@@ -31,7 +31,6 @@ import java.util.stream.Stream;
 import static nu.marginalia.util.TestUtil.evalScript;
 import static nu.marginalia.util.TestUtil.getConnection;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ResourceLock(value = "mariadb", mode = ResourceAccessMode.READ_WRITE)
 @Execution(ExecutionMode.SAME_THREAD)
@@ -42,7 +41,7 @@ class EdgeDirectorServiceTest {
 
     private static HikariDataSource dataSource;
 
-    static int testPort = TestUtil.getPort();
+    static final int testPort = TestUtil.getPort();
     private static EdgeDataStoreTaskDaoImpl taskDao;
     private static EdgeDataStoreDaoImpl dataDao;
 
@@ -232,7 +231,7 @@ class EdgeDirectorServiceTest {
 
 
     @Test
-    public void testFinalizeTask() throws SQLException, URISyntaxException {
+    public void testFinalizeTask() throws URISyntaxException {
         Stream.of(new EdgeUrl("https://marginalia.nu/"),
                 new EdgeUrl("https://marginalia.nu/q"),
                 new EdgeUrl("https://marginalia.nu/r"))

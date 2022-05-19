@@ -8,9 +8,9 @@ public enum MemexTaskState {
     URGENT('!', false, "urgent"),
     TODO(0, false, "todo");
 
-    public int key;
-    public String style;
-    public boolean done;
+    public final int key;
+    public final String style;
+    public final boolean done;
 
     MemexTaskState(int key, boolean done, String style) {
         this.key = key;

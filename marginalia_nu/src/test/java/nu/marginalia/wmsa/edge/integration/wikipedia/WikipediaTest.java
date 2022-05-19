@@ -15,10 +15,9 @@ import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 public class WikipediaTest {
-    LanguageModels lm = TestLanguageModels.getLanguageModels();
+    final LanguageModels lm = TestLanguageModels.getLanguageModels();
 
     @Test @SneakyThrows
     public void test() {

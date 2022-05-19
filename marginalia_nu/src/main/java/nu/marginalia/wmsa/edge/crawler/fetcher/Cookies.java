@@ -5,9 +5,7 @@ import okhttp3.CookieJar;
 import okhttp3.HttpUrl;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Cookies {

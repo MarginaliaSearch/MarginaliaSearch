@@ -60,7 +60,7 @@ public class AuthService extends Service {
         });
     }
 
-    private Object loginForm(Request request, Response response) throws IOException {
+    private Object loginForm(Request request, Response response) {
         String redir = Objects.requireNonNull(request.queryParams("redirect"));
         String service = Objects.requireNonNull(request.queryParams("service"));
 

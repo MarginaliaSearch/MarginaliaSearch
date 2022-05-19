@@ -10,7 +10,6 @@ import nu.marginalia.wmsa.edge.model.EdgeUrl;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @AllArgsConstructor @ToString @Getter @EqualsAndHashCode
 public class EdgeSearchResultItem {

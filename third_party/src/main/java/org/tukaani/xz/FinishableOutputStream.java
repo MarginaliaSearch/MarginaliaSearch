@@ -27,5 +27,5 @@ public abstract class FinishableOutputStream extends OutputStream {
      *
      * @throws      IOException
      */
-    public void finish() throws IOException {};
+    public void finish() throws IOException {}
 }

@@ -23,17 +23,15 @@ public class DictionaryWriter implements AutoCloseable {
     private final ArrayList<byte[]> commitQueue = new ArrayList<>(10_000);
 
     private final DictionaryHashMap reverseIndex;
-    private boolean prepopulate;
+    private final boolean prepopulate;
 
     private final ReadWriteLock memoryLock = new ReentrantReadWriteLock();
     private final ReadWriteLock diskLock = new ReentrantReadWriteLock();
     private final RandomAccessFile raf;
 
-    private final Map<String, Integer> stats = new HashMap<>();
-
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    static volatile AtomicInteger instances = new AtomicInteger();
+    static final AtomicInteger instances = new AtomicInteger();
 
     private final TokenCompressor readOnlyTokenCompressor = new TokenCompressor(this::getReadOnly);
     private final TokenCompressor tokenCompressor = new TokenCompressor(this::get);
@@ -48,14 +46,7 @@ public class DictionaryWriter implements AutoCloseable {
     public long getPos() {
         return raf.getFilePointer();
     }
-    public void printStats() {
-        stats
-                .entrySet()
-                .stream()
-                .filter(e -> e.getValue() > 10)
-                .sorted(Map.Entry.comparingByValue())
-                .forEach(e -> System.out.println(e.getKey() + " " + e.getValue()));
-    }
+
     @SneakyThrows @Inject
     public DictionaryWriter(
             @Named("edge-writer-dictionary-file") File dictionaryFile,

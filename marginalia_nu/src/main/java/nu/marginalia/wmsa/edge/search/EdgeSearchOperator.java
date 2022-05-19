@@ -138,7 +138,7 @@ public class EdgeSearchOperator {
             details = details.withUrlQualityAdjustment(scoreAdjustment);
 
             resultList.add(details);
-        };
+        }
 
         resultList.sort(resultListComparator);
 
@@ -302,7 +302,7 @@ public class EdgeSearchOperator {
         }
     }
 
-    static IndexBlock[] indexBlockSearchOrder = Arrays.stream(IndexBlock.values()).sorted(Comparator.comparing(i -> i.sortOrder)).toArray(IndexBlock[]::new);
+    static final IndexBlock[] indexBlockSearchOrder = Arrays.stream(IndexBlock.values()).sorted(Comparator.comparing(i -> i.sortOrder)).toArray(IndexBlock[]::new);
 
     private Iterable<String> spellCheckTerms(Context ctx, EdgeSearchQuery disjointedQuery) {
         return Observable.fromIterable(disjointedQuery.searchTermsHuman)

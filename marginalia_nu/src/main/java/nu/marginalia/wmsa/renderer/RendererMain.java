@@ -11,11 +11,11 @@ import nu.marginalia.wmsa.configuration.server.Initialization;
 import java.io.IOException;
 
 public class RendererMain extends MainClass {
-    private RendererService service;
+    private final RendererService service;
 
     @Inject
     public RendererMain(RendererService service
-                              ) throws IOException {
+                              ) {
         this.service = service;
     }
 

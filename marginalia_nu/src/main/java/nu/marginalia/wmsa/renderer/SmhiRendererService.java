@@ -32,7 +32,7 @@ public class SmhiRendererService {
     private final MustacheRenderer<IndexPlatser> indexRenderer;
     private final MustacheRenderer<PrognosData> prognosRenderer;
 
-    private ResourceStoreClient resourceStoreClient;
+    private final ResourceStoreClient resourceStoreClient;
 
 
     @Inject @SneakyThrows
@@ -48,7 +48,7 @@ public class SmhiRendererService {
     }
 
 
-    private Object renderSmhiIndex(Request request, Response response) throws IOException {
+    private Object renderSmhiIndex(Request request, Response response) {
         var requestText = request.body();
         var req = gson.fromJson(requestText, RenderSmhiIndexReq.class);
 
@@ -64,7 +64,7 @@ public class SmhiRendererService {
         return "";
     }
 
-    private Object renderSmhiPrognos(Request request, Response response) throws IOException {
+    private Object renderSmhiPrognos(Request request, Response response) {
         var requestText = request.body();
         var req = gson.fromJson(requestText, RenderSmhiPrognosReq.class);
 

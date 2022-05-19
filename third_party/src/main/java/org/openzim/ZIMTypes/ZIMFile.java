@@ -40,7 +40,7 @@ public class ZIMFile extends File {
 
 	private Header mHeader;
 
-	private Map<Integer, String> mMIMETypeList = new HashMap<>(); // Can be removed if not needed
+	private final Map<Integer, String> mMIMETypeList = new HashMap<>(); // Can be removed if not needed
 
 	public ZIMFile(String path) {
 		super(path);
@@ -184,7 +184,7 @@ public class ZIMFile extends File {
 		return mHeader.layoutPage;
 	}
 
-	public class Header {
+	public static class Header {
 		int magicNumber;
 		int version;
 		int uuid;

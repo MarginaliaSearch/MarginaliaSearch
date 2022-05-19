@@ -18,7 +18,7 @@ public abstract class RangeCoder {
     static final short PROB_INIT = (short)(BIT_MODEL_TOTAL / 2);
     static final int MOVE_BITS = 5;
 
-    public static final void initProbs(short[] probs) {
+    public static void initProbs(short[] probs) {
         for (int i = 0; i < probs.length; ++i)
             probs[i] = PROB_INIT;
     }

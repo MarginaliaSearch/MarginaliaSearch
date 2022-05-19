@@ -11,7 +11,7 @@ package org.tukaani.xz.check;
 
 public class CRC64 extends Check {
     private static final long poly = 0xC96C5795D7870F42L;
-    private static final long crcTable[] = new long[256];
+    private static final long[] crcTable = new long[256];
 
     private long crc = -1;
 

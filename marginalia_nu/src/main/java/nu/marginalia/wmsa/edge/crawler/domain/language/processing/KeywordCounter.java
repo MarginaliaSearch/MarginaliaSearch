@@ -37,7 +37,7 @@ public class KeywordCounter {
 
                 instances.computeIfAbsent(stemmed, k -> new HashSet<>()).add(sent.constructWordFromSpan(span));
             }
-        };
+        }
 
         var topWords = counts.entrySet().stream()
                 .filter(w -> w.getValue() > cutoff)
@@ -74,7 +74,7 @@ public class KeywordCounter {
         return ret;
     }
 
-    private static Pattern separator = Pattern.compile("_");
+    private static final Pattern separator = Pattern.compile("_");
 
     public double getTermValue(Map.Entry<String, Double> e) {
         String[] parts = separator.split(e.getKey());

@@ -14,13 +14,12 @@ import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
-import java.nio.file.Path;
 
 public class StackOverflowPostsTest {
-    LanguageModels lm = TestLanguageModels.getLanguageModels();
+    final LanguageModels lm = TestLanguageModels.getLanguageModels();
 
     @Test
-    public void test() throws IOException, ParserConfigurationException, SAXException, InterruptedException {
+    public void test() throws ParserConfigurationException, SAXException, InterruptedException {
         var documentKeywordExtractor = new DocumentKeywordExtractor(new NGramDict(lm));
 
         ThreadLocal<StackOverflowPostProcessor> processor = ThreadLocal.withInitial(() -> {

@@ -157,8 +157,8 @@ public class LongPairHashMap {
 
     @Getter @EqualsAndHashCode
     public static class CellData {
-        long first;
-        long second;
+        final long first;
+        final long second;
 
         public CellData(long key, long offset) {
             first = key | 0x8000_0000_000_000L;

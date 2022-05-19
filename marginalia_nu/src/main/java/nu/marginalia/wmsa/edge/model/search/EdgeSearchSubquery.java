@@ -1,9 +1,7 @@
 package nu.marginalia.wmsa.edge.model.search;
 
 import lombok.*;
-import lombok.experimental.FieldNameConstants;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
-import org.h2.index.Index;
 
 import java.util.List;
 

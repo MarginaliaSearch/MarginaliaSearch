@@ -35,7 +35,7 @@ import static nu.marginalia.wmsa.edge.crawler.domain.language.WordPatterns.*;
 public class SentenceExtractor {
 
     private SentenceDetectorME sentenceDetector;
-    private RDRPOSTagger rdrposTagger;
+    private final RDRPOSTagger rdrposTagger;
 
     private final PorterStemmer porterStemmer = new PorterStemmer();
     private boolean legacyMode = false;

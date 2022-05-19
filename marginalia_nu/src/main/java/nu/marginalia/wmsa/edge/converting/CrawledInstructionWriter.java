@@ -2,9 +2,7 @@ package nu.marginalia.wmsa.edge.converting;
 
 import com.github.luben.zstd.ZstdOutputStream;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import nu.marginalia.wmsa.edge.converting.interpreter.Instruction;
-import nu.marginalia.wmsa.edge.crawling.model.CrawledDomain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +16,7 @@ import java.util.List;
 
 public class CrawledInstructionWriter {
     private final Path outputDir;
-    private Gson gson;
+    private final Gson gson;
     private static final Logger logger = LoggerFactory.getLogger(CrawledInstructionWriter.class);
 
     public CrawledInstructionWriter(Path outputDir, Gson gson) {

@@ -65,12 +65,12 @@ public class EdgeSearchTestLocal {
         return getConnection();
     }
 
-    static int testPort = TestUtil.getPort();
+    static final int testPort = TestUtil.getPort();
 
-    static Initialization init = new Initialization();
+    static final Initialization init = new Initialization();
     private QueryParser parser;
     private static NGramDict dict;
-    private static LanguageModels lm = TestLanguageModels.getLanguageModels();
+    private static final LanguageModels lm = TestLanguageModels.getLanguageModels();
 
     @SneakyThrows
     @BeforeAll

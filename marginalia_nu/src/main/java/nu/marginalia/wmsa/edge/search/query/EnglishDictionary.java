@@ -10,7 +10,6 @@ import java.io.InputStreamReader;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class EnglishDictionary {
     private final Set<String> englishWords = new HashSet<>();
@@ -41,7 +40,7 @@ public class EnglishDictionary {
         return englishWords.contains(word);
     }
 
-    private static Pattern ingPattern = Pattern.compile(".*(\\w)\\1ing$");
+    private static final Pattern ingPattern = Pattern.compile(".*(\\w)\\1ing$");
 
     public Collection<String> getWordVariants(String s) {
         var variants = findWordVariants(s);

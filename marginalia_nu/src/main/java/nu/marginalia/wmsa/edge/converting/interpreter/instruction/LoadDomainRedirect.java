@@ -4,8 +4,6 @@ import nu.marginalia.wmsa.edge.converting.interpreter.Instruction;
 import nu.marginalia.wmsa.edge.converting.interpreter.InstructionTag;
 import nu.marginalia.wmsa.edge.converting.interpreter.Interpreter;
 
-import java.util.Arrays;
-
 public record LoadDomainRedirect(DomainLink links) implements Instruction {
 
     @Override

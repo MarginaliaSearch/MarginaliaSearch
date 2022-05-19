@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Test;
 import spark.Spark;
 
 import static nu.marginalia.util.TestUtil.getConnection;
-import static org.junit.Assert.assertEquals;
 
 class ServiceTest {
     static EdgeAssistantService service;
@@ -25,7 +24,7 @@ class ServiceTest {
 
     private static HikariDataSource dataSource;
 
-    static int testPort = TestUtil.getPort();
+    static final int testPort = TestUtil.getPort();
 
     @SneakyThrows
     public static HikariDataSource provideConnection() {

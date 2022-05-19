@@ -7,8 +7,6 @@ import gnu.trove.set.hash.TIntHashSet;
 import io.prometheus.client.Counter;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import lombok.SneakyThrows;
-import nu.marginalia.wmsa.edge.model.EdgeDomain;
-import nu.marginalia.wmsa.edge.model.EdgeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

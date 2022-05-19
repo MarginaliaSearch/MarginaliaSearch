@@ -122,7 +122,7 @@ public class SearchIndexPreconverter {
             fileChannels[i].close();
             randomAccessFiles[i].close();
         }
-    };
+    }
 
     private boolean isUrlAllowed(long url) {
         int urlId = (int)(url & 0xFFFF_FFFFL);

@@ -11,7 +11,7 @@ public record BTreeHeader(int layers, int numEntries, long indexOffsetLongs, lon
         assert (dataOffsetLongs >= indexOffsetLongs);
     }
 
-    public static int BTreeHeaderSizeLongs = 3;
+    public static final int BTreeHeaderSizeLongs = 3;
 
     public BTreeHeader(long a, long b, long c) {
         this((int)(a >>> 32), (int)(a & 0xFFFF_FFFFL), b, c);

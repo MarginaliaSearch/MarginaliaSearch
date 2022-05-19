@@ -12,10 +12,10 @@ import nu.marginalia.wmsa.configuration.server.Initialization;
 import java.io.IOException;
 
 public class EdgeCrawlerMain extends MainClass {
-    private EdgeCrawlerService service;
+    private final EdgeCrawlerService service;
 
     @Inject
-    public EdgeCrawlerMain(EdgeCrawlerService service) throws IOException {
+    public EdgeCrawlerMain(EdgeCrawlerService service) {
         this.service = service;
     }
 

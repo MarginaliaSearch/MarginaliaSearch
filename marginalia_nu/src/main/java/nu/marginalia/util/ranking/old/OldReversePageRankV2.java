@@ -25,8 +25,8 @@ public class OldReversePageRankV2 {
     private final TIntObjectHashMap<TIntArrayList> reverseLinkData = new TIntObjectHashMap<>();
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public Set<String> originDomains = new HashSet<>();
-    public Set<Integer> originDomainIds = new HashSet<>();
+    public final Set<String> originDomains = new HashSet<>();
+    public final Set<Integer> originDomainIds = new HashSet<>();
 
     public static void main(String... args) throws IOException {
         new OldReversePageRankV2(
@@ -62,7 +62,7 @@ public class OldReversePageRankV2 {
         System.out.printf("%2.2f", (end - start)/1000.0);
     }
 
-    public OldReversePageRankV2(HikariDataSource dataSource) throws IOException {
+    public OldReversePageRankV2(HikariDataSource dataSource) {
         originDomains.add("memex.marginalia.nu");
 
         try (var conn = dataSource.getConnection()) {

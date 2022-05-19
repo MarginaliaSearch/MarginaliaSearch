@@ -12,7 +12,7 @@ package org.tukaani.xz;
 import java.io.InputStream;
 
 class DeltaDecoder extends DeltaCoder implements FilterDecoder {
-    private int distance;
+    private final int distance;
 
     DeltaDecoder(byte[] props) throws UnsupportedOptionsException {
         if (props.length != 1)

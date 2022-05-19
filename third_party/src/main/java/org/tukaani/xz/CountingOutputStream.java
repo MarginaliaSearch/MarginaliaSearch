@@ -13,7 +13,7 @@ import java.io.OutputStream;
 import java.io.IOException;
 
 class CountingOutputStream extends FinishableOutputStream {
-    private OutputStream out;
+    private final OutputStream out;
     private long size = 0;
 
     public CountingOutputStream(OutputStream out) {

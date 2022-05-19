@@ -50,7 +50,7 @@ public class EdgeIndexClientTest {
         return getConnection();
     }
 
-    static int testPort = TestUtil.getPort();
+    static final int testPort = TestUtil.getPort();
 
     @SneakyThrows
     @BeforeAll
@@ -78,13 +78,15 @@ public class EdgeIndexClientTest {
                 new SearchIndexPartitioner(null)
                 );
 
+        var init = new Initialization();
         indexes = new SearchIndexes(servicesFactory, new SearchIndexPartitioner(null));
         service = new EdgeIndexService("127.0.0.1",
                 testPort,
-                new Initialization(), null,
+                init, null,
                 indexes);
 
         Spark.awaitInitialization();
+        init.setReady();
     }
 
     @Test
@@ -106,17 +108,6 @@ public class EdgeIndexClientTest {
     }
 
     @Test
-    public void testLowHit() {
-        putWords(1, 4, 0, "elmoped");
-        indexes.repartition();
-        indexes.preconvert();
-        indexes.reindexAll();
-        var rsp = client.query(Context.internal(), EdgeSearchSpecification.justIncludes("elmoped"));
-        System.out.println(rsp);
-        assertEquals(4, rsp.resultsList.get(0).get(0).results.get(DYNAMIC_BUCKET_LENGTH).get(0).url.getId());
-    }
-
-    @Test
     public void testHighHit() {
         putWords(2, 5, -100, "trapphus");
         indexes.repartition();
@@ -124,7 +115,7 @@ public class EdgeIndexClientTest {
         indexes.reindexAll();
         var rsp = client.query(Context.internal(), EdgeSearchSpecification.justIncludes("trapphus"));
         System.out.println(rsp);
-        assertEquals(5, rsp.resultsList.get(0).get(0).results.get(0).get(0).url.getId());
+        assertEquals(5, rsp.resultsList.get(IndexBlock.Title).get(0).results.get(0).get(0).url.getId());
     }
 
 
@@ -148,23 +139,8 @@ public class EdgeIndexClientTest {
         assertTrue(flatResults.contains(new EdgeId<EdgeUrl>(2)));
     }
 
-    @Test
-    public void miss() {
-        indexes.repartition();
-        indexes.preconvert();
-        indexes.reindexAll();
-
-        try {
-            client.query(Context.internal(), EdgeSearchSpecification.justIncludes("skumtomte"));
-            Assertions.fail();
-        }
-        catch (RemoteException ex) {
-
-        }
-    }
-
     void putWords(int didx, int idx, double quality, String... words) {
-        EdgePageWords epw = new EdgePageWords(IndexBlock.Words);
+        EdgePageWords epw = new EdgePageWords(IndexBlock.Title);
         epw.addAll(Arrays.asList(words));
         client.putWords(Context.internal(), new EdgeId<>(didx), new EdgeId<>(idx), quality,
                 new EdgePageWordSet(epw), 0).blockingSubscribe();
@@ -172,16 +148,7 @@ public class EdgeIndexClientTest {
 
     @AfterAll
     public static void tearDownClass() {
-        for (File f : tempDir.toFile().listFiles()) {
-            if (f.isDirectory()) {
-                for (File f2 : f.listFiles()) {
-                    f2.delete();
-                }
-            }
-            f.delete();
-        }
-
-        tempDir.toFile().delete();
+        nu.marginalia.util.test.TestUtil.clearTempDir(tempDir);
     }
 
 }

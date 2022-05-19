@@ -39,7 +39,7 @@ public class FileRepository {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    ReadWriteLock rwl = new ReentrantReadWriteLock();
+    final ReadWriteLock rwl = new ReentrantReadWriteLock();
 
     @SneakyThrows
     public Object uploadFile(Request request, Response response) {
@@ -105,7 +105,7 @@ public class FileRepository {
             lock.unlock();
         }
         return "";
-    };
+    }
 
     private Path getReleasePath() {
         return Path.of(fileStoreDir, distroFileName);

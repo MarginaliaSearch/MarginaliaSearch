@@ -6,7 +6,6 @@ import nu.marginalia.gemini.gmi.GemtextDocument;
 import nu.marginalia.gemini.gmi.renderer.GemtextRendererFactory;
 import nu.marginalia.wmsa.memex.model.*;
 
-import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;

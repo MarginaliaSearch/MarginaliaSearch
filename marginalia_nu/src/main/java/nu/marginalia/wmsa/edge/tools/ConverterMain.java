@@ -40,12 +40,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 import static nu.marginalia.wmsa.edge.model.crawl.EdgeHtmlStandard.UNKNOWN;
 
 public class ConverterMain {
-    static LinkedBlockingQueue<EdgeRawPageContents> processQueue = new LinkedBlockingQueue<>(20);
-    static LinkedBlockingQueue<UploadJob> uploadQueue = new LinkedBlockingQueue<>(2);
+    static final LinkedBlockingQueue<EdgeRawPageContents> processQueue = new LinkedBlockingQueue<>(20);
+    static final LinkedBlockingQueue<UploadJob> uploadQueue = new LinkedBlockingQueue<>(2);
 
-    static TObjectIntHashMap<String> urlToIdMap = new TObjectIntHashMap<>(50_000_000, 0.5f, -1);
-    static TObjectIntHashMap<String> domainToIdMap = new TObjectIntHashMap<>(5_000_000, 0.5f, -1);
-    static TIntObjectHashMap<String> idToDomainMap = new TIntObjectHashMap<>(5_000_000, 0.5f, -1);
+    static final TObjectIntHashMap<String> urlToIdMap = new TObjectIntHashMap<>(50_000_000, 0.5f, -1);
+    static final TObjectIntHashMap<String> domainToIdMap = new TObjectIntHashMap<>(5_000_000, 0.5f, -1);
+    static final TIntObjectHashMap<String> idToDomainMap = new TIntObjectHashMap<>(5_000_000, 0.5f, -1);
     static HikariDataSource conn;
 
     private static SearchIndexWriterImpl indexWriter;
@@ -57,10 +57,11 @@ public class ConverterMain {
         EdgeId<EdgeUrl> urlId;
         EdgePageWordSet words;
         int wordCount;
-    };
+    }
+
     static volatile boolean running = true;
 
-    public static void main(String... args) throws IOException {
+    public static void main(String... args) {
         org.mariadb.jdbc.Driver driver = new Driver();
 
         dictionaryWriter = new DictionaryWriter(new File(args[0]), 1L << 30, true);
@@ -136,7 +137,7 @@ public class ConverterMain {
         running = false;
     }
 
-    static LanguageModels lm = new LanguageModels(
+    static final LanguageModels lm = new LanguageModels(
             Path.of("/var/lib/wmsa/model/ngrams-generous-emstr.bin"),
             Path.of("/var/lib/wmsa/model/tfreq-new-algo3.bin"),
             Path.of("/var/lib/wmsa/model/opennlp-sentence.bin"),
@@ -144,7 +145,7 @@ public class ConverterMain {
             Path.of("/var/lib/wmsa/model/English.DICT"),
             Path.of("/var/lib/wmsa/model/opennlp-tok.bin")
     );
-    static NGramDict dict = new NGramDict(lm);
+    static final NGramDict dict = new NGramDict(lm);
 
     private static final LanguageFilter languageFilter = new LanguageFilter();
     private static final LinkParser linkParser = new LinkParser();
@@ -266,7 +267,7 @@ public class ConverterMain {
         return scriptTags.size() + badScript + (scriptText.length())/1000;
     }
 
-    static List<String> trackers = List.of("adform.net",
+    static final List<String> trackers = List.of("adform.net",
             "connect.facebook",
             "googletagmanager.com",
             "googlesyndication.com",

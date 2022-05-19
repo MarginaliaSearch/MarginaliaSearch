@@ -13,10 +13,10 @@ import nu.marginalia.wmsa.edge.index.EdgeTablesModule;
 import java.io.IOException;
 
 public class DataStoreMain extends MainClass {
-    private DataStoreService service;
+    private final DataStoreService service;
 
     @Inject
-    public DataStoreMain(DataStoreService service) throws IOException {
+    public DataStoreMain(DataStoreService service) {
         this.service = service;
     }
 

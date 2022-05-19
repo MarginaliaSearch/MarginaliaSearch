@@ -1,10 +1,7 @@
 package nu.marginalia.wmsa.edge.assistant.suggest;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import lombok.SneakyThrows;
 import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.wmsa.edge.assistant.dict.SpellChecker;
 import org.apache.commons.collections4.trie.PatriciaTrie;

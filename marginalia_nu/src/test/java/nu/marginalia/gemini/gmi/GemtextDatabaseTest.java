@@ -23,7 +23,7 @@ class GemtextDatabaseTest {
         Assertions.assertFalse(db.getLinkData(new MemexNodeUrl("/w")).isPresent());
     }
 
-    void verifyResult(String expected, Optional<String> actual) {
+    void verifyResult(String expected, @SuppressWarnings("OptionalUsedAsFieldOrParameterType") Optional<String> actual) {
         Assertions.assertTrue(actual.isPresent(), () -> "No value found, expected " + expected);
         Assertions.assertEquals(expected, actual.get());
     }

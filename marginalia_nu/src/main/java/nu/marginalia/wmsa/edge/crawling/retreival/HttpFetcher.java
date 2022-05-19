@@ -42,7 +42,7 @@ public class HttpFetcher {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final String userAgent;
     private final int maxFetchSize = 1024*512;
-    private Cookies cookies = new Cookies();
+    private final Cookies cookies = new Cookies();
 
     private static final SimpleRobotRulesParser robotsParser = new SimpleRobotRulesParser();
 
@@ -59,8 +59,8 @@ public class HttpFetcher {
     public enum FetchResultState {
         OK,
         REDIRECT,
-        ERROR;
-    };
+        ERROR
+    }
 
     @AllArgsConstructor @ToString
     public static class FetchResult {
@@ -70,7 +70,7 @@ public class HttpFetcher {
         public boolean ok() {
             return state == FetchResultState.OK;
         }
-    };
+    }
 
     @SneakyThrows
     private OkHttpClient createClient(Dispatcher dispatcher) {

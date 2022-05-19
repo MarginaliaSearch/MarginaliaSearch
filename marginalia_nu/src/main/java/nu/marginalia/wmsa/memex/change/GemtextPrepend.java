@@ -2,7 +2,6 @@ package nu.marginalia.wmsa.memex.change;
 
 import lombok.AllArgsConstructor;
 import lombok.ToString;
-import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.memex.Memex;
 import nu.marginalia.gemini.gmi.GemtextDocument;
 import nu.marginalia.gemini.gmi.renderer.GemtextRendererFactory;

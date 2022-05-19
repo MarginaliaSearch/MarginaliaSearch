@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 import java.util.regex.Pattern;
 
 public class GemtextLinkParser {
-    private static Pattern linkPattern = Pattern.compile("^=>\\s?([^\\s]+)\\s*(.+)?$");
+    private static final Pattern linkPattern = Pattern.compile("^=>\\s?([^\\s]+)\\s*(.+)?$");
 
     @Nullable
     public static AbstractGemtextLine parse(String s, MemexNodeHeadingId heading) {

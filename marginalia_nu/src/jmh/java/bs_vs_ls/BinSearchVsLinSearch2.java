@@ -17,7 +17,7 @@ public class BinSearchVsLinSearch2 {
         Path tf;
         MultimapFileLong file;
         MultimapSearcher searcher;
-        long[] data = new long[512];
+        final long[] data = new long[512];
 
         {
             try {

@@ -26,7 +26,7 @@ public class DocumentDebugger {
     private final KeywordExtractor ke;
     private final NameCounter nc;
 
-    Map<String, Path> docsByPath = new TreeMap<>();
+    final Map<String, Path> docsByPath = new TreeMap<>();
     Path tempDir;
     public DocumentDebugger(LanguageModels lm) throws IOException {
         se = new SentenceExtractor(lm);

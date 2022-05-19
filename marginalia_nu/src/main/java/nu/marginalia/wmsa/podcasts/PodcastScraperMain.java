@@ -15,7 +15,7 @@ public class PodcastScraperMain extends MainClass {
     private final PodcastScraperService service;
 
     @Inject
-    public PodcastScraperMain(PodcastScraperService service) throws IOException {
+    public PodcastScraperMain(PodcastScraperService service) {
         this.service = service;
     }
 

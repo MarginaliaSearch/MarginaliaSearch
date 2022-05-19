@@ -14,7 +14,7 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 
 public abstract class MainClass {
-    private Logger logger = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public MainClass() {
 

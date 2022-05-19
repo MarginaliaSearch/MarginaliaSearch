@@ -14,8 +14,8 @@ import static com.google.inject.name.Names.named;
 
 public class ConfigurationModule extends AbstractModule {
     private static final String SERVICE_NAME = System.getProperty("service-name");
-    public static int MONITOR_PORT = Integer.getInteger("monitor.port", 5000);
-    public static String MONITOR_HOST = System.getProperty("monitor.host", "127.0.0.1");
+    public static final int MONITOR_PORT = Integer.getInteger("monitor.port", 5000);
+    public static final String MONITOR_HOST = System.getProperty("monitor.host", "127.0.0.1");
 
     public void configure() {
         bind(Integer.class).annotatedWith(named("monitor-port")).toInstance(MONITOR_PORT);

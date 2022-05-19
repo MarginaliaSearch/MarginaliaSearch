@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 class SentenceExtractorTest {
     SentenceExtractor newSe;
     SentenceExtractor legacySe;
-    LanguageModels lm = TestLanguageModels.getLanguageModels();
+    final LanguageModels lm = TestLanguageModels.getLanguageModels();
     @BeforeEach
     public void setUp() {
 
@@ -219,7 +219,7 @@ class SentenceExtractorTest {
 
     }
 
-    Pattern p = Pattern.compile("([, ]+)");
+    final Pattern p = Pattern.compile("([, ]+)");
     public void seprateExtractor(String sentence) {
         var matcher = p.matcher(sentence);
 

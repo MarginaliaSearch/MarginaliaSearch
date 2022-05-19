@@ -1,6 +1,5 @@
 package nu.marginalia.wmsa.edge.converting.loader;
 
-import io.reactivex.rxjava3.core.Observable;
 import nu.marginalia.wmsa.edge.converting.interpreter.Interpreter;
 import nu.marginalia.wmsa.edge.converting.interpreter.instruction.DocumentKeywords;
 import nu.marginalia.wmsa.edge.converting.interpreter.instruction.DomainLink;

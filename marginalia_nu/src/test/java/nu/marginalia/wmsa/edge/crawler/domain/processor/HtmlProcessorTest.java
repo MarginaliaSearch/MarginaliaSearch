@@ -23,10 +23,10 @@ import java.util.List;
 
 @Disabled
 class HtmlProcessorTest {
-    Logger logger = LoggerFactory.getLogger(getClass());
+    final Logger logger = LoggerFactory.getLogger(getClass());
 
-    LanguageModels lm = TestLanguageModels.getLanguageModels();
-    HtmlProcessor processor = new HtmlProcessor(new DocumentKeywordExtractor(new NGramDict(lm)),new SentenceExtractor(lm));
+    final LanguageModels lm = TestLanguageModels.getLanguageModels();
+    final HtmlProcessor processor = new HtmlProcessor(new DocumentKeywordExtractor(new NGramDict(lm)),new SentenceExtractor(lm));
 
     @Test
     @Disabled

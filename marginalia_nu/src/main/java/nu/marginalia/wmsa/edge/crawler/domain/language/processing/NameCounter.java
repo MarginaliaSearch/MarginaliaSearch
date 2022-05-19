@@ -27,7 +27,7 @@ public class NameCounter {
                 counts.merge(stemmed, 1., Double::sum);
                 instances.computeIfAbsent(stemmed, k -> new HashSet<>()).add(new WordRep(sent, span));
             }
-        };
+        }
 
         return counts.entrySet().stream()
                 .filter(e -> e.getValue() >= minCount)

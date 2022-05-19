@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.ToString;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 

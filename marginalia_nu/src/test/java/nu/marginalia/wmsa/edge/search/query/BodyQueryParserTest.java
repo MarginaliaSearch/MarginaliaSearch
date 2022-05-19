@@ -7,7 +7,6 @@ import org.junit.BeforeClass;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -16,7 +15,7 @@ class BodyQueryParserTest {
     private QueryParser parser;
     private static NGramDict dict;
     private static EnglishDictionary englishDictionary;
-    private static LanguageModels lm = TestLanguageModels.getLanguageModels();
+    private static final LanguageModels lm = TestLanguageModels.getLanguageModels();
 
     @BeforeClass
     public static void init() {

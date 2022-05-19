@@ -24,13 +24,13 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class TermFrequencyCounterMain {
 
-    static LinkedBlockingQueue<EdgeRawPageContents> processQueue = new LinkedBlockingQueue<>(20);
+    static final LinkedBlockingQueue<EdgeRawPageContents> processQueue = new LinkedBlockingQueue<>(20);
 
     public static final String OUTPUT_FILE = "/var/lib/wmsa/archive/tfreq-2022-04-04.bin";
     public static final String ARCHIVE_PATH = "/var/lib/wmsa/archive/webpage"; // "/mnt/storage/wmsa/archive/webpage/"
 
     @SneakyThrows
-    public static void main(String... args) throws IOException {
+    public static void main(String... args) {
 
         List<Thread> pt = new ArrayList<>();
         for (int i = 0; i < 20; i++) {

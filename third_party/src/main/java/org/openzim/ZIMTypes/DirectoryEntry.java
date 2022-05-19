@@ -20,17 +20,17 @@ package org.openzim.ZIMTypes;
 
 public abstract class DirectoryEntry {
 
-	int mimeType;
+	final int mimeType;
 
-	char namespace;
+	final char namespace;
 
-	int revision;
+	final int revision;
 
-	String url;
+	final String url;
 
-	String title;
+	final String title;
 
-	int urlListindex;
+	final int urlListindex;
 
 	public DirectoryEntry(int mimeType, char namespace, int revision,
 			String url, String title, int index) {

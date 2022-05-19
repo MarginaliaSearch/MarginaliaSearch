@@ -56,8 +56,8 @@ public class Context {
                 TimeUnit.MILLISECONDS);
     }
 
-    private String id;
-    private String session;
+    private final String id;
+    private final String session;
     private boolean treatAsPublic;
 
     private Context(String id, String session) {

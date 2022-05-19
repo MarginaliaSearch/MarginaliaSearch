@@ -5,7 +5,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
-import edu.stanford.nlp.parser.lexparser.Edge;
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.edge.crawler.domain.UrlsCache;
 import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklist;
@@ -21,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.*;
@@ -529,7 +527,7 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
         return results;
     }
 
-    static Pattern badChars = Pattern.compile("[';\\\\]");
+    static final Pattern badChars = Pattern.compile("[';\\\\]");
     private String saneString(String s) {
         return "\'"+badChars.matcher(s).replaceAll("?")+"\'";
     }

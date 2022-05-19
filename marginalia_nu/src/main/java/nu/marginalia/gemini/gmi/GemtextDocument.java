@@ -159,5 +159,5 @@ public class GemtextDocument extends Gemtext {
 
             return null;
         }
-    };
+    }
 }

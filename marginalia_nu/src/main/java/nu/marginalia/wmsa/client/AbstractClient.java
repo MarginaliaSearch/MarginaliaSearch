@@ -87,9 +87,7 @@ public abstract class AbstractClient implements AutoCloseable {
             try {
                 alive = isResponsive();
             }
-            catch (java.util.concurrent.TimeoutException tex) {
-                //
-            }
+            //
             catch (Exception ex) {
                 logger.warn("Oops", ex);
             }
@@ -118,7 +116,7 @@ public abstract class AbstractClient implements AutoCloseable {
 
     public abstract String name();
 
-    public synchronized boolean isResponsive() throws java.util.concurrent.TimeoutException {
+    public synchronized boolean isResponsive() {
         Context ctx = Context.internal("ping");
         var req = ctx.paint(new Request.Builder()).url(url + "/internal/ping").get().build();
 

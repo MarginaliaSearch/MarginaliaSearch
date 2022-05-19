@@ -8,7 +8,7 @@ import java.text.ParseException;
 
 class MathParserTest {
 
-    Logger logger = LoggerFactory.getLogger(getClass());
+    final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Test
     void parse() throws ParseException {

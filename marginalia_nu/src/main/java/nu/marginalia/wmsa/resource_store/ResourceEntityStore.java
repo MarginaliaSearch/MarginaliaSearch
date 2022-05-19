@@ -241,7 +241,7 @@ public class ResourceEntityStore {
                 loadResource(domain, resource.getFilename(), resource);
             }
         } catch (IOException e) {
-            logger.error("Could not read file {}", file.toString());
+            logger.error("Could not read file {}", file);
         }
     }
 

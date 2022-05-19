@@ -7,12 +7,12 @@ package com.github.datquocnguyen;
 
 public class Node
 {
-	FWObject condition;
-	String conclusion;
+	final FWObject condition;
+	final String conclusion;
 	Node exceptNode;
 	Node ifnotNode;
 	Node fatherNode;
-	int depth;
+	final int depth;
 
 	public Node(FWObject inCondition, String inConclusion, Node inFatherNode,
 		Node inExceptNode, Node inIfnotNode, int inDepth)

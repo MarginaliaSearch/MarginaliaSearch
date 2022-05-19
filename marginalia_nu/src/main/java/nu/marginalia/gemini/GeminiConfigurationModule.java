@@ -1,11 +1,7 @@
 package nu.marginalia.gemini;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.inject.name.Named;
 import com.google.inject.name.Names;
-import nu.marginalia.wmsa.memex.system.MemexFileWriter;
 
 import java.nio.file.Path;
 

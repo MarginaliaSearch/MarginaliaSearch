@@ -25,7 +25,7 @@ import static spark.Spark.*;
 public class DataStoreService extends Service {
     private final HikariDataSource dataSource;
     private final EdgeDataStoreService edgeService;
-    private Logger logger = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Gson gson = new GsonBuilder().create();
 
     @Inject

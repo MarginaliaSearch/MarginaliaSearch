@@ -1,9 +1,7 @@
 package nu.marginalia.wmsa.edge.crawler.domain;
 
-import jdk.security.jarsigner.JarSigner;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +15,7 @@ import java.util.Set;
 
 class RssCrawlerTest {
 
-    LinkParser lp = new LinkParser();
+    final LinkParser lp = new LinkParser();
 
     @Test @Disabled
     public void test() throws URISyntaxException, IOException {

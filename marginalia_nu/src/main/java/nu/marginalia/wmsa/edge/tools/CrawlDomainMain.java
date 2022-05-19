@@ -48,10 +48,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class CrawlDomainMain {
-    static LinkedBlockingQueue<ReindexJob> processQueue = new LinkedBlockingQueue<>(5);
-    static LinkedBlockingQueue<UploadJob> uploadQueue = new LinkedBlockingQueue<>(2);
+    static final LinkedBlockingQueue<ReindexJob> processQueue = new LinkedBlockingQueue<>(5);
+    static final LinkedBlockingQueue<UploadJob> uploadQueue = new LinkedBlockingQueue<>(2);
 
-    static Logger logger = LoggerFactory.getLogger(CrawlDomainMain.class);
+    static final Logger logger = LoggerFactory.getLogger(CrawlDomainMain.class);
 
     static HikariDataSource conn;
 
@@ -75,16 +75,16 @@ public class CrawlDomainMain {
         EdgeIndexTask task;
         Map<EdgeUrl, Integer> hashes;
         int visitedCount;
-    };
+    }
 
     @AllArgsConstructor
     static class UploadJob {
         DomainCrawlResults results;
         ReindexJob job;
-    };
+    }
 
 
-    static volatile boolean running = true;
+    static final boolean running = true;
 
     public static class AbortMonitor {
         private volatile boolean abort = false;
@@ -122,7 +122,7 @@ public class CrawlDomainMain {
     }
 
     @SneakyThrows
-    public static void main(String... args) throws IOException {
+    public static void main(String... args) {
         Driver driver = new Driver();
 
         indexClient = new EdgeIndexClient();
@@ -233,7 +233,7 @@ public class CrawlDomainMain {
         System.exit(0);
     }
 
-    static LanguageModels lm = new LanguageModels(
+    static final LanguageModels lm = new LanguageModels(
             Path.of("/var/lib/wmsa/model/ngrams-generous-emstr.bin"),
             Path.of("/var/lib/wmsa/model/tfreq-new-algo3.bin"),
             Path.of("/var/lib/wmsa/model/opennlp-sentence.bin"),
@@ -241,7 +241,7 @@ public class CrawlDomainMain {
             Path.of("/var/lib/wmsa/model/English.DICT"),
             Path.of("/var/lib/wmsa/model/opennlp-tok.bin")
     );
-    static NGramDict dict = new NGramDict(lm);
+    static final NGramDict dict = new NGramDict(lm);
 
     private static final Semaphore processSem = new Semaphore(500, true);
     @SneakyThrows

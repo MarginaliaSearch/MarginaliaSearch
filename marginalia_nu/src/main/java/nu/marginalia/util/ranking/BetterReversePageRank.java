@@ -8,7 +8,7 @@ import java.io.IOException;
 public class BetterReversePageRank extends RankingAlgorithm {
 
 
-    public BetterReversePageRank(HikariDataSource dataSource, String... origins) throws IOException {
+    public BetterReversePageRank(HikariDataSource dataSource, String... origins) {
         super(dataSource, origins);
     }
 

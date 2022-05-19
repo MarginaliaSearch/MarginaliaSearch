@@ -3,7 +3,6 @@ package nu.marginalia.gemini.gmi;
 import com.google.common.collect.Sets;
 import nu.marginalia.gemini.gmi.line.GemtextLineVisitorAdapter;
 import nu.marginalia.gemini.gmi.line.GemtextLink;
-import nu.marginalia.wmsa.memex.model.MemexNodeHeadingId;
 import nu.marginalia.wmsa.memex.model.MemexNodeUrl;
 import nu.marginalia.wmsa.memex.model.MemexUrl;
 
@@ -13,7 +12,7 @@ import java.nio.file.Path;
 import java.util.*;
 
 public class GemtextDatabase extends Gemtext {
-    public Map<String, Integer> links;
+    public final Map<String, Integer> links;
 
     public GemtextDatabase(MemexNodeUrl url, String[] lines) {
         super(url, lines);

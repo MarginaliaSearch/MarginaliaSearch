@@ -33,9 +33,7 @@ public class ApiService  extends Service {
                       Initialization initialization,
                       MetricsServer metricsServer,
                       EdgeSearchClient searchClient,
-                      HikariDataSource dataSource)
-            throws IOException
-    {
+                      HikariDataSource dataSource) {
         super(ip, port, initialization, metricsServer);
         this.searchClient = searchClient;
         this.dataSource = dataSource;

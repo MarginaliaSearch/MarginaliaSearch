@@ -16,7 +16,7 @@ import static nu.marginalia.gemini.GeminiService.DEFAULT_FILENAME;
 public class BareStaticPagePlugin implements Plugin {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private Path geminiServerRoot;
+    private final Path geminiServerRoot;
 
     @Inject
     public BareStaticPagePlugin(@Named("gemini-server-root") Path geminiServerRoot) {

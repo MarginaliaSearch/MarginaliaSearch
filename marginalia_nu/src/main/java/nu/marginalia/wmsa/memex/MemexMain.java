@@ -9,10 +9,8 @@ import nu.marginalia.wmsa.configuration.ServiceDescriptor;
 import nu.marginalia.wmsa.configuration.module.ConfigurationModule;
 import nu.marginalia.wmsa.configuration.server.Initialization;
 
-import java.io.IOException;
-
 public class MemexMain extends MainClass {
-    private MemexService service;
+    private final MemexService service;
 
     @Inject
     public MemexMain(MemexService service) {

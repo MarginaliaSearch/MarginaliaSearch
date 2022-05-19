@@ -7,9 +7,6 @@ import org.junit.jupiter.api.Assertions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-
 public class TestUtil {
     private static final int TEST_PORT_BASE = 6000;
     private static final int TEST_PORT_RANGE = 2000;

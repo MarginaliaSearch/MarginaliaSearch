@@ -20,7 +20,7 @@ public abstract class FilterOptions implements Cloneable {
 
     public abstract int getDecoderMemoryUsage();
     public abstract InputStream getInputStream(InputStream in)
-            throws IOException;
+            ;
 
     abstract FilterEncoder getFilterEncoder();
 

@@ -30,7 +30,7 @@ public class LongNameCounter {
                 counts.merge(stemmed, 1., Double::sum);
                 instances.computeIfAbsent(stemmed, k -> new HashSet<>()).add(new WordRep(sent, span));
             }
-        };
+        }
 
         return counts.entrySet().stream().filter(e -> termSize(e.getKey()) > 1)
                 .sorted(Comparator.comparing(this::getTermValue))
@@ -44,7 +44,7 @@ public class LongNameCounter {
     }
 
 
-    Pattern separator = Pattern.compile("_");
+    final Pattern separator = Pattern.compile("_");
 
     public double getTermValue(Map.Entry<String, Double> e) {
         String[] parts = separator.split(e.getKey());

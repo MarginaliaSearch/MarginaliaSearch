@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 @Getter
 public class IndexPlatser {
-    List<IndexPlats> platserPerNyckel = new ArrayList<>();
+    final List<IndexPlats> platserPerNyckel = new ArrayList<>();
 
     public IndexPlatser(List<Plats> platser) {
         var platsMap = kategoriseraEfterNyckel(platser);

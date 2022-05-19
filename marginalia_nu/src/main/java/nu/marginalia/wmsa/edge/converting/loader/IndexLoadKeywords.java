@@ -16,11 +16,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 public class IndexLoadKeywords implements Runnable {
-    private EdgeIndexClient client;
+    private final EdgeIndexClient client;
     private static final Logger logger = LoggerFactory.getLogger(IndexLoadKeywords.class);
     private final LinkedBlockingQueue<InsertTask> insertQueue = new LinkedBlockingQueue<>(32);
 
-    private record InsertTask(int urlId, int domainId, EdgePageWordSet wordSet) {};
+    private record InsertTask(int urlId, int domainId, EdgePageWordSet wordSet) {}
+
     private final Thread runThread;
     private volatile boolean canceled = false;
 

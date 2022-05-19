@@ -10,7 +10,7 @@
 package org.tukaani.xz.check;
 
 public class CRC32 extends Check {
-    private java.util.zip.CRC32 state = new java.util.zip.CRC32();
+    private final java.util.zip.CRC32 state = new java.util.zip.CRC32();
 
     public CRC32() {
         size = 4;

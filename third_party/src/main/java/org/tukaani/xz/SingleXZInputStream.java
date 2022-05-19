@@ -36,7 +36,7 @@ public class SingleXZInputStream extends InputStream {
     private StreamFlags streamHeaderFlags;
     private Check check;
     private BlockInputStream blockDecoder = null;
-    private IndexHash indexHash = new IndexHash();
+    private final IndexHash indexHash = new IndexHash();
     private boolean endReached = false;
     private IOException exception = null;
 

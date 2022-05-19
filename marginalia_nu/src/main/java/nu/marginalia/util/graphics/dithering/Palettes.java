@@ -2,7 +2,7 @@ package nu.marginalia.util.graphics.dithering;
 
 public class Palettes {
 
-    public static int[] MARGINALIA_PALETTE = new int[] {
+    public static final int[] MARGINALIA_PALETTE = new int[] {
             0x000000,
             0x000000,
             0x808080,

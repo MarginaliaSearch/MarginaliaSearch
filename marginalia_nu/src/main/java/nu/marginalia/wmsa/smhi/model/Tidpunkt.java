@@ -12,7 +12,7 @@ public class Tidpunkt {
 
     private static final ZoneId serverZoneId = ZoneId.of("GMT");
     private static final ZoneId localZoneId = ZoneId.of("Europe/Stockholm");
-    private static DateTimeFormatter timeFormatter = (new DateTimeFormatterBuilder())
+    private static final DateTimeFormatter timeFormatter = (new DateTimeFormatterBuilder())
             .appendValue(ChronoField.HOUR_OF_DAY, 2)
             .appendLiteral(':')
             .appendValue(ChronoField.MINUTE_OF_HOUR, 2)
@@ -20,7 +20,7 @@ public class Tidpunkt {
 
     public String validTime;
 
-    public List<Parameter> parameters = new ArrayList<>();
+    public final List<Parameter> parameters = new ArrayList<>();
 
 
     private String getParam(String name) {

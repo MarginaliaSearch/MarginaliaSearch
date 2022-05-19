@@ -32,7 +32,7 @@ import java.io.RandomAccessFile;
 
 public class RandomAcessFileZIMInputStream extends InputStream {
 
-	private RandomAccessFile mRAFReader;
+	private final RandomAccessFile mRAFReader;
 
 	private long mMarked = -1;
 
@@ -78,7 +78,7 @@ public class RandomAcessFileZIMInputStream extends InputStream {
 			throw new OutOfMemoryError("buffer too small");
 		} else {
 			mRAFReader.read(buffer, 0, 16);
-			return Utilities.toSixteenLittleEndianInteger(buffer);
+			return Utilities.toFourLittleEndianInteger(buffer);
 		}
 	}
 
@@ -113,7 +113,7 @@ public class RandomAcessFileZIMInputStream extends InputStream {
 	}
 
 	@Override
-	public int read(byte b[], int off, int len) throws IOException {
+	public int read(byte[] b, int off, int len) throws IOException {
 		return mRAFReader.read(b, off, len);
 	}
 

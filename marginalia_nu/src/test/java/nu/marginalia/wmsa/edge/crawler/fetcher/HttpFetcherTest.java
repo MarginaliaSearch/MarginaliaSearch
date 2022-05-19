@@ -7,8 +7,6 @@ import org.junit.jupiter.api.Test;
 
 import java.net.URISyntaxException;
 
-import static org.junit.Assert.assertTrue;
-
 class HttpFetcherTest {
 
     @SneakyThrows

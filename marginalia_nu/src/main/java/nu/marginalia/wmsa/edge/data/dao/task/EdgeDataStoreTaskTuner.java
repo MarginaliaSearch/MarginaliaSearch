@@ -34,7 +34,7 @@ public class EdgeDataStoreTaskTuner {
     private volatile double indexQualityLimit = -2.;
 
     private final HikariDataSource dataSource;
-    private Logger logger = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
     public EdgeDataStoreTaskTuner(HikariDataSource dataSource) {

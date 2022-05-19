@@ -12,7 +12,7 @@ public class HostnameProvider implements Provider<String> {
     private final int monitorPort;
     private final String monitorHost;
     private final int timeout;
-    private Logger logger = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
     public HostnameProvider(@Named("monitor-port") Integer monitorPort,

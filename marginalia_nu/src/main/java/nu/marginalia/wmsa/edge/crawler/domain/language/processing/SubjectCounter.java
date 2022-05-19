@@ -1,6 +1,5 @@
 package nu.marginalia.wmsa.edge.crawler.domain.language.processing;
 
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.wmsa.edge.crawler.domain.language.processing.model.DocumentLanguageData;
 import nu.marginalia.wmsa.edge.crawler.domain.language.processing.model.WordRep;
 import nu.marginalia.wmsa.edge.crawler.domain.language.processing.model.WordSpan;

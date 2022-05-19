@@ -5,7 +5,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import io.reactivex.rxjava3.schedulers.Schedulers;
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.auth.api.model.ApiSearchResult;
 import nu.marginalia.wmsa.auth.api.model.ApiSearchResults;
@@ -40,7 +39,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class EdgeSearchService extends Service {
@@ -68,7 +66,7 @@ public class EdgeSearchService extends Service {
     private final Gson gson = new GsonBuilder().create();
 
     private static final Logger logger = LoggerFactory.getLogger(EdgeSearchService.class);
-    volatile private int indexSize = 0;
+    private final int indexSize = 0;
 
     private final String maintenanceMessage = null;
 

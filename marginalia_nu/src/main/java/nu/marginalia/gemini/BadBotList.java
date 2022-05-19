@@ -9,7 +9,7 @@ import java.util.Set;
 
 public class BadBotList {
     private final Set<InetAddress> shitlist = new HashSet<>();
-    public static BadBotList INSTANCE = new BadBotList();
+    public static final BadBotList INSTANCE = new BadBotList();
     private final Logger logger = LoggerFactory.getLogger(getClass().getSimpleName());
 
     private BadBotList() {}

@@ -7,7 +7,7 @@ import java.io.IOException;
 
 public class BuggyStandardPageRank extends RankingAlgorithm {
 
-    public BuggyStandardPageRank(HikariDataSource dataSource, String... origins) throws IOException {
+    public BuggyStandardPageRank(HikariDataSource dataSource, String... origins) {
         super(dataSource, origins);
     }
 

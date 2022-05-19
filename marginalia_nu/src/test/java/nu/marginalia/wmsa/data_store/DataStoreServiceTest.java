@@ -37,7 +37,7 @@ class DataStoreServiceTest {
     private static HikariDataSource dataSource;
     private static EdgeDataStoreService edgeService;
 
-    static int testPort = TestUtil.getPort();
+    static final int testPort = TestUtil.getPort();
     private static EdgeDataStoreDaoImpl edgeDataStore;
 
     @SneakyThrows
@@ -106,15 +106,15 @@ class DataStoreServiceTest {
 
     @Test
     public void testUnderscore() {
-        client.offerJson(Context.internal(), String.class, "Hello World", "test", "aaa_bbb").blockingSubscribe();;
+        client.offerJson(Context.internal(), String.class, "Hello World", "test", "aaa_bbb").blockingSubscribe();
         assertEquals("Hello World",
                 client.getJson(Context.internal(), String.class, "test", "aaa_bbb").blockingFirst());
     }
 
     @Test
     public void testList() {
-        client.offerJson(Context.internal(), String.class, "Hello", "test", "aaa").blockingSubscribe();;
-        client.offerJson(Context.internal(), String.class, "World", "test", "bbb").blockingSubscribe();;
+        client.offerJson(Context.internal(), String.class, "Hello", "test", "aaa").blockingSubscribe();
+        client.offerJson(Context.internal(), String.class, "World", "test", "bbb").blockingSubscribe();
         client.offerJson(Context.internal(), String.class, "Dude", "dummy", "ccc").blockingSubscribe();
 
         List<String> allElements = new ArrayList<>();

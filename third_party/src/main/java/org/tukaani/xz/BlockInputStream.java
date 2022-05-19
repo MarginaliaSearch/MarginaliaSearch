@@ -27,7 +27,7 @@ class BlockInputStream extends InputStream {
     private long uncompressedSizeInHeader = -1;
     private long compressedSizeInHeader = -1;
     private long compressedSizeLimit;
-    private int headerSize;
+    private final int headerSize;
     private long uncompressedSize = 0;
 
     public BlockInputStream(InputStream in, Check check, int memoryLimit)

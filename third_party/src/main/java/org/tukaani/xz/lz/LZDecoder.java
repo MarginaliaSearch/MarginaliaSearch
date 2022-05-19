@@ -15,7 +15,7 @@ import java.io.IOException;
 import org.tukaani.xz.CorruptedInputException;
 
 public final class LZDecoder {
-    private byte[] buf;
+    private final byte[] buf;
     private int start = 0;
     private int pos = 0;
     private int full = 0;

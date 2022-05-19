@@ -7,7 +7,6 @@ import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import org.mariadb.jdbc.Driver;
 
-import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Path;

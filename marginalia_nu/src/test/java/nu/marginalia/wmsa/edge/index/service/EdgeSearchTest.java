@@ -95,18 +95,18 @@ public class EdgeSearchTest {
     private static WikipediaProcessor wikipediaProcessor;
     private static SearchIndexes indexes;
 
-    Logger logger = LoggerFactory.getLogger(getClass());
+    final Logger logger = LoggerFactory.getLogger(getClass());
     @SneakyThrows
     public static HikariDataSource provideConnection() {
         return getConnection();
     }
 
-    static int testPort = TestUtil.getPort();
+    static final int testPort = TestUtil.getPort();
 
-    static Initialization init = new Initialization();
+    static final Initialization init = new Initialization();
     private QueryParser parser;
     private static NGramDict dict;
-    private static LanguageModels lm = TestLanguageModels.getLanguageModels();
+    private static final LanguageModels lm = TestLanguageModels.getLanguageModels();
 
 
     @SneakyThrows
@@ -222,7 +222,7 @@ public class EdgeSearchTest {
 
 
 
-    HtmlProcessor processor = new HtmlProcessor(new DocumentKeywordExtractor(new NGramDict(lm)),new SentenceExtractor(lm));
+    final HtmlProcessor processor = new HtmlProcessor(new DocumentKeywordExtractor(new NGramDict(lm)),new SentenceExtractor(lm));
 
     @SneakyThrows
     @Test

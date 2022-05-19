@@ -20,7 +20,7 @@ package org.openzim.ZIMTypes;
 
 public class RedirectEntry extends DirectoryEntry {
 
-	int redirectIndex;
+	final int redirectIndex;
 
 	public RedirectEntry(int mimeType, char namespace, int revision,
 			int redirectIndex, String url, String title, int urlListindex) {

@@ -22,10 +22,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class ZimConverterMain {
 
-    static LinkedBlockingQueue<ConversionJob> jobQueue = new LinkedBlockingQueue<>(100);
-    static LinkedBlockingQueue<String> analysisQueue = new LinkedBlockingQueue<>(100);
+    static final LinkedBlockingQueue<ConversionJob> jobQueue = new LinkedBlockingQueue<>(100);
+    static final LinkedBlockingQueue<String> analysisQueue = new LinkedBlockingQueue<>(100);
     static boolean hasData = true;
-    static ArchiveClient archiveClient = new ArchiveClient();
+    static final ArchiveClient archiveClient = new ArchiveClient();
     static NGramDict dict = new NGramDict(new LanguageModels(
             Path.of("/var/lib/wmsa/model/ngrams-generous-emstr.bin"),
             Path.of("/var/lib/wmsa/model/tfreq-generous-emstr.bin"),
@@ -164,7 +164,7 @@ public class ZimConverterMain {
         jobQueue.put(new ConversionJob(art, url));
     }
 
-    static Map<Long, Integer> wordCount = new ConcurrentHashMap<>();
+    static final Map<Long, Integer> wordCount = new ConcurrentHashMap<>();
     static boolean isKeyword(String word) {
 
         int limit = 100_000;
@@ -190,7 +190,7 @@ public class ZimConverterMain {
         private final String url;
 
 
-        public void convert() throws IOException, InterruptedException {
+        public void convert() throws InterruptedException {
             var page = new WikiCleaner().cleanWikiJunk("https://en.wikipedia.org/wiki/" + url, data);
             String pt = Jsoup.parse(page).text();
             analysisQueue.put(pt);

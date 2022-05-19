@@ -3,9 +3,6 @@ package nu.marginalia.wmsa.auth.api;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import nu.marginalia.wmsa.auth.AuthConfigurationModule;
-import nu.marginalia.wmsa.auth.AuthMain;
-import nu.marginalia.wmsa.auth.AuthService;
 import nu.marginalia.wmsa.configuration.MainClass;
 import nu.marginalia.wmsa.configuration.ServiceDescriptor;
 import nu.marginalia.wmsa.configuration.module.ConfigurationModule;
@@ -17,7 +14,7 @@ import java.io.IOException;
 public class ApiMain extends MainClass {
 
     @Inject
-    public ApiMain(ApiService service) throws IOException {
+    public ApiMain(ApiService service) {
     }
 
     public static void main(String... args) {

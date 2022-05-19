@@ -41,9 +41,9 @@ import org.openzim.util.Utilities;
  */
 public class ZIMReader {
 
-	private ZIMFile mFile;
+	private final ZIMFile mFile;
 	private RandomAcessFileZIMInputStream mReader;
-	private int targetMime;
+	private final int targetMime;
 
 	public ZIMReader(ZIMFile file) {
 		this.mFile = file;
@@ -349,7 +349,7 @@ public class ZIMReader {
 			var firstOffset = Utilities.toFourLittleEndianInteger(buffer);
 			int numberOfBlobs = firstOffset / 4;
 
-			long offsets[] = new long[numberOfBlobs];
+			long[] offsets = new long[numberOfBlobs];
 			offsets[0] = firstOffset;
 
 			buffer = new byte[4*(numberOfBlobs-1)];

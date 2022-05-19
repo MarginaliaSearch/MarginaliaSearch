@@ -1,9 +1,6 @@
 package nu.marginalia.wmsa.edge.index.service.query;
 
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
-
-import java.util.concurrent.atomic.AtomicInteger;
 
 @RequiredArgsConstructor
 public class IndexSearchBudget {

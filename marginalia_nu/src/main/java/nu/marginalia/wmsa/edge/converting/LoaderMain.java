@@ -26,16 +26,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class LoaderMain {
 
     private final Path processDir;
-    private EdgeCrawlPlan plan;
+    private final EdgeCrawlPlan plan;
     private final ConvertedDomainReader instructionsReader;
     private final HikariDataSource dataSource;
 
     private static final Logger logger = LoggerFactory.getLogger(LoaderMain.class);
     private final LoaderFactory loaderFactory;
-    private EdgeIndexClient indexClient;
-    private volatile boolean running = true;
+    private final EdgeIndexClient indexClient;
+    private final boolean running = true;
 
-    Thread processorThread = new Thread(this::processor, "Processor Thread");
+    final Thread processorThread = new Thread(this::processor, "Processor Thread");
 
     public static void main(String... args) throws IOException {
         if (args.length != 1) {
@@ -87,7 +87,7 @@ public class LoaderMain {
     }
 
     private volatile static int loadTotal;
-    private volatile static int loaded = 0;
+    private static final int loaded = 0;
 
     private void load(String path, int cnt) {
         String first = path.substring(0, 2);
@@ -105,7 +105,7 @@ public class LoaderMain {
         }
     }
 
-    static TaskStats taskStats = new TaskStats(100);
+    static final TaskStats taskStats = new TaskStats(100);
 
     private record LoadJob(String path, Loader loader, List<Instruction> instructionList) {
         public void run() {
@@ -120,7 +120,8 @@ public class LoaderMain {
             logger.info("Loaded {}/{} : {} ({}) {}ms {} l/s", taskStats.getCount(), loadTotal, path, loader.data.sizeHint, loadTime, taskStats.avgTime());
         }
 
-    };
+    }
+
     private static final LinkedBlockingQueue<LoadJob> processQueue = new LinkedBlockingQueue<>(2);
 
     private void processor() {

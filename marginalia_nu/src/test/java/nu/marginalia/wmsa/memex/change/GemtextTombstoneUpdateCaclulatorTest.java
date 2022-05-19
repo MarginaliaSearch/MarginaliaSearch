@@ -5,7 +5,6 @@ import lombok.SneakyThrows;
 import nu.marginalia.gemini.GeminiService;
 import nu.marginalia.util.test.TestUtil;
 import nu.marginalia.wmsa.memex.*;
-import nu.marginalia.wmsa.memex.renderer.MemexHtmlRenderer;
 import nu.marginalia.wmsa.memex.model.MemexNodeUrl;
 import nu.marginalia.wmsa.memex.renderer.MemexRendererers;
 import nu.marginalia.wmsa.memex.system.MemexFileSystemModifiedTimes;
@@ -37,7 +36,7 @@ class GemtextTombstoneUpdateCaclulatorTest {
     private final String tombstonePath = "/special/tombstone.gmi";
     private final String redirectPath = "/special/redirects.gmi";
 
-    static Logger logger = LoggerFactory.getLogger(GemtextTombstoneUpdateCaclulatorTest.class);
+    static final Logger logger = LoggerFactory.getLogger(GemtextTombstoneUpdateCaclulatorTest.class);
 
     @BeforeClass
     public static void init() {

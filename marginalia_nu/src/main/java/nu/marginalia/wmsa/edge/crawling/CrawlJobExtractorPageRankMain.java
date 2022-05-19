@@ -88,7 +88,7 @@ public class CrawlJobExtractorPageRankMain {
         }
     }
 
-    private record DomainWithId(String domainName, int id) {};
+    private record DomainWithId(String domainName, int id) {}
 
     public CrawlJobExtractorPageRankMain(HikariDataSource ds) throws SQLException {
         blacklist = new EdgeDomainBlacklistImpl(ds);

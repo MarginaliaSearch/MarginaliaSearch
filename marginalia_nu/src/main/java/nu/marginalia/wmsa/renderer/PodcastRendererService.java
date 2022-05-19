@@ -35,7 +35,7 @@ public class PodcastRendererService {
     private final MustacheRenderer<PodcastListing> listingRenderer;
     private final MustacheRenderer<Podcast> podcastRenderer;
 
-    private ResourceStoreClient resourceStoreClient;
+    private final ResourceStoreClient resourceStoreClient;
 
 
     @Inject @SneakyThrows
@@ -54,7 +54,7 @@ public class PodcastRendererService {
         Spark.post("/render/podcast/listing", this::renderPodcastListing);
     }
 
-    private Object renderPodcastListing(Request request, Response response) throws IOException {
+    private Object renderPodcastListing(Request request, Response response) {
         var requestText = request.body();
         var req = gson.fromJson(requestText, PodcastListing.class);
 
@@ -70,7 +70,7 @@ public class PodcastRendererService {
     }
 
 
-    private Object renderPodcast(Request request, Response response) throws IOException {
+    private Object renderPodcast(Request request, Response response) {
         var requestText = request.body();
         var req = gson.fromJson(requestText, Podcast.class);
 
@@ -85,7 +85,7 @@ public class PodcastRendererService {
         return "";
     }
 
-    private Object renderPodcastEpisode(Request request, Response response) throws IOException {
+    private Object renderPodcastEpisode(Request request, Response response) {
         var requestText = request.body();
         var req = gson.fromJson(requestText, PodcastEpisode.class);
         Context.fromRequest(request);
@@ -100,7 +100,7 @@ public class PodcastRendererService {
         return "";
     }
 
-    private Object renderPodcastNew(Request request, Response response) throws IOException {
+    private Object renderPodcastNew(Request request, Response response) {
         var requestText = request.body();
         var req = gson.fromJson(requestText, PodcastNewEpisodes.class);
 

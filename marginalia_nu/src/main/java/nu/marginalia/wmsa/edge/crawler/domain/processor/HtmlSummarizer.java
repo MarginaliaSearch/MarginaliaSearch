@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 public class HtmlSummarizer {
-    private static Pattern extendedJunk = Pattern.compile("[^a-zA-Z0-9]{4,}");
+    private static final Pattern extendedJunk = Pattern.compile("[^a-zA-Z0-9]{4,}");
 
     private static final int MAX_CONSIDERABLE_SENTENCES = 200;
     private static final int MIN_SUMMARY_LENGTH = 20;
@@ -101,7 +101,7 @@ public class HtmlSummarizer {
             if (ret.size() > MAX_CONSIDERABLE_SENTENCES) {
                 break;
             }
-        };
+        }
 
         return ret;
     }

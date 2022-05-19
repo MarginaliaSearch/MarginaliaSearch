@@ -24,14 +24,14 @@ import static nu.marginalia.util.test.TestUtil.clearTempDir;
 public class ArchiveTest {
     static EdgeArchiveService service;
 
-    static int testPort = getPort();
+    static final int testPort = getPort();
     private static Path tempPath;
     private static Path tempPath2;
     private static ArchiveClient archiveClient;
     private static Archiver archiver;
 
     @BeforeAll
-    public static void setUpClass() throws IOException, InterruptedException {
+    public static void setUpClass() throws IOException {
         Spark.port(testPort);
         System.setProperty("service-name", "edge-archive");
         archiveClient = new ArchiveClient();

@@ -28,8 +28,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class RssCrawler {
 
 
-    static LinkedBlockingQueue<EdgeUrl> feedsQueue = new LinkedBlockingQueue<>();
-    static LinkedBlockingQueue<UploadJob> uploadQueue = new LinkedBlockingQueue<>(2);
+    static final LinkedBlockingQueue<EdgeUrl> feedsQueue = new LinkedBlockingQueue<>();
+    static final LinkedBlockingQueue<UploadJob> uploadQueue = new LinkedBlockingQueue<>(2);
 
     @AllArgsConstructor
     static class UploadJob {
@@ -59,7 +59,7 @@ public class RssCrawler {
     }
 
     @SneakyThrows
-    public void run() throws IOException {
+    public void run() {
         var rank = new BuggyStandardPageRank(dataSource, "memex.marginalia.nu");
         var nodes = rank.pageRankWithPeripheralNodes(rank.size(), false);
 

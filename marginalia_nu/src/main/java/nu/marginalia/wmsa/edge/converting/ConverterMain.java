@@ -31,7 +31,7 @@ public class ConverterMain {
     private final WorkLog processLog;
     private final CrawledInstructionWriter instructionWriter;
 
-    private Gson gson;
+    private final Gson gson;
     private final CrawledDomainReader reader = new CrawledDomainReader();
 
     private final Map<String, String> domainToId = new HashMap<>();
@@ -86,7 +86,7 @@ public class ConverterMain {
 
         var pipe = new ParallelPipe<CrawledDomain, ProcessingInstructions>("Crawler", 48, 4, 2) {
             @Override
-            protected ProcessingInstructions onProcess(CrawledDomain domainData) throws Exception {
+            protected ProcessingInstructions onProcess(CrawledDomain domainData) {
                 var processed = processor.process(domainData);
                 return new ProcessingInstructions(domainData.id, compiler.compile(processed));
             }

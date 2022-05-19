@@ -11,10 +11,10 @@ import nu.marginalia.wmsa.configuration.server.Initialization;
 import java.io.IOException;
 
 public class ResourceStoreMain extends MainClass {
-    private ResourceStoreService service;
+    private final ResourceStoreService service;
 
     @Inject
-    public ResourceStoreMain(ResourceStoreService service) throws IOException {
+    public ResourceStoreMain(ResourceStoreService service) {
         this.service = service;
 
     }

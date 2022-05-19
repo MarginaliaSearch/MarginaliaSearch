@@ -10,7 +10,7 @@ import java.io.IOException;
 public class TestAcademiaRankTool {
 
     @SneakyThrows
-    public static void main(String... args) throws IOException {
+    public static void main(String... args) {
         Driver driver = new Driver();
         var conn = new DatabaseModule().provideConnection();
 

@@ -1,9 +1,6 @@
 package nu.marginalia.wmsa.edge.crawler.domain.language;
 
-import com.google.common.collect.Sets;
 import nu.marginalia.wmsa.edge.crawler.domain.language.processing.model.DocumentLanguageData;
-import nu.marginalia.wmsa.edge.crawler.domain.language.processing.model.DocumentSentence;
-import opennlp.tools.langdetect.LanguageDetector;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,10 +9,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.text.BreakIterator;
 import java.util.*;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 
 @Singleton
 public class LanguageFilter {

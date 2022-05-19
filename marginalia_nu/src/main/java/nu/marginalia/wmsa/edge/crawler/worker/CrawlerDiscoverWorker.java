@@ -19,8 +19,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class CrawlerDiscoverWorker implements Worker {
 
-    private HttpRedirectResolver redirectResolver;
-    private TaskProvider taskProvider;
+    private final HttpRedirectResolver redirectResolver;
+    private final TaskProvider taskProvider;
     private final DomainCrawlerFactory domainCrawlerFactory;
     private final IpBlockList blockList;
     private final LinkedBlockingQueue<WorkerResults> queue;

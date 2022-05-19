@@ -19,8 +19,8 @@ package org.tukaani.xz;
 public class MemoryLimitException extends XZIOException {
     private static final long serialVersionUID = 3L;
 
-    private int memoryNeeded;
-    private int memoryLimit;
+    private final int memoryNeeded;
+    private final int memoryLimit;
 
     /**
      * Creates a new MemoryLimitException.

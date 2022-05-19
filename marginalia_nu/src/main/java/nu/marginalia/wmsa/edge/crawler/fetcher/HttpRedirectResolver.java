@@ -24,7 +24,7 @@ public class HttpRedirectResolver {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final String userAgent;
-    private Cookies cookies = new Cookies();
+    private final Cookies cookies = new Cookies();
 
     private final OkHttpClient client = createClient();
 
@@ -95,7 +95,7 @@ public class HttpRedirectResolver {
             throw new NetworkException("Bad status " + response.code());
         }
         return true;
-    };
+    }
 
     public static class BadContentType extends RuntimeException {
         public BadContentType(String type) {

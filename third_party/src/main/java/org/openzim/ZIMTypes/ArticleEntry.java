@@ -21,9 +21,9 @@ package org.openzim.ZIMTypes;
 
 public class ArticleEntry extends DirectoryEntry {
 
-	int clusterNumber;
+	final int clusterNumber;
 
-	int blobnumber;
+	final int blobnumber;
 
 	public ArticleEntry(int mimeType, char namespace, int revision,
 			int clusterNumber, int blobNumber, String url, String title,

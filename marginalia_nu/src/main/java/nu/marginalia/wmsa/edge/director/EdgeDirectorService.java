@@ -29,7 +29,7 @@ public class EdgeDirectorService extends Service {
             = Histogram.build("wmsa_edge_director_request_time", "DB Request Time")
             .labelNames("request")
             .register();
-    private Logger logger = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
     public EdgeDirectorService(@Named("service-host") String ip,

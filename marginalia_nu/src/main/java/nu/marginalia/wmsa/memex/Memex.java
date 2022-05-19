@@ -52,7 +52,7 @@ public class Memex {
                  @Named("html") MemexFileWriter htmlFiles,
                  GemtextTombstoneUpdateCaclulator tombstoneUpdateCaclulator,
                  MemexRendererers renderers,
-                 GeminiService geminiService) throws IOException {
+                 GeminiService geminiService) {
         this.data = data;
         this.monitor = monitor;
         this.gitRepo = gitRepo;

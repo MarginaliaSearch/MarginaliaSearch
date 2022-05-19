@@ -17,7 +17,7 @@ public class PortProvider implements Provider<Integer> {
     private static final Integer DEFAULT_PORT = 5000;
     private final int monitorPort;
     private final String monitorHost;
-    private Logger logger = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     private final int timeout = 10;
     @Inject
     public PortProvider(@Named("monitor-port") Integer monitorPort,

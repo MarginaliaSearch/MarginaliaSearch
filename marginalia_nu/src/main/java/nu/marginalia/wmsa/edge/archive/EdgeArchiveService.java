@@ -12,7 +12,6 @@ import nu.marginalia.wmsa.configuration.server.Service;
 import nu.marginalia.wmsa.edge.archive.archiver.ArchivedFile;
 import nu.marginalia.wmsa.edge.archive.archiver.Archiver;
 import nu.marginalia.wmsa.edge.archive.request.EdgeArchiveSubmissionReq;
-import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -21,7 +20,6 @@ import spark.Spark;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Collectors;

@@ -1,7 +1,5 @@
 package nu.marginalia.wmsa.edge.crawler.worker;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
@@ -12,14 +10,10 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -55,7 +49,7 @@ public class IpBlockList {
         logger.info("Loaded {} CIDRs", badSubnets.size());
     }
 
-    Predicate<String> numericPattern = Pattern.compile(".*\\d{4}.*").asMatchPredicate();
+    final Predicate<String> numericPattern = Pattern.compile(".*\\d{4}.*").asMatchPredicate();
 
     public boolean isAllowed(EdgeDomain domain) {
         if (domain.domain.endsWith(".cn")) {

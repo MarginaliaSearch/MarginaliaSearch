@@ -33,7 +33,7 @@ public class DictionaryHashMap {
     private final int intsPerBuffer;
     private final long maxProbeLength;
 
-    private AtomicInteger sz = new AtomicInteger(0);
+    private final AtomicInteger sz = new AtomicInteger(0);
 
     public DictionaryHashMap(long sizeMemory) {
         final int intSize = 4;

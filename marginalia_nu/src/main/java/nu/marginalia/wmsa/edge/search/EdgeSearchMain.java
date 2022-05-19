@@ -13,10 +13,10 @@ import spark.Spark;
 import java.io.IOException;
 
 public class EdgeSearchMain extends MainClass {
-    private EdgeSearchService service;
+    private final EdgeSearchService service;
 
     @Inject
-    public EdgeSearchMain(EdgeSearchService service) throws IOException {
+    public EdgeSearchMain(EdgeSearchService service) {
         this.service = service;
     }
 

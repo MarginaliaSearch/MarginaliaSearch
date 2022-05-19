@@ -2,10 +2,8 @@ package nu.marginalia.wmsa.edge.crawler.domain.language.processing.model;
 
 import gnu.trove.map.hash.TObjectIntHashMap;
 import lombok.AllArgsConstructor;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 
 import java.util.Arrays;
-import java.util.Map;
 import java.util.stream.Stream;
 
 @AllArgsConstructor

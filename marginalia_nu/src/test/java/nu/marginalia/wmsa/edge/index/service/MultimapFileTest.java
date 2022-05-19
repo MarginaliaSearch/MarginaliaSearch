@@ -39,7 +39,7 @@ class MultimapFileTest {
     void transfer() {
         ByteBuffer buf = ByteBuffer.allocateDirect(77);
         try (var source = MultimapFileLong.forOutput(tmp.toPath(), 1024);
-             var dest = new MultimapFileLong(tmp, FileChannel.MapMode.READ_WRITE, 1024, 8);
+             var dest = new MultimapFileLong(tmp, FileChannel.MapMode.READ_WRITE, 1024, 8)
         ) {
             for (int i = 0; i < 1024; i++) {
                 source.put(i, i);

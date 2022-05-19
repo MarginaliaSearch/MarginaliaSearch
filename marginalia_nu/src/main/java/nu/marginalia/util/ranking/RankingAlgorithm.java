@@ -33,12 +33,12 @@ public abstract class RankingAlgorithm {
     TIntArrayList[] linkDataSrc2Dest;
     TIntArrayList[] linkDataDest2Src;
 
-    public Set<String> originDomains = new HashSet<>();
-    public Set<Integer> originDomainIds = new HashSet<>();
+    public final Set<String> originDomains = new HashSet<>();
+    public final Set<Integer> originDomainIds = new HashSet<>();
 
     private int maxKnownUrls = Integer.MAX_VALUE;
 
-    private static boolean getNames = true;
+    private static final boolean getNames = true;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 

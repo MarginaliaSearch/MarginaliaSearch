@@ -133,8 +133,7 @@ public class LZMA2InputStream extends InputStream {
      * @param       presetDict  preset dictionary or <code>null</code>
      *                          to use no preset dictionary
      */
-    public LZMA2InputStream(InputStream in, int dictSize, byte[] presetDict)
-            throws IOException {
+    public LZMA2InputStream(InputStream in, int dictSize, byte[] presetDict) {
         this.in = new DataInputStream(in);
         this.lz = new LZDecoder(getDictSize(dictSize), presetDict);
 

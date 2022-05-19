@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public class ContentTypeParser {
 
-    static MimeTypeDetector mimeTypeDetector = new MimeTypeDetector();
+    static final MimeTypeDetector mimeTypeDetector = new MimeTypeDetector();
 
     public static EdgeContentType parse(String contentType, byte[] data) {
         return getContentTypeFromContentTypeString(contentType)

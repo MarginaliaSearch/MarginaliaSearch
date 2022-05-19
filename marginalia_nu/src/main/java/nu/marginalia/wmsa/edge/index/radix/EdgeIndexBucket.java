@@ -8,13 +8,10 @@ import nu.marginalia.wmsa.edge.index.service.index.SearchIndexReader;
 import nu.marginalia.wmsa.edge.index.service.index.SearchIndexWriter;
 import nu.marginalia.wmsa.edge.index.service.query.IndexSearchBudget;
 import nu.marginalia.wmsa.edge.index.service.query.Query;
-import nu.marginalia.wmsa.edge.model.EdgeDomain;
-import nu.marginalia.wmsa.edge.model.EdgeId;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;

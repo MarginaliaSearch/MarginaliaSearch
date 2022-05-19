@@ -38,7 +38,7 @@ public class MultimapFileLong implements AutoCloseable {
 
     private boolean loadAggressively;
 
-    private NativeIO.Advice advice = null;
+    private final NativeIO.Advice advice = null;
 
     public static MultimapFileLong forReading(Path file) throws IOException {
         long fileSize = Files.size(file);
@@ -116,7 +116,7 @@ public class MultimapFileLong implements AutoCloseable {
     public void advice(NativeIO.Advice advice) {
         for (var buffer : mappedByteBuffers) {
                 NativeIO.madvise(buffer, advice);
-        };
+        }
     }
 
     @SneakyThrows

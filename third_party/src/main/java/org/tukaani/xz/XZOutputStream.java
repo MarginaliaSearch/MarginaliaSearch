@@ -22,9 +22,9 @@ import org.tukaani.xz.index.IndexEncoder;
  */
 public class XZOutputStream extends FinishableOutputStream {
     private OutputStream out;
-    private StreamFlags streamFlags = new StreamFlags();
+    private final StreamFlags streamFlags = new StreamFlags();
     private Check check;
-    private IndexEncoder index = new IndexEncoder();
+    private final IndexEncoder index = new IndexEncoder();
     private FilterEncoder[] filters;
     private BlockOutputStream blockEncoder = null;
     private IOException exception = null;

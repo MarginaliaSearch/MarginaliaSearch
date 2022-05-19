@@ -26,7 +26,6 @@ import org.junit.jupiter.api.parallel.ResourceLock;
 import org.mockito.Mockito;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.stream.Collectors;
 
@@ -38,7 +37,7 @@ class DomainCrawlerTest2 {
 
     @SneakyThrows
     @Test
-    public void test() throws CsvValidationException, IOException {
+    public void test() {
         var fetcher = new HttpFetcher("search.marginalia.nu");
         var ingress = new EdgeIndexTask(new EdgeDomain("memex.marginalia.nu"), 0, 10, 1.);
         ingress.urls.add(new EdgeUrl("https://memex.marginalia.nu/"));

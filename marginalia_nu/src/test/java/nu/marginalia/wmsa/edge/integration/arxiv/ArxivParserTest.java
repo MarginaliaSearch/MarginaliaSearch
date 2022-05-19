@@ -5,20 +5,16 @@ import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.wmsa.edge.crawler.domain.language.conf.LanguageModels;
 import nu.marginalia.wmsa.edge.crawler.domain.language.processing.DocumentKeywordExtractor;
 import nu.marginalia.wmsa.edge.crawler.domain.language.processing.SentenceExtractor;
-import nu.marginalia.wmsa.edge.crawler.domain.language.processing.model.DocumentLanguageData;
 import nu.marginalia.wmsa.edge.integration.arxiv.model.ArxivMetadata;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @Disabled // this isn't used and the test is hella slow
 class ArxivParserTest {
-    LanguageModels lm = TestLanguageModels.getLanguageModels();
+    final LanguageModels lm = TestLanguageModels.getLanguageModels();
 
     @Test
     void parse() throws IOException {

@@ -1,6 +1,7 @@
 package com.github.datquocnguyen;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.HashMap;
 
@@ -17,7 +18,7 @@ public class RDRPOSTagger
 		this.FREQDICT = Utils.getDictionary(dictPath.toString());
 
 		BufferedReader buffer = new BufferedReader(new InputStreamReader(
-				new FileInputStream(rulesFilePath.toFile()), "UTF-8"));
+				new FileInputStream(rulesFilePath.toFile()), StandardCharsets.UTF_8));
 		String line = buffer.readLine();
 
 		this.root = new Node(new FWObject(false), "NN", null, null, null, 0);
@@ -25,7 +26,7 @@ public class RDRPOSTagger
 		Node currentNode = this.root;
 		int currentDepth = 0;
 
-		for (; (line = buffer.readLine()) != null;) {
+		while ((line = buffer.readLine()) != null) {
 			int depth = 0;
 			for (int i = 0; i <= 6; i++) { // Supposed that the maximum
 				// exception level is up to 6.

@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.stream.LongStream;
 
 public class BinSearchVsLinSearch {
-    static long[] data = LongStream.generate(() -> (long) (Long.MAX_VALUE * Math.random())).limit(512).sorted().toArray();
+    static final long[] data = LongStream.generate(() -> (long) (Long.MAX_VALUE * Math.random())).limit(512).sorted().toArray();
 
     @State(Scope.Thread)
     public static class Target {

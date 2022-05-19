@@ -20,7 +20,7 @@ public class UpdateDomainRanksTool2 {
 
     public Set<String> originDomains = new HashSet<>();
     public Set<Integer> originDomainIds = new HashSet<>();
-    public long domainIdMax = -1;
+    public final long domainIdMax = -1;
     public int domainCount;
     private volatile static int rankMax;
 
@@ -31,11 +31,11 @@ public class UpdateDomainRanksTool2 {
         return domainCount;
     }
 
-    static LinkedBlockingQueue<Integer> uploadQueue = new LinkedBlockingQueue<>(10);
+    static final LinkedBlockingQueue<Integer> uploadQueue = new LinkedBlockingQueue<>(10);
     volatile static boolean running = true;
 
     @SneakyThrows
-    public static void main(String... args) throws IOException {
+    public static void main(String... args) {
         Driver driver = new Driver();
         var conn = new DatabaseModule().provideConnection();
 

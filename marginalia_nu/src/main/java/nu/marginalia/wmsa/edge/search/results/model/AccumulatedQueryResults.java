@@ -12,7 +12,7 @@ public class AccumulatedQueryResults {
 
     private static final Logger logger = LoggerFactory.getLogger(AccumulatedQueryResults.class);
 
-    public Set<EdgeUrlDetails> results = new HashSet<>();
+    public final Set<EdgeUrlDetails> results = new HashSet<>();
 
     public void add(EdgeUrlDetails details) {
         results.add(details);

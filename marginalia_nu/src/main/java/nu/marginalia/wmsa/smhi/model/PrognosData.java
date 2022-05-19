@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 public class PrognosData {
 
-    public String crawlTime = LocalDateTime.now().toString();
+    public final String crawlTime = LocalDateTime.now().toString();
 
     public String approvedTime;
     public String referenceTime;
@@ -19,7 +19,7 @@ public class PrognosData {
 
     public Plats plats;
 
-    public List<Tidpunkt> timeSeries = new ArrayList<>();
+    public final List<Tidpunkt> timeSeries = new ArrayList<>();
 
     public String getBastFore() {
         return LocalDateTime.parse(crawlTime).atZone(ZoneId.of("Europe/Stockholm"))

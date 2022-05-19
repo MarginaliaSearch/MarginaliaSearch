@@ -3,10 +3,7 @@ package nu.marginalia.wmsa.edge.crawler.domain.language.processing.model;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Objects;
 
 @AllArgsConstructor @EqualsAndHashCode @Getter
 public class WordRep implements Comparable<WordRep> {

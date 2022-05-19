@@ -12,7 +12,6 @@ import nu.marginalia.wmsa.data_store.client.DataStoreClient;
 import nu.marginalia.wmsa.edge.crawler.worker.UploaderWorker;
 import nu.marginalia.wmsa.edge.crawler.worker.Worker;
 import nu.marginalia.wmsa.edge.crawler.worker.WorkerFactory;
-import nu.marginalia.wmsa.edge.crawler.worker.data.CrawlJobsSpecification;
 import nu.marginalia.wmsa.edge.crawler.worker.results.WorkerResults;
 import nu.marginalia.wmsa.edge.director.client.EdgeDirectorClient;
 import nu.marginalia.wmsa.edge.index.client.EdgeIndexClient;

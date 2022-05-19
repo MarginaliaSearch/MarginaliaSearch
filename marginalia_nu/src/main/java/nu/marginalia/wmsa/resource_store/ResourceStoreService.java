@@ -29,11 +29,11 @@ import java.time.ZoneOffset;
 import java.util.concurrent.TimeUnit;
 
 public class ResourceStoreService extends Service {
-    private Gson gson = new GsonBuilder().create();
-    private Logger logger = LoggerFactory.getLogger(getClass());
+    private final Gson gson = new GsonBuilder().create();
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     private final long startTime = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
 
-    private AuthClient authClient;
+    private final AuthClient authClient;
     private final ResourceEntityStore resourceStore;
 
     @Inject

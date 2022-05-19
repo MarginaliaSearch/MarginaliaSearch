@@ -39,11 +39,11 @@ public class PerusePageRankV2 {
     TIntArrayList[] linkDataSrc2Dest;
     TIntArrayList[] linkDataDest2Src;
 
-    private static boolean getNames = true;
+    private static final boolean getNames = true;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    static LinkedBlockingQueue<LinkAdjacencies> uploadQueue = new LinkedBlockingQueue<>(10);
+    static final LinkedBlockingQueue<LinkAdjacencies> uploadQueue = new LinkedBlockingQueue<>(10);
     volatile static boolean running = true;
 
     public int indexMax() {
@@ -55,7 +55,7 @@ public class PerusePageRankV2 {
     }
 
     @SneakyThrows
-    public static void main(String... args) throws IOException {
+    public static void main(String... args) {
         org.mariadb.jdbc.Driver driver = new Driver();
         var conn = new DatabaseModule().provideConnection();
         var rank = new PerusePageRankV2(conn);
@@ -83,7 +83,7 @@ public class PerusePageRankV2 {
     static class LinkAdjacencies {
         public final int id;
         public final int[] neighbors;
-    };
+    }
 
     public static void uploadThread(HikariDataSource dataSource) {
         try (var conn = dataSource.getConnection()) {
@@ -104,7 +104,7 @@ public class PerusePageRankV2 {
         }
     }
 
-    public PerusePageRankV2(HikariDataSource dataSource) throws IOException {
+    public PerusePageRankV2(HikariDataSource dataSource) {
         var blacklist = new EdgeDomainBlacklistImpl(dataSource);
         spamDomains = blacklist.getSpamDomains();
         this.dataSource = dataSource;

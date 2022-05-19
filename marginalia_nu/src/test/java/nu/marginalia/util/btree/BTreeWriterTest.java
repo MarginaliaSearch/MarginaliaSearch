@@ -20,8 +20,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class BTreeWriterTest {
 
-    BTreeContext ctx = new BTreeContext(4,  2, 0xFFFF_FFFF_FFFF_FFFFL, 3);
-    BTreeWriter writer = new BTreeWriter(null, ctx);
+    final BTreeContext ctx = new BTreeContext(4,  2, 0xFFFF_FFFF_FFFF_FFFFL, 3);
+    final BTreeWriter writer = new BTreeWriter(null, ctx);
 
     Logger logger = LoggerFactory.getLogger(getClass());
     @Test
@@ -153,7 +153,7 @@ class BTreeWriterTest {
 
                 for (int i = 0; i < 500; i++) {
                     long val = (long)(Long.MAX_VALUE * Math.random());
-                    while (toPut.contains(val)) val = (long)(Long.MAX_VALUE * Math.random());
+                    while (toPut.contains((int)val)) val = (long)(Long.MAX_VALUE * Math.random());
                     assertEquals(-1, reader.offsetForEntry(header, val));
                 }
             }

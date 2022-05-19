@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class HtmlTagCleanerTest {
 
-    HtmlTagCleaner tagCleaner = new HtmlTagCleaner();
+    final HtmlTagCleaner tagCleaner = new HtmlTagCleaner();
 
     public String cleanTag(String text) {
         var doc = Jsoup.parse(text);

@@ -5,7 +5,6 @@ import lombok.SneakyThrows;
 import nu.marginalia.gemini.GeminiService;
 import nu.marginalia.util.test.TestUtil;
 import nu.marginalia.wmsa.memex.*;
-import nu.marginalia.wmsa.memex.renderer.MemexHtmlRenderer;
 import nu.marginalia.wmsa.memex.model.MemexNodeHeadingId;
 import nu.marginalia.wmsa.memex.model.MemexNodeUrl;
 import nu.marginalia.wmsa.memex.renderer.MemexRendererers;
@@ -39,7 +38,7 @@ class GemtextChangeTest {
     private final String redirectPath = "/special/redirects.gmi";
     private final String testFilePath = "/test.gmi";
 
-    static Logger logger = LoggerFactory.getLogger(GemtextChangeTest.class);
+    static final Logger logger = LoggerFactory.getLogger(GemtextChangeTest.class);
 
     @BeforeClass
     public static void init() {

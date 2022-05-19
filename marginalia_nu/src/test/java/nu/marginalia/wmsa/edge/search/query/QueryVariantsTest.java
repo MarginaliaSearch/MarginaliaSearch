@@ -7,7 +7,6 @@ import nu.marginalia.wmsa.edge.crawler.domain.language.processing.SentenceExtrac
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.nio.file.Path;
 import java.util.List;
 
 class QueryVariantsTest {

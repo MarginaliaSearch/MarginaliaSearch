@@ -9,7 +9,6 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.hash.TIntHashSet;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import nu.marginalia.wmsa.configuration.module.DatabaseModule;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,8 +27,8 @@ public class StandardPageRank {
     private final TIntObjectHashMap<TIntArrayList> reverseLinkData = new TIntObjectHashMap<>();
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public Set<String> originDomains = new HashSet();
-    public Set<Integer> originDomainIds = new HashSet<>();
+    public final Set<String> originDomains = new HashSet<>();
+    public final Set<Integer> originDomainIds = new HashSet<>();
 
     public StandardPageRank(IntToDoubleFunction weight, String... seedDomains) throws IOException {
         originDomains.addAll(Arrays.asList(seedDomains));
@@ -45,7 +44,7 @@ public class StandardPageRank {
         return domains.get(id).name;
     }
 
-    public StandardPageRank(HikariDataSource dataSource, String... origins) throws IOException {
+    public StandardPageRank(HikariDataSource dataSource, String... origins) {
         originDomains.addAll(Arrays.asList(origins));
 
         try (var conn = dataSource.getConnection()) {

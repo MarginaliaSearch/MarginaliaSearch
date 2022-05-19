@@ -7,7 +7,6 @@ import nu.marginalia.gemini.gmi.GemtextDocument;
 import nu.marginalia.util.test.TestUtil;
 import nu.marginalia.wmsa.memex.*;
 import nu.marginalia.wmsa.memex.change.update.GemtextDocumentUpdateCalculator;
-import nu.marginalia.wmsa.memex.renderer.MemexHtmlRenderer;
 import nu.marginalia.wmsa.memex.model.MemexNodeHeadingId;
 import nu.marginalia.wmsa.memex.model.MemexNodeUrl;
 import nu.marginalia.wmsa.memex.renderer.MemexRendererers;
@@ -46,7 +45,7 @@ class GemtextTaskUpdateTest {
     private final String todoFilePath = "/todo.gmi";
     private final String doneFilePath = "/done.gmi";
 
-    static Logger logger = LoggerFactory.getLogger(GemtextTaskUpdateTest.class);
+    static final Logger logger = LoggerFactory.getLogger(GemtextTaskUpdateTest.class);
 
     @BeforeClass
     public static void init() {

@@ -241,5 +241,5 @@ public class DocumentProcessor {
         return doc.text().length();
     }
 
-    private record DetailsWithWords(ProcessedDocumentDetails details, EdgePageWordSet words) {};
+    private record DetailsWithWords(ProcessedDocumentDetails details, EdgePageWordSet words) {}
 }

@@ -84,7 +84,7 @@ public class EdgeIndexService extends Service {
 
         get("/is-blocked", this::isBlocked, gson::toJson);
 
-        Schedulers.newThread().scheduleDirect(this::initialize, 5, TimeUnit.SECONDS);
+        Schedulers.newThread().scheduleDirect(this::initialize, 1, TimeUnit.MICROSECONDS);
     }
 
     private Object getWordId(Request request, Response response) {
@@ -137,6 +137,7 @@ public class EdgeIndexService extends Service {
     volatile boolean initialized = false;
     public void initialize() {
         if (!initialized) {
+            init.waitReady();
             initialized = true;
         }
         else {
@@ -199,6 +200,7 @@ public class EdgeIndexService extends Service {
 
     private Object search(Request request, Response response) {
         if (indexes.getDictionaryReader() == null) {
+            logger.warn("Dictionary reader not yet initialized");
             halt(HttpStatus.SC_SERVICE_UNAVAILABLE, "Come back in a few minutes");
         }
 
@@ -206,8 +208,6 @@ public class EdgeIndexService extends Service {
         EdgeSearchSpecification specsSet = gson.fromJson(json, EdgeSearchSpecification.class);
 
         long start = System.currentTimeMillis();
-
-
         try {
             if (specsSet.isStagger()) {
                 return new EdgeSearchResultSet(searchStaggered(specsSet));

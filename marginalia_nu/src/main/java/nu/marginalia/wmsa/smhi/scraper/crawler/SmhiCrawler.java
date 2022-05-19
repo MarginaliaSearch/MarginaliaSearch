@@ -27,8 +27,8 @@ public class SmhiCrawler {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final Gson gson;
-    private SmhiBackendApi api;
-    private SmhiEntityStore store;
+    private final SmhiBackendApi api;
+    private final SmhiEntityStore store;
     private final List<Plats> platser;
     private Disposable job;
 

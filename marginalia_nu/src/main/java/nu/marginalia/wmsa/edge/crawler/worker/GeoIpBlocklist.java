@@ -17,13 +17,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.concurrent.ExecutionException;
 
 @Singleton
 public class GeoIpBlocklist {
     private final TreeMap<Long, GeoIpBlocklist.IpRange> ranges = new TreeMap<>();
-    private Set<String> blacklist = Set.of("CN", "HK");
-    private Set<String> graylist = Set.of("RU", "TW", "IN", "ZA", "SG", "UA");
+    private final Set<String> blacklist = Set.of("CN", "HK");
+    private final Set<String> graylist = Set.of("RU", "TW", "IN", "ZA", "SG", "UA");
 
     private final Cache<String, String> countryCache = CacheBuilder.newBuilder().maximumSize(100_000).build();
 
@@ -34,7 +33,7 @@ public class GeoIpBlocklist {
         public final long from;
         public final long to;
         public final String country;
-    };
+    }
 
     public GeoIpBlocklist() throws IOException, CsvValidationException {
         var resource = Objects.requireNonNull(ClassLoader.getSystemResourceAsStream("IP2LOCATION-LITE-DB1.CSV"),

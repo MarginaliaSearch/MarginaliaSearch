@@ -4,7 +4,6 @@ import nu.marginalia.wmsa.edge.converting.interpreter.Instruction;
 import nu.marginalia.wmsa.edge.converting.interpreter.InstructionTag;
 import nu.marginalia.wmsa.edge.converting.interpreter.Interpreter;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
-import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeUrlState;
 
 

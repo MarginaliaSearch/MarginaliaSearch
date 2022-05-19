@@ -57,8 +57,8 @@ public class QueryVariants {
 
     @Getter @ToString
     public static class QueryVariantSet {
-        List<QueryVariant> faithful = new ArrayList<>();
-        List<QueryVariant> alternative = new ArrayList<>();
+        final List<QueryVariant> faithful = new ArrayList<>();
+        final List<QueryVariant> alternative = new ArrayList<>();
 
         public boolean isEmpty() {
             return faithful.isEmpty() && alternative.isEmpty();
@@ -144,7 +144,7 @@ public class QueryVariants {
         return returnValue;
     }
 
-    Pattern underscore = Pattern.compile("_");
+    final Pattern underscore = Pattern.compile("_");
 
     private List<QueryVariant> evaluateQueries(List<List<String>> queryStrings) {
         List<QueryVariant> ret = new ArrayList<>();
@@ -177,7 +177,7 @@ public class QueryVariants {
             if (ls.size() == 1 || !isOmittableWord(span.word)) {
                 asTokens.add(span.word);
             }
-        };
+        }
         ret.add(asTokens);
 
         if (dash) {
@@ -226,7 +226,7 @@ public class QueryVariants {
             if (!didSplit) {
                 asTokens2.add(span.word);
             }
-        };
+        }
 
         if (num) {
             return List.of(asTokens2);
@@ -248,7 +248,7 @@ public class QueryVariants {
             else {
                 asTokens2.add(span.word);
             }
-        };
+        }
 
         if (dash) {
             return List.of(asTokens2);

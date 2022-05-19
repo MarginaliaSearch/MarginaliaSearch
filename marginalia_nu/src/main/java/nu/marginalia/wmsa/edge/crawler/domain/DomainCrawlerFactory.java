@@ -13,8 +13,8 @@ public class DomainCrawlerFactory {
     private final HttpFetcher fetcher;
     private final HtmlProcessor htmlProcessor;
     private final ArchiveClient archiveClient;
-    private DomainCrawlerRobotsTxt domainCrawlerRobotsTxt;
-    private LanguageFilter languageFilter;
+    private final DomainCrawlerRobotsTxt domainCrawlerRobotsTxt;
+    private final LanguageFilter languageFilter;
     private final IpBlockList blockList;
     private final PlainTextProcessor plainTextProcessor;
 

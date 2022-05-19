@@ -121,7 +121,7 @@ public final class LZMADecoder extends LZMACoder {
 
 
     private class LiteralDecoder extends LiteralCoder {
-        LiteralSubdecoder[] subdecoders;
+        final LiteralSubdecoder[] subdecoders;
 
         LiteralDecoder(int lc, int lp) {
             super(lc, lp);
@@ -162,7 +162,7 @@ public final class LZMADecoder extends LZMACoder {
                         matchBit = matchByte & offset;
                         bit = rc.decodeBit(probs, offset + matchBit + symbol);
                         symbol = (symbol << 1) | bit;
-                        offset &= (0 - bit) ^ ~matchBit;
+                        offset &= (-bit) ^ ~matchBit;
                     } while (symbol < 0x100);
                 }
 

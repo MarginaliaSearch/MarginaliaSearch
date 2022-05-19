@@ -18,7 +18,7 @@ import org.tukaani.xz.common.EncoderUtil;
 import org.tukaani.xz.XZIOException;
 
 public class IndexEncoder extends IndexBase {
-    private ArrayList records = new ArrayList();
+    private final ArrayList<IndexRecord> records = new ArrayList<>();
 
     public IndexEncoder() {
         super(new XZIOException("XZ Stream or its Index has grown too big"));

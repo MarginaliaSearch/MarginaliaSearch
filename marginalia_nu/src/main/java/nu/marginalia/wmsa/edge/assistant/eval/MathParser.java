@@ -22,7 +22,7 @@ public class MathParser {
     private final NumberFormat df;
     static final Map<String, Double> constants = Map.of("e", Math.E, "pi", Math.PI, "2pi", 2*Math.PI);
 
-    Predicate<String> isTrivial = Pattern.compile("([0-9]+\\.[0-9]*|\\.[0-9]+)").asMatchPredicate();
+    final Predicate<String> isTrivial = Pattern.compile("([0-9]+\\.[0-9]*|\\.[0-9]+)").asMatchPredicate();
 
     public MathParser() {
          df = DecimalFormat.getInstance(Locale.US);
@@ -30,7 +30,7 @@ public class MathParser {
          df.setMaximumFractionDigits(6);
     }
 
-    public String evalFormatted(String inputExpression) throws ParseException {
+    public String evalFormatted(String inputExpression) {
         if (isTrivial.test(inputExpression)) {
             return "";
         }

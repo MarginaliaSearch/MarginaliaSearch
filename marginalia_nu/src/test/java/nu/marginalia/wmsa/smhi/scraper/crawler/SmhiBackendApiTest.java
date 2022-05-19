@@ -7,8 +7,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 class SmhiBackendApiTest {
 
     @Test

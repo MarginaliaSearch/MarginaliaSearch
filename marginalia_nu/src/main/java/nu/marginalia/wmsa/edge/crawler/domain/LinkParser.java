@@ -1,7 +1,6 @@
 package nu.marginalia.wmsa.edge.crawler.domain;
 
 import com.google.common.base.CharMatcher;
-import io.reactivex.rxjava3.core.Maybe;
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import org.jetbrains.annotations.Contract;
@@ -100,7 +99,7 @@ public class LinkParser {
         return url;
     }
 
-    private static Pattern paramRegex = Pattern.compile("\\?.*$");
+    private static final Pattern paramRegex = Pattern.compile("\\?.*$");
     @SneakyThrows
     private String resolveUrl(EdgeUrl baseUrl, String s) {
         s = paramRegex.matcher(s).replaceAll("");

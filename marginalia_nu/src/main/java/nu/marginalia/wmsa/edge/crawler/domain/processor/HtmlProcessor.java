@@ -130,7 +130,7 @@ public class HtmlProcessor {
                 rawPageContent.ip);
     }
 
-    List<String> trackers = List.of("adform.net",
+    final List<String> trackers = List.of("adform.net",
             "connect.facebook",
             "googletagmanager.com",
             "googlesyndication.com",

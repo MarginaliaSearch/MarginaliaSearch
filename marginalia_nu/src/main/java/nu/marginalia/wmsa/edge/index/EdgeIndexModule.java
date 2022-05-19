@@ -5,10 +5,7 @@ import com.google.inject.Provides;
 import com.google.inject.name.Names;
 import nu.marginalia.wmsa.configuration.WmsaHome;
 import nu.marginalia.wmsa.edge.index.model.RankingSettings;
-import org.yaml.snakeyaml.Yaml;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class EdgeIndexModule extends AbstractModule {

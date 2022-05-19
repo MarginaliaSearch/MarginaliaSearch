@@ -1,7 +1,6 @@
 package nu.marginalia.wmsa.edge.archive.archiver;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
+
 import java.nio.file.Path;
 
 public class ArchiverTest {

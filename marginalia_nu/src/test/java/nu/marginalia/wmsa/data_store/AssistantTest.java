@@ -22,7 +22,6 @@ import org.junit.jupiter.api.parallel.ResourceLock;
 import spark.Spark;
 
 import static nu.marginalia.util.TestUtil.getConnection;
-import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -35,7 +34,7 @@ class AssistantTest {
 
     private static HikariDataSource dataSource;
 
-    static int testPort = TestUtil.getPort();
+    static final int testPort = TestUtil.getPort();
 
     @SneakyThrows
     public static HikariDataSource provideConnection() {
@@ -143,7 +142,7 @@ class AssistantTest {
     public void testConvertUnitsWeirdError() {
         try {
             client.unitConversion(Context.internal(), "500", "kg", "meters").blockingFirst();
-            fail("Wanted exception");
+            Assertions.fail("Wanted exception");
         }
         catch (RemoteException ex) {
 

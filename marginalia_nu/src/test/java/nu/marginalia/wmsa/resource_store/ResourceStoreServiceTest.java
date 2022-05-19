@@ -25,10 +25,10 @@ class ResourceStoreServiceTest {
     static ResourceStoreService service;
     static ResourceStoreClient client;
 
-    static int testPort = TestUtil.getPort();
+    static final int testPort = TestUtil.getPort();
     static ResourceEntityStore resourceStore;
     static Path tempDir;
-    private static Logger logger = LoggerFactory.getLogger(ResourceStoreServiceTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(ResourceStoreServiceTest.class);
 
     @SneakyThrows
     @BeforeAll
@@ -63,14 +63,14 @@ class ResourceStoreServiceTest {
     }
 
     @Test
-    public void sunnyDay() throws IOException {
+    public void sunnyDay() {
         client.putResource(Context.internal(), "test", new RenderedResource("index.html",  LocalDateTime.MAX,"Hello World")).blockingSubscribe();
         assertEquals("Hello World", client.getResource(Context.internal(),"test", "index.html").blockingFirst());
     }
 
 
     @Test
-    public void loadFromDisk() throws IOException, InterruptedException {
+    public void loadFromDisk() throws InterruptedException {
         client.putResource(Context.internal(), "test", new RenderedResource("index.html",  LocalDateTime.MAX,"Hello World")).blockingSubscribe();
         client.putResource(Context.internal(), "test", new RenderedResource("expired.html",  LocalDateTime.now().minusDays(14),"Hello World")).blockingSubscribe();
 
@@ -85,7 +85,7 @@ class ResourceStoreServiceTest {
     }
 
     @Test
-    public void testReaper() throws IOException {
+    public void testReaper() {
         client.putResource(Context.internal(), "test", new RenderedResource("index.html",  LocalDateTime.now().minusDays(14),"Hello World")).blockingSubscribe();
         assertEquals("Hello World", client.getResource(Context.internal(),"test", "index.html").blockingFirst());
 
@@ -100,7 +100,7 @@ class ResourceStoreServiceTest {
 
 
     @Test
-    public void update() throws IOException {
+    public void update() {
         client.putResource(Context.internal(), "test", new RenderedResource("index.html", LocalDateTime.MAX,"Hello World")).blockingSubscribe();
         assertEquals("Hello World", client.getResource(Context.internal(),"test", "index.html").blockingFirst());
         client.putResource(Context.internal(), "test", new RenderedResource("index.html", LocalDateTime.MAX,"Hello World 2")).blockingSubscribe();
@@ -108,7 +108,7 @@ class ResourceStoreServiceTest {
     }
 
     @Test
-    public void missing() throws IOException {
+    public void missing() {
         var ret = client
                 .getResource(Context.internal(), "test", "invalid.html")
                 .onErrorReturnItem("Error")

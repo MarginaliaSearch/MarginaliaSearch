@@ -97,7 +97,7 @@ public class CrawlJobExtractorMain {
         }
     }
 
-    private record DomainWithId(String domainName, int id) {};
+    private record DomainWithId(String domainName, int id) {}
 
     private Stream<CrawlingSpecification> extractDomains() {
         List<DomainWithId> ids = new ArrayList<>(100_000);

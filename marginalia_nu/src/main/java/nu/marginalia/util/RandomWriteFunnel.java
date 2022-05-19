@@ -23,7 +23,7 @@ public class RandomWriteFunnel implements AutoCloseable {
     private final static Gauge transfer_rate = Gauge.build("wmsa_rwf_transfer_bytes", "Bytes/s")
             .register();
     private static final Logger logger = LoggerFactory.getLogger(RandomWriteFunnel.class);
-    private DataBin[] bins;
+    private final DataBin[] bins;
 
     private final int binSize;
 
@@ -72,7 +72,7 @@ public class RandomWriteFunnel implements AutoCloseable {
 
     static class DataBin implements AutoCloseable {
         private final ByteBuffer buffer;
-        private int size;
+        private final int size;
         private final FileChannel channel;
         private final File file;
 

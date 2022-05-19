@@ -6,8 +6,6 @@ import nu.marginalia.wmsa.edge.assistant.dict.WikiArticles;
 import nu.marginalia.wmsa.edge.model.search.EdgeUrlDetails;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeUserSearchParameters;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @AllArgsConstructor @Getter

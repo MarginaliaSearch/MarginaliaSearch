@@ -17,7 +17,7 @@ class SearchIndexConverterTest {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Test @Disabled
-    public void test() throws IOException {
+    public void test() {
       //  File dictFile = new File("/home/vlofgren/dictionary.dat");
         File inFile = new File("/home/vlofgren/Work/converter/3/page-index.dat");
 
@@ -29,7 +29,7 @@ class SearchIndexConverterTest {
     }
 
     @Test @Disabled
-    public void sanityCheck() throws IOException {
+    public void sanityCheck() {
         File inFile = new File("/home/vlofgren/write/6/page-index.dat");
 
 //        SearchIndexReader sir = new SearchIndexReader(new SearchIndex[]{

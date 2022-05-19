@@ -33,15 +33,15 @@ import java.util.regex.Pattern;
 
 public class SymSpell
 {
-    private int editDistanceMax=2;
-    private int verbose = 1;
+    private final int editDistanceMax=2;
+    private final int verbose = 1;
     //0: top suggestion
     //1: all suggestions of smallest edit distance
     //2: all suggestions <= editDistanceMax (slower, no early termination)
 
     public static class dictionaryItem
     {
-        public List<Integer> suggestions = new ArrayList<Integer>();
+        public final List<Integer> suggestions = new ArrayList<Integer>();
         public int count = 0;
     }
 
@@ -67,10 +67,10 @@ public class SymSpell
     //Dictionary that contains both the original words and the deletes derived from them. A term might be both word and delete from another word at the same time.
     //For space reduction a item might be either of type dictionaryItem or Int.
     //A dictionaryItem is used for word, word/delete, and delete with multiple suggestions. Int is used for deletes with a single suggestion (the majority of entries).
-    private HashMap<String, Object> dictionary = new HashMap<String, Object>(); //initialisierung
+    private final HashMap<String, Object> dictionary = new HashMap<String, Object>(); //initialisierung
 
     //List of unique words. By using the suggestions (Int) as index for this list they are translated into the original String.
-    private List<String> wordlist = new ArrayList<String>();
+    private final List<String> wordlist = new ArrayList<String>();
 
     //create a non-unique wordlist from sample text
     //language independent (e.g. works with Chinese characters)
@@ -301,7 +301,7 @@ public class SymSpell
                             //Example: (bank==bnak and bank==bink, but bank!=kanb and bank!=xban and bank!=baxn for editDistanceMaxe=1)
                             //Two deletes on each side of a pair makes them all equal, but the first two pairs have edit distance=1, the others edit distance=2.
                             int distance = 0;
-                            if (suggestion != input)
+                            if (!suggestion.equals(input))
                             {
                                 if (suggestion.length() == candidate.length()) distance = input.length() - candidate.length();
                                 else if (input.length() == candidate.length()) distance = suggestion.length() - candidate.length();

@@ -13,7 +13,7 @@ import java.io.IOException;
 public class AuthMain extends MainClass {
 
     @Inject
-    public AuthMain(AuthService service) throws IOException {
+    public AuthMain(AuthService service) {
     }
 
     public static void main(String... args) {

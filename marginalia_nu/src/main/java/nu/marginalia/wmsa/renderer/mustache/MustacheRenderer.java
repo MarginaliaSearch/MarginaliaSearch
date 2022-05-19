@@ -9,14 +9,12 @@ import nu.marginalia.gemini.gmi.GemtextDocument;
 import nu.marginalia.wmsa.memex.model.MemexNodeUrl;
 import nu.marginalia.wmsa.memex.model.render.MemexRendererIndexModel;
 import nu.marginalia.wmsa.memex.model.render.MemexRendererViewModel;
-import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -116,7 +114,7 @@ public class MustacheRenderer<T> {
                         List.of(p, name, type)
                         );
                 sb.append(options.fn(newCtx));
-            };
+            }
             return sb.toString();
         }
     }

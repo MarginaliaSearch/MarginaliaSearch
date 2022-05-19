@@ -10,7 +10,7 @@
 package org.tukaani.xz.check;
 
 public class SHA256 extends Check {
-    private java.security.MessageDigest sha256;
+    private final java.security.MessageDigest sha256;
 
     public SHA256() throws java.security.NoSuchAlgorithmException {
         size = 32;

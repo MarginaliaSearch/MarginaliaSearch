@@ -10,7 +10,7 @@ import nu.marginalia.wmsa.configuration.module.DatabaseModule;
 import nu.marginalia.wmsa.configuration.server.Initialization;
 
 public class EdgeAssistantMain extends MainClass {
-    private EdgeAssistantService service;
+    private final EdgeAssistantService service;
 
     @Inject
     public EdgeAssistantMain(EdgeAssistantService service) {

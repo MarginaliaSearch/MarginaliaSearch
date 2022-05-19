@@ -28,7 +28,7 @@ import java.util.zip.GZIPInputStream;
 public class EdgeDataStoreService {
 
     private final EdgeDataStoreDao dataStore;
-    private Gson gson = new GsonBuilder().create();
+    private final Gson gson = new GsonBuilder().create();
 
 
     static final Histogram request_time_metrics
@@ -184,7 +184,7 @@ public class EdgeDataStoreService {
         return new DomainInformation(domain, blacklisted, pagesKnown, pagesVisited, pagesIndexed, incomingLinks, outboundLinks, nominalQuality, rank, state, linkingDomains);
     }
 
-    private EdgeId<EdgeDomain> getDomainFromPartial(String site) throws URISyntaxException {
+    private EdgeId<EdgeDomain> getDomainFromPartial(String site) {
         try {
             return dataStore.getDomainId(new EdgeDomain(site));
         }

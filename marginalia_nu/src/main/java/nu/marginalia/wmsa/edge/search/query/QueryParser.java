@@ -425,4 +425,4 @@ enum TokenType {
     LITERAL_TERM,
     QUOT_TERM,
     EXCLUDE_TERM,
-};
+}

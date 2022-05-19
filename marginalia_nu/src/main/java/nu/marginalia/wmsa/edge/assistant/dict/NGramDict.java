@@ -2,8 +2,6 @@ package nu.marginalia.wmsa.edge.assistant.dict;
 
 import ca.rmen.porterstemmer.PorterStemmer;
 import gnu.trove.map.hash.TLongIntHashMap;
-import gnu.trove.map.hash.TLongLongHashMap;
-import gnu.trove.set.hash.TLongHashSet;
 import nu.marginalia.wmsa.edge.crawler.domain.language.conf.LanguageModels;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +10,6 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -26,7 +23,7 @@ public class NGramDict {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private static final Pattern separator = Pattern.compile("[_ ]+");
-    private static PorterStemmer ps = new PorterStemmer();
+    private static final PorterStemmer ps = new PorterStemmer();
 
     private static long fileSize(Path p) throws IOException {
         return Files.size(p);

@@ -10,7 +10,7 @@ public enum HtmlFeature {
     COOKIES(4)
     ;
 
-    public int bit;
+    public final int bit;
 
     HtmlFeature(int bit) {
         this.bit = bit;

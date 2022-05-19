@@ -6,8 +6,8 @@ package com.github.datquocnguyen;
  */
 public class WordTag
 {
-	public String word;
-	public String tag;
+	public final String word;
+	public final String tag;
 
 	public WordTag(String iword, String itag)
 	{

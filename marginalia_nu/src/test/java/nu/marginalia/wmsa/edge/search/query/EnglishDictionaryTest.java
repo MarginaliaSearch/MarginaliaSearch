@@ -5,10 +5,6 @@ import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.wmsa.edge.crawler.domain.language.conf.LanguageModels;
 import org.junit.jupiter.api.Test;
 
-import java.nio.file.Path;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 class EnglishDictionaryTest {
 
     @Test

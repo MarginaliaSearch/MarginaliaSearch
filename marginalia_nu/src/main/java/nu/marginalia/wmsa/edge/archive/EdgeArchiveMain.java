@@ -10,7 +10,7 @@ import nu.marginalia.wmsa.configuration.module.DatabaseModule;
 import nu.marginalia.wmsa.configuration.server.Initialization;
 
 public class EdgeArchiveMain extends MainClass {
-    private EdgeArchiveService service;
+    private final EdgeArchiveService service;
 
     @Inject
     public EdgeArchiveMain(EdgeArchiveService service) {

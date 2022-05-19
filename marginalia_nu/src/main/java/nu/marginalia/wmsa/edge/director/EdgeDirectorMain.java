@@ -12,10 +12,10 @@ import nu.marginalia.wmsa.configuration.server.Initialization;
 import java.io.IOException;
 
 public class EdgeDirectorMain extends MainClass {
-    private EdgeDirectorService service;
+    private final EdgeDirectorService service;
 
     @Inject
-    public EdgeDirectorMain(EdgeDirectorService service) throws IOException {
+    public EdgeDirectorMain(EdgeDirectorService service) {
         this.service = service;
     }
 

@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 @Singleton
 public class SearchIndexDao {
     private final HikariDataSource dataSource;
-    private RankingSettings rankingSettings;
+    private final RankingSettings rankingSettings;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject

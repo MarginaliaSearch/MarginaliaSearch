@@ -12,7 +12,6 @@ import nu.marginalia.wmsa.resource_store.model.RenderedResource;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -22,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 public class StatusRendererService {
     private final MustacheRenderer<Object> statusRenderer;
-    private ResourceStoreClient resourceStoreClient;
+    private final ResourceStoreClient resourceStoreClient;
 
     private final OkHttpClient client;
 

@@ -16,7 +16,6 @@ import nu.marginalia.wmsa.edge.archive.EdgeArchiveService;
 import nu.marginalia.wmsa.edge.archive.client.ArchiveClient;
 import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.wmsa.edge.crawler.domain.language.LanguageFilter;
-import nu.marginalia.wmsa.edge.crawler.domain.language.conf.LanguageModels;
 import nu.marginalia.wmsa.edge.crawler.domain.language.processing.DocumentKeywordExtractor;
 import nu.marginalia.wmsa.edge.crawler.domain.language.processing.SentenceExtractor;
 import nu.marginalia.wmsa.edge.crawler.domain.processor.HtmlProcessor;
@@ -49,7 +48,6 @@ import spark.Spark;
 
 import java.net.URISyntaxException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -76,12 +74,12 @@ class DomainCrawlerTest {
     private static HikariDataSource dataSource;
     private static EdgeDataStoreService edgeService;
 
-    static int testPort = TestUtil.getPort();
+    static final int testPort = TestUtil.getPort();
     private static EdgeDataStoreDaoImpl edgeDataStore;
     private static WorkerFactory workerFactory;
     private static ArchiveClient archiveClient;
 
-    private List<CrawlJobsSpecification> crawlJobsSpecifications
+    private final List<CrawlJobsSpecification> crawlJobsSpecifications
             = List.of(
             new CrawlJobsSpecification(0),
             new CrawlJobsSpecification(0),
@@ -101,8 +99,8 @@ class DomainCrawlerTest {
             new CrawlJobsSpecification(50)
     );
 
-    static LinkedList<EdgeIndexTask> indexTasks = new LinkedList<>();
-    static LinkedList<EdgeIndexTask> discoverTasks = new LinkedList<>();
+    static final LinkedList<EdgeIndexTask> indexTasks = new LinkedList<>();
+    static final LinkedList<EdgeIndexTask> discoverTasks = new LinkedList<>();
 
     @SneakyThrows
     public static HikariDataSource provideConnection() {

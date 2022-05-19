@@ -15,7 +15,7 @@ public class SmhiScraperMain extends MainClass {
     private final SmhiScraperService service;
 
     @Inject
-    public SmhiScraperMain(SmhiScraperService service) throws IOException {
+    public SmhiScraperMain(SmhiScraperService service) {
         this.service = service;
     }
 

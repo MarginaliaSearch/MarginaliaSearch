@@ -25,7 +25,7 @@ public class StackOverflowPostsReader extends DefaultHandler {
     private final EdgeDomain domain;
     private final Consumer<StackOverflowPost> postConsumer;
 
-    private Deque<StackOverflowQuestionData> questionWindow = new LinkedList<>();
+    private final Deque<StackOverflowQuestionData> questionWindow = new LinkedList<>();
     private final TIntObjectHashMap<StackOverflowQuestionData> questionsById = new TIntObjectHashMap<>(1_000_000);
 
     public StackOverflowPostsReader(String postsFile, EdgeDomain domain, Consumer<StackOverflowPost> postConsumer) {

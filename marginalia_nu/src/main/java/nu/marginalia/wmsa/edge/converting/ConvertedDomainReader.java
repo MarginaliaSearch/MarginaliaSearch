@@ -2,13 +2,10 @@ package nu.marginalia.wmsa.edge.converting;
 
 import com.github.luben.zstd.ZstdInputStream;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonSyntaxException;
 import crawlercommons.utils.Strings;
 import nu.marginalia.wmsa.edge.converting.interpreter.Instruction;
 import nu.marginalia.wmsa.edge.converting.interpreter.InstructionTag;
-import nu.marginalia.wmsa.edge.crawling.model.CrawledDomain;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +15,6 @@ import java.io.*;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 public class ConvertedDomainReader {
     private static final Logger logger = LoggerFactory.getLogger(ConvertedDomainReader.class);

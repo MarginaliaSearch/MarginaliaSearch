@@ -120,7 +120,7 @@ public class LZMA2Options extends FilterOptions {
         return LZMA2InputStream.getMemoryUsage(dictSize);
     }
 
-    public InputStream getInputStream(InputStream in) throws IOException {
+    public InputStream getInputStream(InputStream in) {
         return new LZMA2InputStream(in, dictSize);
     }
 

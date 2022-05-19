@@ -13,10 +13,10 @@ import spark.Spark;
 import java.io.IOException;
 
 public class DatingMain extends MainClass {
-    DatingService service;
+    final DatingService service;
 
     @Inject
-    public DatingMain(DatingService service) throws IOException {
+    public DatingMain(DatingService service) {
         this.service = service;
     }
 
