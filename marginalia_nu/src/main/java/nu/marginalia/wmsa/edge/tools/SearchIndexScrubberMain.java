@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.edge.index.service.index;
+package nu.marginalia.wmsa.edge.tools;
 
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import org.slf4j.Logger;
