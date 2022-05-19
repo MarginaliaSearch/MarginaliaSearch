@@ -2,6 +2,7 @@ package nu.marginalia.wmsa.edge.index.service;
 
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
+import nu.marginalia.util.TestLanguageModels;
 import nu.marginalia.util.TestUtil;
 import nu.marginalia.wmsa.configuration.ServiceDescriptor;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
@@ -69,15 +70,7 @@ public class EdgeSearchTestLocal {
     static Initialization init = new Initialization();
     private QueryParser parser;
     private static NGramDict dict;
-    private static LanguageModels lm = new LanguageModels(
-            Path.of("/home/vlofgren/Work/ngrams/ngrams-generous-emstr.bin"),
-            Path.of("/home/vlofgren/Work/ngrams/tfreq-new-algo3.bin"),
-            Path.of("/home/vlofgren/Work/ngrams/opennlp-en-ud-ewt-sentence-1.0-1.9.3.bin"),
-            Path.of("/home/vlofgren/Work/ngrams/English.RDR"),
-            Path.of("/home/vlofgren/Work/ngrams/English.DICT"),
-            Path.of("/home/vlofgren/Work/ngrams/opennlp-en-ud-ewt-tokens-1.0-1.9.3.bin")
-    );
-
+    private static LanguageModels lm = TestLanguageModels.getLanguageModels();
 
     @SneakyThrows
     @BeforeAll

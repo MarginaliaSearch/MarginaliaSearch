@@ -1,5 +1,6 @@
 package nu.marginalia.wmsa.edge.crawler.domain.processor;
 
+import nu.marginalia.util.TestLanguageModels;
 import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.wmsa.edge.crawler.domain.language.conf.LanguageModels;
 import nu.marginalia.wmsa.edge.crawler.domain.language.processing.DocumentKeywordExtractor;
@@ -24,14 +25,7 @@ import java.util.List;
 class HtmlProcessorTest {
     Logger logger = LoggerFactory.getLogger(getClass());
 
-    LanguageModels lm = new LanguageModels(
-            Path.of("/home/vlofgren/Work/ngrams/ngrams-generous-emstr.bin"),
-            Path.of("/home/vlofgren/Work/ngrams/tfreq-generous-emstr.bin"),
-            Path.of("/home/vlofgren/Work/ngrams/opennlp-sentence.bin"),
-            Path.of("/var/lib/wmsa/model/English.RDR"),
-            Path.of("/var/lib/wmsa/model/English.DICT"),
-            Path.of("/home/vlofgren/Work/ngrams/opennlp-tok.bin")
-    );
+    LanguageModels lm = TestLanguageModels.getLanguageModels();
     HtmlProcessor processor = new HtmlProcessor(new DocumentKeywordExtractor(new NGramDict(lm)),new SentenceExtractor(lm));
 
     @Test

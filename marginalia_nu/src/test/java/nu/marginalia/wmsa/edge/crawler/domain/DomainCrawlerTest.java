@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import io.reactivex.rxjava3.exceptions.UndeliverableException;
 import io.reactivex.rxjava3.plugins.RxJavaPlugins;
 import lombok.SneakyThrows;
+import nu.marginalia.util.TestLanguageModels;
 import nu.marginalia.util.TestUtil;
 import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.configuration.server.Initialization;
@@ -150,14 +151,7 @@ class DomainCrawlerTest {
 
         languageFilter = new LanguageFilter();
 
-        var lm = new LanguageModels(
-                Path.of("/var/lib/wmsa/model/ngrams-generous-emstr.bin"),
-                Path.of("/var/lib/wmsa/model/tfreq-generous-emstr.bin"),
-                Path.of("/var/lib/wmsa/model/opennlp-sentence.bin"),
-                Path.of("/var/lib/wmsa/model/English.RDR"),
-                Path.of("/var/lib/wmsa/model/English.DICT"),
-                Path.of("/var/lib/wmsa/model/opennlp-tok.bin")
-        );
+        var lm = TestLanguageModels.getLanguageModels();
 
         var ke = new DocumentKeywordExtractor(new NGramDict(lm));
         var se = new SentenceExtractor(lm);

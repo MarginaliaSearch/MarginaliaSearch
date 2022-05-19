@@ -2,6 +2,7 @@ package nu.marginalia.wmsa.edge.crawler.domain;
 
 import com.opencsv.exceptions.CsvValidationException;
 import lombok.SneakyThrows;
+import nu.marginalia.util.TestLanguageModels;
 import nu.marginalia.wmsa.edge.archive.client.ArchiveClient;
 import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.wmsa.edge.crawler.domain.language.LanguageFilter;
@@ -42,14 +43,7 @@ class DomainCrawlerTest2 {
         var ingress = new EdgeIndexTask(new EdgeDomain("memex.marginalia.nu"), 0, 10, 1.);
         ingress.urls.add(new EdgeUrl("https://memex.marginalia.nu/"));
 
-        LanguageModels lm = new LanguageModels(
-                Path.of("/home/vlofgren/Work/ngrams/ngrams-generous-emstr.bin"),
-                Path.of("/home/vlofgren/Work/ngrams/tfreq-generous-emstr.bin"),
-                Path.of("/home/vlofgren/Work/ngrams/opennlp-en-ud-ewt-sentence-1.0-1.9.3.bin"),
-                Path.of("/home/vlofgren/Work/ngrams/English.RDR"),
-                Path.of("/home/vlofgren/Work/ngrams/English.DICT"),
-                Path.of("/home/vlofgren/Work/ngrams/opennlp-tok.bin")
-        );
+        LanguageModels lm = TestLanguageModels.getLanguageModels();
         var dict = new NGramDict(lm);
         HtmlProcessor processor = new HtmlProcessor(new DocumentKeywordExtractor(dict),new SentenceExtractor(lm));
 

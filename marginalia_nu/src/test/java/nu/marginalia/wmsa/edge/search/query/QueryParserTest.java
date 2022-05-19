@@ -1,5 +1,6 @@
 package nu.marginalia.wmsa.edge.search.query;
 
+import nu.marginalia.util.TestLanguageModels;
 import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.wmsa.edge.crawler.domain.language.conf.LanguageModels;
 import org.junit.BeforeClass;
@@ -13,14 +14,7 @@ class QueryParserTest {
     private QueryParser parser;
     private static NGramDict dict;
     private static EnglishDictionary englishDictionary;
-    private static LanguageModels lm = new LanguageModels(
-            Path.of("/home/vlofgren/Work/ngrams/ngrams-generous-emstr.bin"),
-            Path.of("/home/vlofgren/Work/ngrams/tfreq-new-algo4.bin"),
-            Path.of("/home/vlofgren/Work/ngrams/opennlp-en-ud-ewt-sentence-1.0-1.9.3.bin"),
-            Path.of("/home/vlofgren/Work/ngrams/English.RDR"),
-            Path.of("/home/vlofgren/Work/ngrams/English.DICT"),
-            Path.of("/home/vlofgren/Work/ngrams/opennlp-en-ud-ewt-tokens-1.0-1.9.3.bin")
-    );
+    private static LanguageModels lm = TestLanguageModels.getLanguageModels();
 
     @BeforeEach
     public void setUp() {

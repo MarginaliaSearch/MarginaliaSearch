@@ -3,6 +3,7 @@ package nu.marginalia.wmsa.edge.crawler.domain.language.processing;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
+import nu.marginalia.util.TestLanguageModels;
 import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.wmsa.edge.crawler.domain.language.conf.LanguageModels;
 import nu.marginalia.wmsa.edge.crawler.domain.language.processing.model.WordRep;
@@ -28,14 +29,7 @@ import java.util.regex.Pattern;
 class SentenceExtractorTest {
     SentenceExtractor newSe;
     SentenceExtractor legacySe;
-    LanguageModels lm = new LanguageModels(
-            Path.of("/home/vlofgren/Work/ngrams/ngrams-generous-emstr.bin"),
-            Path.of("/home/vlofgren/Work/ngrams/tfreq-new-algo4.bin"),
-            Path.of("/home/vlofgren/Work/ngrams/opennlp-en-ud-ewt-sentence-1.0-1.9.3.bin"),
-            Path.of("/home/vlofgren/Work/ngrams/English.RDR"),
-            Path.of("/home/vlofgren/Work/ngrams/English.DICT"),
-            Path.of("/home/vlofgren/Work/ngrams/opennlp-en-ud-ewt-tokens-1.0-1.9.3.bin")
-    );
+    LanguageModels lm = TestLanguageModels.getLanguageModels();
     @BeforeEach
     public void setUp() {
 
