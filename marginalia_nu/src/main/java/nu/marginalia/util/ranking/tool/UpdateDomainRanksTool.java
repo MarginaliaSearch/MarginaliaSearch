@@ -1,9 +1,9 @@
-package nu.marginalia.wmsa.edge.index.service.util.ranking.tool;
+package nu.marginalia.util.ranking.tool;
 
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
+import nu.marginalia.util.ranking.BuggyStandardPageRank;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
-import nu.marginalia.wmsa.edge.index.service.util.ranking.BuggyStandardPageRank;
 import org.mariadb.jdbc.Driver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

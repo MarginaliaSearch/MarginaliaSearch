@@ -1,8 +1,8 @@
-package nu.marginalia.wmsa.edge.index.service.util.ranking.tool;
+package nu.marginalia.util.ranking.tool;
 
 import lombok.SneakyThrows;
+import nu.marginalia.util.ranking.AcademiaRank;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
-import nu.marginalia.wmsa.edge.index.service.util.ranking.AcademiaRank;
 import org.mariadb.jdbc.Driver;
 
 import java.io.IOException;

@@ -1,8 +1,7 @@
-package nu.marginalia.wmsa.edge.index.service.util.ranking;
+package nu.marginalia.util.ranking;
 
 
 import com.zaxxer.hikari.HikariDataSource;
-import gnu.trove.list.array.TIntArrayList;
 
 import java.io.IOException;
 

@@ -6,6 +6,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
 import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklist;
 import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklistImpl;
+import nu.marginalia.wmsa.edge.index.model.RankingSettings;
 import nu.marginalia.wmsa.edge.index.service.SearchIndexDao;
 import nu.marginalia.wmsa.edge.index.service.query.SearchIndexPartitioner;
 import org.mariadb.jdbc.Driver;
@@ -58,7 +59,7 @@ public class IndexMergerMain {
         }
 
         var hikari = new DatabaseModule().provideConnection();
-        var partitioner = new SearchIndexPartitioner(new SearchIndexDao(hikari));
+        var partitioner = new SearchIndexPartitioner(new SearchIndexDao(hikari, new RankingSettings()));
         var blacklist = new EdgeDomainBlacklistImpl(hikari);
 
         new IndexMergerMain(file1, file2, outputFile, partitioner, blacklist);

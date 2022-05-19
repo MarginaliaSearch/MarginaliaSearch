@@ -7,20 +7,27 @@ import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.hash.TIntHashSet;
 import lombok.SneakyThrows;
+import nu.marginalia.util.ranking.BetterReversePageRank;
+import nu.marginalia.util.ranking.BetterStandardPageRank;
+import nu.marginalia.util.ranking.BuggyStandardPageRank;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
-import nu.marginalia.wmsa.edge.index.service.util.ranking.*;
+import nu.marginalia.wmsa.edge.index.model.RankingSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Singleton
 public class SearchIndexDao {
     private final HikariDataSource dataSource;
+    private RankingSettings rankingSettings;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
-    public SearchIndexDao(HikariDataSource dataSource)
+    public SearchIndexDao(HikariDataSource dataSource,
+                          RankingSettings rankingSettings)
     {
         this.dataSource = dataSource;
+        this.rankingSettings = rankingSettings;
+        logger.info("SearchIndexDao ranking settings = {}", rankingSettings);
     }
 
     @SneakyThrows
@@ -71,14 +78,14 @@ public class SearchIndexDao {
     }
 
     @SneakyThrows
-    public TIntList getDomainsByRealPageRank() {
-        var spr = new BetterStandardPageRank(dataSource,"www.rep.routledge.com", "www.personal.kent.edu", "xroads.virginia.edu", "classics.mit.edu", "faculty.washington.edu", "monadnock.net", "memex.marginalia.nu", "wiki.xxiivv.com", "bikobatanari.art", "sadgrl.online", "lileks.com");
+    public TIntList getRetroDomains() {
+        var spr = new BetterStandardPageRank(dataSource,rankingSettings.retro.toArray(String[]::new));
         return spr.pageRankWithPeripheralNodes(spr.size()/2, false);
     }
 
     @SneakyThrows
     public TIntList getSmallWebDomains() {
-        var rpr = new BetterReversePageRank(new DatabaseModule().provideConnection(),  "bikobatanari.art", "sadgrl.online", "wiki.xxiivv.com", "%neocities.org");
+        var rpr = new BetterReversePageRank(new DatabaseModule().provideConnection(),  rankingSettings.small.toArray(String[]::new));
 
         rpr.setMaxKnownUrls(750);
 
@@ -87,13 +94,13 @@ public class SearchIndexDao {
 
     @SneakyThrows
     public TIntList getAcademiaDomains() {
-        var spr =  new BetterStandardPageRank(new DatabaseModule().provideConnection(),  "%edu");
+        var spr =  new BetterStandardPageRank(new DatabaseModule().provideConnection(),  rankingSettings.academia.toArray(String[]::new));
         return spr.pageRankWithPeripheralNodes(spr.size()/2, false);
     }
 
     @SneakyThrows
-    public TIntList getDomainsByStandardPageRank() {
-        var spr = new BuggyStandardPageRank(dataSource,"memex.marginalia.nu");
+    public TIntList getStandardDomains() {
+        var spr = new BuggyStandardPageRank(dataSource,rankingSettings.standard.toArray(String[]::new));
         return spr.pageRankWithPeripheralNodes(spr.size()/2, false);
     }
 

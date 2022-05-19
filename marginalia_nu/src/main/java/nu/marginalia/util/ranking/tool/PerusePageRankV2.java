@@ -1,10 +1,9 @@
-package nu.marginalia.wmsa.edge.index.service.util.ranking.tool;
+package nu.marginalia.util.ranking.tool;
 
 
 import com.zaxxer.hikari.HikariDataSource;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
-import gnu.trove.map.hash.TIntDoubleHashMap;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.hash.TIntHashSet;
@@ -13,9 +12,9 @@ import it.unimi.dsi.fastutil.ints.IntComparator;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.SneakyThrows;
+import nu.marginalia.util.ranking.RankingAlgorithm;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
 import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklistImpl;
-import nu.marginalia.wmsa.edge.index.service.util.ranking.RankingAlgorithm;
 import org.jetbrains.annotations.NotNull;
 import org.mariadb.jdbc.Driver;
 import org.slf4j.Logger;

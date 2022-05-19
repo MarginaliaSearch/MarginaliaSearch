@@ -23,7 +23,7 @@ public class SearchIndexPartitioner {
 
     private SearchEngineRanking retroRanking = null;
     private SearchEngineRanking smallWebRanking = null;
-    private SearchEngineRanking prWebRanking = null;
+    private SearchEngineRanking standardRanking = null;
     private SearchEngineRanking specialDomainRanking = null;
     private SearchEngineRanking academiaRanking = null;
 
@@ -69,16 +69,16 @@ public class SearchIndexPartitioner {
 
         logger.info("Fetching domains");
 
-        var retroDomains = dao.getDomainsByRealPageRank();
+        var retroDomains = dao.getRetroDomains();
         var smallWebDomains = dao.getSmallWebDomains();
         var academiaDomains = dao.getAcademiaDomains();
-        var prWebDomains = dao.getDomainsByStandardPageRank();
+        var standardDomains = dao.getStandardDomains();
         var specialDomains = dao.getSpecialDomains();
 
         logger.info("Got {} retro domains", retroDomains.size());
         logger.info("Got {} small domains", smallWebDomains.size());
         logger.info("Got {} academia domains", academiaDomains.size());
-        logger.info("Got {} corpo domains", prWebDomains.size());
+        logger.info("Got {} standard domains", standardDomains.size());
         logger.info("Got {} special domains", specialDomains.size());
 
         var lock = rwl.writeLock();
@@ -87,7 +87,7 @@ public class SearchIndexPartitioner {
             retroRanking = new SearchEngineRanking(0, retroDomains, 0.2, 1);
             smallWebRanking = new SearchEngineRanking(2, smallWebDomains,  0.15);
             academiaRanking = new SearchEngineRanking(3, academiaDomains, 1);
-            prWebRanking = new SearchEngineRanking(4, prWebDomains, 0.2, 1);
+            standardRanking = new SearchEngineRanking(4, standardDomains, 0.2, 1);
             specialDomainRanking = new SearchEngineRanking(6, specialDomains, 1);
             logger.info("Finished building partitions table");
         }
@@ -112,7 +112,7 @@ public class SearchIndexPartitioner {
             return true;
         if (academiaRanking.hasBucket(bucketId, domainId))
             return true;
-        if (prWebRanking.hasBucket(bucketId, domainId))
+        if (standardRanking.hasBucket(bucketId, domainId))
             return true;
         if (specialDomainRanking.hasBucket(bucketId, domainId))
             return true;
@@ -150,8 +150,8 @@ public class SearchIndexPartitioner {
         if (academiaRanking != null && academiaRanking.ownsBucket(bucketId)) {
             return academiaRanking.translateId(id);
         }
-        if (prWebRanking != null && prWebRanking.ownsBucket(bucketId)) {
-            return prWebRanking.translateId(id);
+        if (standardRanking != null && standardRanking.ownsBucket(bucketId)) {
+            return standardRanking.translateId(id);
         }
         if (specialDomainRanking != null && specialDomainRanking.ownsBucket(bucketId)) {
             return specialDomainRanking.translateId(id);

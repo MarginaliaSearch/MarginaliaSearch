@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.edge.index.service.util.ranking.old;
+package nu.marginalia.util.ranking.old;
 
 
 import com.zaxxer.hikari.HikariDataSource;

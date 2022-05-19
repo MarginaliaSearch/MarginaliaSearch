@@ -6,11 +6,10 @@ import com.google.common.hash.Hashing;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.zaxxer.hikari.HikariDataSource;
-import gnu.trove.list.array.TIntArrayList;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
 import nu.marginalia.wmsa.edge.crawling.model.CrawlingSpecification;
 import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklistImpl;
-import nu.marginalia.wmsa.edge.index.service.util.ranking.BetterReversePageRank;
+import nu.marginalia.util.ranking.BetterReversePageRank;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeId;
 import org.mariadb.jdbc.Driver;
@@ -24,7 +23,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Stream;
 
 public class CrawlJobExtractorPageRankMain {
 

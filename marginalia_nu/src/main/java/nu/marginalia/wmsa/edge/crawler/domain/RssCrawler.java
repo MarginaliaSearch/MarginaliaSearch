@@ -10,7 +10,7 @@ import nu.marginalia.wmsa.configuration.module.DatabaseModule;
 import nu.marginalia.wmsa.edge.crawler.fetcher.HttpFetcher;
 import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDaoImpl;
 import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklistImpl;
-import nu.marginalia.wmsa.edge.index.service.util.ranking.BuggyStandardPageRank;
+import nu.marginalia.util.ranking.BuggyStandardPageRank;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import org.jsoup.Jsoup;

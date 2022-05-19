@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.edge.index.service.util.ranking.tool;
+package nu.marginalia.util.ranking.tool;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
