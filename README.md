@@ -7,3 +7,5 @@ As it stands now, the project is a bit of a mess as it wasn't developed
 with the intention of going open source, a lot of tests and so on make
 assumptions about the directory structure, much configuration is hard coded
 and so on. It's a work in progress. 
+
+Please stand by. You can also reach me at kontakt@marginalia.nu with any questions.
