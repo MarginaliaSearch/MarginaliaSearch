@@ -1,0 +1,26 @@
+<form method="get" action="/search">
+    <section class="search-box">
+        <h1>Search the Internet</h1>
+        <div class="input">
+            <input id="query" name="query" placeholder="Search terms" value="{{query}}">
+            <input value="Go" type="submit">
+        </div>
+        <div class="settings">
+            <select name="profile" id="profile">
+                <option {{#eq profile "default"}}selected{{/eq}} value="default">Popular Sites</option>
+                <option {{#eq profile "modern"}}selected{{/eq}} value="modern">Blogs and Personal Websites</option>
+                <option {{#eq profile "academia"}}selected{{/eq}} value="academia">Academia, Forums, Big Websites</option>
+                <option {{#eq profile "yolo"}}selected{{/eq}} value="yolo">Default Ranking Algorithm</option>
+                <option {{#eq profile "corpo"}}selected{{/eq}} value="corpo">Experimental</option>
+            </select>
+            <select name="js" id="js">
+                <option {{#eq js "default"}}selected{{/eq}} value="default">Allow JS</option>
+                <option {{#eq js "no-js"}}selected{{/eq}} value="no-js">Deny JS</option>
+                <option {{#eq js "yes-js"}}selected{{/eq}} value="yes-js">Require JS</option>
+            </select>
+        </div>
+        <div class="extra">
+            <a href="https://search.marginalia.nu/explore/random">Random Websites</a>
+        </div>
+    </section>
+</form>

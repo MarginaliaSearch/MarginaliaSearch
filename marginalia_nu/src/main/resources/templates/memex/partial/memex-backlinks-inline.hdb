@@ -1,0 +1,6 @@
+{{#if backlinks}}
+<dl>{{#each backlinks}}
+<dt><a href="{{urlRoot}}{{url}}">{{url}}</a></dt>
+<dd>{{description}}</dd>
+{{/each}}</dl>
+{{/if}}

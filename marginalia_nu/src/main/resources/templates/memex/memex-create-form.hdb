@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+{{>memex/partial/memex-head}}
+<body>
+{{>memex/partial/memex-topbar}}
+<article>
+<section>
+<h1> New : {{url}} </h1>
+<section>
+<form method="post" action="/api/create">
+  <input name="directory" readonly value="{{url}}">
+  <input tabindex="1" name="filename" placeholder="file name"><br />
+  <textarea tabindex="2" name="text">#</textarea>
+  <input tabindex="3" type="submit" value="Submit">
+</form>
+</section>
+<h1>Existing posts</h1>
+<section>
+<ul>{{#each docs}} <li>{{url}}</li> {{/each}}</ul>
+</section>
+</article>
+{{> memex/partial/memex-footer}}
+</body>

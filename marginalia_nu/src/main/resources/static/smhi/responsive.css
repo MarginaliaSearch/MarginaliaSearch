@@ -1,0 +1,74 @@
+/** Anpassningar för tryck, osv. */
+.mobile-only {
+    display: none;
+}
+
+@media only print {
+  .onlyprint {
+     display: block;
+  }
+  .onlyscreen {
+     display: none !important;
+  }
+  body {
+    font-family: 'Liberation', 'Times', Serif !important;
+  }
+  header {
+    display: none;
+  }
+  a {
+    color: #000 !important;
+    text-decoration: none;
+  }
+  figure, blockquote, p, section#footnotes {
+    page-break-inside: avoid;
+  }
+  abbr {
+    text-decoration: none;
+  }
+}
+@media only screen {
+  .onlyprint {
+     display: none;
+  }
+  .onlyscreen {
+     display: block;
+  }
+}
+@media only screen and (max-device-width: 480px) {
+  article {
+    margin: -0.5em !important;
+    padding: 0.5em !important.
+    display: block;
+    font-size: 10pt;
+  }
+  .title {
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+  }
+
+  body.essä article p::before {
+    display: none;
+  }
+  .mobile-only {
+    display: auto;
+  }
+}
+
+@media only screen and (max-device-width: 480px) {
+  blockquote {
+    padding: 0em;
+    border: none;
+  }
+}
+
+@media only screen and (min-device-width: 640px) {
+    header, footer, article {
+        margin-left: 8em;
+        margin-right: 8em;
+    }
+    body,blockquote {
+	    font-size: 14pt;
+    }
+}
+

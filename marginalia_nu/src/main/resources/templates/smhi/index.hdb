@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{title}}</title>
+    <link rel="stylesheet" href="https://www.marginalia.nu/style.css" />
+    <link rel="stylesheet" href="/smhi/font.css" />
+    <link rel="stylesheet" href="/smhi/style.css" />
+    <link rel="stylesheet" href="/smhi/responsive.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+<header>
+<nav><a class="marginalia-link" href="https://www.marginalia.nu/">Till Marginalia</a></nav>
+</header>
+<article>
+    <h1>SMHI</h1>
+    <p class="smhi-snabbhoplista">
+    {{#each platserPerNyckel}}
+        <a class="smhi-snabbhopp" href="#{{nyckel}}">{{nyckel}}</a>
+    {{/each}}
+    </p>
+    <h2>Platser</h2>
+    <dl>
+        {{#each platserPerNyckel}}
+        <a name="{{nyckel}}"></a>
+        &nbsp;<br>
+        <div id="{{nyckel}}">
+        {{#each platser}}
+            <dt><a class="smhi-platslank" href="{{url}}">{{namn}}</a></dt>
+        {{/each}}
+        </div>
+        {{/each}}
+    </dl>
+
+    <h3>Källa SMHI</h3>
+    <p>
+        All prognosdata hämtas från <a href="http://www.smhi.se/data">SMHI:s öppna API:er</a>, under licensen
+        <a href="https://creativecommons.org/licenses/by/2.5/se/legalcode">Creative Commons Erkännande 2.5</a>.
+    </p>
+</article>
+
+</body>
+</html>

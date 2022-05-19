@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+{{>memex/partial/memex-head}}
+<body class="double" lang="en">
+
+{{>memex/partial/memex-topbar url=path}}
+
+<article>
+<section id="memex-node">
+<h1>{{path}}</h1>
+<img src="data:image/png;base64,{{data}}">
+</section>
+<div  id="sidebar">
+<section class="tools">
+    <h1>{{path.filename}}</h1>
+    <a rel="nofollow" class="download" href="{{urlRoot}}/api/raw?url={{path}}">Raw</a><br>
+    {{#unless backlinks}}<a rel="nofollow" href="{{urlRoot}}/api/delete?type=img&url={{path}}" class="verb">Delete</a>{{/unless}}
+    <a rel="nofollow" href="{{urlRoot}}/api/rename?type=img&url={{path}}" class="verb">Rename</a>
+</section>
+{{>memex/partial/memex-backlinks}}
+</div>
+</article>
+{{> memex/partial/memex-footer}}
+</body>

@@ -1,0 +1,14 @@
+  <!-- {{rankingId}}.{{id}}/{{ranking}}/{{termScore}} -->
+  <section class="card search-result rs-rank-{{logRank}} {{#if specialDomain}}special-domain{{/if}}" >
+    <div class="url"><a rel="nofollow external" href="{{url}}">{{url}}</a></div>
+    <h2> <a tabindex="-1" class="title" rel="nofollow external" href="{{url}}">{{title}}</a></h2>
+    <p class="description">{{description}}</p>
+
+    <div class="utils">
+        <a href="/site/{{url.domain}}" title="Domain Information">Info</a>
+        {{#unless focusDomain}}<a href="/site-search/{{url.domain}}/{{query}}?profile={{profile}}" title="Narrow the search to this domain">Search</a>{{/unless}}
+
+        <div class="meta">{{>edge/search-result-metadata}}</div>
+    </div>
+    <hr class="w3m-helper" />
+  </section>

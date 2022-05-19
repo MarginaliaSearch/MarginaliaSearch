@@ -1,0 +1,19 @@
+# Search Engine
+
+=> /search Search
+=> /search-about.gmi About
+
+{{#each problems}}
+* {{{.}}}{{/each}}
+
+## Results for "{{{query}}}"
+
+{{#each results}}
+
+{{>edge/search-result-gmi}}
+
+{{/each}}
+
+--
+
+=> / To index

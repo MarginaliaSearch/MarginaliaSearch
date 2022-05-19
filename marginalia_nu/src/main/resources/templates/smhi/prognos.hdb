@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Väderprognos för {{plats.namn}}</title>
+    <link rel="stylesheet" href="https://www.marginalia.nu/style.css" />
+    <link rel="stylesheet" href="/smhi/font.css" />
+    <link rel="stylesheet" href="/smhi/style.css" />
+    <link rel="stylesheet" href="/smhi/responsive.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Väderprognos för {{plats.namn}}, hämtat från SMHI" />
+    <meta name="keyword" content="Väderprognos" />
+</head>
+<body>
+<header>
+<nav>
+    <a href="https://www.marginalia.nu/smhi/index.html">Alla Prognoser</a>
+    <a class="marginalia-link" href="https://www.marginalia.nu/">Till Marginalia</a>
+</nav>
+</header>
+<article>
+    <h1>{{plats.namn}}</h1>
+    <table width="100%">
+        {{#each dygn}}
+        <thead>
+        <tr><th class="headline" colspan="3">{{date}}</th><th colspan="2">{{{veckodag}}}</th></tr>
+        <tr>
+        <td class="teknisk">Tid</td>
+        <td class="teknisk">Temp</td>
+        <td class="teknisk">Vind</td>
+        <td class="teknisk">Neder.</td>
+        <td class="teknisk">Moln</td>
+        </tr>
+        </thead>
+        {{#each data}}
+        <tr>
+            <td class="headline">{{time}}</td>
+            <td>{{temp}}</td>
+            <td>{{vind}} ({{byvind}})</td>
+            <td>{{nederbord}} {{nederbordTyp}}</td>
+            <td>{{moln}}</td>
+        </tr>
+        {{/each}}
+        </tbody>
+        {{/each}}
+    </table>
+
+    <a name="forklaring"></a>
+    <h2>Förklaring</h2>
+    <p>Molntäcke (Moln.) visas på en skala 0-8, där höga värden indikerar
+        tjockt molntäcke, och låga värden indikerar blåare skyar.</p>
+
+    <p>Nederbörd (Neder.) indikeras med förkortningar:
+    <table width="80%">
+        <tr><td class="headline">S</td><td>Snö</td></tr>
+        <tr><td class="headline">SB</td><td>Snöblandat regn</td></tr>
+        <tr><td class="headline">R</td><td>Regn</td></tr>
+        <tr><td class="headline">D</td><td>Dimma</td></tr>
+        <tr><td class="headline">UKR</td><td>Underkylt regn</td></tr>
+        <tr><td class="headline">UKD</td><td>Underkyld dimma</td></tr>
+    </table>
+    </p>
+
+    <h2>Källa SMHI</h2>
+    <p>
+        All prognosdata hämtas från <a href="http://www.smhi.se/data">SMHI:s öppna API:er</a>, under licensen
+        <a href="https://creativecommons.org/licenses/by/2.5/se/legalcode">Creative Commons Erkännande 2.5</a>.
+        Bäst före {{bastFore}}.
+    </p>
+</article>
+
+</body>
+</html>

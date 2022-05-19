@@ -1,0 +1,235 @@
+body {
+  font-family: sans-serif;
+  font-size: 12pt;
+  margin: 0px;
+  background-color: #f8f8ee;
+}
+
+header {
+  background-color: #acae89;
+  color: #fff;
+  border-bottom: 1px solid #888;
+}
+
+header nav a {
+  text-decoration: none;
+  color: #000;
+
+  margin-right: 1ch;
+  padding: .5ch;
+  display: inline-block;
+}
+
+nav.topbar {
+  display: flex;
+  justify-content: left;
+  align-content: center;
+  background-color: #fff;
+  margin-bottom: 4ch;
+  box-shadow: #ccc 4px 4px 5px;
+  max-width: 160ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+nav.topbar h1 {
+  padding: .5ch 1ch .5ch .5ch;
+  display: inline-block;
+  margin: 0px;
+  background-color: #2f4858;
+  color: #fff;
+  font-weight: normal;
+  font-family: serif;
+  font-size: 16pt;
+  border: 1px solid #fff;
+}
+nav.topbar a {
+  padding: 1ch;
+  display: inline-block;
+  text-decoration: none;
+  color: #000;
+  border-right: 2px solid #ccc;
+  padding-top: 1.20ch;
+  display: flex;
+  align-items:center;
+  gap: 1ch;
+}
+
+nav.topbar > *:last-child {
+  background: #3F5F6F !important;
+  color: #fff;
+}
+
+header nav a:hover, header nav a:focus {
+  background: #2f4858;
+  color: #fff !important;
+}
+
+article a:focus {
+  color: #fff !important;
+  text-shadow: 0 0 5px #f00;
+  background-color: #000 !important;;
+  outline: none;
+}
+article {
+  max-width: 160ch;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+}
+
+article > #memex-node {
+  line-height: 1.6;
+  margin: 1ch 2ch 2ch 2ch;
+  padding: 0ch 1ch 1ch 1ch;
+  flex-basis: 60ch;
+  background-color: #fff;
+
+  border: 2px #ccc;
+  background-color: #fff;
+  border-left: 1px solid #ecb;
+  border-top: 1px solid #ecb;
+
+  box-shadow: #0008 0 0 5px;
+  max-width: 60ch;
+  overflow: auto;
+}
+
+pre {
+  font-size: 8pt;
+  overflow: auto;
+}
+
+#memex-node h1, article #memex-node h2, article #memex-node h3 {
+  margin: 0px 0px 1ch 0px;
+  font-size: 12pt;
+  font-weight: normal;
+  margin-left: -1.6ch;
+  margin-right: -0.6ch;
+  background-color: #2f4858;
+  color: #fff;
+  padding: 0.75ch 1ch 0.5ch 1.5ch;
+  box-shadow: #000a 4px 4px;
+}
+
+article a.doc:before {
+  width: 1ch;
+  height: 1ch;
+  content: url('/ico/file.png');
+  margin-right: .5ch;
+}
+article a.dir:before {
+  width: 1ch;
+  height: 1ch;
+  content: url('/ico/dir.png');
+  margin-right: .5ch;
+}
+article a.img:before {
+  width: 1ch;
+  height: 1ch;
+  content: url('/ico/pic16.png');
+  margin-right: .5ch;
+}
+#sidebar > * {
+  padding: 1ch;
+}
+#sidebar h1 {
+  margin-top: 0;
+  font-size: 12pt;
+  font-weight: normal;
+  margin-left: -1.6ch;
+  margin-right: -0.6ch;
+  background-color: #2f4858;
+  color: #fff;
+  padding: 0.5ch 1ch 0.5ch 1ch;
+  box-shadow: #000a 4px 4px;
+}
+
+article ul, article dl {
+    margin: 0px;
+}
+#sidebar a {
+  color: #000;
+}
+
+#memex-node img {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.toc {
+    margin-top: 1ch;
+}
+.toc a {
+    display: block;
+}
+
+footer {
+  padding: 2ch;
+  margin: 16ch 0px 0px 0px;
+  background-color: #acae89;
+  height: 20ch;
+  font-size: 10pt;
+}
+@media only screen and (max-device-width: 800px) {
+  header nav a {
+    padding: 1ch !important;
+  }
+
+  .topbar {
+    flex-direction: column;
+  }
+  article {
+    flex-direction: column;
+  }
+  #memex-node {
+    flex-basis: unset !important;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  a {
+    color: #acf;
+  }
+  header {
+    background-color: #000;
+  }
+  article #memex-node {
+    border: unset;
+  }
+  header nav a {
+    color: #eee;
+  }
+  nav.topbar {
+    background: #222;
+    box-shadow: #0008 0 0 5px;
+  }
+  nav.topbar a {
+    color: #eee;
+  }
+  nav.topbar h1 {
+    background-color: unset;
+    border-right: 2px solid #444;
+    border-left: none;
+    border-top: none;
+    border-bottom: none;
+  }
+  footer {
+    background-color: #000;
+    color: #fff;
+  }
+  body {
+    background-color: #444;
+  }
+  #sidebar {
+    color: #fff;
+  }
+  #sidebar a {
+    color: #ccc;
+  }
+  #memex-node {
+    background-color: #222 !important;
+    color: #aaa;
+    box-shadow: #0008 0 0 5px;
+  }
+}

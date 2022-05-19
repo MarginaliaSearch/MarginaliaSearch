@@ -1,0 +1,9 @@
+<section class="listing" id="directories">
+<h1>Directories</h1>
+{{#if parent}}
+  <a class="dir" href="{{urlRoot}}{{parent}}">..</a><br />
+{{/if}}
+{{#each directories}}
+  <a class="dir" href="{{urlRoot}}{{.}}">{{filename}}</a><br />
+{{/each}}
+</section>

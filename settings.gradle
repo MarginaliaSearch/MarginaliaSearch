@@ -1,0 +1,4 @@
+rootProject.name = 'wmsa'
+
+include 'marginalia_nu'
+include 'third_party'

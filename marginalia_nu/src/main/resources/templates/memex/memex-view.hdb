@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+{{>memex/partial/memex-head}}
+<body class="double" lang="en">
+
+{{>memex/partial/memex-topbar url=baseDoc.url}}
+
+<article>
+<section id="memex-node">
+{{{doc}}}
+
+{{#pragma this "TOPIC"}}
+{{>memex/partial/memex-backlinks-inline}}
+{{/pragma}}
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>{{baseDoc.url.filename}}</h1>
+    <a class="download" href="{{urlRoot}}/api/raw?url={{baseDoc.url}}">Raw</a><br>
+    <a rel="nofollow" href="{{urlRoot}}/api/update?url={{baseDoc.url}}" class="verb">Edit</a>
+    <a rel="nofollow" href="{{urlRoot}}/api/rename?type=gmi&url={{baseDoc.url}}" class="verb">Rename</a>
+    {{#unless backlinks}}<a rel="nofollow" href="{{urlRoot}}/api/delete?type=gmi&url={{baseDoc.url}}" class="verb">Delete</a>{{/unless}}
+    <br/>
+    <div class="toc">
+    {{#each baseDoc.headings}}
+        <a href="#{{@key}}" class="heading-{{@key.level}}">{{@key}} {{this}}</a>
+    {{/each}}
+    </div>
+</section>
+{{#amgarp this "TOPIC"}}
+{{>memex/partial/memex-backlinks}}
+{{/amgarp}}
+</div>
+</article>
+{{> memex/partial/memex-footer}}
+</body>

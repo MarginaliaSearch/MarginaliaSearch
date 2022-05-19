@@ -1,0 +1,246 @@
+/** MARGINALER */
+
+body {
+    background-color: #f8f8ee;
+    font-family: 'Tahoma', sans-serif;
+    text-rendering: optimizeLegibility;
+    margin: 0 auto;
+    max-width: 80ch;
+
+}
+
+article {
+    background-color: #f8f8ee;
+    margin: -2em;
+    padding: 2em;
+}
+
+body.utkast {
+    background: url('/images/utkast-bg.webp') repeat-y left top;
+}
+
+header, footer, article { 
+    margin-left: 4em;
+    margin-right: 4em;
+    display: block;
+}
+
+a {
+    color: #274fa5;
+}
+a.replyButton, a:visited.replyButton {
+    color: #274fa5;
+    float: right;
+    text-decoration: none;
+}
+.headline {
+    color: #a5274f;
+}
+
+details {
+  border-left: 1px solid #ccc;
+  font-size: 12pt;
+}
+
+/** HEADER */
+header {
+    padding-bottom: 0.5em;
+    margin-bottom: 1em;
+}
+
+header a {
+    text-decoration: none;
+}
+
+a:visited {
+    color: #14114f;
+}
+
+/** ARTIKEL */
+
+article {
+    text-align: justify;
+    -webkit-hyphens: auto;
+    -moz-hyphens: auto;
+    -ms-hyphens: auto;
+    -o-hyphens: auto;
+    line-height: 1.6;
+}
+
+h1, h2, h3 {
+    font-family: 'Garamond', 'Palatino', serif;
+    font-weight: normal;
+    text-align: left;
+    color: #342a00;
+    margin-left: -.5em;
+}
+
+.title {
+    text-align: center;
+    font-family: 'Garamond', 'Palatino', serif;
+    color: #342a00;
+}
+.title h1, .title h2, .title h3 {
+    font-family: 'Garamond', 'Palatino', serif;
+    font-weight: normal;
+    text-align: center;
+    color: #342a00;
+    padding-left: 2em;
+    padding-right: 2em;
+    border: none !important;
+    margin-left: inherit;
+}
+
+
+h1 {
+    border-bottom: 3px double #14114f;
+}
+
+
+h2, h3 {
+    border-bottom: 1px solid #14114f;
+}
+
+.noline {
+    border-bottom: none !important;
+}
+
+dt a, dd a {
+    text-align: left !important;
+}
+
+section#footnotes {
+    font-size: 10pt;
+}
+
+/** FOOTER */
+
+footer {
+    padding-top: 0.5em;
+    margin-top: 3em;
+    color: #444;
+    line-height: 2;
+    text-align: center;
+}
+
+footer section#signatur.special {
+    display: none;
+}
+
+/* monogram */
+footer img {
+    text-align: center;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 4em;
+    width: 50%;
+    height: 50%;
+    opacity: 0.5;
+}
+
+
+/** CITAT */
+
+q {
+    font-family: 'Latin Modern', 'Garamond', serif;
+    color: #444;
+}
+blockquote {
+    color: #444;
+    font-family: 'Latin Modern', 'Garamond', serif;
+    font-size: 12pt;
+}
+
+blockquote.verse {
+    white-space: pre;
+    font-size: 10pt;
+    line-height: 1.2;
+    padding: 1em;
+    margin-left: -1em;
+    margin-right: -1em;
+    overflow: auto;
+}
+cite {
+   text-align: center;
+   display: block;
+}
+
+.teknisk {
+  font-family: 'fixedspace', monospace;
+}
+.deemph {
+  color: #886;
+  font-family: 'fixedspace', monospace;
+}
+
+/** Anpassningar för tryck, osv. */
+
+@media only print {
+  .onlyprint {
+     display: block;
+  }
+  .onlyscreen {
+     display: none;
+  }
+  body {
+    font-family: 'Liberation', 'Times', Serif !important;
+  }
+  header {
+    display: none;
+  }
+  a {
+    color: #000 !important;
+    text-decoration: none;
+  }
+  figure, blockquote, p, section#footnotes {
+    page-break-inside: avoid;
+  }
+  abbr {
+    text-decoration: none;
+  }
+}
+@media only screen {
+  .onlyprint {
+     display: none;
+  }
+  .onlyscreen {
+     display: block;
+  }
+}
+@media only screen and (max-device-width: 480px) {
+  nav a {
+    display: block;
+    margin-bottom: 1.5em;
+    margin-top: 1.5em;
+  }
+
+  header, footer, article {
+    margin-left: 2em;
+    margin-right: 2em;
+    display: block;
+  }
+
+  body.essä article p::before {
+    display: none;
+  }
+}
+
+@media only screen and (max-device-width: 480px) {
+  blockquote {
+    padding: 0em;
+    border: none;
+  }
+}
+
+@media only screen and (min-device-width: 640px) {
+    header, footer, article {
+        margin-left: 8em;
+        margin-right: 8em;
+    }
+    body,blockquote,blockquote.verse {
+	    font-size: 14pt;
+    }
+}
+
+

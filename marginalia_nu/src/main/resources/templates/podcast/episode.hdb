@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{podcastName}}: {{title}}</title>
+    <link rel="stylesheet" href="https://www.marginalia.nu/style.css" />
+    <link rel="stylesheet" href="https://www.marginalia.nu/podcast/style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+<header>
+    <nav>
+        <a href="https://www.marginalia.nu/podcast/new.html">Nya Avsnitt</a>
+        <a href="https://www.marginalia.nu/podcast/list.html">Lista</a>
+        <a class="marginalia-link" href="https://www.marginalia.nu/">Till Marginalia</a>
+    </nav>
+</header>
+<article>
+    <h1>{{title}}</h1>
+    <div><a href="/podcast/{{podcastId}}.html">{{podcastName}}</a></div>
+    <span class="deemph">{{dateUploaded}}</span>
+    <p>
+    {{{description}}}
+    </p>
+    <h2>Spela avsnitt</h2>
+    <p>
+        <audio controls>
+          <source src="{{mp3url}}" type="audio/mpeg" style="width:100%" controls crossorigin="anonymous" preload="metadata">
+          <a class="teknisk" href="{{mp3url}}">{{mp3url}}</a>
+        </audio>
+    </p>
+</article>
+
+</body>
+</html>

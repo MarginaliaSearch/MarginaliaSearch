@@ -1,0 +1,62 @@
+30856775800000000,DISTANCE,pc,parsec,parsecs
+9460500000000000,DISTANCE,ly,light years,light year
+149597870700,DISTANCE,au,astronomical unit
+1000,DISTANCE,km,kilometers,kilometer
+1,DISTANCE,m,meters,meter
+0.1,DISTANCE,dm,decimeters,decimeter
+0.01,DISTANCE,cm,centimeters,centimeter
+0.001,DISTANCE,mm,millimeters,millimeter
+0.9144,DISTANCE,yd,yards,yard
+0.0254,DISTANCE,in,inches,inch
+0.3048,DISTANCE,ft,feet,foot
+0.3048,DISTANCE,ft,feet,foot
+1609.344,DISTANCE,miles,mile
+1852,DISTANCE,nautical miles,nautical mile
+201.168,DISTANCE,furlong,furlongs
+1,WEIGHT,kg,kilograms,kilogram
+0.001,WEIGHT,g,grams,gram
+1000,WEIGHT,metric tons,ton,tons,tonne,tonnes
+907.185,WEIGHT,short tons,short ton,imperial ton,imperial tons,
+0.45359237,WEIGHT,lb,lbs,pounds
+0.0283495231,WEIGHT,oz,ounces,ounce
+1,AREA,m^2,square meters,square meter
+0.01,AREA,dm^2,square decimeters,square decimeter
+0.0001,AREA,cm^2,square centimeters,square centimeter
+0.000001,AREA,mm^2,square millimeters,square millimeter
+1000000,AREA,km^2,square kilometers,square kilometer
+4046.9,AREA,ac,acre,acres
+2589988.1103360,AREA,sq mi,mi^2,square miles,square mile
+258.99881103360,AREA,hectares,hectare
+0.09290304,AREA,ft^2,square foot,square feet
+0.83612736,AREA,yd^2,square yard,square yards
+0.00064516,AREA,in^2,square inch,square inches
+1,VOLUME,m^3,cubic meter,cubic meters
+1000000000,VOLUME,km^3,cubic kilometer,cubic kilometers
+0.001,VOLUME,L,l,dm^3,liter,liters,cubic decimeter,cubic decimeter
+0.0001,VOLUME,dl,deciliter,deciliters
+0.0001,VOLUME,cl,centiliter,centiliters
+0.00001,VOLUME,ml,milliliter,milliliters
+0.000001,VOLUME,cm^3,cc,cubic centimeter,cubic centimeters
+0.000000001,VOLUME,mm^3,cubic millimeter,cubic millimeters
+0.000236588237,VOLUME,us cup,cup,cups
+0.0000295735296,VOLUME,fl.oz.,fl oz,fluid ounces,fluid ounce
+0.028316846592,VOLUME,ft^3,cubic foot,cubic feet
+0.000016387064,VOLUME,in^3,cubic inch,cubic inches
+0.764554857984,VOLUME,yd^3,cubic yard,cubic yards
+0.000473176473,VOLUME,US pint,pint,pints
+0.00378541178,VOLUME,gallon,gallons
+1,TEMPERATURE,C,c,celsius,centigrade
+0,TEMPERATURE,F,f,fahrenheit,fahrenheit
+0,TEMPERATURE,K,k,kelvin,kelvins
+1,TIME,S,s,second,seconds
+0.001,TIME,ms,millisecond
+60,TIME,min,minutes
+3600,TIME,hour,hours
+864000,TIME,day,days
+604800,TIME,week,weeks
+31557600.0,TIME,year,years
+31557600.0,TIME,year,years
+315576000.0,TIME,decade,decades
+3155760000.0,TIME,century,centuries
+1,ANGLE,degree,degrees
+57.2957795,ANGLE,radians,radian

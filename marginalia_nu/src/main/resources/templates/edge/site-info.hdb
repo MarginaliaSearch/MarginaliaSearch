@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Marginalia Search - {{query}}</title>
+
+    <link rel="stylesheet" href="/style-new.css" />
+    <link rel="search" type="application/opensearchdescription+xml" href="/opensearch.xml" title="Marginalia">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+</head>
+<body>
+
+{{>edge/parts/search-header}}
+
+<article>
+    {{>edge/parts/search-form}}
+
+<section class="cards">
+  <div class="card">
+    <h2>{{domain}}</h2>
+    <a href="http://{{domain}}/"><img src="{{screenshot}}" alt="Thumbnail image of {{domain}}"/></a>
+  </div>
+
+  <div class="card info">
+
+    <h2>Indexing Information</h2>
+    <p class="description">
+        Blacklisted: {{blacklisted}}<br/>
+        Pages Known: {{pagesKnown}} <br/>
+        Pages Crawled: {{pagesFetched}} <br/>
+        Pages Indexed: {{pagesIndexed}} <br/>
+        Crawl State: {{state}}<br/>
+    </p>
+  </div>
+
+  <div class="card info">
+      <h2>Links</h2>
+      <p class="description">
+          Nominal Quality: {{nominalQuality}}%<br/>
+          Crawl Ranking: {{ranking}}%<br/>
+          Incoming Links: {{incomingLinks}} <br/>
+          Outbound Links: {{outboundLinks}} <br/>
+      </p>
+      <div class="utils">
+        <a href="/links/{{domain.domain}}">Linking Pages</a>
+        <a href="/explore/{{domain}}" title="Get a list of similar domains">Explore</a>
+      </div>
+    </div>
+
+    {{#each results}}{{>edge/search-result}}{{/each}}
+</section>
+</article>
+
+{{>edge/parts/search-footer}}
+</body>
+
+

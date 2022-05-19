@@ -1,0 +1,9 @@
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - {{title}}</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{#pragma this "FEED"}}
+        <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="https://memex.marginalia.nu{{url}}/feed.xml" />
+    {{/pragma}}
+</head>

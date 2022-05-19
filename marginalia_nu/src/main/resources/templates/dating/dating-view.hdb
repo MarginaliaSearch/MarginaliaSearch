@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Website Explorer - {{url}}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0" />
+  <style type="text/css">
+
+
+body {
+  max-width: 60ch;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: #000;
+  color: #fff;
+}
+
+h1 {
+  text-align: center;
+  font-size: 16pt;
+}
+
+.button {
+  color: white;
+  text-decoration: none;
+}
+
+#url {
+  grid-column: 2 / span 1;
+  grid-row: 1 / span 1;
+  max-width: 80vw;
+}
+
+#main-link {
+  grid-column: 2 / span 1;
+  grid-row: 2 / span 1;
+}
+
+#back-button {
+  grid-column: 1 / span 1;
+  grid-row: 2 / span 1;
+}
+
+#next-button {
+  grid-column: 3 / span 1;
+  grid-row: 2 / span 1;
+}
+
+#like-button {
+  grid-column: 2 / span 1;
+  grid-row: 3 / span 1;
+}
+
+#reset-button {
+  grid-column: 1 / span 1;
+  grid-row: 3 / span 1;
+}
+
+.button {
+  font-size: 24pt;
+  font-weight: bold;
+  padding: 4ch;
+}
+
+.button:hover, .button:focus {
+  text-shadow: 0px 0px 0.5ch black, 0px 0px 1ch red, 0px 0px 1.5ch orange, 0px 0px 2ch yellow, 0px 0px 2.5ch green, 0px 0px 3ch cyan, 0px 0px 3.5ch blue, 0px 0px 4ch indigo, 0px 0px 4.5ch violet;
+  outline: none;
+}
+
+#screenshot {
+  border: 5px solid #ccc;
+  box-shadow: 0px 0px 15px #f0f;
+}
+
+
+#main-link:focus img {
+  filter: brightness(90%);
+}
+
+
+#main-link:focus img {
+  filter: brightness(100%);
+  box-shadow: #ccca 0px 0px 50px;
+}
+
+.desktop-navigation {
+  display: none;
+}
+
+.the-grid > * {
+  place-self: center;
+  align-self: center;
+  justify-self: center stretch;
+  text-align: center;
+}
+
+.the-grid {
+  display: grid;
+  grid-template-columns: 2vw auto 2vw;
+  grid-template-rows: 80px auto 80px;
+}
+
+#help {
+  margin-top: 10ch;
+  font-family: sans-serif;
+}
+
+@media only screen and (max-device-width: 1024px) {
+  body {
+    margin-top: 10ch;
+    max-width: 90%;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 16pt;
+  }
+
+  #screenshot {
+    margin-left: -5vw;
+    margin-right: -5vw;
+    width: 90vw;
+    height: unset;
+    aspect-ratio: 4/3;
+  }
+
+  #back-button, #next-button {
+    padding: 4ch;
+  }
+}
+
+
+  </style>
+</head>
+<body>
+
+  <div class="the-grid">
+      <h1 id="url">{{url}}</h1>
+
+      <a rel="nofollow" id="main-link" href="{{url}}">
+        <img width="512" height="384" id="screenshot" src="/screenshot/{{domainId}}" alt="Screenshot of {{url}}">
+      </a>
+
+      {{#if back}}<a title="Previous Website" class="button" id="back-button" href="/rewind">&#11013;&#65039;</a>{{/if}}
+      <a title="Next website" class="button" id="next-button" href="/next">&#10145;&#65039;</a>
+      <a title="This is not good! Reset selection." class="button" id="reset-button" href="/reset">&#128256;</a>
+      <a title="I like this! More like this!" class="button" id="like-button" href="/similar/{{domainId}}">&#129321;</a>
+  </div>
+
+</body>

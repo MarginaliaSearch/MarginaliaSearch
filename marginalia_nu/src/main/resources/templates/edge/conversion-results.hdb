@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Marginalia Search - {{query}}</title>
+
+    <link rel="stylesheet" href="/style-new.css" />
+    <link rel="search" type="application/opensearchdescription+xml" href="/opensearch.xml" title="Marginalia">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+</head>
+<body>
+
+{{>edge/parts/search-header}}
+
+<article>
+    {{>edge/parts/search-form}}
+
+<section class="cards">
+  <div class="card semantic">
+    <h2>{{query}}</h2>
+    <p class="description">{{result}}</p>
+  </div>
+  <div class="card problem">
+    <h2>Warning</h2>
+    <p class="description">
+        These results use floating point calculations, and may not be accurate
+        for very large or very small numbers. Do not use for orbital calculations,
+        thesis projects, or other sensitive work.
+    </p>
+  </div>
+</section>
+
+</article>
+
+{{>edge/parts/search-footer}}
+</body>

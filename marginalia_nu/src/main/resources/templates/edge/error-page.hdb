@@ -1,0 +1,20 @@
+<html>
+    <head>
+        <title>Error</title>
+        <link rel="stylesheet" href="https://www.marginalia.nu/style.css">
+        <meta http-equiv="refresh" content="5">
+    </head>
+    <body>
+        <article>
+            <h1>Error</h1>
+            <p>Oops! It appears the index server is <span class="headline">{{indexState}}</span>.</p>
+            <p>The server was probably restarted to bring online some changes. Restarting the index typically takes
+               a few minutes, during which searches can't be served. </p>
+
+            <p>In the event of a longer outage, the <a rel="nofollow" href="https://twitter.com/MarginaliaNu">@marginalianu</a> feed
+                on Twitter may have details, otherwise you can always send me an email at <tt>kontakt@marginalia.nu</tt>.</p>
+
+            <p>This page will attempt to refresh automatically every few seconds.</p>
+        </article>
+   </body>
+</html>

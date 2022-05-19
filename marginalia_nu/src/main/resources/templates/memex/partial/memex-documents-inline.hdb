@@ -1,0 +1,10 @@
+{{#pragma this "LISTING"}}
+{{#if docs}}<h2>Documents</h2><br>{{/if}}
+<div class="listing">
+{{#each docs}}
+{{#unless index}}
+  <a class="doc" title="{{title}}" href="{{urlRoot}}{{url}}">{{url.filename}}</a><br />
+{{/unless}}
+{{/each}}
+</div>
+{{/pragma}}

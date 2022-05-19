@@ -1,0 +1,17 @@
+# Search Engine
+
+=> /search Search
+=> /search-about.gmi About
+
+## Results for "{{{query}}}"
+
+{{#each entries}}
+({{type}}) - {{definition}}
+{{/each}}
+
+## Legal
+
+These definitions are from wiktionary, available under GFDL and CC BY-SA 3.0, except for fair use exceptions.
+
+=> https://en.wiktionary.org/
+=> https://dumps.wikimedia.org/legal.html

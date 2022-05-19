@@ -1,0 +1,12 @@
+# Search Engine
+
+=> /search Search
+=> /search-about.gmi About
+
+{{query}} = {{result}}
+
+## Warning
+
+These results use floating point calculations, and may not be accurate
+for very large or very small numbers. Do not use for orbital calculations,
+thesis projects, or other sensitive work.

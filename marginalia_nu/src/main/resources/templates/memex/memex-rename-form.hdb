@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+{{>memex/partial/memex-head}}
+<body>
+{{>memex/partial/memex-topbar}}
+<article>
+<h1>Rename {{url}}</h1>
+<section id="memex-node">
+<form method="post" action="{{urlRoot}}/api/rename">
+<input type="hidden" name="url" value="{{url}}">
+<input type="hidden" name="type" value="{{type}}">
+<input class="path" type="text" name="name" value="{{url}}"><br>
+<input type="checkbox" name="confirm" id="confirm"> <label for="confirm">Confirm rename</label><br>
+<input type="submit" value="Rename">
+</form>
+<hr>
+{{#if doc}}{{{doc}}}{{/if}}
+{{#if image}}<img src="data:image/png;base64,{{image.data}}">{{/if}}
+</section>
+{{>memex/partial/memex-backlinks}}
+</article>
+{{> memex/partial/memex-footer}}
+</body>
