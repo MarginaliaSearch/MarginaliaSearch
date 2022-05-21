@@ -1,4 +1,5 @@
 *.class
+*.swp
 build/
 *~
 .gradle/
