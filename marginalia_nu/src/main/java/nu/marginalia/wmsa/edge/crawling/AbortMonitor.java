@@ -2,7 +2,6 @@ package nu.marginalia.wmsa.edge.crawling;
 
 
 import lombok.SneakyThrows;
-import nu.marginalia.wmsa.edge.tools.ReindexMain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +15,7 @@ public class AbortMonitor {
 
     public static AbortMonitor getInstance() {
         if (instance == null) {
-            synchronized (ReindexMain.AbortMonitor.class) {
+            synchronized (AbortMonitor.class) {
                 if (instance == null) {
                     instance = new AbortMonitor();
                     new Thread(instance::run, "AbortMon").start();

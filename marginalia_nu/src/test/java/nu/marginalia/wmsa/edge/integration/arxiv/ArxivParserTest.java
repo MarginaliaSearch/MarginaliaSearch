@@ -2,9 +2,9 @@ package nu.marginalia.wmsa.edge.integration.arxiv;
 
 import nu.marginalia.util.TestLanguageModels;
 import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
-import nu.marginalia.wmsa.edge.crawler.domain.language.conf.LanguageModels;
-import nu.marginalia.wmsa.edge.crawler.domain.language.processing.DocumentKeywordExtractor;
-import nu.marginalia.wmsa.edge.crawler.domain.language.processing.SentenceExtractor;
+import nu.marginalia.util.language.conf.LanguageModels;
+import nu.marginalia.util.language.processing.DocumentKeywordExtractor;
+import nu.marginalia.util.language.processing.SentenceExtractor;
 import nu.marginalia.wmsa.edge.integration.arxiv.model.ArxivMetadata;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;

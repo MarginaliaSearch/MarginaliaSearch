@@ -6,16 +6,14 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
-import nu.marginalia.wmsa.edge.crawler.domain.UrlsCache;
 import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklist;
-import nu.marginalia.wmsa.edge.model.*;
+import nu.marginalia.wmsa.edge.model.EdgeDomain;
+import nu.marginalia.wmsa.edge.model.EdgeId;
+import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
-import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainLink;
-import nu.marginalia.wmsa.edge.model.crawl.EdgeUrlVisit;
 import nu.marginalia.wmsa.edge.model.search.EdgePageScoreAdjustment;
 import nu.marginalia.wmsa.edge.model.search.EdgeUrlDetails;
 import nu.marginalia.wmsa.edge.search.BrowseResult;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,24 +24,17 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static nu.marginalia.wmsa.edge.crawler.worker.UploaderWorker.QUALITY_LOWER_BOUND_CUTOFF;
 
 public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
-    private static final int DB_LOCK_RETRIES = 3;
-
     private final HikariDataSource dataSource;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final Cache<EdgeUrl, EdgeId<EdgeUrl>> urlIdCache = CacheBuilder.newBuilder().maximumSize(100_000).build();
     private final Cache<EdgeDomain, EdgeId<EdgeDomain>> domainIdCache = CacheBuilder.newBuilder().maximumSize(10_000).build();
 
-    private final UrlsCache<EdgeUrl> URLS_INSERTED_CACHE = new UrlsCache<>();
-    private final UrlsCache<EdgeDomain> DOMAINS_INSERTED_CACHE = new UrlsCache<>();
-
     private static final String DEFAULT_PROTOCOL = "http";
-
+    public static double QUALITY_LOWER_BOUND_CUTOFF = -15.;
     @Inject
     public EdgeDataStoreDaoImpl(HikariDataSource dataSource)
     {
@@ -55,341 +46,6 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
     {
         urlIdCache.invalidateAll();
         domainIdCache.invalidateAll();
-        URLS_INSERTED_CACHE.clear();
-        DOMAINS_INSERTED_CACHE.clear();
-    }
-
-    @Override
-    @SneakyThrows
-    public void putUrl(double quality, EdgeUrl... urls) {
-        if (quality > 0.5) {
-            logger.warn("Put URL q={} {}", quality, urls);
-        }
-
-        if (urls.length == 0) {
-            return;
-        }
-
-        try (var connection = dataSource.getConnection()) {
-
-            connection.setAutoCommit(false);
-
-            for (int i = 0; i < DB_LOCK_RETRIES; i++) {
-                try {
-                    var domains = Arrays.stream(urls)
-                            .map(EdgeUrl::getDomain)
-                            .distinct().toArray(EdgeDomain[]::new);
-
-                    insert(connection, domains, quality);
-                    insert(connection, urls);
-                    connection.commit();
-                    break;
-                } catch (Exception ex) {
-                    logger.error("DB error", ex);
-                    connection.rollback();
-                } finally {
-                    connection.setAutoCommit(true);
-                }
-            }
-        }
-    }
-
-
-    @Override
-    @SneakyThrows
-    public void putFeeds(EdgeUrl... urls) {
-        if (urls.length == 0) {
-            return;
-        }
-
-        try (var connection = dataSource.getConnection()) {
-            connection.setAutoCommit(false);
-
-            for (int i = 0; i < DB_LOCK_RETRIES; i++) {
-                try {
-                    insertFeed(connection, urls);
-                    connection.commit();
-                    break;
-                } catch (Exception ex) {
-                    logger.error("DB error", ex);
-                    connection.rollback();
-                }
-                finally {
-                    connection.setAutoCommit(true);
-                }
-            }
-        }
-    }
-
-    @Override
-    @SneakyThrows
-    public void putUrlVisited(EdgeUrlVisit... urls) {
-        if (urls.length == 0) {
-            return;
-        }
-
-        try (var connection = dataSource.getConnection()) {
-
-            connection.setAutoCommit(false);
-
-            for (int i = 0; i < DB_LOCK_RETRIES; i++) {
-                try {
-                    insert(connection, Arrays.stream(urls).map(url -> url.getUrl().domain).toArray(EdgeDomain[]::new), Optional.ofNullable(urls[0].quality).orElse(-2.));
-                    visited(connection, urls);
-                    connection.commit();
-                    break;
-                } catch (Exception ex) {
-                    logger.error("DB error", ex);
-                    connection.rollback();
-                } finally {
-                    connection.setAutoCommit(true);
-                }
-            }
-        }
-    }
-
-    @SneakyThrows
-    private void insert(Connection connection, EdgeUrl[] urls) {
-
-        EdgeUrl[] toCommitUrls = Arrays
-                .stream(urls)
-                .filter(URLS_INSERTED_CACHE::isMissing)
-                .sorted(Comparator.comparing(url -> url.toString().length()))
-                .distinct()
-                .toArray(EdgeUrl[]::new);
-
-        int size = 0;
-        try (var stmt =
-                     connection.prepareStatement("INSERT IGNORE INTO EC_URL (URL, DOMAIN_ID, PROTO, PORT) SELECT ? AS URL, ID, ?, ? AS DOMAIN_ID FROM EC_DOMAIN WHERE URL_PART=?")) {
-            for (var url : toCommitUrls) {
-                logger.trace("insert({})", url);
-
-                if (url.path.length() > 255) {
-                    logger.warn("(insert) URL too long: {}", url);
-                    continue;
-                }
-
-                stmt.setString(1, url.path);
-                stmt.setString(2, url.proto);
-                if (url.port != null) {
-                    stmt.setInt(3, url.port);
-                }
-                else {
-                    stmt.setNull(3, Types.INTEGER);
-                }
-                stmt.setString(4, url.domain.toString());
-                stmt.addBatch();
-                if ((++size % 100) == 0) {
-                    int[] status = stmt.executeBatch();
-                    checkExecuteStatus("insert", status);
-                }
-            }
-            int[] status = stmt.executeBatch();
-            checkExecuteStatus("insert", status);
-
-            URLS_INSERTED_CACHE.addAll(toCommitUrls);
-        }
-
-    }
-
-    @SneakyThrows
-    private void visited(Connection connection, EdgeUrlVisit[] visits) {
-        int size = 0;
-
-        try (var stmt =
-                     connection.prepareStatement(
-                             "UPDATE EC_URL INNER JOIN EC_DOMAIN ON DOMAIN_ID=EC_DOMAIN.ID " +
-                                     "SET QUALITY_MEASURE=?, DATA_HASH=?, IP=?, EC_URL.STATE=?, VISITED=TRUE " +
-                                     " WHERE URL_PART=? AND URL=?")) {
-            for (var visit : visits) {
-                logger.trace("(visit) insert({})", visit);
-
-                if (visit.url.path.length() > 255) {
-                    logger.warn("URL too long: {}", visit.url);
-                    continue;
-                }
-
-                if (visit.quality != null) {
-                    stmt.setDouble(1, visit.quality);
-                } else {
-                    stmt.setNull(1, Types.DOUBLE);
-                }
-
-                if (visit.data_hash_code != null) {
-                    stmt.setInt(2, visit.data_hash_code);
-                } else {
-                    stmt.setNull(2, Types.INTEGER);
-                }
-
-                stmt.setString(3, visit.ipAddress);
-                stmt.setString(4, visit.urlState.toString());
-                stmt.setString(5, visit.url.domain.toString());
-                stmt.setString(6, visit.url.path);
-                stmt.addBatch();
-                if ((++size % 100) == 0) {
-                    int[] status = stmt.executeBatch();
-                    checkExecuteStatus("set-visited", status);
-                }
-            }
-            var status = stmt.executeBatch();
-
-            checkExecuteStatus("set-visited", status);
-        }
-
-        try (var stmt =
-                     connection.prepareStatement("REPLACE INTO EC_PAGE_DATA (ID, TITLE, DESCRIPTION, WORDS_DISTINCT, WORDS_TOTAL, FORMAT, FEATURES) SELECT ID, ?,?,?,?,?,? FROM EC_URL_VIEW WHERE URL_DOMAIN=? AND URL_PATH=? AND URL_PROTO=? AND IFNULL(URL_PORT,-1)=IFNULL(?,-1)")) {
-            for (var visit : visits) {
-
-
-                if (visit.title != null) {
-                    stmt.setString(1, StringUtils.truncate(visit.title, 255));
-                }
-                else {
-                    stmt.setNull(1, Types.VARCHAR);
-                }
-
-                if (visit.description != null) {
-                    stmt.setString(2, StringUtils.truncate(visit.description, 255));
-                }
-                else {
-                    stmt.setNull(2, Types.VARCHAR);
-                }
-
-                stmt.setInt(3, visit.wordCountDistinct);
-                stmt.setInt(4, visit.wordCountTotal);
-                stmt.setString(5, visit.format);
-                stmt.setInt(6, visit.features);
-                stmt.setString(7, visit.url.domain.toString());
-                stmt.setString(8, visit.url.path);
-                stmt.setString(9, visit.url.proto);
-                if (visit.url.port == null) {
-                    stmt.setNull(10, Types.INTEGER);
-                } else {
-                    stmt.setInt(10, visit.url.port);
-                }
-                stmt.addBatch();
-            }
-            var status = stmt.executeBatch();
-            checkExecuteStatus("set-visited2", status);
-
-        }
-    }
-
-    private void checkExecuteStatus(String operation, int[] status) {
-    }
-
-    @SneakyThrows
-    private void insertFeed(Connection connection, EdgeUrl[] urls) {
-
-        int size = 0;
-        try (var stmt =
-                     connection.prepareStatement("INSERT IGNORE INTO EC_FEED_URL (URL, DOMAIN_ID, PROTO, PORT) SELECT ? AS URL, ID, ?, ? AS DOMAIN_ID FROM EC_DOMAIN WHERE URL_PART=?")) {
-            for (var url : urls) {
-                logger.trace("insert({})", url);
-
-                if (url.path.length() > 255) {
-                    logger.warn("(insert) URL too long: {}", url);
-                    continue;
-                }
-
-                stmt.setString(1, url.path);
-                stmt.setString(2, url.proto);
-                if (url.port != null) {
-                    stmt.setInt(3, url.port);
-                }
-                else {
-                    stmt.setNull(3, Types.INTEGER);
-                }
-                stmt.setString(4, url.domain.toString());
-                stmt.addBatch();
-                if ((++size % 100) == 0) {
-                    int[] status = stmt.executeBatch();
-                    checkExecuteStatus("insert", status);
-                }
-            }
-            int[] status = stmt.executeBatch();
-            checkExecuteStatus("insert", status);
-        }
-
-    }
-    @SneakyThrows
-    private void insert(Connection connection, EdgeDomain[] domains, double quality) {
-        EdgeDomain[] toCommitDomains = Arrays.stream(domains).filter(DOMAINS_INSERTED_CACHE::isMissing).distinct().toArray(EdgeDomain[]::new);
-
-        try (var stmt =
-                     connection.prepareStatement("INSERT IGNORE INTO EC_TOP_DOMAIN (URL_PART) VALUES (?)")) {
-            for (var domain : toCommitDomains) {
-                stmt.setString(1, domain.getDomain());
-                stmt.addBatch();
-            }
-            var status = stmt.executeBatch();
-            checkExecuteStatus("insert", status);
-        }
-
-        int size = 0;
-
-        if (quality > 0.5) {
-            logger.warn("1 quality insert? {}", quality);
-        }
-
-        try (var stmt =
-                     connection.prepareStatement("INSERT IGNORE INTO EC_DOMAIN (URL_PART, QUALITY, QUALITY_ORIGINAL, URL_TOP_DOMAIN_ID, URL_SUBDOMAIN, RANK) SELECT ?, IFNULL(EC_DOMAIN_HISTORY.QUALITY_MEASURE*IFNULL(EC_DOMAIN_HISTORY.RANK, 1), ?), ?, EC_TOP_DOMAIN.ID, ?, IFNULL(EC_DOMAIN_HISTORY.RANK,1) FROM EC_TOP_DOMAIN LEFT JOIN EC_DOMAIN_HISTORY ON EC_DOMAIN_HISTORY.URL_PART=? WHERE EC_TOP_DOMAIN.URL_PART=?")) {
-            for (var domain : toCommitDomains) {
-                logger.trace("insert({})", domain);
-                stmt.setString(1, domain.toString());
-                stmt.setDouble(2, quality);
-                stmt.setDouble(3, quality);
-
-                stmt.setString(4, domain.subDomain);
-
-                stmt.setString(5, domain.toString());
-                stmt.setString(6, domain.domain);
-
-                stmt.addBatch();
-
-                if ((++size % 100) == 0) {
-                    int[] status = stmt.executeBatch();
-                    checkExecuteStatus("insert", status);
-                }
-            }
-            var status = stmt.executeBatch();
-            checkExecuteStatus("insert", status);
-
-            DOMAINS_INSERTED_CACHE.addAll(toCommitDomains);
-        }
-
-    }
-
-    @Override
-    @SneakyThrows
-    public void putLink(boolean wipeExisting, EdgeDomainLink... links) {
-        if (links.length == 0) {
-            return;
-        }
-
-        try (var connection = dataSource.getConnection()) {
-            connection.setAutoCommit(false);
-
-            var domains = Arrays.stream(links).flatMap(link ->
-                    Stream.concat(Stream.of(link.destination),
-                            Stream.of(link.source)))
-                    .distinct().toArray(EdgeDomain[]::new);
-
-            for (int i = 0; i < DB_LOCK_RETRIES; i++) {
-                try {
-                    insert(connection, domains, -5);
-                    insert(connection, links, wipeExisting);
-                    connection.commit();
-                    break;
-
-                } catch (Exception ex) {
-                    logger.error("DB error", ex);
-                    connection.rollback();
-                } finally {
-                    connection.setAutoCommit(true);
-                }
-            }
-        }
     }
 
     @SneakyThrows
@@ -406,41 +62,6 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
                     return false;
                 }
             }
-        }
-    }
-
-    @SneakyThrows
-    private void insert(Connection connection, EdgeDomainLink[] links, boolean wipeExisting) {
-
-        int size = 0;
-        if (wipeExisting) {
-            try (var stmt = connection.prepareStatement("DELETE FROM EC_DOMAIN_LINK WHERE SOURCE_DOMAIN_ID=?")) {
-                EdgeDomain[] sources = Arrays.stream(links).map(EdgeDomainLink::getSource).distinct().toArray(EdgeDomain[]::new);
-                for (var source : sources) {
-                    stmt.setInt(1, getDomainId(source).getId());
-                    stmt.executeUpdate();
-                }
-            }
-        }
-
-        try (var stmt =
-                     connection.prepareStatement(
-                             "INSERT IGNORE INTO EC_DOMAIN_LINK (SOURCE_DOMAIN_ID, DEST_DOMAIN_ID) SELECT SRC.DOMAIN_ID, DEST.DOMAIN_ID FROM (SELECT EC_DOMAIN.ID AS DOMAIN_ID FROM EC_DOMAIN WHERE EC_DOMAIN.URL_PART=?) AS SRC, (SELECT EC_DOMAIN.ID AS DOMAIN_ID FROM EC_DOMAIN WHERE EC_DOMAIN.URL_PART=?) AS DEST")) {
-
-            for (EdgeDomainLink link : links) {
-                stmt.setString(1, link.source.toString());
-                stmt.setString(2, link.destination.toString());
-
-                stmt.addBatch();
-
-                if ((++size % 100) == 0) {
-                    int[] status = stmt.executeBatch();
-                    checkExecuteStatus("insert", status);
-                }
-            }
-
-            var status = stmt.executeBatch();
-            checkExecuteStatus("insert", status);
         }
     }
 
@@ -911,37 +532,6 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
         }
 
         return Optional.empty();
-    }
-
-    @SneakyThrows
-    @Override
-    public void putDomainAlias(EdgeDomain src, EdgeDomain dst) {
-        try (var connection = dataSource.getConnection()) {
-
-            for (int i = 0; i < DB_LOCK_RETRIES; i++) {
-                connection.setAutoCommit(false);
-
-                if (!DOMAINS_INSERTED_CACHE.contains(dst)) {
-                    insert(connection, new EdgeDomain[] { dst }, getDomainQuality(connection, src));
-                }
-
-                try (var stmt = connection.prepareStatement("UPDATE EC_DOMAIN AS D, EC_DOMAIN AS S SET S.DOMAIN_ALIAS=D.ID WHERE S.URL_PART=? AND D.URL_PART=?")) {
-                    stmt.setString(1, src.toString());
-                    stmt.setString(2, dst.toString());
-                    stmt.executeUpdate();
-                    connection.commit();
-                    break;
-                } catch (SQLException ex) {
-                    logger.error("DB Error", ex);
-                    connection.rollback();
-                }
-                finally {
-                    connection.setAutoCommit(true);
-                }
-            }
-
-        }
-
     }
 
     @SneakyThrows

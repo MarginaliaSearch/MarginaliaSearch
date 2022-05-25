@@ -13,8 +13,6 @@ import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.configuration.server.Initialization;
 import nu.marginalia.wmsa.configuration.server.MetricsServer;
 import nu.marginalia.wmsa.configuration.server.Service;
-import nu.marginalia.wmsa.data_store.client.DataStoreClient;
-import nu.marginalia.wmsa.data_store.meta.DomainInformation;
 import nu.marginalia.wmsa.edge.assistant.client.AssistantClient;
 import nu.marginalia.wmsa.edge.assistant.dict.DictionaryResponse;
 import nu.marginalia.wmsa.edge.assistant.screenshot.ScreenshotService;
@@ -25,8 +23,8 @@ import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeId;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
-import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeUserSearchParameters;
+import nu.marginalia.wmsa.edge.search.siteinfo.DomainInformationService;
 import nu.marginalia.wmsa.renderer.mustache.MustacheRenderer;
 import nu.marginalia.wmsa.renderer.mustache.RendererFactory;
 import org.slf4j.Logger;
@@ -45,12 +43,12 @@ public class EdgeSearchService extends Service {
 
     private final EdgeDataStoreDao edgeDataStoreDao;
     private final EdgeIndexClient indexClient;
-    private final DataStoreClient dataStoreClient;
     private final AssistantClient assistantClient;
     private final UnitConversion unitConversion;
     private final EdgeSearchOperator searchOperator;
     private final EdgeDomainBlacklist blacklist;
     private final ScreenshotService screenshotService;
+    private DomainInformationService domainInformationService;
 
     private final MustacheRenderer<BrowseResultSet> browseResultsRenderer;
     private final MustacheRenderer<DecoratedSearchResults> searchResultsRenderer;
@@ -79,12 +77,12 @@ public class EdgeSearchService extends Service {
                              RendererFactory rendererFactory,
                              Initialization initialization,
                              MetricsServer metricsServer,
-                             DataStoreClient dataStoreClient,
                              AssistantClient assistantClient,
                              UnitConversion unitConversion,
                              EdgeSearchOperator searchOperator,
                              EdgeDomainBlacklist blacklist,
-                             ScreenshotService screenshotService
+                             ScreenshotService screenshotService,
+                             DomainInformationService domainInformationService
                              ) {
         super(ip, port, initialization, metricsServer);
         this.edgeDataStoreDao = edgeDataStoreDao;
@@ -104,22 +102,19 @@ public class EdgeSearchService extends Service {
         conversionRenderer = rendererFactory.renderer("edge/conversion-results");
         conversionRendererGmi  = rendererFactory.renderer("edge/conversion-results-gmi");
 
-        this.dataStoreClient = dataStoreClient;
         this.assistantClient = assistantClient;
         this.unitConversion = unitConversion;
         this.searchOperator = searchOperator;
         this.blacklist = blacklist;
         this.screenshotService = screenshotService;
+        this.domainInformationService = domainInformationService;
 
         Spark.staticFiles.expireTime(600);
 
         Spark.get("/search", this::pathSearch);
 
         Spark.get("/api/search", this::apiSearch, gson::toJson);
-
         Spark.get("/public/search", this::pathSearch);
-        Spark.get("/public/submit", this::pathSubmit);
-
         Spark.get("/site-search/:site/*", this::siteSearchRedir);
         Spark.get("/public/site-search/:site/*", this::siteSearchRedir);
 
@@ -162,18 +157,6 @@ public class EdgeSearchService extends Service {
             rsp.body("<html><head><title>Error</title><link rel=\"stylesheet\" href=\"https://www.marginalia.nu/style.css\"> <meta http-equiv=\"refresh\" content=\"5\"> </head><body><article><h1>Error</h1><p>Oops! It appears the index server is <span class=\"headline\">unresponsive</span>.</p> <p>The server was probably restarted to bring online some changes. Restarting the index typically takes a few minutes, during which searches can't be served. </p><p>This page will attempt to refresh automatically every few seconds.</p></body></html>");
         }
 
-    }
-
-    @SneakyThrows
-    private Object pathSubmit(Request request, Response response) {
-        String url = request.queryString();
-
-        var urlToSubmit = new EdgeUrl(url);
-
-        logger.info("Submitting {}", url);
-        edgeDataStoreDao.putUrl(0, urlToSubmit);
-
-        return "ok";
     }
 
     @SneakyThrows
@@ -309,19 +292,12 @@ public class EdgeSearchService extends Service {
         String word = humanQuery.substring(definePrefix.length()).toLowerCase();
 
         logger.info("Fetching Site Info: {}", word);
-        try {
-            var results = dataStoreClient
-                    .siteInfo(ctx, word)
-                    .blockingFirst();
-            logger.debug("Results = {}", results);
+        var results = domainInformationService.domainInfo(word)
+                .orElseGet(() -> new DomainInformation(null, false, 0, 0, 0, 0, 0, 0, 0, EdgeDomainIndexingState.UNKNOWN, Collections.emptyList()));
 
-            return results;
-        }
-        catch (Exception ex) {
-            logger.debug("No Results");
+        logger.debug("Results = {}", results);
 
-            return new DomainInformation(null, false, 0, 0, 0, 0, 0, 0, 0, EdgeDomainIndexingState.UNKNOWN, Collections.emptyList());
-        }
+        return results;
 
     }
 

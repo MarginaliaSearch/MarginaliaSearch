@@ -1,6 +1,5 @@
 package nu.marginalia.wmsa.edge.converting.processor.logic;
 
-import nu.marginalia.wmsa.edge.crawler.domain.processor.HtmlFeature;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDomain;
 import org.jsoup.nodes.Document;
 

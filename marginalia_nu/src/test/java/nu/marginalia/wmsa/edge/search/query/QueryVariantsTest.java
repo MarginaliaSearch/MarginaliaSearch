@@ -2,8 +2,8 @@ package nu.marginalia.wmsa.edge.search.query;
 
 import nu.marginalia.util.TestLanguageModels;
 import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
-import nu.marginalia.wmsa.edge.crawler.domain.language.conf.LanguageModels;
-import nu.marginalia.wmsa.edge.crawler.domain.language.processing.SentenceExtractor;
+import nu.marginalia.util.language.conf.LanguageModels;
+import nu.marginalia.util.language.processing.SentenceExtractor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

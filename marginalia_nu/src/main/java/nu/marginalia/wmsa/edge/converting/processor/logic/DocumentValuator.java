@@ -2,7 +2,7 @@ package nu.marginalia.wmsa.edge.converting.processor.logic;
 
 import crawlercommons.utils.Strings;
 import nu.marginalia.wmsa.edge.converting.model.DisqualifiedException;
-import nu.marginalia.wmsa.edge.crawler.domain.language.processing.model.DocumentLanguageData;
+import nu.marginalia.util.language.processing.model.DocumentLanguageData;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeHtmlStandard;
 import org.jsoup.nodes.Document;
 

@@ -1,9 +1,9 @@
 package nu.marginalia.wmsa.edge.integration.stackoverflow;
 
 import com.google.inject.Inject;
-import nu.marginalia.wmsa.edge.crawler.domain.LinkParser;
-import nu.marginalia.wmsa.edge.crawler.domain.language.processing.DocumentKeywordExtractor;
-import nu.marginalia.wmsa.edge.crawler.domain.language.processing.SentenceExtractor;
+import nu.marginalia.wmsa.edge.converting.processor.logic.LinkParser;
+import nu.marginalia.util.language.processing.DocumentKeywordExtractor;
+import nu.marginalia.util.language.processing.SentenceExtractor;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.integration.model.BasicDocumentData;
 import nu.marginalia.wmsa.edge.integration.stackoverflow.model.StackOverflowPost;

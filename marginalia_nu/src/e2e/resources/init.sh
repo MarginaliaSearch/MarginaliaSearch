@@ -42,15 +42,12 @@ EOF
 cat > /var/lib/wmsa/conf/hosts <<EOF
 # service-name host-name
 resource-store resource-store
-data-store data-store
 renderer renderer
 auth auth
 api api
 smhi-scraper smhi-scraper
 podcast-scraper podcast-scraper
-edge-crawler edge-crawler
 edge-index edge-index
-edge-director edge-director
 edge-search edge-search
 edge-archive edge-archive
 edge-assistant edge-assistant

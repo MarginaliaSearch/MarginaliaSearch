@@ -3,7 +3,7 @@ package nu.marginalia.wmsa.edge.assistant.suggest;
 import nu.marginalia.util.TestLanguageModels;
 import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.wmsa.edge.assistant.dict.SpellChecker;
-import nu.marginalia.wmsa.edge.crawler.domain.language.conf.LanguageModels;
+import nu.marginalia.util.language.conf.LanguageModels;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 

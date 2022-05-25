@@ -1,7 +1,7 @@
 package nu.marginalia.util;
 
 import nu.marginalia.wmsa.configuration.WmsaHome;
-import nu.marginalia.wmsa.edge.crawler.domain.language.conf.LanguageModels;
+import nu.marginalia.util.language.conf.LanguageModels;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

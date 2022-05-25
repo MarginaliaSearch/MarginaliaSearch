@@ -3,7 +3,7 @@ package nu.marginalia.wmsa.edge.search.results;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
-import nu.marginalia.wmsa.edge.crawler.domain.language.WordPatterns;
+import nu.marginalia.util.language.WordPatterns;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchResultKeywordScore;
 

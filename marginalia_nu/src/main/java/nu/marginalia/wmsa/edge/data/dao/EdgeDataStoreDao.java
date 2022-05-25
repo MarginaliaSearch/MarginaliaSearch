@@ -15,12 +15,6 @@ import java.util.Optional;
 
 @ImplementedBy(EdgeDataStoreDaoImpl.class)
 public interface EdgeDataStoreDao {
-    void putUrl(double quality, EdgeUrl... url);
-    void putFeeds(EdgeUrl... url);
-
-    void putUrlVisited(EdgeUrlVisit... urls);
-
-    void putLink(boolean wipeExisting, EdgeDomainLink... links);
     boolean isBlacklisted(EdgeDomain domain);
 
     EdgeId<EdgeDomain> getDomainId(EdgeDomain domain);
@@ -42,7 +36,6 @@ public interface EdgeDataStoreDao {
 
     Optional<EdgeId<EdgeUrl>> resolveAmbiguousDomain(String name);
 
-    void putDomainAlias(EdgeDomain src, EdgeDomain dst);
 
     int getPagesKnown(EdgeId<EdgeDomain> domainId);
     int getPagesVisited(EdgeId<EdgeDomain> domainId);

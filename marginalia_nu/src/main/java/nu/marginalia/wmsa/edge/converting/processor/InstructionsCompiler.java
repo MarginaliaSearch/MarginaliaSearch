@@ -4,7 +4,7 @@ import nu.marginalia.wmsa.edge.converting.interpreter.Instruction;
 import nu.marginalia.wmsa.edge.converting.interpreter.instruction.*;
 import nu.marginalia.wmsa.edge.converting.model.ProcessedDocument;
 import nu.marginalia.wmsa.edge.converting.model.ProcessedDomain;
-import nu.marginalia.wmsa.edge.crawler.domain.processor.HtmlFeature;
+import nu.marginalia.wmsa.edge.converting.processor.logic.HtmlFeature;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 

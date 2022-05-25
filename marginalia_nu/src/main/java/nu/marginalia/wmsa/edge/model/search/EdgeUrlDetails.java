@@ -1,7 +1,7 @@
 package nu.marginalia.wmsa.edge.model.search;
 
 import lombok.*;
-import nu.marginalia.wmsa.edge.crawler.domain.processor.HtmlFeature;
+import nu.marginalia.wmsa.edge.converting.processor.logic.HtmlFeature;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.search.EdgeSearchRankingSymbols;

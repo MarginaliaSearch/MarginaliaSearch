@@ -6,12 +6,9 @@ import nu.marginalia.wmsa.configuration.command.Command;
 import nu.marginalia.wmsa.configuration.command.ListCommand;
 import nu.marginalia.wmsa.configuration.command.StartCommand;
 import nu.marginalia.wmsa.configuration.command.VersionCommand;
-import nu.marginalia.wmsa.data_store.DataStoreMain;
 import nu.marginalia.wmsa.edge.archive.EdgeArchiveMain;
 import nu.marginalia.wmsa.edge.assistant.EdgeAssistantMain;
-import nu.marginalia.wmsa.edge.crawler.EdgeCrawlerMain;
 import nu.marginalia.wmsa.edge.dating.DatingMain;
-import nu.marginalia.wmsa.edge.director.EdgeDirectorMain;
 import nu.marginalia.wmsa.edge.index.EdgeIndexMain;
 import nu.marginalia.wmsa.edge.search.EdgeSearchMain;
 import nu.marginalia.wmsa.memex.MemexMain;
@@ -21,16 +18,12 @@ import nu.marginalia.wmsa.resource_store.ResourceStoreMain;
 import nu.marginalia.wmsa.smhi.scraper.SmhiScraperMain;
 import org.apache.logging.log4j.core.lookup.MainMapLookup;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public enum ServiceDescriptor {
     RESOURCE_STORE("resource-store", 5000, ResourceStoreMain.class),
-    DATA_STORE("data-store", 5001, DataStoreMain.class),
     RENDERER("renderer", 5002, RendererMain.class),
     AUTH("auth", 5003, AuthMain.class),
     API("api", 5004, ApiMain.class),
@@ -38,9 +31,7 @@ public enum ServiceDescriptor {
     SMHI_SCRAPER("smhi-scraper",5012, SmhiScraperMain.class),
     PODCST_SCRAPER("podcast-scraper", 5013, PodcastScraperMain.class),
 
-    EDGE_CRAWLER("edge-crawler", 5020, EdgeCrawlerMain.class),
     EDGE_INDEX("edge-index", 5021, EdgeIndexMain.class),
-    EDGE_DIRECTOR("edge-director", 5022, EdgeDirectorMain.class),
     EDGE_SEARCH("edge-search", 5023, EdgeSearchMain.class),
     EDGE_ARCHIVE("edge-archive", 5024, EdgeArchiveMain.class),
     EDGE_ASSISTANT("edge-assistant", 5025, EdgeAssistantMain.class),

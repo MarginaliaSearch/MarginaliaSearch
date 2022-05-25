@@ -7,7 +7,7 @@ import java.util.Arrays;
 
 public class TestUtil {
     private static boolean isTempDir(Path dir) {
-        return dir.startsWith("/tmp") || dir.toString().contains("Temp");
+        return dir.startsWith("/tmp") || dir.toString().contains("tmp");
     }
     public static void clearTempDir(Path dir) {
         if (!isTempDir(dir)) {

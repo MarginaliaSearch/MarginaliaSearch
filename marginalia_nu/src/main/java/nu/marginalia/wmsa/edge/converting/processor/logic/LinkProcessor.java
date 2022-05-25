@@ -1,7 +1,7 @@
 package nu.marginalia.wmsa.edge.converting.processor.logic;
 
 import nu.marginalia.wmsa.edge.converting.model.ProcessedDocumentDetails;
-import nu.marginalia.wmsa.edge.crawler.worker.UrlBlocklist;
+import nu.marginalia.wmsa.edge.crawling.blocklist.UrlBlocklist;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 

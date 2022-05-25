@@ -1,6 +1,7 @@
 package nu.marginalia.wmsa.edge;
 
 
+import nu.marginalia.util.test.TestUtil;
 import nu.marginalia.wmsa.configuration.ServiceDescriptor;
 import nu.marginalia.wmsa.edge.crawling.CrawlJobExtractorMain;
 import org.jsoup.Jsoup;
@@ -139,7 +140,7 @@ public class EdgeSearchE2ETest {
 
         List<String> urls = new ArrayList<>();
         try {
-            Files.deleteIfExists(wikipediaFiles);
+            TestUtil.clearTempDir(wikipediaFiles);
             Files.createDirectories(wikipediaFiles);
             Files.createDirectories(crawlFiles);
 
@@ -191,6 +192,10 @@ public class EdgeSearchE2ETest {
         System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
 
         driver.get("http://proxyNginx/search?query=bird&profile=corpo");
+        System.out.println(driver.getTitle());
+        System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
+
+        driver.get("http://proxyNginx/search?query=site:wikipedia");
         System.out.println(driver.getTitle());
         System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
     }

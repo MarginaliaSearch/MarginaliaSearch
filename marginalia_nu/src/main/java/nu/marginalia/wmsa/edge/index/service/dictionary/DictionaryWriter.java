@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import io.prometheus.client.Gauge;
 import lombok.SneakyThrows;
-import nu.marginalia.wmsa.edge.crawler.domain.language.WordPatterns;
+import nu.marginalia.util.language.WordPatterns;
 import nu.marginalia.util.dict.DictionaryHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

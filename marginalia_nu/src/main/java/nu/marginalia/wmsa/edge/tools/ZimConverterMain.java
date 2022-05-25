@@ -5,7 +5,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.wmsa.edge.archive.client.ArchiveClient;
 import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.wmsa.edge.assistant.dict.WikiCleaner;
-import nu.marginalia.wmsa.edge.crawler.domain.language.conf.LanguageModels;
+import nu.marginalia.util.language.conf.LanguageModels;
 import org.jsoup.Jsoup;
 import org.openzim.ZIMTypes.ZIMFile;
 import org.openzim.ZIMTypes.ZIMReader;

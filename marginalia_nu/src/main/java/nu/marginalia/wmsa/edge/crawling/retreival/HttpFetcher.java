@@ -7,10 +7,7 @@ import crawlercommons.robots.SimpleRobotRulesParser;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.ToString;
-import nu.marginalia.wmsa.edge.crawler.domain.LinkParser;
-import nu.marginalia.wmsa.edge.crawler.fetcher.ContentTypeParser;
-import nu.marginalia.wmsa.edge.crawler.fetcher.Cookies;
-import nu.marginalia.wmsa.edge.crawler.fetcher.NoSecuritySSL;
+import nu.marginalia.wmsa.edge.converting.processor.logic.LinkParser;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDocument;
 import nu.marginalia.wmsa.edge.crawling.model.CrawlerDocumentStatus;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
@@ -74,9 +71,12 @@ public class HttpFetcher {
 
     @SneakyThrows
     private OkHttpClient createClient(Dispatcher dispatcher) {
-        return new OkHttpClient.Builder()
-            .dispatcher(dispatcher)
-            .sslSocketFactory(NoSecuritySSL.buildSocketFactory(), (X509TrustManager) NoSecuritySSL.trustAllCerts[0])
+        var builder = new OkHttpClient.Builder();
+        if (dispatcher != null) {
+            builder.dispatcher(dispatcher);
+        }
+
+        return builder.sslSocketFactory(NoSecuritySSL.buildSocketFactory(), (X509TrustManager) NoSecuritySSL.trustAllCerts[0])
             .hostnameVerifier(NoSecuritySSL.buildHostnameVerifyer())
             .cookieJar(cookies.getJar())
             .followRedirects(true)
@@ -98,6 +98,11 @@ public class HttpFetcher {
     @Inject
     public HttpFetcher(@Named("user-agent") String userAgent, Dispatcher dispatcher) {
         this.client = createClient(dispatcher);
+        this.userAgent = userAgent;
+    }
+
+    public HttpFetcher(@Named("user-agent") String userAgent) {
+        this.client = createClient(null);
         this.userAgent = userAgent;
     }
 

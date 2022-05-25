@@ -4,7 +4,7 @@ import com.google.gson.*;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import marcono1234.gson.recordadapter.RecordTypeAdapterFactory;
-import nu.marginalia.wmsa.edge.crawler.domain.language.conf.LanguageModels;
+import nu.marginalia.util.language.conf.LanguageModels;
 import nu.marginalia.wmsa.edge.model.EdgeCrawlPlan;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;

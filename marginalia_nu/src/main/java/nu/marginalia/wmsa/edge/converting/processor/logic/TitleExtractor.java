@@ -2,7 +2,7 @@ package nu.marginalia.wmsa.edge.converting.processor.logic;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import nu.marginalia.wmsa.edge.crawler.domain.language.processing.model.DocumentLanguageData;
+import nu.marginalia.util.language.processing.model.DocumentLanguageData;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Document;
 

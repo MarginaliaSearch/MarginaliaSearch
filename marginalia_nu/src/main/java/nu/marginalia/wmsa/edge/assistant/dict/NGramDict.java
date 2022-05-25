@@ -2,7 +2,7 @@ package nu.marginalia.wmsa.edge.assistant.dict;
 
 import ca.rmen.porterstemmer.PorterStemmer;
 import gnu.trove.map.hash.TLongIntHashMap;
-import nu.marginalia.wmsa.edge.crawler.domain.language.conf.LanguageModels;
+import nu.marginalia.util.language.conf.LanguageModels;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

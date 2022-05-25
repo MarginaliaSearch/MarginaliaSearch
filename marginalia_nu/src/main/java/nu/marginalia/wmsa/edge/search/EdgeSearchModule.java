@@ -1,7 +1,7 @@
 package nu.marginalia.wmsa.edge.search;
 
 import com.google.inject.AbstractModule;
-import nu.marginalia.wmsa.edge.crawler.domain.language.conf.LanguageModels;
+import nu.marginalia.util.language.conf.LanguageModels;
 
 import java.nio.file.Path;
 

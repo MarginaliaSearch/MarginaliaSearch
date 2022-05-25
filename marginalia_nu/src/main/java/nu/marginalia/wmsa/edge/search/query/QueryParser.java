@@ -2,7 +2,7 @@ package nu.marginalia.wmsa.edge.search.query;
 
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import nu.marginalia.wmsa.edge.crawler.domain.language.WordPatterns;
+import nu.marginalia.util.language.WordPatterns;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
