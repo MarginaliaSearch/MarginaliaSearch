@@ -9,6 +9,7 @@ import nu.marginalia.util.ParallelPipe;
 import nu.marginalia.wmsa.edge.integration.model.BasicDocumentData;
 import nu.marginalia.wmsa.edge.integration.stackoverflow.model.StackOverflowPost;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;
 
@@ -17,7 +18,7 @@ import javax.xml.parsers.ParserConfigurationException;
 public class StackOverflowPostsTest {
     final LanguageModels lm = TestLanguageModels.getLanguageModels();
 
-    @Test
+    @Test @Disabled("this is stupidly slow")
     public void test() throws ParserConfigurationException, SAXException, InterruptedException {
         var documentKeywordExtractor = new DocumentKeywordExtractor(new NGramDict(lm));
 
