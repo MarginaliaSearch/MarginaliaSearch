@@ -14,8 +14,8 @@ import nu.marginalia.wmsa.memex.system.MemexFileSystemModifiedTimes;
 import nu.marginalia.wmsa.memex.system.MemexFileWriter;
 import nu.marginalia.wmsa.memex.system.MemexGitRepo;
 import nu.marginalia.wmsa.memex.system.MemexSourceFileSystem;
-import org.junit.BeforeClass;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -47,7 +47,7 @@ class GemtextTaskUpdateTest {
 
     static final Logger logger = LoggerFactory.getLogger(GemtextTaskUpdateTest.class);
 
-    @BeforeClass
+    @BeforeAll
     public static void init() {
 
         RxJavaPlugins.setErrorHandler(e -> {

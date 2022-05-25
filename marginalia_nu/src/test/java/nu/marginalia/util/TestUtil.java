@@ -18,8 +18,13 @@ public class TestUtil {
 
     @SneakyThrows
     public static HikariDataSource getConnection() {
+        return getConnection("jdbc:mysql://localhost:3306/WMSA_test");
+    }
+
+    @SneakyThrows
+    public static HikariDataSource getConnection(String connString) {
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl("jdbc:mysql://localhost:3306/WMSA_test");
+        config.setJdbcUrl(connString);
         config.setUsername("wmsa");
         config.setPassword("wmsa");
         config.setMaximumPoolSize(16);
@@ -29,6 +34,7 @@ public class TestUtil {
 
         return new HikariDataSource(config);
     }
+
     @SneakyThrows
     public static void evalScript(HikariDataSource hds, String scriptFile) {
 

@@ -25,6 +25,8 @@ public class IndexLoadKeywords implements Runnable {
     private final Thread runThread;
     private volatile boolean canceled = false;
 
+    private static final int index = Integer.getInteger("keyword-index", 1);
+
     @Inject
     public IndexLoadKeywords(EdgeIndexClient client) {
         this.client = client;
@@ -37,7 +39,7 @@ public class IndexLoadKeywords implements Runnable {
         while (!canceled) {
             var data = insertQueue.poll(1, TimeUnit.SECONDS);
             if (data != null) {
-                client.putWords(Context.internal(), new EdgeId<>(data.domainId), new EdgeId<>(data.urlId), -5., data.wordSet, 1).blockingSubscribe();
+                client.putWords(Context.internal(), new EdgeId<>(data.domainId), new EdgeId<>(data.urlId), -5., data.wordSet, index).blockingSubscribe();
             }
         }
     }

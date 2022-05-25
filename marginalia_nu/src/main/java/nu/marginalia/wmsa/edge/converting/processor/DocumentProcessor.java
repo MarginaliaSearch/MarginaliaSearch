@@ -79,15 +79,21 @@ public class DocumentProcessor {
             ret.url = new EdgeUrl(crawledDocument.url);
             ret.state = crawlerStatusToUrlState(crawledDocument.crawlerStatus, crawledDocument.httpStatus);
 
-            if (ret.state == EdgeUrlState.OK && isAcceptedContentType(crawledDocument)) {
-                var detailsWords = createDetails(crawledDomain, crawledDocument);
+            if (ret.state == EdgeUrlState.OK) {
 
-                if (detailsWords.details().quality < minDocumentQuality) {
-                    throw new DisqualifiedException(DisqualificationReason.QUALITY);
+                if (isAcceptedContentType(crawledDocument)) {
+                    var detailsWords = createDetails(crawledDomain, crawledDocument);
+
+                    if (detailsWords.details().quality < minDocumentQuality) {
+                        throw new DisqualifiedException(DisqualificationReason.QUALITY);
+                    }
+
+                    ret.details = detailsWords.details();
+                    ret.words = detailsWords.words();
                 }
-
-                ret.details = detailsWords.details();
-                ret.words = detailsWords.words();
+                else {
+                    throw new DisqualifiedException(DisqualificationReason.CONTENT_TYPE);
+                }
             }
             else {
                 throw new DisqualifiedException(DisqualificationReason.STATUS);
@@ -95,7 +101,7 @@ public class DocumentProcessor {
         }
         catch (DisqualifiedException ex) {
             ret.state = EdgeUrlState.DISQUALIFIED;
-            logger.debug("Disqualified {}: {}", ret.url, ex.reason);
+            logger.info("Disqualified {}: {}", ret.url, ex.reason);
         }
         catch (Exception ex) {
             ret.state = EdgeUrlState.DISQUALIFIED;

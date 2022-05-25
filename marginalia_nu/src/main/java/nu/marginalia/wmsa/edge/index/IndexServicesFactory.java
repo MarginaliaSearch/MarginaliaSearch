@@ -88,8 +88,8 @@ public class IndexServicesFactory {
         return new DictionaryReader(getDictionaryWriter());
 
     }
-    @SneakyThrows
-    public SearchIndexConverter getIndexConverter(int id, IndexBlock block) {
+
+    public SearchIndexConverter getIndexConverter(int id, IndexBlock block) throws ConversionUnnecessaryException {
         return new SearchIndexConverter(block, id, tmpFileDir,
                 preconverterOutputFile.get(id),
                 indexWriteWordsFile.get(id, block.id),
@@ -146,14 +146,17 @@ public class IndexServicesFactory {
     public Callable<Boolean> switchFilesJob(int id) {
         return () -> {
             for (int block = 0; block < IndexBlock.values().length; block++) {
-                Files.move(
-                        indexWriteWordsFile.get(id, block).toPath(),
-                        indexReadWordsFile.get(id, block).toPath(),
-                        StandardCopyOption.REPLACE_EXISTING);
-                Files.move(
-                        indexWriteUrlsFile.get(id, block).toPath(),
-                        indexReadUrlsFile.get(id, block).toPath(),
-                        StandardCopyOption.REPLACE_EXISTING);
+                if (Files.exists(indexWriteWordsFile.get(id, block).toPath()) &&
+                    Files.exists(indexWriteUrlsFile.get(id, block).toPath())) {
+                    Files.move(
+                            indexWriteWordsFile.get(id, block).toPath(),
+                            indexReadWordsFile.get(id, block).toPath(),
+                            StandardCopyOption.REPLACE_EXISTING);
+                    Files.move(
+                            indexWriteUrlsFile.get(id, block).toPath(),
+                            indexReadUrlsFile.get(id, block).toPath(),
+                            StandardCopyOption.REPLACE_EXISTING);
+                }
             }
             return true;
         };

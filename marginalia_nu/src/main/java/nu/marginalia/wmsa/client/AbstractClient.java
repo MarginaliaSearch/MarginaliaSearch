@@ -49,7 +49,7 @@ public abstract class AbstractClient implements AutoCloseable {
     private final Thread livenessMonitor;
 
     public AbstractClient(String host, int port, int timeout) {
-        logger.info("Creating client for {}", getClass().getSimpleName());
+        logger.info("Creating client for {}[{}:{}]", getClass().getSimpleName(), host, port);
 
         this.timeout = timeout;
         client = new OkHttpClient.Builder()

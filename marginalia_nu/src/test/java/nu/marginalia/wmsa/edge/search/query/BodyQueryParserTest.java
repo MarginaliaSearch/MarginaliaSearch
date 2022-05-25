@@ -3,7 +3,7 @@ package nu.marginalia.wmsa.edge.search.query;
 import nu.marginalia.util.TestLanguageModels;
 import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.wmsa.edge.crawler.domain.language.conf.LanguageModels;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +17,7 @@ class BodyQueryParserTest {
     private static EnglishDictionary englishDictionary;
     private static final LanguageModels lm = TestLanguageModels.getLanguageModels();
 
-    @BeforeClass
+    @BeforeAll
     public static void init() {
         dict = new NGramDict(lm);
         englishDictionary = new EnglishDictionary(dict);

@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 public class CrawlerRetreiver {
-    private static final long DEFAULT_CRAWL_DELAY_MS = 1000;
+    private static final long DEFAULT_CRAWL_DELAY_MS = Long.getLong("defaultCrawlDelay", 1000);
     private final LinkedList<EdgeUrl> queue = new LinkedList<>();
     private final HttpFetcher fetcher;
     private final HashSet<EdgeUrl> visited;

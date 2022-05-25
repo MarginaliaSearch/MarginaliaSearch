@@ -1,5 +1,6 @@
 package nu.marginalia.wmsa.edge.index.service;
 
+import lombok.SneakyThrows;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.index.service.index.SearchIndexConverter;
 import nu.marginalia.wmsa.edge.index.service.query.SearchIndexPartitioner;
@@ -16,7 +17,7 @@ class SearchIndexConverterTest {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    @Test @Disabled
+    @Test @Disabled @SneakyThrows
     public void test() {
       //  File dictFile = new File("/home/vlofgren/dictionary.dat");
         File inFile = new File("/home/vlofgren/Work/converter/3/page-index.dat");

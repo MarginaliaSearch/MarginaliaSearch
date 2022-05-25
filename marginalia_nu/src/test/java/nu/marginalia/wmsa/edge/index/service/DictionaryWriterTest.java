@@ -42,7 +42,7 @@ class DictionaryWriterTest {
             System.out.println(hitsTotal);
         }
     */
-    @Test  @Disabled
+    @Test  @Disabled @SneakyThrows
     public void convert() {
         new SearchIndexConverter(IndexBlock.Title, 0, Path.of("/tmp"),
                 new File("/home/vlofgren/page-index-0.dat"),

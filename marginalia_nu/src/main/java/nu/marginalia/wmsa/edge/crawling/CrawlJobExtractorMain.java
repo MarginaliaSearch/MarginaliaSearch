@@ -73,7 +73,7 @@ public class CrawlJobExtractorMain {
     private final EdgeDomainBlacklistImpl blacklist;
 
     private final Connection conn;
-    private final HashFunction hasher = Hashing.murmur3_128(0);
+    private static final HashFunction hasher = Hashing.murmur3_128(0);
 
     public static void main(String... args) throws SQLException, IOException {
         Driver driver = new Driver();
@@ -94,6 +94,19 @@ public class CrawlJobExtractorMain {
             }
 
             jobs.map(gson::toJson).forEach(out::println);
+        }
+    }
+
+    public static void writeSpec(Path outFile, String domain, List<String> urls) throws IOException {
+        Gson gson = new GsonBuilder().create();
+
+        try (var out = new PrintWriter(new ZstdOutputStream(new BufferedOutputStream(new FileOutputStream(outFile.toFile()))))) {
+            var job = new CrawlingSpecification();
+            job.crawlDepth = urls.size();
+            job.domain = domain;
+            job.id = createId(new EdgeDomain(domain));
+            job.urls = urls;
+            out.println(gson.toJson(job));
         }
     }
 
@@ -186,11 +199,11 @@ public class CrawlJobExtractorMain {
         return spec;
     }
 
-    private String createId(DomainWithId domainWithId) {
+    private static String createId(DomainWithId domainWithId) {
         return hasher.hashUnencodedChars(domainWithId.domainName).toString();
     }
 
-    private String createId(EdgeDomain domain) {
+    private static String createId(EdgeDomain domain) {
         return hasher.hashUnencodedChars(domain.toString()).toString();
     }
 

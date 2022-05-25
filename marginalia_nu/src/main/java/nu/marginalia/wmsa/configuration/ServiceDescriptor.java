@@ -21,6 +21,9 @@ import nu.marginalia.wmsa.resource_store.ResourceStoreMain;
 import nu.marginalia.wmsa.smhi.scraper.SmhiScraperMain;
 import org.apache.logging.log4j.core.lookup.MainMapLookup;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -49,13 +52,21 @@ public enum ServiceDescriptor {
     TEST_1("test-1", 0, null),
     TEST_2("test-2", 0, null);
 
+    private static HostsFile hostsFile;
+    public synchronized String getHost() {
+        if (hostsFile == null) {
+            hostsFile = WmsaHome.getHostsFile();
+        }
+        return hostsFile.getHost(this);
+    }
+
     public static ServiceDescriptor byName(String name) {
         for (var v : values()) {
             if (v.name.equals(name)) {
                 return v;
             }
         }
-        throw new IllegalArgumentException(name);
+        throw new IllegalArgumentException("Invalid ServiceDescriptor " + name);
     }
     public final String name;
     public final Class<?> mainClass;

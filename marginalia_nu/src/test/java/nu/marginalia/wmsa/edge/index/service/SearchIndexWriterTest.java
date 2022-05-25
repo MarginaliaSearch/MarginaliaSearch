@@ -63,7 +63,7 @@ class SearchIndexWriterTest {
         return reader.findWord(block, budget, lv->true, dictionaryWriter.getReadOnly(word)).stream().toArray();
     }
 
-    @Test
+    @Test @SneakyThrows
     void put() throws IOException {
         writer.put(new EdgeId<>(0), new EdgeId<>(1), IndexBlock.Words, Arrays.asList("Hello", "Salvete", "everyone!", "This", "is", "Bob"));
         writer.put(new EdgeId<>(0), new EdgeId<>(2), IndexBlock.Words, Arrays.asList("Salvete", "omnes!", "Bob", "sum", "Hello"));

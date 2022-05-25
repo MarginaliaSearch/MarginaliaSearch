@@ -13,12 +13,18 @@ public class EdgeIndexModule extends AbstractModule {
 
 
     public void configure() {
-        bind(Long.class).annotatedWith(Names.named("edge-dictionary-hash-map-size")).toInstance(1L << 31);
+        if (Boolean.getBoolean("small-ram")) {
+            bind(Long.class).annotatedWith(Names.named("edge-dictionary-hash-map-size")).toInstance(1L << 27);
+        }
+        else {
+            bind(Long.class).annotatedWith(Names.named("edge-dictionary-hash-map-size")).toInstance(1L << 31);
+        }
+
     }
 
     @Provides
     public RankingSettings rankingSettings() {
-        Path dir = WmsaHome.get().resolve("conf/ranking-settings.yaml");
+        Path dir = WmsaHome.getHomePath().resolve("conf/ranking-settings.yaml");
         return RankingSettings.from(dir);
     }
 

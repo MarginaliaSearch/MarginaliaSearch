@@ -3,6 +3,7 @@ package nu.marginalia.wmsa.edge.index;
 
 import com.google.inject.Inject;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
+import nu.marginalia.wmsa.edge.index.service.index.ConversionUnnecessaryException;
 
 
 public class EdgeIndexControl {
@@ -19,11 +20,15 @@ public class EdgeIndexControl {
         System.gc();
 
         for (IndexBlock block : IndexBlock.values()) {
+            try {
+                servicesFactory.getIndexConverter(id, block);
 
-            servicesFactory.getIndexConverter(id, block);
+                System.runFinalization();
+                System.gc();
+            }
+            catch (ConversionUnnecessaryException unnecessary) {
 
-            System.runFinalization();
-            System.gc();
+            }
         }
 
         System.runFinalization();

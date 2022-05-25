@@ -15,7 +15,7 @@ public class AbstractDynamicClient extends AbstractClient {
     private final AbortingScheduler scheduler;
 
     public AbstractDynamicClient(@Nonnull ServiceDescriptor service) {
-        super("localhost",  service.port, 10);
+        super(service.getHost(), service.port, 10);
 
         this.service = service;
         this.scheduler = new AbortingScheduler(name());

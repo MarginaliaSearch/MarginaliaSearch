@@ -33,7 +33,7 @@ public class LoaderMain {
     private static final Logger logger = LoggerFactory.getLogger(LoaderMain.class);
     private final LoaderFactory loaderFactory;
     private final EdgeIndexClient indexClient;
-    private final boolean running = true;
+    private volatile boolean running = true;
 
     final Thread processorThread = new Thread(this::processor, "Processor Thread");
 
@@ -82,8 +82,11 @@ public class LoaderMain {
             load(entry.path(), entry.cnt());
         });
 
+        running = false;
         processorThread.join();
         indexClient.close();
+
+        System.exit(0);
     }
 
     private volatile static int loadTotal;

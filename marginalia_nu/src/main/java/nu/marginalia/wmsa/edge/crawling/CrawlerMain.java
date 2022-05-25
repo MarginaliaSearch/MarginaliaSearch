@@ -79,6 +79,9 @@ public class CrawlerMain implements AutoCloseable {
         try (var crawler = new CrawlerMain(plan)) {
             crawler.run();
         }
+
+        // TODO (2022-05-24): Some thread isn't set to daemon mode, need to explicitly harakiri the process, find why?
+        System.exit(0);
     }
 
     private CrawledDomain fetchDomain(CrawlingSpecification specification) {

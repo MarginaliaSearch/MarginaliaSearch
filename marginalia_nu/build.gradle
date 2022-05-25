@@ -3,6 +3,7 @@ plugins {
     id "io.freefair.lombok" version "5.3.3.3"
 
     id "me.champeau.jmh" version "0.6.6"
+    id "de.undercouch.download" version "5.1.0"
 }
 
 repositories {
@@ -24,6 +25,19 @@ repositories {
     }
 }
 
+sourceSets {
+    e2eTest {
+        java {
+            java {
+                compileClasspath += main.output + test.output
+                runtimeClasspath += main.output + test.output
+                srcDir file('src/e2e/java')
+            }
+            resources.srcDir file('src/e2e/resources')
+        }
+    }
+}
+
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(17))
@@ -33,16 +47,9 @@ java {
 dependencies {
     implementation project(':third_party')
 
-    implementation 'junit:junit:4.13.2'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
 
-    implementation 'org.projectlombok:lombok:1.18.22'
-    annotationProcessor 'org.projectlombok:lombok:1.18.22'
-
-    testCompileOnly 'org.projectlombok:lombok:1.18.22'
-    testImplementation 'org.projectlombok:lombok:1.18.22'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
+    implementation 'org.projectlombok:lombok:1.18.24'
+    annotationProcessor 'org.projectlombok:lombok:1.18.24'
 
     implementation 'com.github.jknack:handlebars:4.3.0'
     implementation 'com.github.jknack:handlebars-markdown:4.2.1'
@@ -63,7 +70,7 @@ dependencies {
 
     implementation 'com.google.guava:guava:31.1-jre'
     implementation 'com.google.inject:guice:5.1.0'
-    implementation 'com.github.jnr:jnr-ffi:2.1.1'
+    implementation 'com.github.jnr:jnr-ffi:2.2.12'
     implementation 'org.apache.httpcomponents:httpcore:4.4.15'
     implementation 'org.apache.httpcomponents:httpclient:4.5.13'
     implementation 'com.github.ThatJavaNerd:JRAW:1.1.0'
@@ -74,29 +81,23 @@ dependencies {
     implementation 'org.jsoup:jsoup:1.14.3'
     implementation group: 'com.github.crawler-commons', name: 'crawler-commons', version: '1.2'
 
-    implementation 'org.mariadb.jdbc:mariadb-java-client:3.0.3'
+    implementation 'org.mariadb.jdbc:mariadb-java-client:3.0.4'
     implementation group: 'net.sf.trove4j', name: 'trove4j', version: '3.0.3'
 
     implementation 'com.zaxxer:HikariCP:5.0.1'
 
-    implementation 'org.apache.opennlp:opennlp-tools:1.9.4'
+    implementation 'org.apache.opennlp:opennlp-tools:1.9.3'
     implementation 'io.prometheus:simpleclient:0.15.0'
     implementation 'io.prometheus:simpleclient_servlet:0.15.0'
     implementation 'io.prometheus:simpleclient_httpserver:0.15.0'
     implementation 'io.prometheus:simpleclient_hotspot:0.15.0'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.2.1'
-    implementation 'org.apache.opennlp:opennlp-tools:1.9.4'
-    implementation 'io.prometheus:simpleclient:0.15.0'
-    implementation 'io.prometheus:simpleclient_servlet:0.15.0'
-    implementation 'io.prometheus:simpleclient_httpserver:0.15.0'
-    implementation 'io.prometheus:simpleclient_hotspot:0.15.0'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.2.1'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
 
     implementation group: 'org.yaml', name: 'snakeyaml', version: '1.30'
 
     implementation 'com.syncthemall:boilerpipe:1.2.2'
     implementation 'com.github.luben:zstd-jni:1.5.2-2'
-    implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:7.3.0'
+    implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:7.5.0'
     implementation 'de.rototor.jeuclid:jeuclid-core:3.1.14'
 
     implementation 'org.imgscalr:imgscalr-lib:4.2'
@@ -111,10 +112,33 @@ dependencies {
     implementation 'edu.stanford.nlp:stanford-corenlp:4.4.0'
 
     implementation group: 'it.unimi.dsi', name: 'fastutil', version: '8.5.8'
-    implementation 'org.roaringbitmap:RoaringBitmap:[0.6,)'
+    implementation 'org.roaringbitmap:RoaringBitmap:0.9.27'
     implementation group: 'mysql', name: 'mysql-connector-java', version: '8.0.29'
 
     implementation 'com.github.Marcono1234:gson-record-type-adapter-factory:0.2.0'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+    testCompileOnly 'org.projectlombok:lombok:1.18.24'
+    testImplementation 'org.projectlombok:lombok:1.18.24'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.24'
+
+    e2eTestImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    e2eTestRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+    e2eTestImplementation 'org.projectlombok:lombok:1.18.24'
+    e2eTestAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
+    e2eTestImplementation 'org.testcontainers:mariadb:1.17.1'
+    e2eTestImplementation 'org.testcontainers:nginx:1.17.1'
+    e2eTestImplementation 'org.testcontainers:testcontainers:1.17.1'
+    e2eTestImplementation "org.testcontainers:junit-jupiter:1.17.1"
+    e2eTestImplementation "org.testcontainers:selenium:1.17.1"
+    e2eTestImplementation 'org.seleniumhq.selenium:selenium-remote-driver:4.1.4'
+    e2eTestImplementation 'org.seleniumhq.selenium:selenium-chrome-driver:4.1.4'
+}
+
+configurations {
+    e2eTestImplementation.extendsFrom(testImplementation)
+
 }
 
 test {
@@ -136,4 +160,51 @@ task dbTest(type: Test) {
     }
 }
 
+task e2eTest(type: Test) {
+    maxParallelForks = 1
+    forkEvery = 1
+    maxHeapSize = "8G"
+    dependsOn ':shadowJar'
+    dependsOn 'downloadTestData'
+    dependsOn 'downloadRDRModelData'
+    dependsOn 'downloadSentenceModelData'
+    dependsOn 'downloadTokenModelData'
+    dependsOn 'downloadTermFreqData'
+
+    classpath = sourceSets.e2eTest.runtimeClasspath
+    testClassesDirs = sourceSets.e2eTest.output.classesDirs
+    useJUnitPlatform {
+    	includeTags "e2e"
+    }
+}
+
+task downloadTestData(type: Download) {
+    src 'http://hammurabi.acc.umu.se/mirror/kiwix.org/zim/wikipedia/wikipedia_en_100_nopic_2022-05.zim'
+    dest file('data/test/wikipedia_en_100_nopic.zim')
+    overwrite false
+}
+
+task downloadRDRModelData(type: Download) {
+    src (['https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/master/Models/POS/English.DICT',
+            'https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/master/Models/POS/English.RDR'])
+    dest file('data/models/')
+    overwrite false
+}
+
+task downloadSentenceModelData(type: Download) {
+    src 'https://dlcdn.apache.org/opennlp/models/ud-models-1.0/opennlp-en-ud-ewt-sentence-1.0-1.9.3.bin'
+    dest file('data/models/opennlp-sentence.bin')
+    overwrite false
+}
+task downloadTokenModelData(type: Download) {
+    src 'https://dlcdn.apache.org/opennlp/models/ud-models-1.0/opennlp-en-ud-ewt-tokens-1.0-1.9.3.bin'
+    dest file('data/models/opennlp-tokens.bin')
+    overwrite false
+}
+
+task downloadTermFreqData(type: Copy) {
+    // TODO: Need hosting for this file
+    from '/var/lib/wmsa/model/tfreq-new-algo3.bin'
+    into 'data/models'
+}
 

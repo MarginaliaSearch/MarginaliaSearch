@@ -1,5 +1,6 @@
 package nu.marginalia.util;
 
+import nu.marginalia.wmsa.configuration.WmsaHome;
 import nu.marginalia.wmsa.edge.crawler.domain.language.conf.LanguageModels;
 
 import java.nio.file.Files;
@@ -7,10 +8,9 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 public class TestLanguageModels {
-    private static final Path LANGUAGE_MODELS_DEFAULT = Path.of("/home/vlofgren/Work/ngrams/");
+    private static final Path LANGUAGE_MODELS_DEFAULT = WmsaHome.getHomePath().resolve("model");
 
-    public static LanguageModels getLanguageModels() {
-
+    public static Path getLanguageModelsPath() {
         final Path languageModelsHome = Optional.ofNullable(System.getenv("LANGUAGE_MODELS_HOME"))
                 .map(Path::of)
                 .orElse(LANGUAGE_MODELS_DEFAULT);
@@ -18,14 +18,20 @@ public class TestLanguageModels {
         if (!Files.isDirectory(languageModelsHome)) {
             throw new IllegalStateException("Could not find $LANGUAGE_MODELS_HOME, see doc/language-models.md");
         }
+        return languageModelsHome;
+    }
+
+    public static LanguageModels getLanguageModels() {
+
+        var languageModelsHome = getLanguageModelsPath();
 
         return new LanguageModels(
                 languageModelsHome.resolve("ngrams-generous-emstr.bin"),
                 languageModelsHome.resolve("tfreq-generous-emstr.bin"),
-                languageModelsHome.resolve("opennlp-en-ud-ewt-sentence-1.0-1.9.3.bin"),
+                languageModelsHome.resolve("opennlp-sentence.bin"),
                 languageModelsHome.resolve("English.RDR"),
                 languageModelsHome.resolve("English.DICT"),
-                languageModelsHome.resolve("opennlp-tok.bin")
+                languageModelsHome.resolve("opennlp-tokens.bin")
         );
     }
 }
