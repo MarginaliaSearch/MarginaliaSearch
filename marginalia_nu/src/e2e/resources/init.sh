@@ -35,6 +35,8 @@ small:
   - "%"
 academia:
   - "%edu"
+  - "%ac.jp"
+  - "%ac.uk"
 standard:
   - "%"
 EOF

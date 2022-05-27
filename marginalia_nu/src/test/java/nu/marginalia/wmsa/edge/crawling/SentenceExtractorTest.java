@@ -33,61 +33,13 @@ class SentenceExtractorTest {
     SentenceExtractor newSe;
     SentenceExtractor legacySe;
     final LanguageModels lm = TestLanguageModels.getLanguageModels();
+
     @BeforeEach
     public void setUp() {
 
         newSe = new SentenceExtractor(lm);
         legacySe = new SentenceExtractor(lm);
         legacySe.setLegacyMode(true);
-    }
-
-
-    @Test @Disabled
-    public void getTheData() throws IOException {
-        var connStr = "jdbc:mariadb://localhost:3306/WMSA_test?rewriteBatchedStatements=true";
-
-        HikariConfig config = new HikariConfig();
-
-        config.setJdbcUrl(connStr);
-        config.setUsername("wmsa");
-        config.setPassword("wmsa");
-        config.addDataSourceProperty("cachePrepStmts", "true");
-        config.addDataSourceProperty("prepStmtCacheSize", "250");
-        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
-        config.setMaximumPoolSize(100);
-        config.setMinimumIdle(10);
-
-        var conn = new HikariDataSource(config);
-
-        var rpr = new BuggyReversePageRank(conn, "virginia.xroads.edu");
-        var spr = new BuggyStandardPageRank(conn, "virginia.xroads.edu");
-
-        var rankVector = spr.pageRankVector();
-        var norm = rankVector.norm();
-
-        int resultCount = rpr.size()/10;
-        var domains = spr.pageRank(i -> rankVector.get(i) / norm, resultCount).toArray();
-        int i = 0;
-
-        try (var bw = Files.newBufferedWriter(Path.of("/tmp/domains.txt"));
-                var stmt = conn.getConnection().prepareStatement("SELECT URL_PROTO, URL_DOMAIN, URL_PORT, URL_PATH FROM EC_URL_VIEW WHERE DOMAIN_ID=? AND TITLE IS NOT NULL ORDER BY ID ASC LIMIT 10 ")) {
-            for (int domainId : domains) {
-                bw.write(String.format("%f\n", i++/(double) resultCount));
-                stmt.setInt(1, domainId);
-                var rsp = stmt.executeQuery();
-                while (rsp.next()) {
-                    var url = new EdgeUrl(rsp.getString(1), new EdgeDomain(rsp.getString(2)),
-                            rsp.getInt(3), rsp.getString(4));
-                    bw.write(url.toString());
-                    bw.write("\n");
-                }
-                bw.write(".\n");
-            }
-
-        }
-        catch (Exception e) {
-
-        }
     }
 
     @SneakyThrows
