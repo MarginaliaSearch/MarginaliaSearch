@@ -35,7 +35,7 @@ public class DatabaseModule extends AbstractModule {
     }
 
     private Properties loadDbProperties() {
-        Path propDir = WmsaHome.getHomePath().resolve("db.properties");
+        Path propDir = WmsaHome.getHomePath().resolve("conf/db.properties");
         if (!Files.isRegularFile(propDir)) {
             throw new IllegalStateException("Database properties file " + propDir + " does not exist");
         }

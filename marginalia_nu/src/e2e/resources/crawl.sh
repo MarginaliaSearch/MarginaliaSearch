@@ -3,7 +3,7 @@
 mkdir -p /var/lib/wmsa/conf/
 mkdir -p /var/lib/wmsa/data/
 
-cat > /var/lib/wmsa/db.properties <<EOF
+cat > /var/lib/wmsa/conf/db.properties <<EOF
   db.user=wmsa
   db.pass=wmsa
   db.conn=jdbc:mariadb://mariadb:3306/WMSA_prod?rewriteBatchedStatements=true

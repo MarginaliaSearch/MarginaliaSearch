@@ -3,6 +3,7 @@ package nu.marginalia.wmsa.configuration;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Properties;
 
 public class WmsaHome {
     private static final String DEFAULT = "/var/lib/wmsa";
@@ -31,5 +32,28 @@ public class WmsaHome {
 
     public static Path getIPLocationDatabse() {
         return getHomePath().resolve("data").resolve("IP2LOCATION-LITE-DB1.CSV");
+    }
+
+    public static Path getDisk(String name) throws IOException {
+        Path p = Path.of(getDiskProperties().getProperty(name));
+        if (!Files.isDirectory(p)) {
+            throw new IOException(name + " does not exist!");
+        }
+        return p;
+    }
+
+    public static Properties getDiskProperties() throws IOException {
+        Path settingsFile = getHomePath().resolve("conf/disks.properties");
+
+        if (Files.isRegularFile(settingsFile)) {
+            try (var is = Files.newInputStream(settingsFile)) {
+                var props = new Properties();
+                props.load(is);
+                return props;
+            }
+        }
+        else {
+            throw new IOException("Could not find disk settings " + settingsFile);
+        }
     }
 }

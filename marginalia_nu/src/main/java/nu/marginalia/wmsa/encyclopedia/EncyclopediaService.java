@@ -1,5 +1,6 @@
 package nu.marginalia.wmsa.encyclopedia;
 
+import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.configuration.server.Context;
@@ -33,6 +34,7 @@ public class EncyclopediaService extends Service {
     private Path wikiPath;
     private EncyclopediaDao encyclopediaDao;
 
+    @Inject
     public EncyclopediaService(@Named("service-host") String ip,
                                @Named("service-port") Integer port,
                                @Named("wiki-path") Path wikiPath,

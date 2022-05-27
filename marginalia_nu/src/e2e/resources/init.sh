@@ -1,5 +1,6 @@
 #!/bin/bash
 
+mkdir -p /var/lib/wmsa/encyclopedia
 mkdir -p /var/lib/wmsa/conf
 mkdir -p /var/lib/wmsa/index/write
 mkdir -p /var/lib/wmsa/index/read
@@ -21,7 +22,11 @@ many
 year
 EOF
 
-cat > /var/lib/wmsa/db.properties <<EOF
+cat > /var/lib/wmsa/conf/disks.properties <<EOF
+encyclopedia=/var/lib/wmsa/encyclopedia
+EOF
+
+cat > /var/lib/wmsa/conf/db.properties <<EOF
   db.user=wmsa
   db.pass=wmsa
   db.conn=jdbc:mariadb://mariadb:3306/WMSA_prod?rewriteBatchedStatements=true
@@ -51,7 +56,7 @@ smhi-scraper smhi-scraper
 podcast-scraper podcast-scraper
 edge-index edge-index
 edge-search edge-search
-edge-archive edge-archive
+encyclopedia encyclopedia
 edge-assistant edge-assistant
 memex memex
 dating dating

@@ -14,6 +14,7 @@ public class EncyclopediaMain extends MainClass  {
         init(ServiceDescriptor.ENCYCLOPEDIA, args);
 
         Injector injector = Guice.createInjector(
+                new EncyclopediaModule(),
                 new ConfigurationModule());
         injector.getInstance(EncyclopediaMain.class);
     }
