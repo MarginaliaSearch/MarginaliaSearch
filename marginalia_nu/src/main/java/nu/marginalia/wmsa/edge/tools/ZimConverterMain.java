@@ -2,10 +2,10 @@ package nu.marginalia.wmsa.edge.tools;
 
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
-import nu.marginalia.wmsa.edge.archive.client.ArchiveClient;
 import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.wmsa.edge.assistant.dict.WikiCleaner;
 import nu.marginalia.util.language.conf.LanguageModels;
+import nu.marginalia.wmsa.encyclopedia.EncyclopediaClient;
 import org.jsoup.Jsoup;
 import org.openzim.ZIMTypes.ZIMFile;
 import org.openzim.ZIMTypes.ZIMReader;
@@ -25,7 +25,7 @@ public class ZimConverterMain {
     static final LinkedBlockingQueue<ConversionJob> jobQueue = new LinkedBlockingQueue<>(100);
     static final LinkedBlockingQueue<String> analysisQueue = new LinkedBlockingQueue<>(100);
     static boolean hasData = true;
-    static final ArchiveClient archiveClient = new ArchiveClient();
+    static final EncyclopediaClient encyclopediaClient = new EncyclopediaClient();
     static NGramDict dict = new NGramDict(new LanguageModels(
             Path.of("/var/lib/wmsa/model/ngrams-generous-emstr.bin"),
             Path.of("/var/lib/wmsa/model/tfreq-generous-emstr.bin"),
@@ -60,7 +60,7 @@ public class ZimConverterMain {
 //        convertJust("Plotinus");
 //        convertJust("C++");
         convertAll(args);
-        archiveClient.close();
+        encyclopediaClient.close();
     }
 
     @SneakyThrows
@@ -108,7 +108,7 @@ public class ZimConverterMain {
     }
 
     private static void convertAll(String[] args) throws IOException {
-        archiveClient.setServiceRoute("127.0.0.1", Integer.parseInt(args[0]));
+        encyclopediaClient.setServiceRoute("127.0.0.1", Integer.parseInt(args[0]));
         var zr = new ZIMReader(new ZIMFile(args[1]));
 //        var zr = new ZIMReader(new ZIMFile("/home/vlofgren/Work/wikipedia_en_all_nopic_2021-01.zim"));
 
@@ -142,7 +142,7 @@ public class ZimConverterMain {
        }, p -> true);
 
         hasData = false;
-        archiveClient.close();
+        encyclopediaClient.close();
     }
 
     @SneakyThrows

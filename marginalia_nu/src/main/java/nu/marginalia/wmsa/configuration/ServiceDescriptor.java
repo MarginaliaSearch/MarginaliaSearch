@@ -6,11 +6,11 @@ import nu.marginalia.wmsa.configuration.command.Command;
 import nu.marginalia.wmsa.configuration.command.ListCommand;
 import nu.marginalia.wmsa.configuration.command.StartCommand;
 import nu.marginalia.wmsa.configuration.command.VersionCommand;
-import nu.marginalia.wmsa.edge.archive.EdgeArchiveMain;
 import nu.marginalia.wmsa.edge.assistant.EdgeAssistantMain;
 import nu.marginalia.wmsa.edge.dating.DatingMain;
 import nu.marginalia.wmsa.edge.index.EdgeIndexMain;
 import nu.marginalia.wmsa.edge.search.EdgeSearchMain;
+import nu.marginalia.wmsa.encyclopedia.EncyclopediaMain;
 import nu.marginalia.wmsa.memex.MemexMain;
 import nu.marginalia.wmsa.podcasts.PodcastScraperMain;
 import nu.marginalia.wmsa.renderer.RendererMain;
@@ -33,10 +33,11 @@ public enum ServiceDescriptor {
 
     EDGE_INDEX("edge-index", 5021, EdgeIndexMain.class),
     EDGE_SEARCH("edge-search", 5023, EdgeSearchMain.class),
-    EDGE_ARCHIVE("edge-archive", 5024, EdgeArchiveMain.class),
     EDGE_ASSISTANT("edge-assistant", 5025, EdgeAssistantMain.class),
 
     EDGE_MEMEX("memex", 5030, MemexMain.class),
+
+    ENCYCLOPEDIA("encyclopedia", 5040, EncyclopediaMain.class),
 
     DATING("dating", 5070, DatingMain.class),
 
