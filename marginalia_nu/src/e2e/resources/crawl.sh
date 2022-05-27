@@ -1,5 +1,7 @@
 #!/bin/bash
+
 mkdir -p /var/lib/wmsa/conf/
+mkdir -p /var/lib/wmsa/data/
 
 cat > /var/lib/wmsa/db.properties <<EOF
   db.user=wmsa

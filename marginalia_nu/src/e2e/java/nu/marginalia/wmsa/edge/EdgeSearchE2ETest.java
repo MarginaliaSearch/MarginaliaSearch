@@ -72,6 +72,7 @@ public class EdgeSearchE2ETest {
                 .withNetwork(network)
                 .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger("crawler")))
                 .withFileSystemBind(modelsPath(), "/var/lib/wmsa/model", BindMode.READ_ONLY)
+                .withCopyFileToContainer(ipDatabasePath(), "/var/lib/wmsa/data/IP2LOCATION-LITE-DB1.CSV")
                 .withCopyFileToContainer(jarFile(), "/WMSA.jar")
                 .withCopyFileToContainer(MountableFile.forClasspathResource("crawl.sh"), "/crawl.sh")
                 .withFileSystemBind(getCrawlPath().toString(), "/crawl/", BindMode.READ_WRITE)
@@ -126,6 +127,14 @@ public class EdgeSearchE2ETest {
             throw new RuntimeException();
         }
         return modelsPath.toString();
+    }
+    public static MountableFile ipDatabasePath() {
+        Path modelsPath = Path.of(System.getProperty("user.dir")).resolve("data/models/IP2LOC/IP2LOCATION-LITE-DB1.CSV");
+        if (!Files.isRegularFile(modelsPath)) {
+            System.err.println("Could not find models, looked in " + modelsPath.toAbsolutePath());
+            throw new RuntimeException();
+        }
+        return MountableFile.forHostPath(modelsPath.toString());
     }
 
     private Path getCrawlPath() {

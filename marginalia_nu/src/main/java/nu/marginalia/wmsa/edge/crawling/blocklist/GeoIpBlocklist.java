@@ -6,10 +6,12 @@ import com.google.inject.Singleton;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import lombok.AllArgsConstructor;
+import nu.marginalia.wmsa.configuration.WmsaHome;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
@@ -24,8 +26,6 @@ public class GeoIpBlocklist {
     private final Set<String> blacklist = Set.of("CN", "HK");
     private final Set<String> graylist = Set.of("RU", "TW", "IN", "ZA", "SG", "UA");
 
-    private final Cache<String, String> countryCache = CacheBuilder.newBuilder().maximumSize(100_000).build();
-
     private static final Logger logger = LoggerFactory.getLogger(GeoIpBlocklist.class);
 
     @AllArgsConstructor
@@ -36,10 +36,9 @@ public class GeoIpBlocklist {
     }
 
     public GeoIpBlocklist() throws IOException, CsvValidationException {
-        var resource = Objects.requireNonNull(ClassLoader.getSystemResourceAsStream("IP2LOCATION-LITE-DB1.CSV"),
-                "Could not load IP location db");
+        var resource = WmsaHome.getIPLocationDatabse();
 
-        try (var reader = new CSVReader(new InputStreamReader(resource, StandardCharsets.UTF_8))) {
+        try (var reader = new CSVReader(new FileReader(resource.toFile()))) {
             for (;;) {
                 String[] vals = reader.readNext();
                 if (vals == null) {

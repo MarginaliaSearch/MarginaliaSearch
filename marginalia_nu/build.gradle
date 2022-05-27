@@ -170,6 +170,7 @@ task e2eTest(type: Test) {
     dependsOn 'downloadSentenceModelData'
     dependsOn 'downloadTokenModelData'
     dependsOn 'downloadTermFreqData'
+    dependsOn 'IP2LocationFile'
 
     classpath = sourceSets.e2eTest.runtimeClasspath
     testClassesDirs = sourceSets.e2eTest.output.classesDirs
@@ -201,10 +202,23 @@ task downloadTokenModelData(type: Download) {
     dest file('data/models/opennlp-tokens.bin')
     overwrite false
 }
+task downloadIP2LocationFile(type: Download) {
+    src 'https://download.ip2location.com/lite/IP2LOCATION-LITE-DB1.CSV.ZIP'
+    dest file('data/models/IP2LOCATION-LITE-DB1.CSV.ZIP')
+    overwrite false
+}
+task IP2LocationFile(type: Copy) {
+    dependsOn 'downloadIP2LocationFile'
+    def zipFile = file('data/models/IP2LOCATION-LITE-DB1.CSV.ZIP')
+    def outputDir = file("data/models/IP2LOC")
+
+    from zipTree(zipFile)
+    into outputDir
+}
 
 task downloadTermFreqData(type: Copy) {
     // TODO: Need hosting for this file
     from '/var/lib/wmsa/model/tfreq-new-algo3.bin'
-    into 'data/models'
+    into 'data/models/'
 }
 

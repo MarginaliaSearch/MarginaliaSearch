@@ -28,4 +28,8 @@ public class WmsaHome {
             return new HostsFile();
         }
     }
+
+    public static Path getIPLocationDatabse() {
+        return getHomePath().resolve("data").resolve("IP2LOCATION-LITE-DB1.CSV");
+    }
 }
