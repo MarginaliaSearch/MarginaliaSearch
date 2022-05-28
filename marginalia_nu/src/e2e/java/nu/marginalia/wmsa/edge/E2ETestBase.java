@@ -17,7 +17,7 @@ import java.time.Duration;
 public abstract class E2ETestBase {
     public Network network = Network.newNetwork();
 
-    public GenericContainer<?> getMariaDBContainer() {
+    public MariaDBContainer<?> getMariaDBContainer() {
         return new MariaDBContainer<>("mariadb")
                 .withDatabaseName("WMSA_prod")
                 .withUsername("wmsa")

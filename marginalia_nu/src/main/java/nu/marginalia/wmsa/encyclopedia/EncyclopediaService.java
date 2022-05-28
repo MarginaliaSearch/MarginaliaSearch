@@ -1,5 +1,7 @@
 package nu.marginalia.wmsa.encyclopedia;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import lombok.SneakyThrows;
@@ -31,6 +33,8 @@ public class EncyclopediaService extends Service {
     private static final Logger logger = LoggerFactory.getLogger(EncyclopediaService.class);
     private final MustacheRenderer<String> wikiErrorPageRenderer;
     private final MustacheRenderer<Object> wikiSearchResultRenderer;
+    private final Gson gson = new GsonBuilder().create();
+
     private Path wikiPath;
     private EncyclopediaDao encyclopediaDao;
 
@@ -62,10 +66,10 @@ public class EncyclopediaService extends Service {
 
         Spark.get("/wiki/has", this::pathWikiHas);
         Spark.post("/wiki/submit", this::pathWikiSubmit);
+        Spark.get("/encyclopedia/:term", (rq, rsp) -> encyclopediaDao.encyclopedia(rq.params("term")), gson::toJson);
 
         Spark.awaitInitialization();
     }
-
 
     @SneakyThrows
     private Object getWikiPage(Request req, Response rsp) {
