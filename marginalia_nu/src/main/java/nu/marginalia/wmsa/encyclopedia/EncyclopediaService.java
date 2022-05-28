@@ -62,6 +62,8 @@ public class EncyclopediaService extends Service {
 
         Spark.get("/wiki/has", this::pathWikiHas);
         Spark.post("/wiki/submit", this::pathWikiSubmit);
+
+        Spark.awaitInitialization();
     }
 
 
@@ -190,7 +192,6 @@ public class EncyclopediaService extends Service {
 
         Files.createDirectories(filename.getParent());
 
-        System.out.println(new String(data));
         logger.debug("Writing {} to {}", wikiUrl, filename);
 
         try (var gos = new GZIPOutputStream(new FileOutputStream(filename.toFile()))) {

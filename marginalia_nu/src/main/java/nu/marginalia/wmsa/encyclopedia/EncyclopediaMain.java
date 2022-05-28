@@ -6,6 +6,7 @@ import com.google.inject.Injector;
 import nu.marginalia.wmsa.configuration.MainClass;
 import nu.marginalia.wmsa.configuration.ServiceDescriptor;
 import nu.marginalia.wmsa.configuration.module.ConfigurationModule;
+import nu.marginalia.wmsa.configuration.module.DatabaseModule;
 
 public class EncyclopediaMain extends MainClass  {
     private final EncyclopediaService service;
@@ -15,6 +16,7 @@ public class EncyclopediaMain extends MainClass  {
 
         Injector injector = Guice.createInjector(
                 new EncyclopediaModule(),
+                new DatabaseModule(),
                 new ConfigurationModule());
         injector.getInstance(EncyclopediaMain.class);
     }

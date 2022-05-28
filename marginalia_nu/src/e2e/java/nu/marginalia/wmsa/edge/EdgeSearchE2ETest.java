@@ -2,7 +2,6 @@ package nu.marginalia.wmsa.edge;
 
 
 import nu.marginalia.util.test.TestUtil;
-import nu.marginalia.wmsa.configuration.ServiceDescriptor;
 import nu.marginalia.wmsa.edge.crawling.CrawlJobExtractorMain;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Tag;
@@ -19,7 +18,6 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.MountableFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,7 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static nu.marginalia.wmsa.configuration.ServiceDescriptor.*;
-import static org.testcontainers.containers.BrowserWebDriverContainer.VncRecordingMode.RECORD_ALL;
 
 @Tag("e2e")
 @Testcontainers
