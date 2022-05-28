@@ -30,7 +30,7 @@ public class EncyclopediaE2ETest extends E2ETestBase {
     @Container
     public GenericContainer<?> encyclopediaContainer =  forService(ENCYCLOPEDIA, mariaDB);
     @Container
-    public GenericContainer<?> encyclopediaLoader = new GenericContainer<>("openjdk:17-alpine")
+    public GenericContainer<?> encyclopediaLoader = new GenericContainer<>("openjdk:17")
             .dependsOn(encyclopediaContainer)
             .dependsOn(mariaDB)
             .withNetwork(network)
