@@ -4,7 +4,7 @@ import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
 import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklist;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeId;
-import nu.marginalia.wmsa.edge.search.BrowseResult;
+import nu.marginalia.wmsa.edge.search.model.BrowseResult;
 
 import java.util.LinkedList;
 

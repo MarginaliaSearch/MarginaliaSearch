@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.edge.search;
+package nu.marginalia.wmsa.edge.search.model;
 
 import lombok.Getter;
 import lombok.ToString;

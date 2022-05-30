@@ -13,6 +13,8 @@ import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.index.service.SearchOrder;
 import nu.marginalia.wmsa.edge.model.*;
 import nu.marginalia.wmsa.edge.model.search.*;
+import nu.marginalia.wmsa.edge.search.model.DecoratedSearchResultSet;
+import nu.marginalia.wmsa.edge.search.model.DecoratedSearchResults;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeSearchQuery;
 import nu.marginalia.wmsa.edge.search.query.QueryFactory;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeUserSearchParameters;
@@ -26,7 +28,10 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -77,16 +82,15 @@ public class EdgeSearchOperator {
         return queryResults.resultSet;
     }
 
-    public DecoratedSearchResults doSearch(Context ctx, EdgeUserSearchParameters params, String evalResult) {
-
-
+    public DecoratedSearchResults doSearch(Context ctx, EdgeUserSearchParameters params, @Nullable Future<String> eval) {
         Observable<WikiArticles> definitions = getWikiArticle(ctx, params.getHumanQuery());
-
         var processedQuery = queryFactory.createQuery(params);
 
         logger.info("Human terms: {}", Strings.join(processedQuery.searchTermsHuman, ','));
 
         DecoratedSearchResultSet queryResults = performQuery(ctx, processedQuery, false);
+
+        String evalResult = getEvalResult(eval);
 
         return new DecoratedSearchResults(params,
                 getProblems(ctx, params.getHumanQuery(), evalResult, queryResults, processedQuery),
@@ -95,6 +99,19 @@ public class EdgeSearchOperator {
                 queryResults.resultSet,
                 processedQuery.domain,
                 getDomainId(processedQuery.domain));
+    }
+
+    private String getEvalResult(@Nullable Future<String> eval) {
+        if (eval == null || eval.isCancelled())  {
+            return "";
+        }
+        try {
+            return eval.get(50, TimeUnit.MILLISECONDS);
+        }
+        catch (Exception ex) {
+            logger.warn("Error fetching eval result", ex);
+            return "";
+        }
     }
 
     private int getDomainId(String domain) {

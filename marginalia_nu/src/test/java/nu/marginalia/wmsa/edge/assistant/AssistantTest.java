@@ -21,6 +21,8 @@ import org.junit.jupiter.api.parallel.ResourceAccessMode;
 import org.junit.jupiter.api.parallel.ResourceLock;
 import spark.Spark;
 
+import java.util.concurrent.ExecutionException;
+
 import static nu.marginalia.util.TestUtil.getConnection;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -123,7 +125,7 @@ class AssistantTest {
     }
 
     @Test
-    public void testEvalWithParser() {
+    public void testEvalWithParser() throws ExecutionException, InterruptedException {
         var conversion = new UnitConversion(client);
         assertEquals("305", conversion.tryEval(Context.internal(), "300+5").get());
         assertEquals("1.772", conversion.tryEval(Context.internal(), "sqrt(pi)").get());

@@ -4,10 +4,8 @@ import com.google.inject.ImplementedBy;
 import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklist;
 import nu.marginalia.wmsa.edge.model.*;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
-import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainLink;
-import nu.marginalia.wmsa.edge.model.crawl.EdgeUrlVisit;
 import nu.marginalia.wmsa.edge.model.search.EdgeUrlDetails;
-import nu.marginalia.wmsa.edge.search.BrowseResult;
+import nu.marginalia.wmsa.edge.search.model.BrowseResult;
 
 import java.util.Collection;
 import java.util.List;

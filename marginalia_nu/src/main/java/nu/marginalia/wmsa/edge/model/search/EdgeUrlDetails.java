@@ -4,7 +4,7 @@ import lombok.*;
 import nu.marginalia.wmsa.edge.converting.processor.logic.HtmlFeature;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
-import nu.marginalia.wmsa.edge.search.EdgeSearchRankingSymbols;
+import nu.marginalia.wmsa.edge.search.model.EdgeSearchRankingSymbols;
 
 import java.util.Objects;
 

@@ -7,6 +7,7 @@ import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
+import org.openqa.selenium.OutputType;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openzim.ZIMTypes.ZIMFile;
 import org.openzim.ZIMTypes.ZIMReader;
@@ -22,6 +23,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,31 +33,33 @@ import static nu.marginalia.wmsa.configuration.ServiceDescriptor.*;
 @Testcontainers
 public class EdgeSearchE2ETest extends E2ETestBase {
     @Container
-    public GenericContainer<?> mariaDB = getMariaDBContainer();
+    public static GenericContainer<?> mariaDB = getMariaDBContainer();
 
     @Container
-    public GenericContainer<?> searchContainer =  forService(EDGE_SEARCH, mariaDB);
+    public static GenericContainer<?> searchContainer =  forService(EDGE_SEARCH, mariaDB);
     @Container
-    public GenericContainer<?> assistantContainer =  forService(EDGE_ASSISTANT, mariaDB);
+    public static GenericContainer<?> assistantContainer =  forService(EDGE_ASSISTANT, mariaDB);
     @Container
-    public GenericContainer<?> indexContainer =  forService(EDGE_INDEX, mariaDB);
+    public static GenericContainer<?> encyclopediaContainer =  forService(ENCYCLOPEDIA, mariaDB);
+    @Container
+    public static GenericContainer<?> indexContainer =  forService(EDGE_INDEX, mariaDB);
 
     @Container
-    public NginxContainer<?> mockWikipedia = new NginxContainer<>("nginx:stable")
+    public static NginxContainer<?> mockWikipedia = new NginxContainer<>("nginx:stable")
             .dependsOn(searchContainer)
             .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger("wikipedia")))
             .withFileSystemBind(getWikipediaFiles(), "/usr/share/nginx/html/", BindMode.READ_ONLY)
             .withNetwork(network)
-            .withNetworkAliases("wikipedia");
+            .withNetworkAliases("wikipedia.local");
 
 
     @Container
-    public BrowserWebDriverContainer<?> chrome = new BrowserWebDriverContainer<>()
+    public static  BrowserWebDriverContainer<?> chrome = new BrowserWebDriverContainer<>()
             .withNetwork(network)
             .withCapabilities(new ChromeOptions());
 
     @Container
-    public GenericContainer<?> crawlerContainer = new GenericContainer<>("openjdk:17-alpine")
+    public static GenericContainer<?> crawlerContainer = new GenericContainer<>("openjdk:17-alpine")
                 .dependsOn(mockWikipedia)
                 .dependsOn(indexContainer)
                 .withNetwork(network)
@@ -69,14 +73,13 @@ public class EdgeSearchE2ETest extends E2ETestBase {
                 .waitingFor(Wait.forLogMessage(".*ALL DONE.*", 1).withStartupTimeout(Duration.ofMinutes(10)));
 
     @Container
-    public NginxContainer<?> proxyNginx = new NginxContainer<>("nginx:stable")
+    public static  NginxContainer<?> proxyNginx = new NginxContainer<>("nginx:stable")
             .dependsOn(searchContainer)
             .dependsOn(crawlerContainer)
             .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger("nginx")))
             .withCopyFileToContainer(MountableFile.forClasspathResource("nginx/search.conf"), "/etc/nginx/conf.d/default.conf")
             .withNetwork(network)
             .withNetworkAliases("proxyNginx");
-    ;
 
     public static MountableFile ipDatabasePath() {
         Path modelsPath = Path.of(System.getProperty("user.dir")).resolve("data/models/IP2LOC/IP2LOCATION-LITE-DB1.CSV");
@@ -87,11 +90,22 @@ public class EdgeSearchE2ETest extends E2ETestBase {
         return MountableFile.forHostPath(modelsPath.toString());
     }
 
-    private Path getCrawlPath() {
+    private static Path getCrawlPath() {
         return Path.of(System.getProperty("user.dir")).resolve("build/tmp/crawl");
     }
 
-    private String getWikipediaFiles() {
+    private static Path screenshotFilename(String operation) throws IOException {
+        var path = Path.of(System.getProperty("user.dir")).resolve("build/test/e2e/");
+        Files.createDirectories(path);
+
+        String name = String.format("test-%s-%s.png", operation, LocalDateTime.now());
+        path = path.resolve(name);
+
+        System.out.println("Screenshot in " + path);
+        return path;
+    }
+
+    private static String getWikipediaFiles() {
         Path wikipediaFiles = Path.of(System.getProperty("user.dir")).resolve("build/tmp/wikipedia");
         Path crawlFiles = getCrawlPath();
         Path zimFile = Path.of(System.getProperty("user.dir")).resolve("data/test/wikipedia_en_100_nopic.zim");
@@ -120,7 +134,7 @@ public class EdgeSearchE2ETest extends E2ETestBase {
 
             var zr = new ZIMReader(new ZIMFile(zimFile.toString()));
             zr.forEachArticles((url, art) -> {
-                urls.add("http://wikipedia/" + url + ".html");
+                urls.add("http://wikipedia.local/" + url + ".html");
 
                 if (art != null) {
                     try {
@@ -134,7 +148,7 @@ public class EdgeSearchE2ETest extends E2ETestBase {
             }, pred -> true);
             urls.forEach(System.out::println);
             Files.writeString(wikipediaFiles.resolve("index.html"), "<html/>");
-            CrawlJobExtractorMain.writeSpec(crawlFiles.resolve("crawl.spec"), "wikipedia", urls);
+            CrawlJobExtractorMain.writeSpec(crawlFiles.resolve("crawl.spec"), "wikipedia.local", urls);
         }
         catch (IOException ex) {
             ex.printStackTrace();
@@ -143,19 +157,80 @@ public class EdgeSearchE2ETest extends E2ETestBase {
     }
 
     @Test
-    public void run() {
+    public void testFrontPage() throws IOException {
         var driver = chrome.getWebDriver();
 
         driver.get("http://proxyNginx/");
         System.out.println(driver.getTitle());
         System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
 
+        Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("frontpage"));
+    }
+
+    @Test
+    public void testQuery() throws IOException {
+        var driver = chrome.getWebDriver();
+
         driver.get("http://proxyNginx/search?query=bird&profile=corpo");
         System.out.println(driver.getTitle());
         System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
 
-        driver.get("http://proxyNginx/search?query=site:wikipedia");
+
+        Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("query"));
+    }
+
+    @Test
+    public void testSiteInfo() throws IOException {
+        var driver = chrome.getWebDriver();
+
+        driver.get("http://proxyNginx/search?query=site:wikipedia.local");
         System.out.println(driver.getTitle());
         System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
+
+
+        Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("site-info"));
+    }
+    @Test
+    public void testSiteSearch() throws IOException {
+        var driver = chrome.getWebDriver();
+
+        driver.get("http://proxyNginx/search?query=site:wikipedia.local%20frog");
+        System.out.println(driver.getTitle());
+        System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
+
+
+        Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("site-search"));
+    }
+    @Test
+    public void testBrowse() throws IOException {
+        var driver = chrome.getWebDriver();
+
+        driver.get("http://proxyNginx/search?query=browse:wikipedia.local");
+        System.out.println(driver.getTitle());
+        System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
+
+
+        Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("browse"));
+    }
+    @Test
+    public void testDefine() throws IOException {
+        var driver = chrome.getWebDriver();
+
+        driver.get("http://proxyNginx/search?query=define:adiabatic");
+        System.out.println(driver.getTitle());
+        System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
+
+
+        Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("define"));
+    }
+    @Test
+    public void testEval() throws IOException {
+        var driver = chrome.getWebDriver();
+
+        driver.get("http://proxyNginx/search?query=3%2B3");
+        System.out.println(driver.getTitle());
+        System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
+
+        Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("eval"));
     }
 }

@@ -15,9 +15,9 @@ import java.nio.file.Path;
 import java.time.Duration;
 
 public abstract class E2ETestBase {
-    public Network network = Network.newNetwork();
+    public static Network network = Network.newNetwork();
 
-    public MariaDBContainer<?> getMariaDBContainer() {
+    public static MariaDBContainer<?> getMariaDBContainer() {
         return new MariaDBContainer<>("mariadb")
                 .withDatabaseName("WMSA_prod")
                 .withUsername("wmsa")
@@ -27,7 +27,7 @@ public abstract class E2ETestBase {
                 .withNetworkAliases("mariadb");
     }
 
-    public GenericContainer<?> forService(ServiceDescriptor service, GenericContainer<?> mariaDB) {
+    public static GenericContainer<?> forService(ServiceDescriptor service, GenericContainer<?> mariaDB) {
         return new GenericContainer<>("openjdk:17-alpine")
                 .dependsOn(mariaDB)
                 .withCopyFileToContainer(jarFile(), "/WMSA.jar")

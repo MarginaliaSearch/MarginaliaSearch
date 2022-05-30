@@ -4,11 +4,10 @@ import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeId;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
-import nu.marginalia.wmsa.edge.search.DomainInformation;
+import nu.marginalia.wmsa.edge.search.model.DomainInformation;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
 

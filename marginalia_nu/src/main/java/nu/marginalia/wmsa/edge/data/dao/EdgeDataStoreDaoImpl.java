@@ -13,7 +13,7 @@ import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
 import nu.marginalia.wmsa.edge.model.search.EdgePageScoreAdjustment;
 import nu.marginalia.wmsa.edge.model.search.EdgeUrlDetails;
-import nu.marginalia.wmsa.edge.search.BrowseResult;
+import nu.marginalia.wmsa.edge.search.model.BrowseResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

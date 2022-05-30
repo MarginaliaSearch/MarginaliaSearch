@@ -6,9 +6,13 @@ import nu.marginalia.wmsa.edge.assistant.client.AssistantClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.CheckForNull;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -54,24 +58,24 @@ public class UnitConversion {
         }
     }
 
-    public Optional<String> tryEval(Context context, String query) {
+    public @CheckForNull Future<String> tryEval(Context context, String query) {
         if (!evalPredicate.test(query)) {
-            return Optional.empty();
+            return null;
         }
 
         var expr = query.toLowerCase().trim();
 
         if (expr.chars().allMatch(Character::isDigit)) {
-            return Optional.empty();
+            return null;
         }
 
         logger.info("eval({})", expr);
 
         try {
-            return Optional.of(assistantClient.evalMath(context, expr).blockingFirst());
+            return assistantClient.evalMath(context, expr).toFuture();
         }
         catch (RemoteException ex) {
-            return Optional.empty();
+            return null;
         }
     }
 }
