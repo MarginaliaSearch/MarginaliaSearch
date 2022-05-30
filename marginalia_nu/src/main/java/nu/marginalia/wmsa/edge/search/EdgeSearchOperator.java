@@ -2,6 +2,7 @@ package nu.marginalia.wmsa.edge.search;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.prometheus.client.Summary;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import nu.marginalia.wmsa.configuration.server.Context;
@@ -46,6 +47,9 @@ public class EdgeSearchOperator {
     private final SearchResultDecorator resultDecorator;
     private final SearchResultValuator valuator;
     private final Comparator<EdgeUrlDetails> resultListComparator;
+
+    private static final Summary wmsa_search_index_api_time = Summary.build().name("wmsa_search_index_api_time").help("-").register();
+    private static final Summary wmsa_search_result_decoration_time = Summary.build().name("wmsa_search_result_decoration_time").help("-").register();
 
     @Inject
     public EdgeSearchOperator(AssistantClient assistantClient,
@@ -141,27 +145,30 @@ public class EdgeSearchOperator {
 
         AccumulatedQueryResults queryResults = new AccumulatedQueryResults();
         UrlDeduplicator deduplicator = new UrlDeduplicator(processedQuery.specs.limitByDomain);
-
-        if (processedQuery.searchTermsHuman.size()<=4 && !asFastAsPossible) {
-            fetchResultsMulti(ctx, processedQuery, queryResults, deduplicator);
-        }
-        else {
-            fetchResultsSimple(ctx, processedQuery, queryResults, deduplicator);
-        }
-
         List<EdgeUrlDetails> resultList = new ArrayList<>(queryResults.size());
 
-        for (var details : queryResults.results) {
-            if (details.getUrlQuality() < -100) {
-                continue;
+        wmsa_search_index_api_time.time(() -> {
+                    if (processedQuery.searchTermsHuman.size() <= 4 && !asFastAsPossible) {
+                        fetchResultsMulti(ctx, processedQuery, queryResults, deduplicator);
+                    } else {
+                        fetchResultsSimple(ctx, processedQuery, queryResults, deduplicator);
+                    }
+                });
+
+        wmsa_search_result_decoration_time.time(() -> {
+            for (var details : queryResults.results) {
+                if (details.getUrlQuality() < -100) {
+                    continue;
+                }
+                var scoreAdjustment = adjustScoreBasedOnQuery(details, processedQuery.specs);
+                details = details.withUrlQualityAdjustment(scoreAdjustment);
+
+                resultList.add(details);
             }
-            var scoreAdjustment = adjustScoreBasedOnQuery(details, processedQuery.specs);
-            details = details.withUrlQualityAdjustment(scoreAdjustment);
 
-            resultList.add(details);
+            resultList.sort(resultListComparator);
         }
-
-        resultList.sort(resultListComparator);
+        );
 
         return new DecoratedSearchResultSet(resultList);
     }
@@ -254,30 +261,13 @@ public class EdgeSearchOperator {
 
         var blocksOrder = processedQuery.specs.subqueries.stream().map(sq -> sq.block).distinct().sorted(Comparator.comparing(block -> block.sortOrder)).toList();
 
+
         EdgeSearchSpecification[] specsArray =
                 processedQuery.specs.subqueries.stream()
                         .filter(sq -> sq.block == IndexBlock.TitleKeywords)
                         .map(sq -> processedQuery.specs.withSubqueries(blocksOrder.stream().map(sq::withBlock).collect(Collectors.toList())))
-                        //.flatMap(specs -> processedQuery.specs.buckets.stream().map(bucket -> specs.withBuckets(List.of(bucket))))
                         .toArray(EdgeSearchSpecification[]::new);
         var resultSets = indexClient.multiQuery(ctx, specsArray);
-
-        if (debug) {
-            for (var s : specsArray) {
-                logger.info("{}", s);
-            }
-            for (IndexBlock block : indexBlockSearchOrder) {
-                resultSets.forEach(res -> {
-                    res.resultsList.getOrDefault(block, Collections.emptyList()).forEach(b2 -> {
-                        b2.results.forEach((idx,items) -> {
-                            items.forEach(i ->
-                                logger.info("{} {} - {}", block, idx, i)
-                            );
-                        });
-                    });
-                });
-            }
-        }
 
         Set<EdgeId<EdgeUrl>> seenUrls = new HashSet<>();
         for (IndexBlock block : indexBlockSearchOrder) {
