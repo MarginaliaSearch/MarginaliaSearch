@@ -1,7 +1,7 @@
 package nu.marginalia.wmsa.configuration;
 
 import nu.marginalia.wmsa.auth.AuthMain;
-import nu.marginalia.wmsa.auth.api.ApiMain;
+import nu.marginalia.wmsa.api.ApiMain;
 import nu.marginalia.wmsa.configuration.command.Command;
 import nu.marginalia.wmsa.configuration.command.ListCommand;
 import nu.marginalia.wmsa.configuration.command.StartCommand;

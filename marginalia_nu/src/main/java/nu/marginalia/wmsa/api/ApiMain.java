@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.auth.api;
+package nu.marginalia.wmsa.api;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -8,8 +8,6 @@ import nu.marginalia.wmsa.configuration.ServiceDescriptor;
 import nu.marginalia.wmsa.configuration.module.ConfigurationModule;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
 import nu.marginalia.wmsa.configuration.server.Initialization;
-
-import java.io.IOException;
 
 public class ApiMain extends MainClass {
 

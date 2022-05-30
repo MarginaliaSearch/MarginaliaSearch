@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.auth.api.model;
+package nu.marginalia.wmsa.api.model;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;

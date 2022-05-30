@@ -2,7 +2,7 @@ package nu.marginalia.wmsa.edge.search.client;
 
 import com.google.inject.Singleton;
 import io.reactivex.rxjava3.core.Observable;
-import nu.marginalia.wmsa.auth.api.model.ApiSearchResults;
+import nu.marginalia.wmsa.api.model.ApiSearchResults;
 import nu.marginalia.wmsa.client.AbstractDynamicClient;
 import nu.marginalia.wmsa.configuration.ServiceDescriptor;
 import nu.marginalia.wmsa.configuration.server.Context;
