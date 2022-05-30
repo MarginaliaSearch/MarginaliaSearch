@@ -53,8 +53,11 @@ public class SearchIndex implements  AutoCloseable {
             var h = reader.getHeader(offset);
             int length = (int) (h.dataOffsetLongs() - h.indexOffsetLongs());
 
+            urls.adviceRange(NativeIO.Advice.Normal, offset, 512);
+
             if (length > 0) {
                 urls.adviceRange(NativeIO.Advice.WillNeed, h.indexOffsetLongs(), length);
+                urls.adviceRange(NativeIO.Advice.Normal, h.dataOffsetLongs(), 2048);
                 urls.pokeRange(h.indexOffsetLongs(), length);
             }
         });

@@ -8,7 +8,6 @@ import com.google.inject.name.Named;
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.api.model.ApiSearchResult;
 import nu.marginalia.wmsa.api.model.ApiSearchResults;
-import nu.marginalia.wmsa.client.exception.TimeoutException;
 import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.configuration.server.Initialization;
 import nu.marginalia.wmsa.configuration.server.MetricsServer;
