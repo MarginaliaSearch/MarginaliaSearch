@@ -60,7 +60,6 @@ class AssistantTest {
                 new DictionaryService(dataSource, new SpellChecker()),
                 new MathParser(),
                 new Units(new MathParser()),
-                null, null,
                 new ScreenshotService(null), null);
 
         Spark.awaitInitialization();
@@ -77,12 +76,6 @@ class AssistantTest {
         Spark.awaitStop();
     }
 
-    @Test
-    public void testEncyclopedia() {
-        var result = client.encyclopediaLookup(Context.internal(), "plato").blockingFirst();
-        System.out.println(result);
-        assertTrue(result.entries.size() >= 1);
-    }
     @Test
     public void testSpellCheck() {
         var result = client.spellCheck(Context.internal(), "plato").blockingFirst();

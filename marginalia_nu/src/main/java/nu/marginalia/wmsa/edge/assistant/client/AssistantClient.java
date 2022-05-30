@@ -24,10 +24,6 @@ public class AssistantClient extends AbstractDynamicClient {
         return super.get(ctx,"/dictionary/" + UrlEncoded.encodeString(word), DictionaryResponse.class);
     }
 
-    public Observable<WikiArticles> encyclopediaLookup(Context ctx, String word) {
-        return super.get(ctx,"/encyclopedia/" + UrlEncoded.encodeString(word), WikiArticles.class);
-    }
-
     @SuppressWarnings("unchecked")
     public Observable<List<String>> spellCheck(Context ctx, String word) {
         return (Observable<List<String>>) (Object) super.get(ctx,"/spell-check/" + UrlEncoded.encodeString(word), List.class);

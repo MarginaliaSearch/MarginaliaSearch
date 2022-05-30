@@ -20,6 +20,7 @@ import nu.marginalia.wmsa.edge.search.results.SearchResultValuator;
 import nu.marginalia.wmsa.edge.search.results.model.AccumulatedQueryResults;
 import nu.marginalia.wmsa.edge.search.results.SearchResultDecorator;
 import nu.marginalia.wmsa.edge.search.results.UrlDeduplicator;
+import nu.marginalia.wmsa.encyclopedia.EncyclopediaClient;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -33,6 +34,7 @@ public class EdgeSearchOperator {
 
     private static final Logger logger = LoggerFactory.getLogger(EdgeSearchOperator.class);
     private final AssistantClient assistantClient;
+    private final EncyclopediaClient encyclopediaClient;
     private final EdgeDataStoreDao edgeDataStoreDao;
     private final EdgeIndexClient indexClient;
     private final QueryFactory queryFactory;
@@ -42,6 +44,7 @@ public class EdgeSearchOperator {
 
     @Inject
     public EdgeSearchOperator(AssistantClient assistantClient,
+                              EncyclopediaClient encyclopediaClient,
                               EdgeDataStoreDao edgeDataStoreDao,
                               EdgeIndexClient indexClient,
                               QueryFactory queryFactory,
@@ -50,6 +53,7 @@ public class EdgeSearchOperator {
                               ) {
 
         this.assistantClient = assistantClient;
+        this.encyclopediaClient = encyclopediaClient;
         this.edgeDataStoreDao = edgeDataStoreDao;
         this.indexClient = indexClient;
         this.queryFactory = queryFactory;
@@ -220,7 +224,7 @@ public class EdgeSearchOperator {
 
     @NotNull
     private Observable<WikiArticles> getWikiArticle(Context ctx, String humanQuery) {
-        return assistantClient
+        return encyclopediaClient
                 .encyclopediaLookup(ctx,
                         humanQuery.replaceAll("\\s+", "_")
                                 .replaceAll("\"", "")
