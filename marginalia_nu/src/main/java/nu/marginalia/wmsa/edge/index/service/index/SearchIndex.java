@@ -3,15 +3,18 @@ package nu.marginalia.wmsa.edge.index.service.index;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.upserve.uppend.blobs.NativeIO;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import nu.marginalia.wmsa.edge.index.service.index.wordstable.IndexWordsTable;
 import nu.marginalia.util.btree.BTreeReader;
 import nu.marginalia.util.multimap.MultimapFileLong;
+import org.eclipse.jetty.util.thread.ThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.concurrent.ForkJoinPool;
 import java.util.stream.LongStream;
 
 public class SearchIndex implements  AutoCloseable {
@@ -40,12 +43,12 @@ public class SearchIndex implements  AutoCloseable {
 
         bTreeReader = new BTreeReader(urls, SearchIndexConverter.urlsBTreeContext);
 
-        madvise(urls, bTreeReader);
+        Schedulers.io().scheduleDirect(() -> madvise(urls, bTreeReader));
     }
 
     private void madvise(MultimapFileLong urls, BTreeReader reader) {
 
-        urls.advice(NativeIO.Advice.Sequential);
+        urls.advice(NativeIO.Advice.Random);
         words.forEachWordsOffset(offset -> {
             var h = reader.getHeader(offset);
             int length = (int) (h.dataOffsetLongs() - h.indexOffsetLongs());
