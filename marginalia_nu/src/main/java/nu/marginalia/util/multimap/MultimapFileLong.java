@@ -52,14 +52,15 @@ public class MultimapFileLong implements AutoCloseable {
     }
 
     private static int getBufferSize(long totalSize, boolean write) {
+        int defaultBig = 2<<23;
         if (totalSize > Integer.MAX_VALUE/WORD_SIZE) {
-            return (int)(Integer.MAX_VALUE/WORD_SIZE);
+            return defaultBig;
         }
         else if (write && totalSize < 8*1024*1024) {
             return 8*1024*1024;
         }
         else {
-            return (int) Math.min(totalSize, Integer.MAX_VALUE/WORD_SIZE);
+            return (int) Math.min(totalSize, defaultBig);
         }
     }
 
