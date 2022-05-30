@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.edge.search.command;
+package nu.marginalia.wmsa.edge.search.command.commands;
 
 import com.google.inject.Inject;
 import nu.marginalia.wmsa.configuration.server.Context;
@@ -6,6 +6,9 @@ import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
 import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklist;
 import nu.marginalia.wmsa.edge.search.EdgeSearchOperator;
 import nu.marginalia.wmsa.edge.search.UnitConversion;
+import nu.marginalia.wmsa.edge.search.command.ResponseType;
+import nu.marginalia.wmsa.edge.search.command.SearchCommandInterface;
+import nu.marginalia.wmsa.edge.search.command.SearchParameters;
 import nu.marginalia.wmsa.edge.search.model.DecoratedSearchResults;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeUserSearchParameters;
 import nu.marginalia.wmsa.renderer.mustache.MustacheRenderer;
@@ -17,10 +20,10 @@ import java.util.Optional;
 import java.util.concurrent.Future;
 
 public class SearchCommand implements SearchCommandInterface {
-    private EdgeDomainBlacklist blacklist;
-    private EdgeDataStoreDao dataStoreDao;
-    private EdgeSearchOperator searchOperator;
-    private UnitConversion unitConversion;
+    private final EdgeDomainBlacklist blacklist;
+    private final EdgeDataStoreDao dataStoreDao;
+    private final EdgeSearchOperator searchOperator;
+    private final UnitConversion unitConversion;
     private final MustacheRenderer<DecoratedSearchResults> searchResultsRenderer;
     private final MustacheRenderer<DecoratedSearchResults> searchResultsRendererGmi;
 

@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.edge.search.command;
+package nu.marginalia.wmsa.edge.search.command.commands;
 
 import com.google.inject.Inject;
 import nu.marginalia.wmsa.configuration.server.Context;
@@ -7,6 +7,8 @@ import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
 import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklist;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeId;
+import nu.marginalia.wmsa.edge.search.command.SearchCommandInterface;
+import nu.marginalia.wmsa.edge.search.command.SearchParameters;
 import nu.marginalia.wmsa.edge.search.model.BrowseResultSet;
 import nu.marginalia.wmsa.renderer.mustache.MustacheRenderer;
 import nu.marginalia.wmsa.renderer.mustache.RendererFactory;

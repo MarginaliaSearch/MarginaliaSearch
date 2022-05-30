@@ -17,6 +17,7 @@ import nu.marginalia.wmsa.edge.index.client.EdgeIndexClient;
 import nu.marginalia.wmsa.edge.search.command.CommandEvaluator;
 import nu.marginalia.wmsa.edge.search.command.ResponseType;
 import nu.marginalia.wmsa.edge.search.command.SearchParameters;
+import nu.marginalia.wmsa.edge.search.exceptions.RedirectException;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeUserSearchParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -164,6 +165,9 @@ public class EdgeSearchService extends Service {
                 responseType);
         try {
             return searchCommandEvaulator.eval(ctx, params, humanQuery);
+        }
+        catch (RedirectException ex) {
+            response.redirect(ex.newUrl);
         }
         catch (Exception ex) {
             logger.error("Error", ex);

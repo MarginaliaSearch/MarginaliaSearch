@@ -233,4 +233,12 @@ public class EdgeSearchE2ETest extends E2ETestBase {
 
         Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("eval"));
     }
+    @Test
+    public void testBang() throws IOException {
+        var driver = chrome.getWebDriver();
+
+        driver.get("http://proxyNginx/search?query=!g test");
+
+        Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("bang"));
+    }
 }

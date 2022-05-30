@@ -1,8 +1,11 @@
-package nu.marginalia.wmsa.edge.search.command;
+package nu.marginalia.wmsa.edge.search.command.commands;
 
 import com.google.inject.Inject;
 import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.edge.search.UnitConversion;
+import nu.marginalia.wmsa.edge.search.command.ResponseType;
+import nu.marginalia.wmsa.edge.search.command.SearchCommandInterface;
+import nu.marginalia.wmsa.edge.search.command.SearchParameters;
 import nu.marginalia.wmsa.renderer.mustache.MustacheRenderer;
 import nu.marginalia.wmsa.renderer.mustache.RendererFactory;
 

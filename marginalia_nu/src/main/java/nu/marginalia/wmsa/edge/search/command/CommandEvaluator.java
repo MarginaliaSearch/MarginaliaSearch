@@ -2,14 +2,15 @@ package nu.marginalia.wmsa.edge.search.command;
 
 import com.google.inject.Inject;
 import nu.marginalia.wmsa.configuration.server.Context;
+import nu.marginalia.wmsa.edge.search.command.commands.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class CommandEvaluator {
 
-    List<SearchCommandInterface> commands = new ArrayList<>();
-
+    private final List<SearchCommandInterface> commands = new ArrayList<>();
+    private final SearchCommand search;
 
     @Inject
     public CommandEvaluator(
@@ -17,13 +18,16 @@ public class CommandEvaluator {
             ConvertCommand convert,
             DefinitionCommand define,
             SiteSearchCommand site,
+            BangCommand bang,
             SearchCommand search
     ) {
         commands.add(browse);
         commands.add(convert);
         commands.add(define);
         commands.add(site);
-        commands.add(search);
+        commands.add(bang);
+
+        this.search = search;
     }
 
     public Object eval(Context ctx, SearchParameters parameters, String query) {
@@ -33,8 +37,10 @@ public class CommandEvaluator {
                 return ret.get();
             }
         }
-        // Search command *should* always evaluate
-        throw new IllegalStateException("Search Command returned Optional.empty()");
+
+        // Always process the search command last
+        return search.process(ctx, parameters, query)
+                .orElseThrow(() -> new IllegalStateException("Search Command returned Optional.empty()!") /* This Should Not be Possible™ */ );
     }
 
 }

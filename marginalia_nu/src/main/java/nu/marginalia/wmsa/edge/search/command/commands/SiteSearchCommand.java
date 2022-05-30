@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.edge.search.command;
+package nu.marginalia.wmsa.edge.search.command.commands;
 
 import com.google.inject.Inject;
 import nu.marginalia.wmsa.configuration.server.Context;
@@ -8,6 +8,9 @@ import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
 import nu.marginalia.wmsa.edge.search.EdgeSearchOperator;
 import nu.marginalia.wmsa.edge.search.EdgeSearchProfile;
+import nu.marginalia.wmsa.edge.search.command.ResponseType;
+import nu.marginalia.wmsa.edge.search.command.SearchCommandInterface;
+import nu.marginalia.wmsa.edge.search.command.SearchParameters;
 import nu.marginalia.wmsa.edge.search.model.DecoratedSearchResultSet;
 import nu.marginalia.wmsa.edge.search.model.DecoratedSearchResults;
 import nu.marginalia.wmsa.edge.search.model.DomainInformation;
@@ -27,7 +30,6 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 public class SiteSearchCommand implements SearchCommandInterface {
-    private EdgeDomainBlacklist blacklist;
     private final EdgeDataStoreDao dataStoreDao;
     private final EdgeSearchOperator searchOperator;
     private DomainInformationService domainInformationService;
@@ -39,21 +41,18 @@ public class SiteSearchCommand implements SearchCommandInterface {
     private final Predicate<String> queryPatternPredicate = Pattern.compile("^site:[.A-Za-z\\-0-9]+$").asPredicate();
     @Inject
     public SiteSearchCommand(
-            EdgeDomainBlacklist blacklist,
+            DomainInformationService domainInformationService,
             EdgeDataStoreDao dataStoreDao,
             RendererFactory rendererFactory,
-            EdgeSearchOperator searchOperator,
-            DomainInformationService domainInformationService)
+            EdgeSearchOperator searchOperator)
             throws IOException
     {
-        this.blacklist = blacklist;
         this.dataStoreDao = dataStoreDao;
+        this.searchOperator = searchOperator;
+        this.domainInformationService = domainInformationService;
 
         siteInfoRenderer = rendererFactory.renderer("edge/site-info");
         siteInfoRendererGmi = rendererFactory.renderer("edge/site-info-gmi");
-
-        this.searchOperator = searchOperator;
-        this.domainInformationService = domainInformationService;
     }
 
     @Override
@@ -63,9 +62,7 @@ public class SiteSearchCommand implements SearchCommandInterface {
         }
 
         var results = siteInfo(ctx, query);
-
         var domain = results.getDomain();
-        logger.info("Domain: {}", domain);
 
         DecoratedSearchResultSet resultSet;
         Path screenshotPath = null;
