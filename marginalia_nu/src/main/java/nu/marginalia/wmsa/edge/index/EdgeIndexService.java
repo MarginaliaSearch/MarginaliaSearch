@@ -331,8 +331,6 @@ public class EdgeIndexService extends Service {
         final Map<Integer, List<EdgeSearchResultItem>> results = new HashMap<>();
         final DomainResultCountFilter localFilter = new DomainResultCountFilter(specs.limitByDomain);
 
-        boolean debug = sq.searchTermsExclude.contains("special:debug");
-
         for (int i : specBuckets) {
             int foundResultsCount = results.values().stream().mapToInt(List::size).sum();
 
@@ -341,37 +339,15 @@ public class EdgeIndexService extends Service {
 
             List<EdgeSearchResultItem> resultsForBucket = new ArrayList<>(specs.limitByBucket);
 
-            if (debug) {
-                getQuery(i, budget, sq.block, lv -> localFilter.filterRawValue(i, lv), searchTerms)
-                        .peek(l -> logger.info("Considering {}", Long.toHexString(l)))
-                        .mapToObj(id -> new EdgeSearchResultItem(i, sq.termSize(), id))
-                        .filter(ri -> {
-                            if (seenResults.contains(ri.url.getId())) {
-                                logger.info("Seen before: {}", Integer.toHexString(ri.url.getId()));
-                                return false;
-                            }
-                            else if (!localFilter.test(i, domainCountFilter, ri)) {
-                                logger.info("DCF: {} - {}:{}", ri.blockId, Integer.toHexString(ri.domain.getId()), Integer.toHexString(ri.url.getId()));
-                                return false;
-                            }
-                            return true;
-                        })
-                        .limit(specs.limitTotal * 3L)
-                        .distinct()
-                        .limit(Math.min(specs.limitByBucket
-                                - results.values().stream().mapToInt(Collection::size).sum(), limit - foundResultsCount))
-                        .forEach(resultsForBucket::add);
-            }
-            else {
-                getQuery(i, budget, sq.block, lv -> localFilter.filterRawValue(i, lv), searchTerms)
-                        .mapToObj(id -> new EdgeSearchResultItem(i, sq.termSize(), id))
-                        .filter(ri -> !seenResults.contains(ri.url.getId()) && localFilter.test(i, domainCountFilter, ri))
-                        .limit(specs.limitTotal * 3L)
-                        .distinct()
-                        .limit(Math.min(specs.limitByBucket
-                                - results.values().stream().mapToInt(Collection::size).sum(), limit - foundResultsCount))
-                        .forEach(resultsForBucket::add);
-            }
+            getQuery(i, budget, sq.block, lv -> localFilter.filterRawValue(i, lv), searchTerms)
+                    .mapToObj(id -> new EdgeSearchResultItem(i, sq.termSize(), id))
+                    .filter(ri -> !seenResults.contains(ri.url.getId()) && localFilter.test(i, domainCountFilter, ri))
+                    .limit(specs.limitTotal * 3L)
+                    .distinct()
+                    .limit(Math.min(specs.limitByBucket
+                            - results.values().stream().mapToInt(Collection::size).sum(), limit - foundResultsCount))
+                    .forEach(resultsForBucket::add);
+
 
             for (var result : resultsForBucket) {
                 seenResults.add(result.url.getId());
