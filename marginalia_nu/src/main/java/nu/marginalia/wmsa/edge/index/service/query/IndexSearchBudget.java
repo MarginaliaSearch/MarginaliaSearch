@@ -2,7 +2,7 @@ package nu.marginalia.wmsa.edge.index.service.query;
 
 
 public class IndexSearchBudget {
-    private long timeout;
+    private final long timeout;
 
     public IndexSearchBudget(long limitTime) {
         this.timeout = System.currentTimeMillis() + limitTime;
