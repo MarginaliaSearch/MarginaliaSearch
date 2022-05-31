@@ -66,6 +66,6 @@ public class RateLimiter {
     private Bucket createBucket() {
         var refill = Refill.greedy(1, Duration.ofSeconds(refillRate));
         var bw = Bandwidth.classic(capacity, refill);
-        return Bucket4j.builder().addLimit(bw).build();
+        return Bucket.builder().addLimit(bw).build();
     }
 }
