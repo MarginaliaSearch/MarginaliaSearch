@@ -59,7 +59,7 @@ class SearchIndexWriterTest {
     }
 
     public long[] findWord(SearchIndexReader reader, String word, IndexBlock block) {
-        IndexSearchBudget budget = new IndexSearchBudget(1_000_000);
+        IndexSearchBudget budget = new IndexSearchBudget(100);
         return reader.findWord(block, budget, lv->true, dictionaryWriter.getReadOnly(word)).stream().toArray();
     }
 

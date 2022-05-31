@@ -41,7 +41,7 @@ import static spark.Spark.get;
 import static spark.Spark.halt;
 
 public class EdgeIndexService extends Service {
-    private static final int SEARCH_BUDGET_LIMIT = 1_000_000;
+    private static final int SEARCH_BUDGET_TIMEOUT_MS = 100;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -243,7 +243,7 @@ public class EdgeIndexService extends Service {
                 new DomainResultCountFilter(specsSet.limitByDomain)
         };
 
-        final IndexSearchBudget budget = new IndexSearchBudget(SEARCH_BUDGET_LIMIT);
+        final IndexSearchBudget budget = new IndexSearchBudget(SEARCH_BUDGET_TIMEOUT_MS);
         final TIntIntHashMap limitsPerBucketRemaining = new TIntIntHashMap(6, 0.7f, 0, specsSet.limitByBucket);
 
         for (int i = 0; i < specsSet.buckets.size(); i+=2) {
@@ -279,10 +279,6 @@ public class EdgeIndexService extends Service {
             }
         }
 
-        if (budget.used() > 0) {
-            logger.debug("Query used ${}", budget.used());
-        }
-
         return results;
     }
 
@@ -294,7 +290,7 @@ public class EdgeIndexService extends Service {
 
         final DomainResultCountFilter domainCountFilter = new DomainResultCountFilter(specsSet.limitByDomain);
 
-        IndexSearchBudget budget = new IndexSearchBudget(SEARCH_BUDGET_LIMIT);
+        IndexSearchBudget budget = new IndexSearchBudget(SEARCH_BUDGET_TIMEOUT_MS);
         for (var sq : specsSet.subqueries) {
             Optional<EdgeIndexSearchTerms> searchTerms = getSearchTerms(sq);
 
@@ -314,10 +310,6 @@ public class EdgeIndexService extends Service {
             if (result.size() > 0) {
                 results.computeIfAbsent(sq.block, s -> new ArrayList<>()).add(result);
             }
-        }
-
-        if (budget.used() > 0) {
-            logger.debug("Query used ${}", budget.used());
         }
 
         return results;
