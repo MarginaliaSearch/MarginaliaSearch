@@ -32,7 +32,9 @@ public class IndexQueryBuilder {
         return new QueryForIndices(budget, filter, wordId);
     }
 
+    // Special treatment for queries with few terms, prefer hits that appear in multiple buckets
     public Query buildUnderspecified(IndexSearchBudget budget, LongPredicate filter, int wordId) {
+
         if (requiredIndices.size() == 1) {
             return build(budget, filter, wordId);
         }
@@ -51,7 +53,7 @@ public class IndexQueryBuilder {
 
         return new QueryForIndices(budget, () ->
             Streams.concat(IntStream.range(1, relevantIndices.length)
-                            .mapToObj(i -> underspecifiedPairStream(budget, (int) budget.limit()/(relevantIndices.length*2), relevantIndices[0], relevantIndices[i], wordId))
+                            .mapToObj(i -> underspecifiedPairStream(budget, 1000, relevantIndices[0], relevantIndices[i], wordId))
                             .flatMapToLong(Function.identity()),
                     fstRange.stream().takeWhile(budget::take))
                 .filter(filter)
@@ -59,17 +61,20 @@ public class IndexQueryBuilder {
     }
 
     private LongStream underspecifiedPairStream(IndexSearchBudget budget, int limit, int firstIdx, int otherIdx, int wordId) {
-        SearchIndex first = requiredIndices.get(firstIdx),
-                second = requiredIndices.get(otherIdx);
+        SearchIndex firstTmp = requiredIndices.get(firstIdx),
+                    secondTmp = requiredIndices.get(otherIdx);
 
-        if (first.numUrls(wordId) > second.numUrls(wordId)) {
-            SearchIndex tmp = first;
-            first = second;
-            second = tmp;
+        final SearchIndex fst;
+        final SearchIndex snd;
+
+        if (firstTmp.numUrls(wordId) > secondTmp.numUrls(wordId)) {
+            fst = secondTmp;
+            snd = firstTmp;
         }
-
-        SearchIndex fst = first;
-        SearchIndex snd = second;
+        else {
+            fst = firstTmp;
+            snd = secondTmp;
+        }
 
         var sndRange = snd.rangeForWord(wordId);
 

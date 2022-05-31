@@ -1,18 +1,16 @@
 package nu.marginalia.wmsa.edge.index.service.query;
 
-import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
 public class IndexSearchBudget {
-    private final long limit;
-    private long used = 0;
+    private long timeout;
 
+    public IndexSearchBudget(long limitTime) {
+        this.timeout = System.currentTimeMillis() + limitTime;
+    }
+
+    // Used for short-circuiting Stream-objects using takeWhile, we don't care
     public boolean take(long unused) {
-        return used++ < limit;
+        return System.currentTimeMillis() < timeout;
     }
 
-    public long used() {
-        return used;
-    }
-    public long limit() { return limit; }
 }

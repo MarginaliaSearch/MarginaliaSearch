@@ -74,7 +74,9 @@ public class SearchIndexReader implements AutoCloseable {
             IndexSearchBudget budget,
             LongPredicate filter,
             int wordId) {
+
         var builder = underspecifiedQueryBuilders.get(block);
+
         if (null != builder) {
             return builder.buildUnderspecified(budget, filter, wordId);
         }
