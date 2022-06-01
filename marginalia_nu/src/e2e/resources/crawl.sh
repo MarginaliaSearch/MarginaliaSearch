@@ -3,6 +3,8 @@
 mkdir -p /var/lib/wmsa/conf/
 mkdir -p /var/lib/wmsa/data/
 
+echo "search.marginalia.nu" > /var/lib/wmsa/conf/user-agent
+
 cat > /var/lib/wmsa/conf/db.properties <<EOF
   db.user=wmsa
   db.pass=wmsa

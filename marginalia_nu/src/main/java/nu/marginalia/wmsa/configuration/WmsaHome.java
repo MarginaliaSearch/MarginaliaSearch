@@ -1,5 +1,6 @@
 package nu.marginalia.wmsa.configuration;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -7,6 +8,16 @@ import java.util.Properties;
 
 public class WmsaHome {
     private static final String DEFAULT = "/var/lib/wmsa";
+
+    public static UserAgent getUserAgent() throws IOException {
+        var uaPath = getHomePath().resolve("conf/user-agent");
+
+        if (!Files.exists(uaPath)) {
+            throw new FileNotFoundException("Could not find " + uaPath);
+        }
+
+        return new UserAgent(Files.readString(uaPath).trim());
+    }
 
     public static Path getHomePath() {
         var ret = Path.of(System.getProperty("WMSA_HOME", DEFAULT));
