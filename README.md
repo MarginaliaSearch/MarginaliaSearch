@@ -5,7 +5,8 @@ the [MEMEX/gemini server](https://memex.marginalia.nu), the and the [encyclopedi
 
 The aim of the project is to develop new and alternative discovery methods for the Internet. 
 It's an experimental workshop as much as it is a public service, the overarching goal is to
-elevate the more human, non-commercial sides of the Internet.
+elevate the more human, non-commercial sides of the Internet. A side-goal is to do this without
+requiring datacenters and expensive enterprise hardware, to run this operation on affordable hardware.
 
 The canonical git server for this project is [https://git.marginalia.nu](https://git.marginalia.nu).
 It is fine to mirror it on other hosts, but if you have issues or questions
