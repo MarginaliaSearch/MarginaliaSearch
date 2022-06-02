@@ -17,6 +17,10 @@ it wasn't developed with the intention of going open source, a lot of tests
 and so on make assumptions about the directory structure, much configuration 
 is hard coded and so on. Please stand by. A lot of the mess is fairly superficial.
 
+## Documentation
+
+Documentation is a work in progress. See the [wiki](https://git.marginalia.nu/marginalia/marginalia.nu/wiki).
+
 ## Contributing
 
 The project is still being set up, but if you are interested in contributing, please contact me. 
