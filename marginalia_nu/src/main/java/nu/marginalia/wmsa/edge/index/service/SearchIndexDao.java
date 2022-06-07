@@ -31,28 +31,12 @@ public class SearchIndexDao {
     }
 
     @SneakyThrows
-    public TIntHashSet getSpamDomains() {
-        final TIntHashSet result = new TIntHashSet(1_000_000);
-
-        try (var connection = dataSource.getConnection()) {
-            try (var stmt = connection.prepareStatement("SELECT EC_DOMAIN.ID FROM EC_DOMAIN INNER JOIN EC_TOP_DOMAIN ON EC_DOMAIN.URL_TOP_DOMAIN_ID = EC_TOP_DOMAIN.ID INNER JOIN EC_DOMAIN_BLACKLIST ON EC_DOMAIN_BLACKLIST.URL_DOMAIN = EC_TOP_DOMAIN.URL_PART")) {
-                var rsp = stmt.executeQuery();
-                while (rsp.next()) {
-                    result.add(rsp.getInt(1));
-                }
-            }
-        }
-
-        return result;
-    }
-
-    @SneakyThrows
     public TIntHashSet goodUrls() {
         TIntHashSet domains = new TIntHashSet(10_000_000, 0.5f, -1);
         TIntHashSet urls = new TIntHashSet(100_000_000, 0.5f, -1);
 
         try (var connection = dataSource.getConnection()) {
-            try (var stmt = connection.prepareStatement("SELECT ID FROM EC_DOMAIN WHERE DOMAIN_ALIAS IS NULL AND STATE>=0")) {
+            try (var stmt = connection.prepareStatement("SELECT ID FROM EC_DOMAIN WHERE DOMAIN_ALIAS IS NULL AND IS_ALIVE")) {
                 stmt.setFetchSize(10_000);
                 var rsp = stmt.executeQuery();
                 while (rsp.next()) {

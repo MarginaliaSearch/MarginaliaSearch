@@ -83,11 +83,6 @@ public class UpdateDomainRanksTool {
                 }
             }
 
-            logger.info("Recalculating quality");
-            try (var stmt = conn.prepareStatement("UPDATE EC_DOMAIN SET QUALITY=-5*RANK+IF(RANK=1,RANK*GREATEST(QUALITY_RAW,QUALITY_ORIGINAL)/2, 0)")) {
-                stmt.executeUpdate();
-            }
-
         } catch (SQLException | InterruptedException throwables) {
             throwables.printStackTrace();
         }

@@ -30,7 +30,7 @@ public class SqlLoadDomainLinks {
                                INSERT IGNORE INTO EC_DOMAIN_LINK (SOURCE_DOMAIN_ID, DEST_DOMAIN_ID)
                                    SELECT SOURCE.ID,DEST.ID
                                    FROM EC_DOMAIN SOURCE INNER JOIN EC_DOMAIN DEST
-                                   ON SOURCE.URL_PART=FROM_DOMAIN AND DEST.URL_PART=TO_DOMAIN;
+                                   ON SOURCE.DOMAIN_NAME=FROM_DOMAIN AND DEST.DOMAIN_NAME=TO_DOMAIN;
                        END
                         """);
             }
@@ -61,8 +61,8 @@ public class SqlLoadDomainLinks {
                 }
             }
         }
-        catch (SQLException sql) {
-            sql.printStackTrace();
+        catch (SQLException ex) {
+            logger.warn("SQL error inserting domain links", ex);
         }
 
     }

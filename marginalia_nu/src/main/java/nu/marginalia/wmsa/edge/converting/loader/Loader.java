@@ -76,9 +76,9 @@ public class Loader implements Interpreter {
     }
 
     @Override
-    public void loadProcessedDomain(EdgeDomain domain, EdgeDomainIndexingState state, double quality) {
-        logger.debug("loadProcessedDomain({}, {}, {})", domain, state, quality);
-        sqlLoadProcessedDomain.load(data, domain, state, quality);
+    public void loadProcessedDomain(EdgeDomain domain, EdgeDomainIndexingState state, String ip) {
+        logger.debug("loadProcessedDomain({}, {}, {})", domain, state, ip);
+        sqlLoadProcessedDomain.load(data, domain, state, ip);
     }
 
     @Override

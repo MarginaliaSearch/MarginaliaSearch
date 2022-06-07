@@ -30,19 +30,19 @@ public class CrawlJobExtractorPageRankMain {
             """
                 SELECT ID
                 FROM EC_DOMAIN
-                WHERE URL_PART=?
+                WHERE DOMAIN_NAME=?
             """;
     private static final String specificDomainSqlFromId =
             """
-                SELECT LOWER(URL_PART)
+                SELECT LOWER(DOMAIN_NAME)
                 FROM EC_DOMAIN
                 WHERE ID=?
             """;
 
     private static final String urlsSql =
             """
-                SELECT CONCAT(PROTO, "://", ?, URL)
-                FROM EC_URL
+                SELECT URL
+                FROM EC_URL_VIEW
                 WHERE DOMAIN_ID=?
                 ORDER BY
                     VISITED DESC,

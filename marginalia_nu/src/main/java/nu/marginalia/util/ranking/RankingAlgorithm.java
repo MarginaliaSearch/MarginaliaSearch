@@ -72,10 +72,10 @@ public abstract class RankingAlgorithm {
 
                 String s;
                 if (getNames) {
-                    s = "SELECT EC_DOMAIN.ID,URL_PART,DOMAIN_ALIAS,STATE,KNOWN_URLS FROM EC_DOMAIN INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID INNER JOIN EC_DOMAIN_LINK ON SOURCE_DOMAIN_ID=EC_DOMAIN.ID WHERE ((INDEXED>1 AND STATE >= 0) OR (INDEXED=1 AND VISITED_URLS=KNOWN_URLS AND GOOD_URLS>0)) AND QUALITY_RAW>=-20 AND SOURCE_DOMAIN_ID!=DEST_DOMAIN_ID GROUP BY EC_DOMAIN.ID";
+                    s = "SELECT EC_DOMAIN.ID,DOMAIN_NAME,DOMAIN_ALIAS,STATE,KNOWN_URLS FROM EC_DOMAIN INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID INNER JOIN EC_DOMAIN_LINK ON SOURCE_DOMAIN_ID=EC_DOMAIN.ID WHERE ((INDEXED>1 AND IS_ALIVE) OR (INDEXED=1 AND VISITED_URLS=KNOWN_URLS AND GOOD_URLS>0)) AND SOURCE_DOMAIN_ID!=DEST_DOMAIN_ID GROUP BY EC_DOMAIN.ID";
                 }
                 else {
-                    s = "SELECT EC_DOMAIN.ID,\"\",DOMAIN_ALIAS,STATE,KNOWN_URLS FROM EC_DOMAIN INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID INNER JOIN EC_DOMAIN_LINK ON SOURCE_DOMAIN_ID=EC_DOMAIN.ID WHERE ((INDEXED>1 AND STATE >= 0) OR (INDEXED=1 AND VISITED_URLS=KNOWN_URLS AND GOOD_URLS>0)) AND QUALITY_RAW>=-20 AND SOURCE_DOMAIN_ID!=DEST_DOMAIN_ID GROUP BY EC_DOMAIN.ID";
+                    s = "SELECT EC_DOMAIN.ID,\"\",DOMAIN_ALIAS,STATE,KNOWN_URLS FROM EC_DOMAIN INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID INNER JOIN EC_DOMAIN_LINK ON SOURCE_DOMAIN_ID=EC_DOMAIN.ID WHERE ((INDEXED>1 AND IS_ALIVE) OR (INDEXED=1 AND VISITED_URLS=KNOWN_URLS AND GOOD_URLS>0)) AND SOURCE_DOMAIN_ID!=DEST_DOMAIN_ID GROUP BY EC_DOMAIN.ID";
                 }
                 try (var stmt = conn.prepareStatement(s)) {
                     stmt.setFetchSize(10000);
@@ -84,7 +84,7 @@ public abstract class RankingAlgorithm {
                         int id = rsp.getInt(1);
                         if (!spamDomains.contains(id)) {
 
-                            domainsById.put(id, new DomainData(id, rsp.getString(2),  rsp.getInt(3), rsp.getInt(4), rsp.getInt(5), false));
+                            domainsById.put(id, new DomainData(id, rsp.getString(2),  rsp.getInt(3), EdgeDomainIndexingState.valueOf(rsp.getString(4)), rsp.getInt(5), false));
 
                             domainIndexToId.put(domainIndexToId.size(), id);
                             domainIdToIndex.put(id, domainIdToIndex.size());
@@ -125,7 +125,7 @@ public abstract class RankingAlgorithm {
                 }
             }
 
-            try (var stmt = conn.prepareStatement("SELECT ID FROM EC_DOMAIN WHERE URL_PART LIKE ?")) {
+            try (var stmt = conn.prepareStatement("SELECT ID FROM EC_DOMAIN WHERE DOMAIN_NAME LIKE ?")) {
                 for (var seed : this.originDomains) {
                     stmt.setString(1, seed);
                     var rsp = stmt.executeQuery();
@@ -159,10 +159,10 @@ public abstract class RankingAlgorithm {
         try (var conn = dataSource.getConnection()) {
             String s;
             if (getNames) {
-                s = "SELECT EC_DOMAIN.ID,URL_PART,DOMAIN_ALIAS,STATE,KNOWN_URLS FROM EC_DOMAIN INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID  LEFT JOIN EC_DOMAIN_LINK ON SOURCE_DOMAIN_ID=EC_DOMAIN.ID WHERE ((INDEXED>1 AND STATE >= 0) OR (INDEXED=1 AND VISITED_URLS=KNOWN_URLS AND GOOD_URLS>0)) AND QUALITY_RAW>=-20 AND EC_DOMAIN_LINK.ID IS NULL GROUP BY EC_DOMAIN.ID";
+                s = "SELECT EC_DOMAIN.ID,DOMAIN_NAME,DOMAIN_ALIAS,STATE,KNOWN_URLS FROM EC_DOMAIN INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID  LEFT JOIN EC_DOMAIN_LINK ON SOURCE_DOMAIN_ID=EC_DOMAIN.ID WHERE ((INDEXED>1 AND IS_ALIVE) OR (INDEXED=1 AND VISITED_URLS=KNOWN_URLS AND GOOD_URLS>0)) AND EC_DOMAIN_LINK.ID IS NULL GROUP BY EC_DOMAIN.ID";
             }
             else {
-                s = "SELECT EC_DOMAIN.ID,\"\",DOMAIN_ALIAS,STATE,KNOWN_URLS FROM EC_DOMAIN INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID  LEFT JOIN EC_DOMAIN_LINK ON SOURCE_DOMAIN_ID=EC_DOMAIN.ID WHERE ((INDEXED>1 AND STATE >= 0) OR (INDEXED=1 AND VISITED_URLS=KNOWN_URLS AND GOOD_URLS>0)) AND QUALITY_RAW>=-20 AND EC_DOMAIN_LINK.ID IS NULL GROUP BY EC_DOMAIN.ID";
+                s = "SELECT EC_DOMAIN.ID,\"\",DOMAIN_ALIAS,STATE,KNOWN_URLS FROM EC_DOMAIN INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID  LEFT JOIN EC_DOMAIN_LINK ON SOURCE_DOMAIN_ID=EC_DOMAIN.ID WHERE ((INDEXED>1 AND IS_ALIVE) OR (INDEXED=1 AND VISITED_URLS=KNOWN_URLS AND GOOD_URLS>0)) AND EC_DOMAIN_LINK.ID IS NULL GROUP BY EC_DOMAIN.ID";
             }
             try (var stmt = conn.prepareStatement(s)) {
                 stmt.setFetchSize(10000);
@@ -172,7 +172,7 @@ public abstract class RankingAlgorithm {
                     int id = rsp.getInt(1);
 
                     if (!spamDomains.contains(id)) {
-                        domainsById.put(id, new DomainData(id, rsp.getString(2), rsp.getInt(3), rsp.getInt(4), rsp.getInt(5), true));
+                        domainsById.put(id, new DomainData(id, rsp.getString(2), rsp.getInt(3), EdgeDomainIndexingState.valueOf(rsp.getString(4)), rsp.getInt(5), true));
 
                         domainIndexToId.put(domainIndexToId.size(), id);
                         domainIdToIndex.put(id, domainIdToIndex.size());
@@ -451,7 +451,7 @@ public abstract class RankingAlgorithm {
         public final int id;
         public final String name;
         private int alias;
-        private int state;
+        private EdgeDomainIndexingState state;
         public final int knownUrls;
         public boolean peripheral;
 
@@ -465,11 +465,11 @@ public abstract class RankingAlgorithm {
         }
 
         public boolean isSpecial() {
-            return EdgeDomainIndexingState.SPECIAL.code == state;
+            return EdgeDomainIndexingState.SPECIAL == state;
         }
 
         public boolean isSocialMedia() {
-            return EdgeDomainIndexingState.SOCIAL_MEDIA.code == state;
+            return EdgeDomainIndexingState.SOCIAL_MEDIA == state;
         }
     }
 
