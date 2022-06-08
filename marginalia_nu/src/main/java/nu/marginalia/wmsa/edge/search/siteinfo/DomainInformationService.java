@@ -203,7 +203,7 @@ public class DomainInformationService {
                 stmt.setInt(1, domainId.getId());
                 var rsp = stmt.executeQuery();
                 if (rsp.next()) {
-                    return EdgeDomainIndexingState.fromCode(rsp.getInt(1));
+                    return EdgeDomainIndexingState.valueOf(rsp.getString(1));
                 }
             } catch (Exception ex) {
                 logger.error("DB error", ex);
