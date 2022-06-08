@@ -4,33 +4,44 @@ import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.util.TestUtil;
 import nu.marginalia.wmsa.edge.converting.interpreter.instruction.LoadProcessedDocument;
 import nu.marginalia.wmsa.edge.converting.processor.logic.HtmlFeature;
+import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDaoImpl;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
+import nu.marginalia.wmsa.edge.model.EdgeId;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeHtmlStandard;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeUrlState;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.ResourceAccessMode;
-import org.junit.jupiter.api.parallel.ResourceLock;
+import org.testcontainers.containers.MariaDBContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Set;
 
-@ResourceLock(value = "mariadb", mode = ResourceAccessMode.READ_WRITE)
-@Execution(ExecutionMode.SAME_THREAD)
-@Tag("db")
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@Testcontainers
 class SqlLoadProcessedDocumentTest {
+    @Container
+    static MariaDBContainer<?> mariaDBContainer = new MariaDBContainer<>("mariadb")
+            .withDatabaseName("WMSA_prod")
+            .withUsername("wmsa")
+            .withPassword("wmsa")
+            .withInitScript("sql/edge-crawler-cache.sql")
+            .withNetworkAliases("mariadb");
+
     HikariDataSource dataSource;
     LoaderData loaderData;
+    EdgeDataStoreDaoImpl dataStoreDao;
+
     @BeforeEach
     public void setUp() throws URISyntaxException {
-        dataSource = TestUtil.getConnection();
-        TestUtil.evalScript(dataSource, "sql/edge-crawler-cache.sql");
+        dataSource = TestUtil.getConnection(mariaDBContainer.getJdbcUrl());
+        dataStoreDao = new EdgeDataStoreDaoImpl(dataSource);
 
         var loadDomains = new SqlLoadDomains(dataSource);
         var loadUrls = new SqlLoadUrls(dataSource);
@@ -46,14 +57,17 @@ class SqlLoadProcessedDocumentTest {
 
     @AfterEach
     public void tearDown() {
+        dataStoreDao.clearCaches();
         dataSource.close();
     }
 
     @Test
     public void loadProcessedDocument() throws URISyntaxException {
         var loader = new SqlLoadProcessedDocument(dataSource);
+        var url = new EdgeUrl("https://www.marginalia.nu/");
+
         loader.load(loaderData, List.of(new LoadProcessedDocument(
-                new EdgeUrl("https://www.marginalia.nu/"),
+                url,
                 EdgeUrlState.OK,
                 "TITLE",
                 "DESCR",
@@ -63,6 +77,17 @@ class SqlLoadProcessedDocumentTest {
                 12345,
                 -5
         )));
+
+        var details = dataStoreDao.getUrlDetailsMulti(List.of(new EdgeId<>(loaderData.getUrlId(new EdgeUrl("https://www.marginalia.nu/")))));
+        assertEquals(1, details.size());
+
+        var urlDetails = details.get(0);
+
+        assertEquals("TITLE", urlDetails.getTitle());
+        assertEquals("DESCR", urlDetails.getDescription());
+        assertTrue(urlDetails.isAffiliate());
+        assertEquals(100, urlDetails.words);
+        assertEquals(12345, urlDetails.dataHash);
     }
 
 }

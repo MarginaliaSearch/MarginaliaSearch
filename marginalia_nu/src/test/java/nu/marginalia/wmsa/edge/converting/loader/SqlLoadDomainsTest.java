@@ -2,27 +2,27 @@ package nu.marginalia.wmsa.edge.converting.loader;
 
 import nu.marginalia.util.TestUtil;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.ResourceAccessMode;
-import org.junit.jupiter.api.parallel.ResourceLock;
+import org.testcontainers.containers.MariaDBContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@ResourceLock(value = "mariadb", mode = ResourceAccessMode.READ_WRITE)
-@Execution(ExecutionMode.SAME_THREAD)
-@Tag("db")
+@Testcontainers
 class SqlLoadDomainsTest {
-
+    @Container
+    static MariaDBContainer<?> mariaDBContainer = new MariaDBContainer<>("mariadb")
+            .withDatabaseName("WMSA_prod")
+            .withUsername("wmsa")
+            .withPassword("wmsa")
+            .withInitScript("sql/edge-crawler-cache.sql")
+            .withNetworkAliases("mariadb");
 
     @Test
     public void loadDomain() {
 
-        try (var dataSource = TestUtil.getConnection()) {
-            TestUtil.evalScript(dataSource, "sql/edge-crawler-cache.sql");
-
+        try (var dataSource = TestUtil.getConnection(mariaDBContainer.getJdbcUrl());) {
             var loadDomains = new SqlLoadDomains(dataSource);
             var loaderData = new LoaderData(10);
 
@@ -37,9 +37,7 @@ class SqlLoadDomainsTest {
     @Test
     public void loadDomains() {
 
-        try (var dataSource = TestUtil.getConnection()) {
-            TestUtil.evalScript(dataSource, "sql/edge-crawler-cache.sql");
-
+        try (var dataSource = TestUtil.getConnection(mariaDBContainer.getJdbcUrl());) {
             var loadDomains = new SqlLoadDomains(dataSource);
             var loaderData = new LoaderData(10);
 
