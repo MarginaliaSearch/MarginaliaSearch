@@ -3,12 +3,13 @@ package nu.marginalia.util.ranking.tool;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import nu.marginalia.util.ranking.BuggyStandardPageRank;
+import nu.marginalia.util.ranking.RankingDomainFetcher;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
+import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklistImpl;
 import org.mariadb.jdbc.Driver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
@@ -43,12 +44,14 @@ public class UpdateDomainRanksTool {
         var uploader = new Thread(() -> uploadThread(conn), "Uploader");
 
         logger.info("Ranking");
-        var spr = new BuggyStandardPageRank(new DatabaseModule().provideConnection(),"memex.marginalia.nu");
+        var ds = new DatabaseModule().provideConnection();
+        var domains = new RankingDomainFetcher(ds, new EdgeDomainBlacklistImpl(ds));
+        var spr = new BuggyStandardPageRank(domains, "memex.marginalia.nu");
 
         rankMax = spr.size()*2;
         uploader.start();
 
-        spr.pageRankWithPeripheralNodes(rankMax, false).forEach(i -> {
+        spr.pageRankWithPeripheralNodes(rankMax).forEach(i -> {
             try {
                 uploadQueue.put(i);
             } catch (InterruptedException e) {

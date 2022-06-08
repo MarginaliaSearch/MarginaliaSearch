@@ -6,6 +6,7 @@ import com.google.common.hash.Hashing;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.util.ranking.RankingDomainFetcher;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
 import nu.marginalia.wmsa.edge.crawling.model.CrawlingSpecification;
 import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklistImpl;
@@ -73,10 +74,12 @@ public class CrawlJobExtractorPageRankMain {
 
         Gson gson = new GsonBuilder().create();
 
-        var rpr = new BetterReversePageRank(new DatabaseModule().provideConnection(),  "bikobatanari.art", "sadgrl.online", "wiki.xxiivv.com", "%neocities.org");
+        var ds = new DatabaseModule().provideConnection();
+        var domains = new RankingDomainFetcher(ds, new EdgeDomainBlacklistImpl(ds));
+        var rpr = new BetterReversePageRank(domains,  "bikobatanari.art", "sadgrl.online", "wiki.xxiivv.com", "%neocities.org");
         rpr.setMaxKnownUrls(750);
 
-        var targetDomainIds = rpr.pageRankWithPeripheralNodes(rpr.size(), false);
+        var targetDomainIds = rpr.pageRankWithPeripheralNodes(rpr.size());
 
         try (var out = new PrintWriter(new ZstdOutputStream(new BufferedOutputStream(new FileOutputStream(outFile.toFile()))))) {
             final var extractor = new CrawlJobExtractorPageRankMain(new DatabaseModule().provideConnection());

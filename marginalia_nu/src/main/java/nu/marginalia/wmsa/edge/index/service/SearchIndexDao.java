@@ -10,7 +10,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.util.ranking.BetterReversePageRank;
 import nu.marginalia.util.ranking.BetterStandardPageRank;
 import nu.marginalia.util.ranking.BuggyStandardPageRank;
-import nu.marginalia.wmsa.configuration.module.DatabaseModule;
+import nu.marginalia.util.ranking.RankingDomainFetcher;
 import nu.marginalia.wmsa.edge.index.model.RankingSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,14 +18,17 @@ import org.slf4j.LoggerFactory;
 @Singleton
 public class SearchIndexDao {
     private final HikariDataSource dataSource;
+    private RankingDomainFetcher rankingDomains;
     private final RankingSettings rankingSettings;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
     public SearchIndexDao(HikariDataSource dataSource,
+                          RankingDomainFetcher rankingDomains,
                           RankingSettings rankingSettings)
     {
         this.dataSource = dataSource;
+        this.rankingDomains = rankingDomains;
         this.rankingSettings = rankingSettings;
         logger.info("SearchIndexDao ranking settings = {}", rankingSettings);
     }
@@ -63,36 +66,36 @@ public class SearchIndexDao {
 
     @SneakyThrows
     public TIntList getRetroDomains() {
-        var spr = new BetterStandardPageRank(dataSource,rankingSettings.retro.toArray(String[]::new));
-        return spr.pageRankWithPeripheralNodes(spr.size()/2, false);
+        var spr = new BetterStandardPageRank(rankingDomains,rankingSettings.retro.toArray(String[]::new));
+        return spr.pageRankWithPeripheralNodes(spr.size()/2);
     }
 
     @SneakyThrows
     public TIntList getSmallWebDomains() {
-        var rpr = new BetterReversePageRank(new DatabaseModule().provideConnection(),  rankingSettings.small.toArray(String[]::new));
+        var rpr = new BetterReversePageRank(rankingDomains,  rankingSettings.small.toArray(String[]::new));
 
         rpr.setMaxKnownUrls(750);
 
-        return rpr.pageRankWithPeripheralNodes(rpr.size(), false);
+        return rpr.pageRankWithPeripheralNodes(rpr.size());
     }
 
     @SneakyThrows
     public TIntList getAcademiaDomains() {
-        var spr =  new BetterStandardPageRank(new DatabaseModule().provideConnection(),  rankingSettings.academia.toArray(String[]::new));
-        return spr.pageRankWithPeripheralNodes(spr.size()/2, false);
+        var spr =  new BetterStandardPageRank(rankingDomains,  rankingSettings.academia.toArray(String[]::new));
+        return spr.pageRankWithPeripheralNodes(spr.size()/2);
     }
 
     @SneakyThrows
     public TIntList getStandardDomains() {
-        var spr = new BuggyStandardPageRank(dataSource,rankingSettings.standard.toArray(String[]::new));
-        return spr.pageRankWithPeripheralNodes(spr.size()/2, false);
+        var spr = new BuggyStandardPageRank(rankingDomains,rankingSettings.standard.toArray(String[]::new));
+        return spr.pageRankWithPeripheralNodes(spr.size()/2);
     }
 
     @SneakyThrows
     public TIntList getSpecialDomains() {
         TIntArrayList results = new TIntArrayList();
         try (var connection = dataSource.getConnection();
-             var stmt = connection.prepareStatement("SELECT ID FROM EC_DOMAIN WHERE STATE=2")
+             var stmt = connection.prepareStatement("SELECT ID FROM EC_DOMAIN WHERE STATE='SPECIAL'")
         ) {
             var rs = stmt.executeQuery();
             while (rs.next()) {

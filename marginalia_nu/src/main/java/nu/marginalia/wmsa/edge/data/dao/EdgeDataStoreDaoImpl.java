@@ -33,7 +33,6 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
     private final Cache<EdgeUrl, EdgeId<EdgeUrl>> urlIdCache = CacheBuilder.newBuilder().maximumSize(100_000).build();
     private final Cache<EdgeDomain, EdgeId<EdgeDomain>> domainIdCache = CacheBuilder.newBuilder().maximumSize(10_000).build();
 
-    private static final String DEFAULT_PROTOCOL = "http";
     public static double QUALITY_LOWER_BOUND_CUTOFF = -15.;
     @Inject
     public EdgeDataStoreDaoImpl(HikariDataSource dataSource)
@@ -46,23 +45,6 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
     {
         urlIdCache.invalidateAll();
         domainIdCache.invalidateAll();
-    }
-
-    @SneakyThrows
-    @Override
-    public boolean isBlacklisted(EdgeDomain domain) {
-
-        try (var connection = dataSource.getConnection()) {
-            try (var stmt = connection.prepareStatement("SELECT ID FROM EC_DOMAIN_BLACKLIST WHERE URL_DOMAIN=?")) {
-                stmt.setString(1, domain.domain);
-                var rsp = stmt.executeQuery();
-                if (rsp.next()) {
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        }
     }
 
     @SneakyThrows
@@ -108,13 +90,12 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
 
             try (var stmt = connection.prepareStatement(
                     """
-                            SELECT ID, URL, 
+                            SELECT ID, URL,
                                     TITLE, DESCRIPTION,
-                                    WORDS_TOTAL, FORMAT, FEATURES, 
+                                    WORDS_TOTAL, FORMAT, FEATURES,
                                     IP, DOMAIN_STATE, DATA_HASH
                                     FROM EC_URL_VIEW WHERE ID IN
                             """ + idString)) {
-//                    "SELECT ID,URL_PROTO,URL_DOMAIN,URL_PORT,URL_PATH,TITLE,DESCRIPTION,URL_QUALITY_MEASURE,DOMAIN_QUALITY_MEASURE,IFNULL(EC_DOMAIN_LINK_AGGREGATE.LINKS,1),WORDS_TOTAL,FORMAT,FEATURES,\"\",QUALITY_RAW,DOMAIN_STATE,DATA_HASH FROM EC_URL_VIEW LEFT JOIN EC_DOMAIN_LINK_AGGREGATE ON EC_DOMAIN_LINK_AGGREGATE.DOMAIN_ID=EC_URL_VIEW.DOMAIN_ID WHERE ID IN " + idString)) {
                 stmt.setFetchSize(ids.size());
 
                 var rsp = stmt.executeQuery();
@@ -125,7 +106,7 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
                             rsp.getString(4), // description
                             -5, // quality
                             rsp.getInt(5), // wordsTotal
-                            rsp.getString(6), // foramt
+                            rsp.getString(6), // format
                             rsp.getInt(7), // features
                             rsp.getString(8), // ip
                             EdgeDomainIndexingState.valueOf(rsp.getString(9)), // domainState
@@ -179,9 +160,7 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
                     String domain = rsp.getString(2);
 
                     if (!blacklist.isBlacklisted(id)) {
-                        var url = new EdgeUrl(DEFAULT_PROTOCOL, new EdgeDomain(domain), null, "/");
-
-                        domains.add(new BrowseResult(url, id));
+                        domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id));
                     }
                 }
             }
@@ -210,9 +189,7 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
                         String domain = rsp.getString(2);
 
                         if (!blacklist.isBlacklisted(id)) {
-                            var url = new EdgeUrl(DEFAULT_PROTOCOL, new EdgeDomain(domain), null, "/");
-
-                            domains.add(new BrowseResult(url, id));
+                            domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id));
                         }
                     }
                 }
@@ -244,9 +221,7 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
                         String domain = rsp.getString(2);
 
                         if (!blacklist.isBlacklisted(id)) {
-                            var url = new EdgeUrl(DEFAULT_PROTOCOL, new EdgeDomain(domain), null, "/");
-
-                            domains.add(new BrowseResult(url, id));
+                            domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id));
                         }
                     }
                 }
@@ -262,7 +237,15 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
     @Override
     public List<BrowseResult> getRandomDomains(int count, EdgeDomainBlacklist blacklist) {
 
-        final String q = "SELECT DOMAIN_ID,DOMAIN_NAME FROM EC_RANDOM_DOMAINS INNER JOIN EC_DOMAIN ON EC_DOMAIN.ID=DOMAIN_ID WHERE STATE<2 AND DOMAIN_ALIAS IS NULL ORDER BY RAND() LIMIT ?";
+        final String q = """
+                SELECT DOMAIN_ID, DOMAIN_NAME
+                FROM EC_RANDOM_DOMAINS
+                INNER JOIN EC_DOMAIN ON EC_DOMAIN.ID=DOMAIN_ID
+                WHERE STATE<2
+                AND DOMAIN_ALIAS IS NULL
+                ORDER BY RAND()
+                LIMIT ?
+                """;
         List<BrowseResult> domains = new ArrayList<>(count);
         try (var conn = dataSource.getConnection()) {
             try (var stmt = conn.prepareStatement(q)) {
@@ -273,9 +256,7 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
                     String domain = rsp.getString(2);
 
                     if (!blacklist.isBlacklisted(id)) {
-                        var url = new EdgeUrl(DEFAULT_PROTOCOL, new EdgeDomain(domain), null, "/");
-
-                        domains.add(new BrowseResult(url, id));
+                        domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id));
                     }
                  }
             }
@@ -301,224 +282,5 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
             }
         }
     }
-
-
-    @Override
-    public Optional<EdgeId<EdgeUrl>> resolveAmbiguousDomain(String name) {
-        try (var connection = dataSource.getConnection()) {
-            try (var stmt = connection.prepareStatement("SELECT IFNULL(DOMAIN_ALIAS,ID) FROM EC_DOMAIN WHERE DOMAIN_NAME=?")) {
-                stmt.setString(1, name);
-                var rsp = stmt.executeQuery();
-                if (rsp.next()) {
-                    return Optional.of(new EdgeId<>(rsp.getInt(1)));
-                }
-            }
-
-            try (var stmt = connection.prepareStatement("SELECT IFNULL(DOMAIN_ALIAS,ID) FROM EC_DOMAIN WHERE DOMAIN_NAME=?")) {
-                stmt.setString(1, "https://"+name);
-                var rsp = stmt.executeQuery();
-                if (rsp.next()) {
-                    return Optional.of(new EdgeId<>(rsp.getInt(1)));
-                }
-            }
-
-            try (var stmt = connection.prepareStatement("SELECT IFNULL(DOMAIN_ALIAS,ID) FROM EC_DOMAIN WHERE DOMAIN_NAME=?")) {
-                stmt.setString(1, "http://"+name);
-                var rsp = stmt.executeQuery();
-                if (rsp.next()) {
-                    return Optional.of(new EdgeId<>(rsp.getInt(1)));
-                }
-            }
-
-            try (var stmt = connection.prepareStatement("SELECT IFNULL(DOMAIN_ALIAS,ID) FROM EC_DOMAIN WHERE DOMAIN_NAME=?")) {
-                stmt.setString(1, "https://www."+name);
-                var rsp = stmt.executeQuery();
-                if (rsp.next()) {
-                    return Optional.of(new EdgeId<>(rsp.getInt(1)));
-                }
-            }
-
-            try (var stmt = connection.prepareStatement("SELECT IFNULL(DOMAIN_ALIAS,ID) FROM EC_DOMAIN WHERE DOMAIN_NAME=?")) {
-                stmt.setString(1, "http://www."+name);
-                var rsp = stmt.executeQuery();
-                if (rsp.next()) {
-                    return Optional.of(new EdgeId<>(rsp.getInt(1)));
-                }
-            }
-
-        } catch (SQLException throwables) {
-            logger.info("Could not resolve domain id for  {}", name);
-        }
-
-        return Optional.empty();
-    }
-
-    @SneakyThrows
-    @Override
-    public int getPagesKnown(EdgeId<EdgeDomain> domainId) {
-        try (var connection = dataSource.getConnection()) {
-
-            try (var stmt = connection.prepareStatement("SELECT KNOWN_URLS FROM DOMAIN_METADATA WHERE ID=?")) {
-                stmt.setInt(1, domainId.getId());
-                var rsp = stmt.executeQuery();
-                if (rsp.next()) {
-                    return rsp.getInt(1);
-                }
-            } catch (Exception ex) {
-                logger.error("DB error", ex);
-            }
-            return 0;
-        }
-    }
-
-    @SneakyThrows
-    @Override
-    public int getPagesVisited(EdgeId<EdgeDomain> domainId) {
-        try (var connection = dataSource.getConnection()) {
-
-            try (var stmt = connection.prepareStatement("SELECT VISITED_URLS FROM DOMAIN_METADATA WHERE ID=?")) {
-                stmt.setInt(1, domainId.getId());
-                var rsp = stmt.executeQuery();
-                if (rsp.next()) {
-                    return rsp.getInt(1);
-                }
-            } catch (Exception ex) {
-                logger.error("DB error", ex);
-            }
-            return 0;
-        }
-    }
-
-
-    @SneakyThrows
-    @Override
-    public int getPagesIndexed(EdgeId<EdgeDomain> domainId) {
-        try (var connection = dataSource.getConnection()) {
-
-            try (var stmt = connection.prepareStatement("SELECT GOOD_URLS FROM DOMAIN_METADATA WHERE ID=?")) {
-                stmt.setInt(1, domainId.getId());
-                var rsp = stmt.executeQuery();
-                if (rsp.next()) {
-                    return rsp.getInt(1);
-                }
-            } catch (Exception ex) {
-                logger.error("DB error", ex);
-            }
-            return 0;
-        }
-    }
-
-    @SneakyThrows
-    @Override
-    public int getIncomingLinks(EdgeId<EdgeDomain> domainId) {
-        try (var connection = dataSource.getConnection()) {
-
-            try (var stmt = connection.prepareStatement("SELECT COUNT(ID) FROM EC_DOMAIN_LINK WHERE DEST_DOMAIN_ID=?")) {
-                stmt.setInt(1, domainId.getId());
-                var rsp = stmt.executeQuery();
-                if (rsp.next()) {
-                    return rsp.getInt(1);
-                }
-            } catch (Exception ex) {
-                logger.error("DB error", ex);
-            }
-            return 0;
-        }
-    }
-    @SneakyThrows
-    @Override
-    public int getOutboundLinks(EdgeId<EdgeDomain> domainId) {
-        try (var connection = dataSource.getConnection()) {
-
-            try (var stmt = connection.prepareStatement("SELECT COUNT(ID) FROM EC_DOMAIN_LINK WHERE SOURCE_DOMAIN_ID=?")) {
-                stmt.setInt(1, domainId.getId());
-                var rsp = stmt.executeQuery();
-                if (rsp.next()) {
-                    return rsp.getInt(1);
-                }
-            } catch (Exception ex) {
-                logger.error("DB error", ex);
-            }
-            return 0;
-        }
-    }
-
-    @SneakyThrows
-    @Override
-    public double getDomainQuality(EdgeId<EdgeDomain> domainId) {
-        try (var connection = dataSource.getConnection()) {
-
-            try (var stmt = connection.prepareStatement("SELECT QUALITY FROM EC_DOMAIN WHERE ID=?")) {
-                stmt.setInt(1, domainId.getId());
-                var rsp = stmt.executeQuery();
-                if (rsp.next()) {
-                    return rsp.getDouble(1);
-                }
-            } catch (Exception ex) {
-                logger.error("DB error", ex);
-            }
-            return -5;
-        }
-    }
-
-    @Override
-    public EdgeDomainIndexingState getDomainState(EdgeId<EdgeDomain> domainId) {
-        try (var connection = dataSource.getConnection()) {
-
-            try (var stmt = connection.prepareStatement("SELECT STATE FROM EC_DOMAIN WHERE ID=?")) {
-                stmt.setInt(1, domainId.getId());
-                var rsp = stmt.executeQuery();
-                if (rsp.next()) {
-                    return EdgeDomainIndexingState.fromCode(rsp.getInt(1));
-                }
-            } catch (Exception ex) {
-                logger.error("DB error", ex);
-            }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-        return EdgeDomainIndexingState.ERROR;
-    }
-
-    @Override
-    public List<EdgeDomain> getLinkingDomains(EdgeId<EdgeDomain> domainId) {
-        try (var connection = dataSource.getConnection()) {
-            List<EdgeDomain> results = new ArrayList<>(25);
-            try (var stmt = connection.prepareStatement("SELECT SOURCE_URL FROM EC_RELATED_LINKS_VIEW WHERE DEST_DOMAIN_ID=? ORDER BY SOURCE_DOMAIN_ID LIMIT 25")) {
-                stmt.setInt(1, domainId.getId());
-                var rsp = stmt.executeQuery();
-                while (rsp.next()) {
-                    results.add(new EdgeDomain(rsp.getString(1)));
-                }
-                return results;
-            } catch (Exception ex) {
-                logger.error("DB error", ex);
-            }
-
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-        return Collections.emptyList();
-    }
-
-    @Override
-    public double getRank(EdgeId<EdgeDomain> domainId) {
-        try (var connection = dataSource.getConnection()) {
-
-            try (var stmt = connection.prepareStatement("SELECT IFNULL(RANK, 1) FROM EC_DOMAIN WHERE ID=?")) {
-                stmt.setInt(1, domainId.getId());
-                var rsp = stmt.executeQuery();
-                if (rsp.next()) {
-                    return rsp.getDouble(1);
-                }
-            } catch (Exception ex) {
-                logger.error("DB error", ex);
-            }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-        return 1;
-    }
-
 
 }
