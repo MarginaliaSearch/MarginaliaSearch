@@ -17,44 +17,21 @@ import java.util.stream.IntStream;
 import it.unimi.dsi.fastutil.ints.IntArrays;
 
 public abstract class RankingAlgorithm {
-    final TIntObjectHashMap<RankingDomainData> domainsById = new TIntObjectHashMap<>();
-    final TIntIntHashMap domainIndexToId = new TIntIntHashMap();
-    final TIntIntHashMap domainIdToIndex = new TIntIntHashMap();
+    protected final TIntObjectHashMap<RankingDomainData> domainsById = new TIntObjectHashMap<>();
+    protected final TIntIntHashMap domainIndexToId = new TIntIntHashMap();
+    protected final TIntIntHashMap domainIdToIndex = new TIntIntHashMap();
 
-    TIntArrayList[] linkDataSrc2Dest;
-    TIntArrayList[] linkDataDest2Src;
+    protected TIntArrayList[] linkDataSrc2Dest;
+    protected TIntArrayList[] linkDataDest2Src;
 
     public final Set<String> originDomains = new HashSet<>();
     public final Set<Integer> originDomainIds = new HashSet<>();
 
     private int maxKnownUrls = Integer.MAX_VALUE;
 
-    private static final boolean getNames = true;
-
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private RankingDomainFetcher domains;
 
-    public static void main(String... args) throws IOException {
-        var ds = new DatabaseModule().provideConnection();
-        var domains = new RankingDomainFetcher(ds, new EdgeDomainBlacklistImpl(ds));
-
-        var rpr = new BuggyReversePageRank(domains, "wiki.xxiivv.com");
-        var spr = new BuggyStandardPageRank(domains, "memex.marginalia.nu");
-
-        var rankVector = spr.pageRankVector();
-        var norm = rankVector.norm();
-        rpr.pageRank(i -> rankVector.get(i) / norm, 25).forEach(i -> {
-            System.out.println(spr.domainNameFromId(i));
-            return true;
-        });
-    }
-
-    public String domainNameFromId(int id) {
-        return domainsById.get(id).name;
-    }
-    public boolean isPeripheral(int id) {
-        return domainsById.get(id).peripheral;
-    }
+    private final RankingDomainFetcher domains;
 
     public RankingAlgorithm(RankingDomainFetcher domains, String... origins) {
         this.domains = domains;
