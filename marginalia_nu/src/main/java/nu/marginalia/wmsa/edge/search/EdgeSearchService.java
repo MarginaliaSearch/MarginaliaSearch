@@ -8,6 +8,7 @@ import com.google.inject.name.Named;
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.api.model.ApiSearchResult;
 import nu.marginalia.wmsa.api.model.ApiSearchResults;
+import nu.marginalia.wmsa.configuration.WebsiteUrl;
 import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.configuration.server.Initialization;
 import nu.marginalia.wmsa.configuration.server.MetricsServer;
@@ -34,7 +35,7 @@ public class EdgeSearchService extends Service {
     private final EdgeIndexClient indexClient;
     private final EdgeSearchOperator searchOperator;
     private final CommandEvaluator searchCommandEvaulator;
-
+    private final WebsiteUrl websiteUrl;
     private static final Logger logger = LoggerFactory.getLogger(EdgeSearchService.class);
 
     @SneakyThrows
@@ -45,13 +46,14 @@ public class EdgeSearchService extends Service {
                              Initialization initialization,
                              MetricsServer metricsServer,
                              EdgeSearchOperator searchOperator,
-                             CommandEvaluator searchCommandEvaulator
-                             ) {
+                             CommandEvaluator searchCommandEvaulator,
+                             WebsiteUrl websiteUrl) {
         super(ip, port, initialization, metricsServer);
         this.indexClient = indexClient;
 
         this.searchOperator = searchOperator;
         this.searchCommandEvaulator = searchCommandEvaulator;
+        this.websiteUrl = websiteUrl;
 
         Spark.staticFiles.expireTime(600);
 
@@ -79,7 +81,7 @@ public class EdgeSearchService extends Service {
         final String query = URLEncoder.encode(String.format("%s site:%s", queryRaw, site), StandardCharsets.UTF_8);
         final String profile = request.queryParamOrDefault("profile", "yolo");
 
-        response.redirect("https://search.marginalia.nu/search?query="+query+"&profile="+profile);
+        response.redirect(websiteUrl.withPath("search?query="+query+"&profile="+profile));
 
         return null;
     }
@@ -141,7 +143,7 @@ public class EdgeSearchService extends Service {
 
         final String queryParam = request.queryParams("query");
         if (null == queryParam || queryParam.isBlank()) {
-            response.redirect("https://search.marginalia.nu/");
+            response.redirect(websiteUrl.url());
             return null;
         }
 
