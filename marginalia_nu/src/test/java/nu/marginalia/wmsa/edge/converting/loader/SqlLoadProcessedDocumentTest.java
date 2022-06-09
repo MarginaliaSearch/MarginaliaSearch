@@ -75,7 +75,7 @@ class SqlLoadProcessedDocumentTest {
                 EdgeHtmlStandard.HTML5,
                 100,
                 12345,
-                -5
+                -3.14
         )));
 
         var details = dataStoreDao.getUrlDetailsMulti(List.of(new EdgeId<>(loaderData.getUrlId(new EdgeUrl("https://www.marginalia.nu/")))));
@@ -88,6 +88,7 @@ class SqlLoadProcessedDocumentTest {
         assertTrue(urlDetails.isAffiliate());
         assertEquals(100, urlDetails.words);
         assertEquals(12345, urlDetails.dataHash);
+        assertEquals(-3.14, urlDetails.getUrlQuality());
     }
 
 }

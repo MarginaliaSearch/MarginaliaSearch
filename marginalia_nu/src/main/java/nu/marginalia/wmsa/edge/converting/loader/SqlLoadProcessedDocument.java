@@ -33,10 +33,11 @@ public class SqlLoadProcessedDocument {
                                IN LENGTH INT,
                                IN FEATURES INT,
                                IN STANDARD VARCHAR(32),
+                               IN QUALITY DOUBLE,
                                IN HASH INT)
                        BEGIN
                                SET FOREIGN_KEY_CHECKS=0;
-                               REPLACE INTO EC_PAGE_DATA(ID, TITLE, DESCRIPTION, WORDS_TOTAL, FORMAT, FEATURES, DATA_HASH) VALUES (URL_ID, TITLE, DESCRIPTION, LENGTH, STANDARD, FEATURES, HASH);
+                               REPLACE INTO EC_PAGE_DATA(ID, TITLE, DESCRIPTION, WORDS_TOTAL, FORMAT, FEATURES, DATA_HASH, QUALITY) VALUES (URL_ID, TITLE, DESCRIPTION, LENGTH, STANDARD, FEATURES, HASH, QUALITY);
                                UPDATE EC_URL SET VISITED=1, STATE=STATE WHERE ID=URL_ID;
                                SET FOREIGN_KEY_CHECKS=1;
                        END
@@ -47,6 +48,7 @@ public class SqlLoadProcessedDocument {
                                IN STATE VARCHAR(32))
                        BEGIN
                                UPDATE EC_URL SET VISITED=1, STATE=STATE WHERE ID=URL_ID;
+                               DELETE FROM PAGE_DATA WHERE ID=URL_ID;
                        END
                         """);
 
@@ -59,7 +61,7 @@ public class SqlLoadProcessedDocument {
 
     public void load(LoaderData data, List<LoadProcessedDocument> documents) {
         try (var conn = dataSource.getConnection();
-             var stmt = conn.prepareCall("CALL INSERT_PAGE_VISIT(?, ?, ?, ?, ?, ?, ?, ?)")) {
+             var stmt = conn.prepareCall("CALL INSERT_PAGE_VISIT(?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             conn.setAutoCommit(false);
 
             for (var doc : documents) {
@@ -76,7 +78,8 @@ public class SqlLoadProcessedDocument {
                 stmt.setInt(5, doc.length());
                 stmt.setInt(6, doc.htmlFeatures());
                 stmt.setString(7, doc.standard().name());
-                stmt.setInt(8, (int) doc.hash());
+                stmt.setDouble(8, doc.quality());
+                stmt.setInt(9, (int) doc.hash());
                 stmt.addBatch();
             }
             var ret = stmt.executeBatch();

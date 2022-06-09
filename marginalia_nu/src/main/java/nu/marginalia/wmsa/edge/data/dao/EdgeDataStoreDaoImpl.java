@@ -92,8 +92,10 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
                     """
                             SELECT ID, URL,
                                     TITLE, DESCRIPTION,
+                                    QUALITY,
                                     WORDS_TOTAL, FORMAT, FEATURES,
-                                    IP, DOMAIN_STATE, DATA_HASH
+                                    IP, DOMAIN_STATE,
+                                    DATA_HASH
                                     FROM EC_URL_VIEW WHERE ID IN
                             """ + idString)) {
                 stmt.setFetchSize(ids.size());
@@ -104,13 +106,13 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
                     var val = new EdgeUrlDetails(rsp.getInt(1), url,
                             rsp.getString(3), // title
                             rsp.getString(4), // description
-                            -5, // quality
-                            rsp.getInt(5), // wordsTotal
-                            rsp.getString(6), // format
-                            rsp.getInt(7), // features
-                            rsp.getString(8), // ip
-                            EdgeDomainIndexingState.valueOf(rsp.getString(9)), // domainState
-                            rsp.getInt(10), // dataHash
+                            rsp.getDouble(5), // quality
+                            rsp.getInt(6), // wordsTotal
+                            rsp.getString(7), // format
+                            rsp.getInt(8), // features
+                            rsp.getString(9), // ip
+                            EdgeDomainIndexingState.valueOf(rsp.getString(10)), // domainState
+                            rsp.getInt(11), // dataHash
                             EdgePageScoreAdjustment.zero(), // urlQualityAdjustment
                             Integer.MAX_VALUE, // rankingId
                             Double.MAX_VALUE, // termScore
