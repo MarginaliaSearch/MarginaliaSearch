@@ -185,26 +185,25 @@ public class DocumentProcessor {
     }
 
     private void getLinks(EdgeUrl baseUrl, ProcessedDocumentDetails ret, Document doc, EdgePageWordSet words) {
-        var links = doc.getElementsByTag("a");
-        var frames = doc.getElementsByTag("frame");
-        var feeds = doc.select("link[rel=alternate]");
 
-        LinkProcessor lp = new LinkProcessor(ret, baseUrl);
+        final LinkProcessor lp = new LinkProcessor(ret, baseUrl);
 
-        for (var atag : links) {
+        baseUrl = linkParser.getBaseLink(doc, baseUrl);
+
+        for (var atag : doc.getElementsByTag("a")) {
             linkParser.parseLink(baseUrl, atag).ifPresent(lp::accept);
         }
-        for (var frame : frames) {
+        for (var frame : doc.getElementsByTag("frame")) {
             linkParser.parseFrame(baseUrl, frame).ifPresent(lp::accept);
         }
 
-        for (var link : feeds) {
+        for (var link : doc.select("link[rel=alternate]")) {
             feedExtractor
-                    .getFeedFromAlternateTag(baseUrl,  link)
+                    .getFeedFromAlternateTag(baseUrl, link)
                     .ifPresent(lp::acceptFeed);
         }
 
-        Set<String> linkTerms = new HashSet<>();
+        final Set<String> linkTerms = new HashSet<>();
 
         for (var domain : lp.getForeignDomains()) {
             linkTerms.add("links:"+domain.toString().toLowerCase());

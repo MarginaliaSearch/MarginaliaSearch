@@ -79,11 +79,6 @@ public class EdgeUrl implements WideHashable {
         this.port = port(URI.getPort(), proto);
     }
 
-    public EdgeUrl sibling(String newPath) {
-        return new EdgeUrl(proto, domain, port, newPath);
-    }
-
-
     private static Integer port(Integer port, String protocol) {
         if (null == port || port < 1) {
             return null;
@@ -120,5 +115,7 @@ public class EdgeUrl implements WideHashable {
         return (int) path.chars().filter(c -> c=='/').count();
     }
 
-
+    public EdgeUrl withPath(String s) {
+        return new EdgeUrl(proto, domain, port, s);
+    }
 }

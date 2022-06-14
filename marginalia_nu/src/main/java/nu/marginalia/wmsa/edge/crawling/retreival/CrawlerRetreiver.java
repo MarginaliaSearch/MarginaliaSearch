@@ -202,10 +202,11 @@ public class CrawlerRetreiver {
         return domain.equals(url.domain.toString().toLowerCase());
     }
 
-    private void findLinks(EdgeUrl url, Document parsed) {
+    private void findLinks(EdgeUrl baseUrl, Document parsed) {
+        baseUrl = linkParser.getBaseLink(parsed, baseUrl);
 
         for (var link : parsed.getElementsByTag("a")) {
-            linkParser.parseLink(url, link)
+            linkParser.parseLink(baseUrl, link)
                     .filter(this::isSameDomain)
                     .filter(u -> !urlBlocklist.isUrlBlocked(u))
                     .filter(u -> !urlBlocklist.isForumLink(u))
@@ -213,7 +214,7 @@ public class CrawlerRetreiver {
                     .ifPresent(queue::addLast);
         }
         for (var link : parsed.getElementsByTag("frame")) {
-            linkParser.parseFrame(url, link)
+            linkParser.parseFrame(baseUrl, link)
                     .filter(this::isSameDomain)
                     .filter(u -> !urlBlocklist.isUrlBlocked(u))
                     .filter(u -> !urlBlocklist.isForumLink(u))
@@ -221,7 +222,7 @@ public class CrawlerRetreiver {
                     .ifPresent(queue::addLast);
         }
         for (var link : parsed.getElementsByTag("iframe")) {
-            linkParser.parseFrame(url, link)
+            linkParser.parseFrame(baseUrl, link)
                     .filter(this::isSameDomain)
                     .filter(u -> !urlBlocklist.isUrlBlocked(u))
                     .filter(u -> !urlBlocklist.isForumLink(u))
@@ -230,10 +231,11 @@ public class CrawlerRetreiver {
         }
     }
 
-    private Optional<EdgeUrl> findCanonicalUrl(EdgeUrl url, Document parsed) {
+    private Optional<EdgeUrl> findCanonicalUrl(EdgeUrl baseUrl, Document parsed) {
+        baseUrl = baseUrl.withPath("/");
 
         for (var link : parsed.select("link[rel=canonical]")) {
-            return linkParser.parseLink(url, link);
+            return linkParser.parseLink(baseUrl, link);
         }
 
         return Optional.empty();
