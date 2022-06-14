@@ -11,9 +11,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class LinkParserTest {
 
-    private String parseLink(String href, String base) throws URISyntaxException {
-        var url = new EdgeUrl("http://www.marginalia.nu/" + base);
-        var domain = url.domain;
+    private String parseLink(String href, String relBase) throws URISyntaxException {
+        var url = new EdgeUrl("http://www.marginalia.nu/" + relBase);
         var parser = new LinkParser();
         var stuff = Jsoup.parseBodyFragment("<a href='"+href+"''>test</a>");
         var lnk = parser.parseLink(
@@ -43,6 +42,7 @@ class LinkParserTest {
     void testAnchor() throws URISyntaxException {
         assertNull(parseLink("#test", "/"));
     }
+
     @Test
     void testRelative() throws URISyntaxException {
         assertEquals("http://www.marginalia.nu/test", parseLink("../test", "/"));
@@ -50,5 +50,33 @@ class LinkParserTest {
         assertEquals("http://www.marginalia.nu/foo/test", parseLink("test", "/foo/index.html"));
         assertEquals("http://www.marginalia.nu/test", parseLink("../test", "/foo/index.html"));
         assertEquals("http://www.marginalia.nu/test", parseLink("/test", "/foo/index.html"));
+    }
+
+    private EdgeUrl getBaseUrl(String href, EdgeUrl documentUrl) {
+        LinkParser lp = new LinkParser();
+
+        return lp.getBaseLink(Jsoup.parse("<base href=\"" + href + "\" />"), documentUrl);
+    }
+
+    @Test
+    public void getBaseUrlTest() throws URISyntaxException {
+        assertEquals(new EdgeUrl("https://www.marginalia.nu/base"),
+                getBaseUrl("/base", new EdgeUrl("https://www.marginalia.nu/test/foo.bar")));
+
+        assertEquals(new EdgeUrl("https://memex.marginalia.nu/base"),
+                getBaseUrl("https://memex.marginalia.nu/base", new EdgeUrl("https://www.marginalia.nu/test/foo.bar")));
+
+        assertEquals(new EdgeUrl("https://www.marginalia.nu/test/base"),
+                getBaseUrl("base", new EdgeUrl("https://www.marginalia.nu/test/foo.bar")));
+    }
+
+    @Test
+    public void testParseBadBaseLink() throws URISyntaxException {
+        LinkParser lp = new LinkParser();
+        var url = new EdgeUrl("https://memex.marginalia.nu/");
+
+        assertEquals(url, lp.getBaseLink(Jsoup.parse("<base href/>"), url));
+        assertEquals(url, lp.getBaseLink(Jsoup.parse("<base target=\"foo\"/>"), url));
+        assertEquals(url, lp.getBaseLink(Jsoup.parse("<base href=\"http://\"/>"), url));
     }
 }

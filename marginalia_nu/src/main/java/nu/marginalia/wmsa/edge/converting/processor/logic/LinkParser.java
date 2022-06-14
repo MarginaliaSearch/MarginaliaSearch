@@ -1,9 +1,12 @@
 package nu.marginalia.wmsa.edge.converting.processor.logic;
 
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Strings;
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.Nullable;
+import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,11 +29,11 @@ public class LinkParser {
             ".gz", ".asc", ".md5", ".asf", ".mov", ".sig", ".pub", ".iso");
 
     @Contract(pure=true)
-    public Optional<EdgeUrl> parseLink(EdgeUrl baseUrl, Element l) {
+    public Optional<EdgeUrl> parseLink(EdgeUrl relativeBaseUrl, Element l) {
         return Optional.of(l)
                 .filter(this::shouldIndexLink)
                 .map(this::getUrl)
-                .map(link -> resolveUrl(baseUrl, link))
+                .map(link -> resolveUrl(relativeBaseUrl, link))
                 .flatMap(this::createURI)
                 .map(URI::normalize)
                 .map(this::renormalize)
@@ -100,6 +103,8 @@ public class LinkParser {
     }
 
     private static final Pattern paramRegex = Pattern.compile("\\?.*$");
+    private static final Pattern spaceRegex = Pattern.compile(" ");
+
     @SneakyThrows
     private String resolveUrl(EdgeUrl baseUrl, String s) {
         s = paramRegex.matcher(s).replaceAll("");
@@ -111,10 +116,12 @@ public class LinkParser {
 
         // url looks like /my-page
         if (s.startsWith("/")) {
-            return baseUrl.sibling(s).toString();
+            return baseUrl.withPath(s).toString();
         }
 
-        return baseUrl.sibling(relativeNavigation(baseUrl) + s.replaceAll(" ", "%20")).toString();
+        final String partFromNewLink = spaceRegex.matcher(s).replaceAll("%20");
+
+        return baseUrl.withPath(relativeNavigation(baseUrl) + partFromNewLink).toString();
     }
 
     // for a relative url that looks like /foo or /foo/bar; return / or /foo
@@ -161,5 +168,24 @@ public class LinkParser {
             return false;
         }
         return true;
+    }
+
+    @Nullable
+    public EdgeUrl getBaseLink(Document parsed, EdgeUrl documentUrl) {
+        var baseTags = parsed.getElementsByTag("base");
+
+        try {
+            for (var tag : baseTags) {
+                String href = tag.attr("href");
+                if (!Strings.isNullOrEmpty(href)) {
+                    return new EdgeUrl(resolveUrl(documentUrl, href));
+                }
+            }
+        }
+        catch (Exception ex) {
+            logger.warn("Failed to parse <base href=...>, falling back to document url");
+        }
+
+        return documentUrl;
     }
 }

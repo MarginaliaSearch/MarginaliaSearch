@@ -21,6 +21,7 @@ public class EdgeDomain implements WideHashable {
 
     @SneakyThrows
     public EdgeDomain(String host) {
+        Objects.requireNonNull(host, "domain name must not be null");
 
         var dot = host.lastIndexOf('.');
 
