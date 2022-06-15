@@ -31,14 +31,14 @@ public class SqlLoadProcessedDocument {
                                IN TITLE VARCHAR(255),
                                IN DESCRIPTION VARCHAR(255),
                                IN LENGTH INT,
+                               IN QUALITY_MEASURE DOUBLE,
                                IN FEATURES INT,
                                IN STANDARD VARCHAR(32),
-                               IN QUALITY DOUBLE,
                                IN HASH INT)
                        BEGIN
                                SET FOREIGN_KEY_CHECKS=0;
-                               REPLACE INTO EC_PAGE_DATA(ID, TITLE, DESCRIPTION, WORDS_TOTAL, FORMAT, FEATURES, DATA_HASH, QUALITY) VALUES (URL_ID, TITLE, DESCRIPTION, LENGTH, STANDARD, FEATURES, HASH, QUALITY);
-                               UPDATE EC_URL SET VISITED=1, STATE=STATE WHERE ID=URL_ID;
+                               REPLACE INTO EC_PAGE_DATA(ID, TITLE, DESCRIPTION, WORDS_TOTAL, FORMAT, FEATURES) VALUES (URL_ID, TITLE, DESCRIPTION, LENGTH, STANDARD, FEATURES);
+                               UPDATE EC_URL SET VISITED=1, STATE=STATE, QUALITY_MEASURE=QUALITY_MEASURE, DATA_HASH=HASH WHERE ID=URL_ID;
                                SET FOREIGN_KEY_CHECKS=1;
                        END
                         """);
@@ -47,8 +47,7 @@ public class SqlLoadProcessedDocument {
                                IN URL_ID INT,
                                IN STATE VARCHAR(32))
                        BEGIN
-                               UPDATE EC_URL SET VISITED=1, STATE=STATE WHERE ID=URL_ID;
-                               DELETE FROM EC_PAGE_DATA WHERE ID=URL_ID;
+                               UPDATE EC_URL SET VISITED=1, STATE=STATE, QUALITY_MEASURE=-100, DATA_HASH=NULL WHERE ID=URL_ID;
                        END
                         """);
 
@@ -62,7 +61,6 @@ public class SqlLoadProcessedDocument {
     public void load(LoaderData data, List<LoadProcessedDocument> documents) {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareCall("CALL INSERT_PAGE_VISIT(?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
-            conn.setAutoCommit(false);
 
             for (var doc : documents) {
                 int urlId = data.getUrlId(doc.url());
@@ -76,9 +74,9 @@ public class SqlLoadProcessedDocument {
                 stmt.setString(3, doc.title());
                 stmt.setString(4, doc.description());
                 stmt.setInt(5, doc.length());
-                stmt.setInt(6, doc.htmlFeatures());
-                stmt.setString(7, doc.standard().name());
-                stmt.setDouble(8, doc.quality());
+                stmt.setDouble(6, doc.quality());
+                stmt.setInt(7, doc.htmlFeatures());
+                stmt.setString(8, doc.standard().name());
                 stmt.setInt(9, (int) doc.hash());
                 stmt.addBatch();
             }
@@ -91,8 +89,8 @@ public class SqlLoadProcessedDocument {
             }
 
             conn.commit();
-        } catch (SQLException ex) {
-            logger.warn("SQL error inserting document", ex);
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
 
 
@@ -119,8 +117,8 @@ public class SqlLoadProcessedDocument {
                     logger.warn("load({}) -- bad row count {}", documents.get(rv), ret[rv]);
                 }
             }
-        } catch (SQLException ex) {
-            logger.warn("SQL error inserting failed document", ex);
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
 
     }

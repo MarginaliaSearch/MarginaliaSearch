@@ -90,10 +90,10 @@ class BTreeWriterTest {
 
             {
                 var writer = new BTreeWriter(mmf, ctx);
-                writer.write(0, toPut.size(), (slice) -> {
+                writer.write(0, toPut.size(), (offset) -> {
                     for (int i = 0; i < data.length; i++) {
-                        slice.put(2L*i, data[i]);
-                        slice.put( 2L*i + 1, i);
+                        mmf.put(offset + 2L*i, data[i]);
+                        mmf.put(offset + 2L*i + 1, i);
                     }
                 });
                 mmf.force();
@@ -133,10 +133,10 @@ class BTreeWriterTest {
 
             {
                 var writer = new BTreeWriter(mmf, ctx);
-                writer.write( 0, toPut.size(), (slice) -> {
+                writer.write( 0, toPut.size(), (offset) -> {
                     for (int i = 0; i < data.length; i++) {
-                        slice.put(2L*i, data[i]);
-                        slice.put(2L*i + 1, i);
+                        mmf.put(offset + 2L*i, data[i]);
+                        mmf.put(offset + 2L*i + 1, i);
                     }
                 });
                 mmf.force();
@@ -182,9 +182,9 @@ class BTreeWriterTest {
             try (MultimapFileLong mmf = MultimapFileLong.forOutput(tempFile, 1000)) {
                 {
                     var writer = new BTreeWriter(mmf, ctx);
-                    writer.write(0, toPut.size(), (slice) -> {
+                    writer.write(0, toPut.size(), (offset) -> {
                         for (int i = 0; i < data.length; i++) {
-                            slice.put(i, data[i]);
+                            mmf.put(offset + i, data[i]);
                         }
                     });
                     mmf.force();
@@ -235,9 +235,9 @@ class BTreeWriterTest {
             try (MultimapFileLong mmf = MultimapFileLong.forOutput(tempFile, 1000)) {
                 {
                     var writer = new BTreeWriter(mmf, ctx);
-                    writer.write(0, toPut.size(), (slice) -> {
+                    writer.write(0, toPut.size(), (offset) -> {
                         for (int i = 0; i < data.length; i++) {
-                            slice.put(i, data[i]);
+                            mmf.put(offset + i, data[i]);
                         }
                     });
                     mmf.force();
@@ -288,10 +288,10 @@ class BTreeWriterTest {
             try (MultimapFileLong mmf = MultimapFileLong.forOutput(tempFile, 1000)) {
                 {
                     var writer = new BTreeWriter(mmf, ctx);
-                    writer.write(0, toPut.size(), (slice) -> {
+                    writer.write(0, toPut.size(), (offset) -> {
                         for (int i = 0; i < data.length; i++) {
-                            slice.put(i*2L, data[i]);
-                            slice.put(i*2L+1, i);
+                            mmf.put(offset + i*2L, data[i]);
+                            mmf.put(offset + i*2L+1, i);
                         }
                     });
                     mmf.force();

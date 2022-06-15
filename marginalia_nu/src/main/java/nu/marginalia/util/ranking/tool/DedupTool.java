@@ -50,7 +50,7 @@ public class DedupTool {
         Map<Integer, Map<Integer, List<Data>>> domainToHashToUrl = new HashMap<>();
 
         try (var conn = ds.getConnection();
-             var fetchStmt = conn.prepareStatement("SELECT URL_TOP_DOMAIN_ID,DATA_HASH,URL,EC_URL.ID,EC_DOMAIN.DOMAIN_NAME FROM EC_URL INNER JOIN EC_DOMAIN ON EC_DOMAIN.ID=DOMAIN_ID WHERE DATA_HASH IS NOT NULL");
+             var fetchStmt = conn.prepareStatement("SELECT URL_TOP_DOMAIN_ID,DATA_HASH,URL,EC_URL.ID,EC_DOMAIN.URL_PART FROM EC_URL INNER JOIN EC_DOMAIN ON EC_DOMAIN.ID=DOMAIN_ID WHERE DATA_HASH IS NOT NULL");
              var updateStmt = conn.prepareStatement("UPDATE EC_URL SET STATE='redirect' WHERE ID=?")
 
         ) {

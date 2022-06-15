@@ -34,10 +34,11 @@ public class CrawlJobExtractorMain {
 
     private static final String domainsSql =
             """
-               SELECT ID, LOWER(EC_DOMAIN.DOMAIN_NAME)
+               SELECT ID, LOWER(EC_DOMAIN.URL_PART)
                FROM EC_DOMAIN
-               WHERE INDEXED>0
-               AND STATE='ACTIVE' OR STATE='EXHAUSTED'
+               WHERE QUALITY_RAW>-100
+               AND INDEXED>0
+               AND STATE<2
                ORDER BY
                     INDEX_DATE ASC,
                     DISCOVER_DATE ASC,
@@ -48,8 +49,8 @@ public class CrawlJobExtractorMain {
 
     private static final String urlsSql =
             """
-                SELECT URL
-                FROM EC_URL_VIEW
+                SELECT CONCAT(PROTO, "://", ?, URL)
+                FROM EC_URL
                 WHERE DOMAIN_ID=?
                 ORDER BY
                     VISITED DESC,

@@ -1,0 +1,16 @@
+package nu.marginalia.wmsa.edge.index.service.query;
+
+
+public class IndexSearchBudget {
+    private long timeout;
+
+    public IndexSearchBudget(long limitTime) {
+        this.timeout = System.currentTimeMillis() + limitTime;
+    }
+
+    // Used for short-circuiting Stream-objects using takeWhile, we don't care
+    public boolean take(long unused) {
+        return System.currentTimeMillis() < timeout;
+    }
+
+}

@@ -13,10 +13,10 @@ import static nu.marginalia.util.multimap.MultimapFileLong.WORD_SIZE;
 public class MultimapSorter {
     private final Path tmpFileDir;
     private final int internalSortLimit;
-    private final MultimapFileLongSlice multimapFileLong;
+    private final MultimapFileLong multimapFileLong;
     private final long[] buffer;
 
-    public MultimapSorter(MultimapFileLongSlice multimapFileLong, Path tmpFileDir, int internalSortLimit) {
+    public MultimapSorter(MultimapFileLong multimapFileLong, Path tmpFileDir, int internalSortLimit) {
         this.multimapFileLong = multimapFileLong;
         this.tmpFileDir = tmpFileDir;
         this.internalSortLimit = internalSortLimit;

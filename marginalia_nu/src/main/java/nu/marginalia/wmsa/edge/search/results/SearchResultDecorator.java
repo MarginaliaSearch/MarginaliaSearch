@@ -107,7 +107,7 @@ public class SearchResultDecorator {
 
     private double calculateTermScore(IndexBlock block, EdgeSearchResultItem resultItem, EdgeUrlDetails details) {
         return valuator.evaluateTerms(resultItem.scores, block, details.words) / Math.sqrt(1 + resultItem.queryLength)
-                + ((details.domainState == EdgeDomainIndexingState.SPECIAL) ? 1.25 : 0);
+                + ((details.domainState == EdgeDomainIndexingState.SPECIAL.code) ? 1.25 : 0);
     }
 
 }

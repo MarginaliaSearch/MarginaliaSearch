@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static nu.marginalia.wmsa.configuration.ServiceDescriptor.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("e2e")
 @Testcontainers
@@ -157,16 +156,6 @@ public class EdgeSearchE2ETest extends E2ETestBase {
         return wikipediaFiles.toString();
     }
 
-    private List<String> getTitlesFromSearchResults(String html) {
-        List<String> ret = new ArrayList<>();
-
-        for (var title : Jsoup.parse(html).select(".card.search-result > h2")) {
-            ret.add(title.text());
-        }
-
-        return ret;
-    }
-
     @Test
     public void testFrontPage() throws IOException {
         var driver = chrome.getWebDriver();
@@ -184,9 +173,8 @@ public class EdgeSearchE2ETest extends E2ETestBase {
 
         driver.get("http://proxyNginx/search?query=bird&profile=corpo");
         System.out.println(driver.getTitle());
+        System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
 
-        var html = driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML");
-        assertEquals(List.of("Bird"), getTitlesFromSearchResults(html));
 
         Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("query"));
     }
@@ -199,23 +187,20 @@ public class EdgeSearchE2ETest extends E2ETestBase {
         System.out.println(driver.getTitle());
         System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
 
+
         Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("site-info"));
     }
-
     @Test
     public void testSiteSearch() throws IOException {
         var driver = chrome.getWebDriver();
 
         driver.get("http://proxyNginx/search?query=site:wikipedia.local%20frog");
         System.out.println(driver.getTitle());
+        System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
 
-        var html = driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML");
-
-        assertEquals(List.of("Frog", "Binomial nomenclature", "Amphibian", "Mantis"), getTitlesFromSearchResults(html));
 
         Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("site-search"));
     }
-
     @Test
     public void testBrowse() throws IOException {
         var driver = chrome.getWebDriver();
@@ -223,6 +208,7 @@ public class EdgeSearchE2ETest extends E2ETestBase {
         driver.get("http://proxyNginx/search?query=browse:wikipedia.local");
         System.out.println(driver.getTitle());
         System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
+
 
         Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("browse"));
     }
@@ -233,6 +219,7 @@ public class EdgeSearchE2ETest extends E2ETestBase {
         driver.get("http://proxyNginx/search?query=define:adiabatic");
         System.out.println(driver.getTitle());
         System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
+
 
         Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("define"));
     }

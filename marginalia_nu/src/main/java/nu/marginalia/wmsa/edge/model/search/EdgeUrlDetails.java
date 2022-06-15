@@ -16,23 +16,24 @@ public class EdgeUrlDetails {
     public String description;
 
     public double urlQuality;
+    public double urlQualityRaw;
+    public double domainQuality;
 
+    public int links; // DEAD
     public int words;
     public String format;
     public int features;
 
-
-
-    public String ip; // BROKEN
-    public EdgeDomainIndexingState domainState;
-
-
-    public int dataHash;
-
     public EdgePageScoreAdjustment urlQualityAdjustment;
+
     public long rankingId;
     public double termScore;
+
+    public String ip; // BROKEN
+    public int domainState;
     public int queryLength;
+
+    public int dataHash;
 
     public long rankingIdAdjustment() {
         int penalty = 0;
@@ -135,7 +136,7 @@ public class EdgeUrlDetails {
         return HtmlFeature.hasFeature(features, HtmlFeature.COOKIES);
     }
     public boolean isSpecialDomain() {
-        return domainState == EdgeDomainIndexingState.SPECIAL;
+        return domainState == EdgeDomainIndexingState.SPECIAL.code;
     }
     public int getLogRank() { return (int) Math.round(Math.min(Math.log(1+rankingId),10)); }
 

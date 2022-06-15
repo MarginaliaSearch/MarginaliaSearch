@@ -11,6 +11,7 @@ import nu.marginalia.wmsa.edge.assistant.dict.WikiArticles;
 import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
 import nu.marginalia.wmsa.edge.index.client.EdgeIndexClient;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
+import nu.marginalia.wmsa.edge.index.service.SearchOrder;
 import nu.marginalia.wmsa.edge.model.*;
 import nu.marginalia.wmsa.edge.model.search.*;
 import nu.marginalia.wmsa.edge.search.model.DecoratedSearchResultSet;
@@ -135,7 +136,7 @@ public class EdgeSearchOperator {
 
         sqs.add(new EdgeSearchSubquery(Arrays.asList(termsInclude), Collections.emptyList(), block));
 
-        EdgeSearchSpecification specs = new EdgeSearchSpecification(profile.buckets, sqs, 100, limitPerDomain, limitTotal, "", EdgeSearchProfile.YOLO.equals(profile), false);
+        EdgeSearchSpecification specs = new EdgeSearchSpecification(profile.buckets, sqs, 100, limitPerDomain, limitTotal, "", SearchOrder.ASCENDING, EdgeSearchProfile.YOLO.equals(profile), false);
 
         return performQuery(ctx, new EdgeSearchQuery(specs), true);
     }

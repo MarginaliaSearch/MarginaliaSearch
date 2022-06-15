@@ -29,7 +29,7 @@ public class ReindexTriggerMain {
                 .build();
 
         try (var ds =  db.provideConnection(); var conn = ds.getConnection(); var stmt = conn.createStatement()) {
-            var rs = stmt.executeQuery("SELECT ID, DOMAIN_NAME, STATE, INDEXED FROM EC_DOMAIN LIMIT 100");
+            var rs = stmt.executeQuery("SELECT ID, URL_PART, STATE, INDEXED FROM EC_DOMAIN LIMIT 100");
             while (rs.next()) {
                 System.out.printf("%d %s %s %d\n",
                         rs.getInt(1),
@@ -38,7 +38,7 @@ public class ReindexTriggerMain {
                         rs.getInt(4));
             }
 
-            rs = stmt.executeQuery("SELECT ID, DOMAIN_ID, PATH, VISITED, STATE FROM EC_URL LIMIT 100");
+            rs = stmt.executeQuery("SELECT ID, DOMAIN_ID, URL, VISITED, STATE FROM EC_URL LIMIT 100");
             while (rs.next()) {
                 System.out.printf("%d %d %s %d %s\n",
                         rs.getInt(1),

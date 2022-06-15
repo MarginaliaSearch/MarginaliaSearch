@@ -3,13 +3,12 @@ package nu.marginalia.wmsa.edge.tools;
 import com.google.inject.Inject;
 import gnu.trove.set.hash.TIntHashSet;
 import lombok.SneakyThrows;
-import nu.marginalia.util.ranking.RankingDomainFetcher;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
 import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklist;
 import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklistImpl;
 import nu.marginalia.wmsa.edge.index.model.RankingSettings;
-import nu.marginalia.wmsa.edge.index.conversion.SearchIndexDao;
-import nu.marginalia.wmsa.edge.index.conversion.SearchIndexPartitioner;
+import nu.marginalia.wmsa.edge.index.service.SearchIndexDao;
+import nu.marginalia.wmsa.edge.index.service.query.SearchIndexPartitioner;
 import org.mariadb.jdbc.Driver;
 import org.roaringbitmap.longlong.Roaring64Bitmap;
 import org.slf4j.Logger;
@@ -60,9 +59,7 @@ public class IndexMergerMain {
         }
 
         var hikari = new DatabaseModule().provideConnection();
-        var ds = new DatabaseModule().provideConnection();
-        var domains = new RankingDomainFetcher(ds, new EdgeDomainBlacklistImpl(ds));
-        var partitioner = new SearchIndexPartitioner(new SearchIndexDao(hikari, domains, new RankingSettings()));
+        var partitioner = new SearchIndexPartitioner(new SearchIndexDao(hikari, new RankingSettings()));
         var blacklist = new EdgeDomainBlacklistImpl(hikari);
 
         new IndexMergerMain(file1, file2, outputFile, partitioner, blacklist);

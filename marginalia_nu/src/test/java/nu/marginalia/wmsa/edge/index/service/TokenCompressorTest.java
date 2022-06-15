@@ -1,6 +1,6 @@
 package nu.marginalia.wmsa.edge.index.service;
 
-import nu.marginalia.wmsa.edge.index.dictionary.TokenCompressor;
+import nu.marginalia.wmsa.edge.index.service.dictionary.TokenCompressor;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;

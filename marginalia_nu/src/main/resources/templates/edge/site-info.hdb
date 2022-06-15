@@ -37,6 +37,7 @@
   <div class="card info">
       <h2>Links</h2>
       <p class="description">
+          Nominal Quality: {{nominalQuality}}%<br/>
           Crawl Ranking: {{ranking}}%<br/>
           Incoming Links: {{incomingLinks}} <br/>
           Outbound Links: {{outboundLinks}} <br/>

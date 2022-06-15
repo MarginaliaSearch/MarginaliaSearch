@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
 public class SiteSearchCommand implements SearchCommandInterface {
     private final EdgeDataStoreDao dataStoreDao;
     private final EdgeSearchOperator searchOperator;
-    private final DomainInformationService domainInformationService;
+    private DomainInformationService domainInformationService;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final MustacheRenderer<DomainInformation> siteInfoRenderer;
@@ -91,7 +91,7 @@ public class SiteSearchCommand implements SearchCommandInterface {
 
         logger.info("Fetching Site Info: {}", word);
         var results = domainInformationService.domainInfo(word)
-                .orElseGet(() -> new DomainInformation(null, false, 0, 0, 0, 0, 0, 0, EdgeDomainIndexingState.UNKNOWN, Collections.emptyList()));
+                .orElseGet(() -> new DomainInformation(null, false, 0, 0, 0, 0, 0, 0, 0, EdgeDomainIndexingState.UNKNOWN, Collections.emptyList()));
 
         logger.debug("Results = {}", results);
 

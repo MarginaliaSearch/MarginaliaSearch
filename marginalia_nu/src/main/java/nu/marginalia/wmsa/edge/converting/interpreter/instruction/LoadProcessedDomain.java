@@ -6,11 +6,11 @@ import nu.marginalia.wmsa.edge.converting.interpreter.Interpreter;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
 
-public record LoadProcessedDomain(EdgeDomain domain, EdgeDomainIndexingState state, String ip) implements Instruction {
+public record LoadProcessedDomain(EdgeDomain domain, EdgeDomainIndexingState state, double quality) implements Instruction {
 
     @Override
     public void apply(Interpreter interpreter) {
-        interpreter.loadProcessedDomain(domain, state, ip);
+        interpreter.loadProcessedDomain(domain, state, quality);
     }
 
     @Override

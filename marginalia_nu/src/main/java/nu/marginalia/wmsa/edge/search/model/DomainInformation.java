@@ -18,6 +18,7 @@ public class DomainInformation {
     int pagesIndexed;
     int incomingLinks;
     int outboundLinks;
+    double nominalQuality;
     double ranking;
 
     EdgeDomainIndexingState state;

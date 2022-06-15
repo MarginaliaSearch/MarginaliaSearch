@@ -138,6 +138,7 @@ public class QueryFactory {
                 .subqueries(subqueries)
                 .limitByBucket(50)
                 .limitTotal(100)
+                .searchOrder(profile.order)
                 .humanQuery(query)
                 .buckets(profile.buckets);
 
