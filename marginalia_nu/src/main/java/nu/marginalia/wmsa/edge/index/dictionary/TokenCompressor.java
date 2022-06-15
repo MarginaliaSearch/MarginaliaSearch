@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.edge.index.service.dictionary;
+package nu.marginalia.wmsa.edge.index.dictionary;
 
 import nu.marginalia.util.ByteFolder;
 import nu.marginalia.util.dict.DictionaryHashMap;

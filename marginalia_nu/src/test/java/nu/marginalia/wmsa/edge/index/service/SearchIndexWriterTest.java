@@ -2,7 +2,7 @@ package nu.marginalia.wmsa.edge.index.service;
 
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
-import nu.marginalia.wmsa.edge.index.service.dictionary.DictionaryWriter;
+import nu.marginalia.wmsa.edge.index.dictionary.DictionaryWriter;
 import nu.marginalia.wmsa.edge.index.service.index.SearchIndex;
 import nu.marginalia.wmsa.edge.index.service.index.SearchIndexConverter;
 import nu.marginalia.wmsa.edge.index.service.index.SearchIndexReader;

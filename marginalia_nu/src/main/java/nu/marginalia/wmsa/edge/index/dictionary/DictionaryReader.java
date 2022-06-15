@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.edge.index.service.dictionary;
+package nu.marginalia.wmsa.edge.index.dictionary;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
