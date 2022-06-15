@@ -33,7 +33,7 @@ public abstract class E2ETestBase {
                 .withCopyFileToContainer(jarFile(), "/WMSA.jar")
                 .withCopyFileToContainer(MountableFile.forClasspathResource("init.sh"), "/init.sh")
                 .withExposedPorts(service.port)
-                .withFileSystemBind(modelsPath(), "/var/lib/wmsa/model", BindMode.READ_ONLY)
+                .withFileSystemBind(modelsPath(), "/wmsa/model", BindMode.READ_ONLY)
                 .withNetwork(network)
                 .withNetworkAliases(service.name)
                 .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger(service.name)))

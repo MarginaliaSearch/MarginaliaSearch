@@ -5,6 +5,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import marcono1234.gson.recordadapter.RecordTypeAdapterFactory;
 import nu.marginalia.util.language.conf.LanguageModels;
+import nu.marginalia.wmsa.configuration.WmsaHome;
 import nu.marginalia.wmsa.edge.model.EdgeCrawlPlan;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
@@ -30,14 +31,7 @@ public class ConverterModule extends AbstractModule {
         bind(Integer.class).annotatedWith(Names.named("max-title-length")).toInstance(128);
         bind(Integer.class).annotatedWith(Names.named("max-summary-length")).toInstance(255);
 
-        bind(LanguageModels.class).toInstance(new LanguageModels(
-                Path.of("/var/lib/wmsa/model/ngrams-generous-emstr.bin"),
-                Path.of("/var/lib/wmsa/model/tfreq-new-algo3.bin"),
-                Path.of("/var/lib/wmsa/model/opennlp-sentence.bin"),
-                Path.of("/var/lib/wmsa/model/English.RDR"),
-                Path.of("/var/lib/wmsa/model/English.DICT"),
-                Path.of("/var/lib/wmsa/model/opennlp-tok.bin")
-        ));
+        bind(LanguageModels.class).toInstance(WmsaHome.getLanguageModels());
     }
 
     private Gson createGson() {

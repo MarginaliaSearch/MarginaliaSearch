@@ -1,13 +1,15 @@
 #!/bin/bash
 
-mkdir -p /var/lib/wmsa/encyclopedia
-mkdir -p /var/lib/wmsa/conf
-mkdir -p /var/lib/wmsa/index/write
-mkdir -p /var/lib/wmsa/index/read
-mkdir -p /backup/work/index-tmp
+HOME=/wmsa
 
-mkdir -p /var/log/wmsa
-cat > /var/lib/wmsa/suggestions.txt <<EOF
+mkdir -p ${HOME}/encyclopedia
+mkdir -p ${HOME}/conf
+mkdir -p ${HOME}/index/write
+mkdir -p ${HOME}/index/read
+mkdir -p ${HOME}/tmp-slow
+mkdir -p ${HOME}/tmp-fast
+
+cat > ${HOME}/suggestions.txt <<EOF
 state
 three
 while
@@ -22,17 +24,22 @@ many
 year
 EOF
 
-cat > /var/lib/wmsa/conf/disks.properties <<EOF
-encyclopedia=/var/lib/wmsa/encyclopedia
+cat > ${HOME}/conf/disks.properties <<EOF
+encyclopedia=${HOME}/encyclopedia
+
+index-write=${HOME}/index/write
+index-read=${HOME}/index/read
+tmp-slow=${HOME}/tmp-slow
+tmp-fast=${HOME}/tmp-fast
 EOF
 
-cat > /var/lib/wmsa/conf/db.properties <<EOF
+cat > ${HOME}/conf/db.properties <<EOF
   db.user=wmsa
   db.pass=wmsa
   db.conn=jdbc:mariadb://mariadb:3306/WMSA_prod?rewriteBatchedStatements=true
 EOF
 
-cat > /var/lib/wmsa/conf/ranking-settings.yaml <<EOF
+cat > ${HOME}/conf/ranking-settings.yaml <<EOF
 ---
 retro:
   - "%"
@@ -46,7 +53,7 @@ standard:
   - "%"
 EOF
 
-cat > /var/lib/wmsa/conf/hosts <<EOF
+cat > ${HOME}/conf/hosts <<EOF
 # service-name host-name
 resource-store resource-store
 renderer renderer
@@ -62,4 +69,4 @@ memex memex
 dating dating
 EOF
 
-java -Dsmall-ram=TRUE -Dservice-host=0.0.0.0 -jar /WMSA.jar start $1
+WMSA_HOME=${HOME} java -Dsmall-ram=TRUE -Dservice-host=0.0.0.0 -jar /WMSA.jar start $1

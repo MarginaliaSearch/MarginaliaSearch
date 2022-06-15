@@ -2,6 +2,8 @@ package nu.marginalia.wmsa.edge.crawling;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import nu.marginalia.wmsa.configuration.UserAgent;
+import nu.marginalia.wmsa.configuration.WmsaHome;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDomain;
 import nu.marginalia.wmsa.edge.crawling.model.CrawlingSpecification;
 import nu.marginalia.wmsa.edge.crawling.retreival.CrawlerRetreiver;
@@ -34,10 +36,12 @@ public class CrawlerMain implements AutoCloseable {
     private final Dispatcher dispatcher = new Dispatcher(new ThreadPoolExecutor(0, Integer.MAX_VALUE, 5, TimeUnit.SECONDS,
             new SynchronousQueue<>(), Util.threadFactory("OkHttp Dispatcher", true)));
 
+    private final UserAgent userAgent;
 
     public CrawlerMain(EdgeCrawlPlan plan) throws Exception {
         this.inputSpec = plan.getJobSpec();
         this.numberOfThreads = 512;
+        this.userAgent = WmsaHome.getUserAgent();
 
         workLog = new WorkLog(plan.crawl.getLogFile());
         domainWriter = new CrawledDomainWriter(plan.crawl.getDir());
@@ -88,7 +92,7 @@ public class CrawlerMain implements AutoCloseable {
         if (workLog.isJobFinished(specification.id))
             return null;
 
-        var fetcher = new HttpFetcher("search.marginalia.nu", dispatcher);
+        var fetcher = new HttpFetcher(userAgent.uaString(), dispatcher);
 
         try {
             var retreiver = new CrawlerRetreiver(fetcher, specification);
