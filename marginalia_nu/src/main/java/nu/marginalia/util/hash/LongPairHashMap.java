@@ -1,9 +1,7 @@
 package nu.marginalia.util.hash;
 
-import io.prometheus.client.Gauge;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import nu.marginalia.wmsa.edge.index.service.index.wordstable.IndexWordsTable;
 import nu.marginalia.util.multimap.MultimapFileLong;
 import nu.marginalia.util.PrimeUtil;
 import org.slf4j.Logger;
@@ -17,9 +15,7 @@ import static java.lang.Math.round;
  */
 public class LongPairHashMap {
     private static final Logger logger = LoggerFactory.getLogger(LongPairHashMap.class);
-    private static final Gauge probe_count_metrics
-            = Gauge.build("wmsa_wordfile_hash_map_probe_count", "Probing Count")
-            .register();
+    private static final long MAGIC_WORD = 0xE00E00E00E0E0E0EL; // it's the data police
 
     private final long hashTableSize;
     private final MultimapFileLong data;
@@ -27,26 +23,37 @@ public class LongPairHashMap {
     private int sz = 0;
     private static final int HEADER_SIZE = 2;
 
-    public LongPairHashMap(MultimapFileLong data, long size) {
+    private LongPairHashMap(MultimapFileLong data, long hashTableSize, long maxProbeLength) {
         this.data = data;
-        // Actually use a prime size for Donald Knuth reasons
-        hashTableSize = PrimeUtil.nextPrime(size, 1);
-        maxProbeLength = hashTableSize / 2;
+        this.hashTableSize = hashTableSize;
+        this.maxProbeLength = maxProbeLength;
+    }
 
-        logger.debug("Table size = " + hashTableSize);
+    public static LongPairHashMap createNew(MultimapFileLong data, long size) {
+        var tableSize = PrimeUtil.nextPrime(size, 1);
+        var ret = new LongPairHashMap(data, tableSize, tableSize/2);
 
-        data.put(0, IndexWordsTable.Strategy.HASH.ordinal());
-        data.put(1, hashTableSize);
-        for (int i = 2; i < hashTableSize; i++) {
+        data.put(0, MAGIC_WORD);
+        data.put(1, tableSize);
+
+        for (int i = 2; i < tableSize; i++) {
             data.put(HEADER_SIZE + 2L*i, 0);
         }
-    }
-    public LongPairHashMap(MultimapFileLong data) {
-        this.data = data;
-        hashTableSize = data.get(1);
-        maxProbeLength = hashTableSize / 10;
 
-        logger.debug("Table size = " + hashTableSize);
+        return ret;
+    }
+
+    public static LongPairHashMap loadExisting(MultimapFileLong data) {
+        long key = data.get(0);
+
+        if (key != MAGIC_WORD) {
+            logger.warn("LongPairHashMap lacks magic word, could this be garbage data?");
+        }
+
+        var hashTableSize = data.get(1);
+        var maxProbeLength = hashTableSize / 10;
+
+        return new LongPairHashMap(data, hashTableSize, maxProbeLength);
     }
 
     public int size() {
@@ -91,8 +98,6 @@ public class LongPairHashMap {
             final var val = getCell(idx);
 
             if (!val.isSet()) {
-                probe_count_metrics.set(j);
-
                 return setValue(data, idx);
             }
             else if (val.getKey() == data.getKey()) {

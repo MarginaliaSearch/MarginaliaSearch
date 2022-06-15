@@ -1,11 +1,9 @@
-package nu.marginalia.wmsa.edge.index.service.query;
+package nu.marginalia.wmsa.edge.index.conversion;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import gnu.trove.set.hash.TIntHashSet;
 import lombok.SneakyThrows;
-import nu.marginalia.wmsa.edge.index.service.SearchEngineRanking;
-import nu.marginalia.wmsa.edge.index.service.SearchIndexDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

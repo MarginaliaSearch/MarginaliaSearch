@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.edge.index.service.index;
+package nu.marginalia.wmsa.edge.index.conversion;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -6,9 +6,10 @@ import gnu.trove.set.hash.TIntHashSet;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklist;
+import nu.marginalia.wmsa.edge.index.conversion.words.WordIndexOffsetsTable;
+import nu.marginalia.wmsa.edge.index.journal.SearchIndexWriterImpl;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
-import nu.marginalia.wmsa.edge.index.service.index.wordstable.WordsTableWriter;
-import nu.marginalia.wmsa.edge.index.service.query.SearchIndexPartitioner;
+import nu.marginalia.wmsa.edge.index.conversion.words.WordsTableWriter;
 import nu.marginalia.util.btree.BTreeWriter;
 import nu.marginalia.util.btree.model.BTreeContext;
 import nu.marginalia.util.multimap.MultimapFileLong;
@@ -32,17 +33,23 @@ public class SearchIndexConverter {
 
     private final long fileLength;
     private final long urlsFileSize;
+    private final Path tmpFileDir;
+
     private final FileChannel urlsTmpFileChannel;
     private final int wordCount;
     private final MultimapFileLong urlsTmpFileMap;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final IndexBlock block;
     private final int bucketId;
-    @org.jetbrains.annotations.NotNull
+
+
     private final File urlsFile;
     private final SearchIndexPartitioner partitioner;
     private final TIntHashSet spamDomains;
     private final MultimapSorter urlTmpFileSorter;
+
+    private final static int internalSortLimit =
+            Boolean.getBoolean("small-ram") ? 1024*1024 : 1024*1024*256;
 
     @SneakyThrows
     public static long wordCount(File inputFile) {
@@ -52,7 +59,6 @@ public class SearchIndexConverter {
         }
     }
 
-    @SneakyThrows
     @Inject
     public SearchIndexConverter(IndexBlock block,
                                 int bucketId, @Named("tmp-file-dir") Path tmpFileDir,
@@ -61,13 +67,15 @@ public class SearchIndexConverter {
                                 @Named("edge-index-write-urls-file") File outputFileUrls,
                                 SearchIndexPartitioner partitioner,
                                 EdgeDomainBlacklist blacklist)
-            throws ConversionUnnecessaryException
+            throws ConversionUnnecessaryException, IOException
     {
         this.block = block;
         this.bucketId = bucketId;
-        urlsFile = outputFileUrls;
+        this.tmpFileDir = tmpFileDir;
+        this.urlsFile = outputFileUrls;
         this.partitioner = partitioner;
         this.spamDomains = blacklist.getSpamDomains();
+
         logger.info("Converting {} ({}) {}", block.id, block, inputFile);
 
         Files.deleteIfExists(outputFileWords.toPath());
@@ -89,18 +97,16 @@ public class SearchIndexConverter {
         urlsFileSize = getUrlsSize(buffer, inputChannel);
 
         var tmpUrlsFile = Files.createTempFile(tmpFileDir, "urls-sorted", ".dat");
-
-
         var urlsTmpFileRaf = new RandomAccessFile(tmpUrlsFile.toFile(), "rw");
         urlsTmpFileChannel = urlsTmpFileRaf.getChannel();
         urlsTmpFileMap = new MultimapFileLong(urlsTmpFileRaf, FileChannel.MapMode.READ_WRITE, urlsFileSize, 8*1024*1024, false);
-        urlTmpFileSorter = urlsTmpFileMap.createSorter(tmpFileDir, 1024*1024*256);
+        urlTmpFileSorter = urlsTmpFileMap.createSorter(tmpFileDir, internalSortLimit);
 
         logger.info("Creating word index table {} for block {} ({})", outputFileWords, block.id, block);
-        long[] wordIndexTable = createWordIndexTable(outputFileWords, inputChannel);
+        WordIndexOffsetsTable wordIndexTable = createWordIndexTable(outputFileWords, inputChannel);
 
         logger.info("Creating word urls table {} for block {} ({})", outputFileUrls, block.id, block);
-        createUrlTable(tmpFileDir, buffer, raf, wordIndexTable);
+        createUrlTable(buffer, raf, wordIndexTable);
 
         Files.delete(tmpUrlsFile);
         raf.close();
@@ -140,99 +146,69 @@ public class SearchIndexConverter {
         return reader.size;
     }
 
-    private void createUrlTable(Path tmpFileDir, ByteBuffer buffer, RandomAccessFile raf, long[] wordIndexTable) throws IOException {
-        logger.debug("Table size = {}", wordIndexTable.length);
-        int[] wordIndex = new int[wordIndexTable.length];
+    private void createUrlTable(ByteBuffer buffer, RandomAccessFile raf, WordIndexOffsetsTable wordOffsetsTable) throws IOException {
+        logger.info("Table size = {}", wordOffsetsTable.length());
+
         raf.seek(FILE_HEADER_SIZE);
 
         var channel = raf.getChannel();
 
         try (RandomWriteFunnel rwf = new RandomWriteFunnel(tmpFileDir, urlsFileSize, 10_000_000)) {
-            var reader = new IndexReader(buffer, channel) {
+            int[] wordWriteOffset = new int[wordOffsetsTable.length()];
+
+            new IndexReader(buffer, channel) {
                 @Override
                 public void eachWord(long urlId, int wordId) throws IOException {
-                    if (wordId >= wordIndex.length)
+                    if (wordId >= wordWriteOffset.length)
                         return;
 
-                    if (wordId != 0) {
-                        if (!(wordIndexTable[wordId - 1] + wordIndex[wordId] <= wordIndexTable[wordId])) {
-                            logger.error("Crazy state: wordId={}, index={}, lower={}, upper={}",
-                                    wordId,
-                                    wordIndex[wordId],
-                                    wordIndexTable[wordId - 1],
-                                    wordIndexTable[wordId]);
-                            throw new IllegalStateException();
-                        }
-                    }
                     if (wordId > 0) {
-                        rwf.put(wordIndexTable[wordId - 1] + wordIndex[wordId]++, translateUrl(urlId));
+                        rwf.put(wordOffsetsTable.get(wordId - 1) + wordWriteOffset[wordId]++, translateUrl(urlId));
                     } else {
-                        rwf.put(wordIndex[wordId]++, translateUrl(urlId));
+                        rwf.put(wordWriteOffset[wordId]++, translateUrl(urlId));
                     }
                 }
-            };
-
-            reader.read();
+            }.read();
 
             rwf.write(urlsTmpFileChannel);
         }
 
         urlsTmpFileChannel.force(false);
+        logger.info("URL TMP Table: {} Mb", channel.position()/(1024*1024));
 
-        logger.debug("URL TMP Table: {} Mb", channel.position()/(1024*1024));
+        if (wordOffsetsTable.length() > 0) {
+            logger.info("Sorting urls table");
 
-        if (wordIndexTable.length > 0) {
-            logger.debug("Sorting urls table");
-            sortUrls(wordIndexTable);
+            wordOffsetsTable.forEach(urlTmpFileSorter::sort);
+
             urlsTmpFileMap.force();
         }
         else {
             logger.warn("urls table empty -- nothing to sort");
         }
 
-
-        long idx = 0;
-
+        logger.info("Writing BTree");
         try (var urlsFileMap = MultimapFileLong.forOutput(urlsFile.toPath(), 1024)) {
             var writer = new BTreeWriter(urlsFileMap, urlsBTreeContext);
 
-            if (wordIndexTable[0] != 0) {
-                int start = 0;
-                int end = (int) wordIndexTable[0];
+            wordOffsetsTable.fold((accumulatorIdx, start, length) -> {
+                // Note: The return value is accumulated into accumulatorIdx!
 
-                idx += writer.write(idx, (int) wordIndexTable[0],
-                        offset -> urlsFileMap.transferFromFileChannel(urlsTmpFileChannel, offset, start, end));
-            }
+                return writer.write(accumulatorIdx, length,
+                        slice -> slice.transferFromFileChannel(urlsTmpFileChannel, 0, start, start + length));
+            });
 
-            for (int i = 1; i < wordIndexTable.length; i++) {
-                if (wordIndexTable[i] != wordIndexTable[i - 1]) {
-                    long start = wordIndexTable[i-1];
-                    long end = wordIndexTable[i];
-
-                    idx += writer.write(idx, (int) (end-start),
-                            offset -> urlsFileMap.transferFromFileChannel(urlsTmpFileChannel, offset, start, end));
-                }
-            }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error while writing BTree", e);
         }
     }
 
-    @SneakyThrows
-    private void sortUrls(long[] wordIndices) {
-        urlTmpFileSorter.sort( 0, (int) wordIndices[0]);
-
-        for (int i = 1; i < wordIndices.length; i++) {
-            urlTmpFileSorter.sort(wordIndices[i-1], (int) (wordIndices[i] - wordIndices[i-1]));
-        }
-    }
-
-    private long[] createWordIndexTable(File outputFileWords, FileChannel inputChannel) throws Exception {
+    private WordIndexOffsetsTable createWordIndexTable(File outputFileWords, FileChannel inputChannel) throws IOException {
         inputChannel.position(FILE_HEADER_SIZE);
 
         logger.debug("Table size = {}", wordCount);
         WordsTableWriter wordsTableWriter = new WordsTableWriter(wordCount);
-        ByteBuffer buffer = ByteBuffer.allocateDirect(8*SearchIndexWriterImpl.MAX_BLOCK_SIZE);
+        ByteBuffer buffer = ByteBuffer.allocateDirect(8* SearchIndexWriterImpl.MAX_BLOCK_SIZE);
 
         logger.debug("Reading words");
 

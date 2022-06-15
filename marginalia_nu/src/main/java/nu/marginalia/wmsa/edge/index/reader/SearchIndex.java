@@ -1,20 +1,18 @@
-package nu.marginalia.wmsa.edge.index.service.index;
+package nu.marginalia.wmsa.edge.index.reader;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.upserve.uppend.blobs.NativeIO;
 import io.reactivex.rxjava3.schedulers.Schedulers;
-import nu.marginalia.wmsa.edge.index.service.index.wordstable.IndexWordsTable;
+import nu.marginalia.wmsa.edge.index.conversion.SearchIndexConverter;
 import nu.marginalia.util.btree.BTreeReader;
 import nu.marginalia.util.multimap.MultimapFileLong;
-import org.eclipse.jetty.util.thread.ThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.concurrent.ForkJoinPool;
 import java.util.stream.LongStream;
 
 public class SearchIndex implements  AutoCloseable {

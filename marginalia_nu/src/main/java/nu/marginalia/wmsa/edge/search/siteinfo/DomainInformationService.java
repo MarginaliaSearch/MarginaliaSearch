@@ -57,10 +57,9 @@ public class DomainInformationService {
         int outboundLinks = getOutboundLinks(domainId);
         double rank = Math.round(10000.0*(1.0-getRank(domainId)))/100;
         EdgeDomainIndexingState state = getDomainState(domainId);
-        double nominalQuality = Math.round(100*100*Math.exp(getDomainQuality(domainId)))/100.;
         List<EdgeDomain> linkingDomains = getLinkingDomains(domainId);
 
-        return Optional.of(new DomainInformation(domain, blacklisted, pagesKnown, pagesVisited, pagesIndexed, incomingLinks, outboundLinks, nominalQuality, rank, state, linkingDomains));
+        return Optional.of(new DomainInformation(domain, blacklisted, pagesKnown, pagesVisited, pagesIndexed, incomingLinks, outboundLinks, rank, state, linkingDomains));
     }
 
     private EdgeId<EdgeDomain> getDomainFromPartial(String site) {

@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.edge.index.service.index;
+package nu.marginalia.wmsa.edge.index.journal;
 
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;

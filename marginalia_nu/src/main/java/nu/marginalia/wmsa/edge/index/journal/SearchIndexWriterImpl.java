@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.edge.index.service.index;
+package nu.marginalia.wmsa.edge.index.journal;
 
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;

@@ -1,13 +1,13 @@
-package nu.marginalia.wmsa.edge.index.service.index;
+package nu.marginalia.wmsa.edge.index.reader;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
-import nu.marginalia.wmsa.edge.index.service.query.IndexQueryBuilder;
-import nu.marginalia.wmsa.edge.index.service.query.IndexSearchBudget;
-import nu.marginalia.wmsa.edge.index.service.query.Query;
+import nu.marginalia.wmsa.edge.index.reader.query.IndexQueryBuilder;
+import nu.marginalia.wmsa.edge.index.reader.query.IndexSearchBudget;
+import nu.marginalia.wmsa.edge.index.reader.query.Query;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,9 +105,7 @@ public class SearchIndexReader implements AutoCloseable {
                         .mapToLong(idx -> idx.numUrls(word))
                         .sum()
         );
-
     }
-
 
     public IndexBlock getBlockForResult(int searchTerm, long urlId) {
         for (var block : indicesBySearchOrder) {

@@ -1,13 +1,13 @@
-package nu.marginalia.wmsa.edge.index.radix;
+package nu.marginalia.wmsa.edge.index;
 
 import nu.marginalia.wmsa.edge.index.EdgeIndexControl;
 import nu.marginalia.wmsa.edge.index.IndexServicesFactory;
 import nu.marginalia.wmsa.edge.index.model.EdgeIndexSearchTerms;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
-import nu.marginalia.wmsa.edge.index.service.index.SearchIndexReader;
-import nu.marginalia.wmsa.edge.index.service.index.SearchIndexWriter;
-import nu.marginalia.wmsa.edge.index.service.query.IndexSearchBudget;
-import nu.marginalia.wmsa.edge.index.service.query.Query;
+import nu.marginalia.wmsa.edge.index.reader.SearchIndexReader;
+import nu.marginalia.wmsa.edge.index.journal.SearchIndexWriter;
+import nu.marginalia.wmsa.edge.index.reader.query.IndexSearchBudget;
+import nu.marginalia.wmsa.edge.index.reader.query.Query;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

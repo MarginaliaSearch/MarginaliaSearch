@@ -1,11 +1,11 @@
 package nu.marginalia.wmsa.edge.index.service;
 
 import lombok.SneakyThrows;
+import nu.marginalia.wmsa.edge.index.conversion.SearchIndexPartitioner;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.index.dictionary.DictionaryReader;
 import nu.marginalia.wmsa.edge.index.dictionary.DictionaryWriter;
-import nu.marginalia.wmsa.edge.index.service.index.SearchIndexConverter;
-import nu.marginalia.wmsa.edge.index.service.query.SearchIndexPartitioner;
+import nu.marginalia.wmsa.edge.index.conversion.SearchIndexConverter;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 

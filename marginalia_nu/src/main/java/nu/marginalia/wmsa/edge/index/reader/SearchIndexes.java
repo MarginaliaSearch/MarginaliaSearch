@@ -1,13 +1,13 @@
-package nu.marginalia.wmsa.edge.index.service;
+package nu.marginalia.wmsa.edge.index.reader;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.wmsa.configuration.server.Initialization;
 import nu.marginalia.wmsa.edge.index.IndexServicesFactory;
-import nu.marginalia.wmsa.edge.index.radix.EdgeIndexBucket;
+import nu.marginalia.wmsa.edge.index.conversion.SearchIndexPartitioner;
+import nu.marginalia.wmsa.edge.index.EdgeIndexBucket;
 import nu.marginalia.wmsa.edge.index.dictionary.DictionaryReader;
-import nu.marginalia.wmsa.edge.index.service.index.SearchIndexWriterImpl;
-import nu.marginalia.wmsa.edge.index.service.query.SearchIndexPartitioner;
+import nu.marginalia.wmsa.edge.index.journal.SearchIndexWriterImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

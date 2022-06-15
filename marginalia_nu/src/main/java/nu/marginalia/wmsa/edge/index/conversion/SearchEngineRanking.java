@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.edge.index.service;
+package nu.marginalia.wmsa.edge.index.conversion;
 
 import gnu.trove.list.TIntList;
 import gnu.trove.map.hash.TIntIntHashMap;

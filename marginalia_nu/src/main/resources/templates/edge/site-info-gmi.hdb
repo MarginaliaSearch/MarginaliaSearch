@@ -10,5 +10,4 @@ Pages Known:     {{pagesKnown}}
 Pages Indexed:   {{pagesKnown}}
 Inbound Links:   {{inboundLinks}}
 Outbound Links:  {{outboundLinks}}
-Nominal Quality: {{nominalQuality}}%
 Crawl Ranking: {{ranking}}%

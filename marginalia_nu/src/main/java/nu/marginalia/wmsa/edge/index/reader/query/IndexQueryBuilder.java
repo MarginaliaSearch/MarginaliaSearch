@@ -1,7 +1,7 @@
-package nu.marginalia.wmsa.edge.index.service.query;
+package nu.marginalia.wmsa.edge.index.reader.query;
 
 import com.google.common.collect.Streams;
-import nu.marginalia.wmsa.edge.index.service.index.SearchIndex;
+import nu.marginalia.wmsa.edge.index.reader.SearchIndex;
 
 import java.util.Collection;
 import java.util.List;

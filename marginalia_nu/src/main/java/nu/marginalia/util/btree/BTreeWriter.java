@@ -3,6 +3,7 @@ package nu.marginalia.util.btree;
 import nu.marginalia.util.btree.model.BTreeContext;
 import nu.marginalia.util.btree.model.BTreeHeader;
 import nu.marginalia.util.multimap.MultimapFileLong;
+import nu.marginalia.util.multimap.MultimapFileLongSlice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,9 +13,9 @@ import java.io.IOException;
 public class BTreeWriter {
     private final Logger logger = LoggerFactory.getLogger(BTreeWriter.class);
     private final BTreeContext ctx;
-    private final MultimapFileLong map;
+    private final MultimapFileLongSlice map;
 
-    public BTreeWriter(MultimapFileLong map, BTreeContext ctx) {
+    public BTreeWriter(MultimapFileLongSlice map, BTreeContext ctx) {
         this.map = map;
         this.ctx = ctx;
     }
@@ -31,13 +32,18 @@ public class BTreeWriter {
         return size;
     }
 
-    public long write(long offset, int numEntries, WriteCallback writeIndex)
+    /** Construct a BTree with numEntries entries at offset in the associated map
+     *
+     * @return The size of the written data
+     */
+    public long write(long offset, int numEntries, WriteCallback writeIndexCallback)
             throws IOException
     {
-        var header = makeHeader(offset, numEntries);
+        BTreeHeader header = makeHeader(offset, numEntries);
 
         header.write(map, offset);
-        writeIndex.write(header.dataOffsetLongs());
+
+        writeIndexCallback.write(map.atOffset(header.dataOffsetLongs()));
 
         if (header.layers() < 1) {
             return ctx.calculateSize(numEntries);

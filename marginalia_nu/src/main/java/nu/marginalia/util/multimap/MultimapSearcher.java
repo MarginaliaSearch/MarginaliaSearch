@@ -4,9 +4,9 @@ import lombok.experimental.Delegate;
 
 public class MultimapSearcher {
     @Delegate
-    private final MultimapFileLong mmf;
+    private final MultimapFileLongSlice mmf;
 
-    public MultimapSearcher(MultimapFileLong mmf) {
+    public MultimapSearcher(MultimapFileLongSlice mmf) {
         this.mmf = mmf;
     }
 

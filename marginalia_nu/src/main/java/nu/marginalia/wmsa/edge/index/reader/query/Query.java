@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.edge.index.service.query;
+package nu.marginalia.wmsa.edge.index.reader.query;
 
 import java.util.stream.LongStream;
 

@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.edge.index.service;
+package nu.marginalia.wmsa.edge.index.conversion;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

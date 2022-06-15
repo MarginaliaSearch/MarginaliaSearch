@@ -135,7 +135,7 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
         final Set<BrowseResult> domains = new HashSet<>(count*3);
 
         final String q = """
-                            SELECT EC_DOMAIN.ID AS NEIGHBOR_ID, URL_PART, COUNT(*) AS CNT 
+                            SELECT EC_DOMAIN.ID AS NEIGHBOR_ID, DOMAIN_NAME, COUNT(*) AS CNT 
                             FROM EC_DOMAIN_NEIGHBORS 
                             INNER JOIN EC_DOMAIN ON NEIGHBOR_ID=EC_DOMAIN.ID 
                             INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID 
@@ -169,7 +169,7 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
 
             if (domains.size() < count/2) {
                 final String q2 = """
-                        SELECT EC_DOMAIN.ID, URL_PART
+                        SELECT EC_DOMAIN.ID, DOMAIN_NAME
                         FROM EC_DOMAIN
                         INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID 
                         INNER JOIN EC_DOMAIN_LINK B ON DEST_DOMAIN_ID=EC_DOMAIN.ID 
@@ -199,11 +199,11 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
 
             if (domains.size() < count/2) {
                 final String q3 = """
-                    SELECT EC_DOMAIN.ID, URL_PART
-                    FROM EC_DOMAIN 
-                    INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID 
+                    SELECT EC_DOMAIN.ID, DOMAIN_NAME
+                    FROM EC_DOMAIN
+                    INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID
                     INNER JOIN EC_DOMAIN_LINK B ON B.SOURCE_DOMAIN_ID=EC_DOMAIN.ID
-                    INNER JOIN EC_DOMAIN_LINK O ON O.DEST_DOMAIN_ID=EC_DOMAIN.ID  
+                    INNER JOIN EC_DOMAIN_LINK O ON O.DEST_DOMAIN_ID=EC_DOMAIN.ID
                     WHERE B.DEST_DOMAIN_ID=? 
                     AND STATE<2 
                     AND KNOWN_URLS<1000 

@@ -48,7 +48,7 @@ public class SqlLoadProcessedDocument {
                                IN STATE VARCHAR(32))
                        BEGIN
                                UPDATE EC_URL SET VISITED=1, STATE=STATE WHERE ID=URL_ID;
-                               DELETE FROM PAGE_DATA WHERE ID=URL_ID;
+                               DELETE FROM EC_PAGE_DATA WHERE ID=URL_ID;
                        END
                         """);
 
