@@ -59,12 +59,12 @@ dependencies {
     implementation "com.sparkjava:spark-core:2.9.3"
     implementation 'com.opencsv:opencsv:5.6'
 
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.17.1'
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.17.1'
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.17.1'
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.17.1'
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.17.1'
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.17.1'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.17.2'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.17.2'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.17.2'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.17.2'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.17.2'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.17.2'
 
     implementation 'org.slf4j:slf4j-api:1.7.36'
 
@@ -76,7 +76,6 @@ dependencies {
     implementation 'com.github.ThatJavaNerd:JRAW:1.1.0'
 
     implementation group: 'com.h2database', name: 'h2', version: '2.1.210'
-    testImplementation group: 'org.mockito', name: 'mockito-core', version: '4.3.1'
 
     implementation 'org.jsoup:jsoup:1.14.3'
     implementation group: 'com.github.crawler-commons', name: 'crawler-commons', version: '1.2'
@@ -86,7 +85,7 @@ dependencies {
 
     implementation 'com.zaxxer:HikariCP:5.0.1'
 
-    implementation 'org.apache.opennlp:opennlp-tools:1.9.3'
+    implementation 'org.apache.opennlp:opennlp-tools:1.9.4'
     implementation 'io.prometheus:simpleclient:0.15.0'
     implementation 'io.prometheus:simpleclient_servlet:0.15.0'
     implementation 'io.prometheus:simpleclient_httpserver:0.15.0'
@@ -123,15 +122,19 @@ dependencies {
     testImplementation 'org.projectlombok:lombok:1.18.24'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.24'
 
+    testImplementation group: 'org.mockito', name: 'mockito-core', version: '4.5.1'
+
+    testImplementation platform('org.testcontainers:testcontainers-bom:1.17.2')
+    testImplementation 'org.testcontainers:mariadb:1.17.2'
+    testImplementation "org.testcontainers:junit-jupiter:1.17.2"
+
     e2eTestImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
     e2eTestRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
     e2eTestImplementation 'org.projectlombok:lombok:1.18.24'
-    e2eTestAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
-    e2eTestImplementation 'org.testcontainers:mariadb:1.17.1'
-    e2eTestImplementation 'org.testcontainers:nginx:1.17.1'
-    e2eTestImplementation 'org.testcontainers:testcontainers:1.17.1'
-    e2eTestImplementation "org.testcontainers:junit-jupiter:1.17.1"
-    e2eTestImplementation "org.testcontainers:selenium:1.17.1"
+    e2eTestAnnotationProcessor 'org.projectlombok:lombok:1.18.24'
+    e2eTestImplementation 'org.testcontainers:nginx:1.17.2'
+    e2eTestImplementation "org.testcontainers:junit-jupiter:1.17.2"
+    e2eTestImplementation "org.testcontainers:selenium:1.17.2"
     e2eTestImplementation 'org.seleniumhq.selenium:selenium-remote-driver:4.1.4'
     e2eTestImplementation 'org.seleniumhq.selenium:selenium-chrome-driver:4.1.4'
 }

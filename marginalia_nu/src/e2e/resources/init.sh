@@ -69,4 +69,4 @@ memex memex
 dating dating
 EOF
 
-WMSA_HOME=${HOME} java -Dsmall-ram=TRUE -Dservice-host=0.0.0.0 -jar /WMSA.jar start $1
+WMSA_HOME=${HOME} java -server -Xmx2G -Dsmall-ram=TRUE -Dservice-host=0.0.0.0 -jar /WMSA.jar start $1

@@ -15,7 +15,7 @@ public class InstructionsCompiler {
     public List<Instruction> compile(ProcessedDomain domain) {
         List<Instruction> ret = new ArrayList<>(domain.size()*4);
 
-        ret.add(new LoadProcessedDomain(domain.domain, domain.state, domain.averageQuality().orElse(-5.)));
+        ret.add(new LoadProcessedDomain(domain.domain, domain.state, domain.ip));
 
         if (domain.documents != null) {
             compileUrls(ret, domain.documents);

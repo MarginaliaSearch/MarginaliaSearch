@@ -14,7 +14,7 @@ public interface Interpreter {
     void loadRssFeed(EdgeUrl[] rssFeed);
     void loadDomainLink(DomainLink[] links);
 
-    void loadProcessedDomain(EdgeDomain domain, EdgeDomainIndexingState state, double quality);
+    void loadProcessedDomain(EdgeDomain domain, EdgeDomainIndexingState state, String ip);
     void loadProcessedDocument(LoadProcessedDocument loadProcessedDocument);
     void loadProcessedDocumentWithError(LoadProcessedDocumentWithError loadProcessedDocumentWithError);
 

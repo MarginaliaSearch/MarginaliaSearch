@@ -21,7 +21,7 @@ import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 import static nu.marginalia.util.FileSizeUtil.readableSize;
 
 
-public class MultimapFileLong implements AutoCloseable {
+public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
 
     private final ArrayList<LongBuffer> buffers = new ArrayList<>();
     private final ArrayList<MappedByteBuffer> mappedByteBuffers = new ArrayList<>();
@@ -196,10 +196,12 @@ public class MultimapFileLong implements AutoCloseable {
         }
     }
 
+    @Override
     public long size() {
         return fileLength;
     }
 
+    @Override
     public void put(long idx, long val) {
         if (idx >= mappedSize)
             grow(idx);
@@ -214,6 +216,7 @@ public class MultimapFileLong implements AutoCloseable {
         }
     }
 
+    @Override
     public long get(long idx) {
         if (idx >= mappedSize)
             grow(idx);
@@ -229,10 +232,12 @@ public class MultimapFileLong implements AutoCloseable {
     }
 
 
+    @Override
     public void read(long[] vals, long idx) {
         read(vals, vals.length, idx);
     }
 
+    @Override
     public void read(long[] vals, int n, long idx) {
         if (idx+n >= mappedSize) {
             grow(idx+n);
@@ -257,10 +262,12 @@ public class MultimapFileLong implements AutoCloseable {
 
     }
 
+    @Override
     public void write(long[] vals, long idx) {
         write(vals, vals.length, idx);
     }
 
+    @Override
     public void write(long[] vals, int n, long idx) {
         if (idx+n >= mappedSize) {
             grow(idx+n);
@@ -285,6 +292,7 @@ public class MultimapFileLong implements AutoCloseable {
 
     }
 
+    @Override
     public void write(LongBuffer vals, long idx) {
         int n = vals.limit() - vals.position();
         if (idx+n >= mappedSize) {
@@ -310,6 +318,7 @@ public class MultimapFileLong implements AutoCloseable {
     }
 
 
+    @Override
     public void transferFromFileChannel(FileChannel sourceChannel, long destOffset, long sourceStart, long sourceEnd) throws IOException {
 
         int length = (int)(sourceEnd - sourceStart);

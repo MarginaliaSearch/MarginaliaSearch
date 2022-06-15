@@ -1,11 +1,13 @@
 package nu.marginalia.wmsa.edge.converting.loader;
 
+import com.google.common.hash.Hashing;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.sql.Types;
 
@@ -25,12 +27,13 @@ public class SqlLoadUrls {
                 stmt.execute("""
                         CREATE PROCEDURE INSERT_URL (
                             IN PROTO VARCHAR(255),
-                            IN DOMAIN_NAME VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+                            IN DOMAIN VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
                             IN PORT INT,
-                            IN URL VARCHAR(255)
+                            IN PATH VARCHAR(255),
+                            IN PATH_HASH BIGINT
                             )
                         BEGIN
-                            INSERT IGNORE INTO EC_URL (PROTO,DOMAIN_ID,PORT,URL) SELECT PROTO,ID,PORT,URL FROM EC_DOMAIN WHERE URL_PART=DOMAIN_NAME;
+                            INSERT IGNORE INTO EC_URL (PROTO,DOMAIN_ID,PORT,PATH,PATH_HASH) SELECT PROTO,ID,PORT,PATH,PATH_HASH FROM EC_DOMAIN WHERE DOMAIN_NAME=DOMAIN;
                         END
                         """);
             }
@@ -42,8 +45,8 @@ public class SqlLoadUrls {
 
     public void load(LoaderData data, EdgeUrl[] urls) {
         try (var conn = dataSource.getConnection();
-             var insertCall = conn.prepareCall("CALL INSERT_URL(?,?,?,?)");
-             var queryCall = conn.prepareStatement("SELECT ID, PROTO, URL FROM EC_URL WHERE DOMAIN_ID=?")
+             var insertCall = conn.prepareCall("CALL INSERT_URL(?,?,?,?, ?)");
+             var queryCall = conn.prepareStatement("SELECT ID, PROTO, PATH FROM EC_URL WHERE DOMAIN_ID=?")
              )
         {
             conn.setAutoCommit(false);
@@ -58,6 +61,7 @@ public class SqlLoadUrls {
                     insertCall.setNull(3, Types.INTEGER);
                 }
                 insertCall.setString(4, url.path);
+                insertCall.setLong(5, hashPath(url.path));
                 insertCall.addBatch();
             }
             var ret = insertCall.executeBatch();
@@ -86,7 +90,11 @@ public class SqlLoadUrls {
 
         }
         catch (SQLException ex) {
-            ex.printStackTrace();
+            logger.warn("SQL error inserting URLs", ex);
         }
+    }
+
+    private long hashPath(String path) {
+        return Hashing.murmur3_128().hashString(path, StandardCharsets.UTF_8).asLong();
     }
 }

@@ -5,12 +5,16 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklist;
+import nu.marginalia.wmsa.edge.index.conversion.ConversionUnnecessaryException;
+import nu.marginalia.wmsa.edge.index.conversion.SearchIndexConverter;
+import nu.marginalia.wmsa.edge.index.conversion.SearchIndexPreconverter;
+import nu.marginalia.wmsa.edge.index.journal.SearchIndexWriterImpl;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
-import nu.marginalia.wmsa.edge.index.radix.EdgeIndexBucket;
-import nu.marginalia.wmsa.edge.index.service.dictionary.DictionaryReader;
-import nu.marginalia.wmsa.edge.index.service.dictionary.DictionaryWriter;
-import nu.marginalia.wmsa.edge.index.service.index.*;
-import nu.marginalia.wmsa.edge.index.service.query.SearchIndexPartitioner;
+import nu.marginalia.wmsa.edge.index.dictionary.DictionaryReader;
+import nu.marginalia.wmsa.edge.index.dictionary.DictionaryWriter;
+import nu.marginalia.wmsa.edge.index.reader.SearchIndex;
+import nu.marginalia.wmsa.edge.index.reader.SearchIndexReader;
+import nu.marginalia.wmsa.edge.index.conversion.SearchIndexPartitioner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,7 +93,7 @@ public class IndexServicesFactory {
 
     }
 
-    public SearchIndexConverter getIndexConverter(int id, IndexBlock block) throws ConversionUnnecessaryException {
+    public SearchIndexConverter getIndexConverter(int id, IndexBlock block) throws ConversionUnnecessaryException, IOException {
         return new SearchIndexConverter(block, id, tmpFileDir,
                 preconverterOutputFile.get(id),
                 indexWriteWordsFile.get(id, block.id),
