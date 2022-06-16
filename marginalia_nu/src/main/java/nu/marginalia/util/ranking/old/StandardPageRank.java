@@ -48,7 +48,7 @@ public class StandardPageRank {
         originDomains.addAll(Arrays.asList(origins));
 
         try (var conn = dataSource.getConnection()) {
-            try (var stmt = conn.prepareStatement("SELECT ID,INDEXED,STATE,URL_PART FROM EC_DOMAIN WHERE INDEXED>1 AND STATE>=0 AND QUALITY>=-10")) {
+            try (var stmt = conn.prepareStatement("SELECT ID,INDEXED,STATE,DOMAIN_NAME FROM EC_DOMAIN WHERE INDEXED>1 AND IS_ALIVE AND QUALITY>=-10")) {
                 stmt.setFetchSize(10000);
                 var rsp = stmt.executeQuery();
                 while (rsp.next()) {
@@ -78,7 +78,7 @@ public class StandardPageRank {
                 }
             }
 
-            try (var stmt = conn.prepareStatement("SELECT ID FROM EC_DOMAIN WHERE URL_PART=?")) {
+            try (var stmt = conn.prepareStatement("SELECT ID FROM EC_DOMAIN WHERE DOMAIN_NAME=?")) {
                 for (var seed : this.originDomains) {
                     stmt.setString(1, seed);
                     var rsp = stmt.executeQuery();

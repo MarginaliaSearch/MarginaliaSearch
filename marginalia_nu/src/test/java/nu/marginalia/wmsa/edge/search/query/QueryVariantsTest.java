@@ -13,6 +13,7 @@ class QueryVariantsTest {
     QueryVariants variants;
     QueryParser parser;
     SentenceExtractor se;
+
     @BeforeEach
     public void setUp() {
         LanguageModels lm = TestLanguageModels.getLanguageModels();
@@ -24,7 +25,7 @@ class QueryVariantsTest {
         parser = new QueryParser(new EnglishDictionary(dict), variants);
     }
 
-    @Test
+    @Test @SuppressWarnings("unchecked")
     void getQueryVariants() {
         System.out.println(se.extractSentence("we are alone"));
         testCase("DOS", List.of("DOS"));
@@ -50,7 +51,5 @@ class QueryVariantsTest {
     private void testCase(String input, List<String>... expected) {
         var tokens = variants.getQueryVariants(parser.extractBasicTokens(input));
         System.out.println(tokens);
-//        var result = tokens.stream().map(lst -> lst.terms).collect(Collectors.toSet());
-//        assertEquals(Set.of(expected), result, "Case failed: " + input);
     }
 }

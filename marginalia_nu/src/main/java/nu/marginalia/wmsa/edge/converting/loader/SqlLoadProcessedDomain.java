@@ -25,12 +25,12 @@ public class SqlLoadProcessedDomain {
                 stmt.execute("DROP PROCEDURE IF EXISTS INITIALIZE_DOMAIN");
                 stmt.execute("""
                         CREATE PROCEDURE INITIALIZE_DOMAIN (
-                            IN ST INT,
+                            IN ST ENUM('ACTIVE', 'EXHAUSTED', 'SPECIAL', 'SOCIAL_MEDIA', 'BLOCKED', 'REDIR', 'ERROR', 'UNKNOWN'),
                             IN IDX INT,
-                            IN QUAL DOUBLE,
-                            IN DID INT)
+                            IN DID INT,
+                            IN IP VARCHAR(32))
                         BEGIN
-                            UPDATE EC_DOMAIN SET INDEX_DATE=NOW(), STATE=ST, DOMAIN_ALIAS=NULL, INDEXED=GREATEST(INDEXED,IDX), QUALITY=QUAL, QUALITY_RAW=QUAL, QUALITY_ORIGINAL=QUAL WHERE ID=DID;
+                            UPDATE EC_DOMAIN SET INDEX_DATE=NOW(), STATE=ST, DOMAIN_ALIAS=NULL, INDEXED=GREATEST(INDEXED,IDX), IP=IP WHERE ID=DID;
                             DELETE FROM EC_DOMAIN_LINK WHERE SOURCE_DOMAIN_ID=DID;
                         END
                         """);
@@ -41,7 +41,7 @@ public class SqlLoadProcessedDomain {
         }
     }
 
-    public void load(LoaderData data, EdgeDomain domain, EdgeDomainIndexingState state, double quality) {
+    public void load(LoaderData data, EdgeDomain domain, EdgeDomainIndexingState state, String ip) {
         data.setTargetDomain(domain);
 
         loadDomains.load(data, domain);
@@ -49,18 +49,17 @@ public class SqlLoadProcessedDomain {
         try (var conn = dataSource.getConnection();
              var initCall = conn.prepareCall("CALL INITIALIZE_DOMAIN(?,?,?,?)"))
         {
-            initCall.setInt(1, state.code);
+            initCall.setString(1, state.name());
             initCall.setInt(2, 1 + data.sizeHint / 100);
-            initCall.setDouble(3, quality);
-            initCall.setInt(4, data.getDomainId(domain));
+            initCall.setInt(3, data.getDomainId(domain));
+            initCall.setString(4, ip);
             int rc = initCall.executeUpdate();
             if (rc < 1) {
-                logger.warn("load({},{},{}) -- bad rowcount {}", domain, state, quality, rc);
+                logger.warn("load({},{}) -- bad rowcount {}", domain, state, rc);
             }
-            conn.commit();
         }
         catch (SQLException ex) {
-            ex.printStackTrace();
+            logger.warn("SQL error initializing domain", ex);
         }
 
     }
@@ -69,9 +68,9 @@ public class SqlLoadProcessedDomain {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
                      UPDATE EC_DOMAIN TARGET 
-                            INNER JOIN EC_DOMAIN ALIAS ON ALIAS.URL_PART=? 
+                            INNER JOIN EC_DOMAIN ALIAS ON ALIAS.DOMAIN_NAME=? 
                             SET TARGET.DOMAIN_ALIAS=ALIAS.ID
-                            WHERE TARGET.URL_PART=?
+                            WHERE TARGET.DOMAIN_NAME=?
                      """)) {
             stmt.setString(1, link.to().toString());
             stmt.setString(2, link.from().toString());
@@ -81,7 +80,7 @@ public class SqlLoadProcessedDomain {
             }
         }
         catch (SQLException ex) {
-            ex.printStackTrace();
+            logger.warn("SQL error inserting domain alias", ex);
         }
     }
 }
