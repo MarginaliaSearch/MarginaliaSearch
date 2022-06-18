@@ -16,7 +16,7 @@ public class WordIndexOffsetsTable {
         return table.length;
     }
 
-    public void forEach(OffsetTableEntryConsumer o) throws IOException {
+    public void forEachRange(OffsetTableEntryConsumer o) throws IOException {
         if (table[0] > 0) {
             o.accept(0, (int) table[0]);
         }
@@ -32,9 +32,9 @@ public class WordIndexOffsetsTable {
     }
 
     /**
-     * Fold over each span in the file, left to right
+     * Fold over each span in the file, left to right, accumulating the return value
      */
-    public long fold(OffsetTableEntryFoldConsumer o) throws IOException {
+    public long foldRanges(OffsetTableEntryFoldConsumer o) throws IOException {
         long total = 0;
 
         if (table[0] > 0) {

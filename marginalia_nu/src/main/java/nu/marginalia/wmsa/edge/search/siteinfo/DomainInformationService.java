@@ -2,7 +2,6 @@ package nu.marginalia.wmsa.edge.search.siteinfo;
 
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
-import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
 import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDaoImpl;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeId;
@@ -98,7 +97,7 @@ public class DomainInformationService {
         try (var connection = dataSource.getConnection()) {
 
             try (var stmt = connection.prepareStatement("SELECT KNOWN_URLS FROM DOMAIN_METADATA WHERE ID=?")) {
-                stmt.setInt(1, domainId.getId());
+                stmt.setInt(1, domainId.id());
                 var rsp = stmt.executeQuery();
                 if (rsp.next()) {
                     return rsp.getInt(1);
@@ -115,7 +114,7 @@ public class DomainInformationService {
         try (var connection = dataSource.getConnection()) {
 
             try (var stmt = connection.prepareStatement("SELECT VISITED_URLS FROM DOMAIN_METADATA WHERE ID=?")) {
-                stmt.setInt(1, domainId.getId());
+                stmt.setInt(1, domainId.id());
                 var rsp = stmt.executeQuery();
                 if (rsp.next()) {
                     return rsp.getInt(1);
@@ -133,7 +132,7 @@ public class DomainInformationService {
         try (var connection = dataSource.getConnection()) {
 
             try (var stmt = connection.prepareStatement("SELECT GOOD_URLS FROM DOMAIN_METADATA WHERE ID=?")) {
-                stmt.setInt(1, domainId.getId());
+                stmt.setInt(1, domainId.id());
                 var rsp = stmt.executeQuery();
                 if (rsp.next()) {
                     return rsp.getInt(1);
@@ -150,7 +149,7 @@ public class DomainInformationService {
         try (var connection = dataSource.getConnection()) {
 
             try (var stmt = connection.prepareStatement("SELECT COUNT(ID) FROM EC_DOMAIN_LINK WHERE DEST_DOMAIN_ID=?")) {
-                stmt.setInt(1, domainId.getId());
+                stmt.setInt(1, domainId.id());
                 var rsp = stmt.executeQuery();
                 if (rsp.next()) {
                     return rsp.getInt(1);
@@ -166,7 +165,7 @@ public class DomainInformationService {
         try (var connection = dataSource.getConnection()) {
 
             try (var stmt = connection.prepareStatement("SELECT COUNT(ID) FROM EC_DOMAIN_LINK WHERE SOURCE_DOMAIN_ID=?")) {
-                stmt.setInt(1, domainId.getId());
+                stmt.setInt(1, domainId.id());
                 var rsp = stmt.executeQuery();
                 if (rsp.next()) {
                     return rsp.getInt(1);
@@ -183,7 +182,7 @@ public class DomainInformationService {
         try (var connection = dataSource.getConnection()) {
 
             try (var stmt = connection.prepareStatement("SELECT QUALITY FROM EC_DOMAIN WHERE ID=?")) {
-                stmt.setInt(1, domainId.getId());
+                stmt.setInt(1, domainId.id());
                 var rsp = stmt.executeQuery();
                 if (rsp.next()) {
                     return rsp.getDouble(1);
@@ -199,7 +198,7 @@ public class DomainInformationService {
         try (var connection = dataSource.getConnection()) {
 
             try (var stmt = connection.prepareStatement("SELECT STATE FROM EC_DOMAIN WHERE ID=?")) {
-                stmt.setInt(1, domainId.getId());
+                stmt.setInt(1, domainId.id());
                 var rsp = stmt.executeQuery();
                 if (rsp.next()) {
                     return EdgeDomainIndexingState.valueOf(rsp.getString(1));
@@ -216,8 +215,8 @@ public class DomainInformationService {
     public List<EdgeDomain> getLinkingDomains(EdgeId<EdgeDomain> domainId) {
         try (var connection = dataSource.getConnection()) {
             List<EdgeDomain> results = new ArrayList<>(25);
-            try (var stmt = connection.prepareStatement("SELECT SOURCE_URL FROM EC_RELATED_LINKS_VIEW WHERE DEST_DOMAIN_ID=? ORDER BY SOURCE_DOMAIN_ID LIMIT 25")) {
-                stmt.setInt(1, domainId.getId());
+            try (var stmt = connection.prepareStatement("SELECT SOURCE_DOMAIN FROM EC_RELATED_LINKS_VIEW WHERE DEST_DOMAIN_ID=? ORDER BY SOURCE_DOMAIN_ID LIMIT 25")) {
+                stmt.setInt(1, domainId.id());
                 var rsp = stmt.executeQuery();
                 while (rsp.next()) {
                     results.add(new EdgeDomain(rsp.getString(1)));
@@ -237,7 +236,7 @@ public class DomainInformationService {
         try (var connection = dataSource.getConnection()) {
 
             try (var stmt = connection.prepareStatement("SELECT IFNULL(RANK, 1) FROM EC_DOMAIN WHERE ID=?")) {
-                stmt.setInt(1, domainId.getId());
+                stmt.setInt(1, domainId.id());
                 var rsp = stmt.executeQuery();
                 if (rsp.next()) {
                     return rsp.getDouble(1);

@@ -81,7 +81,8 @@ public class EdgeIndexClientTest {
         service = new EdgeIndexService("127.0.0.1",
                 testPort,
                 init, null,
-                indexes);
+                indexes,
+                servicesFactory);
 
         Spark.awaitInitialization();
         init.setReady();
@@ -113,7 +114,7 @@ public class EdgeIndexClientTest {
         indexes.reindexAll();
         var rsp = client.query(Context.internal(), EdgeSearchSpecification.justIncludes("trapphus"));
         System.out.println(rsp);
-        assertEquals(5, rsp.resultsList.get(IndexBlock.Title).get(0).results.get(0).get(0).url.getId());
+        assertEquals(5, rsp.resultsList.get(IndexBlock.Title).get(0).results.get(0).get(0).url.id());
     }
 
 

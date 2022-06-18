@@ -39,6 +39,9 @@ public class MultimapFileLongOffsetSlice implements MultimapFileLongSlice {
     }
 
     @Override
+    public void read(LongBuffer vals, long idx) { map.read(vals, idx+off); }
+
+    @Override
     public void write(long[] vals, long idx) {
         map.write(vals, idx+off);
     }

@@ -3,11 +3,7 @@ package nu.marginalia.wmsa.edge.index.journal;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import lombok.SneakyThrows;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.index.dictionary.DictionaryWriter;
-import nu.marginalia.wmsa.edge.model.EdgeDomain;
-import nu.marginalia.wmsa.edge.model.EdgeId;
-import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,10 +13,9 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class SearchIndexWriterImpl implements SearchIndexWriter {
+public class SearchIndexJournalWriterImpl implements SearchIndexJournalWriter {
     private final DictionaryWriter dictionaryWriter;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -28,12 +23,12 @@ public class SearchIndexWriterImpl implements SearchIndexWriter {
     private RandomAccessFile raf;
     private FileChannel channel;
 
-    public static final int MAX_BLOCK_SIZE = 1000*32*8*4;
+    public static final int MAX_BLOCK_SIZE = SearchIndexJournalEntry.MAX_LENGTH*32*8*4;
     private final ByteBuffer byteBuffer;
     private long pos;
 
     @SneakyThrows
-    public SearchIndexWriterImpl(DictionaryWriter dictionaryWriter, File indexFile) {
+    public SearchIndexJournalWriterImpl(DictionaryWriter dictionaryWriter, File indexFile) {
         this.dictionaryWriter = dictionaryWriter;
         initializeIndexFile(indexFile);
 
@@ -61,23 +56,16 @@ public class SearchIndexWriterImpl implements SearchIndexWriter {
 
     @Override
     @SneakyThrows
-    public synchronized void put(EdgeId<EdgeDomain> domainId, EdgeId<EdgeUrl> urlId, IndexBlock block, List<String> wordsSuspect) {
-        int numGoodWords = 0;
-        for (String word : wordsSuspect) {
-            if (word.length() < Byte.MAX_VALUE) numGoodWords++;
-        }
+    public synchronized void put(SearchIndexJournalEntryHeader header, SearchIndexJournalEntry entryData) {
 
         byteBuffer.clear();
-        long url_id = ((long) domainId.getId() << 32) | urlId.getId();
-        byteBuffer.putLong(url_id);
-        byteBuffer.putInt(block.id);
-        byteBuffer.putInt(numGoodWords);
 
-        for (String word : wordsSuspect) {
-            if (word.length() < Byte.MAX_VALUE) {
-                byteBuffer.putInt(dictionaryWriter.get(word));
-            }
-        }
+        byteBuffer.putInt(entryData.size());
+        byteBuffer.putInt(header.block().id);
+        byteBuffer.putLong(header.documentId());
+
+        entryData.write(byteBuffer);
+
         byteBuffer.limit(byteBuffer.position());
         byteBuffer.rewind();
 
@@ -104,11 +92,11 @@ public class SearchIndexWriterImpl implements SearchIndexWriter {
     }
 
     private void writePositionMarker() throws IOException {
-        var lock = channel.lock(0, 12, false);
+        var lock = channel.lock(0, 16, false);
         pos = channel.size();
         raf.seek(0);
         raf.writeLong(pos);
-        raf.writeInt(dictionaryWriter.size());
+        raf.writeLong(dictionaryWriter.size());
         raf.seek(pos);
         lock.release();
     }

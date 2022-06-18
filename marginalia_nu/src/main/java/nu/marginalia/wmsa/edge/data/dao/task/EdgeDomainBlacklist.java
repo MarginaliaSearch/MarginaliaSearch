@@ -9,7 +9,7 @@ import nu.marginalia.wmsa.edge.model.EdgeId;
 public interface EdgeDomainBlacklist {
     boolean isBlacklisted(int domainId);
     default boolean isBlacklisted(EdgeId<EdgeDomain> domainId) {
-        return isBlacklisted(domainId.getId());
+        return isBlacklisted(domainId.id());
     }
     default TIntHashSet getSpamDomains() {
         return new TIntHashSet();

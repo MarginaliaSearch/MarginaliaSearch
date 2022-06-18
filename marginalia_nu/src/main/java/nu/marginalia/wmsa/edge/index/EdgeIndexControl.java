@@ -23,7 +23,7 @@ public class EdgeIndexControl {
 
         for (IndexBlock block : IndexBlock.values()) {
             try {
-                servicesFactory.getIndexConverter(id, block);
+                servicesFactory.convertIndex(id, block);
 
                 System.runFinalization();
                 System.gc();
@@ -38,10 +38,6 @@ public class EdgeIndexControl {
 
         System.runFinalization();
         System.gc();
-    }
-
-    public long wordCount(int id) {
-        return servicesFactory.wordCount(id);
     }
 
     public void switchIndexFiles(int id) throws Exception {

@@ -94,8 +94,6 @@ public class SqlLoadProcessedDocument {
         } catch (SQLException ex) {
             logger.warn("SQL error inserting document", ex);
         }
-
-
     }
 
     public void loadWithError(LoaderData data, List<LoadProcessedDocumentWithError> documents) {

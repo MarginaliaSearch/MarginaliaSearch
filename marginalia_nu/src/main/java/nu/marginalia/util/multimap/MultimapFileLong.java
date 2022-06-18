@@ -36,9 +36,7 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
     private long mappedSize;
     final static long WORD_SIZE = 8;
 
-    private boolean loadAggressively;
-
-    private final NativeIO.Advice advice = null;
+    private NativeIO.Advice defaultAdvice = null;
 
     public static MultimapFileLong forReading(Path file) throws IOException {
         long fileSize = Files.size(file);
@@ -70,12 +68,7 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
                             long mapSize,
                             int bufferSize) throws IOException {
 
-        this(new RandomAccessFile(file, translateToRAFMode(mode)), mode, mapSize, bufferSize, false);
-    }
-
-    public MultimapFileLong loadAggressively(boolean v) {
-        this.loadAggressively = v;
-        return this;
+        this(new RandomAccessFile(file, translateToRAFMode(mode)), mode, mapSize, bufferSize);
     }
 
     private static String translateToRAFMode(FileChannel.MapMode mode) {
@@ -91,13 +84,11 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
     public MultimapFileLong(RandomAccessFile file,
                             FileChannel.MapMode mode,
                             long mapSizeBytes,
-                            int bufferSizeWords,
-                            boolean loadAggressively) throws IOException {
+                            int bufferSizeWords) throws IOException {
         this.mode = mode;
         this.bufferSize = bufferSizeWords;
         this.mapSize = mapSizeBytes;
         this.fileLength = file.length();
-        this.loadAggressively = loadAggressively;
 
         channel = file.getChannel();
         mappedSize = 0;
@@ -115,6 +106,7 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
 
     @SneakyThrows
     public void advice(NativeIO.Advice advice) {
+        this.defaultAdvice = advice;
         for (var buffer : mappedByteBuffers) {
                 NativeIO.madvise(buffer, advice);
         }
@@ -157,7 +149,7 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
     }
 
     @SneakyThrows
-    private void grow(long posIdxRequired) {
+    public void grow(long posIdxRequired) {
         if (posIdxRequired*WORD_SIZE > mapSize && mode == READ_ONLY) {
             throw new IndexOutOfBoundsException(posIdxRequired + " (max " + mapSize + ")");
         }
@@ -182,11 +174,8 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
 
             var buffer = channel.map(mode, posBytes, bzBytes);
 
-            if (loadAggressively)
-                buffer.load();
-
-            if (advice != null) {
-                NativeIO.madvise(buffer, advice);
+            if (defaultAdvice != null) {
+                NativeIO.madvise(buffer, defaultAdvice);
             }
 
             buffers.add(buffer.asLongBuffer());
@@ -261,6 +250,32 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
         }
 
     }
+
+    @Override
+    public void read(LongBuffer vals, long idx) {
+        int n = vals.limit() - vals.position();
+        if (idx+n >= mappedSize) {
+            grow(idx+n);
+        }
+        int iN = (int)((idx + n) / bufferSize);
+
+        for (int i = 0; i < n; ) {
+            int i0 = (int)((idx + i) / bufferSize);
+
+            int bufferOffset = (int) ((idx+i) % bufferSize);
+            var buffer = buffers.get(i0);
+
+            final int l;
+
+            if (i0 < iN) l = bufferSize - bufferOffset;
+            else l = Math.min(n - i, bufferSize - bufferOffset);
+
+            vals.put(vals.position() + i, buffer, bufferOffset, l);
+            i+=l;
+        }
+
+    }
+
 
     @Override
     public void write(long[] vals, long idx) {
@@ -363,8 +378,10 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
     @Override
     public void close() throws IOException {
         force();
+
         mappedByteBuffers.clear();
         buffers.clear();
+
         channel.close();
 
         // I want to believe

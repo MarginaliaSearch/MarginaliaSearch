@@ -1,11 +1,9 @@
 package nu.marginalia.wmsa.edge.index;
 
-import nu.marginalia.wmsa.edge.index.EdgeIndexControl;
-import nu.marginalia.wmsa.edge.index.IndexServicesFactory;
 import nu.marginalia.wmsa.edge.index.model.EdgeIndexSearchTerms;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.index.reader.SearchIndexReader;
-import nu.marginalia.wmsa.edge.index.journal.SearchIndexWriter;
+import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalWriter;
 import nu.marginalia.wmsa.edge.index.reader.query.IndexSearchBudget;
 import nu.marginalia.wmsa.edge.index.reader.query.Query;
 import org.jetbrains.annotations.NotNull;
@@ -31,7 +29,7 @@ public class EdgeIndexBucket {
     @NotNull
     private final IndexServicesFactory servicesFactory;
     private final EdgeIndexControl indexControl;
-    private final SearchIndexWriter writer;
+    private final SearchIndexJournalWriter writer;
 
     private final int id;
 

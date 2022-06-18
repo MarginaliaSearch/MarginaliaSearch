@@ -7,7 +7,7 @@ import nu.marginalia.wmsa.edge.index.IndexServicesFactory;
 import nu.marginalia.wmsa.edge.index.conversion.SearchIndexPartitioner;
 import nu.marginalia.wmsa.edge.index.EdgeIndexBucket;
 import nu.marginalia.wmsa.edge.index.dictionary.DictionaryReader;
-import nu.marginalia.wmsa.edge.index.journal.SearchIndexWriterImpl;
+import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalWriterImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,8 +27,8 @@ public class SearchIndexes {
 
     private final ReentrantLock opsLock = new ReentrantLock(false);
 
-    private final SearchIndexWriterImpl primaryIndexWriter;
-    private final SearchIndexWriterImpl secondaryIndexWriter;
+    private final SearchIndexJournalWriterImpl primaryIndexWriter;
+    private final SearchIndexJournalWriterImpl secondaryIndexWriter;
     private DictionaryReader dictionaryReader = null;
 
     @Inject
@@ -134,7 +134,7 @@ public class SearchIndexes {
         }
     }
 
-    public SearchIndexWriterImpl getIndexWriter(int idx) {
+    public SearchIndexJournalWriterImpl getIndexWriter(int idx) {
         if (idx == 0) {
             return primaryIndexWriter;
         }

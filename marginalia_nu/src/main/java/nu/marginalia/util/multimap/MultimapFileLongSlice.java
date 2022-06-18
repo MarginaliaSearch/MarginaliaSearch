@@ -15,6 +15,8 @@ public interface MultimapFileLongSlice {
 
     void read(long[] vals, int n, long idx);
 
+    void read(LongBuffer vals, long idx);
+
     void write(long[] vals, long idx);
 
     void write(long[] vals, int n, long idx);

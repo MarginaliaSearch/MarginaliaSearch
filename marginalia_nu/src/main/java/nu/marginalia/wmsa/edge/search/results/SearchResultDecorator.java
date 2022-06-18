@@ -78,8 +78,8 @@ public class SearchResultDecorator {
         TIntArrayList missedIds = new TIntArrayList();
         for (var resultItem : resultItems) {
 
-            var did = resultItem.getDomain().getId();
-            var uid = resultItem.getUrl().getId();
+            var did = resultItem.getDomain().id();
+            var uid = resultItem.getUrl().id();
 
             var details = detailsById.get(uid);
             if (details == null) {

@@ -1,6 +1,6 @@
 package nu.marginalia.util;
 
-import io.prometheus.client.Gauge;
+import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,10 +18,6 @@ import java.nio.file.Path;
  * */
 public class RandomWriteFunnel implements AutoCloseable {
 
-    private final static Gauge write_rate = Gauge.build("wmsa_rwf_write_bytes", "Bytes/s")
-            .register();
-    private final static Gauge transfer_rate = Gauge.build("wmsa_rwf_transfer_bytes", "Bytes/s")
-            .register();
     private static final Logger logger = LoggerFactory.getLogger(RandomWriteFunnel.class);
     private final DataBin[] bins;
 
@@ -34,7 +30,7 @@ public class RandomWriteFunnel implements AutoCloseable {
             int binCount = (int) (size / binSize + ((size % binSize) != 0L ? 1 : 0));
             bins = new DataBin[binCount];
             for (int i = 0; i < binCount; i++) {
-                bins[i] = new DataBin(tempDir, (int) Math.min(size - binSize * i, binSize));
+                bins[i] = new DataBin(tempDir, Math.min((int) (size - binSize * i), binSize));
             }
         }
         else {
@@ -42,25 +38,25 @@ public class RandomWriteFunnel implements AutoCloseable {
         }
     }
 
-    public void put(long address, long data) throws IOException {
-        bins[((int)(address / binSize))].put((int)(address%binSize), data);
+    @SneakyThrows
+    public void put(long address, long data) {
+        int bin = (int)(address / binSize);
+        int offset = (int)(address%binSize);
+
+        bins[bin].put(offset, data);
     }
 
     public void write(FileChannel o) throws IOException {
         ByteBuffer buffer = ByteBuffer.allocateDirect(binSize*8);
-        logger.debug("Writing from RWF");
 
-        for (int i = 0; i < bins.length; i++) {
-            var bin = bins[i];
+        for (var bin : bins) {
             buffer.clear();
             bin.eval(buffer);
 
             while (buffer.hasRemaining()) {
-                int wb = o.write(buffer);
-                write_rate.set(wb);
+                o.write(buffer);
             }
         }
-        logger.debug("Done");
     }
 
     @Override
@@ -84,12 +80,12 @@ public class RandomWriteFunnel implements AutoCloseable {
         }
 
         void put(int address, long data) throws IOException {
-            buffer.putInt(address);
-            buffer.putLong(data);
-
-            if (buffer.capacity() - buffer.position() < 12) {
+            if (buffer.remaining() < 12) {
                 flushBuffer();
             }
+
+            buffer.putInt(address);
+            buffer.putLong(data);
         }
 
         private void flushBuffer() throws IOException {
@@ -97,12 +93,15 @@ public class RandomWriteFunnel implements AutoCloseable {
                 return;
 
             buffer.flip();
-            while (channel.write(buffer) > 0);
+            while (buffer.hasRemaining())
+                channel.write(buffer);
+
             buffer.clear();
         }
 
         private void eval(ByteBuffer dest) throws IOException {
             flushBuffer();
+            channel.force(false);
 
             channel.position(0);
             buffer.clear();
@@ -117,14 +116,17 @@ public class RandomWriteFunnel implements AutoCloseable {
                 if (rb < 0) {
                     break;
                 }
-                else {
-                    transfer_rate.set(rb);
-                }
                 buffer.flip();
                 while (buffer.limit() - buffer.position() >= 12) {
-                    int addr = buffer.getInt();
+                    int addr = 8 * buffer.getInt();
                     long data = buffer.getLong();
-                    dest.putLong(8*addr, data);
+
+                    try {
+                        dest.putLong(addr, data);
+                    }
+                    catch (IndexOutOfBoundsException ex) {
+                        logger.info("!!!bad[{}]={}", addr, data);
+                    }
                 }
                 buffer.compact();
             }

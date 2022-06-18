@@ -8,7 +8,7 @@ import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklist;
 import nu.marginalia.wmsa.edge.index.conversion.ConversionUnnecessaryException;
 import nu.marginalia.wmsa.edge.index.conversion.SearchIndexConverter;
 import nu.marginalia.wmsa.edge.index.conversion.SearchIndexPreconverter;
-import nu.marginalia.wmsa.edge.index.journal.SearchIndexWriterImpl;
+import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalWriterImpl;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.index.dictionary.DictionaryReader;
 import nu.marginalia.wmsa.edge.index.dictionary.DictionaryWriter;
@@ -44,7 +44,8 @@ public class IndexServicesFactory {
     private final DoublePartitionedDataFile indexWriteUrlsFile;
     private volatile static DictionaryWriter dictionaryWriter;
     private final Long dictionaryHashMapSize;
-    private final SearchIndexPartitioner partitoner;
+    private final SearchIndexPartitioner partitioner;
+
     @Inject
     public IndexServicesFactory(
             @Named("tmp-file-dir") Path tmpFileDir,
@@ -59,7 +60,7 @@ public class IndexServicesFactory {
             @Named("edge-index-write-urls-file") String indexWriteUrlsFile,
             @Named("edge-dictionary-hash-map-size") Long dictionaryHashMapSize,
             EdgeDomainBlacklist domainBlacklist,
-            SearchIndexPartitioner partitoner
+            SearchIndexPartitioner partitioner
             ) {
 
         this.tmpFileDir = tmpFileDir;
@@ -73,11 +74,11 @@ public class IndexServicesFactory {
         this.indexWriteWordsFile = new DoublePartitionedDataFile(partitionRootFast, indexWriteWordsFile);
         this.indexWriteUrlsFile = new DoublePartitionedDataFile(partitionRootFast, indexWriteUrlsFile);
         this.preconverterOutputFile = new PartitionedDataFile(partitionRootSlowTmp, "preconverted.dat");
-        this.partitoner = partitoner;
+        this.partitioner = partitioner;
     }
 
-    public SearchIndexWriterImpl getIndexWriter(int idx) {
-        return new SearchIndexWriterImpl(getDictionaryWriter(), writerIndexFile.get(idx));
+    public SearchIndexJournalWriterImpl getIndexWriter(int idx) {
+        return new SearchIndexJournalWriterImpl(getDictionaryWriter(), writerIndexFile.get(idx));
     }
 
     public DictionaryWriter getDictionaryWriter() {
@@ -93,15 +94,17 @@ public class IndexServicesFactory {
 
     }
 
-    public SearchIndexConverter getIndexConverter(int id, IndexBlock block) throws ConversionUnnecessaryException, IOException {
-        return new SearchIndexConverter(block, id, tmpFileDir,
+    public void convertIndex(int id, IndexBlock block) throws ConversionUnnecessaryException, IOException {
+        var converter = new SearchIndexConverter(block, id, tmpFileDir,
                 preconverterOutputFile.get(id),
                 indexWriteWordsFile.get(id, block.id),
                 indexWriteUrlsFile.get(id, block.id),
-                partitoner,
+                partitioner,
                 domainBlacklist
                 );
+        converter.convert();
     }
+
     @SneakyThrows
     public SearchIndexPreconverter getIndexPreconverter() {
         File[] outputFiles = new File[DYNAMIC_BUCKET_LENGTH+1];
@@ -110,17 +113,13 @@ public class IndexServicesFactory {
         }
         return new SearchIndexPreconverter(writerIndexFile.get(0),
                 outputFiles,
-                partitoner,
+                partitioner,
                 domainBlacklist
         );
     }
 
     private File getPreconverterOutputFile(int i) {
         return preconverterOutputFile.get(i);
-    }
-
-    public long wordCount(int id) {
-        return SearchIndexConverter.wordCount(writerIndexFile.get(0));
     }
 
     @SneakyThrows

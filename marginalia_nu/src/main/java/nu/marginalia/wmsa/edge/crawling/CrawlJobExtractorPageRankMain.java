@@ -105,7 +105,7 @@ public class CrawlJobExtractorPageRankMain {
         try (var domainQuery = conn.prepareStatement(specificDomainSqlFromId);
              var urlQuery = conn.prepareStatement(urlsSql))
         {
-            domainQuery.setInt(1, domainId.getId());
+            domainQuery.setInt(1, domainId.id());
             ResultSet rsp = domainQuery.executeQuery();
             domainName = rsp.next() ? rsp.getString(1) : "";
 
@@ -113,10 +113,10 @@ public class CrawlJobExtractorPageRankMain {
             spec.id = createId(new EdgeDomain(domainName));
             spec.urls = new ArrayList<>(1000);
 
-            spec.crawlDepth = getCrawlDepth(new DomainWithId(domainName, domainId.getId()));
+            spec.crawlDepth = getCrawlDepth(new DomainWithId(domainName, domainId.id()));
 
             urlQuery.setString(1, domainName.toString());
-            urlQuery.setInt(2, domainId.getId());
+            urlQuery.setInt(2, domainId.id());
             urlQuery.setFetchSize(1000);
             rsp = urlQuery.executeQuery();
 

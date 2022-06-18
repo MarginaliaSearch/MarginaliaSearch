@@ -3,7 +3,6 @@ package nu.marginalia.wmsa.edge.search.command.commands;
 import com.google.inject.Inject;
 import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
-import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklist;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
 import nu.marginalia.wmsa.edge.search.EdgeSearchOperator;
@@ -12,7 +11,6 @@ import nu.marginalia.wmsa.edge.search.command.ResponseType;
 import nu.marginalia.wmsa.edge.search.command.SearchCommandInterface;
 import nu.marginalia.wmsa.edge.search.command.SearchParameters;
 import nu.marginalia.wmsa.edge.search.model.DecoratedSearchResultSet;
-import nu.marginalia.wmsa.edge.search.model.DecoratedSearchResults;
 import nu.marginalia.wmsa.edge.search.model.DomainInformation;
 import nu.marginalia.wmsa.edge.search.siteinfo.DomainInformationService;
 import nu.marginalia.wmsa.renderer.mustache.MustacheRenderer;
@@ -69,7 +67,7 @@ public class SiteSearchCommand implements SearchCommandInterface {
         if (null != domain) {
             resultSet = searchOperator.performDumbQuery(ctx, EdgeSearchProfile.CORPO, IndexBlock.Words, 100, 100, "site:"+domain);
 
-            screenshotPath = Path.of("/screenshot/" + dataStoreDao.getDomainId(domain).getId());
+            screenshotPath = Path.of("/screenshot/" + dataStoreDao.getDomainId(domain).id());
         }
         else {
             resultSet = new DecoratedSearchResultSet(Collections.emptyList());

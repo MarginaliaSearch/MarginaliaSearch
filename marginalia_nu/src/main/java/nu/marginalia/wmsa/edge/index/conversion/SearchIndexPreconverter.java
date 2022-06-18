@@ -3,7 +3,9 @@ package nu.marginalia.wmsa.edge.index.conversion;
 import com.google.inject.Inject;
 import gnu.trove.set.hash.TIntHashSet;
 import lombok.SneakyThrows;
+import nu.marginalia.util.multimap.MultimapFileLong;
 import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklist;
+import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,23 +48,16 @@ public class SearchIndexPreconverter {
             }
         }
 
-        final RandomAccessFile raf = new RandomAccessFile(inputFile, "r");
+        SearchIndexJournalReader indexJournalReader = new SearchIndexJournalReader(MultimapFileLong.forReading(inputFile.toPath()));
 
-        var fileLength = raf.readLong();
-        var wordCount = raf.readInt();
-        final int wordCountOriginal = wordCount;
+        final long wordCountOriginal = indexJournalReader.fileHeader.wordCount();
 
-        logger.info("Word Count: {}", wordCount);
-        logger.info("File Length: {}", fileLength);
-
-        var channel = raf.getChannel();
-
-        ByteBuffer inByteBuffer = ByteBuffer.allocateDirect(10_000);
+        logger.info("{}", indexJournalReader.fileHeader);
 
         RandomAccessFile[] randomAccessFiles = new RandomAccessFile[outputFiles.length];
         for (int i = 0; i < randomAccessFiles.length; i++) {
             randomAccessFiles[i] = new RandomAccessFile(outputFiles[i], "rw");
-            randomAccessFiles[i].seek(12);
+            randomAccessFiles[i].seek(SearchIndexJournalReader.FILE_HEADER_SIZE_BYTES);
         }
         FileChannel[] fileChannels = new FileChannel[outputFiles.length];
         for (int i = 0; i < fileChannels.length; i++) {
@@ -73,33 +68,24 @@ public class SearchIndexPreconverter {
         var lock = partitioner.getReadLock();
         try {
             lock.lock();
+            ByteBuffer buffer = ByteBuffer.allocateDirect(8192);
 
-            while (channel.position() < fileLength) {
-                inByteBuffer.clear();
-                inByteBuffer.limit(CHUNK_HEADER_SIZE);
-                channel.read(inByteBuffer);
-                inByteBuffer.flip();
-                long urlId = inByteBuffer.getLong();
-                int chunkBlock = inByteBuffer.getInt();
-                int count = inByteBuffer.getInt();
-                //            inByteBuffer.clear();
-                inByteBuffer.limit(count * 4 + CHUNK_HEADER_SIZE);
-                channel.read(inByteBuffer);
-                inByteBuffer.position(CHUNK_HEADER_SIZE);
-
-                for (int i = 0; i < count; i++) {
-                    wordCount = Math.max(wordCount, 1 + inByteBuffer.getInt());
+            for (var entry : indexJournalReader) {
+                if (!partitioner.isGoodUrl(entry.urlId())
+                    || spamDomains.contains(entry.domainId())) {
+                    continue;
                 }
 
-                inByteBuffer.position(count * 4 + CHUNK_HEADER_SIZE);
+                int domainId = entry.domainId();
+                buffer.clear();
+                entry.copyToBuffer(buffer);
 
+                for (int i = 0; i < randomAccessFiles.length; i++) {
+                    if (partitioner.filterUnsafe(domainId, i)) {
+                        buffer.flip();
 
-                if (isUrlAllowed(urlId)) {
-                    for (int i = 0; i < randomAccessFiles.length; i++) {
-                        if (partitioner.filterUnsafe(lock, (int) (urlId >>> 32L), i)) {
-                            inByteBuffer.flip();
-                            fileChannels[i].write(inByteBuffer);
-                        }
+                        while (buffer.position() < buffer.limit())
+                            fileChannels[i].write(buffer);
                     }
                 }
             }
@@ -108,26 +94,15 @@ public class SearchIndexPreconverter {
             lock.unlock();
         }
 
-        if (wordCountOriginal < wordCount) {
-            logger.warn("Raised word count {} => {}", wordCountOriginal, wordCount);
-        }
-
         for (int i = 0; i < randomAccessFiles.length; i++) {
             long pos = randomAccessFiles[i].getFilePointer();
             randomAccessFiles[i].seek(0);
             randomAccessFiles[i].writeLong(pos);
-            randomAccessFiles[i].writeInt(wordCount);
+            randomAccessFiles[i].writeLong(wordCountOriginal);
             fileChannels[i].force(true);
             fileChannels[i].close();
             randomAccessFiles[i].close();
         }
-    }
-
-    private boolean isUrlAllowed(long url) {
-        int urlId = (int)(url & 0xFFFF_FFFFL);
-        int domainId = (int)(url >>> 32);
-
-        return partitioner.isGoodUrl(urlId) && !spamDomains.contains(domainId);
     }
 
 }

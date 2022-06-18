@@ -17,13 +17,8 @@ import nu.marginalia.wmsa.edge.search.model.BrowseResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.*;
-import java.util.function.Function;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 
 public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
@@ -71,7 +66,7 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
     private <T> String idList(List<EdgeId<T>> ids) {
         StringJoiner j = new StringJoiner(",", "(", ")");
         for (var id : ids) {
-            j.add(Integer.toString(id.getId()));
+            j.add(Integer.toString(id.id()));
         }
         return j.toString();
     }
@@ -154,7 +149,7 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
         try (var connection = dataSource.getConnection()) {
             try (var stmt = connection.prepareStatement(q)) {
                 stmt.setFetchSize(count);
-                stmt.setInt(1, domainId.getId());
+                stmt.setInt(1, domainId.id());
                 stmt.setInt(2, count);
                 var rsp = stmt.executeQuery();
                 while (rsp.next()) {
@@ -183,7 +178,7 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
                 try (var stmt = connection.prepareStatement(q2)) {
 
                     stmt.setFetchSize(count/2);
-                    stmt.setInt(1, domainId.getId());
+                    stmt.setInt(1, domainId.id());
                     stmt.setInt(2, count/2 - domains.size());
                     var rsp = stmt.executeQuery();
                     while (rsp.next()  && domains.size() < count/2) {
@@ -214,7 +209,7 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
                     LIMIT ?""";
                 try (var stmt = connection.prepareStatement(q3)) {
                     stmt.setFetchSize(count/2);
-                    stmt.setInt(1, domainId.getId());
+                    stmt.setInt(1, domainId.id());
                     stmt.setInt(2, count/2 - domains.size());
 
                     var rsp = stmt.executeQuery();
@@ -275,7 +270,7 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
         try (var connection = dataSource.getConnection()) {
 
             try (var stmt = connection.prepareStatement("SELECT DOMAIN_NAME FROM EC_DOMAIN WHERE ID=?")) {
-                stmt.setInt(1, id.getId());
+                stmt.setInt(1, id.id());
                 var rsp = stmt.executeQuery();
                 if (rsp.next()) {
                     return new EdgeDomain(rsp.getString(1));

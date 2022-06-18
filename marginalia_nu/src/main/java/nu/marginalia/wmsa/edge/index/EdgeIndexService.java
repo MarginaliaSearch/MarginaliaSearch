@@ -11,12 +11,17 @@ import gnu.trove.set.hash.TIntHashSet;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import marcono1234.gson.recordadapter.RecordTypeAdapterFactory;
+import nu.marginalia.util.ListChunker;
 import nu.marginalia.wmsa.configuration.server.Initialization;
 import nu.marginalia.wmsa.configuration.server.MetricsServer;
 import nu.marginalia.wmsa.configuration.server.Service;
+import nu.marginalia.wmsa.edge.index.dictionary.DictionaryWriter;
+import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalEntry;
+import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalEntryHeader;
 import nu.marginalia.wmsa.edge.index.model.*;
 import nu.marginalia.wmsa.edge.index.reader.SearchIndexes;
-import nu.marginalia.wmsa.edge.index.journal.SearchIndexWriterImpl;
+import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalWriterImpl;
 import nu.marginalia.wmsa.edge.index.reader.query.IndexSearchBudget;
 import nu.marginalia.util.dict.DictionaryHashMap;
 import nu.marginalia.wmsa.edge.model.*;
@@ -48,8 +53,11 @@ public class EdgeIndexService extends Service {
     @NotNull
     private final Initialization init;
     private final SearchIndexes indexes;
+    private final DictionaryWriter dictionaryWriter;
 
-    private final Gson gson = new GsonBuilder().create();
+    private final Gson gson = new GsonBuilder()
+            .registerTypeAdapterFactory(RecordTypeAdapterFactory.builder().allowMissingComponentValues().create())
+            .create();
 
     private static final Histogram wmsa_edge_index_query_time
             = Histogram.build().name("wmsa_edge_index_query_time").help("-").register();
@@ -66,12 +74,13 @@ public class EdgeIndexService extends Service {
                             @Named("service-port") Integer port,
                             Initialization init,
                             MetricsServer metricsServer,
-                            SearchIndexes indexes
-                            ) {
+                            SearchIndexes indexes,
+                            IndexServicesFactory servicesFactory) {
         super(ip, port, init, metricsServer);
 
         this.init = init;
         this.indexes = indexes;
+        this.dictionaryWriter = servicesFactory.getDictionaryWriter();
 
         Spark.post("/words/", this::putWords);
         Spark.post("/search/", this::search, gson::toJson);
@@ -173,29 +182,19 @@ public class EdgeIndexService extends Service {
     public void putWords(EdgeId<EdgeDomain> domainId, EdgeId<EdgeUrl> urlId,
                          EdgePageWords words, int idx
     ) {
-        SearchIndexWriterImpl indexWriter = indexes.getIndexWriter(idx);
+        SearchIndexJournalWriterImpl indexWriter = indexes.getIndexWriter(idx);
 
-        if (!words.words.isEmpty()) {
-            if (words.size() < 1000) {
-                indexWriter.put(domainId, urlId, words.block, words.words);
-            } else {
-                chunks(words.words, 1000).forEach(chunk -> {
-                    indexWriter.put(domainId, urlId, words.block, chunk);
-                });
-            }
-        }
+        for (var chunk : ListChunker.chopList(words.words, SearchIndexJournalEntry.MAX_LENGTH)) {
+
+            var entry = new SearchIndexJournalEntry(getWordIds(chunk));
+            var header = new SearchIndexJournalEntryHeader(domainId, urlId, words.block);
+
+            indexWriter.put(header, entry);
+        };
     }
 
-
-    private <T> List<List<T>> chunks(Collection<T> coll, int size) {
-        List<List<T>> ret = new ArrayList<>();
-        List<T> data = List.copyOf(coll);
-
-        for (int i = 0; i < data.size(); i+=size) {
-            ret.add(data.subList(i, Math.min(data.size(), i+size)));
-        }
-
-        return ret;
+    private long[] getWordIds(List<String> words) {
+        return words.stream().filter(w -> w.length() < Byte.MAX_VALUE).mapToLong(dictionaryWriter::get).toArray();
     }
 
     private Object search(Request request, Response response) {
@@ -341,7 +340,7 @@ public class EdgeIndexService extends Service {
 
             getQuery(i, budget, sq.block, lv -> localFilter.filterRawValue(i, lv), searchTerms)
                     .mapToObj(id -> new EdgeSearchResultItem(i, sq.termSize(), id))
-                    .filter(ri -> !seenResults.contains(ri.url.getId()) && localFilter.test(i, domainCountFilter, ri))
+                    .filter(ri -> !seenResults.contains(ri.url.id()) && localFilter.test(i, domainCountFilter, ri))
                     .limit(specs.limitTotal * 3L)
                     .distinct()
                     .limit(Math.min(specs.limitByBucket
@@ -350,7 +349,7 @@ public class EdgeIndexService extends Service {
 
 
             for (var result : resultsForBucket) {
-                seenResults.add(result.url.getId());
+                seenResults.add(result.url.id());
             }
             for (var result : resultsForBucket) {
                 for (var searchTerm : sq.searchTermsInclude) {
@@ -401,7 +400,7 @@ public class EdgeIndexService extends Service {
         public boolean filterRawValue(int bucket, long value) {
             var domain = new EdgeId<EdgeDomain>((int)(value >>> 32));
 
-            if (domain.getId() == Integer.MAX_VALUE) {
+            if (domain.id() == Integer.MAX_VALUE) {
                 return true;
             }
 
@@ -409,11 +408,11 @@ public class EdgeIndexService extends Service {
         }
 
         long getKey(int bucket, EdgeId<EdgeDomain> id) {
-            return ((long)bucket) << 32 | id.getId();
+            return ((long)bucket) << 32 | id.id();
         }
 
         public boolean test(int bucket, EdgeSearchResultItem item) {
-            if (item.domain.getId() == Integer.MAX_VALUE) {
+            if (item.domain.id() == Integer.MAX_VALUE) {
                 return true;
             }
 
@@ -431,7 +430,7 @@ public class EdgeIndexService extends Service {
         }
 
         public boolean test(int bucket, DomainResultCountFilter root, EdgeSearchResultItem item) {
-            if (item.domain.getId() == Integer.MAX_VALUE) {
+            if (item.domain.id() == Integer.MAX_VALUE) {
                 return true;
             }
             return root.getCount(bucket, item) + resultsByDomain.adjustOrPutValue(getKey(bucket, item.domain), 1, 1) <= limitByDomain;

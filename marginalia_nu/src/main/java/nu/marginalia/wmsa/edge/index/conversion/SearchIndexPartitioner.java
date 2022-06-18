@@ -122,7 +122,7 @@ public class SearchIndexPartitioner {
     public Lock getReadLock() {
         return rwl.readLock();
     }
-    public boolean filterUnsafe(Lock lock, int domainId, int bucketId) {
+    public boolean filterUnsafe(int domainId, int bucketId) {
         return partitionSet.test(domainId, bucketId);
     }
 

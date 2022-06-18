@@ -121,7 +121,7 @@ public class EdgeSearchOperator {
         int domainId = -1;
         try {
             if (domain != null) {
-                return edgeDataStoreDao.getDomainId(new EdgeDomain(domain)).getId();
+                return edgeDataStoreDao.getDomainId(new EdgeDomain(domain)).id();
             }
         }
         catch (NoSuchElementException ex) {
