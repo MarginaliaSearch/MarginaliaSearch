@@ -5,6 +5,8 @@ import nu.marginalia.util.btree.model.BTreeHeader;
 import nu.marginalia.util.multimap.MultimapFileLong;
 import nu.marginalia.util.multimap.MultimapSearcher;
 
+import javax.annotation.CheckReturnValue;
+
 import static java.lang.Math.min;
 
 public class BTreeReader {
@@ -37,19 +39,22 @@ public class BTreeReader {
         final long key = keyRaw & ctx.equalityMask();
         final long dataAddress = header.dataOffsetLongs();
 
-        if (header.layers() == 0) { // For small data, we only have a data block
-            return dataSearcher.binarySearch(key, dataAddress, header.numEntries());
-        }
+        final long searchStart;
+        final long numEntries;
 
-        // Search index layers
-        long dataLayerOffset = searchIndex(header, key);
-        if (dataLayerOffset < 0) {
-            return dataLayerOffset;
+        if (header.layers() == 0) { // For small data, there is no index block, only a flat data block
+            searchStart = dataAddress;
+            numEntries = header.numEntries();
         }
+        else {
+            long dataLayerOffset = searchIndex(header, key);
+            if (dataLayerOffset < 0) {
+                return dataLayerOffset;
+            }
 
-        // Search the corresponding data block
-        final long searchStart = dataAddress + dataLayerOffset * ctx.entrySize();
-        final long numEntries = min(header.numEntries() - dataLayerOffset, blockSize);
+            searchStart = dataAddress + dataLayerOffset * ctx.entrySize();
+            numEntries = min(header.numEntries() - dataLayerOffset, blockSize);
+        }
 
         return dataSearcher.binarySearch(key, searchStart, numEntries);
     }
@@ -61,14 +66,15 @@ public class BTreeReader {
         long layerOffset = 0;
 
         for (int i = header.layers() - 1; i >= 0; --i) {
-            final long layerBlockOffset = header.relativeIndexLayerOffset(ctx, i) + layerOffset;
+            final long indexLayerBlockOffset = header.relativeIndexLayerOffset(ctx, i) + layerOffset;
 
-            final long nextLayerOffset = indexSearch(key, indexAddress + layerBlockOffset, blockSize);
+            final long nextLayerOffset = indexSearch(key, indexAddress + indexLayerBlockOffset, blockSize);
             if (nextLayerOffset < 0)
-                return -1;
+                return nextLayerOffset;
 
-            layerOffset = blockSize *(nextLayerOffset + layerOffset);
+            layerOffset = blockSize * (nextLayerOffset + layerOffset);
         }
+
         return layerOffset;
     }
 
