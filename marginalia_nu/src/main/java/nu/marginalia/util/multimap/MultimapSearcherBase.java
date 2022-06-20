@@ -29,7 +29,7 @@ public class MultimapSearcherBase {
         return false;
     }
 
-    public long binarySearchOffset(long key, long fromIndex, long n) {
+    public long binarySearchUpper(long key, long fromIndex, long n) {
         long low = 0;
         long high = n - 1;
 
@@ -48,7 +48,7 @@ public class MultimapSearcherBase {
     }
 
 
-    public long binarySearchOffset(long key, long fromIndex, long n, long mask) {
+    public long binarySearchUpper(long key, long fromIndex, long n, long mask) {
         long low = 0;
         long high = n - 1;
 
@@ -67,7 +67,7 @@ public class MultimapSearcherBase {
     }
 
 
-    public long binarySearchOffset(long key, long fromIndex, int step, long n, long mask) {
+    public long binarySearchUpper(long key, long fromIndex, int step, long n, long mask) {
         long low = 0;
         long high = n - 1;
 
@@ -85,7 +85,7 @@ public class MultimapSearcherBase {
         return fromIndex + low;
     }
 
-    public long binarySearchUpperBound(long key, long fromIndex, long n) {
+    public long binarySearch(long key, long fromIndex, long n) {
         long low = 0;
         long high = n - 1;
 
@@ -104,7 +104,7 @@ public class MultimapSearcherBase {
     }
 
 
-    public long binarySearchUpperBound(long key, long fromIndex, long n, long mask) {
+    public long binarySearch(long key, long fromIndex, long n, long mask) {
         long low = 0;
         long high = n - 1;
 
@@ -123,7 +123,7 @@ public class MultimapSearcherBase {
     }
 
 
-    public long binarySearchUpperBound(long key, long fromIndex, int step, long n, long mask) {
+    public long binarySearch(long key, long fromIndex, int step, long n, long mask) {
         long low = 0;
         long high = n - 1;
 

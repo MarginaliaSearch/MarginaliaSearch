@@ -1,8 +1,8 @@
 package nu.marginalia.util.multimap;
 
 public interface MultimapSearcher {
+    long binarySearchUpper(long key, long fromIndex, long n);
     long binarySearch(long key, long fromIndex, long n);
-    long binarySearchUpperBound(long key, long fromIndex, long n);
 
     static MultimapSearcher forContext(MultimapFileLongSlice slice, long mask, int stepSize) {
         if (mask == ~0L && stepSize == 1) {
@@ -25,13 +25,13 @@ class SimpleMultimapSearcher implements  MultimapSearcher {
     }
 
     @Override
-    public long binarySearch(long key, long fromIndex, long n) {
-        return base.binarySearchOffset(key, fromIndex, n);
+    public long binarySearchUpper(long key, long fromIndex, long n) {
+        return base.binarySearchUpper(key, fromIndex, n);
     }
 
     @Override
-    public long binarySearchUpperBound(long key, long fromIndex, long n) {
-        return base.binarySearchUpperBound(key, fromIndex, n);
+    public long binarySearch(long key, long fromIndex, long n) {
+        return base.binarySearch(key, fromIndex, n);
     }
 }
 
@@ -46,13 +46,13 @@ class MaskedMultimapSearcher implements  MultimapSearcher {
     }
 
     @Override
-    public long binarySearch(long key, long fromIndex, long n) {
-        return base.binarySearchOffset(key, fromIndex, n, mask);
+    public long binarySearchUpper(long key, long fromIndex, long n) {
+        return base.binarySearchUpper(key, fromIndex, n, mask);
     }
 
     @Override
-    public long binarySearchUpperBound(long key, long fromIndex, long n) {
-        return base.binarySearchUpperBound(key, fromIndex, n, mask);
+    public long binarySearch(long key, long fromIndex, long n) {
+        return base.binarySearch(key, fromIndex, n, mask);
     }
 }
 
@@ -69,12 +69,12 @@ class SteppingMaskedMultimapSearcher implements  MultimapSearcher {
     }
 
     @Override
-    public long binarySearch(long key, long fromIndex, long n) {
-        return base.binarySearchOffset(key, fromIndex, step, n, mask);
+    public long binarySearchUpper(long key, long fromIndex, long n) {
+        return base.binarySearchUpper(key, fromIndex, step, n, mask);
     }
 
     @Override
-    public long binarySearchUpperBound(long key, long fromIndex, long n) {
-        return base.binarySearchUpperBound(key, fromIndex, step, n, mask);
+    public long binarySearch(long key, long fromIndex, long n) {
+        return base.binarySearch(key, fromIndex, step, n, mask);
     }
 }

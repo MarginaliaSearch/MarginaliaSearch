@@ -41,7 +41,7 @@ public class BTreeReader {
         final int blockSize = ctx.BLOCK_SIZE_WORDS();
 
         if (header.layers() == 0) { // For small data, we only have a data block
-            return dataSearcher.binarySearchUpperBound(key, dataAddress, header.numEntries());
+            return dataSearcher.binarySearch(key, dataAddress, header.numEntries());
         }
 
         final long indexOffset = header.indexOffsetLongs();
@@ -68,11 +68,11 @@ public class BTreeReader {
         final long lastItemInBlockAddress = searchStart + (long) blockSize * entrySize;
         final long searchEnd = Math.min(lastItemInBlockAddress, lastDataAddress);
 
-        return dataSearcher.binarySearchUpperBound(key, searchStart, (searchEnd - searchStart) / entrySize);
+        return dataSearcher.binarySearch(key, searchStart, (searchEnd - searchStart) / entrySize);
     }
 
     private long indexSearch(long key, long start, long n) {
-        return indexSearcher.binarySearch(key, start, n) - start;
+        return indexSearcher.binarySearchUpper(key, start, n) - start;
     }
 
 }
