@@ -24,6 +24,11 @@ public class MultimapFileLongOffsetSlice implements MultimapFileLongSlice {
     }
 
     @Override
+    public void setRange(long idx, int n, long val) {
+        map.setRange(off+idx, n, val);
+    }
+
+    @Override
     public long get(long idx) {
         return map.get(off+idx);
     }

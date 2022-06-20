@@ -97,8 +97,8 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
                 readableSize(mapSizeBytes), readableSize(8L*bufferSizeWords), mode);
     }
 
-    public MultimapSearcher createSearcher() {
-        return new MultimapSearcher(this);
+    public MultimapSearcherBase createSearcher() {
+        return new MultimapSearcherBase(this);
     }
     public MultimapSorter createSorter(Path tmpFile, int internalSortLimit) {
         return new MultimapSorter(this, tmpFile, internalSortLimit);
@@ -330,6 +330,34 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
             i+=l;
         }
 
+    }
+
+    @Override
+    public void setRange(long idx, int n, long val) {
+        if (n == 0) return;
+
+        if (idx+n >= mappedSize) {
+            grow(idx+n);
+        }
+        int iN = (int)((idx + n) / bufferSize);
+
+        for (int i = 0; i < n; ) {
+            int i0 = (int)((idx + i) / bufferSize);
+
+            int bufferOffset = (int) ((idx+i) % bufferSize);
+            var buffer = buffers.get(i0);
+
+            final int l;
+
+            if (i0 < iN) l = bufferSize - bufferOffset;
+            else l = Math.min(n - i, bufferSize - bufferOffset);
+
+            for (int p = 0; p < l; p++) {
+                buffer.put(bufferOffset + p, val);
+            }
+
+            i+=l;
+        }
     }
 
 

@@ -9,6 +9,8 @@ public interface MultimapFileLongSlice {
 
     void put(long idx, long val);
 
+    void setRange(long idx, int n, long val);
+
     long get(long idx);
 
     void read(long[] vals, long idx);

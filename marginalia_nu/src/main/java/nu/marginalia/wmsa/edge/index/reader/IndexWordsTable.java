@@ -45,12 +45,12 @@ public class IndexWordsTable implements AutoCloseable {
 
     private static MultimapFileLong openWordsFile(RandomAccessFile wordsFile) throws IOException {
         return new MultimapFileLong(wordsFile,
-                FileChannel.MapMode.READ_ONLY, wordsFile.length(), BUFFER_SIZE, false);
+                FileChannel.MapMode.READ_ONLY, wordsFile.length(), BUFFER_SIZE);
     }
 
     public long positionForWord(int wordId) {
 
-        long offset = reader.offsetForEntry(header, wordId);
+        long offset = reader.findEntry(header, wordId);
         if (offset < 0) {
             return -1L;
         }
@@ -60,7 +60,7 @@ public class IndexWordsTable implements AutoCloseable {
 
     public int wordLength(int wordId) {
 
-        long offset = reader.offsetForEntry(header, wordId);
+        long offset = reader.findEntry(header, wordId);
         if (offset < 0) {
             return -1;
         }

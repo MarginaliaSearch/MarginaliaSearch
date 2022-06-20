@@ -82,7 +82,7 @@ public class SearchIndex implements  AutoCloseable {
         if (!range.isPresent())
             return false;
 
-        return bTreeReader.offsetForEntry(bTreeReader.getHeader(range.dataOffset), url) >= 0;
+        return bTreeReader.findEntry(bTreeReader.getHeader(range.dataOffset), url) >= 0;
     }
 
     public class UrlIndexTree {

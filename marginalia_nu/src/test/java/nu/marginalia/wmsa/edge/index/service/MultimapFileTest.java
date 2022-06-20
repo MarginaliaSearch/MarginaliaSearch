@@ -56,7 +56,7 @@ class MultimapFileTest {
     @SneakyThrows
     @Test
     void put() {
-        var file = new MultimapFileLong(new RandomAccessFile(tmp, "rw"), FileChannel.MapMode.READ_WRITE, 32, 8, false);
+        var file = new MultimapFileLong(new RandomAccessFile(tmp, "rw"), FileChannel.MapMode.READ_WRITE, 32, 8);
         for (int i = 0; i < 32; i++) {
             file.put(i, i);
         }
@@ -68,7 +68,7 @@ class MultimapFileTest {
     @SneakyThrows
     @Test
     void read() {
-        var file = new MultimapFileLong(new RandomAccessFile(tmp, "rw"), FileChannel.MapMode.READ_WRITE, 32, 8, false);
+        var file = new MultimapFileLong(new RandomAccessFile(tmp, "rw"), FileChannel.MapMode.READ_WRITE, 32, 8);
         for (int i = 0; i < 32; i++) {
             file.put(i, i);
         }
@@ -85,7 +85,7 @@ class MultimapFileTest {
 
     @Test
     void write() throws IOException {
-        var file = new MultimapFileLong(new RandomAccessFile(tmp, "rw"), FileChannel.MapMode.READ_WRITE, 32, 8, false);
+        var file = new MultimapFileLong(new RandomAccessFile(tmp, "rw"), FileChannel.MapMode.READ_WRITE, 32, 8);
 
         for (int i = 0; i < 32-6; i++) {
             file.write(new long[] { 0,1,2,3,4,5}, i);
@@ -98,7 +98,7 @@ class MultimapFileTest {
 
     @Test
     void sortInternal() throws IOException {
-        var file = new MultimapFileLong(new RandomAccessFile(tmp, "rw"), FileChannel.MapMode.READ_WRITE, 32, 8, false);
+        var file = new MultimapFileLong(new RandomAccessFile(tmp, "rw"), FileChannel.MapMode.READ_WRITE, 32, 8);
         var sorter = file.createSorter(Path.of("/tmp"), 16);
         var searcher = file.createSearcher();
         for (int i = 0; i < 32; i++) {
@@ -109,13 +109,13 @@ class MultimapFileTest {
 
         for (int i = 2+1; i < 16; i++) {
             assertTrue(file.get(i) > file.get(i-1));
-            assertTrue(searcher.binarySearch(file.get(i), 2, 18));
+            assertTrue(searcher.binarySearchTest(file.get(i), 2, 16));
         }
     }
 
     @Test
     void sortExternal() throws IOException {
-        var file = new MultimapFileLong(new RandomAccessFile(tmp, "rw"), FileChannel.MapMode.READ_WRITE, 32, 8, false);
+        var file = new MultimapFileLong(new RandomAccessFile(tmp, "rw"), FileChannel.MapMode.READ_WRITE, 32, 8);
         var sorter = file.createSorter(Path.of("/tmp"), 2);
         var searcher = file.createSearcher();
 
@@ -128,7 +128,7 @@ class MultimapFileTest {
 
         for (int i = 2+1; i < 16; i++) {
             assertTrue(file.get(i) > file.get(i-1));
-            assertTrue(searcher.binarySearch(file.get(i), 2, 18));
+            assertTrue(searcher.binarySearchTest(file.get(i), 2, 16));
         }
     }
 
