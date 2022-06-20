@@ -4,7 +4,6 @@ import nu.marginalia.util.btree.model.BTreeContext;
 import nu.marginalia.util.btree.model.BTreeHeader;
 import nu.marginalia.util.multimap.MultimapFileLong;
 import nu.marginalia.util.multimap.MultimapSearcher;
-import org.jetbrains.annotations.Nullable;
 
 import static java.lang.Math.min;
 
@@ -33,8 +32,9 @@ public class BTreeReader {
      * @return file offset of entry matching keyRaw, negative if absent
      */
     public long findEntry(BTreeHeader header, final long keyRaw) {
-        final long key = keyRaw & ctx.equalityMask();
         final int blockSize = ctx.BLOCK_SIZE_WORDS();
+
+        final long key = keyRaw & ctx.equalityMask();
         final long dataAddress = header.dataOffsetLongs();
 
         if (header.layers() == 0) { // For small data, we only have a data block
