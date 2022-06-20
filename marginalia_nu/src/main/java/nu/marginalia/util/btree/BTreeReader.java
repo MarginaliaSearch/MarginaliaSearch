@@ -4,15 +4,14 @@ import nu.marginalia.util.btree.model.BTreeContext;
 import nu.marginalia.util.btree.model.BTreeHeader;
 import nu.marginalia.util.multimap.MultimapFileLong;
 import nu.marginalia.util.multimap.MultimapSearcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jetbrains.annotations.Nullable;
+
+import static java.lang.Math.min;
 
 public class BTreeReader {
 
     private final MultimapFileLong file;
     private final BTreeContext ctx;
-
-    private final Logger logger = LoggerFactory.getLogger(BTreeReader.class);
 
     private final MultimapSearcher indexSearcher;
     private final MultimapSearcher dataSearcher;
@@ -35,40 +34,42 @@ public class BTreeReader {
      */
     public long findEntry(BTreeHeader header, final long keyRaw) {
         final long key = keyRaw & ctx.equalityMask();
-
-        final long dataAddress = header.dataOffsetLongs();
-        final int entrySize = ctx.entrySize();
         final int blockSize = ctx.BLOCK_SIZE_WORDS();
+        final long dataAddress = header.dataOffsetLongs();
 
         if (header.layers() == 0) { // For small data, we only have a data block
             return dataSearcher.binarySearch(key, dataAddress, header.numEntries());
         }
 
-        final long indexOffset = header.indexOffsetLongs();
-
-        // Search the top layer
-        long layerOffset = indexSearch(key, indexOffset, blockSize);
-        if (layerOffset < 0) return -1;
-
-        // Search intermediary layers
-        for (int i = header.layers() - 2; i >= 0; --i) {
-            final long layerAddressBase = indexOffset + header.relativeIndexLayerOffset(ctx, i);
-            final long layerBlockOffset = layerAddressBase + layerOffset;
-
-            final long nextLayerOffset = indexSearch(key, layerBlockOffset, blockSize);
-            if (nextLayerOffset < 0)
-                return -1;
-
-            layerOffset = blockSize*(nextLayerOffset + layerOffset);
+        // Search index layers
+        long dataLayerOffset = searchIndex(header, key);
+        if (dataLayerOffset < 0) {
+            return dataLayerOffset;
         }
 
         // Search the corresponding data block
-        final long searchStart = dataAddress + layerOffset * entrySize;
-        final long lastDataAddress = dataAddress + (long) header.numEntries() * entrySize;
-        final long lastItemInBlockAddress = searchStart + (long) blockSize * entrySize;
-        final long searchEnd = Math.min(lastItemInBlockAddress, lastDataAddress);
+        final long searchStart = dataAddress + dataLayerOffset * ctx.entrySize();
+        final long numEntries = min(header.numEntries() - dataLayerOffset, blockSize);
 
-        return dataSearcher.binarySearch(key, searchStart, (searchEnd - searchStart) / entrySize);
+        return dataSearcher.binarySearch(key, searchStart, numEntries);
+    }
+
+    private long searchIndex(BTreeHeader header, long key) {
+        final int blockSize = ctx.BLOCK_SIZE_WORDS();
+        final long indexAddress = header.indexOffsetLongs();
+
+        long layerOffset = 0;
+
+        for (int i = header.layers() - 1; i >= 0; --i) {
+            final long layerBlockOffset = header.relativeIndexLayerOffset(ctx, i) + layerOffset;
+
+            final long nextLayerOffset = indexSearch(key, indexAddress + layerBlockOffset, blockSize);
+            if (nextLayerOffset < 0)
+                return -1;
+
+            layerOffset = blockSize *(nextLayerOffset + layerOffset);
+        }
+        return layerOffset;
     }
 
     private long indexSearch(long key, long start, long n) {

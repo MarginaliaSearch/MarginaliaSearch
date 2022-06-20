@@ -36,16 +36,13 @@ public record BTreeContext(int MAX_LAYERS,
     }
 
     public long indexLayerSize(int numWords, int level) {
+        final long layerSize = 1L<<(BLOCK_SIZE_BITS*(level+1));
+        final long numBlocks = numWords / layerSize;
 
-        long layerSize = 1L<<(BLOCK_SIZE_BITS*(level+1));
-        int numBlocks = 0;
-
-        numBlocks += numWords / layerSize;
         if (numWords % layerSize != 0) {
-            numBlocks++;
+            return BLOCK_SIZE_WORDS * (numBlocks + 1);
         }
-
-        return (long) BLOCK_SIZE_WORDS * numBlocks;
+        return BLOCK_SIZE_WORDS * numBlocks;
     }
 
 }
