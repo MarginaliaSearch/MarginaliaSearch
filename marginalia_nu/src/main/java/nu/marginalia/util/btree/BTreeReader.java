@@ -5,8 +5,6 @@ import nu.marginalia.util.btree.model.BTreeHeader;
 import nu.marginalia.util.multimap.MultimapFileLong;
 import nu.marginalia.util.multimap.MultimapSearcher;
 
-import javax.annotation.CheckReturnValue;
-
 import static java.lang.Math.min;
 
 public class BTreeReader {
@@ -68,7 +66,7 @@ public class BTreeReader {
         for (int i = header.layers() - 1; i >= 0; --i) {
             final long indexLayerBlockOffset = header.relativeIndexLayerOffset(ctx, i) + layerOffset;
 
-            final long nextLayerOffset = indexSearch(key, indexAddress + indexLayerBlockOffset, blockSize);
+            final long nextLayerOffset = relativePositionInIndex(key, indexAddress + indexLayerBlockOffset, blockSize);
             if (nextLayerOffset < 0)
                 return nextLayerOffset;
 
@@ -78,7 +76,7 @@ public class BTreeReader {
         return layerOffset;
     }
 
-    private long indexSearch(long key, long start, long n) {
+    private long relativePositionInIndex(long key, long start, long n) {
         return indexSearcher.binarySearchUpper(key, start, n) - start;
     }
 

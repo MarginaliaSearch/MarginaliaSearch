@@ -145,13 +145,8 @@ public class LinkParser {
     }
 
     private boolean isRelRelevant(String rel) {
-        if (null == rel) {
-            return true;
-        }
-        return switch (rel) {
-            case "noindex" -> false;
-            default -> true;
-        };
+        // this is null safe
+        return !"noindex".equalsIgnoreCase(rel);
     }
 
     private boolean isUrlRelevant(String href) {

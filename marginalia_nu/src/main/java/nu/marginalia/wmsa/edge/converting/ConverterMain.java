@@ -52,13 +52,6 @@ public class ConverterMain {
         injector.getInstance(ConverterMain.class);
     }
 
-    private static void requireArgs(String[] args, String... help) {
-        if (args.length != help.length) {
-            System.out.println("Usage: " + String.join(", ", help));
-            System.exit(255);
-        }
-    }
-
     @Inject
     public ConverterMain(
             EdgeCrawlPlan plan,
@@ -103,7 +96,8 @@ public class ConverterMain {
 
         domainToId.forEach((domain, id) -> {
             String fileName = idToFileName.get(id);
-            Path dest = getFilePath(plan.crawl.getDir(), fileName);
+            Path dest = plan.getCrawledFilePath(fileName);
+
             logger.info("{} - {} - {}", domain, id, dest);
 
             if (!processLog.isJobFinished(id)) {
@@ -127,11 +121,5 @@ public class ConverterMain {
     }
 
     record ProcessingInstructions(String id, List<Instruction> instructions) {}
-
-    private Path getFilePath(Path dir, String fileName) {
-        String sp1 = fileName.substring(0, 2);
-        String sp2 = fileName.substring(2, 4);
-        return dir.resolve(sp1).resolve(sp2).resolve(fileName);
-    }
 
 }

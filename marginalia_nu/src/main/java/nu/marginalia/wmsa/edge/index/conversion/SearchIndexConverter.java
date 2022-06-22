@@ -91,17 +91,12 @@ public class SearchIndexConverter {
         }
     }
 
-
-
     private WordIndexOffsetsTable createWordIndexTable(SearchIndexJournalReader journalReader,
                                                        File outputFileWords) throws IOException
     {
         final int topWord = (int) journalReader.fileHeader.wordCount();
 
-        logger.debug("Table size = {}", topWord);
         WordsTableWriter wordsTableWriter = new WordsTableWriter(topWord);
-
-        logger.debug("Reading words");
 
         for (var entry : journalReader) {
             if (!isRelevantEntry(entry)) {
@@ -119,8 +114,6 @@ public class SearchIndexConverter {
             }
         }
 
-        logger.debug("Rearranging table");
-
         wordsTableWriter.write(outputFileWords);
 
         return wordsTableWriter.getTable();
@@ -130,14 +123,11 @@ public class SearchIndexConverter {
                                 Path tmpUrlsFile,
                                 WordIndexOffsetsTable wordOffsetsTable) throws IOException
     {
-        logger.info("Table size = {}", wordOffsetsTable.length());
-
         long numberOfWordsTotal = 0;
         for (var entry : journalReader) {
             if (isRelevantEntry(entry))
                 numberOfWordsTotal += entry.wordCount();
         }
-
 
         try (RandomAccessFile urlsTmpFileRAF = new RandomAccessFile(tmpUrlsFile.toFile(), "rw");
              FileChannel urlsTmpFileChannel = urlsTmpFileRAF.getChannel()) {
@@ -168,7 +158,6 @@ public class SearchIndexConverter {
                     }
                 }
 
-
                 rwf.write(urlsTmpFileChannel);
             }
 
@@ -176,8 +165,6 @@ public class SearchIndexConverter {
 
             try (var urlsTmpFileMap = MultimapFileLong.forOutput(tmpUrlsFile, numberOfWordsTotal)) {
                 if (wordOffsetsTable.length() > 0) {
-                    logger.info("Sorting urls table");
-
                     var urlTmpFileSorter = urlsTmpFileMap.createSorter(tmpFileDir, internalSortLimit);
 
                     wordOffsetsTable.forEachRange(urlTmpFileSorter::sort);
@@ -188,7 +175,6 @@ public class SearchIndexConverter {
                 }
             }
 
-            logger.info("Writing BTree");
             try (var urlsFileMap = MultimapFileLong.forOutput(outputFileUrls.toPath(), numberOfWordsTotal)) {
                 var writer = new BTreeWriter(urlsFileMap, urlsBTreeContext);
 
@@ -205,7 +191,6 @@ public class SearchIndexConverter {
 
         }
     }
-
 
     private long translateUrl(long url) {
         int domainId = partitioner.translateId(bucketId, (int) (url >>> 32));

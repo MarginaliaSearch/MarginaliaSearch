@@ -125,7 +125,7 @@ public class RandomWriteFunnel implements AutoCloseable {
                         dest.putLong(addr, data);
                     }
                     catch (IndexOutOfBoundsException ex) {
-                        logger.info("!!!bad[{}]={}", addr, data);
+                        logger.info("Bad poke[{}]={}, this happens if an RWF is allocated with insufficient size", addr, data);
                     }
                 }
                 buffer.compact();

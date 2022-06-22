@@ -43,11 +43,11 @@ public class WordsTableWriter {
 
             var writer = new BTreeWriter(mmf, wordsBTreeContext);
 
-            writer.write(offset, tableSize, this::writeBTreeBlock);
+            writer.write(offset, tableSize, this::writeBTreeDataBlock);
         }
     }
 
-    private void writeBTreeBlock(MultimapFileLongSlice mapSlice) {
+    private void writeBTreeDataBlock(MultimapFileLongSlice mapSlice) {
         long urlFileOffset = 0;
         int idx = 0;
 
