@@ -19,6 +19,8 @@ import nu.marginalia.wmsa.edge.crawling.model.CrawlerDocumentStatus;
 import nu.marginalia.wmsa.edge.model.EdgeCrawlPlan;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,21 +103,40 @@ public class LinkKeywordExtractorMain {
         }
     }
 
-    private final Pattern anchorTextNoise = Pattern.compile("[\\s\"()“”:]+");
 
     private void processDocument(String docUrl, String documentBody) throws URISyntaxException {
-        var processed = Jsoup.parse(documentBody);
-
-        EdgeUrl documentUrl = new EdgeUrl(docUrl);
+        final Document processed = Jsoup.parse(documentBody);
+        final EdgeUrl documentUrl = new EdgeUrl(docUrl);
 
         for (var link : processed.getElementsByTag("a")) {
             if (link.hasAttr("href")) {
                 String href = link.attr("href");
-                String text = anchorTextNoise.matcher(link.text().toLowerCase()).replaceAll(" ").trim();
+                String text = getLinkText(link);
 
                 processAnchor(documentUrl, href, text);
             }
         }
+    }
+
+    private final Pattern anchorTextNoise = Pattern.compile("[\\s\"()“”:]+");
+
+    private String getLinkText(Element link) {
+        String text = link.text();
+
+        if (link.text().isBlank()) {
+            text = getLinkTextByImgAltTag(link);
+        }
+
+        return anchorTextNoise.matcher(text.toLowerCase()).replaceAll(" ").trim();
+    }
+
+    private String getLinkTextByImgAltTag(Element link) {
+        for (var img: link.getElementsByTag("img")) {
+            if (img.hasAttr("alt")) {
+                return img.attr("alt");
+            }
+        }
+        return "";
     }
 
     private void processAnchor(EdgeUrl documentUrl, String href, String text) {
