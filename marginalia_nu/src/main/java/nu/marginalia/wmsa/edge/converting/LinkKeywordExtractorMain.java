@@ -139,9 +139,9 @@ public class LinkKeywordExtractorMain {
                     continue;
 
                 String word = wordPos.wordLowerCase();
-                if (!WordPatterns.wordQualitiesPredicate.test(word) || !WordPatterns.filter(word))
-                    continue;
 
+                if (!WordPatterns.filter(word))
+                    continue;
 
                 if (!linkUrl.domain.equals(documentUrl.domain)) {
                     if (isNewKeywordForLink(word, linkUrl.toString())) {

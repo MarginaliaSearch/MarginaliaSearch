@@ -3,7 +3,9 @@ package nu.marginalia.util.language;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -13,21 +15,13 @@ public class WordPatterns {
 
     public static final String WORD_TOKEN_JOINER = "_";
     public static final Pattern wordPattern = Pattern.compile("[#]?[_@.a-zA-Z0-9'+\\-\\u00C0-\\u00D6\\u00D8-\\u00f6\\u00f8-\\u00ff]+[#]?");
-    public static final Pattern wordPatternRestrictive = Pattern.compile("[#]?[@a-zA-Z0-9'+\\-\\u00C0-\\u00D6\\u00D8-\\u00f6\\u00f8-\\u00ff]+[#]?");
-    public static final Pattern keyWordPattern = Pattern.compile("[A-Z\\u00C0-\\u00D6][_a-zA-Z\\u00C0-\\u00D6\\u00D8-\\u00f6\\u00f8-\\u00ff]{0,32}('[a-zA-Z])?");
     public static final Pattern wordAppendixPattern = Pattern.compile("[.]?[0-9a-zA-Z\\u00C0-\\u00D6\\u00D8-\\u00f6\\u00f8-\\u00ff]{1,3}[0-9]?");
-    public static final Pattern joinWord = Pattern.compile("(as|an|the|of|in|a)");
-    public static final Pattern keywordAppendixPattern = Pattern.compile("([0-9A-Z][A-Z0-9]{0,3})");
     public static final Pattern wordBreakPattern = Pattern.compile("([^_#@.a-zA-Z'+\\-0-9\\u00C0-\\u00D6\\u00D8-\\u00f6\\u00f8-\\u00ff]+)|[|]|(\\.(\\s+|$))");
     public static final Pattern characterNoisePattern = Pattern.compile("^[/+\\-]+$");
 
     public static final Predicate<String> wordQualitiesPredicate = wordPattern.asMatchPredicate();
-    public static final Predicate<String> restrictivePredicate = wordPatternRestrictive.asMatchPredicate();
     public static final Predicate<String> wordAppendixPredicate = wordAppendixPattern.asMatchPredicate();
-    public static final Predicate<String> keywordPredicate = keyWordPattern.asMatchPredicate();
-    public static final Predicate<String> keywordAppendixPredicate = keywordAppendixPattern.asMatchPredicate();
     public static final Predicate<String> wordPredicateEither = wordQualitiesPredicate.or(wordAppendixPredicate);
-    public static final Predicate<String> keywordPredicateEither = keywordPredicate.or(keywordAppendixPredicate);
     public static final Predicate<String> characterNoisePredicate = characterNoisePattern.asMatchPredicate();
 
     public static final Set<String> topWords;
@@ -83,16 +77,6 @@ public class WordPatterns {
             }
             if (numDigits > 6)
                 return false;
-        }
-
-        return true;
-    }
-
-    public static boolean filterStrict(String word) {
-
-        int numDigits = (int) word.chars().filter(Character::isDigit).count();
-        if (numDigits == word.length()) {
-            return false;
         }
 
         return true;
