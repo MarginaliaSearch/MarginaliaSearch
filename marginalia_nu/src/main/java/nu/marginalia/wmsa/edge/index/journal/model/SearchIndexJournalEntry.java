@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.edge.index.journal;
+package nu.marginalia.wmsa.edge.index.journal.model;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;

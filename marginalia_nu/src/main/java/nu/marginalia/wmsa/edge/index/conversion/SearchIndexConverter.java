@@ -1,24 +1,26 @@
 package nu.marginalia.wmsa.edge.index.conversion;
 
-import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklist;
-import nu.marginalia.wmsa.edge.index.conversion.words.WordIndexOffsetsTable;
-import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalEntry;
-import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalReader;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
-import nu.marginalia.wmsa.edge.index.conversion.words.WordsTableWriter;
+import nu.marginalia.util.RandomWriteFunnel;
 import nu.marginalia.util.btree.BTreeWriter;
 import nu.marginalia.util.btree.model.BTreeContext;
 import nu.marginalia.util.multimap.MultimapFileLong;
-import nu.marginalia.util.RandomWriteFunnel;
+import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklist;
+import nu.marginalia.wmsa.edge.index.conversion.words.WordIndexOffsetsTable;
+import nu.marginalia.wmsa.edge.index.conversion.words.WordsTableWriter;
+import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalReader;
+import nu.marginalia.wmsa.edge.index.journal.model.SearchIndexJournalEntry;
+import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalEntry.MAX_LENGTH;
+import static nu.marginalia.wmsa.edge.index.journal.model.SearchIndexJournalEntry.MAX_LENGTH;
 
 public class SearchIndexConverter {
     public static final BTreeContext urlsBTreeContext = new BTreeContext(5, 1, ~0, 8);

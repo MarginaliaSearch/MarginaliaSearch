@@ -3,13 +3,16 @@ package nu.marginalia.wmsa.edge.index.journal;
 import com.upserve.uppend.blobs.NativeIO;
 import nu.marginalia.util.multimap.MultimapFileLong;
 import nu.marginalia.util.multimap.MultimapFileLongSlice;
+import nu.marginalia.wmsa.edge.index.journal.model.SearchIndexJournalEntry;
+import nu.marginalia.wmsa.edge.index.journal.model.SearchIndexJournalEntryHeader;
+import nu.marginalia.wmsa.edge.index.journal.model.SearchIndexJournalFileHeader;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 
-import static nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalEntryHeader.HEADER_SIZE_LONGS;
+import static nu.marginalia.wmsa.edge.index.journal.model.SearchIndexJournalEntryHeader.HEADER_SIZE_LONGS;
 
 public class SearchIndexJournalReader implements Iterable<SearchIndexJournalReader.JournalEntry>  {
     public static final long FILE_HEADER_SIZE_LONGS = 2;

@@ -1,15 +1,15 @@
 package nu.marginalia.wmsa.edge.index.service;
 
 import lombok.SneakyThrows;
+import nu.marginalia.util.dict.DictionaryHashMap;
 import nu.marginalia.util.multimap.MultimapFileLong;
-import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalEntry;
-import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalEntryHeader;
 import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalReader;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
-import nu.marginalia.wmsa.edge.index.dictionary.DictionaryWriter;
-import nu.marginalia.wmsa.edge.index.reader.SearchIndexReader;
 import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalWriterImpl;
-import nu.marginalia.wmsa.edge.index.reader.query.IndexSearchBudget;
+import nu.marginalia.wmsa.edge.index.journal.model.SearchIndexJournalEntry;
+import nu.marginalia.wmsa.edge.index.journal.model.SearchIndexJournalEntryHeader;
+import nu.marginalia.wmsa.edge.index.lexicon.KeywordLexicon;
+import nu.marginalia.wmsa.edge.index.lexicon.journal.KeywordLexiconJournal;
+import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,12 +17,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 class SearchIndexJournalWriterTest {
-    DictionaryWriter dictionaryWriter;
+    KeywordLexicon keywordLexicon;
     SearchIndexJournalWriterImpl writer;
 
     Path indexFile;
@@ -37,11 +36,11 @@ class SearchIndexJournalWriterTest {
         dictionaryFile = Files.createTempFile("tmp", ".dict");
         dictionaryFile.toFile().deleteOnExit();
 
-        dictionaryWriter = new DictionaryWriter(dictionaryFile.toFile(), 1L<<16, false);
+        keywordLexicon = new KeywordLexicon(new KeywordLexiconJournal(dictionaryFile.toFile()), new DictionaryHashMap(1L<<16));
 
         indexFile = Files.createTempFile("tmp", ".idx");
         indexFile.toFile().deleteOnExit();
-        writer = new SearchIndexJournalWriterImpl(dictionaryWriter, indexFile.toFile());
+        writer = new SearchIndexJournalWriterImpl(keywordLexicon, indexFile.toFile());
 
         wordsFile1 = Files.createTempFile("words1", ".idx");
         urlsFile1 = Files.createTempFile("urls1", ".idx");
@@ -50,7 +49,7 @@ class SearchIndexJournalWriterTest {
     @SneakyThrows
     @AfterEach
     void tearDown() {
-        dictionaryWriter.close();
+        keywordLexicon.close();
         writer.close();
         indexFile.toFile().delete();
         dictionaryFile.toFile().delete();

@@ -1,15 +1,18 @@
 package nu.marginalia.wmsa.edge.index.service;
 
 import lombok.SneakyThrows;
-import nu.marginalia.wmsa.edge.index.conversion.SearchIndexPartitioner;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
-import nu.marginalia.wmsa.edge.index.dictionary.DictionaryReader;
-import nu.marginalia.wmsa.edge.index.dictionary.DictionaryWriter;
+import nu.marginalia.util.dict.DictionaryHashMap;
 import nu.marginalia.wmsa.edge.index.conversion.SearchIndexConverter;
+import nu.marginalia.wmsa.edge.index.conversion.SearchIndexPartitioner;
+import nu.marginalia.wmsa.edge.index.lexicon.KeywordLexicon;
+import nu.marginalia.wmsa.edge.index.lexicon.KeywordLexiconReadOnlyView;
+import nu.marginalia.wmsa.edge.index.lexicon.journal.KeywordLexiconJournal;
+import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -51,11 +54,16 @@ class DictionaryWriterTest {
                 new SearchIndexPartitioner(null),
                 val -> false);
     }
+    
+    KeywordLexiconJournal createJournal(File f) throws IOException {
+        return new KeywordLexiconJournal(f);
+    }
+
     @SneakyThrows
     @Test
     @Disabled
     void test() {
-        try (var dict = new DictionaryWriter(Path.of("/home/vlofgren/Code/data/dictionary.dat").toFile(), 1L<<16, false)) {
+        try (var dict = new KeywordLexicon(createJournal(Path.of("/home/vlofgren/Code/data/dictionary.dat").toFile()), new DictionaryHashMap(1L<<16))) {
             wait();
         }
     }
@@ -65,33 +73,33 @@ class DictionaryWriterTest {
     @Test
     void getFold() {
         var path = Files.createTempFile("dict", ".tmp");
-        try (var dict = new DictionaryWriter(path.toFile(), 1L<<16, false)) {
-            dict.get("hic");
-            dict.get("hac");
+        try (var dict = new KeywordLexicon(createJournal(path.toFile()), new DictionaryHashMap(1L<<16))) {
+            dict.getOrInsert("hic");
+            dict.getOrInsert("hac");
             dict.commitToDisk();
-            dict.get("quae");
-            dict.get("quis");
-            dict.get("quem1");
-            dict.get("quem2");
-            dict.get("quem3");
-            dict.get("quem4");
-            dict.get("quem5");
-            dict.get("quem6");
-            dict.get("quem7");
-            dict.get("quem8");
-            dict.get("quem9");
-            dict.get("quem10");
-            dict.get("cuis");
-            dict.get("haec_hic");
-            dict.get("hoc_hac_cuis");
+            dict.getOrInsert("quae");
+            dict.getOrInsert("quis");
+            dict.getOrInsert("quem1");
+            dict.getOrInsert("quem2");
+            dict.getOrInsert("quem3");
+            dict.getOrInsert("quem4");
+            dict.getOrInsert("quem5");
+            dict.getOrInsert("quem6");
+            dict.getOrInsert("quem7");
+            dict.getOrInsert("quem8");
+            dict.getOrInsert("quem9");
+            dict.getOrInsert("quem10");
+            dict.getOrInsert("cuis");
+            dict.getOrInsert("haec_hic");
+            dict.getOrInsert("hoc_hac_cuis");
             dict.commitToDisk();
-            assertNotEquals(0, dict.get("hac"));
-            assertEquals(0, dict.get("hic"));
+            assertNotEquals(0, dict.getOrInsert("hac"));
+            assertEquals(0, dict.getOrInsert("hic"));
         }
 
-        try (var dict = new DictionaryWriter(path.toFile(), 1L<<16, false)) {
-            assertNotEquals(0, dict.get("hoc"));
-            assertEquals(0, dict.get("hic"));
+        try (var dict = new KeywordLexicon(createJournal(path.toFile()), new DictionaryHashMap(1L<<16))) {
+            assertNotEquals(0, dict.getOrInsert("hoc"));
+            assertEquals(0, dict.getOrInsert("hic"));
         }
 
         path.toFile().delete();
@@ -101,24 +109,24 @@ class DictionaryWriterTest {
     @Test
     void get() {
         var path = Files.createTempFile("dict", ".tmp");
-        try (var dict = new DictionaryWriter(path.toFile(), 1L<<16, false)) {
-            dict.get("hic");
-            dict.get("hac");
-            dict.get("haec");
-            dict.get("hoc");
+        try (var dict = new KeywordLexicon(createJournal(path.toFile()), new DictionaryHashMap(1L<<16))) {
+            dict.getOrInsert("hic");
+            dict.getOrInsert("hac");
+            dict.getOrInsert("haec");
+            dict.getOrInsert("hoc");
             dict.commitToDisk();
-            dict.get("quae");
-            dict.get("quis");
-            dict.get("quem");
-            dict.get("cuis");
+            dict.getOrInsert("quae");
+            dict.getOrInsert("quis");
+            dict.getOrInsert("quem");
+            dict.getOrInsert("cuis");
             dict.commitToDisk();
-            assertNotEquals(0, dict.get("hac"));
-            assertEquals(0, dict.get("hic"));
+            assertNotEquals(0, dict.getOrInsert("hac"));
+            assertEquals(0, dict.getOrInsert("hic"));
         }
 
-        try (var dict = new DictionaryWriter(path.toFile(), 1L<<16, false)) {
-            assertNotEquals(0, dict.get("hoc"));
-            assertEquals(0, dict.get("hic"));
+        try (var dict = new KeywordLexicon(createJournal(path.toFile()), new DictionaryHashMap(1L<<16))) {
+            assertNotEquals(0, dict.getOrInsert("hoc"));
+            assertEquals(0, dict.getOrInsert("hic"));
         }
 
         path.toFile().delete();
@@ -129,25 +137,25 @@ class DictionaryWriterTest {
     void getDoubleWrite() {
         var path = Files.createTempFile("dict", ".tmp");
 
-        try (var dict = new DictionaryWriter(path.toFile(), 1L<<16, false)) {
+        try (var dict = new KeywordLexicon(createJournal(path.toFile()), new DictionaryHashMap(1L<<16))) {
             dict.commitToDisk();
         }
 
-        try (var dict = new DictionaryWriter(path.toFile(), 1L<<16, false)) {
-            dict.get("hic");
-            dict.get("hac");
-            dict.get("haec");
-            dict.get("hoc");
-            dict.get("quae");
-            dict.get("quis");
-            dict.get("quem");
-            dict.get("cuis");
+        try (var dict = new KeywordLexicon(createJournal(path.toFile()), new DictionaryHashMap(1L<<16))) {
+            dict.getOrInsert("hic");
+            dict.getOrInsert("hac");
+            dict.getOrInsert("haec");
+            dict.getOrInsert("hoc");
+            dict.getOrInsert("quae");
+            dict.getOrInsert("quis");
+            dict.getOrInsert("quem");
+            dict.getOrInsert("cuis");
             dict.commitToDisk();
-            assertNotEquals(0, dict.get("hac"));
-            assertEquals(0, dict.get("hic"));
+            assertNotEquals(0, dict.getOrInsert("hac"));
+            assertEquals(0, dict.getOrInsert("hic"));
         }
 
-        var dict = new DictionaryReader(new DictionaryWriter(path.toFile(), 1L<<16, false));
+        var dict = new KeywordLexiconReadOnlyView(new KeywordLexicon(createJournal(path.toFile()), new DictionaryHashMap(1L<<16)));
 
         assertNotEquals(0, dict.get("hoc"));
         assertEquals(0, dict.get("hic"));
@@ -160,38 +168,38 @@ class DictionaryWriterTest {
     void getDoubleWrite2() {
         var path = Files.createTempFile("dict", ".tmp");
 
-        try (var dict = new DictionaryWriter(path.toFile(), 1L<<16, false)) {
-            dict.get("hic");
-            dict.get("hac");
-            dict.get("haec");
-            dict.get("hoc");
-            dict.get("quae");
-            dict.get("quis");
-            dict.get("quem");
-            dict.get("cuis");
+        try (var dict = new KeywordLexicon(createJournal(path.toFile()), new DictionaryHashMap(1L<<16))) {
+            dict.getOrInsert("hic");
+            dict.getOrInsert("hac");
+            dict.getOrInsert("haec");
+            dict.getOrInsert("hoc");
+            dict.getOrInsert("quae");
+            dict.getOrInsert("quis");
+            dict.getOrInsert("quem");
+            dict.getOrInsert("cuis");
             dict.commitToDisk();
-            assertNotEquals(0, dict.get("hac"));
-            assertEquals(0, dict.get("hic"));
+            assertNotEquals(0, dict.getOrInsert("hac"));
+            assertEquals(0, dict.getOrInsert("hic"));
         }
 
-        try (var dict = new DictionaryWriter(path.toFile(), 1L<<16, false)) {
-            dict.get("fe");
-            dict.get("fi");
-            dict.get("fo");
-            dict.get("fum");
+        try (var dict = new KeywordLexicon(createJournal(path.toFile()), new DictionaryHashMap(1L<<16))) {
+            dict.getOrInsert("fe");
+            dict.getOrInsert("fi");
+            dict.getOrInsert("fo");
+            dict.getOrInsert("fum");
             dict.commitToDisk();
-            assertNotEquals(0, dict.get("hac"));
-            assertEquals(0, dict.get("hic"));
+            assertNotEquals(0, dict.getOrInsert("hac"));
+            assertEquals(0, dict.getOrInsert("hic"));
         }
 
-        try (var dict = new DictionaryWriter(path.toFile(), 1L<<16, false)) {
-            dict.get("bip");
-            dict.get("bap");
+        try (var dict = new KeywordLexicon(createJournal(path.toFile()), new DictionaryHashMap(1L<<16))) {
+            dict.getOrInsert("bip");
+            dict.getOrInsert("bap");
             dict.commitToDisk();
         }
 
 
-        var dict = new DictionaryReader(new DictionaryWriter(path.toFile(), 1L<<16, false));
+        var dict = new KeywordLexiconReadOnlyView(new KeywordLexicon(createJournal(path.toFile()), new DictionaryHashMap(1L<<16)));
 
         assertEquals(0, dict.get("hic"));
         assertEquals(1, dict.get("hac"));

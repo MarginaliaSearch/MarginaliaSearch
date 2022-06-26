@@ -13,18 +13,22 @@ import io.prometheus.client.Histogram;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import marcono1234.gson.recordadapter.RecordTypeAdapterFactory;
 import nu.marginalia.util.ListChunker;
+import nu.marginalia.util.dict.DictionaryHashMap;
 import nu.marginalia.wmsa.configuration.server.Initialization;
 import nu.marginalia.wmsa.configuration.server.MetricsServer;
 import nu.marginalia.wmsa.configuration.server.Service;
-import nu.marginalia.wmsa.edge.index.dictionary.DictionaryWriter;
-import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalEntry;
-import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalEntryHeader;
-import nu.marginalia.wmsa.edge.index.model.*;
-import nu.marginalia.wmsa.edge.index.reader.SearchIndexes;
 import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalWriterImpl;
+import nu.marginalia.wmsa.edge.index.journal.model.SearchIndexJournalEntry;
+import nu.marginalia.wmsa.edge.index.journal.model.SearchIndexJournalEntryHeader;
+import nu.marginalia.wmsa.edge.index.lexicon.KeywordLexicon;
+import nu.marginalia.wmsa.edge.index.model.EdgeIndexSearchTerms;
+import nu.marginalia.wmsa.edge.index.model.EdgePutWordsRequest;
+import nu.marginalia.wmsa.edge.index.model.IndexBlock;
+import nu.marginalia.wmsa.edge.index.reader.SearchIndexes;
 import nu.marginalia.wmsa.edge.index.reader.query.IndexSearchBudget;
-import nu.marginalia.util.dict.DictionaryHashMap;
-import nu.marginalia.wmsa.edge.model.*;
+import nu.marginalia.wmsa.edge.model.EdgeDomain;
+import nu.marginalia.wmsa.edge.model.EdgeId;
+import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgePageWordSet;
 import nu.marginalia.wmsa.edge.model.crawl.EdgePageWords;
 import nu.marginalia.wmsa.edge.model.search.*;
@@ -53,7 +57,7 @@ public class EdgeIndexService extends Service {
     @NotNull
     private final Initialization init;
     private final SearchIndexes indexes;
-    private final DictionaryWriter dictionaryWriter;
+    private final KeywordLexicon keywordLexicon;
 
     private final Gson gson = new GsonBuilder()
             .registerTypeAdapterFactory(RecordTypeAdapterFactory.builder().allowMissingComponentValues().create())
@@ -80,7 +84,7 @@ public class EdgeIndexService extends Service {
 
         this.init = init;
         this.indexes = indexes;
-        this.dictionaryWriter = servicesFactory.getDictionaryWriter();
+        this.keywordLexicon = servicesFactory.getKeywordLexicon();
 
         Spark.post("/words/", this::putWords);
         Spark.post("/search/", this::search, gson::toJson);
@@ -186,15 +190,18 @@ public class EdgeIndexService extends Service {
 
         for (var chunk : ListChunker.chopList(words.words, SearchIndexJournalEntry.MAX_LENGTH)) {
 
-            var entry = new SearchIndexJournalEntry(getWordIds(chunk));
+            var entry = new SearchIndexJournalEntry(getOrInsertWordIds(chunk));
             var header = new SearchIndexJournalEntryHeader(domainId, urlId, words.block);
 
             indexWriter.put(header, entry);
         };
     }
 
-    private long[] getWordIds(List<String> words) {
-        return words.stream().filter(w -> w.length() < Byte.MAX_VALUE).mapToLong(dictionaryWriter::get).toArray();
+    private long[] getOrInsertWordIds(List<String> words) {
+        return words.stream()
+                .filter(w -> w.length() < Byte.MAX_VALUE)
+                .mapToLong(keywordLexicon::getOrInsert)
+                .toArray();
     }
 
     private Object search(Request request, Response response) {

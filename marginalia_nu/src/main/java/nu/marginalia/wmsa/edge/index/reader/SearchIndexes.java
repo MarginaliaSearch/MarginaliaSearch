@@ -3,11 +3,11 @@ package nu.marginalia.wmsa.edge.index.reader;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.wmsa.configuration.server.Initialization;
+import nu.marginalia.wmsa.edge.index.EdgeIndexBucket;
 import nu.marginalia.wmsa.edge.index.IndexServicesFactory;
 import nu.marginalia.wmsa.edge.index.conversion.SearchIndexPartitioner;
-import nu.marginalia.wmsa.edge.index.EdgeIndexBucket;
-import nu.marginalia.wmsa.edge.index.dictionary.DictionaryReader;
 import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalWriterImpl;
+import nu.marginalia.wmsa.edge.index.lexicon.KeywordLexiconReadOnlyView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +29,7 @@ public class SearchIndexes {
 
     private final SearchIndexJournalWriterImpl primaryIndexWriter;
     private final SearchIndexJournalWriterImpl secondaryIndexWriter;
-    private DictionaryReader dictionaryReader = null;
+    private KeywordLexiconReadOnlyView keywordLexiconReadOnlyView = null;
 
     @Inject
     public SearchIndexes(IndexServicesFactory servicesFactory, SearchIndexPartitioner partitioner) {
@@ -105,8 +105,8 @@ public class SearchIndexes {
     }
 
     @Nullable
-    public DictionaryReader getDictionaryReader() {
-        return dictionaryReader;
+    public KeywordLexiconReadOnlyView getDictionaryReader() {
+        return keywordLexiconReadOnlyView;
     }
 
 
@@ -127,7 +127,7 @@ public class SearchIndexes {
             }
 
             logger.info("Initializing dictionary reader");
-            dictionaryReader = servicesFactory.getDictionaryReader();
+            keywordLexiconReadOnlyView = servicesFactory.getDictionaryReader();
         }
         finally {
             opsLock.unlock();

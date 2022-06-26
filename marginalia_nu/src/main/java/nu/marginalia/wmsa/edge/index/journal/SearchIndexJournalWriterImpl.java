@@ -3,7 +3,9 @@ package nu.marginalia.wmsa.edge.index.journal;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import lombok.SneakyThrows;
-import nu.marginalia.wmsa.edge.index.dictionary.DictionaryWriter;
+import nu.marginalia.wmsa.edge.index.journal.model.SearchIndexJournalEntry;
+import nu.marginalia.wmsa.edge.index.journal.model.SearchIndexJournalEntryHeader;
+import nu.marginalia.wmsa.edge.index.lexicon.KeywordLexicon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +18,7 @@ import java.nio.channels.FileChannel;
 import java.util.concurrent.TimeUnit;
 
 public class SearchIndexJournalWriterImpl implements SearchIndexJournalWriter {
-    private final DictionaryWriter dictionaryWriter;
+    private final KeywordLexicon dictionaryWriter;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Disposable writerTask;
@@ -28,7 +30,7 @@ public class SearchIndexJournalWriterImpl implements SearchIndexJournalWriter {
     private long pos;
 
     @SneakyThrows
-    public SearchIndexJournalWriterImpl(DictionaryWriter dictionaryWriter, File indexFile) {
+    public SearchIndexJournalWriterImpl(KeywordLexicon dictionaryWriter, File indexFile) {
         this.dictionaryWriter = dictionaryWriter;
         initializeIndexFile(indexFile);
 

@@ -82,9 +82,6 @@ public class DictionaryHashMap {
         }
     }
 
-    public int memSz() {
-        return dictionaryData.size();
-    }
     public int size() {
         return sz.get();
     }
@@ -101,20 +98,20 @@ public class DictionaryHashMap {
         buffers[buffer].put(bufferIdx, val);
     }
 
-    public int put(byte[] data, int value) {
+    public int put(long key) {
 
-        long hash = longHash(data) & 0x7FFF_FFFF_FFFF_FFFFL;
+        long hash = key & 0x7FFF_FFFF_FFFF_FFFFL;
 
         long idx = hash % hashTableSize;
 
         if (getCell(idx) == NO_VALUE) {
-            return setValue(data, value, idx);
+            return setValue(key, idx);
         }
 
-        return putRehash(data, value, idx, hash);
+        return putRehash(key, idx, hash);
     }
 
-    private int putRehash(byte[] data, int value, long idx, long hash) {
+    private int putRehash(long key, long idx, long hash) {
         final long pStride = 1 + (hash % (hashTableSize - 2));
 
         for (long j = 1; j < maxProbeLength; j++) {
@@ -129,9 +126,9 @@ public class DictionaryHashMap {
             if (val == NO_VALUE) {
                 probe_count_metrics.set(j);
 
-                return setValue(data, value, idx);
+                return setValue(key, idx);
             }
-            else if (dictionaryData.keyEquals(val, data)) {
+            else if (dictionaryData.keyEquals(val, key)) {
                 return val;
             }
         }
@@ -139,16 +136,16 @@ public class DictionaryHashMap {
         throw new IllegalStateException("DictionaryHashMap full @ size " + size() + "/" + hashTableSize + ", " + round((100.0*size()) / hashTableSize) + "%");
     }
 
-    private int setValue(byte[] data, int value, long cell) {
+    private int setValue(long key, long cell) {
         sz.incrementAndGet();
 
-        int di = dictionaryData.add(data, value);
+        int di = dictionaryData.add(key);
         setCell(cell, di);
         return di;
     }
 
-    public int get(byte[] data) {
-        final long hash = longHash(data) & 0x7FFF_FFFF_FFFF_FFFFL;
+    public int get(long key) {
+        final long hash = key & 0x7FFF_FFFF_FFFF_FFFFL;
         final long cell = hash % hashTableSize;
 
         if (getCell(cell) == NO_VALUE) {
@@ -157,15 +154,15 @@ public class DictionaryHashMap {
         else {
             int val = getCell(cell);
 
-            if (dictionaryData.keyEquals(val, data)) {
-                return dictionaryData.getValue(val);
+            if (dictionaryData.keyEquals(val, key)) {
+                return val;
             }
         }
 
-        return getRehash(data, cell, hash);
+        return getRehash(key, cell, hash);
     }
 
-    private int getRehash(byte[] data, long idx, long hash) {
+    private int getRehash(long key, long idx, long hash) {
         final long pStride = 1 + (hash % (hashTableSize - 2));
 
         for (long j = 1; j < maxProbeLength; j++) {
@@ -180,29 +177,12 @@ public class DictionaryHashMap {
             if (val == NO_VALUE) {
                 return NO_VALUE;
             }
-            else if (dictionaryData.keyEquals(val, data)) {
-                return dictionaryData.getValue(val);
+            else if (dictionaryData.keyEquals(val, key)) {
+                return val;
             }
         }
 
         throw new IllegalStateException("DictionaryHashMap full @ size " + size() + "/" + hashTableSize + ", " + round((100.0*size()) / hashTableSize) + "%");
-    }
-
-    private long longHash(byte[] bytes) {
-        if (bytes == null)
-            return 0;
-
-        // https://cp-algorithms.com/string/string-hashing.html
-        int p = 127;
-        long m = (1L<<61)-1;
-        long p_power = 1;
-        long hash_val = 0;
-
-        for (byte element : bytes) {
-            hash_val = (hash_val + (element+1) * p_power) % m;
-            p_power = (p_power * p) % m;
-        }
-        return hash_val;
     }
 
 }
