@@ -74,9 +74,6 @@ public class AnchorTextExtractor {
         if (!isInterestingAnchorText(text)) {
             return;
         }
-        if (href.contains("?")) {
-            return;
-        }
 
         var optLinkUrl = linkParser.parseLink(documentUrl, href);
         if (optLinkUrl.isEmpty()) return;
@@ -92,13 +89,16 @@ public class AnchorTextExtractor {
                 continue;
 
             word = word.toLowerCase();
-            if (!WordPatterns.filter(word))
+            if (!WordPatterns.filter(word)) {
                 continue;
+            }
 
-            if (!linkUrl.domain.equals(documentUrl.domain)) {
-                if (isNewKeywordForLink(word, linkUrl.toString())) {
-                    linkKeywordConsumer.accept(linkUrl, word);
-                }
+            if (linkUrl.domain.equals(documentUrl.domain)) {
+                continue;
+            }
+
+            if (isNewKeywordForLink(word, linkUrl.toString())) {
+                linkKeywordConsumer.accept(linkUrl, word);
             }
         }
     }

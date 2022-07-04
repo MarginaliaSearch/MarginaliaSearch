@@ -63,7 +63,7 @@ public class CrawlerRetreiver {
 
         if (queue.peek() != null) {
             var fst = queue.peek();
-            var root = new EdgeUrl(fst.proto, fst.domain, fst.port, "/");
+            var root = new EdgeUrl(fst.proto, fst.domain, fst.port, "/", null);
             if (known.add(root))
                 queue.addFirst(root);
         }
@@ -110,7 +110,7 @@ public class CrawlerRetreiver {
                     .build());
         }
 
-        var fetchResult = fetcher.probeDomain(new EdgeUrl(fst.proto, fst.domain, fst.port, "/"));
+        var fetchResult = fetcher.probeDomain(fst.domain.toRootUrl());
         if (!fetchResult.ok()) {
             logger.debug("Bad status on {}", domain);
             return Optional.of(createErrorPostFromStatus(fetchResult));
@@ -232,7 +232,7 @@ public class CrawlerRetreiver {
     }
 
     private Optional<EdgeUrl> findCanonicalUrl(EdgeUrl baseUrl, Document parsed) {
-        baseUrl = baseUrl.withPath("/");
+        baseUrl = baseUrl.domain.toRootUrl();
 
         for (var link : parsed.select("link[rel=canonical]")) {
             return linkParser.parseLink(baseUrl, link);

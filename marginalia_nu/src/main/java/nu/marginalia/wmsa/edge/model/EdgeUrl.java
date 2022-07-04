@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import nu.marginalia.wmsa.edge.converting.processor.logic.LinkParser;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -15,12 +16,14 @@ public class EdgeUrl implements WideHashable {
     public final EdgeDomain domain;
     public final Integer port;
     public final String path;
+    public final String params;
 
-    public EdgeUrl(String proto, EdgeDomain domain, Integer port, String path) {
+    public EdgeUrl(String proto, EdgeDomain domain, Integer port, String path, String params) {
         this.proto = proto;
         this.domain = domain;
         this.port = port(port, proto);
         this.path = path;
+        this.params = params;
     }
 
     public EdgeUrl(String url) throws URISyntaxException {
@@ -77,7 +80,9 @@ public class EdgeUrl implements WideHashable {
         this.path = URI.getPath().isEmpty() ? "/" : URI.getPath();
         this.proto = URI.getScheme().toLowerCase();
         this.port = port(URI.getPort(), proto);
+        this.params = LinkParser.queryParamsSanitizer(URI.getQuery());
     }
+
 
     private static Integer port(Integer port, String protocol) {
         if (null == port || port < 1) {
@@ -94,8 +99,9 @@ public class EdgeUrl implements WideHashable {
 
     public String toString() {
         String portPart = port == null ? "" : (":" + port);
+        String queryPart = params == null ? "" : ("?" + params);
 
-        return proto + "://" + domain + portPart + "" + path;
+        return proto + "://" + domain + portPart + path + queryPart;
     }
 
     public String dir() {
@@ -115,7 +121,7 @@ public class EdgeUrl implements WideHashable {
         return (int) path.chars().filter(c -> c=='/').count();
     }
 
-    public EdgeUrl withPath(String s) {
-        return new EdgeUrl(proto, domain, port, s);
+    public EdgeUrl withPathAndParam(String path, String param) {
+        return new EdgeUrl(proto, domain, port, path, param);
     }
 }

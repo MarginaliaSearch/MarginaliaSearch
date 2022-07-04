@@ -13,9 +13,12 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class LinkParser {
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -107,21 +110,30 @@ public class LinkParser {
 
     @SneakyThrows
     private String resolveUrl(EdgeUrl baseUrl, String s) {
-        s = paramRegex.matcher(s).replaceAll("");
 
         // url looks like http://www.marginalia.nu/
         if (isAbsoluteDomain(s)) {
             return s;
         }
 
-        // url looks like /my-page
-        if (s.startsWith("/")) {
-            return baseUrl.withPath(s).toString();
+        String[] parts = s.split("\\?", 2);
+        String path = parts[0];
+        String param;
+        if (parts.length > 1) {
+            param = queryParamsSanitizer(parts[1]);
+        }
+        else {
+            param = null;
         }
 
-        final String partFromNewLink = spaceRegex.matcher(s).replaceAll("%20");
+        // url looks like /my-page
+        if (path.startsWith("/")) {
+            return baseUrl.withPathAndParam(path, param).toString();
+        }
 
-        return baseUrl.withPath(relativeNavigation(baseUrl) + partFromNewLink).toString();
+        final String partFromNewLink = spaceRegex.matcher(path).replaceAll("%20");
+
+        return baseUrl.withPathAndParam(relativeNavigation(baseUrl) + partFromNewLink, param).toString();
     }
 
     // for a relative url that looks like /foo or /foo/bar; return / or /foo
@@ -182,5 +194,22 @@ public class LinkParser {
         }
 
         return documentUrl;
+    }
+
+    private static final Pattern paramSplitterPattern = Pattern.compile("&");
+    private static final Predicate<String> paramPatternPredicate = Pattern.compile("((id|i|p|t|v|m|name|view|post)=[a-zA-Z\\d]+)|(view=(/[a-zA-Z\\d\\-])+)").asMatchPredicate();
+
+    public static String queryParamsSanitizer(String queryParams) {
+        if (queryParams == null) {
+            return null;
+        }
+
+        var ret = Arrays.stream(paramSplitterPattern.split(queryParams))
+                .filter(paramPatternPredicate)
+                .sorted()
+                .collect(Collectors.joining("&"));
+        if (ret.isBlank())
+            return null;
+        return ret;
     }
 }

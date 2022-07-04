@@ -30,6 +30,7 @@ public class SqlLoadUrls {
                             IN DOMAIN VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
                             IN PORT INT,
                             IN PATH VARCHAR(255),
+                            IN PARAM VARCHAR(255),
                             IN PATH_HASH BIGINT
                             )
                         BEGIN
@@ -45,8 +46,8 @@ public class SqlLoadUrls {
 
     public void load(LoaderData data, EdgeUrl[] urls) {
         try (var conn = dataSource.getConnection();
-             var insertCall = conn.prepareCall("CALL INSERT_URL(?,?,?,?, ?)");
-             var queryCall = conn.prepareStatement("SELECT ID, PROTO, PATH FROM EC_URL WHERE DOMAIN_ID=?")
+             var insertCall = conn.prepareCall("CALL INSERT_URL(?,?,?,?,?,?)");
+             var queryCall = conn.prepareStatement("SELECT ID, PROTO, PATH, PARAM FROM EC_URL WHERE DOMAIN_ID=?")
              )
         {
             conn.setAutoCommit(false);
@@ -61,7 +62,8 @@ public class SqlLoadUrls {
                     insertCall.setNull(3, Types.INTEGER);
                 }
                 insertCall.setString(4, url.path);
-                insertCall.setLong(5, hashPath(url.path));
+                insertCall.setString(5, url.params);
+                insertCall.setLong(6, hashPath(url.path));
                 insertCall.addBatch();
             }
             var ret = insertCall.executeBatch();
@@ -84,8 +86,9 @@ public class SqlLoadUrls {
                 int urlId = rsp.getInt(1);
                 String proto = rsp.getString(2);
                 String path = rsp.getString(3);
+                String param = rsp.getString(4);
 
-                data.addUrl(new EdgeUrl(proto, targetDomain, null, path), urlId);
+                data.addUrl(new EdgeUrl(proto, targetDomain, null, path, param), urlId);
             }
 
         }

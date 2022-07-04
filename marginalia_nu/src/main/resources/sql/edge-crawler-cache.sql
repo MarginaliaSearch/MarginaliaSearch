@@ -46,20 +46,23 @@ COLLATE utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS EC_URL (
     ID INT PRIMARY KEY AUTO_INCREMENT,
     DOMAIN_ID INT NOT NULL,
-    PROTO ENUM('http','https','gemini') NOT NULL,
-    PATH VARCHAR(255) NOT NULL COLLATE utf8mb4_bin,
+
+    PROTO ENUM('http','https','gemini') NOT NULL COLLATE utf8mb4_unicode_ci,
+    PATH VARCHAR(255) NOT NULL,
     PORT INT,
+    PARAM VARCHAR(255),
 
     PATH_HASH BIGINT NOT NULL COMMENT "Hash of PATH for uniqueness check by domain",
+
     VISITED BOOLEAN NOT NULL DEFAULT FALSE,
 
-    STATE ENUM('ok', 'redirect', 'dead', 'archived', 'disqualified') NOT NULL DEFAULT 'ok',
+    STATE ENUM('ok', 'redirect', 'dead', 'archived', 'disqualified') NOT NULL DEFAULT 'ok' COLLATE utf8mb4_unicode_ci,
 
     CONSTRAINT CONS UNIQUE (DOMAIN_ID, PATH_HASH),
     FOREIGN KEY (DOMAIN_ID) REFERENCES EC_DOMAIN(ID) ON DELETE CASCADE
 )
 CHARACTER SET utf8mb4
-COLLATE utf8mb4_unicode_ci;
+COLLATE utf8mb4_bin;
 
 CREATE TABLE IF NOT EXISTS EC_PAGE_DATA (
     ID INT PRIMARY KEY AUTO_INCREMENT,
@@ -113,10 +116,13 @@ CREATE TABLE IF NOT EXISTS EC_DOMAIN_LINK (
 
 CREATE OR REPLACE VIEW EC_URL_VIEW AS
     SELECT
-        IF(PORT IS NULL,
-            CONCAT(EC_URL.PROTO, "://", EC_DOMAIN.DOMAIN_NAME, EC_URL.PATH),
-            CONCAT(EC_URL.PROTO, "://", EC_DOMAIN.DOMAIN_NAME, ":", EC_URL.PORT, EC_URL.PATH))
-            AS URL,
+        CONCAT(EC_URL.PROTO,
+               '://',
+               EC_DOMAIN.DOMAIN_NAME,
+               IF(EC_URL.PORT IS NULL, '', CONCAT(':', EC_URL.PORT)),
+               EC_URL.PATH,
+               IF(EC_URL.PARAM IS NULL, '', CONCAT('?', EC_URL.PARAM))
+               ) AS URL,
         EC_URL.PATH_HASH AS PATH_HASH,
         EC_URL.PATH AS PATH,
         EC_DOMAIN.DOMAIN_NAME AS DOMAIN_NAME,
