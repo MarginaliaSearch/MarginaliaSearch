@@ -3,6 +3,7 @@ package nu.marginalia.wmsa.memex;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import lombok.SneakyThrows;
+import nu.marginalia.gemini.gmi.GemtextDocument;
 import nu.marginalia.gemini.gmi.renderer.GemtextRendererFactory;
 import nu.marginalia.wmsa.auth.client.AuthClient;
 import nu.marginalia.wmsa.configuration.server.Context;
@@ -10,12 +11,11 @@ import nu.marginalia.wmsa.configuration.server.Initialization;
 import nu.marginalia.wmsa.configuration.server.MetricsServer;
 import nu.marginalia.wmsa.configuration.server.Service;
 import nu.marginalia.wmsa.memex.change.GemtextMutation;
-import nu.marginalia.gemini.gmi.GemtextDocument;
 import nu.marginalia.wmsa.memex.change.update.GemtextDocumentUpdateCalculator;
-import nu.marginalia.wmsa.memex.renderer.MemexHtmlRenderer;
 import nu.marginalia.wmsa.memex.model.MemexNodeHeadingId;
 import nu.marginalia.wmsa.memex.model.MemexNodeUrl;
 import nu.marginalia.wmsa.memex.model.render.*;
+import nu.marginalia.wmsa.memex.renderer.MemexHtmlRenderer;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,9 +49,18 @@ public class MemexService extends Service {
                         MemexHtmlRenderer renderer,
                         AuthClient authClient,
                         Initialization initialization,
-                        MetricsServer metricsServer) {
+                        MetricsServer metricsServer,
+                        @Named("memex-html-resources") Path memexHtmlDir
+                        ) {
 
-        super(ip, port, initialization, metricsServer);
+        super(ip, port, initialization, metricsServer, () -> {
+            staticFiles.externalLocation(memexHtmlDir.toString());
+            staticFiles.disableMimeTypeGuessing();
+            staticFiles.registerMimeType("gmi", "text/html");
+            staticFiles.registerMimeType("png", "text/html");
+            staticFiles.expireTime(60);
+            staticFiles.header("Cache-control", "public,proxy-revalidate");
+        });
 
         this.updateCalculator = updateCalculator;
         this.memex = memex;

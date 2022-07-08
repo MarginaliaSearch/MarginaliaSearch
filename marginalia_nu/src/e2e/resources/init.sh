@@ -69,4 +69,5 @@ memex memex
 dating dating
 EOF
 
+echo "*** Starting $1"
 WMSA_HOME=${HOME} java -Dsmall-ram=TRUE -Dservice-host=0.0.0.0 -jar /WMSA.jar start $1

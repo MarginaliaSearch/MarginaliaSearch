@@ -16,7 +16,6 @@ public class StartCommand extends Command {
             System.err.println("Usage: start service-descriptor");
             System.exit(255);
         }
-
         var mainMethod = getKind(args[1]).mainClass.getMethod("main", String[].class);
         String[] args2 = Arrays.copyOfRange(args, 2, args.length);
         mainMethod.invoke(null, (Object) args2);

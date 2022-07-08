@@ -1,6 +1,5 @@
 package nu.marginalia.wmsa.auth;
 
-import com.github.jknack.handlebars.internal.Files;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import nu.marginalia.wmsa.auth.model.LoginFormModel;
@@ -14,11 +13,12 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
-import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 import static spark.Spark.*;
 
@@ -40,11 +40,8 @@ public class AuthService extends Service {
 
         super(ip, port, initialization, metricsServer);
 
-        try (var is = new FileReader(topSecretPasswordFile.toFile())) {
-            password = Files.read(is);
-        } catch (IOException e) {
-            logger.error("Could not read password from file " + topSecretPasswordFile, e);
-        }
+        password = initPassword(topSecretPasswordFile);
+
         loginFormRenderer = rendererFactory.renderer("auth/login");
 
         Spark.path("public/api", () -> {
@@ -58,6 +55,18 @@ public class AuthService extends Service {
         Spark.path("api", () -> {
             get("/is-logged-in", this::isLoggedIn);
         });
+    }
+
+    private String initPassword(Path topSecretPasswordFile) {
+        if (Files.exists(topSecretPasswordFile)) {
+            try {
+                return Files.readString(topSecretPasswordFile);
+            } catch (IOException e) {
+                logger.error("Could not read password from file " + topSecretPasswordFile, e);
+            }
+        }
+        logger.error("Setting random password");
+        return UUID.randomUUID().toString();
     }
 
     private Object loginForm(Request request, Response response) {

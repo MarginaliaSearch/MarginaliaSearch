@@ -2,6 +2,7 @@ package nu.marginalia.gemini.plugins;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import nu.marginalia.gemini.GeminiService;
 import nu.marginalia.gemini.io.GeminiConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,8 +11,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
-import static nu.marginalia.gemini.GeminiService.DEFAULT_FILENAME;
 
 public class BareStaticPagePlugin implements Plugin {
 
@@ -43,8 +42,8 @@ public class BareStaticPagePlugin implements Plugin {
     private Path getServerPath(String requestPath) {
         final Path serverPath = Path.of(geminiServerRoot + requestPath);
 
-        if (Files.isDirectory(serverPath) && Files.isRegularFile(serverPath.resolve(DEFAULT_FILENAME))) {
-            return serverPath.resolve(DEFAULT_FILENAME);
+        if (Files.isDirectory(serverPath) && Files.isRegularFile(serverPath.resolve(GeminiService.DEFAULT_FILENAME))) {
+            return serverPath.resolve(GeminiService.DEFAULT_FILENAME);
         }
 
         return serverPath;

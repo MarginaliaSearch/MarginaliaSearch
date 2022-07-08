@@ -18,7 +18,7 @@ public class MemexMain extends MainClass {
     }
 
     public static void main(String... args) {
-        init(ServiceDescriptor.EDGE_MEMEX, args);
+        init(ServiceDescriptor.MEMEX, args);
 
         Injector injector = Guice.createInjector(
                 new MemexConfigurationModule(),
