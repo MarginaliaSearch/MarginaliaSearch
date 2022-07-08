@@ -163,7 +163,6 @@ public class DocumentProcessor {
         var edgeDomain = url.domain;
         tagWords.add("format:"+ret.standard.toString().toLowerCase());
 
-
         tagWords.add("site:" + edgeDomain.toString().toLowerCase());
         if (!Objects.equals(edgeDomain.toString(), edgeDomain.domain)) {
             tagWords.add("site:" + edgeDomain.domain.toLowerCase());
@@ -172,18 +171,7 @@ public class DocumentProcessor {
         tagWords.add("proto:"+url.proto.toLowerCase());
         tagWords.add("js:" + Boolean.toString(ret.features.contains(HtmlFeature.JS)).toLowerCase());
 
-        if (ret.features.contains(HtmlFeature.MEDIA)) {
-            tagWords.add("special:media");
-        }
-        if (ret.features.contains(HtmlFeature.TRACKING)) {
-            tagWords.add("special:tracking");
-        }
-        if (ret.features.contains(HtmlFeature.AFFILIATE_LINK)) {
-            tagWords.add("special:affiliate");
-        }
-        if (ret.features.contains(HtmlFeature.COOKIES)) {
-            tagWords.add("special:cookies");
-        }
+        ret.features.stream().map(HtmlFeature::getKeyword).forEach(tagWords::add);
 
         words.append(IndexBlock.Meta, tagWords);
         words.append(IndexBlock.Words, tagWords);
@@ -201,7 +189,9 @@ public class DocumentProcessor {
         for (var frame : doc.getElementsByTag("frame")) {
             linkParser.parseFrame(baseUrl, frame).ifPresent(lp::accept);
         }
-
+        for (var frame : doc.getElementsByTag("iframe")) {
+            linkParser.parseFrame(baseUrl, frame).ifPresent(lp::accept);
+        }
         for (var link : doc.select("link[rel=alternate]")) {
             feedExtractor
                     .getFeedFromAlternateTag(baseUrl, link)
