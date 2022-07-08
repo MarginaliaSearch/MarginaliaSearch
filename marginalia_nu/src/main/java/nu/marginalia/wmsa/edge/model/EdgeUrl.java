@@ -4,7 +4,7 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import nu.marginalia.wmsa.edge.converting.processor.logic.LinkParser;
+import nu.marginalia.wmsa.edge.converting.processor.logic.QueryParams;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -16,14 +16,14 @@ public class EdgeUrl implements WideHashable {
     public final EdgeDomain domain;
     public final Integer port;
     public final String path;
-    public final String params;
+    public final String param;
 
-    public EdgeUrl(String proto, EdgeDomain domain, Integer port, String path, String params) {
+    public EdgeUrl(String proto, EdgeDomain domain, Integer port, String path, String param) {
         this.proto = proto;
         this.domain = domain;
         this.port = port(port, proto);
         this.path = path;
-        this.params = params;
+        this.param = param;
     }
 
     public EdgeUrl(String url) throws URISyntaxException {
@@ -80,7 +80,7 @@ public class EdgeUrl implements WideHashable {
         this.path = URI.getPath().isEmpty() ? "/" : URI.getPath();
         this.proto = URI.getScheme().toLowerCase();
         this.port = port(URI.getPort(), proto);
-        this.params = LinkParser.queryParamsSanitizer(URI.getQuery());
+        this.param = QueryParams.queryParamsSanitizer(this.path, URI.getQuery());
     }
 
 
@@ -99,7 +99,7 @@ public class EdgeUrl implements WideHashable {
 
     public String toString() {
         String portPart = port == null ? "" : (":" + port);
-        String queryPart = params == null ? "" : ("?" + params);
+        String queryPart = param == null ? "" : ("?" + param);
 
         return proto + "://" + domain + portPart + path + queryPart;
     }

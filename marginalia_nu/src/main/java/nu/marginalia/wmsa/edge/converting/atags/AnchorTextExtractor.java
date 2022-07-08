@@ -138,8 +138,8 @@ public class AnchorTextExtractor {
     private boolean isNewKeywordForLink(String href, String text) {
         long hash = 0;
 
-        hash ^= hashFunction.hashString(href, StandardCharsets.UTF_8).asLong();
-        hash ^= hashFunction.hashString(text, StandardCharsets.UTF_8).asLong();
+        hash ^= hashFunction.hashString(href, StandardCharsets.UTF_8).padToLong();
+        hash ^= hashFunction.hashString(text, StandardCharsets.UTF_8).padToLong();
 
         // Remove sign bit because we don't want a negative index in deduplicateHashBitset
         hash &= 0x7FFF_FFFF_FFFF_FFFFL;

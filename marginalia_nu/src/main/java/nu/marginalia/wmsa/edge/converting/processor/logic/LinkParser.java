@@ -13,12 +13,9 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Predicate;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class LinkParser {
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -105,7 +102,6 @@ public class LinkParser {
         return url;
     }
 
-    private static final Pattern paramRegex = Pattern.compile("\\?.*$");
     private static final Pattern spaceRegex = Pattern.compile(" ");
 
     @SneakyThrows
@@ -120,7 +116,7 @@ public class LinkParser {
         String path = parts[0];
         String param;
         if (parts.length > 1) {
-            param = queryParamsSanitizer(parts[1]);
+            param = QueryParams.queryParamsSanitizer(parts[0], parts[1]);
         }
         else {
             param = null;
@@ -196,20 +192,4 @@ public class LinkParser {
         return documentUrl;
     }
 
-    private static final Pattern paramSplitterPattern = Pattern.compile("&");
-    private static final Predicate<String> paramPatternPredicate = Pattern.compile("((id|i|p|t|v|m|name|view|post)=[a-zA-Z\\d]+)|(view=(/[a-zA-Z\\d\\-])+)").asMatchPredicate();
-
-    public static String queryParamsSanitizer(String queryParams) {
-        if (queryParams == null) {
-            return null;
-        }
-
-        var ret = Arrays.stream(paramSplitterPattern.split(queryParams))
-                .filter(paramPatternPredicate)
-                .sorted()
-                .collect(Collectors.joining("&"));
-        if (ret.isBlank())
-            return null;
-        return ret;
-    }
 }

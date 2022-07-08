@@ -33,18 +33,12 @@ public class UrlBlocklist {
         }
     }
 
-    public boolean isForumLink(EdgeUrl linkUrl) {
+    public boolean isMailingListLink(EdgeUrl linkUrl) {
         var path = linkUrl.path;
-        if (path.startsWith("/forum")) {
-            return true;
-        }
         if (path.startsWith("/lists/")) {
             return true;
         }
         if (path.startsWith("mailinglist")) {
-            return true;
-        }
-        if (path.contains("phpbb")) {
             return true;
         }
         return false;

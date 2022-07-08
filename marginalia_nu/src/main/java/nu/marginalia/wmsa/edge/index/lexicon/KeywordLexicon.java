@@ -46,13 +46,13 @@ public class KeywordLexicon implements AutoCloseable {
     }
 
     private void loadJournalEntry(byte[] bytes) {
-        final long key = hashFunction.hashBytes(bytes).asLong();
+        final long key = hashFunction.hashBytes(bytes).padToLong();
         reverseIndex.put(key);
     }
 
     @SneakyThrows
     public int getOrInsert(String macroWord) {
-        final long key = hashFunction.hashBytes(macroWord.getBytes()).asLong();
+        final long key = hashFunction.hashBytes(macroWord.getBytes()).padToLong();
 
         int idx = getReadOnly(key);
         if (idx >= 0)
@@ -78,7 +78,7 @@ public class KeywordLexicon implements AutoCloseable {
     }
 
     public int getReadOnly(String word) {
-        return getReadOnly(hashFunction.hashBytes(word.getBytes()).asLong());
+        return getReadOnly(hashFunction.hashBytes(word.getBytes()).padToLong());
     }
 
     public int getReadOnly(long hashedKey) {

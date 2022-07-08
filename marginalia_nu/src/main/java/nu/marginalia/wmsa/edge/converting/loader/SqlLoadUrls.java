@@ -1,5 +1,6 @@
 package nu.marginalia.wmsa.edge.converting.loader;
 
+import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
@@ -62,8 +63,8 @@ public class SqlLoadUrls {
                     insertCall.setNull(3, Types.INTEGER);
                 }
                 insertCall.setString(4, url.path);
-                insertCall.setString(5, url.params);
-                insertCall.setLong(6, hashPath(url.path));
+                insertCall.setString(5, url.param);
+                insertCall.setLong(6, hashPath(url.path, url.param));
                 insertCall.addBatch();
             }
             var ret = insertCall.executeBatch();
@@ -97,7 +98,15 @@ public class SqlLoadUrls {
         }
     }
 
-    private long hashPath(String path) {
-        return Hashing.murmur3_128().hashString(path, StandardCharsets.UTF_8).asLong();
+    private static final HashFunction murmur3_128 = Hashing.murmur3_128();
+    private long hashPath(String path, String queryParam) {
+        long pathHash = murmur3_128.hashString(path, StandardCharsets.UTF_8).padToLong();
+
+        if (queryParam == null) {
+            return pathHash;
+        }
+        else {
+            return pathHash + murmur3_128.hashString(queryParam, StandardCharsets.UTF_8).padToLong();
+        }
     }
 }

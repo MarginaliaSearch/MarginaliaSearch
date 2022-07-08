@@ -72,7 +72,7 @@ public class LinkProcessor {
             return false;
         }
 
-        if (urlBlocklist.isForumLink(link)) {
+        if (urlBlocklist.isMailingListLink(link)) {
             return false;
         }
 

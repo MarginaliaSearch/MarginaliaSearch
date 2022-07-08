@@ -144,7 +144,7 @@ public class LinkKeywordExtractorMain {
 
         try (var output = new UrlKeywordTsvWriter(Path.of("links.tsv"))) {
             AnchorTextExtractor anchorTextExtractor = new AnchorTextExtractor(crawledDomains::contains,
-                    url -> url.params != null,
+                    url -> url.param != null,
                     //url -> crawledUrls.contains(url.toString().hashCode()),
                     output::write);
 
