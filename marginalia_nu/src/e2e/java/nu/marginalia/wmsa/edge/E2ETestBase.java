@@ -43,6 +43,22 @@ public abstract class E2ETestBase {
                         .withReadTimeout(Duration.ofSeconds(15)))
                 ;
     }
+    public static GenericContainer<?> forService(ServiceDescriptor service, GenericContainer<?> mariaDB, String setupScript) {
+        return new GenericContainer<>("openjdk:17-alpine")
+                .dependsOn(mariaDB)
+                .withCopyFileToContainer(jarFile(), "/WMSA.jar")
+                .withCopyFileToContainer(MountableFile.forClasspathResource(setupScript), "/" + setupScript)
+                .withExposedPorts(service.port)
+                .withFileSystemBind(modelsPath(), "/wmsa/model", BindMode.READ_ONLY)
+                .withNetwork(network)
+                .withNetworkAliases(service.name)
+                .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger(service.name)))
+                .withCommand("sh", setupScript, service.name)
+                .waitingFor(Wait.forHttp("/internal/ping")
+                        .forPort(service.port)
+                        .withReadTimeout(Duration.ofSeconds(15)))
+                ;
+    }
 
     public static MountableFile jarFile() {
         Path cwd = Path.of(System.getProperty("user.dir"));

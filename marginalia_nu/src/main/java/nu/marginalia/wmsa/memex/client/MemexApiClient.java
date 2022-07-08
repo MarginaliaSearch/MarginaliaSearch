@@ -8,7 +8,7 @@ import nu.marginalia.wmsa.configuration.ServiceDescriptor;
 public class MemexApiClient extends AbstractDynamicClient {
     @Inject
     public MemexApiClient() {
-        super(ServiceDescriptor.EDGE_MEMEX);
+        super(ServiceDescriptor.MEMEX);
     }
 
 }
