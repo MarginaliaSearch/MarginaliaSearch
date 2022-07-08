@@ -3,19 +3,15 @@ package nu.marginalia.wmsa.edge.converting.processor;
 import com.google.common.hash.HashCode;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import nu.marginalia.util.language.LanguageFilter;
+import nu.marginalia.util.language.processing.DocumentKeywordExtractor;
+import nu.marginalia.util.language.processing.SentenceExtractor;
+import nu.marginalia.util.language.processing.model.DocumentLanguageData;
 import nu.marginalia.wmsa.edge.converting.model.DisqualifiedException;
 import nu.marginalia.wmsa.edge.converting.model.DisqualifiedException.DisqualificationReason;
 import nu.marginalia.wmsa.edge.converting.model.ProcessedDocument;
 import nu.marginalia.wmsa.edge.converting.model.ProcessedDocumentDetails;
 import nu.marginalia.wmsa.edge.converting.processor.logic.*;
-import nu.marginalia.wmsa.edge.converting.processor.logic.FeedExtractor;
-import nu.marginalia.wmsa.edge.converting.processor.logic.LinkParser;
-import nu.marginalia.util.language.LanguageFilter;
-import nu.marginalia.util.language.processing.DocumentKeywordExtractor;
-import nu.marginalia.util.language.processing.SentenceExtractor;
-import nu.marginalia.util.language.processing.model.DocumentLanguageData;
-import nu.marginalia.wmsa.edge.converting.processor.logic.HtmlFeature;
-import nu.marginalia.wmsa.edge.converting.processor.logic.HtmlStandardExtractor;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDocument;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDomain;
 import nu.marginalia.wmsa.edge.crawling.model.CrawlerDocumentStatus;
@@ -81,6 +77,10 @@ public class DocumentProcessor {
 
             if (ret.state == EdgeUrlState.OK) {
 
+                if (AcceptableAds.hasAcceptableAdsHeader(crawledDocument)) {
+                    throw new DisqualifiedException(DisqualificationReason.ACCEPTABLE_ADS);
+                }
+
                 if (isAcceptedContentType(crawledDocument)) {
                     var detailsWords = createDetails(crawledDomain, crawledDocument);
 
@@ -128,6 +128,11 @@ public class DocumentProcessor {
             throws DisqualifiedException, URISyntaxException {
 
         var doc = Jsoup.parse(crawledDocument.documentBody);
+
+        if (AcceptableAds.hasAcceptableAdsTag(doc)) {
+            throw new DisqualifiedException(DisqualificationReason.ACCEPTABLE_ADS);
+        }
+
         var dld = sentenceExtractor.extractSentences(doc.clone());
 
         checkDocumentLanguage(dld);
