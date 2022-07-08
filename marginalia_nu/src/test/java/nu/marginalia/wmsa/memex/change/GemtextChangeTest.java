@@ -2,16 +2,18 @@ package nu.marginalia.wmsa.memex.change;
 
 import io.reactivex.rxjava3.plugins.RxJavaPlugins;
 import lombok.SneakyThrows;
-import nu.marginalia.gemini.GeminiService;
+import nu.marginalia.gemini.GeminiServiceImpl;
 import nu.marginalia.util.test.TestUtil;
-import nu.marginalia.wmsa.memex.*;
+import nu.marginalia.wmsa.memex.Memex;
+import nu.marginalia.wmsa.memex.MemexData;
+import nu.marginalia.wmsa.memex.MemexLoader;
 import nu.marginalia.wmsa.memex.model.MemexNodeHeadingId;
 import nu.marginalia.wmsa.memex.model.MemexNodeUrl;
 import nu.marginalia.wmsa.memex.renderer.MemexRendererers;
 import nu.marginalia.wmsa.memex.system.MemexFileSystemModifiedTimes;
 import nu.marginalia.wmsa.memex.system.MemexFileWriter;
-import nu.marginalia.wmsa.memex.system.MemexGitRepo;
 import nu.marginalia.wmsa.memex.system.MemexSourceFileSystem;
+import nu.marginalia.wmsa.memex.system.git.MemexGitRepoImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,13 +63,13 @@ class GemtextChangeTest {
         var data = new MemexData();
 
         memex = new Memex(data, null,
-                Mockito.mock(MemexGitRepo.class), new MemexLoader(data, new MemexFileSystemModifiedTimes(),
-                    new MemexSourceFileSystem(tempDir, Mockito.mock(MemexGitRepo.class)),
+                Mockito.mock(MemexGitRepoImpl.class), new MemexLoader(data, new MemexFileSystemModifiedTimes(),
+                    new MemexSourceFileSystem(tempDir, Mockito.mock(MemexGitRepoImpl.class)),
                 tempDir, tombstonePath, redirectPath),
                 Mockito.mock(MemexFileWriter.class),
                 null,
                 Mockito.mock(MemexRendererers.class),
-                Mockito.mock(GeminiService.class));
+                Mockito.mock(GeminiServiceImpl.class));
     }
 
     @SneakyThrows

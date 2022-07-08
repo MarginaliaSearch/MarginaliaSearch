@@ -1,7 +1,7 @@
 package nu.marginalia.wmsa.configuration;
 
-import nu.marginalia.wmsa.auth.AuthMain;
 import nu.marginalia.wmsa.api.ApiMain;
+import nu.marginalia.wmsa.auth.AuthMain;
 import nu.marginalia.wmsa.configuration.command.Command;
 import nu.marginalia.wmsa.configuration.command.ListCommand;
 import nu.marginalia.wmsa.configuration.command.StartCommand;
@@ -35,7 +35,7 @@ public enum ServiceDescriptor {
     EDGE_SEARCH("edge-search", 5023, EdgeSearchMain.class),
     EDGE_ASSISTANT("edge-assistant", 5025, EdgeAssistantMain.class),
 
-    EDGE_MEMEX("memex", 5030, MemexMain.class),
+    MEMEX("memex", 5030, MemexMain.class),
 
     ENCYCLOPEDIA("encyclopedia", 5040, EncyclopediaMain.class),
 
@@ -79,7 +79,6 @@ public enum ServiceDescriptor {
     }
 
     public static void main(String... args) {
-
         MainMapLookup.setMainArguments(args);
         Map<String, Command> functions = Stream.of(new ListCommand(),
                 new StartCommand(),

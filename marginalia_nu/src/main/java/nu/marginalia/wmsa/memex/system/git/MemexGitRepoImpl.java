@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.memex.system;
+package nu.marginalia.wmsa.memex.system.git;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -10,7 +10,8 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
-import org.eclipse.jgit.transport.*;
+import org.eclipse.jgit.transport.JschConfigSessionFactory;
+import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.util.FS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,13 +20,13 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 @Singleton
-public class MemexGitRepo {
+public class MemexGitRepoImpl implements MemexGitRepo {
 
     private final Git git;
-    private final Logger logger = LoggerFactory.getLogger(MemexGitRepo.class);
+    private final Logger logger = LoggerFactory.getLogger(MemexGitRepoImpl.class);
 
     @Inject
-    public MemexGitRepo(@Named("memex-root") Path root) throws IOException {
+    public MemexGitRepoImpl(@Named("memex-root") Path root) throws IOException {
 
         FileRepositoryBuilder repositoryBuilder = new FileRepositoryBuilder();
 
@@ -49,6 +50,7 @@ public class MemexGitRepo {
         pull();
     }
 
+    @Override
     public void pull() {
         try {
             git.pull().call();
@@ -58,6 +60,7 @@ public class MemexGitRepo {
         }
     }
 
+    @Override
     public void remove(MemexNodeUrl url) {
         try {
             git.rm()
@@ -72,6 +75,7 @@ public class MemexGitRepo {
         }
     }
 
+    @Override
     public void add(MemexNodeUrl url) {
         try {
             git.add()
@@ -87,6 +91,7 @@ public class MemexGitRepo {
             logger.error("Git operation failed", ex);
         }
     }
+    @Override
     public void update(MemexNodeUrl url) {
         try {
             git.add()
@@ -105,6 +110,7 @@ public class MemexGitRepo {
     }
 
 
+    @Override
     public void rename(MemexNodeUrl src, MemexNodeUrl dst) {
         try {
             git.rm().addFilepattern(filePattern(src)).call();

@@ -4,11 +4,15 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import nu.marginalia.wmsa.memex.model.MemexNodeUrl;
+import nu.marginalia.wmsa.memex.system.git.MemexGitRepo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 
 @Singleton
 public class MemexSourceFileSystem {

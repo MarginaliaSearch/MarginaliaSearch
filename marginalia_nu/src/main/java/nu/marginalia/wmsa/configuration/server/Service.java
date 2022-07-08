@@ -37,7 +37,7 @@ public class Service {
 
     private static volatile boolean initialized = false;
 
-    public Service(String ip, int port, Initialization initialization, MetricsServer metricsServer) {
+    public Service(String ip, int port, Initialization initialization, MetricsServer metricsServer, Runnable configureStaticFiles) {
         this.initialization = initialization;
 
         serviceName = System.getProperty("service-name");
@@ -51,8 +51,7 @@ public class Service {
 
             logger.info("{} Listening to {}:{}", getClass().getSimpleName(), ip == null ? "" : ip, port);
 
-            Spark.staticFiles.expireTime(3600);
-            Spark.staticFiles.header("Cache-control", "public");
+            configureStaticFiles.run();
 
             Spark.before(this::filterPublicRequests);
             Spark.before(this::auditRequestIn);
@@ -66,24 +65,35 @@ public class Service {
         }
     }
 
+    public Service(String ip, int port, Initialization initialization, MetricsServer metricsServer) {
+        this(ip, port, initialization, metricsServer, () -> {
+            // configureStaticFiles can't be an overridable method in Service because it may
+            // need to depend on parameters to the constructor, and super-constructors
+            // must run first
+            Spark.staticFiles.expireTime(3600);
+            Spark.staticFiles.header("Cache-control", "public");
+        });
+    }
+
     private void filterPublicRequests(Request request, Response response) {
-        if (null != request.headers("X-Public")) {
-
-            String context = Optional
-                            .ofNullable(request.headers("X-Context"))
-                            .orElseGet(request::ip);
-
-            if (!request.pathInfo().startsWith("/public/")) {
-                logger.warn(httpMarker, "External connection to internal API: {} -> {} {}", context, request.requestMethod(), request.pathInfo());
-                Spark.halt(HttpStatus.SC_FORBIDDEN);
-            }
-
-            String url = request.pathInfo();
-            if (request.queryString() != null) {
-                url = url + "?" + request.queryString();
-            }
-            logger.info(httpMarker, "PUBLIC {}: {} {}", Context.fromRequest(request).getIpHash().orElse("?"), request.requestMethod(), url);
+        if (null == request.headers("X-Public")) {
+            return;
         }
+
+        String context = Optional
+                        .ofNullable(request.headers("X-Context"))
+                        .orElseGet(request::ip);
+
+        if (!request.pathInfo().startsWith("/public/")) {
+            logger.warn(httpMarker, "External connection to internal API: {} -> {} {}", context, request.requestMethod(), request.pathInfo());
+            Spark.halt(HttpStatus.SC_FORBIDDEN);
+        }
+
+        String url = request.pathInfo();
+        if (request.queryString() != null) {
+            url = url + "?" + request.queryString();
+        }
+        logger.info(httpMarker, "PUBLIC {}: {} {}", Context.fromRequest(request).getIpHash().orElse("?"), request.requestMethod(), url);
     }
 
     private Object isInitialized(Request request, Response response) {
