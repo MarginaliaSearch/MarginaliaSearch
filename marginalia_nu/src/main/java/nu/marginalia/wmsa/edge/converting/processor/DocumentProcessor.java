@@ -113,7 +113,19 @@ public class DocumentProcessor {
     }
 
     private boolean isAcceptedContentType(CrawledDocument crawledDocument) {
-        return crawledDocument.contentType != null && acceptedContentTypes.contains(crawledDocument.contentType.toLowerCase());
+        if (crawledDocument.contentType == null) {
+            return false;
+        }
+
+        var ct = crawledDocument.contentType;
+
+        if (acceptedContentTypes.contains(ct))
+            return true;
+
+        if (ct.contains(";")) {
+            return acceptedContentTypes.contains(ct.substring(0, ct.indexOf(';')));
+        }
+        return false;
     }
 
     private EdgeUrlState crawlerStatusToUrlState(String crawlerStatus, int httpStatus) {

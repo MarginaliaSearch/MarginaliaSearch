@@ -11,7 +11,6 @@ import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 
 import java.net.URISyntaxException;
-import java.nio.file.Path;
 
 public class ConverterModule extends AbstractModule {
 
@@ -27,6 +26,7 @@ public class ConverterModule extends AbstractModule {
         bind(Gson.class).toInstance(createGson());
 
         bind(Double.class).annotatedWith(Names.named("min-document-quality")).toInstance(-15.);
+        bind(Double.class).annotatedWith(Names.named("min-avg-document-quality")).toInstance(-25.);
         bind(Integer.class).annotatedWith(Names.named("min-document-length")).toInstance(100);
         bind(Integer.class).annotatedWith(Names.named("max-title-length")).toInstance(128);
         bind(Integer.class).annotatedWith(Names.named("max-summary-length")).toInstance(255);

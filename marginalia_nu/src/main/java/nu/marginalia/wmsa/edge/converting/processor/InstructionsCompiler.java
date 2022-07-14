@@ -42,15 +42,16 @@ public class InstructionsCompiler {
         Set<EdgeUrl> seenUrls = new HashSet<>(documents.size()*4);
         Set<EdgeDomain> seenDomains = new HashSet<>(documents.size());
 
-        documents.stream().map(doc -> doc.url).forEach(seenUrls::add);
-
         for (var doc : documents) {
-            if (doc.details == null) continue;
-            for (var url : doc.details.linksExternal) {
-                seenDomains.add(url.domain);
+            seenUrls.add(doc.url);
+
+            if (doc.details != null) {
+                for (var url : doc.details.linksExternal) {
+                    seenDomains.add(url.domain);
+                }
+                seenUrls.addAll(doc.details.linksExternal);
+                seenUrls.addAll(doc.details.linksInternal);
             }
-            seenUrls.addAll(doc.details.linksExternal);
-            seenUrls.addAll(doc.details.linksInternal);
         }
 
         ret.add(new LoadDomain(seenDomains.toArray(EdgeDomain[]::new)));
