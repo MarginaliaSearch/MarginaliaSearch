@@ -5,6 +5,11 @@ body {
   background-color: #f8f8ee;
 }
 
+textarea {
+  width: 100%;
+  height: 60ch;
+}
+
 header {
   background-color: #acae89;
   color: #fff;
@@ -233,3 +238,4 @@ footer {
     box-shadow: #0008 0 0 5px;
   }
 }
+
