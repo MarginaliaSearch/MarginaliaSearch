@@ -11,8 +11,8 @@ public class UrlBlocklist {
     private final List<Predicate<String>> patterns = new ArrayList<>();
 
     public UrlBlocklist() {
-        patterns.add(Pattern.compile(".*/[a-f0-9]{40}(/|$)").asPredicate());
-        patterns.add(Pattern.compile("/download(-([A-Za-z]+|[0-9]+)){4,}\\.(htm|html|php)$").asPredicate());
+        patterns.add(Pattern.compile(".*/[a-f0-9]{40}(/|$)").asPredicate()); // git
+        patterns.add(Pattern.compile(".*/[a-f0-9]{64}(/|$)").asPredicate()); // fossil SCM
         patterns.add(Pattern.compile("/download(-([A-Za-z]+|[0-9]+)){4,}\\.(htm|html|php)$").asPredicate());
         patterns.add(Pattern.compile("/permalink/[a-z]+(-([A-Za-z]+|[0-9]+)){3,}\\.(htm|html|php)$").asPredicate());
         patterns.add(Pattern.compile("(webrx3|lib|pdf|book|720p).*/[A-Za-z]+(-([A-Za-z]+|[0-9]+)){3,}((-[0-9]+)?/|\\.(php|htm|html))$").asPredicate());
