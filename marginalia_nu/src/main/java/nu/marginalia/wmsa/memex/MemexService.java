@@ -73,6 +73,9 @@ public class MemexService extends Service {
             before((req, rsp) -> {
                 logger.info("{} {}", req.requestMethod(), req.pathInfo());
             });
+            after((req, rsp) -> {
+                rsp.header("Cache-control", "no-cache");
+            });
 
             post("/create", this::create);
             get("/create", this::createForm, this::renderModel);
