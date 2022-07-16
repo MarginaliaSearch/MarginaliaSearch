@@ -59,12 +59,14 @@ public class DictionaryData {
         private final LongBuffer keys;
 
         private int size;
+        private final int capacity;
 
 
         public DictionaryDataBank(int start_idx, int sz) {
             this.start_idx = start_idx;
+            this.capacity = sz;
 
-            keys = ByteBuffer.allocateDirect(8*sz).asLongBuffer();
+            keys = ByteBuffer.allocateDirect(8*capacity).asLongBuffer();
             size = 0;
         }
 
@@ -88,10 +90,13 @@ public class DictionaryData {
                 throw new IndexOutOfBoundsException(idx);
             }
 
-            return keys.get(idx -  start_idx) == other;
+            return keys.get(idx - start_idx) == other;
         }
 
         public int add(long newKey) {
+            if (size >= capacity)
+                return -1;
+
             keys.put(size, newKey);
 
             return start_idx + size++;

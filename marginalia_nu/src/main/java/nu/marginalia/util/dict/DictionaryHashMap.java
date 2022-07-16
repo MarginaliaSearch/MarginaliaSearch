@@ -66,8 +66,7 @@ public class DictionaryHashMap {
             logger.debug("Buffer size sanity checked passed");
         }
 
-
-        dictionaryData = new DictionaryData(Math.min(1<<30, Math.max(32, (int)(sizeMemory/4))));
+        dictionaryData = new DictionaryData((int)Math.min(1<<27, Math.max(32L, sizeMemory/4)));
 
         initializeBuffers();
     }
