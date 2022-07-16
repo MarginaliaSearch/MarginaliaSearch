@@ -45,7 +45,7 @@ public class ConvertedDomainReader {
                 try {
                     ret.add(gson.fromJson(parts[1], type));
                 }
-                catch (JsonParseException ex) {
+                catch (NullPointerException|JsonParseException ex) {
                     logger.warn("Failed to deserialize {} {}", type.getSimpleName(), StringUtils.abbreviate(parts[1], 255));
                     logger.warn("Json error", ex);
                 }
