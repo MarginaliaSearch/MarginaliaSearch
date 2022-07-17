@@ -53,6 +53,10 @@ public class SqlLoadUrls {
         {
             conn.setAutoCommit(false);
             for (var url : urls) {
+                if (url.path.length() >= 255) {
+                    logger.warn("Skipping bad URL {}", url);
+                    continue;
+                }
 
                 insertCall.setString(1, url.proto);
                 insertCall.setString(2, url.domain.toString());
@@ -68,7 +72,7 @@ public class SqlLoadUrls {
                 insertCall.addBatch();
             }
             var ret = insertCall.executeBatch();
-            for (int rv = 0; rv < urls.length; rv++) {
+            for (int rv = 0; rv < ret.length; rv++) {
                 if (ret[rv] < 0 && ret[rv] != SUCCESS_NO_INFO) {
                     logger.warn("load({}) -- bad row count {}", urls[rv], ret[rv]);
                 }
