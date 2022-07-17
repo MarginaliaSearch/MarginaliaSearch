@@ -30,7 +30,7 @@ public class KeywordLexiconJournal {
         Runtime.getRuntime().addShutdownHook(new Thread(this::commitToDisk));
     }
 
-    public void enqueue(String word) throws InterruptedException {
+    public void enqueue(byte[] word) throws InterruptedException {
         commitQueue.enqueue(word);
     }
 
@@ -49,7 +49,7 @@ public class KeywordLexiconJournal {
     }
 
     public void commitToDisk() {
-        List<String> entries = commitQueue.getQueuedEntries();
+        List<byte[]> entries = commitQueue.getQueuedEntries();
 
         journalFile.writeEntriesToJournal(entries);
     }

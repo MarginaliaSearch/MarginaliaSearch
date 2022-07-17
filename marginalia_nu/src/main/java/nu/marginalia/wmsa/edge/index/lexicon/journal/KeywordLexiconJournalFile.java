@@ -110,7 +110,7 @@ public class KeywordLexiconJournalFile {
 
     private final ByteBuffer writeBuffer = ByteBuffer.allocateDirect(4096);
 
-    public void writeEntriesToJournal(List<String> data) {
+    public void writeEntriesToJournal(List<byte[]> data) {
         if (data.isEmpty())
             return;
 
@@ -127,10 +127,9 @@ public class KeywordLexiconJournalFile {
             long start = System.currentTimeMillis();
             int ct = data.size();
 
-            for (String item : data) {
+            for (byte[] itemBytes : data) {
                 writeBuffer.clear();
-                byte[] itemBytes = item.getBytes();
-                writeBuffer.put((byte)itemBytes.length);
+                writeBuffer.put((byte) itemBytes.length);
                 writeBuffer.put(itemBytes);
                 writeBuffer.flip();
 

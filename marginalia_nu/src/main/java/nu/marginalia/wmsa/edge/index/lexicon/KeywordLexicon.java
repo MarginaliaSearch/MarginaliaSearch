@@ -9,6 +9,7 @@ import nu.marginalia.wmsa.edge.index.lexicon.journal.KeywordLexiconJournal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -40,19 +41,23 @@ public class KeywordLexicon implements AutoCloseable {
             logger.error("MULTIPLE WRITER INSTANCES!");
         }
 
-        journal.loadFile(this::loadJournalEntry);
+        journal.loadFile(bytes -> reverseIndex.put(hashFunction.hashBytes(bytes).padToLong()));
 
         logger.info("Done creating dictionary writer");
     }
 
-    private void loadJournalEntry(byte[] bytes) {
-        final long key = hashFunction.hashBytes(bytes).padToLong();
-        reverseIndex.put(key);
+    public int getOrInsert(String macroWord) {
+        return getOrInsert(macroWord.getBytes(StandardCharsets.UTF_8));
     }
 
     @SneakyThrows
-    public int getOrInsert(String macroWord) {
-        final long key = hashFunction.hashBytes(macroWord.getBytes()).padToLong();
+    private int getOrInsert(byte[] bytes) {
+        if (bytes.length >= Byte.MAX_VALUE) {
+            logger.warn("getOrInsert({}), illegal length {}", bytes, bytes.length);
+            return DictionaryHashMap.NO_VALUE;
+        }
+
+        final long key = hashFunction.hashBytes(bytes).padToLong();
 
         int idx = getReadOnly(key);
         if (idx >= 0)
@@ -66,7 +71,7 @@ public class KeywordLexicon implements AutoCloseable {
             if ((idx = reverseIndex.get(key)) >= 0)
                 return idx;
 
-            journal.enqueue(macroWord);
+            journal.enqueue(bytes);
             idx = reverseIndex.put(key);
             request_time_metrics.set(reverseIndex.size());
 
@@ -78,7 +83,8 @@ public class KeywordLexicon implements AutoCloseable {
     }
 
     public int getReadOnly(String word) {
-        return getReadOnly(hashFunction.hashBytes(word.getBytes()).padToLong());
+        final byte[] bytes = word.getBytes(StandardCharsets.UTF_8);
+        return getReadOnly(hashFunction.hashBytes(bytes).padToLong());
     }
 
     public int getReadOnly(long hashedKey) {

@@ -199,7 +199,7 @@ public class EdgeIndexService extends Service {
 
     private long[] getOrInsertWordIds(List<String> words) {
         return words.stream()
-                .filter(w -> w.length() < Byte.MAX_VALUE)
+                .filter(w -> w.getBytes().length < Byte.MAX_VALUE)
                 .mapToLong(keywordLexicon::getOrInsert)
                 .toArray();
     }
