@@ -88,6 +88,10 @@ public class SearchIndexConverter {
 
             Files.delete(tmpUrlsFile);
         }
+        catch (IOException ex) {
+            logger.error("Failed to convert", ex);
+            throw ex;
+        }
         finally {
             lock.unlock();
         }
