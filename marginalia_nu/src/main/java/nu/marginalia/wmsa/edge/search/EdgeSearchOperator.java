@@ -11,17 +11,19 @@ import nu.marginalia.wmsa.edge.assistant.dict.WikiArticles;
 import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
 import nu.marginalia.wmsa.edge.index.client.EdgeIndexClient;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
-import nu.marginalia.wmsa.edge.model.*;
+import nu.marginalia.wmsa.edge.model.EdgeDomain;
+import nu.marginalia.wmsa.edge.model.EdgeId;
+import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.search.*;
 import nu.marginalia.wmsa.edge.search.model.DecoratedSearchResultSet;
 import nu.marginalia.wmsa.edge.search.model.DecoratedSearchResults;
-import nu.marginalia.wmsa.edge.search.query.model.EdgeSearchQuery;
 import nu.marginalia.wmsa.edge.search.query.QueryFactory;
+import nu.marginalia.wmsa.edge.search.query.model.EdgeSearchQuery;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeUserSearchParameters;
-import nu.marginalia.wmsa.edge.search.results.SearchResultValuator;
-import nu.marginalia.wmsa.edge.search.results.model.AccumulatedQueryResults;
 import nu.marginalia.wmsa.edge.search.results.SearchResultDecorator;
+import nu.marginalia.wmsa.edge.search.results.SearchResultValuator;
 import nu.marginalia.wmsa.edge.search.results.UrlDeduplicator;
+import nu.marginalia.wmsa.edge.search.results.model.AccumulatedQueryResults;
 import nu.marginalia.wmsa.encyclopedia.EncyclopediaClient;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -251,7 +253,9 @@ public class EdgeSearchOperator {
                 .encyclopediaLookup(ctx,
                         humanQuery.replaceAll("\\s+", "_")
                                 .replaceAll("\"", "")
-                ).subscribeOn(Schedulers.io());
+                )
+                .onErrorReturn(e -> new WikiArticles())
+                .subscribeOn(Schedulers.io());
     }
 
     private void fetchResultsMulti(Context ctx, EdgeSearchQuery processedQuery, AccumulatedQueryResults queryResults, UrlDeduplicator deduplicator) {

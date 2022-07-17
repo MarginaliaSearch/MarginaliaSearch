@@ -12,7 +12,10 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openzim.ZIMTypes.ZIMFile;
 import org.openzim.ZIMTypes.ZIMReader;
 import org.slf4j.LoggerFactory;
-import org.testcontainers.containers.*;
+import org.testcontainers.containers.BindMode;
+import org.testcontainers.containers.BrowserWebDriverContainer;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.NginxContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
@@ -40,8 +43,6 @@ public class EdgeSearchE2ETest extends E2ETestBase {
     public static GenericContainer<?> searchContainer =  forService(EDGE_SEARCH, mariaDB);
     @Container
     public static GenericContainer<?> assistantContainer =  forService(EDGE_ASSISTANT, mariaDB);
-    @Container
-    public static GenericContainer<?> encyclopediaContainer =  forService(ENCYCLOPEDIA, mariaDB);
     @Container
     public static GenericContainer<?> indexContainer =  forService(EDGE_INDEX, mariaDB);
 
