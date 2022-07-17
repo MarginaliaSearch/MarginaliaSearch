@@ -70,7 +70,10 @@ public class KeywordLexiconJournalFile {
                     buffer.flip();
                 }
 
-                int len = buffer.get();
+                int len = buffer.get() & 0xFF;
+                if (len > Byte.MAX_VALUE) {
+                    logger.warn("Found keyword with impossible length {} near {}, likely corruption", len, cp);
+                }
                 while (buffer.limit() - buffer.position() < len) {
                     buffer.compact();
                     int rb = channel.read(buffer);
@@ -126,8 +129,9 @@ public class KeywordLexiconJournalFile {
 
             for (String item : data) {
                 writeBuffer.clear();
-                writeBuffer.put((byte) item.length());
-                writeBuffer.put(item.getBytes());
+                byte[] itemBytes = item.getBytes();
+                writeBuffer.put((byte)itemBytes.length);
+                writeBuffer.put(itemBytes);
                 writeBuffer.flip();
 
                 while (writeBuffer.position() < writeBuffer.limit())
