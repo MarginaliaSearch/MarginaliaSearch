@@ -15,7 +15,6 @@ import nu.marginalia.wmsa.configuration.server.MetricsServer;
 import nu.marginalia.wmsa.configuration.server.Service;
 import nu.marginalia.wmsa.edge.index.client.EdgeIndexClient;
 import nu.marginalia.wmsa.edge.search.command.CommandEvaluator;
-import nu.marginalia.wmsa.edge.search.command.ResponseType;
 import nu.marginalia.wmsa.edge.search.command.SearchParameters;
 import nu.marginalia.wmsa.edge.search.exceptions.RedirectException;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeUserSearchParameters;
@@ -27,7 +26,7 @@ import spark.Spark;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class EdgeSearchService extends Service {
@@ -149,21 +148,10 @@ public class EdgeSearchService extends Service {
 
         final String profileStr = Optional.ofNullable(request.queryParams("profile")).orElse("yolo");
         final String humanQuery = queryParam.trim();
-        final String format = request.queryParams("format");
-        ResponseType responseType;
-
-        if ("gmi".equals(format)) {
-            response.type("text/gemini");
-            responseType = ResponseType.GEMINI;
-        }
-        else {
-            responseType = ResponseType.HTML;
-        }
 
         var params = new SearchParameters(
                 EdgeSearchProfile.getSearchProfile(profileStr),
-                Optional.ofNullable(request.queryParams("js")).orElse("default"),
-                responseType);
+                Optional.ofNullable(request.queryParams("js")).orElse("default"));
         try {
             return searchCommandEvaulator.eval(ctx, params, humanQuery);
         }

@@ -6,7 +6,6 @@ import lombok.SneakyThrows;
 import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.edge.assistant.client.AssistantClient;
 import nu.marginalia.wmsa.edge.assistant.dict.DictionaryResponse;
-import nu.marginalia.wmsa.edge.search.command.ResponseType;
 import nu.marginalia.wmsa.edge.search.command.SearchCommandInterface;
 import nu.marginalia.wmsa.edge.search.command.SearchParameters;
 import nu.marginalia.wmsa.renderer.mustache.MustacheRenderer;
@@ -24,7 +23,6 @@ public class DefinitionCommand implements SearchCommandInterface {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final MustacheRenderer<DictionaryResponse> dictionaryRenderer;
-    private final MustacheRenderer<DictionaryResponse> dictionaryRendererGmi;
     private final AssistantClient assistantClient;
 
 
@@ -36,7 +34,6 @@ public class DefinitionCommand implements SearchCommandInterface {
     {
 
         dictionaryRenderer = rendererFactory.renderer("edge/dictionary-results");
-        dictionaryRendererGmi = rendererFactory.renderer("edge/dictionary-results-gmi");
         this.assistantClient = assistantClient;
     }
 
@@ -48,11 +45,7 @@ public class DefinitionCommand implements SearchCommandInterface {
 
         var results = lookupDefinition(ctx, query);
 
-        if (parameters.responseType() == ResponseType.GEMINI) {
-            return Optional.of(dictionaryRendererGmi.render(results, Map.of("query", parameters.profileStr())));
-        } else {
-            return Optional.of(dictionaryRenderer.render(results, Map.of("query", query, "profile", parameters.profileStr())));
-        }
+        return Optional.of(dictionaryRenderer.render(results, Map.of("query", query, "profile", parameters.profileStr())));
     }
 
 

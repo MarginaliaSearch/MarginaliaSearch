@@ -7,7 +7,6 @@ import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
 import nu.marginalia.wmsa.edge.search.EdgeSearchOperator;
 import nu.marginalia.wmsa.edge.search.EdgeSearchProfile;
-import nu.marginalia.wmsa.edge.search.command.ResponseType;
 import nu.marginalia.wmsa.edge.search.command.SearchCommandInterface;
 import nu.marginalia.wmsa.edge.search.command.SearchParameters;
 import nu.marginalia.wmsa.edge.search.model.DecoratedSearchResultSet;
@@ -34,7 +33,6 @@ public class SiteSearchCommand implements SearchCommandInterface {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final MustacheRenderer<DomainInformation> siteInfoRenderer;
-    private final MustacheRenderer<DomainInformation> siteInfoRendererGmi;
 
     private final Predicate<String> queryPatternPredicate = Pattern.compile("^site:[.A-Za-z\\-0-9]+$").asPredicate();
     @Inject
@@ -50,7 +48,6 @@ public class SiteSearchCommand implements SearchCommandInterface {
         this.domainInformationService = domainInformationService;
 
         siteInfoRenderer = rendererFactory.renderer("edge/site-info");
-        siteInfoRendererGmi = rendererFactory.renderer("edge/site-info-gmi");
     }
 
     @Override
@@ -73,13 +70,7 @@ public class SiteSearchCommand implements SearchCommandInterface {
             resultSet = new DecoratedSearchResultSet(Collections.emptyList());
         }
 
-        if (parameters.responseType() == ResponseType.GEMINI) {
-            return Optional.of(siteInfoRendererGmi.render(results, Map.of("query", query)));
-        } else {
-            return Optional.of(siteInfoRenderer.render(results, Map.of("query", query, "focusDomain", Objects.requireNonNullElse(domain, ""), "profile", parameters.profileStr(), "results", resultSet.resultSet, "screenshot", screenshotPath == null ? "" : screenshotPath.toString())));
-        }
-
-
+        return Optional.of(siteInfoRenderer.render(results, Map.of("query", query, "focusDomain", Objects.requireNonNullElse(domain, ""), "profile", parameters.profileStr(), "results", resultSet.resultSet, "screenshot", screenshotPath == null ? "" : screenshotPath.toString())));
     }
 
 

@@ -89,7 +89,7 @@ public class EdgeSearchOperator {
 
     public DecoratedSearchResults doSearch(Context ctx, EdgeUserSearchParameters params, @Nullable Future<String> eval) {
         Observable<WikiArticles> definitions = getWikiArticle(ctx, params.getHumanQuery());
-        var processedQuery = queryFactory.createQuery(params);
+        EdgeSearchQuery processedQuery = queryFactory.createQuery(params);
 
         logger.info("Human terms: {}", Strings.join(processedQuery.searchTermsHuman, ','));
 
