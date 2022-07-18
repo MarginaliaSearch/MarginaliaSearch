@@ -1,5 +1,6 @@
 package nu.marginalia.wmsa.edge.index.lexicon.journal;
 
+import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,9 +22,22 @@ public class KeywordLexiconJournalFile {
 
     private final ReadWriteLock diskLock = new ReentrantReadWriteLock();
 
+    @SneakyThrows
+    public static void main(String... args) {
+        if (args.length != 1) {
+            System.err.println("Dumps lexicon content to stdout");
+            System.err.println("Arguments: filename");
+            return;
+        }
+
+        KeywordLexiconJournalFile lf = new KeywordLexiconJournalFile(new File(args[0]));
+        lf.loadFile(bytes -> {
+            System.out.println(new String(bytes));
+        });
+    }
 
     public KeywordLexiconJournalFile(File journalFile) throws IOException {
-        this.journalFileRAF = new RandomAccessFile(journalFile, "rw");;
+        this.journalFileRAF = new RandomAccessFile(journalFile, "rw");
         this.journalFile = journalFile;
     }
 
