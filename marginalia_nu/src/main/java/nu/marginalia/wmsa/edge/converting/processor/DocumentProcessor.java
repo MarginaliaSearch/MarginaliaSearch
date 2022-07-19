@@ -183,6 +183,10 @@ public class DocumentProcessor {
         tagWords.add("proto:"+url.proto.toLowerCase());
         tagWords.add("js:" + Boolean.toString(ret.features.contains(HtmlFeature.JS)).toLowerCase());
 
+        if (domain.ip != null) {
+            tagWords.add("ip:" + domain.ip.toLowerCase()); // lower case because IPv6 is hexadecimal
+        }
+
         ret.features.stream().map(HtmlFeature::getKeyword).forEach(tagWords::add);
 
         words.append(IndexBlock.Meta, tagWords);
