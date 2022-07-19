@@ -101,7 +101,7 @@ public class DocumentProcessor {
         }
         catch (DisqualifiedException ex) {
             ret.state = EdgeUrlState.DISQUALIFIED;
-            logger.info("Disqualified {}: {}", ret.url, ex.reason);
+            logger.debug("Disqualified {}: {}", ret.url, ex.reason);
         }
         catch (Exception ex) {
             ret.state = EdgeUrlState.DISQUALIFIED;
