@@ -212,9 +212,10 @@ public class EdgeSearchE2ETest extends E2ETestBase {
 
         var html = driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML");
 
-        assertEquals(List.of("Frog", "Binomial nomenclature", "Amphibian", "Mantis"), getTitlesFromSearchResults(html));
-
         Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("site-search"));
+
+        assertEquals(List.of("Frog", "Binomial nomenclature", "Mantis", "Amphibian"), getTitlesFromSearchResults(html));
+
     }
 
     @Test
