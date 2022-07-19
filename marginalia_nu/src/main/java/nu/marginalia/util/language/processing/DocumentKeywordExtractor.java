@@ -39,13 +39,12 @@ public class DocumentKeywordExtractor {
 
     public EdgePageWordSet extractKeywords(DocumentLanguageData documentLanguageData) {
 
-        var titleWords = extractTitleWords(documentLanguageData);
+        List<WordRep> titleWords = extractTitleWords(documentLanguageData);
 
-        var wordsTfIdf = tfIdfCounter.count(documentLanguageData, 0.75);
-        var wordsNamesRepeated = nameCounter.count(documentLanguageData, 2);
-        var wordsNamesAll = nameCounter.count(documentLanguageData, 1);
-        var subjects = subjectCounter.count(documentLanguageData);
-
+        List<WordRep> wordsTfIdf = tfIdfCounter.count(documentLanguageData);
+        List<WordRep> wordsNamesRepeated = nameCounter.count(documentLanguageData, 2);
+        List<WordRep> wordsNamesAll = nameCounter.count(documentLanguageData, 1);
+        List<WordRep> subjects = subjectCounter.count(documentLanguageData);
         List<WordRep> wordsLongName = longNameCounter.count(documentLanguageData);
 
         int totalSize = wordsTfIdf.size();
@@ -55,8 +54,8 @@ public class DocumentKeywordExtractor {
         List<WordRep> topKeywords = new ArrayList<>(totalSize / 2);
 
         for(var v : wordsTfIdf) {
-            if (topKeywords.size() < totalSize / 10) topKeywords.add(v);
-            else if (midKeywords.size() < totalSize / 5) midKeywords.add(v);
+            if (topKeywords.size() <= totalSize / 10) topKeywords.add(v);
+            else if (midKeywords.size() <= totalSize / 5) midKeywords.add(v);
             else lowKeywords.add(v);
         }
 
@@ -125,17 +124,18 @@ public class DocumentKeywordExtractor {
             }
         }
 
-        return counts.entrySet().stream().filter(c2 -> c2.getValue()>=1)
-                .sorted(Comparator.comparing(this::value))
+        return counts.entrySet().stream()
+                .sorted(Comparator.comparing(e -> {
+                    double N = 11820118.; // Number of documents in term freq dictionary
+
+                    // Caveat: This is actually the *negated* term score, because the second logarithm has
+                    // its parameter inverted (log(a^b) = b log(a); here b = -1)
+                    return (1+Math.log(e.getValue())) * Math.log((1.+dict.getTermFreq(e.getKey()))/N);
+                }))
                 .map(Map.Entry::getKey)
-                .limit(512).collect(Collectors.toSet());
+                .limit(512).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
-    private double value(Map.Entry<String, Integer> e) {
-        double N = 11820118.; // Number of documents in term freq dictionary
-
-        return (1+Math.log(e.getValue())) * Math.log((1.+dict.getTermFreq(e.getKey()))/N);
-    }
 
     public EdgePageWords createWords(IndexBlock block, Collection<WordRep> words) {
         return new EdgePageWords(block, words.stream().map(w -> w.word).map(AsciiFlattener::flattenUnicode).filter(WordPatterns.wordQualitiesPredicate).collect(Collectors.toSet()));

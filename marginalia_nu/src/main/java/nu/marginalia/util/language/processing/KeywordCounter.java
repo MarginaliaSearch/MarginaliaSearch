@@ -1,15 +1,12 @@
 package nu.marginalia.util.language.processing;
 
 import nu.marginalia.util.language.processing.model.DocumentLanguageData;
-import nu.marginalia.util.language.processing.model.DocumentSentence;
 import nu.marginalia.util.language.processing.model.WordRep;
-import nu.marginalia.util.language.processing.model.WordSpan;
 import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class KeywordCounter {
     private final KeywordExtractor keywordExtractor;
@@ -20,58 +17,29 @@ public class KeywordCounter {
         this.keywordExtractor = keywordExtractor;
     }
 
-    public List<WordRep> count(DocumentLanguageData dld, double cutoff) {
+    public List<WordRep> count(DocumentLanguageData dld) {
         HashMap<String, Double> counts = new HashMap<>(1000);
-        HashMap<String, HashSet<String>> instances = new HashMap<>(1000);
+        HashMap<String, HashSet<WordRep>> instances = new HashMap<>(1000);
 
-        for (int i = 0; i < dld.sentences.length; i++) {
-            DocumentSentence sent = dld.sentences[i];
-            double value = 1.0 / Math.log(1+i);
+        for (var sent : dld.sentences) {
             var keywords = keywordExtractor.getKeywordsFromSentence(sent);
             for (var span : keywords) {
-                var stemmed = sent.constructStemmedWordFromSpan(span);
-                if (stemmed.isBlank())
-                    continue;
 
-                counts.merge(stemmed, value, Double::sum);
+                String stemmed = sent.constructStemmedWordFromSpan(span);
 
-                instances.computeIfAbsent(stemmed, k -> new HashSet<>()).add(sent.constructWordFromSpan(span));
+                counts.merge(stemmed, 1., Double::sum);
+                instances.computeIfAbsent(stemmed, k -> new HashSet<>()).add(new WordRep(sent, span));
             }
         }
 
-        var topWords = counts.entrySet().stream()
-                .filter(w -> w.getValue() > cutoff)
+        return counts.entrySet().stream()
+                .filter(e -> e.getValue() > 1)
                 .sorted(Comparator.comparing(this::getTermValue))
-                .limit(Math.min(100, counts.size()/2))
                 .map(Map.Entry::getKey)
+                .flatMap(w -> instances.get(w).stream())
+                .filter(w -> w.word.length() > 1)
+                .limit(150)
                 .collect(Collectors.toList());
-
-        var topWordsSet = new HashSet<>(topWords);
-
-        final Set<WordRep> keywords = new HashSet<>();
-
-        for (var sentence : dld.sentences) {
-            for (WordSpan kw : keywordExtractor.getKeywordsFromSentence(sentence)) {
-                String stemmedWord = sentence.constructStemmedWordFromSpan(kw);
-                if (topWords.contains(stemmedWord)) {
-                    keywords.add(new WordRep(sentence, kw));
-                }
-            }
-        }
-
-        for (var sentence : dld.sentences) {
-            for (var kw : keywordExtractor.getKeywordsFromSentenceStrict(sentence, topWordsSet, true)) {
-                keywords.add(new WordRep(sentence, kw));
-            }
-        }
-
-        Map<String, Integer> sortOrder = IntStream.range(0, topWords.size()).boxed().collect(Collectors.toMap(topWords::get, i->i));
-
-        Comparator<WordRep> comp = Comparator.comparing(wr -> sortOrder.getOrDefault(wr.stemmed, topWords.size()));
-
-        var ret = new ArrayList<>(keywords);
-        ret.sort(comp);
-        return ret;
     }
 
     private static final Pattern separator = Pattern.compile("_");
@@ -86,7 +54,11 @@ public class KeywordCounter {
     }
 
     double value(String key, double value) {
-        return (1+Math.log(value)) * Math.log((1.+dict.getTermFreq(key))/11820118.);
+        double freq = dict.getTermFreqStemmed(key);
+        if (freq < 1) {
+            freq = 10;
+        }
+        return (1+Math.log(value)) * Math.log((1.1+freq)/11820118.);
     }
 
 

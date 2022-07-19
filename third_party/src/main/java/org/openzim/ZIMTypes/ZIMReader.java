@@ -256,8 +256,8 @@ public class ZIMReader {
 			try {
 				getArticleData(consumer, pos, blobs);
 			}
-			catch (IOException ex) {
-
+			catch (Exception ex) {
+				ex.printStackTrace();
 			}
 		});
 
@@ -384,7 +384,12 @@ public class ZIMReader {
 						rb = is.read(data, trb, data.length - trb);
 						trb += rb;
 					}
-					consumer.accept(blobToUrl.get(blobNumber), new String(data));
+					try {
+						consumer.accept(blobToUrl.get(blobNumber), new String(data));
+					}
+					catch (Exception ex) {
+						ex.printStackTrace();
+					}
 				}
 			}
 			System.out.println(clusterNumber + " " + blobToUrl.size());
