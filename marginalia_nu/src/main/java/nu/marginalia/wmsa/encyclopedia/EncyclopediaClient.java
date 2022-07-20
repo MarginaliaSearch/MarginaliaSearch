@@ -23,11 +23,6 @@ public class EncyclopediaClient extends AbstractDynamicClient {
     }
 
     @CheckReturnValue
-    public Observable<Boolean> hasWiki(Context ctx, String url) {
-        return super.get(ctx, "/wiki/has?url="+ UrlEncoded.encodeString(url), Boolean.class);
-    }
-
-    @CheckReturnValue
     public Observable<WikiArticles> encyclopediaLookup(Context ctx, String word) {
         try {
             return super.get(ctx, "/encyclopedia/" + UrlEncoded.encodeString(word), WikiArticles.class);
