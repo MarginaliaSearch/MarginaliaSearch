@@ -6,12 +6,11 @@ import nu.marginalia.util.TestUtil;
 import nu.marginalia.wmsa.client.exception.RemoteException;
 import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.configuration.server.Initialization;
+import nu.marginalia.wmsa.edge.assistant.client.AssistantClient;
 import nu.marginalia.wmsa.edge.assistant.dict.DictionaryService;
 import nu.marginalia.wmsa.edge.assistant.dict.SpellChecker;
 import nu.marginalia.wmsa.edge.assistant.eval.MathParser;
 import nu.marginalia.wmsa.edge.assistant.eval.Units;
-import nu.marginalia.wmsa.edge.assistant.EdgeAssistantService;
-import nu.marginalia.wmsa.edge.assistant.client.AssistantClient;
 import nu.marginalia.wmsa.edge.assistant.screenshot.ScreenshotService;
 import nu.marginalia.wmsa.edge.search.UnitConversion;
 import org.junit.jupiter.api.*;
@@ -62,7 +61,7 @@ class AssistantTest {
                 new DictionaryService(dataSource, new SpellChecker()),
                 new MathParser(),
                 new Units(new MathParser()),
-                new ScreenshotService(null), null);
+                new ScreenshotService(null, dataSource), null);
 
         Spark.awaitInitialization();
     }
