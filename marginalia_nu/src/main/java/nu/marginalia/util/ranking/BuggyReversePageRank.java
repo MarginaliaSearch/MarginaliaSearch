@@ -1,15 +1,11 @@
 package nu.marginalia.util.ranking;
 
 
-import com.zaxxer.hikari.HikariDataSource;
-
-import java.io.IOException;
-
 public class BuggyReversePageRank extends RankingAlgorithm {
 
 
-    public BuggyReversePageRank(HikariDataSource dataSource, String... origins) {
-        super(dataSource, origins);
+    public BuggyReversePageRank(RankingDomainFetcher domains, String... origins) {
+        super(domains, origins);
     }
 
     @Override

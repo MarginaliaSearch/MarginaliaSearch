@@ -2,15 +2,17 @@ package nu.marginalia.util.language.processing.model;
 
 
 import nu.marginalia.util.language.WordPatterns;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.ref.SoftReference;
 import java.util.BitSet;
+import java.util.Iterator;
 import java.util.StringJoiner;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class DocumentSentence {
+public class DocumentSentence implements Iterable<DocumentSentence.SentencePos>{
     public final String originalSentence;
     public final String[] words;
     public final int[] separators;
@@ -85,4 +87,37 @@ public class DocumentSentence {
     public String toString() {
         return IntStream.range(0, length()).mapToObj(i -> String.format("%s[%s]", words[i], posTags[i])).collect(Collectors.joining(" "));
     }
+
+    @NotNull
+    @Override
+    public Iterator<SentencePos> iterator() {
+        return new Iterator<>() {
+            int i = -1;
+            @Override
+            public boolean hasNext() {
+                return i+1 < length();
+            }
+
+            @Override
+            public SentencePos next() {
+                return new SentencePos(++i);
+            }
+        };
+    }
+
+    public class SentencePos {
+        public final int pos;
+
+        public SentencePos(int pos) {
+            this.pos = pos;
+        }
+
+        public String word() { return words[pos]; }
+        public String wordLowerCase() { return wordsLowerCase[pos]; }
+        public String posTag() { return posTags[pos]; }
+        public String stemmed() { return stemmedWords[pos]; }
+        public int separator() { return separators[pos]; }
+        public boolean isStopWord() { return DocumentSentence.this.isStopWord(pos); }
+    }
 }
+

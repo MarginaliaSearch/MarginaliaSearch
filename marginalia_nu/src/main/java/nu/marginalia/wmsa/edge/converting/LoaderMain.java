@@ -3,7 +3,6 @@ package nu.marginalia.wmsa.edge.converting;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
 import nu.marginalia.wmsa.edge.converting.interpreter.Instruction;
@@ -25,14 +24,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class LoaderMain {
 
+
+    private static final Logger logger = LoggerFactory.getLogger(LoaderMain.class);
+
     private final Path processDir;
     private final EdgeCrawlPlan plan;
     private final ConvertedDomainReader instructionsReader;
-    private final HikariDataSource dataSource;
-
-    private static final Logger logger = LoggerFactory.getLogger(LoaderMain.class);
     private final LoaderFactory loaderFactory;
     private final EdgeIndexClient indexClient;
+
     private volatile boolean running = true;
 
     final Thread processorThread = new Thread(this::processor, "Processor Thread");
@@ -56,14 +56,12 @@ public class LoaderMain {
     @Inject
     public LoaderMain(EdgeCrawlPlan plan,
                       ConvertedDomainReader instructionsReader,
-                      HikariDataSource dataSource,
                       LoaderFactory loaderFactory,
                       EdgeIndexClient indexClient) {
 
         this.processDir = plan.process.getDir();
         this.plan = plan;
         this.instructionsReader = instructionsReader;
-        this.dataSource = dataSource;
         this.loaderFactory = loaderFactory;
         this.indexClient = indexClient;
 
@@ -79,7 +77,7 @@ public class LoaderMain {
         LoaderMain.loadTotal = loadTotal.get();
 
         WorkLog.readLog(logFile, entry -> {
-            load(entry.path(), entry.cnt());
+            load(plan, entry.path(), entry.cnt());
         });
 
         running = false;
@@ -90,15 +88,9 @@ public class LoaderMain {
     }
 
     private volatile static int loadTotal;
-    private static final int loaded = 0;
 
-    private void load(String path, int cnt) {
-        String first = path.substring(0, 2);
-        String second = path.substring(2, 4);
-        Path destDir = processDir.resolve(first).resolve(second).resolve(path);
-
-
-
+    private void load(EdgeCrawlPlan plan, String path, int cnt) {
+        Path destDir = plan.getProcessedFilePath(path);
         try {
             var loader = loaderFactory.create(cnt);
             var instructions = instructionsReader.read(destDir, cnt);
@@ -120,7 +112,8 @@ public class LoaderMain {
             loader.finish();
             long loadTime = System.currentTimeMillis() - startTime;
             taskStats.observe(loadTime);
-            logger.info("Loaded {}/{} : {} ({}) {}ms {} l/s", taskStats.getCount(), loadTotal, path, loader.data.sizeHint, loadTime, taskStats.avgTime());
+            logger.info("Loaded {}/{} : {} ({}) {}ms {} l/s", taskStats.getCount(),
+                    loadTotal, path, loader.data.sizeHint, loadTime, taskStats.avgTime());
         }
 
     }

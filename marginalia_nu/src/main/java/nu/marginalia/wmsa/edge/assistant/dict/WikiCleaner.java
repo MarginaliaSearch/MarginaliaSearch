@@ -79,10 +79,7 @@ public class WikiCleaner {
             }
         });
 
-        Optional.ofNullable(doc.getElementsByTag("cite")).ifPresent(cite -> cite.forEach(c -> {
-            c.tagName("span");
-        }));
-
+        doc.getElementsByTag("cite").tagName("span");
 
         removeIds(doc, "toc", "catlinks", "Notes", "mw-navigation", "mw-data-after-content", "jump-to-nav");
         removeByClass(doc, "mw-references-wrap", "references", "reference", "siteSub", "refbegin");
@@ -205,7 +202,7 @@ public class WikiCleaner {
             }
         });
         doc.getAllElements().forEach(elem -> {
-            var classes = elem.classNames().stream().filter(this::isWikiClass).collect(Collectors.toList());
+            var classes = elem.classNames().stream().filter(this::isWikiClass).toList();
             classes.forEach(elem::removeClass);
             elem.removeAttr("lang");
             elem.removeAttr("dir");
@@ -251,9 +248,8 @@ public class WikiCleaner {
             var formula = math.getElementsByTag("math");
             var converter = net.sourceforge.jeuclid.converter.Converter.getInstance();
             var sos = new ByteArrayOutputStream();
-            var alt = Optional.ofNullable(formula.attr("alttext"))
-                    .or(() -> Optional.ofNullable(math.getElementsByTag("annotation").text()))
-                    .orElse("");
+            var alt = Optional.of(formula.attr("alttext")).filter(s -> !s.isBlank())
+                    .orElseGet(() -> math.getElementsByTag("annotation").text());
 
             var layoutContext = new LayoutContextImpl(LayoutContextImpl.getDefaultLayoutContext());
 
@@ -309,16 +305,16 @@ public class WikiCleaner {
     @NotNull
     private List<Pair<String, String>> getWikiPageLinks(Document doc) {
         List<Pair<String,String>> topLinks = new ArrayList<>();
-        Optional.ofNullable(doc.select("p a")).ifPresent(links -> links.forEach(atag -> {
+        doc.select("p a").forEach(atag -> {
             String href = atag.attr("href");
 
-            if (href != null && !href.isBlank()
+            if (!href.isBlank()
                     && !href.contains(":")
                     && !href.startsWith("#")
             ) {
                 topLinks.add(Pair.of(href, atag.attr("title")));
             }
-        }));
+        });
         return topLinks;
     }
 
@@ -336,19 +332,16 @@ public class WikiCleaner {
     private List<Pair<String, String>> getDisambiguationLinks(Document doc) {
         List<Pair<String,String>> disambig = new ArrayList<>();
 
+        for (var note: doc.getElementsByClass("hatnote")) {
+            for (var atag : note.getElementsByTag("a")) {
+                String href = atag.attr("href");
+                if (atag.hasClass("mw-disambig") && !href.isBlank()) {
+                    disambig.add(Pair.of(href, atag.attr("title")));
+                }
+            }
+        }
+        doc.getElementsByClass("hatnote").remove();
 
-        Optional.ofNullable(doc.getElementsByClass("hatnote")).ifPresent(hatnotes -> {
-            hatnotes.forEach(note -> {
-                Optional.ofNullable(note.getElementsByTag("a"))
-                    .ifPresent(links -> links.forEach(atag -> {
-                        String href = atag.attr("href");
-                        if (atag.hasClass("mw-disambig") && href != null) {
-                            disambig.add(Pair.of(href, atag.attr("title")));
-                        }
-                    }));
-            });
-        });
-        Optional.ofNullable(doc.getElementsByClass("hatnote")).ifPresent(Elements::remove);
         return disambig;
     }
 

@@ -18,20 +18,20 @@
 
 package org.openzim.ZIMTypes;
 
-import java.io.*;
-import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-
 import com.github.luben.zstd.RecyclingBufferPool;
 import com.github.luben.zstd.ZstdInputStream;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
-import org.tukaani.xz.SingleXZInputStream;
 import org.openzim.util.RandomAcessFileZIMInputStream;
 import org.openzim.util.Utilities;
+import org.tukaani.xz.SingleXZInputStream;
+
+import java.io.*;
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * @author Arunesh Mathur
@@ -256,8 +256,8 @@ public class ZIMReader {
 			try {
 				getArticleData(consumer, pos, blobs);
 			}
-			catch (IOException ex) {
-
+			catch (Exception ex) {
+				ex.printStackTrace();
 			}
 		});
 
@@ -384,7 +384,12 @@ public class ZIMReader {
 						rb = is.read(data, trb, data.length - trb);
 						trb += rb;
 					}
-					consumer.accept(blobToUrl.get(blobNumber), new String(data));
+					try {
+						consumer.accept(blobToUrl.get(blobNumber), new String(data));
+					}
+					catch (Exception ex) {
+						ex.printStackTrace();
+					}
 				}
 			}
 			System.out.println(clusterNumber + " " + blobToUrl.size());
@@ -396,198 +401,6 @@ public class ZIMReader {
 			}
 		}
 
-
-		return null;
-
-	}
-
-	public String getArticleData(DirectoryEntry mainEntry) throws IOException {
-
-		byte[] buffer = new byte[8];
-
-		if (mainEntry != null) {
-
-			// Check what kind of an entry was mainEnrty
-			if (mainEntry.getClass() == ArticleEntry.class) {
-
-				// Cast to ArticleEntry
-				ArticleEntry article = (ArticleEntry) mainEntry;
-
-				// Get the cluster and blob numbers from the article
-				long clusterNumber = article.getClusterNumber();
-				int blobNumber = article.getBlobnumber();
-
-				// Move to the cluster entry in the clusterPtrPos
-				mReader.seek(mFile.getClusterPtrPos() + clusterNumber * 8);
-
-				// Read the location of the cluster
-				long clusterPos = mReader
-						.readEightLittleEndianBytesValue(buffer);
-
-				// Move to the cluster
-				mReader.seek(clusterPos);
-
-				// Read the first byte, for compression information
-				int compressionType = mReader.read();
-
-				// Reference declaration
-				SingleXZInputStream xzReader = null;
-				int firstOffset, numberOfBlobs, offset1,
-				offset2,
-				location,
-				differenceOffset;
-				
-				ByteArrayOutputStream baos;
-
-				// Check the compression type that was read
-				switch (compressionType) {
-
-					// TODO: Read uncompressed data directly
-					case 0:
-					case 1:
-
-						// Read the first 4 bytes to find out the number of artciles
-						buffer = new byte[4];
-
-						// Create a dictionary with size 40MiB, the zimlib uses this
-						// size while creating
-
-						// Read the first offset
-						mReader.read(buffer);
-
-						// The first four bytes are the offset of the zeroth blob
-						firstOffset = Utilities
-								.toFourLittleEndianInteger(buffer);
-
-						// The number of blobs
-						numberOfBlobs = firstOffset / 4;
-
-						// The blobNumber has to be lesser than the numberOfBlobs
-						assert blobNumber < numberOfBlobs;
-
-
-						if (blobNumber == 0) {
-							// The first offset is what we read earlier
-							offset1 = firstOffset;
-						} else {
-
-							location = (blobNumber - 1) * 4;
-							Utilities.skipFully(mReader, location);
-							mReader.read(buffer);
-							offset1 = Utilities.toFourLittleEndianInteger(buffer);
-						}
-
-						mReader.read(buffer);
-						offset2 = Utilities.toFourLittleEndianInteger(buffer);
-
-						differenceOffset = offset2 - offset1;
-						buffer = new byte[differenceOffset];
-
-						Utilities.skipFully(mReader,
-								(offset1 - 4 * (blobNumber + 2)));
-
-						mReader.read(buffer, 0, differenceOffset);
-
-						return new String(buffer);
-
-				// LZMA2 compressed data
-				case 4:
-
-					// Read the first 4 bytes to find out the number of artciles
-					buffer = new byte[4];
-
-					// Create a dictionary with size 40MiB, the zimlib uses this
-					// size while creating
-					xzReader = new SingleXZInputStream(mReader, 4194304);
-
-					// Read the first offset
-					xzReader.read(buffer);
-
-					// The first four bytes are the offset of the zeroth blob
-					firstOffset = Utilities
-							.toFourLittleEndianInteger(buffer);
-
-					// The number of blobs
-					numberOfBlobs = firstOffset / 4;
-
-					// The blobNumber has to be lesser than the numberOfBlobs
-					assert blobNumber < numberOfBlobs;
-
-					if(blobNumber == 0) {
-						// The first offset is what we read earlier
-						offset1 = firstOffset;
-					} else {
-
-						location = (blobNumber - 1) * 4;
-						Utilities.skipFully(xzReader, location);
-						xzReader.read(buffer);
-						offset1 = Utilities.toFourLittleEndianInteger(buffer);
-					}
-
-					xzReader.read(buffer);
-					offset2 = Utilities.toFourLittleEndianInteger(buffer);
-
-					differenceOffset = offset2 - offset1;
-					buffer = new byte[differenceOffset];
-
-					Utilities.skipFully(xzReader,
-							(offset1 - 4 * (blobNumber + 2)));
-
-					xzReader.read(buffer, 0, differenceOffset);
-					return new String(buffer);
-
-				case 5:
-					// Read the first 4 bytes to find out the number of artciles
-					buffer = new byte[4];
-
-					// Create a dictionary with size 40MiB, the zimlib uses this
-					// size while creating
-					var zstdInputStream = new com.github.luben.zstd.ZstdInputStream(new BufferedInputStream(mReader));
-
-					// Read the first offset
-					zstdInputStream.read(buffer);
-
-					// The first four bytes are the offset of the zeroth blob
-					firstOffset = Utilities
-							.toFourLittleEndianInteger(buffer);
-
-					// The number of blobs
-					numberOfBlobs = firstOffset / 4;
-
-					// The blobNumber has to be lesser than the numberOfBlobs
-					assert blobNumber < numberOfBlobs;
-
-					if(blobNumber == 0) {
-						// The first offset is what we read earlier
-						offset1 = firstOffset;
-					} else {
-
-						location = (blobNumber - 1) * 4;
-						Utilities.skipFully(zstdInputStream, location);
-						zstdInputStream.read(buffer);
-						offset1 = Utilities.toFourLittleEndianInteger(buffer);
-					}
-
-					zstdInputStream.read(buffer);
-					offset2 = Utilities.toFourLittleEndianInteger(buffer);
-
-					differenceOffset = offset2 - offset1;
-					buffer = new byte[differenceOffset];
-
-					Utilities.skipFully(zstdInputStream,
-							(offset1 - 4 * (blobNumber + 2)));
-
-					zstdInputStream.read(buffer, 0, differenceOffset);
-
-					return new String(buffer);
-
-					default:
-						System.err.print("What is compression = " + compressionType);
-
-				}
-
-			}
-		}
 
 		return null;
 

@@ -9,8 +9,8 @@ import java.util.List;
 
 public class CommandEvaluator {
 
-    private final List<SearchCommandInterface> commands = new ArrayList<>();
-    private final SearchCommand search;
+    private final List<SearchCommandInterface> specialCommands = new ArrayList<>();
+    private final SearchCommand defaultCommand;
 
     @Inject
     public CommandEvaluator(
@@ -21,17 +21,17 @@ public class CommandEvaluator {
             BangCommand bang,
             SearchCommand search
     ) {
-        commands.add(browse);
-        commands.add(convert);
-        commands.add(define);
-        commands.add(site);
-        commands.add(bang);
+        specialCommands.add(browse);
+        specialCommands.add(convert);
+        specialCommands.add(define);
+        specialCommands.add(site);
+        specialCommands.add(bang);
 
-        this.search = search;
+        defaultCommand = search;
     }
 
     public Object eval(Context ctx, SearchParameters parameters, String query) {
-        for (var cmd : commands) {
+        for (var cmd : specialCommands) {
             var ret = cmd.process(ctx, parameters, query);
             if (ret.isPresent()) {
                 return ret.get();
@@ -39,7 +39,7 @@ public class CommandEvaluator {
         }
 
         // Always process the search command last
-        return search.process(ctx, parameters, query)
+        return defaultCommand.process(ctx, parameters, query)
                 .orElseThrow(() -> new IllegalStateException("Search Command returned Optional.empty()!") /* This Should Not be Possible™ */ );
     }
 

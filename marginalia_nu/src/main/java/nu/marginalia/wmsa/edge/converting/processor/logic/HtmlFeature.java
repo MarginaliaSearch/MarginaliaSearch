@@ -3,26 +3,32 @@ package nu.marginalia.wmsa.edge.converting.processor.logic;
 import java.util.Collection;
 
 public enum HtmlFeature {
-    MEDIA(0),
-    JS(1),
-    AFFILIATE_LINK(2),
-    TRACKING(3),
-    COOKIES(4)
+    MEDIA( "special:media"),
+    JS("special:scripts"),
+    AFFILIATE_LINK( "special:affiliate"),
+    TRACKING("special:tracking"),
+    COOKIES("special:cookies")
     ;
 
-    public final int bit;
+    private final String keyword;
 
-    HtmlFeature(int bit) {
-        this.bit = bit;
+    HtmlFeature(String keyword) {
+        this.keyword = keyword;
+    }
+
+    public String getKeyword() {
+        return keyword;
     }
 
     public static int encode(Collection<HtmlFeature> featuresAll) {
-        return featuresAll.stream().mapToInt(f -> 1 << f.bit).reduce(0, (l, r) -> (l|r));
+        int ret = 0;
+        for (var feature : featuresAll) {
+            ret |= (1 << (feature.ordinal()));
+        }
+        return ret;
     }
+
     public static boolean hasFeature(int value, HtmlFeature feature) {
-        return (value & (1<< feature.bit)) != 0;
-    }
-    public static int addFeature(int value, HtmlFeature feature) {
-        return (value | (1<< feature.bit));
+        return (value & (1<< feature.ordinal())) != 0;
     }
 }

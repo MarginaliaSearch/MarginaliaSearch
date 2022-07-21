@@ -1,59 +1,85 @@
 package nu.marginalia.wmsa.edge.tools;
 
-import nu.marginalia.wmsa.configuration.server.Context;
+import com.github.luben.zstd.Zstd;
+import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.util.ParallelPipe;
+import nu.marginalia.wmsa.configuration.module.DatabaseModule;
 import nu.marginalia.wmsa.edge.assistant.dict.WikiCleaner;
-import nu.marginalia.wmsa.encyclopedia.EncyclopediaClient;
+import org.mariadb.jdbc.Driver;
 import org.openzim.ZIMTypes.ZIMFile;
 import org.openzim.ZIMTypes.ZIMReader;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.concurrent.*;
+import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
-public class EncyclopediaLoaderTool {
+public class EncyclopediaLoaderTool extends ParallelPipe<EncyclopediaLoaderTool.ArticleRaw, EncyclopediaLoaderTool.ArticleProcessed> implements AutoCloseable {
 
-    static final EncyclopediaClient encyclopediaClient = new EncyclopediaClient();
+    public static void main(String[] args) throws IOException, InterruptedException, SQLException {
 
-    public static void main(String[] args) throws IOException, InterruptedException {
-        convertAll(args);
-        encyclopediaClient.close();
+        org.mariadb.jdbc.Driver driver = new Driver();
+
+        try (var loader = new EncyclopediaLoaderTool(new DatabaseModule().provideConnection())) {
+            var zr = new ZIMReader(new ZIMFile(args[0]));
+
+            zr.forEachArticles((url, art) -> {
+                if (art != null) {
+                    loader.accept(new ArticleRaw(url, art));
+                }
+            }, p->true);
+
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
         System.exit(0);
     }
 
-    private static void convertAll(String[] args) throws IOException, InterruptedException {
-        var zr = new ZIMReader(new ZIMFile(args[0]));
+    public record ArticleRaw(String url, String art) {
+        public ArticleProcessed toProcessed(String data) {
+            return new ArticleProcessed(url, data);
+        }
+    }
+    public record ArticleProcessed(String url, String art) {}
 
-        var pool = Executors.newFixedThreadPool(8);
-        var sem = new Semaphore(12);
-        zr.forEachArticles((url, art) -> {
-           if (art != null) {
-               try {
-                   sem.acquire();
 
-                   pool.execute(() -> {
-                       try {
-                           convert(url, art);
-                       } finally {
-                           sem.release();
-                       }
-                   });
-               } catch (InterruptedException e) {
-                   throw new RuntimeException(e);
-               }
-           }
-       }, p -> true);
+    private final HikariDataSource dataSource;
+    private final Connection connection;
+    private final PreparedStatement insertArticleDataStatement;
 
-        sem.acquire(12);
+    private final WikiCleaner wikiCleaner = new WikiCleaner();
 
-        encyclopediaClient.close();
+    public EncyclopediaLoaderTool(HikariDataSource dataSource) throws SQLException {
+        super("EncyclopediaPipe", 24, 4, 2);
+        this.dataSource = dataSource;
+        this.connection = dataSource.getConnection();
+        this.insertArticleDataStatement = connection.prepareStatement("REPLACE INTO REF_WIKI_ARTICLE(NAME, ENTRY) VALUES (?, ?)");
+
     }
 
-    private static void convert(String url, String art) {
-        String newData = new WikiCleaner().cleanWikiJunk("https://en.wikipedia.org/wiki/" + url, art);
+    @Override
+    protected ArticleProcessed onProcess(ArticleRaw articleRaw) {
+        return articleRaw.toProcessed(wikiCleaner.cleanWikiJunk("https://en.wikipedia.org/wiki/" + articleRaw.url, articleRaw.art));
+    }
 
-        if (null != newData) {
-            encyclopediaClient.submitWiki(Context.internal(), url, newData)
-                    .retry(5)
-                    .blockingSubscribe();
+    @Override
+    protected void onReceive(ArticleProcessed articleProcessed) throws Exception {
+        if (articleProcessed.art == null) return;
+
+        try (var bs = new ByteArrayInputStream(Zstd.compress(articleProcessed.art.getBytes(StandardCharsets.UTF_8)))) {
+            insertArticleDataStatement.setString(1, articleProcessed.url);
+            insertArticleDataStatement.setBlob(2, bs);
+            insertArticleDataStatement.executeUpdate();
         }
+    }
+
+    public void close() throws Exception {
+        join();
+        if (insertArticleDataStatement != null) insertArticleDataStatement.close();
+        if (connection != null) connection.close();
+        if (dataSource != null) dataSource.close();
     }
 }

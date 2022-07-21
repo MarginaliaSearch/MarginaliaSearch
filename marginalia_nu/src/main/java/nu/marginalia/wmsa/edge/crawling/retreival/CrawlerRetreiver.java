@@ -63,7 +63,7 @@ public class CrawlerRetreiver {
 
         if (queue.peek() != null) {
             var fst = queue.peek();
-            var root = new EdgeUrl(fst.proto, fst.domain, fst.port, "/");
+            var root = fst.domain.toRootUrl();
             if (known.add(root))
                 queue.addFirst(root);
         }
@@ -110,7 +110,7 @@ public class CrawlerRetreiver {
                     .build());
         }
 
-        var fetchResult = fetcher.probeDomain(new EdgeUrl(fst.proto, fst.domain, fst.port, "/"));
+        var fetchResult = fetcher.probeDomain(fst.domain.toRootUrl());
         if (!fetchResult.ok()) {
             logger.debug("Bad status on {}", domain);
             return Optional.of(createErrorPostFromStatus(fetchResult));
@@ -120,6 +120,8 @@ public class CrawlerRetreiver {
 
     private CrawledDomain crawlDomain() {
         String ip = findIp(domain);
+
+        assert !queue.isEmpty();
 
         var robotsRules = fetcher.fetchRobotRules(queue.peek().domain);
         long crawlDelay = robotsRules.getCrawlDelay();
@@ -209,7 +211,7 @@ public class CrawlerRetreiver {
             linkParser.parseLink(baseUrl, link)
                     .filter(this::isSameDomain)
                     .filter(u -> !urlBlocklist.isUrlBlocked(u))
-                    .filter(u -> !urlBlocklist.isForumLink(u))
+                    .filter(u -> !urlBlocklist.isMailingListLink(u))
                     .filter(known::add)
                     .ifPresent(queue::addLast);
         }
@@ -217,7 +219,7 @@ public class CrawlerRetreiver {
             linkParser.parseFrame(baseUrl, link)
                     .filter(this::isSameDomain)
                     .filter(u -> !urlBlocklist.isUrlBlocked(u))
-                    .filter(u -> !urlBlocklist.isForumLink(u))
+                    .filter(u -> !urlBlocklist.isMailingListLink(u))
                     .filter(known::add)
                     .ifPresent(queue::addLast);
         }
@@ -225,14 +227,14 @@ public class CrawlerRetreiver {
             linkParser.parseFrame(baseUrl, link)
                     .filter(this::isSameDomain)
                     .filter(u -> !urlBlocklist.isUrlBlocked(u))
-                    .filter(u -> !urlBlocklist.isForumLink(u))
+                    .filter(u -> !urlBlocklist.isMailingListLink(u))
                     .filter(known::add)
                     .ifPresent(queue::addLast);
         }
     }
 
     private Optional<EdgeUrl> findCanonicalUrl(EdgeUrl baseUrl, Document parsed) {
-        baseUrl = baseUrl.withPath("/");
+        baseUrl = baseUrl.domain.toRootUrl();
 
         for (var link : parsed.select("link[rel=canonical]")) {
             return linkParser.parseLink(baseUrl, link);

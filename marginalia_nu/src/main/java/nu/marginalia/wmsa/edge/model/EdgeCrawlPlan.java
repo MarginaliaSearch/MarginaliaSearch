@@ -27,4 +27,15 @@ public class EdgeCrawlPlan {
         }
     }
 
+    public Path getCrawledFilePath(String fileName) {
+        String sp1 = fileName.substring(0, 2);
+        String sp2 = fileName.substring(2, 4);
+        return crawl.getDir().resolve(sp1).resolve(sp2).resolve(fileName);
+    }
+
+    public Path getProcessedFilePath(String fileName) {
+        String sp1 = fileName.substring(0, 2);
+        String sp2 = fileName.substring(2, 4);
+        return process.getDir().resolve(sp1).resolve(sp2).resolve(fileName);
+    }
 }

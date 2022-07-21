@@ -50,7 +50,7 @@ public class EdgeDomainBlacklistImpl implements EdgeDomainBlacklist {
         final TIntHashSet result = new TIntHashSet(1_000_000);
 
         try (var connection = dataSource.getConnection()) {
-            try (var stmt = connection.prepareStatement("SELECT EC_DOMAIN.ID FROM EC_DOMAIN INNER JOIN EC_TOP_DOMAIN ON EC_DOMAIN.URL_TOP_DOMAIN_ID = EC_TOP_DOMAIN.ID INNER JOIN EC_DOMAIN_BLACKLIST ON EC_DOMAIN_BLACKLIST.URL_DOMAIN = EC_TOP_DOMAIN.URL_PART")) {
+            try (var stmt = connection.prepareStatement("SELECT EC_DOMAIN.ID FROM EC_DOMAIN INNER JOIN EC_DOMAIN_BLACKLIST ON EC_DOMAIN_BLACKLIST.URL_DOMAIN = EC_DOMAIN.DOMAIN_TOP")) {
                 stmt.setFetchSize(1000);
                 var rsp = stmt.executeQuery();
                 while (rsp.next()) {

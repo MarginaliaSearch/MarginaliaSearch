@@ -1,18 +1,19 @@
 package nu.marginalia.wmsa.edge.converting;
 
-import com.google.gson.*;
+import com.google.common.base.Strings;
+import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import nu.marginalia.util.ParallelPipe;
 import nu.marginalia.wmsa.edge.converting.interpreter.Instruction;
 import nu.marginalia.wmsa.edge.converting.processor.DomainProcessor;
 import nu.marginalia.wmsa.edge.converting.processor.InstructionsCompiler;
 import nu.marginalia.wmsa.edge.crawling.CrawlPlanLoader;
 import nu.marginalia.wmsa.edge.crawling.CrawledDomainReader;
-import nu.marginalia.wmsa.edge.crawling.WorkLog;
 import nu.marginalia.wmsa.edge.crawling.CrawlerSpecificationLoader;
+import nu.marginalia.wmsa.edge.crawling.WorkLog;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDomain;
-import nu.marginalia.util.ParallelPipe;
 import nu.marginalia.wmsa.edge.model.EdgeCrawlPlan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,13 +51,6 @@ public class ConverterMain {
         );
 
         injector.getInstance(ConverterMain.class);
-    }
-
-    private static void requireArgs(String[] args, String... help) {
-        if (args.length != help.length) {
-            System.out.println("Usage: " + String.join(", ", help));
-            System.exit(255);
-        }
     }
 
     @Inject
@@ -103,7 +97,12 @@ public class ConverterMain {
 
         domainToId.forEach((domain, id) -> {
             String fileName = idToFileName.get(id);
-            Path dest = getFilePath(plan.crawl.getDir(), fileName);
+
+            if (Strings.isNullOrEmpty(fileName))
+                return;
+
+            Path dest = plan.getCrawledFilePath(fileName);
+
             logger.info("{} - {} - {}", domain, id, dest);
 
             if (!processLog.isJobFinished(id)) {
@@ -127,11 +126,5 @@ public class ConverterMain {
     }
 
     record ProcessingInstructions(String id, List<Instruction> instructions) {}
-
-    private Path getFilePath(Path dir, String fileName) {
-        String sp1 = fileName.substring(0, 2);
-        String sp2 = fileName.substring(2, 4);
-        return dir.resolve(sp1).resolve(sp2).resolve(fileName);
-    }
 
 }

@@ -64,7 +64,7 @@ public class StackOverflowPostsReader extends DefaultHandler {
     }
 
     private StackOverflowPost createPost(StackOverflowQuestionData data) {
-        EdgeUrl url = new EdgeUrl("https", domain, null, "/questions/"+data.getId());
+        EdgeUrl url = new EdgeUrl("https", domain, null, "/questions/"+data.getId(), null);
 
         StringBuilder body = new StringBuilder();
         body.append(data.getQuestion());

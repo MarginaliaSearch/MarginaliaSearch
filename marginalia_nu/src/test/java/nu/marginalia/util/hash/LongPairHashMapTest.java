@@ -26,8 +26,8 @@ class LongPairHashMapTest {
 
         try {
             RandomAccessFile raf = new RandomAccessFile(tempFile.toFile(), "rw");
-            MultimapFileLong mmf = new MultimapFileLong(raf, FileChannel.MapMode.READ_WRITE, 10000, 1000, true);
-            var lphm = new LongPairHashMap(mmf, 1024);
+            MultimapFileLong mmf = new MultimapFileLong(raf, FileChannel.MapMode.READ_WRITE, 10000, 1000);
+            var lphm = LongPairHashMap.createNew(mmf, 1024);
             toPut.forEach(i -> {
                 lphm.put(new LongPairHashMap.CellData(i, i));
             });
@@ -35,8 +35,8 @@ class LongPairHashMapTest {
             lphm.close();
 
             RandomAccessFile raf2 = new RandomAccessFile(tempFile.toFile(), "rw");
-            MultimapFileLong mmf2 = new MultimapFileLong(raf2, FileChannel.MapMode.READ_WRITE, 10000, 1000, true);
-            var lphm2 = new LongPairHashMap(mmf2);
+            MultimapFileLong mmf2 = new MultimapFileLong(raf2, FileChannel.MapMode.READ_WRITE, 10000, 1000);
+            var lphm2 = LongPairHashMap.loadExisting(mmf2);
             toPut.forEach(i -> {
                 Assertions.assertTrue(lphm2.get(i).isSet());
                 Assertions.assertEquals(i, (int) lphm2.get(i).getKey());

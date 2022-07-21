@@ -3,18 +3,15 @@ package com.upserve.uppend.blobs;
 
 import jnr.ffi.*;
 import jnr.ffi.types.size_t;
-import org.slf4j.Logger;
 import com.kenai.jffi.MemoryIO;
 
 import java.io.IOException;
-import java.lang.invoke.MethodHandles;
 import java.nio.*;
 
 // https://github.com/upserve/uppend/blob/70967c6f24d7f1a3bbc18799f485d981da93f53b/src/main/java/com/upserve/uppend/blobs/NativeIO.java
 // MIT License
 
 public class NativeIO {
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final NativeC nativeC = LibraryLoader.create(NativeC.class).load("c");
     public static final int pageSize = nativeC.getpagesize(); // 4096 on most Linux

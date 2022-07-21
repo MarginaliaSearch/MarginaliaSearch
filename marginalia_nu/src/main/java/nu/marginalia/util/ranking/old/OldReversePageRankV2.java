@@ -66,7 +66,7 @@ public class OldReversePageRankV2 {
         originDomains.add("memex.marginalia.nu");
 
         try (var conn = dataSource.getConnection()) {
-            try (var stmt = conn.prepareStatement("SELECT ID,INDEXED,STATE FROM EC_DOMAIN WHERE INDEXED>1 AND STATE>=0 AND QUALITY_RAW>=-10")) {
+            try (var stmt = conn.prepareStatement("SELECT ID,INDEXED,STATE FROM EC_DOMAIN WHERE INDEXED>1 AND IS_ALIVE")) {
                 stmt.setFetchSize(10000);
                 var rsp = stmt.executeQuery();
                 while (rsp.next()) {
@@ -90,7 +90,7 @@ public class OldReversePageRankV2 {
                 }
             }
 
-            try (var stmt = conn.prepareStatement("SELECT ID FROM EC_DOMAIN WHERE URL_PART=?")) {
+            try (var stmt = conn.prepareStatement("SELECT ID FROM EC_DOMAIN WHERE DOMAIN_NAME=?")) {
                 stmt.setFetchSize(10000);
 
                 for (var seed : this.originDomains) {

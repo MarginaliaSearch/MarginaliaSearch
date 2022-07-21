@@ -12,6 +12,11 @@ public class DisqualifiedException extends Exception {
     }
 
     public enum DisqualificationReason {
-        LENGTH, CONTENT_TYPE, LANGUAGE, STATUS, QUALITY
+        LENGTH,
+        CONTENT_TYPE,
+        LANGUAGE,
+        STATUS,
+        QUALITY,
+        ACCEPTABLE_ADS
     }
 }

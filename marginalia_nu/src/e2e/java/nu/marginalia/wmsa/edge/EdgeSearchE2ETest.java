@@ -12,7 +12,10 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openzim.ZIMTypes.ZIMFile;
 import org.openzim.ZIMTypes.ZIMReader;
 import org.slf4j.LoggerFactory;
-import org.testcontainers.containers.*;
+import org.testcontainers.containers.BindMode;
+import org.testcontainers.containers.BrowserWebDriverContainer;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.NginxContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
@@ -28,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static nu.marginalia.wmsa.configuration.ServiceDescriptor.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("e2e")
 @Testcontainers
@@ -39,8 +43,6 @@ public class EdgeSearchE2ETest extends E2ETestBase {
     public static GenericContainer<?> searchContainer =  forService(EDGE_SEARCH, mariaDB);
     @Container
     public static GenericContainer<?> assistantContainer =  forService(EDGE_ASSISTANT, mariaDB);
-    @Container
-    public static GenericContainer<?> encyclopediaContainer =  forService(ENCYCLOPEDIA, mariaDB);
     @Container
     public static GenericContainer<?> indexContainer =  forService(EDGE_INDEX, mariaDB);
 
@@ -156,6 +158,16 @@ public class EdgeSearchE2ETest extends E2ETestBase {
         return wikipediaFiles.toString();
     }
 
+    private List<String> getTitlesFromSearchResults(String html) {
+        List<String> ret = new ArrayList<>();
+
+        for (var title : Jsoup.parse(html).select(".card.search-result > h2")) {
+            ret.add(title.text());
+        }
+
+        return ret;
+    }
+
     @Test
     public void testFrontPage() throws IOException {
         var driver = chrome.getWebDriver();
@@ -173,8 +185,9 @@ public class EdgeSearchE2ETest extends E2ETestBase {
 
         driver.get("http://proxyNginx/search?query=bird&profile=corpo");
         System.out.println(driver.getTitle());
-        System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
 
+        var html = driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML");
+        assertEquals(List.of("Bird"), getTitlesFromSearchResults(html));
 
         Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("query"));
     }
@@ -187,20 +200,24 @@ public class EdgeSearchE2ETest extends E2ETestBase {
         System.out.println(driver.getTitle());
         System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
 
-
         Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("site-info"));
     }
+
     @Test
     public void testSiteSearch() throws IOException {
         var driver = chrome.getWebDriver();
 
         driver.get("http://proxyNginx/search?query=site:wikipedia.local%20frog");
         System.out.println(driver.getTitle());
-        System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
 
+        var html = driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML");
 
         Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("site-search"));
+
+        assertEquals(List.of("Frog", "Binomial nomenclature", "Mantis", "Amphibian"), getTitlesFromSearchResults(html));
+
     }
+
     @Test
     public void testBrowse() throws IOException {
         var driver = chrome.getWebDriver();
@@ -208,7 +225,6 @@ public class EdgeSearchE2ETest extends E2ETestBase {
         driver.get("http://proxyNginx/search?query=browse:wikipedia.local");
         System.out.println(driver.getTitle());
         System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
-
 
         Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("browse"));
     }
@@ -219,7 +235,6 @@ public class EdgeSearchE2ETest extends E2ETestBase {
         driver.get("http://proxyNginx/search?query=define:adiabatic");
         System.out.println(driver.getTitle());
         System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
-
 
         Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("define"));
     }

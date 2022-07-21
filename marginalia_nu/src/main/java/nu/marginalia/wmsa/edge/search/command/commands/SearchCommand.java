@@ -6,7 +6,6 @@ import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
 import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklist;
 import nu.marginalia.wmsa.edge.search.EdgeSearchOperator;
 import nu.marginalia.wmsa.edge.search.UnitConversion;
-import nu.marginalia.wmsa.edge.search.command.ResponseType;
 import nu.marginalia.wmsa.edge.search.command.SearchCommandInterface;
 import nu.marginalia.wmsa.edge.search.command.SearchParameters;
 import nu.marginalia.wmsa.edge.search.model.DecoratedSearchResults;
@@ -25,7 +24,6 @@ public class SearchCommand implements SearchCommandInterface {
     private final EdgeSearchOperator searchOperator;
     private final UnitConversion unitConversion;
     private final MustacheRenderer<DecoratedSearchResults> searchResultsRenderer;
-    private final MustacheRenderer<DecoratedSearchResults> searchResultsRendererGmi;
 
     @Inject
     public SearchCommand(EdgeDomainBlacklist blacklist,
@@ -39,23 +37,16 @@ public class SearchCommand implements SearchCommandInterface {
         this.unitConversion = unitConversion;
 
         searchResultsRenderer = rendererFactory.renderer("edge/search-results");
-        searchResultsRendererGmi = rendererFactory.renderer("edge/search-results-gmi");
     }
 
     @Override
     public Optional<Object> process(Context ctx, SearchParameters parameters, String query) {
         @CheckForNull Future<String> eval = unitConversion.tryEval(ctx, query);
 
-        var results = searchOperator.doSearch(ctx, new EdgeUserSearchParameters(query,
-                parameters.profile(), parameters.js()), eval
-        );
+        DecoratedSearchResults results = searchOperator.doSearch(ctx, new EdgeUserSearchParameters(query, parameters.profile(), parameters.js()), eval);
 
         results.getResults().removeIf(detail -> blacklist.isBlacklisted(dataStoreDao.getDomainId(detail.url.domain)));
 
-        if (parameters.responseType() == ResponseType.GEMINI) {
-            return Optional.of(searchResultsRendererGmi.render(results));
-        } else {
-            return Optional.of(searchResultsRenderer.render(results));
-        }
+        return Optional.of(searchResultsRenderer.render(results));
     }
 }

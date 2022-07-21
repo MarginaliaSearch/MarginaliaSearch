@@ -6,6 +6,7 @@ import com.google.common.hash.Hashing;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.util.ranking.RankingDomainFetcher;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
 import nu.marginalia.wmsa.edge.crawling.model.CrawlingSpecification;
 import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklistImpl;
@@ -30,19 +31,19 @@ public class CrawlJobExtractorPageRankMain {
             """
                 SELECT ID
                 FROM EC_DOMAIN
-                WHERE URL_PART=?
+                WHERE DOMAIN_NAME=?
             """;
     private static final String specificDomainSqlFromId =
             """
-                SELECT LOWER(URL_PART)
+                SELECT LOWER(DOMAIN_NAME)
                 FROM EC_DOMAIN
                 WHERE ID=?
             """;
 
     private static final String urlsSql =
             """
-                SELECT CONCAT(PROTO, "://", ?, URL)
-                FROM EC_URL
+                SELECT URL
+                FROM EC_URL_VIEW
                 WHERE DOMAIN_ID=?
                 ORDER BY
                     VISITED DESC,
@@ -73,10 +74,12 @@ public class CrawlJobExtractorPageRankMain {
 
         Gson gson = new GsonBuilder().create();
 
-        var rpr = new BetterReversePageRank(new DatabaseModule().provideConnection(),  "bikobatanari.art", "sadgrl.online", "wiki.xxiivv.com", "%neocities.org");
+        var ds = new DatabaseModule().provideConnection();
+        var domains = new RankingDomainFetcher(ds, new EdgeDomainBlacklistImpl(ds));
+        var rpr = new BetterReversePageRank(domains,  "bikobatanari.art", "sadgrl.online", "wiki.xxiivv.com", "%neocities.org");
         rpr.setMaxKnownUrls(750);
 
-        var targetDomainIds = rpr.pageRankWithPeripheralNodes(rpr.size(), false);
+        var targetDomainIds = rpr.pageRankWithPeripheralNodes(rpr.size());
 
         try (var out = new PrintWriter(new ZstdOutputStream(new BufferedOutputStream(new FileOutputStream(outFile.toFile()))))) {
             final var extractor = new CrawlJobExtractorPageRankMain(new DatabaseModule().provideConnection());
@@ -102,7 +105,7 @@ public class CrawlJobExtractorPageRankMain {
         try (var domainQuery = conn.prepareStatement(specificDomainSqlFromId);
              var urlQuery = conn.prepareStatement(urlsSql))
         {
-            domainQuery.setInt(1, domainId.getId());
+            domainQuery.setInt(1, domainId.id());
             ResultSet rsp = domainQuery.executeQuery();
             domainName = rsp.next() ? rsp.getString(1) : "";
 
@@ -110,10 +113,10 @@ public class CrawlJobExtractorPageRankMain {
             spec.id = createId(new EdgeDomain(domainName));
             spec.urls = new ArrayList<>(1000);
 
-            spec.crawlDepth = getCrawlDepth(new DomainWithId(domainName, domainId.getId()));
+            spec.crawlDepth = getCrawlDepth(new DomainWithId(domainName, domainId.id()));
 
             urlQuery.setString(1, domainName.toString());
-            urlQuery.setInt(2, domainId.getId());
+            urlQuery.setInt(2, domainId.id());
             urlQuery.setFetchSize(1000);
             rsp = urlQuery.executeQuery();
 

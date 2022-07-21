@@ -50,7 +50,7 @@ class ServiceTest {
                 new DictionaryService(dataSource, new SpellChecker()),
                 new MathParser(),
                 new Units(new MathParser()),
-                new ScreenshotService(null), null);
+                new ScreenshotService(null, dataSource), null);
 
         Spark.awaitInitialization();
     }

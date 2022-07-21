@@ -3,6 +3,7 @@ package nu.marginalia.wmsa.encyclopedia;
 import io.reactivex.rxjava3.core.Observable;
 import nu.marginalia.wmsa.client.AbstractDynamicClient;
 import nu.marginalia.wmsa.client.HttpStatusCode;
+import nu.marginalia.wmsa.client.exception.RouteNotConfiguredException;
 import nu.marginalia.wmsa.configuration.ServiceDescriptor;
 import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.edge.assistant.dict.WikiArticles;
@@ -22,13 +23,13 @@ public class EncyclopediaClient extends AbstractDynamicClient {
     }
 
     @CheckReturnValue
-    public Observable<Boolean> hasWiki(Context ctx, String url) {
-        return super.get(ctx, "/wiki/has?url="+ UrlEncoded.encodeString(url), Boolean.class);
-    }
-
-    @CheckReturnValue
     public Observable<WikiArticles> encyclopediaLookup(Context ctx, String word) {
-        return super.get(ctx,"/encyclopedia/" + UrlEncoded.encodeString(word), WikiArticles.class);
+        try {
+            return super.get(ctx, "/encyclopedia/" + UrlEncoded.encodeString(word), WikiArticles.class);
+        }
+        catch (RouteNotConfiguredException ex) {
+            return Observable.fromSupplier(WikiArticles::new);
+        }
     }
 
 }
