@@ -102,26 +102,34 @@ public class LinkParser {
         return url;
     }
 
-    private static final Pattern paramRegex = Pattern.compile("\\?.*$");
     private static final Pattern spaceRegex = Pattern.compile(" ");
 
     @SneakyThrows
     private String resolveUrl(EdgeUrl baseUrl, String s) {
-        s = paramRegex.matcher(s).replaceAll("");
 
         // url looks like http://www.marginalia.nu/
         if (isAbsoluteDomain(s)) {
             return s;
         }
 
-        // url looks like /my-page
-        if (s.startsWith("/")) {
-            return baseUrl.withPath(s).toString();
+        String[] parts = s.split("\\?", 2);
+        String path = parts[0];
+        String param;
+        if (parts.length > 1) {
+            param = QueryParams.queryParamsSanitizer(parts[0], parts[1]);
+        }
+        else {
+            param = null;
         }
 
-        final String partFromNewLink = spaceRegex.matcher(s).replaceAll("%20");
+        // url looks like /my-page
+        if (path.startsWith("/")) {
+            return baseUrl.withPathAndParam(path, param).toString();
+        }
 
-        return baseUrl.withPath(relativeNavigation(baseUrl) + partFromNewLink).toString();
+        final String partFromNewLink = spaceRegex.matcher(path).replaceAll("%20");
+
+        return baseUrl.withPathAndParam(relativeNavigation(baseUrl) + partFromNewLink, param).toString();
     }
 
     // for a relative url that looks like /foo or /foo/bar; return / or /foo
@@ -145,13 +153,8 @@ public class LinkParser {
     }
 
     private boolean isRelRelevant(String rel) {
-        if (null == rel) {
-            return true;
-        }
-        return switch (rel) {
-            case "noindex" -> false;
-            default -> true;
-        };
+        // this is null safe
+        return !"noindex".equalsIgnoreCase(rel);
     }
 
     private boolean isUrlRelevant(String href) {
@@ -188,4 +191,5 @@ public class LinkParser {
 
         return documentUrl;
     }
+
 }

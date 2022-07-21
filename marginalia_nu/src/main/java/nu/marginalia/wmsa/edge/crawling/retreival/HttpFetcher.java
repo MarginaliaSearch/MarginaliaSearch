@@ -109,7 +109,7 @@ public class HttpFetcher {
     @SneakyThrows
     public FetchResult probeDomain(EdgeUrl url) {
         var head = new Request.Builder().head().addHeader("User-agent", userAgent)
-                .url(new EdgeUrl(url.proto, url.domain, url.port, "/").toString())
+                .url(url.domain.toRootUrl().toString())
                 .build();
 
         var call = client.newCall(head);
@@ -293,7 +293,7 @@ public class HttpFetcher {
 
     private Optional<SimpleRobotRules> fetchRobotsForProto(String proto, EdgeDomain domain) {
         try {
-            var url = new EdgeUrl(proto, domain, null, "/robots.txt");
+            var url = new EdgeUrl(proto, domain, null, "/robots.txt", null);
             return Optional.of(parseRobotsTxt(fetchContent(url)));
         }
         catch (Exception ex) {

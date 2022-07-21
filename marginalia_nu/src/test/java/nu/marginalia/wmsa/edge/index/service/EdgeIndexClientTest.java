@@ -3,14 +3,14 @@ package nu.marginalia.wmsa.edge.index.service;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import nu.marginalia.util.TestUtil;
-import nu.marginalia.wmsa.client.exception.RemoteException;
 import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.configuration.server.Initialization;
 import nu.marginalia.wmsa.edge.index.EdgeIndexService;
 import nu.marginalia.wmsa.edge.index.IndexServicesFactory;
 import nu.marginalia.wmsa.edge.index.client.EdgeIndexClient;
+import nu.marginalia.wmsa.edge.index.conversion.SearchIndexPartitioner;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
-import nu.marginalia.wmsa.edge.index.service.query.SearchIndexPartitioner;
+import nu.marginalia.wmsa.edge.index.reader.SearchIndexes;
 import nu.marginalia.wmsa.edge.model.crawl.EdgePageWordSet;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchSpecification;
 import nu.marginalia.wmsa.edge.model.EdgeId;
@@ -23,7 +23,6 @@ import org.junit.jupiter.api.parallel.ResourceAccessMode;
 import org.junit.jupiter.api.parallel.ResourceLock;
 import spark.Spark;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -31,7 +30,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static nu.marginalia.util.TestUtil.getConnection;
-import static nu.marginalia.wmsa.edge.index.EdgeIndexService.DYNAMIC_BUCKET_LENGTH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -83,7 +81,8 @@ public class EdgeIndexClientTest {
         service = new EdgeIndexService("127.0.0.1",
                 testPort,
                 init, null,
-                indexes);
+                indexes,
+                servicesFactory);
 
         Spark.awaitInitialization();
         init.setReady();
@@ -115,7 +114,7 @@ public class EdgeIndexClientTest {
         indexes.reindexAll();
         var rsp = client.query(Context.internal(), EdgeSearchSpecification.justIncludes("trapphus"));
         System.out.println(rsp);
-        assertEquals(5, rsp.resultsList.get(IndexBlock.Title).get(0).results.get(0).get(0).url.getId());
+        assertEquals(5, rsp.resultsList.get(IndexBlock.Title).get(0).results.get(0).get(0).url.id());
     }
 
 

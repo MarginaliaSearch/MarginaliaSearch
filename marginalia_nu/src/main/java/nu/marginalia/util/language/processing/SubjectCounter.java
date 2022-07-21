@@ -5,7 +5,9 @@ import nu.marginalia.util.language.processing.model.WordRep;
 import nu.marginalia.util.language.processing.model.WordSpan;
 import nu.marginalia.util.language.processing.model.tag.WordSeparator;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class SubjectCounter {
@@ -14,6 +16,14 @@ public class SubjectCounter {
     public SubjectCounter(KeywordExtractor keywordExtractor) {
         this.keywordExtractor = keywordExtractor;
     }
+
+    // Seeks out subjects in a sentence by constructs like
+    //
+    // [Name] (Verbs) (the|a|Adverb|Verb) ...
+    // e.g.
+    //
+    // Greeks bearing gifts -> Greeks
+    // Steve McQueen drove fast | cars -> Steve McQueen
 
     public List<WordRep> count(DocumentLanguageData dld) {
 
@@ -27,9 +37,10 @@ public class SubjectCounter {
                         || sentence.separators[kw.end + 1] == WordSeparator.COMMA)
                     break;
 
-                if (("VBZ".equals(sentence.posTags[kw.end]) || "VBP".equals(sentence.posTags[kw.end]))
-                        && ("DT".equals(sentence.posTags[kw.end + 1]) || "RB".equals(sentence.posTags[kw.end]) || sentence.posTags[kw.end].startsWith("VB"))
-                ) {
+                String nextTag = sentence.posTags[kw.end];
+                String nextNextTag = sentence.posTags[kw.end+1];
+
+                if (isVerb(nextTag) && isDetOrAdverbOrVerb(nextNextTag)) {
                     counts.merge(new WordRep(sentence, new WordSpan(kw.start, kw.end)), -1, Integer::sum);
                 }
             }
@@ -41,6 +52,18 @@ public class SubjectCounter {
                 .filter(e -> e.getValue()<-2 && e.getValue()<best*0.75)
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
+    }
+
+    private boolean isDetOrAdverbOrVerb(String posTag) {
+        return "DT".equals(posTag) // determinant
+                || "RB".equals(posTag) // adverb
+                || posTag.startsWith("VB")  // verb
+                || posTag.startsWith("JJ"); // adjective
+    }
+
+    boolean isVerb(String posTag) {
+        return posTag.startsWith("VB")
+            && !posTag.equals("VB"); // not interested in the infinitive
     }
 
 }

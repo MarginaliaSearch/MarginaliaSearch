@@ -67,4 +67,37 @@ class RandomWriteFunnelTest {
             }
         }
     }
+
+
+    @Test
+    public void testYuge() {
+        new File("/tmp/test.bin").delete();
+        for (int j = 1; j <= 20; j++) {
+            try (var funnel = new RandomWriteFunnel(Path.of("/tmp"), 10, j);
+                 var out = new RandomAccessFile("/tmp/test.bin", "rw")) {
+                for (int i = 10 - 1; i >= 0; i -= 2) {
+                    funnel.put(i, Long.MAX_VALUE - i);
+                }
+                funnel.write(out.getChannel());
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            try (var in = new RandomAccessFile("/tmp/test.bin", "r")) {
+                in.readLong();
+                in.readLong();
+                in.readLong();
+                in.readLong();
+                in.readLong();
+                in.readLong();
+                in.readLong();
+                in.readLong();
+                in.readLong();
+                in.readLong();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

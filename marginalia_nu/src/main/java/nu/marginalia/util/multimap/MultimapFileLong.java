@@ -21,7 +21,7 @@ import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 import static nu.marginalia.util.FileSizeUtil.readableSize;
 
 
-public class MultimapFileLong implements AutoCloseable {
+public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
 
     private final ArrayList<LongBuffer> buffers = new ArrayList<>();
     private final ArrayList<MappedByteBuffer> mappedByteBuffers = new ArrayList<>();
@@ -36,9 +36,7 @@ public class MultimapFileLong implements AutoCloseable {
     private long mappedSize;
     final static long WORD_SIZE = 8;
 
-    private boolean loadAggressively;
-
-    private final NativeIO.Advice advice = null;
+    private NativeIO.Advice defaultAdvice = null;
 
     public static MultimapFileLong forReading(Path file) throws IOException {
         long fileSize = Files.size(file);
@@ -70,12 +68,7 @@ public class MultimapFileLong implements AutoCloseable {
                             long mapSize,
                             int bufferSize) throws IOException {
 
-        this(new RandomAccessFile(file, translateToRAFMode(mode)), mode, mapSize, bufferSize, false);
-    }
-
-    public MultimapFileLong loadAggressively(boolean v) {
-        this.loadAggressively = v;
-        return this;
+        this(new RandomAccessFile(file, translateToRAFMode(mode)), mode, mapSize, bufferSize);
     }
 
     private static String translateToRAFMode(FileChannel.MapMode mode) {
@@ -91,13 +84,11 @@ public class MultimapFileLong implements AutoCloseable {
     public MultimapFileLong(RandomAccessFile file,
                             FileChannel.MapMode mode,
                             long mapSizeBytes,
-                            int bufferSizeWords,
-                            boolean loadAggressively) throws IOException {
+                            int bufferSizeWords) throws IOException {
         this.mode = mode;
         this.bufferSize = bufferSizeWords;
         this.mapSize = mapSizeBytes;
         this.fileLength = file.length();
-        this.loadAggressively = loadAggressively;
 
         channel = file.getChannel();
         mappedSize = 0;
@@ -106,8 +97,8 @@ public class MultimapFileLong implements AutoCloseable {
                 readableSize(mapSizeBytes), readableSize(8L*bufferSizeWords), mode);
     }
 
-    public MultimapSearcher createSearcher() {
-        return new MultimapSearcher(this);
+    public MultimapSearcherBase createSearcher() {
+        return new MultimapSearcherBase(this);
     }
     public MultimapSorter createSorter(Path tmpFile, int internalSortLimit) {
         return new MultimapSorter(this, tmpFile, internalSortLimit);
@@ -115,6 +106,7 @@ public class MultimapFileLong implements AutoCloseable {
 
     @SneakyThrows
     public void advice(NativeIO.Advice advice) {
+        this.defaultAdvice = advice;
         for (var buffer : mappedByteBuffers) {
                 NativeIO.madvise(buffer, advice);
         }
@@ -157,7 +149,7 @@ public class MultimapFileLong implements AutoCloseable {
     }
 
     @SneakyThrows
-    private void grow(long posIdxRequired) {
+    public void grow(long posIdxRequired) {
         if (posIdxRequired*WORD_SIZE > mapSize && mode == READ_ONLY) {
             throw new IndexOutOfBoundsException(posIdxRequired + " (max " + mapSize + ")");
         }
@@ -182,11 +174,8 @@ public class MultimapFileLong implements AutoCloseable {
 
             var buffer = channel.map(mode, posBytes, bzBytes);
 
-            if (loadAggressively)
-                buffer.load();
-
-            if (advice != null) {
-                NativeIO.madvise(buffer, advice);
+            if (defaultAdvice != null) {
+                NativeIO.madvise(buffer, defaultAdvice);
             }
 
             buffers.add(buffer.asLongBuffer());
@@ -196,10 +185,12 @@ public class MultimapFileLong implements AutoCloseable {
         }
     }
 
+    @Override
     public long size() {
         return fileLength;
     }
 
+    @Override
     public void put(long idx, long val) {
         if (idx >= mappedSize)
             grow(idx);
@@ -214,6 +205,7 @@ public class MultimapFileLong implements AutoCloseable {
         }
     }
 
+    @Override
     public long get(long idx) {
         if (idx >= mappedSize)
             grow(idx);
@@ -229,10 +221,12 @@ public class MultimapFileLong implements AutoCloseable {
     }
 
 
+    @Override
     public void read(long[] vals, long idx) {
         read(vals, vals.length, idx);
     }
 
+    @Override
     public void read(long[] vals, int n, long idx) {
         if (idx+n >= mappedSize) {
             grow(idx+n);
@@ -257,10 +251,38 @@ public class MultimapFileLong implements AutoCloseable {
 
     }
 
+    @Override
+    public void read(LongBuffer vals, long idx) {
+        int n = vals.limit() - vals.position();
+        if (idx+n >= mappedSize) {
+            grow(idx+n);
+        }
+        int iN = (int)((idx + n) / bufferSize);
+
+        for (int i = 0; i < n; ) {
+            int i0 = (int)((idx + i) / bufferSize);
+
+            int bufferOffset = (int) ((idx+i) % bufferSize);
+            var buffer = buffers.get(i0);
+
+            final int l;
+
+            if (i0 < iN) l = bufferSize - bufferOffset;
+            else l = Math.min(n - i, bufferSize - bufferOffset);
+
+            vals.put(vals.position() + i, buffer, bufferOffset, l);
+            i+=l;
+        }
+
+    }
+
+
+    @Override
     public void write(long[] vals, long idx) {
         write(vals, vals.length, idx);
     }
 
+    @Override
     public void write(long[] vals, int n, long idx) {
         if (idx+n >= mappedSize) {
             grow(idx+n);
@@ -285,6 +307,7 @@ public class MultimapFileLong implements AutoCloseable {
 
     }
 
+    @Override
     public void write(LongBuffer vals, long idx) {
         int n = vals.limit() - vals.position();
         if (idx+n >= mappedSize) {
@@ -309,7 +332,36 @@ public class MultimapFileLong implements AutoCloseable {
 
     }
 
+    @Override
+    public void setRange(long idx, int n, long val) {
+        if (n == 0) return;
 
+        if (idx+n >= mappedSize) {
+            grow(idx+n);
+        }
+        int iN = (int)((idx + n) / bufferSize);
+
+        for (int i = 0; i < n; ) {
+            int i0 = (int)((idx + i) / bufferSize);
+
+            int bufferOffset = (int) ((idx+i) % bufferSize);
+            var buffer = buffers.get(i0);
+
+            final int l;
+
+            if (i0 < iN) l = bufferSize - bufferOffset;
+            else l = Math.min(n - i, bufferSize - bufferOffset);
+
+            for (int p = 0; p < l; p++) {
+                buffer.put(bufferOffset + p, val);
+            }
+
+            i+=l;
+        }
+    }
+
+
+    @Override
     public void transferFromFileChannel(FileChannel sourceChannel, long destOffset, long sourceStart, long sourceEnd) throws IOException {
 
         int length = (int)(sourceEnd - sourceStart);
@@ -354,8 +406,10 @@ public class MultimapFileLong implements AutoCloseable {
     @Override
     public void close() throws IOException {
         force();
+
         mappedByteBuffers.clear();
         buffers.clear();
+
         channel.close();
 
         // I want to believe

@@ -11,7 +11,6 @@ public enum IndexBlock {
     Meta(7, 7),
     PositionWords(8, 4.5),
     NamesWords(9, 5),
-    TermFreq(10, 10),
     Topic(11, 0.5);
 
     public final int id;

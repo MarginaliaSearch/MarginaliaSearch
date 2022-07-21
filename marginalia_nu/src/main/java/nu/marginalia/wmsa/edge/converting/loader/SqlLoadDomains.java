@@ -25,15 +25,9 @@ public class SqlLoadDomains {
                 stmt.execute("""
                         CREATE PROCEDURE INSERT_DOMAIN (
                             IN DOMAIN_NAME VARCHAR(255),
-                            IN SUB_DOMAIN VARCHAR(255),
                             IN TOP_DOMAIN VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci)
                         BEGIN
-                            INSERT IGNORE INTO EC_TOP_DOMAIN (URL_PART) VALUES (TOP_DOMAIN);
-                                                
-                            INSERT IGNORE INTO EC_DOMAIN(URL_PART, URL_SUBDOMAIN, URL_TOP_DOMAIN_ID)
-                                SELECT DOMAIN_NAME,SUB_DOMAIN,ID
-                                FROM EC_TOP_DOMAIN
-                                WHERE EC_TOP_DOMAIN.URL_PART=TOP_DOMAIN;
+                            INSERT IGNORE INTO EC_DOMAIN(DOMAIN_NAME, DOMAIN_TOP) VALUES (DOMAIN_NAME, TOP_DOMAIN);
                         END
                         """);
             }
@@ -46,10 +40,9 @@ public class SqlLoadDomains {
     public void load(LoaderData data, EdgeDomain domain) {
 
         try (var connection = dataSource.getConnection()) {
-            try (var insertCall = connection.prepareCall("CALL INSERT_DOMAIN(?,?,?)")) {
+            try (var insertCall = connection.prepareCall("CALL INSERT_DOMAIN(?,?)")) {
                 insertCall.setString(1, domain.toString());
-                insertCall.setString(2, domain.subDomain);
-                insertCall.setString(3, domain.domain);
+                insertCall.setString(2, domain.domain);
                 insertCall.addBatch();
 
                 var ret = insertCall.executeUpdate();
@@ -57,12 +50,11 @@ public class SqlLoadDomains {
                     logger.warn("load({}) -- bad row count {}", domain, ret);
                 }
 
-                connection.commit();
                 findIdForTargetDomain(connection, data);
             }
         }
         catch (SQLException ex) {
-            ex.printStackTrace();
+            logger.warn("SQL error inserting domain", ex);
         }
 
 
@@ -73,12 +65,11 @@ public class SqlLoadDomains {
         try (var connection = dataSource.getConnection()) {
             connection.setAutoCommit(false);
 
-            try (var insertCall = connection.prepareCall("CALL INSERT_DOMAIN(?,?,?)")) {
+            try (var insertCall = connection.prepareCall("CALL INSERT_DOMAIN(?,?)")) {
 
                 for (var domain : domains) {
                     insertCall.setString(1, domain.toString());
-                    insertCall.setString(2, domain.subDomain);
-                    insertCall.setString(3, domain.domain);
+                    insertCall.setString(2, domain.domain);
                     insertCall.addBatch();
                 }
                 var ret = insertCall.executeBatch();
@@ -95,7 +86,7 @@ public class SqlLoadDomains {
             findIdForTargetDomain(connection, data);
         }
         catch (SQLException ex) {
-            ex.printStackTrace();
+            logger.warn("SQL error inserting domains", ex);
         }
     }
 
@@ -104,7 +95,7 @@ public class SqlLoadDomains {
             return;
         }
 
-        try (var query = connection.prepareStatement("SELECT ID FROM EC_DOMAIN WHERE URL_PART=?"))
+        try (var query = connection.prepareStatement("SELECT ID FROM EC_DOMAIN WHERE DOMAIN_NAME=?"))
         {
 
             var targetDomain = data.getTargetDomain();
@@ -118,7 +109,7 @@ public class SqlLoadDomains {
             }
         }
         catch (SQLException ex) {
-            ex.printStackTrace();
+            logger.warn("SQL error finding id for domain", ex);
         }
     }
 }

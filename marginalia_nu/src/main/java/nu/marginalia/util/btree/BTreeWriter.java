@@ -2,19 +2,16 @@ package nu.marginalia.util.btree;
 
 import nu.marginalia.util.btree.model.BTreeContext;
 import nu.marginalia.util.btree.model.BTreeHeader;
-import nu.marginalia.util.multimap.MultimapFileLong;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import nu.marginalia.util.multimap.MultimapFileLongSlice;
 
 import java.io.IOException;
 
 
 public class BTreeWriter {
-    private final Logger logger = LoggerFactory.getLogger(BTreeWriter.class);
     private final BTreeContext ctx;
-    private final MultimapFileLong map;
+    private final MultimapFileLongSlice map;
 
-    public BTreeWriter(MultimapFileLong map, BTreeContext ctx) {
+    public BTreeWriter(MultimapFileLongSlice map, BTreeContext ctx) {
         this.map = map;
         this.ctx = ctx;
     }
@@ -26,30 +23,35 @@ public class BTreeWriter {
 
         long size = 0;
         for (int layer = 0; layer < numLayers; layer++) {
-            size += ctx.layerSize(numWords, layer);
+            size += ctx.indexLayerSize(numWords, layer);
         }
         return size;
     }
 
-    public long write(long offset, int numEntries, WriteCallback writeIndex)
+    /** Construct a BTree with numEntries entries at offset in the associated map
+     *
+     * @return The size of the written data
+     */
+    public long write(long offset, int numEntries, WriteCallback writeIndexCallback)
             throws IOException
     {
-        var header = makeHeader(offset, numEntries);
+        BTreeHeader header = makeHeader(offset, numEntries);
 
         header.write(map, offset);
-        writeIndex.write(header.dataOffsetLongs());
 
-        if (header.layers() < 1) {
+        writeIndexCallback.write(map.atOffset(header.dataOffsetLongs()));
+
+        if (header.layers() < 1) { // The data is too small to benefit from indexing
             return ctx.calculateSize(numEntries);
         }
-
-        writeIndex(header);
-
-        return ctx.calculateSize(numEntries);
+        else {
+            writeIndex(header);
+            return ctx.calculateSize(numEntries);
+        }
     }
 
     public static BTreeHeader makeHeader(BTreeContext ctx, long offset, int numEntries) {
-        final int numLayers = ctx.numLayers(numEntries);
+        final int numLayers = ctx.numIndexLayers(numEntries);
 
         final int padding = BTreeHeader.getPadding(ctx, offset, numLayers);
 
@@ -65,46 +67,50 @@ public class BTreeWriter {
 
 
     private void writeIndex(BTreeHeader header) {
-        var layerOffsets = getRelativeLayerOffsets(header);
+        var layerOffsets = header.getRelativeLayerOffsets(ctx);
 
-        long stride = ctx.BLOCK_SIZE_WORDS();
+        long indexedDataStepSize = ctx.BLOCK_SIZE_WORDS();
+
+        /*  Index layer 0 indexes the data itself
+            Index layer 1 indexes layer 0
+            Index layer 2 indexes layer 1
+            And so on
+         */
         for (int layer = 0; layer < header.layers(); layer++,
-                stride*=ctx.BLOCK_SIZE_WORDS()) {
-            long indexWord = 0;
-            long offsetBase = layerOffsets[layer] + header.indexOffsetLongs();
-            long numEntries = header.numEntries();
-            for (long idx = 0; idx < numEntries; idx += stride, indexWord++) {
-                long dataOffset = header.dataOffsetLongs() + (idx + (stride-1)) * ctx.entrySize();
-                long val;
+                indexedDataStepSize*=ctx.BLOCK_SIZE_WORDS()) {
 
-                if (idx + (stride-1) < numEntries) {
-                    val = map.get(dataOffset) & ctx.equalityMask();
-                }
-                else {
-                    val = Long.MAX_VALUE;
-                }
-                if (offsetBase + indexWord < 0) {
-                    logger.error("bad put @ {}", offsetBase + indexWord);
-                    logger.error("layer{}", layer);
-                    logger.error("layer offsets {}", layerOffsets);
-                    logger.error("offsetBase = {}", offsetBase);
-                    logger.error("numEntries = {}", numEntries);
-                    logger.error("indexWord = {}", indexWord);
-                }
-                map.put(offsetBase + indexWord, val);
-            }
-            for (; (indexWord % ctx.BLOCK_SIZE_WORDS()) != 0; indexWord++) {
-                map.put(offsetBase + indexWord, Long.MAX_VALUE);
-            }
+            writeIndexLayer(header, layerOffsets, indexedDataStepSize, layer);
         }
 
     }
 
-    private long[] getRelativeLayerOffsets(BTreeHeader header) {
-        long[] layerOffsets = new long[header.layers()];
-        for (int i = 0; i < header.layers(); i++) {
-            layerOffsets[i] = header.relativeLayerOffset(ctx, i);
+    private void writeIndexLayer(BTreeHeader header, long[] layerOffsets,
+                                 final long indexedDataStepSize,
+                                 final int layer) {
+
+        final long indexOffsetBase = layerOffsets[layer] + header.indexOffsetLongs();
+        final long dataOffsetBase = header.dataOffsetLongs();
+
+        final long dataEntriesMax = header.numEntries();
+        final int entrySize = ctx.entrySize();
+
+        final long lastDataEntryOffset = indexedDataStepSize - 1;
+
+        long indexWord = 0;
+
+        for (long dataPtr = 0;
+             dataPtr + lastDataEntryOffset < dataEntriesMax;
+             dataPtr += indexedDataStepSize)
+        {
+            long dataOffset = dataOffsetBase + (dataPtr + lastDataEntryOffset) * entrySize;
+            map.put(indexOffsetBase + indexWord++, map.get(dataOffset) & ctx.equalityMask());
         }
-        return layerOffsets;
+
+        // Fill the remaining block with LONG_MAX
+        map.setRange(indexOffsetBase+indexWord,
+                (int) (ctx.BLOCK_SIZE_WORDS() - (indexWord % ctx.BLOCK_SIZE_WORDS())),
+                Long.MAX_VALUE);
     }
+
+
 }

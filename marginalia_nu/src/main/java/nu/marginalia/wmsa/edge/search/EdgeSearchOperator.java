@@ -11,18 +11,19 @@ import nu.marginalia.wmsa.edge.assistant.dict.WikiArticles;
 import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
 import nu.marginalia.wmsa.edge.index.client.EdgeIndexClient;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
-import nu.marginalia.wmsa.edge.index.service.SearchOrder;
-import nu.marginalia.wmsa.edge.model.*;
+import nu.marginalia.wmsa.edge.model.EdgeDomain;
+import nu.marginalia.wmsa.edge.model.EdgeId;
+import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.search.*;
 import nu.marginalia.wmsa.edge.search.model.DecoratedSearchResultSet;
 import nu.marginalia.wmsa.edge.search.model.DecoratedSearchResults;
-import nu.marginalia.wmsa.edge.search.query.model.EdgeSearchQuery;
 import nu.marginalia.wmsa.edge.search.query.QueryFactory;
+import nu.marginalia.wmsa.edge.search.query.model.EdgeSearchQuery;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeUserSearchParameters;
-import nu.marginalia.wmsa.edge.search.results.SearchResultValuator;
-import nu.marginalia.wmsa.edge.search.results.model.AccumulatedQueryResults;
 import nu.marginalia.wmsa.edge.search.results.SearchResultDecorator;
+import nu.marginalia.wmsa.edge.search.results.SearchResultValuator;
 import nu.marginalia.wmsa.edge.search.results.UrlDeduplicator;
+import nu.marginalia.wmsa.edge.search.results.model.AccumulatedQueryResults;
 import nu.marginalia.wmsa.encyclopedia.EncyclopediaClient;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -88,7 +89,7 @@ public class EdgeSearchOperator {
 
     public DecoratedSearchResults doSearch(Context ctx, EdgeUserSearchParameters params, @Nullable Future<String> eval) {
         Observable<WikiArticles> definitions = getWikiArticle(ctx, params.getHumanQuery());
-        var processedQuery = queryFactory.createQuery(params);
+        EdgeSearchQuery processedQuery = queryFactory.createQuery(params);
 
         logger.info("Human terms: {}", Strings.join(processedQuery.searchTermsHuman, ','));
 
@@ -122,7 +123,7 @@ public class EdgeSearchOperator {
         int domainId = -1;
         try {
             if (domain != null) {
-                return edgeDataStoreDao.getDomainId(new EdgeDomain(domain)).getId();
+                return edgeDataStoreDao.getDomainId(new EdgeDomain(domain)).id();
             }
         }
         catch (NoSuchElementException ex) {
@@ -136,7 +137,7 @@ public class EdgeSearchOperator {
 
         sqs.add(new EdgeSearchSubquery(Arrays.asList(termsInclude), Collections.emptyList(), block));
 
-        EdgeSearchSpecification specs = new EdgeSearchSpecification(profile.buckets, sqs, 100, limitPerDomain, limitTotal, "", SearchOrder.ASCENDING, EdgeSearchProfile.YOLO.equals(profile), false);
+        EdgeSearchSpecification specs = new EdgeSearchSpecification(profile.buckets, sqs, 100, limitPerDomain, limitTotal, "", EdgeSearchProfile.YOLO.equals(profile), false);
 
         return performQuery(ctx, new EdgeSearchQuery(specs), true);
     }
@@ -252,7 +253,9 @@ public class EdgeSearchOperator {
                 .encyclopediaLookup(ctx,
                         humanQuery.replaceAll("\\s+", "_")
                                 .replaceAll("\"", "")
-                ).subscribeOn(Schedulers.io());
+                )
+                .onErrorReturn(e -> new WikiArticles())
+                .subscribeOn(Schedulers.io());
     }
 
     private void fetchResultsMulti(Context ctx, EdgeSearchQuery processedQuery, AccumulatedQueryResults queryResults, UrlDeduplicator deduplicator) {

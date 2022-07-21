@@ -37,7 +37,7 @@ public class WikipediaReader {
     }
 
     private EdgeUrl synthesizeUrl(String originalUrl) {
-        return new EdgeUrl("https", domain, null, "/wiki/"+originalUrl);
+        return new EdgeUrl("https", domain, null, "/wiki/"+originalUrl, null);
     }
 
     public void join() throws InterruptedException {

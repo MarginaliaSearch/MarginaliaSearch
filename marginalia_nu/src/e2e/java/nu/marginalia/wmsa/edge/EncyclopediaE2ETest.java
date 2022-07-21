@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mariadb.jdbc.Driver;
-import org.openqa.selenium.By;
+import org.openqa.selenium.OutputType;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.*;
@@ -23,16 +23,16 @@ import org.testcontainers.utility.MountableFile;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 
 import static nu.marginalia.wmsa.configuration.ServiceDescriptor.ENCYCLOPEDIA;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 @Tag("e2e")
 @Testcontainers
@@ -80,12 +80,23 @@ public class EncyclopediaE2ETest extends E2ETestBase {
         return Path.of(System.getProperty("user.dir")).resolve("data/test");
     }
 
+    private static Path screenshotFilename(String operation) throws IOException {
+        var path = Path.of(System.getProperty("user.dir")).resolve("build/test/e2e/");
+        Files.createDirectories(path);
+
+        String name = String.format("test-encyclopedia-%s-%s.png", operation, LocalDateTime.now());
+        path = path.resolve(name);
+
+        System.out.println("Screenshot in " + path);
+        return path;
+    }
+
     @Test
-    public void run() throws MalformedURLException {
+    public void run() throws IOException {
         new Driver();
 
         try (var conn = DriverManager.getConnection(mariaDB.getJdbcUrl(), "wmsa", "wmsa");
-             var stmt = conn.prepareStatement("INSERT IGNORE INTO REF_WIKI_TITLE(NAME,REF_NAME) VALUES (?,?)")) {
+             var stmt = conn.prepareStatement("INSERT IGNORE INTO REF_WIKI_ARTICLE(NAME,REF_NAME) VALUES (?,?)")) {
 
             stmt.setString(1, "Forg");
             stmt.setString(2, "Frog");
@@ -102,23 +113,15 @@ public class EncyclopediaE2ETest extends E2ETestBase {
         var driver = chrome.getWebDriver();
 
         driver.get("http://proxyNginx/wiki/Frog");
+        Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("get-article"));
+
+        driver.get("http://proxyNginx/wiki/Forg");
+        Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("get-article-redir"));
+
         System.out.println(driver.getTitle());
         driver.get("http://proxyNginx/wiki-search?query=Forg");
+        Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("disambig"));
         System.out.println(driver.getTitle());
-
-        assertTrue(get(encyclopediaContainer.getHost(),
-                encyclopediaContainer.getMappedPort(ENCYCLOPEDIA.port),
-                "/wiki/has?url=Frog", Boolean.class));
-
-        assertFalse(get(encyclopediaContainer.getHost(),
-                encyclopediaContainer.getMappedPort(ENCYCLOPEDIA.port),
-                "/wiki/has?url=Marginalia", Boolean.class));
-
-        assertFalse(get(encyclopediaContainer.getHost(),
-                encyclopediaContainer.getMappedPort(ENCYCLOPEDIA.port),
-                "/wiki/has?url=Marginalia", Boolean.class));
-
-
 
         var resultsForMarginalia = get(encyclopediaContainer.getHost(),
                 encyclopediaContainer.getMappedPort(ENCYCLOPEDIA.port),

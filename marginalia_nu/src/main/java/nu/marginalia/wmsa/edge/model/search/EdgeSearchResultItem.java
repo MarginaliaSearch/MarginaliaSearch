@@ -32,7 +32,7 @@ public class EdgeSearchResultItem {
     }
 
     public long getCombinedId() {
-        return ((long) domain.getId() << 32L) | url.getId();
+        return ((long) domain.id() << 32L) | url.id();
     }
 
 }

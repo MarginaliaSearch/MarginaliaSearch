@@ -43,7 +43,7 @@ public class TestUtil {
             logger.info("Running script {}", scriptFile);
             try (var scriptStream = ClassLoader.getSystemResourceAsStream(scriptFile);
                  var stmt = conn.createStatement()) {
-                for (String s : new String(scriptStream.readAllBytes()).split(";")) {
+                for (String s : new String(scriptStream.readAllBytes()).split("(;|---)")) {
                     if (!s.isBlank()) {
                         try {
                             Assertions.assertTrue(stmt.executeUpdate(s) >= 0);

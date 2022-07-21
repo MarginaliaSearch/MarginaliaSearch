@@ -56,7 +56,7 @@ public class LongNameCounter {
     }
 
     double value(String key, double value) {
-        return (1+Math.log(value)) * Math.log((1.+dict.getTermFreq(key))/11820118.);
+        return (1+Math.log(value)) * Math.log((1.1+dict.getTermFreqStemmed(key))/11820118.);
     }
 
 

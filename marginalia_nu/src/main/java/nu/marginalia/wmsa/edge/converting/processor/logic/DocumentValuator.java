@@ -1,8 +1,8 @@
 package nu.marginalia.wmsa.edge.converting.processor.logic;
 
 import crawlercommons.utils.Strings;
-import nu.marginalia.wmsa.edge.converting.model.DisqualifiedException;
 import nu.marginalia.util.language.processing.model.DocumentLanguageData;
+import nu.marginalia.wmsa.edge.converting.model.DisqualifiedException;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeHtmlStandard;
 import org.jsoup.nodes.Document;
 
@@ -35,7 +35,7 @@ public class DocumentValuator {
             throw new DisqualifiedException(LENGTH);
         }
 
-        return Math.log(textBodyLength / (double) rawLength)*htmlStandard.scale
+        return Math.log(textBodyLength / (double) (1+rawLength))*htmlStandard.scale
                 + htmlStandard.offset
                 - scriptPenalty
                 - smutCoefficient;
@@ -52,17 +52,13 @@ public class DocumentValuator {
 
         double scriptPenalty = 0;
         for (var tag : scriptTags) {
-            String srcTag = tag.attr("src");
-            if (Strings.isBlank(srcTag)) {
-                scriptPenalty += 1;
-            }
-            else if (srcTag.contains("wp-content") || srcTag.contains("wp-includes") || srcTag.contains("jquery")) {
+            String srcAttr = tag.attr("src");
+            if (srcAttr.contains("wp-content") || srcAttr.contains("wp-includes") || srcAttr.contains("jquery")) {
                 scriptPenalty += 0.49;
             }
-            else {
+            else if (!Strings.isBlank(srcAttr)) {
                 scriptPenalty += 1;
             }
-
         }
         return (int)(scriptPenalty + badScript + (scriptText.length())/1000.);
     }

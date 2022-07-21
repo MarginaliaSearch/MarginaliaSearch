@@ -1,6 +1,6 @@
 package nu.marginalia.util.btree.model;
 
-import nu.marginalia.util.multimap.MultimapFileLong;
+import nu.marginalia.util.multimap.MultimapFileLongSlice;
 
 public record BTreeHeader(int layers, int numEntries, long indexOffsetLongs, long dataOffsetLongs) {
     public BTreeHeader {
@@ -28,19 +28,27 @@ public record BTreeHeader(int layers, int numEntries, long indexOffsetLongs, lon
         return padding;
     }
 
-    public void write(MultimapFileLong dest, long offset) {
+    public void write(MultimapFileLongSlice dest, long offset) {
         dest.put(offset, ((long) layers << 32L) | ((long)numEntries & 0xFFFF_FFFFL));
         dest.put(offset+1, indexOffsetLongs);
         dest.put(offset+2, dataOffsetLongs);
     }
 
 
-    public long relativeLayerOffset(BTreeContext ctx, int n) {
+    public long relativeIndexLayerOffset(BTreeContext ctx, int n) {
         long offset = 0;
         for (int i = n+1; i < layers; i++) {
-            offset += ctx.layerSize( numEntries, i);
+            offset += ctx.indexLayerSize( numEntries, i);
         }
         return offset;
+    }
+
+    public long[] getRelativeLayerOffsets(BTreeContext ctx) {
+        long[] layerOffsets = new long[layers()];
+        for (int i = 0; i < layers(); i++) {
+            layerOffsets[i] = relativeIndexLayerOffset(ctx, i);
+        }
+        return layerOffsets;
     }
 
 }

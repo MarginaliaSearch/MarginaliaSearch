@@ -1,128 +1,80 @@
 package nu.marginalia.util.multimap;
 
-import lombok.experimental.Delegate;
+public interface MultimapSearcher {
+    long binarySearchUpper(long key, long fromIndex, long n);
+    long binarySearch(long key, long fromIndex, long n);
 
-public class MultimapSearcher {
-    @Delegate
-    private final MultimapFileLong mmf;
+    static MultimapSearcher forContext(MultimapFileLongSlice slice, long mask, int stepSize) {
+        if (mask == ~0L && stepSize == 1) {
+            return new SimpleMultimapSearcher(new MultimapSearcherBase(slice));
+        }
+        else if (stepSize == 1) {
+            return new MaskedMultimapSearcher(new MultimapSearcherBase(slice), mask);
+        }
+        else {
+            return new SteppingMaskedMultimapSearcher(new MultimapSearcherBase(slice), mask, stepSize);
+        }
+    }
+}
 
-    public MultimapSearcher(MultimapFileLong mmf) {
-        this.mmf = mmf;
+class SimpleMultimapSearcher implements  MultimapSearcher {
+    private final MultimapSearcherBase base;
+
+    SimpleMultimapSearcher(MultimapSearcherBase base) {
+        this.base = base;
     }
 
-    public boolean binarySearch(long key, long fromIndex, long toIndex) {
-
-        long low = fromIndex;
-        long high = toIndex - 1;
-
-        while (low <= high) {
-            long mid = (low + high) >>> 1;
-            long midVal = get(mid);
-
-            if (midVal < key)
-                low = mid + 1;
-            else if (midVal > key)
-                high = mid - 1;
-            else
-                return true; // key found
-        }
-        return false;  // key not found.
+    @Override
+    public long binarySearchUpper(long key, long fromIndex, long n) {
+        return base.binarySearchUpper(key, fromIndex, n);
     }
 
-    public long binarySearchUpperBound(long key, long fromIndex, long toIndex) {
+    @Override
+    public long binarySearch(long key, long fromIndex, long n) {
+        return base.binarySearch(key, fromIndex, n);
+    }
+}
 
-        long low = fromIndex;
-        long high = toIndex - 1;
 
-        while (low <= high) {
-            long mid = (low + high) >>> 1;
-            long midVal = get(mid);
+class MaskedMultimapSearcher implements  MultimapSearcher {
+    private final MultimapSearcherBase base;
+    private final long mask;
 
-            if (midVal < key)
-                low = mid + 1;
-            else if (midVal > key)
-                high = mid - 1;
-            else
-                return mid;
-        }
-        return low;
+    MaskedMultimapSearcher(MultimapSearcherBase base, long mask) {
+        this.base = base;
+        this.mask = mask;
     }
 
-    public long binarySearchUpperBound(long key, long fromIndex, long toIndex, long mask) {
-
-        long low = fromIndex;
-        long high = toIndex - 1;
-
-        while (low <= high) {
-            long mid = (low + high) >>> 1;
-            long midVal = get(mid) & mask;
-
-            if (midVal < key)
-                low = mid + 1;
-            else if (midVal > key)
-                high = mid - 1;
-            else
-                return mid;
-        }
-        return low;
+    @Override
+    public long binarySearchUpper(long key, long fromIndex, long n) {
+        return base.binarySearchUpper(key, fromIndex, n, mask);
     }
 
-    public long binarySearchUpperBoundNoMiss(long key, long fromIndex, long toIndex) {
+    @Override
+    public long binarySearch(long key, long fromIndex, long n) {
+        return base.binarySearch(key, fromIndex, n, mask);
+    }
+}
 
-        long low = fromIndex;
-        long high = toIndex - 1;
 
-        while (low <= high) {
-            long mid = (low + high) >>> 1;
-            long midVal = get(mid);
+class SteppingMaskedMultimapSearcher implements  MultimapSearcher {
+    private final MultimapSearcherBase base;
+    private final long mask;
+    private final int step;
 
-            if (midVal < key)
-                low = mid + 1;
-            else if (midVal > key)
-                high = mid - 1;
-            else
-                return mid;
-        }
-        return -1;
+    SteppingMaskedMultimapSearcher(MultimapSearcherBase base, long mask, int step) {
+        this.base = base;
+        this.mask = mask;
+        this.step = step;
     }
 
-
-    public long binarySearchUpperBoundNoMiss(long key, long fromIndex, long toIndex, long mask) {
-
-        long low = fromIndex;
-        long high = toIndex - 1;
-
-        while (low <= high) {
-            long mid = (low + high) >>> 1;
-            long midVal = get(mid) & mask;
-
-            if (midVal < key)
-                low = mid + 1;
-            else if (midVal > key)
-                high = mid - 1;
-            else
-                return mid;
-        }
-        return -1;
+    @Override
+    public long binarySearchUpper(long key, long fromIndex, long n) {
+        return base.binarySearchUpper(key, fromIndex, step, n, mask);
     }
 
-
-    public long binarySearchUpperBoundNoMiss(long key, long fromIndex, long step, long steps, long mask) {
-
-        long low = 0;
-        long high = steps - 1;
-
-        while (low <= high) {
-            long mid = (low + high) >>> 1;
-            long midVal = get(fromIndex + mid*step) & mask;
-
-            if (midVal < key)
-                low = mid + 1;
-            else if (midVal > key)
-                high = mid - 1;
-            else
-                return fromIndex + mid*step;
-        }
-        return -1;
+    @Override
+    public long binarySearch(long key, long fromIndex, long n) {
+        return base.binarySearch(key, fromIndex, step, n, mask);
     }
 }
