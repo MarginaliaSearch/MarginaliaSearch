@@ -4,9 +4,9 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.upserve.uppend.blobs.NativeIO;
 import io.reactivex.rxjava3.schedulers.Schedulers;
-import nu.marginalia.wmsa.edge.index.conversion.SearchIndexConverter;
 import nu.marginalia.util.btree.BTreeReader;
 import nu.marginalia.util.multimap.MultimapFileLong;
+import nu.marginalia.wmsa.edge.index.conversion.SearchIndexConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +49,7 @@ public class SearchIndex implements  AutoCloseable {
         urls.advice(NativeIO.Advice.Random);
         words.forEachWordsOffset(offset -> {
             var h = reader.getHeader(offset);
-            int length = (int) (h.dataOffsetLongs() - h.indexOffsetLongs());
+            long length = h.dataOffsetLongs() - h.indexOffsetLongs();
 
             urls.adviceRange(NativeIO.Advice.Normal, offset, 512);
 
