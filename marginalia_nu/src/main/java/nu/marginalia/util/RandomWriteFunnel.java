@@ -30,7 +30,8 @@ public class RandomWriteFunnel implements AutoCloseable {
             int binCount = (int) (size / binSize + ((size % binSize) != 0L ? 1 : 0));
             bins = new DataBin[binCount];
             for (int i = 0; i < binCount; i++) {
-                bins[i] = new DataBin(tempDir, Math.min((int) (size - binSize * i), binSize));
+                bins[i] = new DataBin(tempDir, (int)
+                        Math.min((size - (long)binSize * i), binSize));
             }
         }
         else {
