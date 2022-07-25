@@ -95,7 +95,7 @@ public class IndexWordsTable implements AutoCloseable {
                     offsetConsumer.accept(words.get(posOffset+1));
                 }
             }
-            catch (RuntimeException ex) {
+            catch (Exception ex) {
                 logger.warn("Error @ " + i, ex);
                 break;
             }

@@ -10,7 +10,7 @@ import static java.lang.Math.min;
 public class BTreeReader {
 
     private final MultimapFileLong file;
-    private final BTreeContext ctx;
+    public final BTreeContext ctx;
 
     private final MultimapSearcher indexSearcher;
     private final MultimapSearcher dataSearcher;
