@@ -124,14 +124,22 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
         if (endLongs >= mappedSize)
             grow(endLongs);
 
-        var buff = mappedByteBuffers.get((int)(startLongs / bufferSize));
 
-        if ((int)(startLongs / bufferSize) != (int)((endLongs) / bufferSize)) {
-            logger.debug("Misaligned madvise, skipping");
-            return;
+        int startIdx = (int)(startLongs / bufferSize);
+        int endIdx = (int)(endLongs / bufferSize);
+
+        if (startIdx != endIdx) {
+            long offsetStart = (startLongs % bufferSize) * WORD_SIZE;
+            NativeIO.madviseRange(mappedByteBuffers.get(startIdx), advice, offsetStart, (int) (bufferSize * WORD_SIZE - offsetStart));
+            for (int i = startIdx+1; i < endIdx; i++) {
+                NativeIO.madviseRange(mappedByteBuffers.get(i), advice, 0, (int)(bufferSize * WORD_SIZE));
+            }
+            NativeIO.madviseRange(mappedByteBuffers.get(endIdx), advice, 0, (int)((endIdx % bufferSize) * WORD_SIZE));
         }
-
-        NativeIO.madviseRange(buff, advice, (startLongs % bufferSize) * WORD_SIZE, (int)(lengthLongs*WORD_SIZE));
+        else {
+            var buff = mappedByteBuffers.get(startIdx);
+            NativeIO.madviseRange(buff, advice, (startLongs % bufferSize) * WORD_SIZE, (int) (lengthLongs * WORD_SIZE));
+        }
     }
 
     public void pokeRange(long offset, long length) {

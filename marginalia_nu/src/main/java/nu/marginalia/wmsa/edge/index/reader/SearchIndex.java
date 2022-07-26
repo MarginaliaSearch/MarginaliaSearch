@@ -46,17 +46,14 @@ public class SearchIndex implements  AutoCloseable {
 
     private void madvise(MultimapFileLong urls, BTreeReader reader) {
 
-        urls.advice(NativeIO.Advice.Random);
         words.forEachWordsOffset(offset -> {
             var h = reader.getHeader(offset);
             long length = h.dataOffsetLongs() - h.indexOffsetLongs();
 
-            urls.adviceRange(NativeIO.Advice.Normal, offset, 512);
+            urls.adviceRange(NativeIO.Advice.WillNeed, offset, 512);
 
             if (length > 0) {
                 urls.adviceRange(NativeIO.Advice.WillNeed, h.indexOffsetLongs(), length);
-                urls.adviceRange(NativeIO.Advice.Normal, h.dataOffsetLongs(), Math.min(2048, h.numEntries()*bTreeReader.ctx.entrySize()));
-                urls.pokeRange(h.indexOffsetLongs(), length);
             }
         });
     }
