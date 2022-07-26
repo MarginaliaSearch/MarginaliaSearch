@@ -17,19 +17,7 @@ import java.nio.file.Files;
 import java.util.Objects;
 
 public class SearchIndexPreconverter {
-    private static final int CHUNK_HEADER_SIZE = 16;
-
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final SearchIndexPartitioner partitioner;
-    private final TIntHashSet spamDomains;
-
-    @SneakyThrows
-    public static long wordCount(File inputFile) {
-        try (RandomAccessFile raf = new RandomAccessFile(inputFile, "r")) {
-            raf.readLong();
-            return raf.readInt();
-        }
-    }
 
     @SneakyThrows
     @Inject
@@ -38,8 +26,7 @@ public class SearchIndexPreconverter {
                                    SearchIndexPartitioner partitioner,
                                    EdgeDomainBlacklist blacklist)
     {
-        this.partitioner = partitioner;
-        this.spamDomains = blacklist.getSpamDomains();
+        TIntHashSet spamDomains = blacklist.getSpamDomains();
         logger.info("Preconverting {}", inputFile);
 
         for (File f : outputFiles) {
@@ -64,12 +51,10 @@ public class SearchIndexPreconverter {
             fileChannels[i] = randomAccessFiles[i].getChannel();
         }
 
-
         var lock = partitioner.getReadLock();
         try {
             lock.lock();
             ByteBuffer buffer = ByteBuffer.allocateDirect(8192);
-
             for (var entry : indexJournalReader) {
                 if (!partitioner.isGoodUrl(entry.urlId())
                     || spamDomains.contains(entry.domainId())) {
@@ -93,6 +78,7 @@ public class SearchIndexPreconverter {
         finally {
             lock.unlock();
         }
+        logger.info("Finalizing preconversion");
 
         for (int i = 0; i < randomAccessFiles.length; i++) {
             long pos = randomAccessFiles[i].getFilePointer();
