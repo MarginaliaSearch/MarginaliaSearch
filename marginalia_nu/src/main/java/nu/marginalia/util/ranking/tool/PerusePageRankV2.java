@@ -6,35 +6,29 @@ import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import gnu.trove.set.hash.TIntHashSet;
 import it.unimi.dsi.fastutil.ints.IntArrays;
 import it.unimi.dsi.fastutil.ints.IntComparator;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.SneakyThrows;
 import nu.marginalia.util.ranking.RankingAlgorithm;
+import nu.marginalia.util.ranking.RankingDomainData;
+import nu.marginalia.util.ranking.RankingDomainFetcher;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
 import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklistImpl;
 import org.jetbrains.annotations.NotNull;
-import org.mariadb.jdbc.Driver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Arrays;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.function.IntToDoubleFunction;
 import java.util.stream.IntStream;
 
 public class PerusePageRankV2 {
 
-    final TIntObjectHashMap<DomainData> domainsById = new TIntObjectHashMap<>();
+    final TIntObjectHashMap<RankingDomainData> domainsById = new TIntObjectHashMap<>();
     final TIntIntHashMap domainIndexToId = new TIntIntHashMap();
     final TIntIntHashMap domainIdToIndex = new TIntIntHashMap();
-
-    private final TIntHashSet spamDomains;
-    private final HikariDataSource dataSource;
 
     TIntArrayList[] linkDataSrc2Dest;
     TIntArrayList[] linkDataDest2Src;
@@ -56,12 +50,12 @@ public class PerusePageRankV2 {
 
     @SneakyThrows
     public static void main(String... args) {
-        org.mariadb.jdbc.Driver driver = new Driver();
-        var conn = new DatabaseModule().provideConnection();
-        var rank = new PerusePageRankV2(conn);
+        var ds = new DatabaseModule().provideConnection();
+        var blacklist = new EdgeDomainBlacklistImpl(ds);
+        var rank = new PerusePageRankV2(new RankingDomainFetcher(ds, blacklist));
 
         long start = System.currentTimeMillis();
-        var uploader = new Thread(() -> uploadThread(conn));
+        var uploader = new Thread(() -> uploadThread(ds));
         uploader.start();
 
         IntStream.range(0, rank.indexMax()).parallel().forEach(i -> {
@@ -104,71 +98,39 @@ public class PerusePageRankV2 {
         }
     }
 
-    public PerusePageRankV2(HikariDataSource dataSource) {
-        var blacklist = new EdgeDomainBlacklistImpl(dataSource);
-        spamDomains = blacklist.getSpamDomains();
-        this.dataSource = dataSource;
+    public PerusePageRankV2(RankingDomainFetcher domainFetcher) {
 
-        try (var conn = dataSource.getConnection()) {
-            String s;
-            if (getNames) {
-                s = "SELECT EC_DOMAIN.ID,DOMAIN_NAME,DOMAIN_ALIAS FROM EC_DOMAIN INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID WHERE ((INDEXED>1 AND IS_ALIVE) OR (INDEXED=1 AND VISITED_URLS=KNOWN_URLS AND GOOD_URLS>0)) GROUP BY EC_DOMAIN.ID";
-            }
-            else {
-                s = "SELECT EC_DOMAIN.ID,\"\",DOMAIN_ALIAS FROM EC_DOMAIN ON EC_DOMAIN.ID=DOMAIN_METADATA.ID WHERE ((INDEXED>1 AND IS_ALIVE) OR (INDEXED=1 AND VISITED_URLS=KNOWN_URLS AND GOOD_URLS>0)) GROUP BY EC_DOMAIN.ID";
-            }
-            try (var stmt = conn.prepareStatement(s)) {
-                stmt.setFetchSize(10000);
-                var rsp = stmt.executeQuery();
-                while (rsp.next()) {
-                    int id = rsp.getInt(1);
-                    if (!spamDomains.contains(id)) {
+        domainFetcher.getDomains(domainData -> {
+            int id = domainData.id;
 
-                        domainsById.put(id, new DomainData(id, rsp.getString(2),  rsp.getInt(3), false));
+            domainsById.put(id, domainData);
 
-                        domainIndexToId.put(domainIndexToId.size(), id);
-                        domainIdToIndex.put(id, domainIdToIndex.size());
-                    }
+            domainIndexToId.put(domainIndexToId.size(), id);
+            domainIdToIndex.put(id, domainIdToIndex.size());
+        });
+
+        linkDataSrc2Dest = new TIntArrayList[domainIndexToId.size()];
+        linkDataDest2Src = new TIntArrayList[domainIndexToId.size()];
+
+        domainFetcher.eachDomainLink((src, dst) -> {
+            if (src == dst) return;
+
+            if (domainsById.contains(src) && domainsById.contains(dst)) {
+
+                int srcIdx = domainIdToIndex.get(src);
+                int dstIdx = domainIdToIndex.get(domainsById.get(dst).resolveAlias());
+
+                if (linkDataSrc2Dest[srcIdx] == null) {
+                    linkDataSrc2Dest[srcIdx] = new TIntArrayList();
                 }
-            }
+                linkDataSrc2Dest[srcIdx].add(dstIdx);
 
-
-            linkDataSrc2Dest = new TIntArrayList[domainIndexToId.size()];
-            linkDataDest2Src = new TIntArrayList[domainIndexToId.size()];
-
-            try (var stmt = conn.prepareStatement("SELECT SOURCE_DOMAIN_ID, DEST_DOMAIN_ID FROM EC_DOMAIN_LINK")) {
-                stmt.setFetchSize(10000);
-
-                var rsp = stmt.executeQuery();
-
-                while (rsp.next()) {
-                    int src = rsp.getInt(1);
-                    int dst = rsp.getInt(2);
-
-                    if (src == dst) continue;
-
-                    if (domainsById.contains(src) && domainsById.contains(dst)) {
-
-                        int srcIdx = domainIdToIndex.get(src);
-                        int dstIdx = domainIdToIndex.get(domainsById.get(dst).resolveAlias());
-
-                        if (linkDataSrc2Dest[srcIdx] == null) {
-                            linkDataSrc2Dest[srcIdx] = new TIntArrayList();
-                        }
-                        linkDataSrc2Dest[srcIdx].add(dstIdx);
-
-                        if (linkDataDest2Src[dstIdx] == null) {
-                            linkDataDest2Src[dstIdx] = new TIntArrayList();
-                        }
-                        linkDataDest2Src[dstIdx].add(srcIdx);
-                    }
+                if (linkDataDest2Src[dstIdx] == null) {
+                    linkDataDest2Src[dstIdx] = new TIntArrayList();
                 }
+                linkDataDest2Src[dstIdx].add(srcIdx);
             }
-
-        } catch (SQLException throwables) {
-            logger.error("SQL error", throwables);
-        }
-
+        });
     }
 
     public TIntList pageRank(int origin, int resultCount) {
@@ -261,21 +223,6 @@ public class PerusePageRankV2 {
             return v;
         }
 
-        public TIntList getRanking(IntToDoubleFunction other, int numResults) {
-            TIntArrayList list = new TIntArrayList(numResults);
-
-            Comparator<Integer> comparator = Comparator.comparing(i -> Math.sqrt(other.applyAsDouble(domainIdToIndex.get(i)) * rank[i]));
-
-            IntStream.range(0, rank.length)
-                    .boxed()
-                    .sorted(comparator.reversed())
-                    .map(domainIndexToId::get)
-                    .limit(numResults)
-                    .forEach(list::add);
-
-            return list;
-        }
-
         public TIntList getRanking(int numResults) {
             if (numResults < 0) {
                 numResults = domainIdToIndex.size();
@@ -306,34 +253,6 @@ public class PerusePageRankV2 {
 
             return list;
         }
-
-        public void incrementAll(double v) {
-            for (int i = 0; i < rank.length; i++) {
-                rank[i]+=v;
-            }
-        }
-
-        int size() {
-            return domainsById.size();
-        }
     }
 
-    @Data
-    @AllArgsConstructor
-    static class DomainData {
-        public final int id;
-        public final String name;
-        private int alias;
-
-        public int resolveAlias() {
-            if (alias == 0) return id;
-            return alias;
-        }
-
-        public boolean isAlias() {
-            return alias != 0;
-        }
-
-        public boolean peripheral;
-    }
 }

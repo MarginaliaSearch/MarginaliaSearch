@@ -6,7 +6,7 @@ import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
 
 @Data
 @AllArgsConstructor
-class RankingDomainData {
+public class RankingDomainData {
     public final int id;
     public final String name;
     private int alias;
