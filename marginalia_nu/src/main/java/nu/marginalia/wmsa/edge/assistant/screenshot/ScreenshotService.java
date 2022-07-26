@@ -7,6 +7,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeId;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -39,7 +40,9 @@ public class ScreenshotService {
                     """)) {
             ps.setInt(1, domainId.id());
             var rs = ps.executeQuery();
-            return rs.next();
+            if (rs.next()) {
+                return rs.getBoolean(1);
+            }
         }
         catch (SQLException ex) {
             logger.warn("SQL error", ex);
@@ -67,7 +70,10 @@ public class ScreenshotService {
             var rsp = ps.executeQuery();
             if (rsp.next()) {
                 response.type(rsp.getString(1));
-                rsp.getBlob(2).getBinaryStream().transferTo(response.raw().getOutputStream());
+                response.status(200);
+                response.header("Cache-control", "public,max-age=3600");
+
+                IOUtils.copy(rsp.getBlob(2).getBinaryStream(), response.raw().getOutputStream());
                 return "";
             }
         }
