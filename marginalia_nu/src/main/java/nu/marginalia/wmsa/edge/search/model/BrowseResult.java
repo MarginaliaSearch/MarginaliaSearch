@@ -8,4 +8,12 @@ import nu.marginalia.wmsa.edge.model.EdgeUrl;
 public class BrowseResult {
     public final EdgeUrl url;
     public final int domainId;
+
+    public String domainHash() {
+        var domain = url.domain;
+        if ("www".equals(domain.subDomain)) {
+            return domain.domain;
+        }
+        return domain.toString();
+    }
 }

@@ -16,8 +16,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -58,17 +60,25 @@ public class BrowseCommand implements SearchCommandInterface {
         String definePrefix = "browse:";
         String word = humanQuery.substring(definePrefix.length()).toLowerCase();
 
+        Set<String> domainHashes = new HashSet<>();
+
         try {
             if ("random".equals(word)) {
                 var results = edgeDataStoreDao.getRandomDomains(25, blacklist);
-                results.removeIf(res -> !screenshotService.hasScreenshot(new EdgeId<>(res.domainId)));
+
+                results.removeIf(res ->
+                               !screenshotService.hasScreenshot(new EdgeId<>(res.domainId))
+                            || !domainHashes.add(res.domainHash()));
+
                 return new BrowseResultSet(results);
             }
             else {
                 var domain = edgeDataStoreDao.getDomainId(new EdgeDomain(word));
                 var neighbors = edgeDataStoreDao.getDomainNeighborsAdjacent(domain, blacklist, 45);
 
-                neighbors.removeIf(res -> !screenshotService.hasScreenshot(new EdgeId<>(res.domainId)));
+                neighbors.removeIf(res ->
+                           !screenshotService.hasScreenshot(new EdgeId<>(res.domainId))
+                        || !domainHashes.add(res.domainHash()));
 
                 return new BrowseResultSet(neighbors);
             }
