@@ -117,7 +117,7 @@ public class EdgeSearchOperator {
                 .flatMap(sq -> sq.searchTermsInclude.stream())
                 .distinct()
                 .flatMap(keyword ->
-                        specs.buckets.stream().map(bucket -> new EdgeDomainSearchSpecification(bucket, IndexBlock.Title, keyword, 1_000_000/specs.buckets.size(), 20, 20))
+                        specs.buckets.stream().map(bucket -> new EdgeDomainSearchSpecification(bucket, IndexBlock.Title, keyword, 10_000_000/specs.buckets.size(), 20, 100/specs.buckets.size()))
                 )
                 .toArray(EdgeDomainSearchSpecification[]::new);
 
