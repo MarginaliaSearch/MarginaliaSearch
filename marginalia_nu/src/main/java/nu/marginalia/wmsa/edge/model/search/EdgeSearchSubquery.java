@@ -1,9 +1,12 @@
 package nu.marginalia.wmsa.edge.model.search;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.ToString;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @ToString
 @Getter
@@ -23,7 +26,10 @@ public class EdgeSearchSubquery {
     }
 
     public EdgeSearchSubquery withBlock(IndexBlock block) {
-        return new EdgeSearchSubquery(searchTermsInclude, searchTermsExclude, block);
+        return new EdgeSearchSubquery(
+                new CopyOnWriteArrayList<>(searchTermsInclude),
+                new CopyOnWriteArrayList<>(searchTermsExclude),
+                block);
     }
 
     public int termSize() {

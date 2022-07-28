@@ -32,6 +32,7 @@ import java.util.List;
 
 import static nu.marginalia.wmsa.configuration.ServiceDescriptor.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 @Tag("e2e")
 @Testcontainers
@@ -192,6 +193,31 @@ public class EdgeSearchE2ETest extends E2ETestBase {
         Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("query"));
     }
 
+    @Test
+    public void testQueryYesJs() throws IOException {
+        var driver = chrome.getWebDriver();
+
+        driver.get("http://proxyNginx/search?query=bird&profile=corpo&js=yes-js");
+        System.out.println(driver.getTitle());
+
+        var html = driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML");
+        assertNotEquals(List.of("Bird"), getTitlesFromSearchResults(html));
+
+        Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("query-yes-js"));
+    }
+
+    @Test
+    public void testQueryNoJs() throws IOException {
+        var driver = chrome.getWebDriver();
+
+        driver.get("http://proxyNginx/search?query=bird&profile=corpo&js=no-js");
+        System.out.println(driver.getTitle());
+
+        var html = driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML");
+        assertEquals(List.of("Bird"), getTitlesFromSearchResults(html));
+
+        Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("query-no-js"));
+    }
     @Test
     public void testSiteInfo() throws IOException {
         var driver = chrome.getWebDriver();

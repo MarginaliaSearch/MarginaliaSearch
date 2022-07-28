@@ -15,6 +15,7 @@ import nu.marginalia.wmsa.configuration.server.MetricsServer;
 import nu.marginalia.wmsa.configuration.server.Service;
 import nu.marginalia.wmsa.edge.index.client.EdgeIndexClient;
 import nu.marginalia.wmsa.edge.search.command.CommandEvaluator;
+import nu.marginalia.wmsa.edge.search.command.SearchJsParameter;
 import nu.marginalia.wmsa.edge.search.command.SearchParameters;
 import nu.marginalia.wmsa.edge.search.exceptions.RedirectException;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeUserSearchParameters;
@@ -130,7 +131,7 @@ public class EdgeSearchService extends Service {
 
         final String humanQuery = queryParam.trim();
 
-        var results = searchOperator.doApiSearch(ctx, new EdgeUserSearchParameters(humanQuery, profile, ""));
+        var results = searchOperator.doApiSearch(ctx, new EdgeUserSearchParameters(humanQuery, profile, SearchJsParameter.DEFAULT));
 
         return new ApiSearchResults("RESTRICTED", humanQuery, results.stream().map(ApiSearchResult::new).limit(limit).collect(Collectors.toList()));
     }
@@ -151,7 +152,9 @@ public class EdgeSearchService extends Service {
 
         var params = new SearchParameters(
                 EdgeSearchProfile.getSearchProfile(profileStr),
-                Optional.ofNullable(request.queryParams("js")).orElse("default"));
+                SearchJsParameter.parse(request.queryParams("js"))
+        );
+
         try {
             return searchCommandEvaulator.eval(ctx, params, humanQuery);
         }

@@ -43,7 +43,8 @@ public class SearchCommand implements SearchCommandInterface {
     public Optional<Object> process(Context ctx, SearchParameters parameters, String query) {
         @CheckForNull Future<String> eval = unitConversion.tryEval(ctx, query);
 
-        DecoratedSearchResults results = searchOperator.doSearch(ctx, new EdgeUserSearchParameters(query, parameters.profile(), parameters.js()), eval);
+        EdgeUserSearchParameters params = new EdgeUserSearchParameters(query, parameters.profile(), parameters.js());
+        DecoratedSearchResults results = searchOperator.doSearch(ctx, params, eval);
 
         results.getResults().removeIf(detail -> blacklist.isBlacklisted(dataStoreDao.getDomainId(detail.url.domain)));
 

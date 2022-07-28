@@ -2,9 +2,9 @@ package nu.marginalia.wmsa.edge.search.query;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.util.language.WordPatterns;
 import nu.marginalia.util.language.conf.LanguageModels;
+import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchSpecification;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchSubquery;
@@ -39,15 +39,26 @@ public class QueryFactory {
     }
 
     public EdgeSearchQuery createQuery(EdgeUserSearchParameters params) {
-        final var profile = params.getProfile();
-        final var jsSetting = params.getJsSetting();
-
+        final var profile = params.profile();
         final var processedQuery =  createQuery(getParser(), params);
 
         processedQuery.specs.experimental = EdgeSearchProfile.CORPO.equals(profile);
         processedQuery.specs.stagger = EdgeSearchProfile.YOLO.equals(profile);
 
-        List<EdgeSearchSubquery> subqueries = new ArrayList<>(processedQuery.specs.subqueries.size() * profile.indexBlocks.size());
+        final var newSubqueries = reevaluateSubqueries(processedQuery, params);
+
+        processedQuery.specs.subqueries.clear();
+        processedQuery.specs.subqueries.addAll(newSubqueries);
+
+        return processedQuery;
+    }
+
+    private List<EdgeSearchSubquery> reevaluateSubqueries(EdgeSearchQuery processedQuery, EdgeUserSearchParameters params) {
+        final var jsSetting = params.jsSetting();
+        final var profile = params.profile();
+
+        List<EdgeSearchSubquery> subqueries =
+                new ArrayList<>(processedQuery.specs.subqueries.size() * profile.indexBlocks.size());
 
         for (var sq : processedQuery.specs.subqueries) {
             for (var block : profile.indexBlocks) {
@@ -55,28 +66,19 @@ public class QueryFactory {
             }
         }
 
-        processedQuery.specs.subqueries.clear();
-        processedQuery.specs.subqueries.addAll(subqueries);
-
-        processedQuery.specs.subqueries.forEach(sq -> {
-            sq.searchTermsInclude.addAll(profile.additionalSearchTerm);
-            if (jsSetting.equals("yes-js")) {
-                sq.searchTermsExclude.add("js:false");
-            }
-            if (jsSetting.equals("no-js")) {
-                sq.searchTermsExclude.add("js:true");
-            }
+        subqueries.forEach(sq -> {
+            sq.searchTermsExclude.addAll(Arrays.asList(jsSetting.implictExcludeSearchTerms));
         });
 
-        processedQuery.specs.subqueries.sort(Comparator.comparing(sq -> -sq.termSize()*2.3 + sq.block.sortOrder));
+        subqueries.sort(Comparator.comparing(sq -> -sq.termSize()*2.3 + sq.block.sortOrder));
 
-        return processedQuery;
+        return subqueries;
     }
 
 
     public EdgeSearchQuery createQuery(QueryParser queryParser, EdgeUserSearchParameters params) {
-        final var query = params.humanQuery;
-        final var profile = params.getProfile();
+        final var query = params.humanQuery();
+        final var profile = params.profile();
 
         if (query.length() > 1000) {
             Spark.halt(HttpStatus.BAD_REQUEST_400, "That's too much, man");
