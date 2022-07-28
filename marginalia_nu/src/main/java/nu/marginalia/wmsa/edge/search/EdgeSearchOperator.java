@@ -135,8 +135,20 @@ public class EdgeSearchOperator {
 
         Set<EdgeId<EdgeUrl>> results = new LinkedHashSet<>();
 
+        List<Iterator<EdgeId<EdgeUrl>>> iters = new ArrayList<>();
+
         for (var result : indexClient.queryDomains(ctx, requests)) {
-            results.addAll(result.results);
+            iters.add(result.results.iterator());
+        }
+
+        while (!iters.isEmpty()) {
+            iters.removeIf(iter -> {
+                if (!iter.hasNext()) return true;
+                else {
+                    results.add(iter.next());
+                    return false;
+                }
+            });
         }
 
         return edgeDataStoreDao.getBrowseResultFromUrlIds(new ArrayList<>(results));
