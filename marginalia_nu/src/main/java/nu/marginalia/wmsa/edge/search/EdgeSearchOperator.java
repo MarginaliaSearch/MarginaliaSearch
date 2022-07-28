@@ -112,17 +112,18 @@ public class EdgeSearchOperator {
     }
 
     private List<BrowseResult> getDomainResults(Context ctx, EdgeSearchSpecification specs) {
-        List<String> keywords = specs.subqueries.stream().filter(sq -> sq.searchTermsExclude.isEmpty() && sq.searchTermsInclude.size() == 1)
-                .findFirst().map(sq -> sq.searchTermsInclude).orElseGet(Collections::emptyList);
+        var requests = specs.subqueries.stream().filter(sq -> sq.searchTermsExclude.isEmpty() && sq.searchTermsInclude.size() == 1)
+                .flatMap(sq -> sq.searchTermsInclude.stream())
+                .map(keyword -> new EdgeDomainSearchSpecification(specs.buckets.get(0), IndexBlock.TitleKeywords, keyword, 1_000_000, 10, 20))
+                .toArray(EdgeDomainSearchSpecification[]::new);
 
-        if (keywords.size() == 1) {
-            var request = new EdgeDomainSearchSpecification(specs.buckets.get(0), IndexBlock.TitleKeywords, keywords.get(0), 1_000_000, 10, 20);
-            var response = indexClient.queryDomains(ctx, request);
+        if (requests.length == 0)
+            return Collections.emptyList();
 
-            return edgeDataStoreDao.getBrowseResultFromUrlIds(response.results, 5);
-        }
+        List<EdgeId<EdgeUrl>> results = indexClient.queryDomains(ctx, requests)
+                .stream().flatMap(rs -> rs.results.stream()).distinct().toList();
 
-        return Collections.emptyList();
+        return edgeDataStoreDao.getBrowseResultFromUrlIds(results, 5);
     }
 
     private String getEvalResult(@Nullable Future<String> eval) {

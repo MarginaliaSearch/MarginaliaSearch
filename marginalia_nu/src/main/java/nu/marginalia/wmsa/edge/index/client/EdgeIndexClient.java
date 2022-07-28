@@ -65,8 +65,14 @@ public class EdgeIndexClient extends AbstractDynamicClient {
     }
 
     @CheckReturnValue
-    public EdgeDomainSearchResults queryDomains(Context ctx, EdgeDomainSearchSpecification specs) {
-        return this.postGet(ctx, "/search-domain/", specs, EdgeDomainSearchResults.class).blockingFirst();
+    public List<EdgeDomainSearchResults> queryDomains(Context ctx, EdgeDomainSearchSpecification... specs) {
+        return Observable.fromArray(specs)
+                .concatMap(s -> postGet(ctx, "/search-domain/", specs, EdgeDomainSearchResults.class)
+                        .subscribeOn(Schedulers.io())
+                        .timeout(1, TimeUnit.SECONDS)
+                        .onErrorComplete())
+                .toList()
+                .blockingGet();
     }
 
 
