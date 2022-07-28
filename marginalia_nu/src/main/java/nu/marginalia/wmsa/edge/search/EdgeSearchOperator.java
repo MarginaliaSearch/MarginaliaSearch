@@ -15,6 +15,8 @@ import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeId;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.search.*;
+import nu.marginalia.wmsa.edge.model.search.domain.EdgeDomainSearchSpecification;
+import nu.marginalia.wmsa.edge.search.model.BrowseResult;
 import nu.marginalia.wmsa.edge.search.model.DecoratedSearchResultSet;
 import nu.marginalia.wmsa.edge.search.model.DecoratedSearchResults;
 import nu.marginalia.wmsa.edge.search.query.QueryFactory;
@@ -97,13 +99,30 @@ public class EdgeSearchOperator {
 
         String evalResult = getEvalResult(eval);
 
+        List<BrowseResult> domainResults = getDomainResults(ctx, processedQuery.specs);
+
         return new DecoratedSearchResults(params,
                 getProblems(ctx, params.humanQuery(), evalResult, queryResults, processedQuery),
                 evalResult,
                 definitions.onErrorReturn((e) -> new WikiArticles()).blockingFirst(),
                 queryResults.resultSet,
+                domainResults,
                 processedQuery.domain,
                 getDomainId(processedQuery.domain));
+    }
+
+    private List<BrowseResult> getDomainResults(Context ctx, EdgeSearchSpecification specs) {
+        List<String> keywords = specs.subqueries.stream().filter(sq -> sq.searchTermsExclude.isEmpty() && sq.searchTermsInclude.size() == 1)
+                .findFirst().map(sq -> sq.searchTermsExclude).orElseGet(Collections::emptyList);
+
+        if (keywords.size() == 1) {
+            var request = new EdgeDomainSearchSpecification(specs.buckets.get(0), IndexBlock.TitleKeywords, keywords.get(0), 10_000, 10, 5);
+            var response = indexClient.queryDomains(ctx, request);
+
+            return edgeDataStoreDao.getBrowseResultFromUrlIds(response.results);
+        }
+
+        return Collections.emptyList();
     }
 
     private String getEvalResult(@Nullable Future<String> eval) {

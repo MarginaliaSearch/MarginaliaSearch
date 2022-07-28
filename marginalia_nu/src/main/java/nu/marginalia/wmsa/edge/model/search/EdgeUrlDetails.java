@@ -2,8 +2,8 @@ package nu.marginalia.wmsa.edge.model.search;
 
 import lombok.*;
 import nu.marginalia.wmsa.edge.converting.processor.logic.HtmlFeature;
-import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
+import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
 import nu.marginalia.wmsa.edge.search.model.EdgeSearchRankingSymbols;
 
 import java.util.Objects;
@@ -21,11 +21,8 @@ public class EdgeUrlDetails {
     public String format;
     public int features;
 
-
-
-    public String ip; // BROKEN
+    public String ip;
     public EdgeDomainIndexingState domainState;
-
 
     public int dataHash;
 

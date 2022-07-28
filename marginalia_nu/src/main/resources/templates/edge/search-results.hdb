@@ -37,6 +37,7 @@
     </section>
     {{/if}}
 
+    {{#each domainResults}}{{>edge/browse-result}}{{/each}}
     {{#each results}}{{>edge/search-result}}{{/each}}
 
     {{#unless evalResult}}{{#if problems}}<section class="card problems onlyscreen"><h2>Suggestions</h2><ul class="onlyscreen search-problems">{{#each problems}}<li>{{{.}}}</li>{{/each}}</ul></section> {{/if}}{{/unless}}

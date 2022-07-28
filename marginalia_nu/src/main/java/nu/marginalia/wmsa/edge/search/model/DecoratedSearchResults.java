@@ -14,7 +14,9 @@ public class DecoratedSearchResults {
     private final List<String> problems;
     private final String evalResult;
     private final WikiArticles wiki;
-    private final List<EdgeUrlDetails> results;
+
+    public final List<EdgeUrlDetails> results;
+    public final List<BrowseResult> domainResults;
 
     private final String focusDomain;
     private final int focusDomainId;
