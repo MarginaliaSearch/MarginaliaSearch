@@ -10,10 +10,14 @@ import nu.marginalia.wmsa.client.HttpStatusCode;
 import nu.marginalia.wmsa.configuration.ServiceDescriptor;
 import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.edge.index.model.EdgePutWordsRequest;
-import nu.marginalia.wmsa.edge.model.*;
+import nu.marginalia.wmsa.edge.model.EdgeDomain;
+import nu.marginalia.wmsa.edge.model.EdgeId;
+import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgePageWordSet;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchResultSet;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchSpecification;
+import nu.marginalia.wmsa.edge.model.search.domain.EdgeDomainSearchResults;
+import nu.marginalia.wmsa.edge.model.search.domain.EdgeDomainSearchSpecification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +62,11 @@ public class EdgeIndexClient extends AbstractDynamicClient {
                         .onErrorComplete())
                 .toList()
                 .blockingGet();
+    }
+
+    @CheckReturnValue
+    public EdgeDomainSearchResults queryDomains(Context ctx, EdgeDomainSearchSpecification specs) {
+        return this.postGet(ctx, "/search-domain/", specs, EdgeDomainSearchResults.class).blockingFirst();
     }
 
 

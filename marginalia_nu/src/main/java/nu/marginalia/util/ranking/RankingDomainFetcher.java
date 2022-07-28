@@ -56,7 +56,7 @@ public class RankingDomainFetcher {
             while (rsp.next()) {
                 int id = rsp.getInt(1);
                 if (!blacklist.isBlacklisted(id)) {
-                    consumer.accept(new RankingDomainData(id, rsp.getString(2), rsp.getInt(3), EdgeDomainIndexingState.valueOf(rsp.getString(4)), rsp.getInt(5), false));
+                    consumer.accept(new RankingDomainData(id, rsp.getString(2), rsp.getInt(3), EdgeDomainIndexingState.valueOf(rsp.getString(4)), rsp.getInt(5)));
                 }
             }
         }

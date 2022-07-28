@@ -112,6 +112,11 @@ public class IndexQueryBuilder {
 
         @Override
         public Query not(int wordId) {
+            // Happens when an index simply isn't present, won't find data anyway
+            // so it's safe to no-op the query
+            if (excludeIndex == null)
+                return new QueryForIndices(budget, LongStream::empty);
+
             return new QueryForIndices(budget, () -> notStream(wordId));
         }
 

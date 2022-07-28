@@ -12,7 +12,6 @@ public class RankingDomainData {
     private int alias;
     private EdgeDomainIndexingState state;
     public final int knownUrls;
-    public boolean peripheral;
 
     public int resolveAlias() {
         if (alias == 0) return id;

@@ -108,6 +108,14 @@ public class PerusePageRankV2 {
             domainIndexToId.put(domainIndexToId.size(), id);
             domainIdToIndex.put(id, domainIdToIndex.size());
         });
+        domainFetcher.getPeripheralDomains(domainData -> {
+            int id = domainData.id;
+
+            domainsById.put(id, domainData);
+
+            domainIndexToId.put(domainIndexToId.size(), id);
+            domainIdToIndex.put(id, domainIdToIndex.size());
+        });
 
         linkDataSrc2Dest = new TIntArrayList[domainIndexToId.size()];
         linkDataDest2Src = new TIntArrayList[domainIndexToId.size()];

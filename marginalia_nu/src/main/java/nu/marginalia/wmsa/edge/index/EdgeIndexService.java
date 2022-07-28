@@ -32,6 +32,8 @@ import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgePageWordSet;
 import nu.marginalia.wmsa.edge.model.crawl.EdgePageWords;
 import nu.marginalia.wmsa.edge.model.search.*;
+import nu.marginalia.wmsa.edge.model.search.domain.EdgeDomainSearchResults;
+import nu.marginalia.wmsa.edge.model.search.domain.EdgeDomainSearchSpecification;
 import org.apache.http.HttpStatus;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -88,6 +90,7 @@ public class EdgeIndexService extends Service {
 
         Spark.post("/words/", this::putWords);
         Spark.post("/search/", this::search, gson::toJson);
+        Spark.post("/search-domain/", this::searchDomain, gson::toJson);
 
         Spark.post("/dictionary/*", this::getWordId, gson::toJson);
 
@@ -202,6 +205,26 @@ public class EdgeIndexService extends Service {
                 .filter(w -> w.getBytes().length < Byte.MAX_VALUE)
                 .mapToLong(keywordLexicon::getOrInsert)
                 .toArray();
+    }
+
+    private Object searchDomain(Request request, Response response) {
+        if (indexes.getDictionaryReader() == null) {
+            logger.warn("Dictionary reader not yet initialized");
+            halt(HttpStatus.SC_SERVICE_UNAVAILABLE, "Come back in a few minutes");
+        }
+
+        String json = request.body();
+        EdgeDomainSearchSpecification specsSet = gson.fromJson(json, EdgeDomainSearchSpecification.class);
+
+        final int wordId = keywordLexicon.getOrInsert(specsSet.keyword);
+
+        List<EdgeId<EdgeUrl>> urlIds = indexes
+                .getBucket(specsSet.bucket)
+                .findHotDomainsForKeyword(specsSet.block, wordId, specsSet.queryDepth, specsSet.minHitCount, specsSet.maxResults)
+                .mapToObj(lv -> new EdgeId<EdgeUrl>((int)(lv & 0xFFFF_FFFFL)))
+                .toList();
+
+        return new EdgeDomainSearchResults(specsSet.keyword, urlIds);
     }
 
     private Object search(Request request, Response response) {
@@ -385,6 +408,16 @@ public class EdgeIndexService extends Service {
                 bucket.isTermInBucket(IndexBlock.Link, termId, urlId)
                 );
 
+    }
+
+    public LongStream getHotDomainsQuery(int bucket, IndexBlock block, int wordId,
+                                         int queryDepth, int minHitCount, int maxResults) {
+        if (!indexes.isValidBucket(bucket)) {
+            logger.warn("Invalid bucket {}", bucket);
+            return LongStream.empty();
+        }
+
+        return indexes.getBucket(bucket).findHotDomainsForKeyword(block, wordId, queryDepth, minHitCount, maxResults);
     }
 
     private LongStream getQuery(int bucket, IndexSearchBudget budget, IndexBlock block,
