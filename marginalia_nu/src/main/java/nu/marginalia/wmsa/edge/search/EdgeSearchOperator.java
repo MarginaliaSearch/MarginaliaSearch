@@ -88,7 +88,7 @@ public class EdgeSearchOperator {
     }
 
     public DecoratedSearchResults doSearch(Context ctx, EdgeUserSearchParameters params, @Nullable Future<String> eval) {
-        Observable<WikiArticles> definitions = getWikiArticle(ctx, params.getHumanQuery());
+        Observable<WikiArticles> definitions = getWikiArticle(ctx, params.humanQuery());
         EdgeSearchQuery processedQuery = queryFactory.createQuery(params);
 
         logger.info("Human terms: {}", Strings.join(processedQuery.searchTermsHuman, ','));
@@ -98,7 +98,7 @@ public class EdgeSearchOperator {
         String evalResult = getEvalResult(eval);
 
         return new DecoratedSearchResults(params,
-                getProblems(ctx, params.getHumanQuery(), evalResult, queryResults, processedQuery),
+                getProblems(ctx, params.humanQuery(), evalResult, queryResults, processedQuery),
                 evalResult,
                 definitions.onErrorReturn((e) -> new WikiArticles()).blockingFirst(),
                 queryResults.resultSet,

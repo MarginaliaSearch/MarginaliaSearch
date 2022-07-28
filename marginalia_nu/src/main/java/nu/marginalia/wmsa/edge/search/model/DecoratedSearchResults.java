@@ -20,12 +20,12 @@ public class DecoratedSearchResults {
     private final int focusDomainId;
 
     public String getQuery() {
-        return params.humanQuery;
+        return params.humanQuery();
     }
     public String getProfile() {
-        return params.getProfile().name;
+        return params.profile().name;
     }
     public String getJs() {
-        return params.jsSetting;
+        return params.jsSetting().value;
     }
 }
