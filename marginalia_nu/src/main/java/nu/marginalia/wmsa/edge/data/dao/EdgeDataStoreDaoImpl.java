@@ -267,6 +267,9 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
 
     @Override
     public List<BrowseResult> getBrowseResultFromUrlIds(List<EdgeId<EdgeUrl>> urlId) {
+        if (urlId.isEmpty())
+            return Collections.emptyList();
+
         List<BrowseResult> ret = new ArrayList<>(urlId.size());
 
         try (var conn = dataSource.getConnection()) {
