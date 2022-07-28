@@ -112,8 +112,10 @@ public class EdgeSearchOperator {
     }
 
     private List<BrowseResult> getDomainResults(Context ctx, EdgeSearchSpecification specs) {
-        var requests = specs.subqueries.stream().filter(sq -> sq.searchTermsExclude.isEmpty() && sq.searchTermsInclude.size() == 1)
+        var requests = specs.subqueries.stream()
+                .filter(sq -> sq.searchTermsExclude.isEmpty() && sq.searchTermsInclude.size() == 1)
                 .flatMap(sq -> sq.searchTermsInclude.stream())
+                .distinct()
                 .map(keyword -> new EdgeDomainSearchSpecification(specs.buckets.get(0), IndexBlock.TitleKeywords, keyword, 1_000_000, 10, 20))
                 .toArray(EdgeDomainSearchSpecification[]::new);
 
