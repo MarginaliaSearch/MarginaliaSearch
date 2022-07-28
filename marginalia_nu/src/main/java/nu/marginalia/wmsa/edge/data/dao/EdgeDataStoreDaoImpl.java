@@ -277,7 +277,7 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
                 // this is safe, string cocatenation is of integers
                 String inStmt = urlId.stream().map(id -> Integer.toString(id.id())).collect(Collectors.joining(", ", "(", ")"));
 
-                var rsp = stmt.executeQuery("SELECT DOMAIN_ID, DOMAIN_NAME FROM EC_URL_VIEW INNER JOIN DOMAIN_METADATA ON EC_URL_VIEW.DOMAIN_ID=DOMAIN_METADATA.ID WHERE VISITED_URLS<500 AND QUALITY>-10 AND EC_URL_VIEW.ID IN " + inStmt + " ORDER BY RANK ASC");
+                var rsp = stmt.executeQuery("SELECT DOMAIN_ID, DOMAIN_NAME FROM EC_URL_VIEW INNER JOIN DOMAIN_METADATA ON EC_URL_VIEW.DOMAIN_ID=DOMAIN_METADATA.ID WHERE VISITED_URLS<750 AND QUALITY>-10 AND EC_URL_VIEW.ID IN " + inStmt + " ORDER BY RANK ASC");
                 while (rsp.next()) {
                     int id = rsp.getInt(1);
                     String domain = rsp.getString(2);

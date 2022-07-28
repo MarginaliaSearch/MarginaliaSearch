@@ -22,7 +22,7 @@ public class EdgeSearchSubquery {
         this.searchTermsInclude = searchTermsInclude;
         this.searchTermsExclude = searchTermsExclude;
         this.block = block;
-        this.termSize =  (int) searchTermsInclude.stream().flatMapToInt(String::chars).filter(i -> '_'==i).count();
+        this.termSize = (int) searchTermsInclude.stream().flatMapToInt(String::chars).filter(i -> '_'==i).count();
     }
 
     public EdgeSearchSubquery withBlock(IndexBlock block) {

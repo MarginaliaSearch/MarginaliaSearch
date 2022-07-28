@@ -112,22 +112,34 @@ public class EdgeSearchOperator {
     }
 
     private List<BrowseResult> getDomainResults(Context ctx, EdgeSearchSpecification specs) {
-        var requests = specs.subqueries.stream()
+
+        List<Integer> buckets = specs.buckets.stream().limit(specs.stagger ? 2 : 1).toList();
+        List<String> keywords = specs.subqueries.stream()
                 .filter(sq -> sq.searchTermsExclude.isEmpty() && sq.searchTermsInclude.size() == 1)
-                .flatMap(sq -> sq.searchTermsInclude.stream())
+                .map(sq -> sq.searchTermsInclude.get(0))
                 .distinct()
-                .flatMap(keyword ->
-                        specs.buckets.stream().map(bucket -> new EdgeDomainSearchSpecification(bucket, IndexBlock.Title, keyword, 2_000_000/specs.buckets.size(), 10, 25))
-                )
-                .toArray(EdgeDomainSearchSpecification[]::new);
+                .toList();
 
-        if (requests.length == 0)
+        List<EdgeDomainSearchSpecification> requests = new ArrayList<>(keywords.size() * buckets.size());
+
+        for (var keyword : keywords) {
+            for (var bucket : buckets) {
+                requests.add(new EdgeDomainSearchSpecification(bucket, IndexBlock.Title, keyword,
+                        1_000_000, 10, 25));
+            }
+        }
+
+        if (requests.isEmpty()) {
             return Collections.emptyList();
+        }
 
-        List<EdgeId<EdgeUrl>> results = indexClient.queryDomains(ctx, requests)
-                .stream().flatMap(rs -> rs.results.stream()).distinct().toList();
+        Set<EdgeId<EdgeUrl>> results = new LinkedHashSet<>();
 
-        return edgeDataStoreDao.getBrowseResultFromUrlIds(results);
+        for (var result : indexClient.queryDomains(ctx, requests)) {
+            results.addAll(result.results);
+        }
+
+        return edgeDataStoreDao.getBrowseResultFromUrlIds(new ArrayList<>(results));
     }
 
     private String getEvalResult(@Nullable Future<String> eval) {
