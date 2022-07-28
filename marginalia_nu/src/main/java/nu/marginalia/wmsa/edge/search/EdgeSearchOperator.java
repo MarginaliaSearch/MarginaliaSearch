@@ -125,7 +125,7 @@ public class EdgeSearchOperator {
         for (var keyword : keywords) {
             for (var bucket : buckets) {
                 requests.add(new EdgeDomainSearchSpecification(bucket, IndexBlock.TitleKeywords, keyword,
-                        1_000_000, 10, 25));
+                        1_000_000, 25, 25));
             }
         }
 
