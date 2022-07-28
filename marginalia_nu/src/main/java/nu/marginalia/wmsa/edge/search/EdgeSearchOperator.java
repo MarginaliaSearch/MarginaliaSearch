@@ -99,7 +99,7 @@ public class EdgeSearchOperator {
 
         String evalResult = getEvalResult(eval);
 
-        List<BrowseResult> domainResults = getDomainResults(ctx, processedQuery.specs);
+        List<BrowseResult> domainResults = getDomainResults(ctx, processedQuery.specs, queryResults);
 
         return new DecoratedSearchResults(params,
                 getProblems(ctx, params.humanQuery(), evalResult, queryResults, processedQuery),
@@ -111,7 +111,9 @@ public class EdgeSearchOperator {
                 getDomainId(processedQuery.domain));
     }
 
-    private List<BrowseResult> getDomainResults(Context ctx, EdgeSearchSpecification specs) {
+    private List<BrowseResult> getDomainResults(Context ctx, EdgeSearchSpecification specs, DecoratedSearchResultSet queryResults) {
+
+        Set<EdgeDomain> resultDomains = queryResults.resultSet.stream().map(rs -> rs.url.domain).collect(Collectors.toSet());
 
         List<Integer> buckets = specs.buckets.stream().limit(specs.stagger ? 2 : 1).toList();
         List<String> keywords = specs.subqueries.stream()
@@ -125,7 +127,7 @@ public class EdgeSearchOperator {
         for (var keyword : keywords) {
             for (var bucket : buckets) {
                 requests.add(new EdgeDomainSearchSpecification(bucket, IndexBlock.TitleKeywords, keyword,
-                        1_000_000, 25, 25));
+                        1_000_000, 5, 25));
             }
         }
 
@@ -135,23 +137,13 @@ public class EdgeSearchOperator {
 
         Set<EdgeId<EdgeUrl>> results = new LinkedHashSet<>();
 
-        List<Iterator<EdgeId<EdgeUrl>>> iters = new ArrayList<>();
-
         for (var result : indexClient.queryDomains(ctx, requests)) {
-            iters.add(result.results.iterator());
+            results.addAll(result.getResults());
         }
 
-        while (!iters.isEmpty()) {
-            iters.removeIf(iter -> {
-                if (!iter.hasNext()) return true;
-                else {
-                    results.add(iter.next());
-                    return false;
-                }
-            });
-        }
-
-        return edgeDataStoreDao.getBrowseResultFromUrlIds(new ArrayList<>(results));
+        var ret = edgeDataStoreDao.getBrowseResultFromUrlIds(new ArrayList<>(results));
+        ret.removeIf(result -> !resultDomains.contains(result.url.domain));
+        return ret;
     }
 
     private String getEvalResult(@Nullable Future<String> eval) {
