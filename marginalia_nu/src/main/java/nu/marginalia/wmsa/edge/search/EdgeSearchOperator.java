@@ -116,7 +116,7 @@ public class EdgeSearchOperator {
                 .findFirst().map(sq -> sq.searchTermsInclude).orElseGet(Collections::emptyList);
 
         if (keywords.size() == 1) {
-            var request = new EdgeDomainSearchSpecification(specs.buckets.get(0), IndexBlock.TitleKeywords, keywords.get(0), 10_000, 10, 5);
+            var request = new EdgeDomainSearchSpecification(specs.buckets.get(0), IndexBlock.TitleKeywords, keywords.get(0), 1_000_000, 20, 10);
             var response = indexClient.queryDomains(ctx, request);
 
             return edgeDataStoreDao.getBrowseResultFromUrlIds(response.results);
