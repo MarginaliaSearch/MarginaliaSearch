@@ -52,7 +52,11 @@ public class SearchCommand implements SearchCommandInterface {
         DecoratedSearchResults results = searchOperator.doSearch(ctx, params, eval);
 
         results.results.removeIf(detail -> blacklist.isBlacklisted(dataStoreDao.getDomainId(detail.url.domain)));
+
         results.domainResults.removeIf(browseResultCleaner.shouldRemoveResultPredicate());
+        if (results.domainResults.size() > 5) {
+            results.domainResults.subList(5, results.domainResults.size()).clear();
+        }
 
         return Optional.of(searchResultsRenderer.render(results));
     }

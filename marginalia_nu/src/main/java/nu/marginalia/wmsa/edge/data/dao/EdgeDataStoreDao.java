@@ -18,7 +18,7 @@ public interface EdgeDataStoreDao {
 
     List<BrowseResult> getRandomDomains(int count, EdgeDomainBlacklist backlist);
 
-    List<BrowseResult> getBrowseResultFromUrlIds(List<EdgeId<EdgeUrl>> urlId, int count);
+    List<BrowseResult> getBrowseResultFromUrlIds(List<EdgeId<EdgeUrl>> urlId);
 
     List<EdgeUrlDetails> getUrlDetailsMulti(List<EdgeId<EdgeUrl>> ids);
 

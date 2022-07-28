@@ -117,7 +117,7 @@ public class EdgeSearchOperator {
                 .flatMap(sq -> sq.searchTermsInclude.stream())
                 .distinct()
                 .flatMap(keyword ->
-                        specs.buckets.stream().map(bucket -> new EdgeDomainSearchSpecification(bucket, IndexBlock.Title, keyword, 2_000_000/specs.buckets.size(), 20, 25/specs.buckets.size()))
+                        specs.buckets.stream().map(bucket -> new EdgeDomainSearchSpecification(bucket, IndexBlock.Title, keyword, 2_000_000/specs.buckets.size(), 10, 25))
                 )
                 .toArray(EdgeDomainSearchSpecification[]::new);
 
@@ -127,7 +127,7 @@ public class EdgeSearchOperator {
         List<EdgeId<EdgeUrl>> results = indexClient.queryDomains(ctx, requests)
                 .stream().flatMap(rs -> rs.results.stream()).distinct().toList();
 
-        return edgeDataStoreDao.getBrowseResultFromUrlIds(results, 5);
+        return edgeDataStoreDao.getBrowseResultFromUrlIds(results);
     }
 
     private String getEvalResult(@Nullable Future<String> eval) {
