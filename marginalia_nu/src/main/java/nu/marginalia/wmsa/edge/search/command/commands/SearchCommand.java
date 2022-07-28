@@ -10,6 +10,7 @@ import nu.marginalia.wmsa.edge.search.command.SearchCommandInterface;
 import nu.marginalia.wmsa.edge.search.command.SearchParameters;
 import nu.marginalia.wmsa.edge.search.model.DecoratedSearchResults;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeUserSearchParameters;
+import nu.marginalia.wmsa.edge.search.results.BrowseResultCleaner;
 import nu.marginalia.wmsa.renderer.mustache.MustacheRenderer;
 import nu.marginalia.wmsa.renderer.mustache.RendererFactory;
 
@@ -24,17 +25,21 @@ public class SearchCommand implements SearchCommandInterface {
     private final EdgeSearchOperator searchOperator;
     private final UnitConversion unitConversion;
     private final MustacheRenderer<DecoratedSearchResults> searchResultsRenderer;
+    private BrowseResultCleaner browseResultCleaner;
 
     @Inject
     public SearchCommand(EdgeDomainBlacklist blacklist,
                          EdgeDataStoreDao dataStoreDao,
                          EdgeSearchOperator searchOperator,
                          UnitConversion unitConversion,
-                         RendererFactory rendererFactory) throws IOException {
+                         RendererFactory rendererFactory,
+                         BrowseResultCleaner browseResultCleaner
+                         ) throws IOException {
         this.blacklist = blacklist;
         this.dataStoreDao = dataStoreDao;
         this.searchOperator = searchOperator;
         this.unitConversion = unitConversion;
+        this.browseResultCleaner = browseResultCleaner;
 
         searchResultsRenderer = rendererFactory.renderer("edge/search-results");
     }
@@ -46,7 +51,8 @@ public class SearchCommand implements SearchCommandInterface {
         EdgeUserSearchParameters params = new EdgeUserSearchParameters(query, parameters.profile(), parameters.js());
         DecoratedSearchResults results = searchOperator.doSearch(ctx, params, eval);
 
-        results.getResults().removeIf(detail -> blacklist.isBlacklisted(dataStoreDao.getDomainId(detail.url.domain)));
+        results.results.removeIf(detail -> blacklist.isBlacklisted(dataStoreDao.getDomainId(detail.url.domain)));
+        results.domainResults.removeIf(browseResultCleaner.shouldRemoveResultPredicate());
 
         return Optional.of(searchResultsRenderer.render(results));
     }

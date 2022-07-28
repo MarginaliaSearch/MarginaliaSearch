@@ -6,10 +6,10 @@ import nu.marginalia.wmsa.edge.assistant.screenshot.ScreenshotService;
 import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
 import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklist;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
-import nu.marginalia.wmsa.edge.model.EdgeId;
 import nu.marginalia.wmsa.edge.search.command.SearchCommandInterface;
 import nu.marginalia.wmsa.edge.search.command.SearchParameters;
 import nu.marginalia.wmsa.edge.search.model.BrowseResultSet;
+import nu.marginalia.wmsa.edge.search.results.BrowseResultCleaner;
 import nu.marginalia.wmsa.renderer.mustache.MustacheRenderer;
 import nu.marginalia.wmsa.renderer.mustache.RendererFactory;
 import org.slf4j.Logger;
@@ -28,6 +28,7 @@ public class BrowseCommand implements SearchCommandInterface {
     private final ScreenshotService screenshotService;
     private final EdgeDomainBlacklist blacklist;
     private final MustacheRenderer<BrowseResultSet> browseResultsRenderer;
+    private final BrowseResultCleaner browseResultCleaner;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Predicate<String> queryPatternPredicate = Pattern.compile("^browse:[.A-Za-z\\-0-9]+$").asPredicate();
 
@@ -35,12 +36,14 @@ public class BrowseCommand implements SearchCommandInterface {
     public BrowseCommand(EdgeDataStoreDao edgeDataStoreDao,
                          ScreenshotService screenshotService,
                          EdgeDomainBlacklist blacklist,
-                         RendererFactory rendererFactory)
+                         RendererFactory rendererFactory,
+                         BrowseResultCleaner browseResultCleaner)
             throws IOException
     {
         this.edgeDataStoreDao = edgeDataStoreDao;
         this.screenshotService = screenshotService;
         this.blacklist = blacklist;
+        this.browseResultCleaner = browseResultCleaner;
 
         browseResultsRenderer = rendererFactory.renderer("edge/browse-results");
     }
@@ -66,9 +69,7 @@ public class BrowseCommand implements SearchCommandInterface {
             if ("random".equals(word)) {
                 var results = edgeDataStoreDao.getRandomDomains(25, blacklist);
 
-                results.removeIf(res ->
-                               !screenshotService.hasScreenshot(new EdgeId<>(res.domainId))
-                            || !domainHashes.add(res.domainHash()));
+                results.removeIf(browseResultCleaner.shouldRemoveResultPredicate());
 
                 return new BrowseResultSet(results);
             }
@@ -76,9 +77,7 @@ public class BrowseCommand implements SearchCommandInterface {
                 var domain = edgeDataStoreDao.getDomainId(new EdgeDomain(word));
                 var neighbors = edgeDataStoreDao.getDomainNeighborsAdjacent(domain, blacklist, 45);
 
-                neighbors.removeIf(res ->
-                           !screenshotService.hasScreenshot(new EdgeId<>(res.domainId))
-                        || !domainHashes.add(res.domainHash()));
+                neighbors.removeIf(browseResultCleaner.shouldRemoveResultPredicate());
 
                 return new BrowseResultSet(neighbors);
             }

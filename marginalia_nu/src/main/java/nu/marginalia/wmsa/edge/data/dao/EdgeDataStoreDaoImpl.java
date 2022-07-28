@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
@@ -262,6 +263,31 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
             logger.error("SQL error", ex);
         }
         return domains;
+    }
+
+    @Override
+    public List<BrowseResult> getBrowseResultFromUrlIds(List<EdgeId<EdgeUrl>> urlId) {
+        List<BrowseResult> ret = new ArrayList<>(urlId.size());
+
+        try (var conn = dataSource.getConnection()) {
+            try (var stmt = conn.createStatement()) {
+                // this is safe, string cocatenation is of integers
+                String inStmt = urlId.stream().map(id -> Integer.toString(id.id())).collect(Collectors.joining(", ", "(", ")"));
+
+                var rsp = stmt.executeQuery("SELECT DOMAIN_ID, DOMAIN_NAME FROM EC_URL WHERE ID IN " + inStmt);
+                while (rsp.next()) {
+                    int id = rsp.getInt(1);
+                    String domain = rsp.getString(2);
+
+                    ret.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id));
+                }
+            }
+        }
+        catch (SQLException ex) {
+            logger.error("SQL error", ex);
+        }
+
+        return ret;
     }
 
     @Override
