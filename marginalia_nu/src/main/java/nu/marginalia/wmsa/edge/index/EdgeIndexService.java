@@ -216,7 +216,7 @@ public class EdgeIndexService extends Service {
         String json = request.body();
         EdgeDomainSearchSpecification specsSet = gson.fromJson(json, EdgeDomainSearchSpecification.class);
 
-        final int wordId = keywordLexicon.getOrInsert(specsSet.keyword);
+        final int wordId = keywordLexicon.getReadOnly(specsSet.keyword);
 
         List<EdgeId<EdgeUrl>> urlIds = indexes
                 .getBucket(specsSet.bucket)
