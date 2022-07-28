@@ -65,7 +65,7 @@ public class EdgeIndexClient extends AbstractDynamicClient {
     }
 
     @CheckReturnValue
-    public List<EdgeDomainSearchResults> queryDomains(Context ctx, EdgeDomainSearchSpecification... specs) {
+    public List<EdgeDomainSearchResults> queryDomains(Context ctx, List<EdgeDomainSearchSpecification> specs) {
         return Observable.fromArray(specs)
                 .concatMap(s -> postGet(ctx, "/search-domain/", s, EdgeDomainSearchResults.class)
                         .subscribeOn(Schedulers.io())
