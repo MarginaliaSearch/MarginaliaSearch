@@ -13,8 +13,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.EnumMap;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.LongPredicate;
-import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 public class SearchIndexReader implements AutoCloseable {
@@ -55,18 +57,53 @@ public class SearchIndexReader implements AutoCloseable {
         queryBuilders = new EnumMap<>(IndexBlock.class);
         underspecifiedQueryBuilders = new EnumMap<>(IndexBlock.class);
 
-        queryBuilders.put(IndexBlock.Words, new IndexQueryBuilder(Stream.of(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, topIndex, midIndex, lowIndex, namesIndex, wordsIndex).collect(Collectors.toList()), wordsIndex));
-        queryBuilders.put(IndexBlock.Low, new IndexQueryBuilder(Stream.of(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, topIndex, midIndex, lowIndex, namesIndex).collect(Collectors.toList()), wordsIndex));
-        queryBuilders.put(IndexBlock.Middle, new IndexQueryBuilder(Stream.of(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, topIndex, midIndex).collect(Collectors.toList()), wordsIndex));
-        queryBuilders.put(IndexBlock.Top, new IndexQueryBuilder(Stream.of(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, topIndex).collect(Collectors.toList()), wordsIndex));
-        queryBuilders.put(IndexBlock.PositionWords, new IndexQueryBuilder(Stream.of(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, namesIndex, positionIndex).collect(Collectors.toList()), wordsIndex));
-        queryBuilders.put(IndexBlock.NamesWords, new IndexQueryBuilder(Stream.of(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, namesIndex).collect(Collectors.toList()), wordsIndex));
-        queryBuilders.put(IndexBlock.Link, new IndexQueryBuilder(Stream.of(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, linkIndex).collect(Collectors.toList()), wordsIndex));
-        queryBuilders.put(IndexBlock.Title, new IndexQueryBuilder(Stream.of(metaIndex, titleKeywordsIndex, topicIndex, titleIndex).collect(Collectors.toList()), wordsIndex));
-        queryBuilders.put(IndexBlock.TitleKeywords, new IndexQueryBuilder(Stream.of(metaIndex, titleKeywordsIndex).collect(Collectors.toList()), wordsIndex));
+        queryBuilders.put(IndexBlock.Words, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, topIndex, midIndex, lowIndex, namesIndex, wordsIndex), wordsIndex));
+        queryBuilders.put(IndexBlock.Low, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, topIndex, midIndex, lowIndex, namesIndex), wordsIndex));
+        queryBuilders.put(IndexBlock.Middle, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, topIndex, midIndex), wordsIndex));
+        queryBuilders.put(IndexBlock.Top, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, topIndex), wordsIndex));
+        queryBuilders.put(IndexBlock.PositionWords, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, namesIndex, positionIndex), wordsIndex));
+        queryBuilders.put(IndexBlock.NamesWords, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, namesIndex), wordsIndex));
+        queryBuilders.put(IndexBlock.Link, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, linkIndex), wordsIndex));
+        queryBuilders.put(IndexBlock.Title, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex), wordsIndex));
+        queryBuilders.put(IndexBlock.TitleKeywords, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex), wordsIndex));
 
-        underspecifiedQueryBuilders.put(IndexBlock.TitleKeywords, new IndexQueryBuilder(Stream.of(titleKeywordsIndex, linkIndex, topicIndex, topIndex, midIndex, lowIndex, namesIndex, positionIndex, metaIndex).collect(Collectors.toList()), wordsIndex));
-        underspecifiedQueryBuilders.put(IndexBlock.Link, new IndexQueryBuilder(Stream.of(linkIndex, topicIndex, topIndex, midIndex, lowIndex, namesIndex, positionIndex, metaIndex).collect(Collectors.toList()), wordsIndex));
+        underspecifiedQueryBuilders.put(IndexBlock.TitleKeywords, new IndexQueryBuilder(listOfNonNulls(titleKeywordsIndex, linkIndex, topicIndex, topIndex, midIndex, lowIndex, namesIndex, positionIndex, metaIndex), wordsIndex));
+        underspecifiedQueryBuilders.put(IndexBlock.Link, new IndexQueryBuilder(listOfNonNulls(linkIndex, topicIndex, topIndex, midIndex, lowIndex, namesIndex, positionIndex, metaIndex), wordsIndex));
+    }
+
+    @SafeVarargs
+    public final <T> List<T> listOfNonNulls(T... vals) {
+        return Stream.of(vals).filter(Objects::nonNull).toList();
+    }
+
+
+    public LongStream findHotDomainsForKeyword(IndexBlock block, int wordId, int queryDepth, int minHitCount, int maxResults) {
+        var index = indices.get(block);
+
+        if (index == null)
+            return LongStream.empty();
+
+        return index.rangeForWord(wordId)
+                .stream()
+                .limit(queryDepth)
+                .filter(new LongPredicate() {
+                    long last = Long.MIN_VALUE;
+                    int count = 0;
+
+                    @Override
+                    public boolean test(long value) {
+                        if ((last >>> 32L) == (value >>> 32L)) {
+                            return count++ == minHitCount;
+                        }
+                        else {
+                            last = value;
+                            count = 0;
+
+                        }
+                        return false;
+                    }
+                })
+                .limit(maxResults);
     }
 
     public Query findUnderspecified(
@@ -116,6 +153,7 @@ public class SearchIndexReader implements AutoCloseable {
             }
 
             var range = index.rangeForWord(searchTerm);
+
             if (index.hasUrl(urlId, range)) {
                 return block;
             }

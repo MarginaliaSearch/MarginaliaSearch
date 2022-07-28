@@ -1,21 +1,20 @@
 package nu.marginalia.wmsa.edge.index;
 
+import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalWriter;
 import nu.marginalia.wmsa.edge.index.model.EdgeIndexSearchTerms;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.index.reader.SearchIndexReader;
-import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalWriter;
 import nu.marginalia.wmsa.edge.index.reader.query.IndexSearchBudget;
 import nu.marginalia.wmsa.edge.index.reader.query.Query;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Comparator;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.LongPredicate;
-import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
 public class EdgeIndexBucket {
@@ -101,6 +100,10 @@ public class EdgeIndexBucket {
         return indexReader != null;
     }
 
+    public LongStream findHotDomainsForKeyword(IndexBlock block, int wordId, int queryDepth, int minHitCount, int maxResults) {
+        return indexReader.findHotDomainsForKeyword(block, wordId, queryDepth, minHitCount, maxResults);
+    }
+
     public LongStream getQuery(IndexBlock block, LongPredicate filter, IndexSearchBudget budget, EdgeIndexSearchTerms searchTerms) {
         if (null == indexReader) {
             logger.warn("Index reader not neady {}", block);
@@ -114,15 +117,8 @@ public class EdgeIndexBucket {
                 .mapToInt(Integer::intValue)
                 .toArray();
 
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("Includes: ({}); excludes: ({})", Arrays.
-                            stream(orderedIncludes)
-                            .mapToObj(String::valueOf)
-                            .collect(Collectors.joining(",")),
-                    searchTerms.excludes.stream().map(String::valueOf).collect(Collectors.joining(",")));
-        }
         Query query;
+
         if (orderedIncludes.length == 1) {
             query = indexReader.findUnderspecified(block, budget, filter, orderedIncludes[0]);
         }
@@ -136,6 +132,7 @@ public class EdgeIndexBucket {
         for (int term : searchTerms.excludes) {
             query = query.not(term);
         }
+
         return query.stream();
     }
 
