@@ -57,18 +57,15 @@ public class SearchIndexReader implements AutoCloseable {
         queryBuilders = new EnumMap<>(IndexBlock.class);
         underspecifiedQueryBuilders = new EnumMap<>(IndexBlock.class);
 
-        queryBuilders.put(IndexBlock.Words, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, topIndex, midIndex, lowIndex, namesIndex, wordsIndex), wordsIndex));
-        queryBuilders.put(IndexBlock.Low, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, topIndex, midIndex, lowIndex, namesIndex), wordsIndex));
-        queryBuilders.put(IndexBlock.Middle, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, topIndex, midIndex), wordsIndex));
+        queryBuilders.put(IndexBlock.Words, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, topIndex, midIndex, lowIndex, linkIndex, namesIndex, wordsIndex), wordsIndex));
+        queryBuilders.put(IndexBlock.Low, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, topIndex, midIndex, lowIndex, linkIndex), wordsIndex));
         queryBuilders.put(IndexBlock.Top, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, topIndex), wordsIndex));
-        queryBuilders.put(IndexBlock.PositionWords, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, namesIndex, positionIndex), wordsIndex));
-        queryBuilders.put(IndexBlock.NamesWords, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, namesIndex), wordsIndex));
-        queryBuilders.put(IndexBlock.Link, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, linkIndex), wordsIndex));
         queryBuilders.put(IndexBlock.Title, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex), wordsIndex));
         queryBuilders.put(IndexBlock.TitleKeywords, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex), wordsIndex));
 
         underspecifiedQueryBuilders.put(IndexBlock.TitleKeywords, new IndexQueryBuilder(listOfNonNulls(titleKeywordsIndex, linkIndex, topicIndex, topIndex, midIndex, lowIndex, namesIndex, positionIndex, metaIndex), wordsIndex));
-        underspecifiedQueryBuilders.put(IndexBlock.Link, new IndexQueryBuilder(listOfNonNulls(linkIndex, topicIndex, topIndex, midIndex, lowIndex, namesIndex, positionIndex, metaIndex), wordsIndex));
+        underspecifiedQueryBuilders.put(IndexBlock.Title, new IndexQueryBuilder(listOfNonNulls(titleIndex, topicIndex, linkIndex, topicIndex, topIndex, midIndex, lowIndex, namesIndex, positionIndex, metaIndex), wordsIndex));
+        underspecifiedQueryBuilders.put(IndexBlock.Top, new IndexQueryBuilder(listOfNonNulls(topIndex, linkIndex, midIndex, lowIndex, namesIndex, positionIndex, metaIndex), wordsIndex));
     }
 
     @SafeVarargs
@@ -121,7 +118,12 @@ public class SearchIndexReader implements AutoCloseable {
     }
 
     public Query findWord(IndexBlock block, IndexSearchBudget budget, LongPredicate filter, int wordId) {
-        return queryBuilders.get(block).build(budget, filter, wordId);
+        var builder = queryBuilders.get(block);
+
+        if (builder == null)
+            return Query.EMPTY;
+
+        return builder.build(budget, filter, wordId);
     }
 
     @Override
@@ -135,13 +137,20 @@ public class SearchIndexReader implements AutoCloseable {
 
     @SneakyThrows
     public long numHits(IndexBlock block, int word) {
-        return numHitsCache.get(Pair.of(block, word),
-                () -> queryBuilders.get(block)
-                        .getIndicies()
-                        .stream()
-                        .mapToLong(idx -> idx.numUrls(word))
-                        .sum()
-        );
+        return numHitsCache.get(Pair.of(block, word), () -> numHitsForBlockWord(block, word));
+    }
+
+    private long numHitsForBlockWord(IndexBlock block, int word) {
+        IndexQueryBuilder builder = queryBuilders.get(block);
+
+        if (builder == null)
+            return 0L;
+
+        return builder
+                .getIndicies()
+                .stream()
+                .mapToLong(idx -> idx.numUrls(word))
+                .sum();
     }
 
     public IndexBlock getBlockForResult(int searchTerm, long urlId) {
