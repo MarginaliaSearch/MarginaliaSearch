@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
@@ -266,18 +265,26 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
     }
 
     @Override
-    public List<BrowseResult> getBrowseResultFromUrlIds(List<EdgeId<EdgeUrl>> urlId) {
-        if (urlId.isEmpty())
+    public List<BrowseResult> getBrowseResultFromUrlIds(List<EdgeId<EdgeUrl>> urlIds) {
+        if (urlIds.isEmpty())
             return Collections.emptyList();
 
-        List<BrowseResult> ret = new ArrayList<>(urlId.size());
+        List<BrowseResult> ret = new ArrayList<>(urlIds.size());
 
         try (var conn = dataSource.getConnection()) {
             try (var stmt = conn.createStatement()) {
-                // this is safe, string concatenation is of integers
-                String inStmt = urlId.stream().map(id -> Integer.toString(id.id())).collect(Collectors.joining(", ", "(", ")"));
 
-                var rsp = stmt.executeQuery("SELECT DOMAIN_ID, DOMAIN_NAME FROM EC_URL_VIEW INNER JOIN DOMAIN_METADATA ON EC_URL_VIEW.DOMAIN_ID=DOMAIN_METADATA.ID WHERE KNOWN_URLS<5000 AND QUALITY>-10 AND EC_URL_VIEW.ID IN " + inStmt);
+                String inStmt = idList(urlIds);
+
+                var rsp = stmt.executeQuery("""
+                    SELECT DOMAIN_ID, DOMAIN_NAME
+                    FROM EC_URL_VIEW 
+                    INNER JOIN DOMAIN_METADATA ON EC_URL_VIEW.DOMAIN_ID=DOMAIN_METADATA.ID 
+                    WHERE 
+                        KNOWN_URLS<5000 
+                    AND QUALITY>-10 
+                    AND EC_URL_VIEW.ID IN 
+                    """ + inStmt); // this injection is safe, inStmt is derived from concatenating a list of integers
                 while (rsp.next()) {
                     int id = rsp.getInt(1);
                     String domain = rsp.getString(2);
