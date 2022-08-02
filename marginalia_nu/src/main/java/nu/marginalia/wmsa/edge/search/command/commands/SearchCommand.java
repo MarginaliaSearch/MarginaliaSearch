@@ -48,7 +48,8 @@ public class SearchCommand implements SearchCommandInterface {
 
     @Override
     public Optional<Object> process(Context ctx, SearchParameters parameters, String query) {
-        @CheckForNull Future<String> eval = unitConversion.tryEval(ctx, query);
+        @CheckForNull
+        Future<String> eval = unitConversion.tryEval(ctx, query);
 
         EdgeUserSearchParameters params = new EdgeUserSearchParameters(query, parameters.profile(), parameters.js());
         DecoratedSearchResults results = searchOperator.doSearch(ctx, params, eval);
