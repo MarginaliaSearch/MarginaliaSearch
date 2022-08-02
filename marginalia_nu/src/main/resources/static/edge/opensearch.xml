@@ -1,6 +1,10 @@
 <OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/"
                        xmlns:moz="http://www.mozilla.org/2006/browser/search/">
     <!-- Thanks everyone who has told me about this :) -->
+
+    <!-- By the way, check out https://api.marginalia.nu/ if you wish to automate this,
+         if you try to use the endpoint below you'll probably run into trouble with cloudflare :-/
+    -->
     <ShortName>Marginalia</ShortName>
     <Description>Search Marginalia</Description>
     <InputEncoding>UTF-8</InputEncoding>

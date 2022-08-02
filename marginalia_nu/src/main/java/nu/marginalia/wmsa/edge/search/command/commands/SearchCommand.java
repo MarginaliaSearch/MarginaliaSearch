@@ -27,6 +27,8 @@ public class SearchCommand implements SearchCommandInterface {
     private final MustacheRenderer<DecoratedSearchResults> searchResultsRenderer;
     private BrowseResultCleaner browseResultCleaner;
 
+    public static final int MAX_DOMAIN_RESULTS = 3;
+
     @Inject
     public SearchCommand(EdgeDomainBlacklist blacklist,
                          EdgeDataStoreDao dataStoreDao,
@@ -54,8 +56,9 @@ public class SearchCommand implements SearchCommandInterface {
         results.results.removeIf(detail -> blacklist.isBlacklisted(dataStoreDao.getDomainId(detail.url.domain)));
 
         results.domainResults.removeIf(browseResultCleaner.shouldRemoveResultPredicate());
-        if (results.domainResults.size() > 5) {
-            results.domainResults.subList(5, results.domainResults.size()).clear();
+
+        if (results.domainResults.size() > MAX_DOMAIN_RESULTS) {
+            results.domainResults.subList(MAX_DOMAIN_RESULTS, results.domainResults.size()).clear();
         }
 
         return Optional.of(searchResultsRenderer.render(results));
