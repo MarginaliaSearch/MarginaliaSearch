@@ -40,12 +40,8 @@ public class SearchResultValuator {
         double factorSum = 0.;
 
         for (int i = 0; i < scores.length; i++) {
-            final double factorBase;
 
-            if (scores[i].link) factorBase = 0.5;
-            else factorBase = 1.;
-
-            final double factor = factorBase / (1.0 + weights[i]);
+            final double factor = 1. / (1.0 + weights[i]);
 
             factorSum += factor;
 
@@ -53,6 +49,9 @@ public class SearchResultValuator {
 
             if (!scores[i].link && !scores[i].title) {
                 termValue *= lengthPenalty;
+            }
+            if (scores[i].link) {
+                termValue /= 2;
             }
 
             termSum += termValue;
