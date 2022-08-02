@@ -50,8 +50,8 @@ public class SearchResultValuator {
             if (!scores[i].link && !scores[i].title) {
                 termValue *= lengthPenalty;
             }
-            if (scores[i].link) {
-                termValue /= 2;
+            else if (scores[i].link) {
+                termValue /= 4.75;
             }
 
             termSum += termValue;
