@@ -2,8 +2,8 @@ package nu.marginalia.wmsa.edge.search.results;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.util.language.WordPatterns;
+import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchResultKeywordScore;
 
@@ -40,7 +40,13 @@ public class SearchResultValuator {
         double factorSum = 0.;
 
         for (int i = 0; i < scores.length; i++) {
-            final double factor = 1.0 / (1.0 + weights[i]);
+            final double factorBase;
+
+            if (scores[i].link) factorBase = 0.5;
+            else factorBase = 1.;
+
+            final double factor = factorBase / (1.0 + weights[i]);
+
             factorSum += factor;
 
             double termValue = (scores[i].index.sortOrder + 0.5) * factor;
