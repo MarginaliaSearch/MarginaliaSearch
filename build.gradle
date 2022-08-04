@@ -28,6 +28,7 @@ repositories {
 }
 
 shadowJar {
+    zip64 true
 }
 jar {
     manifest {

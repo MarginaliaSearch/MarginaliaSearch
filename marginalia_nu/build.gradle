@@ -132,17 +132,23 @@ dependencies {
     e2eTestRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
     e2eTestImplementation 'org.projectlombok:lombok:1.18.24'
     e2eTestAnnotationProcessor 'org.projectlombok:lombok:1.18.24'
-    e2eTestImplementation 'org.testcontainers:nginx:1.17.2'
+    e2eTestImplementation 'org.testcontainers:nginx:1.17.3'
     e2eTestImplementation "org.testcontainers:junit-jupiter:1.17.2"
-    e2eTestImplementation "org.testcontainers:selenium:1.17.2"
-    e2eTestImplementation 'org.seleniumhq.selenium:selenium-remote-driver:4.1.4'
-    e2eTestImplementation 'org.seleniumhq.selenium:selenium-chrome-driver:4.1.4'
+    e2eTestImplementation 'org.testcontainers:selenium:1.17.3'
+    e2eTestImplementation 'org.seleniumhq.selenium:selenium-remote-driver:4.2.1'
+    e2eTestImplementation 'org.seleniumhq.selenium:selenium-chrome-driver:4.2.1'
+
+
+    implementation 'org.seleniumhq.selenium:selenium-chrome-driver:4.1.4'
+    implementation 'org.seleniumhq.selenium:selenium-java:4.3.0'
+    implementation 'org.sejda.imageio:webp-imageio:0.1.6'
 }
 
 configurations {
     e2eTestImplementation.extendsFrom(testImplementation)
 
 }
+
 
 test {
     maxParallelForks = 16
