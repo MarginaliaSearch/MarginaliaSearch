@@ -1,0 +1,57 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html> 
+ <head> 
+  <style type="text/css" media="all">@import "style.css";</style> 
+  <title>J. D. Eisenberg's Programming Experience</title> 
+ </head> 
+ <body class="body-style"> 
+  <div class="top-navig"> <a id="top"></a> <a href="index.html">Home Page</a> &gt; <a href="about.html">About This Site</a> &gt; Programming Experience 
+  </div> 
+  <h1>Programming Experience</h1> 
+  <div class="center"> <span class="thislink">Programming</span> | <a href="teaching.html">Teaching</a> | <a href="interest.html">Interests</a> 
+   <script type="text/javascript">
+<!--
+document.writeln(" | <a href='javascript:history.back()'>Back to previous page</a>");
+// -->
+</script> 
+  </div> 
+  <h2><a name="contracts"><i>The Independent Contractor Years</i></a></h2> 
+  <h2>Internet</h2> 
+  <ul> 
+   <li>Have written CGI scripts, and Java servlets; set up Linux system running Apache server and MySQL database software at <a href="http://www.dvptechdoc.com/">DVP Techdoc</a>.</li> 
+   <li>Developed training courses for CGI and Cascading Style Sheets; modified and expanded JavaScript course for <a href="http://www.keypoint.com/">KeyPoint Software</a>.</li> 
+  </ul> 
+  <h2>Commercial Software</h2> 
+  <ul> 
+   <li>CD-ROM Titles from <a href="texcav.html">Texas Caviar</a></li> 
+   <li>Software from <a href="senari.html">Senari Software</a></li> 
+   <li><a href="ideafish.html">IdeaFisher</a></li> 
+  </ul> 
+  <h2><a name="utilities">Demo and Utility Software</a></h2> 
+  <ul> 
+   <li><a href="newtcks.html">Newton</a> Rolling Demo (done with CKS Partners)</li> 
+   <li>CD-ROM Data Retrieval Engine for <a href="texcav.html#softmart">Software Mart, Inc.</a></li> 
+  </ul> 
+  <h2><a name="Apple"><i>The Apple Years</i></a></h2> 
+  <p>Between 1979 and 1985, I worked on several interesting <a href="appleprj.html">projects with the education software division of Apple Computer, Inc.</a></p> 
+  <h2><a name="Burroughs"><i>The Burroughs Years</i></a></h2> 
+  <p><img src="michigan.png" alt="[Map of Michigan]" width="107" height="110"> In 1978 and 1979, I worked for Burroughs in Plymouth, Michigan. Our project team was implementing a language whose goal was to make development of business software on the Burroughs B-80 mini-computer quick and efficient. </p> 
+  <p> Although the project did not become commercially available, it was a valuable experience for me. This was the first time I had left the university computing environment to work on a "real world" project.</p> 
+  <h2><a name="Delaware"><i>The University of Delaware Years</i></a></h2> 
+  <p>I worked as a system programmer at the <a href="http://www.udel.edu/">University of Delaware</a> in Newark, Delaware, USA. for two years.</p> 
+  <p>Among the things I did were:</p> 
+  <ul> 
+   <li>User consulting</li> 
+   <li>Team taught an "introduction to the Computing Center" course along with Ken Weiss.</li> 
+   <li>Added a "desk calculator" feature to the Burroughs B6700 CANDE editor.</li> 
+   <li>Wrote a mailing label utility program for the Oceanography department. (I was assisted by Dave Tall on this project.)</li> 
+   <li>Translated Dartmouth University's IMPRESS statistics program from BASIC to ALGOL.</li> 
+   <li>Wrote various small utility programs for the University's DEC-10.</li> 
+  </ul> 
+  <h2><a name="PLATO"><i>The PLATO Years</i></a></h2> 
+  <p>While attending the <a href="http://www.uiuc.edu/extern/UofI_intro.html">University of Illinois</a> at Urbana, I worked on the PLATO computer-assisted instruction system. This system, running on a CDC mainframe, was truly ahead of its time. In the early 1970s it was able to serve 500 users simultaneously with less than a tenth second response to every keypress. Each user had a 512 by 512 pixel-addressable graphic terminal.</p> 
+  <p> I started working on the elementary reading project under the direction of John T. Risken. I moved on to the Modern Hebrew project led by Dr. Roberta Stock. I worked my way up to lead programmer for the Modern Foreign Languages PLATO project, headed by Dr. M. Keith Myers.</p> 
+  <h2><a name="UnivIll"><i>The University of Illinois Years</i></a></h2> 
+  <p> As an undergraduate at the <a href="http://www.uiuc.edu/extern/UofI_intro.html">University of Illinois </a>, I took the usual range of computer science courses. I discovered the wonderful world of timesharing on the Burroughs B5500 at the Civil Engineering building. I wrote a program in ALGOL to do gymnastics scorekeeping, and used it to calculate the statistics for a national competition. I used an ASR-33 Teletype in the gym hooked up via acoustic coupler.</p>  
+ </body>
+</html>

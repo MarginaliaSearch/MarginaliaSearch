@@ -1,0 +1,95 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html> 
+ <head> 
+  <script language="javascript">
+
+<!-- // hide script from old browsers
+
+// define images
+
+if(document.images) {
+
+  image01 = new Image;
+  image02 = new Image;
+  image11 = new Image;
+  image12 = new Image;
+  image21 = new Image;
+  image22 = new Image;
+  image31 = new Image;
+  image32 = new Image;
+  image41 = new Image;
+  image42 = new Image;
+  image61 = new Image;
+  image62 = new Image;
+  image71 = new Image;
+  image72 = new Image;
+  image81 = new Image;
+  image82 = new Image;
+
+// source images
+
+  image01.src = "../images/enter1.jpg";
+  image02.src = "../images/enter2.jpg";
+  image11.src = "../images/home1.jpg";
+  image12.src = "../images/home2.jpg";
+  image21.src = "../images/back11.jpg";
+  image22.src = "../images/back2.jpg";
+  image31.src = "../images/email1.jpg";
+  image32.src = "../images/email2.jpg";
+  image41.src = "../images/contact1.jpg";
+  image42.src = "../images/contact2.jpg";
+  image61.src = "../images/next1.jpg";
+  image62.src = "../images/next2.jpg";
+  
+}
+
+// MouseOver Function
+
+function swapOn(imgLocation) {
+  if(document.images) {
+    document.images[imgLocation].src = eval(imgLocation + "2.src");
+  }
+}
+
+// MouseOut Function
+
+function swapOff(imgLocation) {
+  if(document.images) {
+    document.images[imgLocation].src = eval(imgLocation + "1.src");
+  }
+}
+
+// end hiding script -->
+
+</script> 
+  <title>
+ Aristotle  </title> 
+  <meta name="robots" content="index,follow"> 
+  <meta name="Author" content="Jay Atkinson"> 
+  <meta name="Description" content="Aristotle criticized
+Plato and Socrates with a certain hardness. Aristotle had been the tutor of  "> 
+  <meta name="Keywords" content="aristotle greek philosophers plato socrates alexander philip macedon plato's reasoning knowledge god first principal final cause universe creator wisdom philosopher principles heaven eternal motion space life prophetic vision universe free will democratic liberty natural science morals metaphysics natural   "> 
+  <meta name="revisit-after" content="30 days"> 
+  <meta name="GENERATOR" content="Mozilla/3.01Gold (Win95; I) [Netscape]"> 
+ </head> 
+ <body background="../images/back-2.5.jpg" text="#0" body link="#8B0000" vlink="#770000"> 
+  <center> <a href="http://latter-rain.com"><img src="../images/logo.jpg"> </a>
+  </center> 
+  <p> <font face="ARIAL" size="5" color="brown"><b> Aristotle </b></font><b> </b></p>
+  <p><b> <font face="ARIAL" size="2" color="black"><b> </b></font></b></p>
+  <blockquote>
+   <b><font face="ARIAL" size="2" color="black"><b> <!-- Enter Paragraph Below Here --> 384-322 BC. Aristotle was the greatest of the Greek philosophers. He criticized Plato and Socrates with a certain hardness. Been the tutor of Alexander of several years at the court of Philip of Macedon. Studied under Plato. Accepted Plato's general notion of the existence of ideas, but held that physical matter also is a part of reality and not to be despised. Like Plato, Aristotle thought it necessary, first of all, to understand and explain the workings of the human mind and to show what kinds of reasoning were valid and could be relied on to give us sure knowledge of anything and what were not. God the first principal and final cause of all the universe. Not the creator, nothing can be produced out of nothing. In a lunar eclipse, the earth throws a curved shadow on the moon, which it could only do if it were a ball.<p> The wisdom for which all philosophers are in search is the knowledge of first principles and the causes of things. The first heaven must be eternal. There is also something that moves it.. moves others without being moved. Motion in space is the first beginning of change. Life also belongs to God, for thought as actuality is life, and God is that actuality. For a man is magnificent not when he spends on himself, but when he spends for the common good. Every prophetic vision contains some lesson by means of allegory. The universe has not a beginning.. an ultimate final cause cannot be sought.. t of a permanent order of things. Everything in nature serves a purpose.. each part is thought to be a product of the divine will. The circumference and the radius of the earth are known. While one part of the universe owes its existence to Providence and is under control of a ruler and a governor, another part is abandoned and left to chance. Man has free will, it is therefore unintelligible that the Law contains commands and prohibitions. The theory of man's perfectly free will is one of the fundamental principles of the law of our teacher Moses, and of those who follow the Law. Providence can only proceed from an intelligent being. Earth lies at the center of the universe and must be spherical.. it is clear that the earth does not move. Called father of science.</p><p> The basis of a democratic state is liberty. To be happy means to be self-sufficient. From the same truth-seeking school came Aristotle, who led the search into added fields and made it more scientific and exact. Philosophy in his hands was enlarged, to embrace natural science, as well as morals and metaphysics. Natural science, indeed, may be said to have originated with Aristotle.<br> [04, 07, 10, 167, 368, 375, 393, 394, 396] </p></b></font></b>
+  </blockquote><b><font face="ARIAL" size="2" color="black"><b> <!-- Enter Paragraph Above Here --> <p><br> </p>
+     <center> 
+      <img src="../images/fence.gif">
+     </center> <p><br> </p>
+     <center>
+      <b>The Lord has given Christians the grace to reconcile the children to their Fathers<br> <h3>As One Body</h3>
+       <ul>
+        <li>We prepare for the Marriage Supper of the Lamb</li>
+        <li>Harvest the Fruit of the Latter Rain</li>
+        <li>Follow Him as the Army of the Lord into His Glory</li>
+       </ul> <p> <a href="http://latter-rain.com" onmouseover="swapOn('image0');" onmouseout="swapOff('image0');"><img src="../images/enter1.jpg" width="110" height="36" align="BOTTOM" border="0" name="image0"></a></p><p> </p><h3> Help To Prepare A Holy Bride!</h3> <p> Issue Oriented Discussion Newsletter<br> <a href="http://nleinternet.net/mailman/listinfo/latter-rain" onmouseover="swapOn('image4');" onmouseout="swapOff('image4');"><img src="../images/contact1.jpg" width="110" height="36" align="BOTTOM" border="0" name="image4"></a></p><p> </p><p> <a href="../index.html" onmouseover="swapOn('image1');" onmouseout="swapOff('image1');"><img src="../images/home1.jpg" width="110" height="36" align="BOTTOM" border="0" name="image1"></a> <a href="mailto:jay@latter-rain.com" onmouseover="swapOn('image3');" onmouseout="swapOff('image3');"><img src="../images/email1.jpg" width="110" height="36" align="BOTTOM" border="0" name="image3"></a></p><p> <font size="1" face="ARIAL"><b> <a href="../index.html" target="parent">Index</a> | <a href="http://search.freefind.com/find.html?id=8446585" target="parent">Search This Site</a> | <a href="http://aristide.org" target="parent">Aristide.Org</a> | <a href="../eschae/latter.htm" target="parent">The Latter Rain</a> | <a href="../eschae/babyl.htm" target="parent">Babylon the Great</a> | <a href="../general/king.htm" target="parent">The Kingdom</a> | <a href="../eschae/nicola.htm" target="parent">The Nicolaitans</a> | <a href="../eschae/jezebel.htm" target="parent">Jezebel</a> <br> <a href="../church/baphg.htm" target="parent">The Baptism With the Holy Ghost</a> | <a href="../eschae/delu.htm" target="parent">The Grand Delusion</a> | <a href="../freedom/seattlewto.htm" target="parent">World Trade Org</a> | <a href="../freedom/libthe.htm" target="parent">Liberation Theology</a> | <a href="../perspectives/testimony.htm" target="parent">Jay Atkinson</a> | <a href="../ltrain" target="parent">Alphabetical Index</a></b></font></p><p><font size="1" face="ARIAL"><b><br> <a href="mailto:jay@latter-rain.com"><br> <font size="2" face="ARIAL"><b>jay@latter-rain.com</b></font></a></b></font></p></b>
+     </center><b><font size="1" face="ARIAL"><b><font size="2" face="ARIAL"><b> <p><br><br><br><br>  </p></b></font></b></font></b></b></font></b>
+ </body>
+</html>

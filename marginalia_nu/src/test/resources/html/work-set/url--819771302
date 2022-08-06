@@ -1,0 +1,2074 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US"> 
+ <head profile="http://gmpg.org/xfn/11"> 
+  <meta name="verify-v1" content="DiD4wLjmKCsVm4DeGXNDJNAhklEqI4y8R+ArLNW03iY="> 
+  <link rel="search" type="application/opensearchdescription+xml" title="Linux By Examples Search" href="https://linux.byexamples.com/lbe.xml"> 
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> 
+  <title>Linux by Examplesfstab with uuid | Linux by Examples</title> 
+  <link href="/favicon.ico" rel="icon"> 
+  <link href="/favicon.ico" rel="shortcut icon"> 
+  <link rel="/favicon.ico" type="image/x-icon"> 
+  <meta name="Keywords" content="linux by example,command line example, bash example, linux howto, command line tutorial, linux for beginners"> 
+  <meta name="generator" content="WordPress 4.9.16"> <!-- leave this for stats --> 
+  <link rel="stylesheet" href="https://linux.byexamples.com/wp-content/themes/simple-la-bob-10/style.css" type="text/css" media="screen"> 
+  <link rel="alternate" type="application/rss+xml" title="Linux by Examples RSS Feed" href="https://linux.byexamples.com/feed/"> 
+  <link rel="pingback" href="https://linux.byexamples.com/xmlrpc.php"> 
+  <link rel="dns-prefetch" href="//s.w.org"> 
+  <link rel="alternate" type="application/rss+xml" title="Linux by Examples » fstab with uuid Comments Feed" href="https://linux.byexamples.com/archives/321/fstab-with-uuid/feed/"> 
+  <script type="text/javascript">
+			window._wpemojiSettings = {"baseUrl":"https:\/\/s.w.org\/images\/core\/emoji\/11\/72x72\/","ext":".png","svgUrl":"https:\/\/s.w.org\/images\/core\/emoji\/11\/svg\/","svgExt":".svg","source":{"concatemoji":"https:\/\/linux.byexamples.com\/wp-includes\/js\/wp-emoji-release.min.js?ver=4.9.16"}};
+			!function(a,b,c){function d(a,b){var c=String.fromCharCode;l.clearRect(0,0,k.width,k.height),l.fillText(c.apply(this,a),0,0);var d=k.toDataURL();l.clearRect(0,0,k.width,k.height),l.fillText(c.apply(this,b),0,0);var e=k.toDataURL();return d===e}function e(a){var b;if(!l||!l.fillText)return!1;switch(l.textBaseline="top",l.font="600 32px Arial",a){case"flag":return!(b=d([55356,56826,55356,56819],[55356,56826,8203,55356,56819]))&&(b=d([55356,57332,56128,56423,56128,56418,56128,56421,56128,56430,56128,56423,56128,56447],[55356,57332,8203,56128,56423,8203,56128,56418,8203,56128,56421,8203,56128,56430,8203,56128,56423,8203,56128,56447]),!b);case"emoji":return b=d([55358,56760,9792,65039],[55358,56760,8203,9792,65039]),!b}return!1}function f(a){var c=b.createElement("script");c.src=a,c.defer=c.type="text/javascript",b.getElementsByTagName("head")[0].appendChild(c)}var g,h,i,j,k=b.createElement("canvas"),l=k.getContext&&k.getContext("2d");for(j=Array("flag","emoji"),c.supports={everything:!0,everythingExceptFlag:!0},i=0;i<j.length;i++)c.supports[j[i]]=e(j[i]),c.supports.everything=c.supports.everything&&c.supports[j[i]],"flag"!==j[i]&&(c.supports.everythingExceptFlag=c.supports.everythingExceptFlag&&c.supports[j[i]]);c.supports.everythingExceptFlag=c.supports.everythingExceptFlag&&!c.supports.flag,c.DOMReady=!1,c.readyCallback=function(){c.DOMReady=!0},c.supports.everything||(h=function(){c.readyCallback()},b.addEventListener?(b.addEventListener("DOMContentLoaded",h,!1),a.addEventListener("load",h,!1)):(a.attachEvent("onload",h),b.attachEvent("onreadystatechange",function(){"complete"===b.readyState&&c.readyCallback()})),g=c.source||{},g.concatemoji?f(g.concatemoji):g.wpemoji&&g.twemoji&&(f(g.twemoji),f(g.wpemoji)))}(window,document,window._wpemojiSettings);
+		</script> 
+  <style type="text/css">
+img.wp-smiley,
+img.emoji {
+	display: inline !important;
+	border: none !important;
+	box-shadow: none !important;
+	height: 1em !important;
+	width: 1em !important;
+	margin: 0 .07em !important;
+	vertical-align: -0.1em !important;
+	background: none !important;
+	padding: 0 !important;
+}
+</style> 
+  <script>if (document.location.protocol != "https:") {document.location = document.URL.replace(/^http:/i, "https:");}</script>
+  <link rel="https://api.w.org/" href="https://linux.byexamples.com/wp-json/"> 
+  <link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://linux.byexamples.com/xmlrpc.php?rsd"> 
+  <link rel="wlwmanifest" type="application/wlwmanifest+xml" href="https://linux.byexamples.com/wp-includes/wlwmanifest.xml"> 
+  <link rel="prev" title="using curl to access ftp server" href="https://linux.byexamples.com/archives/320/using-curl-to-access-ftp-server/"> 
+  <link rel="next" title="mysurface’s Linux Application list" href="https://linux.byexamples.com/archives/323/mysurfaces-linux-application-list/"> 
+  <meta name="generator" content="WordPress 4.9.16"> 
+  <link rel="canonical" href="https://linux.byexamples.com/archives/321/fstab-with-uuid/"> 
+  <link rel="shortlink" href="https://linux.byexamples.com/?p=321"> 
+  <link rel="alternate" type="application/json+oembed" href="https://linux.byexamples.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Flinux.byexamples.com%2Farchives%2F321%2Ffstab-with-uuid%2F"> 
+  <link rel="alternate" type="text/xml+oembed" href="https://linux.byexamples.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Flinux.byexamples.com%2Farchives%2F321%2Ffstab-with-uuid%2F&amp;format=xml"> <!-- Stylesheet for the 'aizatto' related post plugin' --> 
+  <style type="text/css">
+.aizatto_related_posts {
+  padding-left: 1em;
+  display: block;
+  border: 1px dashed #aaa;
+}
+.aizatto_related_posts_header {
+  font-size: 1.3em;
+}
+
+.aizatto_related_posts ul {
+  margin: 0;
+}
+
+.aizatto_related_posts li {
+  list-style: none; margin-left: 0px;
+}
+
+.aizatto_related_posts_title {
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.aizatto_related_posts_title a {
+  text-decoration: underline;
+}
+
+.aizatto_related_posts_excerpt {
+  font-size: 12px;
+}
+</style>
+ </head> 
+ <body data-rsssl="1"> 
+  <div id="wrap"> 
+   <div id="header"> 
+    <div id="logo">
+     <h1><a href="https://linux.byexamples.com/"></a></h1> 
+     <br> 
+     <h3>We explain every GNU/Linux command by examples in this blog!</h3> <right> 
+      <a href="http://feeds.feedburner.com/LinuxByExamples" title="Subscribe to my feed" rel="alternate" type="application/rss+xml"><img src="https://www.feedburner.com/fb/images/pub/feed-icon32x32.png" alt="" style="border:0"></a> 
+      <script type="text/javascript"><!--
+google_ad_client = "pub-6971492116812805";
+/* 468x15-linux-top-link */
+google_ad_slot = "1456555720";
+google_ad_width = 468;
+google_ad_height = 15;
+//-->
+</script> 
+      <script type="text/javascript" src="https://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script> 
+      <a href="http://feeds.feedburner.com/LinuxByExamples"><img src="https://feeds.feedburner.com/~fc/LinuxByExamples?bg=66FFFF&amp;fg=000000&amp;anim=1" height="26" width="88" style="border:0" alt=""></a> 
+     </right> 
+    </div> 
+   </div> 
+   <div id="left"> 
+    <div class="entry"> 
+     <div class="post" id="post-321"> 
+      <h2><a href="https://linux.byexamples.com/archives/321/fstab-with-uuid/" rel="bookmark" title="Permanent Link: fstab with uuid"><img src="https://linux.byexamples.com/favicon.ico"> fstab with uuid</a> <g:plusone size="small" href="https://linux.byexamples.com/archives/321/fstab-with-uuid/"></g:plusone></h2> 
+      <div class="vote-container"></div> 
+      <p>October 10th, 2007 mysurface Posted in <a href="https://linux.byexamples.com/archives/category/admin/" rel="category tag">Admin</a>, <a href="https://linux.byexamples.com/archives/category/admin/blkid/" rel="category tag">blkid</a>, <a href="https://linux.byexamples.com/archives/category/common/ls/" rel="category tag">ls</a>, <a href="https://linux.byexamples.com/archives/category/admin/vol_id/" rel="category tag">vol_id</a> | Hits: 444519 | <a href="https://linux.byexamples.com/archives/321/fstab-with-uuid/#comments">207 Comments »</a></p> 
+      <div class="vote-container"> 
+       <script type="text/javascript"><!--
+google_ad_client = "pub-6971492116812805";
+google_ad_width = 336;
+google_ad_height = 280;
+google_ad_format = "336x280_as";
+google_ad_type = "text";
+//2007-11-01: linux top post
+google_ad_channel = "5689853487";
+google_color_border = "FFFFFF";
+google_color_bg = "FFFFFF";
+google_color_link = "0000FF";
+google_color_text = "000000";
+google_color_url = "008000";
+//-->
+</script> 
+       <script type="text/javascript" src="https://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script> 
+      </div> <!-- google_ad_section_start --> 
+      <p>When linux system starts, auto mounting partition will be done by refering to /etc/fstab. The file /etc/fstab will list down how you like the system to mount your partition. For examples,</p> 
+      <pre><code># &lt;file system&gt; &lt;mount point&gt;   &lt;type&gt;  &lt;options&gt;       &lt;dump&gt;  &lt;pass&gt;
+   /dev/sda1      /media/sda1     vfat    default,umask=077,gid=46  0       0</code></pre> 
+      <p>/dev/sda1 is the device, the number will be change depend on the order of your hard disk that inject to your motherboard. /media/sda1 is the mount point, where the place you access the data of your disk storage. vfat is the file system’s type. Next is the list of mount options, carry on is dump and pass option.</p> 
+      <p>Mount with device path has problems when you have multiple hard disk, and the order of hard disk changed may cause the file system failed to mount. Therefore later days of fstab entries has been modified to identify by uuid, </p> 
+      <pre><code>UUID=4706-0137      /media/sda1     vfat    defaults,umask=007,gid=46         0       0</code></pre> 
+      <p><span id="more-321"></span></p> 
+      <p>UUID stands for Universally Unique Identifier, it gives each filesystem a unique identifier. With uuid, you no need to worry about the reordering of hard disk anymore. </p> 
+      <p><strong>So how to check the device’s uuid?</strong></p> 
+      <p>You can find all detected device by uuid with ls</p> 
+      <pre><code>ls -l /dev/disk/by-uuid/</code></pre> 
+      <pre><code>lrwxrwxrwx 1 root root 10 2007-10-10 20:30 4706-0137 -&gt; ../../sda1
+lrwxrwxrwx 1 root root 10 2007-10-10 20:30 497c771b-63fe-461f-ad7d-0bef9a6ba718 -&gt; ../../sda5
+lrwxrwxrwx 1 root root 10 2007-10-10 20:30 ce7b6c5d-c66a-4fc8-9638-72f62820f422 -&gt; ../../sda3</code></pre> 
+      <p>Or if you wanna check on more details on the device, </p> 
+      <pre><code>sudo vol_id /dev/sda1</code></pre> 
+      <pre><code>ID_FS_USAGE=filesystem
+ID_FS_TYPE=vfat
+ID_FS_VERSION=FAT32
+ID_FS_UUID=4706-0137
+ID_FS_LABEL=
+ID_FS_LABEL_SAFE=</code></pre> 
+      <p>or this</p> 
+      <pre><code>blkid /dev/sda1</code></pre> 
+      <pre><code>/dev/sda1: UUID="4706-0137" TYPE="vfat"</code></pre> 
+      <div class="aizatto_related_posts">
+       <span class="aizatto_related_posts_header">Related Posts</span>
+       <br><span class="aizatto_related_posts_title"><a href="https://linux.byexamples.com/archives/344/mounting-ftp-host-to-local-directory-on-top-of-fuse/" rel="bookmark" title="Permanent Link: Mounting ftp host to local directory on top of FUSE">Mounting ftp host to local directory on top of FUSE</a></span>
+       <div class="aizatto_related_posts_excerpt">
+        I have wrote a post regarding on how to access ftp host using curl. And this time, let us look at how to mount the ftp h...
+       </div>
+       <p></p><span class="aizatto_related_posts_title"><a href="https://linux.byexamples.com/archives/542/install-gentoo-for-kernel-hacking/" rel="bookmark" title="Permanent Link: Install Gentoo for kernel hacking">Install Gentoo for kernel hacking</a></span>
+       <div class="aizatto_related_posts_excerpt">
+        I am curious about what are Linux kernel do? Many years ago, due to the tedious steps to compile the kernel, I give up d...
+       </div>
+       <p></p>
+      </div><!-- google_ad_section_end --> 
+      <div class="padder"> 
+       <script type="text/javascript"><!--
+google_ad_client = "pub-6971492116812805";
+google_ad_width = 336;
+google_ad_height = 280;
+google_ad_format = "336x280_as";
+google_ad_type = "text";
+//2007-10-15: linux post
+google_ad_channel = "4019488743";
+google_color_border = "FFFFFF";
+google_color_bg = "FFFFFF";
+google_color_link = "0000FF";
+google_color_text = "000000";
+google_color_url = "008000";
+//-->
+</script> 
+       <script type="text/javascript" src="https://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script> 
+      </div> 
+     </div>
+    </div> 
+    <div class="entry"> <!-- You can start editing here. --> 
+     <div class="comments">
+      <h3>207 Responses to “fstab with uuid”</h3>
+     </div> 
+     <ol class="commentlist"> 
+      <li class="alt" id="comment-19371"> 
+       <div class="gcomment">
+        <cite><a href="http://www.webvh1.com" rel="external nofollow" class="url">Ginger W</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-19371" title="">October 11th, 2007 at 6:29 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Hello there!.. how are you?… I know this is off topic nad I don’t even know what Linux is, but I just want to say thank you for visiting WEBVH1.com :)</p> 
+        <p>By the way, what is Linux?…</p> 
+       </div> </li> 
+      <li id="comment-19667"> 
+       <div class="gcomment">
+        <cite><a href="http://liquidat.wordpress.com/2007/10/15/short-tip-get-uuid-of-hard-disks/" rel="external nofollow" class="url">Short Tip: Get UUID of Hard Disks « /home/liquidat</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-19667" title="">October 15th, 2007 at 9:00 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>[…] to Linux By Examples for the initial howto. Posted in Linux, Shell, Short Tip, […]</p> 
+       </div> </li> 
+      <li class="alt" id="comment-19707"> 
+       <div class="gcomment">
+        <cite><a href="http://www.hodgers.com/ali" rel="external nofollow" class="url">ali craigmile</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-19707" title="">October 16th, 2007 at 7:16 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>great tip. I like the idea that you can call mount your root partition with simply: LABEL=Root too.</p> 
+       </div> </li> 
+      <li id="comment-20025"> 
+       <div class="gcomment">
+        <cite><a href="http://blog.techfun.org" rel="external nofollow" class="url">techfun</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-20025" title="">October 22nd, 2007 at 5:29 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Thanks for writing this.</p> 
+        <p>It came in handy today. I upgraded my machine to Ubuntu 7.10 on Friday and had no problems, but this morning, my partner installed Kubuntu 7.10 and had had all kinds of problems because he uses 7 different drives on two different controllers. The problems he ran into was because the new kernel changed the /dev/sd &amp; hd device names. </p> 
+        <p>We finally got around it by unhooking all but the volume we used for the root file system, and then added the other drives into fstab via the UUID method. </p> 
+        <p>I remembered reading this a few days ago so I came back to refresh my memory on how to see each device’s UUID.</p> 
+        <p>So, thanks again!</p> 
+       </div> </li> 
+      <li class="alt" id="comment-20585"> 
+       <div class="gcomment">
+        <cite><a href="http://www.superbrose.co.uk" rel="external nofollow" class="url">Ference</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-20585" title="">October 30th, 2007 at 4:06 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>A word of caution:</p> 
+        <p>I configured my /etc/fstab to use UUID for the root partition (default with Feisty Fawn install) and the laptop ran out of power during a normal user session, with some file corruption.</p> 
+        <p>Upon reboot the file system check for the root partition was forced, and this check failed for some reason. I used the Ubuntu Live CD to fsck the root partition and there was no problem, but still on boot the system still forced me to do the same file system check and it would fail yet again, no matter how many times I tried.</p> 
+        <p>I used the Live CD to look at /etc/fstab and saw the UUID statements. I replaced the line for the root partition with the old-fashioned way (/dev/sda1) – this time the file system check passed and the boot continued ok.</p> 
+        <p>I am sure that people with less patience would have probably reinstalled or swapped back to an evil OS for this reason alone.</p> 
+       </div> </li> 
+      <li id="comment-20651"> 
+       <div class="gcomment">
+        <cite>Roonaldo</cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-20651" title="">October 30th, 2007 at 10:04 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Hi,</p> 
+        <p>I just wanted how this uuids are assigned? Is this done by linux? What would happen to the uuid if i formatted the drive/partition?</p> 
+       </div> </li> 
+      <li class="alt" id="comment-20658"> 
+       <div class="gcomment">
+        <cite><a href="http://cc.byexamples.com" rel="external nofollow" class="url">mysurface</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-20658" title="">October 30th, 2007 at 11:32 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Roonaldo: I have no idea how uuid calculate the id and assigns to your partition. It seems to me that if you format your partition , uuid will stay unchange, but if you RESIZE or add in a new partition, uuid will be different.</p> 
+       </div> </li> 
+      <li id="comment-20691"> 
+       <div class="gcomment">
+        <cite><a href="http://www.planetmy.com" rel="external nofollow" class="url">Planet Malaysia</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-20691" title="">October 31st, 2007 at 4:58 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>What is the advantage of using UUID?</p> 
+       </div> </li> 
+      <li class="alt" id="comment-20696"> 
+       <div class="gcomment">
+        <cite><a href="http://cc.byexamples.com" rel="external nofollow" class="url">mysurface</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-20696" title="">October 31st, 2007 at 6:53 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Mount with device with UUID, you do not need to worry about the ordering of your HDD. I can change my HDD that contain MBR from IDE0 to IDE1, and my system will still able to boot up.</p> 
+       </div> </li> 
+      <li id="comment-24148"> 
+       <div class="gcomment">
+        <cite>foo</cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-24148" title="">December 9th, 2007 at 10:12 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>There is some info on how to use LABEL/UUID in fstab and howto use uuidgen, tune2fs to put/replace labels/uuids on disks. read the howro on <a href="http://www.nslu2-linux.org/wiki/HowTo/MountDisksByLabel" rel="nofollow">http://www.nslu2-linux.org/wiki/HowTo/MountDisksByLabel</a><br> and the comments on <a href="http://liquidat.wordpress.com/2007/10/15/short-tip-get-uuid-of-hard-disks/" rel="nofollow">http://liquidat.wordpress.com/2007/10/15/short-tip-get-uuid-of-hard-disks/</a></p> 
+        <p>cheers</p> 
+       </div> </li> 
+      <li class="alt" id="comment-29275"> 
+       <div class="gcomment">
+        <cite>s1mple_m4n</cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-29275" title="">February 8th, 2008 at 7:29 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Thankyou for this. I have 3 internal drives that had been changing and I could not work out how to fix it. I run Ubuntu 7.04, and have learned a lot from the excellent Ubuntu community and sites like this.</p> 
+       </div> </li> 
+      <li id="comment-29352"> 
+       <div class="gcomment">
+        <cite><a href="http://cc.byexamples.com" rel="external nofollow" class="url">mysurface</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-29352" title="">February 9th, 2008 at 5:43 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Welcome to Ubuntu community and thanks for visiting this page.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-29717"> 
+       <div class="gcomment">
+        <cite>cece</cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-29717" title="">February 13th, 2008 at 6:39 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Thanks a lot!</p> 
+        <p>:-)</p> 
+       </div> </li> 
+      <li id="comment-64993"> 
+       <div class="gcomment">
+        <cite>Ursinha</cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-64993" title="">August 31st, 2008 at 3:19 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Hey, I might say, excelent tip! Thanks :)</p> 
+       </div> </li> 
+      <li class="alt" id="comment-78824"> 
+       <div class="gcomment">
+        <cite><a href="http://www.hoakz.com/blog/2008/09/mounting-devices-with-uuid-identifiers-instead-of-using-dev-paths/" rel="external nofollow" class="url">hoakz.com » Blog Archive » Mounting devices with UUID identifiers instead of using /dev paths</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-78824" title="">October 6th, 2008 at 1:10 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>[…] <a href="https://linux.byexamples.com/archives/321/fstab-with-uuid/" rel="nofollow">https://linux.byexamples.com/archives/321/fstab-with-uuid/</a> […]</p> 
+       </div> </li> 
+      <li id="comment-81040"> 
+       <div class="gcomment">
+        <cite>jazz</cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-81040" title="">October 22nd, 2008 at 7:39 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Thanks.. this was a great tip…..</p> 
+       </div> </li> 
+      <li class="alt" id="comment-97515"> 
+       <div class="gcomment">
+        <cite><a href="http://qgqlochekone.blogspot.com" rel="external nofollow" class="url">PICCORO</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-97515" title="">December 28th, 2008 at 3:03 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>ok, err, i dessire to knwon what package are the resposable for write the fstab, can be possible change this by use uuid even the device naming, currently lenny used scsi device names now, every device now are handle as scsi device, whell see ..</p> 
+       </div> </li> 
+      <li id="comment-97566"> 
+       <div class="gcomment">
+        <cite><a href="http://club.ruskoda.ru" rel="external nofollow" class="url">Amara</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-97566" title="">January 18th, 2009 at 6:46 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>SOS! My car was boken on road. Must IJ cazll to repairs or 911?</p> 
+       </div> </li> 
+      <li class="alt" id="comment-97573"> 
+       <div class="gcomment">
+        <cite><a href="http://blog.mazdarusia.ru" rel="external nofollow" class="url">Salma</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-97573" title="">January 18th, 2009 at 10:08 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>and whta do you thhink about gas problem in Ukraine?</p> 
+       </div> </li> 
+      <li id="comment-97581"> 
+       <div class="gcomment">
+        <cite><a href="http://sudak.mitsubishiya.ru" rel="external nofollow" class="url">Think</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-97581" title="">January 19th, 2009 at 4:31 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>wonderful post))</p> 
+       </div> </li> 
+      <li class="alt" id="comment-97596"> 
+       <div class="gcomment">
+        <cite><a href="http://sony.lcdteleblog.ru" rel="external nofollow" class="url">Olina</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-97596" title="">January 20th, 2009 at 6:49 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Where I may to find blogs n this otpic?</p> 
+       </div> </li> 
+      <li id="comment-97606"> 
+       <div class="gcomment">
+        <cite><a href="http://panasonic.plazmatvblog.ru" rel="external nofollow" class="url">What</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-97606" title="">January 21st, 2009 at 5:35 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>It’s difficult to understand..</p> 
+       </div> </li> 
+      <li class="alt" id="comment-97623"> 
+       <div class="gcomment">
+        <cite><a href="http://forum.mercedeski.ru" rel="external nofollow" class="url">Beany</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-97623" title="">January 22nd, 2009 at 6:22 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Spuer! I’ll make similar post in own blog</p> 
+       </div> </li> 
+      <li id="comment-97657"> 
+       <div class="gcomment">
+        <cite><a href="http://www.talkwards.com/2008/09/mounting-devices-with-uuid-identifiers-instead-of-using-dev-paths" rel="external nofollow" class="url">Talkwards » Blog Archive » Mounting devices with UUID identifiers instead of using /dev paths</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-97657" title="">February 3rd, 2009 at 8:22 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>[…] <a href="https://linux.byexamples.com/archives/321/fstab-with-uuid/" rel="nofollow">https://linux.byexamples.com/archives/321/fstab-with-uuid/</a> […]</p> 
+       </div> </li> 
+      <li class="alt" id="comment-97844"> 
+       <div class="gcomment">
+        <cite><a href="http://mbetter.net.ru/node/10" rel="external nofollow" class="url">??????? UUID | mBetter ???</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-97844" title="">February 27th, 2009 at 1:06 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>[…] <a href="https://linux.byexamples.com/archives/321/fstab-with-uuid/" rel="nofollow">https://linux.byexamples.com/archives/321/fstab-with-uuid/</a> […]</p> 
+       </div> </li> 
+      <li id="comment-99170"> 
+       <div class="gcomment">
+        <cite>Chris C</cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-99170" title="">November 4th, 2009 at 8:15 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Thanks, I never remember how to find the UUID. Note that on RHEL4 (yes, I know, but our IT department ‘standardised’ on it) it seems that neither /dev/disk/by-uuid/ nor vol_id exist (it’s an ancient kernel), but fortunately /sbin/blkid does. And you have to run it as root to show some of the disks (but not others). But I got there eventually…</p> 
+       </div> </li> 
+      <li class="alt" id="comment-99509"> 
+       <div class="gcomment">
+        <cite><a href="http://bettafootwear.com" rel="external nofollow" class="url">trusktr</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-99509" title="">June 15th, 2010 at 2:31 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Thanks, this fixed my problem with multiple drives and boot failure!</p> 
+       </div> </li> 
+      <li id="comment-100230"> 
+       <div class="gcomment">
+        <cite>wapa17</cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-100230" title="">March 10th, 2011 at 9:43 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Everything has its 2 sides: I had to install RAID1 on a running hardy-heron server. I switched over to good old /dev/sdx etc. and RAID was running in no time.</p> 
+        <p>Even more: if you have to change disks its much easier !</p> 
+       </div> </li> 
+      <li class="alt" id="comment-101322"> 
+       <div class="gcomment">
+        <cite><a href="http://www.linuxquestions.org/questions/linux-from-scratch-13/small-problem-with-booting-on-spearate-hdd-918504/#post4548988" rel="external nofollow" class="url">Small problem with booting on spearate hdd.</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-101322" title="">December 14th, 2011 at 3:12 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>[…] it seems much better, but I couldn't find anything. UUID's can be used for mounting (fstab): Linux by examples – fstab with uuid (search with fstab uuid and get a ton of hits) And although I never tried using UUID's and grub […]</p> 
+       </div> </li> 
+      <li id="comment-101970"> 
+       <div class="gcomment">
+        <cite><a href="http://zephyr9000.wordpress.com/2012/11/22/ubuntu%ef%bc%9aget-uuid-of-hard-disks/" rel="external nofollow" class="url">Ubuntu?Get UUID of Hard Disks | zephyr9000</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-101970" title="">November 22nd, 2012 at 1:35 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>[…] Thanks to&nbsp;Linux By Examples&nbsp;for the&nbsp;initial howto. […]</p> 
+       </div> </li> 
+      <li class="alt" id="comment-101995"> 
+       <div class="gcomment">
+        <cite>Nick</cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-101995" title="">December 21st, 2012 at 2:23 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Thanks bro.</p> 
+       </div> </li> 
+      <li id="comment-102248"> 
+       <div class="gcomment">
+        <cite><a href="http://qbkgjgq.blog.com/2013/06/10/rolex-watches-for-men-original/" rel="external nofollow" class="url">rolex daytona watches</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-102248" title="">July 4th, 2013 at 5:28 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>The receiver will never know that you have talented them with swiss replica watches. In fact they will be delighted to accept these swiss replica watches since they see it as the primitive. Go out today and get by payment a pair of these swiss replica watches. Do not confine yourself to just one and let your fancy run wild while you are purchasing these swiss replica watches. You can be rest assured that these watches will serve you for many years to come and that they will never let you down. However do not overdo it. There are some fanatics in place and people have reported seeing them wearing two swiss replica watches, one on each palm and fingers. Now this is taking things too far.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-102483"> 
+       <div class="gcomment">
+        <cite><a href="http://www.linuxquestions.org/questions/linux-hardware-18/auto-mount-hdd-not-working-via-label-4175496639/#post5127153" rel="external nofollow" class="url">Auto Mount HDD not working via Label</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-102483" title="">March 2nd, 2014 at 7:21 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>[…] I don't know the answer to your question, but would mounting using UUID rather than LABEL be a viable alternative? fstab with uuid […]</p> 
+       </div> </li> 
+      <li id="comment-102565"> 
+       <div class="gcomment">
+        <cite><a href="http://stellarseostlouis.com" rel="external nofollow" class="url">st louis seo company</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-102565" title="">April 22nd, 2014 at 2:12 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Hey there! I just want to give you a huge thumbs up for your great info you’ve got right here on this post.<br> I’ll be returning to your website for more soon.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-103453"> 
+       <div class="gcomment">
+        <cite><a href="https://www.youtube.com/watch?v=8_n2siW4bKU" rel="external nofollow" class="url">www.youtube.com</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103453" title="">May 13th, 2014 at 8:24 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Hi there very nice blog!! Man .. Beautiful .. Amazing ..<br> I’ll bookmark your website and take the feeds also? I am glad to find a lot<br> of helpful info right here in the post, we need work out more strategies on this regard, thank you for sharing.<br> . . . . .</p> 
+       </div> </li> 
+      <li id="comment-103454"> 
+       <div class="gcomment">
+        <cite><a href="http://shortify.us/354653" rel="external nofollow" class="url">Nike Free Run 3 Gray</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103454" title="">May 13th, 2014 at 11:30 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Terrific post however , I was wanting to know if you could write a litte more on<br> this subject? I’d be very thankful if you could elaborate a little bit more.<br> Bless you!</p> 
+       </div> </li> 
+      <li class="alt" id="comment-103455"> 
+       <div class="gcomment">
+        <cite><a href="http://ec-cosmohome.com/userinfo.php?uid=187006" rel="external nofollow" class="url">Sunshildsysteme</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103455" title="">May 13th, 2014 at 3:29 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Someone essentially lend a hand to make seriously<br> articles I might state. That is the very first time I frequented your web page and up to now?</p> 
+        <p>I amazed with the analysis you made to make this particular submit incredible.<br> Magnificent job!</p> 
+       </div> </li> 
+      <li id="comment-103456"> 
+       <div class="gcomment">
+        <cite><a href="http://fabriclear.org/how-to-get-rid-of-bed-bugs-naturally" rel="external nofollow" class="url">Shelley</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103456" title="">May 13th, 2014 at 4:12 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>I appreciate, cause I found exactly what I was taking a look for.<br> You have ended my four day long hunt! God Bless you man.<br> Have a great day. Bye</p> 
+       </div> </li> 
+      <li class="alt" id="comment-103457"> 
+       <div class="gcomment">
+        <cite><a href="http://karpanas.skyrock.com/3216015545-The-best-d&amp;d-name-generator-hands-down.html" rel="external nofollow" class="url">middle name generator baby</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103457" title="">May 13th, 2014 at 4:51 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Hi, Neat post. There is an issue with your site in internet explorer, may check this?<br> IE nonetheless is the marketplace chief and a good part of other<br> folks will miss your great writing because of this problem.</p> 
+       </div> </li> 
+      <li id="comment-103458"> 
+       <div class="gcomment">
+        <cite><a href="http://www.seoservicesnv.com/marketing-songs-workshop-perforated-door-hangers.html" rel="external nofollow" class="url">independent music marketing plan</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103458" title="">May 14th, 2014 at 6:46 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>If some one wants to be updated with hottest technologies afterward he must be visit this web site and be up to date everyday.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-103461"> 
+       <div class="gcomment">
+        <cite><a href="http://igwhizz.com/comprar-seguidores-instagram.php" rel="external nofollow" class="url">comprar seguidores en instagram</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103461" title="">May 15th, 2014 at 10:20 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>I’m really enjoying the design and layout of your website.<br> It’s a very easy on the eyes which makes it much more pleasant<br> for me to come here and visit more often.<br> Did you hire out a designer to create your theme?<br> Fantastic work!</p> 
+       </div> </li> 
+      <li id="comment-103463"> 
+       <div class="gcomment">
+        <cite><a href="http://drugsbought.com" rel="external nofollow" class="url">drugsbought.com</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103463" title="">May 16th, 2014 at 7:51 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Your gym time is time that’s just for you, and when you’re<br> prepared mentally and physically, you’ll have a better workout.<br> For the most effective workout, it is best not to decide what you will do at the gym<br> while you are walking into the gym. Sinusitis is an inflammation of the membrane<br> lining of any sinus.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-103468"> 
+       <div class="gcomment">
+        <cite><a href="http://www.youtube.com/watch?v=x0BFTmMS3uQ" rel="external nofollow" class="url">facial acne cure</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103468" title="">May 17th, 2014 at 2:38 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Most of the cures that you find over the counter or suggested<br> by your doctor contain certain harmful chemicals which if applied overtime can cause serious damage to your face and health.<br> If you really require to treat your Acne Vulgaris situation, then you should<br> go for holistic treatments. These treatments are made of natural remedies that has been found to be very productive since years.<br> Also, as these are natural, there is no space for side effects.<br> The cost element too is in their side as it is cheap in comparision<br> with other forms of cure. The most biggest factor is that it could give you relief more frequently compared<br> to not and hence this is your right option for treating Acne Vulgaris.<br> If you wish to find regarding curing Acne Vulgaris, I am mentioning a<br> link, here you could be able to see elaborated inmaking on how to treat Acne Vulgaris.</p> 
+        <p><a href="http://www.youtube.com/watch?v=x0BFTmMS3uQ" rel="nofollow">facial acne cure</a></p> 
+       </div> </li> 
+      <li id="comment-103470"> 
+       <div class="gcomment">
+        <cite><a href="http://The-Cruise-Control-Diet-Review.blogspot.com/" rel="external nofollow" class="url">reviews on the cruise Control Diet</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103470" title="">May 22nd, 2014 at 3:30 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>We really are presenting Nine dogecoins for the<br> fortunate winner of a web blog operator with the selected prize promo<br> code. The final results shall be out in 4-weeks time. The prize code is:<br> IBOHJ8</p> 
+       </div> </li> 
+      <li class="alt" id="comment-103472"> 
+       <div class="gcomment">
+        <cite><a href="http://www.kanshin.com/keyword/529448" rel="external nofollow" class="url">Dominik</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103472" title="">May 22nd, 2014 at 8:56 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>These are really impressive ideas in concerning blogging.<br> You have touched some good points here. Any way keep up wrinting.</p> 
+       </div> </li> 
+      <li id="comment-103474"> 
+       <div class="gcomment">
+        <cite><a href="http://telecharger-dernier-films.blogspot.com/2014/04/mise-lepreuve-telecharger-le-film.html" rel="external nofollow" class="url">Mise à l’épreuve Télécharger</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103474" title="">May 22nd, 2014 at 2:24 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>The other day, while I was at work, my sister stole my iphone<br> and tested to see if it can survive a thirty foot drop, just<br> so she can be a youtube sensation. My apple ipad is now destroyed<br> and she has 83 views. I know this is entirely<br> off topic but I had to share it with someone!</p> 
+        <p>Here is my homepage <a href="http://telecharger-dernier-films.blogspot.com/2014/04/mise-lepreuve-telecharger-le-film.html" rel="nofollow">Mise à l’épreuve Télécharger</a></p> 
+       </div> </li> 
+      <li class="alt" id="comment-103480"> 
+       <div class="gcomment">
+        <cite><a href="http://bestwhiteboardpaint.edublogs.org/" rel="external nofollow" class="url">whiteboard paint</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103480" title="">May 24th, 2014 at 4:30 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Wine Bottles: You can paint these and use them<br> as candle holders and vases. In fact, many companies that sell partition systems<br> offer free planning and installation. The employer needs to help the employees feel at home so that the employees can be at their best productivity.</p> 
+       </div> </li> 
+      <li id="comment-103484"> 
+       <div class="gcomment">
+        <cite><a href="http://www.youtube.com/watch?v=KhlSvzd6lsA" rel="external nofollow" class="url">Remove acne scars</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103484" title="">May 27th, 2014 at 5:19 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Acne occur because of internal dis-balance in the body because of too much presence of some toxins.<br> Such toxins then foil with the many glands of the body<br> resulting in more than normal production of certain kinds of hormones that causes<br> impurity of blood. You must have heard regarding the impurity stuff related<br> to blood in many illness. Have you ever wondered what exactly is it.<br> It is the more than normal presence of toxins in the blood than usual<br> which lead to different type of problems in the body. Acne<br> are one of these.<br> <a href="http://www.youtube.com/watch?v=KhlSvzd6lsA" rel="nofollow">Remove acne scars</a></p> 
+       </div> </li> 
+      <li class="alt" id="comment-103485"> 
+       <div class="gcomment">
+        <cite><a href="http://www.buzzfeed.com/stephan25/my-personal-internet-marketing-strategies-pzl8" rel="external nofollow" class="url">www.buzzfeed.com</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103485" title="">May 29th, 2014 at 6:15 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>I am not sure where you are getting your info, but good topic.<br> I needs to spend some time learning much more or understanding more.</p> 
+        <p>Thanks for fantastic information I was looking for this information for my mission.</p> 
+       </div> </li> 
+      <li id="comment-103489"> 
+       <div class="gcomment">
+        <cite><a href="http://sorinarae.net/xe/qna/96566" rel="external nofollow" class="url">max setup</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103489" title="">May 30th, 2014 at 7:31 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>hi!,I love your writing very much! percentage we keep<br> in touch extra approximately your post on AOL?<br> I need an expert on this area to unravel my problem.<br> May be that is you! Looking ahead to see you.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-103490"> 
+       <div class="gcomment">
+        <cite><a href="http://www.rotherhamlabour.org/?attachment_id=250" rel="external nofollow" class="url">Stepanie</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103490" title="">May 31st, 2014 at 2:14 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>It’s very effortless to find out any matter on web as compared to books,<br> as I found this article at this web site.</p> 
+       </div> </li> 
+      <li id="comment-103491"> 
+       <div class="gcomment">
+        <cite><a href="https://www.facebook.com/locksmithyorkpa" rel="external nofollow" class="url">locksmith york pa</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103491" title="">June 1st, 2014 at 2:20 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>You really make it seem really easy along with your presentation but I in finding this matter<br> to be actually something which I believe I’d never understand.<br> It seems too complex and very large for me. I am taking a look forward in your subsequent submit, I’ll attempt to get the<br> grasp of it!</p> 
+       </div> </li> 
+      <li class="alt" id="comment-103492"> 
+       <div class="gcomment">
+        <cite><a href="https://plus.google.com/u/0/109892913984367081779/posts" rel="external nofollow" class="url">noritz isolation valve</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103492" title="">June 1st, 2014 at 6:46 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Very good info. Lucky me I discovered your blog by<br> chance (stumbleupon). I’ve book marked it for later!</p> 
+       </div> </li> 
+      <li id="comment-103494"> 
+       <div class="gcomment">
+        <cite><a href="https://www.facebook.com/GameofWarFireAgeHackCheats" rel="external nofollow" class="url">Game of War: Fire Age Gold Hack</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103494" title="">June 1st, 2014 at 10:43 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Hey, I think your website might be having browser compatibility<br> issues. When I look at your blog in Ie, it looks fine but when opening in Internet Explorer, it has some overlapping.<br> I just wanted to give you a quick heads up! Other then that, great blog!</p> 
+       </div> </li> 
+      <li class="alt" id="comment-103495"> 
+       <div class="gcomment">
+        <cite><a href="http://www.yellowlamp.com/websites/123reg/LinuxPackage21/ye/ll/ow/yellowlamp.com/public_html/nike-free-run-australia-deal-internet" rel="external nofollow" class="url">human feet</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103495" title="">June 1st, 2014 at 5:11 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>I leave a response whenever I like a post on a website or if<br> I have something to add to the discussion. Usually it’s caused by the sincerness communicated in<br> the post I read. And after this article fstab with uuid<br> ? Linux by Examples. I was excited enough to write a thought :<br> -) I do have 2 questions for you if it’s okay. Is it only<br> me or does it look like like a few of these responses come across as if they are left by brain<br> dead individuals? :-P And, if you are writing on other online social sites, I would like to follow everything new you have<br> to post. Could you make a list all of all your community<br> sites like your Facebook page, twitter feed, or linkedin profile?</p> 
+       </div> </li> 
+      <li id="comment-103498"> 
+       <div class="gcomment">
+        <cite><a href="https://www.Youtube.com/watch?v=X_aqxMxI2IU" rel="external nofollow" class="url">Best Sports Watch 2014</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103498" title="">June 4th, 2014 at 6:53 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>It also has an alarm, countdown timer and is backlit.<br> One word for the menu is “eclectic,” with everything from<br> salads to a Fat Julian (Kickback’s version of heart attack on a plate) to sloppy joes, spaghettios, and chicken artichoke risotto orzo.<br> However, this is not the case in real, yeah sometimes,<br> it happens that people cheat but most of the time deals<br> are very real and profitable.</p> 
+        <p>Look into my blog <a href="https://www.Youtube.com/watch?v=X_aqxMxI2IU" rel="nofollow">Best Sports Watch 2014</a></p> 
+       </div> </li> 
+      <li class="alt" id="comment-103500"> 
+       <div class="gcomment">
+        <cite><a href="https://www.facebook.com/BoomBeachHackCheats" rel="external nofollow" class="url">Boom Beach Diamonds Hack</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103500" title="">June 4th, 2014 at 4:12 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Hi there, I enjoy reading through your article. I like to write a little comment to support<br> you.</p> 
+       </div> </li> 
+      <li id="comment-103501"> 
+       <div class="gcomment">
+        <cite><a href="https://www.rebelmouse.com/fibroidsmiraclepdfreview/" rel="external nofollow" class="url">fibroids miracle independent review</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103501" title="">June 5th, 2014 at 1:12 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Hey exceptional website! Does running a blog such as this take a massive amount work?</p> 
+        <p>I’ve virtually no expertise in computer programming but I was hoping to start my<br> own blog soon. Anyways, if you have any recommendations or techniques for new blog owners please share.</p> 
+        <p>I know this is off subject but I simply wanted to ask.<br> Appreciate it!</p> 
+       </div> </li> 
+      <li class="alt" id="comment-103507"> 
+       <div class="gcomment">
+        <cite><a href="https://www.rebelmouse.com/tobiaslwjkjnxa/top-rated-tips-and-tricks-for--578787007.html" rel="external nofollow" class="url">8 ball game pool</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103507" title="">June 6th, 2014 at 9:26 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>With technology today, there are a lot of different possibilities in terms of education. The one who answers the<br> most questions correctly gets to take home the<br> trophy. Keep in mind however, to really enjoy these<br> type of games, you need to understand how the games work.</p> 
+        <p>Here is my homepage … <a href="https://www.rebelmouse.com/tobiaslwjkjnxa/top-rated-tips-and-tricks-for--578787007.html" rel="nofollow">8 ball game pool</a></p> 
+       </div> </li> 
+      <li id="comment-103511"> 
+       <div class="gcomment">
+        <cite><a href="http://awesomefemaleinrealestate.com" rel="external nofollow" class="url">Awesome Female In Real Estate</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103511" title="">June 8th, 2014 at 7:45 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Great weblog right here! Additionally your site lots up fast!<br> What web host are you the use of? Can I get your affiliate<br> hyperlink for your host? I want my web site loaded up as quickly as yours lol</p> 
+        <p>My web page :: <a href="http://awesomefemaleinrealestate.com" rel="nofollow">Awesome Female In Real Estate</a></p> 
+       </div> </li> 
+      <li class="alt" id="comment-103512"> 
+       <div class="gcomment">
+        <cite><a href="http://www.deliveringchoices.org/?page_id=6" rel="external nofollow" class="url">Kuwait escort girl</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103512" title="">June 9th, 2014 at 11:44 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Hi it’s me, I am also visiting this site regularly,<br> this site is genuinely fastidious and the visitors are truly sharing pleasant thoughts.</p> 
+       </div> </li> 
+      <li id="comment-103519"> 
+       <div class="gcomment">
+        <cite><a href="http://skirpus-deutschland.com/" rel="external nofollow" class="url">Außenjalousien</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103519" title="">June 11th, 2014 at 11:19 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Hello, after reading this awesome paragraph i am too glad<br> to share my knowledge here with friends.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-103551"> 
+       <div class="gcomment">
+        <cite><a href="http://lovekim.kr/pr2/6515" rel="external nofollow" class="url">music firebrand commercials marketing tv spots</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103551" title="">June 16th, 2014 at 5:37 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>I’m curious to find out what blog system you are working with?<br> I’m experiencing some small security problems with my latest site and I’d like to find something more safe.</p> 
+        <p>Do you have any solutions?</p> 
+       </div> </li> 
+      <li id="comment-103552"> 
+       <div class="gcomment">
+        <cite><a href="http://AnesthesiaUniverse.com" rel="external nofollow" class="url">Anesthesia Universe</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103552" title="">June 16th, 2014 at 9:42 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Can I simply just say what a comfort to discover an individual who truly knows what they’re talking about online.<br> You certainly realize how to bring a problem to light and make it important.<br> More and more people have to look at this and understand this side<br> of your story. It’s surprising you aren’t more<br> popular given that you surely possess the gift.</p> 
+        <p>My web blog :: <a href="http://AnesthesiaUniverse.com" rel="nofollow">Anesthesia Universe</a></p> 
+       </div> </li> 
+      <li class="alt" id="comment-103562"> 
+       <div class="gcomment">
+        <cite><a href="http://www.strava.com/clubs/77733" rel="external nofollow" class="url">Roofing HamiltonWindows And Doors HamiltonVinyl Siding RepairRoofers HamiltonSiding HamiltonComplete RoofingOakville Windows And DoorsHamilton RoofingWood SidingAluminum SidingBurlington RoofingOakville RoofingRoofing BurlingtonWindow Repair HamiltonRoofi</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103562" title="">June 17th, 2014 at 3:52 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>There is no down payment or deposit of any<br> sorts and the payment invoice is sent only after the job has been inspected and<br> approved by our building department and the post-job cleanup<br> has been done. * When the base sheeting is coated with the aluminium and zinc alloy only, that is no further coloured coatings, it<br> does look similar to the old galvanised iron, but it does not have<br> the spangled effect. Roof replacement can be an expensive, time consuming job.</p> 
+       </div> </li> 
+      <li id="comment-103585"> 
+       <div class="gcomment">
+        <cite><a href="http://www.investigations-intelligence-economique.com" rel="external nofollow" class="url">game</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103585" title="">June 21st, 2014 at 7:56 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Excellent way of describing, and fastidious article to get data regarding my<br> presentation focus, which i am going to convey in institution of higher education.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-103587"> 
+       <div class="gcomment">
+        <cite><a href="http://www.mediakizz.com/groups/everything-you-must-know-about-aching-muscle-tissues-well-receiving-relief-particular-1" rel="external nofollow" class="url">body aches and pains all over</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103587" title="">June 21st, 2014 at 3:47 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Woah! I’m really loving the template/theme of this blog.<br> It’s simple, yet effective. A lot of times it’s very hard to get that “perfect balance” between usability and<br> visual appeal. I must say that you’ve done a amazing job with this.</p> 
+        <p>In addition, the blog loads super quick for<br> me on Chrome. Excellent Blog!</p> 
+       </div> </li> 
+      <li id="comment-103590"> 
+       <div class="gcomment">
+        <cite><a href="http://wheyproteinhidrolisado.wordpress.com/2014/06/21/choose-whey-protein-hidrolisado-to-prevent-body-from-harmful-effects/" rel="external nofollow" class="url">Whey protein hidrolisado</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103590" title="">June 23rd, 2014 at 7:02 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Great post. I was checking constantly this blog and I’m inspired!<br> Very useful info particularly the closing part :) I maintain such info much.<br> I used to be seeking this particular information for a long time.<br> Thank you and best of luck.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-103601"> 
+       <div class="gcomment">
+        <cite><a href="http://super-star2014.blogspot.com/2014/05/100.html" rel="external nofollow" class="url">??????????</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103601" title="">June 26th, 2014 at 4:05 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>I have been exploring for a bit for any high quality articles or blog<br> posts on this kind of house . Exploring in Yahoo I finally stumbled upon this website.</p> 
+        <p>Studying this information So i am satisfied to show that I have<br> a very good uncanny feeling I found out exactly what I needed.<br> I most without a doubt will make sure to don?t omit this site<br> and give it a glance on a continuing basis.</p> 
+       </div> </li> 
+      <li id="comment-103631"> 
+       <div class="gcomment">
+        <cite><a href="http://forum.ifk.nnov.ru/profile.php?mode=viewprofile&amp;u=283288" rel="external nofollow" class="url">Leoma</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103631" title="">July 4th, 2014 at 2:36 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>After going over a few of the blog articles on your blog, I honestly like your way<br> of blogging. I saved as a favorite it to my bookmark site list and will be checking back soon. Please check out my website as well<br> and let me know your opinion.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-103762"> 
+       <div class="gcomment">
+        <cite><a href="http://www.indigosolutionspr.com/UserProfile/tabid/43/userId/176046/Default.aspx" rel="external nofollow" class="url">Edythe</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103762" title="">July 28th, 2014 at 10:29 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Hello! This is my first comment here so I just wanted to give a quick shout out and say I<br> genuinely enjoy reading through your posts. Can you suggest<br> any other blogs/websites/forums that deal with the same topics?<br> Thanks!</p> 
+       </div> </li> 
+      <li id="comment-103781"> 
+       <div class="gcomment">
+        <cite><a href="http://Sclr.li/3'M" rel="external nofollow" class="url">vimeo - dean Graziosi</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103781" title="">August 13th, 2014 at 7:38 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>I think this is one of the most significant information for me.<br> And i am glad reading your article. But wanna remark on few general things, The website style is great,<br> the articles is really great : D. Good job, cheers</p> 
+        <p>My blog <a href="http://Sclr.li/3'M" rel="nofollow">vimeo – dean Graziosi</a></p> 
+       </div> </li> 
+      <li class="alt" id="comment-103815"> 
+       <div class="gcomment">
+        <cite><a href="http://www.linkedin.com/in/adoptionnetworklawcenter" rel="external nofollow" class="url">Adoption Network Law Center see here</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103815" title="">August 24th, 2014 at 12:27 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>For now the college is using an empirical approach to the i – Pad which has<br> generated mixed results. 1) How many families does the<br> agency have in its China Waiting Child program.<br> As the popularity of adoption is growing every day, and the<br> number of adoptive parents is increasing, the need<br> for information on the adoption process and available adoption services has grown.</p> 
+        <p>my webpage; <a href="http://www.linkedin.com/in/adoptionnetworklawcenter" rel="nofollow">Adoption Network Law Center see here</a></p> 
+       </div> </li> 
+      <li id="comment-103838"> 
+       <div class="gcomment">
+        <cite><a href="http://issaasadblog.weebly.com/" rel="external nofollow" class="url">Companies owned by Issa Asad</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103838" title="">September 2nd, 2014 at 8:03 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>While hosted applications and VoIP are inseparable ass they go collusively<br> in tender and it’s admirably termed as concern VoIP.<br> It had been suggested that the supplier. The telecommunication services in Gujarat, Himachal Pradesh and<br> Madhya Pradesh, Jammu &amp; Kashmir, Kerala, Madhya<br> telecommunications Pradesh, Jammu &amp; Kashmir,<br> Kerala, Madhya Pradesh. Mobile phones are improving by leaps and<br> bounds. If yyou care to mak equity investments from $250, 000 linews by August 30, opening and<br> closing of contacts in a cycle of improvement and natural obsolescence.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-103842"> 
+       <div class="gcomment">
+        <cite><a href="http://kateuptonscandal.tumblr.com/" rel="external nofollow" class="url">Kate Upton nude video 2014</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103842" title="">September 2nd, 2014 at 8:49 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Thank you a lot for sharing this with all of us you actually understand what you are speaking approximately!<br> Bookmarked. Please also consult with my site =). We may<br> have a hyperlink trade contract between us</p> 
+       </div> </li> 
+      <li id="comment-103869"> 
+       <div class="gcomment">
+        <cite><a href="http://ow.ly/AtumL" rel="external nofollow" class="url">Bluzy Z Nadrukiem W?Asnym</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103869" title="">September 14th, 2014 at 8:29 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p><a href="http://ow.ly/AtumL" rel="nofollow">Bluzy Z Nadrukiem W?Asnym</a><br> domain name registrations<br> ulcerative colitis<br> drivers ed<br> canon printer<br> at&amp;t cellular<br> gene juarez</p> 
+       </div> </li> 
+      <li class="alt" id="comment-103925"> 
+       <div class="gcomment">
+        <cite><a href="http://mynaughtyprofiles.com" rel="external nofollow" class="url">sexbook</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103925" title="">September 23rd, 2014 at 3:21 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Undeniably believe that which you stated. Your favorite justification seemed to be on the internet the simplest thing to be aware of.<br> I say to you, I certainly get annoyed while people consider<br> worries that they just don’t know about. You managed to hit the nail upon the top as well<br> as defined out the whole thing without having side effect , people can take a signal.<br> Will probably be back to get more. Thanks</p> 
+       </div> </li> 
+      <li id="comment-103957"> 
+       <div class="gcomment">
+        <cite><a href="http://www.mobiotekisaguelsanix.com" rel="external nofollow" class="url">beeper sound</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103957" title="">September 26th, 2014 at 10:57 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>hello!,I like your writing very so much! share we keep up a correspondence extra about your article on AOL?<br> I need a specialist on this area to resolve my problem.<br> Maybe that is you! Taking a look forward to peer you.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-103970"> 
+       <div class="gcomment">
+        <cite><a href="http://tinnitus-ringinginears.tumblr.com/" rel="external nofollow" class="url">tinnitus</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103970" title="">September 29th, 2014 at 7:41 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>The Scientific American magazine article refers readers to a<br> study published online in January in Quality of Life Research found<br> that about half of tinnitus sufferers also have mental disorders,<br> confirming the findings of previous research. We know that some drugs may affect some of the cells in the hearing system,<br> especially in people who happen to be particularly sensitive.</p> 
+        <p>The holistic therapy is based on scientific fact along with the study he completed.</p> 
+       </div> </li> 
+      <li id="comment-103977"> 
+       <div class="gcomment">
+        <cite><a href="http://lifeintherapids.com/ForumRetrieve.aspx?ForumID=317&amp;TopicID=1710892&amp;NoTemplate=False" rel="external nofollow" class="url">Max Light Review</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-103977" title="">October 1st, 2014 at 9:11 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>I savour, result in I discovered just what I used to<br> be looking for. You’ve ended my 4 day lengthy hunt!</p> 
+        <p>God Bless you man. Have a great day. Bye</p> 
+       </div> </li> 
+      <li class="alt" id="comment-104124"> 
+       <div class="gcomment">
+        <cite><a href="http://astucegameofwar.weebly.com" rel="external nofollow" class="url">astuces game of war ipad</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104124" title="">October 22nd, 2014 at 3:00 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Howdy very nice site!! Maan .. Beautiful .. Amazing ..</p> 
+        <p>I’ll bookmark your blog and tzke the feeds additionally?<br> I am satisfied too seek out a lot of helpful info here within the post, we need develop<br> mire strategies on this regard, thanks for sharing.<br> . . . . .</p> 
+       </div> </li> 
+      <li id="comment-104157"> 
+       <div class="gcomment">
+        <cite><a href="http://fondationseneve.org/index.php?option=com_phocaguestbook&amp;view=phocaguestbook&amp;id=1&amp;Itemid=57" rel="external nofollow" class="url">medicare 'solutions</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104157" title="">November 5th, 2014 at 9:14 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>I really do take into consideration each of the concepts you could have released inside your post. There’re really convincing and definitely will absolutely perform. Nevertheless, this articles are far too swift for freshies medicare ‘solutions. May well you desire stretch them a tad through next moment? Wanted publish.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-104160"> 
+       <div class="gcomment">
+        <cite><a href="https://medium.com/easy-sketch-pro-2-0-review/get-easy-sketch-pro-2-0-review-easy-sketch-pro-2-0-download-71aeb81bbeab" rel="external nofollow" class="url">medium.com</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104160" title="">November 6th, 2014 at 5:43 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Asking questions are truuly god thing iif you are not uunderstanding something completely, except this piece of writing ofers fastidious understanding yet.</p> 
+        <p>my web site released games (<a href="https://medium.com/easy-sketch-pro-2-0-review/get-easy-sketch-pro-2-0-review-easy-sketch-pro-2-0-download-71aeb81bbeab" rel="nofollow">medium.com</a>)</p> 
+       </div> </li> 
+      <li id="comment-104177"> 
+       <div class="gcomment">
+        <cite><a href="http://ta.gd/tsingydebemaraha" rel="external nofollow" class="url">tsingy de bemaraha</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104177" title="">November 10th, 2014 at 5:54 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Excellent blog you’ve got here.. It’s hard to find good quality writing like yours these<br> days. I honestly appreciate people like you! Take care!!</p> 
+        <p>My blog: <a href="http://ta.gd/tsingydebemaraha" rel="nofollow">tsingy de bemaraha</a></p> 
+       </div> </li> 
+      <li class="alt" id="comment-104455"> 
+       <div class="gcomment">
+        <cite><a href="http://www.mrmarylou.com/1-and-1-dedicated-server-review" rel="external nofollow" class="url">www.mrmarylou.com</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104455" title="">January 1st, 2015 at 6:52 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Your style is very unique in comparison to other<br> folks I’ve read stuff from. Thank you for posting<br> when you have the opportunity, Guess I’ll just bookmark this page.</p> 
+       </div> </li> 
+      <li id="comment-104506"> 
+       <div class="gcomment">
+        <cite><a href="http://getvsharefree.soup.io" rel="external nofollow" class="url">cydia problems</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104506" title="">January 27th, 2015 at 6:28 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Baseband is a part of iOS which controls your<br> connection to the carrier network. Enabling this attribute will allow you<br> to immediately answer without quitting the existing<br> page. Does somebody hide programs on an iPhone?</p> 
+       </div> </li> 
+      <li class="alt" id="comment-104531"> 
+       <div class="gcomment">
+        <cite><a href="http://savinggracereporters.com/general/newsupdate/disenfranchisement-of-over-35millionnigerian-voters-inec-has-already-rigged-2015-presidential-poll-for-the-north/" rel="external nofollow" class="url">Aleida</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104531" title="">February 9th, 2015 at 1:36 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>It’s just uncomplicated. 1st you have to obtain software which will allow you to jailbreak<br> your iPad. First, you’ve got to make guaranteed the computer you’re applying is up to day.<br> Welcome to our world, the universe of advancement.</p> 
+       </div> </li> 
+      <li id="comment-104744"> 
+       <div class="gcomment">
+        <cite><a href="https://tim82hlkyjhksr.wordpress.com/" rel="external nofollow" class="url">tim82hlkyjhksr.wordpress.com</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104744" title="">April 9th, 2015 at 10:10 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>The unlock depends upon the firmware version on your own iPhone as well as the modem firmware version. The other alternative is to hide the Cydia app entirely.<br> Back up your device to sync it, and your iTunes library.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-104755"> 
+       <div class="gcomment">
+        <cite><a href="http://www.bloggerslobby.com/profile.php?a=1192" rel="external nofollow" class="url">cydia youtube background</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104755" title="">April 11th, 2015 at 6:10 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>The alternate apps are plenty but you must<br> concentrate on your demand. After that your device will blank out and after the theme will<br> undoubtedly be enabled. Additionally, this is<br> called unlocking the phone.</p> 
+       </div> </li> 
+      <li id="comment-104777"> 
+       <div class="gcomment">
+        <cite><a href="http://kucke-li-lo.bloggplatsen.se/gilla/?url=http://slimextreme.net/" rel="external nofollow" class="url">slim extreme skincare</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104777" title="">April 19th, 2015 at 12:35 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>I know this web site presents quality dependent posts and other data, is there<br> any other web page which presents these information in quality?</p> 
+       </div> </li> 
+      <li class="alt" id="comment-104782"> 
+       <div class="gcomment">
+        <cite><a href="http://downloadapptrackr.blog.com/" rel="external nofollow" class="url">Lorna</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104782" title="">April 20th, 2015 at 9:38 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>That you do not need to worry too much about the baseband, if you’re on an official iPhone carrier.<br> It is also possible to unlock your device after jailbreak it.<br> AT&amp;ampT could be the only service provider for the telephone.</p> 
+       </div> </li> 
+      <li id="comment-104819"> 
+       <div class="gcomment">
+        <cite><a href="https://www.facebook.com/mortalkombatxhackcheats" rel="external nofollow" class="url">mortal kombat x generator</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104819" title="">April 28th, 2015 at 4:00 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Whenever a developer faces a styling problem, he can quickly turn on the<br> Hierarchy Viewer. Thumb Maze is a free Android puzzle game produced by Ecrodaemus.</p> 
+        <p>Even the military uses them to send and receive top<br> secret information.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-104820"> 
+       <div class="gcomment">
+        <cite><a href="http://orkutluv.com/facts-to-know-about-leukemia-blood-cancer/" rel="external nofollow" class="url">leukemia blood cancer</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104820" title="">April 28th, 2015 at 6:09 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Leukemia is a type of cancer that affects the blood or the bone<br> marrow. Clinical Trials are categorized into four phases as follows:.<br> This industry has become an economic and environmentally-friendly alternative<br> to unsustainable harvesting of hearts of palm, logging and conversion of the rain forest<br> to farming or ranching.</p> 
+       </div> </li> 
+      <li id="comment-104824"> 
+       <div class="gcomment">
+        <cite><a href="http://www.effaction.sk/blog/?mid=1&amp;cid=10" rel="external nofollow" class="url">CLeanse Body Pro Supplement</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104824" title="">April 28th, 2015 at 6:19 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>My relatives every time say that I am killing my time here at web, but I know I am getting knowledge every day by reading such nice articles or reviews.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-104857"> 
+       <div class="gcomment">
+        <cite><a href="http://www.ask.co.uk/" rel="external nofollow" class="url">ask</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104857" title="">May 6th, 2015 at 7:59 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>I got this site from my friend who shared with me concerning<br> this website and at the moment this time I am browsing this web site and reading very informative articles or reviews at this place.</p> 
+       </div> </li> 
+      <li id="comment-104862"> 
+       <div class="gcomment">
+        <cite><a href="http://www.streetfire.net/profile/connorlavarack2.htm" rel="external nofollow" class="url">used car dealers in austin tx</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104862" title="">May 8th, 2015 at 12:54 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Can I simply just say what a comfort to discover someone who really knows what they’re discussing on the web.<br> You certainly realize how to bring an issue to light and make it important.</p> 
+        <p>A lot more people have to look at this and understand this side<br> of the story. I was surprised you’re not more popular because you most certainly<br> possess the gift.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-104864"> 
+       <div class="gcomment">
+        <cite><a href="http://www.youtube.com/watch?v=-z7HcEu3bpw" rel="external nofollow" class="url">www.youtube.com</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104864" title="">May 8th, 2015 at 8:36 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Origin, including the apple Ugg Boots Sale wine, Bordeaux,<br> France (Bordeaux) and Burgundy (Bourgogne).<br> Perhaps the crowning moment came when she Tweeted that,<br> “People are calling this ‘brilliant self-marketing. The inexperienced young actors give it their all and are likeable believable as our unfortunate victims, so there is an element of sympathy to their dismemberments.</p> 
+       </div> </li> 
+      <li id="comment-104867"> 
+       <div class="gcomment">
+        <cite><a href="http://suadienlanh247.com/sua-dieu-hoa" rel="external nofollow" class="url">Dieu hoa</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104867" title="">May 9th, 2015 at 12:24 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Useful info. Lucky me I discovered your web site unintentionally, and I am surprised why<br> this twist of fate didn’t came about earlier! I bookmarked it.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-104872"> 
+       <div class="gcomment">
+        <cite><a href="http://onlinetshirtdesigner.info" rel="external nofollow" class="url">t shirt printing machine</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104872" title="">May 10th, 2015 at 9:35 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Aw, this was an extremely good post. Spending some time and actual effort to produce a good article… but what can I say… I put things off a lot and never manage to get nearly anything done.</p> 
+       </div> </li> 
+      <li id="comment-104881"> 
+       <div class="gcomment">
+        <cite><a href="http://semitic.com.au/events-in-ti/" rel="external nofollow" class="url">edc items</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104881" title="">May 13th, 2015 at 1:25 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>It is in point of fact a great and helpful piece of information. I am glad that you just shared<br> this helpful info with us. Please stay us informed like this.<br> Thank you for sharing.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-104892"> 
+       <div class="gcomment">
+        <cite><a href="http://56k.us/regularxcleanse33068" rel="external nofollow" class="url">regula rx cleanse</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104892" title="">May 15th, 2015 at 7:47 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Hi there to every one, the contents existing at this<br> web page are really amazing for people experience, well, keep up the good work fellows.</p> 
+       </div> </li> 
+      <li id="comment-104894"> 
+       <div class="gcomment">
+        <cite><a href="http://marina.rgfw.de/index.php?option=com_phocaguestbook&amp;view=guestbook&amp;id=1&amp;Itemid=141&amp;t=45&amp;t=17820" rel="external nofollow" class="url">moviestarplanet Money hack</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104894" title="">May 16th, 2015 at 11:59 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Once you’ve the images and music, you may need to put the two together.<br> Even so, there are certain things you must know<br> about moviestarplanet hack that can help improve your experience, most of<br> which are reviewed in this post. Such effects make 3D Games or movies more exciting and real.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-104902"> 
+       <div class="gcomment">
+        <cite><a href="http://www.iphonefixes.com/" rel="external nofollow" class="url">Cortez</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104902" title="">May 18th, 2015 at 3:27 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>This paragraph will assist the internet viewers for creating new blog or even a weblog from start to end.</p> 
+        <p>my page iphone (<a href="http://www.iphonefixes.com/" rel="nofollow">Cortez</a>)</p> 
+       </div> </li> 
+      <li id="comment-104994"> 
+       <div class="gcomment">
+        <cite><a href="http://resellrightproducts.com/" rel="external nofollow" class="url">resellrightproducts.com</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104994" title="">June 1st, 2015 at 9:55 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Amazing! Its truly amazing piece of writing, I have got much clear idea regarding from this post.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-104997"> 
+       <div class="gcomment">
+        <cite><a href="http://tshirtprintinguk.org" rel="external nofollow" class="url">cheap t shirts design</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104997" title="">June 2nd, 2015 at 2:17 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Hello to every , as I am actually eager of reading this web site’s post to be updated on a regular basis.<br> It carries good information.</p> 
+       </div> </li> 
+      <li id="comment-104999"> 
+       <div class="gcomment">
+        <cite><a href="http://cheapprintedtshirts.net" rel="external nofollow" class="url">custom screen printing</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-104999" title="">June 2nd, 2015 at 8:54 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Quality content is the crucial to interest the visitors to pay a quick<br> visit the web page, that’s what this website is<br> providing.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105000"> 
+       <div class="gcomment">
+        <cite><a href="http://thehoodieworld.com" rel="external nofollow" class="url">white hoodie</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105000" title="">June 3rd, 2015 at 12:10 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Wow, fantastic weblog format! How long have you been running a blog for?</p> 
+        <p>you make blogging glance easy. The whole look of your website is magnificent, let<br> alone the content material!</p> 
+       </div> </li> 
+      <li id="comment-105005"> 
+       <div class="gcomment">
+        <cite><a href="http://www.amazon.com/Ken-Fisher/e/B000APA1OK" rel="external nofollow" class="url">Ken Fisher on Twitter</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105005" title="">June 5th, 2015 at 2:37 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>whoah this weblog is fantastic i really like reading your articles.<br> Keep up the great work! You understand, lots of people are looking around<br> for this information, you can aid them greatly.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105008"> 
+       <div class="gcomment">
+        <cite><a href="http://chicentral.net/?p=112" rel="external nofollow" class="url">Clitramine Review</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105008" title="">June 5th, 2015 at 8:26 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>I relish, lead to I discovered just what I used to be taking a look for.<br> You have ended my four day long hunt! God Bless you man. Have a nice day.<br> Bye</p> 
+       </div> </li> 
+      <li id="comment-105012"> 
+       <div class="gcomment">
+        <cite><a href="http://www.cortalo.net/xength228416" rel="external nofollow" class="url">Xength</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105012" title="">June 6th, 2015 at 9:26 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>That is very fascinating, You’re an excessively professional blogger.<br> I have joined your rss feed and look forward to seeking<br> extra of your great post. Also, I’ve shared your web site in my<br> social networks</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105016"> 
+       <div class="gcomment">
+        <cite><a href="http://home.iewed.com/space.php?uid=2522&amp;do=blog&amp;id=3704" rel="external nofollow" class="url">????????????????</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105016" title="">June 7th, 2015 at 2:09 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>The important years in their life are 14, 22, 23, 29, 30, 40, 41 &amp; 45.</p> 
+        <p>Download a treatment and just click for its run and Windows Cannot Find Fix<br> Wizard will do everything instead of you. Do you want<br> to add spice to your life and make it more interesting.</p> 
+       </div> </li> 
+      <li id="comment-105017"> 
+       <div class="gcomment">
+        <cite><a href="http://shrinkurl.ru/eczemaserum7430" rel="external nofollow" class="url">Eczema serum</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105017" title="">June 7th, 2015 at 6:20 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Excellent web site. Plenty of helpful information here. I’m sending it<br> to some buddies ans additionally sharing in delicious.<br> And naturally, thank you for your effort!</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105018"> 
+       <div class="gcomment">
+        <cite><a href="https://www.facebook.com/pages/Earn-to-Die-2-cheat-tool/1603816923191099" rel="external nofollow" class="url">www.facebook.com</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105018" title="">June 7th, 2015 at 6:24 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>AP Dopout According to Stanley-Becker, “The problem with the AP program is that we don’t have time to really learn U. Get back inside after its done to go back to the Citadel and receive their thanks and a mission complete. In the main area with vehicles there are a number of groups of two.</p> 
+       </div> </li> 
+      <li id="comment-105020"> 
+       <div class="gcomment">
+        <cite><a href="http://www.manulostintheweb.com/2007/10/et-bis-repetita/" rel="external nofollow" class="url">refinance mortgage online</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105020" title="">June 8th, 2015 at 2:03 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Hi, I desire to subscribe for this blog to obtain most up-to-date updates, thus where can i<br> do it please help out.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105047"> 
+       <div class="gcomment">
+        <cite><a href="http://youticle.com/article.php?id=52794" rel="external nofollow" class="url">dodge brothers cars</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105047" title="">June 10th, 2015 at 2:50 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Blunder 4: Thinking that Buying the Car is the<br> End of the Purchase. Animals have been pulling carts and chariots since at least<br> 3500 BC. Volkswagen is currently in the middle of a quest to offer diesel technology as an option across all of its many model lines, thus leaving<br> the Routan out would do the model some disservice.</p> 
+       </div> </li> 
+      <li id="comment-105048"> 
+       <div class="gcomment">
+        <cite><a href="http://redhoodies.net" rel="external nofollow" class="url">Make A Tshirt Design</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105048" title="">June 10th, 2015 at 4:56 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>With havin so much written content do you ever run into any problems of plagorism<br> or copyright violation? My blog has a lot of exclusive content<br> I’ve either authored myself or outsourced but it appears a lot of it<br> is popping it up all over the web without my<br> authorization. Do you know any methods to help stop<br> content from being ripped off? I’d truly appreciate<br> it.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105050"> 
+       <div class="gcomment">
+        <cite><a href="http://indulgy.com/post/Nfv4Opwm03" rel="external nofollow" class="url">Guillermo</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105050" title="">June 10th, 2015 at 6:15 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>You’re so cool! I do not suppose I’ve read a single thing like this before.<br> So wonderful to find another person with some unique thoughts on this subject matter.<br> Seriously.. many thanks for starting this up. This site is something that is needed on the web, someone with a little originality!</p> 
+       </div> </li> 
+      <li id="comment-105059"> 
+       <div class="gcomment">
+        <cite><a href="http://www.amazon.com/gp/product/B00KJUYZ0C" rel="external nofollow" class="url">dog brush comb</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105059" title="">June 12th, 2015 at 1:51 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>I have fun with, cause I discovered just what I<br> used to be having a look for. You have ended my 4 day long hunt!<br> God Bless you man. Have a nice day. Bye</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105067"> 
+       <div class="gcomment">
+        <cite><a href="http://www.natural-health-online.org/fish-oil/" rel="external nofollow" class="url">Health</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105067" title="">June 15th, 2015 at 4:45 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>I don’t even understand how I finished up here, but I<br> assumed this submit was once great. I do not realize who you<br> are however certainly you’re going to a well-known<br> blogger if you happen to aren’t already. Cheers!</p> 
+       </div> </li> 
+      <li id="comment-105078"> 
+       <div class="gcomment">
+        <cite><a href="http://www.old.poltuba.com/profile.php?u=RonTrost359" rel="external nofollow" class="url">Acai Diet Plus</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105078" title="">June 16th, 2015 at 8:18 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Very good article. I absolutely love this website.</p> 
+        <p>Keep writing!</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105082"> 
+       <div class="gcomment">
+        <cite><a href="http://www.curriki.org/xwiki/bin/view/XWiki/tachor91" rel="external nofollow" class="url">Cheryle</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105082" title="">June 17th, 2015 at 9:32 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>About The – Author: Harris – Noah<br> is an expert author on pet products related topics and currently workingfor.<br> In other words, structures would be designed or modified to collect the natural rainfall that falls onto the<br> property, purify it and then store it in cisterns until the<br> water is needed by the occupants of the building. Experience the difference an experienced, reliable home theater setup<br> company makes.</p> 
+       </div> </li> 
+      <li id="comment-105092"> 
+       <div class="gcomment">
+        <cite><a href="http://ibuildapp.com/members/1302408/" rel="external nofollow" class="url">Florian</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105092" title="">June 20th, 2015 at 8:06 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>When getting rid of drain clogs, avoid using<br> chemical cleaners. But make sure that you consider the style your home is built with.<br> It is not known what prompted officials to drain that specific septic tank looking for Noah’s body.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105094"> 
+       <div class="gcomment">
+        <cite><a href="http://pluscheats.com/" rel="external nofollow" class="url">PlusCheats.com</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105094" title="">June 20th, 2015 at 6:42 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>At this time I am ready to do myy breakfast, once having my breakfast<br> oming again to read further news.</p> 
+       </div> </li> 
+      <li id="comment-105102"> 
+       <div class="gcomment">
+        <cite><a href="http://hocketoan-censtaf.blogspot.com/2015/06/hoc-vien-cac-lop-thue-cua-censtaf.html" rel="external nofollow" class="url">hoc vien cac lop thue cua censtaf</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105102" title="">June 22nd, 2015 at 12:49 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>A fascinating discussion is definitely worth comment. I think that you ought to write more about<br> this issue, it may not be a taboo subject but generally people don’t speak about such subjects.</p> 
+        <p>To the next! All the best!!</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105104"> 
+       <div class="gcomment">
+        <cite><a href="http://luennemann.org/index.php?mod=users&amp;action=view&amp;id=209896" rel="external nofollow" class="url">aimee serum</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105104" title="">June 23rd, 2015 at 1:03 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>First of all I want to say fantastic blog! I had a quick question which I’d like to ask if you don’t mind.<br> I was curious to know how you center yourself and clear your<br> mind before writing. I have had a difficult time<br> clearing my thoughts in getting my thoughts out there.<br> I truly do take pleasure in writing but it just seems like the first 10 to 15 minutes are usually wasted just trying to figure out how to begin. Any recommendations or<br> hints? Many thanks!</p> 
+       </div> </li> 
+      <li id="comment-105105"> 
+       <div class="gcomment">
+        <cite><a href="http://Www.Sunfrogshirts.com/CatK/?9983" rel="external nofollow" class="url">t shirt company</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105105" title="">June 23rd, 2015 at 10:18 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Hi, I would like to subscribe for this web site to get most recent updates,<br> thus where can i do it please help out.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105116"> 
+       <div class="gcomment">
+        <cite><a href="http://Www.metal-archives.com/users/MahukL382" rel="external nofollow" class="url">Www.metal-archives.com</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105116" title="">June 23rd, 2015 at 8:55 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>During this time they gather all necessary information and make<br> certain choices like neighborhood to live, type of house to look for, and many more.<br> With time and passage, our taste and style differs.<br> Sorry, but this is one of those things that most people won.</p> 
+       </div> </li> 
+      <li id="comment-105120"> 
+       <div class="gcomment">
+        <cite><a href="https://fingerjet.bandcamp.com/track/provider-of-banking-facilities-for-businesses" rel="external nofollow" class="url">Lovie</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105120" title="">June 27th, 2015 at 5:16 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>I was able to find good info from your blog articles.</p> 
+        <p>Feel free to surf to my web blog :: Cyprus Company<br> Formation (<a href="https://fingerjet.bandcamp.com/track/provider-of-banking-facilities-for-businesses" rel="nofollow">Lovie</a>)</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105121"> 
+       <div class="gcomment">
+        <cite><a href="http://nebankovni-pujcky-online.com/" rel="external nofollow" class="url">P?j?ky do 3500</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105121" title="">June 27th, 2015 at 6:34 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Hi, i feel that i noticed you visited my website so i got here to<br> go back the choose?.I’m attempting to find things to enhance my website!I guess its ok to<br> make use of some of your ideas!!</p> 
+       </div> </li> 
+      <li id="comment-105122"> 
+       <div class="gcomment">
+        <cite><a href="http://laisladelosjuegos.com/" rel="external nofollow" class="url">Beaute FX BB Serum</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105122" title="">June 27th, 2015 at 10:46 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Just desire to say your article is as astounding.<br> The clarity for your submit is just nice and that i can assume you are a professional on this subject.<br> Fine together with your permission allow me to clutch your feed to stay up to date with coming near<br> near post. Thank you a million and please continue the gratifying<br> work.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105137"> 
+       <div class="gcomment">
+        <cite><a href="http://adv-stroy.ru/tools.php?event=profile&amp;pname=ubelip" rel="external nofollow" class="url">Angelina</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105137" title="">July 6th, 2015 at 1:20 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Here at Createch we have made a variety of supplements, several of which are intended to<br> do an exact job with your body. You can even check out the customer reviews, and start availing more information, about<br> those products. To attain this level in the blood, most people must supplement with an additional 4000 to 5000 IU of vitamin D3.</p> 
+       </div> </li> 
+      <li id="comment-105153"> 
+       <div class="gcomment">
+        <cite><a href="http://chuyensuachua.net/lap-dieu-hoa" rel="external nofollow" class="url">l?p ?i?u hòa</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105153" title="">July 10th, 2015 at 11:44 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Howdy, You’ve got executed a wonderful job l?p ?i?u hòa. I’ll definitely bing this plus in my own look at suggest for you to my girlfriends. More than likely they shall be taken advantage of this excellent website.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105156"> 
+       <div class="gcomment">
+        <cite><a href="http://tiffoliw.bloggagratis.setiffoliw.bloggagratis.se/gilla/?url=http://dermaessenceskin.com/" rel="external nofollow" class="url">Derma Essence Serum</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105156" title="">July 12th, 2015 at 4:14 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>I think the admin of this web page is actually working hard in support<br> of his web site, as here every information is quality based data.</p> 
+       </div> </li> 
+      <li id="comment-105182"> 
+       <div class="gcomment">
+        <cite><a href="http://url.bz/lalumierescream597606" rel="external nofollow" class="url">La Lumieres Serum</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105182" title="">July 18th, 2015 at 12:08 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>If you would like to increase your familiarity just keep visiting<br> this web page and be updated with the latest gossip posted here.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105183"> 
+       <div class="gcomment">
+        <cite><a href="http://forum.z88z.ru/profile.php?id=50957" rel="external nofollow" class="url">nuplenish eye review</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105183" title="">July 18th, 2015 at 10:27 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Thank you for the good writeup. It if truth be told used to be a leisure account it.<br> Glance advanced to more introduced agreeable from you! However,<br> how could we keep up a correspondence?</p> 
+       </div> </li> 
+      <li id="comment-105191"> 
+       <div class="gcomment">
+        <cite><a href="http://reiskirchen-niederwetz.de/index.php?option=com_phocaguestbook&amp;view=phocaguestbook&amp;id=1&amp;Itemid" rel="external nofollow" class="url">reiskirchen-niederwetz.de</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105191" title="">July 21st, 2015 at 6:54 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>I’ve got 1 scam from Lisa Temuana and a Mathew Cole.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105192"> 
+       <div class="gcomment">
+        <cite><a href="http://gamerzhackzone.com/warship-battle-3d-world-war-ii-hack-tool" rel="external nofollow" class="url">heavenstrike rivals iphone hack</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105192" title="">July 21st, 2015 at 12:28 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>I’m impressed, I must say. Really hardly ever do I encounter a weblog that<br> both educative and entertaining, and let me let you know, you’ve got hit the nail on the head.<br> Your concept is outstanding; the problem is one thing that not enough individuals are talking<br> intelligently about. I am very joyful that I stumbled across this in my search<br> for one thing referring to this.</p> 
+       </div> </li> 
+      <li id="comment-105195"> 
+       <div class="gcomment">
+        <cite><a href="https://getsatisfaction.com/people/yhjuh16" rel="external nofollow" class="url">getsatisfaction.com</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105195" title="">July 22nd, 2015 at 11:55 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>This is how quite a few website owners make substantial 6 and 7 figure incomes each year.<br> If these eight steps seem overwhelming, welcome to the club.<br> Predicting i – Phone 6: Size, features and release date.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105208"> 
+       <div class="gcomment">
+        <cite><a href="https://kdp.amazon.com/community/profile.jspa?userID=749808" rel="external nofollow" class="url">bik</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105208" title="">July 27th, 2015 at 2:54 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Basil is good for hair strength as well, application of basil leaves helps you improve hair strength.</p> 
+        <p>You will also find a free piano sheet music that will help you learn better.<br> If you want to entertain your boss and visitors then you must have quality and durable home office furniture.</p> 
+       </div> </li> 
+      <li id="comment-105209"> 
+       <div class="gcomment">
+        <cite><a href="http://scarvesmore.com/cgi-sys/defaultwebpage.cgi?" rel="external nofollow" class="url">Mellisa</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105209" title="">July 27th, 2015 at 10:45 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>This article will help the internet users for setting up<br> new blog or even a weblog from start to end.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105211"> 
+       <div class="gcomment">
+        <cite><a href="http://fresh.signupdate.co.uk/index.php?searchword=Search%20...&amp;searchphrase=all&amp;Itemid=9999&amp;option=com_search" rel="external nofollow" class="url">fresh.signupdate.co.uk</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105211" title="">July 28th, 2015 at 2:53 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Greetings I am so excited I found your web site, I really found you by accident, while I was searching on Yahoo for something<br> else, Regardless I am here now and would just like to say thanks a lot for a incredible post and a all round exciting blog (I also love the<br> theme/design), I don’t have time to read through<br> it all at the moment but I have book-marked it and also included your RSS feeds, so<br> when I have time I will be back to read more, Please do keep up the superb job.</p> 
+       </div> </li> 
+      <li id="comment-105215"> 
+       <div class="gcomment">
+        <cite><a href="http://csowo.pl/member.php?action=profile&amp;uid=19123" rel="external nofollow" class="url">Wilhelmina</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105215" title="">July 31st, 2015 at 1:27 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>This is how quite a few website owners make substantial 6 and 7 figure incomes each year.<br> Not only do you want lots of people to visit your website but<br> you also want your visitors to stay on your site and see if the<br> deal is worthwhile by simply checking out your site. Well, you may have to consider a lot of things before<br> you even plan to launch your website.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105226"> 
+       <div class="gcomment">
+        <cite><a href="http://www.keyingredient.com/members/1379932003/" rel="external nofollow" class="url">dzia?ki budowlane</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105226" title="">August 5th, 2015 at 4:39 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>” Industry information shows that from 2000 to the first half of 2006, China’s appliance market has maintained rapid development momentum, with 50% -70% annually over the market growth rate, market capacity jumped from 100 million to In 2006 nearly 60 million units. If he carefully tells you a concept is folly, or openly asks you questions to have a much better comprehension of your expections, then he’s possibly an excellent service provider. Check that your credit is good and that you have the money you need.</p> 
+       </div> </li> 
+      <li id="comment-105232"> 
+       <div class="gcomment">
+        <cite><a href="http://www.iqcomp.ru/forum/index.php?PAGE_NAME=profile_view&amp;UID=36670" rel="external nofollow" class="url">???????????</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105232" title="">August 14th, 2015 at 5:26 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Why people still make use of to read news papers when in this technological globe all is available on web?</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105281"> 
+       <div class="gcomment">
+        <cite><a href="https://www.wta.org/@@backpacks/scrnm-SubateOO" rel="external nofollow" class="url">Bik Br</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105281" title="">September 25th, 2015 at 1:41 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>” Industry information shows that from 2000 to the first half of 2006, China’s appliance market has maintained rapid development momentum, with 50% -70% annually over the market growth rate, market capacity jumped from 100 million to In 2006 nearly 60 million units. With time and passage, our taste and style differs. It can be due to aging, stress, mental trauma, heredity, malnutrition, harsh hair handling, or hormonal imbalance.</p> 
+       </div> </li> 
+      <li id="comment-105291"> 
+       <div class="gcomment">
+        <cite><a href="http://filter.centralusd.k12.ca.us/login" rel="external nofollow" class="url">???????</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105291" title="">October 9th, 2015 at 2:40 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>‘ Flores also related details of an interview he conducted<br> with Arias. This could have been something from a BDSM sex film.<br> The murder trial for Jodi Arias is scheduled to resume on Tuesday, January 8.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105409"> 
+       <div class="gcomment">
+        <cite><a href="http://www.alkasingh.com/professional-companions/winter-skin-how-to-defeat-it_i11694" rel="external nofollow" class="url">Chloe Jolie Serum</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105409" title="">December 26th, 2015 at 4:11 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Good way of describing, and pleasant article to obtain information about my presentation topic, which i am going<br> to present in academy.</p> 
+       </div> </li> 
+      <li id="comment-105419"> 
+       <div class="gcomment">
+        <cite><a href="http://Dealers.nssfmarketplace.com/link.php?url=http://glycemate.org" rel="external nofollow" class="url">Glycemate scam</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105419" title="">January 5th, 2016 at 7:49 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Hello terrific website! Does running a blog like this require a massive amount work?</p> 
+        <p>I have absolutely no expertise in programming however I<br> was hoping to start my own blog in the near<br> future. Anyway, if you have any recommendations or techniques<br> for new blog owners please share. I know this is off subject nevertheless<br> I just wanted tto ask. Thanks a lot!</p> 
+        <p>my weblog <a href="http://Dealers.nssfmarketplace.com/link.php?url=http://glycemate.org" rel="nofollow">Glycemate scam</a></p> 
+       </div> </li> 
+      <li class="alt" id="comment-105435"> 
+       <div class="gcomment">
+        <cite><a href="http://www.taksms.com/member.php?action=profile&amp;uid=82181" rel="external nofollow" class="url">Gidget</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105435" title="">January 17th, 2016 at 7:49 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>For most businesses, the way to produce high returns is to<br> concentrate on making some intellectual capital that can only be<br> used by that 1 company. Copyright is the correct to control copy and industrial<br> exploitation of your function. Once this time period expires,<br> the function then enters the public area and may be used freely by anybody without permission.</p> 
+        <p>My website <a href="http://www.taksms.com/member.php?action=profile&amp;uid=82181" rel="nofollow">Gidget</a></p> 
+       </div> </li> 
+      <li id="comment-105437"> 
+       <div class="gcomment">
+        <cite><a href="http://Flygmyran.Bloggplatsen.se/gilla/?url=http://mss.rane.ru/go.php?url=http://revitacleanseadvanced.reviews" rel="external nofollow" class="url">revita cleanse Advanced Nutrients</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105437" title="">January 18th, 2016 at 11:56 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Awesome tһings here. I am very Һappy to<br> ѕᥱe yߋսг роѕt.</p> 
+        <p>Ƭhank үоս ѕⲟ mucɦ and I’m Һɑᴠіng ɑ lⲟօк fοгwɑгd tο tоuch үοu.<br> Ꮤіⅼⅼ үⲟᥙ қііndlʏ ԁгορ me a<br> e-mɑіⅼ?</p> 
+        <p>mү ƅⅼog <a href="http://Flygmyran.Bloggplatsen.se/gilla/?url=http://mss.rane.ru/go.php?url=http://revitacleanseadvanced.reviews" rel="nofollow">revita cleanse Advanced Nutrients</a></p> 
+       </div> </li> 
+      <li class="alt" id="comment-105442"> 
+       <div class="gcomment">
+        <cite><a href="http://ilovebolly.com/flash_player.php?songurl=http://Blog.brides.Com.cn/link.php?url=http://ultimatemuscles.net/" rel="external nofollow" class="url">beverly ultimate muscle protein free shipping</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105442" title="">January 20th, 2016 at 7:24 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Тɦiѕ іs геɑⅼlү іntегᥱstіng, Үоᥙ aгe a ᴠегү<br> ѕкіlled bloɡgег.<br> I haνᥱ jоineɗ үоսr гsѕ fееd аnd ⅼօоқ fοгԝɑгԁ tο ѕeeқіng mоrе ⲟf yօսг gгеat ρօst.<br> Аlsօ, Ι’ѵᥱ sɦагеⅾ үοսг ѕіtее іn mү ѕοcіɑl netաߋгкѕ!</p> 
+        <p>Vіѕit mү ѡеb Ьⅼоɡ <a href="http://ilovebolly.com/flash_player.php?songurl=http://Blog.brides.Com.cn/link.php?url=http://ultimatemuscles.net/" rel="nofollow">beverly ultimate muscle protein free shipping</a></p> 
+       </div> </li> 
+      <li id="comment-105444"> 
+       <div class="gcomment">
+        <cite><a href="http://www.sunfrogshirts.com/Betsyhh/?9983" rel="external nofollow" class="url">custom tee shirt</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105444" title="">January 22nd, 2016 at 2:18 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>I don’t even know how I stopped up right here,<br> however I thought this publish was once good. I don’t recognise who you are however certainly you’re<br> going to a famous blogger for those who are not already. Cheers!</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105445"> 
+       <div class="gcomment">
+        <cite><a href="http://Www.uholecku.cz/2013/12/10/comment-test/" rel="external nofollow" class="url">x ripped and t complex Skin</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105445" title="">January 23rd, 2016 at 3:41 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>І’m no ⅼⲟnger surе the ρⅼасе үоu’гᥱ gеttіng<br> уоᥙг іnfогmatіоn, hοաеνᥱг goߋɗ tορіс.</p> 
+        <p>ӏ mսѕt ѕреnd ѕоmе tіmᥱ ⅼeɑгning muсҺ mогᥱ ог fіgսгіng օut mоrе.<br> ƬҺаnkѕ fоr fаntɑѕtіc infߋ Ⅰ աаѕ ѕеarchіng fог tɦіѕ іnfօгmatіοn fοг my mіѕѕіοn.</p> 
+        <p>Αⅼѕօ νіѕіt my һоmеρaցе;<br> <a href="http://Www.uholecku.cz/2013/12/10/comment-test/" rel="nofollow">x ripped and t complex Skin</a></p> 
+       </div> </li> 
+      <li id="comment-105449"> 
+       <div class="gcomment">
+        <cite><a href="http://www.kesuntrading.en.alibaba.com" rel="external nofollow" class="url">fish lure</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105449" title="">January 24th, 2016 at 4:55 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Shop freshwater &amp; saltwater fishing lures, soft baits, hard baits, buzzbaits, lure<br> kits game fishing lures &amp; more at kmucutie</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105455"> 
+       <div class="gcomment">
+        <cite><a href="http://App.Chinamining.com.cn/bbs/uchome/link.php?url=http://ketoneslimxt.net" rel="external nofollow" class="url">Erin</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105455" title="">February 1st, 2016 at 9:38 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Hello tto all, it’s really a fastidios for me to pay a quick visit this website, it contains useful Information.</p> 
+        <p>Here is my bog post <a href="http://App.Chinamining.com.cn/bbs/uchome/link.php?url=http://ketoneslimxt.net" rel="nofollow">Erin</a></p> 
+       </div> </li> 
+      <li id="comment-105459"> 
+       <div class="gcomment">
+        <cite><a href="http://www.techpeper.com/innerspace-cm13-cm12-theme-v1-25-apk/" rel="external nofollow" class="url">Inner Space cm</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105459" title="">February 6th, 2016 at 11:17 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Wow, superb weblog format! How lengthy have you<br> ever been blogging for? you made running a blog glance easy.<br> The whole glance of your website is great, let alone the content material!</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105474"> 
+       <div class="gcomment">
+        <cite><a href="http://Www.Anobii.com/groups/0103271f3c4b135dc8/" rel="external nofollow" class="url">weight lifting</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105474" title="">February 17th, 2016 at 2:36 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>you’re in reality a good webmaster. The site loading pace is amazing.<br> It kind of feels that you are doing any distinctive trick.<br> Moreover, The contents are masterpiece. you have done<br> a great job on this subject!</p> 
+       </div> </li> 
+      <li id="comment-105478"> 
+       <div class="gcomment">
+        <cite><a href="http://bit.ly/1Lsqz6l+" rel="external nofollow" class="url">suitable diet</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105478" title="">February 19th, 2016 at 10:04 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>You are so interesting! I don’t think I’ve truly<br> read anything like that before. So great to find another person with some unique thoughts on this<br> topic. Really.. thanks for starting this up.<br> This web site is something that is needed on the web, someone with a little originality!</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105485"> 
+       <div class="gcomment">
+        <cite><a href="http://www.brownpapertickets.com/profile/1496595" rel="external nofollow" class="url">youtube view increaser</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105485" title="">February 25th, 2016 at 1:51 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Pimp My Views basically offers website visitors buy<br> a precise numbers of views they needed. They provide pricing plans<br> for this one. You can even customize it, depends in relation to your needs.</p> 
+        <p>Exactly what great about their service simply because are offering a trial views, you actually<br> are not yet decided what plans would likely choose. This low cost, but went right get high quality, real visitors from the video.<br> To provide a no harm in the actual. We take risk often. If you still<br> do canrrrt you create experience in <a href="http://www.brownpapertickets.com/profile/1496595" rel="nofollow">youtube view increaser</a>,<br> well this is the actual best time to consider action and try it.</p> 
+       </div> </li> 
+      <li id="comment-105492"> 
+       <div class="gcomment">
+        <cite><a href="https://eliasenmcconnell0petersenaguirre316.shutterfly.com/22" rel="external nofollow" class="url">jennifer aniston skin-care line</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105492" title="">February 28th, 2016 at 9:53 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>I enjoy what you guys are up too. This kind of clever work and reporting!<br> Keep up the fantastic works guys I’ve you guys to our blogroll.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105517"> 
+       <div class="gcomment">
+        <cite><a href="http://self-inspiration.com" rel="external nofollow" class="url">self-inspiration</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105517" title="">March 8th, 2016 at 8:05 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Thanks for every other magnificent article.<br> The place else could anybody get that type of info in such an ideal approach of<br> writing? I have a presentation next week, and I am at the look for such info.</p> 
+       </div> </li> 
+      <li id="comment-105525"> 
+       <div class="gcomment">
+        <cite><a href="https://penzu.com/p/c374d288" rel="external nofollow" class="url">grosfillex chaise</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105525" title="">March 12th, 2016 at 2:53 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Contract Furnishings International are the specialists in Pool Furnishings , Patio<br> Furnishings , Wicker and Rattan , and Outside Grosfillex Furnishings for Commercial Purposes.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105537"> 
+       <div class="gcomment">
+        <cite><a href="http://Nitrocleanse.org/" rel="external nofollow" class="url">Nitrocleanse.Org</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105537" title="">March 20th, 2016 at 9:34 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Thank you for any other great article. The place else could amyone get<br> thwt kind oof info in such a perfecdt approach of writing?<br> I’ve a presentation subsequent week, and I am on the search for such info.</p> 
+        <p>Feell free to visit my web page; <a href="http://Nitrocleanse.org/" rel="nofollow">Nitrocleanse.Org</a></p> 
+       </div> </li> 
+      <li id="comment-105548"> 
+       <div class="gcomment">
+        <cite><a href="http://http://outdoor-resin-furniture.com" rel="external nofollow" class="url">grosfillex outdoor furniture uk</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105548" title="">March 25th, 2016 at 8:14 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>It won’t really sound correct to your consumer<br> so that you can own furnishings which will seem good; but unpleasant.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105554"> 
+       <div class="gcomment">
+        <cite><a href="https://www.facebook.com/yachtsinvest" rel="external nofollow" class="url">Yacht Charters French Riviera</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105554" title="">April 1st, 2016 at 8:01 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>You are in control of how the food is made, what goes into it, and most importantly, how much is served.<br> You can find the mens underwear that fits your liking and character.<br> Follow the Zombie Cafe Cooking Guide which can help you easily<br> cook in this i – Phone game.</p> 
+       </div> </li> 
+      <li id="comment-105591"> 
+       <div class="gcomment">
+        <cite><a href="http://n-0.co/Beef_Diane_Slow_Cooker_Recipe_1491459" rel="external nofollow" class="url">Recipe For Gluten Free Beef And Noodles</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105591" title="">May 1st, 2016 at 6:49 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>” there is a good bit of that when it comes to Cajun cooking. It will take time for the food to be ready and you, the cook, must learn to welcome this about Cajun food. Apart&nbsp;from&nbsp;cooking,&nbsp;people&nbsp;use&nbsp;Olive&nbsp;oil&nbsp;in&nbsp;baking&nbsp;&nbsp;as&nbsp;well.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105722"> 
+       <div class="gcomment">
+        <cite><a href="http://porno-rolik.ru/video-molodyh/26328-Porno-staraya-shlyuha-blyad" rel="external nofollow" class="url">Williams</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105722" title="">July 25th, 2016 at 5:20 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>???????? ?????; <a href="http://porno-rolik.ru/video-molodyh/26328-Porno-staraya-shlyuha-blyad" rel="nofollow">Williams</a>,</p> 
+       </div> </li> 
+      <li id="comment-105798"> 
+       <div class="gcomment">
+        <cite><a href="http://Nitroslims.com/" rel="external nofollow" class="url">Nitro slimak</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105798" title="">August 24th, 2016 at 3:14 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Hey there! Do you kmow iif they make any plugins to ssist with SEO?<br> I’m trying to get my bloig to rank for some targeted keywords but I’m not seeing vsry good results.<br> If you know of any please share. Many thanks!</p> 
+        <p>Also visit my siite – <a href="http://nitroslims.com/" rel="nofollow">nitro slim Shady 180</a></p> 
+       </div> </li> 
+      <li class="alt" id="comment-105819"> 
+       <div class="gcomment">
+        <cite><a href="http://www.e-kupongkode.com/" rel="external nofollow" class="url">pierre robert salg</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105819" title="">September 6th, 2016 at 2:23 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>What a data of un-ambiguity and preserveness of<br> valuable knowledge about unpredicted emotions.</p> 
+       </div> </li> 
+      <li id="comment-105845"> 
+       <div class="gcomment">
+        <cite><a href="http://www.calld.de/" rel="external nofollow" class="url">Telefonbuch Oberhausen</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105845" title="">September 20th, 2016 at 11:43 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Thank you for any other informative blog. The place else may just<br> I get that kind of information written in such a perfect approach?<br> I have a mission that I am simply now running on, and I have been on the look out for such info.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105853"> 
+       <div class="gcomment">
+        <cite><a href="http://Its" rel="external nofollow" class="url">such as you read my thoughts!</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105853" title="">September 22nd, 2016 at 4:42 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Just wanted to say keep up the good work!</p> 
+       </div> </li> 
+      <li id="comment-105854"> 
+       <div class="gcomment">
+        <cite><a href="http://www.erebajas.info/" rel="external nofollow" class="url">tiendas almacenes paris</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105854" title="">September 23rd, 2016 at 12:06 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Very good article. I definitely love this website. Stick with it!</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105876"> 
+       <div class="gcomment">
+        <cite><a href="http://porno-file.ru/gruppovuha/20851-kimber-james-and-chris.php" rel="external nofollow" class="url">?????</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105876" title="">October 11th, 2016 at 4:34 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>???????? ????? <a href="http://porno-file.ru/gruppovuha/20851-kimber-james-and-chris.php" rel="nofollow">?????</a> ?????</p> 
+       </div> </li> 
+      <li id="comment-105921"> 
+       <div class="gcomment">
+        <cite><a href="http://lysenko-solicitors.com/ranklist/index.php?a=stats&amp;u=doreennord27" rel="external nofollow" class="url">???????? ?????? ????? ?????</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105921" title="">November 28th, 2016 at 2:27 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>porno-file.ru <a href="http://lysenko-solicitors.com/ranklist/index.php?a=stats&amp;u=doreennord27" rel="nofollow">???????? ?????? ????? ?????</a><br> ???????? ????? ?????? ?? ????????</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105923"> 
+       <div class="gcomment">
+        <cite>Peter Berger</cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105923" title="">November 28th, 2016 at 9:48 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Now you can create your personal mobile app to share it with your friends and colleagues! Use <a href="http://appyresto.com" rel="nofollow">http://appyresto.com</a> to convert your creative thoughts, concepts and ideas into digital code without actual knowledge of programming/coding, just average computer user skills.</p> 
+       </div> </li> 
+      <li id="comment-105939"> 
+       <div class="gcomment">
+        <cite><a href="http://theplaypen.biz/video-mnogo-spermi" rel="external nofollow" class="url">???????? ????? ????? ??????</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105939" title="">December 7th, 2016 at 9:07 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>????? ???? <a href="http://theplaypen.biz/video-mnogo-spermi" rel="nofollow">???????? ????? ????? ??????</a> ???????? ????? ?????? ???????</p> 
+       </div> </li> 
+      <li class="alt" id="comment-105940"> 
+       <div class="gcomment">
+        <cite><a href="http://videomonde.com/groups/best-mens-cologne-products-whats-needed/" rel="external nofollow" class="url">top cologne for men</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105940" title="">December 9th, 2016 at 7:47 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Le Male by Jean Paul Gaultier – Le Male is a classic and has been one<br> of the most popular men’s fragrances. Once that’s done, seal the jar tightly and set it aside.<br> If the man smells great, they go straight up about that fact.</p> 
+       </div> </li> 
+      <li id="comment-105944"> 
+       <div class="gcomment">
+        <cite><a href="http://amtech.co.th/index.php/improve-your-golfing-technique-with-this-suggestions/" rel="external nofollow" class="url">square to square golf swing technique</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105944" title="">December 9th, 2016 at 10:11 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>I have been exploring for a little bit for any high-quality articles or blog posts in this kind of space .<br> Exploring in Yahopo I finally stumbled upon this web site.<br> Studying this info So i’m happy to convey that I’ve a vry<br> excellent uncanny feeling I fond out just wat I needed.</p> 
+        <p>I such a lot surely will make certain to don’t omit this wweb site and provides<br> it a glance on a constant basis.</p> 
+        <p>my pae … <a href="http://amtech.co.th/index.php/improve-your-golfing-technique-with-this-suggestions/" rel="nofollow">square to square golf swing technique</a></p> 
+       </div> </li> 
+      <li class="alt" id="comment-105949"> 
+       <div class="gcomment">
+        <cite><a href="https://branded.me/tsmagency" rel="external nofollow" class="url">branded.me</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-105949" title="">December 12th, 2016 at 2:33 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>What’s up, this weekend is pleasant designed for me,<br> for the reason that this moment i am reading this impressive<br> informative article here at my residence.</p> 
+       </div> </li> 
+      <li id="comment-106015"> 
+       <div class="gcomment">
+        <cite><a href="http://h-panther.com/" rel="external nofollow" class="url">????</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-106015" title="">January 18th, 2017 at 12:38 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Truly no matter if someone doesn’t be aware of then its up<br> to other visitors that they will help, so here it happens.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-106046"> 
+       <div class="gcomment">
+        <cite><a href="http://norfloxacin.paka.info" rel="external nofollow" class="url">norfloxacin to purchase without script</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-106046" title="">February 24th, 2017 at 2:47 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Usually I do not read article on blogs, but I would like to say<br> that this write-up very forced me to try and do it! Your writing style has been surprised me.<br> Thank you, very great post.</p> 
+       </div> </li> 
+      <li id="comment-106047"> 
+       <div class="gcomment">
+        <cite><a href="http://robotenergy.com/es/" rel="external nofollow" class="url">Joaquin Chamber</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-106047" title="">February 25th, 2017 at 8:07 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Great article! <a href="http://robotenergy.com/en/" rel="nofollow"></a></p> 
+       </div> </li> 
+      <li class="alt" id="comment-106048"> 
+       <div class="gcomment">
+        <cite><a href="http://robotenergy.com/es/" rel="external nofollow" class="url">Elene Livengood</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-106048" title="">February 25th, 2017 at 8:07 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>I read this while i was drinking a <a href="http://robotenergy.com/" rel="nofollow">Robot energy</a>.</p> 
+       </div> </li> 
+      <li id="comment-106056"> 
+       <div class="gcomment">
+        <cite><a href="http://robotenergy.com/es/" rel="external nofollow" class="url">Sanford Himmel</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-106056" title="">February 25th, 2017 at 8:38 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p><a href="http://robotenergy.com/" rel="nofollow">Robot energy drink</a>.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-106057"> 
+       <div class="gcomment">
+        <cite><a href="http://robotenergy.com/en/" rel="external nofollow" class="url">Angelia Dellasciucca</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-106057" title="">February 25th, 2017 at 8:39 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p><a href="http://robotenergy.com/en/" rel="nofollow">Robot energy</a></p> 
+       </div> </li> 
+      <li id="comment-106063"> 
+       <div class="gcomment">
+        <cite>Helena</cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-106063" title="">March 1st, 2017 at 2:10 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Hello</p> 
+        <p>My name is Helena. I am advertising manager of <a href="http://appyresto.com/" rel="nofollow">http://appyresto.com/</a>. I want to ask you if it is possible to place an article about app builder with permanent link to our website on your web resource. </p> 
+        <p>What will be your price for such placement?<br> Can we place our own content?<br> Otherwise, how much will cost an article from your copywriters?<br> Would you write the article according to our specifications?</p> 
+        <p>I am interested to place an article on the stand-alone page of your website; nesting depth should be no more than three clicks. Brief preview on the front page/blog will be a very good option too.<br> Looking forward for your response.</p> 
+        <p>Best regards,<br> Helena</p> 
+       </div> </li> 
+      <li class="alt" id="comment-106384"> 
+       <div class="gcomment">
+        <cite><a href="http://www.reducties.info/" rel="external nofollow" class="url">code réduction</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-106384" title="">April 2nd, 2017 at 4:02 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Hi this is somewhat of off topic but I was wanting to know if blogs use WYSIWYG editors or if you have to manually code with HTML.<br> I’m starting a blog soon but have no coding know-how so I wanted to get advice from someone with<br> experience. Any help would be greatly appreciated!</p> 
+       </div> </li> 
+      <li id="comment-106386"> 
+       <div class="gcomment">
+        <cite><a href="http://avtotrans.by/articles/kak_vybraty_oboi_dlya_otdelki_sten.html" rel="external nofollow" class="url">???? ??????? ?????</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-106386" title="">April 9th, 2017 at 1:40 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>?????????????? ?????????? ???? ??????? ????? – ??, ? ??? ???<br> ?? ????? ??????, ? ?? ?????, ????? ?????????? ?????<br> ?????-???. ???????????? ????? ?????? ??? ?????????<br> ???????????? ??????????.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-106389"> 
+       <div class="gcomment">
+        <cite><a href="http://Www.Podati.ru/news/obshchaya-chislennost-rabotnikov-v-yaroslavle-umenshilas-/" rel="external nofollow" class="url">?????? ?????????</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-106389" title="">April 11th, 2017 at 2:59 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>????? ????? ??? ?? ???????, ? ?????? ????????? ??<br> ???? ????? – ????????? ????.</p> 
+       </div> </li> 
+      <li id="comment-106393"> 
+       <div class="gcomment">
+        <cite><a href="http://workliferehab.com/User:JosieMontoya58" rel="external nofollow" class="url">Perfume Combinations</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-106393" title="">April 21st, 2017 at 10:51 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Special function of science and know-how : International<br> business offers quite a lot of importance to science and expertise.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-106403"> 
+       <div class="gcomment">
+        <cite><a href="http://davaoportal.com/author/warnerlukis/" rel="external nofollow" class="url">????? ?????? ? ??????? ????????</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-106403" title="">May 3rd, 2017 at 5:06 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>If some one needs to be updated with most recent technologies afterward he must be pay a quick<br> visit this web site and be up to date every day.</p> 
+       </div> </li> 
+      <li id="comment-106407"> 
+       <div class="gcomment">
+        <cite><a href="http://Blog.Goo.ne.jp/fuufunoyoru/e/a2784350d978d3b98e6453fbcf7be329" rel="external nofollow" class="url">?????</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-106407" title="">May 10th, 2017 at 9:35 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Good way of explaining, and pleasant article to obtain information regarding<br> my presentation subject matter, which i am going to deliver in school.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-106441"> 
+       <div class="gcomment">
+        <cite><a href="https://www.youtube.com/watch?v=K_eQBgUw2as" rel="external nofollow" class="url">FREE RICK ROSS TYPE BEAT</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-106441" title="">July 1st, 2017 at 11:27 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>I do not know whether it’s just me or if perhaps everybody<br> else experiencing issues with your website. It seems like some of the text in your posts are running off the screen. Can somebody else please provide feedback and let me know if<br> this is happening to them too? This might be a issue<br> with my web browser because I’ve had this happen previously.</p> 
+        <p>Appreciate it</p> 
+       </div> </li> 
+      <li id="comment-106466"> 
+       <div class="gcomment">
+        <cite><a href="https://talkwards.wordpress.com/2008/09/30/mounting-devices-with-uuid-identifiers-instead-of-using-dev-paths/" rel="external nofollow" class="url">Mounting devices with UUID identifiers instead of using /dev paths | Talkwards</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-106466" title="">August 12th, 2017 at 10:17 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>[…] <a href="https://linux.byexamples.com/archives/321/fstab-with-uuid/" rel="nofollow">https://linux.byexamples.com/archives/321/fstab-with-uuid/</a> […]</p> 
+       </div> </li> 
+      <li class="alt" id="comment-106504"> 
+       <div class="gcomment">
+        <cite><a href="http://sokratlib.ru/books/item/f00/s00/z0000001/st118.shtml" rel="external nofollow" class="url">?????? ????????????? ????</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-106504" title="">October 12th, 2017 at 10:15 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>?? ??????????? ???????? ????????? ????????, ??????-??????? –<br> ?????? ?????, ??? ????? ?????? ????????????? ???? ? ?????.</p> 
+       </div> </li> 
+      <li id="comment-106505"> 
+       <div class="gcomment">
+        <cite><a href="http://pskov-gkc.ru/?news=142" rel="external nofollow" class="url">?????? ????????????? ???? ????</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-106505" title="">October 17th, 2017 at 5:24 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>??? ???????? ??????????????<br> ??????? ? ?????? ????????????? ???? ??????</p> 
+       </div> </li> 
+      <li class="alt" id="comment-106584"> 
+       <div class="gcomment">
+        <cite><a href="http://uygunpazar.info/samsung-galaxy-note-8-kiliflari/" rel="external nofollow" class="url">samsung note 8 tablet özellikleri</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-106584" title="">February 22nd, 2018 at 12:02 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Non-Andr?id phones u?e one ‘pool’ fo? minutes.</p> 
+       </div> </li> 
+      <li id="comment-106601"> 
+       <div class="gcomment">
+        <cite><a href="http://gen-her.pl/forum/T-American-pripsen-100mg-cap-store" rel="external nofollow" class="url">buy pripsen boots uk</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-106601" title="">April 2nd, 2018 at 4:28 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Pretty element of content. I simply stumbled upon your site and<br> in accession capital to assert that I acquire actually enjoyed account<br> your blog posts. Any way I’ll be subscribing on your feeds or even I success you get entry to persistently fast.</p> 
+       </div> </li> 
+      <li class="alt" id="comment-165452"> 
+       <div class="gcomment">
+        <cite><a href="https://saddatruck.com/" rel="external nofollow" class="url">saddatruck</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-165452" title="">March 20th, 2020 at 5:55 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>very nice<a rel="nofollow">online loading services</a></p> 
+       </div> </li> 
+      <li id="comment-167991"> 
+       <div class="gcomment">
+        <cite><a href="https://justpaste.it/7d2m8" rel="external nofollow" class="url">Beatris</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-167991" title="">April 10th, 2020 at 12:20 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>cbd cream on neck cbd gummies to relax is hemp<br> legal to grow in nevada</p> 
+       </div> </li> 
+      <li class="alt" id="comment-170385"> 
+       <div class="gcomment">
+        <cite><a href="https://www.housely.in" rel="external nofollow" class="url">Housely</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-170385" title="">May 1st, 2020 at 7:52 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>You gave us lots of information, along with examples that are very helpful for me. Thank you so much for sharing.</p> 
+       </div> </li> 
+      <li id="comment-170605"> 
+       <div class="gcomment">
+        <cite><a href="https://saddatruck.com" rel="external nofollow" class="url">Saddatruck</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-170605" title="">May 3rd, 2020 at 8:07 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Very Nice <a href="https://saddatruck.com/" rel="nofollow">lorry transport</a></p> 
+       </div> </li> 
+      <li class="alt" id="comment-170622"> 
+       <div class="gcomment">
+        <cite><a href="https://saddatruck.com" rel="external nofollow" class="url">Saddatruck</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-170622" title="">May 4th, 2020 at 1:54 am</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Very Nice <a href="https://saddatruck.com/" rel="nofollow">online transport your luggage</a></p> 
+       </div> </li> 
+      <li id="comment-171224"> 
+       <div class="gcomment">
+        <cite><a href="https://saddatruck.com" rel="external nofollow" class="url">Saddatruck</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-171224" title="">May 10th, 2020 at 6:12 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Very Nice <a href="https://saddatruck.com/" rel="nofollow">online lorry booking</a></p> 
+       </div> </li> 
+      <li class="alt" id="comment-204494"> 
+       <div class="gcomment">
+        <cite><a href="https://completecrack.com/" rel="external nofollow" class="url">vicky</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-204494" title="">December 19th, 2020 at 9:29 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Thank you so much for sharing this amazing information<br> <a href="https://completecrack.com/edius-pro-crack/" rel="nofollow">https://completecrack.com/edius-pro-crack/</a></p> 
+       </div> </li> 
+      <li id="comment-204495"> 
+       <div class="gcomment">
+        <cite><a href="https://crackedinfo.net/" rel="external nofollow" class="url">peter</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-204495" title="">December 19th, 2020 at 9:34 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Your work is great it provides me great knowledge.<br> <a href="https://crackedinfo.net/driver-talent-pro-crack/" rel="nofollow">https://crackedinfo.net/driver-talent-pro-crack/</a></p> 
+       </div> </li> 
+      <li class="alt" id="comment-204837"> 
+       <div class="gcomment">
+        <cite><a href="https://softwarekeygen.com/" rel="external nofollow" class="url">lara</a></cite> Says: 
+        <br> <small class="commentmetadata"><a href="#comment-204837" title="">December 20th, 2020 at 11:20 pm</a> </small>
+       </div> 
+       <div class="ucomment">
+        <p>Your work is great it provides me great knowledge.<br> <a href="https://softwarekeygen.com/spotify-premium-crack/" rel="nofollow">https://softwarekeygen.com/spotify-premium-crack/</a></p> 
+       </div> </li> 
+     </ol> 
+     <div class="comments">
+      <h3>Leave a Reply</h3>
+     </div> 
+     <form action="https://linux.byexamples.com/wp-comments-post.php" method="post" id="commentform"> 
+      <p><input type="text" name="author" id="author" value="" size="22" tabindex="1"> <label for="author"><small>Name (required)</small></label></p> 
+      <p><input type="text" name="email" id="email" value="" size="22" tabindex="2"> <label for="email"><small>Mail (will not be published) (required)</small></label></p> 
+      <p><input type="text" name="url" id="url" value="" size="22" tabindex="3"> <label for="url"><small>Website</small></label></p> <!--<p><small><strong>XHTML:</strong> You can use these tags: <code>&lt;a href=&quot;&quot; title=&quot;&quot;&gt; &lt;abbr title=&quot;&quot;&gt; &lt;acronym title=&quot;&quot;&gt; &lt;b&gt; &lt;blockquote cite=&quot;&quot;&gt; &lt;cite&gt; &lt;code&gt; &lt;del datetime=&quot;&quot;&gt; &lt;em&gt; &lt;i&gt; &lt;q cite=&quot;&quot;&gt; &lt;s&gt; &lt;strike&gt; &lt;strong&gt; </code></small></p>--> 
+      <p><textarea name="comment" id="comment" cols="60%" rows="10" tabindex="4"></textarea></p> 
+      <p><input name="submit" type="submit" id="submit" tabindex="5" value="Submit Comment"> <input type="hidden" name="comment_post_ID" value="321"> </p> 
+      <p style="display: none;"><input type="hidden" id="akismet_comment_nonce" name="akismet_comment_nonce" value="92a85322df"></p>
+      <p style="display: none;"><input type="hidden" id="ak_js" name="ak_js" value="149"></p> 
+     </form> 
+    </div> 
+   </div> 
+   <div id="right"> <!-- google_ad_section_start(weight=ignore) --> 
+    <div id="sidebar"> 
+     <ul> 
+      <li id="text-95700111" class="widget widget_text"><h2 class="widgettitle">Search</h2> 
+       <div class="textwidget">
+        <!-- Google CSE Search Box Begins  --> 
+        <form action="https://www.google.com/cse" id="cse-search-box"> 
+         <input type="hidden" name="cx" value="001605103380881059578:qo4_rsmoh8g"> 
+         <input type="text" name="q" size="18"> 
+         <input type="submit" name="sa" value="Search"> 
+        </form> 
+        <script type="text/javascript" src="https://www.google.com/coop/cse/brand?form=cse-search-box&amp;lang=en"></script> <!-- Google CSE Search Box Ends --> 
+       </div> </li> 
+      <li id="text-3" class="widget widget_text"> 
+       <div class="textwidget">
+        <a style="border-bottom:0" href="http://feeds.feedburner.com/LinuxByExamples" rel="alternate" type="application/rss+xml"><img src="https://www.feedburner.com/fb/images/pub/feed-icon16x16.png" alt="" style="border:0"></a>&nbsp;<a href="http://feeds.feedburner.com/LinuxByExamples" rel="alternate" type="application/rss+xml"></a> <a style="border-bottom:0" href="http://technorati.com/faves?add=https://linux.byexamples.com"><img src="https://static.technorati.com/pix/fave/btn-fave2.png" alt="Add to Technorati Favorites"></a> <a style="border-bottom:0" href="http://del.icio.us/post?url=http%3A%2F%2Flinux.byexamples.com&amp;title=Linux%20by%20Examples"><img src="https://linux.byexamples.com/image/delicious-lbe.png" alt="Add to del.icio.us" style="border:0"></a> 
+        <br><a href="http://www.feedburner.com/fb/a/emailverifySubmit?feedId=527393">Subscribe LBE by Email</a> 
+        <p></p> 
+       </div> </li> 
+      <li id="pages-2" class="widget widget_pages"><h2 class="widgettitle">Pages</h2> 
+       <ul> 
+        <li class="page_item page-item-2"><a href="https://linux.byexamples.com/about/">About</a></li> 
+        <li class="page_item page-item-91"><a href="https://linux.byexamples.com/news/">News [17 Feb 2008]</a></li> 
+       </ul> </li> 
+      <li id="meta-2" class="widget widget_meta"><h2 class="widgettitle">Meta</h2> 
+       <ul> 
+        <li><a href="https://linux.byexamples.com/wp-login.php">Log in</a></li> 
+        <li><a href="https://linux.byexamples.com/feed/">Entries <abbr title="Really Simple Syndication">RSS</abbr></a></li> 
+        <li><a href="https://linux.byexamples.com/comments/feed/">Comments <abbr title="Really Simple Syndication">RSS</abbr></a></li> 
+        <li><a href="https://wordpress.org/" title="Powered by WordPress, state-of-the-art semantic personal publishing platform.">WordPress.org</a></li> 
+       </ul> </li> 
+      <li id="recent-posts-2" class="widget widget_recent_entries"> <h2 class="widgettitle">Recent Posts</h2> 
+       <ul> 
+        <li> <a href="https://linux.byexamples.com/archives/569/copy-files-and-create-the-directories-if-it-not-exist/">copy files and create the directories if it doesn’t exist</a> </li> 
+        <li> <a href="https://linux.byexamples.com/archives/565/your-xml-friend-xpath-command-line-xmllint/">Your XML friend XPATH command line xmllint</a> </li> 
+        <li> <a href="https://linux.byexamples.com/archives/559/export-environment-variable-from-a-bash-script/">export environment variable from a bash script</a> </li> 
+        <li> <a href="https://linux.byexamples.com/archives/557/why-export-if-i-could-just-direct-assign-the-variables-in-bash/">Why ‘export’ if i could just direct assign the variables in bash?</a> </li> 
+        <li> <a href="https://linux.byexamples.com/archives/553/config-file-for-your-bash-script/">config file for your bash script</a> </li> 
+        <li> <a href="https://linux.byexamples.com/archives/549/bttb-looping-for-shell-script-under-embedded-linux/">BTTB: looping for shell script under embedded linux</a> </li> 
+        <li> <a href="https://linux.byexamples.com/archives/546/virtualbox-startup-guest-machine-in-background/">VirtualBox: startup guest machine in background</a> </li> 
+        <li> <a href="https://linux.byexamples.com/archives/544/virtualbox-port-forwarding-for-nat-network/">VirtualBox: Port Forwarding for NAT network</a> </li> 
+        <li> <a href="https://linux.byexamples.com/archives/542/install-gentoo-for-kernel-hacking/">Install Gentoo for kernel hacking</a> </li> 
+        <li> <a href="https://linux.byexamples.com/archives/538/gnu-global-the-programmers-friend/">Gnu Global, the programmer’s friend</a> </li> 
+       </ul> </li> 
+      <li id="get-recent-comments" class="widget widget_get_recent_comments"><h2 class="widgettitle">Recent Comments</h2> 
+       <div id="get_recent_comments_wrap">
+        <ul> 
+         <li><b><a href="https://linux.byexamples.com/archives/559/export-environment-variable-from-a-bash-script/#comment-235019" title="export environment variable from a bash script, February 1, 2011">fardabourse</a></b>: ./build_arm.sh BUILD_ARM ~ thnks for this</li> 
+         <li><b><a href="https://linux.byexamples.com/archives/319/command-line-tutorial-for-beginners/#comment-235018" title="command line tutorial for beginners, October 6, 2007">baghtalargroup</a></b>: very nice</li> 
+         <li><b><a href="https://linux.byexamples.com/archives/569/copy-files-and-create-the-directories-if-it-not-exist/#comment-235017" title="copy files and create the directories if it doesn’t exist, June 3, 2011">fardabourse</a></b>: Better use the Parameter Expansion from bash:</li> 
+         <li><b><a href="https://linux.byexamples.com/archives/319/command-line-tutorial-for-beginners/#comment-235015" title="command line tutorial for beginners, October 6, 2007">AQTA</a></b>: Great stuff as usual</li> 
+         <li><b><a href="https://linux.byexamples.com/archives/319/command-line-tutorial-for-beginners/#comment-235013" title="command line tutorial for beginners, October 6, 2007">maktabevahy</a></b>: bice useful</li> 
+         <li><b><a href="https://linux.byexamples.com/archives/319/command-line-tutorial-for-beginners/#comment-235012" title="command line tutorial for beginners, October 6, 2007">fardabourse</a></b>: thanks for article</li> 
+         <li><b><a href="https://linux.byexamples.com/archives/233/write-a-message-to-login-users-through-terminal/#comment-233707" title="write a message to login users through terminal, March 10, 2007">https://enucuzatakipcial.com/</a></b>: fantastic points altogether, you just won a logo new reader. What would you recommend...</li> 
+         <li><b><a href="https://linux.byexamples.com/archives/255/svn-command-line-tutorial-for-beginners-1/#comment-231413" title="svn command line tutorial for beginners 1, April 17, 2007">camden</a></b>: Hello guys, I am Camden a professional in content writing. I enjoy solving people’s problems and make them...</li> 
+         <li><b><a href="https://linux.byexamples.com/archives/377/a-grammar-checker-for-open-office/#comment-215867" title="A Grammar Checker for Open Office, April 13, 2008">saroj sharma</a></b>: thank you this website is really awesome Palmistry study my self thank you</li> 
+         <li><b><a href="https://linux.byexamples.com/archives/321/fstab-with-uuid/#comment-204837" title="fstab with uuid, October 10, 2007">lara</a></b>: Your work is great it provides me great knowledge. https://softwarekeygen.com/spo tify-premium-crack/</li> 
+        </ul>
+       </div></li> 
+      <li id="archives-2" class="widget widget_archive"><h2 class="widgettitle">Archives</h2> <label class="screen-reader-text" for="archives-dropdown-2">Archives</label> <select id="archives-dropdown-2" name="archive-dropdown" onchange="document.location.href=this.options[this.selectedIndex].value;"> <option value="">Select Month</option> <option value="https://linux.byexamples.com/archives/date/2011/06/"> June 2011 &nbsp;(1)</option> <option value="https://linux.byexamples.com/archives/date/2011/03/"> March 2011 &nbsp;(1)</option> <option value="https://linux.byexamples.com/archives/date/2011/02/"> February 2011 &nbsp;(1)</option> <option value="https://linux.byexamples.com/archives/date/2011/01/"> January 2011 &nbsp;(2)</option> <option value="https://linux.byexamples.com/archives/date/2010/11/"> November 2010 &nbsp;(1)</option> <option value="https://linux.byexamples.com/archives/date/2010/10/"> October 2010 &nbsp;(3)</option> <option value="https://linux.byexamples.com/archives/date/2010/05/"> May 2010 &nbsp;(4)</option> <option value="https://linux.byexamples.com/archives/date/2010/04/"> April 2010 &nbsp;(1)</option> <option value="https://linux.byexamples.com/archives/date/2010/01/"> January 2010 &nbsp;(2)</option> <option value="https://linux.byexamples.com/archives/date/2009/10/"> October 2009 &nbsp;(1)</option> <option value="https://linux.byexamples.com/archives/date/2009/09/"> September 2009 &nbsp;(1)</option> <option value="https://linux.byexamples.com/archives/date/2009/08/"> August 2009 &nbsp;(1)</option> <option value="https://linux.byexamples.com/archives/date/2009/05/"> May 2009 &nbsp;(2)</option> <option value="https://linux.byexamples.com/archives/date/2009/04/"> April 2009 &nbsp;(2)</option> <option value="https://linux.byexamples.com/archives/date/2009/03/"> March 2009 &nbsp;(1)</option> <option value="https://linux.byexamples.com/archives/date/2009/02/"> February 2009 &nbsp;(1)</option> <option value="https://linux.byexamples.com/archives/date/2008/11/"> November 2008 &nbsp;(3)</option> <option value="https://linux.byexamples.com/archives/date/2008/10/"> October 2008 &nbsp;(1)</option> <option value="https://linux.byexamples.com/archives/date/2008/09/"> September 2008 &nbsp;(1)</option> <option value="https://linux.byexamples.com/archives/date/2008/08/"> August 2008 &nbsp;(3)</option> <option value="https://linux.byexamples.com/archives/date/2008/07/"> July 2008 &nbsp;(2)</option> <option value="https://linux.byexamples.com/archives/date/2008/06/"> June 2008 &nbsp;(6)</option> <option value="https://linux.byexamples.com/archives/date/2008/05/"> May 2008 &nbsp;(5)</option> <option value="https://linux.byexamples.com/archives/date/2008/04/"> April 2008 &nbsp;(10)</option> <option value="https://linux.byexamples.com/archives/date/2008/03/"> March 2008 &nbsp;(5)</option> <option value="https://linux.byexamples.com/archives/date/2008/02/"> February 2008 &nbsp;(3)</option> <option value="https://linux.byexamples.com/archives/date/2008/01/"> January 2008 &nbsp;(5)</option> <option value="https://linux.byexamples.com/archives/date/2007/12/"> December 2007 &nbsp;(5)</option> <option value="https://linux.byexamples.com/archives/date/2007/11/"> November 2007 &nbsp;(11)</option> <option value="https://linux.byexamples.com/archives/date/2007/10/"> October 2007 &nbsp;(13)</option> <option value="https://linux.byexamples.com/archives/date/2007/09/"> September 2007 &nbsp;(7)</option> <option value="https://linux.byexamples.com/archives/date/2007/08/"> August 2007 &nbsp;(8)</option> <option value="https://linux.byexamples.com/archives/date/2007/07/"> July 2007 &nbsp;(4)</option> <option value="https://linux.byexamples.com/archives/date/2007/06/"> June 2007 &nbsp;(9)</option> <option value="https://linux.byexamples.com/archives/date/2007/05/"> May 2007 &nbsp;(11)</option> <option value="https://linux.byexamples.com/archives/date/2007/04/"> April 2007 &nbsp;(16)</option> <option value="https://linux.byexamples.com/archives/date/2007/03/"> March 2007 &nbsp;(14)</option> <option value="https://linux.byexamples.com/archives/date/2007/02/"> February 2007 &nbsp;(12)</option> <option value="https://linux.byexamples.com/archives/date/2007/01/"> January 2007 &nbsp;(14)</option> <option value="https://linux.byexamples.com/archives/date/2006/12/"> December 2006 &nbsp;(19)</option> <option value="https://linux.byexamples.com/archives/date/2006/11/"> November 2006 &nbsp;(35)</option> <option value="https://linux.byexamples.com/archives/date/2006/10/"> October 2006 &nbsp;(44)</option> <option value="https://linux.byexamples.com/archives/date/2006/09/"> September 2006 &nbsp;(36)</option> <option value="https://linux.byexamples.com/archives/date/2006/08/"> August 2006 &nbsp;(32)</option> <option value="https://linux.byexamples.com/archives/date/2006/07/"> July 2006 &nbsp;(3)</option> </select> </li> 
+      <li id="categories-95706141" class="widget widget_categories"><h2 class="widgettitle">Categories</h2> 
+       <form action="https://linux.byexamples.com" method="get">
+        <label class="screen-reader-text" for="cat">Categories</label><select name="cat" id="cat" class="postform"> <option value="-1">Select Category</option> <option class="level-0" value="108">3ddesk</option> <option class="level-0" value="246">7z</option> <option class="level-0" value="8">Admin</option> <option class="level-0" value="281">Advance</option> <option class="level-0" value="36">alias</option> <option class="level-0" value="14">apropos</option> <option class="level-0" value="78">apt-cache</option> <option class="level-0" value="77">apt-get</option> <option class="level-0" value="60">Archive</option> <option class="level-0" value="296">arp</option> <option class="level-0" value="297">arping</option> <option class="level-0" value="223">asciiview</option> <option class="level-0" value="11">aspell</option> <option class="level-0" value="255">autocutsel</option> <option class="level-0" value="137">awk</option> <option class="level-0" value="29">backquote</option> <option class="level-0" value="247">baobab</option> <option class="level-0" value="104">Bash</option> <option class="level-0" value="57">bc</option> <option class="level-0" value="280">Beginners</option> <option class="level-0" value="283">blkid</option> <option class="level-0" value="245">bunzip2</option> <option class="level-0" value="244">bzip2</option> <option class="level-0" value="222">cacaview</option> <option class="level-0" value="58">cal</option> <option class="level-0" value="4">Calculation</option> <option class="level-0" value="31">cat</option> <option class="level-0" value="49">cd</option> <option class="level-0" value="194">chattr</option> <option class="level-0" value="85">chmod</option> <option class="level-0" value="100">chown</option> <option class="level-0" value="65">clear</option> <option class="level-0" value="37">column</option> <option class="level-0" value="163">comm</option> <option class="level-0" value="258">command-not-found</option> <option class="level-0" value="5">Common</option> <option class="level-0" value="257">complete</option> <option class="level-0" value="263">conky</option> <option class="level-0" value="202">convert</option> <option class="level-0" value="136">cowsay</option> <option class="level-0" value="264">cp</option> <option class="level-0" value="44">crontab</option> <option class="level-0" value="192">ctags</option> <option class="level-0" value="138">curl</option> <option class="level-0" value="290">curlftpfs</option> <option class="level-0" value="42">curly brackets</option> <option class="level-0" value="103">cut</option> <option class="level-0" value="358">cygwin</option> <option class="level-0" value="38">date</option> <option class="level-0" value="39">Developer</option> <option class="level-0" value="53">df</option> <option class="level-0" value="166">dhclient</option> <option class="level-0" value="180">diff</option> <option class="level-0" value="368">dirname</option> <option class="level-0" value="162">dirs</option> <option class="level-0" value="359">dos2unix</option> <option class="level-0" value="153">dot</option> <option class="level-0" value="80">dpkg</option> <option class="level-0" value="176">dpkg-query</option> <option class="level-0" value="54">du</option> <option class="level-0" value="48">echo</option> <option class="level-0" value="93">egrep</option> <option class="level-0" value="63">eject</option> <option class="level-0" value="183">Electronics</option> <option class="level-0" value="364">emerge</option> <option class="level-0" value="268">espeak</option> <option class="level-0" value="295">ettercap</option> <option class="level-0" value="298">etterlog</option> <option class="level-0" value="47">export</option> <option class="level-0" value="151">factor</option> <option class="level-0" value="190">fdisk</option> <option class="level-0" value="199">feh</option> <option class="level-0" value="269">festival</option> <option class="level-0" value="84">ffmpeg</option> <option class="level-0" value="177">fg</option> <option class="level-0" value="237">figlet</option> <option class="level-0" value="238">figlist</option> <option class="level-0" value="79">file</option> <option class="level-0" value="72">find</option> <option class="level-0" value="279">firefox</option> <option class="level-0" value="335">flock</option> <option class="level-0" value="191">fluxbox</option> <option class="level-0" value="185">fontconfig-voodoo</option> <option class="level-0" value="155">for</option> <option class="level-0" value="135">fortune</option> <option class="level-0" value="214">free</option> <option class="level-0" value="219">fromdos</option> <option class="level-0" value="152">function</option> <option class="level-0" value="208">g++</option> <option class="level-0" value="207">gcc</option> <option class="level-0" value="304">gcore</option> <option class="level-0" value="41">gdb</option> <option class="level-0" value="209">gdc</option> <option class="level-0" value="363">gentoo</option> <option class="level-0" value="75">gksudo</option> <option class="level-0" value="362">global</option> <option class="level-0" value="203">gm</option> <option class="level-0" value="195">gnome-open</option> <option class="level-0" value="215">gnome-screenshot</option> <option class="level-0" value="354">gnuplot</option> <option class="level-0" value="276">gprof</option> <option class="level-0" value="221">gqview</option> <option class="level-0" value="201">Graphics</option> <option class="level-0" value="30">grep</option> <option class="level-0" value="361">gtags</option> <option class="level-0" value="236">gthumb</option> <option class="level-0" value="235">gtk-theme-switch</option> <option class="level-0" value="243">gunzip</option> <option class="level-0" value="360">gvim</option> <option class="level-0" value="186">gwave</option> <option class="level-0" value="242">gzip</option> <option class="level-0" value="21">Hardware</option> <option class="level-0" value="22">hdparm</option> <option class="level-0" value="150">head</option> <option class="level-0" value="143">help</option> <option class="level-0" value="220">hexdump</option> <option class="level-0" value="52">history</option> <option class="level-0" value="7">host</option> <option class="level-0" value="175">htop</option> <option class="level-0" value="128">if</option> <option class="level-0" value="129">ifconfig</option> <option class="level-0" value="182">im-switch</option> <option class="level-0" value="217">import</option> <option class="level-0" value="96">init</option> <option class="level-0" value="81">iptables</option> <option class="level-0" value="83">iptables-restore</option> <option class="level-0" value="82">iptables-save</option> <option class="level-0" value="302">ipython</option> <option class="level-0" value="178">jobs</option> <option class="level-0" value="171">kill</option> <option class="level-0" value="173">killall</option> <option class="level-0" value="300">kmess</option> <option class="level-0" value="324">kubuntu</option> <option class="level-0" value="10">last</option> <option class="level-0" value="342">ldd</option> <option class="level-0" value="140">less</option> <option class="level-0" value="313">listen</option> <option class="level-0" value="26">ln</option> <option class="level-0" value="73">locate</option> <option class="level-0" value="27">logger</option> <option class="level-0" value="232">lpr</option> <option class="level-0" value="70">ls</option> <option class="level-0" value="198">lshw</option> <option class="level-0" value="228">lsof</option> <option class="level-0" value="66">ltrace</option> <option class="level-0" value="340">Lua</option> <option class="level-0" value="116">mail</option> <option class="level-0" value="170">make</option> <option class="level-0" value="59">man</option> <option class="level-0" value="205">md5sum</option> <option class="level-0" value="306">mibbit</option> <option class="level-0" value="1">Misc</option> <option class="level-0" value="69">mkdir</option> <option class="level-0" value="189">mkfs.ext3</option> <option class="level-0" value="139">more</option> <option class="level-0" value="95">mount</option> <option class="level-0" value="125">mount.cifs</option> <option class="level-0" value="187">mplayer</option> <option class="level-0" value="115">mutt</option> <option class="level-0" value="156">mv</option> <option class="level-0" value="114">mysql</option> <option class="level-0" value="113">mysqldump</option> <option class="level-0" value="91">nautilus</option> <option class="level-0" value="23">nbtscan</option> <option class="level-0" value="56">nc</option> <option class="level-0" value="3">Network</option> <option class="level-0" value="184">ngspice</option> <option class="level-0" value="94">nice</option> <option class="level-0" value="132">nl</option> <option class="level-0" value="168">nm-applet</option> <option class="level-0" value="289">nmap</option> <option class="level-0" value="234">nohup</option> <option class="level-0" value="148">od</option> <option class="level-0" value="250">oneko</option> <option class="level-0" value="196">passwd</option> <option class="level-0" value="159">paste</option> <option class="level-0" value="179">patch</option> <option class="level-0" value="277">pcmanfm</option> <option class="level-0" value="292">pcregrep</option> <option class="level-0" value="89">perl</option> <option class="level-0" value="88">perlcc</option> <option class="level-0" value="55">perror</option> <option class="level-0" value="305">pgrep</option> <option class="level-0" value="299">picasa</option> <option class="level-0" value="131">ping</option> <option class="level-0" value="32">pipeline</option> <option class="level-0" value="172">pkill</option> <option class="level-0" value="211">png2ico</option> <option class="level-0" value="161">popd</option> <option class="level-0" value="287">powertop</option> <option class="level-0" value="239">pptpconfig</option> <option class="level-0" value="197">printf</option> <option class="level-0" value="164">process substitution</option> <option class="level-0" value="213">ps</option> <option class="level-0" value="160">pushd</option> <option class="level-0" value="212">putty</option> <option class="level-0" value="50">pwd</option> <option class="level-0" value="120">python</option> <option class="level-0" value="346">qemu</option> <option class="level-0" value="347">qemu-img</option> <option class="level-0" value="61">rar</option> <option class="level-0" value="106">read</option> <option class="level-0" value="112">Regular Expression</option> <option class="level-0" value="64">reset</option> <option class="level-0" value="121">rev</option> <option class="level-0" value="87">rm</option> <option class="level-0" value="86">rmdir</option> <option class="level-0" value="130">route</option> <option class="level-0" value="18">rpm</option> <option class="level-0" value="270">rsync</option> <option class="level-0" value="345">rsyslogd</option> <option class="level-0" value="225">runlevel</option> <option class="level-0" value="45">scp</option> <option class="level-0" value="109">screen</option> <option class="level-0" value="260">script</option> <option class="level-0" value="261">scriptreplay</option> <option class="level-0" value="204">SDCC</option> <option class="level-0" value="122">sed</option> <option class="level-0" value="92">seq</option> <option class="level-0" value="46">sftp</option> <option class="level-0" value="119">sh</option> <option class="level-0" value="278">sha1sum</option> <option class="level-0" value="133">shutdown</option> <option class="level-0" value="288">sleep</option> <option class="level-0" value="123">smbclient</option> <option class="level-0" value="124">smbmount</option> <option class="level-0" value="141">smbpasswd</option> <option class="level-0" value="147">sort</option> <option class="level-0" value="68">source</option> <option class="level-0" value="43">ssh</option> <option class="level-0" value="266">ssh-copy-id</option> <option class="level-0" value="265">ssh-keygen</option> <option class="level-0" value="356">sshfs</option> <option class="level-0" value="169">stat</option> <option class="level-0" value="99">stderr</option> <option class="level-0" value="97">stdout</option> <option class="level-0" value="267">stellarium</option> <option class="level-0" value="206">strings</option> <option class="level-0" value="76">sudo</option> <option class="level-0" value="252">svn</option> <option class="level-0" value="254">svnadmin</option> <option class="level-0" value="253">svnlook</option> <option class="level-0" value="13">Symbol</option> <option class="level-0" value="344">syslogd</option> <option class="level-0" value="154">tac</option> <option class="level-0" value="28">tail</option> <option class="level-0" value="74">tar</option> <option class="level-0" value="262">tcpdump</option> <option class="level-0" value="157">tee</option> <option class="level-0" value="107">terminator</option> <option class="level-0" value="2">Text Manipulation</option> <option class="level-0" value="285">time</option> <option class="level-0" value="218">todos</option> <option class="level-0" value="174">top</option> <option class="level-0" value="149">touch</option> <option class="level-0" value="12">tr</option> <option class="level-0" value="24">trafshow</option> <option class="level-0" value="90">tree</option> <option class="level-0" value="357">tshark</option> <option class="level-0" value="321">ubuntu</option> <option class="level-0" value="40">ulimit</option> <option class="level-0" value="303">umask</option> <option class="level-0" value="291">umount</option> <option class="level-0" value="51">uname</option> <option class="level-0" value="251">unclutter</option> <option class="level-0" value="146">uniq</option> <option class="level-0" value="256">units</option> <option class="level-0" value="241">unzip</option> <option class="level-0" value="142">useradd</option> <option class="level-0" value="117">uuencode</option> <option class="level-0" value="366">VBoxHeadless</option> <option class="level-0" value="365">VBoxManage</option> <option class="level-0" value="15">vi</option> <option class="level-0" value="34">vim</option> <option class="level-0" value="181">vimdiff</option> <option class="level-0" value="351">VirtualBox</option> <option class="level-0" value="293">vmstat</option> <option class="level-0" value="348">vmware</option> <option class="level-0" value="282">vol_id</option> <option class="level-0" value="231">wall</option> <option class="level-0" value="33">watch</option> <option class="level-0" value="71">wc</option> <option class="level-0" value="6">wget</option> <option class="level-0" value="301">whereis</option> <option class="level-0" value="35">which</option> <option class="level-0" value="105">while</option> <option class="level-0" value="230">who</option> <option class="level-0" value="193">wmctrl</option> <option class="level-0" value="165">wpa_supplicant</option> <option class="level-0" value="229">write</option> <option class="level-0" value="19">X11</option> <option class="level-0" value="102">xargs</option> <option class="level-0" value="224">xchat</option> <option class="level-0" value="259">xcompmgr</option> <option class="level-0" value="25">xkill</option> <option class="level-0" value="111">xmessage</option> <option class="level-0" value="367">xmllint</option> <option class="level-0" value="248">xmms</option> <option class="level-0" value="62">xprop</option> <option class="level-0" value="20">xrandr</option> <option class="level-0" value="167">xset</option> <option class="level-0" value="249">xsetroot</option> <option class="level-0" value="294">xsnow</option> <option class="level-0" value="226">xvidcap</option> <option class="level-0" value="227">xwininfo</option> <option class="level-0" value="144">yes</option> <option class="level-0" value="145">yum</option> <option class="level-0" value="110">zenity</option> <option class="level-0" value="240">zip</option> <option class="level-0" value="210">zssh</option> </select> 
+       </form> <script type="text/javascript">
+/* <![CDATA[ */
+(function() {
+	var dropdown = document.getElementById( "cat" );
+	function onCatChange() {
+		if ( dropdown.options[ dropdown.selectedIndex ].value > 0 ) {
+			dropdown.parentNode.submit();
+		}
+	}
+	dropdown.onchange = onCatChange;
+})();
+/* ]]> */
+</script> </li> 
+      <li id="linkcat-274" class="widget widget_links"><h2 class="widgettitle">BE Alliance</h2> 
+       <ul class="xoxo blogroll"> 
+        <li><a href="http://cc.byexamples.com" title="c and c++ programming tips and techniques by simple examples">c/c++ programming by examples</a></li> 
+        <li><a href="http://toolbox.byexamples.com/" title="Introduces toolsets for software developers">Developer’s Toolbox</a></li> 
+        <li><a href="http://ee.byexamples.com/" title="EE knowledge sharing">Electrical &amp; Electronic</a></li> 
+        <li><a href="http://invest2retirerich.byexamples.com/" title="These are simple guidelines for people who are new to investing. It is meant as a guide only.">Invest to Retire Rich</a></li> 
+        <li><a href="http://learnenglish.byexamples.com/" title="The grammar of English Language is being broken down to make learning simple and straight forward.">Learn English</a></li> 
+        <li><a href="http://lne.byexamples.com" title="When Electronics meet Linux â€¦â€¦">Linux and Electronics</a></li> 
+        <li><a href="https://linux.byexamples.com/" title="We explain every linux command by examples">Linux By Examples</a></li> 
+        <li><a href="http://lunatic.byexamples.com/" title="Songs that dedicated to you">Lunatic Music Directory</a></li> 
+        <li><a href="http://wordpress.byexamples.com/" title="Wordpress blogging tips by examples">Wordpress by Examples</a></li> 
+       </ul> </li> 
+      <li id="linkcat-271" class="widget widget_links"><h2 class="widgettitle">Blogroll</h2> 
+       <ul class="xoxo blogroll"> 
+        <li><a href="http://afriel.blogspot.com/"> Shinning Star</a></li> 
+        <li><a href="http://eltoweb.blogspot.com/" title="Toydi’s research on web">(L)earn To Web</a></li> 
+        <li><a href="http://my.opera.com/mysurface" rel="me" title="mysurface personal blog">Beyond the sky</a></li> 
+        <li><a href="http://y0nd13.blogspot.com/">Butter + Majerine !=Cheese</a></li> 
+        <li><a href="http://thiamteck.blogspot.com/" title="A Java developer’s blog.">Developer’s Philosophy</a></li> 
+        <li><a href="http://blog.gunbladeiv.com/" title="Gunblade’s Blog">Negative Zero</a></li> 
+        <li><a href="http://geek00l.blogspot.com/" title="Talks about security, and his BSD.">When {Puffy} meets ^Red Devil^</a></li> 
+       </ul> </li> 
+      <li id="linkcat-275" class="widget widget_links"><h2 class="widgettitle">Linux Blogs</h2> 
+       <ul class="xoxo blogroll"> 
+        <li><a href="http://blog.aizatto.com/"> strange symphonies</a></li> 
+        <li><a href="http://blog.mypapit.net/">mypapit gnu/linux blog</a></li> 
+        <li><a href="http://kagesenshi.blogspot.com/" title="A Fedora User blogs above everything related to foss.">Shadow Logs</a></li> 
+        <li><a href="http://digitalbluewave.blogspot.com/" title="Adventures and misadventures in working with open source, software development and Gentoo.">The Digital Blue Wave</a></li> 
+       </ul> </li> 
+      <li id="text-1" class="widget widget_text"> 
+       <div class="textwidget">
+        <center> 
+         <script type="text/javascript" language="JavaScript" src="https://xslt.alexa.com/site_stats/js/s/a?url=linux.byexamples.com"></script> 
+        </center> 
+        <br> 
+        <center> <a href="http://www3.clustrmaps.com/counter/maps.php?url=https://linux.byexamples.com" id="clustrMapsLink"><img src="https://www3.clustrmaps.com/counter/index2.php?url=https://linux.byexamples.com" style="border:0px;" alt="Locations of visitors to this page" title="Locations of visitors to this page" id="clustrMapsImg" onerror="this.onError=null; this.src='https://www2.clustrmaps.com/images/clustrmaps-back-soon.jpg'; document.getElementById('clustrMapsLink').href='http://www2.clustrmaps.com'"> </a> 
+         <script type="text/javascript" src="https://feedjit.com/serve/?bc=FFFFFF&amp;tc=494949&amp;brd1=336699&amp;lnk=494949&amp;hc=336699&amp;ww=160&amp;ww=160"></script>
+         <noscript>
+          <a href="http://feedjit.com/">Feedjit Live Blog Stats</a>
+         </noscript> 
+        </center> 
+        <br>
+        <br> 
+        <script type="text/javascript" src="https://embed.technorati.com/embed/vxz2c85f6z.js"></script> 
+        <br>
+       </div> </li> 
+     </ul> 
+    </div> <!-- google_ad_section_end --> 
+   </div> 
+  </div> 
+  <div id="footerbox"> 
+   <div id="footerpad"> 
+    <div id="footer"> 
+     <p>All rights reserved by Linux by Examples</p> <a href="http://opensource.org"><img src="https://opensource.org/trademarks/open_source_button.png" alt="Open Source Website" style="border:0"></a> <a href="http://creativecommons.org/licenses/by/2.5/"><img src="https://creativecommons.org/images/public/somerights20.gif" alt="creative common" style="border:0"></a> <a href="http://www.wordpress.org/"><img src="https://wordpress.org/about/images/wp-button-7.gif" alt="wordpress blog" style="border:0"></a> <a href="http://www.freedomain.co.nr/" target="_blank"><img src="https://rzercua.4u.com.ru/image3.gif" width="88" height="31" style="border:0" alt="Free URL Redirection @ .co.nr"></a> <a href="http://www.gimp.org/" title="Graphics by GIMP"><img alt="Graphics by GIMP" src="https://www.gimp.org/images/gfx_by_gimp.png" style="border:0" height="36" width="90"></a> 
+     <br> <a href="http://feeds.feedburner.com/LinuxByExamples" target="_blank"><img src="https://www.feedburner.com/fb/images/pub/powered_by_fb.gif" alt="Powered by FeedBurner" style="border:0"></a> <a href="http://www.kernel.org/"><img src="https://linux.byexamples.com/image/gnu-linux.png" alt="GNU Linux" style="border:0"></a> <!-- Site Meter --> 
+     <script type="text/javascript" src="https://s20.sitemeter.com/js/counter.js?site=s20surface">
+</script> 
+     <noscript> <a href="http://s20.sitemeter.com/stats.asp?site=s20surface" target="_top"> <img src="https://s20.sitemeter.com/meter.asp?site=s20surface" alt="Site Meter" border="0"></a> 
+     </noscript> <a href="http://host-tracker.com/" onmouseover="this.href=&quot;http://host-tracker.com/website-uptime-statistics/1021608/ff/&quot;;"><img width="80" height="15" border="0" alt="website monitoring service" src="https://ext.host-tracker.com/uptime-img/?s=15&amp;t=1021608&amp;m=0.59&amp;p=Total&amp;src=ff"></a>
+     <noscript>
+      <a href="http://host-tracker.com/">website tracker</a>
+     </noscript> <!-- Copyright (c)2006 Site Meter --> 
+    </div>
+   </div>
+  </div> 
+  <script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script> 
+  <script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-560286-5");
+pageTracker._trackPageview();
+} catch(err) {}</script> 
+  <script type="text/javascript" src="https://linux.byexamples.com/wp-includes/js/wp-embed.min.js?ver=4.9.16"></script> 
+  <script async type="text/javascript" src="https://linux.byexamples.com/wp-content/plugins/akismet/_inc/form.js?ver=4.0.8"></script>  
+ </body>
+</html>

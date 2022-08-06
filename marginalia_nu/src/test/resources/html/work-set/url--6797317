@@ -1,0 +1,1072 @@
+<!doctype html><!--[if IE 6]>
+<html id="ie6" lang="en-US">
+<![endif]--><!--[if IE 7]>
+<html id="ie7" lang="en-US">
+<![endif]--><!--[if IE 8]>
+<html id="ie8" lang="en-US">
+<![endif]--><!--[if !(IE 6) & !(IE 7) & !(IE 8)]><!-->
+<html lang="en-US"> <!--<![endif]--> 
+ <head> 
+  <meta charset="UTF-8"> 
+  <meta name="viewport" content="width=device-width"> 
+  <meta name="flattr:id" content="092j0d"> 
+  <title>
+Arabesque | Systems, Tools, and Terminal Science	</title> 
+  <link rel="profile" href="https://gmpg.org/xfn/11"> 
+  <link rel="stylesheet" type="text/css" media="all" href="https://blog.sanctum.geek.nz/wp-content/themes/arabesque/style.css?ver=20190507"> 
+  <link rel="pingback" href="https://blog.sanctum.geek.nz/xmlrpc.php"> <!--[if lt IE 9]>
+<script src="https://blog.sanctum.geek.nz/wp-content/themes/twentyeleven/js/html5.js?ver=3.7.0" type="text/javascript"></script>
+<![endif]--> 
+  <meta name="robots" content="max-image-preview:large"> 
+  <link rel="alternate" type="application/rss+xml" title="Arabesque » Feed" href="https://blog.sanctum.geek.nz/feed/"> 
+  <link rel="alternate" type="application/rss+xml" title="Arabesque » Comments Feed" href="https://blog.sanctum.geek.nz/comments/feed/"> 
+  <link rel="stylesheet" id="wp-block-library-css" href="https://blog.sanctum.geek.nz/wp-includes/css/dist/block-library/style.min.css?ver=5.7" type="text/css" media="all"> 
+  <link rel="stylesheet" id="wp-block-library-theme-css" href="https://blog.sanctum.geek.nz/wp-includes/css/dist/block-library/theme.min.css?ver=5.7" type="text/css" media="all"> 
+  <link rel="stylesheet" id="twentyeleven-block-style-css" href="https://blog.sanctum.geek.nz/wp-content/themes/twentyeleven/blocks.css?ver=20190102" type="text/css" media="all"> 
+  <link rel="stylesheet" id="dark-css" href="https://blog.sanctum.geek.nz/wp-content/themes/twentyeleven/colors/dark.css?ver=20190404" type="text/css" media="all"> 
+  <link rel="https://api.w.org/" href="https://blog.sanctum.geek.nz/wp-json/">
+  <link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://blog.sanctum.geek.nz/xmlrpc.php?rsd"> 
+  <link rel="wlwmanifest" type="application/wlwmanifest+xml" href="https://blog.sanctum.geek.nz/wp-includes/wlwmanifest.xml"> 
+  <meta name="generator" content="WordPress 5.7"> 
+  <style>
+		/* Link color */
+		a,
+		#site-title a:focus,
+		#site-title a:hover,
+		#site-title a:active,
+		.entry-title a:hover,
+		.entry-title a:focus,
+		.entry-title a:active,
+		.widget_twentyeleven_ephemera .comments-link a:hover,
+		section.recent-posts .other-recent-posts a[rel="bookmark"]:hover,
+		section.recent-posts .other-recent-posts .comments-link a:hover,
+		.format-image footer.entry-meta a:hover,
+		#site-generator a:hover {
+			color: #ffffff;
+		}
+		section.recent-posts .other-recent-posts .comments-link a:hover {
+			border-color: #ffffff;
+		}
+		article.feature-image.small .entry-summary p a:hover,
+		.entry-header .comments-link a:hover,
+		.entry-header .comments-link a:focus,
+		.entry-header .comments-link a:active,
+		.feature-slider a.active {
+			background-color: #ffffff;
+		}
+	</style> 
+ </head> 
+ <body class="home blog wp-embed-responsive single-author two-column right-sidebar"> 
+  <div class="skip-link">
+   <a class="assistive-text" href="#content">Skip to primary content</a>
+  </div>
+  <div class="skip-link">
+   <a class="assistive-text" href="#secondary">Skip to secondary content</a>
+  </div>
+  <div id="page" class="hfeed"> 
+   <header id="branding" role="banner"> 
+    <hgroup> 
+     <h1 id="site-title"><span><a href="https://blog.sanctum.geek.nz/" rel="home"><img src="https://blog.sanctum.geek.nz/wp-content/themes/arabesque/title.png" alt="Arabesque" title="Arabesque" width="220" height="49"></a></span></h1> 
+     <h2 id="site-description">Systems, Tools, and Terminal Science</h2> 
+    </hgroup> 
+    <form method="get" id="searchform" action="https://blog.sanctum.geek.nz/"> <label for="s" class="assistive-text">Search</label> 
+     <input type="text" class="field" name="s" id="s" placeholder="Search"> 
+     <input type="submit" class="submit" name="submit" id="searchsubmit" value="Search"> 
+    </form> 
+    <nav id="access" role="navigation"> 
+     <h3 class="assistive-text">Main menu</h3> 
+     <div class="menu-main-container">
+      <ul id="menu-main" class="menu">
+       <li id="menu-item-2302" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-2302"><a href="https://blog.sanctum.geek.nz/about/">About</a></li> 
+       <li id="menu-item-2303" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-2303"><a href="https://blog.sanctum.geek.nz/bash-quick-start-guide/">Bash Guide</a></li> 
+       <li id="menu-item-2304" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-2304"><a href="https://blog.sanctum.geek.nz/faq/">FAQ</a></li> 
+       <li id="menu-item-2310" class="menu-item menu-item-type-taxonomy menu-item-object-series menu-item-2310"><a href="https://blog.sanctum.geek.nz/series/gnu-linux-crypto/">GNU/Linux Crypto</a></li> 
+       <li id="menu-item-2306" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-2306"><a href="https://blog.sanctum.geek.nz/nagios-core-administration-cookbook/">Nagios Cookbook</a></li> 
+       <li id="menu-item-2307" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-2307"><a href="https://blog.sanctum.geek.nz/unidex/">Unidex</a></li> 
+       <li id="menu-item-2311" class="menu-item menu-item-type-taxonomy menu-item-object-series menu-item-2311"><a href="https://blog.sanctum.geek.nz/series/unix-as-ide/">Unix as IDE</a></li> 
+       <li id="menu-item-2309" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-2309"><a href="https://blog.sanctum.geek.nz/vim-koans/">Vim Kōans</a></li> 
+      </ul>
+     </div> 
+    </nav><!-- #access --> 
+   </header><!-- #branding --> 
+   <div id="main"> 
+    <div id="primary"> 
+     <div id="content" role="main"> 
+      <nav id="nav-above"> 
+       <h3 class="assistive-text">Post navigation</h3> 
+       <div class="nav-previous">
+        <a href="https://blog.sanctum.geek.nz/page/2/"><span class="meta-nav">←</span> Older posts</a>
+       </div> 
+       <div class="nav-next"></div> 
+      </nav><!-- #nav-above --> 
+      <article id="post-2195" class="post-2195 post type-post status-publish format-standard hentry category-awk category-bash tag-arbitrary-code-execution tag-arguments tag-environment tag-quoting tag-runtime-data tag-security tag-variables"> 
+       <header class="entry-header"> 
+        <h1 class="entry-title"><a href="https://blog.sanctum.geek.nz/passing-runtime-data-to-awk/" rel="bookmark">Passing runtime data to AWK</a></h1> 
+        <div class="entry-meta"> <span class="sep">Posted on </span><a href="https://blog.sanctum.geek.nz/passing-runtime-data-to-awk/" title="23:55" rel="bookmark"><time class="entry-date" datetime="2020-05-31T23:55:54+12:00">2020-05-31</time></a><span class="by-author"> <span class="sep"> by </span> <span class="author vcard"><a class="url fn n" href="https://blog.sanctum.geek.nz/author/tom/" title="View all posts by Tom Ryder" rel="author">Tom Ryder</a></span></span> 
+        </div><!-- .entry-meta --> 
+       </header><!-- .entry-header --> 
+       <div class="entry-content"> 
+        <p>Shell script and AWK are very complementary languages. AWK was designed from its very beginnings at Bell Labs as a pattern-action language for short programs, ideally one or two lines long. It was intended to be used on the Unix shell interactive command line, or in shell scripts. Its feature set filled out some functionality that shell script at the time lacked, and often still lacks, as is the case with floating point numbers; it thereby (indirectly) brings much of the C language’s expressive power to the shell.</p> 
+        <p>It’s therefore both common and reasonable to see AWK one-liners in shell scripts for data processing where doing the same in shell is unwieldy or impossible, especially when floating point operations or data delimiting are involved. While AWK’s full power is in general tragically underused, most shell script users and developers know about one of its most useful properties: selecting a single column from whitespace-delimited data. Sometimes, <a href="https://www.man7.org/linux/man-pages/man1/cut.1p.html"><code>cut(1)</code></a> doesn’t, uh, cut it.</p> 
+        <p>In order for one language to cooperate with another usefully via embedded programs in this way, data of some sort needs to be passed between them at runtime, and here there are a few traps with syntax that may catch out unwary shell programmers. We’ll go through a simple example showing the problems, and demonstrate a few potential solutions.</p> 
+        <h2>Easy: Fixed data</h2> 
+        <p>Embedded AWK programs in shell scripts work great when you already know <em>before</em> runtime what you want your patterns for the pattern-action pairs to be. Suppose our company has a vendor-supplied program that returns temperature sensor data for the server room, and we want to run some commands for any and all rows registering over a certain threshold temperature. The output for the existing <code>server-room-temps</code> command might look like this:</p> 
+        <pre><code>$ server-room-temps
+ID  Location    Temperature_C
+1   hot_aisle_1 27.9
+2   hot_aisle_2 30.3
+3   cold_aisle_1    26.0
+4   cold_aisle_2    25.2
+5   outer       23.9
+</code></pre> 
+        <p>The task for the monitoring script is simple: get a list of all the locations where the temperature is above 28°C. If there are any such locations, we need to email the administrator the full list. Easy! It looks like every introductory AWK example you’ve ever seen—it could be straight out of <a href="https://www.amazon.com/AWK-Programming-Language-Alfred-Aho/dp/020107981X">the book</a>. Let’s type it up on the shell to test it:</p> 
+        <pre><code>$ server-room-temps | awk 'NR &gt; 1 &amp;&amp; $3 &gt; 28 {print $2}'
+hot_aisle_2
+</code></pre> 
+        <p>That looks good. The script might end up looking something like this:</p> 
+        <pre><code>#!/bin/sh
+alerts=/var/cache/temps/alerts
+server-room-temps |
+    awk 'NR &gt; 1 &amp;&amp; $3 &gt; 28 {print $2}' &gt; "$alerts" || exit
+if [ -s "$alerts" ] ; then
+    mail -s 'Temperature alert' sysadmin &lt; "$alerts"
+fi
+</code></pre> 
+        <p>So, after writing the alerts data file, we test if with <code>[ -s ... ]</code> to see whether it’s got any data in it. If it does, we send it all to the administrator with <code>mail(1)</code>. Done!</p> 
+        <p>We set that running every few minutes with <code>cron(8)</code> or <code>systemd.timer(5)</code>, and we have a nice stop-gap solution until the lazy systems administrator gets around to fixing the Nagios server. He’s probably just off playing <a href="https://www.adom.de/home/index.html">ADOM</a> again…</p> 
+        <h2>Hard: runtime data</h2> 
+        <p>A few weeks later, our sysadmin still hasn’t got the Nagios server running, because his high elf wizard is about to hit level 50, and there’s a new request from the boss: can we adjust the script so that it accepts the cutoff temperature data as an argument, and other departments can use it? Sure, why not. Let’s mock that up, with a threshold of, let’s say, 25.5°C.</p> 
+        <pre><code>$ server-room-temps &gt; test-data
+$ threshold=25.5
+$ awk 'NR &gt; 1 &amp;&amp; $3 &gt; $threshold {print $2}' test-data
+hot_aisle_1
+hot_aisle_2
+</code></pre> 
+        <p>Wait, that’s not right. There are <em>three</em> lines with temperatures over 25.5°C, not two. Where’s <code>cold_aisle_1</code>?</p> 
+        <p>Looking at the code more carefully, you realize that you assumed your shell variable would be accessible from within the AWK program, when of course, it isn’t; AWK’s variables are independent of shell variables. You don’t know why the hell it’s showing those two rows, though…</p> 
+        <p>Maybe we need double quotes?</p> 
+        <pre><code>$ awk "NR &gt; 1 &amp;&amp; $3 &gt; $threshold {print $2}" test-data
+awk: cmd. line:1: NR &gt; 1 &amp;&amp;  &gt; 25.5 {print}
+awk: cmd. line:1:            ^ syntax error
+</code></pre> 
+        <p>Hmm. Nope. Maybe we need to expand the variable inside the quotes?</p> 
+        <pre><code>$ awk 'NR &gt; 1 &amp;&amp; $3 &gt; "$threshold" {print $2}' test-data
+hot-aisle-1
+hot-aisle-2
+cold-aisle-1
+cold-aisle-2
+outer
+</code></pre> 
+        <p>That’s not right, either. It seems to have printed <em>all</em> the locations, as if it didn’t test the threshold at all.</p> 
+        <p>Maybe it should be <em>outside</em> the single quotes?</p> 
+        <pre><code>$ awk 'NR &gt; 1 &amp;&amp; $3 &gt; '$threshold' {print $2}' test-data
+hot-aisle-1
+hot-aisle-2
+cold-aisle-1
+</code></pre> 
+        <p>The results look right, now … ah, but wait, we still need to <a href="https://mywiki.wooledge.org/Quotes">quote it to stop spaces expanding</a>…</p> 
+        <pre><code>$ awk 'NR &gt; 1 &amp;&amp; $3 &gt; '"$threshold"' {print $2}' test-data
+hot-aisle-1
+hot-aisle-2
+cold-aisle-1
+</code></pre> 
+        <p>Cool, that works. Let’s submit it to the security team and go to lunch.</p> 
+        <h3>Caught out</h3> 
+        <p>To your surprise, the script is rejected. The security officer says you have an unescaped variable that allows arbitrary code execution. What? Where? It’s just AWK, not SQL…!</p> 
+        <p>To your horror, the security officer demonstrates:</p> 
+        <pre><code>$ threshold='0;{system("echo rm -fr /*");exit}'
+$ echo 'NR &gt; 1 &amp;&amp; $3 &gt; '"$threshold"' {print $2}'
+NR &gt; 1 &amp;&amp; $3 &gt; 0;{system("echo rm -fr /*");exit} {print $2}
+$ awk 'NR &gt; 1 &amp;&amp; $3 &gt; '"$threshold"' {print $2}' test-data
+rm -fr /bin /boot /dev /etc /home /initrd.img ...
+</code></pre> 
+        <p>Oh, hell… if that were installed, and someone were able to set <code>threshold</code> to an arbitrary value, they could execute <em>any</em> AWK code, and thereby shell script, that they wanted to. It’s <em>AWK injection</em>! How embarrassing—good thing that was never going to run as <code>root</code> (…right?) Back to the drawing board …</p> 
+        <h3>Validating the data</h3> 
+        <p>One approach that might come readily to mind is to ensure that no unexpected characters appear in the value. We could use a <code>case</code> statement before interpolating the variable into the AWK program to check it contains no characters outside digits and a decimal:</p> 
+        <pre><code>case $threshold in
+    *[!0-9.]*) exit 2 ;;
+esac
+</code></pre> 
+        <p>That works just fine, and it’s appropriate to do some data validation at the opening of the script, anyway. It’s certainly better than leaving it as it was. But we <a href="https://en.wikipedia.org/wiki/SQL_injection">learned this lesson</a> with PHP in the 90s; you don’t just filter on characters, or slap in some backslashes—that’s missing the point. Ideally, we need to safely pass the data into the AWK process <em>without</em> ever parsing it as AWK code, sanitized or nay, so the situation doesn’t arise in the first place.</p> 
+        <h3>Environment variables</h3> 
+        <p>The shell and your embedded AWK program may not share the shell’s local variables, but they <em>do</em> share environment variables, accessible in AWK’s <code>ENVIRON</code> array. So, passing the threshold in as an environment variable works:</p> 
+        <pre><code>$ THRESHOLD=25.5
+$ export THRESHOLD
+$ awk 'NR &gt; 1 &amp;&amp; $3 &gt; ENVIRON["THRESHOLD"] {print $2}' test-data
+hot-aisle-1
+hot-aisle-2
+cold-aisle-1
+</code></pre> 
+        <p>Or, to be a little cleaner:</p> 
+        <pre><code>$ THRESHOLD=25.5 \
+    awk 'NR &gt; 1 &amp;&amp; $3 &gt; ENVIRON["THRESHOLD"] {print $2}' test-data
+hot-aisle-1
+hot-aisle-2
+cold-aisle-1
+</code></pre> 
+        <p>This is already much better. AWK will parse our data <em>only</em> as a variable, and won’t try to execute anything within it. The only snag with this method is picking a name; make sure that you don’t overwrite another, more important environment variable, like <code>PATH</code>, or <code>LANG</code>…</p> 
+        <h3>Another argument</h3> 
+        <p>Passing the data as another <em>argument</em> and then reading it out of the <code>ARGV</code> array works, too:</p> 
+        <pre><code>$ awk 'BEGIN{ARGC--} NR &gt; 1 &amp;&amp; $3 &gt; ARGV[2] {print $2}' test-data 25.5
+</code></pre> 
+        <p>This method is also safe from arbitrary code execution, but it’s still somewhat awkward because it requires us to decrease the argument count <code>ARGC</code> by one so that AWK doesn’t try to process a file named “25.5” and end up upset when it’s not there. AWK arguments can mean whatever you need them to mean, but unless told otherwise, AWK generally assumes they are filenames, and will attempt to iterate through them for lines of data to chew on.</p> 
+        <p>Here’s another way that’s very similar; we read the threshold from the second argument, and then blank it out in the <code>ARGV</code> array:</p> 
+        <pre><code>$ awk 'BEGIN{threshold=ARGV[2];ARGV[2]=""}
+    NR &gt; 1 &amp;&amp; $3 &gt; threshold {print $2}' test-data 25.5
+</code></pre> 
+        <p>AWK won’t treat the second argument as a filename, because it’s blank by the time it processes it.</p> 
+        <h3>Pre-assigned variables</h3> 
+        <p>There are two lesser-known syntaxes for passing data into AWK that allow you safely to assign variables at runtime. The first is to use the <code>-v</code> option:</p> 
+        <pre><code>$ awk -v threshold="$threshold" \
+    'NR &gt; 1 &amp;&amp; $3 &gt; threshold {print $2}' \
+    test-data
+</code></pre> 
+        <p>Another, perhaps even more obscure, is to set them as arguments before the filename data, using the <code>var=value</code> syntax:</p> 
+        <pre><code>$ awk 'NR &gt; 1 &amp;&amp; $3 &gt; threshold {print $2}' \
+    threshold="$threshold" test-data
+</code></pre> 
+        <p>Note that in both cases, we still <em>quote</em> the <code>$threshold</code> expansion; this is because the shell is expanding the value before we pass it in.</p> 
+        <p>The difference between these two syntaxes is when the variable assignment occurs. With <code>-v</code>, the assignment happens straight away, before reading any data from the input sources, as if it were in the <code>BEGIN</code> block of the program. With the argument form, it happens when the program’s data processing reaches that argument. The upshot of that is that you could test several files with several different temperatures in one hit, if you wanted to:</p> 
+        <pre><code>$ awk 'NR &gt; 1 &amp;&amp; $3 &gt; threshold {print $2}' \
+    threshold=25.5 test-data-1 threshold=26.0 test-data-2
+</code></pre> 
+        <p>Both of these assignment syntaxes are standardized in <a href="https://www.man7.org/linux/man-pages/man1/awk.1p.html">POSIX <code>awk</code></a>.</p> 
+        <p>These are my preferred methods for passing runtime data; they require no argument count munging, avoid the possibility of trampling on existing environment variables, use AWK’s own variable and expression syntax, and most importantly, the chances of anyone reading the script being able to grasp what’s going on are higher. You can thereby avoid a mess of quoting and back-ticking that often plagues these sorts of embedded programs.</p> 
+        <h2>Safety not guaranteed</h2> 
+        <p>If you take away only one thing from this post, it might be: <em>don’t interpolate shell variables in AWK programs</em>, because it has the same fundamental problems as interpolating data into query strings in PHP. Pass the data in safely instead, using either environment variables, arguments, or AWK variable assignments. Keeping this principle in mind will serve you well for other embedded programs, too; stop thinking in terms of escaping and character whitelists, and start thinking in terms of passing the data safely in the first place.</p> 
+       </div><!-- .entry-content --> 
+       <footer class="entry-meta"> <span class="cat-links"> <span class="entry-utility-prep entry-utility-prep-cat-links">Posted in</span> <a href="https://blog.sanctum.geek.nz/category/awk/" rel="category tag">Awk</a>, <a href="https://blog.sanctum.geek.nz/category/bash/" rel="category tag">Bash</a> </span> <span class="sep"> | </span> <span class="tag-links"> <span class="entry-utility-prep entry-utility-prep-tag-links">Tagged</span> <a href="https://blog.sanctum.geek.nz/tag/arbitrary-code-execution/" rel="tag">arbitrary code execution</a>, <a href="https://blog.sanctum.geek.nz/tag/arguments/" rel="tag">arguments</a>, <a href="https://blog.sanctum.geek.nz/tag/environment/" rel="tag">environment</a>, <a href="https://blog.sanctum.geek.nz/tag/quoting/" rel="tag">quoting</a>, <a href="https://blog.sanctum.geek.nz/tag/runtime-data/" rel="tag">runtime data</a>, <a href="https://blog.sanctum.geek.nz/tag/security/" rel="tag">security</a>, <a href="https://blog.sanctum.geek.nz/tag/variables/" rel="tag">variables</a> </span> 
+       </footer><!-- .entry-meta --> 
+      </article><!-- #post-2195 --> 
+      <article id="post-2113" class="post-2113 post type-post status-publish format-link hentry category-vim tag-runtime tag-vim-advent-calendar tag-vimrc tag-vimways post_format-post-format-link"> 
+       <header class="entry-header"> 
+        <hgroup> 
+         <h2 class="entry-title"><a href="https://blog.sanctum.geek.nz/vimways-runtime-hackery/" rel="bookmark">Vimways: Runtime hackery</a></h2> 
+         <h3 class="entry-format">Link</h3> 
+        </hgroup> 
+       </header><!-- .entry-header --> 
+       <div class="entry-content"> 
+        <p>I’ve written <a href="https://vimways.org/2018/runtime-hackery/">another new article over on Vimways</a> for the 2018 Vim advent calendar. This is a followup to <a href="https://vimways.org/2018/from-vimrc-to-vim/">my previous article</a>, adding some more detail about ways to use Vim’s runtime directory structure.</p> 
+       </div><!-- .entry-content --> 
+       <footer class="entry-meta"> <span class="sep">Posted on </span><a href="https://blog.sanctum.geek.nz/vimways-runtime-hackery/" title="10:27" rel="bookmark"><time class="entry-date" datetime="2018-12-11T10:27:24+13:00">2018-12-11</time></a><span class="by-author"> <span class="sep"> by </span> <span class="author vcard"><a class="url fn n" href="https://blog.sanctum.geek.nz/author/tom/" title="View all posts by Tom Ryder" rel="author">Tom Ryder</a></span></span> 
+       </footer><!-- .entry-meta --> 
+      </article><!-- #post-2113 --> 
+      <article id="post-2108" class="post-2108 post type-post status-publish format-link hentry category-vim tag-runtime tag-vim-advent-calendar tag-vimrc tag-vimways post_format-post-format-link"> 
+       <header class="entry-header"> 
+        <hgroup> 
+         <h2 class="entry-title"><a href="https://blog.sanctum.geek.nz/vimways-from-vimrc-to-vim/" rel="bookmark">Vimways: From .vimrc to .vim</a></h2> 
+         <h3 class="entry-format">Link</h3> 
+        </hgroup> 
+       </header><!-- .entry-header --> 
+       <div class="entry-content"> 
+        <p>I’ve written <a href="https://vimways.org/2018/from-vimrc-to-vim/">a new article over on Vimways</a> for the 2018 Vim advent calendar. It’s about converting a long and unwieldy <code>.vimrc</code> into a <code>~/.vim</code> runtime directory.</p> 
+       </div><!-- .entry-content --> 
+       <footer class="entry-meta"> <span class="sep">Posted on </span><a href="https://blog.sanctum.geek.nz/vimways-from-vimrc-to-vim/" title="21:50" rel="bookmark"><time class="entry-date" datetime="2018-12-08T21:50:17+13:00">2018-12-08</time></a><span class="by-author"> <span class="sep"> by </span> <span class="author vcard"><a class="url fn n" href="https://blog.sanctum.geek.nz/author/tom/" title="View all posts by Tom Ryder" rel="author">Tom Ryder</a></span></span> 
+       </footer><!-- .entry-meta --> 
+      </article><!-- #post-2108 --> 
+      <article id="post-1794" class="post-1794 post type-post status-publish format-standard hentry category-vim tag-ed tag-filter tag-posix tag-read tag-shell tag-unix tag-vi tag-write"> 
+       <header class="entry-header"> 
+        <h1 class="entry-title"><a href="https://blog.sanctum.geek.nz/shell-from-vi/" rel="bookmark">Shell from vi</a></h1> 
+        <div class="entry-meta"> <span class="sep">Posted on </span><a href="https://blog.sanctum.geek.nz/shell-from-vi/" title="23:46" rel="bookmark"><time class="entry-date" datetime="2017-02-18T23:46:56+13:00">2017-02-18</time></a><span class="by-author"> <span class="sep"> by </span> <span class="author vcard"><a class="url fn n" href="https://blog.sanctum.geek.nz/author/tom/" title="View all posts by Tom Ryder" rel="author">Tom Ryder</a></span></span> 
+        </div><!-- .entry-meta --> 
+       </header><!-- .entry-header --> 
+       <div class="entry-content"> 
+        <p>A good sign of a philosophically sound interactive Unix tool is the facilities it offers for interacting with the filesystem and the shell: specifically, how easily can you run file operations and/or shell commands with reference to data within the tool? The more straightforward this is, the more likely the tool will fit neatly into a terminal-driven Unix workflow.</p> 
+        <p>If all else fails, you could always suspend the task with Ctrl+Z to drop to a shell, but it’s helpful if the tool shows more deference to the shell than that; it means you can use and (even more importantly) <em>write</em> tools to manipulate the data in the program in whatever languages you choose, rather than being forced to use any kind of heretical internal scripting language, or worse, an over-engineered API.</p> 
+        <p><code>vi</code> is a good example of a tool that interacts openly and easily with the Unix shell, allowing you to pass open buffers as streams of text transparently to classic filter and text processing tools. In the case of Vim, it’s particularly useful to get to know these, because in many cases they allow you to avoid painful Vimscript, and to do things your way, without having to learn an ad-hoc language or to rely on plugins. This was touched on briefly in the <a href="https://blog.sanctum.geek.nz/unix-as-ide-editing/">“Editing” article</a> of the <a href="https://blog.sanctum.geek.nz/series/unix-as-ide/">Unix as IDE</a> series.</p> 
+        <h2>Choosing your shell</h2> 
+        <p>By default, <code>vi</code> will use the value of your <code>SHELL</code> environment variable as the shell in which your commands will be run. In most cases, this is probably what you want, but it might pay to check before you start:</p> 
+        <pre><code>:set shell?
+</code></pre> 
+        <p>If you’re using Bash, and this prints <code>/bin/bash</code>, you’re good to go, and you’ll be able to use Bash-specific features or builtins such as <code>[[</code> comfortably in your command lines if you wish.</p> 
+        <h2>Running commands</h2> 
+        <p>You can run a shell command from <code>vi</code> with the <code>!</code> <code>ex</code> command. This is inherited from the same behaviour in <code>ed</code>. A good example would be to read a manual page in the same terminal window without exiting or suspending <code>vi</code>:</p> 
+        <pre><code>:!man grep
+</code></pre> 
+        <p>Or to build your project:</p> 
+        <pre><code>:!make
+</code></pre> 
+        <p>You’ll find that exclamation point prefix <code>!</code> shows up in the context of running external commands pretty consistently in <code>vi</code>.</p> 
+        <p>You will probably need to press Enter afterwards to return to <code>vi</code>. This is to allow you to read any output remaining on your screen.</p> 
+        <p>Of course, that’s not the only way to do it; you may prefer to drop to a forked shell with <code>:sh</code>, or suspend <code>vi</code> with <code>^Z</code> to get back to the original shell, resuming it later with <code>fg</code>.</p> 
+        <p>You can refer to the current buffer’s filename in the command with <code>%</code>, but be aware that this may cause escaping problems for files with special characters in their names:</p> 
+        <pre><code>:!gcc % -o foo
+</code></pre> 
+        <p>If you want a literal <code>%</code>, you will need to escape it with a backslash:</p> 
+        <pre><code>:!grep \% .vimrc
+</code></pre> 
+        <p>The same applies for the <code>#</code> character, for the <em>alternate buffer</em>.</p> 
+        <pre><code>:!gcc # -o bar
+:!grep \# .vimrc
+</code></pre> 
+        <p>And for the <code>!</code> character, which expands to the previous command:</p> 
+        <pre><code>:!echo !
+:!echo \!
+</code></pre> 
+        <p>You can try to work around special characters for these expansions by single-quoting them:</p> 
+        <pre><code>:!gcc '%' -o foo
+:!gcc '#' -o bar
+</code></pre> 
+        <p>But that’s still imperfect for files with apostrophes in their names. In Vim (but not <code>vi</code>) you can do this:</p> 
+        <pre><code>:exe "!gcc " . shellescape(expand("%")) . " -o foo"
+</code></pre> 
+        <p>The Vim help for this is at <code>:help :!</code>.</p> 
+        <h2>Reading the output of commands into a buffer</h2> 
+        <p>Also inherited from <code>ed</code> is reading the output of commands into a buffer, which is done by giving a command starting with <code>!</code> as the argument to <code>:r</code>:</p> 
+        <pre><code>:r !grep vim .vimrc
+</code></pre> 
+        <p>This will insert the output of the command <em>after</em> the current line position in the buffer; it works in the same way as reading in a file directly.</p> 
+        <p>You can add a line number prefix to <code>:r</code> to place the output after that line number:</p> 
+        <pre><code>:5r !grep vim .vimrc
+</code></pre> 
+        <p>To put the output at the very start of the file, a line number of <code>0</code> works:</p> 
+        <pre><code>:0r !grep vim .vimrc
+</code></pre> 
+        <p>And for the very <em>end</em> of the file, you’d use <code>$</code>:</p> 
+        <pre><code>:$r !grep vim .vimrc
+</code></pre> 
+        <p>Note that redirections work fine, too, if you want to prevent <code>stderr</code> from being written to your buffer in the case of errors:</p> 
+        <pre><code>:$r !grep vim .vimrc 2&gt;&gt;vim_errorlog
+</code></pre> 
+        <h2>Writing buffer text into a command</h2> 
+        <p>To run a command with standard input coming from text in your buffer, but <em>without</em> deleting it or writing the output back into your buffer, you can provide a <code>!</code> command as an argument to <code>:w</code>. Again, this behaviour is inherited from <code>ed</code>.</p> 
+        <p>By default, the whole buffer is written to the command; you might initially expect that only the current line would be written, but this makes sense if you consider the usual behaviour of <code>w</code> when writing directly to a file.</p> 
+        <p>Given a file with a first column full of numbers:</p> 
+        <pre><code>304 Donald Trump
+227 Hillary Clinton
+3   Colin Powell
+1   Spotted Eagle
+1   Ron Paul
+1   John Kasich
+1   Bernie Sanders
+</code></pre> 
+        <p>We could calculate and view (but not save) the sum of the first column with <code>awk(1)</code>, to see the expected value of 538 printed to the terminal:</p> 
+        <pre><code>:w !awk '{sum+=$1}END{print sum}'
+</code></pre> 
+        <p>We could limit the operation to the faithless electoral votes by specifying a line range:</p> 
+        <pre><code>:3,$w !awk '{sum+=$1}END{print sum}'
+</code></pre> 
+        <p>You can also give a range of just <code>.</code>, if you only want to write out the current line.</p> 
+        <p>In Vim, if you’re using visual mode, pressing <code>:</code> while you have some text selected will automatically add the <code>'&lt;,'&gt;</code> range marks for you, and you can write out the rest of the command:</p> 
+        <pre><code>:'&lt;,'&gt;w !grep Bernie
+</code></pre> 
+        <p>Note that this writes every <em>line</em> of your selection to the command, not merely the characters you have selected. It’s more intuitive to use visual line mode (Shift+V) if you take this approach.</p> 
+        <h2>Filtering text</h2> 
+        <p>If you want to <em>replace</em> text in your buffer by filtering it through a command, you can do this by providing a range to the <code>!</code> command:</p> 
+        <pre><code>:1,2!tr '[:lower:]' '[:upper:]'
+</code></pre> 
+        <p>This example would capitalise the letters in the first two lines of the buffer, passing them as input to the command and replacing them with the command’s output.</p> 
+        <pre><code>304 DONALD TRUMP
+227 HILLARY CLINTON
+3 Colin Powell
+1 Spotted Eagle
+1 Ron Paul
+1 John Kasich
+1 Bernie Sanders
+</code></pre> 
+        <p>Note that the number of lines passed as input need not match the number of lines of output. The length of the buffer can change. Note also that by default any <code>stderr</code> is included; you may want to redirect that away.</p> 
+        <p>You can specify the entire file for such a filter with <code>%</code>:</p> 
+        <pre><code>:%!tr '[:lower:]' '[:upper:]'
+</code></pre> 
+        <p>As before, the current line must be explicitly specified with <code>.</code> if you want to use only that as input, otherwise you’ll just be running the command with no buffer interaction at all, per the first heading of this article:</p> 
+        <pre><code>:.!tr '[:lower:]' '[:upper:]'
+</code></pre> 
+        <p>You can also use <code>!</code> as a <em>motion</em> rather than an <code>ex</code> command on a range of lines, by pressing <code>!</code> in normal mode and then a motion (<code>w</code>, <code>3w</code>, <code>}</code>, etc) to select all the lines you want to pass through the filter. Doubling it (<code>!!</code>) filters the current line, in a similar way to the <code>yy</code> and <code>dd</code> shortcuts, and you can provide a numeric prefix (e.g. <code>3!!</code>) to specify a number of lines from the current line.</p> 
+        <p>This is an example of a general approach that will work with any POSIX-compliant version of <code>vi</code>. In Vim, you have the <code>gU</code> command available to coerce text to uppercase, but this is not available in vanilla <code>vi</code>; the best you have is the tilde command <code>~</code> to <em>toggle</em> the case of the character under the cursor. <code>tr(1)</code>, however, is specified by POSIX–including the locale-aware transformation–so you are much more likely to find it works on any modern Unix system.</p> 
+        <p>If you end up needing such a command during editing a lot, you could make a generic command for your <a href="https://blog.sanctum.geek.nz/custom-commands/">private bindir</a>, say named <code>upp</code> for uppercase, that forces all of its standard input to uppercase:</p> 
+        <pre><code>#!/bin/sh
+tr '[:lower:]' '[:upper:]'
+</code></pre> 
+        <p>Once saved somewhere in <code>$PATH</code> and made executable, this would allow you simply to write the following to apply the filter to the entire buffer:</p> 
+        <pre><code>:%!upp
+</code></pre> 
+        <p>The main takeaway from this is that the scripts you use with your editor don’t have to be in shell. You might prefer <a href="https://sanctum.geek.nz/blinkenlights/kernighan.jpg">Awk</a>:</p> 
+        <pre><code>#!/usr/bin/awk -f
+{ print toupper($0) }
+</code></pre> 
+        <p>Or <a href="https://sanctum.geek.nz/blinkenlights/zeus.png">Perl</a>:</p> 
+        <pre><code>#!/usr/bin/env perl
+print uc while &lt;&gt;;
+</code></pre> 
+        <p><a href="https://sanctum.geek.nz/blinkenlights/i-guess.png">Or Python, or Ruby, or Rust</a>, or …</p> 
+        <p><code>ed</code> supports this Incidentally, this “filtering” feature is where <code>vi</code>‘s heritage from <code>ed</code> ends as far as external commands are concerned. In POSIX <code>ed</code>, there isn’t a way to filter a subset of the buffer text through a command in one hit. It’s not too hard to emulate it with a temporary file, though, using all the syntax learned above:</p> 
+        <pre><code>*1,2w !upp &gt; tmp
+*1,2d
+*0r tmp
+*!rm tmp
+</code></pre> 
+        <p>However, there is a way to filter a whole file in one hit:</p> 
+        <pre><code>*e !upp &lt; %
+</code></pre> 
+       </div><!-- .entry-content --> 
+       <footer class="entry-meta"> <span class="cat-links"> <span class="entry-utility-prep entry-utility-prep-cat-links">Posted in</span> <a href="https://blog.sanctum.geek.nz/category/vim/" rel="category tag">Vim</a> </span> <span class="sep"> | </span> <span class="tag-links"> <span class="entry-utility-prep entry-utility-prep-tag-links">Tagged</span> <a href="https://blog.sanctum.geek.nz/tag/ed/" rel="tag">ed</a>, <a href="https://blog.sanctum.geek.nz/tag/filter/" rel="tag">filter</a>, <a href="https://blog.sanctum.geek.nz/tag/posix/" rel="tag">posix</a>, <a href="https://blog.sanctum.geek.nz/tag/read/" rel="tag">read</a>, <a href="https://blog.sanctum.geek.nz/tag/shell/" rel="tag">shell</a>, <a href="https://blog.sanctum.geek.nz/tag/unix/" rel="tag">unix</a>, <a href="https://blog.sanctum.geek.nz/tag/vi/" rel="tag">vi</a>, <a href="https://blog.sanctum.geek.nz/tag/write/" rel="tag">write</a> </span> 
+       </footer><!-- .entry-meta --> 
+      </article><!-- #post-1794 --> 
+      <article id="post-1782" class="post-1782 post type-post status-publish format-standard hentry category-bash tag-completion tag-host tag-hostname tag-hosts-file"> 
+       <header class="entry-header"> 
+        <h1 class="entry-title"><a href="https://blog.sanctum.geek.nz/bash-hostname-completion/" rel="bookmark">Bash hostname completion</a></h1> 
+        <div class="entry-meta"> <span class="sep">Posted on </span><a href="https://blog.sanctum.geek.nz/bash-hostname-completion/" title="23:32" rel="bookmark"><time class="entry-date" datetime="2017-02-10T23:32:17+13:00">2017-02-10</time></a><span class="by-author"> <span class="sep"> by </span> <span class="author vcard"><a class="url fn n" href="https://blog.sanctum.geek.nz/author/tom/" title="View all posts by Tom Ryder" rel="author">Tom Ryder</a></span></span> 
+        </div><!-- .entry-meta --> 
+       </header><!-- .entry-header --> 
+       <div class="entry-content"> 
+        <p>As part of its programmable completion suite, Bash includes <strong>hostname completion</strong>. This completion mode reads hostnames from a file in <a href="https://linux.die.net/man/5/hosts"><code>hosts(5)</code></a> format to find possible completions matching the current word. On Unix-like operating systems, it defaults to reading the file in its usual path at <code>/etc/hosts</code>.</p> 
+        <p>For example, given the following <code>hosts(5)</code> file in place at <code>/etc/hosts</code>:</p> 
+        <pre><code>127.0.0.1      localhost
+192.0.2.1      web.example.com www
+198.51.100.10  mail.example.com mx
+203.0.113.52   radius.example.com rad
+</code></pre> 
+        <p>An appropriate call to <code>compgen</code> would yield this output:</p> 
+        <pre><code>$ compgen -A hostname
+localhost
+web.example.com
+www
+mail.example.com
+mx
+radius.example.com
+rad
+</code></pre> 
+        <p>We could then use this to complete hostnames for network diagnostic tools like <code>ping(8)</code>:</p> 
+        <pre><code>$ complete -A hostname ping
+</code></pre> 
+        <p>Typing <code>ping we</code> and then pressing Tab would then complete to <code>ping web.example.com</code>. If the <code>shopt</code> option <code>hostcomplete</code> is on, which it is by default, Bash will also attempt host completion if completing any word with an <code>@</code> character in it. This can be useful for email address completion or for SSH <code>username@hostname</code> completion.</p> 
+        <p>We could also trigger hostname completion in any other Bash command line (regardless of <code>complete</code> settings) with the Readline shortcut Alt+@ (i.e. Alt+Shift+2). This works even if <code>hostcomplete</code> is turned off.</p> 
+        <p>However, with DNS so widely deployed, and with system <code>/etc/hosts</code> files normally so brief on internet-connected systems, this may not seem terribly useful; you’d just end up completing <code>localhost</code>, and (somewhat erroneously) a few IPv6 addresses that don’t begin with a digit. It may seem even less useful if you have your own set of hosts in which you’re interested, since they may not correspond to the hosts in the system’s <code>/etc/hosts</code> file, and you probably really do want them looked up via DNS each time, rather than maintaining static addresses for them.</p> 
+        <p>There’s a simple way to make host completion much more useful by defining the <code>HOSTFILE</code> variable in <code>~/.bashrc</code> to point to any other file containing a list of hostnames. You could, for example, create a simple file <code>~/.hosts</code> in your home directory, and then include this in your <code>~/.bashrc</code>:</p> 
+        <pre><code># Use a private mock hosts(5) file for completion
+HOSTFILE=$HOME/.hosts
+</code></pre> 
+        <p>You could then populate the <code>~/.hosts</code> file with a list of hostnames in which you’re interested, which will allow you to influence hostname completion usefully without messing with your system’s DNS resolution process at all. Because of <a href="http://git.savannah.gnu.org/cgit/bash.git/tree/bashline.c?id=bc007799f0e1362100375bb95d952d28de4c62fb#n749">the way the Bash <code>HOSTFILE</code> parsing works</a>, you don’t even have to fake an IP address as the first field; it simply scans the file for any word that doesn’t start with a digit:</p> 
+        <pre><code># Comments with leading hashes will be excluded
+external.example.com
+router.example.com router
+github.com
+google.com
+...
+</code></pre> 
+        <p>You can even include other files from it with an <code>$include</code> directive!</p> 
+        <pre><code>$include /home/tom/.hosts.home
+$include /home/tom/.hosts.work
+</code></pre> 
+        <p>This really surprised me when reading the source, because I don’t think <code>/etc/hosts</code> files generally support that for their usual name resolution function. I would love to know if any systems out there actually do support this.</p> 
+        <p>The behaviour of the <code>HOSTFILE</code> variable is a bit weird; all of the hosts from the <code>HOSTFILE</code> are <em>appended</em> to the in-memory list of completion hosts each time the <code>HOSTFILE</code> variable is set (not even just changed), <em>and</em> host completion is attempted, even if the hostnames were already in the list. It’s probably sufficient just to set the file once in <code>~/.bashrc</code>.</p> 
+        <p>This setup allows you to set hostname completion as the default method for all sorts of network-poking tools, falling back on the usual filename completion if nothing matches with <code>-o default</code>:</p> 
+        <pre><code>$ complete -A hostname -o default curl dig host netcat ping telnet
+</code></pre> 
+        <p>You could also use hostname completions for <code>ssh(1)</code>, but to account for hostname aliases and <a href="https://blog.sanctum.geek.nz/uses-for-ssh-config/">other <code>ssh_config(5)</code> tricks</a>, I prefer to read <code>Host</code> directives values from <code>~/.ssh/config</code> for that.</p> 
+        <p>If you have machine-readable access to the complete zone data for your home or work domain, it may even be worth periodically enumerating all of the hostnames into that file, perhaps using <code>rndc dumpdb -zones</code> for a BIND9 setup, or using an <code>AXFR</code> request. If you have a locally caching recursive nameserver, you could even periodically examine the contents of its cache for new and interesting hosts to add to the file.</p> 
+       </div><!-- .entry-content --> 
+       <footer class="entry-meta"> <span class="cat-links"> <span class="entry-utility-prep entry-utility-prep-cat-links">Posted in</span> <a href="https://blog.sanctum.geek.nz/category/bash/" rel="category tag">Bash</a> </span> <span class="sep"> | </span> <span class="tag-links"> <span class="entry-utility-prep entry-utility-prep-tag-links">Tagged</span> <a href="https://blog.sanctum.geek.nz/tag/completion/" rel="tag">completion</a>, <a href="https://blog.sanctum.geek.nz/tag/host/" rel="tag">host</a>, <a href="https://blog.sanctum.geek.nz/tag/hostname/" rel="tag">hostname</a>, <a href="https://blog.sanctum.geek.nz/tag/hosts-file/" rel="tag">hosts file</a> </span> 
+       </footer><!-- .entry-meta --> 
+      </article><!-- #post-1782 --> 
+      <article id="post-1695" class="post-1695 post type-post status-publish format-standard hentry category-bash tag-aliases tag-bindir tag-commands tag-custom tag-functions tag-philosophy tag-scripts tag-unix"> 
+       <header class="entry-header"> 
+        <h1 class="entry-title"><a href="https://blog.sanctum.geek.nz/custom-commands/" rel="bookmark">Custom commands</a></h1> 
+        <div class="entry-meta"> <span class="sep">Posted on </span><a href="https://blog.sanctum.geek.nz/custom-commands/" title="18:37" rel="bookmark"><time class="entry-date" datetime="2016-10-22T18:37:44+13:00">2016-10-22</time></a><span class="by-author"> <span class="sep"> by </span> <span class="author vcard"><a class="url fn n" href="https://blog.sanctum.geek.nz/author/tom/" title="View all posts by Tom Ryder" rel="author">Tom Ryder</a></span></span> 
+        </div><!-- .entry-meta --> 
+       </header><!-- .entry-header --> 
+       <div class="entry-content"> 
+        <p>As users grow more familiar with the feature set available to them on UNIX-like operating systems, and grow more comfortable using the command line, they will find more often that they develop their own routines for solving problems using their preferred tools, often repeatedly solving the same problem in the same way. You can usually tell if you’ve entered this stage if one or more of the below applies:</p> 
+        <ul> 
+         <li>You repeatedly search the web for the same long commands to copy-paste.</li> 
+         <li>You type a particular long command so often it’s gone into muscle memory, and you type it without thinking.</li> 
+         <li>You have a text file somewhere with a list of useful commands to solve some frequently recurring problem or task, and you copy-paste from it a lot.</li> 
+         <li>You’re keeping large amounts of history so you can search back through commands you ran weeks or months ago with <code>^R</code>, to find the last time an instance of a problem came up, and getting angry when you realize it’s fallen away off the end of your history file.</li> 
+         <li>You’ve found that you prefer to run a tool like <a href="https://linux.die.net/man/1/ls"><code>ls(1)</code></a> more often with a non-default flag than without it; <code>-l</code> is a common example.</li> 
+        </ul> 
+        <p>You can definitely accomplish a lot of work quickly with shoving the output of some monolithic program through a terse one-liner to get the information you want, or by developing muscle memory for your chosen toolbox and oft-repeated commands, but if you want to apply more discipline and automation to managing these sorts of tasks, it may be useful for you to explore more rigorously defining your own commands for use during your shell sessions, or for automation purposes.</p> 
+        <p>This is consistent with the original idea of the Unix shell as a <a href="https://en.wikipedia.org/wiki/The_Unix_Programming_Environment">programming environment</a>; the tools provided by the base system are intentionally very general, not prescribing how they’re used, an approach which allows the user to build and customize their own command set as appropriate for their system’s needs, even on a per-user basis.</p> 
+        <p>What this all means is that you need not treat the tools available to you as holy writ. To leverage the Unix philosophy’s real power, you should consider customizing and extending the command set in ways that are useful to you, refining them as you go, and sharing those extensions and tweaks if they may be useful to others. We’ll discuss here a few methods for implementing custom commands, and where and how to apply them.</p> 
+        <h2>Aliases</h2> 
+        <p>The first step users take toward customizing the behaviour of their shell tools is often to define shell aliases in their shell’s startup file, usually specifically for interactive sessions; for Bash, this is usually <code>~/.bashrc</code>.</p> 
+        <p>Some aliases are so common that they’re included as commented-out suggestions in the default <code>~/.bashrc</code> file for new users. For example, on Debian systems, the following alias is defined by default if the <code>dircolors(1)</code> tool is available for coloring <code>ls(1)</code> output by filetype:</p> 
+        <pre><code>alias ls='ls --color=auto'
+</code></pre> 
+        <p>With this defined at startup, invoking <code>ls</code>, with or without other arguments, will expand to run <code>ls --color=auto</code>, including any given arguments on the end as well.</p> 
+        <p>In the same block of that file, but commented out, are suggestions for other aliases to enable coloured output for GNU versions of the <code>dir</code> and <code>grep</code> tools:</p> 
+        <pre><code>#alias dir='dir --color=auto'
+#alias vdir='vdir --color=auto'
+
+#alias grep='grep --color=auto'
+#alias fgrep='fgrep --color=auto'
+#alias egrep='egrep --color=auto'
+</code></pre> 
+        <p>Further down still, there are some suggestions for different methods of invoking <code>ls</code>:</p> 
+        <pre><code>#alias ll='ls -l'
+#alias la='ls -A'
+#alias l='ls -CF'
+</code></pre> 
+        <p>Commenting these out would make <code>ll</code>, <code>la</code>, and <code>l</code> work as commands during an interactive session, with the appropriate options added to the call.</p> 
+        <p>You can check the aliases defined in your current shell session by typing <code>alias</code> with no arguments:</p> 
+        <pre><code>$ alias
+alias ls='ls --color=auto'
+</code></pre> 
+        <p>Aliases are convenient ways to add options to commands, and are very common features of <code>~/.bashrc</code> files shared on the web. They also work in POSIX-conforming shells besides Bash. However, for general use, <a href="http://mywiki.wooledge.org/BashFAQ/080">they aren’t very sophisticated</a>. For one thing, you can’t process arguments with them: </p> 
+        <pre><code># An attempt to write an alias that searches for a given pattern in a fixed
+# file; doesn't work because aliases don't expand parameters
+alias grepvim='grep "$1" ~/.vimrc'
+</code></pre> 
+        <p>They also don’t work for defining new commands within scripts for certain shells:</p> 
+        <pre><code>#!/bin/bash
+alias ll='ls -l'
+ll
+</code></pre> 
+        <p>When saved in a file as <code>test</code>, made executable, and run, this script fails:</p> 
+        <pre><code>./test: line 3: ll: command not found
+</code></pre> 
+        <p>So, once you understand how aliases work so you can read them when others define them in startup files, my suggestion is there’s no point writing any. Aside from some <a href="http://www.chiark.greenend.org.uk/~sgtatham/aliases.html">very niche evaluation tricks</a>, they have no functional advantages over shell functions and scripts.</p> 
+        <h2>Functions</h2> 
+        <p>A more flexible method for defining custom commands for an interactive shell (or within a script) is to use a shell function. We could declare our <code>ll</code> function in a Bash startup file as a function instead of an alias like so:</p> 
+        <pre><code># Shortcut to call ls(1) with the -l flag
+ll() {
+    command ls -l "$@"
+}
+</code></pre> 
+        <p>Note the use of the <code>command</code> builtin here to specify that the <code>ll</code> function should invoke the <em>program</em> named <code>ls</code>, and not any <em>function</em> named <code>ls</code>. This is particularly important when writing a function wrapper around a command, to stop an infinite loop where the function calls itself indefinitely:</p> 
+        <pre><code># Always add -q to invocations of gdb(1)
+gdb() {
+    command gdb -q "$@"
+}
+</code></pre> 
+        <p>In both examples, note also the use of the <code>"$@"</code> expansion, to add to the final command line any arguments given to the function. We wrap it in double quotes to stop spaces and other shell metacharacters in the arguments causing problems. This means that the <code>ll</code> command will work correctly if you were to pass it further options and/or one or more directories as arguments:</p> 
+        <pre><code>$ ll -a
+$ ll ~/.config
+</code></pre> 
+        <p>Shell functions declared in this way are specified by POSIX for Bourne-style shells, so they should work in your shell of choice, including Bash, <code>dash</code>, Korn shell, and Zsh. They can also be used within scripts, allowing you to abstract away multiple instances of similar commands to improve the clarity of your script, in much the same way the basics of functions work in general-purpose programming languages.</p> 
+        <p>Functions are a good and portable way to approach adding features to your interactive shell; written carefully, they even allow you to port features you might like from other shells into your shell of choice. I’m fond of taking commands I like from Korn shell or Zsh and implementing them in Bash or POSIX shell functions, such as Zsh’s <a href="https://sanctum.geek.nz/cgit/dotfiles.git/tree/bash/bashrc.d/vared.bash"><code>vared</code></a> or its <a href="https://sanctum.geek.nz/cgit/dotfiles.git/tree/sh/shrc.d/rd.sh">two-argument <code>cd</code></a> features.</p> 
+        <p>If you end up writing a lot of shell functions, you should consider putting them into <a href="https://blog.sanctum.geek.nz/shell-config-subfiles/">separate configuration subfiles</a> to keep your shell’s primary startup file from becoming unmanageably large.</p> 
+        <h3>Examples from the author</h3> 
+        <p>You can take a look at some of the shell functions I have defined here that are useful to me in general shell usage; a lot of these amount to implementing convenience features that I wish my shell had, especially for quick directory navigation, or adding options to commands:</p> 
+        <ul> 
+         <li><a href="https://sanctum.geek.nz/cgit/dotfiles.git/tree/sh/shrc.d">POSIX-compatible (works in most <code>sh</code> implementations)</a></li> 
+         <li><a href="https://sanctum.geek.nz/cgit/dotfiles.git/tree/bash/bashrc.d">Bash-specific</a></li> 
+        </ul> 
+        <h3>Other examples</h3> 
+        <ul> 
+         <li><a href="http://2048.fi/shellnotes.txt">Shell functions on 2048.fi</a></li> 
+        </ul> 
+        <h3>Variables in shell functions</h3> 
+        <p>You can manipulate variables within shell functions, too:</p> 
+        <pre><code># Print the filename of a path, stripping off its leading path and
+# extension
+fn() {
+    name=$1
+    name=${name##*/}
+    name=${name%.*}
+    printf '%s\n' "$name"
+}
+</code></pre> 
+        <p>This works fine, but the catch is that after the function is done, the value for <code>name</code> will still be defined in the shell, and will overwrite whatever was in there previously:</p> 
+        <pre><code>$ printf '%s\n' "$name"
+foobar
+$ fn /home/you/Task_List.doc
+Task_List
+$ printf '%s\n' "$name"
+Task_List
+</code></pre> 
+        <p>This may be desirable if you actually want the function to change some aspect of your current shell session, such as managing variables or changing the working directory. If you <em>don’t</em> want that, you will probably want to find some means of avoiding name collisions in your variables. </p> 
+        <p>If your function is only for use with a shell that provides the <code>local</code> (Bash) or <code>typeset</code> (Ksh) features, you can declare the variable as local to the function to remove its global scope, to prevent this happening:</p> 
+        <pre><code># Bash-like
+fn() {
+    local name
+    name=$1
+    name=${name##*/}
+    name=${name%.*}
+    printf '%s\n' "$name"
+}
+
+# Ksh-like
+# Note different syntax for first line
+function fn {
+    typeset name
+    name=$1
+    name=${name##*/}
+    name=${name%.*}
+    printf '%s\n' "$name"
+}
+</code></pre> 
+        <p>If you’re using a shell that lacks these features, or you want to aim for POSIX compatibility, things are a little trickier, since local function variables aren’t specified by the standard. One option is to use a <a href="http://mywiki.wooledge.org/SubShell">subshell</a>, so that the variables are only defined for the duration of the function:</p> 
+        <pre><code># POSIX; note we're using plain parentheses rather than curly brackets, for
+# a subshell
+fn() (
+    name=$1
+    name=${name##*/}
+    name=${name%.*}
+    printf '%s\n' "$name"
+)
+
+# POSIX; alternative approach using command substitution:
+fn() {
+    printf '%s\n' "$(
+        name=$1
+        name=${name##*/}
+        name=${name%.*}
+        printf %s "$name"
+    )"
+}
+</code></pre> 
+        <p>This subshell method also allows you to change directory with <code>cd</code> within a function without changing the working directory of the user’s interactive shell, or to change shell options with <code>set</code> or Bash options with <code>shopt</code> only temporarily for the purposes of the function.</p> 
+        <p>Another method to deal with variables is to manipulate the <a href="http://mywiki.wooledge.org/BashGuide/Parameters#Special_Parameters_and_Variables">positional parameters</a> directly (<code>$1</code>, <code>$2</code> … ) with <code>set</code>, since they are local to the function call too:</p> 
+        <pre><code># POSIX; using positional parameters
+fn() {
+    set -- "${1##*/}"
+    set -- "${1%.*}"
+    printf '%s\n' "$1"
+}
+</code></pre> 
+        <p>These methods work well, and can sometimes even be combined, but they’re awkward to write, and harder to read than the modern shell versions. If you only need your functions to work with your modern shell, I recommend just using <code>local</code> or <code>typeset</code>. The Bash Guide on Greg’s Wiki has a <a href="http://mywiki.wooledge.org/BashGuide/CompoundCommands#Functions">very thorough breakdown</a> of functions in Bash, if you want to read about this and other aspects of functions in more detail.</p> 
+        <h3>Keeping functions for later</h3> 
+        <p>As you get comfortable with defining and using functions during an interactive session, you might define them in ad-hoc ways on the command line for calling in a loop or some other similar circumstance, just to solve a task in that moment.</p> 
+        <p>As an example, I recently made an ad-hoc function called <code>monit</code> to run a set of commands for its hostname argument that together established different types of monitoring system checks, using an existing script called <code>nmfs</code>:</p> 
+        <pre><code>$ monit() { nmfs "$1" Ping Y ; nmfs "$1" HTTP Y ; nmfs "$1" SNMP Y ; }
+$ for host in webhost{1..10} ; do
+&gt; monit "$host"
+&gt; done
+</code></pre> 
+        <p>After that task was done, I realized I was likely to use the <code>monit</code> command interactively again, so I decided to keep it. Shell functions only last as long as the current shell, so if you want to make them permanent, you need to store their definitions somewhere in your startup files. If you’re using Bash, and you’re content to just add things to the end of your <code>~/.bashrc</code> file, you could just do something like this:</p> 
+        <pre><code>$ declare -f monit &gt;&gt; ~/.bashrc
+</code></pre> 
+        <p>That would append the existing definition of <code>monit</code> in parseable form to your <code>~/.bashrc</code> file, and the <code>monit</code> function would then be loaded and available to you for future interactive sessions. Later on, I ended up converting <code>monit</code> into a shell script, as its use wasn’t limited to just an interactive shell.</p> 
+        <p>If you want a more robust approach to keeping functions like this for Bash permanently, I wrote <a href="https://sanctum.geek.nz/cgit/dotfiles.git/tree/bash/bashrc.d/keep.bash">a tool called Bashkeep</a>, which allows you to quickly store functions and variables defined in your current shell into separate and appropriately-named files, including viewing and managing the list of names conveniently:</p> 
+        <pre><code>$ keep monit
+$ keep
+monit
+$ ls ~/.bashkeep.d
+monit.bash
+$ keep -d monit
+</code></pre> 
+        <h2>Scripts</h2> 
+        <p>Shell functions are a great way to portably customize behaviour you want for your interactive shell, but if a task isn’t specific only to an interactive shell context, you should instead consider putting it into its own script whether written in shell or not, to be invoked somewhere from your <code>PATH</code>. This makes the script useable in contexts besides an interactive shell with your personal configuration loaded, for example from within another script, by another user, or by an X11 session called by something like <a href="http://tools.suckless.org/dmenu/"><code>dmenu</code></a>. </p> 
+        <p>Even if your set of commands is only a few lines long, if you need to call it often–especially with reference to other scripts and in varying contexts– making it into a generally-available shell script has many advantages.</p> 
+        <h3><code>/usr/local/bin</code></h3> 
+        <p>Users making their own scripts often start by putting them in <code>/usr/local/bin</code> and making them executable with <code>sudo chmod +x</code>, since many Unix systems include this directory in the system <code>PATH</code>. If you want a script to be generally available to all users on a system, this is a reasonable approach. However, if the script is just something for your own personal use, or if you don’t have the permissions necessary to write to this system path, it may be preferable to have your own directory for logical binaries, including scripts.</p> 
+        <h3>Private bindir</h3> 
+        <p>Unix-like users who do this seem to vary in where they choose to put their private logical binaries directory. I’ve seen each of the below used or recommended:</p> 
+        <ul> 
+         <li><code>~/bin</code></li> 
+         <li><code>~/.bin</code></li> 
+         <li><code>~/.local/bin</code></li> 
+         <li><code>~/Scripts</code></li> 
+        </ul> 
+        <p>I personally favour <code>~/.local/bin</code>, but you can put your scripts wherever they best fit into your <code>HOME</code> directory layout. You may want to choose something that fits in well with the <a href="https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html">XDG standard</a>, or whatever existing standard or system your distribution chooses for filesystem layout in <code>$HOME</code>.</p> 
+        <p>In order to make this work, you will want to customize your login shell startup to include the directory in your <code>PATH</code> environment variable. It’s better to put this into <code>~/.profile</code> or <a href="http://mywiki.wooledge.org/DotFiles">whichever file your shell runs on login</a>, so that it’s only run once. That should be all that’s necessary, as <code>PATH</code> is typically exported as an environment variable for all the shell’s child processes. A line like this at the end of one of those scripts works well to extend the system <code>PATH</code> for our login shell:</p> 
+        <pre><code>PATH=$HOME/.local/bin:$PATH
+</code></pre> 
+        <p>Note that we specifically put our new path at the <em>front</em> of the <code>PATH</code> variable’s value, so that it’s the first directory searched for programs. This allows you to implement or install your own versions of programs with the same name as those in the system; this is useful, for example, if you like to experiment with <a href="https://blog.sanctum.geek.nz/compiling-in-home/">building software in <code>$HOME</code></a>.</p> 
+        <p>If you’re using a systemd-based GNU/Linux, and particularly if you’re using a display manager like GDM rather than a TTY login and <code>startx</code> for your X11 environment, you may find it more robust to instead set this variable with the <a href="https://wiki.archlinux.org/index.php/Systemd/User#Environment_variables">appropriate systemd configuration file</a>. Another option you may prefer on systems using PAM is to set it with <a href="https://linux.die.net/man/8/pam_env">pam_env(8)</a>.</p> 
+        <p>After logging in, we first verify the directory is in place in the <code>PATH</code> variable:</p> 
+        <pre><code>$ printf '%s\n' "$PATH"
+/home/tom/.local/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
+</code></pre> 
+        <p>We can test this is working correctly by placing a test script into the directory, including the <code>#!/bin/sh</code> <a href="https://en.wikipedia.org/wiki/Shebang_(Unix)">shebang</a>, and making it executable by the current user with <a href="https://linux.die.net/man/1/chmod"><code>chmod(1)</code></a>:</p> 
+        <pre><code>$ cat &gt;~/.local/bin/test-private-bindir
+#!/bin/sh
+printf 'Working!\n'
+^D
+$ chmod u+x ~./local/bin/test-private-bindir
+$ test-private-bindir
+Working!
+</code></pre> 
+        <h3>Examples from the author</h3> 
+        <p>I publish the more <a href="https://sanctum.geek.nz/cgit/dotfiles.git/tree/bin">generic scripts I keep in <code>~/.local/bin</code></a>, which I keep up-to-date on my personal systems in version control using Git, along with my configuration files. Many of the scripts are very short, and are intended mostly as building blocks for other scripts in the same directory. A few examples:</p> 
+        <ul> 
+         <li><code>gscr(1df)</code>: Run a set of commands on a Git repository to minimize its size.</li> 
+         <li><code>fgscr(1df)</code>: Find all Git repositories in a directory tree and run <code>gscr(1df)</code> over them.</li> 
+         <li><code>hurl(1df)</code>: Extract URLs from links in an HTML document.</li> 
+         <li><code>maybe(1df)</code>: Exit with success or failure with a given probability.</li> 
+         <li><code>rfcr(1df)</code>: Download and read a given <a href="https://en.wikipedia.org/wiki/Request_for_Comments">Request for Comments</a> document.</li> 
+         <li><code>tot(1df)</code>: Add up a list of numbers.</li> 
+        </ul> 
+        <p>For such scripts, I try to write them as much as possible to use tools specified by POSIX, so that there’s a decent chance of them working on whatever Unix-like system I need them to.</p> 
+        <p>On systems I use or manage, I might specify commands to do things relevant specifically to that system, such as:</p> 
+        <ul> 
+         <li>Filter out uninteresting lines in an Apache HTTPD logfile with awk.</li> 
+         <li>Check whether mail has been delivered to system users in <code>/var/mail</code>.</li> 
+         <li>Upgrade the Adobe Flash player in a private Firefox instance.</li> 
+        </ul> 
+        <p>The tasks you need to solve both generally and specifically will almost certainly be different; this is where you can get creative with your automation and abstraction.</p> 
+        <h3>X windows scripts</h3> 
+        <p>An additional advantage worth mentioning of using scripts rather than shell functions where possible is that they can be called from environments besides shells, such as in X11 or by other scripts. You can combine this method with X11-based utilities such as <code>dmenu(1)</code>, libnotify’s <a href="http://ss64.com/bash/notify-send.html"><code>notify-send(1)</code></a>, or ImageMagick’s <a href="http://www.imagemagick.org/script/import.php"><code>import(1)</code></a> to implement custom interactive behaviour for your X windows session, without having to write your own X11-interfacing code.</p> 
+        <h3>Other languages</h3> 
+        <p>Of course, you’re not limited to just shell scripts with this system; it might suit you to write a script completely in a language like <a href="https://linux.die.net/man/1/awk">awk(1)</a>, or even <a href="https://linux.die.net/man/1/sed">sed(1)</a>. If portability isn’t a concern for the particular script, you should use your favourite scripting language. Notably, don’t fall into the trap of implementing a script in shell for no reason …</p> 
+        <pre><code>#!/bin/sh
+awk 'NF&gt;2 &amp;&amp; /foobar/ {print $1}' "$@"
+</code></pre> 
+        <p>… when you can instead write the whole script in the main language used, and save a <code>fork(2)</code> syscall and a layer of quoting:</p> 
+        <pre><code>#!/usr/bin/awk -f
+NF&gt;2 &amp;&amp; /foobar/ {print $1}
+</code></pre> 
+        <h2>Versioning and sharing</h2> 
+        <p>Finally, if you end up writing more than a couple of useful shell functions and scripts, you should consider versioning them with Git or a similar version control system. This also eases implementing your shell setup and scripts on other systems, and sharing them with others via publishing on GitHub. You might even go so far as to write a <a href="https://sanctum.geek.nz/cgit/dotfiles.git/tree/Makefile">Makefile</a> to install them, or <a href="https://sanctum.geek.nz/cgit/dotfiles.git/tree/man/man1">manual pages</a> for quick reference as documentation … if you’re just a little bit crazy …</p> 
+       </div><!-- .entry-content --> 
+       <footer class="entry-meta"> <span class="cat-links"> <span class="entry-utility-prep entry-utility-prep-cat-links">Posted in</span> <a href="https://blog.sanctum.geek.nz/category/bash/" rel="category tag">Bash</a> </span> <span class="sep"> | </span> <span class="tag-links"> <span class="entry-utility-prep entry-utility-prep-tag-links">Tagged</span> <a href="https://blog.sanctum.geek.nz/tag/aliases/" rel="tag">aliases</a>, <a href="https://blog.sanctum.geek.nz/tag/bindir/" rel="tag">bindir</a>, <a href="https://blog.sanctum.geek.nz/tag/commands/" rel="tag">commands</a>, <a href="https://blog.sanctum.geek.nz/tag/custom/" rel="tag">custom</a>, <a href="https://blog.sanctum.geek.nz/tag/functions/" rel="tag">functions</a>, <a href="https://blog.sanctum.geek.nz/tag/philosophy/" rel="tag">philosophy</a>, <a href="https://blog.sanctum.geek.nz/tag/scripts/" rel="tag">scripts</a>, <a href="https://blog.sanctum.geek.nz/tag/unix/" rel="tag">unix</a> </span> 
+       </footer><!-- .entry-meta --> 
+      </article><!-- #post-1695 --> 
+      <article id="post-1500" class="post-1500 post type-post status-publish format-standard hentry category-cron tag-aliases tag-anacron tag-best-practices tag-crontab tag-mail tag-nscaw tag-safety tag-security tag-syslog"> 
+       <header class="entry-header"> 
+        <h1 class="entry-title"><a href="https://blog.sanctum.geek.nz/cron-best-practices/" rel="bookmark">Cron best practices</a></h1> 
+        <div class="entry-meta"> <span class="sep">Posted on </span><a href="https://blog.sanctum.geek.nz/cron-best-practices/" title="18:19" rel="bookmark"><time class="entry-date" datetime="2016-05-08T18:19:19+12:00">2016-05-08</time></a><span class="by-author"> <span class="sep"> by </span> <span class="author vcard"><a class="url fn n" href="https://blog.sanctum.geek.nz/author/tom/" title="View all posts by Tom Ryder" rel="author">Tom Ryder</a></span></span> 
+        </div><!-- .entry-meta --> 
+       </header><!-- .entry-header --> 
+       <div class="entry-content"> 
+        <p>The time-based job scheduler <a href="http://linux.die.net/man/8/cron"><code>cron(8)</code></a> has been around since Version 7 Unix, and its <a href="http://linux.die.net/man/1/crontab"><code>crontab(5)</code></a> syntax is familiar even for people who don’t do much Unix system administration. It’s <a href="http://pubs.opengroup.org/onlinepubs/7908799/xcu/crontab.html">standardised</a>, reasonably flexible, simple to configure, and works reliably, and so it’s trusted by both system packages and users to manage many important tasks.</p> 
+        <p>However, like many older Unix tools, <code>cron(8)</code>‘s simplicity has a drawback: it relies upon the user to know some detail of how it works, and to correctly implement any other safety checking behaviour around it. Specifically, all it does is try and run the job at an appropriate time, and email the output. For simple and unimportant per-user jobs, that may be just fine, but for more crucial system tasks it’s worthwhile to wrap a little extra infrastructure around it and the tasks it calls.</p> 
+        <p>There are a few ways to make the way you use <code>cron(8)</code> more robust if you’re in a situation where keeping track of the running job is desirable.</p> 
+        <h2>Apply the principle of least privilege</h2> 
+        <p>The sixth column of a system <code>crontab(5)</code> file is the username of the user as which the task should run:</p> 
+        <pre><code>0 * * * *  root  cron-task
+</code></pre> 
+        <p>To the extent that is practical, you should run the task as a user with only the privileges it needs to run, and nothing else. This can sometimes make it worthwhile to create a dedicated system user purely for running scheduled tasks relevant to your application.</p> 
+        <pre><code>0 * * * *  myappcron  cron-task
+</code></pre> 
+        <p>This is not just for security reasons, although those are good ones; it helps protect you against nasties like scripting errors attempting to <a href="https://github.com/valvesoftware/steam-for-linux/issues/3671">remove entire system directories</a>.</p> 
+        <p>Similarly, for tasks with database systems such as MySQL, don’t use the administrative <code>root</code> user if you can avoid it; instead, use or even create a dedicated user with a unique random password stored in a locked-down <code>~/.my.cnf</code> file, with only the needed permissions. For a MySQL backup task, for example, only a few permissions should be required, including <code>SELECT</code>, <code>SHOW VIEW</code>, and <code>LOCK TABLES</code>.</p> 
+        <p>In some cases, of course, you really will need to be <code>root</code>. In particularly sensitive contexts you might even consider using <code>sudo(8)</code> with appropriate <code>NOPASSWD</code> options, to allow the dedicated user to run only the appropriate tasks as <code>root</code>, and nothing else.</p> 
+        <h2>Test the tasks</h2> 
+        <p>Before placing a task in a <code>crontab(5)</code> file, you should test it on the command line, as the user configured to run the task and with the appropriate environment set. If you’re going to run the task as <code>root</code>, use something like <code>su</code> or <code>sudo -i</code> to get a root shell with the user’s expected environment first:</p> 
+        <pre><code>$ sudo -i -u cronuser
+$ cron-task
+</code></pre> 
+        <p>Once the task works on the command line, place it in the <code>crontab(5)</code> file with the timing settings modified to run the task a few minutes later, and then watch <code>/var/log/syslog</code> with <code>tail -f</code> to check that the task actually runs without errors, and that the task itself completes properly:</p> 
+        <pre><code>May  7 13:30:01 yourhost CRON[20249]: (you) CMD (cron-task)
+</code></pre> 
+        <p>This may seem pedantic at first, but it becomes routine very quickly, and it saves a lot of hassles down the line as it’s very easy to make an assumption about something in your environment that doesn’t actually hold in the one that <code>cron(8)</code> will use. It’s also a necessary acid test to make sure that your <code>crontab(5)</code> file is well-formed, as some implementations of <code>cron(8)</code> will refuse to load the entire file if one of the lines is malformed.</p> 
+        <p>If necessary, you can set arbitrary environment variables for the tasks at the top of the file:</p> 
+        <pre><code>MYVAR=myvalue
+
+0 * * * *  you  cron-task
+</code></pre> 
+        <h2>Don’t throw away errors or useful output</h2> 
+        <p>You’ve probably seen tutorials on the web where in order to keep the <code>crontab(5)</code> job from sending standard output and/or standard error emails every five minutes, shell redirection operators are included at the end of the job specification to discard both the standard output and standard error. This kluge is particularly common for running web development tasks by automating a request to a URL with <a href="https://curl.haxx.se/docs/manpage.html"><code>curl(1)</code></a> or <a href="http://linux.die.net/man/1/wget"><code>wget(1)</code></a>:</p> 
+        <pre><code>*/5 * * *  root  curl https://example.com/cron.php &gt;/dev/null 2&gt;&amp;1
+</code></pre> 
+        <p>Ignoring the output completely is generally not a good idea, because unless you have other tasks or monitoring ensuring the job does its work, you won’t notice problems (or know what they are), when the job emits output or errors that you actually care about.</p> 
+        <p>In the case of <code>curl(1)</code>, there are just way too many things that could go wrong, that you might notice far too late:</p> 
+        <ul> 
+         <li>The script could get broken and return 500 errors.</li> 
+         <li>The URL of the <code>cron.php</code> task could change, and someone could forget to add a HTTP 301 redirect.</li> 
+         <li>Even if a HTTP 301 redirect is added, if you don’t use <code>-L</code> or <code>--location</code> for <code>curl(1)</code>, it won’t follow it.</li> 
+         <li>The client could get blacklisted, firewalled, or otherwise impeded by automatic or manual processes that falsely flag the request as spam.</li> 
+         <li>If using HTTPS, connectivity could break due to cipher or protocol mismatch.</li> 
+        </ul> 
+        <p>The author has seen all of the above happen, in some cases very frequently.</p> 
+        <p>As a general policy, it’s worth taking the time to read the manual page of the task you’re calling, and to look for ways to correctly control its output so that it emits only the output you actually want. In the case of <code>curl(1)</code>, for example, I’ve found the following formula works well:</p> 
+        <pre><code>curl -fLsS -o /dev/null http://example.com/
+</code></pre> 
+        <ul> 
+         <li><code>-f</code>: If the HTTP response code is an error, emit an error message rather than the 404 page.</li> 
+         <li><code>-L</code>: If there’s an HTTP 301 redirect given, try to follow it.</li> 
+         <li><code>-sS</code>: Don’t show progress meter (<code>-S</code> stops <code>-s</code> from also blocking error messages).</li> 
+         <li><code>-o /dev/null</code>: Send the standard output (the actual page returned) to <code>/dev/null</code>.</li> 
+        </ul> 
+        <p>This way, the <code>curl(1)</code> request should stay silent if everything is well, per the old Unix philosophy <a href="http://www.linfo.org/rule_of_silence.html">Rule of Silence</a>.</p> 
+        <p>You may not agree with some of the choices above; you might think it important to e.g. log the complete output of the returned page, or to fail rather than silently accept a 301 redirect, or you might prefer to use <code>wget(1)</code>. The point is that you take the time to understand in more depth what the called program will actually emit under what circumstances, and make it match your requirements as closely as possible, rather than blindly discarding all the output and (worse) the errors. Work with <a href="https://en.wikipedia.org/wiki/Murphy%27s_law">Murphy’s law</a>; assume that anything that can go wrong eventually will.</p> 
+        <h2>Send the output somewhere useful</h2> 
+        <p>Another common mistake is failing to set a useful <code>MAILTO</code> at the top of the <code>crontab(5)</code> file, as the specified destination for any output and errors from the tasks. <code>cron(8)</code> uses the system mail implementation to send its messages, and typically, default configurations for mail agents will simply send the message to an <code>mbox</code> file in <code>/var/mail/$USER</code>, that they may not ever read. This defeats much of the point of mailing output and errors.</p> 
+        <p>This is easily dealt with, though; ensure that you can send a message to an address you actually <em>do</em> check from the server, perhaps using <code>mail(1)</code>:</p> 
+        <pre><code>$ printf '%s\n' 'Test message' | mail -s 'Test subject' you@example.com
+</code></pre> 
+        <p>Once you’ve verified that your mail agent is correctly configured and that the mail arrives in your inbox, set the address in a <code>MAILTO</code> variable at the top of your file:</p> 
+        <pre><code>MAILTO=you@example.com
+
+0 * * * *    you  cron-task-1
+*/5 * * * *  you  cron-task-2
+</code></pre> 
+        <p>If you don’t want to use email for routine output, another method that works is sending the output to <code>syslog</code> with a tool like <a href="http://linux.die.net/man/1/logger"><code>logger(1)</code></a>:</p> 
+        <pre><code>0 * * * *   you  cron-task | logger -it cron-task
+</code></pre> 
+        <p>Alternatively, you can configure aliases on your system to forward system mail destined for you on to an address you check. For Postfix, you’d use an <a href="http://www.postfix.org/aliases.5.html"><code>aliases(5)</code></a> file.</p> 
+        <p>I sometimes use this setup in cases where the task is expected to emit a few lines of output which might be useful for later review, but send <code>stderr</code> output via <code>MAILTO</code> as normal. If you’d rather not use <code>syslog</code>, perhaps because the output is high in volume and/or frequency, you can always set up a log file <code>/var/log/cron-task.log</code> … but don’t forget to add a <a href="http://linux.die.net/man/8/logrotate"><code>logrotate(8)</code></a> rule for it!</p> 
+        <h2>Put the tasks in their own shell script file</h2> 
+        <p>Ideally, the commands in your <code>crontab(5)</code> definitions should only be a few words, in one or two commands. If the command is running off the screen, it’s likely too long to be in the <code>crontab(5)</code> file, and you should instead put it into its own script. This is a particularly good idea if you want to reliably use features of <code>bash</code> or some other shell besides POSIX/Bourne <code>/bin/sh</code> for your commands, or even a scripting language like Awk or Perl; by default, <code>cron(8)</code> uses the system’s <code>/bin/sh</code> implementation for parsing the commands.</p> 
+        <p>Because <code>crontab(5)</code> files don’t allow multi-line commands, and have other gotchas like the need to escape percent signs <code>%</code> with backslashes, keeping as much configuration out of the actual <code>crontab(5)</code> file as you can is generally a good idea.</p> 
+        <p>If you’re running <code>cron(8)</code> tasks as a non-system user, and can’t add scripts into a system bindir like <code>/usr/local/bin</code>, a tidy method is to start your own, and include a reference to it as part of your <code>PATH</code>. I favour <code>~/.local/bin</code>, and have seen references to <code>~/bin</code> as well. Save the script in <code>~/.local/bin/cron-task</code>, make it executable with <code>chmod +x</code>, and include the directory in the <code>PATH</code> environment definition at the top of the file:</p> 
+        <pre><code>PATH=/home/you/.local/bin:/usr/local/bin:/usr/bin:/bin
+MAILTO=you@example.com
+
+0 * * * *  you  cron-task
+</code></pre> 
+        <p>Having your own directory with custom scripts for your own purposes has a host of other benefits, but that’s another article…</p> 
+        <h2>Avoid /etc/crontab</h2> 
+        <p>If your implementation of <code>cron(8)</code> supports it, rather than having an <code>/etc/crontab</code> file a mile long, you can put tasks into separate files in <code>/etc/cron.d</code>:</p> 
+        <pre><code>$ ls /etc/cron.d
+system-a
+system-b
+raid-maint
+</code></pre> 
+        <p>This approach allows you to group the configuration files meaningfully, so that you and other administrators can find the appropriate tasks more easily; it also allows you to make some files editable by some users and not others, and reduces the chance of edit conflicts. Using <code>sudoedit(8)</code> helps here too. Another advantage is that it works better with version control; if I start collecting more than a few of these task files or to update them more often than every few months, I start a Git repository to track them:</p> 
+        <pre><code>$ cd /etc/cron.d
+$ sudo git init
+$ sudo git add --all
+$ sudo git commit -m "First commit"
+</code></pre> 
+        <p>If you’re editing a <code>crontab(5)</code> file for tasks related only to the individual user, use the <code>crontab(1)</code> tool; you can edit your own <code>crontab(5)</code> by typing <code>crontab -e</code>, which will open your <code>$EDITOR</code> to edit a temporary file that will be installed on exit. This will save the files into a dedicated directory, which on my system is <code>/var/spool/cron/crontabs</code>.</p> 
+        <p>On the systems maintained by the author, it’s quite normal for <code>/etc/crontab</code> never to change from its packaged template.</p> 
+        <h2>Include a timeout</h2> 
+        <p><code>cron(8)</code> will normally allow a task to run indefinitely, so if this is not desirable, you should consider either using options of the program you’re calling to implement a timeout, or including one in the script. If there’s no option for the command itself, the <a href="http://linux.die.net/man/1/timeout"><code>timeout(1)</code></a> command wrapper in <code>coreutils</code> is one possible way of implementing this:</p> 
+        <pre><code>0 * * * *  you  timeout 10s cron-task
+</code></pre> 
+        <p>Greg’s wiki has some further suggestions on <a href="http://mywiki.wooledge.org/BashFAQ/068">ways to implement timeouts</a>.</p> 
+        <h2>Include file locking to prevent overruns</h2> 
+        <p><code>cron(8)</code> will start a new process regardless of whether its previous runs have completed, so if you wish to avoid locking for long-running task, on GNU/Linux you could use the <a href="http://linux.die.net/man/1/flock"><code>flock(1)</code></a> wrapper for the <a href="http://linux.die.net/man/2/flock"><code>flock(2)</code></a> system call to set an exclusive lockfile, in order to prevent the task from running more than one instance in parallel.</p> 
+        <pre><code>0 * * * *  you  flock -nx /var/lock/cron-task cron-task
+</code></pre> 
+        <p>Greg’s wiki has some more in-depth discussion of the <a href="http://mywiki.wooledge.org/BashFAQ/045">file locking</a> problem for scripts in a general sense, including important information about the caveats of “rolling your own” when <code>flock(1)</code> is not available.</p> 
+        <p>If it’s important that your tasks run in a certain order, consider whether it’s necessary to have them in separate tasks at all; it may be easier to guarantee they’re run sequentially by collecting them in a single shell script.</p> 
+        <h2>Do something useful with exit statuses</h2> 
+        <p>If your <code>cron(8)</code> task or commands within its script exit non-zero, it can be useful to run commands that handle the failure appropriately, including cleanup of appropriate resources, and sending information to monitoring tools about the current status of the job. If you’re using Nagios Core or one of its derivatives, you could consider using <code>send_nsca</code> to send passive checks reporting the status of jobs to your monitoring server. I’ve written <a href="https://sanctum.geek.nz/cgit/nscaw.git/about">a simple script called <code>nscaw</code></a> to do this for me:</p> 
+        <pre><code>0 * * * *  you  nscaw CRON_TASK -- cron-task
+</code></pre> 
+        <h2>Consider alternatives to <code>cron(8)</code></h2> 
+        <p>If your machine isn’t always on and your task doesn’t need to run at a specific time, but rather needs to run once daily or weekly, you can install <a href="http://linux.die.net/man/8/anacron"><code>anacron</code></a> and drop scripts into the <code>cron.hourly</code>, <code>cron.daily</code>, <code>cron.monthly</code>, and <code>cron.weekly</code> directories in <code>/etc</code>, as appropriate. Note that on Debian and Ubuntu GNU/Linux systems, the default <code>/etc/crontab</code> contains hooks that run these, but they run only if <a href="http://linux.die.net/man/8/anacron"><code>anacron(8)</code></a> is not installed. </p> 
+        <p>If you’re using <code>cron(8)</code> to poll a directory for changes and run a script if there are such changes, on GNU/Linux you could consider using a daemon based on <code>inotifywait(1)</code> instead.</p> 
+        <p>Finally, if you require more advanced control over when and how your task runs than <code>cron(8)</code> can provide, you could perhaps consider writing a daemon to run on the server consistently and fork processes for its task. This would allow running a task more often than once a minute, as an example. Don’t get too bogged down into thinking that <code>cron(8)</code> is your only option for any kind of asynchronous task management!</p> 
+       </div><!-- .entry-content --> 
+       <footer class="entry-meta"> <span class="cat-links"> <span class="entry-utility-prep entry-utility-prep-cat-links">Posted in</span> <a href="https://blog.sanctum.geek.nz/category/cron/" rel="category tag">Cron</a> </span> <span class="sep"> | </span> <span class="tag-links"> <span class="entry-utility-prep entry-utility-prep-tag-links">Tagged</span> <a href="https://blog.sanctum.geek.nz/tag/aliases/" rel="tag">aliases</a>, <a href="https://blog.sanctum.geek.nz/tag/anacron/" rel="tag">anacron</a>, <a href="https://blog.sanctum.geek.nz/tag/best-practices/" rel="tag">best practices</a>, <a href="https://blog.sanctum.geek.nz/tag/crontab/" rel="tag">crontab</a>, <a href="https://blog.sanctum.geek.nz/tag/mail/" rel="tag">mail</a>, <a href="https://blog.sanctum.geek.nz/tag/nscaw/" rel="tag">nscaw</a>, <a href="https://blog.sanctum.geek.nz/tag/safety/" rel="tag">safety</a>, <a href="https://blog.sanctum.geek.nz/tag/security/" rel="tag">security</a>, <a href="https://blog.sanctum.geek.nz/tag/syslog/" rel="tag">syslog</a> </span> 
+       </footer><!-- .entry-meta --> 
+      </article><!-- #post-1500 --> 
+      <article id="post-1466" class="post-1466 post type-post status-publish format-standard hentry category-bash tag-bashrc tag-bashrc-d tag-configuration tag-directory tag-posix tag-profile tag-profile-d tag-sh"> 
+       <header class="entry-header"> 
+        <h1 class="entry-title"><a href="https://blog.sanctum.geek.nz/shell-config-subfiles/" rel="bookmark">Shell config subfiles</a></h1> 
+        <div class="entry-meta"> <span class="sep">Posted on </span><a href="https://blog.sanctum.geek.nz/shell-config-subfiles/" title="00:01" rel="bookmark"><time class="entry-date" datetime="2015-01-30T00:01:09+13:00">2015-01-30</time></a><span class="by-author"> <span class="sep"> by </span> <span class="author vcard"><a class="url fn n" href="https://blog.sanctum.geek.nz/author/tom/" title="View all posts by Tom Ryder" rel="author">Tom Ryder</a></span></span> 
+        </div><!-- .entry-meta --> 
+       </header><!-- .entry-header --> 
+       <div class="entry-content"> 
+        <p>Large shell startup scripts (<code>.bashrc</code>, <code>.profile</code>) over about fifty lines or so with a lot of options, aliases, custom functions, and similar tweaks can get cumbersome to manage over time, and if you keep your dotfiles under version control it’s not terribly helpful to see large sets of commits just editing the one file when it could be more instructive if broken up into files by section.</p> 
+        <p>Given that shell configuration is just shell code, we can apply the <code>source</code> builtin (or the <code>.</code> builtin for POSIX <code>sh</code>) to load several files at the end of a <code>.bashrc</code>, for example:</p> 
+        <pre><code>source ~/.bashrc.options
+source ~/.bashrc.aliases
+source ~/.bashrc.functions
+</code></pre> 
+        <p>This is a better approach, but it still binds us into using those filenames; we still have to edit the <code>~/.bashrc</code> file if we want to rename them, or remove them, or add new ones.</p> 
+        <p>Fortunately, UNIX-like systems have a common convention for this, the <code>.d</code> directory suffix, in which sections of configuration can be stored to be read by a main configuration file dynamically. In our case, we can create a new directory <code>~/.bashrc.d</code>:</p> 
+        <pre><code>$ ls ~/.bashrc.d
+options.bash
+aliases.bash
+functions.bash
+</code></pre> 
+        <p>With a slightly more advanced snippet at the end of <code>~/.bashrc</code>, we can then load every file with the suffix <code>.bash</code> in this directory:</p> 
+        <pre><code># Load any supplementary scripts
+for config in "$HOME"/.bashrc.d/*.bash ; do
+    source "$config"
+done
+unset -v config
+</code></pre> 
+        <p>Note that we unset the <code>config</code> variable after we’re done, otherwise it’ll be in the namespace of our shell where we don’t need it. You may also wish to check for the existence of the <code>~/.bashrc.d</code> directory, check there’s at least one matching file inside it, or check that the file is readable before attempting to source it, depending on your preference.</p> 
+        <p>The same method can be applied with <code>.profile</code> to load all scripts with the suffix <code>.sh</code> in <code>~/.profile.d</code>, if we want to write in POSIX <code>sh</code>, with some slightly different syntax:</p> 
+        <pre><code># Load any supplementary scripts
+for config in "$HOME"/.profile.d/*.sh ; do
+    . "$config"
+done
+unset -v config
+</code></pre> 
+        <p>Another advantage of this method is that if you have your dotfiles under version control, you can arrange to add extra snippets on a per-machine basis unversioned, without having to update your <code>.bashrc</code> file.</p> 
+        <p>Here’s my implementation of the above method, for both <code>.bashrc</code> and <code>.profile</code>:</p> 
+        <ul> 
+         <li><a href="https://sanctum.geek.nz/cgit/dotfiles.git/tree/bash/bashrc"><code>.bashrc</code></a></li> 
+         <li><a href="https://sanctum.geek.nz/cgit/dotfiles.git/tree/bash/bashrc.d"><code>.bashrc.d</code></a></li> 
+         <li><a href="https://sanctum.geek.nz/cgit/dotfiles.git/tree/sh/profile"><code>.profile</code></a></li> 
+         <li><a href="https://sanctum.geek.nz/cgit/dotfiles.git/tree/sh/profile.d"><code>.profile.d</code></a></li> 
+        </ul> 
+       </div><!-- .entry-content --> 
+       <footer class="entry-meta"> <span class="cat-links"> <span class="entry-utility-prep entry-utility-prep-cat-links">Posted in</span> <a href="https://blog.sanctum.geek.nz/category/bash/" rel="category tag">Bash</a> </span> <span class="sep"> | </span> <span class="tag-links"> <span class="entry-utility-prep entry-utility-prep-tag-links">Tagged</span> <a href="https://blog.sanctum.geek.nz/tag/bashrc/" rel="tag">bashrc</a>, <a href="https://blog.sanctum.geek.nz/tag/bashrc-d/" rel="tag">bashrc.d</a>, <a href="https://blog.sanctum.geek.nz/tag/configuration/" rel="tag">configuration</a>, <a href="https://blog.sanctum.geek.nz/tag/directory/" rel="tag">directory</a>, <a href="https://blog.sanctum.geek.nz/tag/posix/" rel="tag">posix</a>, <a href="https://blog.sanctum.geek.nz/tag/profile/" rel="tag">profile</a>, <a href="https://blog.sanctum.geek.nz/tag/profile-d/" rel="tag">profile.d</a>, <a href="https://blog.sanctum.geek.nz/tag/sh/" rel="tag">sh</a> </span> 
+       </footer><!-- .entry-meta --> 
+      </article><!-- #post-1466 --> 
+      <article id="post-1453" class="post-1453 post type-post status-publish format-standard hentry category-bash tag-directory tag-hierarchy tag-prompt tag-ps1 tag-shorten tag-tree"> 
+       <header class="entry-header"> 
+        <h1 class="entry-title"><a href="https://blog.sanctum.geek.nz/prompt-directory-shortening/" rel="bookmark">Prompt directory shortening</a></h1> 
+        <div class="entry-meta"> <span class="sep">Posted on </span><a href="https://blog.sanctum.geek.nz/prompt-directory-shortening/" title="22:13" rel="bookmark"><time class="entry-date" datetime="2014-11-07T22:13:47+13:00">2014-11-07</time></a><span class="by-author"> <span class="sep"> by </span> <span class="author vcard"><a class="url fn n" href="https://blog.sanctum.geek.nz/author/tom/" title="View all posts by Tom Ryder" rel="author">Tom Ryder</a></span></span> 
+        </div><!-- .entry-meta --> 
+       </header><!-- .entry-header --> 
+       <div class="entry-content"> 
+        <p>The common default of some variant of <code>\h:\w\$</code> for a <a href="https://blog.sanctum.geek.nz/bash-prompts/">Bash prompt</a> <code>PS1</code> string includes the <code>\w</code> escape character, so that the user’s current working directory appears in the prompt, but with <code>$HOME</code> shortened to a tilde:</p> 
+        <pre><code>tom@sanctum:~$
+tom@sanctum:~/Documents$
+tom@sanctum:/usr/local/nagios$
+</code></pre> 
+        <p>This is normally very helpful, particularly if you leave your shell for a time and forget where you are, though of course you can always call the <code>pwd</code> shell builtin. However it can get annoying for very deep directory hierarchies, particularly if you’re using a smaller terminal window:</p> 
+        <pre><code>tom@sanctum:/chroot/apache/usr/local/perl/app-library/lib/App/Library/Class:~$
+</code></pre> 
+        <p>If you’re using Bash version 4.0 or above (<code>bash --version</code>), you can save a bit of terminal space by setting the <code>PROMPT_DIRTRIM</code> variable for the shell. This limits the length of the tail end of the <code>\w</code> and <code>\W</code> expansions to that number of path elements:</p> 
+        <pre><code>tom@sanctum:/chroot/apache/usr/local/app-library/lib/App/Library/Class$ PROMPT_DIRTRIM=3
+tom@sanctum:.../App/Library/Class$
+</code></pre> 
+        <p>This is a good thing to include in your <code>~/.bashrc</code> file if you often find yourself deep in directory trees where the upper end of the hierarchy isn’t of immediate interest to you. You can remove the effect again by unsetting the variable:</p> 
+        <pre><code>tom@sanctum:.../App/Library/Class$ unset PROMPT_DIRTRIM
+tom@sanctum:/chroot/apache/usr/local/app-library/lib/App/Library/Class$
+</code></pre> 
+       </div><!-- .entry-content --> 
+       <footer class="entry-meta"> <span class="cat-links"> <span class="entry-utility-prep entry-utility-prep-cat-links">Posted in</span> <a href="https://blog.sanctum.geek.nz/category/bash/" rel="category tag">Bash</a> </span> <span class="sep"> | </span> <span class="tag-links"> <span class="entry-utility-prep entry-utility-prep-tag-links">Tagged</span> <a href="https://blog.sanctum.geek.nz/tag/directory/" rel="tag">directory</a>, <a href="https://blog.sanctum.geek.nz/tag/hierarchy/" rel="tag">hierarchy</a>, <a href="https://blog.sanctum.geek.nz/tag/prompt/" rel="tag">prompt</a>, <a href="https://blog.sanctum.geek.nz/tag/ps1/" rel="tag">ps1</a>, <a href="https://blog.sanctum.geek.nz/tag/shorten/" rel="tag">shorten</a>, <a href="https://blog.sanctum.geek.nz/tag/tree/" rel="tag">tree</a> </span> 
+       </footer><!-- .entry-meta --> 
+      </article><!-- #post-1453 --> 
+      <article id="post-1393" class="post-1393 post type-post status-publish format-standard hentry category-bash tag-commands tag-conditionals tag-exit-values tag-grouped-commands tag-return-values tag-testing"> 
+       <header class="entry-header"> 
+        <h1 class="entry-title"><a href="https://blog.sanctum.geek.nz/testing-exit-values-bash/" rel="bookmark">Testing exit values in Bash</a></h1> 
+        <div class="entry-meta"> <span class="sep">Posted on </span><a href="https://blog.sanctum.geek.nz/testing-exit-values-bash/" title="18:56" rel="bookmark"><time class="entry-date" datetime="2013-10-28T18:56:37+13:00">2013-10-28</time></a><span class="by-author"> <span class="sep"> by </span> <span class="author vcard"><a class="url fn n" href="https://blog.sanctum.geek.nz/author/tom/" title="View all posts by Tom Ryder" rel="author">Tom Ryder</a></span></span> 
+        </div><!-- .entry-meta --> 
+       </header><!-- .entry-header --> 
+       <div class="entry-content"> 
+        <p>In Bash scripting (and shell scripting in general), we often want to check the exit value of a command to decide an action to take after it completes, likely for the purpose of error handling. For example, to determine whether a particular regular expression <code>regex</code> was present somewhere in a file <code>options</code>, we might apply <code>grep(1)</code> with its POSIX <code>-q</code> option to suppress output and just use the exit value:</p> 
+        <pre><code>grep -q regex options
+</code></pre> 
+        <p>An approach sometimes taken is then to test the exit value with the <code>$?</code> parameter, using <code>if</code> to check if it’s non-zero, which is not very elegant and a bit hard to read:</p> 
+        <pre><code># Bad practice
+grep -q regex options
+if (($? &gt; 0)); then
+    printf '%s\n' 'myscript: Pattern not found!' &gt;&amp;2
+    exit 1
+fi
+</code></pre> 
+        <p>Because the <code>if</code> construct by design <a href="http://mywiki.wooledge.org/BashPitfalls?highlight=%28is+a+command%29#if_.5Bgrep_foo_myfile.5D">tests the exit value of commands</a>, it’s better to test the command <em>directly</em>, making the expansion of <code>$?</code> unnecessary:</p> 
+        <pre><code># Better
+if grep -q regex options; then
+    # Do nothing
+    :
+else
+    printf '%s\n' 'myscript: Pattern not found!\n' &gt;&amp;2
+    exit 1
+fi
+</code></pre> 
+        <p>We can precede the command to be tested with <code>!</code> to <em>negate</em> the test as well, to prevent us having to use <code>else</code> as well:</p> 
+        <pre><code># Best
+if ! grep -q regex options; then
+    printf '%s\n' 'myscript: Pattern not found!' &gt;&amp;2
+    exit 1
+fi
+</code></pre> 
+        <p>An alternative syntax is to use <code>&amp;&amp;</code> and <code>||</code> to perform <code>if</code> and <code>else</code> tests with grouped commands between braces, but these tend to be harder to read:</p> 
+        <pre><code># Alternative
+grep -q regex options || {
+    printf '%s\n' 'myscript: Pattern not found!' &gt;&amp;2
+    exit 1
+}
+</code></pre> 
+        <p>With this syntax, the two commands in the block are only executed if the <code>grep(1)</code> call exits with a non-zero status. We can apply <code>&amp;&amp;</code> instead to execute commands if it <em>does</em> exit with zero.</p> 
+        <p>That syntax can be convenient for quickly short-circuiting failures in scripts, for example due to nonexistent commands, particularly if the command being tested already outputs its own error message. This therefore cuts the script off if the given command fails, likely due to <code>ffmpeg(1)</code> being unavailable on the system:</p> 
+        <pre><code>hash ffmpeg || exit 1
+</code></pre> 
+        <p>Note that the braces for a grouped command are not needed here, as there’s only one command to be run in case of failure, the <code>exit</code> call.</p> 
+        <p>Calls to <code>cd</code> are another good use case here, as running a script in the wrong directory if a call to <code>cd</code> fails could have really nasty effects:</p> 
+        <pre><code>cd wherever || exit 1
+</code></pre> 
+        <p>In general, you’ll probably only want to test <code>$?</code> when you have <em>specific</em> non-zero error conditions to catch. For example, if we were using the <code>--max-delete</code> option for <code>rsync(1)</code>, we could check a call’s return value to see whether <code>rsync(1)</code> hit the threshold for deleted file count and write a message to a logfile appropriately:</p> 
+        <pre><code>rsync --archive --delete --max-delete=5 source destination
+if (($? == 25)); then
+    printf '%s\n' 'Deletion limit was reached' &gt;"$logfile"
+fi
+</code></pre> 
+        <p>It may be tempting to use the <code>errexit</code> feature in the hopes of stopping a script as soon as it encounters any error, but there are <a href="http://mywiki.wooledge.org/BashFAQ/105">some problems with its usage</a> that make it a bit error-prone. It’s generally more straightforward to simply write your own error handling using the methods above.</p> 
+        <p>For a really thorough breakdown of dealing with conditionals in Bash, take a look at the relevant chapter of the <a href="http://mywiki.wooledge.org/BashGuide/TestsAndConditionals">Bash Guide</a>.</p> 
+       </div><!-- .entry-content --> 
+       <footer class="entry-meta"> <span class="cat-links"> <span class="entry-utility-prep entry-utility-prep-cat-links">Posted in</span> <a href="https://blog.sanctum.geek.nz/category/bash/" rel="category tag">Bash</a> </span> <span class="sep"> | </span> <span class="tag-links"> <span class="entry-utility-prep entry-utility-prep-tag-links">Tagged</span> <a href="https://blog.sanctum.geek.nz/tag/commands/" rel="tag">commands</a>, <a href="https://blog.sanctum.geek.nz/tag/conditionals/" rel="tag">conditionals</a>, <a href="https://blog.sanctum.geek.nz/tag/exit-values/" rel="tag">exit values</a>, <a href="https://blog.sanctum.geek.nz/tag/grouped-commands/" rel="tag">grouped commands</a>, <a href="https://blog.sanctum.geek.nz/tag/return-values/" rel="tag">return values</a>, <a href="https://blog.sanctum.geek.nz/tag/testing/" rel="tag">testing</a> </span> 
+       </footer><!-- .entry-meta --> 
+      </article><!-- #post-1393 --> 
+      <nav id="nav-below"> 
+       <h3 class="assistive-text">Post navigation</h3> 
+       <div class="nav-previous">
+        <a href="https://blog.sanctum.geek.nz/page/2/"><span class="meta-nav">←</span> Older posts</a>
+       </div> 
+       <div class="nav-next"></div> 
+      </nav><!-- #nav-above --> 
+     </div><!-- #content --> 
+    </div><!-- #primary --> 
+    <div id="secondary" class="widget-area" role="complementary"> 
+     <aside id="recent-posts-2" class="widget widget_recent_entries"> 
+      <h3 class="widget-title">Recent Posts</h3> 
+      <ul> 
+       <li> <a href="https://blog.sanctum.geek.nz/passing-runtime-data-to-awk/">Passing runtime data to AWK</a> </li> 
+       <li> <a href="https://blog.sanctum.geek.nz/vimways-runtime-hackery/">Vimways: Runtime hackery</a> </li> 
+       <li> <a href="https://blog.sanctum.geek.nz/vimways-from-vimrc-to-vim/">Vimways: From .vimrc to .vim</a> </li> 
+       <li> <a href="https://blog.sanctum.geek.nz/shell-from-vi/">Shell from vi</a> </li> 
+       <li> <a href="https://blog.sanctum.geek.nz/bash-hostname-completion/">Bash hostname completion</a> </li> 
+       <li> <a href="https://blog.sanctum.geek.nz/custom-commands/">Custom commands</a> </li> 
+       <li> <a href="https://blog.sanctum.geek.nz/cron-best-practices/">Cron best practices</a> </li> 
+       <li> <a href="https://blog.sanctum.geek.nz/shell-config-subfiles/">Shell config subfiles</a> </li> 
+       <li> <a href="https://blog.sanctum.geek.nz/prompt-directory-shortening/">Prompt directory shortening</a> </li> 
+       <li> <a href="https://blog.sanctum.geek.nz/testing-exit-values-bash/">Testing exit values in Bash</a> </li> 
+      </ul> 
+     </aside>
+     <aside id="pages-2" class="widget widget_pages">
+      <h3 class="widget-title">Pages</h3> 
+      <ul> 
+       <li class="page_item page-item-2"><a href="https://blog.sanctum.geek.nz/about/">About</a></li> 
+       <li class="page_item page-item-2064"><a href="https://blog.sanctum.geek.nz/bash-quick-start-guide/">Bash Guide</a></li> 
+       <li class="page_item page-item-1936"><a href="https://blog.sanctum.geek.nz/faq/">FAQ</a></li> 
+       <li class="page_item page-item-1136"><a href="https://blog.sanctum.geek.nz/nagios-core-administration-cookbook/">Nagios Core Cookbook</a></li> 
+       <li class="page_item page-item-2323"><a href="https://blog.sanctum.geek.nz/privacy/">Privacy</a></li> 
+       <li class="page_item page-item-996"><a href="https://blog.sanctum.geek.nz/unidex/">Unidex</a></li> 
+       <li class="page_item page-item-826"><a href="https://blog.sanctum.geek.nz/vim-koans/">Vim Kōans</a></li> 
+      </ul> 
+     </aside>
+     <aside id="categories-2" class="widget widget_categories">
+      <h3 class="widget-title">Categories</h3> 
+      <ul> 
+       <li class="cat-item cat-item-118"><a href="https://blog.sanctum.geek.nz/category/awk/">Awk</a> (2) </li> 
+       <li class="cat-item cat-item-53"><a href="https://blog.sanctum.geek.nz/category/bash/">Bash</a> (25) </li> 
+       <li class="cat-item cat-item-130"><a href="https://blog.sanctum.geek.nz/category/cron/">Cron</a> (2) </li> 
+       <li class="cat-item cat-item-455"><a href="https://blog.sanctum.geek.nz/category/cryptography/">Cryptography</a> (10) </li> 
+       <li class="cat-item cat-item-323"><a href="https://blog.sanctum.geek.nz/category/debian-2/">Debian</a> (2) </li> 
+       <li class="cat-item cat-item-371"><a href="https://blog.sanctum.geek.nz/category/ed/">Ed</a> (1) </li> 
+       <li class="cat-item cat-item-8"><a href="https://blog.sanctum.geek.nz/category/git/">Git</a> (3) </li> 
+       <li class="cat-item cat-item-132"><a href="https://blog.sanctum.geek.nz/category/gnu-linux/">GNU/Linux</a> (11) </li> 
+       <li class="cat-item cat-item-346"><a href="https://blog.sanctum.geek.nz/category/http/">HTTP</a> (1) </li> 
+       <li class="cat-item cat-item-335"><a href="https://blog.sanctum.geek.nz/category/mysql/">MySQL</a> (1) </li> 
+       <li class="cat-item cat-item-66"><a href="https://blog.sanctum.geek.nz/category/nagios/">Nagios</a> (1) </li> 
+       <li class="cat-item cat-item-69"><a href="https://blog.sanctum.geek.nz/category/perl/">Perl</a> (1) </li> 
+       <li class="cat-item cat-item-435"><a href="https://blog.sanctum.geek.nz/category/putty/">PuTTY</a> (1) </li> 
+       <li class="cat-item cat-item-21"><a href="https://blog.sanctum.geek.nz/category/ssh/">SSH</a> (7) </li> 
+       <li class="cat-item cat-item-268"><a href="https://blog.sanctum.geek.nz/category/subversion/">Subversion</a> (1) </li> 
+       <li class="cat-item cat-item-229"><a href="https://blog.sanctum.geek.nz/category/terminal-2/">Terminal</a> (5) </li> 
+       <li class="cat-item cat-item-198"><a href="https://blog.sanctum.geek.nz/category/tmux/">Tmux</a> (7) </li> 
+       <li class="cat-item cat-item-3"><a href="https://blog.sanctum.geek.nz/category/vim/">Vim</a> (25) </li> 
+      </ul> 
+     </aside>
+     <aside id="linkcat-542" class="widget widget_links">
+      <h3 class="widget-title">Tom Ryder</h3> 
+      <ul class="xoxo blogroll"> 
+       <li><a href="https://sanctum.geek.nz/" rel="me" title="Tom’s homepage">Homepage</a></li> 
+       <li><a href="https://sanctum.geek.nz/cgit/" rel="me" title="Tom’s code repositories">Code</a></li> 
+      </ul> 
+     </aside> 
+     <aside id="linkcat-536" class="widget widget_links">
+      <h3 class="widget-title">Dev</h3> 
+      <ul class="xoxo blogroll"> 
+       <li><a href="https://github.com/tejr" rel="me" title="Tom’s GitHub account">GitHub</a></li> 
+       <li><a href="https://sr.ht/~tejr/" rel="me" title="Tom’s SourceHut account">SourceHut</a></li> 
+      </ul> 
+     </aside> 
+     <aside id="linkcat-535" class="widget widget_links">
+      <h3 class="widget-title">Social</h3> 
+      <ul class="xoxo blogroll"> 
+       <li><a href="https://www.linkedin.com/in/tom-ryder-tejrnz" rel="me">LinkedIn</a></li> 
+       <li><a href="https://mastodon.sdf.org/@tejr" rel="me" title="Tom’s Mastodon account (Fediverse)">Mastodon</a></li> 
+       <li><a href="https://www.reddit.com/user/tejrnz" rel="me" title="Tom’s Reddit account">Reddit</a></li> 
+       <li><a href="https://twitter.com/tejrnz" rel="me" title="Tom’s Twitter">Twitter</a></li> 
+      </ul> 
+     </aside> 
+     <aside id="linkcat-540" class="widget widget_links">
+      <h3 class="widget-title">Donate</h3> 
+      <ul class="xoxo blogroll"> 
+       <li><a href="https://flattr.com/@tejr/domain/blog.sanctum.geek.nz" rel="me" title="Donate real actual money to Tom">Flattr</a></li> 
+       <li><a href="https://www.bookdepository.com/wishlists/WT40F" rel="me" title="Buy Tom a book">Wishlist</a></li> 
+      </ul> 
+     </aside> 
+    </div><!-- #secondary .widget-area --> 
+   </div><!-- #main --> 
+   <footer id="colophon" role="contentinfo"> 
+   </footer><!-- #colophon --> 
+  </div><!-- #page --> 
+  <script type="text/javascript"><!--
+			var seriesdropdown = document.getElementById("orgseries_dropdown");
+			if (seriesdropdown) {
+			 function onSeriesChange() {
+					if ( seriesdropdown.options[seriesdropdown.selectedIndex].value != ( 0 || -1 ) ) {
+						location.href = "https://blog.sanctum.geek.nz/series/"+seriesdropdown.options[seriesdropdown.selectedIndex].value;
+					}
+				}
+				seriesdropdown.onchange = onSeriesChange;
+			}
+			--></script> 
+  <script type="text/javascript" src="https://blog.sanctum.geek.nz/wp-includes/js/wp-embed.min.js?ver=5.7" id="wp-embed-js"></script>  
+ </body>
+</html>

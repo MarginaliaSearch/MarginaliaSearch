@@ -1,0 +1,205 @@
+<!doctype html>
+<html class="client-nojs" lang="en" dir="ltr"> 
+ <head> 
+  <meta charset="UTF-8"> 
+  <title>Ipvanish VPN - Amahi Wiki</title> 
+  <script>document.documentElement.className="client-js";RLCONF={"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":!1,"wgNamespaceNumber":0,"wgPageName":"Ipvanish_VPN","wgTitle":"Ipvanish VPN","wgCurRevisionId":103891,"wgRevisionId":103891,"wgArticleId":13496,"wgIsArticle":!0,"wgIsRedirect":!1,"wgAction":"view","wgUserName":null,"wgUserGroups":["*"],"wgCategories":[],"wgBreakFrames":!1,"wgPageContentLanguage":"en","wgPageContentModel":"wikitext","wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgDefaultDateFormat":"dmy","wgMonthNames":["","January","February","March","April","May","June","July","August","September","October","November","December"],"wgMonthNamesShort":["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"wgRelevantPageName":"Ipvanish_VPN","wgRelevantArticleId":13496,"wgRequestId":"YHLFX4w1UksC3KEbPYN6uAAAAEU","wgCSPNonce":!1,"wgIsProbablyEditable":!1,"wgRelevantPageIsProbablyEditable":!1,"wgRestrictionEdit":[],
+"wgRestrictionMove":[],"wgMFDisplayWikibaseDescriptions":{"search":!1,"nearby":!1,"watchlist":!1,"tagline":!1}};RLSTATE={"site.styles":"ready","noscript":"ready","user.styles":"ready","user":"ready","user.options":"ready","user.tokens":"loading","mediawiki.legacy.shared":"ready","mediawiki.legacy.commonPrint":"ready","mediawiki.toc.styles":"ready"};RLPAGEMODULES=["site","mediawiki.page.startup","mediawiki.page.ready","mediawiki.toc","mediawiki.searchSuggest"];</script> 
+  <script>(RLQ=window.RLQ||[]).push(function(){mw.loader.implement("user.tokens@tffin",function($,jQuery,require,module){/*@nomin*/mw.user.tokens.set({"editToken":"+\\","patrolToken":"+\\","watchToken":"+\\","csrfToken":"+\\"});
+});});</script> 
+  <link rel="stylesheet" href="/load.php?lang=en&amp;modules=mediawiki.legacy.commonPrint%2Cshared%7Cmediawiki.toc.styles&amp;only=styles&amp;skin=amahitwelve"> 
+  <script async src="/load.php?lang=en&amp;modules=startup&amp;only=scripts&amp;raw=1&amp;skin=amahitwelve"></script> 
+  <link rel="stylesheet" href="/skins/AmahiTwelve/style/screen.css?cc5b8" media="screen">
+  <link rel="stylesheet" href="/skins/AmahiTwelve/style/enhanced.css?ade5c" media="screen">
+  <link rel="stylesheet" href="/skins/AmahiTwelve/style/mediawiki.css?3058e" media="screen"><!--[if gte IE 6]><link rel="stylesheet" href="/skins/AmahiTwelve/style/ie.css?cf7e7" media="screen"/><![endif]--> 
+  <meta name="generator" content="MediaWiki 1.34.2"> 
+  <link rel="shortcut icon" href="/favicon.ico"> 
+  <link rel="search" type="application/opensearchdescription+xml" href="/opensearch_desc.php" title="Amahi Wiki (en)"> 
+  <link rel="EditURI" type="application/rsd+xml" href="https://wiki.amahi.org/api.php?action=rsd"> 
+  <link rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/"> 
+  <link rel="alternate" type="application/atom+xml" title="Amahi Wiki Atom feed" href="/index.php?title=Special:RecentChanges&amp;feed=atom"> <!--[if lt IE 7]><style type="text/css">body{behavior:url("/skins/AmahiTwelve/csshover.min.htc")}</style><![endif]--> <!--[if lt IE 9]><script src="/resources/lib/html5shiv/html5shiv.js"></script><![endif]--> 
+ </head> 
+ <body class="mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-Ipvanish_VPN rootpage-Ipvanish_VPN skin-amahitwelve action-view">
+  <div id="globalWrapper"> 
+   <div id="header"> 
+    <h1 class="unitPng"><a href="/">Amahi Wiki</a></h1> 
+    <div id="header-contents"> 
+     <ul id="nav"> 
+      <li id="ca-nstab-main" class="selected"><a href="/index.php/Ipvanish_VPN">Page</a></li>
+      <li id="ca-talk" class="new"><a href="/index.php?title=Talk:Ipvanish_VPN&amp;action=edit&amp;redlink=1">Discussion</a></li>
+      <li id="ca-viewsource"><a href="/index.php?title=Ipvanish_VPN&amp;action=edit">View source</a></li>
+      <li id="ca-history"><a href="/index.php?title=Ipvanish_VPN&amp;action=history">History</a></li> 
+     </ul> 
+     <form action="/index.php/Special:Search" id="quick-search"> 
+      <div> 
+       <input id="q" name="search" type="text"> 
+       <input type="image" id="quick-search-btn" alt="Search" src="/skins/AmahiTwelve/img/screen/template/search-submit.png"> 
+      </div> 
+     </form> 
+    </div> 
+   </div> 
+   <div id="column-one"> 
+    <div class="portlet" id="main-links"> 
+     <h2>Links</h2> 
+     <div class="pBody"> 
+      <ul> 
+       <li> <a href="https://wiki.amahi.org">Wiki Home</a></li> 
+       <li> <a href="https://www.amahi.org">Amahi Home</a></li> 
+       <li> <a href="https://www.amahi.org/apps">Amahi Apps</a></li> 
+       <li> <a href="https://www.amahi.org/faq">FAQ</a></li> 
+       <li> <a href="https://forums.amahi.org">Forums</a></li> 
+       <li> <a href="https://bugs.amahi.org">Bug Tracker</a></li> 
+       <li> <a href="https://blog.amahi.org/">Blog</a></li> 
+       <li> <a href="https://www.amahi.org/gallery">Feature Gallery</a></li> 
+       <li> <a href="/index.php/Mailing_list">Mailing Lists</a></li> 
+      </ul> 
+     </div> 
+    </div> 
+    <div class="portlet" id="p-personal" role="navigation"> 
+     <h2>Personal tools</h2> 
+     <div class="pBody"> 
+      <ul> 
+       <li id="pt-login"><a href="/index.php?title=Special:UserLogin&amp;returnto=Ipvanish+VPN" title="You are encouraged to log in; however, it is not mandatory [o]" accesskey="o">Log in</a></li> 
+       <li id="pt-createaccount"><a href="/index.php/Special:RequestAccount" title="You are encouraged to create an account and log in; however, it is not mandatory">Request account</a></li> 
+      </ul> 
+     </div> 
+    </div> 
+    <div class="portlet" id="p-logo" role="banner"> <a href="/index.php/Main_Page" class="mw-wiki-logo" title="Visit the main page"></a> 
+    </div> 
+    <div class="generated-sidebar portlet" id="p-navigation" role="navigation"> 
+     <h3>Navigation</h3> 
+     <div class="pBody"> 
+      <ul> 
+       <li id="n-recentchanges"><a href="/index.php/Special:RecentChanges" title="A list of recent changes in the wiki [r]" accesskey="r">Recent changes</a></li> 
+       <li id="n-help"><a href="https://www.mediawiki.org/wiki/Special:MyLanguage/Help:Contents" title="The place to find out">Help</a></li> 
+      </ul> 
+     </div> 
+    </div> 
+    <div class="portlet" id="p-tb" role="navigation"> 
+     <h2>Tools</h2> 
+     <div class="pBody"> 
+      <ul> 
+       <li id="t-whatlinkshere"><a href="/index.php/Special:WhatLinksHere/Ipvanish_VPN" title="A list of all wiki pages that link here [j]" accesskey="j">What links here</a></li> 
+       <li id="t-recentchangeslinked"><a href="/index.php/Special:RecentChangesLinked/Ipvanish_VPN" rel="nofollow" title="Recent changes in pages linked from this page [k]" accesskey="k">Related changes</a></li> 
+       <li id="t-specialpages"><a href="/index.php/Special:SpecialPages" title="A list of all special pages [q]" accesskey="q">Special pages</a></li> 
+       <li id="t-print"><a href="/index.php?title=Ipvanish_VPN&amp;printable=yes" rel="alternate" title="Printable version of this page [p]" accesskey="p">Printable version</a></li> 
+       <li id="t-permalink"><a href="/index.php?title=Ipvanish_VPN&amp;oldid=103891" title="Permanent link to this revision of the page">Permanent link</a></li> 
+       <li id="t-info"><a href="/index.php?title=Ipvanish_VPN&amp;action=info" title="More information about this page">Page information</a></li> 
+      </ul> 
+     </div> 
+    </div> 
+   </div><!-- end of the left (by default at least) column --> 
+   <div id="column-content"> 
+    <div id="content" class="mw-body" role="main"> <a id="top"></a> 
+     <div class="mw-indicators mw-body-content"> 
+     </div> 
+     <h1 id="firstHeading" class="firstHeading" lang="en">Ipvanish VPN</h1> 
+     <div id="bodyContent" class="mw-body-content"> 
+      <div id="siteSub">
+       From Amahi Wiki
+      </div> 
+      <div id="contentSub"></div> 
+      <div id="jump-to-nav" class="mw-jump">
+       Jump to: <a href="#column-one">navigation</a>, <a href="#searchInput">search</a>
+      </div> <!-- start content --> 
+      <div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr">
+       <div class="mw-parser-output">
+        <p>Below you will find a guide on how to connect your Amahi server HDA as a client to Ipvanish VPN. <br>We are going to connect your HDA through a VPN tunnel to Ipvanish's servers. We will ssh into your HDA, show your current IP addresses Geo location and then connect to Ipvanish's servers and show the geolocation again. I will also introduce you to ways on how to check that your HDA is definitely connected by using a shell based text browser called lynx. Connecting is not a problem as such. I have yet to find a clean way to disconnect the VPN tunnel. in the last part of this tutorial we will disconnect from the VPN tunnel manually ( the hard way). </p> 
+        <div id="toc" class="toc">
+         <input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none">
+         <div class="toctitle" lang="en" dir="ltr">
+          <h2>Contents</h2><span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span>
+         </div> 
+         <ul> 
+          <li class="toclevel-1 tocsection-1"><a href="#What_is_Ipvanish"><span class="tocnumber">1</span> <span class="toctext">What is Ipvanish</span></a></li> 
+          <li class="toclevel-1 tocsection-2"><a href="#Prerequisites"><span class="tocnumber">2</span> <span class="toctext">Prerequisites</span></a></li> 
+          <li class="toclevel-1 tocsection-3"><a href="#Getting_your_config_files"><span class="tocnumber">3</span> <span class="toctext">Getting your config files</span></a></li> 
+          <li class="toclevel-1 tocsection-4"><a href="#Connecting_to_your_VPN"><span class="tocnumber">4</span> <span class="toctext">Connecting to your VPN</span></a></li> 
+          <li class="toclevel-1 tocsection-5"><a href="#Confirming_your_Ipvanish_VPN_connection"><span class="tocnumber">5</span> <span class="toctext">Confirming your Ipvanish VPN connection</span></a></li> 
+          <li class="toclevel-1 tocsection-6"><a href="#Disconnecting_Ipvanish_VPN"><span class="tocnumber">6</span> <span class="toctext">Disconnecting Ipvanish VPN</span></a></li> 
+         </ul> 
+        </div> 
+        <h2><span class="mw-headline" id="What_is_Ipvanish">What is Ipvanish</span></h2> 
+        <p>Ipvanish is a service that allows you to connect through a secure VPN tunnel and change your locations IP address. this is in particular useful if you need to browse something that is not accessible for your country location. read more about IPvanish <a rel="nofollow" class="external text" href="https://ipvanish.com">here</a> </p> 
+        <h2><span class="mw-headline" id="Prerequisites">Prerequisites</span></h2> 
+        <p>- This tutorial assumes that you are running your Amahi HDA headless on version 9 based on fedora 23. Installation instructions can be found <a rel="nofollow" class="external text" href="https://wiki.amahi.org/index.php/Amahi_9_Install">here</a> <br>- You have Openvpn server installed. ( for this tutorial we purchased the amahi app for openvpn). can be purchased <a rel="nofollow" class="external text" href="https://www.amahi.org/apps/openvpn">here</a> <br>- Please understand that this tutorial is not perfect as closing the VPN tunnel still requires some manual work. <br>- I am currently working on a shell script that will allow you to connect , show the status of your geolocation and disconnect. </p> 
+        <h2><span class="mw-headline" id="Getting_your_config_files">Getting your config files</span></h2> 
+        <p>You will need to browse on another computer to the location of Ipvanish's config files and decide which location config file you would like to use. please see <a rel="nofollow" class="external text" href="http://www.ipvanish.com/software/configs/">here </a> <br> For this example I have used ipvanish-NL-Amsterdam-ams-a17.ovpn. You will also need the certificate file ca.ipvanish.com.crt <br> <br>lets ssh into our HDA server and get these files. <br> open a terminal window using putty or for linux or mac just use terminal. <br><br> <code>ssh username@your_hda_ip_adress</code> <br> replace <code>ssh username</code> with your HDA login credentials and <code>your_hda_ip_address</code> with the ip address of your HDA <br><br>After inputting your password you should be in your username folder. In this folder we are going to create a new folder and then change directory to this folder. We will store the config files here <br><code> mkdir ipvanish </code> <br><code> cd ipvanish</code><br> <br> now lets download the files <br><code>wget http://www.ipvanish.com/software/configs/ca.ipvanish.com.crt</code> <br><code>wget http://www.ipvanish.com/software/configs/ipvanish-NL-Amsterdam-ams-a17.ovpn</code> </p>
+        <h2><span class="mw-headline" id="Connecting_to_your_VPN">Connecting to your VPN</span></h2> 
+        <p>If you have followed the above steps you should have successfully downloaded the config files and we are ready to connect. <br><br> issue the following command <br><code>sudo openvpn --config ipvanish-NL-Amsterdam-ams-a17.ovpn</code>. <br>of course replace your server config name with the one you have chosen.<br>You will be firstly asked to input your HDA's super user password and then the script will run. At some point during the script you will be prompted for your Ipvanish username and password. <br> <br>You are now connected. The shell window will show a bunch of code. you will not be able to enter any code to it. Just close the Shell window. </p> 
+        <h2><span class="mw-headline" id="Confirming_your_Ipvanish_VPN_connection">Confirming your Ipvanish VPN connection</span></h2> 
+        <p>There are a couple ways to check wether your connection to Ipvanish's servers has really happened. I will show you a couple ways below<br> <br>- Using freegeoip.net <br><br> firstly lets get our wan IP address. <br> Issue the following command whilst logged into shell. <br> <code>dig +short myip.opendns.com @resolver1.opendns.com</code> <br><br> this will show you you current wan IP address. <br>in the example above it shows <code>81.171.81.95</code> <br><br>Using freegeoip.net we are going to see what the location of this IP address is by issuing the following command <br> <code>curl freegeoip.net/xml/81.171.81.95</code> <br>this will display the location of the server and you will see that you are now connected through a different country. <code> </code></p>
+        <p><code>&lt;Response&gt; <br>&lt;IP&gt;81.171.81.95&lt;/IP&gt; <br>&lt;CountryCode&gt;US&lt;/CountryCode&gt; <br>&lt;CountryName&gt;United States&lt;/CountryName&gt; <br>&lt;RegionCode&gt;NY&lt;/RegionCode&gt; <br>&lt;RegionName&gt;New York&lt;/RegionName&gt; <br>&lt;City&gt;New York&lt;/City&gt; <br>&lt;ZipCode&gt;10118&lt;/ZipCode&gt; <br>&lt;TimeZone&gt;America/New_York&lt;/TimeZone&gt; <br>&lt;Latitude&gt;40.7143&lt;/Latitude&gt; <br>&lt;Longitude&gt;-74.006&lt;/Longitude&gt; <br>&lt;MetroCode&gt;501&lt;/MetroCode&gt; <br>&lt;/Response&gt; </code></p>
+        <p class="mw-empty-elt"> </p>
+        <p><br>- The second way you can confirm that you are connected to Ipvanish VPN is Using a terminal based text browser Lynx. <br>If the site is blocked by your ISP's warning message using Lynx we can browse and see the warning message. Once connected to Ipvanish VPN you can browse the blocked website again and see that the warning message is no longer there and you can visit the site. </p> 
+        <p class="mw-empty-elt"></p>
+        <p>Lynx is not installed by default so we will have to install this application </p>
+        <p>issue the following command <br><code> sudo dnf install lynx</code> </p> 
+        <p>Once the application is installed you can browse the web using your shell terminal as follows <br>Issue the following command <code> lynx http://www.google.com</code> <br><br> of course google is not on anyone's blocked list. So please check <a rel="nofollow" class="external text" href="https://en.wikipedia.org/wiki/List_of_websites_blocked_in_the_United_Kingdom">here</a> for sites that are blocked by ISP's and confirm that you can browse them without any block message. <br><br> - Alternatively you can always logon to your Amahi control panel https://www.amahi.org/users and under the section Alerts you can see that your Wan IP address of your HDA has changed. </p>
+        <h2><span class="mw-headline" id="Disconnecting_Ipvanish_VPN">Disconnecting Ipvanish VPN</span></h2> 
+        <p>As mentioned before disconnecting the VPN tunnel is a little troublesome as it doesn't disconnect in an easy way. <br> we need to find the VPN tunnel connection and then using a Kill command stop it </p>
+        <p><br> Issue the following command in your shell console <br><code>ifconfig</code> <br>look out for a connection named tun0 or tun1 that looks like this &lt;POINTOPOINT,NOARP,MULTICAST&gt;. </p> 
+        <p class="mw-empty-elt"></p>
+        <p> once we have identified the connection we simply kill it by issuing the following command </p>
+        <p><code>sudo ifconfig tun0 down</code> <br> or <br><code>sudo ifconfig tun1 down</code> </p>
+        <p><br> Using the section above 'Confirming your Ipvanish VPN connection' you will be able to check that you are back on your ISP's wan IP. </p> <!-- 
+NewPP limit report
+Cached time: 20210410210408
+Cache expiry: 86400
+Dynamic content: false
+Complications: []
+CPU time usage: 0.012 seconds
+Real time usage: 0.015 seconds
+Preprocessor visited node count: 38/1000000
+Preprocessor generated node count: 0/1000000
+Post‐expand include size: 0/2097152 bytes
+Template argument size: 0/2097152 bytes
+Highest expansion depth: 2/40
+Expensive parser function count: 0/100
+Unstrip recursion depth: 0/20
+Unstrip post‐expand size: 183/5000000 bytes
+--> <!--
+Transclusion expansion time report (%,ms,calls,template)
+100.00%    0.000      1 -total
+--> <!-- Saved in parser cache with key amahi_wiki:pcache:idhash:13496-0!canonical and timestamp 20210410210408 and revision id 103891
+ --> 
+       </div>
+      </div>
+      <div class="printfooter">
+        Retrieved from "<a dir="ltr" href="https://wiki.amahi.org/index.php?title=Ipvanish_VPN&amp;oldid=103891">https://wiki.amahi.org/index.php?title=Ipvanish_VPN&amp;oldid=103891</a>"
+      </div> 
+      <div id="catlinks" class="catlinks catlinks-allhidden" data-mw="interface"></div> <!-- end content --> 
+      <div class="visualClear"></div> 
+     </div> 
+    </div> 
+   </div> 
+   <div class="visualClear"></div> 
+   <div id="footer" role="contentinfo"> 
+    <div class="six-col"> <a href="/" id="logo-footer"><img src="/skins/AmahiTwelve/img/screen/template/screen/logo_footer.png" alt="Amahi"></a> 
+    </div> 
+    <div class="col-span"> 
+     <ul id="f-list"> 
+      <li id="lastmod"> This page was last edited on 15 June 2016, at 17:33.</li> 
+      <li id="copyright">Content is available under <a class="external" rel="nofollow" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Attribution-Noncommercial-No Derivative Works 3.0 </a> unless otherwise noted.</li> 
+      <li id="privacy"><a href="/index.php/Amahi_Wiki:Privacy_policy" title="Amahi Wiki:Privacy policy">Privacy policy</a></li> 
+      <li id="about"><a href="/index.php/Amahi_Wiki:About" title="Amahi Wiki:About">About Amahi Wiki</a></li> 
+      <li id="disclaimer"><a href="/index.php/Amahi_Wiki:General_disclaimer" title="Amahi Wiki:General disclaimer">Disclaimers</a></li> 
+      <li id="mobileview"><a href="https://wiki.amahi.org/index.php?title=Ipvanish_VPN&amp;mobileaction=toggle_view_mobile" class="noprint stopMobileRedirectToggle">Mobile view</a></li> 
+     </ul> 
+    </div> 
+   </div> 
+  </div> 
+  <script>(RLQ=window.RLQ||[]).push(function(){mw.config.set({"wgPageParseReport":{"limitreport":{"cputime":"0.012","walltime":"0.015","ppvisitednodes":{"value":38,"limit":1000000},"ppgeneratednodes":{"value":0,"limit":1000000},"postexpandincludesize":{"value":0,"limit":2097152},"templateargumentsize":{"value":0,"limit":2097152},"expansiondepth":{"value":2,"limit":40},"expensivefunctioncount":{"value":0,"limit":100},"unstrip-depth":{"value":0,"limit":20},"unstrip-size":{"value":183,"limit":5000000},"timingprofile":["100.00%    0.000      1 -total"]},"cachereport":{"timestamp":"20210410210408","ttl":86400,"transientcontent":false}}});});</script> 
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-2168005-1', 'auto');
+  ga('send', 'pageview');
+
+</script> 
+  <script>(RLQ=window.RLQ||[]).push(function(){mw.config.set({"wgBackendResponseTime":285});});</script>
+ </body>
+</html>

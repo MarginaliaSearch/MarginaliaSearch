@@ -1,0 +1,98 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+ <head> 
+  <title>Download PuTTY: release 0.48</title> 
+  <link rel="canonical" href="https://www.chiark.greenend.org.uk/~sgtatham/putty/releases/0.48.html"> 
+  <link rel="stylesheet" type="text/css" href="../sitestyle.css" title="PuTTY Home Page Style"> 
+  <link rel="shortcut icon" href="putty.ico"> 
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8"> 
+  <meta name="robots" content="noindex,nofollow"> 
+ </head> 
+ <body> 
+  <h1 align="center">Download PuTTY: release 0.48</h1> 
+  <div align="center" class="mirrorwarning">
+    This is a mirror. Follow this link to find <a href="https://www.chiark.greenend.org.uk/~sgtatham/putty/">the primary PuTTY web site</a>. 
+  </div> 
+  <p align="center"> <a href="../">Home</a> | <a href="../faq.html">FAQ</a> | <a href="../feedback.html">Feedback</a> | <a href="../licence.html">Licence</a> | <a href="../maillist.html">Updates</a> | <a href="../mirrors.html">Mirrors</a> | <a href="../keys.html">Keys</a> | <a href="../links.html">Links</a> | <a href="../team.html">Team</a> <br> Download: <a href="../latest.html">Stable</a> · <a href="../snapshot.html">Snapshot</a> | <a href="../docs.html">Docs</a> | <a href="../changes.html">Changes</a> | <a href="../wishlist/">Wishlist</a> </p> 
+  <p> This page contains download links for PuTTY release 0.48. </p>
+  <p> 0.48, released on 1999-11-18, is <em>not</em> the latest release. See the <a href="../latest.html">Latest Release page</a> for the most up-to-date release (currently 0.74). </p>
+  <p> Past releases of PuTTY are versions we thought were reasonably likely to work well, at the time they were released. However, later releases will almost always have fixed bugs and/or added new features. If you have a problem with this release, please try the <a href="../latest.html">latest release</a>, to see if the problem has already been fixed. </p>
+  <h2 class="securityboxtop">SECURITY WARNING</h2> 
+  <div class="securityboxbottom"> 
+   <p class="securityboxbottomfirst"> This release has known security vulnerabilities. Consider using a later release instead, such as the <a href="../latest.html">latest version, 0.74</a>. </p> 
+   <p> The known vulnerabilities in this release are: </p>
+   <ul class="securityboxbottomlast">
+    <li><a href="../wishlist/private-key-not-wiped.html">private-key-not-wiped</a> (fixed in release 0.63) </li>
+    <li><a href="../wishlist/private-key-not-wiped-2.html">private-key-not-wiped-2</a> (fixed in release 0.64) </li>
+    <li><a href="../wishlist/vuln-agent-fwd-overflow.html">vuln-agent-fwd-overflow</a> (fixed in release 0.68) </li>
+    <li><a href="../wishlist/vuln-auth-prompt-spoofing.html">vuln-auth-prompt-spoofing</a> (fixed in release 0.71) </li>
+    <li><a href="../wishlist/vuln-bignum-division-by-zero.html">vuln-bignum-division-by-zero</a> (fixed in release 0.63) </li>
+    <li><a href="../wishlist/vuln-indirect-dll-hijack.html">vuln-indirect-dll-hijack</a> (fixed in release 0.68) </li>
+    <li><a href="../wishlist/vuln-indirect-dll-hijack-2.html">vuln-indirect-dll-hijack-2</a> (fixed in release 0.69) </li>
+    <li><a href="../wishlist/vuln-indirect-dll-hijack-3.html">vuln-indirect-dll-hijack-3</a> (fixed in release 0.70) </li>
+    <li><a href="../wishlist/vuln-modmul.html">vuln-modmul</a> (fixed in release 0.63) </li>
+    <li><a href="../wishlist/vuln-modpow.html">vuln-modpow</a> (fixed in release 0.55) </li>
+    <li><a href="../wishlist/vuln-passwd-memdump.html">vuln-passwd-memdump</a> (fixed in release 0.54) </li>
+    <li><a href="../wishlist/vuln-pscp-sink-sscanf.html">vuln-pscp-sink-sscanf</a> (fixed in release 0.67) </li>
+    <li><a href="../wishlist/vuln-rng-reuse.html">vuln-rng-reuse</a> (fixed in release 0.71) </li>
+    <li><a href="../wishlist/vuln-sftp-readdir.html">vuln-sftp-readdir</a> (fixed in release 0.57) </li>
+    <li><a href="../wishlist/vuln-sftp-string.html">vuln-sftp-string</a> (fixed in release 0.57) </li>
+    <li><a href="../wishlist/vuln-signature-stringlen.html">vuln-signature-stringlen</a> (fixed in release 0.63) </li>
+    <li><a href="../wishlist/vuln-ssh1-buffer-length-underflow.html">vuln-ssh1-buffer-length-underflow</a> (fixed in release 0.72) </li>
+    <li><a href="../wishlist/vuln-ssh1-kex.html">vuln-ssh1-kex</a> (fixed in release 0.55) </li>
+    <li><a href="../wishlist/vuln-ssh1-short-rsa-keys.html">vuln-ssh1-short-rsa-keys</a> (fixed in release 0.72) </li>
+    <li><a href="../wishlist/vuln-sshredder.html">vuln-sshredder</a> (fixed in release 0.53b) </li>
+    <li><a href="../wishlist/vuln-terminal-dos-one-column-cjk.html">vuln-terminal-dos-one-column-cjk</a> (fixed in release 0.71) </li>
+    <li><a href="../wishlist/vuln-win-exclusiveaddruse.html">vuln-win-exclusiveaddruse</a> (fixed in release 0.73) </li>
+    <li><a href="../wishlist/vuln-win-pageant-client-missing-length-check.html">vuln-win-pageant-client-missing-length-check</a> (fixed in release 0.72) </li>
+   </ul> 
+  </div> 
+  <h2 class="
+downloadtop downloadinsecuretopcolour
+">Binary files</h2> 
+  <div class="
+downloadbottom downloadinsecurebotcolour
+"> 
+   <div class="downloadheading">
+    <code>putty.exe</code> (the SSH and Telnet client itself)
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">x86:</span> <span class="downloadfile"><a href="https://the.earth.li/~sgtatham/putty/0.48/putty.exe"><code>putty.exe</code></a></span> <span class="downloadftp"> <a href="ftp://ftp.chiark.greenend.org.uk/users/sgtatham/putty-0.48/putty.exe">(or by FTP)</a> </span> 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">Alpha:</span> <span class="downloadfile"><a href="https://the.earth.li/~sgtatham/putty/0.48/putty-alpha.exe"><code>putty-alpha.exe</code></a></span> <span class="downloadftp"> <a href="ftp://ftp.chiark.greenend.org.uk/users/sgtatham/putty-0.48/putty-alpha.exe">(or by FTP)</a> </span> 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">Win32s:</span> <span class="downloadfile"><a href="https://the.earth.li/~sgtatham/putty/0.48/putty-win32s.exe"><code>putty-win32s.exe</code></a></span> <span class="downloadftp"> <a href="ftp://ftp.chiark.greenend.org.uk/users/sgtatham/putty-0.48/putty-win32s.exe">(or by FTP)</a> </span> 
+   </div> 
+   <div class="downloadheading">
+    <code>pscp.exe</code> (an SCP client, i.e. command-line secure file copy)
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">x86:</span> <span class="downloadfile"><a href="https://the.earth.li/~sgtatham/putty/0.48/pscp.exe"><code>pscp.exe</code></a></span> <span class="downloadftp"> <a href="ftp://ftp.chiark.greenend.org.uk/users/sgtatham/putty-0.48/pscp.exe">(or by FTP)</a> </span> 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">Alpha:</span> <span class="downloadfile"><a href="https://the.earth.li/~sgtatham/putty/0.48/pscp-alpha.exe"><code>pscp-alpha.exe</code></a></span> <span class="downloadftp"> <a href="ftp://ftp.chiark.greenend.org.uk/users/sgtatham/putty-0.48/pscp-alpha.exe">(or by FTP)</a> </span> 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">Win32s:</span> <span class="downloadfile"><a href="https://the.earth.li/~sgtatham/putty/0.48/pscp-win32s.exe"><code>pscp-win32s.exe</code></a></span> <span class="downloadftp"> <a href="ftp://ftp.chiark.greenend.org.uk/users/sgtatham/putty-0.48/pscp-win32s.exe">(or by FTP)</a> </span> 
+   </div> 
+  </div> 
+  <h2 class="
+downloadtop downloadinsecuretopcolour
+">Source code</h2> 
+  <div class="
+downloadbottom downloadinsecurebotcolour
+"> 
+   <div class="downloadheading">
+    Windows source archive
+   </div> 
+   <div class="downloadrow"> <span class="downloadname"><code>.zip</code>:</span> <span class="downloadfile"><a href="https://the.earth.li/~sgtatham/putty/0.48/putty.zip"><code>putty.zip</code></a></span> <span class="downloadftp"> <a href="ftp://ftp.chiark.greenend.org.uk/users/sgtatham/putty-0.48/putty.zip">(or by FTP)</a> </span> 
+   </div> 
+   <div class="downloadheading">
+    git repository
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">Clone:</span> <span class="downloadgitlink"><code>https://git.tartarus.org/simon/putty.git</code></span> 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">gitweb:</span> <span class="downloadgitlink"><a href="https://git.tartarus.org/?p=simon/putty.git">main</a> | <a href="https://git.tartarus.org/?p=simon/putty.git;a=commit;h=refs/tags/0.48"><code>0.48</code> release tag</a> </span> 
+   </div> 
+  </div> 
+  <p></p>
+  <hr> If you want to comment on this web site, see the <a href="../feedback.html">Feedback page</a>. 
+  <br> (last modified on <!--LASTMOD-->Sun Nov 22 22:29:04 2020<!--END-->) 
+ </body>
+</html>

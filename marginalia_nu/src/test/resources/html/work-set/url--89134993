@@ -1,0 +1,93 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html> 
+ <head> 
+  <title>Crawl!</title> 
+  <link rel="shortcut icon" href="favicon.ico"> 
+  <link rel="stylesheet" type="text/css" href="minimalist.css"> 
+  <script type="text/javascript" src="tourney-time.js"></script> 
+ </head> 
+ <body onload="populateTourneyTime()"> 
+  <div id="news"> 
+   <h2>News</h2> 
+   <table class="news"> 
+    <tbody>
+     <tr> 
+      <th>28 May 20</th> 
+      <td>This box updated for the first time in 5 years.</td> 
+     </tr> 
+     <tr> 
+      <td colspan="2"> <a href="oldnews.html">Older news...</a> </td> 
+     </tr> 
+    </tbody>
+   </table> 
+  </div> 
+  <div id="main"> 
+   <p>To play Crawl on this server, either visit <strong><a href="http://crawl.akrasiac.org:8080">WebTiles</a></strong>, or SSH to <strong><a href="ssh://crawl.akrasiac.org">crawl.akrasiac.org</a></strong>. The username and password are both joshua; if you catch the reference, give yourself a cookie. If you prefer to connect via SSH key, <a href="cao_key">click here</a> to get the RSA key. Or, if you are running PuTTY, <a href="cao_key.ppk">click here</a> to get the key in a format PuTTY can use natively! If all of that is gibberish to you, <a href="docs/ssh_guide.txt">read this</a>. If it's gibberish to you and you're not interested in playing online, you can <a href="https://crawl.develz.org/wordpress/downloads">download a copy</a> for Windows, OS X, or GNU/Linux.</p> 
+   <p>This server is currently running <a href="http://crawl.develz.org/">Crawl Stone Soup 0.25</a> and takes version updates with elegant quickness, although this front page does not always announce them with such. :) You also play the development versions as well, if you prefer the latest and greatest. Because the 0.4 release changed the scoring system pretty fundamentally, scores prior to that release are archived <a href="http://crawl.akrasiac.org/scoring03/">here</a>. Hopefully the scoring system will not change again.</p> 
+   <div id="tourney_banner" class="tourney_banner"> 
+    <noscript>
+     Tournament times are available here if you enable Javascript.
+    </noscript> Filled in by Javascript 
+   </div> 
+   <p>We hang out in <code>##crawl</code> on Freenode, come join us! The server administrator's nick is rax; advil, gammafunk, |amethyst, and johnstein also help out from time to time.</p> 
+   <h3>Scoring</h3> 
+   <ul> 
+    <li><a href="scoring/overview.html">Scoring overview</a></li> 
+    <li><a href="scoring/top-N.html">Top scores on the server</a></li> 
+    <li><a href="scoring/all-players.html">Summary of each player</a></li> 
+    <li><a href="scoring/best-players-total-score.html">Top total scores</a></li> 
+    <li><a href="scoring/top-combo-scores.html">Top scores by race/class combination</a></li> 
+    <li><a href="scoring/combo-scoreboard.html">Top scorers of top race/class scores</a></li> 
+    <li><a href="scoring/killers.html">Top killers on the server</a></li> 
+    <li><a href="scoring/winners.html">Winners</a></li> 
+    <li><a href="scoring/streaks.html">Streaks</a></li> 
+    <li><a href="scoring/gkills.html">Ghost killers</a></li> 
+    <li><a href="scoring03/">Scoring for 0.3 and below</a></li> 
+   </ul> <!-- [snark] Not done yet
+          <h3>Statistics</h3>
+          <ul>
+            <li><a href="scoring/clevels.html">Character levels</a></li>
+            <li><a href="scoring/species.html">Species</a></li>
+            <li><a href="scoring/classes.html">Classes</a></li>
+	    <li><a href="scoring/runes.html">Runes</a></li>
+            <li><a href="scoring/gods.html">Gods</a></li>
+            <li><a href="scoring/specie_class.html">Species/class combinations</a></li>
+
+          </ul>
+          --> 
+   <h3>Server</h3> 
+   <ul> 
+    <li><a href="rawdata/">Morgues and ttyrecs</a></li> 
+    <li>init.txt files (yes, I know they have the wrong name): <a href="rcfiles/crawl-0.25/">0.25</a> <a href="rcfiles/crawl-0.24/">0.24</a></li> 
+    <li><a href="scoring/per-day.html">Usage statistics</a></li> 
+    <li><a href="scoring/recent.html">Recent games</a></li> 
+    <li><a href="docs/">Crawl documentation</a></li> 
+    <li><a href="tournaments.html">Tournaments hosted on CAO (2008-2012)</a></li> 
+   </ul> 
+   <h3>Links</h3> 
+   <ul> 
+    <li><a href="http://www.digital-eel.com/13steps/">13 Steps To Crawl (introductory)</a></li> 
+    <li><a href="http://www.normalesup.org/~grasland/Crawl/">R1's Crawl page (spoilers)</a></li> 
+    <li><a href="http://www.cs.helsinki.fi/u/kielosto/crawl_spoilers/ss/">Jarmo's Crawl Spoilers</a></li> 
+    <li><a href="http://www.crawl.webpark.pl/">Dungeon Crawl Extra Spoilers</a></li> 
+    <li><a href="http://www.swallowtail.org/crawl/hints.shtml">Association for the Advancement of Dungeon Crawling</a></li> 
+    <li><a href="http://collectivecomputing.com/~evilupine/crawl/index.html">Linley's Dungeon Crawl - The Almost Perfect Roguelike</a></li> 
+    <li><a href="http://crawl.chaosforge.org/">Crawl Wiki (Kornel's, new)</a></li> 
+    <li><a href="http://www.dtek.chalmers.se/~salman/spoilers.html">cbus's spoiler page!</a></li> 
+    <li><a href="http://crawl.develz.org/">Napkin's Crawl Server --- with playable beta!</a></li> <!-- <li><a href="http://greyfire.org/~sigmund/">haha_sigmund(), a Crawl comic!</a></li> --> 
+   </ul> 
+   <hr> 
+   <h3>Thanks!</h3> 
+   <ul> 
+    <li>Darshan and all the Stone Soup team for their hard work, especially with server stuff.</li> 
+    <li>Napkin for constantly and consistently helping me with server administration issues.</li> 
+    <li>Jarmo Kielosto for scoring and statistics script, and Markus Maier for adding in additional statistics.</li> 
+    <li>The dgamelaunch guys for writing the server software and providing help where they could. The new version is excellent!</li> 
+    <li>Eidolos for setting up this front page.</li> 
+    <li>jmr for the sweet favicon!</li> 
+    <li>elliptic for setting up and organizing the 2011 tournament!</li> 
+    <li>And, of course, to Linley Henzell for writing an amazing game.</li> 
+   </ul> 
+  </div>  
+ </body>
+</html>

@@ -6,57 +6,98 @@ import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class SummaryExtractor {
     private final int maxSummaryLength;
 
-    private final Pattern truncatedCharacters = Pattern.compile("[^a-zA-Z0-9.,!?\\-'\"]+");
+    private final Pattern truncatedCharacters = Pattern.compile("[^a-zA-Z0-9.,!?\\-'\"]+|[\\-.,!?' ]{3,}");
 
     @Inject
     public SummaryExtractor(@Named("max-summary-length") Integer maxSummaryLength) {
         this.maxSummaryLength = maxSummaryLength;
     }
 
-    public Optional<String> extractSummary(Document parsed) {
+    public String extractSummary(Document parsed) {
         var cleanDoc = parsed.clone();
-        cleanDoc.select("h1,h2,h3,header,nav,#header,#nav,#navigation,.header,.nav,.navigation,ul,li").remove();
+        cleanDoc.select("header,nav,#header,#nav,#navigation,.header,.nav,.navigation,ul,li").remove();
 
-        return extractSummaryRaw(cleanDoc)
-                .map(String::trim)
-                .filter(s -> !s.isBlank() && s.length() > 20)
-                .or(() -> getOgDescription(parsed))
-                .or(() -> getMetaDescription(parsed))
-                .map(this::trimLongSpaces)
-                .map(s -> StringUtils.abbreviate(s, "", maxSummaryLength))
-                ;
+        String summaryString;
+
+        summaryString = extractSummaryRaw(cleanDoc);
+        summaryString = truncatedCharacters.matcher(summaryString).replaceAll(" ");
+        summaryString = StringUtils.abbreviate(summaryString, "", maxSummaryLength);
+
+        return summaryString;
     }
 
-    private String trimLongSpaces(String s) {
-        return truncatedCharacters.matcher(s).replaceAll(" ");
+
+    private String extractSummaryRaw(Document parsed) {
+
+        String maybe;
+
+        // Plan A
+
+        maybe = getSummaryByTagDensity(parsed);
+        if (!maybe.isBlank()) return maybe;
+
+        // Plan B: Open Graph Description
+        maybe = parsed.select("meta[name=og:description]").attr("content");
+        if (!maybe.isBlank()) return maybe;
+
+        // Plan C: Ye Olde meta-description
+        maybe = parsed.select("meta[name=description]").attr("content");
+        if (!maybe.isBlank()) return maybe;
+
+        // Plan D: The kitchen sink?
+        return lastDitchSummaryEffort(parsed);
     }
 
-    private Optional<String> extractSummaryRaw(Document parsed) {
+    private String getSummaryByTagDensity(Document parsed) {
         StringBuilder content = new StringBuilder();
 
-        parsed.select("p,div,section,article").stream()
-                .takeWhile(e -> content.length() <= maxSummaryLength)
-                .filter(elem -> elem.text().length() > elem.html().length()/2)
-                .map(Element::text)
-                .forEach(content::append);
+        for (var elem : parsed.select("p,div,section,article,font,center")) {
+            if (content.length() >= maxSummaryLength) break;
 
-        if (content.length() > 10) {
-            return Optional.of(content.toString());
+            String tagName = elem.tagName();
+            if (("p".equals(tagName) || "center".equals(tagName) || "font".equals(tagName))
+                    && elem.text().length() < 16)
+            {
+                continue;
+            }
+
+            if (aTagDensity(elem) < 0.1 && htmlTagDensity(elem) > 0.85) {
+                content.append(elem.text()).append(' ');
+            }
         }
-        return Optional.empty();
+
+        if (content.length() > 32) {
+            // AAAA AAAA AAAA AAAA AAAA AAAA AAAA AAAA
+            return content.toString();
+        }
+
+        return "";
     }
 
-    private Optional<String> getMetaDescription(Document parsed) {
-        return Optional.of(parsed.select("meta[name=description]").attr("content")).filter(s -> !s.isBlank());
+    private String lastDitchSummaryEffort(Document parsed) {
+        int bodyTextLength = parsed.body().text().length();
+
+        parsed.getElementsByTag("a").remove();
+
+        for (var elem : parsed.select("p,div,section,article,font,center,td,h1,h2,h3,h4,h5,h6,tr,th")) {
+            if (elem.text().length() < bodyTextLength / 2 && aTagDensity(elem) > 0.25) {
+                elem.remove();
+            }
+        }
+
+        return parsed.body().text();
+    }
+    private double htmlTagDensity(Element elem) {
+        return (double) elem.text().length() / elem.html().length();
     }
 
-    private Optional<String> getOgDescription(Document parsed) {
-        return Optional.of(parsed.select("meta[name=og:description]").attr("content")).filter(s -> !s.isBlank());
+    private double aTagDensity(Element elem) {
+        return (double) elem.getElementsByTag("a").text().length() / elem.text().length();
     }
+
 }

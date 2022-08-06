@@ -1,0 +1,447 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" dir="ltr"> 
+ <head> 
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"> 
+  <title>A Guide to Efficiently Using Irssi and Screen</title> 
+  <link rel="stylesheet" media="all" type="text/css" href="/static/css/pygments_style.css"> 
+  <link rel="stylesheet" media="all" type="text/css" href="/static/css/stylev3.css"> 
+  <link rel="stylesheet" media="all" type="text/css" href="/static/css/libgithub.css"> 
+  <link href="//fonts.googleapis.com/css?family=Molengo|Tinos|Anonymous+Pro" rel="stylesheet" type="text/css"> 
+  <link rel="shortcut icon" href="/static/images/favicon.ico" type="image/x-icon"> 
+  <script type="text/javascript" src="/static/js/jquery.min.js"></script> 
+  <script type="text/javascript" src="/static/js/jquery.tableofcontents.min.js"></script> 
+ </head> 
+ <body> 
+  <div class="container"> 
+   <div class="header"> <span class="path meta"> <a href="/">quadpoint.org</a> </span> <span class="nav meta"> <a href="/projects/">Projects</a> · <a href="/articles/">Articles</a> · <a href="/notes/">Notes</a> </span> 
+   </div> 
+   <div class="page"> 
+    <h1>A Guide to Efficiently Using Irssi and Screen</h1> 
+    <p>Irssi is a text-only IRC client. It does not get in your way and its commands are intuitive and useful. Non-standard features are implemented with perl scripts, rather than in the core. Irssi can range from a functional, no-frills client to a highly-customized and automated client.</p> 
+    <p>Irssi is not the only focus of this guide. GNU screen, the well-known terminal multiplexer, is also discussed. Screen is a highly useful tool that allows a user to manipulate multiple windows inside of a single session. Each window operates independently of the others and acts like another terminal. For example, a user can create a screen session with Irssi running in the first window, an instant messenger program open in the second window, and a general purpose shell prompt in the third window. The beauty of the screen is that users can “detach” from their screens, logout, and then at a later time, login again “reattach” to find their programs still running just as they left them. The steps to do this are explained in this guide.</p> 
+    <ul id="toc"> 
+    </ul> 
+    <h2 id="irssi-basics">Irssi Basics</h2> 
+    <h3 id="getting-connected">Getting Connected</h3> 
+    <p>The first step is to start irssi. Run from your shell:</p> 
+    <pre><code>irssi
+</code></pre> 
+    <p>You should now see Irssi in its default state–disconnected, with some blue bars at the top and bottom.</p> 
+    <p>In Irssi, there are three important connection-related commands: <code>/server</code>, <code>/connect</code>, and <code>/disconnect</code>. Irssi can handle multiple IRC connections simultaneously, thus it is possible to be active in channels on different networks at the same time. The first command, <code>/server</code>, will connect to the specified server on the current network. On the other hand, <code>/connect</code> will open a new network connection and connect to the specified server on the new network.</p> 
+    <p>For example, typing <code>/connect irc.foo.com</code> will open a new network connection and connect to irc.foo.com. If you then type <code>/connect irc.bar.com</code>, there will be two network connections open, one for irc.foo.com, one for irc.bar.com. Typing <code>/server irc.baz.com</code> while the network connection for irc.bar.com is active will disconnect the client from irc.bar.com and connect to irc.baz.com on that network connection. You can use <code>Ctrl-X</code> to switch between network connections. You can see what the active network is by looking at the status bar, which looks something like this:</p> 
+    <p><code>(05:23:10) (ms[+abilorsuwxyz]) (1:NullIRC (change with ^X))</code></p> 
+    <p>In this example, NullIRC is the active network. Feel free to test this on your own. Use <code>/disconnect</code> to disconnect from the active server. Move on after you have disconnected from all servers.</p> 
+    <p>At this point you should have a just-opened instance of Irssi, with no connections to any server. Connect to an IRC server by typing:</p> 
+    <pre><code>/connect irc.nullirc.net
+</code></pre> 
+    <p>If everything connected fine, join a channel by typing:</p> 
+    <pre><code>/join #test
+</code></pre> 
+    <h3 id="switching-windows">Switching Windows</h3> 
+    <p>You should now notice that the “status” window is now hidden, and you’re looking at the channel you just joined. You should also notice that your status bar says “2:#test”. This means that the window for #test is assigned window number 2. The status window is by default window number 1. To switch between windows in Irssi, use <code>Alt-#</code>, where <code>#</code> is 0-9. Windows start at number 1, and <code>Alt-0</code> goes to window number 10. You can use <code>Alt-q</code> through <code>Alt-o</code> for windows 11 to 19. It is possible to have more than 19 windows. Use Alt with the arrow keys to scroll through the windows.</p> 
+    <p>Tip: If you’re trying to get to end windows past 19, start at window 1, and then use Alt with the left arrow key.</p> 
+    <p>Advanced note: use <code>/help bind</code> to learn about the <code>/bind</code> command. It can be used to assign keyboard shortcuts to windows past 19.</p> 
+    <h4 id="using-the-alt-key-as-meta">Using the Alt key as Meta</h4> 
+    <p>In some cases, using Alt as the modifier for window switching does not work. Macs have this ‘problem’; the alt key on Mac OS X’s terminal does not send an escape by default. The escape key may usually be used as a replacement for Alt for switching windows. If you’d like to use your Mac’s Alt key to send an escape and properly switch windows in Irssi, do the following:</p> 
+    <h5 id="terminalapp-105-leopard-106-snow-leopard">Terminal.app (10.5 Leopard, 10.6 Snow Leopard)</h5> 
+    <ol> 
+     <li>Choose “Preferences” from the Terminal.app menu</li> 
+     <li>In the “Settings” group, choose your profile.</li> 
+     <li>Go to the “Keyboard” tab</li> 
+     <li>Check “Use option as meta key”</li> 
+    </ol> 
+    <h5 id="terminalapp-104-tiger">Terminal.app (10.4 Tiger)</h5> 
+    <ol> 
+     <li>Choose “Window Settings” from the Terminal menu</li> 
+     <li>Choose “Keyboard” from the dropdown in the dialog that pops up</li> 
+     <li>Check “Use option key as meta key”</li> 
+     <li>Click Use Settings as Default</li> 
+    </ol> 
+    <h5 id="iterm">iTerm</h5> 
+    <ol> 
+     <li>Choose “Manage Profiles” from the Bookmarks menu</li> 
+     <li>Expand “Keyboard Profiles”</li> 
+     <li>Select “Global”</li> 
+     <li>Select “Option Key as +Esc”</li> 
+    </ol> 
+    <h3 id="query-windows">Query Windows</h3> 
+    <p>Once you’re comfortable with the window switching, join another channel on the network and talk with people. Open a private message using:</p> 
+    <pre><code>/q &lt;nick&gt;
+</code></pre> 
+    <p><code>/q</code> is short for <code>/query</code>. Both commands work, as <code>/q</code> is just an alias for <code>/query</code>. Irssi has many default aliases that aid in controlling your IRC client more quickly and easily. You can see them using <code>/alias</code> and looking at your status window. Remember that <code>Alt-1</code> switches to your status window.</p> 
+    <p>Once you’ve finished typing in your query, type <code>/q</code> in the window to close it. Closing windows can also be accomplished using <code>/wc</code> (an alias for <code>/window close</code>). Using the <code>/wc</code> method is useful for parting channels on disconnected networks. In these cases, simply using <code>/part</code> will not work.</p> 
+    <p>And with that, you have learned the basics of using Irssi–connecting, joining channels, opening and closing query windows, and switching through windows. Continue reading to learn more about Irssi’s other features and commands.</p> 
+    <h2 id="more-irssi">More Irssi</h2> 
+    <h3 id="changing-settings">Changing Settings</h3> 
+    <p>Switch to your status window and type <code>/set</code>. You’ll see your screen scroll with various <em>setting = value</em> lines. Use page up and page down to look through them (sometimes it is necessary to hold shift down while using these keys). These are the configurable settings of your IRC client. You can specify which ones in particular you’d like to see, instead of viewing all of them, by including a keyword after <code>/set</code>. Try: <code>/set timestamp</code>. The output should look something like this:</p> 
+    <pre><code>05:50 [lookandfeel]
+05:50 timestamps = ON
+05:50 timestamp_format = %H:%M
+05:50 timestamp_timeout =
+05:50 timestamp_level = ALL
+</code></pre> 
+    <p>The setting of <code>timestamp_format</code> controls the appearance of the timestamps used in the client. I personally prefer having the seconds also displayed. One way to have the seconds displayed is the following:</p> 
+    <pre><code>/set timestamp_format %H:%M:%S
+</code></pre> 
+    <p>Once you change a setting, use:</p> 
+    <pre><code>/save
+</code></pre> 
+    <p>to save your changes to your Irssi config file, located at <code>~/.irssi/config</code>.</p> 
+    <blockquote> 
+     <p>Aside: My real <code>timestamp_format</code> is <code>%d.%H%M%S</code>, which looks like “16.213823” (16th day of the month at 21:38:23). This timestamp is precise, minimal, and useful when scrolling back through several days of logs.</p> 
+    </blockquote> 
+    <h3 id="tab-completion">Tab Completion</h3> 
+    <p>Now would be a good time to learn of Irssi’s tab-completion feature. One of the most fantastic features of Irssi is its ability to complete a nickname, variable, or file using the tab key. Try typing <code>/set time</code>, and instead of pressing enter, press the tab key. You will notice that Irssi completes the variable name. Press tab repeatedly to cycle through the matching variables. You can also use the tab completion to complete nicknames in channels or query windows by typing out the first few letters of their name and pressing tab.</p> 
+    <h3 id="perl-scripts">Perl Scripts</h3> 
+    <p>Most non-standard functionality is added through the use of perl scripts. There is a large database of these scripts available at <a href="http://scripts.irssi.org">scripts.irssi.org</a>. To use them, download the perl scripts to your <code>~/.irssi/scripts</code> directory, and then type:</p> 
+    <pre><code>/run &lt;scriptname&gt;
+</code></pre> 
+    <p>Put the scripts (or symbolic links to them) in <code>~/.irssi/scripts/autorun</code> to make them load automatically when Irssi starts. It’s important that you <strong>read the top of each script you download</strong>; usually there is documentation there of some kind explaining the settings for the script. I recommend installing the following scripts to start:</p> 
+    <ul> 
+     <li><a href="http://scripts.irssi.org/scripts/splitlong.pl">splitlong.pl</a><br> Splits long messages into multiple lines to avoid having messages truncated due to IRC limits.</li> 
+     <li><a href="http://scripts.irssi.org/scripts/dispatch.pl">dispatch.pl</a><br> Sends unknown commands, such as server-specific commands like <code>/map</code>, to the server instead of requiring the use of <code>/quote</code> (e.g., <code>/quote map</code>).</li> 
+     <li><a href="http://scripts.irssi.org/scripts/usercount.pl">usercount.pl</a><br> Makes population of the current channel available for display in the status bar. Read the script for instructions for use.</li> 
+    </ul> 
+    <h3 id="defining-networks-and-servers">Defining networks and servers</h3> 
+    <p>By now you should have a good start to using Irssi for your needs. Irssi is simple to use. You can learn a great deal about Irssi by reading its help. Type <code>/help</code> in Irssi to get a full list of commands (including those from perl addon scripts) in your status window. To see detailed information a particular command, use <code>/help &lt;command&gt;</code>. In particular, I strongly recommend learning about the <code>/network</code> command in more detail:</p> 
+    <pre><code>/help network
+</code></pre> 
+    <p>The <code>/network</code> command manages the networks that Irssi knows about. If you define the networks that you frequent, you can set multiple servers for a particular network and then simply use <code>/connect &lt;network name&gt;</code> to connect to that network. If the first server fails, the next server in the list you defined with <code>/server</code> will be tried. You can also define a command to send to the server upon connection to the network. This is useful for automatic identification to a NickServ service or opering up, if you have an o:line.</p> 
+    <p>A minimal use of <code>/network</code> and <code>/server</code>, followed by <code>/connect</code>, might look like this:</p> 
+    <pre><code>/network add -autosendcmd "/^msg bot hi" freenode
+/server add -network freenode irc.freenode.net
+/connect freenode
+</code></pre> 
+    <p>When this sequence of commands is run, Irssi will connect to the Freenode IRC network at irc.freenode.net, and upon connect, will say hi to bot. The caret in <code>/^msg</code> tells Irssi to not display this message locally.</p> 
+    <p>Use <code>/network list</code> and <code>/server list</code> to see all of your configured networks and servers.</p> 
+    <p>Note: the <code>/network</code> command replaced <code>/ircnet</code> in Irssi version 0.8.10. If you are using irssi 0.8.9, ask your system administrator to upgrade and use <code>/ircnet</code> in the meantime.</p> 
+    <h2 id="learning-screen">Learning Screen</h2> 
+    <p>Screen is a wonderful program that creates a “session” in which several “windows” exist. In each window is a shell prompt, from which commands can be executed and programs can be run. With screen, a user can “detach” from his or her screen session, log out, eat some runts, log back in, and reattach to the screen session and find it in the same condition as it was left. Read on for a demonstration.</p> 
+    <h3 id="starting-screen">Starting Screen</h3> 
+    <p>If you have Irssi open, use <code>/quit</code> to close it. When you’re back at your shell prompt, start screen:</p> 
+    <pre><code>screen
+</code></pre> 
+    <p>You should be immediately returned to a shell prompt. You’re now inside of your screen. You can see this by typing <code>screen -list</code></p> 
+    <pre><code>ms@turing ~ $ screen -list
+There is a screen on:
+        7517.pts-0.turing    (Attached)
+1 Socket in /var/run/screen/S-ms.
+</code></pre> 
+    <p>Now, type <code>irssi</code>. If you took the time earlier to define your networks with <code>/network</code>, you can type <code>irssi -c &lt;network name&gt;</code> here to automatically connect to the desired network. Irssi should open as it did before, but now it’s running <strong>inside of screen</strong>.</p> 
+    <h3 id="detaching">Detaching</h3> 
+    <p>There are certain keystrokes that you can make inside of a screen session to control it. The commands are in the format of <strong>Ctrl-a,<em>letter</em></strong>, usually. This is executed by pressing the control key and the ‘a’ key at the same time, releasing both, and then pressing <em>letter</em>. At this point you should learn to detach from your screen session. Press <em>ctrl-a,d</em> to do this (Press ctrl-a, release, press d). When this is done, you should see something like “[detached]” print to your terminal. If you see this, you’re no longer in screen, but Irssi is still running in the background. For effect, feel free to disconnect from your shell completely and then log back in before continuing to the next step.</p> 
+    <h3 id="reattaching">Reattaching</h3> 
+    <p>You should be at your shell prompt right now, outside of screen. Before, you typed <code>screen</code> to run it. Running <code>screen</code> with no arguments creates a new screen session. You can have multiple screen sessions, but this will not be discussed here. Read the manpage of screen for more information. Since you have already created a screen session, you do not want to make a new one, you want to reattach to the one you already created. To do this, type:</p> 
+    <pre><code>screen -rd
+</code></pre> 
+    <p>The arguments <code>-rd</code> tell screen what you want it to do: reattach and detach before reattaching if necessary. These arguments are safe to use in just about every case. If your screen session is attached elsewhere, using <code>-rd</code> will detach that session, and reattach it here.</p> 
+    <p>Magically, irssi should have reappeared. This is the point where you stand back for a moment and say “Wow, that kicks ass,” because now you should understand that you can leave Irssi running all the time under screen, detach from screen and disconnect from your shell, come back later, login and reattach and there Irssi will be. You should also see that with screen, you will have the ability to log in from anywhere and continue your IRCing (or whatever work you’re doing in another screen window) just as you left it.</p> 
+    <h3 id="more-screen-functionality">More Screen Functionality</h3> 
+    <p>You just learned the basics of screen. Now you should learn how to create new windows inside of screen. This is done by typing <strong>C-a c</strong> (this is how it is written in the screen manpage. It means Ctrl-a,c). As new windows are created, you will be automatically switched to them. You can navigate through screen windows using C-a #, starting at zero, so Ctrl-a,0 should take you back to Irssi. Here’s a cheat sheet (from the screen manpage):</p> 
+    <p>The following table shows the default key bindings:</p> 
+    <table> 
+     <tbody>
+      <tr> 
+       <th>Keystrokes</th> 
+       <th>C-a : Command</th> 
+       <th>Action</th> 
+      </tr> 
+      <tr> 
+       <td>C-a 0</td> 
+       <td>select 0</td> 
+       <td>Switch to window 0</td> 
+      </tr> 
+      <tr> 
+       <td>C-a 9</td> 
+       <td>select 9</td> 
+       <td>Switch to window 9</td> 
+      </tr> 
+      <tr> 
+       <td>C-a C-a</td> 
+       <td>other</td> 
+       <td>Toggle to the window displayed previously.</td> 
+      </tr> 
+      <tr> 
+       <td>C-a a</td> 
+       <td>meta</td> 
+       <td>Send the command character (C-a) to window. See escape command.</td> 
+      </tr> 
+      <tr> 
+       <td>C-a A</td> 
+       <td>title</td> 
+       <td>Allow the user to enter a name for the current window.</td> 
+      </tr> 
+      <tr> 
+       <td>C-a c</td> 
+       <td>screen</td> 
+       <td>Create a new window with a shell and switch to that window.</td> 
+      </tr> 
+      <tr> 
+       <td>C-a C-c</td> 
+       <td>screen</td> 
+       <td>Create a new window with a shell and switch to that window.</td> 
+      </tr> 
+      <tr> 
+       <td>C-a C</td> 
+       <td>clear</td> 
+       <td>Clear the screen.</td> 
+      </tr> 
+      <tr> 
+       <td>C-a d</td> 
+       <td>detach</td> 
+       <td>Detach screen from this terminal.</td> 
+      </tr> 
+      <tr> 
+       <td>C-a C-d</td> 
+       <td>detach</td> 
+       <td>Detach screen from this terminal.</td> 
+      </tr> 
+      <tr> 
+       <td>C-a D D</td> 
+       <td>pow_detach</td> 
+       <td>Detach and logout.</td> 
+      </tr> 
+      <tr> 
+       <td>C-a k</td> 
+       <td>kill</td> 
+       <td>Destroy current window.</td> 
+      </tr> 
+      <tr> 
+       <td>C-a C-k</td> 
+       <td>kill</td> 
+       <td>Destroy current window.</td> 
+      </tr> 
+      <tr> 
+       <td>C-a space</td> 
+       <td>next</td> 
+       <td>Switch to the next window.</td> 
+      </tr> 
+      <tr> 
+       <td>C-a n</td> 
+       <td>next</td> 
+       <td>Switch to the next window.</td> 
+      </tr> 
+      <tr> 
+       <td>C-a C-n</td> 
+       <td>next</td> 
+       <td>Switch to the next window.</td> 
+      </tr> 
+      <tr> 
+       <td>C-a x</td> 
+       <td>lockscreen</td> 
+       <td>Lock this terminal.</td> 
+      </tr> 
+      <tr> 
+       <td>C-a C-x</td> 
+       <td>lockscreen</td> 
+       <td>Lock this terminal.</td> 
+      </tr> 
+      <tr> 
+       <td>C-a w</td> 
+       <td>windows</td> 
+       <td>Show a list of window.</td> 
+      </tr> 
+      <tr> 
+       <td>C-a C-w</td> 
+       <td>windows</td> 
+       <td>Show a list of window.</td> 
+      </tr> 
+      <tr> 
+       <td>C-a ?</td> 
+       <td>help</td> 
+       <td>Show key bindings.</td> 
+      </tr> 
+     </tbody>
+    </table> 
+    <p>Take a moment to look over those commands. They should tell you how to basically operate screen, especially the last one. There are plenty more, use Ctrl-a,c and then type <code>man screen</code> for the full list.</p> 
+    <h3 id="troubleshooting">Troubleshooting</h3> 
+    <p>If you mess up and screen doesn’t seem to work correctly, remember to use <code>screen -list</code> (or <code>screen -ls</code>) to see where you are. You should pay attention to whether or not you are attached, detached, or if screen is running at all.</p> 
+    <h4 id="killing-a-screen-session">Killing a Screen Session</h4> 
+    <p>If you end up with multiple screen sessions, you have to specify which session when you want to attach. If this is not desired, kill one of the sessions by first using <code>screen -list</code> to find the <strong>id</strong> of the session. The id will look something like <code>8037.tty1.godfather</code>. With the id in hand, run:</p> 
+    <pre><code>screen -X -S ID kill
+</code></pre> 
+    <p>to kill the screen session with id ID.</p> 
+    <h4 id="dealing-with-flow-control">Dealing With Flow Control</h4> 
+    <p>If you accidentally hit <code>Ctrl-s</code> or <code>Ctrl-a s</code>, you may notice some general unpleasantry, namely that your screen session (or irssi) stops updating. I suggest reading more about flow control and <a href="http://web.mit.edu/gnu/doc/html/screen_14.html">how screen handles it</a>. The quick fix is to type <code>Ctrl-q</code> or <code>Ctrl-a q</code> (depending on which you used first). I have the following in my shell’s rc file to turn off flow control handling completely, since I like using <code>Ctrl-s</code> for some programs:</p> 
+    <pre><code>stty -ixon -ixoff
+</code></pre> 
+    <h4 id="non-blocking-mode">Non-blocking mode</h4> 
+    <p>Before you disconnect from your shell, make sure you detach from your screen using the appropriate detach sequence. This keeps programs like irssi from hanging while waiting for input. To avoid having to worry about this, put <code>defnonblock on</code> in your <code>~/.screenrc</code>. Read more about the <a href="http://www.gnu.org/software/screen/manual/html_node/Nonblock.html">nonblock option</a> in the screen manual.</p> 
+    <h2 id="customizing-irssis-display">Customizing Irssi’s Display</h2> 
+    <p>Ample time should be spent adjusting the appearance of irssi to make the client suitable for you. This includes changing the theme, adding or splitting windows, and manipulating the statusbars. I’ll go over the basics of how to obtain a more complicated Irssi setup like this:</p> 
+    <p><img src="/articles/irssi/irssi-numbered-600.png" alt="irssi screenshot (numbered)"></p> 
+    <h3 id="theme">Theme</h3> 
+    <p>The theme only changes the colors of text and objects in Irssi, as well as some symbols used in the statusbars. The <code>&gt;&gt;</code> used at the beginning of the statusbars in my screenshot is there because of the theme I’m using. The theme used in that screenshot is my own hack of the irssi default themes called <a href="https://raw.githubusercontent.com/msparks/irssiscripts/master/themes/fear2.theme">fear2</a>.</p> 
+    <p>To load a new theme, first download the <code>.theme</code> file into <code>~/.irssi</code>; from a shell prompt:</p> 
+    <pre><code>wget -P ~/.irssi https://raw.githubusercontent.com/msparks/irssiscripts/master/themes/fear2.theme
+</code></pre> 
+    <p>then use <code>/set theme fear2</code> in irssi, where “fear2” is the part of the filename before <code>.theme</code>. Don’t forget to <code>/save</code> if you want to keep that theme setting.</p> 
+    <h3 id="hilight-window">Hilight Window</h3> 
+    <p>See the irssi screenshot above. The section labeled “1” is a split window called “hilight”. Anything that is hilighted (set using the <code>/hilight</code> command) will be logged to that window.</p> 
+    <p>To do this, first load the script. The script I use is a modified version of cras’s <code>hilightwin.pl</code> that logs timestamps as well. It is available here: <a href="https://github.com/irssi/scripts.irssi.org/blob/gh-pages/scripts/hilightwin.pl">hilightwin.pl</a></p> 
+    <p>Put the script in <code>~/.irssi/scripts/autorun/</code> and type <code>/run autorun/hilightwin.pl</code> in irssi.</p> 
+    <p>Next, create the split window. This is done with the <code>/window</code> command. See <code>/help window</code> for details on how this works.</p> 
+    <pre><code>/window new split
+/window name hilight
+/window size 6
+</code></pre> 
+    <p>The above commands will create a new split window (as opposed to a “hidden” window, which privmsg, channel, and status windows are by default), call it hilight (so the script knows where to send the information) with a height of 6 lines.</p> 
+    <p>Now, have someone address you in a channel using “yournick: hello”. If you did everything correctly, it should be logged to the split window. If you want to have all lines containing your nick hilighted, type <code>/hilight -word yournick</code>. See <code>/help hilight</code> for advanced features. Use <code>/layout save</code> to save your layout settings and have irssi automatically recreate the split hilight window on startup.</p> 
+    <blockquote> 
+     <p>Note: you may notice that when starting up a fresh Irssi instance after having configured the hilight window, the active window is the hilight window instead of the status window. If you connect to servers with the hilight window active, your channels may be placed in the top container instead of the bottom container as you would expect. A simple workaround for this is to simply hit <code>Alt-1</code> to switch to your status window, which is in the bottom container, before you connect.</p> 
+    </blockquote> 
+    <h3 id="statusbar">Statusbar</h3> 
+    <p>See number 2 in the screenshot above. This is the default statusbar that you will see in any default irssi setup. However, mine is slightly modified to include a user count of the current channel. This is easily done by loading the <a href="http://scripts.irssi.org/scripts/usercount.pl">usercount.pl</a> script and typing <code>/statusbar window add usercount</code> in irssi.</p> 
+    <h3 id="channel-statusbar-using-advanced-windowlist">Channel Statusbar Using Advanced Windowlist</h3> 
+    <p>This is my favorite part of my Irssi setup. The screenshot above displays <em>chanact.pl</em> to list windows open in Irssi. As of October 16, 2005, this article explains the setup of awl (Advanced Windowlist) instead of chanact.</p> 
+    <p>Download <a href="http://anti.teamidiot.de/static/nei/*/Code/Irssi/adv_windowlist.pl">adv_windowlist.pl</a> (known as ‘awl’). This is a fabulous script that grants powerful manipulation of the active window list. Put the script in <code>~/.irssi/scripts/autorun</code> and run it: <code>/run autorun/adv_windowlist.pl</code></p> 
+    <p>Upon loading, AWL will create new statusbars on its own. AWL is an updated version of the older <em>chanact.pl</em> script. AWL has many, many new features developed by <a href="http://anti.teamidiot.de">Nei</a>. It would be worth your time to read the comments at the top of the script to get a feel for what all you can do with it (an entire article could be written on the features of this script and how to use them).</p> 
+    <p>Now would be a good time to remove the standard Act statusbar item. If you’re unfamiliar with what I’m talking about, the act object is the part of the default statusbar that says <code>(Act: 2)</code> when window 2 has activity. With awl loaded, you won’t need it anymore.</p> 
+    <pre><code>/statusbar window remove act
+</code></pre> 
+    <p>You can see all available settings (which will be listed in your status window) for awl by typing <code>/set awl</code>. The possible settings and explanations for them are listed at the top of the awl script. The current settings I am using for awl are:</p> 
+    <pre><code>/set awl_block -14
+/set awl_display_key $Q%K|$N%n $H$C$S
+/set awl_display_key_active $Q%K|$N%n $H%U$C%n$S
+/set awl_display_nokey [$N]$H$C$S
+</code></pre> 
+    <p>If you like the setup, type <code>/save</code> to keep it. You can revert to the old act setup using <code>/script unload adv_windowlist</code> and <code>/statusbar window add -after lag -priority 10 act</code>.</p> 
+    <h2 id="irssi-command-reference">Irssi Command Reference</h2> 
+    <p>Here is a list of common commands, aliases, and some tips on using them. Usage and additional information can be obtained by typing <code>/help /command</code> in irssi.</p> 
+    <table> 
+     <tbody>
+      <tr> 
+       <th>Command</th> 
+       <th>Alias</th> 
+       <th>Info</th> 
+      </tr> 
+      <tr> 
+       <td>/ban</td> 
+       <td>/bans, /b</td> 
+       <td>Sets or List bans for a channel</td> 
+      </tr> 
+      <tr> 
+       <td>/clear</td> 
+       <td>/c, /cl</td> 
+       <td>Clears a channel buffer</td> 
+      </tr> 
+      <tr> 
+       <td>/join</td> 
+       <td>/j</td> 
+       <td>Joins a channel</td> 
+      </tr> 
+      <tr> 
+       <td>/kick</td> 
+       <td>/k</td> 
+       <td>Kicks a user</td> 
+      </tr> 
+      <tr> 
+       <td>/kickban</td> 
+       <td>/kb</td> 
+       <td>Kickban a user</td> 
+      </tr> 
+      <tr> 
+       <td>/msg</td> 
+       <td>/m</td> 
+       <td>Send a private message to a user</td> 
+      </tr> 
+      <tr> 
+       <td>/unban*</td> 
+       <td>/mub</td> 
+       <td>Clears the unbanlist (unbans everyone) in a channel </td> 
+      </tr> 
+      <tr> 
+       <td>/names</td> 
+       <td>/n</td> 
+       <td>Lists the users in the current channel</td> 
+      </tr> 
+      <tr> 
+       <td>/query</td> 
+       <td>/q</td> 
+       <td>Open a query window with a user, or close current query window</td> 
+      </tr> 
+      <tr> 
+       <td>/topic</td> 
+       <td>/t</td> 
+       <td>Displays/edits current topic. Tip: use /t[space][tab] to automatically fill in existing topic.</td> 
+      </tr> 
+      <tr> 
+       <td>/window close</td> 
+       <td>/wc</td> 
+       <td>Force closure of a window.</td> 
+      </tr> 
+      <tr> 
+       <td>/whois</td> 
+       <td>/wi</td> 
+       <td>WHOIS a user. Displays user information</td> 
+      </tr> 
+     </tbody>
+    </table> 
+    <h2 id="tips">Tips</h2> 
+    <p>When selecting URLs using a double-click, the Windows SSH client <a href="http://www.chiark.greenend.org.uk/~sgtatham/putty/">PuTTY</a> will choke on the colon and possibly some other characters. You can fix this by changing the character class of these troublesome characters in the PuTTY options under <code>Window -&gt; Selection</code> to match the character class of typical alphanumeric characters (which is ‘2’ at the time of this writing). Essentially, this changes what PuTTY considers to be a ‘word’ when double-clicking.</p> 
+    <p>Linux terminal emulator programs also have this problem. The terminal emulator rxvt-unicode (urxvt), which has a resource option called <code>cutchars</code> (read the <a href="http://www.die.net/doc/linux/man/man1/urxvt.1.html">manpage for urxvt</a>). The default <code>cutchars</code> setting breaks ‘words’ on any of those characters.</p> 
+    <p>However, adding this to your <code>~/.Xdefaults</code> file will adjust urxvt so that URLs containing <code>&amp; , = ? ;</code> will not break words so they can be selected entirely with one double-click:</p> 
+    <pre><code>URxvt*cutchars: `"()'*&lt;&gt;[]{|}
+</code></pre> 
+    <h3 id="launching-urls-from-rxvt-unicode-urxvt">Launching URLs from rxvt-unicode (urxvt)</h3> 
+    <p>URLs can be launched from urxvt with something like the following in your <code>~/.Xdefaults</code>:</p> 
+    <pre><code>urxvt*perl-lib:         /usr/lib/urxvt/perl/
+urxvt*perl-ext-common:  default,matcher
+urxvt*matcher.button:   1
+urxvt*urlLauncher:      /usr/bin/firefox
+</code></pre> 
+    <p>(Thanks to anrxc for this tip.)</p> 
+    <h3 id="utf-8-in-irssi-and-screen">UTF-8 in Irssi and Screen</h3> 
+    <p>This topic is <a href="http://www.google.com/search?q=screen+irssi+utf-8">covered elsewhere</a> but I mention it here for completeness. There are usually three steps involved with getting UTF-8 support in Irssi:</p> 
+    <ol> 
+     <li>Fix your <a href="http://www.linux.com/archive/feed/53781">locales</a></li> 
+     <li>Enable UTF-8 in screen</li> 
+     <li>Enable UTF-8 in irssi</li> 
+    </ol> 
+    <p>First, check your current locales. Run <code>locale</code> in a terminal. Mine look like this:</p> 
+    <pre><code>LANG="en_US.utf-8"
+LC_COLLATE="en_US.utf-8"
+LC_CTYPE="en_US.utf-8"
+LC_MESSAGES="en_US.utf-8"
+LC_MONETARY="en_US.utf-8"
+LC_NUMERIC="en_US.utf-8"
+LC_TIME="en_US.utf-8"
+LC_ALL=
+</code></pre> 
+    <p>If yours are all set to <code>POSIX</code> or are missing the “.utf-8” suffix, you need to generate and set your UTF-8 locales. In Debian and Ubuntu, simply run <code>sudo dpkg-reconfigure locales</code> and select the UTF-8 locales you desire. If everything goes smoothly, after logging in again, you should see “utf-8” suffixes in <code>locale</code>. For other distributions, refer to your distro-specific documentation.</p> 
+    <p>Now that the hard part is over, you must enable UTF-8 support in screen. This is done a variety of ways. The best way is to put</p> 
+    <pre><code>defutf8 on
+</code></pre> 
+    <p>in your <code>~/.screenrc</code> and start screen. If you’re already running screen, you can avoid restarting it by using <code>Ctrl-a :utf8 on</code> to enable this option.</p> 
+    <p>Enabling UTF-8 support in Irssi is typically as simple as <code>/set term_charset utf-8</code> and <code>/save</code>. Try pasting some Japanese characters from <a href="http://www.yahoo.co.jp">www.yahoo.co.jp</a> to test.</p> 
+    <p>If you get garbage when you type foreign characters, something went wrong with the above three steps. Try to deduce the problem by running Irssi outside of screen or running other unicode-enabled programs inside screen. However, if you get square boxes, you’re probably missing some terminal fonts for those characters and you should consult your package manager.</p> 
+    <h2 id="resources">Resources</h2> 
+    <p>Happy Irssi-ing and screening. You may use <code>man irssi</code> and <code>man screen</code> at a command prompt for more detailed information about both of the programs discussed in this guide. Read Irssi’s help with <code>/help</code> to learn about useful features not discussed in this tutorial, and also visit the following sites:</p> 
+    <ul> 
+     <li><a href="http://irssi.org/documentation">Official documentation</a> - Docs on the official irssi website, <a href="http://irssi.org">irssi.org</a></li> 
+     <li><a href="http://scripts.irssi.org/">web::irssi::scripts</a> - Archive of many, many various scripts for use with irssi.</li> 
+     <li><a href="http://carina.org.uk/screenirssi.shtml">Guide to Using Screen and Irssi</a> by <a href="http://carina.org.uk/">Elizabeth Overal</a> - Another screen+irssi tutorial with some more information. Thanks for the link, Lizzie.</li> 
+     <li><a href="http://blinkenshell.org">Blinkenshell</a> - Free UNIX shell provider.</li> 
+    </ul> 
+    <div class="footer"> <span class="meta"> Posted December 19, 2004 · Modified <a href="https://github.com/msparks/quadpoint.org/commits/gh-pages/articles/irssi/index.md"> October 5, 2014 </a> </span> 
+    </div> 
+   </div> 
+  </div> 
+  <script type="text/javascript">
+  $(document).ready(function() {
+    $("#toc").tableOfContents(null,
+        { startLevel: 2, depth: 2 });
+  });
+</script> 
+  <script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script> 
+  <script type="text/javascript">
+try {
+  var pageTracker = _gat._getTracker("UA-4064625-2");
+  pageTracker._trackPageview();
+} catch(err) {}
+</script>  
+ </body>
+</html>

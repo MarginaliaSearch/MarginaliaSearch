@@ -1,0 +1,1043 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html> 
+ <head> <!-- cjverify:63d101691b83a60ac1941a6e114853b2: --> 
+  <title>z/OS MVS, CICS, TCP/IP, Webmaster, Useful Links</title> 
+  <meta name="TITLE" content="OS/390 and CICS "> 
+  <meta name="DESCRIPTION" content="Dedicated to OS/390 and CICS links. A webmaster section is included along with job hunt and IT magazines."> 
+  <meta name="KEYWORDS" content="os/390, CICS, ethernet, Lotus, Lotus Domino, TCP/IP, Infoprint, Mainframe Utilities, Utilities, IBM, Support, Secure Server, e-network CS, Workload Manager, SMB, NET.DATA"> 
+  <meta name="OWNER" content="ronmas@mailcity.com"> 
+  <meta name="AUTHOR" content="Ron Mascarenhas"> 
+  <meta http-equiv="EXPIRES" content=""> 
+  <meta http-equiv="CHARSET" content="ISO-8859-1"> 
+  <meta http-equiv="CONTENT-LANGUAGE" content="English"> 
+  <meta http-equiv="VW96.OBJECT TYPE" content="Document"> 
+  <meta name="RATING" content="General"> 
+  <meta name="ROBOTS" content="index,follow"> 
+  <meta name="REVISIT-AFTER" content="4 weeks"> 
+  <link rel="stylesheet" href="rony.css"> 
+  <style type="text/css">
+<!--
+.style1 {color: #003399;}
+.style2 {
+	color: #0066CC;
+	font-size: 10;
+}
+.style3 {color: #006666;}
+.style4 {color: #006699;}
+a:link {
+	color: #336699;
+	text-decoration: none;
+}
+a:visited {
+	color: #993300;
+	text-decoration: none;
+}
+a:hover {
+	text-decoration: underline;
+}
+a:active {
+	text-decoration: none;
+}
+.style5 {font-family: Arial, Helvetica, sans-serif;}
+.style6 {font-size: 10px;}
+.style7 {color: #0066CC;}
+.style8 {font-size: 10;}
+a {
+	font-size: 9px;
+}
+body,td,th {
+	font-size: 9px;
+}
+.style12 {
+	color: #FF0000;
+	font-size: 12px;
+	font-weight: bold;
+}
+.style13 {color: #336699;}
+.style14 {
+	font-size: 12px;
+	font-weight: bold;
+}
+.style15 {
+	font-size: 12px;
+	color: #CC0000;
+	font-weight: bold;
+}
+-->
+</style> 
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"> 
+  <meta name="GENERATOR" content="IBM WebSphere Studio Homepage Builder V6.0.0 for Windows"> 
+  <meta http-equiv="Content-Style-Type" content="text/css"> 
+ </head> 
+ <body bgcolor="#6666FF" background="julback.gif" text="#FFFFFF" alink="#00CC00" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0"> <!-- Top horizontal table --> 
+  <table width="778" cellspacing="0" cellpadding="0" border="0"> 
+   <tbody>
+    <tr> 
+     <td><script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script> <script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-15637444-1");
+pageTracker._trackPageview();
+} catch(err) {}</script> </td> 
+     <td> 
+      <table width="100%" bgcolor="navy" "#990033" cellspacing="0" cellpadding="0" border="0"> 
+       <tbody>
+        <tr> 
+         <td align="left" valign="middle"> </td>
+         <td align="center"></td> 
+         <td align="center"> </td>
+         <td> <script type="text/javascript"><!--
+google_ad_client = "pub-0906558981398844";
+/* ronmas */
+google_ad_slot = "4483287496";
+google_ad_width = 468;
+google_ad_height = 60;
+//-->
+</script> <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script></td>
+         <td> <iframe src="http://rcm.amazon.com/e/cm?t=ronmasvirtual-20&amp;o=1&amp;p=13&amp;l=bn1&amp;mode=pc-hardware&amp;browse=565108&amp;fc1=000000&amp;lt1=&amp;lc1=3366FF&amp;bg1=FFFFFF&amp;f=ifr" marginwidth="0" marginheight="0" width="468" height="60" border="0" frameborder="0" style="border:none;" scrolling="no"></iframe> </td> 
+        </tr> 
+       </tbody>
+      </table> <script type="text/javascript"><!--
+google_ad_client = "pub-0906558981398844";
+/* 728x90, created 7/12/11 */
+google_ad_slot = "2359809675";
+google_ad_width = 728;
+google_ad_height = 90;
+//-->
+</script> <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script> 
+      <div id="predictad_div" class="predictad" style="display:none;z-index:1000"></div>
+      <table width="100%" height="50%" cellspacing="0" cellpadding="0" border="0"> 
+       <tbody>
+        <tr> <!-- Start left  column --> 
+         <td valign="TOP" align="center" width="17%"><br> <img src="spacer.gif" width="12" height="5" border="0"><br> <img src="spacer.gif" width="12" height="5" border="0"><br> <img src="spacer.gif" width="12" height="5" border="0"><br> <script src="http://www.flickr.com/fun/zeitgeist/badge.js.gne" type="text/javascript"></script> <img src="spacer.gif" width="12" height="5" border="0"><br> <a target="_self" href="http://eservercomputing.com/mainframe"> <img src="eserver.gif" width="125" xheight="65" border="0"> </a><a target="_self" href="http://www.skyscanner.net"> <img src="skyscanner.gif" xwidth="125" xheight="65" border="1"> </a> <a href="http://www.technorati.com"> <img src="technorati.gif" xheight="55" xwidth="155" border="0" alt="technorati"></a><br> <img src="spacer.gif" width="12" height="5" border="0"><br> <img src="spacer.gif" width="12" height="5" border="0"><br> <a href="http://www.websphere.org/websphere/Site?page=home"> <img src="websphere.jpg" xheight="55" width="125" border="0" alt="Websphere.org"></a><br> <br> <br> <!-- Translate this site --> <!--#include file="translate.shtml"--> <!-- Bravenet Super Search --> <!-- End Bravenet Super Search --> <u><span class="style15">Useful Links</span></u><br> <br> <a href="http://www.salary.com/">Salary/Job surveys</a><br> <a href="http://www.vault.com//">Education/Universities</a><br> <a href="http://www.c4lpt.co.uk">100 Useful Learning Tools etc</a><br> <a href="http://powerbacks.com/index2.html">Free Powerpoint Templates</a><br> <a href="
+http://wufoo.com">Free Forms Builder</a><br> <a href="http://www.campware.org/">Campware Free Software</a><br> <a href="http://fxtop.com/en/cnvhisto.php3">Past Currency Convertor</a><br> <a href="http://www.topsecretrecipes.com">Top Secret Recipes</a><br> <a href="http://www.hispasec.com/directorio/laboratorio/Software/ws_ftp.html">WS-FTP Password Decrypt</a><br> <a href="http://
+http://www.evite.com/">Evite Party Planner</a><br> <a href="http://www.virtualbox.org/">VMWARE VirualBox</a><br> <a href="http://www.microsoft.com/windows/products/winfamily/virtualpc/default.mspx/">VMWARE Microsoft VirualPC</a><br> <a href="http://www.vmware.com/products/server/">VMWARE Server</a><br> <a href="http://www.rssfeeds.com/">Search RSS Feeds</a><br> <a href="http://www.chordbook.com">Interactive Guitar Chords</a><br> <a href="http://www.meandeviation.com/tutorials/learnphp/php-syntax-check/syntax-check.php?Submit=Check+another+file
+">PHP Syntax checker</a><br> <a href="http://idgettr.com/">Get your Flickr Id </a><br> <a href="http://phpflickr.com/phpflickr-applications/">Flickr PHP Applications</a><br> <a href="http://www.sxc.hu/home">Free Stock Photos</a><br> <a href="http://www.masternewmedia.org/where_to_find_free_images_and_visuals/">Free Images Review</a><br> <a href="http://opensourcecms.com/">OpenSource Try Before Install</a><br> <a href="http://www.xnview.com/en/index.html">Free graphic/batch convertors</a><br> <a href="http://www.flydragonsoft.com/download.htm">Free graphic convertor</a><br> <a href="http://www.irfanview.com/">Irfanview Free graphic convertor</a><br> <a href="http://www.primopdf.com/">Free PDF creator</a><br> <a href="http://www.cogniview.com/cc-pdf-converter.php">Cogniview Free PDF creator</a><br> <a href="http://www.freepdfconvert.com">Free PDF convertor</a><br> <span class="rss-content"> <a href="http://www.hotconference.com">Conferencing Software</a><br> <a href="http://www.tribalpages.com">Create Free Online Family Trees</a><br> <a href="http://www.studyabroad.com/default-ielts.html">StudyAbroad</a><br> <a href="http://www.microsoft.com/downloads/details.aspx?familyid=413744D1-A0BC-479F-BAFA-E4B278EB9147&amp;displaylang=en">Free SQL Server</a><br> <a href="http://www.ehow.com//">eHowto Portal</a><br> <a href="http://www.refdesk.com/free.html">Free Online Resources</a><br> <a href="http://www.archive.org/">Web Archive. See into the past</a><br> <a href="http://www.pcworld.com/downloads/file_description/0,fid,18821,00.asp">E-Mail/File encryption software</a><br> <a href="http://www.avg.com/html/us_downl.htm">Free AVG Anti-Virus Software</a><br> <a href="http://www.cramsession.com">Free Study Guides</a><br> <a href="http://dmoz.org/Computers/Software/Operating_Systems/Linux/Hardware_Support/Booting/">Free Boot Managers</a><br> <a href="http://dmoz.org/Computers/Software/Disk_Management/Partition/">Disk Partitioning utilities</a><br> <a href="http://btmgr.sourceforge.net">Free Dual Boot Manager</a><br> <a href="http://www.intelinfo.com/free_computer_books.html">Free computerbooks</a><br> <a href="http://www.infoplease.com">Almanacs Dic. Maps</a><br> <a href="http://www.technologyevaluation.com">Articles/Surveys</a><br> <a href="http://www.scambusters.com">All about scams</a><br> <a href="http://www.surfnetkids.com">Kids Site</a><br> <a href="http://news.netcraft.com">What servers are they using?</a><br> <a href="http://www.wavget.com/typeitin.html">Typeitin</a> <br> <a href="http://www.techsmith.com/default.asp">Capture, Avi Editing</a><br> <a href="http://eawc.evansville.edu/">Ancient Cultures</a><br> <a href="http://cws.internet.com">Software download</a><br> <a href="http://www.mcseguide.com">MCSE Guides</a><br> <a href="http://www.examware.com/">Exam Guides</a><br> <a href="http://highschoolace.com">High School Hub</a><br> <a href="http://www.facstaff.bucknell.edu/rbeard/diction.html">Dictionaries</a><br> <a href="http://www.acronymfinder.com/">Acronym Finder</a><br> <a href="http://unbound.biola.edu/">Bible Search</a><br><a href="http://www.tutorials.com/fd/tutorials.asp/">Learn2</a><br> <a href="http://www.howstuffworks.com/">How Stuff Works</a><br> <a href="http://www.blink.com/">Web Bookmarks </a><br> <a href="http://www.phonefree.com/">Free phonecalls</a><br> <a href="http://www.rootsweb.ancestry.com/~genepool/sayings.htm">Old English Sayings</a><br> <a href="http://www.webring.org/#ringworld">Web Rings</a><br> <a href="http://www.whitepages.com/">Int'nl Directories/Find a person</a><br> <a href="http://www.timeanddate.com/worldclock/">World Time Zones- Dialling codes</a><br> <a href="http://www.wolinskyweb.com/measure.htm">Convert anything</a><br> <a href="http://finance.yahoo.com/currency-converter?u">Curency converter</a><br> <a href="http://www.gadgetguru.com/">All about gadgets</a><br> <a href="http://encyclozine.com/">Encyclozine Ref.</a><br> <a href="http://www.moviemistakes.com/">Movie Mistakes</a><br> <a href="http://www.fastweb.com/">Search Scholarships</a><br> <a href="http://computershopper.com/">Computer Shopper</a><br> <a href="http://www.coolquiz.com/trivia/">Trivia Quotes Quizzes</a><br> <a href="http://www.marketresearch.com/">Market Research papers</a><br> <a href="http://www.phplist.com/">Phplist Newsletter Manager</a><br> <a href="http://us.imdb.com/">Movie Database</a><br> <a href="http://allmusic.com/">Music Guide</a><br> <a href="http://www.symbols.com/">Encyclopedia of Symbols</a><br> <a href="http://www.history.com/">History Channel</a><br> <a href="http://www.inter800.com">Toll free Numbers</a><br> <a href="http://www.free-email-address.com">Free e-mail addresses</a><br> <a href="http://www.anonymizer.com">Surf anonymously</a><br><br> <a href="http://www.surfnetkids.com/">Kids Site</a><br> <a href="http://www.wintility.com">Windows archive/search utility</a><br> <br> </span> <span class="style15"><u>Search Engines</u></span><br><br> <br> <br> <a href="http://www.wink.com">Wink - Social networking Search</a><br> <a href="http://wwwintelius.com/">Intelius - Search US Public Records</a><br> <br> <span class="style15"><u>Mailing Lists</u></span><br><br> <br> <br> <a href="http://www.planetmvs.com/ibm-main/index.html">Unofficial IBM Mailing List FAQ</a><br> <a href="http://www-4.ibm.com/software/mailing-lists/">IBM Software Mailing Lists</a><br> <a href="http://www.listbot.com/">Create mailing Lists</a><br> <a href="http://www.coollist.com/">Another mailing List</a><br> <a href="http://www.egroups.com/">Mailing Lists/Newsletters</a><br> <a href="http://www.elistas.com">Mailing Lists/Newsletters</a><br> <a href="http://www.liszt.com/">Directory of mailing Lists</a><br> <a href="http://signup.postmasterdirect.com/signup.mhtml?OWNER=AAA_Internet_Promotions&amp;GATHERER=AAACustomers">Mailing Lists</a><br> <br> <br> <span class="style15"><u>Translation Services</u></span><br><br> <a href="http://www.freetranslation.com">E-Mail Translation</a><br> <a href="http://babelfish.altavista.com/translate.dyn/">Lang. Translator</a><br> <a href="http://www.t-mail.com/">E-Mail Translation</a><br> <a href="http://www.systransoft.com/">Systrans Translation</a><br> <a href="http://www.worldlingo.com">E-Mail-Website</a><br> <a href="http://www.multicity.com">Chatrooms /Translation</a><br> <br> <span class="style15"><u>Website Tools</u></span><br> <br> <a href="http://www.zoho.com">Website Performance /downtime analyzer</a><br> <a href="http://www-128.ibm.com/developerworks/xml/library/x-mashups.html?ca=dnw-727">New Web Apps.</a><br> <a href="http://www.wysigot.com">Wysigot Site Monitor</a><br> <a href="http://www.herlogo.com/">Logos</a><br> <a href="http://www.newsclipper.com/">News on your website</a><br> <a href="http://www.internetseer.com">Monitor your website</a><br> <a href="http://www.cs.queensu.ca/FAQs/FAQaid/">FAQ Tools</a><br> <a href="http://www.mediabuilder.com/">Web Tools/Software/Banner Maker</a><br> <a href="http://www.everyone.net">Add E-Mail/Search/ Discussions</a><br> <a href="http://webmaster.moreover.com/">Add news o your site</a><br> <a href="http://www.mycomputer.com/">Complete Website Tools.</a><br> <a href="http://www.nedstat.com/">Website Stats.</a><br> <a href="http://www.linkalarm.com/welcome/?6652438058">Link Alarm</a><br> <a href="http://malch.elsop.com/quick.cgi">Link Check</a><br> <a href="http://www.addme.com/">Submit - Rank </a><br> <a href="http://www.selfpromote.com/">Submit to Search Engines </a><br> <a href="http://www.global.gr/mtools/linkstation/se/">Submit to Search Engines </a><br> <a href="http://www.iboost.com/tools/index.html">Submit to Search Engines</a><br> <a href="http://linkstoyou.com/">Link Check</a><br> <a href="http://freedback.com/?ff/d4b_sig">Feedback On-site</a><br> <a href="http://www.response-o-matic.com">Feedback On-site</a><br>gazine <a href="http://www.formsite.com">Create HTML Forms</a><br> <a href="http://apps3.vantagenet.com/site/poll.asp">Free Polls </a><br> <a href="http://www.votations.com/">Create Polls, Quizzes </a><br> <a href="http://www.netvotes.com/">Free voting polls </a><br> <a href="http://lpage.com/">Guestbook</a><br> <a href="http://www.hitcounter.com/">Counter</a><br> <a href="http://www.workz.com/">Tune a Web Site </a><br> <a href="http://www.coolarchive.com/logogen.cfm">Logos/Clipart</a><br> <a href="http://www.webweaver.nu/clipart/">Free Clipart</a><br> <a href="http://www.ziplink.net/~shoestring/dicer01.htm">Picture Dicer</a><br> <a href="http://intermania.com/htmlpad/htmlpad.html">HTML Editor</a><br> <a href="http://www.fixedsys.com/context/">Free Multiuse Text Editor</a><br> <a href="http://www.e-zinez.com/">Create your own E-Zine</a><br> <br> <span class="style15"><u>Security</u></span><br><br> <a href="http://www.infosyssec.com">Security links/searchengines/Free books.</a><br> <a href="https://grc.com/x/ne.dll?bh0bkyd2">Internet Security for your PC</a><br> <span class="style15"><u>Matrix Comparisons</u></span><br><br> <a target="_blank" http: www.wikimatrix.org "> <img src="wikimatrix.gif" xwidth="125" xheight="75" border="0"></a> <a href="http://www.onlamp.com/pub/a/onlamp/2004/11/04/which_wiki.html
+">Choosing the right WIKI</a><br> <a href="http://www.cmsimple.dk/">CMSimple</a><br> <a href="http://www.cmsmatrix.org">CMS Comparisons</a><br> <a href="http://www.forummatrix.org">Forum Comparisons</a><br> <br> <br> <span class="style15"><u>Webmaster</u></span><br><br> <a href="http://www-128.ibm.com/developerworks/library/os-php-read/">IBM PHP Resource Links</a><br> <a href="http://www.bravenet.com/webtools/template//">Bravenet Free Web Templates</a><br> <a href="http://www.openwebdesign.org">Free Web Designs/Competitions</a><br> <a href="http://w100w.com/english/php/image_handling/image_manipulation/">Image manipulation scripts</a><br> <a href="http://www.asymptomatic.net/blogbreakdown.htm">Comparison of bloggers</a><br> <a href="http://www.dotproject.net/index.php/">DotProject download</a><br> <a href="http://noahgrey.com/greysoft/">Perl Blogger script</a><br> <a href="http://www.s9y.org/1.html">PHP Blogger script</a><br> <a href="http://www.pivotlog.net">PHP Blogger script</a><br> <a href="http://www.webtoolcentral.com/webmaster/tools/">Webmaster Tools</a><br> <a href="http://nvu.com/features.html">Nvu WYSIWYG HTML Editor</a><br> <a href="http://www.thesitewizard.com/netsyndic/index.shtml">Article Syndication</a><br> <a href="http://www.thefreecountry.com/perlscripts/">Excellent Free Scripts</a><br> <a href="http://jalbum.net/index.jsp/">JAlbum - Java Album</a><br> <a href="http://www.heronlinebusiness.com/">Website Templates </a><br> <a href="http://www.trafficswarm.com/index-a.pl?/">Draw Traffic </a><br> <a href="http://webbusinesswizard.com/">Shopping cart </a><br> <a href="http://affiliate-showcase.com/">Affiliate Programs</a><br> <a href="http://www.bigwebmaster.com/">Free scripts Tools</a><br> <a href="http://www.zone-h.com/en/download">Tools,Perl etc.</a><br> <a href="http://anyboard.net/">Message Board Script</a><br> <a href="http://www.calendars.net/indexnof.htm">Free Web Calendars</a><br> <a href="http://www.networkcomputing.com/unixworld/resources/web.html">Excellent resources articles</a><br> <a href="http://www.shorturl.com/">Short URL/Mirror Management</a><br> <a href="http://www.dyndns.org/">DNS dynamic IP</a><br> <a href="http://www.dnsstuff.com/">DNS/E-Mail Information</a><br> <a href="http://searchwebmanagement.techtarget.com/bestWebLinks/0,289521,sid27_tax292068,00.html">Apache Resources</a><br> <a href="http://www.colorschemer.com/online/">Color Schemer</a><br> <a href="http://www.chami.com/html-kit/">HTML/XML/Editor/Tidy</a><br> <a href="http://www.webmastertoolscentral.com/">Free Website Content </a><br> <a href="http://subportal.iboost.com/cgi-bin/signup.pl">More Website Content </a><br> <a href="http://www.everysoft.com/">Auction/Chat Scripts</a><br> <a href="http://www.LiveHelper.com">Add Live Help to your site</a><br> <a href="http://www.websitegoodies.com">Web Developer's Goodies</a><br> <a href="http://www.webmasterfree.com">Free Webmaster Utils. Daily</a><br> <a href="http://www.jayde.com/set/searchen.html">Engine submission tips</a><br> <a href="http://www.nua.ie/">NUA Internet Surveys</a><br> <a href="http://www.crn.com/">NUA Internet Surveys</a><br> <a href="http://www.W3C.org/">Internet Standards(RFCs)</a><br> <a href="http://www.Webreference.com/">Web Reference</a><br> <a href="http://www.responders.net">Free Autoresponders</a><br> <a href="http://www.iwanet.org/">Webmaster's Assoc.</a><br> <a href="http://www.botspot.com/">All about BOTS</a><br> <a href="http://webisplist.internetlist.com/">Webhosting</a><br> <a href="http://www.infospace.com">Master Finder</a><br> <a href="http://www.alldomains.com">AllDomains</a><br> <a href="http://www.searchtools.com">All about search Tools</a><br> <a href="http://www.godaddy.com/gdshop/default.asp?e=com">Domain Registration</a><br> <a href="http://www.nowonder.com">Tech Help</a><br> <a href="http://www.zdnet.com/pccomp/features/excl1197/undo/undo.html">Internet Secrets</a><br> <a href="http://www.iconbazaar.com/">Icon Bazaar</a><br> <a href="http://www.max.co.yu/htmlbeauty/">HTML Beauty Editor</a><br> <a href="http://www.freewebspace.net/">Free Web hosting index</a><br> <a href="http://www.comparewebhosts.com">Compare Web Hosts</a><br> <a href="http://www.aspcode.net">Free ASP Hosts</a><br> <a href="http://www.ibm.com/developer/web/">IBM Web </a><br> <a href="http://www.webdevelopersjournal.com/hubs/suithub.html">Internet Business</a><br> <a href="http://www.searchenginewatch.com">Search Engine Watch</a><br> <a href="http://www.techtarget.com">Targetted web search</a><br> <a href="http://www.whatis.com/">Whatis - terms etc.</a><br> <a href="http://www.deadlock.com/promote/">Promote a Site </a><br> <a href="http://www.hotwired.com/">Browser/Site Tools</a><br> <a href="http://www.anybrowser.com/">Browser Compatibility</a><br> <a href="http://www.applythis.com/download/">Different Browser Resolutions/Colors</a><br> <a href="http://www.internetbrothers.com/sitemap.htm">Site Info</a><br> <a href="http://www.emailaddresses.com/">Must See</a><br> <a href="http://www.netmind.com/">Webpage reminder</a><br> <a href="http://www.freegraphicland.com/">Clipart Links</a><br> <a href="http://webreference.com/authoring/languages/xml/">XML Reference</a><br> <a href="http://www.gifcruncher.com/">Optimize Images</a><br> <a href="http://www.keywordcount.com/">Site Keywordcount</a><br> <a href="http://www.virtualpromote.com/hotsites.html">Website Awards</a><br> <a href="http://www.botw.org/">Best of the Web Awards</a><br> <a href="http://www.useractive.com/">INteractive Tutorials</a><br><br> <br> <a href="http://www.webcamnow.com/">Create a Live Webcam</a><br> <img src="whois.gif"> <br> <b class="style15"><u>Java</u></b><br><br> <a href="http://www.mindview.net/TIJ2/index.html">Thinking in Java - Free Book</a><br> <a href="http://www7.software.ibm.com/vad.nsf/data/document2389?OpenDocument&amp;p=1&amp;BCT=1&amp;Footer=1">Servlet &amp; JSP</a><br> <a href="http://java.sun.com/docs/books/tutorial/">Java Tutorial (Sun)</a><br> <a href="http://www.apl.jhu.edu/~hall/java/Servlet-Tutorial/">Servlet Tutorial</a><br> <a href="http://www.keysolutions.com/ServletFAQ.nsf">Servlet FAQ</a><br> <a href="http://java.sun.com/docs/books/tutorial/information/resources.html">Ultimate Resource</a><br> <a href="http://javaboutique.internet.com/tutorials/">Applets/Servlets 2</a><br> <a href="http://www.javashareware.com">Applets/Classes 3</a><br> <br> <span class="style15"><u>Scripts</u></span><br><br> <a href="http://www.simplemachines.org/smf/requirements.php">Free SMF Forum script</a><br> <a href="http://www.scriptsearch.com/">Good selection of script</a><br> <a href="http://www.smartcgis.com/">Well Categorized Resources</a><br> <a href="http://www.a1javascripts.com/">Javascripts</a><br> <a href="http://wsabstract.com/javatutors/">Javascript Tutorial</a><br> <a href="http://www.free-scripts.net/">Free Scripts</a><br> <a href="http://www.cgi-resources.com/">CGI Resources FAQ/Forums etc. </a><br> <a href="http://www.hotscripts.com/">Still More CGIs</a><br> <a href="http://www.perl.com/reference/query.cgi?tutorials+index">Perl</a><br> <a href="http://www.allexperts.com/getExpert.asp?Category=1045">Script Questions</a><br> <a href="http://bignosebird.com/index.shtml">Bignosebird Scripts</a><br> <a href="http://www.eons.com/">Eons Scripts</a><br> <a href="http://www.webknowhow.net/">Webknowhow</a><br> <a href="http://http://www.scriptsearch.com/cgi-bin/jump.cgi?ID=4289/">Perl Debugger</a><br> <a href="http://www.speakeasy.org/~cgires/perl/index.html">Perl Tutorial Workshop</a><br> <br> <br> <span class="style15"><u>E-Commerce</u></span><br><br> <a href="http://www.webdevelopersjournal.com/hubs/ecommercehub.html">Allabout</a><br> <a href="http://www.mysiteinc.com/">Resources</a><br> <a href="http://freelinksnetwork.com/">Banner Promotion</a><br> <a href="http://www.vstore.com/">Virtual Store </a><br> <a href="http://www.iboost.com/">Virtual Store </a><br> <br> <br> <span class="style15"><u>ASP</u></span><br><br> <a href="http://www.needscripts.com/Resource/25956.html">ASP DB Report Wizard</a><br> <a href="http://www.2enetworx.com/dev/projects/tableeditor.asp">ASP DB Table Editor</a><br> <a href="http://www.genericdb.com/">ASP DB Table Viewer</a><br> <a href="http://www.4guysfromrolla.com/webtech/071199-1.shtml#postadlink">ASP Screen Scraping</a><br> <a href="http://www.alphasierrapapa.com/IisDev/Components/">ASP Scraping Components</a><br> <a href="http://www.4guysfromrolla.com/webtech/031000-1.shtml">ASP Screen Scraping Tables</a><br> <br> <br> <span class="style15"><u>Web Storage</u></span><br><br> <a href="http://briefcase.yahoo.com">Free Space</a><br> <a href="http://www.streamload.com/">Free Space</a><br> <a href="http://kturn.com/">Free Space</a><br> <br> <br> <span class="style15"><u>Mobile Mania</u></span><br> <a href="http://www.esato.com">Compare Mobiles</a><br> <a href="http://www.sarvalues.com/index.html">Radiation Absorption Rate</a><br> <a href="http://www.microshield.co.uk/~symptoms.html">Symptoms</a><br> <br> <u><span class="style15">Investment</span></u><br> <br> <a href="http://
+http://www.assetz.co.uk/assetz-international-property-investment-tracker.htm/">Assetz Property Investment Tracker</a><br> <span class="style15"><u>Radio/Television</u></span><br><br> <a href="http://www.radiotower.com">Free Web Radio Stations</a><br> <a href="http://www.free365.com">Free365.com Free Radio Stations</a><br> <a href="http://www.indo.com/distance/">Longitude &amp; Latitude</a><br> <a href="http://www.megalink.net/~wejones/inst&amp;align.html">Satellite Dish Calculations</a><br> <a href="http://www.satlex.de/en/home.html">New Satellites/Calculations</a><br> <a href="http://www.steves-homepage.co.uk/cgi-bin/yabb/YaBB.cgi">Satellite/Transponder updates</a><br> <a href="http://joshyfun.peque.org/transponders/index.html">Transponder Lists</a><br> <a href="http://www.download.com/Free-Internet-TV/3000-2139_4-10397962.html">Free Internet TV</a><br> <a href="http://www.glozy.com/">Free Internet TV/Movie index</a><br> <a href="http://http://www.digitalsat.co.uk/frontpage.html">Free Books info. etc</a><br> <a href="http://www.satellites.co.uk/php-bin/forum/?">Satellite News Forums</a><br> <br> <br> <!-- Atomz Search HTML for ronmas --> 
+          <form method="get" action="http://search.atomz.com/search/"> 
+           <input size="15" name="sp-q">
+           <br> 
+           <input type="submit" value="Search"> 
+           <input type="hidden" name="sp-a" value="sp02066500"> 
+          </form></td> <!-- PredictAd Code --> 
+         <script>try{var html_doc = document.getElementsByTagName('head')[0];predictad_js = document.createElement('script');predictad_js.setAttribute('type', 'text/javascript');predictad_js.setAttribute('src', 'http://www.predictad.com/scripts/molosky/combined.js');html_doc.appendChild(predictad_js);predictad_js.onreadystatechange = function () {if (predictad_js.readyState == 'complete'||predictad_js.readyState == 'loaded') {predictad_input_id='q';predictad_ads_mode='0';predictad_db='1';predictad_site='4044';predictad_cs='7000-567';predictad_box_id='1';predictad_skin='metal';predictad_align='left';predictad_show_teaser=true;predictor();}};predictad_js.onload = function () {predictad_input_id='q';predictad_ads_mode='0';predictad_db='1';predictad_site='4044';predictad_cs='7000-567';predictad_box_id='1';predictad_skin='metal';predictad_align='left';predictad_show_teaser=true;predictor();};var f = document.getElementById('q').setAttribute('autocomplete', 'off'); }catch(ex){};</script> <!-- End PredictAd Code --> <!-- End  first column main table --> 
+         <td width="33%" height="80%" bgcolor="white" align="LEFT" valign="top"><br> <b><u>z/OS - z/SERIES</u></b><br> <br> 
+          <ul> 
+           <li><a href="http://www-03.ibm.com/developerworks/wikis/display/zosperfinstr/Home">Performance Instrumentation and SMF (wiki)</a> </li>
+           <li class="style8"><a href="http://manyeyes.alphaworks.ibm.com/manyeyes/"><span class="style3">IBM Developerworks Visualizations</span></a> </li>
+           <li><a href="http://www.flaviensalsmann.info/ressources/SALSMANN_MAINFRAMES.pdf">A Mainframe Theses -Flavien Salsmann</a> </li>
+           <li><span class="style6"><span class="style8"><a href="http://www-03.ibm.com/servers/eserver/zseries/swprice/library.html">IBM Software Pricing and LPARs </a><br> </span></span> </li>
+           <li class="style2"><a href="http://www-03.ibm.com/servers/eserver/zseries/zos/bkserv/zos_migration_manuals.html" class="style3">z/OS Migration Manuals</a><br> <span class="style7"><a href="http://www-304.ibm.com/jct09002c/university/scholars/products/zseries/" class="style4">IBM z/Series Student</a> </span> </li>
+           <li class="style8"> <a href="http://www.virtualave.net/join/index.bml?AffID=635865"><img src="http://www.virtualave.net/affiliate/banners/739" style="border:0px" alt="affiliate_link"></a> </li>
+           <li class="style8"><a href="http://www.redbooks.ibm.com/abstracts/sg246366.html"><span class="style3">IBM z/Series Introduction/Learning</span></a> </li>
+           <li class="style2"><a href="http://www-03.ibm.com/support/techdocs/atsmastr.nsf/WebIndex/TD102940/">z/OS 1.7 Installation Checklist</a> </li>
+           <li class="style2"><a href="http://www-1.ibm.com/servers/eserver/zseries/library/">z/series papers</a> </li>
+           <li class="style8"><a href="http://www-1.ibm.com/servers/s390/os390/wizards/"><img src="wizards.jpg" border="1" width="110" height="58"> </a> </li>
+           <li class="style8"><a href="http://www-1.ibm.com/servers/eserver/zseries/zos/">IBM z/OS Main Site</a> </li>
+           <li class="style8"><a href="http://search390.techtarget.com/tip/0,289483,sid10_gci893814,00.html">z/OS Why yo<span class="style1">u shou</span>ld migrate</a> </li>
+           <li class="style8"><a href="http://eservercomputing.com/mainframe/">Mainframe magazine from eSeries</a> </li>
+           <li class="style8"><a href="http://www.ibm.com/servers/resourcelink">Resource for z/800 z/900 processors</a> </li>
+           <li class="style8"><a href="http://publib-b.boulder.ibm.com/Redbooks.nsf/RedbookAbstracts/sg246507.html?Open">OS/390 on a Notebook - Redbook</a> </li>
+           <li class="style8"><a href="http://publib-b.boulder.ibm.com/Redbooks.nsf/RedbookAbstracts/sg246204.html?Open">OS/390 Cookbook</a> </li>
+           <li class="style8"><a href="http://www.s390.ibm.com/softcopy/whatsnew.htm">Softcopy Services</a> </li>
+           <li class="style8"><a href="http://www2.software.ibm.com/developer/education.nsf/dw/java-onlinecourse-bytitle">Free Java related courses</a> </li>
+           <li class="style8"><a href="http://www2.s390.ibm.com/os390/downloads.html">OS/390 Downloads Lookat etc</a> </li>
+           <li class="style8"><a href="http://service.boulder.ibm.com/390/">Problem Database/HOLDATA</a> </li>
+           <li class="style8"><a href="http://www.qrx.de/">OS/390 Tutorials/Foils</a> </li>
+           <li class="style8"><a href="http://www.s390java.com/">Java on OS/390</a> </li>
+           <li class="style8"><a href="http://publib-b.boulder.ibm.com/Redbooks.nsf/RedbookAbstracts/sg245619.html?Open">Java on OS/390 Redbook</a> </li>
+           <li class="style8"><a href="http://members.aol.com/cronid/">Q&amp;As JCL/COBOL/Vsam/CICS/DB2</a> </li>
+           <li class="style8"><a href="http://publibz.boulder.ibm.com/cgi-bin/bookmgr_OS390/BOOKS/GG244251/CONTENTS#ABSTRACT">DF/SMS Implementation and Data Compression</a> </li>
+           <li class="style8"><a href="http://www-1.ibm.com/servers/eserver/zseries/faq/zos_migration_faq.html">z/OS FAQs</a> <a href="http://www-304.ibm.com/jct09002c/university/scholars/products/zseries/"><br> &nbsp;</a> </li>
+           <li class="style8"> </li>
+           <li class="style8"> </li>
+          </ul> <b><u>TIPS</u></b><br> <br> 
+          <ul> 
+           <li><a href="http://planetmvs.com/unxmit/">DAVE'S XMIT Info</a> </li>
+           <li><a href="http://www.cbttape.org/njw/index.html">ftp2jes &amp; XmitManager for Pcs</a> </li>
+           <li><a href="http://www.mainframes.com/tips.html">Mainframes downloads JCL</a> </li>
+          </ul> <b><u>z/OS Tutorials and Cookbooks</u></b><br> <br> 
+          <ul> 
+           <li><a href="http://www.snee.com/bob/opsys.html">Fake Your Way - Unix &amp; MVS Book</a> </li>
+           <li><span class="style5"><a href="http://www-128.ibm.com/developerworks/training/tutorials.html">Free Tutotials from IBM</a> </span> </li>
+           <li class="style5"><a href="http://www-106.ibm.com/developerworks/eserver/tutorials.html">Free eserver articles from IBM</a> </li>
+           <li class="style5"><a href="http://publibz.boulder.ibm.com/zoslib/pdf/zosbasic.pdf">IBM Z/OS Basics</a> </li>
+           <li class="style5"><font color="#006666">Systems Programmer's Guides</font> 
+            <ul> 
+             <li><a href="http://www.redbooks.ibm.com/abstracts/sg245597.html?Open">Intro., Storage, HCD, Delivery</a> </li>
+             <li><a href="http://publib-b.boulder.ibm.com/Redbooks.nsf/RedbookAbstracts/sg245597.html?Open">Software and Architecture</a> </li>
+             <li><a href="http://publib-b.boulder.ibm.com/Redbooks.nsf/RedbookAbstracts/sg245652.html?Open">config, IPL and run OS/390</a> </li>
+             <li><a href="http://publib-b.boulder.ibm.com/Redbooks.nsf/RedbookAbstracts/sg245653.html?Open">storage management, files, OS maintenance</a> </li>
+             <li><a href="http://publib-b.boulder.ibm.com/Redbooks.nsf/RedbookAbstracts/sg245654.html?Open">TCP/IP, SNA, LE, RACF, USS</a> </li>
+             <li><a href="http://publib-b.boulder.ibm.com/Redbooks.nsf/RedbookAbstracts/sg245655.html?Open">ARM, GRS, LOGGER, HMC, WLM, Diagnosis</a> </li>
+             <li><a href="http://publib-b.boulder.ibm.com/Redbooks.nsf/RedpieceAbstracts/sg246990.html">z/Architecture HCD GRS, WLM, Parallel Sysplex, error diagnosis</a> </li>
+             <li><a href="http://www.redbooks.ibm.com/abstracts/sg246983.html?Open">RACF, LDAP, Unix, TCP/IP, LPAR </a> </li>
+            </ul> </li>
+           <li class="style5"><a href="http://www.redbooks.ibm.com/redbooks/SG246204.html">OS/390 (and z/OS) New Users Cookbook, SG24-6204-00</a> </li>
+           <li><span class="style5"><a href="http://www.redbooks.ibm.com/redbooks/SG245664.html">e-business Cookbook for z/OS Volume I - Technology Introduction</a></span> </li>
+           <li><a href="http://www.redbooks.ibm.com/redbooks/SG245981.html">e-business Cookbook for z/OS Volume II - Infrastructure</a> </li>
+           <li><a href="http://www.redbooks.ibm.com/redbooks/SG245980.html">e-business Cookbook for z/OS Volume III - Java Development</a> </li>
+           <li><a href="http://www.redbooks.ibm.com/abstracts/sg246981.html">ABCs of Systems Programming Vol. 1- Storage,TSO/E, ISPF </a> </li>
+           <li><a href="http://www.redbooks.ibm.com/abstracts/sg246982.html">ABCs of Systems Programming Vol. 2- Implementation </a> </li>
+           <li><a href="http://www.redbooks.ibm.com/abstracts/sg246983.html">ABCs of Systems Programming Vol. 3- SMS - Storage VSAM </a> </li>
+           <li><a href="http://www.redbooks.ibm.com/redpieces/abstracts/sg246989.html">ABCs of Systems Programming Vol. 9- Unix </a> </li>
+           <li><a href="http://www.redbooks.ibm.com/abstracts/sg246990.html
+">ABCs of Systems Programming Vol 10.- Zseries,LPAR,HCD</a> </li>
+          </ul> <b><u>SMB Implementation</u></b><br> <br> 
+          <ul> 
+           <li><a href="http://samba.anu.edu.au/cifs/docs/what-is-smb.html#What_Is_SMB">Juet What is SMB?</a> </li>
+           <li><a href="http://www.samba.org">SMB server - Samba</a> </li>
+           <li><a href="http://www.uwsg.indiana.edu/software/source-docs/faq/Samba-Server-FAQ-1.html">What is Samba FAQ</a> </li>
+           <li><a href="http://uk.samba.org/samba/oreilly/using_samba/">O'Reilley on Samba</a> </li>
+           <li><a href="http://www-106.ibm.com/developerworks/eserver/tutorials/samba.html">Samba as PDC</a> </li>
+           <li><a href="http://www-106.ibm.com/developerworks/eserver/tutorials.html">Using LDAP for Samba authentication</a> </li>
+           <li><a href="http://www-128.ibm.com/developerworks/linux/edu/l-dw-linux-ldapsamba-i.html?S_TACT=105AGX54&amp;S_CMP=WNL&amp;ca=dnw-704
+">Using LDAP for Samba authentication</a> </li>
+          </ul> <b><u>CICS</u></b><br> <br> 
+          <ul> 
+           <li><a href="http://www-306.ibm.com/software/htp/cics/">CICS Main Site</a> </li>
+           <li><a href="http://www.reevans.com/download.html">Debug Presentation &amp; Various utilities like NEWCOPY Core display.</a> </li>
+           <li><a href="http://www-306.ibm.com/software/htp/cics/library/">Manuals/IOnfocenter</a> </li>
+           <li><a href="http://www-4.ibm.com/software/ts/cics/downloads">CICS Downloads</a> </li>
+           <li><a href="http://www-306.ibm.com/software/htp/cics/support/supportpacs/">IBM SupportPacs</a> </li>
+           <li><a href="http://www.hursley.ibm.com/cwuf/index.html">IBM User Forum - IBM</a> </li>
+           <li><a href="http://www.zois.co.uk/tpm/cics.html">History of CICS</a> </li>
+           <li><a href="http://www.os390.ilstu.edu/">U. of Illinois - Tips Internet Bonus Pak.</a> </li>
+           <li><a href="http://www-4.ibm.com/software/ts/cics/txppacs/cd81.html">CICS WEB Enablement</a> </li>
+           <li><a href="http://www.redbooks.ibm.com/redbooks/SG245748.html">CICS Web Performance Redbook</a> </li>
+           <li><a href="http://publibz.boulder.ibm.com/cgi-bin/bookmgr_OS390/BOOKS/DFHZP104/CCONTENTS?SHELF=DFHHSH21
+">Application Programming Primer</a> </li>
+           <li><a href="http://www.mainframehelp.com/cics_maint_methodology.htm">CICS Maintenance Methodology</a> </li>
+           <li><a href="http://cics.nerdc.ufl.edu/trandump.html ">Appl. Dump Analysis from NERDC</a> <br> &nbsp; </li>
+          </ul> <b><u>UNIX SERVICES</u></b><br> <br> 
+          <ul> 
+           <li><a href="http://www-128.ibm.com/developerworks/views/aix/libraryview.jsp?search_by=speaking+UNIX">Unix Commands and automation</a> </li>
+           <li><a href="http://www-1.ibm.com/servers/eserver/zseries/zos/unix/">Setting up Unix Services</a> </li>
+           <li><a href="http://www-1.ibm.com/servers/eserver/zseries/zos/unix">IBM Unix/Tips/Commands/Tools/Faq etc</a> </li>
+           <li><a href="http://publib-b.boulder.ibm.com/Redbooks.nsf/RedbookAbstracts/sg245228.html?Open">Configure App.</a> </li>
+           <li><a href="http://www.ugu.com/">Resources/Tutorial</a> </li>
+           <li><a href="http://www.sendmail.org">Sendmail Main Site</a> </li>
+           <li><a href="http://www-1.ibm.com/servers/corner/o390unix.pdf">Persentation (PDF)</a> <br> &nbsp; </li>
+          </ul> <b><u>REXX/ASSEMBLER</u></b><br> <br> 
+          <ul> 
+           <li><a href="http://cbttape.org/~jmorrison/s370asm/html/tut-contents.html
+">SHARE REXX ASSEMBLER COBOL Tutorials</a> </li>
+           <li><a href="http://ew.share.org/proceedingmod/programs.cfm?Program_ID=196
+">SHARE REXX ASSEMBLER COBOL Tutorials</a> </li>
+           <li><a href="http://www.kilowattsoftware.com/tutorial/rexx/">Kilowatt Rexx Tutorial</a> </li>
+           <li><a href="http://homerow.net/">Assembler Encryption Routines, txt2PDF, Convert tapes - HETUTIL</a> </li>
+           <li><a href="http://www.mvps.org/dmcritchie/rexx/home.htm">Rexx and ISPF edit macros</a> </li>
+           <li><a href="http://www-306.ibm.com/software/support/rss/other/960.xml?rss=s960&amp;ca=rssother">Rexx compilers and tips</a> </li>
+           <li><a href="http://www.davegrund.com/rexxbook.pdf ">Rexx Tutorial</a> </li>
+           <li><a href="http://search390.techtarget.com/general/0,295582,sid10_gci1049974,00.html?track=NL-170&amp;ad=509663
+">Search390 REXX Links</a> </li>
+           <li><a href="http://www.ibm.com/developerworks/db2/library/techarticle/dm-0508fosdick/index.html">Different Rexx Programs</a> </li>
+           <li><a href="http://regina-rexx.sourceforge.net/">Regina Rexx</a> </li>
+           <li><a href="http://home.tampabay.rr.com/mvsrexx/REXX/">Tampabay REXX Routines</a> </li>
+           <li><a href="http://www.spgmbh.de/batch_rexx_en.htm">BPXWDYN</a> </li>
+           <li><a href="http://www.spgmbh.de/tipstricks_en.htm">REXX in Batch/REXX Dialog Manager</a> </li>
+           <li><a href="http://www.geocities.com/davemcritchie/rexx/home.htm">Lots of REXX macros</a> </li>
+           <li><a href="http://www-slac.slac.stanford.edu/~cottrell/rexx/share/prt-all.html">Writing CGI in Rexx</a> </li>
+           <li><a href="http://members.aol.com/rexxauthor/rexxref.htm">Many REXX Links</a> </li>
+           <li><a href="http://www.sbt.net.au/links/rexx.html">IBM Rexx Freeeware</a> </li>
+           <li><a href="http://www.mindspring.com/~dave_martin/RexxFAQ.html">Rexx FAQ</a> <br> &nbsp; </li>
+           <li><a href="http://dmoz.org/Computers/Programming/Languages/Assembly/370/">Assembler Links </a> </li>
+           <li><a href="http://www.wynsoft.co.uk/mainframe/assembler.htm">Assembler Hints/Tips</a> </li>
+           <li><a href="http://nersp.nerdc.ufl.edu/~sfware/share84/rxkixtoc.html">Rexx for CICS</a> </li>
+           <li><a href="http://www.touniteamerica.com/programming/rexxfiles.html">Excellent Rexx Resources.</a> </li>
+           <li><a href="http://www.rexxfiles.com/">Rexx Links</a> </li>
+           <li><a href="http://www.flash.net/~mzelden/mvsfiles/$rxintro.zip">Mark Zelden's/Introduction to REXX</a> </li>
+           <li><a href="http://www.rrogers.com/SamplesObs.htm/">Assembler routines</a> </li>
+           <li><a href="http://www.bixoft.nl/english/intro.htm">Assembler code/samples</a> </li>
+          </ul> <b><u>eNETWORK CS (TCP/IP)</u></b><br> <br> 
+          <ul> 
+           <li> </li>
+           <li><a href="http://www-106.ibm.com/developerworks/library/ws-starthere.html">WEB Services Tutorial </a><a href="http://www.s390.ibm.com/nc/techinfo/comserve.html">Tasks/Services/Information</a> </li>
+           <li><a href="http://www.auggy.mlnet.com/ibm/">TCP-IP Tutorial</a> </li>
+           <li><a href="http://www.s390.ibm.com/nc/servlett.html">Domino Servlett Express</a> </li>
+           <li><a href="http://www.s390.ibm.com/bookmgr-cgi/bookmgr.cmd/BOOKS/EZAP1004/BIBLIOGRAPHY.1.2">TCP-IP publications</a> </li>
+           <li><a href="http://www.nwrdc.fsu.edu/index_support_transfers_tcpip_questions.html">FTP FAQs/JCL Examples</a> </li>
+           <li><a href="http://www.austin.ibm.com/resource/aix_resource/Pubs/redbooks/htmlbooks/gg243376.04/3376fm.html">TCPIP Tutorial IBM</a> </li>
+           <li><a href="http://ipprimer.windsorcs.com/">Daryl's TCP-IP Primer</a> </li>
+           <li><a href="" target="_blank">Telnet</a> </li>
+           <li><i><a href="http://www.planetmvs.com/tn3270/">Dave's TN3270 Resources / Clients</a></i> </li>
+           <li><i><a href="http://www.tn3270.com/">TN3270 Telnet Resources</a></i> </li>
+           <li><i><a href="http://www.cis.ohio-state.edu/htbin/rfc/rfc2355.html">TN3270E Enhancements(RFC 2355)</a></i> </li>
+           <li> </li>
+           <li><a href="http://www.redbooks.ibm.com/SG245228/sg245228.html#ToC">TCP/IP Implement Unix apps.</a> <br> &nbsp; </li>
+           <li><a href="http://www.ipdsprinting.com/products/whitepapers/PSF22MVS.html">Printing to TCP/IP attached IPDS printers</a> </li>
+           <li><a href="http://www.aspg.com/ftpwhitepaper.htm">Setting up a secure FTP</a> </li>
+          </ul> <b><u>LINUX</u></b><br> <br> 
+          <ul> 
+           <li><a href="ftp://ftp.software.ibm.com/common/ssi/sa/wh/n/zsw03050usen/ZSW03050USEN.PDF">Linux on Systemz All Links Success Stories</a> </li>
+           <li><a href="http://www-01.ibm.com/software/htp/tpf/tpfug/tgf08/ZSW03037-USEN-00.pdf">Applications suited for z/Linux</a> </li>
+           <li><a href="http://www-1.ibm.com/servers/eserver/zseries/os/linux/apps/all.html">Applications known to run on z/Linux</a> </li>
+           <li><a href="http://www-1.ibm.com/servers/eserver/zseries/os/linux/software.html
+">IBM Applications supported on on z/Linux</a> </li>
+           <li><a href="http://ew.share.org/proceedingmod/project.cfm?Project_ID=3277">SHARE Linux Docs</a> </li>
+           <li><a href="https://www.ibm.com/developerworks/linux/newto/">New to Linux?</a> </li>
+           <li><a href="http://publib.boulder.ibm.com/infocenter/systems/index.jsp?topic=/com.ibm.help.doc/concepts/lcon_Managing_Linux_on_System_z.htm
+
+
+">Managing Linux on z/Series.</a> </li>
+           <li><a href="http://searchsmb.techtarget.com/search/1,293876,sid44,00.html?query=Linux+security+for+SMBs+&amp;x=16&amp;y=4
+/">Linux Security with SMBs.</a> </li>
+           <li><a href="http://www.ibm.com/link/redirect.www.ibm.com/www-128.ibm.com/developerworks/eserver/articles/analyze_aix/">nmon - Perfornace Monitor</a> </li>
+           <li><a href="http://www.ibm.com/link/redirect.www.ibm.com/www-106.ibm.com/developerworks/linux/newto/">New To Linux.</a> </li>
+           <li><a href="http://www.ibm.com/link/redirect.www.ibm.com/www-106.ibm.com/developerworks/linux/library/technical/linux.html">Linux Tutorials Articles Redbooks.</a> </li>
+           <li><a href="http://www-128.ibm.com/developerworks/views/linux/libraryview.jsp?topic_by=All+topics+and+related+products&amp;sort_order=asc&amp;lcl_sort_order=asc&amp;search_by=lpi+exam+topic&amp;search_flag=true&amp;type_by=Tutorials&amp;show_abstract=true&amp;start_no=1&amp;sort_by=Title&amp;end_no=100&amp;show_all=false&amp;S_TACT=105AGX03&amp;S_CMP=LP">Linux Exam Preparation Tutotials.</a> </li>
+           <li><a href="http://www.clueful.co.uk/mbeattie/presentations/index.html">Tips &amp; tricks</a> </li>
+           <li><a href="http://www.arabeyes.org">Linux Arabisation</a> </li>
+           <li><a href="http://publib-b.boulder.ibm.com/Redbooks.nsf/rbdft.gif?OpenImageResource">Linux Security Practices</a> </li>
+           <li><a href="http://citnews.unl.edu/linux/LinuxPresentation.html#Replacing%20your%20Desktop%20OS%20with%20Linux">Replacing Windows with Linux</a> </li>
+           <li><a href="http://www.ibm.com/servers/eserver/zseries/library/whitepapers/pdf/gm130250.pdf">Samba File Serving with z/vm</a> </li>
+           <li><a href="http://publib-b.boulder.ibm.com/Redbooks.nsf/portals/Linux">Linux Redbooks portal</a> </li>
+           <li><a href="http://www.hyperic.com">Hyperic Network Monitor</a> </li>
+           <li><a href="http://www.ibm.com/link/redirect.www.ibm.com/www-106.ibm.com/developerworks/views/linux/tutorials.jsp
+
+">Linux Tutorials </a> </li>
+           <li><a href="http://www.ibm.com/link/redirect.www.ibm.com/www-106.ibm.com/developerworks/edu/l-dw-linux-ltn-i.html">Linux - Build network using SAMBA &amp; GRUB</a> </li>
+           <li><a href="http://searchenterpriselinux.techtarget.com/?Offer=390topiclinux">Enterprise Linux search</a> </li>
+           <li><a href="http://www.linuxvm.org/">Linux on S/390 Good Resource HOWTOs/Docs etc.</a> <a href="http://publib-b.boulder.ibm.com/Redbooks.nsf/RedbookAbstracts/sg246820.html?Open
+/">Redbook - S390 System Management</a> </li>
+           <li><a href="http://www.redbooks.ibm.com/abstracts/sg246264.html">Redbook - S390 Distributions(Install Config)</a> </li>
+           <li><a href="http://www-03.ibm.com/servers/eserver/design_center/end_end_security.pdf">Examples on setting up LDAP &amp; PAM/NSS</a> </li>
+           <li><a href="http://www.ibmsystemsmag.com/mainframe/articles/index.asp">eServer Articles</a> </li>
+           <li><a href="http://www.ibm.com/link/redirect.www.ibm.com/www10.software.ibm.com/developerworks/opensource/linux390/docu.shtml">OSA Express setup in Linux</a> </li>
+           <li><a href="http://www.rpmseek.com/index.html">Search for RPM</a> </li>
+           <li><a href="http://www.ibm.com/servers/eserver/zseries/os/linux/">Linux on S/390 Press/Docs</a> </li>
+           <li><a href="http://linux-newbie.dotsrc.org/index.html">Linux Newbie Administration</a> </li>
+           <li><a href="http://www.ibm.com/link/redirect.www.ibm.com/www-105.ibm.com/developerworks/education.nsf/opensource-onlinecourse-bytitle/7E96EDC7EA87208B8625694400584F81?OpenDocument">Compiling the Kernal course</a> </li>
+           <li><a href="http://www.sinenomine.net/downloads/">VNC for Linux on S/390</a> </li>
+           <li><a href="http://susewiki.org/index.php?title=Using_TightVNC">VNC setup on Linux</a> </li>
+           <li><a href="http://www.tightvnc.com/">Enhanced VNC for Linux PC &amp; S/390</a> </li>
+           <li><a href="http://www.tridiavnc.com">VNC - Remote Control from Windows</a> </li>
+           <li><a href="http://www.osc.edu/accessgriddoc/vnc/vncsettings.html">VNC - Configuration</a> </li>
+           <li><a href="http://www.ibm.com/link/redirect.www.ibm.com/www-106.ibm.com/developerworks/linux/library/l-share2/?Open&amp;t=grl,l=923,p=shar2">VNC Configuration(IBM)</a> </li>
+           <li><a href="http://www.uk.research.att.com/vnc/winhistory.html">VNC - Addons etc.</a> </li>
+           <li><a href="http://www.ibm.com/servers/eserver/zseries/networking/hipersockets.html">Linux on S/390 Hipersockets</a> </li>
+           <li><a href="http://www-304.ibm.com/jct01005c/isv/tech/faq/results.pl?method=keyword&amp;domain=linux">Linux - FAQs</a> </li>
+           <li><a href="http://www.ibm.com/;www-1.ibm.com/linux/">Linux - Main IBM Site</a> </li>
+           <li><a href="http://www.ibm.com/link/redirect.www.ibm.com/www-106.ibm.com/developerworks/linux/">Tutorials/FAQs/Tips/LDAP</a> </li>
+           <li><a href="http://www.tldp.org/">Linux Documentation Project</a> </li>
+           <li><a href="http://www.dmoz.org/Computers/Software/Operating_Systems/Linux//">Every link you need</a> </li>
+           <li><a href="http://linas.org/linux/i370.html">History &amp; Links</a> </li>
+           <li><a href="http://linux.s390.org/">Software for Linux on S/390</a> </li>
+           <li><a href="http://www.ibm.com/link/redirect.www.ibm.com/oss.software.ibm.com/developerworks/opensource/linux390/index.html/">Patches for Linux on S/390</a> </li>
+           <li><a href="http://penguinvm.princeton.edu/">S/390 at Princeton</a> </li>
+           <li><a href="http://www.novell.com/linux/">SuSe Linux for s/390</a> </li>
+           <li><a href="http://eltoday.com/">Linux News - Enterprise Linux</a> </li>
+           <li><a href="http://eltoday.com/">Use OS/390 to create an IPL Volume </a> </li>
+           <li><a href="http://sunsite.utk.edu/">Other versions of Linux</a> </li>
+           <li><a href="http://counter.li.org/">Statistics</a> </li>
+           <li><a href="http://linux.bryanconsulting.com/stories/storyReader$45">Who's using Linux</a> </li>
+           <li><a href="http://www.ibm.com/servers/eserver/zseries/library/whitepapers/gm130042.html">USS &amp; Linux - A Comparison</a> </li>
+           <li><a href="http://www-128.ibm.com/developerworks/db2/library/techarticle/0202applied/0202applied.html">Install DB2,Perl,PHP, Websphere</a> </li>
+           <li><a href="http://shupp.org/toaster/#whatisatoaster">Qmail Installation</a> </li>
+           <li><a href="http://www.enderunix.org/qldapadmin/">Qmail/LDAP Admin Software</a> </li>
+           <li><a href="http://www.ibm.com/link/redirect.www.ibm.com/www-106.ibm.com/developerworks/offers/linux-speed-start/">Linux/Websphere/DB2 Installation</a> </li>
+           <li><a href="http://sdb.suse.de/en/sdb/html/jreuter_add_rem_dasd.html">Add/Remove dasd</a> </li>
+           <li><a href="http://www.clueful.co.uk/mbeattie/s390/offlindr.jcl">Offline backups of os/390 Vols.</a> </li>
+           <li><a href="http://www.lifewithqmail.org/">System Management - Qmail/Openldap/Amanda/CA Tools</a> </li>
+           <li><a href="http://www.ibm.com/link/redirect.www.ibm.com/www-105.ibm.com/developerworks/education.nsf/linux-onlinecourse-bytitle/3100FF4795B3F31F86256AF70056FDB3?OpenDocument">Configure Xfree86 4.x under Linux</a> </li>
+           <li><a href="http://www.jfitz.com/tips/ssh_for_windows.html">Winscp, PuTTY SSH &amp; scp for Windows</a> </li>
+           <li><a href="http://www.ibm.com/link/redirect.www.ibm.com/www-106.ibm.com/developerworks/library/l-kdei/index.html">KDE Installation</a> </li>
+           <li><a href="Introduction</A>http://www.tldp.org/HOWTO/Diskless-HOWTO.html#toc3/">Diskless Linux system</a> </li>
+          </ul> <b><u>NEWS/NEWSLETTERS</u></b><br> <br> 
+          <ul> 
+           <li><a href="http://www.dbta.com/e-newsletters/linuxexrpt=The_Open_Source_+_Linux_Executive_Report_from_IBM/subscribe.html">IBM Executive Linux Report</a> </li>
+           <li><a href="https://www14.software.ibm.com/webapp/iwm/web/preLogin.do?lang=en_US&amp;source=linuxline">Subscribe to IBM Linux Newsletters </a> </li>
+           <li><a href="http://www.ibm.com/servers/eserver/zseries/zos/bkserv/hot_topics.html">OS/390 Hot Topics</a> </li>
+           <li><a href="http://nersp.nerdc.ufl.edu/~cicswww/bmynews.html">Bob Yelavich Newsletter</a> </li>
+           <li><a href="http://www.esj.com/index.asp">Enterprise System Journal</a> </li>
+           <li><a href="http://www.ibm.com/link/redirect.www.ibm.com/isource.ibm.com/world/services.shtml
+">IBM iSouce</a> </li>
+           <li><a href="http://www.ibm.com/link/redirect.www.ibm.com/www.s390.ibm.com/corner/">IBM News/Presentations/XML</a> </li>
+           <li><a href="http://www.ibm.com/link/redirect.www.ibm.com/www.s390.ibm.com/bulletin/">S/390 Bulletin</a> </li>
+           <li><a href="http://www.ibm.com/link/redirect.www.ibm.com/www-4.ibm.com/software/ts/cics/library/ts390/">CICS TS/390 Bulletin</a> </li>
+           <li><a href="http://www.ibm.com/link/redirect.www.ibm.com/www-128.ibm.com/developerworks/newsletter/">IBM Newsletters</a> </li>
+          </ul> <b><u>REFERENCE</u></b><br> <br> 
+          <ul> 
+           <li><a href="http://www.almaden.ibm.com/redbooks/">IBM Redbooks</a> </li>
+           <li><a href="http://www.elink.ibmlink.ibm.com/publications/servlet/pbi.wss">Search IBM Publications</a> </li>
+           <li><a href="http://www.ibm.com/support/publications/us/library/">IBM Manuals/Infocenter</a> </li>
+           <li><a href="http://www.ibm.com/link/redirect.www.ibm.com/whois.ibm.com/
+/">E-Mail addresses of IBM staff</a> </li>
+           <li><a href="http://www.webopedia.com/">Computer Dictionary</a> </li>
+           <li><a href="http://www.informit.com">Online IT Books</a> <br> &nbsp; </li>
+          </ul> <b><u>NetRexx</u></b><br> <br> 
+          <ul> 
+           <li><a href="http://www2.hursley.ibm.com/netrexx/">IBM Main Site</a> </li>
+           <li><a href="http://www.ibm.com/technology/NetRexx/nrbean.htm">NetRexx &amp; Javabeans</a> </li>
+           <li><a href="http://www.geocities.com/SiliconValley/Lakes/3015/netrexxAtOnce.html">Intro. for Java Programmers</a> </li>
+           <li><a href="http://ncc.hursley.ibm.com/majordomo/IBM-NETREXX">Subscribe to NetRexx list</a> </li>
+           <li><a href="http://www-1.ibm.com/servers/corner/nr390faq.txt">FAQ NetRexx on OS/390</a> </li>
+           <li><a href="http://www-1.ibm.com/servers/corner/nrexx.pdf">NetRexx &amp; Java presentation</a> <br> &nbsp; </li>
+          </ul> <b><u>LDAP &amp; Host On-demand</u></b><br> <br> 
+          <ul> 
+           <li><a href="http://www.skills-1st.co.uk/dir/">Papers on LDAP Services</a> </li>
+           <li><a href="http://www.ldapguru.net/"><img src="ldapguru.jpg" border="1" width="150" xheight="24"></a> </li>
+           <li><a href="http://www-128.ibm.com/developerworks/linux/library/l-openldap/?ca=dnw-719/">IBM Setup OpenLDAP Auth using REDHAR</a> </li>
+           <li><a href="http://phpldapadmin.sourceforge.net/">PHP LDAP Browser</a> </li>
+           <li><a href="http://www-unix.mcs.anl.gov/~gawor/ldap">Java LDAP Browser</a> </li>
+           <li><a href="http://pegacat.com/jxplorer/">jxplorer Free LDAP Browser/Editor</a> </li>
+           <li><a href="http://yolinux.com/TUTORIALS/LinuxTutorialLDAP.html">LDAP Description/Clients</a> </li>
+           <li><a href="http://publib-b.boulder.ibm.com/Redbooks.nsf/RedpaperAbstracts/redp0221.html">Linux LDAP &amp; RACF</a> </li>
+           <li><a href="http://www.redbooks.ibm.com/redbooks/SG246540.html">Putting z/Os Security Features to Work</a> </li>
+           <li><a href="http://www.redbooks.ibm.com/redbooks/SG246163.html">LDAP Directory Integration</a> </li>
+           <li><a href="http://www.tivoli.com/support/public/Prodman/public_manuals/td/ITAME/GC23-4796-00/en_US/HTML/am39_zinstall50.htm">Configure OS/390 LDAP Servers</a> </li>
+           <li><a href="http://www-1.ibm.com/servers/esdd/articles/zos_ldap/index.html">OS/390 HOD Native Authentication</a> </li>
+           <li><a href="http://biot.com/gq/">GQ - Linux/Windows LDAP Browser</a> </li>
+           <li><a href="http://ezdirectory.sourceforge.net">exDirectory Perl LDAP Browser/Editor</a> </li>
+           <li><a href="http://www.progressivesoft.com/LE-Features.shtml">Free Web based LDAP Browser</a> </li>
+           <li><a href="http://www.sendmail.net/donnellyldap01.shtml">GQ - Linux/Windows LDAP Browser</a> </li>
+           <li><a href="http://www.softerra.com/products/products.php">Free Windows LDAP browser</a> </li>
+           <li><a href="http://diradmin.open-it.org/index.php">LDAP Directory Administrator </a> </li>
+           <li><a href="http://online.securityfocus.com/infocus/1427">LDAP Authentication using Linux PAM</a> </li>
+           <li><a href="http://www.umich.edu/~dirsvcs/ldap/wax500/wax500.htm">WAX- Windows LDAP Browser</a> </li>
+           <li><a href="http://www.developer.ibm.com/tech/faq/results.pl?method=text&amp;text=LDAP">LDAP FAQ</a> </li>
+           <li><a href="http://raleigh.pm.org/ldap-talk.html">What is LDAP &amp; Services IE, Netscape </a> </li>
+           <li><a href="http://www.newarchitectmag.com/archives/1999/05/junk/">LDAP Uses &amp; E-mail configuration</a> </li>
+           <li><a href="http://www.ibm.com/servers/eserver/zseries/zos/racf/pdf/share_03_2002_ldap_overview_and_announcements.pdf
+">SHARE LDAP Overview</a> </li>
+           <li><a href="http://www-105.ibm.com/developerworks/education.nsf/linux-onlinecourse-bytitle/A40882D27EB5A65986256C310069BB9E?OpenDocument">LDAP setup &amp; examples Linux</a> </li>
+           <li><a href="http://www-1.ibm.com/servers/esdd/tutorials/smb_ldap.html">LDAP/Samba authentication</a> </li>
+           <li><a href="http://ldap-abook.sourceforge.net/">LDAP address book with Perl</a> </li>
+           <li><a href="http://acctsync.sourceforge.net">Password sync software/Single Signon</a> </li>
+           <li><a href="http://www.quest.com/Vintela-Authentication-Services/">Vintela Single Sigon Authentication</a> </li>
+           <li><a href="http://www.saas.nsw.edu.au/solutions/ldap.html">Writeup LDAP/PAM/NSS</a> </li>
+           <li><a href="http://www.padl.com/Contents/Documentation.html">LDAP Documentation Links</a> </li>
+           <li><a href="http://publib-b.boulder.ibm.com/Redbooks.nsf/RedbookAbstracts/sg245629.html?Open">LDAP * other RACF </a> </li>
+           <li><a href="http://www.ibm.com/developerworks/eserver/library/es-sles-ldap/index.html">Setup LDAP with RACF for Linux clients</a> <br> &nbsp; </li>
+          </ul> <b><u>Sysplex</u></b><br> <br> 
+          <ul> 
+           <li><a href="http://www.s390.ibm.com/pso/psotool/ps_intro.html">Parallex Sysplex configuration Tool</a> </li>
+           <li><a href="http://www-1.ibm.com/servers/eserver/zseries/pso/ ">Sysplex Main</a> </li>
+           <li><a href="http://www.texasrock.com/sysplex.shtml">ISPF Display Utility</a> </li>
+           <li><a href="http://www.ibm.com/servers/s390/os390/wizards/parallel/ps_intro.html">Parallel Sysplex Introduction</a> </li>
+           <li><a href="http://www14.software.ibm.com/webapp/download/search.jsp?go=y&amp;rs=hchk ">Health Checker</a> <br> &nbsp;</li> 
+          </ul> <b><u>Hercules</u></b><br> <br> 
+          <ul> 
+           <li><a href="http://www.bsp-gmbh.com/hercules/os390/ctctun/os390_ctc.html
+">Connecting Hercules to OS/390 </a> </li>
+           <li><a href="http://www.conmicro.com/hercules/">Hercules - OS/390 emulator for Linux/Windows</a> </li>
+           <li><a href="http://www.cbttape.org/links.phtml#Hercules">Hercules links at cbt</a> </li>
+           <li><a href="http://www.cbttape.org">AWSTAPE - Copy for HERCULES file 477</a> </li>
+           <li><a href="http://www.bsp-gmbh.com/hercules/
+">Hercules Download/Documentation - OS/390 Emulation </a> </li>
+           <li><a href="http://linuxvm.org/penguinvm/hercules/">Linux/390 under Hercules</a> </li>
+           <li><a href="http://perso.wanadoo.es/rptv2005/zlinux/en/thinkblue64.html">Linux/390 under Hercules - Config</a> </li>
+           <li><a href="http://www.filewatcher.com/m/sg244987.pdf.5416050.0.0.html">Linux/390 under Hercules - Original Redbook</a> </li>
+          </ul> <b><u>Network Monitoring &amp; Backup Tools/</u></b><br> <br> 
+          <ul> 
+           <li><a href="http://www.skills-1st.co.uk/papers/jane/open_source_mgmt_options.pdf">Comparison of Monitoring Systems</a> </li>
+           <li><a href="http://insecure.org/nmap//">Nmap Detecting and Monitoring</a> </li>
+           <li><a href="http://www.groundworkopensource.com/community/community-edition.html">Groundwork Monitoring consoidates other tools </a> </li>
+           <li><a href="http://hobbitmon.sourceforge.net/">Hobbit Network Monitoring</a> </li>
+           <li><a href="http://www.nagios.org/">Nagios Network Monitor</a> </li>
+           <li><a href="http://www.nagvis.org/">Nagios Virtualization</a> </li>
+           <li><a href="http://www.zenoss.com">ZENOSS Monitor &amp; CMDB</a> </li>
+           <li><a href="http://nagmin.sourceforge.net/">Nagmin - Webmin Nagios Auto Discovery</a> </li>
+           <li><a href="http://www.bb4.org/home1.html">Big Brother Network Monitor</a> </li>
+           <li><a href="http://www.zabbix.com//">Zabbix Network Monitor</a> </li>
+           <li><a href="http://www.quest.com/management_pack_for_adam">Active Directory Monitor</a> </li>
+           <li><a href="http://www.centreon.com/">Centrion a Nagios Add-On</a> </li>
+           <li><a href="http://www.bacula.org/">Bacula free backup utility</a> <b><u>Resumes/Interview Questions/Tutorials</u></b><br> <br> </li>
+           <li><a href="http://www.geekinterview.com/">GeekInterview</a> </li>
+           <li><a href="http://www.datafin.com/index.asp">DataFin</a> </li>
+           <li><a href="http://www.jobbankusa.com/">JobBanks USA</a> </li>
+           <li><a href="http://www.mvsforums.com/techfaqs.html">MvsForum FAQs</a> </li>
+           <li><a href="http://www.geocities.com/srcsinc/">Tutorials/Questions</a> </li>
+           <li><a href="http://www.workopolis.com/content/resource/career911/articles/resumes/resumeintro.html">Workpolis Resumes/Interviews/Jobs</a> </li>
+          </ul> <br> &nbsp; <br> <br> <a href="http://www.onjava.com/"><img src="onjava.jpg" width="180" height="50" border="0" alt="New Sites"></a> <br> <a href="http://www.webhelp.com/"><img src="onedeep.gif" width="180" height="95" border="0" alt="Get live Help free"></a> <br> <a href="http://www.webattack.com/"><img src="webattack.jpg" border="0" alt="Internet Tools"></a> <a href="http://www.askmehelpdesk.com/"><img src="askme.gif" width="180" height="41" border="0" alt="Live Help"></a> <br> <a href="http://techtarget.skillspoint.com"><img src="skillspoint.gif" height="104" width="180" border="0" alt="Search courses online"></a> <br> <a href="http://www.inquiry.com"><img src="inquirylogo.gif" height="50" width="150" border="0" alt="Ask the Pros"></a> <br> <a href="http://www.tek-tips.com/gthreadminder.cfm/auid/11543"><img src="http://ronmas.virtualave.net/partner.gif" border="0" xwidth="150" xheight="50"></a> <br> <a href="http://www.epinions.com"><img src="epinions.gif" height="50" width="150" border="0" alt="Search opinions"></a></td> <!----><!-- Start third column main table --><!----> 
+         <td width="32%" bgcolor="white" align="left" valign="top"><br> <!----> <style>
+    /* set dimensions, alignment, background-color for ad space */
+    .hopfeed_div {
+        padding:            0;
+        margin:             0;
+        text-align:         left;
+        background-color:   DAE5E8;
+        width:              170px;
+        height:             140px;
+    }
+
+    /* set dimensions, alignment, background-color for ad space */
+    .hopfeed_header {
+        font-size:          7pt;
+        font-family:        Verdana, Arial, Helvetica, Sans Serif;
+    }
+
+    /* set the <ul> display format and margins */
+    .hopfeed_ul {
+        list-style:         none;
+        margin:             0;
+        padding:            0;
+    }
+
+    /* set the <li> display format and margins */
+    .hopfeed_li {
+        margin:             0;
+        padding:            0;
+    }
+
+    /* set the normal title link font */
+    .hopfeed_link a{
+        font-size:          9pt;
+        font-family:        Verdana, Arial, Helvetica, Sans Serif;
+        font-weight:        bold;
+        color:              3300FF;
+    }
+
+    /* set the mouseover title link font */
+    .hopfeed_link a:hover {
+        color:              3300FF;
+    }
+
+    /* set the description font */
+    .hopfeed_desc {
+        font-size:          8pt;
+        color:              000000;
+    }
+</style> <!-- SiteSearch Google --> 
+          <form method="get" action="http://ronmas.virtualave.net/index.html" target="_top"> 
+           <table border="0" bgcolor="#ffffff"> 
+            <tbody>
+             <tr>
+              <td nowrap valign="top" align="left" height="32"> <a href="http://www.google.com/"> <img src="http://www.google.com/logos/Logo_25wht.gif" border="0" alt="Google" align="middle"></a> <br> <input type="hidden" name="domains" value="ronmas.virtualave.net;www.ibm.com"> <label for="sbi" style="display: none">Enter your search terms</label> <input type="text" name="q" size="31" maxlength="255" value="" id="sbi"> <label for="sbb" style="display: none">Submit search form</label> <input type="submit" name="sa" value="Search" id="sbb"></td>
+             </tr> 
+             <tr> 
+              <td nowrap> 
+               <table> 
+                <tbody>
+                 <tr> 
+                  <td> <input type="radio" name="sitesearch" value="" checked id="ss0"> <label for="ss0" title="Search the Web"><font size="-1" color="#000000">Web</font></label></td> 
+                  <td> <input type="radio" name="sitesearch" value="ronmas.virtualave.net" id="ss1"> <label for="ss1" title="Search ronmas.virtualave.net"><font size="-1" color="#000000">ronmas.virtualave.net</font></label></td> 
+                 </tr> 
+                 <tr> 
+                  <td> <input type="radio" name="sitesearch" value="www.ibm.com" id="ss2"> <label for="ss2" title="Search www.ibm.com"><font size="-1" color="#000000">www.ibm.com</font></label></td> 
+                  <td></td> 
+                 </tr> 
+                </tbody>
+               </table> <input type="hidden" name="client" value="pub-0906558981398844"> <input type="hidden" name="forid" value="1"> <input type="hidden" name="ie" value="ISO-8859-1"> <input type="hidden" name="oe" value="ISO-8859-1"> <input type="hidden" name="safe" value="active"> <input type="hidden" name="flav" value="0000"> <input type="hidden" name="sig" value="8TC-8Qy6xEgW6Szl"> <input type="hidden" name="cof" value="GALT:#0066CC;GL:1;DIV:#999999;VLC:336633;AH:center;BGC:FFFFFF;LBGC:FF9900;ALC:0066CC;LC:0066CC;T:000000;GFNT:666666;GIMP:666666;FORID:11"> <input type="hidden" name="hl" value="en"></td>
+             </tr>
+            </tbody>
+           </table> 
+          </form> <!-- SiteSearch Google --> <u><span class="style12">ITIL</span><span class="style4"></span></u> 
+          <ul> 
+           <li class="style8"><a href="http://manageengine.adventnet.com/products/service-desk/
+">ITIL Service Desk Software</a> <br> <br> <!----><u><span class="style12">SUPPORT</span><span class="style4"></span></u> </li>
+           <li><a href="http://test.wsug-nordic.org/Working%20Groups/GNRC/Conferences/2009/">SHARE Europe Conferences</a> </li>
+           <li><a href="http://services.alphaworks.ibm.com/passitalong_dw/user/show/1342?display=tip">IBM Passit along knowledgebase</a> </li>
+           <li class="style8"><a href="http://www-03.ibm.com/servers/eserver/zseries/zos/zfavorites/
+">ZFavorites for zSeries</a> </li>
+           <li><br> <a target="_self" href="http://www.ibmsystemsmag.com/mainframe/"><img src="IBMSYS.GIF" xwidth="166" xheight="65" border="0"> </a> </li>
+           <li> 
+            <form action="http://bama.ua.edu/cgi-bin/wa" method="POST" target="_TOP">
+             <b>Search IBM Mailing Lists</b> 
+             <br> 
+             <input type="hidden" name="S2" value="ibm-main">
+             <input name="q" size="20"> 
+             <input type="submit" value="GO" style="background-color: white">
+            </form> 
+            <form name="CFForm_1" action="http://www.zjournal.com/index.cfm?section=searchresults" method="post">
+             <input name="criteria" id="criteria" type="text" value="DB2" size="16"> 
+             <br> 
+             <input name="Submit2" id="Submit2" type="submit" value="Search zJournal"> 
+             <br> 
+            </form> 
+            <form name="Search" method="post" action="http://www.developer.ibm.com/search/results" enctype="multipart/form-data" target="_TOP">
+             <b>Search IBM Developer Works</b> 
+             <br> 
+             <input type="hidden" name="v" value="10">
+             <input type="hidden" name="lang" value="en">
+             <input type="hidden" name="cc" value="us">
+             <input class="searchBox" size="12" type="TEXT" name="query"> <select name="searchScope"> <option selected value="faq">FAQ </option><option value="all">ibm.com </option></select> 
+             <input type="submit" name="Search" value="GO"> 
+             <input type="hidden" name="searchType" value="1">
+             <input type="hidden" name="unicode_detect" value="þÿ">
+            </form> 
+            <ul> 
+             <li><a href="http://www.research.ibm.com/">IBM Research Labs</a> </li>
+             <li><a href="http://www-306.ibm.com/software/support/lifecycle/">IBM Product Lifecycle</a> </li>
+             <li><a href="http://www.vm.ibm.com/techinfo/listserv.html/">IBM Listservers</a> </li>
+             <li><a href="http://www-128.ibm.com/developerworks/dwgizmos">IBM Developerworks Gizmos</a> </li>
+             <li><a href="http://www.ibm.com/developerworks/forums/index.html">Developerworks Forums</a> </li>
+             <li><a href="https://www14.software.ibm.com/webapp/set2/sas/f/redAlerts/home.html">Red Alerts</a> </li>
+             <li><a href="http://www-1.ibm.com/support/docview.wss?rs=1088&amp;context=SSDPL6&amp;dc=DB520&amp;uid=swg21049360&amp;loc=en_US&amp;cs=UTF-8&amp;lang=en&amp;rss=ct1088other
+">IBM How to Order</a> </li>
+             <li><a href="http://demos.dfw.ibm.com/brands/">IBM Software demos</a> </li>
+             <li><a href="http://www.youtube.com/user/ibmtv">IBM TV on Youtube</a> </li>
+             <li><a href="http://www-306.ibm.com/software/info/television/index.jsp?lang=en_us&amp;media=ALL&amp;S_CMP=newplay"><img src="IBMTV.bmp" border="0" alt="Watch IBMTV"></a> </li>
+             <li><a href="http://www14.software.ibm.com/webapp/set2/psp/srchBroker">PSP Buckets</a> </li>
+             <li><a href="http://techsupport.services.ibm.com/server/nav/zSeries/putdoc/putdoc.html">IBM PUTDOC Utility</a> </li>
+             <li><a href="http://www-03.ibm.com/ibm/history/exhibits/index.html">IBM Museum</a> </li>
+             <li><a href="http://www-03.ibm.com/servers/eserver/support/zseries/progportal/>IBM System Programmer Portal</a>
+<LI><a href=" http: publib.boulder.ibm.com infocenter dzichelp v2r2 index.jsp">IBM Information Center Search </a> </li>
+             <li><a href="http://www-128.ibm.com/developerworks/blogs/dw_blog.jspa?blog=551">DW Blogs </a> </li>
+             <li><a href="http://www-130.ibm.com/developerworks/db2/">DB2 Complete Support/Links Site</a> </li>
+             <li><a href="http://www-1.ibm.com/servers/s390/os390/bkserv/">Search Software Manuals</a> </li>
+             <li><a href="http://www-1.ibm.com/servers/s390/os390/bkserv/hw.html">Search Hardware Manuals</a> </li>
+             <li><a href="http://www-03.ibm.com/support/techdocs/atsmastr.nsf/Web/TechDocs">Search IBM Technical DOCS Tips</a> </li>
+             <li><a href="http://publib-b.boulder.ibm.com/Redbooks.nsf/RedbookAbstracts/gg244001.html?Open">Redbook DB2 Plans and Packages </a> </li>
+             <li><a href="http://responsivesystems.com/">Performance Papers/ Downloads </a> </li>
+             <li><a href="http://www.ibm.com/support/us/">Search Problem Database</a> </li>
+             <li><a target="_blank" href="http://www-1.ibm.com/servers/s390/os390/bkserv/lookat/lookat.html"><img src="lookat.gif" xwidth="150" xheight="80" border="1"> </a> </li>
+             <li><a href="http://www-1.ibm.com/servers/eserver/zseries/lspr/">IBM Processor LSPR Ratios</a> </li>
+             <li><a href="http://www-1.ibm.com/servers/eserver/zseries/srm/">IBM Processor SRM Costants</a> </li>
+             <li><a href="http://search390.techtarget.com/general/0,295582,sid10_gci1068509,00.html?track=NL-170&amp;ad=508537
+">IBM Pricing Policy</a> </li>
+             <li><a href="http://www.ibm.com/products/finder/us/finders?pg=ddfinder">IBM Downloads/Tools</a> </li>
+             <li><a href="http://www.computermeasurement.com/index.asp">Mainframe Statiistics/Processors</a> </li>
+             <li><a href="https://rl11.gpl.ihost.com/servers/resourcelink/svc00100.nsf/vNav/R_SP_PL?OpenDocument&amp;eRNL=R_SP_PL">IBM Planning Tools Maintenance etc.</a> </li>
+             <li><a href="http://techsupport.services.ibm.com/guides/handbook.html">IBM Software Support Guide</a> </li>
+             <li><a href="http://www-1.ibm.com/servers/corner/">IBM e-Business Presentations/White Papers</a> </li>
+             <li><a href="http://www-1.ibm.com/servers/corner/omvlrlfa.pdf
+">LANRES/ADSM/LFS Storage (PDF)</a> </li>
+             <li><a href="http://www.software.ibm.com/downloads">IBM Downloads</a> </li>
+             <li><a href="http://www.beagle-ears.com/lars/engineer/comphist/">IBM 360/370/390 History</a> </li>
+             <li><a href="http://www-1.ibm.com/support/search.wss?rs=538&amp;q=ssg1*&amp;tc=SWJ30&amp;dc=DB520+D800+D900+DA900+DA800+DA460+DB300+DB540+DB400&amp;dtm">IBM DFSMS/VSAM knowledge base</a> </li>
+             <li><a href="http://www-1.ibm.com/servers/eserver/support/zseries/">Z/Series Hardware IBM Support</a> </li>
+             <li><a href="http://www1.ibmlink.ibm.com/cgi-bin/master?xh=logon&amp;nls=USen&amp;xu=guest&amp;XXX=+">IBM Announcements/Press Releases</a> </li>
+             <li><a href="http://techsupport.services.ibm.com/server/390.elecptforder/">Order a PTF</a> </li>
+             <li><a href="http://bama.ua.edu/archives/ibm-main.html">Search IBM-MAIN Mailing List</a> </li>
+             <li><a href="http://support.cai.com">CA Support</a> </li>
+             <li><a href="http://www-106.ibm.com/developerworks/training/">Tutorials/Training Linux JAVA XML s/390..</a> </li>
+             <li><a href="http://www.developer.ibm.com/devcon/mag.htm">IBM Developer Toolbox Magazine</a> <br> &nbsp; </li>
+             <li><a href="http://www-306.ibm.com/services/learning/">IBM Online Courses</a> </li>
+             <li><a href="http://www-3.ibm.com/services/learning/spotlight/dl/">e-Learning Courses</a> </li>
+             <li><a href="http://www-306.ibm.com/software/data/education/">Information Managemnt Training</a> </li>
+             <li><a href="http://www-306.ibm.com/software/data/education/bookstore/">Information Managemnt Books</a> </li>
+             <li><a href="http://members.aol.com/cronid">Data Processing FAQs DB2 COBOL CICS</a> </li>
+             <li><a href="http://www.mainframeforum.com">Mainframe Forum</a> </li>
+             <li><a href="http://publib-b.boulder.ibm.com/Redbooks.nsf/RedpieceAbstracts/sg246887.html?Open">IBM Application Develoopment Tools</a> </li>
+             <li><a href="http://knowledgestorm.techtarget.com/search390/search/browse/directory/directory.jsp">Search390 Product/Vendor directory</a> </li>
+            </ul> <b><u>DB2</u></b><br> <br> 
+            <ul> 
+             <li><a href="http://www-306.ibm.com/software/data/db2/zos/downloads/osc.html">SQL Optimization Tool (OSC) For DB2</a> </li>
+             <li><a href="http://contineo.sourceforge.net/">Contineo DMS with DB2</a> </li>
+             <li><a href="http://rexxsql.sourceforge.net/">Windows Regina Rexx for DB2</a> </li>
+             <li><a href="http://www.ibm.com/developerworks/db2/library/techarticle/dm-0508fosdick1/">Regina Rexx &amp; rexxSQL Examples</a> </li>
+             <li><a href="http://www.williefavero.com/DB2V8_catalog_Poster_2006April12.pdf">DB2 Catalog tables poster</a> </li>
+             <li><a href="http://www-306.ibm.com/software/data/db2/zos/roadmap.html">DB2 Information Roadmap</a> </li>
+             <li><a href="http://www.db2now.com/">DB2 Now Interesting Links</a> <a target="_self" href="http://www.dbta.com"><img src="dbta.gif" xwidth="166" xheight="65" border="0"> </a> </li>
+             <li><a href="http://www.db2portal.com">DB2 Portal - Craig Mullins</a> </li>
+             <li><a href="http://www.theamericanprogrammer.com/programming/code.shtml">DB2 Scripts. Rexx QMF SQL</a> </li>
+             <li><a href="http://www.cp.be/gse/">DB2 Various Presentations</a> </li>
+             <li><a href="http://blogs.ittoolbox.com/database/db2zos/">DB2 Tech. Conference Blogs</a> </li>
+             <li><a href="http://www-128.ibm.com/developerworks/db2/library/techarticle/dm-0508fosdick1/?ca=dgr-lnxw07Rexx4DB2">DB2 Rexx coding.</a> </li>
+             <li><a href="http://search390.techtarget.com/featuredTopic/0,290042,sid10_gci1016277,00.html?track=NL-168&amp;ad=495023">DB2 Performance Tuning.</a> </li>
+             <li><a href="http://www.dbazine.com/db2">DB2 Articles V8 etc.</a> </li>
+             <li><a href="http://www-128.ibm.com/developerworks/db2/library/samples/db2/0205udfs/">DB2 User Defined Functions</a> </li>
+             <li><a href="http://www.mainframeweek.com/journals/articles/0059/Sample+user-defined+functions,+part+2">DB2 UDFs</a> </li>
+             <li><a href="http://www.mssqlcity.com/Articles/UDF/StrUDF.htm#part_2_6">DB2 UDFs</a> </li>
+             <li><a href="http://www.canadiancontent.net/en/jd/go?Url=http://www.exspans.com">Z/os Freeware.Automation etc.</a> </li>
+             <li><a href="http://www.db2mag.com/db_area/archives/1998/q1/98spDba.shtml">DB2 Tuning your CICS RCT</a> </li>
+             <li><a href="http://search390.techtarget.com/general/0,295582,sid10_gci1094418,00.html?track=NL-173&amp;ad=522128">DB2 Crash Course</a> </li>
+             <li><a href="http://www-306.ibm.com/software/data/db2/zos/exHome.html">DB2 Examples</a> </li>
+             <li><a href="http://www.cardett.co.nz">DB2 Free Query Tools</a> </li>
+             <li><a href="http://www.quest-pipelines.com/pipelines/db2/index.asp">Freeware tips</a> </li>
+             <li><a href="http://www-106.ibm.com/developerworks/db2">New to DB2</a> </li>
+             <li><a href="http://www-106.ibm.com/developerworks/forums/db2_forums.jsp">DB2 Forums</a> </li>
+             <li><a href="http://publib.boulder.ibm.com/infocenter/dzichelp/index.jsp">DB2 Information Center</a> </li>
+             <li><a href="http://www.gseukdb2.org.uk/downloads/0306multiplat.zip">Comparison OS/390 DB2-Other Platforms</a> </li>
+             <li><a href="http://www.gseukdb2.org.uk/techinfo.htm">DB2 Documents</a> </li>
+             <li><a href="http://www-4.ibm.com/software/data/db2/udb/">DB2 Main</a><br> </li>
+             <li><a href="http://www-4.ibm.com/cgi-bin/db2www/data/db2/udb/winos2unix/support/index.d2w/report">DB2 Support</a> </li>
+             <li><a href="http://www-3.ibm.com/software/data/highlights/">DB2 Questions answered</a> </li>
+             <li><a href="http://www7b.boulder.ibm.com/dmdd/?open&amp;l=swalert,nl=db2dd">DB2 Developer Domain</a> </li>
+             <li><a href="http://www-1.ibm.com/certify/index.shtml">DB2 Certification</a> </li>
+             <li><a href="http://certify.torolab.ibm.com/">DB2 Certification Tests</a> </li>
+             <li><a href="http://www.tek-tips.com/gthreadminder.cfm/lev2/4/lev3/27/pid/178/auid/11543">IBM: DB2 Forum</a> </li>
+             <li><a href="http://publib-b.boulder.ibm.com/Redbooks.nsf/RedbookAbstracts/sg245759.html">DB2 Management Tools Installation</a><br> </li>
+             <li><a href="http://www.ims.state.ne.us/dba/">DB2 Standards - Nebraska</a> </li>
+             <li><a href="http://www.hcfa.gov/contracts/database/">DB2 Standards/Docs - HCFA</a> </li>
+             <li><a href="http://www.cms.hhs.gov/DBAdmin/">DB2 Standards Guidelines - CMS</a> </li>
+             <li><a href="http://www.tuplesystems.com/toc.htm ">DB2 Standards/Procedures - Tupplesystems</a> </li>
+             <li><a href="http://mysite.verizon.net/Graeme_Birchall/id1.html">DB2 UDB Cookbooks</a> </li>
+             <li><a href="http://www-4.ibm.com/software/data/db2/skills/">DB2 Skills/Courses</a> </li>
+             <li><a href="http://www14.software.ibm.com/webapp/download/search.jsp?go=y&amp;rs=db2fastpath">DB2 UDB Programming Course (Free)</a><br> </li>
+             <li><a href="http://www-128.ibm.com/developerworks/views/db2/library.jsp/">DB2 Technical Library</a> </li>
+             <li><a href="http://www.db2usa.com/">DB2 Links Searchable</a> </li>
+             <li><a href="http://webdocs.caspur.it/ibm/web/udb-6.1/index.htm">DB2 Documentation/Links</a> </li>
+             <li><a href="ftp://ftp.software.ibm.com/ps/products/db2/tools">DB2 Tools</a> </li>
+             <li><a href="http://www-4.ibm.com/software/data/db2/os390/downloads.html">DB2 Downloads</a> </li>
+             <li><a href="http://www.intelligententerprise.com/000929/feat1.shtml">DB2 vs ORACLE</a> </li>
+             <li><a href="http://www.informationweek.com/815/database.htm">All Database Comparisons</a> </li>
+             <li><a href="http://www-1.ibm.com/servers/eserver/zseries/zos/racf/racfdb2.html">DB2 Auth to RACF Utility</a> <br> </li>
+             <li><a href="http://www7b.boulder.ibm.com/dmdd/library/tutorials/db2cert/db2cert_tut.html">DB2 Tutorials</a> </li>
+             <li><a href="http://www.developer.ibm.com/tech/sampdb2.html">DB2 Sample Code</a> </li>
+             <li><a href="http://www.redbooks.ibm.com/redbooks/SG245261.html">DB2 Compression Redbook</a> </li>
+             <li><a href="http://www.bmc.com/offers/demos/database_smartdba_cockpit/">Smart DBA Cockpit</a> </li>
+             <li><a href="http://www.leipelt.de/">Free Table Editor for tables/LOBS</a><br> </li>
+             <li><a href="http://www.ispirer.com/products">Utility LOAD/UNLOAD between databases</a><br> </li>
+             <li><a href="http://publib-b.boulder.ibm.com/Redbooks.nsf/RedbookAbstracts/sg246571.html?Open">Redbook Large OBJECTS with DB2</a><br> </li>
+             <li><a href="http://www.mainframehelp.com/db2%20tuning.htm/">DB2 Application Tuning</a><br> </li>
+             <li><a href="http://www.idug.org/db2/career_center.cfm">DB2 Career Resources</a><br> </li>
+             <li><a href="http://www.idugdb2-l.org/">DB2 User's Group</a><br> </li>
+            </ul> </li>
+          </ul> <b><u>SAN Storage</u></b><br> <br> 
+          <ul> 
+           <li><a href="http://www-1.ibm.com/servers/storage/disk/ess/pdf/essvalue.pdf/">ESS Summary of features</a> </li>
+           <li><a href="http://itpapers.zdnet.com/search.aspx?scid=174&amp;sortby=dated&amp;x=40/">SAN Articles</a> </li>
+           <li><a href="http://publib-b.boulder.ibm.com/Redbooks.nsf/Portals/StorageTop10/">Top ten SAN links</a> </li>
+           <li><a href="javascript:ol('http://www-1.ibm.com/servers/storage/support/index.html');/">SAN fixes/Problem Database</a> </li>
+           <li><a href="http://www-1.ibm.com/support/docview.wss?rs=580&amp;context=STC6UKY&amp;uid=ssg1S7001000&amp;loc=en_US&amp;cs=utf-8&amp;lang=en/">SAN moving data across disks</a> </li>
+           <li><a href="http://www-900.ibm.com/cn/support/library/storage/download/DFSMS%20Software%20Support%20Reference.pdf
+/">ESS Miscellaneous Issues</a> </li>
+           <li><a href="http://www.ts.ilstu.edu/">Net Data Live Examples</a>&nbsp; </li>
+          </ul> <!----><b><u>HOTLINKS</u></b><br> <br> 
+          <ul> 
+           <li><a href="http://ronmas.virtualave.net/hotlinks.htm">IBM Testing/Service Update Facility/Vendor Compatibility</a></li> 
+          </ul> <!----><b><u>Migration Tools/Disaster Recovery</u></b> <br> <br> 
+          <ul> 
+           <li><img src="img_zos.gif" xwidth="150" height="75" border="0"> </li>
+           <li><a href="http://www-1.ibm.com/support/docview.wss?fdoc=aimcics&amp;rs=1083&amp;context=SSGMGV&amp;uid=swg21207399">CICS/zos Migration effects</a></li> 
+           <li><a href="http://www.redbooks.ibm.com/abstracts/sg246672.html">Redbook SQL Server to DB2</a></li> 
+           <li><a href="http://www-03.ibm.com/servers/eserver/zseries/zos/le/conference/share.html">LE Migration/Condition Handlers</a></li> 
+           <li><a href="http://ew.share.org/proceedingmod/abstract.cfm?abstract_id=5804">LE Condition Handlers</a></li> 
+           <li><a href="http://searchdatacenter.techtarget.com/featuredTopic/0,290042,sid80_gci1059440,00.html">Rothstein-Comprehensive Resources</a></li> 
+           <li><a href="http://www-306.ibm.com/software/data/integration/iicf/">Information Integrator for DATACOM/DB2</a></li> 
+           <li><a href="http://www.rothstein.com/">Rothstein-Comprehensive Resources</a></li> 
+           <li><a href="http://search390.com/r/0,27104,00.htm?track=NL-251&amp;ad=479493&amp;SEGUS ">CA-7 to TWS for z/OS</a></li> 
+           <li><a href="http://www.redbooks.ibm.com/Redbooks.nsf/RedbookAbstracts/gg244021.html?Open">Migrate from CA-librarian &amp; endevor to ISPF/PDF </a></li> 
+           <li><a href="http://gsf-soft.com/Products">Migration Tools from Gilbert Saint-Flour </a></li> 
+           <li><a target="_blank" href="http://www-1.ibm.com/servers/eserver/zseries/zos/installation/">GA22-7499-02 Consolidated migration book</a> </li>
+           <li><a href="http://www-306.ibm.com/software/data/db2/migration/ ">IBM - Migrate from Oracle/Sybase/SQL Server</a></li> 
+           <li><a href="http://www-3.ibm.com/software/ts/cics/library/whitepapers/MIG13TO22.pdf">Migrate CICS/TS 1.3 to 2.2</a> </li>
+           <li><a href="http://www7b.software.ibm.com/dmdd/library/techarticle/0209jarzebowicz/0209jarzebowicz.html">IBM Migration Toolkit - SQL Server etc</a> </li>
+           <li><a href="http://publibfp.boulder.ibm.com/cgi-bin/bookmgr/BOOKS/e0z2m101/CCONTENTS
+">Migrate from OS/390 to z/OS</a> </li>
+           <li><a href="http://www14.software.ibm.com/webapp/download/preconfig.jsp?id=2003-01-07+14%3A42%3A09.298487R&amp;cat=os&amp;fam=&amp;s=c&amp;S_TACT=&amp;S_CMP=
+">z/OS Bimodal 32/64 bit Migration</a> </li>
+           <li><a href="http://www.mainframehelp.com/migrating_zos_14.htm">Article OS/390 to z/OS</a></li> 
+           <li><a href="http://www.mainframehelp.com/reasons_to_migrate_to_z_os_now.htm">Odzen reasons to migrate to z/OS</a></li> 
+           <li><a href="http://www.mainframehelp.com/migrating_zos_14.htm">Article OS/390 to z/OS</a></li> 
+           <li><a href="http://www.mainframehelp.com/cics%20upgrade.htm">Migrate to CICS TS 2.2</a></li> 
+           <li><a href="http://www.mainframehelp.com/structure_your_system_for_serverpac.htm">Structure you system for ServerPac</a></li> 
+           <li><a href="http://www-1.ibm.com/support/techdocs/atsmastr.nsf/WebIndex/PRS268">Softcat Tool for capacity</a></li> 
+           <li><a href="http://search390.techtarget.com/tip/1,289483,sid10_gci841753,00.html">z/os Migration links</a> </li>
+           <li><a href="http://www.planetmvs.com/freeware/opackr6b.txt">Single pack system - os/390 2.6 </a></li> 
+           <li><a href="http://home.flash.net/~mzelden/mvsutil.html">Single pack system - z/os 1.3</a></li> 
+           <li><a href="http://os390-mvs.hypermart.net/xephon/minisys.htm">Single pack system - os/390 2.10</a></li> 
+           <li><a href="http://www.mainframeweek.com/journals/articles/0015/160">Convert VSAM to DB2</a></li> 
+           <li><a href="http://apps.adcom.uci.edu/EnterpriseArch/Legacy/Lightyear_VSAMtoDB2_101002.pdf">Convert VSAM to DB2 Options (PDF)</a></li> 
+           <li><a href="http://search390.techtarget.com/ateAnswers/0,289620,sid10_cid475121_tax292523,00.html?track=NL-173
+">Search/390 questions on Z/os migration</a></li> 
+           <li><a href="http://www14.software.ibm.com/webapp/download/search.jsp?go=y&amp;rs=dm-mgtki">Migrate from Informix to DB2</a></li> 
+           <li><a href="http://www.versora.com/">Software - Windows to Linux</a></li> 
+          </ul> <b><u>WORKLOAD MANAGER/PERFORMANCE</u></b> <br> <br> 
+          <ul> 
+           <li><a href="http://ew.share.org/proceedingmod/project.cfm?Project_ID=3269">SHARE Capacity &amp; Performance DOCS</a> </li>
+           <li><a href="http://www.zjournal.com/index.cfm?section=article&amp;aid=450/">Test your WLM </a> </li>
+           <li><a href="http://www-03.ibm.com/servers/eserver/zseries/zos/wlm/tools/wlmque.html">WLM Enqueue Viewer Tool</a> </li>
+           <li><a href="http://www-03.ibm.com/servers/eserver/zseries/zos/wlm/tools/ ">IBM - WLM Formatter Windows</a> </li>
+           <li><a href="http://www.sherkow.com/papers/index.html ">Workload LIcense Charges/Performance Presentations</a> </li>
+           <li><a href="http://www.cmg.org/">CMD Performance Papers DB2 z/OS</a> </li>
+           <li><a href="http://www.ibm.com/s390/wlm">IBM - FAQs, Tools, Samples, Guidelines</a> </li>
+           <li><a href="http://www.redbooks.ibm.com/redbooks/pdfs/sg246542.pdf
+">System Tuning for E-business</a> </li>
+           <li><a href="http://www.watsonwalker.com/GTsamples.pdf">Cheryl Watson's GoalTender &amp; tips</a> </li>
+           <li><a href="http://www.naspa.com/PDF/96/T9603008.pdf ">Cheryl Watson's Analyze Goal Mode Reports</a> </li>
+           <li><a href="http://www.ibm.com/s390/wlm">IBM - FAQs, Tools, Samples, Guidelines</a> </li>
+           <li><a href="http://members.dsl.telocity.com/~bdavis/h4013-3.htm">Brian Davis - Cookbook, Tips</a> </li>
+           <li><a href="http://philippe-richard.chez.tiscali.fr/wlm/">Philippe Richards - Tips, User Experiences, WLM JES2</a> </li>
+           <li><a href="http://www.chopf.com/geekland.shtml">WLM Implementaion, User Experiences,</a> </li>
+           <li><a href="http://www.watsonwalker.com/goalmode.html">Cheryl Watson's GoalMode</a> </li>
+           <li><a href="http://www-1.ibm.com/servers/eserver/zseries/zos/unix/bpxa1ty2.html">ICS2WLM Tool - Convert ICS to WLM Defs </a> </li>
+           <li><a href="http://www.epstrategies.com/html/nf/epsgmltohtml.html">WLM - Convet GML to HTML Online</a> </li>
+           <li><a href="http://www.epstrategies.com/html/nf/Articles.html">Performance Management</a> </li>
+           <li><a href="http://www.vm.ibm.com/download/packages/b2h.zip">WLM - Convert GML to HTML TSO</a> </li>
+           <li><a href="http://www-1.ibm.com/servers/eserver/zseries/zos/wlm/documents/measure/measure.html">IBM - Interpreting WLM measurements</a> </li>
+           <li><a href="http://www-1.ibm.com/support/techdocs/atsmastr.nsf/WebIndex/TD100686">IBM - Produce RMF WLM reports</a> </li>
+           <li><a href="http://www.multi-platforms.com/OS390Samson.htm">Steve Samson's Performance Management</a> </li>
+           <li><a href="http://www.cpexpert.com/cics_wlm.htm">CICS Performance in Goal Mode</a> </li>
+           <li><a href="http://www.cpexpert.com/rmf_wlm.htm">Analyze RMF Service Class Data</a><br> </li>
+          </ul> <b><u>S/390 POWERED SITES</u></b> <br> <br> 
+          <ul> 
+           <li><a href="http://datacenter.cit.nih.gov/">NIH Computer Center on the Web</a> </li>
+           <li><a href="http://pucc.princeton.edu/">Princeton University</a> </li>
+           <li><a href="http://www.infotech.siu.edu/">Southern Illinois University</a> </li>
+           <li><a href="http://charlotte.utcc.utk.edu/">University of Tennessee</a> <br> &nbsp; </li>
+          </ul> <b><u>OTHER LINKS</u></b> <br> <br> 
+          <ul> 
+           <li><a href="http://mainframesindia.com/">Mainframesindia - Forum, support, Placement, Downloads</a> </li>
+           <li><a href="http://www.thefreecountry.com/compilers/cobol.shtml">Free COBOL Compilers</a> </li>
+           <li><a href="http://www.cobug.com/">COBOL portal &amp; User Group</a> </li>
+           <li><a href="http://www.csis.ul.ie/COBOL/">COBOL examples Tutorials</a> </li>
+           <li><a href="http://www.infogoal.com/cbd/cbdhome.htm">A COBOL page</a> </li>
+           <li><a href="http://www.infogoal.com/cbd/">The COBOL center</a> </li>
+           <li><a href="http://home.swbell.net/mck9/cobol/cobol.html">Another COBOL page</a> </li>
+           <li><a href="http://www.wynsoft.co.uk/links.htm">Winsoft Links</a> </li>
+           <li><a href="http://www.geocities.com/~oberoi/mainfrme.html">Useful Links&nbsp;</a> </li>
+           <li><a href="http://www.nauticom.net/www/softwise/mfdisc.htm">Discussion Groups&nbsp;</a> </li>
+           <li><a href="http://www.watsonwalker.com/doform1.cgi">390</a> </li>
+           <li><a href="http://www.naspa.net">NaSPA Assoc.</a> </li>
+           <li><a href="http://mvshelp.com/">mvshelp</a> </li>
+           <li><a href="http://www.ping.be/~ping1475/">Eric Loriaux's System-390</a> </li>
+           <li><a href="http://shareew.prod.web.sba.com/proceedingmod/index.cfm">SHARE.ORG Proceedings!</a> </li>
+           <li><a href="http://www.sluug.org/~necics/puseful.htm">puseful.htm at www</a> </li>
+           <li><a href="http://www.xephon.com/">Xephon </a> </li>
+           <li><a href="http://nersp.nerdc.ufl.edu/~sfware/share87/toc.html">CICS-ESA Migration - User Experience</a> </li>
+           <li><a href="http://docweb.nerdc.ufl.edu/docweb.nsf/011f90bc25d6a3ed852566a300676122/b58e6d23a7768977852566a300676981?OpenDocument">Documents TPX/TSO/MAIL</a> </li>
+           <li><a href="http://os390.web.arizona.edu/home.shtml">University of arizona Documents</a> </li>
+           <li><a href="http://www.cbttape.org/cbtdowns.htm">Download CBT Tape</a> </li>
+           <li><a href="http://cbttape.org/links.htm#OS/390 Freeware">CBT FReeware</a> </li>
+           <li><a href="http://www.lbdsoftware.com">FTP Batch/ TSO E-Mail checker/LPR Dialog/XMITIP</a> 
+            <ul> 
+             <li><a href="http://panthernet.pbcc.cc.fl.us/xmitip.html">XMITIP Examples</a></li> 
+            </ul> </li>
+           <li><a href="http://www.abel.net.uk/~eldervas/index.htm">MVS Systems Programming Home Page</a> </li>
+           <li><a href="http://www.mainframes.com/">Welcome To MainFrames.Com</a> </li>
+           <li><a href="http://www.pobox.com/~gsf/tools/index.html">GSF MVS Tools &amp; Docs</a> </li>
+           <li><a href="http://os390-mvs.hypermart.net">Thierry FALISSARD's home page </a> </li>
+           <li><a href="http://www.mvshelp.com/wwwboard.htm">MVSHELP Message Board</a> </li>
+           <li><a href="http://members.tripod.com/~billlalonde/slinks.htm">MVS System Programmer Links</a> </li>
+           <li><a href="http://home.clara.net/andywrobertson/mvsbatchart.html">XMITCICS/Generate Web charts</a> </li>
+           <li><a href="http://home.pacbell.net/mcleary/freeware.html">Various Utilities</a> 
+            <ul> 
+             <li><a href="http://home.pacbell.net/mcleary/daf290.zip">SMF records Reporting utility</a> </li>
+             <li><a href="http://home.pacbell.net/mcleary/grs260.zip">ISPF GRS Display</a> </li>
+             <li><a href="http://home.pacbell.net/mcleary/lpalnk.zip">ISPF LPA/LNKLST Analyzer</a><br> </li>
+            </ul> </li>
+          </ul> <b><u>SOFTWARE/UTILITIES</u></b> <br> <br> 
+          <ul> 
+           <li><a href="ftp://ftp.software.ibm.com/storage/dfsort/mvs/">DFSMSRMM AND DFSMS ICETOOL utilities</a> </li>
+           <li><a href="http://www.neonesoft.com/portals/healthcheck/index.aspx?home">DB2 Free Catalog Statistics Utility</a> </li>
+           <li><a href="http://www.robinandmariette.com/Mvs/Rexx/RexxUtils.asp">REXX Programs FTPPDS EACHMEM STARTUP etc.</a> </li>
+           <li><a href="http://www-1.ibm.com/support/docview.wss?rs=1083&amp;context=SSGMGV&amp;context=SSZPSF&amp;context=SSNQZF&amp;dc=D400&amp;uid=swg24010925&amp;loc=en_US&amp;cs=utf-8&amp;lang=en
+">IBM Load Module Analyzer</a> </li>
+           <li><a href="http://dwodp2.distributel.net/odp-en/index.php?c=/Computers/Software/Operating_Systems/Mainframe/IBM/z-OS/ISPF">Excellent ISPF links</a> </li>
+           <li><a href="http://www.sscmainframe.com/freeware.htm">PDS Programs Automation.</a> </li>
+           <li><a href="http://www.tsotimes.com/archives.html">TSOTIMES REXX/TSO programs.</a> </li>
+           <li><a href="http://www.geocities.com/SiliconValley/Ridge/7322/hildownl.htm">MVS/TSO/CICS Utilities/Routines</a> </li>
+           <li><a href="http://www.ixiacom.com/products/performance_applications/pa_display.php?skey=pa_q_check">Qcheck - Ping &amp; Traceroute utility.</a> </li>
+           <li><a href="http://www.dcmsi.com/tboxa2.htm#Batch">TBOX - Free z/OS Dialogs Utils.</a> </li>
+           <li><a href="http://www.radmin.com/radmin/new/rcs/">Free Windows IP Tools</a> </li>
+           <li><a href="http://www.revealnet.com/pipelines/db2/syscat/syscat.htm">DB2 Freeware to Display the System Catalog</a> </li>
+           <li><a href="http://www.journyx.com/products/timesheet/">Journyx Timesheet Project software</a> </li>
+           <li><a href="http://www.bsp-gmbh.com/turnkey/cookbook/pdf/rpf142.pdf">RPF - Librarian Panvalet Editor</a> </li>
+           <li><a href="http://www.bsp-gmbh.com/hercules/turnkey_utils.html">Utilities automation, Tapelabel, Diskmap</a> </li>
+           <li><a href="http://www.geocities.com/derusudibyo/Deru_Freeware">Jes2 Spool Distribution</a> </li>
+           <li><a href="http://www.pmail.com/">Pegasus Mail E-Mail client</a> </li>
+           <li><a href="http://www.cybelesoft.com/en/cybmain.htm">CYBELE - Free 3270 TELNET Client</a> </li>
+           <li><a href="http://www.tachyonsoft.com/legacy.html">Assembler for Win/Linux</a> </li>
+           <li><a href="http://asp2php.naken.cc/">asp2PHP</a> </li>
+           <li><a href="http://www.fileviewer.com/">EBCDIC File Viewer</a> </li>
+           <li><a href="http://www.tdslink.com/products.html">Free Ip Tracing Software</a> </li>
+           <li><a href="http://www.exspans.com/Automan.html">Automated console Operations</a> </li>
+           <li><a href="http://www.exspans.com/Tapeman.html">Automated tape Operations</a> </li>
+           <li><a href="http://www.world-of-os390.de/">Large number of Utilities</a> </li>
+           <li><a href="http://www.kmsitltd.co.uk/page8.html">Tehcnical Support various</a> </li>
+           <li><a href="http://www.roygardiner.com/dfr01.htm">ISPF Dataset Display Facility(DDF)</a> </li>
+           <li><a href="http://www.diacomsoftware.com
+">JOBVIEW - Submit/View Jobs from the PC</a> </li>
+           <li><a href="http://www.naspa.com/PDF/97/T9701015.pdf
+">naspa- Compression Utilities(pdf)</a> </li>
+           <li><a href="http://www.planetmvs.com/ibm-main/faqt.html">A list of compression utilities/methods</a> </li>
+           <li><a href="http://www.planetmvs.com/index.html">Dave's Freeware Utilities</a> </li>
+           <li><a href="http://mmiller.myweb.uga.edu/pdf/home.html">REXX Txt2PDF Convert files to PDF</a> </li>
+           <li><a href="http://mmiller.myweb.uga.edu/mailintx/">E-mail files/PDFs Job codes etc.</a> </li>
+           <li><a href="http://www.arches.uga.edu/~mmiller/mailintx">REXX to send mail in batch JES</a> </li>
+           <li><a href="http://www.nichols.biz/os390.html">REXX SMF/TELNET batch/OPENSSH</a> </li>
+           <li><a href="http://www.ngthomas.co.uk/s390.htm">z/OS 1.4 Telnet selection exit/ISSSIGn signon exit,OAT,DHCP</a> </li>
+           <li><a href="http://www.simtel.net/pub/pd/16476.html">Free Document Imaging Software</a> </li>
+           <li><a href="http://www.javaside.com/asp/menu_us.asp?page=tchart.shtml">Chart Applet</a> </li>
+           <li><a href="http://www.ve.com">Free Chart Applets</a> </li>
+           <li><a href="http://www.vm.ibm.com/download/packages/h2s.zip">HTML to Script/VS</a> </li>
+           <li><a href="http://www.vm.ibm.com/download/packages/b2h.zip">Bookmanager to HTML</a> </li>
+           <li><a href="http://manatee.nss.udel.edu/">Netprint via SAPI</a> </li>
+           <li><a href="http://mstack.cs.niu.edu/pub/MVSBatch">PC Batch submission via TCP/IP</a> </li>
+           <li><a href="http://www.simtel.net">Searchable Freeware</a> </li>
+           <li><a href=" http://www.ngthomas.co.uk/wnbrowse.htm">View ASCII EBCDIC in Windows</a> </li>
+           <li><a href="http://www-1.ibm.com/servers/eserver/zseries/zos/unix/bpxa1sam.html">Samba SMB Server - Replace NFS</a> </li>
+           <li><a href="http://theoryx5.uwinnipeg.ca/">University of WInnipeg</a> </li>
+          </ul> <li> 
+           <ul> 
+            <li><i><a href="http://theoryx5.uwinnipeg.ca/">GNU software/Doc. Perl etc</a></i> </li>
+            <li><i><a href="http://theoryx5.uwinnipeg.ca/UNIXhelp/index.html">UNIX Help</a></i> </li>
+            <li><i><a href="http://theoryx5.uwinnipeg.ca/LDP/index.html">Linux Documentation</a></i> </li>
+            <li> </li>
+            <li><a href="http://www.clark.net/pub/dickey/xterm/xterm.html">X-Windows for OS/390</a> </li>
+            <li><a href="http://www.renex.com/products/bzFtp/">BlueZone FTP client for OS/390 </a> </li>
+            <li><a href="http://www.seagullsw.com/products/free_ftp.html">Seagull FTP client for OS/390 </a> </li>
+            <li><a href="http://www.xbridgesystems.com/">Access Mainframe VSAM data from the PC</a> </li>
+            <li><a href="http://users1.50megs.com/bookex/">BookManager Explorer </a> </li>
+            <li><a href="http://home.attbi.com/~bookex/index.html
+/">BookManager PC Explorer </a> </li>
+            <li><a href="http://www.nigelpentland.co.uk/">RACF Report Utilities on the PC</a> </li>
+            <li><a href="http://www.geocities.com/steveneeland/Sort_Reports.html">RACF Reports in DFSORT; REXX</a> </li>
+            <li><a href="http://www.auditnet.org/docs/racfaud.txt">RACF audit incl. DSMON etc</a> </li>
+            <li><a href="http://uncatigger.com/pro/presentations.htm">RACF auditing </a> </li>
+            <li><a href="http://www.indyisaca.org/links/links.html#Audit%20Programs">Security Audit Lists &amp; RACF</a> </li>
+            <li><a href="http://all.net/books/audit/index.html">Audit Checklists RACF/MVS etc.</a> </li>
+            <li><a href="http://www-1.ibm.com/servers/eserver/zseries/zos/racf/goodies.html">RACF Utilities from IBM</a> </li>
+            <li><a href="http://www.data21.com/products/">JES2Mail/FTP/3270 Bridge/PKZIP MVS Free</a> </li>
+            <li><font color="#006666">Three Must Have Utilities for OS/390</font> 
+             <ul> 
+              <li><a href="http://www.sillysot.com/mvs/tasid.htm">TASID - Download</a> </li>
+              <li><a href="http://www.mindspring.com/~somebody/tasidsmp.htm">TASID - Screen samples</a> </li>
+              <li><a href="http://www.secltd.co.uk/">MXI REXX Utiities </a> </li>
+              <li><a href="http://www.cbttape.org/cbtdowns.htm">ShowMVS on cbttape file 492</a> </li>
+             </ul> </li>
+            <li><a href="http://www.s390.ibm.com/products/rmf/rmfhtmls/pmweb/pmweb.htm">RMF Performance Monitor </a> </li>
+            <li><a href="http://www.servertec.com/products/iws/iws.html">Servlett Web Server</a> </li>
+            <li><a href="http://www.mindspring.com/~somebody/">ISPF TSO routines and macros</a> </li>
+            <li><a href="http://home.clara.net/andywrobertson/mvsindex.html">XMITEMAIL, XMITCICS</a> <a href="http://www.info-zip.org/pub/infozip/">ZIP for OS/390/HFS</a> </li>
+            <li><a href="http://www.halcyonsoft.com/">Free ASP Software</a> </li>
+            <li><a href="http://www.solutionsoft.com/products.htm">Perl Builder</a> </li>
+            <li><a href="http://www.xray.mpe.mpg.de/cgi-bin/w3glimpse/perl-mvs?query=os%2F390&amp;errors=0&amp;case=on&amp;maxfiles=100&amp;maxlines=30&quot;">Perl for OS/390 FAQ's</a> </li>
+            <li><a href="http://pvhp.best.vwh.net/os390/doc/perlebcdicFAQ.html">Perl on OS/390 FAQ</a> </li>
+            <li><a href="http://locatesoftware.com/Network-Information-Tools.htm">Download Network Tools</a> </li>
+            <li><a href="http://www.freedownloadscenter.com/Network_and_Internet/FTP_Server_Tools/GuildFTPD.html">GuildFTP Free FTP Server</a> </li>
+            <li><a href="http://www.jgaa.com/warftpd.htm">WarFTPD Free FTP Server</a> </li>
+            <li><a href="http://filezilla.sourceforge.net/">Filezilla FTP Client/Server</a> </li>
+            <li><a href="http://www.dynu.com">Free Servers Clients FTP Server</a> </li>
+            <li><a href="http://www.willdata.com/">TCP/IP FTP Monitoring/Control</a> </li>
+            <li><a href="http://www.colesoft.com/utilities.html">Automation Command schedular</a> </li>
+            <li><a href="http://www.ses-soft.com/SESware/">Free Utilities from Ses-soft</a> </li>
+            <li><a href="http://www.easysw.com/htmldoc/pdf-o-matic.php">Convert HTML to PDF Online</a> </li>
+            <li><a href="http://www.sanface.com/txt2pdf.html">Convert text to PDF Good Util.</a> </li>
+            <li><a href="http://www.gohtm.com/">Convert HTML-PDF PDF-HTML Online</a> </li>
+            <li><a href="http://www.cbttape.org/cbtdowns.htm">SMF Programs CBT File 529</a> </li>
+            <li><a href="http://home.flash.net/%7Emzelden/mvsutil.html">Doug Nadel - VTOCTOT/ REXX</a> </li>
+            <li><a href="http://www.rizzuto.it/index.htm">RACF DB Info/DB2 Table sizing</a> </li>
+            <li><a href="http://www.backupcentral.com">Backupcentral /Free backup software</a> </li>
+            <li><a href="http://www.prycroft6.com.au/">Review, Spool browse, SPY, WTO Exit TSO IPL</a> </li>
+            <li><a href="http://www.mainframeweek.com/journals/articles/0021/A+utility+to+update+sequential+and+partitioned+datasets
+">REXX PDS update utility</a> </li>
+            <li><a href="http://www.itc.virginia.edu/~drs8h/articles/">VTAM signon exit, Monitors/LSR in Batch</a> </li>
+            <li><a href="" target="_blank">Simotime Utilities</a> </li>
+            <li><i><a href="http://www.simotime.com/sim4dzip.htm">COBOL VSAMm QSAM samples &amp; utilities</a></i> </li>
+            <li><i><a href="http://www.simotime.com/asc2ebc1.htm">EBCDIC -ASCII conversion chart </a></i> </li>
+            <li><i><a href="http://www.simotime.com/ftp4cmd1.htm">FTP commands</a></i> </li>
+            <li><i><a href="http://www.simotime.com/indextwo.htm">File conversion/scan/analyze source</a></i> </li>
+            <li><i><a href="http://www.simotime.com/indexasm.htm">Assembler sample Programs</a></i> </li>
+            <li> </li>
+            <li><a href="" target="_blank">Useful OS/390 Tape Utilities</a> </li>
+            <li><i><a href="http://www.best.com/~ldw/mvs
+">TAPEMAP - map of a tape</a></i> </li>
+            <li><i><a href="http://www.cbttape.org">COPYMODS - Copies of tapes CBT FILE 229</a></i> </li>
+            <li><i><a href="http://www.cbttape.org">TAPESCAN - Gives tape length etc cbt file 102</a></i> </li>
+            <li><i><a href="http://www.cbttape.org">COPYFILE - Copy &amp; reorder files cbt file 35</a></i> </li>
+            <li><i><a href="http://www.cbttape.org">AWSTAPE - Copy for HERCULES file 477</a></i> </li>
+            <li><i><a href="http://www.cbttape.org/awstape.htm">Browse AWSTAPE</a></i> </li>
+            <li> </li>
+            <li><a href="http://www.s390.ibm.com/os390/installation/cppupdte.html
+">CPPUPDTE - New IPOUPDATE</a> </li>
+            <li><a href="http://www.aboutlegacycoding.com/">Cobol Legacy Coding</a> </li>
+            <li><i><a href="http://www.aboutlegacycoding.com/Library/category.asp?CAT=Number">COBOL Numbers into English text</a></i> </li>
+            <li><i><a href="http://www.aboutlegacycoding.com/Library/category.asp?CAT=Conversion">COBOL conversion ChartoHex etc</a></i> </li>
+            <li><i><a href="http://www.aboutlegacycoding.com/Library/category.asp?CAT=Date%2DTime">COBOL date conversion</a></i> </li>
+            <li><i><a href="http://www.aboutlegacycoding.com/Library/category.asp?CAT=Miscellaneous">COBOL Convert Store clock </a></i> </li>
+            <li><i><a href="http://www.aboutlegacycoding.com/Library/category.asp?CAT=String">COBOL Parse /Vaklidate names </a></i> </li>
+            <li><i><a href="http://www.aboutlegacycoding.com/Articles/V/V50103.asp">Article z/os &amp; OS/390</a></i> </li>
+            <li><i><a href="http://www.csis.ul.ie/COBOL/">COBOL Lectures Examples</a></i> </li>
+            <li><br> <br> &nbsp; </li>
+           </ul>  </li></td> <!--End third column main table>
+
+<!--Start fourth column main table--> 
+         <td valign="top"><!--Start news table on right --> 
+          <table width="100%" border="1" bordercolor="red"> 
+           <tbody>
+            <tr> 
+             <td align="center"><b><u>IBM Education</u></b></td> 
+            </tr> 
+            <tr> 
+             <td align="center"> <a href="http://www-304.ibm.com/jct09002c/university/scholars/products/zseries/"><img src="ibmai_small.gif" alt="IBM Education Initiative"></a></td> 
+            </tr> 
+            <tr> 
+             <td align="center"> <a href="http://www-913.ibm.com/employment/us/extremeblue/">IBM Extreme Blue Internship</a></td> 
+            </tr>  
+            <tr> 
+            </tr>
+            <tr> 
+             <td> <img style="visibility:hidden;width:0px;height:0px;" border="0" width="0" height="0" src="http://c.gigcount.com/wildfire/IMP/CXNID=2000002.0NXC/bT*xJmx*PTEzOTA1NjQxMjQ3NjAmcHQ9MTM5MDU2NDE5MDM4MiZwPTYzNTAzMiZkPSZnPTEmbz1jZDM1MDgzZDUzM2Y*N2FiYjM3/MWY4NmM3ZTU3MGZlMCZvZj*w.gif"> <a href="http://www.ipligence.com/visitor_extended/22708737cf9408a9384a6e0012be2bab/month"><img src="http://www.ipligence.com/visitor-maps/m/small/1/month/22708737cf9408a9384a6e0012be2bab" alt="Visit http://www.ipligence.com" style="border:0;"></a> </td>
+            </tr> 
+            <tr> 
+             <td align="center"><b><u>MAGAZINES/BOOKS</u></b></td> 
+            </tr> 
+            <tr> 
+             <td><br> <a href="http://www.mainframe-exec.com/">DB2 Mag</a><br> <a href="http://www.db2mag.com/">DB2 Mag</a><br> <a href="http://www.zjournal.com/">IBM S/390 Articles</a><br> <a href="http://www.research.ibm.com/journal">IBM Journals</a><br> <a href="http://www7b.boulder.ibm.com/wsdd/techjournal/">Websphere Technical Journal</a><br> <a href="http://www.mvsbook.fsnet.co.uk">MVS Systems Programming</a><br> <a href="http://www.naspa.com/tsyellow.htm">Naspa Archives</a><br> <a href="http://www.iemagazine.com/">Articles/Whitepapers</a><br> <a href="http://www.computerworld.com">Computerworld</a><br> <a href="http://www.pcworld.com">PCworld</a><br> <a href="http://www.winmag.com">Windows UK</a><br> <a href="http://www.zdnet.co.uk/athome/">Zdnet</a><br> <a href="http://www.newsweek.com">Newsweek</a><br> <a href="http://www.pathfinder.com/time/">Time</a><br> <a href="http://www.drj.com/">Disaster Recovery</a><br> <a href="http://www.pcmag-mideast.co.ae/">PCMag. ME</a><br> <a href="http://www.pcquest.com/">PCQuest</a><br> <a href="http://www.datamation.com/">Datamation</a><br> <a href="http://www.byte.com/">Byte</a><br> <a href="http://www.certmag.com/">Certification</a><br> </td> 
+            </tr> 
+            <tr> 
+             <td align="center"><b><u>JOBS</u></b></td> 
+            </tr> 
+            <tr> 
+             <td><br> <a href="http://www.simplyhired.com/>Simply Hired </A><br>
+                  <A HREF=" http: www.topblogarea.com rss mainframe.htm ">Mainframe India</a><br> <a href="http://mainframejobs.zjournal.com/a/jbb/find-jobs">Mainframe Jobs z/Journal</a><br> <a href="http://www-03.ibm.com/employment/">IBM Global Employment</a><br> <a href="http://www.211ontario.ca/apt/index.htm/">Professions and trades</a><br> <a href="http://www.gpscanada.com/">GPS Canada</a><br> <a href="http://www.kaplancareers.com/">Kaplan Careers Canada</a><br> <a href="http://thestar.workopolis.com/">Workopolis</a><br> <a href="http://www.headhunter.com">Headhunter.net</a><br> <a href="http://www.hitechcareer.com">Hitechcareer (CAN)</a><br> <a href="http://www.jobsite.co.uk">Jobsite (UK)</a><br> <a href="http://www.itjobseek.co.uk">Jobsite (UK)</a><br> <a href="http://canada.careermosaic.com">Careermosaic (CAN)</a><br> <a href="http://jobs.gc.ca/home_e.htm">Gov. of Canada</a> <a href="http://www.justmainframejobs.com/">Mainframes</a> <a href="http://www.freetimejobs.com/">Part Time Work</a><br> <a href="http://www.creativeassets.com">Graphics Jobs</a><br> <a href="http://www.allfreelance.com/">Freelance Jobs</a><br> <a href="http://www.bilingualsource.com/">Bilingual Jobs</a><br> <a href="http://www.techies.com/">Tech Jobs</a><br> <a href="http://www.workpermit.com/">Work Permits</a><br> <a href="http://www.educationcanada.com/">Canada - Jobs in Education</a><br> <a href="http://www.shad.ca/usefullinks.html">Jobs/Scholarships</a><br> </td> 
+            </tr> 
+            <tr> 
+             <td align="center"><b><u>EVERYTHING CANADIAN </u></b><br> <img src="canicon.gif" alt="Canada Flag"></td> 
+            </tr> 
+            <tr> 
+             <td><br> <a href="http://www.servicecanada.gc.ca/en/home.shtml">Gov. Services for immigrants</a><br> <a href="http://www.immigrationguides.com/">Immigrationguides</a><br> <a href="http://canada.gc.ca/main_e.html">Main Canadian Portal</a><br> <a href="http://www.edu.gov.on.ca/eng/welcome.html">Canadian Gov. Training and Education</a><br> <a href="http://ogov.newswire.ca">Canadian Gov. newswire service</a><br> <a href="http://atlas.gc.ca/site/english/index.html">Canada Atlas</a><br> <a href="http://www.careerbridge.ca/becomeintern.asp">Canada - New Internship program</a><br> <a href="http://www.labourmarketinformation.ca/standard.asp?pcode=lmiv_main&amp;lcode=e">Canada - Labor market Information</a><br> <a href="http://www.cic.gc.ca">Canadian Immigration Gov. Website</a><br> <a href="http://canadavisa.com/english.htm">Immigration Documents</a><br> <a href="http://www.hrsdc.gc.ca/en/home.shtml">Human Resources (HRDC)CAN)</a><br> <a href="http://www.rhic.com/FreeResources">Canada - Salary survey</a><br> <a href="http://www.settlement.org">Canada - settlement Issues</a><br> <a href="http://www.crr.ca">Canada - Race Relations</a><br> <a href="http://www.volunteer.ca/volunteer/index.html">Canada - Volunteer Your Services</a><br> <a href="http://www.cicic.ca/indexe.stm">Canada - Assess Quallifications</a><br> <a href="http://jobfutures.ca/doc/jf/index.shtml">Job Futures</a><br> <a href="http://www.applytoteach.ca/">Apply to Teach</a><br> </td> 
+            </tr> 
+            <tr> 
+             <td align="center"><b><u>COMPUTER HUMOR</u></b></td> 
+            </tr> 
+            <tr> 
+             <td><br> <a href="http://www.cs.bgu.ac.il/~omri/Humor/">Omri's Humor/Music</a><br> <a href="http://www.rinkworks.com/stupid/">Computer Stupidities</a><br> <a href="http://searchnetworking.techtarget.com/bestWebLinks/0,289521,sid7_tax292220,00.html">Missing Links</a><br> </td> 
+            </tr> 
+            <tr> 
+             <td align="center"><b><u>Travels/Hotels</u></b></td> 
+            </tr> 
+            <tr> 
+             <td><br> <a href="http://www.mobissimo.com">Mobissimo</a><br> <a href="http://www.travelocity.com">Travelocity</a><br> </td> 
+            </tr> 
+            <tr> 
+             <td align="center"><b><u>CAREERS</u></b></td> 
+            </tr> 
+            <tr> 
+             <td><br> <a href="http://career.db2mag.com/candidates/careerguide_careernews/">Job Search Tips</a><br> <a href="http://www.matrixresources.com/matrix/website.nsf/framesets/CareerServicesCareerCenterFrames?Opendocument&amp;LID=HPCA005
+/">Careers Resources/Jobs Descriptions</a><br> <a href="http://www.ontariojobfutures.net/">Ontario Careers</a><br> <a href="http://www.bls.gov/oco/">Outlook Handbook</a><br> <a href="http://www.careerhub.org/">Career Hub</a><br> <a href="http://www.wetfeet.com/asp/home.asp">Company profiles</a><br> <a href="http://www.careerlab.com/letters/">Letters</a><br> <a href="http://www.workingwounded.com/">Working Wounded</a><br> <a href="http://www.work-at-home-site.com/">Work At Home Guide</a><br> <br> <br> <br> 
+              <center>
+               <!-- myTalky Code Block --><a href="http://mytalky.mediaring.com/"><img src="voizmail.jpg" width="100" height="55" border="0" alt="Add Voice Mail to your site"></a> <!-- End myTalky Code Block --><!-- Humanclick  Code Block --><a href="http://www.humanclick.com/"><img src="humanclick.jpg" height="55" width="100" border="0" alt="Free Chat"></a> <!-- End of humanclick --><a href="http://www.informIT.com/"><img src="informit.jpg" height="55" width="100" border="0" alt="InformIT"></a> <a href="http://www.expedia.com/"><img src="expedia_uk_logo_v.jpg" height="55" width="100" border="0" alt="Expedia"></a> <a href="http://www.kelkoo.co.uk/">KelKoo UK -Search Flights</a> <a href="http://flights.airlinecodes.co.uk/">Airlinecode -Search Flights</a> <a href="http://www.humor.com"><img src="humor.jpg" height="40" width="100" border="0" alt="www.humor.com"></a>
+               <br> 
+               <img src="spacer.gif" width="12" height="5" border="0">
+               <br> <a href="http://www.tryscience.org"><img src="tryscience.jpg" width="100" border="0"></a> 
+               <br> 
+               <br> 
+               <br> 
+               <br> <!--Counter--><a target="_top" href="http://u.extreme-dm.com/?login=tsdjim"><img name="im" src="http://u1.extreme-dm.com/i.gif" height="38" border="0" width="41" alt=""></a>
+               <script language="javascript"><!--
+an=navigator.appName;d=document;function
+pr(){d.write("<img src=\"http://u0.extreme-dm.com",
+"/0.gif?tag=tsdjim&j=y&srw="+srw+"&srb="+srb+"&",
+"rs="+r+"&l="+escape(d.referrer)+"\" height=1 ",
+"width=1>");}srb="na";srw="na";//-->
+</script>
+               <script language="javascript1.2"><!--
+s=screen;srw=s.width;an!="Netscape"?
+srb=s.colorDepth:srb=s.pixelDepth;//-->
+</script>
+               <script language="javascript"><!--
+r=41;d.images?r=d.im.width:z=0;pr();//-->
+</script> 
+               <noscript>
+                <img height="1" width="1" alt="" src="http://u0.extreme-dm.com/0.gif?tag=tsdjim&amp;j=n">
+               </noscript> 
+               <br> 
+              </center> <!--End news table on right--></td> 
+            </tr> 
+           </tbody>
+          </table> <!--End main table--></td> 
+        </tr> 
+       </tbody>
+      </table> </td> 
+    </tr> 
+   </tbody>
+  </table> <!--Start copyright table--> 
+  <table width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="maroon"> 
+   <tbody>
+    <tr> 
+     <td align="center"> <p align="center"><font color="#CCCC99">Copyright © 2000. Ron Mascarenhas, Kuwait. All Rights Reserved. <br> Address all comments and/or questions concerning this <b>web site</b> to <a href="mailto:ronmas@mailcity.com"><font color="#CCCC99">The Webmaster </font></a><br> </font></p> </td> 
+    </tr> 
+   </tbody>
+  </table>  
+ </body>
+</html>

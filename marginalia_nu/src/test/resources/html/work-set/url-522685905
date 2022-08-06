@@ -1,0 +1,390 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns:st1="urn:schemas-microsoft-com:office:smarttags" xmlns="http://www.w3.org/TR/REC-html40"> 
+ <head> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii"> 
+  <meta name="ProgId" content="Word.Document"> 
+  <meta name="Generator" content="Microsoft Word 11"> 
+  <meta name="Originator" content="Microsoft Word 11"> 
+  <link rel="File-List" href="archimedes_files/filelist.xml"> 
+  <title>Greek Science after Aristotle </title> 
+ </head>
+ <body bgcolor="white" lang="EN-US" link="blue" vlink="blue" style="tab-interval:.5in">
+  <o:smarttagtype namespaceuri="urn:schemas-microsoft-com:office:smarttags" name="Street" /> <o:smarttagtype namespaceuri="urn:schemas-microsoft-com:office:smarttags" name="address" /> <o:smarttagtype namespaceuri="urn:schemas-microsoft-com:office:smarttags" name="place" /> <o:smarttagtype namespaceuri="urn:schemas-microsoft-com:office:smarttags" name="State" /> <o:smarttagtype namespaceuri="urn:schemas-microsoft-com:office:smarttags" name="City" /> <o:smarttagtype namespaceuri="urn:schemas-microsoft-com:office:smarttags" name="country-region" /> <!--[if gte mso 9]><xml>
+ <o:DocumentProperties>
+  <o:Author>Michael Fowler </o:Author>
+  <o:LastAuthor>Michael Fowler </o:LastAuthor>
+  <o:Revision>3</o:Revision>
+  <o:TotalTime>12</o:TotalTime>
+  <o:Created>2008-09-09T01:17:00Z</o:Created>
+  <o:LastSaved>2008-09-09T01:22:00Z</o:LastSaved>
+  <o:Pages>1</o:Pages>
+  <o:Words>3639</o:Words>
+  <o:Characters>17252</o:Characters>
+  <o:Company>University of Virginia</o:Company>
+  <o:Lines>273</o:Lines>
+  <o:Paragraphs>70</o:Paragraphs>
+  <o:CharactersWithSpaces>20821</o:CharactersWithSpaces>
+  <o:Version>11.9999</o:Version>
+ </o:DocumentProperties>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:WordDocument>
+  <w:ValidateAgainstSchemas/>
+  <w:SaveIfXMLInvalid>false</w:SaveIfXMLInvalid>
+  <w:IgnoreMixedContent>false</w:IgnoreMixedContent>
+  <w:AlwaysShowPlaceholderText>false</w:AlwaysShowPlaceholderText>
+  <w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel>
+ </w:WordDocument>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:LatentStyles DefLockedState="false" LatentStyleCount="156">
+ </w:LatentStyles>
+</xml><![endif]--><!--[if !mso]><object
+ classid="clsid:38481807-CA0E-42D2-BF39-B33AF135CC4D" id=ieooui></object>
+<style>
+st1\:*{behavior:url(#ieooui) }
+</style>
+<![endif]--> 
+  <style>
+<!--
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-parent:"";
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";}
+h1
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:1;
+	font-size:16.0pt;
+	font-family:Arial;
+	mso-font-kerning:16.0pt;
+	font-weight:bold;}
+h2
+	{mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:2;
+	font-size:13.0pt;
+	mso-bidi-font-size:18.0pt;
+	font-family:Arial;
+	mso-bidi-font-family:"Times New Roman";
+	color:red;
+	font-weight:bold;}
+h3
+	{mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:3;
+	font-size:13.5pt;
+	font-family:"Times New Roman";
+	font-weight:bold;}
+p.MsoHeader, li.MsoHeader, div.MsoHeader
+	{margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	tab-stops:center 3.0in right 6.0in;
+	font-size:12.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";}
+a:link, span.MsoHyperlink
+	{color:blue;
+	text-decoration:underline;
+	text-underline:single;}
+a:visited, span.MsoHyperlinkFollowed
+	{color:blue;
+	text-decoration:underline;
+	text-underline:single;}
+p
+	{mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";}
+ /* Page Definitions */
+ @page
+	{mso-footnote-separator:url("archimedes_files/header.htm") fs;
+	mso-footnote-continuation-separator:url("archimedes_files/header.htm") fcs;
+	mso-endnote-separator:url("archimedes_files/header.htm") es;
+	mso-endnote-continuation-separator:url("archimedes_files/header.htm") ecs;}
+@page Section1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.25in 1.0in 1.25in;
+	mso-header-margin:.5in;
+	mso-footer-margin:.5in;
+	mso-title-page:yes;
+	mso-even-header:url("archimedes_files/header.htm") eh1;
+	mso-header:url("archimedes_files/header.htm") h1;
+	mso-paper-source:0;}
+div.Section1
+	{page:Section1;}
+-->
+</style> <!--[if gte mso 10]>
+<style>
+ /* Style Definitions */
+ table.MsoNormalTable
+	{mso-style-name:"Table Normal";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	mso-style-noshow:yes;
+	mso-style-parent:"";
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";
+	mso-ansi-language:#0400;
+	mso-fareast-language:#0400;
+	mso-bidi-language:#0400;}
+</style>
+<![endif]--><!--[if gte mso 9]><xml>
+ <o:shapedefaults v:ext="edit" spidmax="2050"/>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <o:shapelayout v:ext="edit">
+  <o:idmap v:ext="edit" data="1"/>
+ </o:shapelayout></xml><![endif]-->   
+  <div class="Section1"> 
+   <h1><span style="font-size:8.0pt"><a href="http://galileoandeinstein.phys.virginia.edu/lectures/gkastr1.html"><span style="text-decoration:none;text-underline:none">previous</span></a><span style="mso-spacerun:yes">&nbsp; </span><span style="mso-spacerun:yes">&nbsp;</span><a href="http://galileoandeinstein.phys.virginia.edu/lectures/lecturelist.html"><span style="text-decoration:none;text-underline:none">index</span></a> <span style="mso-spacerun:yes">&nbsp;</span><span style="mso-spacerun:yes">&nbsp;</span><a href="http://galileoandeinstein.phys.virginia.edu/lectures/greek_math.htm"><span style="text-decoration:none;text-underline:none">next</span></a> <span style="mso-spacerun:yes">&nbsp;</span><span style="mso-spacerun:yes">&nbsp;</span><a href="http://galileoandeinstein.phys.virginia.edu/lectures/archimedes.pdf"><span style="text-decoration:none;text-underline:none"><span style="mso-spacerun:yes">&nbsp;</span>PDF</span></a>
+     <o:p></o:p></span></h1> 
+   <h1>Greek Science after Aristotle </h1> 
+   <p><i>Michael Fowler</i> <span style="mso-spacerun:yes">&nbsp;</span><i>UVa Physics</i> </p> 
+   <h2>Strato </h2> 
+   <p>As we mentioned before, Aristotle&#x2019;s analysis of motion was criticized by<b> Strato </b>(who died around 268 B.C., he is sometimes called Straton), known as &#x201c;the Physicist&#x201d; who was the third director of the Lyceum after Aristotle (the founder) and Theophrastus, who was mainly a botanist. </p> 
+   <p>Strato&#x2019;s career was curiously parallel to Aristotle&#x2019;s. Recall Aristotle spent twenty years at Plato&#x2019;s academy before going to <st1:country-region w:st="on">
+     Macedonia
+    </st1:country-region> to be tutor to Alexander, after which Aristotle came back to <st1:place w:st="on">
+     <st1:city w:st="on">
+      Athens
+     </st1:city>
+    </st1:place> to found his own &#x201c;university&#x201d;, the Lyceum. A few years later, Alexander conquered most of the known world, dividing it into regions with his old friends in charge. In particular, he had his boyhood friend Ptolemy in charge of <st1:country-region w:st="on">
+     Egypt
+    </st1:country-region>, where Alexander founded the <st1:city w:st="on">
+     new city
+    </st1:city> of <st1:city w:st="on">
+     <st1:place w:st="on">
+      Alexandria
+     </st1:place>
+    </st1:city>. Now Strato, after a period of study at the Lyceum, was hired by Ptolemy to tutor his son Ptolemy II Philadelphus (as he became known) in <st1:city w:st="on">
+     <st1:place w:st="on">
+      Alexandria
+     </st1:place>
+    </st1:city>. Subsequently Strato returned to <st1:city w:st="on">
+     <st1:place w:st="on">
+      Athens
+     </st1:place>
+    </st1:city> where he was in charge of the Lyceum for almost twenty years, until his death. </p> 
+   <p>Strato, like Aristotle, believed in close observation of natural phenomena, but in our particular field of interest here, the study of motion, he observed much more carefully than Aristotle, and realized that falling bodies usually accelerate. He made two important points: rainwater pouring off a corner of a roof is clearly moving faster when it hits the ground than it was when it left the roof, because a continuous stream can be seen to break into drops which then become spread further apart as they fall towards the ground. His second point was that if you drop something to the ground, it lands with a bigger thud if you drop it from a greater height: compare, say, a three foot drop with a one inch drop. One is forced to conclude that falling objects do <i>not</i> usually reach some final speed in a very short time and then fall steadily, which was Aristotle&#x2019;s picture. Had this line of investigation been pursued further at the Lyceum, we might have saved a thousand years or more, but after Strato the Lyceum concentrated its efforts on literary criticism. </p> 
+   <h2>Aristarchus </h2> 
+   <p>Strato did, however, have one very famous pupil, <b>Aristarchus </b>of <st1:place w:st="on">
+     Samos
+    </st1:place> (310 - 230 B.C.). Aristarchus claimed that the earth rotated on its axis every twenty-four hours and also went round the sun once a year, and that the other planets all move in orbits around the sun. In other words<i>, he anticipated Copernicus in all essentials</i>. In fact, Copernicus at first acknowledged Aristarchus, but later didn&#x2019;t mention him (see <i>Penguin Dictionary of Ancient History</i>). Aristarchus&#x2019; claims were not generally accepted, and in fact some thought he should be indicted on a charge of impiety for suggesting that the earth, thought to be the fixed center of the universe, was in motion (Bertrand Russell, quoting Plutarch about Cleanthes). The other astronomers didn&#x2019;t believe Aristarchus&#x2019; theory for different reasons. It was known that the distance to the sun was in excess of one million miles (Aristarchus himself estimated one and a half million miles, which is far too low) and they thought that if the earth is going around in a circle that big, the pattern of stars in the sky would vary noticeably throughout the year, because the closer ones would appear to move to some extent against the background of the ones further away. Aristarchus responded that they are all so far away that a million miles or two difference in the point of observation is negligible. This implied, though, the universe was <i>really</i> huge&#x2014;at least <i>billions</i> of miles across&#x2014;which few were ready to believe. </p> 
+   <h2>
+    <st1:place w:st="on">
+     <st1:city w:st="on">
+      Euclid
+     </st1:city>
+    </st1:place> </h2> 
+   <p>Although the Ptolemies were not exactly nice people, they did a great deal of good for Greek civilization, especially the sciences and mathematics. In their anxiety to prove how cultured and powerful they were, they had constructed a massive museum and a library at <st1:city w:st="on">
+     <st1:place w:st="on">
+      Alexandria
+     </st1:place>
+    </st1:city>, a city which grew to half a million people by 200 B.C. It was here that Erastosthenes (275 - 195 B.C.) was librarian, but somewhat earlier<b> </b><st1:city w:st="on">
+     <st1:place w:st="on">
+      Euclid
+     </st1:place>
+    </st1:city> taught mathematics there, about 295 B.C. during the reign of Ptolemy I. His great work is his <i>Elements</i>, setting out all of Greek geometry as a logical development from basic axioms in twelve volumes. This is certainly one of the greatest books ever written, but not an easy read. </p> 
+   <p>In fact, Ptolemy I, realizing that geometry was an important part of Greek thought, suggested to Euclid that he would like to get up to speed in the subject, but, being a king, could not put in a great deal of effort. <st1:place w:st="on">
+     <st1:city w:st="on">
+      Euclid
+     </st1:city>
+    </st1:place> responded: &#x201c;There is no <st1:street w:st="on">
+     <st1:address w:st="on">
+      Royal Road
+     </st1:address>
+    </st1:street> to geometry.&#x201d; </p> 
+   <p>
+    <st1:place w:st="on">
+     <st1:city w:st="on">
+      Euclid
+     </st1:city>
+    </st1:place> shared Plato&#x2019;s contempt for the practical. When one of his pupils asked what was in it for him to learn geometry, <st1:place w:st="on">
+     <st1:city w:st="on">
+      Euclid
+     </st1:city>
+    </st1:place> called a slave and said &#x201c;Give this young man fifty cents, since he must needs make a gain out of what he learns.&#x201d; </p> 
+   <p>The Romans, who took over later on didn&#x2019;t appreciate <st1:place w:st="on">
+     <st1:city w:st="on">
+      Euclid
+     </st1:city>
+    </st1:place>. There is no record of a translation of the <i>Elements</i> into Latin until 480 A.D. But the Arabs were more perceptive. A copy was given to the Caliph by the Byzantine emperor in A.D. 760, and the first Latin translation that still survives was actually made from the Arabic in <st1:place w:st="on">
+     <st1:city w:st="on">
+      Bath
+     </st1:city>, 
+     <st1:country-region w:st="on">
+      England
+     </st1:country-region>
+    </st1:place>, in 1120. From that point on, the study of geometry grew again in the West, thanks to the Arabs. </p> 
+   <h2>Plato, Aristotle and Christianity </h2> 
+   <p>It is interesting to note that it was in <st1:place w:st="on">
+     <st1:city w:st="on">
+      Alexandria
+     </st1:city>
+    </st1:place> that the first crucial connection between classical Greek philosophy and Christian thought was made. As we have just seen, <st1:city w:st="on">
+     <st1:place w:st="on">
+      Alexandria
+     </st1:place>
+    </st1:city> was a major center of Greek thought, and also had a very large Jewish community, which had self-governing privileges. Many Jews never returned to <st1:city w:st="on">
+     Palestine
+    </st1:city> after the Babylonian captivity, but became traders in the cities around the eastern Mediterranean, and <st1:city w:st="on">
+     <st1:place w:st="on">
+      Alexandria
+     </st1:place>
+    </st1:city> was a center of this trade. Thus <st1:city w:st="on">
+     <st1:place w:st="on">
+      Alexandria
+     </st1:place>
+    </st1:city> was a melting-pot of ideas and philosophies from these different sources. In particular, St. Clement (A.D. 150-215) and Origen were Greek Christians living in <st1:city w:st="on">
+     <st1:place w:st="on">
+      Alexandria
+     </st1:place>
+    </st1:city> who helped develop Christian theology and incorporated many of the ideas of Plato and Aristotle. </p> 
+   <p>(Actually, this St. Clement was demoted from the Roman martyrology in the ninth century for supposed hereticism (but Isaac Newton admired him!). There is a St. Clement of <st1:city w:st="on">
+     <st1:place w:st="on">
+      Rome
+     </st1:place>
+    </st1:city>, who lived in the first century. See the <st1:city w:st="on">
+     <st1:place w:st="on">
+      <i>Columbia</i>
+     </st1:place>
+    </st1:city><i> Encyclopedia</i>.) Recall that <st1:city w:st="on">
+     St. Paul
+    </st1:city> himself was a Greek speaking Jew, and his epistles were written in Greek to Greek cities, like <st1:city w:st="on">
+     Ephesus
+    </st1:city> near <st1:city w:st="on">
+     Miletus
+    </st1:city>, Phillipi and Thessalonica on the Aegean, and <st1:city w:st="on">
+     Corinth
+    </st1:city> between <st1:city w:st="on">
+     Athens
+    </st1:city> and <st1:city w:st="on">
+     <st1:place w:st="on">
+      Sparta
+     </st1:place>
+    </st1:city>. After <st1:city w:st="on">
+     St. Paul
+    </st1:city>, then, many of the early Christian fathers were Greek, and it is hardly surprising that as the faith developed in <st1:city w:st="on">
+     <st1:place w:st="on">
+      Alexandria
+     </st1:place>
+    </st1:city> and elsewhere it included Greek ideas. This Greek influence had of course been long forgotten in the middle ages. Consequently, when monks began to look at the works of Plato and Aristotle at the dawn of the Renaissance, they were amazed to find how these pre-Christian heathens had anticipated so many of the ideas found in Christian theology. (<i>A History of Science</i>, W. C. Dampier, end of Chapter 1.) </p> 
+   <p>The most famous Alexandrian astronomer, Ptolemy, lived from about 100 AD to 170 AD. He is <i>not to be confused</i> with all the Ptolemies who were the rulers! We will discuss Ptolemy later, in comparing his scheme for the solar system with that of Copernicus. </p> 
+   <p>There were two other great mathematicians of this period that we must mention: Archimedes and Apollonius. </p> 
+   <h2>Archimedes </h2> 
+   <p>Archimedes, 287 - 212 B.C., lived at <st1:city w:st="on">
+     Syracuse
+    </st1:city> in <st1:state w:st="on">
+     Sicily
+    </st1:state>, but also studied in <st1:place w:st="on">
+     <st1:city w:st="on">
+      Alexandria
+     </st1:city>
+    </st1:place>. He contributed many new results to mathematics, including successfully computing areas and volumes of two and three dimensional figures with techniques that amounted to calculus for the cases he studied. He calculated pi by finding the perimeter of a sequence of regular polygons inscribed and escribed about a circle. </p> 
+   <p>Two of his major contributions to physics are his understanding of the principle of buoyancy, and his analysis of the lever. He also invented many ingenious technological devices, many for war, but also the Archimedean screw, a pumping device for irrigation systems. </p> 
+   <h2>Archimedes&#x2019; Principle </h2> 
+   <p>We turn now to <st1:place w:st="on">
+     <st1:city w:st="on">
+      Syracuse
+     </st1:city>, 
+     <st1:state w:st="on">
+      Sicily
+     </st1:state>
+    </st1:place>, 2200 years ago, with Archimedes and his friend king Heiro. The following is quoted from Vitruvius, a Roman historian writing just before the time of Christ: </p> 
+   <p><i>Heiro, after gaining the royal power in Syracuse, resolved, as a consequence of his successful exploits, to place in a certain temple a golden crown which he had vowed to the immortal gods. He contracted for its making at a fixed price and weighed out a precise amount of gold to the contractor. At the appointed time the latter delivered to the king&#x2019;s satisfaction an exquisitely finished piece of handiwork, and it appeared that in weight the crown corresponded precisely to what the gold had weighed.</i> </p> 
+   <p><i>But afterwards a charge was made that gold had been abstracted and an equivalent weight of silver had been added in the manufacture of the crown. Heiro, thinking it an outrage that he had been tricked, and yet not knowing how to detect the theft, requested Archimedes to consider the matter. The latter, while the case was still on his mind, happened to go to the bath, and on getting into a tub observed that the more his body sank into it the more water ran out over the tub. As this pointed out the way to explain the case in question, without a moments delay and transported with joy, he jumped out of the tub and rushed home naked, crying in a loud voice that he had found what he was seeking; for as he ran he shouted repeatedly in Greek, &#x201c;Eureka, Eureka.&#x201d;</i> </p> 
+   <p>Taking this as the beginning of his discovery, it is said that he made two masses of the same weight as the crown, one of gold and the other of silver. After making them, he filled a large vessel with water to the very brim and dropped the mass of silver into it. As much water ran out as was equal in bulk to that of the silver sunk in the vessel. Then, taking out the mass, he poured back the lost quantity of water, using a pint measure, until it was level with the brim as it had been before. Thus he found the weight of silver corresponding to a definite quantity of water. </p> 
+   <p>After this experiment, he likewise dropped the mass of gold into the full vessel and, on taking it out and measuring as before, found that not so much water was lost, but a smaller quantity: namely, as much less as a mass of gold lacks in bulk compared to a mass of silver of the same weight. Finally, filling the vessel again and dropping the crown itself into the same quantity of water, he found that more water ran over for the crown than for the mass of gold of the same weight. Hence, reasoning from the fact that more water was lost in the case of the crown than in that of the mass, he detected the mixing of silver with the gold and made the theft of the contractor perfectly clear. </p> 
+   <p>What is going on here is simply a measurement of the density&#x2014;the mass per unit volume&#x2014;of silver, gold and the crown. To measure the masses some kind of scale is used, note that at the beginning a precise amount of gold is weighed out to the contractor. Of course, if you had a nice rectangular brick of gold, and knew its weight, you wouldn&#x2019;t need to mess with water to determine its density, you could just figure out its volume by multiplying together length, breadth and height, and divide the mass, or weight, by the volume to find the density in, say, pounds per cubic foot or whatever units are convenient. (Actually, the units most often used are the metric ones, grams per cubic centimeter. These have the nice feature that water has a density of 1, because that&#x2019;s how the gram was defined. In these units, silver has a density of 10.5, and gold of 19.3. To go from these units to pounds per cubic foot, we would multiply by the weight in pounds of a cubic foot of water, which is 62.) </p> 
+   <p>The problem with just trying to find the density by figuring out the volume of the crown is that it is a very complicated shape, and although one could no doubt find its volume by measuring each tiny piece and calculating a lot of small volumes which are then added together, it would take a long time and be hard to be sure of the accuracy, whereas lowering the crown into a filled bucket of water and measuring how much water overflows is obviously a pretty simple procedure. (You do have to allow for the volume of the string!). Anyway, the bottom line is that if the crown displaces more water than a block of gold of the same weight, the crown isn&#x2019;t pure gold. </p> 
+   <p>Actually, there is one slightly surprising aspect of the story as recounted above by Vitruvius. Note that they had a weighing scale available, and a bucket suitable for immersing the crown. Given these, there was really no need to measure the amount of water slopping over. All that was necessary was first, to weigh the crown when it was fully immersed in the water, then, second, to dry it off and weigh it out of the water. The difference in these two weighings is just the buoyancy support force from the water. <b><i>Archimedes&#x2019; Principle</i></b><i> states that the buoyancy support force is exactly equal to the weight of the water displaced</i> by the crown, that is, it is equal to the weight of a volume of water equal to the volume of the crown. </p> 
+   <p>This is definitely a less messy procedure&#x2014;there is no need to fill the bucket to the brim in the first place, all that is necessary is to be sure that the crown is fully immersed, and not resting on the bottom or caught on the side of the bucket, during the weighing. </p> 
+   <p>Of course, maybe Archimedes had not figured out his Principle when the king began to worry about the crown, perhaps the above experiment led him to it. There seems to be some confusion on this point of history. </p> 
+   <h2>Archimedes and Leverage </h2> 
+   <p>Although we know that leverage had been used to move heavy objects since prehistoric times, it appears that Archimedes was the first person to appreciate just how much weight could be shifted by one person using appropriate leverage. </p> 
+   <p>Archimedes illustrated the principle of the lever very graphically to his friend the king, by declaring that if there were another world, and he could go to it, he could move this one. To quote from Plutarch, </p> 
+   <p><i>Heiro was astonished, and begged him to put his proposition into execution, and show him some great weight moved by a slight force. Archimedes therefore fixed upon a three-masted merchantman of the royal fleet, which had been dragged ashore by the great labours of many men, and after putting on board many passengers and the customary freight, he seated himself at some distance from her, and without any great effort, but quietly setting in motion a system of compound pulleys, drew her towards him smoothly and evenly, as though she were gliding through the water. </i></p> 
+   <p>Just in case you thought kings might have been different 2200 years ago, read on: </p> 
+   <p><i>Amazed at this, then, and comprehending the power of his art, the king persuaded Archimedes to prepare for him offensive and defensive weapons to be used in every kind of siege warfare.</i> </p> 
+   <p>This turned out to be a very smart move on the king&#x2019;s part, since some time later, in 215 B.C., the Romans attacked <st1:place w:st="on">
+     <st1:city w:st="on">
+      Syracuse
+     </st1:city>
+    </st1:place>. To quote from Plutarch&#x2019;s Life of Marcellus (the Roman general): </p> 
+   <p><i>When, therefore, the Romans assaulted them by sea and land, the Syracusans were stricken dumb with terror; they thought that nothing could withstand so furious an onslaught by such forces. But Archimedes began to ply his engines, and shot against the land forces of the assailants all sorts of missiles and immense masses of stones, which came down with incredible din and speed; nothing whatever could ward off their weight, but they knocked down in heaps those who stood in their way, and threw their ranks into confusion. At the same time huge beams were suddenly projected over the ships from the walls, which sank some of them with great weights plunging down from on high; others were seized at the prow by iron claws, or beaks like the beaks of cranes, drawn straight up into the air, and then plunged stern foremost into the depths, or were turned round and round by means of enginery within the city, and dashed upon the steep cliffs that jutted out beneath the wall of the city, with great destruction of the fighting men on board, who perished in the wrecks. Frequently, too, a ship would be lifted out of the water into mid-air, whirled hither and thither as it hung there, a dreadful spectacle, until its crew had been thrown out and hurled in all directions, when it would fall empty upon the walls, or slip away from the clutch that had held it... .</i> </p> 
+   <p><i>Then, in a council of war, it was decided to come up under the walls while it was still night, if they could; for the ropes which Archimedes used in his engines, since they imported great impetus to the missiles cast, would, they thought, send them flying over their heads, but would be ineffective at close quarters, since there was no space for the cast. Archimedes, however, as it seemed, had long before prepared for such an emergency engines with a range adapted to any interval and missiles of short flight, and, through many small and contiguous openings in the wall, short-range engines called &#x201c;scorpions&#x201d; could be brought to bear on objects close at hand without being seen by the enemy.</i> </p> 
+   <p><i>When, therefore, the Romans came up under the walls, thinking themselves unnoticed, once more they encountered a great storm of missiles; huge stones came tumbling down upon them almost perpendicularly, and the wall shot out arrows at them from every point; they therefore retired.... . At last, the Romans became so fearful that, whenever they saw a bit of rope or a stick of timber projecting a little over the wall, &#x201c;There it is,&#x201d; they cried, &#x201c;Archimedes is training some engine upon us,&#x201d; and turned their backs and fled. Seeing this, Marcellus desisted from all fighting and assault, and thenceforth depended on a long siege. </i></p> 
+   <p>It is sad to report that the long siege was successful and a Roman soldier killed Archimedes as he was drawing geometric figures in the sand, in 212 B.C. Marcellus had given orders that Archimedes was not to be killed, but somehow the orders didn&#x2019;t get through. </p> 
+   <h2>Apollonius </h2> 
+   <p>Apollonius probably did most of his work at <st1:place w:st="on">
+     <st1:city w:st="on">
+      Alexandria
+     </st1:city>
+    </st1:place>, and lived around 220 B.C., but his exact dates have been lost. He greatly extended the study of conic sections, the ellipse, parabola and hyperbola. </p> 
+   <p>As we shall find later in the course, the conic sections play a central role in our understanding of everything from projectiles to planets, and both Galileo and <st1:place w:st="on">
+     <st1:city w:st="on">
+      Newton
+     </st1:city>
+    </st1:place>, among many others, acknowledge the importance of Apollonius&#x2019; work. This is not, however, a geometry course, so we will not survey his results here, but, following Galileo, rederive the few we need when we need them. </p> 
+   <h2>Hypatia </h2> 
+   <p>The last really good astronomer and mathematician in Greek Alexandria was a woman, <a href="http://www-groups.dcs.st-and.ac.uk/~history/Mathematicians/Hypatia.html">Hypatia</a>, born in 370 AD the daughter of an astronomer and mathematician Theon, who worked at the museum. She wrote a popularization of Apollonius&#x2019; work on conics. She became enmeshed in politics, and, as a pagan who lectured on neoplatonism to pagans, Jews and Christians (who by now had separate schools) she was well known. In 412 Cyril became patriarch. He was a fanatical Christian, and became hostile to Orestes, the Roman prefect of <st1:country-region w:st="on">
+     <st1:place w:st="on">
+      Egypt
+     </st1:place>
+    </st1:country-region>, a former student and a friend of Hypatia. In March 415, Hypatia was killed by a mob of fanatical Christian monks in particularly horrible fashion. The details can be found in the book <i>Hypatia&#x2019;s Heritage </i>(see below). </p> 
+   <p>Books I used in preparing this lecture: </p> 
+   <p><i>Greek Science after Aristotle</i>, G. E. R. Lloyd, <st1:place w:st="on">
+     <st1:city w:st="on">
+      Norton
+     </st1:city>, 
+     <st1:state w:st="on">
+      N.Y.
+     </st1:state>
+    </st1:place>, 1973 </p> 
+   <p><i>A Source Book in Greek Science</i>, M. R. Cohen and I. <st1:place w:st="on">
+     E. Drabkin
+    </st1:place>, Harvard, 1966 </p> 
+   <p><i>Hypatia&#x2019;s Heritage: A History of Women in Science,</i> Margaret Alic, The Women&#x2019;s Press, <st1:place w:st="on">
+     <st1:city w:st="on">
+      London
+     </st1:city>
+    </st1:place> 1986 </p> 
+   <p><i>A History of Science</i>, W. C. Dampier, <st1:place w:st="on">
+     <st1:city w:st="on">
+      Cambridge
+     </st1:city>
+    </st1:place>, 1929 </p> 
+   <h1><span style="font-size:12.0pt;font-family:&quot;Times New Roman&quot;;font-weight:
+normal;mso-bidi-font-weight:bold">Copyright except where otherwise noted &copy;1995 Michael Fowler
+     <o:p></o:p></span></h1> 
+   <h1><span style="font-size:8.0pt"><a href="http://galileoandeinstein.phys.virginia.edu/lectures/gkastr1.html"><span style="text-decoration:none;text-underline:none">previous</span></a><span style="mso-spacerun:yes">&nbsp; </span><span style="mso-spacerun:yes">&nbsp;</span><a href="http://galileoandeinstein.phys.virginia.edu/lectures/lecturelist.html"><span style="text-decoration:none;text-underline:none">index</span></a> <span style="mso-spacerun:yes">&nbsp;</span><span style="mso-spacerun:yes">&nbsp;</span><a href="http://galileoandeinstein.phys.virginia.edu/lectures/greek_math.htm"><span style="text-decoration:none;text-underline:none">next</span></a> <span style="mso-spacerun:yes">&nbsp;</span><span style="mso-spacerun:yes">&nbsp;</span><a href="http://galileoandeinstein.phys.virginia.edu/lectures/archimedes.pdf"><span style="text-decoration:none;text-underline:none"><span style="mso-spacerun:yes">&nbsp;</span>PDF</span></a>
+     <o:p></o:p></span></h1> 
+   <p>
+    <o:p>
+     &nbsp;
+    </o:p></p> 
+  </div>  
+ </body>
+</html>

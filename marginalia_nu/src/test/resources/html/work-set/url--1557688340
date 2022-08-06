@@ -1,0 +1,193 @@
+<!doctype html>
+<html> 
+ <head> 
+  <meta name="viewport" content="width=device-width, initial-scale=1"> 
+  <link rel="stylesheet" href="//code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css"> 
+  <script src="//code.jquery.com/jquery-1.11.2.min.js"></script> 
+  <script src="//code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script> 
+ </head> 
+ <body> 
+  <div data-role="page" id="pageone"> 
+   <div data-role="header"> 
+    <h1>Galileo and Einstein: Lecture Index</h1> 
+   </div> 
+   <div data-role="main" class="ui-content"> 
+    <p><a href="../home.html" data-ajax="false">Galileo and Einstein Home Page</a> </p> 
+    <h2>Galileo and Einstein: Lectures</h2> 
+    <p><i><a href="//galileo.phys.virginia.edu/~mf1i/home.html" data-ajax="false">Michael Fowler</a></i> - <a href="//web.phys.virginia.edu/" data-ajax="false">University of Virginia Physics</a></p> 
+    <div data-role="collapsibleset"> 
+     <div data-role="collapsible"> 
+      <h3>Counting in Babylon</h3> 
+      <p>Babylon had in all probability the earliest written language. At the same time, an elegant system of weights and measures kept the peace in the marketplace. Their method of counting was in some ways better than our present one! We look at some ancient math tables, and ideas about Pythagoras' theorem 1,000 years before Pythagoras.</p> 
+      <p><a href="babylon.html" data-ajax="false">Link to lecture</a> &nbsp;&nbsp;&nbsp;&nbsp; <a href="babylon.pdf" data-ajax="false">PDF</a> &nbsp;&nbsp;&nbsp;&nbsp; <a href="Contando_en_Babilonia.htm" data-ajax="false">Spanish</a>&nbsp;&nbsp; <a href="https://www.homeyou.com/~edu/contando-em-babilonia">Portuguese</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>Early Greek Science: Thales to Plato</h3> 
+      <p>In the ancient port city of Miletus, there took place a "discovery of nature": philosophers tried to understand natural phenomena without invoking the supernatural. The Greeks imported basic geometric ideas from Egypt, and developed them further. Members of the Pythagorean cult announced the famous theorem, and the (to them) alarming discovery of <i>irrational </i>numbers! The Greeks had some ideas about elements and atoms. Hippocrates looked for non-supernatural causes of disease. Plato formulated a rationale for higher education, and thought about atoms.</p> 
+      <p><a href="thales.html" data-ajax="false">Link to Lecture</a> &nbsp;&nbsp;&nbsp;&nbsp; <a href="thales.pdf" data-ajax="false">PDF</a> &nbsp;&nbsp;&nbsp;&nbsp;<a href="LaPrimeraCienciaGriega.htm" data-ajax="false">Spanish Version</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>Motion in the Heavens: Stars, Sun, Moon, Planets</h3> 
+      <p>A brief review for moderns of facts familiar to almost everybody in the ancient world: how the Sun, Moon and planets move through the sky over the course of time.</p> 
+      <p><a href="starry~1.html" data-ajax="false">Link to Lecture</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>Aristotle</h3> 
+      <p>A brief look at <a href="aristot2.html" data-ajax="false">the beginnings of science and philosophy</a> in Athens: Plato's Academy and Aristotle's Lyceum. On to Aristotle's science: causes in living things and inanimate matter, Aristotle's elements, and laws of motion.</p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>Measuring the Solar System</h3> 
+      <p>We look at some startlingly good measurements by the Greeks of the size of the Earth and the distance to the Moon, and a less successful (but correct in principle) attempt to find the distance to the Sun. </p> 
+      <p><a href="gkastr1.html" data-ajax="false">Link to Lecture</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>Greek Science after Aristotle</h3> 
+      <p>Strato understood that falling bodies pick up speed (contrary to Aristotle's assertions). Aristarchus gave a completely correct view of the solar system, anticipating Copernicus by 2,000 years or so. Science flourished for centuries in Alexandria, Egypt: Euclid, Apollonius, Hypatia and others lived there, Archimedes studied there. Archimedes understood leverage and buoyancy, developed military applications, approximated Pi very closely, and almost invented calculus! (See also the next lecture.) </p>
+      <p><a href="archimedes.htm" data-ajax="false">Link to Lecture.</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>Basic Ideas in Greek Mathematics</h3> 
+      <p>Nailing down the square root of 2. Zeno's paradoxes: Achilles and the tortoise. Proving an arrow can never move - analyzing motion, the beginning of calculus. How Archimedes calculated Pi to impressive accuracy, squared the circle, and did an integral to find the area of a sphere.</p>
+      <p> <a href="greek_math.htm" data-ajax="false">Link to Lecture.</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>How the Greeks Used Geometry to Understand the Stars</h3> 
+      <p>The universe is like an onion of crystal spheres: Plato, Eudoxus, Aristotle. More earthly ideas: Eudoxus and Aristarchus. Understanding planetary motion in terms of cycles and epicycles: Hipparchus and Ptolemy. These methods were refined to the point where they gave accurate predictions of planetary positions for centuries (even though Ptolemy believed the earth was at rest at the center of the universe). </p>
+      <p><a href="greek_astro.htm" data-ajax="false">Link to Lecture.</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>How Greek Science Reached Baghdad</h3> 
+      <p><a href="AthenstoBaghdad.htm" data-ajax="false">Link to Lecture</a>&nbsp;&nbsp;&nbsp;&nbsp; <a href="AthenstoBaghdad.pdf" data-ajax="false">PDF</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>Some Later Islamic Science</h3> 
+      <p><a href="IslamicScience.htm" data-ajax="false">Some Later Islamic Science</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="IslamicScience.pdf" data-ajax="false">PDF</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>Galileo and the Telescope</h3> 
+      <p>Copernicus challenged Ptolemy's worldview. Evolution of the telescope. Galileo saw mountains on the Moon, and estimated their height - the first indication that the Moon was Earthlike, not a perfect ethereal sphere at all.</p> 
+      <p><a href="galtel.htm" data-ajax="false">Link to Lecture.</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>Life of Galileo</h3> 
+      <p>A few facts and anecdotes to try to give something of the flavor of Galileo's life and times, plus references to books for those who would like a more complete picture.</p> 
+      <p><a href="gal_life.htm" data-ajax="false">Link to Lecture</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>Scaling: Why Giants Don't Exist</h3> 
+      <p>One of Galileo's most important contributions to science (and engineering): the realization that since areas and volumes scale differently when the size of an object is increased keeping all proportions the same, physical properties of large objects may be dramatically different from similar small objects, not just scaled up versions of the same thing. We explore some of the consequences.</p> 
+      <p><a href="scaling.html" data-ajax="false">Link to Lecture</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>Galileo's Acceleration Experiment</h3> 
+      <p>Galileo argued against Aristotle's assertions that falling bodies fall at steady speeds, with heavier objects falling proportionately faster. Galileo argued that falling bodies<i> pick up speed at a steady rate</i> (until they move so fast that air resistance becomes important). He constructed an experiment to prove his point (and we reproduced it).</p> 
+      <p><a href="gal_accn96.htm" data-ajax="false">Link to Lecture</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>Naturally Accelerated Motion</h3> 
+      <p>This lecture presents the core of Galileo's analysis of motion in free fall, which he referred to as "naturally accelerated motion". This is challenging material if you're new to it, but <i>crucial </i>in progressing from an Aristotelian or medieval worldview to that of Galileo and <st1:city w:st="on">
+        <st1:place w:st="on">
+         Newton
+        </st1:place>
+       </st1:city>, the basis of our modern understanding of nature. Galileo used his new-found understanding of falling motion to prove that a projectile follows a parabolic path, if air resistance can be ignored.</p> 
+      <p><a href="gal_accn962.htm" data-ajax="false">Link to Lecture</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>Describing Motion</h3> 
+      <p>A simple introduction to the modern way of describing motion using arrows - "vectors" - to indicate speed and direction. Galileo (and, later, Newton) made heavy use of Greek geometry in analyzing motion. It's much easier, and just as valid, to use vectors.</p> 
+      <p><a href="vectors.htm" data-ajax="false">Link to Lecture</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>Tycho Brahe and Johannes Kepler (summary)</h3> 
+      <p> This lecture is here for anyone teaching from these notes who is running out of time! It summarizes the next three lectures, so you can get on to relativity.</p>
+      <p> However, if you do, you're missing out on two fascinating characters whose work gave Newton the essential clue he needed for his greatest achievement: establishing the inverse-square law of gravity.</p> 
+      <p><a href="tycho.htm" data-ajax="false">Link to Lecture</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>Tycho Brahe</h3> 
+      <p>Tycho Brahe (1546-1601), from a rich Danish noble family, was fascinated by astronomy, but disappointed with the accuracy of tables of planetary motion at the time. He decided to dedicate his life and considerable resources to recording planetary positions ten times more accurately than the best previous work. After some early successes (and in gratitude for having his life saved by Tycho's uncle) the king of Denmark gave Tycho tremendous resources: an island with many families on it, and money to build an observatory. </p> 
+      <p><a href="//galileoandeinstein.phys.virginia.edu/1995/lectures/tychob.html" data-ajax="false">Link to Lecture</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>Johannes Kepler</h3> 
+      <p>Johannes Kepler (1571-1630) believed God must have had some geometric reason for placing the six planets at the particular distances from the sun that they occupied. He thought it could only be related to the five perfect Platonic solids -- the orbit spheres were maybe just such that between two successive ones a Platonic solid would just fit. The data available at the time didn't rule this out, but Kepler realized that Tycho's precise recorded observations would settle the question one way or the other. He went to work with Tycho in 1600. Tycho died the next year. Kepler stole the data, and worked with it for nine years.</p> 
+      <p><a href="//galileoandeinstein.phys.virginia.edu/1995/lectures/kepler.html" data-ajax="false">Link to Lecture</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>More Kepler</h3> 
+      <p>Working with Tycho's data, Kepler reluctantly concluded that his beautiful Platonic universe was incorrect. In fact, he found, the planetary orbits were ellipses, and the speed of the planet in the orbit varied in a precise way. These discoveries were pivotal in establishing Newton's Law of Universal Gravitation.</p> 
+      <p><a href="//galileoandeinstein.phys.virginia.edu/1995/lectures/morekepl.html" data-ajax="false">Link to Lecture</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>Isaac Newton</h3> 
+      <p>A brief account of Newton's life, followed by a discussion of perhaps his most important insight: that a cannonball shot horizontally, and fast enough, from an imagined mountaintop above the atmosphere might orbit the earth. This tied together Galileo's understanding of projectiles with the motion of the moon, and was the first direct understanding (as opposed to description) of motion in the heavens.</p> 
+      <p><a href="newton.html" data-ajax="false">Link to Lecture</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>How Newton Built on Galileo's Ideas</h3> 
+      <p>Newton's famous Laws of Motion generalized and extended Galileo's discussion of falling objects and projectiles. Putting these laws together with his Law of Universal Gravitation, Newton was able to account for the observed motions of all the planets. This lecture gives a careful development of the basic concepts underlying Newton's Laws, in particular the tricky concept of acceleration in a moving body that is changing direction - essential to really understanding planetary motion.</p> 
+      <p><a href="newtongl.html" data-ajax="false">Link to Lecture</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>Newton Clarifies the Concept of Force</h3> 
+      <p>We look a little deeper into the development of Newton's idea of force, and present a vivid picture he constructed to understand circular motion as being motion subject to a constant perpendicular force, in contrast to the earlier view of it as "natural" motion of planets, etc.</p> 
+      <p><a href="Newtons2ndLaw1.htm" data-ajax="false">Link to Lecture</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>The Speed of Light</h3> 
+      <p>Aristotle thought it was infinite, Galileo tried unsuccessfully to measure it with lanterns on hilltops, a Danish astronomer found it first by observing Jupiter's moons. Rival Frenchmen found it quite accurately about 1850, but a far more precise experiment was carried out in 1879 in Annapolis, Maryland by Albert Abraham Michelson.</p> 
+      <p><a href="spedlite.html" data-ajax="false">Link to Lecture</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>The Michelson-Morley Experiment</h3> 
+      <p>By the late 1800's, it had been established that light was wavelike, and in fact consisted of waving electric and magnetic fields. These fields were thought somehow to be oscillations in a material aether, a transparent, light yet hard substance that filled the universe (since we see light from far away). Michelson devised an experiment to detect the earth's motion through this aether, and the result contributed to the development of special relativity.</p> 
+      <p><a href="michelson.html" data-ajax="false">Link to Lecture</a>&nbsp;&nbsp;&nbsp;&nbsp; <a href="Michelson-Morley_Sp.htm" data-ajax="false">Spanish Version</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>Special Relativity</h3> 
+      <p>Galileo had long ago observed that in a closed windowless room below decks in a smoothly moving ship, it was impossible to do an experiment to tell if the ship really was moving. Physicists call this "Galilean relativity" - the laws of motion are the same in a smoothly moving room (that is to say, one that isn't accelerating)as in a room "at rest". Einstein generalized the notion to include the more recently discovered laws concerning electric and magnetic fields, and hence light. He deduced some surprising consequences, recounted below.</p> 
+      <p><a href="spec_rel.html" data-ajax="false">Link to Lecture</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>Special Relativity: What Time Is It?</h3> 
+      <p>The first amazing consequence of Einstein's seemingly innocuous generalization of Galileo's observation is that time must pass differently for observers moving relative to one another - moving clocks run slow. We show how this comes about, and review the experimental evidence that it really happens. We also show that if times pass differently for different observers, lengths must look different too.</p> 
+      <p><a href="srelwhat.html" data-ajax="false">Link to Lecture</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>Special Relativity: Synchronizing Clocks</h3> 
+      <p>Another essential ingredient in the relativistic brew is that if I synchronize two clocks at opposite ends of a train I'm on, say, they will <i>not </i>appear to be synchronized to someone on the ground watching the train go by. (Of course, the discrepancy is tiny at ordinary speeds, but becomes important for speeds comparable to that of light).</p> 
+      <p><a href="synchronizing.html" data-ajax="false">Link to Lecture</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>Time Dilation: A Worked Example</h3> 
+      <p>At first sight, it seems impossible that each of two observers can claim the other one's clock runs slow. Surely one of them must be wrong? We give a detailed analysis to demonstrate that this is a perfectly logically consistent situation, when one remembers also to include effects of length contraction and of lack of synchronization - special relativity makes perfect sense!</p> 
+      <p><a href="time_dil.html" data-ajax="false">Link to Lecture</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>More Relativity: the Train and the Twins</h3> 
+      <p>Some famous paradoxes raised in attempts to show that special relativity was self-contradictory. We show how they were resolved.</p> 
+      <p><a href="sreltwins.html" data-ajax="false">Link to Lecture</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>Momentum, Work and Energy</h3> 
+      <p>An elementary review of these basic concepts in physics, placed here for the convenience of nonscience majors who may be a little rusty on these things, and will need them to appreciate something of what relativity has to say about dynamics - the science of motion.</p> 
+      <p><a href="momentum.html" data-ajax="false">Link to Lecture</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>Adding Velocities: A Walk on the Train</h3> 
+      <p>A straight forward application of the new relativistic concepts of time dilation, length contraction etc., reveals that if you walk at exactly 3 m.p.h. towards the front of a train that's going exactly 60 m.p.h., your speed relative to the ground is not 63 m.p.h. but a very tiny bit less! Again, this difference from common sense is only detectable if one of the speeds is comparable with that of light, but then it becomes very important.</p> 
+      <p><a href="adding_vels.html" data-ajax="false">Link to Lecture</a></p> 
+     </div> 
+     <div data-role="collapsible"> 
+      <h3>Conserving Momentum: the Relativistic Mass Increase</h3> 
+      <p>How the very general physical principle of momentum conservation in collisions, when put together with special relativity, predicts that an object's mass increases with its speed, and how this startling prediction has been verified experimentally many times over. The increase in mass is related to the increase in kinetic energy by <i>E</i> = <i>mc</i><sup>2</sup>. This formula turns out to be more general: any kind of energy, not just kinetic energy, is associated with a mass increase in this way. In particular, the tight binding energies of nuclei, corresponding to the energy released in nuclear weapons, can be measured simply by weighing nuclei of the elements involved.</p> 
+      <p><a href="mass_increase.html" data-ajax="false">Link to Lecture</a></p> 
+     </div> 
+    </div> 
+   </div> 
+   <div data-role="footer"> 
+    <h1><p> Text is available under the <a href="//creativecommons.org/licenses/by-sa/3.0/" data-ajax="false">Creative Commons Attribution/Share-Alike License</a>. </p></h1> 
+   </div> 
+  </div>  
+ </body>
+</html>

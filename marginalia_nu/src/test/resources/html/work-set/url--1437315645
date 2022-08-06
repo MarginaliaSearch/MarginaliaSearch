@@ -1,0 +1,162 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html> 
+ <head> 
+  <title>tinyapps.org / network</title> 
+  <meta http-equiv="content-type" content="text/html; charset=utf-8"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+  <link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="https://tinyapps.org/blog/index.rss"> 
+  <style type="text/css">
+<!--
+body {margin: 0 auto;max-width: 50em;line-height: 1.5;padding: 1em;font-family: Cambria,Verdana,"Trebuchet MS",Tahoma,Palatino,"Palatino Linotype",Georgia,Arial,Helvetica,Serif}
+input,textarea {border: 1px solid black;padding: 0.3em}
+h1,#menu {font-size: 1.5em}
+h2 {font-size: 1.17em}
+h3 {font-size: 1em}
+h4 {font-size: .83em}
+h5 {font-size: .67em}
+h6 {font-size: .52em}
+pre {overflow: auto;width: 90%;padding: 7px;border-radius: 7px}
+code,kbd {color: #9864d9}
+samp {color: #708090}
+pre,code,kbd,samp,tt {font-family: "Ubuntu Mono","Source Code Pro",Monaco,Consolas,Menlo,"Courier New",Courier,monospace,sans-serif}
+.icon {font-size: xx-small;vertical-align: .2em}
+#menu {font-weight: bold;margin-bottom: .67em}
+a:link,a:visited {color: #1e8ad6;text-decoration: none}
+a:active,a:hover {color: #3ba0e6;text-decoration: underline}
+
+@media (prefers-color-scheme: dark) {
+body {background: #222b39;color: #e1dfdc}
+input,textarea {background: #333333;color: #e1dfdc;border: 1px solid white}
+}
+-->
+</style> 
+  <script type="text/javascript">
+<!--
+if (top !== self) top.location.href = self.location.href;
+-->
+</script> 
+ </head> 
+ <body> 
+  <h1><a href="/">tinyapps.org</a> / network</h1> 
+  <hr> 
+  <h2>Web Browsing</h2> 
+  <p><a href="https://web.archive.org/web/20160219002114/http://offbyone.com/offbyone/">OffByOne Web Browser 3.5a</a> [409k] + "May be the world's smallest and fastest Web Browser with full HTML 3.2 support. It is a completely self-contained, stand-alone 1.1mb application with no dependencies on any other browser or browser component." <a href="/screenshots/offbyone.png" class="icon">📺</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://jim.spath.com/lynx_win32/">Lynx for Win32 v. 2-8-3</a> [714k] {S}+ Text-based web browser <a href="/screenshots/lynx.png" class="icon">📺</a> <a href="/downloads/ly283rel.7z" class="icon">💾</a></p> 
+  <p><span class="icon">🌱</span> <a href="https://sourceforge.net/projects/dplus-browser/">D+ Browser 0.5b (formerly "Dillo")</a> [1304k] {S}+ "A graphical web browser with an emphasis on security, performance, and portability." <a href="/screenshots/d-plus-browser.png" class="icon">📺</a></p> 
+  <p><a href="http://www.litepc.com/ieradicator.html">IEradicator</a> [102k] Internet Explorer (versions 3 through 6) removal tool. <a href="/screenshots/ieradicator.png" class="icon">📺</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://web.archive.org/web/20041209093907/www.iomagic.org/fsc/pleasedontlinkheredirectly.htm">KillAd v0.11</a> [42k] + Ad blocker. Works with IE, Netscape, and Opera. <a href="/screenshots/killad.png" class="icon">📺</a> <a href="/downloads/killad.7z" class="icon">💾</a></p> 
+  <p><a href="http://www.morpheussoftware.net/sab/">SAB 0.96</a> [93k] + Filter out web annoyances. Linux version also available. <a href="/screenshots/sab.png" class="icon">📺</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://www.proxomitron.info/">Proxomitron</a> [371k] + Powerful filter for eliminating web annoyances and customizing your browsing experience. <a href="/screenshots/proxomitron.png" class="icon">📺</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://ranfo.com/popki.html">PopKi Popup Closer v1.4</a> [187k] + Prevent popups without using a proxy. <a href="/screenshots/popki.png" class="icon">📺</a></p> 
+  <p>Nir Sofer's <a href="https://www.nirsoft.net/web_browser_tools.html">Web Browser Tools</a></p> 
+  <h2>Offline Browsing &amp; Download Managers</h2> 
+  <p><span class="icon">🌱</span> <a href="http://web.archive.org/web/20050427131656/http://www.diamondcs.com.au/?page=console">HTTP Get</a> [15k] + Download files from the web <a href="/screenshots/httpget.png" class="icon">📺</a></p> 
+  <p>HTTrack Website Copier 3.10 [176k] {S}+ Save entire websites to a local directory. (This console-only version is hosted by TinyApps. See the HTTrack homepage for additional versions and source code.) <a href="/screenshots/httrack.png" class="icon">📺</a> <a href="/downloads/httrack.7z" class="icon">💾</a> <a href="http://www.httrack.com/" class="icon">🌎</a></p> 
+  <p>WackGet 1.2.2 [127k] {S}+ Download a list of files in the order you specify. Options include: logging, setting number of concurrent downloads, importing from clipboard, and more. <a href="/downloads/wackget1.7z">Source code</a> <a href="/screenshots/wackget.png" class="icon">📺</a> <a href="/downloads/wackget1.7z" class="icon">💾</a> <a href="http://web.archive.org/web/20060603234011/http://millweed.com/projects/wackget/" class="icon">🌎</a></p> 
+  <p><span class="icon">🌱</span> GNU Wget 1.8.2 [271k] {S}+ Mirroring tool which supports HTTP, HTTPS and FTP. <a href="/screenshots/wget.png" class="icon">📺</a> <a href="/downloads/wget-1.7z" class="icon">💾</a> <a href="http://wget.sunsite.dk/" class="icon">🌎</a></p> 
+  <p><span class="icon">🌱</span> Flash Movie Player 1.4 [333k] + ShockWave Flash (SWF) player with animation rewinding, advanced full screen mode, playlists, browser cache integration, snapshot creation, more. (The Green Award is given to the installer-free version (which the author kindly provided) directly linked to from here.) <a href="/screenshots/flash_movie_player.png" class="icon">📺</a> <a href="http://www.eolsoft.com/download/flash_movie_player.zip" class="icon">💾</a> <a href="http://www.eolsoft.com/freeware/flash_movie_player/" class="icon">🌎</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://sourceforge.net/projects/asfrecorder/">ASFRecorder V1.1</a> [368k] {S}+ Download and store streaming Windows Media files (asf, asx, wma, wmx, wmv, wvx). <a href="/screenshots/asfrecorder.png" class="icon">📺</a></p> 
+  <p><a href="https://web.archive.org/web/20060212162609/http://www.yanew.com/">DLExpert 0.99</a> [769k] Download manager with multi-thread, pause/resume, scheduling, auto dial, hangup, shutdown, more. <a href="/screenshots/dlexpert.png" class="icon">📺</a> <a href="/downloads/dlexpert099.7z" class="icon">💾</a></p> 
+  <h2>Email Clients</h2> 
+  <p><span class="icon">🌱</span> <a href="https://web.archive.org/web/20080225153835/http://www.beyondlogic.org/solutions/cmdlinemail/cmdlinemail.htm">bmail 1.07</a> [17k] + Lean command line SMTP mail sender <a href="/screenshots/bmail.png" class="icon">📺</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://web.archive.org/web/20060925201810/http://web.archive.org/web/20050427131656/http://www.diamondcs.com.au/?page=console">SendMail 1.1</a> [18k] + Send email (and even attach a file) using any SMTP server <a href="/screenshots/sendmail.png" class="icon">📺</a> <a href="/downloads/sendmail.7z" class="icon">💾</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://davidp.org/qm/">Qm 2.2</a> [21k] + Quick mail sending program <a href="/screenshots/qm.png" class="icon">📺</a></p> 
+  <p><a href="http://www.interlog.com/~tcharron/getmail.html">Getmail 1.33</a> [50k] + Console utility for downloading POP3 mail. Free for non-commercial use. <a href="/screenshots/getmail.png" class="icon">📺</a></p> 
+  <p><a href="http://www.blat.net/">Blat 1.9.4</a> [74k] {S}+ Console utility that sends the contents of a file in an e-mail message using the SMTP protocol. <a href="/screenshots/blat.png" class="icon">📺</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://www.nakka.com/soft/npop/index_eng.html">nPOP</a> [82k] {S}+ Tiny email client with powerful features. Pocket PC, Windows CE, and Japanese versions also available. <a href="/screenshots/npop.png" class="icon">📺</a></p> 
+  <p><span class="icon">🌱</span> <a href="https://web.archive.org/web/20130127132917/http://www.ultrafunk.com/popcorn/">Popcorn 1.99.3</a> [151k] {S}+ Ultra-lightweight POP3/SMTP email client. Check/delete mail on server before downloading. <a href="/screenshots/popcorn.png" class="icon">📺</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://jbmail.pc-tools.net/">JBMail 3.2</a> [159k] + Portable mail client with POP3 and SMTP support, and optional SSL/TLS security. Shareware version saves multiple profiles to disk. <a href="/screenshots/jbmail.png" class="icon">📺</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://web.archive.org/web/20060629023242/http://members.aol.com/toadbee/Programs.htm">SpeedMail 1.2</a> [188k] + SMTP mailer with simple address book and attachment support. <a href="/screenshots/speedmail.jpg" class="icon">📺</a> <a href="/downloads/speedmail.7z" class="icon">💾</a></p> 
+  <p><span class="icon">🌱</span> Pimmy 3.5 [361k] + Complete email client; includes newsgroup support. <a href="/screenshots/pimmy.png" class="icon">📺</a> <a href="/downloads/pimmy350e.7z" class="icon">💾</a> <a href="http://www.geminisoft.com/en/pimmy/" class="icon">🌎</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://www.memecode.com/scribe.php">i.Scribe 1.88</a> [826k] + A small, fast, crossplatform, object based email client with many of the features that larger mail clients have. <a href="/screenshots/iscribe.png" class="icon">📺</a></p> 
+  <h2>Mailing Lists</h2> 
+  <p>SmartSerialMail 1.1 [229k] + Group mail sender <a href="/screenshots/smartserialmail.png" class="icon">📺</a> <a href="/downloads/smartserialmail1_1.7z" class="icon">💾</a> <a href="http://www.jam-software.com/freeware/index.shtml" class="icon">🌎</a></p> 
+  <p><a href="http://www.analogx.com/contents/download/network/lmpro.htm">ListMaster Pro 1.83</a> [383k] Mailing list manager that validates, sorts, and dedupes email addresses <i>very</i> quickly (it can load and sort a list of over 100,000 addresses in under 10 seconds and dedupe the same list in less than 2 seconds). <a href="/screenshots/listmasterpro.png" class="icon">📺</a></p> 
+  <p><a href="http://web.archive.org/web/20100805052734/http://www.vallen.de/freeware/index.html">Vallen e-Mailer R2007.0904</a> [573k] + Group mail sender <a href="/screenshots/vallen_emailer.png" class="icon">📺</a> <a href="/downloads/vallen_emailer_r2007.7z" class="icon">💾</a></p> 
+  <h2>Other Email &amp; Usenet</h2> 
+  <p><span class="icon">🌱</span> <a href="http://members.tripod.com/semper.fi/oelc/index.htm">Obfusticated Email Link Creator 1.0.4.0 (OELC)</a> [4k] + Create munged email address links with hex, dec, or a mix of both. <a href="/screenshots/oelc.png" class="icon">📺</a></p> 
+  <p><a href="http://www.keir.net/k9.html">K9 Version 1.28</a> [77k] + Automatic spam email filtering for POP3 email. <a href="/screenshots/k9.png" class="icon">📺</a></p> 
+  <p><a href="http://stripmail.belenli.org">StripMail v0.99p</a> [146k] + Clean up emails &amp; plain text files. <a href="/screenshots/stripmail.png" class="icon">📺</a></p> 
+  <p>Bounce Spam Mail v.1.8 [271k] + Send fake bounce messages. Does not support SMTP authentication. <a href="/screenshots/bouncespammail.png" class="icon">📺</a> <a href="/downloads/bouncespammail.7z" class="icon">💾</a> <a href="http://users.telenet.be/tontonzen/gg/albert.html" class="icon">🌎</a></p> 
+  <p><span class="icon">🌱</span> Pimmy 3.5 [361k] + Complete email client; includes newsgroup support. <a href="/screenshots/pimmy.png" class="icon">📺</a> <a href="/downloads/pimmy350e.7z" class="icon">💾</a> <a href="http://www.geminisoft.com/en/pimmy/" class="icon">🌎</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://www.blat.net/miniRelay/">miniRelay 0.9.77d</a> [270k] + SMTP relay tool that shuts down when idle. <a href="/screenshots/minirelay.png" class="icon">📺</a></p> 
+  <p><a href="http://xnews.newsguy.com/">Xnews 4.06.22</a> [680k] + Usenet newsreader <a href="/screenshots/xnews.png" class="icon">📺</a></p> 
+  <h2>HTTP, (S)FTP, &amp; File Sharing</h2> 
+  <p><span class="icon">🌱</span> <a href="http://www.whitsoftdev.com/ssft/">Simple Socket File Transfer 1.0</a> [9k] + Transfer a file between two computers using the TCP port of your choosing. Partially completed transfers can be resumed, and files are automatically checked with MD5 to ensure they were received error-free. Supports very large files (up to about 4 petabytes). <a href="/screenshots/simplesocket.png" class="icon">📺</a></p> 
+  <p><span class="icon">🌱</span> <a href="https://web.archive.org/web/20020610004958/http://www.purebasic.com/download.php3">Atomic FTP Server v0.5</a> [10k] {S}+ Extremely simple and fast FTP server <a href="/screenshots/atomicftpserver.png" class="icon">📺</a> <a href="/downloads/atomicftpserver.7z" class="icon">💾</a></p> 
+  <p><span class="icon">🌱</span> <a href="https://web.archive.org/web/20020610004958/http://www.purebasic.com/download.php3">Atomic Web Server v1.0</a> [10k] {S}+ Extremely simple and fast web server <a href="/screenshots/atomicwebserver.png" class="icon">📺</a> <a href="/downloads/atomicwebserver.7z" class="icon">💾</a></p> 
+  <p><a href="http://www.ritlabs.com/tinyweb/">TinyWeb 1.9</a> [53k] {S}+ Small, simple and fast Win32 daemon for regular (TCP/http) and secure (SSL/TLS/https) web servers. <a href="/screenshots/tinyweb.png" class="icon">📺</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://www.sentex.net/~mwandel/ftpdmin/">ftpdmin 0.96</a> [65k] {S}+ Minimal FTP server primarily for one-off LAN transfers (no security or password options available) <a href="/screenshots/ftpdmin.png" class="icon">📺</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://barracudaserver.com/examples/BarracudaDrive/">BarracudaDrive V1.5.2</a> [196k] + Multi-user secure HTTPS file manager which eliminates the need for FTP access. Securely upload, download, and manage your files on your home computer from anywhere in the world. BarracudaDrive also bypasses firewalls and proxies since the communication protocol is HTTPS. The communication is protected by using SSL so no one can eavesdrop on your file transfer. Linux and OS X versions <a href="http://barracudaserver.com/examples/BarracudaDrive/other.html">also available</a>. <a href="/screenshots/barracudadrive.png" class="icon">📺</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://hamsterrepublic.com/dl/">RemotePad</a> [244k] + Combination plain-text-editor and ftp-client. <a href="/screenshots/remotepad.png" class="icon">📺</a></p> 
+  <p><a href="http://www.satsignal.eu/software/net.htm#FTPpie">FTPpie</a> [248k] + Pie chart display of FTP file space use. <a href="/screenshots/ftppie.png" class="icon">📺</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://www.memecode.com/iftp.php">i.Ftp 1.85</a> [359k] {S}+ Simple graphical ftp application. <a href="/screenshots/iftp.png" class="icon">📺</a></p> 
+  <p><a name="sendtoftp"></a>SendTo FTP 2.8 [359k] FTP from the context (right click) menu. <a href="/screenshots/sendtoftp.png" class="icon">📺</a> <a href="/downloads/sendtoftp.7z" class="icon">💾</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://www.rejetto.com/sw/">HFS - HTTP File Server 1.6a</a> [409k] {S}+ Simple HTTP server with drag &amp; drop interface. <a href="/screenshots/httpfileserver.png" class="icon">📺</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://web.archive.org/web/20080318154239/http://en.typsoft.com/">TYPSoft FTP Server 1.10</a> [413k] {S}+ Simple, clean and robust ftp server. <a href="/screenshots/typsoft_ftp_server.png" class="icon">📺</a></p> 
+  <p><a href="http://web.archive.org/web/20060111114351/http://stud.fh-heilbronn.de/~jdebis/leechftp/downloads.html">LeechFTP 1.3 Build 207</a> [580k] Multithreading FTP client <a href="/screenshots/leechftp.png" class="icon">📺</a> <a href="/downloads/leechftp_1.7z" class="icon">💾</a></p> 
+  <p><a href="http://winscp.sourceforge.net/eng/index.php">WinSCP 3.7.4</a> [980k] + SFTP / SCP client. <a href="/screenshots/winscp.png" class="icon">📺</a></p> 
+  <p>Ftp.exe [44k] + Command line FTP program included with Windows. <a href="http://web.archive.org/web/20030404071717/http://www.tpdigital.com/ftptutorial/dosftp/dosftp.html">Brief tutorial</a> | <a href="ftp.html">Scripting</a> <a href="/screenshots/ftp.exe.png" class="icon">📺</a></p> 
+  <h2>Telnet / SSH</h2> 
+  <p><span class="icon">🌱</span> <a href="http://www.pagetutor.com/dl/sptn3209.html">SimpTerm 0.9.4</a> [120k] + A telnet/rlogin client with file download and KANJI display support <a href="/screenshots/simpterm.png" class="icon">📺</a></p> 
+  <p><a href="http://www.chiark.greenend.org.uk/~sgtatham/putty/">PuTTY 0.57</a> [372k] {S}+ A Telnet and SSH client, along with an xterm terminal emulator <a href="/screenshots/putty.png" class="icon">📺</a></p> 
+  <p><a href="http://hp.vector.co.jp/authors/VA002416/teraterm.html">Tera Term (Pro) 2.3</a> [922k] {S} Supports serial port connections; TCP/IP (telnet) connections; VT100, select VT200/300, and TEK4010 emulation; file transfer protocols (Kermit, XMODEM, ZMODEM, B-PLUS and Quick-VAN); scripting; Japanese &amp; Russian character sets; more. SSH module also available. <a href="/screenshots/teratermpro.png" class="icon">📺</a></p> 
+  <h2>IRC</h2> 
+  <p><span class="icon">🌱</span> <a href="http://www.tinyirc.net/">TinyIRC 1.0 Public Beta 5 (Build 1099)</a> [60k] + The goal of this project is to create the world's smallest IRC client for Win32, with as many (if possible, all) of the features that you're used to in your current IRC client. <a href="/screenshots/tinyirc.png" class="icon">📺</a> <a href="/downloads/tinyirc.7z" class="icon">💾</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://www.dev0.de/products_0irc.html">0irc v1.4.53</a> [67k] {S}+ Tiny, open source IRC client. <a href="/screenshots/0irc.png" class="icon">📺</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://www.diebestenbits.de">Dana 1.3</a> [121k] + Simple, skinnable IRC client <a href="screenshots/dana.png" class="icon">📺</a></p> 
+  <p>IamC 2.9.26R [198k] + Simple IRC client <a href="screenshots/iamc.png" class="icon">📺</a> <a href="/downloads/iamc2_9_26r.7z" class="icon">💾</a> <a href="http://vtatila.kapsi.fi/iamc.html" class="icon">🌎</a></p> 
+  <p><a href="http://xchat.org/">xchat 1.8.5</a> [633k] {S} Graphical IRC client for Windows and several other OSes <a href="screenshots/xchat.png" class="icon">📺</a></p> 
+  <p><a href="http://www.hydrairc.com/">HydraIRC</a> [740k] {S}+ Open source IRC client with support for: DCC chat and file transfers, connecting to multiple servers, dockable floating tabbed windows, channel monitoring, message logs, event viewer, reg-exp highlighting, and much more. <a href="screenshots/hydra.png" class="icon">📺</a></p> 
+  <h2>Instant Messaging (IM)</h2> 
+  <p><span class="icon">🌱</span> <a href="http://miniaim.net/">miniaim v0.2.3</a> [47k] + Tiny AOL instant messaging client. <a href="/screenshots/miniaim.png" class="icon">📺</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://usuarios.lycos.es/pixador/">PixaMSN v0.61</a> [168k] {S}+ Tiny MSN Messenger clone. <a href="/screenshots/pixamsn.png" class="icon">📺</a></p> 
+  <p><a href="http://www.miranda-im.org/">Miranda IM 0.3.3</a> [774k] {S}+ Streamlined ICQ client which supports ICQ, AIM, MSN, Jabber, Yahoo, Gadu-Gadu, Tlen, Netsend, and more. <a href="/screenshots/mirandaim.png" class="icon">📺</a></p> 
+  <h2>Voice over IP (VoIP)</h2> 
+  <p><span class="icon">🌱</span> <a href="http://web.tiscali.it/vitez/picophone.html">PicoPhone</a> [88k] {S}+ Simple Internet phone application with chat <a href="/screenshots/picophone.png" class="icon">📺</a></p> 
+  <p><a href="https://web.archive.org/web/20050222075328/http://www.student.tue.nl/m/j.s.d.kleijn/voiperized/">VoIPerized 2.3</a> [332k] Tiny Voice over IP program. <a href="/screenshots/voiperized.png" class="icon">📺</a> <a href="https://web.archive.org/web/20050316045732fw_/http://www.student.tue.nl:80/m/j.s.d.kleijn/voiperized/voiperized21setup.exe" class="icon">💾</a></p> 
+  <p><a href="http://sourceforge.net/projects/speak-freely-w/">Speak Freely 7.6a</a> [690k] {S} Conduct real-time voice conversations over the Internet or any other TCP/IP network. Includes IDEA, DES, and limited PGP encryption capabilities. <a href="/screenshots/speakfreely.png" class="icon">📺</a></p> 
+  <h2>Port-to-Process Mappers</h2> 
+  <p><span class="icon">🌱</span> <a href="http://web.archive.org/web/20050509013514/http://www.diamondcs.com.au/openports/">DiamondCS OpenPorts v1.0</a> [24k] + CLI port to process mapper for Windows NT/2000/XP. Provides five different output styles, including CSV, FPort, and WinXP's Netstat. Free for personal use. <a href="/screenshots/openports.png" class="icon">📺</a></p> 
+  <p><a href="http://www.nirsoft.net/utils/cports.html">CurrPorts v1.02</a> [36k] + Detailed view of open ports and their corresponding applications. Close ports, kill processes, export info to HTML, XML, or CSV, and much more. <a href="/screenshots/currports.png" class="icon">📺</a></p> 
+  <h2>Firewalls</h2> 
+  <p><a href="http://ghostsecurity.com/ghostwall/">GhostWall 1.150</a> [656k] Windows Firewall alternative ideal for low latency applications. <a href="/screenshots/ghostwall.png" class="icon">📺</a></p> 
+  <p><a href="http://www.softperfect.com/products/firewall/">SoftPerfect Personal Firewall 1.2</a> [900k] "Does not change your Windows system files and does not require any additional libraries" <a href="/screenshots/softperfect_personal_firewall.png" class="icon">📺</a></p> 
+  <h2><a name="remoteaccess"></a>Remote Access</h2> 
+  <p><span class="icon">🌱</span> <a href="http://xrowcc.blog.shinobi.jp/Entry/318/">ZeroRemote v1.2.5</a> [152k] + Remote viewer with DirectX support, file transfer, audio, and more. Single EXE supports both client and server modes. <a href="/screenshots/zeroremote.png" class="icon">📺</a></p> 
+  <p><a href="http://www.tightvnc.com/">TightVNC 1.2.8</a> [582k] {S}+ Client/server software package allowing remote network access to graphical desktops. This bandwidth-efficient version has many improvements over the <a href="http://www.uk.research.att.com/vnc/">original</a>. <a href="/screenshots/tightvnc.png" class="icon">📺</a></p> 
+  <h2>Network Speed Testing</h2> 
+  <p><span class="icon">🌱</span> <a href="http://www.netchain.com/netcps/">NetCPS</a> [23k] {S}+ Measure the effective performance of a TCP/IP network. <a href="/screenshots/netcps.png" class="icon">📺</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://www.pcausa.com/Utilities/pcattcp.htm">PCATTCP</a> [60k] {S}+ PCAUSA's port of <a href="http://ftp.arl.mil/~mike/ttcp.html">Test TCP (TTCP)</a>, a command-line sockets-based benchmarking tool for measuring TCP and UDP performance between two systems. <a href="/screenshots/pcattcp.png" class="icon">📺</a></p> 
+  <h2>Ping / Network Scanning</h2> 
+  <p><span class="icon">🌱</span> <a href="http://www.angryziber.com/ipscan/">Angry IP Scanner 2.21</a> [109k] {S}+ Pings a range of IP addresses and optionally resolves hostnames, scans ports, returns NetBIOS info (computer name, workgroup name, currently logged in user and MAC address), and saves results to CSV, TXT, HTML, XML or IP-Port list files. (While settings can be saved to the registry, this is not the default behavior.) <a href="/screenshots/angryipscanner.png" class="icon">📺</a></p> 
+  <p><a href="http://software.ccschmidt.de/">MultiPing Grapher 1.4.1</a> [284k] + Graph up to 10 different ICMP results. Adjust ping interval and packet size. Includes logging and average calculation. <a href="/screenshots/multiping_grapher.png" class="icon">📺</a></p> 
+  <p><a href="http://www.pingplotter.com/">PingPlotter 1.10</a> [424k] Graphical network troubleshooting and diagnostic tool. Shareware version also available (<a href="http://www.pingplotter.com/featurecomp.html">feature comparison</a>). <a href="/screenshots/pingplotter.png" class="icon">📺</a> <a href="http://www.pingplotter.com/downloads/pngplt_1.exe" class="icon">💾</a></p> 
+  <p><a href="http://www.softperfect.com/products/networkscanner/">SoftPerfect Network Scanner 3.3</a> [619k] + IP, NetBIOS, and SNMP scanner with a slew of features: fast multithreaded scanning; computer pinging; hidden shared resource detection; scanning for listening TCP ports; mount and explore found resources; resolve host names; autodetect local and external IP range; support for remote shutdown and Wake-On-LAN (WoL). <a href="/screenshots/softperfect_network_scanner.png" class="icon">📺</a></p> 
+  <h2>Other Network Tools</h2> 
+  <p><span class="icon">🌱</span> <a href="http://web.archive.org/web/20050427131656/http://www.diamondcs.com.au/?page=console">IP List</a> [12k] + Enumerates network interfaces, showing all bound IP addresses, their broadcast addresses, and their netmasks. <a href="/screenshots/iplist.png" class="icon">📺</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://web.archive.org/web/20050427131656/http://www.diamondcs.com.au/?page=console">Resolve</a> [16k] + Resolve an IP address to its DNS address, and vice versa. <a href="/screenshots/resolve.png" class="icon">📺</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://web.archive.org/web/20050427131656/http://www.diamondcs.com.au/?page=console">XWhois</a> [21k] + Look up information on registered Internet domains and addresses. <a href="/screenshots/xwhois.png" class="icon">📺</a></p> 
+  <p><a href="http://stevemiller.net/sharewatch/">ShareWatch 1.0</a> [33k] + Monitor shares on local and remote servers; see who is connected and what files they are accessing; disconnect any file, user, computer, or share; more. <a href="/screenshots/sharewatch.png" class="icon">📺</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://web.archive.org/web/20080209224009/http://www.vulnwatch.org/netcat/">Netcat 1.11</a> [60k] {S}+ Network swiss army knife. <a href="http://web.archive.org/web/20030210231118/www.sans.org/rr/audit/netcat.php">Review</a> <a href="/screenshots/netcat.png" class="icon">📺</a></p> 
+  <p><a href="http://www.speedguide.net/downloads.php">TCP Optimizer 4.07</a> [668k] + Internet connection tuning and optimizing. Runs under Windows 95 through 10. <a href="/screenshots/tcpoptimizer.png" class="icon">📺</a></p> 
+  <p>Nir Sofer's <a href="https://www.nirsoft.net/network_tools.html">Network Monitoring Tools</a></p> 
+  <h2>HTML and Webmaster Tools</h2> 
+  <p><span class="icon">🌱</span> <a href="https://web.archive.org/web/20080119233750/http://www.simtel.net/pub/pd/24497.html">TAGCASE</a> [6k] {S}+ Converts the case of HTML tags without disturbing attribute values. Includes ANSI C source and DOS executable. <a href="/screenshots/tagcase.png" class="icon">📺</a> <a href="/downloads/tagcase0.7z" class="icon">💾</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://www.thuto.org/ubh/download/dload0.htm">Pich</a> [7k] + Generates an HTML page of all images (JPG, GIF, PNG) in the current directory and (optionally) subdirectories. <a href="/screenshots/pich.png" class="icon">📺</a></p> 
+  <p><span class="icon">🌱</span> <a href="https://web.archive.org/web/20080419021359/http://www.protonfx.com/applications.php">KILL&lt;HTML&gt; 1.5a</a> [from 8k] + Removes all HTML tags and JavaScript from one or more HTML files. DOS and Windows versions included. <a href="/screenshots/killhtml.png" class="icon">📺</a> <a href="/downloads/killhtml.7z" class="icon">💾</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://www.thuto.org/ubh/download/dload0.htm">HTI (Hyper-Text Index) 0.5</a> [16k] {S}+ Generates an index page of HTML files. Includes titles, meta descriptions, and H1 - H6 headings. ANSI C source code available on request, on a "don't laugh" basis. <a href="/screenshots/hti.png" class="icon">📺</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://users.erols.com/waynesof/bruce.htm">HTMStrip 911</a> [129k] + Convert HTML to plain text. Very robust command line program. <a href="/screenshots/htmstrip.png" class="icon">📺</a></p> 
+  <p><a href="http://www.clickomania.ch/progs/HTMLstripper.htm">HTML stripper 1.1</a> [275k] + Scrub HTML clean of ads, iframes, scripts, etc. <a href="/screenshots/html_stripper.png" class="icon">📺</a></p> 
+  <p><a href="http://www.cyber-matrix.com/txt2htm.htm">Text2HTML 1.3</a> [240k] Convert plain text to HTML <a href="/screenshots/text2html.png" class="icon">📺</a> <a href="https://web.archive.org/web/20070310231724/http://www.cybermatrix.com/download/txt2html.zip" class="icon">💾</a></p> 
+  <p><span class="icon">🌱</span> <a href="http://www.sulaco.co.za/downloads.htm">HTML Image Page Builder</a> [193k] + Convert images to HTML <a href="/screenshots/html_image_page_builder.png" class="icon">📺</a></p> 
+  <p><a href="https://web.archive.org/web/20060714064742/http://www.feldfunker.de:80/software/splitz.htm">Splitz</a> [353k] + Split any image into rectangular parts and export the resulting images along with the HTML table that puts them back together. <a href="/screenshots/splitz.png" class="icon">📺</a></p> 
+  <p><span class="icon">🌱</span> <a href="https://web.archive.org/web/20070410002904/http://hjem.get2net.dk/fec/shtmlc/shtmlc.html">sHTMLc v2.1</a> [150k] + Convert characters to character entities quickly and easily. <a href="/screenshots/shtmlc.png" class="icon">📺</a></p> 
+  <p><a href="http://ablavier.pagesperso-orange.fr/TidyGUI/">TidyGUI 1.1.5</a> [146k] {S}+ Clean up your HTML <a href="/screenshots/tidygui.png" class="icon">📺</a></p> 
+  <p><a href="http://home.snafu.de/tilman/xenulink.html">Xenu's Link Sleuth 1.2d</a> [230k] + Check websites for broken links <a href="/screenshots/xenu.png" class="icon">📺</a></p> 
+  <p><a href="https://web.archive.org/web/20070207011259/http://www.domainpunch.com/products/domainstatus/">Domain Name Status Reporter</a> [328k] + Monitor the registry status of domain names. <a href="/screenshots/domain_name_status_reporter.png" class="icon">📺</a></p> 
+  <p><a href="http://www.mrunix.net/webalizer/">Webalizer 2.01-10</a> [589k] {S}+ Web server log file analysis program. Produces highly detailed, easily configurable usage reports in HTML format. <a href="/screenshots/webalizer.png" class="icon">📺</a> <a href="/downloads/webalizer-2.01-10-win32-bin.7z" class="icon">💾</a></p> 
+  <hr> 
+  <p><i>last update: 2020.08.15</i></p>  
+ </body>
+</html>

@@ -1,0 +1,205 @@
+<!doctype html><!--[if IE]><html lang="en" class="ie"><![endif]-->
+<html lang="en"> 
+ <head> 
+  <meta charset="utf-8"> 
+  <title>Mobatek - System and network software for Windows</title> 
+  <meta name="description" content="Home of MobaXterm X server and SSH client, MobaSSH SSH server, MobaLiveCD, MobaPhoto and MobaMotiv"> 
+  <meta name="keywords" content="Mobatek, X server, ssh, X11, Xserver, putty, exceed, reflection, xwin32, X11 forwarding, sftp, rdp, vnc, xdmcp, mosh, windows, portable, linux, unix, remote, puttycm, securecrt, secure crt, X11 server, Xorg, X.org, Xfree, mocha"> 
+  <meta name="author" content="Mobatek"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> 
+  <link rel="canonical" href="https://www.mobatek.net/"> 
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon"> 
+  <link rel="icon" href="favicon.ico" type="image/x-icon"> 
+  <link rel="alternate" type="application/rss+xml" title="Mobatek RSS feed" href="https://blog.mobatek.net/index.xml"> 
+  <link href="css/mobastyles.css" rel="stylesheet" media="screen"> 
+  <link href="css/moba.css" rel="stylesheet" media="screen"> 
+  <script src="js/libs/modernizr.js"></script> <!--[if lt IE 9]>
+      <script src="js/libs/respond.js"></script>
+    <![endif]--> 
+ </head> 
+ <body> 
+  <div id="off-canvas-wrap" class="off-canvas-wrap" data-offcanvas> 
+   <div class="inner-wrap"> 
+    <aside class="left-off-canvas-menu"> 
+     <div class="mobile-navi"> 
+      <ul> 
+       <li class="current"><a href="/">Home</a></li> 
+       <li><a href="/labs.html">Labs</a></li> 
+       <li><a href="/contact.html">Contact</a></li> 
+       <li><a href="/aboutus.html">About us</a></li> 
+      </ul> 
+     </div> 
+    </aside> 
+    <div class="site-layout boxed"> 
+     <div class="header_background"> 
+     </div> 
+     <header id="mobaheader" class="header sticky"> 
+      <div class="inner"> 
+       <div class="container group"> <a href="/" class="logo"> 
+         <div class="mobalogoimg"> 
+          <img width="48" height="48" src="img/logo.png" alt="Mobatek"> 
+         </div> 
+         <div class="mobalogotxt">
+           Mobatek 
+         </div> </a> 
+        <div onclick="toggleMobileMenu();" class="left-off-canvas-toggle" id="nav-toggle"> <span></span> 
+        </div> 
+        <div class="navigation"> 
+         <nav class="menu"> 
+          <ul> 
+           <li class="active"><a href="/">Home</a></li> 
+           <li><a href="/labs.html">Labs</a></li> 
+           <li><a href="/contact.html">Contact</a></li> 
+           <li><a href="/aboutus.html">About us</a></li> 
+          </ul> 
+         </nav> 
+         <div class="socials_haut"> <a target="_blank" href="https://www.facebook.com/plugins/like.php?href=https://www.mobatek.net/"> 
+           <div class="socialicon socialsmall fbicon"> <i class="tooltipped fa fa-facebook" data-placement="bottom" title="Like us on Facebook"></i> 
+           </div> </a> <a target="_blank" href="https://twitter.com/intent/follow?original_referer=http%3A%2F%2Fwww.mobatek.net%2F&amp;region=follow_link&amp;screen_name=mobatek&amp;tw_p=followbutton"> 
+           <div class="socialicon socialsmall tticon"> <i class="tooltipped fa fa-twitter" data-placement="bottom" title="Follow us on Twitter"></i> 
+           </div> </a> <a target="_blank" href="https://blog.mobatek.net"> <i class="tooltipped fa fa-users" data-placement="bottom" title="Mobatek blog"></i> </a> 
+         </div> 
+        </div> 
+       </div> 
+      </div> 
+     </header> 
+     <div class="page"> 
+      <section class="mobatitre"> 
+       <div class="page-heading center"> 
+        <h1>Welcome to Mobatek</h1> 
+        <h3>Powerful, secure and cost effective software for computer professionals</h3> 
+       </div> 
+       <div class="col-md-4 col-sm-4 center-mobile"> 
+        <div class="space-top">
+         <a class="btn_bleu" href="https://mobaxterm.mobatek.net"><i class="fa fa-terminal btn_icon"></i>GET MOBAXTERM NOW!</a> 
+        </div> 
+       </div> 
+       <div class="col-md-4 col-sm-4 center-mobile"> 
+        <div class="space-top">
+         <a class="btn_vert" href="https://mobassh.mobatek.net"><i class="fa fa-lock btn_icon"></i>GET MOBASSH NOW!</a> 
+        </div> 
+       </div> 
+       <div class="col-md-4 col-sm-4 center-mobile"> 
+        <div class="space-top">
+         <a class="btn_orange" href="/labs.html"><i class="fa fa-flask btn_icon"></i>VISIT OUR LABS!</a> 
+        </div> 
+       </div> &nbsp; 
+      </section> 
+      <section class="page-block space-top double-padding-bottom"> 
+       <div class="container"> 
+        <div class="row double-padding-bottom"> 
+         <p>We have been creating system and network software since 2008 for worldwide users. Mobatek develops high value products in order to provide efficient and cost effective solutions for your IT, development and DBA teams.<br> Our products are designed to ensure high security, efficiency and focused on user experience. No headache for deployment: our products do not require any dependency, Internet connection or third-party software to run. Just download, run and enjoy!</p> 
+         <div class="col-md-3 col-sm-3" style="padding:0 0 0 0;"> 
+          <div class="row icon-block key_feature"> 
+           <div class="col-lg-2 col-md-2 col-sm-2 key_feature_icon"> <i class="fa fa-cogs"></i> 
+           </div> 
+           <div class="col-lg-9 col-md-9 col-sm-9 key_feature_text"> 
+            <h5>Powerful and stable</h5> 
+            <p>Stable, lightweight and easy to configure software</p> 
+           </div> 
+          </div> 
+         </div> 
+         <div class="col-md-3 col-sm-3" style="padding:0 0 0 0;"> 
+          <div class="row icon-block key_feature"> 
+           <div class="col-lg-2 col-md-2 col-sm-2 key_feature_icon"> <i class="fa fa-image"></i> 
+           </div> 
+           <div class="col-lg-9 col-md-9 col-sm-9 key_feature_text"> 
+            <h5>Intuitive design</h5> 
+            <p>Versatile and easy to use graphical interfaces</p> 
+           </div> 
+          </div> 
+         </div> 
+         <div class="col-md-3 col-sm-3" style="padding:0 0 0 0;"> 
+          <div class="row icon-block key_feature"> 
+           <div class="col-lg-2 col-md-2 col-sm-2 key_feature_icon"> <i class="fa fa-puzzle-piece"></i> 
+           </div> 
+           <div class="col-lg-9 col-md-9 col-sm-9 key_feature_text"> 
+            <h5>Agility</h5> 
+            <p>Development driven by users feedback and requests</p> 
+           </div> 
+          </div> 
+         </div> 
+         <div class="col-md-3 col-sm-3" style="padding:0 0 0 0;"> 
+          <div class="row icon-block key_feature"> 
+           <div class="col-lg-2 col-md-2 col-sm-2 key_feature_icon"> <i class="fa fa-users"></i> 
+           </div> 
+           <div class="col-lg-9 col-md-9 col-sm-9 key_feature_text"> 
+            <h5>Try before you buy</h5> 
+            <p>Free versions available: test before you purchase</p> 
+           </div> 
+          </div> 
+         </div> 
+        </div> 
+       </div> 
+       <div class="row"> 
+        <div class="col-md-6 col-sm-6"> <a class="no_text_decoration center" href="https://mobaxterm.mobatek.net"> 
+          <div class="mobadiapo"> 
+           <div class="font_grise"> 
+            <h4>MobaXterm</h4> 
+            <p class="texte_serre">X server and SSH client for Windows</p> 
+            <img width="150" height="110" class="center" style="width: 150px; height: auto;" src="img/mobaxterm_logo.png" alt="MobaXterm"> 
+            <p class="texte_serre"><br>MobaXterm is your ultimate toolbox for remote computing. In a single Windows application, it provides remote network tools (SSH, X11, RDP, VNC, FTP, MOSH, ...) and Unix commands (bash, ls, cat, sed, grep, awk, rsync, ...).</p> <span style="color:#4374E0;">Read more on MobaXterm website</span> 
+           </div> 
+          </div> </a> 
+        </div> 
+        <div class="col-md-6 col-sm-6"> <a class="no_text_decoration center" href="https://mobassh.mobatek.net"> 
+          <div class="mobadiapo"> 
+           <div class="font_grise center"> 
+            <h4>MobaSSH</h4> 
+            <p class="texte_serre">Enhanced SSH server for Windows with Unix tools</p> 
+            <img width="150" height="110" class="center" style="width: 150px; height: auto;" src="img/mobassh_logo.png" alt="MobaSSH"> 
+            <p class="texte_serre"><br>MobaSSH allows you to run commands and transfer files on a remote Windows PC from any operating system (GNU/Linux, Unix, HP-UX, AIX, Windows, ...) through a fully secured and encrypted network connection.</p> <span style="color:#4374E0;">Read more on MobaSSH website</span> 
+           </div> 
+          </div> </a> 
+        </div> 
+        <div class="col-md-12 col-sm-12"> <a class="no_text_decoration center" href="/labs.html"> 
+          <div class="mobadiapo"> 
+           <div class="font_grise"> 
+            <h4>Mobatek Labs</h4> 
+            <p class="texte_serre">Discover our other multimedia and system software</p> 
+            <div class="col-md-4 col-sm-4"> 
+             <img width="150" height="110" class="center" style="width: 150px; height: auto;" src="img/mobalivecd_logo.png" alt="MobaLiveCD"> 
+             <p class="texte_serre"><br>MobaLiveCD is a freeware that allows you to run your LiveCD on Windows into an emulation window.</p> 
+            </div> 
+            <div class="col-md-4 col-sm-4"> 
+             <img width="150" height="110" class="center" style="width: 150px; height: auto;" src="img/mobaphoto_logo.png" alt="MobaPhoto"> 
+             <p class="texte_serre"><br>MobaPhoto is a freeware that allows you to create some professional looking photo galleries for your webpage.</p> 
+            </div> 
+            <div class="col-md-4 col-sm-4"> 
+             <img width="150" height="110" class="center" style="width: 150px; height: auto;" src="img/mobamotiv_logo.png" alt="MobaMotiv"> 
+             <p class="texte_serre"><br>MobaMotiv is a freeware that automatically generates French cover letters based on your profile.</p> 
+            </div> <span style="color:#4374E0;">Download them from our labs</span> 
+           </div> 
+          </div> </a> 
+        </div> 
+       </div> 
+      </section> 
+     </div> 
+     <footer class="footer"> 
+      <div class="copyright"> 
+       <div class="col-md-3 col-sm-3" style="padding-top: 12px;"> 
+        <p><a href="https://mobaxterm.mobatek.net" target="_blank">MobaXterm</a> | <a href="https://mobassh.mobatek.net" target="_blank">MobaSSH</a> | <a href="/labs.html" target="_blank">Other products</a></p> 
+       </div> 
+       <div class="col-md-6 col-sm-6" style="padding-top: 12px;"> 
+        <p>© 2008 - 2021 Mobatek. <a href="/">Mobatek</a>® is a registered trademark</p> 
+       </div> 
+       <div class="col-md-3 col-sm-3" style="text-align: right;"> 
+        <div class="contacts"> 
+         <div class="socials_bas"> <a target="_blank" href="https://www.facebook.com/plugins/like.php?href=https://www.mobatek.net/"> 
+           <div class="socialicon socialbig fbicon"> <i class="tooltipped fa fa-facebook" data-placement="bottom" title="Like us on Facebook"></i> 
+           </div> </a> <a target="_blank" href="https://twitter.com/intent/follow?original_referer=http%3A%2F%2Fwww.mobatek.net%2F&amp;region=follow_link&amp;screen_name=mobatek&amp;tw_p=followbutton"> 
+           <div class="socialicon socialbig tticon"> <i class="tooltipped fa fa-twitter" data-placement="bottom" title="Follow us on Twitter"></i> 
+           </div> </a> <a target="_blank" href="https://blog.mobatek.net"> <i class="tooltipped fa fa-users" data-placement="bottom" title="Mobatek blog"></i> </a> 
+         </div> 
+        </div> 
+       </div> 
+      </div> 
+     </footer> 
+    </div> <a class="exit-off-canvas"></a> 
+   </div> 
+  </div> 
+  <div id="mobastickybtns" class="sticky-btns"> <a href="#"><span><i class="fa fa-chevron-up"></i></span></a> 
+  </div> 
+  <script src="js/mobascripts.js"></script>  
+ </body>
+</html>

@@ -1,0 +1,1332 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+ <head> 
+  <title>FHEM SVN</title> 
+  <link rel="stylesheet" type="text/css" href="style.css"> 
+  <link rel="stylesheet" type="text/css" href="modules.css"> 
+  <script type="text/javascript" language="JavaScript">function iLoveBread(){var a="sv",b="n",c=Math.pow(2,6),d=String.fromCharCode(c),e="fhem.de",f=a+b+String.fromCharCode(c)+e;document.write("<a href=mailto:"+f+">"+a+b+d+e+"</a>")}</script> 
+  <script type="text/javascript" language="JavaScript" src="js/jquery-3.1.1.min.js"></script> 
+  <script type="text/javascript" language="JavaScript" src="js/module-overview.js"></script> 
+  <script type="text/javascript" language="JavaScript" src="js/jquery.tablesorter.min.js"></script> 
+  <script type="text/javascript" language="JavaScript" src="js/jquery.tablesorter.widgets.js"></script> 
+  <meta http-equiv="Content-type" content="text/html;charset=utf-8"> 
+  <link rel="shortcut icon" href="favicon.ico"> 
+  <style type="text/css">
+
+	</style> 
+ </head> 
+ <body> 
+  <div id="menuScrollArea"> 
+   <div id="logo"></div> 
+   <div id="menu"> 
+    <table>
+     <tbody>
+      <tr>
+       <td> <!-- Playing with the width --> 
+        <table class="room"> 
+         <tbody>
+          <tr>
+           <td></td>
+          </tr> 
+          <tr>
+           <td><b>Content:</b></td>
+          </tr> 
+          <tr>
+           <td></td>
+          </tr> 
+          <tr>
+           <td><a href="#browsing">browsing</a></td>
+          </tr> 
+          <tr>
+           <td></td>
+          </tr> 
+          <tr>
+           <td><a href="#readonly">read only access</a></td>
+          </tr> 
+          <tr>
+           <td></td>
+          </tr> 
+          <tr>
+           <td><a href="#readwrite">read/write access</a></td>
+          </tr> 
+          <tr>
+           <td></td>
+          </tr> 
+          <tr>
+           <td><a href="#fingerprints">SSH fingerprints</a></td>
+          </tr> 
+          <tr>
+           <td></td>
+          </tr> 
+          <tr>
+           <td><a href="#contributors">contributors</a></td>
+          </tr> 
+          <tr>
+           <td></td>
+          </tr> 
+          <tr>
+           <td><a href="#troubleshooting">troubleshooting</a></td>
+          </tr> 
+          <tr>
+           <td>
+            <hr></td>
+          </tr> 
+          <tr>
+           <td><b>FHEM Links:</b></td>
+          </tr> 
+          <tr>
+           <td></td>
+          </tr> 
+          <tr>
+           <td><a href="https://fhem.de" target="_blank">Home</a></td>
+          </tr> 
+          <tr>
+           <td></td>
+          </tr> 
+          <tr>
+           <td><a href="https://forum.fhem.de" target="_blank">Forum</a></td>
+          </tr> 
+          <tr>
+           <td></td>
+          </tr> 
+          <tr>
+           <td><a href="https://svn.fhem.de/" target="_blank">SVN</a></td>
+          </tr> 
+          <tr>
+           <td></td>
+          </tr> 
+          <tr>
+           <td><a href="https://wiki.fhem.de" target="_blank">Wiki</a></td>
+          </tr> 
+          <tr>
+           <td></td>
+          </tr> 
+          <tr>
+           <td><a href="https://verein.fhem.de" target="_blank">Verein</a></td>
+          </tr> 
+          <tr>
+           <td></td>
+          </tr> 
+         </tbody>
+        </table> </td>
+      </tr>
+     </tbody>
+    </table> 
+   </div> 
+  </div> 
+  <div id="right"> <a name="top"></a> 
+   <h3>SVN repository</h3> 
+   <ul>
+     Welcome to the FHEM SVN repository server. Here you can access the source code of FHEM.
+    <br> 
+    <br> This site is part of the FHEM project located at <a target="_new" href="http://fhem.de">http://fhem.de</a>. 
+   </ul> <a name="browsing"></a> 
+   <h3>browsing the source code</h3> 
+   <ul>
+     To browse the repository, you can use our <a target="_new" href="/trac">Trac</a>.
+    <br> 
+    <br> Here are some common used links:
+    <br> 
+    <br> 
+    <ul> 
+     <li>History Log: <a target="_new" href="/trac/log">https://svn.fhem.de/trac/log/</a> - <a href="/trac/log/trunk?format=rss&amp;rev=HEAD&amp;limit=200&amp;mode=stop_on_copy">RSS-Feed <img src="images/feed.png"></a></li> 
+     <li>Trunk: <a target="_new" href="/trac/browser/trunk/fhem">https://svn.fhem.de/trac/browser/trunk/fhem</a> - <a href="/trac/browser/trunk/fhem?rev=HEAD&amp;format=zip">ZIP-File Download</a></li> 
+    </ul> 
+   </ul> <a name="readonly"></a> 
+   <h3>read only check out via HTTP</h3> 
+   <ul>
+     A read only check out of the repository can be performed via HTTP. Please use the following SVN command:
+    <br> 
+    <br> 
+    <ul>
+     <code>svn co <a href="/fhem/">https://svn.fhem.de/fhem/</a> <i>&lt;directory&gt;</i></code>
+    </ul> 
+    <br> To check out only the trunk branch, use the following SVN command:
+    <br> 
+    <br> 
+    <ul>
+     <code>svn co <a href="/fhem/trunk/fhem">https://svn.fhem.de/fhem/trunk/fhem</a> <i>&lt;directory&gt;</i></code>
+    </ul> 
+   </ul> <a name="readwrite"></a> 
+   <h3>read/write access for developers</h3> 
+   <ul>
+     Module developers can get read/write access to the repository via SSH. You need to provide your SSH public key (if you dont have one, generate it on Linux via <code>ssh-keygen -t rsa -b 4096 -C "myusername@svn.fhem.de"</code> or on Windows via PuTTYgen) and your <a href="http://forum.fhem.de/" target="_new">FHEM forum</a> username via mail to 
+    <script language="JavaScript">iLoveBread();</script> together with the name of modules you want to contribute.
+    <br> 
+    <br> All active SVN accounts will be listed here at <a href="#contributors">active contributors</a>. If you don't want to be listed here, please give us an information via mail. 
+    <br>
+    <br> If your account is activated, you can check out the repository with the following steps:
+    <br> 
+    <br> <u>Linux/Unix:</u>
+    <br> 
+    <br> 
+    <ol> 
+     <li>add the following lines to your SSH config file <code>~/.ssh/config</code>:<br><br> 
+      <ul> <code> Host svn.fhem.de<br> IdentityFile <i>&lt;full path to your private key file&gt;</i><br> Port 55522<br> User <i>&lt;your username&gt;</i><br> </code> 
+       <br> 
+      </ul> </li> 
+     <li>check out the repository with the following command:<br><br> 
+      <ul>
+       <code>svn co svn+ssh://svn.fhem.de/ <i>&lt;directory&gt;</i></code>
+      </ul><br> or for trunk only:<br><br> 
+      <ul>
+       <code>svn co svn+ssh://svn.fhem.de/trunk/fhem <i>&lt;directory&gt;</i></code>
+      </ul> </li> 
+    </ol> 
+    <br> <u>Windows (with TortoiseSVN):</u>
+    <br> 
+    <br> 
+    <ol> 
+     <li><b>Ensure your private key file is stored as PuTTY private key file (*.ppk). A private key file in OpenSSH format will not work. You can convert an existing OpenSSH privat key file with PuTTYgen which is part of a PuTTY installation</b></li>
+     <br> 
+     <li>create a appropriate Putty Session:<br><br> 
+      <ul> 
+       <img src="images/putty1.png">
+       <br> 
+       <br> 
+       <img src="images/putty2.png">
+       <br> 
+       <br> 
+       <img src="images/putty3.png">
+       <br> 
+      </ul> <br><br> </li> 
+     <li>check out the repository with the following url (use Putty session name as hostname!):<br><br> 
+      <ul>
+       <code> svn+ssh://svn.fhem.de/</code>
+      </ul><br> or for trunk only:<br><br> 
+      <ul>
+       <code>svn+ssh://svn.fhem.de/trunk/fhem</code>
+      </ul> <br><br> 
+      <ul> 
+       <img src="images/tortoise1.png"> 
+      </ul> </li> 
+    </ol> 
+   </ul> <a name="fingerprints"></a> 
+   <h3>SSH host key fingerprints</h3> 
+   <ul>
+     To verify your SSH connection to svn.fhem.de is not compromised, these are the SSH host key fingerprints of svn.fhem.de:
+    <br>
+    <br> <code> RSA:<br>
+     <ul>
+       MD5:1c:da:8b:06:83:27:d3:7e:d4:35:ca:02:9d:2d:79:d0
+      <br> SHA256:n69/rOAgGK4k7Msi/O0im82ATHn9zCkrzJWr7MwMeYk
+      <br>
+      <br>
+     </ul> DSA:<br>
+     <ul>
+       MD5:10:96:51:b2:78:93:6a:43:13:4b:56:30:67:b4:63:a8
+      <br> SHA256:iELbGviKk7QCztEwiO/YiBKTfEqUumo3tw82iY0Llak
+      <br>
+      <br>
+     </ul> ECDSA:<br>
+     <ul>
+       SHA256:aekRckgeP3UWEwumpa1KbpiNVeFNlIlsXU8DC6fhH9k
+      <br> MD5:66:41:62:f3:45:ed:a3:59:93:28:c6:84:2d:36:b0:00
+      <br>
+      <br>
+     </ul> ED25519:<br>
+     <ul>
+       SHA256:QNBlnK0+QTr1m8VX8gIr2+YDQA9t1qOAaXsb0bf3QmQ
+      <br> MD5:5a:9e:6a:e7:1e:34:df:28:8f:9e:1c:07:da:e0:3e:d0
+      <br>
+     </ul> </code> 
+   </ul> <a name="contributors"></a> 
+   <h3>active contributors</h3> 
+   <ul>
+     These are the contributors who made FHEM what it is today. This table is based on <a href="https://svn.fhem.de/trac/browser/trunk/fhem/MAINTAINER.txt">MAINTAINER.txt</a> where all developers are listed with their maintained files.
+    <br> 
+    <br> Currently 135 active contributors are registered.
+    <br> 
+    <br> 
+    <table cellpadding="5" class="block summary" id="module-overview"> 
+     <thead> 
+      <tr>
+       <th class="sortable">user</th>
+       <th class="sortable">since</th>
+       <th>maintains</th>
+      </tr> 
+     </thead> 
+     <tbody> 
+      <tr class="odd">
+       <td nowrap>50watt</td>
+       <td nowrap>2014-06-20</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/70_PIONEERAVR.pm<br> FHEM/71_PIONEERAVRZONE.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>Adam</td>
+       <td nowrap>2014-12-09</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/89_VCONTROL.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>Adimarantis</td>
+       <td nowrap>2021-01-20</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/52_I2C_ADS1x1x</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>alexus</td>
+       <td nowrap>2017-04-03</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/17_EGPM2LAN.pm<br> FHEM/70_EGPM.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>amenomade</td>
+       <td nowrap>2020-09-06</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/lib/AttrTemplate/httpmod.template</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>andi291</td>
+       <td nowrap>2015-05-15</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/00_TUL.pm<br> FHEM/10_EIB.pm<br> FHEM/10_KNX.pm<br> FHEM/86_Robonect.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>andies</td>
+       <td nowrap>2018-12-22</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/89_VCLIENT.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>andreas13</td>
+       <td nowrap>2018-12-27</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/98_vitoconnect.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>arnoaugustin</td>
+       <td nowrap>2012-09-17</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/51_I2C_BH1750.pm<br> FHEM/79_BDKM.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>Benni</td>
+       <td nowrap>2015-12-06</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/98_QRCode.pm<br> FHEM/98_rssFeed.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>bernd_zwo</td>
+       <td nowrap>2018-09-25</td>
+       <td>
+        <div class="module-overview">
+         <code></code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>Beta-User</td>
+       <td nowrap>2018-12-13</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/00_MYSENSORS.pm<br> FHEM/10_MYSENSORS_DEVICE<br> FHEM/59_Twilight.pm<br> FHEM/98_RandomTimer.pm<br> FHEM/98_WeekdayTimer.pm<br> FHEM/lib/AttrTemplate/mqtt2.template<br> FHEM/lib/AttrTemplate/mysensors.template<br> FHEM/lib/Device/MySensors/*<br> contrib/AttrTemplate/*</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>betateilchen</td>
+       <td nowrap>2013-07-21</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/55_InfoPanel.pm<br> FHEM/98_configdb.pm<br> FHEM/98_count.pm<br> FHEM/98_fheminfo.pm<br> FHEM/98_GoogleAuth.pm<br> FHEM/98_help.pm<br> FHEM/holiday/*<br> contrib/betateilchen/*<br> contrib/DEBIAN/*<br> configDB.pm<br> http://debian.fhem.de</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>BioS</td>
+       <td nowrap>2014-04-09</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/70_Jabber.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>bjoernh</td>
+       <td nowrap>2014-01-07</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/10_IT.pm<br> FHEM/14_CUL_REDIRECT.pm<br> FHEM/14_CUL_TCM97001.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>Blackcat</td>
+       <td nowrap>2014-05-12</td>
+       <td>
+        <div class="module-overview">
+         <code></code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>Byte09</td>
+       <td nowrap>2017-10-07</td>
+       <td>
+        <div class="module-overview">
+         <code></code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>C_Herrmann</td>
+       <td nowrap>2014-03-30</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/10_UNIRoll.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>charlie71</td>
+       <td nowrap>2016-01-15</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/44_S7.pm<br> FHEM/44_S7_ARead.pm<br> FHEM/44_S7_AWrite.pm<br> FHEM/44_S7_Client.pm<br> FHEM/44_S7_DRead.pm<br> FHEM/44_S7_DWrite.pm<br> FHEM/44_S7_S5Client.pm<br> FHEM/44_S7_S7Client.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>choenig</td>
+       <td nowrap>2019-03-14</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/10_WS980.pm<br> FHEM/48_MieleAtHome.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>chris1284</td>
+       <td nowrap>2015-01-13</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/57_CALVIEW.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>ChrisD</td>
+       <td nowrap>2015-03-19</td>
+       <td>
+        <div class="module-overview">
+         <code></code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>CoolTux</td>
+       <td nowrap>2015-09-10</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/21_HEOSGroup<br> FHEM/21_HEOSMaster<br> FHEM/21_HEOSPlayer<br> FHEM/42_AptToDate.pm<br> FHEM/46_Aqicn.pm<br> FHEM/46_SmartPi.pm<br> FHEM/46_TeslaPowerwall2AC.pm<br> FHEM/73_AMADCommBridge.pm<br> FHEM/73_AutoShuttersControl.pm<br> FHEM/73_GardenaSmartBridge.pm<br> FHEM/73_NUKIBridge.pm<br> FHEM/74_AMADDevice.pm<br> FHEM/74_GardenaSmartDevice.pm<br> FHEM/74_HOMBOT.pm<br> FHEM/74_NUKIDevice.pm<br> FHEM/74_XiaomiBTLESens<br> FHEM/77_UWZ.pm<br> FHEM/82_LGTV_WebOS.pm<br> FHEM/98_backup.pm<br> FHEM/DarkSkyAPI.pm<br> FHEM/GPUtils.pm<br> FHEM/OpenWeatherMapAPI.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>Creideiki</td>
+       <td nowrap>2014-09-22</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/34_NUT.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>Damian</td>
+       <td nowrap>2013-03-11</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/98_DOIF.pm<br> FHEM/98_IF.pm<br> FHEM/98_THRESHOLD.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>daniel2311</td>
+       <td nowrap>2017-05-15</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/38_Broadlink.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>DeeSPe</td>
+       <td nowrap>2016-08-03</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/22_HOMEMODE.pm<br> FHEM/98_Hyperion.pm<br> FHEM/98_serviced.pm<br> contrib/98_FileLogConvert.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>delmar</td>
+       <td nowrap>2018-09-25</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/49_IPCAM.pm<br> FHEM/70_CanOverEthernet.pm<br> FHEM/70_DENON_AVR.pm<br> FHEM/70_DENON_AVR_ZONE.pm<br> FHEM/70_ONKYO_AVR.pm<br> FHEM/70_ZoneMinder.pm<br> FHEM/71_COE_Node.pm<br> FHEM/71_ONKYO_AVR_ZONE.pm<br> FHEM/71_ZM_Monitor.pm<br> FHEM/72_TA_CMI_JSON.pm<br> FHEM/ONKYOdb.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>dev0</td>
+       <td nowrap>2017-02-18</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/34_ESPEasy.pm<br> FHEM/98_expandJSON.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>dirigent</td>
+       <td nowrap>2017-12-26</td>
+       <td>
+        <div class="module-overview">
+         <code></code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>dominik</td>
+       <td nowrap>2016-07-18</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/10_EQ3BT.pm<br> FHEM/39_gassistant.pm<br> FHEM/98_BOSEST.pm<br> FHEM/98_DLNARenderer.pm<br> FHEM/98_GOOGLECAST.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>domschl</td>
+       <td nowrap>2015-04-01</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/38_JawboneUp.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>DS_Starter</td>
+       <td nowrap>2015-11-25</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/49_SSCam.pm<br> FHEM/49_SSCamSTRM.pm<br> FHEM/50_SSChatBot.pm<br> FHEM/57_SSCal.pm<br> FHEM/60_Watches.pm<br> FHEM/76_SMAInverter.pm<br> FHEM/93_DbLog.pm<br> FHEM/93_DbRep.pm<br> FHEM/93_Log2Syslog.pm<br> FHEM/95_Dashboard.pm<br> contrib/DS_Starter/*<br> lib/FHEM/SynoModules/API.pm<br> lib/FHEM/SynoModules/ErrCodes.pm<br> lib/FHEM/SynoModules/SMUtils.pm<br> www/pgm2/dashboard*</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>eisler</td>
+       <td nowrap>2014-09-23</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/12_HProtocolGateway.pm<br> FHEM/12_HProtocolTank.pm<br> FHEM/12_OilFox.pm<br> FHEM/44_TEK603.pm<br> FHEM/52_I2C_EMC1001.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>eki</td>
+       <td nowrap>2020-02-27</td>
+       <td>
+        <div class="module-overview">
+         <code></code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>Ellert</td>
+       <td nowrap>2017-01-17</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/98_DOIFtools.pm<br> www/pgm2/doif.js<br> www/pgm2/fhemweb_iconButtons.js<br> www/pgm2/fhemweb_iconLabel.js<br> www/pgm2/fhemweb_iconRadio.js<br> www/pgm2/fhemweb_iconSwitch.js</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>fhemmiv</td>
+       <td nowrap>2017-06-25</td>
+       <td>
+        <div class="module-overview">
+         <code></code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>Florian_GT</td>
+       <td nowrap>2019-06-20</td>
+       <td>
+        <div class="module-overview">
+         <code></code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>FlorianZ</td>
+       <td nowrap>2017-05-03</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/98_alarmclock.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>gandy</td>
+       <td nowrap>2015-05-05</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/76_MSGFile.pm<br> FHEM/76_MSGMail.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>GeXX</td>
+       <td nowrap>2017-06-11</td>
+       <td>
+        <div class="module-overview">
+         <code></code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>gvzdus</td>
+       <td nowrap>2021-01-11</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/36_ShellyMonitor.pm<br> FHEM/47_OBIS.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>haus-automatisierung.com</td>
+       <td nowrap>2017-07-16</td>
+       <td>
+        <div class="module-overview">
+         <code></code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>Hauswart</td>
+       <td nowrap>2017-09-20</td>
+       <td>
+        <div class="module-overview">
+         <code></code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>HCS</td>
+       <td nowrap>2014-06-09</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/36_EleroDrive.pm<br> FHEM/36_EleroStick.pm<br> FHEM/36_EleroSwitch.pm<br> FHEM/36_EMT7110.pm<br> FHEM/36_KeyValueProtocol.pm<br> FHEM/36_LaCrosse.pm<br> FHEM/36_LaCrosseGateway.pm<br> FHEM/36_Level.pm<br> FHEM/36_PrecipitationSensor.pm<br> FHEM/98_CustomReadings.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>herrmannj</td>
+       <td nowrap>2015-10-18</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/32_TechemHKV.pm<br> FHEM/32_TechemWZ.pm<br> FHEM/32_WifiLight.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>hexenmeister</td>
+       <td nowrap>2014-01-13</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/00_MQTT.pm<br> FHEM/10_MQTT_BRIDGE<br> FHEM/10_MQTT_DEVICE<br> FHEM/10_MQTT_GENERIC_BRIDGE<br> FHEM/42_SMARTMON.pm<br> FHEM/42_SYSMON.pm<br> FHEM/98_systemd_watchdog.pm<br> FHEM/lib/Net/MQTT.pod<br> FHEM/lib/Net/MQTT/*</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>hjr</td>
+       <td nowrap>2017-12-09</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/59_HCS.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>HomeAuto_User</td>
+       <td nowrap>2017-12-16</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/14_FLAMINGO.pm<br> FHEM/14_SD_BELL.pm<br> FHEM/14_SD_UT.pm<br> FHEM/88_Timer.pm<br> FHEM/88_xs1Bridge.pm<br> FHEM/88_xs1Dev.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>hotbso</td>
+       <td nowrap>2017-11-21</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/98_dewpoint.pm<br> FHEM/98_feels_like.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>Icinger</td>
+       <td nowrap>2015-11-11</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/45_Plugwise.pm<br> FHEM/46_PW_Circle.pm<br> FHEM/46_PW_Scan.pm<br> FHEM/46_PW_Sense.pm<br> FHEM/46_PW_Switch.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>igami</td>
+       <td nowrap>2017-03-18</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/59_LuftdatenInfo<br> FHEM/74_Nmap.pm<br> FHEM/76_msgDialog.pm<br> FHEM/98_archetype.pm<br> FHEM/98_monitoring.pm<br> FHEM/98_powerMap</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>immi</td>
+       <td nowrap>2014-02-16</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/00_THZ.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>jamesgo</td>
+       <td nowrap>2015-09-11</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/93_PWMR.pm<br> FHEM/94_PWM.pm<br> FHEM/98_GAEBUS.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>jensb</td>
+       <td nowrap>2017-04-14</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/10_FRM.pm<br> FHEM/20_FRM_AD.pm<br> FHEM/20_FRM_I2C.pm<br> FHEM/20_FRM_IN.pm<br> FHEM/20_FRM_OUT.pm<br> FHEM/20_FRM_PWM.pm<br> FHEM/20_FRM_RGB.pm<br> FHEM/20_FRM_ROTENC.pm<br> FHEM/20_FRM_SERVO.pm<br> FHEM/20_FRM_STEPPER.pm<br> FHEM/51_I2C_TSL2561.pm<br> FHEM/52_I2C_MMA845X<br> FHEM/55_DWD_OpenData.pm<br> FHEM/lib/Device/Firmata/*<br> FHEM/TimeSeries.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>jeschkec</td>
+       <td nowrap>2018-11-04</td>
+       <td>
+        <div class="module-overview">
+         <code></code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>jewuma</td>
+       <td nowrap>2019-12-29</td>
+       <td>
+        <div class="module-overview">
+         <code></code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>jmike</td>
+       <td nowrap>2016-10-07</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/98_TRAFFIC.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>John</td>
+       <td nowrap>2014-10-20</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/23_KOSTALPIKO.pm<br> FHEM/98_HourCounter.pm<br> FHEM/98_MaxScanner.pm<br> FHEM/98_PID20.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>Josch</td>
+       <td nowrap>2017-01-07</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/70_WS3600.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>justme1968</td>
+       <td nowrap>2013-02-06</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/30_HUEBridge.pm<br> FHEM/30_LIGHTIFY.pm<br> FHEM/30_tradfri.pm<br> FHEM/31_Aurora.pm<br> FHEM/31_HUEDevice.pm<br> FHEM/31_LightScene.pm<br> FHEM/32_mailcheck.pm<br> FHEM/32_speedtest.pm<br> FHEM/32_SYSSTAT.pm<br> FHEM/32_yowsup.pm<br> FHEM/33_readingsGroup.pm<br> FHEM/33_readingsHistory.pm<br> FHEM/33_readingsProxy.pm<br> FHEM/34_panStamp.pm<br> FHEM/34_SWAP.pm<br> FHEM/35_SWAP_0000002200000003.pm<br> FHEM/35_SWAP_0000002200000008.pm<br> FHEM/36_EC3000.pm<br> FHEM/36_JeeLink.pm<br> FHEM/36_PCA301.pm<br> FHEM/37_dash_dhcp.pm<br> FHEM/37_fakeRoku.pm<br> FHEM/37_harmony.pm<br> FHEM/37_NotifyAndroidTV.pm<br> FHEM/37_plex.pm<br> FHEM/39_alexa.pm<br> FHEM/39_siri.pm<br> FHEM/74_UnifiVideo.pm<br> FHEM/98_copy.pm<br> FHEM/98_logProxy.pm<br> FHEM/Color.pm<br> FHEM/CoProcess.pm<br> FHEM/lib/SWAP/*<br> www/jscolor/*<br> www/pgm2/fhemweb_readingsGroup.js<br> www/pgm2/fhemweb_readingsHistory.js<br> www/pgm2/fhemweb_uzsu.js</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>kaihs</td>
+       <td nowrap>2014-04-24</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/00_DFPlayerMini.pm<br> FHEM/02_FRAMEBUFFER.pm<br> FHEM/36_WMBUS.pm<br> FHEM/WMBus.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>KernSani</td>
+       <td nowrap>2018-02-04</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/44_ROLLO.pm<br> FHEM/45_TRX.pm<br> FHEM/46_TRX_ELSE.pm<br> FHEM/46_TRX_LIGHT.pm<br> FHEM/46_TRX_SECURITY.pm<br> FHEM/46_TRX_WEATHER.pm<br> FHEM/98_DSBMobile<br> FHEM/98_freezemon<br> FHEM/98_WOL.pm<br> FHEM/_69_SoftliqCloud.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>klaus.schauer</td>
+       <td nowrap>2013-03-23</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/00_ElsnerWS.pm<br> FHEM/55_PIFACE.pm<br> FHEM/98_ModbusElsnerWS.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>klausw</td>
+       <td nowrap>2014-01-03</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/00_NetzerI2C.pm<br> FHEM/00_Neuron.pm<br> FHEM/00_RPII2C<br> FHEM/10_NeuronPin.pm<br> FHEM/51_Netzer.pm<br> FHEM/51_RPI_GPIO.pm<br> FHEM/52_I2C_BME280<br> FHEM/52_I2C_EEPROM.pm<br> FHEM/52_I2C_MCP23008<br> FHEM/52_I2C_MCP23017<br> FHEM/52_I2C_MCP342x<br> FHEM/52_I2C_PCA9532<br> FHEM/52_I2C_PCA9685<br> FHEM/52_I2C_PCF8574<br> FHEM/52_I2C_SHT21<br> FHEM/53_GHoma.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>KoelnSolar</td>
+       <td nowrap>2019-04-03</td>
+       <td>
+        <div class="module-overview">
+         <code></code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>krannich</td>
+       <td nowrap>2018-04-28</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/74_HusqvarnaAutomower.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>krikan</td>
+       <td nowrap>2015-05-24</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/lib/*deviceconfig.xml.gz<br> FHEM/lib/*manufacturer_specific.xml</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>Leugi</td>
+       <td nowrap>2019-03-05</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/71_YAMAHA_MC.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>loredo</td>
+       <td nowrap>2013-09-23</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/10_RESIDENTS.pm<br> FHEM/20_GUEST.pm<br> FHEM/20_PET.pm<br> FHEM/20_ROOMMATE.pm<br> FHEM/42_npmjs.pm<br> FHEM/50_HP1000.pm<br> FHEM/59_Wunderground.pm<br> FHEM/70_ENIGMA2.pm<br> FHEM/70_LaMetric2.pm<br> FHEM/70_PHTV.pm<br> FHEM/70_Pushover.pm<br> FHEM/74_THINKINGCLEANER.pm<br> FHEM/75_MSG.pm<br> FHEM/75_msgConfig.pm<br> FHEM/98_GEOFANCY.pm<br> FHEM/98_Installer.pm<br> FHEM/98_search.pm<br> FHEM/HOMESTATEtk.pm<br> FHEM/Meta.pm<br> FHEM/msgSchema.pm<br> FHEM/RESIDENTStk.pm<br> FHEM/UConv.pm<br> FHEM/Unit.pm<br> FHEM/wundergroundAPI.pm<br> contrib/70_ONKYO_AVR_PULL.pm<br> contrib/98_exportdevice.pm<br> contrib/META.json.full.txt<br> contrib/META.json.txt</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>mabula</td>
+       <td nowrap>2019-11-23</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/70_VIERA.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>mahowi</td>
+       <td nowrap>2017-08-17</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/59_WUup.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>maluk</td>
+       <td nowrap>2018-05-21</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/49_Arlo.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>MarcP</td>
+       <td nowrap>2017-07-10</td>
+       <td>
+        <div class="module-overview">
+         <code>contrib/YAF/*</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>markusbloch</td>
+       <td nowrap>2012-11-02</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/70_Pushsafer.pm<br> FHEM/71_YAMAHA_AVR.pm<br> FHEM/71_YAMAHA_BD.pm<br> FHEM/72_FB_CALLLIST.pm<br> FHEM/72_FB_CALLMONITOR.pm<br> FHEM/73_PRESENCE.pm<br> FHEM/82_LGTV_IP12.pm<br> FHEM/98_version.pm<br> contrib/PRESENCE<br> www/pgm2/fhemweb_fbcalllist.js<br> www/pgm2/fhemweb_sortable.js</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>MarkusF</td>
+       <td nowrap>2017-12-17</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/50_MOBILEALERTSGW.pm<br> FHEM/51_MOBILEALERTS.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>martinp876</td>
+       <td nowrap>2012-07-10</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/00_HMLAN.pm<br> FHEM/10_CUL_HM.pm<br> FHEM/98_apptime.pm<br> FHEM/98_HMinfo.pm<br> FHEM/HMConfig.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>martins</td>
+       <td nowrap>2016-12-11</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/98_Verkehrsinfo.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>marvin78</td>
+       <td nowrap>2019-01-14</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/98_inotify.pm<br> FHEM/98_todoist.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>Matscher</td>
+       <td nowrap>2014-02-17</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/09_CUL_FHTTK.pm<br> contrib/Widgets/DateTimePicker*</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>mattwire</td>
+       <td nowrap>2014-12-22</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/30_MilightBridge.pm<br> FHEM/31_MilightDevice.pm<br> FHEM/98_ping</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>mgernoth</td>
+       <td nowrap>2016-07-17</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/00_HMUARTLGW.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>michael.winkler</td>
+       <td nowrap>2017-07-21</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/37_echodevice.pm<br> FHEM/70_NEUTRINO.pm<br> FHEM/70_OctoPrint.pm<br> FHEM/70_WINCONNECT.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>mike3436</td>
+       <td nowrap>2016-06-17</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/26_tahoma.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>moises</td>
+       <td nowrap>2015-09-09</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/32_withings.pm<br> FHEM/38_CO20.pm<br> FHEM/38_netatmo.pm<br> FHEM/60_allergy.pm<br> FHEM/72_XiaomiDevice.pm<br> FHEM/98_livetracking.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>neubert</td>
+       <td nowrap>2007-12-29</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/00_CM11.pm<br> FHEM/00_HXB.pm<br> FHEM/02_HTTPSRV.pm<br> FHEM/02_RSS.pm<br> FHEM/09_BS.pm<br> FHEM/09_USF1000.pm<br> FHEM/10_HXBDevice.pm<br> FHEM/10_OWServer.pm<br> FHEM/11_OWDevice.pm<br> FHEM/20_X10.pm<br> FHEM/57_Calendar.pm<br> FHEM/59_Weather.pm<br> FHEM/66_ECMD.pm<br> FHEM/67_ECMDDevice.pm<br> FHEM/80_M232.pm<br> FHEM/81_M232Counter.pm<br> FHEM/82_M232Voltage.pm<br> FHEM/83_IOhomecontrol.pm<br> FHEM/84_IOhomecontrolDevice.pm<br> FHEM/SubProcess.pm<br> FHEM/TimeSeries.pm<br> FHEM/YahooWeatherAPI.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>neumann</td>
+       <td nowrap>2017-05-28</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/31_Nello.pm<br> FHEM/37_Spotify.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>oliverk</td>
+       <td nowrap>2016-10-22</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/20_N4HBUS.pm<br> FHEM/21_N4HMODULE.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>orti-otto</td>
+       <td nowrap>2013-02-14</td>
+       <td>
+        <div class="module-overview">
+         <code></code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>Oskar</td>
+       <td nowrap>2017-11-30</td>
+       <td>
+        <div class="module-overview">
+         <code></code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>Otto123</td>
+       <td nowrap>2021-02-24</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/lib/AttrTemplate/mqtt2.template<br> contrib/AttrTemplate/99_sonos2mqttUtils.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>pandabear_de</td>
+       <td nowrap>2017-01-14</td>
+       <td>
+        <div class="module-overview">
+         <code></code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>PatrickR</td>
+       <td nowrap>2016-05-24</td>
+       <td>
+        <div class="module-overview">
+         <code>contrib/PRESENCE/lepresenced</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>phenning</td>
+       <td nowrap>2012-02-13</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/00_OWX.pm<br> FHEM/11_OWX_CCC.pm<br> FHEM/11_OWX_FRM.pm<br> FHEM/11_OWX_SER.pm<br> FHEM/11_OWX_TCP.pm<br> FHEM/21_OWAD.pm<br> FHEM/21_OWCOUNT.pm<br> FHEM/21_OWID.pm<br> FHEM/21_OWLCD.pm<br> FHEM/21_OWMULTI.pm<br> FHEM/21_OWSWITCH.pm<br> FHEM/21_OWTHERM.pm<br> FHEM/21_OWVAR.pm<br> FHEM/36_Shelly.pm<br> FHEM/95_Alarm.pm<br> FHEM/95_Babble.pm<br> FHEM/95_PostMe.pm<br> FHEM/95_YAAHM.pm<br> contrib/DoorPi/70_DoorPi.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>Phill</td>
+       <td nowrap>2018-02-12</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/39_Talk2Fhem.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>Physikus1</td>
+       <td nowrap>2012-06-20</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/00_KM271.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>PiXtend</td>
+       <td nowrap>2017-10-26</td>
+       <td>
+        <div class="module-overview">
+         <code></code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>pizmus</td>
+       <td nowrap>2019-09-09</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/66_EseraAnalogInIout.pm<br> FHEM/66_EseraCount.pm<br> FHEM/66_EseraDigitalInOut.pm<br> FHEM/66_EseraDimmer.pm<br> FHEM/66_EseraIButton.pm<br> FHEM/66_EseraMulti.pm<br> FHEM/66_EseraOneWire.pm<br> FHEM/66_EseraShutter.pm<br> FHEM/66_EseraTemp.pm<br> FHEM/70_SolarEdgeAPI.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>plin</td>
+       <td nowrap>2017-02-16</td>
+       <td>
+        <div class="module-overview">
+         <code></code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>ra666ack</td>
+       <td nowrap>2015-01-17</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/71_PHILIPS_AUDIO.pm<br> FHEM/71_YAMAHA_NP.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>rapster</td>
+       <td nowrap>2015-08-17</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/70_VolumeLink.pm<br> FHEM/74_Unifi.pm<br> www/codemirror/*</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>RaspII</td>
+       <td nowrap>2014-12-21</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/10_KOPP_FC.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>Reinerlein</td>
+       <td nowrap>2014-12-17</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/00_SONOS.pm<br> FHEM/21_SONOSPLAYER<br> FHEM/70_MEDIAPORTAL.pm<br> FHEM/98_ModbusTrovis5576.pm<br> FHEM/lib/MP3/*<br> FHEM/lib/UPnP/*</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>Risiko</td>
+       <td nowrap>2015-04-26</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/10_pilight_ctrl.pm<br> FHEM/30_pilight_contact.pm<br> FHEM/30_pilight_dimmer.pm<br> FHEM/30_pilight_raw.pm<br> FHEM/30_pilight_smoke.pm<br> FHEM/30_pilight_switch.pm<br> FHEM/30_pilight_temp.pm<br> FHEM/98_weekprofile.pm<br> www/pgm2/fhemweb_weekprofile.js</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>roelb</td>
+       <td nowrap>2020-04-17</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/58_HVAC_DaikinAC.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>rudolfkoenig</td>
+       <td nowrap>2007-01-30</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/00_CUL.pm<br> FHEM/00_FBAHA.pm<br> FHEM/00_FBAHAHTTP.pm<br> FHEM/00_FHZ.pm<br> FHEM/00_LIRC.pm<br> FHEM/00_MQTT2_CLIENT.pm<br> FHEM/00_MQTT2_SERVER.pm<br> FHEM/00_ZWCUL.pm<br> FHEM/00_ZWDongle.pm<br> FHEM/01_FHEMWEB.pm<br> FHEM/10_FBDECT.pm<br> FHEM/10_FS20.pm<br> FHEM/10_MQTT2_DEVICE.pm<br> FHEM/10_ZWave.pm<br> FHEM/11_FHT.pm<br> FHEM/11_FHT8V.pm<br> FHEM/12_HMS.pm<br> FHEM/13_KS300.pm<br> FHEM/14_CUL_TX.pm<br> FHEM/14_CUL_WS.pm<br> FHEM/15_CUL_EM.pm<br> FHEM/16_CUL_RFR.pm<br> FHEM/16_STACKABLE.pm<br> FHEM/16_STACKABLE_CC.pm<br> FHEM/18_CUL_HOERMANN.pm<br> FHEM/24_NetIO230B.pm<br> FHEM/33_readingsChange.pm<br> FHEM/60_EM.pm<br> FHEM/61_EMWZ.pm<br> FHEM/62_EMEM.pm<br> FHEM/63_EMGZ.pm<br> FHEM/70_SCIVT.pm<br> FHEM/90_at.pm<br> FHEM/91_eventTypes.pm<br> FHEM/91_notify.pm<br> FHEM/91_sequence.pm<br> FHEM/91_watchdog.pm<br> FHEM/92_FileLog.pm<br> FHEM/92_SingleFileLog.pm<br> FHEM/93_FHEM2FHEM.pm<br> FHEM/95_holiday.pm<br> FHEM/96_allowed.pm<br> FHEM/96_Snapcast.pm<br> FHEM/98_autocreate.pm<br> FHEM/98_average.pm<br> FHEM/98_cmdalias.pm<br> FHEM/98_CULflash.pm<br> FHEM/98_dummy.pm<br> FHEM/98_fhemdebug.pm<br> FHEM/98_FhemTestUtils.pm<br> FHEM/98_JsonList2.pm<br> FHEM/98_restore.pm<br> FHEM/98_structure.pm<br> FHEM/98_SVG.pm<br> FHEM/98_telnet.pm<br> FHEM/98_update.pm<br> FHEM/98_weblink.pm<br> FHEM/98_XmlList.pm<br> FHEM/99_SUNRISE_EL.pm<br> FHEM/99_Utils.pm<br> FHEM/AttrTemplate.pm<br> FHEM/Blocking.pm<br> FHEM/DevIo.pm<br> FHEM/FritzBoxUtils.pm<br> FHEM/HttpUtils.pm<br> FHEM/SetExtensions.pm<br> FHEM/TcpServerUtils.pm<br> FHEM/TR064Utils.pm<br> contrib/commandref*<br> contrib/deprecated/95_PachLog.pm<br> contrib/pre-commit<br> contrib/sacha_gloor/*<br> www/gplot/*<br> www/pgm2/*<br> docs/*<br> fhem.cfg<br> fhem.pl<br> Makefile</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>Sailor</td>
+       <td nowrap>2015-01-07</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/73_DoorBird.pm<br> FHEM/73_ElectricityCalculator.pm<br> FHEM/73_GasCalculator<br> FHEM/73_km200.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>Schotty</td>
+       <td nowrap>2020-04-13</td>
+       <td>
+        <div class="module-overview">
+         <code></code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>Shojo</td>
+       <td nowrap>2019-06-20</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/lib/AttrTemplate/huedevice.template</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>Sidey</td>
+       <td nowrap>2015-10-22</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/00_SIGNALduino.pm<br> FHEM/10_FS10.pm<br> FHEM/10_SD_GT.PM<br> FHEM/14_Hideki.pm<br> FHEM/14_SD_RSL.pm<br> FHEM/14_SD_WS.pm<br> FHEM/14_SD_WS07.pm<br> FHEM/14_SD_WS09.pm<br> FHEM/41_OREGON.pm<br> FHEM/90_SIGNALduino_un.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>Skjall</td>
+       <td nowrap>2017-04-30</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/36_Vallox.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>StefanStrobel</td>
+       <td nowrap>2016-12-14</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/98_ArduCounter.pm<br> FHEM/98_ComfoAir.pm<br> FHEM/98_FReplacer.pm<br> FHEM/98_HTTPMOD.pm<br> FHEM/98_Modbus.pm<br> FHEM/98_ModbusAttr.pm<br> FHEM/98_ModbusSET.pm<br> FHEM/98_PHC.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>Talkabout</td>
+       <td nowrap>2015-06-05</td>
+       <td>
+        <div class="module-overview">
+         <code>contrib/deprecated/70_Pushalot.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>Telekatz</td>
+       <td nowrap>2015-11-16</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/10_DUOFERNSTICK<br> FHEM/30_DUOFERN</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>TH9</td>
+       <td nowrap>2020-11-07</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/23_LUXTRONIK2.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>thdankert</td>
+       <td nowrap>2014-06-30</td>
+       <td>
+        <div class="module-overview">
+         <code></code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>timmib</td>
+       <td nowrap>2020-12-09</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/93_InfluxDBLogger.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>Tobias.Faust</td>
+       <td nowrap>2012-11-24</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/19_VBUSIF.pm<br> FHEM/21_VBUSDEV.pm<br> FHEM/97_TrashCal.pm<br> FHEM/98_MediaList.pm<br> FHEM/98_Text2Speech.pm<br> contrib/97_SprinkleControl.pm<br> contrib/98_Sprinkle.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>tupol</td>
+       <td nowrap>2012-04-29</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/59_OPENWEATHER.pm<br> FHEM/59_PROPLANTA.pm<br> FHEM/70_JSONMETER.pm<br> FHEM/72_FRITZBOX.pm<br> FHEM/98_statistics.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>UliM</td>
+       <td nowrap>2012-03-04</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/10_Itach_IR<br> FHEM/88_Itach_IRDevice<br> FHEM/95_FLOORPLAN.pm<br> FHEM/95_remotecontrol.pm<br> docs/fhem-floorplan-*</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>unimatrix</td>
+       <td nowrap>2017-01-20</td>
+       <td>
+        <div class="module-overview">
+         <code></code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>vbs</td>
+       <td nowrap>2015-01-05</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/70_KODI.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>viegener</td>
+       <td nowrap>2015-10-17</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/02_FTUISRV.pm<br> FHEM/10_SOMFY.pm<br> FHEM/42_Nextion.pm<br> FHEM/49_TBot_List.pm<br> FHEM/50_TelegramBot.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>vk</td>
+       <td nowrap>2016-07-18</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/24_Iluminize.pm<br> FHEM/24_TPLinkHS110.pm<br> FHEM/77_SMAEM.pm<br> FHEM/77_SMASTP.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>vuffiraa</td>
+       <td nowrap>2016-03-25</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/70_BOTVAC.pm<br> FHEM/70_BRAVIA.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>wuehler</td>
+       <td nowrap>2018-01-10</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/74_Unifi.pm<br> FHEM/74_UnifiClient.pm<br> FHEM/74_UnifiSwitch.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>Wuppi68</td>
+       <td nowrap>2016-12-16</td>
+       <td>
+        <div class="module-overview">
+         <code>www/images/*</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>Wzut</td>
+       <td nowrap>2014-02-14</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/00_MAXLAN.pm<br> FHEM/00_OW2S0SMSGUARD.pm<br> FHEM/10_MAX.pm<br> FHEM/14_CUL_MAX.pm<br> FHEM/38_BEOK.pm<br> FHEM/73_MPD.pm<br> FHEM/98_MAX_Temperature.pm<br> FHEM/98_readingsWatcher<br> FHEM/98_UbiquitiMP.pm<br> FHEM/98_UbiquitiOut.pm<br> FHEM/MaxCommon.pm<br> contrib/98_EDIPLUG.pm<br> contrib/Infratec/*<br> contrib/SIP/*<br> contrib/Wzut/*</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>xasher</td>
+       <td nowrap>2020-04-07</td>
+       <td>
+        <div class="module-overview">
+         <code></code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>xenos1984</td>
+       <td nowrap>2020-04-13</td>
+       <td>
+        <div class="module-overview">
+         <code></code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>xusader</td>
+       <td nowrap>2014-08-03</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/70_PushNotifier.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>yoda_gh</td>
+       <td nowrap>2018-02-24</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/19_Revolt.pm<br> FHEM/52_I2C_HDC1008.pm<br> FHEM/52_I2C_K30</code>
+        </div></td>
+      </tr> 
+      <tr class="odd">
+       <td nowrap>zap</td>
+       <td nowrap>2015-09-18</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/88_HMCCU.pm<br> FHEM/88_HMCCUCHN.pm<br> FHEM/88_HMCCUDEV.pm<br> FHEM/88_HMCCURPC.pm<br> FHEM/88_HMCCURPCPROC.pm<br> FHEM/89_FULLY.pm<br> FHEM/HMCCUConf.pm</code>
+        </div></td>
+      </tr> 
+      <tr class="even">
+       <td nowrap>Zwiebel</td>
+       <td nowrap>2012-04-08</td>
+       <td>
+        <div class="module-overview">
+         <code>FHEM/70_SML.pm<br> FHEM/70_STV.pm</code>
+        </div></td>
+      </tr> 
+     </tbody> 
+    </table> 
+   </ul> <a name="troubleshooting"></a> 
+   <h3>troubleshooting</h3> 
+   <ul>
+     If you have any trouble using the SVN services on this server, please contact us via 
+    <script language="JavaScript">iLoveBread();</script> or create a new thread in the <a href="https://forum.fhem.de/index.php/board,48.0.html" target="_new">FHEM development forum</a>. 
+   </ul>  
+  </div>
+ </body>
+</html>

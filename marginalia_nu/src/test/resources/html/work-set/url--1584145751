@@ -1,0 +1,376 @@
+<html> 
+ <head> 
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"> 
+  <title>SSH (SSH1, SSH2), WebDAV, FTP, SFTP free GUI Client for Windows. Download GUI for PuTTY - freeware SSH, FTP, WebDAV client here.</title> 
+  <meta name="keywords" content="Download GUI for PuTTY SSH SSH1 SSH2 WebDAV FTP secure SFTP protocols client Win32 Windows free freeware"> 
+  <meta name="title" content="SSH (SSH1, SSH2), WebDAV, FTP, SFTP free Client for Windows. Download freeware SSH, FTP, WebDAV client here."> 
+  <meta name="description" content="SSH (SSH1, SSH2), WebDAV, FTP, SFTP free Client for Windows. Download freeware SSH, FTP, WebDAV client here."> 
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"> 
+  <link href="style.css" rel="stylesheet" type="text/css"> 
+ </head> 
+ <body marginwidth="0" marginheight="0" topmargin="0" bottommargin="0" leftmargin="0" rightmargin="0"> 
+  <table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0"> 
+   <tbody>
+    <tr valign="top"> 
+     <td height="123"> 
+      <table width="100%" height="123" border="0" cellpadding="0" cellspacing="0"> 
+       <tbody>
+        <tr> 
+         <td width="218" height="123"><img src="image/logo.gif" alt="Download GUI for PuTTY - freeware SSH (SSH1,SSH2,SFTP), WebDAV, FTP, FTPS Client for Windows" width="218" height="123" border="0"></td> 
+         <td> 
+          <table width="100%" height="123" border="0" cellpadding="0" cellspacing="0"> 
+           <tbody>
+            <tr> 
+             <td height="34" colspan="2" bgcolor="#ffffff">&nbsp;</td> 
+            </tr> 
+            <tr> 
+             <td width="20" height="32"><img src="image/topbg.gif" width="20" height="32" border="0"></td> 
+             <td width="100%" height="32" class="topbckg">&nbsp;</td> 
+            </tr> 
+            <tr> 
+             <td height="14" colspan="2" class="tex-tit">tools of the trade</td> 
+            </tr> 
+            <tr> 
+             <td height="43" colspan="2" class="topbckg2">&nbsp;</td> 
+            </tr> 
+           </tbody>
+          </table> </td> 
+        </tr> 
+       </tbody>
+      </table> </td> 
+    </tr> <!-- 2-  . .--> 
+    <tr valign="top"> 
+     <td valign="top" height="100%"> 
+      <table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0"> 
+       <tbody>
+        <tr> 
+         <td rowspan="2" valign="top" height="123" background="image/backgr-left.gif"> 
+          <table height="100%" border="0" cellpadding="0" cellspacing="0"> 
+           <tbody>
+            <tr> 
+             <td width="185" height="10" bgcolor="#DDDDDD"></td> 
+             <td width="10" height="10"><img src="image/top-menu.gif" width="10" height="10" border="0"></td> 
+            </tr> 
+            <tr> 
+             <td bgcolor="#FFFFFF"> 
+              <table width="185" height="363" border="0" cellpadding="0" cellspacing="0"> 
+               <tbody>
+                <tr> 
+                 <td width="34" height="34">&nbsp;</td> 
+                 <td height="34">&nbsp;</td> 
+                </tr> 
+                <tr> 
+                 <td width="33"></td> 
+                 <td valign="top"> <!-- menu --> 
+                  <table width="135" height="260" border="0" cellpadding="0" cellspacing="0"> 
+                   <tbody>
+                    <tr> 
+                     <td height="15" width="105" class="tex-menu"><a href="http://www.enginsite.com" class="menu"></a>
+                      <div class="tex-menu">
+                       <a href="http://www.enginsite.com" class="menu">Main Page</a>
+                      </div></td> 
+                     <td width="30" height="15" align="right"><img src="image/m-menu.gif" align="right" width="30" height="15" border="0"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="2" colspan="2" background="image/line-menu.gif"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="15"><a target="_blank" href="http://outsourcing.luckasoft.com/">
+                       <div class="tex-menu"> <b>Outsourcing</b>
+                       </div></a></td> 
+                     <td width="30" height="15" align="right"><img src="image/m-menu.gif" align="right" width="30" height="15" border="0"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="15"><a href="About.htm">
+                       <div class="tex-menu">
+                        Company
+                       </div></a></td> 
+                     <td width="30" height="15" align="right"><img src="image/m-menu.gif" align="right" width="30" height="15" border="0"></td> 
+                    </tr> 
+                    <tr>
+                     <td height="3" colspan="2" background="image/line-yel-menu.gif"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="25"><a href="php-editor.htm">
+                       <div class="tex-menu">
+                        PHP Editor
+                       </div></a></td> 
+                     <td width="30" height="15" align="right"><img src="image/m-menu.gif" align="right" width="30" height="15" border="0"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="2" colspan="2" background="image/line-menu.gif"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="15"><a href="Perl.htm">
+                       <div class="tex-menu">
+                        Perl Editor
+                       </div></a></td> 
+                     <td width="30" height="15" align="right"><img src="image/m-menu.gif" align="right" width="30" height="15" border="0"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="2" colspan="2" background="image/line-menu.gif"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="15"><a href="css-editor.htm">
+                       <div class="tex-menu">
+                        CSS Editor
+                       </div></a></td> 
+                     <td width="30" height="15" align="right"><img src="image/m-menu.gif" align="right" width="30" height="15" border="0"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="2" colspan="2" background="image/line-menu.gif"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="15"><a href="MySQL-client-manager-and-GUI-for-MySQL.htm">
+                       <div class="tex-menu">
+                         MySQL Client
+                       </div></a></td> 
+                     <td width="30" height="15" align="right"><img src="image/m-menu.gif" align="right" width="30" height="15" border="0"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="2" colspan="2" background="image/line-menu.gif"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="15"><a href="Apache-GUI.htm">
+                       <div class="tex-menu">
+                        Apache GUI
+                       </div></a></td> 
+                     <td width="30" height="15" align="right"><img src="image/m-menu.gif" align="right" width="30" height="15" border="0"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="2" colspan="2" background="image/line-menu.gif"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="15"><a href="GCC-Builder.htm">
+                       <div class="tex-menu">
+                        GCC Builder
+                       </div></a></td> 
+                     <td width="30" height="15" align="right"><img src="image/m-menu.gif" align="right" width="30" height="15" border="0"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="2" colspan="2" background="image/line-menu.gif"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="15"><a href="ssh-webdav-ftp-sftp-client.htm">
+                       <div class="tex-menu">
+                        <font color="#B11B00" class="img-v">DataFreeway</font>
+                       </div></a></td> 
+                     <td width="30" height="15" align="right"><img src="image/m-menu2.gif" align="right" width="30" height="15" border="0"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="3" colspan="2" background="image/line-yel-menu.gif"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="25"><a href="Download.htm">
+                       <div class="tex-menu">
+                        Download
+                       </div></a></td> 
+                     <td width="30" height="15" align="right"><img src="image/m-menu.gif" align="right" width="30" height="15" border="0" class="img-v"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="2" colspan="2" background="image/line-menu.gif"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="15"><a href="register.htm">
+                       <div class="tex-menu">
+                        Purchase
+                       </div></a></td> 
+                     <td width="30" height="15" align="right"><img src="image/m-menu.gif" align="right" width="30" height="15" border="0"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="2" colspan="2" background="image/line-menu.gif"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="15"><a href="support.htm">
+                       <div class="tex-menu">
+                        Support
+                       </div></a></td> 
+                     <td width="30" height="15" align="right"><img src="image/m-menu.gif" align="right" width="30" height="15" border="0"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="3" colspan="2" background="image/line-yel-menu.gif"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="25"><a href="http://forum.enginsite.com">
+                       <div class="tex-menu">
+                        Forum
+                       </div></a></td> 
+                     <td width="30" height="15" align="right"><img src="image/m-menu.gif" align="right" width="30" height="15" border="0"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="2" colspan="2" background="image/line-menu.gif"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="15"><a href="Library.htm">
+                       <div class="tex-menu">
+                        Library
+                       </div></a></td> 
+                     <td width="30" height="15" align="right"><img src="image/m-menu.gif" align="right" width="30" height="15" border="0"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="2" colspan="2" background="image/line-menu.gif"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="15"><a href="Links.htm">
+                       <div class="tex-menu">
+                        Links
+                       </div></a></td> 
+                     <td width="30" height="15" align="right"><img src="image/m-menu.gif" align="right" width="30" height="15" border="0"></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="3" colspan="2" background="image/line-yel-menu.gif"></td> 
+                    </tr> 
+                   </tbody>
+                  </table> <!-- /menu --> </td> 
+                </tr> 
+                <tr> 
+                 <td width="33" height="69">&nbsp;</td> 
+                 <td height="69">&nbsp;</td> 
+                </tr> 
+               </tbody>
+              </table> </td> 
+             <td width="10" bgcolor="#DDDDDD"></td> 
+            </tr> 
+            <tr> 
+             <td width="195" colspan="2" bgcolor="#DDDDDD" height="98"> 
+              <table cellpadding="0" cellspacing="0" class="tab-menu"> 
+               <tbody>
+                <tr> 
+                 <td bgcolor="#F6F6F6"> 
+                  <table width="179" height="98" border="0" cellpadding="0" cellspacing="0"> 
+                   <tbody>
+                    <tr> 
+                     <td height="29" class="tex-join">Join our mailing list</td> 
+                    </tr> 
+                    <tr> 
+                     <td height="22" class="input-join">
+                      <form action="http://enginsite.com/cgi-bin/subscribe.pl" method="POST"> 
+                       <input type="HIDDEN" name="subscribe" value="subscribe"> 
+                       <input type="HIDDEN" name="maildata" value="address.txt"> 
+                       <input type="text" size="5" name="email" class="mail"> 
+                       <input type="submit" value="Join" class="but-join" name="Submit">
+                      </form></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="20"><a href="EmailPrivacyPolicy.htm" target="_blank" class="link-join">Privacy policy</a></td> 
+                    </tr> 
+                    <tr> 
+                     <td height="27">&nbsp;</td> 
+                    </tr> 
+                   </tbody>
+                  </table> </td> 
+                 <td width="4"></td> 
+                </tr> 
+               </tbody>
+              </table> </td> 
+            </tr> 
+            <tr> 
+             <td height="100%" bgcolor="#FFFFFF" valign="bottom"></td> 
+             <td width="10" height="100%" bgcolor="#DDDDDD"></td> 
+            </tr> 
+           </tbody>
+          </table> </td> 
+         <td width="100%" height="100%" valign="top"> 
+          <table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0" class="tex-center"> 
+           <tbody>
+            <tr valign="top"> 
+             <td width="23" valign="top" bgcolor="#f2f2f2"><img src="tr.gif" width="23" height="1" border="0"></td> 
+             <td width="100%" height="100%" class="text"><h1 align="center">DataFreeway - free SSH (SSH1, SSH2, SFTP), WebDAV, FTP GUI Client for Windows </h1><h2 class="p-editor"><b>Now you can have Linux and Unix folders right on your Windows Desktop!</b></h2> <p> <img src="ssh-webdav-ftp-sftp-client/SSH-We2.jpg" align="left" hspace="10" border="0" width="140" height="140" alt="GUI for PuTTY"> Many corporate networks typically include Linux and Unix servers that host their most critical applications, while the network users stick with the familiarity of Windows.&nbsp;</p> <p> EngInSite DataFreeway lets you get access to any and all of the remote servers from inside your Windows desktop. Familiar Microsoft Explorer Interface will make file operations easy no matter what protocol you use.</p> <p>&nbsp;</p> <p>&nbsp;</p> <p>DataFreeway is an innovative network, plug-in based <b>freeware GUI client </b> supporting multiple transfer protocols. Its user interface provides a simple, protocol independent way to transfer data. Standard techniques like <b>drag-and-drop </b>and <b>copy-and-paste</b> let users transfer files between servers running different transfer protocols, as well as enabling users to download/upload files to/from a local machine.&nbsp;</p> <b>Secure</b><br> Protect logins and transfers using industry standard SSH1, SSH2 (both RSA and DSA public key authentication), or SFTP based protocols (some call our program <b>GUI for <a href="http://www.chiark.greenend.org.uk/~sgtatham/putty/" target="_blank">PuTTY</a></b> *). <p><b>Transfer</b><br> - Text file awareness, recursive subdirectory transfers;<br> - Powerful, advanced transfer list management;<br> - Fast responsiveness to user input even when in the middle of multiple file transfers.</p> <p><b>Manage</b><br> - Edit or view remote content, synchronize or backup your site,<b> monitor a folder or files for changes</b> and perform a host of other site management operations.</p> <p><b>Total Affordability&nbsp;</b><br> - There is no match on the market. Guaranteed. This is&nbsp; <b>freeware.</b></p> <p><b>Convenience&nbsp;</b><br> - <u> Put shortcut to your SSH, FTP or WebDAV folder on the desktop.</u> Now your data is only one click away.</p> <p>Currently we support <b>SSH</b> (<b>SSH1</b> and <b>SSH2</b>), <b>WebDAV</b>, common <b>FTP</b> and secure <b>SFTP</b> protocols.</p> <p>&nbsp;</p> <p align="center"> <img border="0" src="ssh-webdav-ftp-sftp-client/FFScreenshotFull.gif" alt="GUI for PuTTY" width="325" height="300"></p> <p align="center"> &nbsp;</p> <p style="text-align: center"> <b><a href="Download.htm#Freeware">Download DataFreeway</a></b></p> <p>&nbsp;</p></td> 
+             <td width="45" valign="top"><img src="tr.gif" width="45" height="1" border="0"></td> 
+            </tr> 
+           </tbody>
+          </table> </td> 
+         <td rowspan="2" valign="top" background="image/backgr-right.gif"> 
+          <table width="185" height="100%" border="0" cellpadding="0" cellspacing="0"> 
+           <tbody>
+            <tr> 
+             <td width="10" height="10"><img src="image/top-news.gif" width="10" height="10" border="0"></td> 
+             <td width="168" height="10" bgcolor="#ffffff"></td> 
+            </tr> 
+            <tr> 
+             <td width="10" bgcolor="#ffffff"></td> 
+             <td width="168" height="21" class="prod" background="image/but-prod.gif">Features</td> 
+            </tr> 
+            <tr> 
+             <td width="10" bgcolor="#ffffff"></td> 
+             <td width="168" height="30" valign="bottom"><img src="but-menu.gif" width="16" height="16" border="0" class="but-menu"><font class="menu-prod"><a href="ssh-webdav-ftp-sftp-client.htm">Features</a></font></td> 
+            </tr> 
+            <tr> 
+             <td width="10" bgcolor="#ffffff"></td> 
+             <td width="168" height="30" valign="bottom"><img src="but-menu.gif" width="16" height="16" border="0" class="but-menu"><font class="menu-prod">Screenshots</font></td> 
+            </tr> 
+            <tr> 
+             <td width="10" bgcolor="#ffffff"></td> 
+             <td width="168" height="30" valign="bottom"><img src="but-menu.gif" width="16" height="16" border="0" class="but-menu"><font class="menu-prod"><a href="ssh-webdav-ftp-sftp-client-FAQ.htm">FAQ</a></font></td> 
+            </tr> 
+            <tr> 
+             <td width="10" height="30" bgcolor="#ffffff">&nbsp;</td> 
+             <td height="30" align="center" valign="top">&nbsp;</td> 
+            </tr> 
+            <tr> 
+             <td width="10" bgcolor="#ffffff"></td> 
+             <td width="168" height="21" class="prod" background="image/but-prod.gif">Testimonials</td> 
+            </tr> 
+            <tr> 
+             <td width="10" bgcolor="#ffffff"></td> 
+             <td width="168" height="30" class="menu-prod">&nbsp;<p>My new discovery is DataFreeway, created by LuckaSoft Software. It supports standard FTP as well as the secure FTPS protocol. Best of all, on web servers that also support SSH (Secure Shell terminal access), you can also use that protocol in a manner that makes it look like Windows File Manger. (Normal SSH looks like a Dec VAX operator's console from the late 1970s.) I use SSH a lot but others who maintain web sites might go for years without needing SSH</p> <p>DataFreeway is a very useful program: easier to use than any of its competitors I have seen, easy to install, and available free of charge.</p> <p> <a target="_blank" href="http://eogn.typepad.com/eastmans_online_genealogy/2005/02/datafreeway_for.html"> Dick Eastman</a></p> <p>&nbsp;</p> </td> 
+            </tr> 
+            <tr> 
+             <td width="10" height="100%" bgcolor="#ffffff" align="center" valign="top">&nbsp;</td> 
+             <td align="center" valign="top"> <script type="text/javascript"><!--
+google_ad_client = "pub-9259304213980142";
+google_ad_width = 120;
+google_ad_height = 600;
+google_ad_format = "120x600_as";
+google_ad_channel ="";
+google_color_border = "336699";
+google_color_bg = "FFFFFF";
+google_color_link = "0000FF";
+google_color_url = "008000";
+google_color_text = "000000";
+//--></script> <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script> </td> 
+            </tr> 
+           </tbody>
+          </table> </td> 
+        </tr> 
+        <tr> 
+         <td valign="top"> 
+          <div class="tex-cent-left"> 
+           <p>* Our SSH code is based on the well-tested popular <a href="http://www.chiark.greenend.org.uk/~sgtatham/putty/" target="_blank">Putty</a> (v 0.56) open source project</p> 
+          </div></td> 
+        </tr> 
+       </tbody>
+      </table> </td> 
+    </tr> <!-- 3-  . .--> 
+    <tr valign="top"> 
+     <td> 
+      <table width="100%" height="57" border="0" cellpadding="0" cellspacing="0" class="tab-center"> 
+       <tbody>
+        <tr> 
+         <td width="185" height="18" bgcolor="#ffffff"><img src="image/tr.gif" width="185" height="18"></td> 
+         <td width="10" height="18" bgcolor="DDDDDD"><img src="image/tr.gif" width="10" height="18"></td> 
+         <td width="100%" height="18"></td> 
+         <td width="168" height="18" background="image/backgr-right.gif" colspan="2"><img src="image/tr.gif" width="185" height="18"></td> 
+        </tr> 
+        <tr bgcolor="#ffffff"> 
+         <td width="185" height="3"><img src="image/tr.gif" width="1" height="3"></td> 
+         <td width="10" height="3"></td> 
+         <td height="3"></td> 
+         <td width="10" height="3"><img src="image/tr.gif" width="10" height="3"></td> 
+         <td height="3"></td> 
+        </tr> 
+        <tr> 
+         <td width="185" height="39" bgcolor="#ffffff">&nbsp;</td> 
+         <td width="10" height="39" bgcolor="DDDDDD"><img src="image/tr.gif" width="10" height="39"></td> 
+         <td width="100%" height="39" class="tex-copyright">EnginSite(TM) is a trademark of Luckasoft Software. No reproduction is permitted without explicit written permission. <br>Copyright 2001-2004 Luckasoft Software. All rights reserved.</td> 
+         <td width="10" height="39" bgcolor="#ffffff"><img src="image/tr.gif" width="10" height="39"></td> 
+         <td width="175" height="39"></td> 
+        </tr> 
+       </tbody>
+      </table> </td> 
+    </tr> 
+   </tbody>
+  </table>  
+ </body>
+</html>

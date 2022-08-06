@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html> 
+ <head> 
+  <title>Borges-Odyssey</title> 
+  <link href="shared/global_css/styles.css" rel="stylesheet" type="text/css"> 
+  <meta name="keywords" content="Borges, Odysseus, Odyssey, Plato, Pythagoras"> 
+  <meta name="description" content="Sexual Fables is an alternative history of Western Arts and Literature."> 
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <style type="text/css">
+<!--
+body {
+	background-color: #336600;
+}
+.style1 {font-size: 12pt}
+-->
+</style>
+ </head> 
+ <body> 
+  <table width="650" border="0" cellspacing="0" cellpadding="10" align="center"> 
+   <tbody>
+    <tr> 
+     <td align="left" valign="top"><span class="chapter_site_title">Sexual Fables</span></td> 
+     <td align="right" valign="middle"> 
+      <form style="margin: 0;" class="formtext"> <select onchange="window.location.href=this.options[this.selectedIndex].value"> <option value="javascript:void(0);" selected class="formtext">Go to a Fable</option> <option value="The-Age-of-Consent.php" class="formtext">The Age of Consent</option> <option value="the_judgment_of_paris.php" class="formtext">The Judgment of Paris</option> <option value="homers_women.php" class="formtext">Homer's Women</option> <option value="sacred_prostitute.php" class="formtext">Sacred Prostitute</option> <option value="Dreaming-the-Virgin-Mary.php" class="formtext">Dreaming the Virgin Mary</option> <option value="Women-in-Trousers.php" class="formtext">Women in Trousers</option> <option value="how_to_look_at_a_naked_lady.php" class="formtext">How to Look at a Naked Lady</option> <option value="the_woman_in_the_bower.php" class="formtext">The Woman in the Bower</option> <option value="voices_and_saints.php" class="formtext">Voices and Saints</option> <option value="angel-incarnate.php" class="formtext">Angel Incarnate</option> <option value="a_tale_of_two_women.php" class="formtext">A Tale of Two Women</option> <option value="Precious-Bodily-Fluids.php" class="formtext">Precious Bodily Fluids</option> <option value="the_whores_revenge.php" class="formtext">The Whore's Revenge</option> <option value="spinster.php" class="formtext">Spinster</option> <option value="splendour-in-the-grass.php" class="formtext">Splendour in the Grass</option> <option value="immortal_beloved.php" class="formtext">Immortal Beloved</option> <option value="vampires_in_venice.php" class="formtext">Vampires in Venice</option> <option value="the-sorcerers-apprentice.php" class="formtext">The Sorcerers Apprentice</option> <option value="life_as_opera.php" class="formtext">Life as Opera</option> <option value="OzisChina.php" class="formtext">Oz is China</option> <option value="poison_pen_letters.php" class="formtext">Poison Pen Letters</option> <option value="the_house_of_incest.php" class="formtext">The House of Incest</option> <option value="From-Russia-with-Love.php" class="formtext">From Russia with Love</option> <option value="Kama-Sutra.php" class="formtext">Kama Sutra</option> <option value="Letters-from-Africa.php" class="formtext">Letters from Africa</option> <option value="beauty_and_the_beast.php" class="formtext">Beauty &amp; the Beast</option> <option value="lokis-children.php" class="formtext">Loki's Children</option> <option value="search.php" class="formtext">SEARCH</option> <option value="index.php" class="formtext">RETURN TO HOMEPAGE</option> </select> 
+      </form> </td> 
+    </tr> 
+   </tbody>
+  </table> 
+  <table width="650" border="0" cellspacing="0" cellpadding="0" align="center"> 
+   <tbody>
+    <tr> 
+     <td width="625" align="left" valign="top" bgcolor="#ffffff" style="padding: 20px;"> <p><span class="chapter_subtitle">This article accompanies the fable</span><br> <span class="chapter_title"><a href="index.php" class="article">Homer's Women</a></span><br> <br> <br> <b><br> <span class="style1">Jorge Luis Borges on the <i>Odyssey</i></span></b></p> <p><img src="images/Odysseus_000.jpg" width="130" height="131" alt="Odysseus-asteroid"></p> <p>Borges is interested in the idea that transmigration was a respectable concept in ancient Greek thought and is still an under-appreciated thought in the West today. He cites Pythagoras who recognized the shield he fought with in the Trojan War. And then there was Plato: </p> <p>"In the tenth book of Plato's <i>Republic</i> is the dream of Er, a soldier who watches the souls choose their fates before drinking in the river of Oblivion. Agamemnon chooses to be an eagle, Orpheus a swan, and Odysseus - who once called himself Nobody - chooses to be the most modest, the most unknown of men."</p> <p>Anonymity is bliss...<br> </p></td> 
+     <td width="25" align="left" valign="top" bgcolor="#ffffff" style="background: #ffffff url(shared/global_images/sidebar_arrows.gif) repeat-y top left;"> <img src="shared/global_images/spacer.gif" width="25" height="25" alt="" border="0"> </td> 
+    </tr> 
+   </tbody>
+  </table> 
+  <table width="650" border="0" cellspacing="0" cellpadding="15" align="center"> 
+   <tbody>
+    <tr> 
+     <td align="left"> <span class="footer_white">Copyright © All rights reserved.</span> </td> 
+     <td align="right"> <span class="footer_white"> <a href="index.php" class="footer">Homepage</a> | <a href="contact.php" class="footer">Contact</a> | <a href="about.php" class="footer">About</a> | <a href="search.php" class="footer">Search</a></span> </td> 
+    </tr> 
+   </tbody>
+  </table>  
+ </body>
+</html>
