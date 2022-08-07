@@ -30,7 +30,7 @@ public class BrowseCommand implements SearchCommandInterface {
     private final MustacheRenderer<BrowseResultSet> browseResultsRenderer;
     private final BrowseResultCleaner browseResultCleaner;
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Predicate<String> queryPatternPredicate = Pattern.compile("^browse:[.A-Za-z\\-0-9]+$").asPredicate();
+    private final Predicate<String> queryPatternPredicate = Pattern.compile("^browse:[.A-Za-z\\-0-9:]+$").asPredicate();
 
     @Inject
     public BrowseCommand(EdgeDataStoreDao edgeDataStoreDao,
