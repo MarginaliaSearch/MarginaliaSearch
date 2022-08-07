@@ -23,7 +23,7 @@ public class DatingSessionObject {
 
     public BrowseResult next(EdgeDataStoreDao dao, EdgeDomainBlacklist blacklist) {
         if (queue.isEmpty()) {
-            dao.getRandomDomains(25, blacklist, set).forEach(queue::addLast);
+            dao.getRandomDomains(25, blacklist, 0).forEach(queue::addLast);
         }
         return queue.pollFirst();
     }
