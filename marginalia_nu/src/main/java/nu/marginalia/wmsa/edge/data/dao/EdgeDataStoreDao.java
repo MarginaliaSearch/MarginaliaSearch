@@ -16,7 +16,7 @@ public interface EdgeDataStoreDao {
 
     List<BrowseResult> getDomainNeighborsAdjacent(EdgeId<EdgeDomain> domainId, EdgeDomainBlacklist backlist, int count);
 
-    List<BrowseResult> getRandomDomains(int count, EdgeDomainBlacklist backlist);
+    List<BrowseResult> getRandomDomains(int count, EdgeDomainBlacklist backlist, int set);
 
     List<BrowseResult> getBrowseResultFromUrlIds(List<EdgeId<EdgeUrl>> urlId);
 
