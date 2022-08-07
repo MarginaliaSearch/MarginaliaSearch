@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "~/strict.dtd"><!--
+Local Variables:
+sgml-default-dtd-file: "~/html-strict.ced"
+End:
+-->
+<html> 
+ <head> 
+  <title>pssh: SSH 2 for Palm OS 5</title> 
+ </head> 
+ <body> 
+  <table> 
+   <tbody>
+    <tr> 
+     <td rowspan="100" valign="top"> <h3>pssh: SSH 2 for Palm OS 5</h3> <p> <b>pssh</b> is a free, open-source SSH 2 client for Palm OS 5. </p> <br> <h4>Features</h4> 
+      <ul> 
+       <li>SSH 2 protocol using 3DES or AES-128 ciphers</li> 
+       <li>Fast authentication and encryption using ARM-native code</li> 
+       <li>Support for public-key authentication and host key verification</li> 
+       <li>High quality VT100/VT220/xterm terminal emulator</li> 
+       <li>Up to 80 x 53 character display on 320x320 screen</li> 
+       <li>Support for large screens with virtual Graffiti areas</li> 
+       <li>Customizable font colors and sizes</li> 
+       <li>Full-size on-screen keyboard</li> 
+       <li>Palm 5-Way Navigator acts as CTRL/ESC key and arrow keys</li> 
+       <li>Thumb wheel press acts as CTRL/ESC key</li> 
+       <li>Complete source code distributed under BSD- and MIT-style licenses</li> 
+      </ul> <br> <h4>WARNING</h4> <p> <b>pssh</b> is substantially <strong>UNTESTED</strong> and probably <strong>INSECURE</strong>. Do not use it for security-critical applications. </p> <br> <h4>Download</h4> <p> <b>pssh version 2005-06-23</b><br> <a href="dist/pssh-2005_06_23.prc">prc binary</a> (297 KB)<br> <a href="dist/pssh-2005_06_23.tar.gz">tar.gz archive</a> (157 KB)<br> <a href="dist/pssh-2005_06_23.zip">zip archive</a> (158 KB)<br> <br> <b>pssh version 2005-06-23 (source code)</b><br> <a href="dist/pssh-source-2005_06_23.tar.gz">tar.gz archive</a> (430 KB)<br> <a href="dist/pssh-source-2005_06_23.zip">zip archive</a> (738 KB)<br> <br> pssh requires about 300 KB of storage and several hundred KB of heap memory to run.<br> <br> New in this version: </p> 
+      <ul> 
+       <li>Fixed crash during connection when the server sends a login banner. </li>
+      </ul> <p> Current test version: none. <br> See the <a href="dist/index.html">release history</a> for older versions, test versions, and change logs. </p> <br> <h4>Documentation</h4> 
+      <ul> 
+       <li><a href="README">README</a>: about pssh </li>
+       <li><a href="README.licenses">README.licenses</a>: licenses under which pssh is distributed </li>
+       <li><a href="README.publickeys">README.publickeys</a>: how to use public-key authentication and import keys into pssh </li>
+       <li><a href="README.code">README.code</a>: some notes for pssh hackers </li>
+      </ul> <br> <h4>Mailing lists</h4> <p> <a href="http://six.pairlist.net/mailman/listinfo/pssh-announce/">pssh-announce</a>: announcements of new versions of pssh<br> <a href="http://six.pairlist.net/mailman/listinfo/pssh-users/">pssh-users</a>: general discussion of pssh </p> <br> <h4>Contact</h4> <p> Send bug reports, feature suggestions, and patches to Greg Parker (gparker-pssh@sealiesoftware.com). </p> <br> <h4>Credits</h4> Portions of this software are copyrighted by: 
+      <dl> 
+       <dt>
+        Greg Parker 
+       </dt>
+       <dd>
+        <a href="http://www.sealiesoftware.com/">http://www.sealiesoftware.com/</a> 
+       </dd>
+       <dt>
+        Tatu Ylonen, Markus Friedl, Niels Provos, and the OpenSSH Project 
+       </dt>
+       <dd>
+        <a href="http://www.openssh.org/">http://www.openssh.org/</a> 
+       </dd>
+       <dt>
+        Eric Young and the OpenSSL Project 
+       </dt>
+       <dd>
+        <a href="http://www.openssl.org/">http://www.openssl.org/</a> 
+       </dd>
+       <dt>
+        Simon Tatham and the PuTTY Team 
+       </dt>
+       <dd>
+        <a href="http://www.chiark.greenend.org.uk/~sgtatham/putty/">http://www.chiark.greenend.org.uk/~sgtatham/putty/</a> 
+       </dd>
+       <dt>
+        Aaron Gifford 
+       </dt>
+       <dd>
+        <a href="http://www.adg.us/computers/sha.html">http://www.adg.us/computers/sha.html</a> 
+       </dd>
+       <dt>
+        Lauri Aarnio 
+       </dt>
+       <dd>
+        <a href="http://www.nixu.fi/~lauri/">http://www.nixu.fi/~lauri/</a> 
+       </dd>
+      </dl> See the <a href="README">README</a> and <a href="README.licenses">README.licenses</a> files for details.<br> <br> If you need SSH 1 or support for Palm OS 4 and earlier, try <a href="http://www.tussh.com/">TuSSH</a> or <a href="http://online.offshore.com.ai/~iang/TGssh/">TGssh</a>. <br> </td> 
+     <td> <img src="screenshots/color.gif" width="324" height="324" alt="pssh emacs screenshot"> </td> 
+    </tr> 
+    <tr> 
+     <td> <img src="screenshots/tetris.gif" width="324" height="324" alt="pssh tetris screenshot"> </td> 
+    </tr> 
+    <tr> 
+     <td> <img src="screenshots/green.gif" width="324" height="324" alt="pssh connection screenshot"> </td> 
+    </tr> 
+    <tr> 
+     <td> <img src="screenshots/connection.gif" width="324" height="324" alt="pssh password screenshot"> </td> 
+    </tr> 
+    <tr> 
+     <td> <img src="screenshots/publickey.gif" width="324" height="324" alt="pssh hostkey screenshot"> </td> 
+    </tr> 
+   </tbody>
+  </table> 
+  <hr> 
+  <p> <img align="right" src="/sealie.gif" alt="seal!" width="114" height="69"> Greg Parker<br> <a href="mailto:gparker-pssh@sealiesoftware.com">gparker-pssh@sealiesoftware.com</a><br> <a href="/index.html">Sealie Software</a> </p>  
+ </body>
+</html>

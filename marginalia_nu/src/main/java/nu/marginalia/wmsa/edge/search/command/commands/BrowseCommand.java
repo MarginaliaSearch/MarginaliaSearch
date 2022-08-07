@@ -67,7 +67,16 @@ public class BrowseCommand implements SearchCommandInterface {
 
         try {
             if ("random".equals(word)) {
-                var results = edgeDataStoreDao.getRandomDomains(25, blacklist);
+                var results = edgeDataStoreDao.getRandomDomains(25, blacklist, 0);
+
+                results.removeIf(browseResultCleaner.shouldRemoveResultPredicate());
+
+                return new BrowseResultSet(results);
+            }
+            if (word.startsWith("random:")) {
+                int set = Integer.parseInt(word.split(":")[1]);
+
+                var results = edgeDataStoreDao.getRandomDomains(25, blacklist, set);
 
                 results.removeIf(browseResultCleaner.shouldRemoveResultPredicate());
 

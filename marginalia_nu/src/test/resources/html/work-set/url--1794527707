@@ -1,0 +1,38 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+ <head> 
+  <title>PuTTY semi-bug psftp-speedups</title> 
+  <link rel="canonical" href="https://www.chiark.greenend.org.uk/~sgtatham/putty/wishlist/psftp-speedups.html"> 
+  <link rel="stylesheet" type="text/css" href="../sitestyle.css" title="PuTTY Home Page Style"> 
+  <link rel="shortcut icon" href="putty.ico"> 
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8"> 
+  <meta name="robots" content="noindex,nofollow"> 
+ </head> 
+ <body> 
+  <h1 align="center">PuTTY semi-bug psftp-speedups</h1> 
+  <div align="center" class="mirrorwarning">
+    This is a mirror. Follow this link to find <a href="https://www.chiark.greenend.org.uk/~sgtatham/putty/">the primary PuTTY web site</a>. 
+  </div> 
+  <p align="center"> <a href="../">Home</a> | <a href="../faq.html">FAQ</a> | <a href="../feedback.html">Feedback</a> | <a href="../licence.html">Licence</a> | <a href="../maillist.html">Updates</a> | <a href="../mirrors.html">Mirrors</a> | <a href="../keys.html">Keys</a> | <a href="../links.html">Links</a> | <a href="../team.html">Team</a> <br> Download: <a href="../latest.html">Stable</a> · <a href="../snapshot.html">Snapshot</a> | <a href="../docs.html">Docs</a> | <a href="../changes.html">Changes</a> | <a href="./">Wishlist</a> </p> <b>summary</b>: Further speedups for PSFTP
+  <br> <b>class</b>: <i>semi-bug:</i> This might or might not be a bug, depending on your precise definition of what a bug is.
+  <br> <b>difficulty</b>: <i>tricky:</i> Needs many tuits.
+  <br> 
+  <p></p>
+  <pre>We've had some suggestions (and patches) that are claimed to significantly
+improve PSFTP's throughput, by frobbing Nagle and trying to be clever
+about how the SSH protocol is broken up into TCP packets.
+
+&lt;<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="7c4e4c4c484c4f4d4d4e4c4e4e4d49523b3d4d4e484c453c12130e0819101219080b130e170f521f1311">[email&nbsp;protected]</a>&gt; et seq.
+</pre>
+  <div class="audit">
+   <a href="https://git.tartarus.org/?p=simon/putty-wishlist.git;a=history;f=data/psftp-speedups;hb=refs/heads/main">Audit trail</a> for this semi-bug.
+  </div> 
+  <p></p>
+  <hr> If you want to comment on this web site, see the <a href="../feedback.html">Feedback page</a>. 
+  <br> 
+  <div class="timestamp">
+   (last revision of this bug record was at 2016-12-21 16:52:17 +0000)
+  </div> 
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+ </body>
+</html>

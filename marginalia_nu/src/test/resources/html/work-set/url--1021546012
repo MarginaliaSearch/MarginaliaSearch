@@ -1,0 +1,675 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+ <head> 
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"> 
+  <title>Quotidiana</title> <!-- Javascript --> 
+  <script type="text/javascript">
+<!--
+function MM_jumpMenu(targ,selObj,restore){ //v3.0
+  eval(targ+".location='"+selObj.options[selObj.selectedIndex].value+"'");
+  if (restore) selObj.selectedIndex=0;
+}
+//-->
+</script> <!-- CSS --> 
+  <link rel="stylesheet" type="text/css" media="all" href="http://essays.quotidiana.org/styles/essays.css"> 
+  <link rel="stylesheet" type="text/css" media="print" href="http://essays.quotidiana.org/styles/print.css"> 
+  <style type="text/css">body { background-image: url(http://essays.quotidiana.org/images/quescayje.jpg); }</style> 
+ </head> 
+ <body class="front"> 
+  <div id="menu"> 
+   <ul> <!--<li><a href="http://quotidiana.org/">Quotidiana</a></li>--> 
+    <li><a href="http://essays.quotidiana.org/">Classical Essays</a></li> 
+    <li><a href="http://interviews.quotidiana.org/">Interviews</a></li> 
+    <li><a href="http://eae.quotidiana.org/" title="Essayest American Essays">EAE</a></li> 
+    <li><a href="http://students.quotidiana.org/" title="Student Successes">Students</a></li> 
+    <li><a href="http://teaching.quotidiana.org/">Teaching Portfolio</a></li> 
+    <li><a href="http://writing.quotidiana.org">Writing Portfolio</a></li> 
+    <li><a href="http://about.quotidiana.org/">About</a></li> 
+    <li><a href="http://quotidiana.org/contact/">Contact</a></li> 
+   </ul> 
+  </div> 
+  <div id="container"> 
+   <h1>Quotidiana</h1> 
+   <p>(kwo•ti•de•A•na) </p>
+   <p><strong>N.</strong> 1. The land of everyday, commonplace things; 2. The online compendium of 420 public-domain essays.</p> 
+   <h2>Featuring</h2> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/addison/">Joseph Addison</a></h3> <a href="http://essays.quotidiana.org/addison/"><img src="http://essays.quotidiana.org/images/portraits/small/addison.jpg"></a> 
+    <p class="dates">(1672–1719) / 6 essays</p> 
+    <p></p>
+    <p>Wit and humor, as have a tendency to expose vice and folly, furnish useful diversions.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/bacon/">Francis Bacon</a></h3> <a href="http://essays.quotidiana.org/bacon/"><img src="http://essays.quotidiana.org/images/portraits/small/bacon.jpg"></a> 
+    <p class="dates">(1561–1626) / 6 essays</p> 
+    <p></p>
+    <p>There be so many false points of praise, that a man may justly hold it a suspect.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/barbauld_anna_laetitia/">Anna Laetitia Barbauld</a></h3> <a href="http://essays.quotidiana.org/barbauld_anna_laetitia/"><img src="http://essays.quotidiana.org/images/portraits/small/barbauld_anna_laetitia.jpg"></a> 
+    <p class="dates">(1743–1825) / 1 essays</p> 
+    <p></p>
+    <p>Is there not A tongue in every star that talks with man, And wooes him to be wise? nor wooes in vain; This dead of midnight is the noon of thought, And wisdom mounts her zenith with the stars.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/barbellion/">W. N. P. Barbellion</a></h3> <a href="http://essays.quotidiana.org/barbellion/"><img src="http://essays.quotidiana.org/images/portraits/small/barbellion.jpg"></a> 
+    <p class="dates">(1889–1919) / 3 essays</p> 
+    <p></p>
+    <p>My life [is a] struggle with ill-health and ambition, and I have mastered neither.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/belloc/">Hilaire Belloc</a></h3> <a href="http://essays.quotidiana.org/belloc/"><img src="http://essays.quotidiana.org/images/portraits/small/belloc.jpg"></a> 
+    <p class="dates">(1870–1953) / 8 essays</p> 
+    <p></p>
+    <p>Time can take only what is ripe, but Death comes always too soon.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/benson/">Arthur Benson</a></h3> <a href="http://essays.quotidiana.org/benson/"><img src="http://essays.quotidiana.org/images/portraits/small/benson.jpg"></a> 
+    <p class="dates">(1862–1925) / 3 essays</p> 
+    <p></p>
+    <p>The worth of experience is not measured by what is called success, but rather resides in a fullness of life</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/bird/">Isabella Bird</a></h3> <a href="http://essays.quotidiana.org/bird/"><img src="http://essays.quotidiana.org/images/portraits/small/bird.jpg"></a> 
+    <p class="dates">(1831–1904) / 1 essays</p> 
+    <p></p>
+    <p>I have found a dream of beauty at which one might look all one’s life and sigh.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/bly/">Nellie Bly</a></h3> <a href="http://essays.quotidiana.org/bly/"><img src="http://essays.quotidiana.org/images/portraits/small/bly.jpg"></a> 
+    <p class="dates">(1864–1922) / 3 essays</p> 
+    <p></p>
+    <p>It is only after one is in trouble that one realizes how little sympathy and kindness there are in the world. </p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/browne/">Thomas Browne</a></h3> <a href="http://essays.quotidiana.org/browne/"><img src="http://essays.quotidiana.org/images/portraits/small/browne.jpg"></a> 
+    <p class="dates">(1605–1682) / 5 essays</p> 
+    <p></p>
+    <p>Where life is more terrible than death, it is then the truest valor to dare to live.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/burney/">Fanny Burney</a></h3> <a href="http://essays.quotidiana.org/burney/"><img src="http://essays.quotidiana.org/images/portraits/small/burney.jpg"></a> 
+    <p class="dates">(1752–1840) / 4 essays</p> 
+    <p></p>
+    <p>What strange ideas are taken from mere book-reading.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/cavendish/">Margaret Cavendish</a></h3> <a href="http://essays.quotidiana.org/cavendish/"><img src="http://essays.quotidiana.org/images/portraits/small/cavendish.jpg"></a> 
+    <p class="dates">(1623–1673) / 5 essays</p> 
+    <p></p>
+    <p>If tranquility lives in an honest mind the mind dwells in peace.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/chesterton/">G. K. Chesterton</a></h3> <a href="http://essays.quotidiana.org/chesterton/"><img src="http://essays.quotidiana.org/images/portraits/small/chesterton.jpg"></a> 
+    <p class="dates">(1874–1936) / 3 essays</p> 
+    <p></p>
+    <p>An adventure is only an inconvenience rightly considered.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/chudleigh/">Mary Chudleigh</a></h3> <a href="http://essays.quotidiana.org/chudleigh/"><img src="http://essays.quotidiana.org/images/portraits/small/chudleigh.jpg"></a> 
+    <p class="dates">(1656–1710) / 1 essays</p> 
+    <p></p>
+    <p>The fear of death is the occasional cause of the greatest part of…mean dishonorable actions. </p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/clinton/">Elizabeth Clinton</a></h3> <a href="http://essays.quotidiana.org/clinton/"><img src="http://essays.quotidiana.org/images/portraits/small/clinton.jpg"></a> 
+    <p class="dates">(1575–1638) / 1 essays</p> 
+    <p></p>
+    <p>The mothers then that refuse to nurse their owne children, doe they not despise God’s providence?</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/colton/">Charles Colton</a></h3> <a href="http://essays.quotidiana.org/colton/"><img src="http://essays.quotidiana.org/images/portraits/small/colton.jpg"></a> 
+    <p class="dates">(1780–1832) / 3 essays</p> 
+    <p></p>
+    <p>We owe almost all of our knowledge not to those who have agreed, but to those who have differed.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/cooper_a/">Anna Julia Cooper</a></h3> <a href="http://essays.quotidiana.org/cooper_a/"><img src="http://essays.quotidiana.org/images/portraits/small/cooper_a.jpg"></a> 
+    <p class="dates">(1858–1964) / 1 essays</p> 
+    <p></p>
+    <p>Nothing natural can be wholly unworthy. </p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/cooper_s/">Susan Fenimore Cooper</a></h3> <a href="http://essays.quotidiana.org/cooper_s/"><img src="http://essays.quotidiana.org/images/portraits/small/cooper_s.jpg"></a> 
+    <p class="dates">(1813–1894) / 2 essays</p> 
+    <p></p>
+    <p>Of the infinite variety of fruits which spring from the bosom of the earth, the trees of the wood are the greatest in dignity.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/cornwallis/">William Cornwallis</a></h3> <a href="http://essays.quotidiana.org/cornwallis/"><img src="http://essays.quotidiana.org/images/portraits/small/cornwallis.jpg"></a> 
+    <p class="dates">(1579–1614) / 2 essays</p> 
+    <p></p>
+    <p>It is easier to think well than to do well; and no trial to have handsome dapper conceits run invisibly in a brain.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/cowley/">Abraham Cowley</a></h3> <a href="http://essays.quotidiana.org/cowley/"><img src="http://essays.quotidiana.org/images/portraits/small/cowley.jpg"></a> 
+    <p class="dates">(1618–1667) / 4 essays</p> 
+    <p></p>
+    <p>It is a hard and nice subject for a man to write of himself.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/cowper/">William Cowper</a></h3> <a href="http://essays.quotidiana.org/cowper/"><img src="http://essays.quotidiana.org/images/portraits/small/cowper.jpg"></a> 
+    <p class="dates">(1731–1800) / 4 essays</p> 
+    <p></p>
+    <p>Uncertainty and expectation are the joys of life. Security is an insipid thing.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/culpeper/">Thomas Culpeper</a></h3> <a href="http://essays.quotidiana.org/culpeper/"><img src="http://essays.quotidiana.org/images/portraits/small/culpeper.jpg"></a> 
+    <p class="dates">(1626–1697) / 1 essays</p> 
+    <p></p>
+    <p>Though [essays] may gather some honey from the best flowers of wit and learning, they have a limitation from none.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/dequincey/">Thomas De Quincey</a></h3> <a href="http://essays.quotidiana.org/dequincey/"><img src="http://essays.quotidiana.org/images/portraits/small/dequincey.jpg"></a> 
+    <p class="dates">(1785–1859) / 21 essays</p> 
+    <p></p>
+    <p>All is finite in the present; and even that finite is infinite in its velocity of flight towards death.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/edgeworth/">Maria Edgeworth</a></h3> <a href="http://essays.quotidiana.org/edgeworth/"><img src="http://essays.quotidiana.org/images/portraits/small/edgeworth.jpg"></a> 
+    <p class="dates">(1767–1849) / 0 essays</p> 
+    <p></p>
+    <p>Some people talk of morality, and some of religion, but give me a little snug property.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/eliot/">T. S. Eliot</a></h3> <a href="http://essays.quotidiana.org/eliot/"><img src="http://essays.quotidiana.org/images/portraits/small/eliot.jpg"></a> 
+    <p class="dates">(1888–1965) / 1 essays</p> 
+    <p></p>
+    <p>Knowledge is invariably a matter of degree: you cannot put your finger upon even the simplest datum and say this we know. </p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/emerson/">Ralph Waldo Emerson</a></h3> <a href="http://essays.quotidiana.org/emerson/"><img src="http://essays.quotidiana.org/images/portraits/small/emerson.jpg"></a> 
+    <p class="dates">(1803–1882) / 4 essays</p> 
+    <p></p>
+    <p>Our being is descending into us from we know not whence. </p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/far/">Sui Sin Far</a></h3> <a href="http://essays.quotidiana.org/far/"><img src="http://essays.quotidiana.org/images/portraits/small/far.jpg"></a> 
+    <p class="dates">(1865–1914) / 1 essays</p> 
+    <p></p>
+    <p>I have no nationality and am not anxious to claim any. Individuality is more than nationality. </p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/felltham/">Owen Felltham</a></h3> <a href="http://essays.quotidiana.org/felltham/"><img src="http://essays.quotidiana.org/images/portraits/small/felltham.jpg"></a> 
+    <p class="dates">(1602–1668) / 2 essays</p> 
+    <p></p>
+    <p>We begin to be miserable, when we are totally bent on some one temporal object.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/freud/">Sigmund Freud</a></h3> <a href="http://essays.quotidiana.org/freud/"><img src="http://essays.quotidiana.org/images/portraits/small/freud.jpg"></a> 
+    <p class="dates">(1856–1939) / 1 essays</p> 
+    <p></p>
+    <p>My main object is to collect everyday material and utilize it scientifically.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/fuller/">Margaret Fuller</a></h3> <a href="http://essays.quotidiana.org/fuller/"><img src="http://essays.quotidiana.org/images/portraits/small/fuller.jpg"></a> 
+    <p class="dates">(1810–1850) / 1 essays</p> 
+    <p></p>
+    <p>None can sympathize with thoughts like mine, who are permanently ensnared in the meshes of sect or party.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/gerould/">Katharine Fullerton Gerould</a></h3> <a href="http://essays.quotidiana.org/gerould/"><img src="http://essays.quotidiana.org/images/portraits/small/gerould.jpg"></a> 
+    <p class="dates">(1879–1944) / 3 essays</p> 
+    <p></p>
+    <p>Common sense has a deal of caution in it; and do we not, somewhere in the world, need rashness?</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/gilman/">Charlotte Perkins Gilman</a></h3> <a href="http://essays.quotidiana.org/gilman/"><img src="http://essays.quotidiana.org/images/portraits/small/gilman.jpg"></a> 
+    <p class="dates">(1860–1935) / 2 essays</p> 
+    <p></p>
+    <p>There is nothing in maternity, nothing in the natural relation of the sexes which should make the female the servant of the male.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/goldsmith/">Oliver Goldsmith</a></h3> <a href="http://essays.quotidiana.org/goldsmith/"><img src="http://essays.quotidiana.org/images/portraits/small/goldsmith.jpg"></a> 
+    <p class="dates">(1735–1774) / 3 essays</p> 
+    <p></p>
+    <p>From the highest to the lowest, this people seem fond of sights and monsters.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/guiney/">Louise Imogen Guiney</a></h3> <a href="http://essays.quotidiana.org/guiney/"><img src="http://essays.quotidiana.org/images/portraits/small/guiney.jpg"></a> 
+    <p class="dates">(1861–1920) / 12 essays</p> 
+    <p></p>
+    <p>It is diverting to study…how many indispensables man can live without.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/hamilton/">Gail Hamilton</a></h3> <a href="http://essays.quotidiana.org/hamilton/"><img src="http://essays.quotidiana.org/images/portraits/small/hamilton.jpg"></a> 
+    <p class="dates">(1838–1896) / 5 essays</p> 
+    <p></p>
+    <p>Manhood discovers what childhood can never divine,—that the sorrows of life are superficial, and the happiness…structural.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/harrison/">Jane Ellen Harrison</a></h3> <a href="http://essays.quotidiana.org/harrison/"><img src="http://essays.quotidiana.org/images/portraits/small/harrison.jpg"></a> 
+    <p class="dates">(1850–1928) / 2 essays</p> 
+    <p></p>
+    <p>Anyone who cares passionately for abstract discussion, be his hair never so gray,…is in spirit young.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/haywood/">Eliza Haywood</a></h3> <a href="http://essays.quotidiana.org/haywood/"><img src="http://essays.quotidiana.org/images/portraits/small/haywood.jpg"></a> 
+    <p class="dates">(1693–1756) / 3 essays</p> 
+    <p></p>
+    <p>To know ourselves, is agreed by all to be the most useful Learning.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/hazlitt/">William Hazlitt</a></h3> <a href="http://essays.quotidiana.org/hazlitt/"><img src="http://essays.quotidiana.org/images/portraits/small/hazlitt.jpg"></a> 
+    <p class="dates">(1778–1830) / 30 essays</p> 
+    <p></p>
+    <p>In art, in taste, in life, in speech, you decide from feeling, and not from reason.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/howell/">James Howell</a></h3> <a href="http://essays.quotidiana.org/howell/"><img src="http://essays.quotidiana.org/images/portraits/small/howell.jpg"></a> 
+    <p class="dates">(1594–1666) / 2 essays</p> 
+    <p></p>
+    <p>Excuse me that I trouble you thus with these rambling meditations.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/howells/">William Dean Howells</a></h3> <a href="http://essays.quotidiana.org/howells/"><img src="http://essays.quotidiana.org/images/portraits/small/howells.jpg"></a> 
+    <p class="dates">(1837–1920) / 1 essays</p> 
+    <p></p>
+    <p>The soul… is the supernal criticism of the deeds done in the body.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/hume/">David Hume</a></h3> <a href="http://essays.quotidiana.org/hume/"><img src="http://essays.quotidiana.org/images/portraits/small/hume.jpg"></a> 
+    <p class="dates">(1711–1776) / 1 essays</p> 
+    <p></p>
+    <p>Learning has been as great a Loser by being shut up in Colleges and Cells, and secluded from the World.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/hunt/">Leigh Hunt</a></h3> <a href="http://essays.quotidiana.org/hunt/"><img src="http://essays.quotidiana.org/images/portraits/small/hunt.jpg"></a> 
+    <p class="dates">(1784–1859) / 16 essays</p> 
+    <p></p>
+    <p>The test of seeing and hearing… is in the ideas we realize, and the pleasure we derive.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/huxley/">Thomas Henry Huxley</a></h3> <a href="http://essays.quotidiana.org/huxley/"><img src="http://essays.quotidiana.org/images/portraits/small/huxley.jpg"></a> 
+    <p class="dates">(1825–1895) / 2 essays</p> 
+    <p></p>
+    <p>A small beginning has led us to a great ending. </p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/hyde/">Edward Hyde</a></h3> <a href="http://essays.quotidiana.org/hyde/"><img src="http://essays.quotidiana.org/images/portraits/small/hyde.jpg"></a> 
+    <p class="dates">(1609–1674) / 1 essays</p> 
+    <p></p>
+    <p>There is nothing worthier of an honest man than to have contention with nobody.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/jacks/">L. P. Jacks</a></h3> <a href="http://essays.quotidiana.org/jacks/"><img src="http://essays.quotidiana.org/images/portraits/small/jacks.jpg"></a> 
+    <p class="dates">(1860–1955) / 1 essays</p> 
+    <p></p>
+    <p>The richest and most significant experiences of man…are the least patient of verbal reproduction. </p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/jacobs/">Harriet Jacobs</a></h3> <a href="http://essays.quotidiana.org/jacobs/"><img src="http://essays.quotidiana.org/images/portraits/small/jacobs.jpg"></a> 
+    <p class="dates">(1813–1897) / 2 essays</p> 
+    <p></p>
+    <p>There are wrongs which even the grave does not bury.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/jerome/">Jerome K. Jerome</a></h3> <a href="http://essays.quotidiana.org/jerome/"><img src="http://essays.quotidiana.org/images/portraits/small/jerome.jpg"></a> 
+    <p class="dates">(1859–1927) / 4 essays</p> 
+    <p></p>
+    <p>One we discover how to appreciate the timeless values in our daily experiences, we can enjoy the best things in life. </p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/johnson/">Samuel Johnson</a></h3> <a href="http://essays.quotidiana.org/johnson/"><img src="http://essays.quotidiana.org/images/portraits/small/johnson.jpg"></a> 
+    <p class="dates">(1709–1784) / 5 essays</p> 
+    <p></p>
+    <p>Every diversity of art or nature…may supply matter to him whose only rule is to avoid uniformity.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/kenko/">Yoshida Kenko</a></h3> <a href="http://essays.quotidiana.org/kenko/"><img src="http://essays.quotidiana.org/images/portraits/small/kenko.jpg"></a> 
+    <p class="dates">(1283–1350) / 1 essays</p> 
+    <p></p>
+    <p>It is a fine thing when a man who thoroughly understands a subject is unwilling to open his mouth.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/kirkland/">Caroline Kirkland</a></h3> <a href="http://essays.quotidiana.org/kirkland/"><img src="http://essays.quotidiana.org/images/portraits/small/kirkland.jpg"></a> 
+    <p class="dates">(1801–1864) / 2 essays</p> 
+    <p></p>
+    <p>The wildflowers of Michigan deserve a poet of their own.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/lamb/">Charles Lamb</a></h3> <a href="http://essays.quotidiana.org/lamb/"><img src="http://essays.quotidiana.org/images/portraits/small/lamb.jpg"></a> 
+    <p class="dates">(1775–1834) / 25 essays</p> 
+    <p></p>
+    <p>The mighty future is as nothing, being every thing! The past is every thing, being nothing.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/lamb_m/">Mary Lamb</a></h3> <a href="http://essays.quotidiana.org/lamb_m/"><img src="http://essays.quotidiana.org/images/portraits/small/lamb_m.jpg"></a> 
+    <p class="dates">(1764–1847) / 1 essays</p> 
+    <p></p>
+    <p>In the most meritorious discharges of those duties the highest praise we can aim at is to be accounted the helpmates of man, who, in return for all he does for us, expects, and justly expects, us to do all in our power to soften and sweeten life. </p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/landor/">Walter Savage Landor</a></h3> <a href="http://essays.quotidiana.org/landor/"><img src="http://essays.quotidiana.org/images/portraits/small/landor.jpg"></a> 
+    <p class="dates">(1775–1864) / 1 essays</p> 
+    <p></p>
+    <p>A man’s vanity tells him what is honor, a man’s conscience what is justice.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/lee/">Vernon Lee</a></h3> <a href="http://essays.quotidiana.org/lee/"><img src="http://essays.quotidiana.org/images/portraits/small/lee.jpg"></a> 
+    <p class="dates">(1856–1935) / 10 essays</p> 
+    <p></p>
+    <p>I know few things more odious than the chilly, draughty, emptiness of a place without a history.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/marquis/">Don Marquis</a></h3> <a href="http://essays.quotidiana.org/marquis/"><img src="http://essays.quotidiana.org/images/portraits/small/marquis.jpg"></a> 
+    <p class="dates">(1878–1937) / 1 essays</p> 
+    <p></p>
+    <p>The best good that you can possibly achieve is not good enough if you have to strain yourself all the time to reach it.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/martin/">Edward Sanford Martin</a></h3> <a href="http://essays.quotidiana.org/martin/"><img src="http://essays.quotidiana.org/images/portraits/small/martin.jpg"></a> 
+    <p class="dates">(1856–1939) / 1 essays</p> 
+    <p></p>
+    <p>It does a comfortable sufferer good to get his head out of his conveniences sometimes and complain.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/martineau/">Harriet Martineau</a></h3> <a href="http://essays.quotidiana.org/martineau/"><img src="http://essays.quotidiana.org/images/portraits/small/martineau.jpg"></a> 
+    <p class="dates">(1802–1876) / 5 essays</p> 
+    <p></p>
+    <p>My chief object in life shall be the cultivation of my intellectual powers, with a view to the instruction of others.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/meynell/">Alice Meynell</a></h3> <a href="http://essays.quotidiana.org/meynell/"><img src="http://essays.quotidiana.org/images/portraits/small/meynell.jpg"></a> 
+    <p class="dates">(1847–1922) / 22 essays</p> 
+    <p></p>
+    <p>More candid is the author who has no world, but turns that appeal inwards to his own heart.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/milne/">A. A. Milne</a></h3> <a href="http://essays.quotidiana.org/milne/"><img src="http://essays.quotidiana.org/images/portraits/small/milne.jpg"></a> 
+    <p class="dates">(1882–1956) / 12 essays</p> 
+    <p></p>
+    <p>There is a crispness about celery that is of the essence of October.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/montaigne/">Michel de Montaigne</a></h3> <a href="http://essays.quotidiana.org/montaigne/"><img src="http://essays.quotidiana.org/images/portraits/small/montaigne.jpg"></a> 
+    <p class="dates">(1533–1592) / 50 essays</p> 
+    <p></p>
+    <p>I seek out change indiscriminately and tumultuously. My style and my mind alike go roaming.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/more/">Hannah More</a></h3> <a href="http://essays.quotidiana.org/more/"><img src="http://essays.quotidiana.org/images/portraits/small/more.jpg"></a> 
+    <p class="dates">(1745–1833) / 7 essays</p> 
+    <p></p>
+    <p>If all accomplishments could be bought at the price of a single virtue, the purchase would be infinitely dear.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/morley/">Christopher Morley</a></h3> <a href="http://essays.quotidiana.org/morley/"><img src="http://essays.quotidiana.org/images/portraits/small/morley.jpg"></a> 
+    <p class="dates">(1890–1957) / 3 essays</p> 
+    <p></p>
+    <p>The real purpose of books is to trap the mind into doing its own thinking.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/morris/">Elisabeth Morris</a></h3> <a href="http://essays.quotidiana.org/morris/"><img src="http://essays.quotidiana.org/images/portraits/small/morris.jpg"></a> 
+    <p class="dates">(1870–1964) / 10 essays</p> 
+    <p></p>
+    <p>Ground your happiness in a nice dove tailing of eager conviction with tolerant in difference, and you are safe for a lifetime. </p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/osler/">William Osler</a></h3> <a href="http://essays.quotidiana.org/osler/"><img src="http://essays.quotidiana.org/images/portraits/small/osler.jpg"></a> 
+    <p class="dates">(1849–1919) / 1 essays</p> 
+    <p></p>
+    <p>The strength of a student of men is…to study men, their habits…their vices, virtues, and peculiarities.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/plato/">Ann Plato</a></h3> <a href="http://essays.quotidiana.org/plato/"><img src="http://essays.quotidiana.org/images/portraits/small/plato.jpg"></a> 
+    <p class="dates">(1820–?) / 6 essays</p> 
+    <p></p>
+    <p>The graves before me…are thickly deposited. The marble that speak the names, bid us prepare for Death.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/repplier/">Agnes Repplier</a></h3> <a href="http://essays.quotidiana.org/repplier/"><img src="http://essays.quotidiana.org/images/portraits/small/repplier.jpg"></a> 
+    <p class="dates">(1855–1950) / 7 essays</p> 
+    <p></p>
+    <p>It has been wisely said that we cannot really love anybody at whom we never laugh.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/rhys/">Grace Little Rhys</a></h3> <a href="http://essays.quotidiana.org/rhys/"><img src="http://essays.quotidiana.org/images/portraits/small/rhys.jpg"></a> 
+    <p class="dates">(1865–1929) / 4 essays</p> 
+    <p></p>
+    <p>Eyes and mind soon become accustomed to a miracle that happens every day and in time notice no more.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/seneca/">Lucius Annaeus Seneca</a></h3> <a href="http://essays.quotidiana.org/seneca/"><img src="http://essays.quotidiana.org/images/portraits/small/seneca.jpg"></a> 
+    <p class="dates">(4–65) / 4 essays</p> 
+    <p></p>
+    <p>That which was bitter to bear is pleasant to have borne; it is natural to rejoice at the ending of one’s ills.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/smith_a/">Alexander Smith</a></h3> <a href="http://essays.quotidiana.org/smith_a/"><img src="http://essays.quotidiana.org/images/portraits/small/smith_a.jpg"></a> 
+    <p class="dates">(1830–1867) / 15 essays</p> 
+    <p></p>
+    <p>In my book there is little more life than there is in the market-place on the days when there is no market.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/steele/">Richard Steele</a></h3> <a href="http://essays.quotidiana.org/steele/"><img src="http://essays.quotidiana.org/images/portraits/small/steele.jpg"></a> 
+    <p class="dates">(1672–1729) / 3 essays</p> 
+    <p></p>
+    <p>When a man has no design but to speak plain truth, he may say a great deal in a very narrow compass.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/stein/">Edith Stein</a></h3> <a href="http://essays.quotidiana.org/stein/"><img src="http://essays.quotidiana.org/images/portraits/small/stein.jpg"></a> 
+    <p class="dates">(1891–1942) / 5 essays</p> 
+    <p></p>
+    <p>My longing for truth was a single prayer.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/stevenson/">Robert Lewis Stevenson</a></h3> <a href="http://essays.quotidiana.org/stevenson/"><img src="http://essays.quotidiana.org/images/portraits/small/stevenson.jpg"></a> 
+    <p class="dates">(1850–1894) / 6 essays</p> 
+    <p></p>
+    <p>A happy man or woman is a better thing to find than a five-pound note.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/swift/">Jonathan Swift</a></h3> <a href="http://essays.quotidiana.org/swift/"><img src="http://essays.quotidiana.org/images/portraits/small/swift.jpg"></a> 
+    <p class="dates">(1667–1745) / 4 essays</p> 
+    <p></p>
+    <p>It is useless to attempt to reason a man out of a thing he was never reasoned into.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/temple/">William Temple</a></h3> <a href="http://essays.quotidiana.org/temple/"><img src="http://essays.quotidiana.org/images/portraits/small/temple.jpg"></a> 
+    <p class="dates">(1628–1699) / 4 essays</p> 
+    <p></p>
+    <p>The first ingredient in conversation is truth, the next good sense, the third good humor, and the fourth wit.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/tomlinson/">H. M. Tomlinson</a></h3> <a href="http://essays.quotidiana.org/tomlinson/"><img src="http://essays.quotidiana.org/images/portraits/small/tomlinson.jpg"></a> 
+    <p class="dates">(1873–1958) / 6 essays</p> 
+    <p></p>
+    <p>It is better to obey the mysterious direction … when it points to a new road, however strange that road may be.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/twain/">Mark Twain</a></h3> <a href="http://essays.quotidiana.org/twain/"><img src="http://essays.quotidiana.org/images/portraits/small/twain.jpg"></a> 
+    <p class="dates">(1835–1910) / 2 essays</p> 
+    <p></p>
+    <p>The adoption of cremation would relieve us of a muck of threadbare burial-witticisms.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/wharton/">Edith Wharton</a></h3> <a href="http://essays.quotidiana.org/wharton/"><img src="http://essays.quotidiana.org/images/portraits/small/wharton.jpg"></a> 
+    <p class="dates">(1862–1937) / 3 essays</p> 
+    <p></p>
+    <p>True originality consists not in a new manner but in a new vision.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/wollstonecraft/">Mary Wollstonecraft</a></h3> <a href="http://essays.quotidiana.org/wollstonecraft/"><img src="http://essays.quotidiana.org/images/portraits/small/wollstonecraft.jpg"></a> 
+    <p class="dates">(1759–1797) / 5 essays</p> 
+    <p></p>
+    <p>We must have an object to refer our reflections to, or they will seldom go below the surface.</p> 
+    <p></p> 
+   </div> 
+   <div class="column" style="width: 225px; min-height: 125px;"> 
+    <h3><a href="http://essays.quotidiana.org/zitkala-sa/">Zitkala-Ša</a></h3> <a href="http://essays.quotidiana.org/zitkala-sa/"><img src="http://essays.quotidiana.org/images/portraits/small/zitkala-sa.jpg"></a> 
+    <p class="dates">(1876–1938) / 1 essays</p> 
+    <p></p>
+    <p>To my innermost consciousness the phenomenal universe is a royal mantle, vibrating with His divine breath.</p> 
+    <p></p> 
+   </div> 
+  </div><!-- container --> 
+  <div id="side"> 
+   <h5>Patrick Madden's New Book</h5> <a href="http://www.amazon.com/Quotidiana-Patrick-Madden/dp/0803222963"> <img src="http://www.quotidiana.org/images/Quotidiana_cover.jpg" alt="Quotidiana by Patrick Madden"></a> 
+   <h5>Search</h5> 
+   <form method="get" action="http://quotidiana.org/mt/mt-search.cgi"> 
+    <input type="hidden" name="IncludeBlogs" value="1"> 
+    <input name="search" id="search" style="width: 125px;"> 
+    <input type="submit" value="Go">
+    <br> 
+   </form> 
+   <h5>Join Us on Facebook</h5> <a href="http://www.facebook.com/home.php?ref=home#/pages/Quotidiana/50194372604?ref=ts"> <img src="http://www.quotidiana.org/images/facebook-logo.png" alt="facebook logo" style="border: none"></a> 
+   <h5>Essayists</h5> <!-- ALPHABETICAL LIST --> <select name="category_alpha" style="width: 175px;" onchange="MM_jumpMenu('parent',this,0)"> <option value="" selected>Alphabetical</option> <option value="http://essays.quotidiana.org/addison/">Addison, Joseph (1672-1719)</option> <option value="http://essays.quotidiana.org/bacon/">Bacon, Francis (1561-1626)</option> <option value="http://essays.quotidiana.org/barbauld_anna_laetitia/">Barbauld, Anna Laetitia (1743-1825)</option> <option value="http://essays.quotidiana.org/barbellion/">Barbellion, W. N. P. (1889-1919)</option> <option value="http://essays.quotidiana.org/belloc/">Belloc, Hilaire (1870-1953)</option> <option value="http://essays.quotidiana.org/benson/">Benson, Arthur (1862-1925)</option> <option value="http://essays.quotidiana.org/bird/">Bird, Isabella (1831-1904)</option> <option value="http://essays.quotidiana.org/bly/">Bly, Nellie (1864-1922)</option> <option value="http://essays.quotidiana.org/browne/">Browne, Thomas (1605-1682)</option> <option value="http://essays.quotidiana.org/burney/">Burney, Fanny (1752-1840)</option> <option value="http://essays.quotidiana.org/cavendish/">Cavendish, Margaret (1623-1673)</option> <option value="http://essays.quotidiana.org/chesterton/">Chesterton, G. K. (1874-1936)</option> <option value="http://essays.quotidiana.org/chudleigh/">Chudleigh, Mary (1656-1710)</option> <option value="http://essays.quotidiana.org/clinton/">Clinton, Elizabeth (1575-1638)</option> <option value="http://essays.quotidiana.org/colton/">Colton, Charles (1780-1832)</option> <option value="http://essays.quotidiana.org/cooper_a/">Cooper, Anna Julia (1858-1964)</option> <option value="http://essays.quotidiana.org/cooper_s/">Cooper, Susan Fenimore (1813-1894)</option> <option value="http://essays.quotidiana.org/cornwallis/">Cornwallis, William (1579-1614)</option> <option value="http://essays.quotidiana.org/cowley/">Cowley, Abraham (1618-1667)</option> <option value="http://essays.quotidiana.org/cowper/">Cowper, William (1731-1800)</option> <option value="http://essays.quotidiana.org/culpeper/">Culpeper, Thomas (1626-1697)</option> <option value="http://essays.quotidiana.org/dequincey/">De Quincey, Thomas (1785-1859)</option> <option value="http://essays.quotidiana.org/edgeworth/">Edgeworth, Maria (1767-1849)</option> <option value="http://essays.quotidiana.org/eliot/">Eliot, T. S. (1888-1965)</option> <option value="http://essays.quotidiana.org/emerson/">Emerson, Ralph Waldo (1803-1882)</option> <option value="http://essays.quotidiana.org/far/">Far, Sui Sin (1865-1914)</option> <option value="http://essays.quotidiana.org/felltham/">Felltham, Owen (1602-1668)</option> <option value="http://essays.quotidiana.org/freud/">Freud, Sigmund (1856-1939)</option> <option value="http://essays.quotidiana.org/fuller/">Fuller, Margaret (1810-1850)</option> <option value="http://essays.quotidiana.org/gerould/">Gerould, Katharine Fullerton (1879-1944)</option> <option value="http://essays.quotidiana.org/gilman/">Gilman, Charlotte Perkins (1860-1935)</option> <option value="http://essays.quotidiana.org/goldsmith/">Goldsmith, Oliver (1735-1774)</option> <option value="http://essays.quotidiana.org/guiney/">Guiney, Louise Imogen (1861-1920)</option> <option value="http://essays.quotidiana.org/hamilton/">Hamilton, Gail (1838-1896)</option> <option value="http://essays.quotidiana.org/harrison/">Harrison, Jane Ellen (1850-1928)</option> <option value="http://essays.quotidiana.org/haywood/">Haywood, Eliza (1693-1756)</option> <option value="http://essays.quotidiana.org/hazlitt/">Hazlitt, William (1778-1830)</option> <option value="http://essays.quotidiana.org/howell/">Howell, James (1594-1666)</option> <option value="http://essays.quotidiana.org/howells/">Howells, William Dean (1837-1920)</option> <option value="http://essays.quotidiana.org/hume/">Hume, David (1711-1776)</option> <option value="http://essays.quotidiana.org/hunt/">Hunt, Leigh (1784-1859)</option> <option value="http://essays.quotidiana.org/huxley/">Huxley, Thomas Henry (1825-1895)</option> <option value="http://essays.quotidiana.org/hyde/">Hyde, Edward (1609-1674)</option> <option value="http://essays.quotidiana.org/jacks/">Jacks, L. P. (1860-1955)</option> <option value="http://essays.quotidiana.org/jacobs/">Jacobs, Harriet (1813-1897)</option> <option value="http://essays.quotidiana.org/jerome/">Jerome, Jerome K. (1859-1927)</option> <option value="http://essays.quotidiana.org/johnson/">Johnson, Samuel (1709-1784)</option> <option value="http://essays.quotidiana.org/kenko/">Kenko, Yoshida (1283-1350)</option> <option value="http://essays.quotidiana.org/kirkland/">Kirkland, Caroline (1801-1864)</option> <option value="http://essays.quotidiana.org/lamb/">Lamb, Charles (1775-1834)</option> <option value="http://essays.quotidiana.org/lamb_m/">Lamb, Mary (1764-1847)</option> <option value="http://essays.quotidiana.org/landor/">Landor, Walter Savage (1775-1864)</option> <option value="http://essays.quotidiana.org/lee/">Lee, Vernon (1856-1935)</option> <option value="http://essays.quotidiana.org/marquis/">Marquis, Don (1878-1937)</option> <option value="http://essays.quotidiana.org/martin/">Martin, Edward Sanford (1856-1939)</option> <option value="http://essays.quotidiana.org/martineau/">Martineau, Harriet (1802-1876)</option> <option value="http://essays.quotidiana.org/meynell/">Meynell, Alice (1847-1922)</option> <option value="http://essays.quotidiana.org/milne/">Milne, A. A. (1882-1956)</option> <option value="http://essays.quotidiana.org/montaigne/">Montaigne, Michel de (1533-1592)</option> <option value="http://essays.quotidiana.org/more/">More, Hannah (1745-1833)</option> <option value="http://essays.quotidiana.org/morley/">Morley, Christopher (1890-1957)</option> <option value="http://essays.quotidiana.org/morris/">Morris, Elisabeth (1870-1964)</option> <option value="http://essays.quotidiana.org/osler/">Osler, William (1849-1919)</option> <option value="http://essays.quotidiana.org/plato/">Plato, Ann (1820-?)</option> <option value="http://essays.quotidiana.org/repplier/">Repplier, Agnes (1855-1950)</option> <option value="http://essays.quotidiana.org/rhys/">Rhys, Grace Little (1865-1929)</option> <option value="http://essays.quotidiana.org/seneca/">Seneca, Lucius Annaeus (4-65)</option> <option value="http://essays.quotidiana.org/smith_a/">Smith, Alexander (1830-1867)</option> <option value="http://essays.quotidiana.org/steele/">Steele, Richard (1672-1729)</option> <option value="http://essays.quotidiana.org/stein/">Stein, Edith (1891-1942)</option> <option value="http://essays.quotidiana.org/stevenson/">Stevenson, Robert Louis (1850-1894)</option> <option value="http://essays.quotidiana.org/swift/">Swift, Jonathan (1667-1745)</option> <option value="http://essays.quotidiana.org/temple/">Temple, William (1628-1699)</option> <option value="http://essays.quotidiana.org/tomlinson/">Tomlinson, H. M. (1873-1958)</option> <option value="http://essays.quotidiana.org/twain/">Twain, Mark (1835-1910)</option> <option value="http://essays.quotidiana.org/wharton/">Wharton, Edith (1862-1937)</option> <option value="http://essays.quotidiana.org/wollstonecraft/">Wollstonecraft, Mary (1759-1797)</option> <option value="http://essays.quotidiana.org/zitkala-sa/">Zitkala-Ša (1876-1938)</option> </select> <!-- CHRONOLOGICAL LIST See http://www.nonplus.net/software/mt/MTCollate.htm --> <select name="category_chron" style="width: 175px;" onchange="MM_jumpMenu('parent',this,0)"> <option value="" selected>Chronological</option> <option value="http://essays.quotidiana.org/seneca/">Seneca, Lucius Annaeus (4-65)</option> <option value="http://essays.quotidiana.org/kenko/">Kenko, Yoshida (1283-1350)</option> <option value="http://essays.quotidiana.org/montaigne/">Montaigne, Michel de (1533-1592)</option> <option value="http://essays.quotidiana.org/bacon/">Bacon, Francis (1561-1626)</option> <option value="http://essays.quotidiana.org/clinton/">Clinton, Elizabeth (1575-1638)</option> <option value="http://essays.quotidiana.org/cornwallis/">Cornwallis, William (1579-1614)</option> <option value="http://essays.quotidiana.org/howell/">Howell, James (1594-1666)</option> <option value="http://essays.quotidiana.org/felltham/">Felltham, Owen (1602-1668)</option> <option value="http://essays.quotidiana.org/browne/">Browne, Thomas (1605-1682)</option> <option value="http://essays.quotidiana.org/hyde/">Hyde, Edward (1609-1674)</option> <option value="http://essays.quotidiana.org/cowley/">Cowley, Abraham (1618-1667)</option> <option value="http://essays.quotidiana.org/cavendish/">Cavendish, Margaret (1623-1673)</option> <option value="http://essays.quotidiana.org/culpeper/">Culpeper, Thomas (1626-1697)</option> <option value="http://essays.quotidiana.org/temple/">Temple, William (1628-1699)</option> <option value="http://essays.quotidiana.org/chudleigh/">Chudleigh, Mary (1656-1710)</option> <option value="http://essays.quotidiana.org/swift/">Swift, Jonathan (1667-1745)</option> <option value="http://essays.quotidiana.org/addison/">Addison, Joseph (1672-1719)</option> <option value="http://essays.quotidiana.org/steele/">Steele, Richard (1672-1729)</option> <option value="http://essays.quotidiana.org/haywood/">Haywood, Eliza (1693-1756)</option> <option value="http://essays.quotidiana.org/johnson/">Johnson, Samuel (1709-1784)</option> <option value="http://essays.quotidiana.org/hume/">Hume, David (1711-1776)</option> <option value="http://essays.quotidiana.org/cowper/">Cowper, William (1731-1800)</option> <option value="http://essays.quotidiana.org/goldsmith/">Goldsmith, Oliver (1735-1774)</option> <option value="http://essays.quotidiana.org/barbauld_anna_laetitia/">Barbauld, Anna Laetitia (1743-1825)</option> <option value="http://essays.quotidiana.org/more/">More, Hannah (1745-1833)</option> <option value="http://essays.quotidiana.org/burney/">Burney, Fanny (1752-1840)</option> <option value="http://essays.quotidiana.org/wollstonecraft/">Wollstonecraft, Mary (1759-1797)</option> <option value="http://essays.quotidiana.org/lamb_m/">Lamb, Mary (1764-1847)</option> <option value="http://essays.quotidiana.org/edgeworth/">Edgeworth, Maria (1767-1849)</option> <option value="http://essays.quotidiana.org/lamb/">Lamb, Charles (1775-1834)</option> <option value="http://essays.quotidiana.org/landor/">Landor, Walter Savage (1775-1864)</option> <option value="http://essays.quotidiana.org/hazlitt/">Hazlitt, William (1778-1830)</option> <option value="http://essays.quotidiana.org/colton/">Colton, Charles (1780-1832)</option> <option value="http://essays.quotidiana.org/hunt/">Hunt, Leigh (1784-1859)</option> <option value="http://essays.quotidiana.org/dequincey/">De Quincey, Thomas (1785-1859)</option> <option value="http://essays.quotidiana.org/kirkland/">Kirkland, Caroline (1801-1864)</option> <option value="http://essays.quotidiana.org/martineau/">Martineau, Harriet (1802-1876)</option> <option value="http://essays.quotidiana.org/emerson/">Emerson, Ralph Waldo (1803-1882)</option> <option value="http://essays.quotidiana.org/fuller/">Fuller, Margaret (1810-1850)</option> <option value="http://essays.quotidiana.org/cooper_s/">Cooper, Susan Fenimore (1813-1894)</option> <option value="http://essays.quotidiana.org/jacobs/">Jacobs, Harriet (1813-1897)</option> <option value="http://essays.quotidiana.org/plato/">Plato, Ann (1820-?)</option> <option value="http://essays.quotidiana.org/huxley/">Huxley, Thomas Henry (1825-1895)</option> <option value="http://essays.quotidiana.org/smith_a/">Smith, Alexander (1830-1867)</option> <option value="http://essays.quotidiana.org/bird/">Bird, Isabella (1831-1904)</option> <option value="http://essays.quotidiana.org/twain/">Twain, Mark (1835-1910)</option> <option value="http://essays.quotidiana.org/howells/">Howells, William Dean (1837-1920)</option> <option value="http://essays.quotidiana.org/hamilton/">Hamilton, Gail (1838-1896)</option> <option value="http://essays.quotidiana.org/meynell/">Meynell, Alice (1847-1922)</option> <option value="http://essays.quotidiana.org/osler/">Osler, William (1849-1919)</option> <option value="http://essays.quotidiana.org/harrison/">Harrison, Jane Ellen (1850-1928)</option> <option value="http://essays.quotidiana.org/stevenson/">Stevenson, Robert Louis (1850-1894)</option> <option value="http://essays.quotidiana.org/repplier/">Repplier, Agnes (1855-1950)</option> <option value="http://essays.quotidiana.org/freud/">Freud, Sigmund (1856-1939)</option> <option value="http://essays.quotidiana.org/lee/">Lee, Vernon (1856-1935)</option> <option value="http://essays.quotidiana.org/martin/">Martin, Edward Sanford (1856-1939)</option> <option value="http://essays.quotidiana.org/cooper_a/">Cooper, Anna Julia (1858-1964)</option> <option value="http://essays.quotidiana.org/jerome/">Jerome, Jerome K. (1859-1927)</option> <option value="http://essays.quotidiana.org/gilman/">Gilman, Charlotte Perkins (1860-1935)</option> <option value="http://essays.quotidiana.org/jacks/">Jacks, L. P. (1860-1955)</option> <option value="http://essays.quotidiana.org/guiney/">Guiney, Louise Imogen (1861-1920)</option> <option value="http://essays.quotidiana.org/benson/">Benson, Arthur (1862-1925)</option> <option value="http://essays.quotidiana.org/wharton/">Wharton, Edith (1862-1937)</option> <option value="http://essays.quotidiana.org/bly/">Bly, Nellie (1864-1922)</option> <option value="http://essays.quotidiana.org/far/">Far, Sui Sin (1865-1914)</option> <option value="http://essays.quotidiana.org/rhys/">Rhys, Grace Little (1865-1929)</option> <option value="http://essays.quotidiana.org/belloc/">Belloc, Hilaire (1870-1953)</option> <option value="http://essays.quotidiana.org/morris/">Morris, Elisabeth (1870-1964)</option> <option value="http://essays.quotidiana.org/tomlinson/">Tomlinson, H. M. (1873-1958)</option> <option value="http://essays.quotidiana.org/chesterton/">Chesterton, G. K. (1874-1936)</option> <option value="http://essays.quotidiana.org/zitkala-sa/">Zitkala-Ša (1876-1938)</option> <option value="http://essays.quotidiana.org/marquis/">Marquis, Don (1878-1937)</option> <option value="http://essays.quotidiana.org/gerould/">Gerould, Katharine Fullerton (1879-1944)</option> <option value="http://essays.quotidiana.org/milne/">Milne, A. A. (1882-1956)</option> <option value="http://essays.quotidiana.org/eliot/">Eliot, T. S. (1888-1965)</option> <option value="http://essays.quotidiana.org/barbellion/">Barbellion, W. N. P. (1889-1919)</option> <option value="http://essays.quotidiana.org/morley/">Morley, Christopher (1890-1957)</option> <option value="http://essays.quotidiana.org/stein/">Stein, Edith (1891-1942)</option> </select> <!-- GENDER LISTS --> <select name="category_gender" style="width: 175px;" onchange="MM_jumpMenu('parent',this,0)"> <option value="" selected>Women</option> <option value="http://essays.quotidiana.org/barbauld_anna_laetitia/" class="female">Barbauld, Anna Laetitia (1743-1825)</option><option value="http://essays.quotidiana.org/bird/" class="female">Bird, Isabella (1831-1904)</option><option value="http://essays.quotidiana.org/bly/" class="female">Bly, Nellie (1864-1922)</option><option value="http://essays.quotidiana.org/burney/" class="female">Burney, Fanny (1752-1840)</option><option value="http://essays.quotidiana.org/cavendish/" class="female">Cavendish, Margaret (1623-1673)</option><option value="http://essays.quotidiana.org/chudleigh/" class="female">Chudleigh, Mary (1656-1710)</option><option value="http://essays.quotidiana.org/clinton/" class="female">Clinton, Elizabeth (1575-1638)</option><option value="http://essays.quotidiana.org/cooper_a/" class="female">Cooper, Anna Julia (1858-1964)</option><option value="http://essays.quotidiana.org/cooper_s/" class="female">Cooper, Susan Fenimore (1813-1894)</option><option value="http://essays.quotidiana.org/edgeworth/" class="female">Edgeworth, Maria (1767-1849)</option><option value="http://essays.quotidiana.org/far/" class="female">Far, Sui Sin (1865-1914)</option><option value="http://essays.quotidiana.org/fuller/" class="female">Fuller, Margaret (1810-1850)</option><option value="http://essays.quotidiana.org/gerould/" class="female">Gerould, Katharine Fullerton (1879-1944)</option><option value="http://essays.quotidiana.org/gilman/" class="female">Gilman, Charlotte Perkins (1860-1935)</option><option value="http://essays.quotidiana.org/guiney/" class="female">Guiney, Louise Imogen (1861-1920)</option><option value="http://essays.quotidiana.org/hamilton/" class="female">Hamilton, Gail (1838-1896)</option><option value="http://essays.quotidiana.org/harrison/" class="female">Harrison, Jane Ellen (1850-1928)</option><option value="http://essays.quotidiana.org/haywood/" class="female">Haywood, Eliza (1693-1756)</option><option value="http://essays.quotidiana.org/jacobs/" class="female">Jacobs, Harriet (1813-1897)</option><option value="http://essays.quotidiana.org/kirkland/" class="female">Kirkland, Caroline (1801-1864)</option><option value="http://essays.quotidiana.org/lamb_m/" class="female">Lamb, Mary (1764-1847)</option><option value="http://essays.quotidiana.org/lee/" class="female">Lee, Vernon (1856-1935)</option><option value="http://essays.quotidiana.org/martineau/" class="female">Martineau, Harriet (1802-1876)</option><option value="http://essays.quotidiana.org/meynell/" class="female">Meynell, Alice (1847-1922)</option><option value="http://essays.quotidiana.org/more/" class="female">More, Hannah (1745-1833)</option><option value="http://essays.quotidiana.org/morris/" class="female">Morris, Elisabeth (1870-1964)</option><option value="http://essays.quotidiana.org/plato/" class="female">Plato, Ann (1820-?)</option><option value="http://essays.quotidiana.org/repplier/" class="female">Repplier, Agnes (1855-1950)</option><option value="http://essays.quotidiana.org/rhys/" class="female">Rhys, Grace Little (1865-1929)</option><option value="http://essays.quotidiana.org/stein/" class="female">Stein, Edith (1891-1942)</option><option value="http://essays.quotidiana.org/wharton/" class="female">Wharton, Edith (1862-1937)</option><option value="http://essays.quotidiana.org/wollstonecraft/" class="female">Wollstonecraft, Mary (1759-1797)</option><option value="http://essays.quotidiana.org/zitkala-sa/" class="female">Zitkala-Ša (1876-1938)</option></select> 
+   <h5>Essayist of the Month</h5> <a href="http://essays.quotidiana.org/hazlitt"><img style="border: 0; float: right; margin-top:-10px;" src="http://essays.quotidiana.org/images/portraits/small/hazlitt.jpg" alt="link to essayist of the month essays"></a>
+   <h3>April</h3> 
+   <p style="margin-top: 10px;"><a href="http://essays.quotidiana.org/hazlitt">William Hazlitt</a> was born on April 10, 1778</p> 
+   <h5>Most Popular Essays</h5> 
+   <ol>
+    <li><h3><a href="http://essays.quotidiana.org/swift/modest_proposal/">“A modest proposal”</a></h3></li>
+    <p style="text-indent: .7em;"><a href="http://essays.quotidiana.org/swift/">Jonathan Swift</a></p>
+    <li><h3><a href="http://essays.quotidiana.org/chesterton/lying_in_bed/">“On lying in bed”</a></h3></li>
+    <p style="text-indent: .7em;"><a href="http://essays.quotidiana.org/chesterton/">G. K. Chesterton</a></p>
+    <li><h3><a href="http://essays.quotidiana.org/chesterton/running_after_ones_hat/">“On running after one’s hat”</a></h3></li>
+    <p style="text-indent: .7em;"><a href="http://essays.quotidiana.org/chesterton/">G. K. Chesterton</a></p>
+    <li><h3><a href="http://essays.quotidiana.org/morley/laziness/">“On laziness”</a></h3></li>
+    <p style="text-indent: .7em;"><a href="http://essays.quotidiana.org/morley/">Christopher Morley</a></p>
+    <li><h3><a href="http://essays.quotidiana.org/bacon/studies/">“Of studies”</a></h3></li>
+    <p style="text-indent: .7em;"><a href="http://essays.quotidiana.org/bacon/">Francis Bacon</a></p>
+   </ol>
+   <p style="text-indent: .7em;"><a href="./popular/">View more . . .</a></p> 
+   <h5>Recently Added</h5> 
+   <h3><a href="http://essays.quotidiana.org/lamb/on_some_of_the_old_actors/">“On some of the old actors”</a></h3> 
+   <p style="text-indent: .7em;"><a href="http://essays.quotidiana.org/lamb/">Charles Lamb</a></p> 
+   <p style="padding-left: .7em;">Of all the actors who flourished in my time--a melancholy phrase if taken aright, reader--Bensley had most of the swell of soul, was greatest in the delivery of heroic conceptions, the emotions consequent upon the presentment of a great idea to the fancy. </p> 
+   <h3><a href="http://essays.quotidiana.org/lamb/grace_before_meat/">“Grace before meat”</a></h3> 
+   <p style="text-indent: .7em;"><a href="http://essays.quotidiana.org/lamb/">Charles Lamb</a></p> 
+   <p style="padding-left: .7em;">The form then of the benediction before eating has its beauty at a poor man's table, or at the simple and unprovocative repasts of children. It is here that the grace becomes exceedingly graceful.</p> 
+   <h3><a href="http://essays.quotidiana.org/barbauld_anna_laetitia/sins_of_government_sins_of_the/">“Sins of government, Sins of the nation; or, a Discourse for the fast”</a></h3> 
+   <p style="text-indent: .7em;"><a href="http://essays.quotidiana.org/barbauld_anna_laetitia/">Anna Laetitia Barbauld</a></p> 
+   <p style="padding-left: .7em;">Every individual, my brethren, who has a sense of religion, and a desire of conforming his conduct to its precepts, will frequently retire into himself to discover his faults; and having discovered, to repent of, -- and having repented of, to amend them. Nations have likewise their faults to repent of, their conduct to examine.</p> 
+   <h3><a href="http://essays.quotidiana.org/bly/a_proposal_to_girdle_the_earth/">“A Proposal to Girdle the Earth ”</a></h3> 
+   <p style="text-indent: .7em;"><a href="http://essays.quotidiana.org/bly/">Nellie Bly</a></p> 
+   <p style="padding-left: .7em;">I always have a comfortable feeling that nothing is impossible if one applies a certain amount of energy in the right direction </p> 
+   <h3><a href="http://essays.quotidiana.org/lamb_m/needlework/">“On needlework”</a></h3> 
+   <p style="text-indent: .7em;"><a href="http://essays.quotidiana.org/lamb_m/">Mary Lamb</a></p> 
+   <p style="padding-left: .7em;">At all events, let us not confuse the motives of economy with those of simple pastime. </p> 
+   <p>&nbsp;</p> 
+   <p style="text-indent: .7em;"><a href="./recent/">View more . . .</a></p> 
+   <h5>Sample Syllabi</h5> 
+   <p>Coming soon</p> 
+  </div> 
+  <div id="footer"> 
+   <div class="column"> 
+    <h4>About</h4> 
+    <p>Quotidiana is an online anthology of "classical" essays, from antiquity to the early twentieth century. All essays and images are in the public domain. Commentaries are copyrighted, but may be used with proper attribution. Special thanks to the <a href="http://humanities.byu.edu/">BYU College of Humanities</a> and <a href="http://english.byu.edu/">English Department</a> for funding, and to <a href="http://www.randomhouse.com/rhpg/20by20contest/authors.html">Joey Franklin</a> and <a href="http://www.laraburton.com/">Lara Burton</a>, for tireless research assisting.</p> 
+   </div> 
+   <div class="column" style="width: 480px;"> 
+    <h4>AWP 2007: Teaching the Classical Essay</h4> 
+    <table> 
+     <tbody>
+      <tr> 
+       <td><img src="http://www.quotidiana.org/essays/images/bobcats/mike_32.jpg" alt="Michael Danko" width="64" height="32" border="1"></td> 
+       <td>Michael Danko<br>on Precursors to the Essay</td> 
+       <td><a href="http://essays.quotidiana.org/awp2007/lakanen/"><img src="http://www.quotidiana.org/essays/images/bobcats/shannon_32.jpg" alt="Shannon Lakanen" width="64" height="32" border="1"></a></td> 
+       <td><a href="http://essays.quotidiana.org/awp2007/lakanen/">Shannon Lakanen</a><br>on Early 20th-C Essays</td> 
+      </tr> 
+      <tr> 
+       <td><img src="http://www.quotidiana.org/essays/images/bobcats/michelle_32.jpg" alt="Michelle Disler" width="64" height="32" border="1"></td> 
+       <td>Michelle Disler<br>on Epistolary Essays</td> 
+       <td><a href="http://essays.quotidiana.org/awp2007/madden/"><img src="http://www.quotidiana.org/essays/images/bobcats/pat_32.jpg" alt="Patrick Madden" width="64" height="32" border="1"></a></td> 
+       <td><a href="http://essays.quotidiana.org/awp2007/madden/">Patrick Madden</a><br>on Essays on the Essay</td> 
+      </tr> 
+      <tr> 
+       <td><img src="http://www.quotidiana.org/essays/images/bobcats/kelley_32.jpg" alt="Kelley Evans" width="64" height="32" border="1"></td> 
+       <td>Kelley Evans<br>on Women Essayists</td> 
+       <td><a href="http://essays.quotidiana.org/awp2007/matherly/"><img src="http://www.quotidiana.org/essays/images/bobcats/desi_32.jpg" alt="Desirae Matherly" width="64" height="32" border="1"></a></td> 
+       <td><a href="http://essays.quotidiana.org/awp2007/matherly/">Desirae Matherly</a><br>on Essayists' Personas</td> 
+      </tr>
+     </tbody>
+    </table> 
+   </div> 
+   <div class="column" style="width:360px"> 
+    <h4>Books</h4> 
+    <table> 
+     <tbody>
+      <tr> 
+       <td width="59" align="center"><img src="http://www.quotidiana.org/essays/images/books/montaigne_50.jpg" alt="Montaigne's Complete Works" width="30" height="50" border="1"></td> 
+       <td>Purchase books by our featured essayists at <a href="http://astore.amazon.com/quotidiana-20">our Amazon store</a>. The (piddly) kickbacks we get help defray the cost of web hosting. Thank you.</td> 
+      </tr> 
+     </tbody>
+    </table> 
+   </div> 
+  </div>  
+ </body>
+</html>

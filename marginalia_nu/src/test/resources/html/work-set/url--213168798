@@ -1,0 +1,178 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+ <head> 
+  <title>PuTTY Download Page</title> 
+  <link rel="canonical" href="http://www.chiark.greenend.org.uk/~sgtatham/putty/"> 
+  <link rel="stylesheet" type="text/css" href="sitestyle.css" title="PuTTY Home Page Style"> 
+  <link rel="shortcut icon" href="putty.ico"> 
+  <meta http-equiv="content-type" content="text/html; charset=US-ASCII"> 
+  <meta name="robots" content="noindex,nofollow"> 
+ </head> 
+ <body> 
+  <h1 align="center">PuTTY Download Page</h1> 
+  <div align="center" class="mirrorwarning">
+    This is a mirror. Follow this link to find <a href="http://www.chiark.greenend.org.uk/~sgtatham/putty/">the primary PuTTY web site</a>. 
+  </div> 
+  <p align="center"> <a href="./">Home</a> | <a href="licence.html">Licence</a> | <a href="faq.html">FAQ</a> | <a href="docs.html">Docs</a> | <b>Download</b> | <a href="keys.html">Keys</a> | <a href="links.html">Links</a> <br> <a href="mirrors.html">Mirrors</a> | <a href="maillist.html">Updates</a> | <a href="feedback.html">Feedback</a> | <a href="changes.html">Changes</a> | <a href="wishlist/">Wishlist</a> | <a href="team.html">Team</a> </p> 
+  <p> Here are the PuTTY files themselves: </p>
+  <ul> 
+   <li> PuTTY (the SSH and Telnet client itself) </li>
+   <li> PSCP (an SCP client, i.e. command-line secure file copy) </li>
+   <li> PSFTP (an SFTP client, i.e. general file transfer sessions much like FTP) </li>
+   <li> PuTTYtel (a Telnet-only client) </li>
+   <li> Plink (a command-line interface to the PuTTY back ends) </li>
+   <li> Pageant (an SSH authentication agent for PuTTY, PSCP, PSFTP, and Plink) </li>
+   <li> PuTTYgen (an RSA and DSA key generation utility). </li>
+  </ul> 
+  <p><b>LEGAL WARNING</b>: Use of PuTTY, PSCP, PSFTP and Plink is illegal in countries where encryption is outlawed. We believe it is legal to use PuTTY, PSCP, PSFTP and Plink in England and Wales and in many other countries, but we are not lawyers, and so if in doubt you should seek legal advice before downloading it. You may find useful information at <a href="http://www.cryptolaw.org/">cryptolaw.org</a>, which collects information on cryptography laws in many countries, but we can't vouch for its correctness. </p> 
+  <p> Use of the Telnet-only binary (PuTTYtel) is unrestricted by any cryptography laws. </p>
+  <p> There are cryptographic signatures available for all the files we offer below. We also supply cryptographically signed lists of checksums. To download our public keys and find out more about our signature policy, visit the <a href="keys.html">Keys page</a>. If you need a Windows program to compute MD5 checksums, you could try this one at <a href="http://www.pc-tools.net/win32/freeware/md5sums/">pc-tools.net</a>. (This MD5 program is also cryptographically signed by its author.) </p>
+  <h2>Binaries</h2> 
+  <div class="release"> 
+   <div class="buildtype">
+    The latest release version (beta 0.67)
+   </div> 
+   <p> This will generally be a version we think is reasonably likely to work well. If you have a problem with the release version, it might be worth trying out the latest development snapshot (below) to see if we've already fixed the bug, before reporting it. </p> 
+   <div class="downloadheading">
+     For Windows on Intel x86 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">PuTTY:</span> <span class="downloadfile"><a href="0.67/x86/putty.exe"><code>putty.exe</code></a></span> <span class="downloadftp"> <a href="ftp://ftp.chiark.greenend.org.uk/users/sgtatham/putty-latest/x86/putty.exe">(or by FTP)</a> </span> <span class="downloadsig"><a href="0.67/x86/putty.exe.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">PuTTY<wbr>tel:</span> <span class="downloadfile"><a href="0.67/x86/puttytel.exe"><code>puttytel.exe</code></a></span> <span class="downloadftp"> <a href="ftp://ftp.chiark.greenend.org.uk/users/sgtatham/putty-latest/x86/puttytel.exe">(or by FTP)</a> </span> <span class="downloadsig"><a href="0.67/x86/puttytel.exe.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">PSCP:</span> <span class="downloadfile"><a href="0.67/x86/pscp.exe"><code>pscp.exe</code></a></span> <span class="downloadftp"> <a href="ftp://ftp.chiark.greenend.org.uk/users/sgtatham/putty-latest/x86/pscp.exe">(or by FTP)</a> </span> <span class="downloadsig"><a href="0.67/x86/pscp.exe.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">PSFTP:</span> <span class="downloadfile"><a href="0.67/x86/psftp.exe"><code>psftp.exe</code></a></span> <span class="downloadftp"> <a href="ftp://ftp.chiark.greenend.org.uk/users/sgtatham/putty-latest/x86/psftp.exe">(or by FTP)</a> </span> <span class="downloadsig"><a href="0.67/x86/psftp.exe.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">Plink:</span> <span class="downloadfile"><a href="0.67/x86/plink.exe"><code>plink.exe</code></a></span> <span class="downloadftp"> <a href="ftp://ftp.chiark.greenend.org.uk/users/sgtatham/putty-latest/x86/plink.exe">(or by FTP)</a> </span> <span class="downloadsig"><a href="0.67/x86/plink.exe.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">Pageant:</span> <span class="downloadfile"><a href="0.67/x86/pageant.exe"><code>pageant.exe</code></a></span> <span class="downloadftp"> <a href="ftp://ftp.chiark.greenend.org.uk/users/sgtatham/putty-latest/x86/pageant.exe">(or by FTP)</a> </span> <span class="downloadsig"><a href="0.67/x86/pageant.exe.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">PuTTY<wbr>gen:</span> <span class="downloadfile"><a href="0.67/x86/puttygen.exe"><code>puttygen.exe</code></a></span> <span class="downloadftp"> <a href="ftp://ftp.chiark.greenend.org.uk/users/sgtatham/putty-latest/x86/puttygen.exe">(or by FTP)</a> </span> <span class="downloadsig"><a href="0.67/x86/puttygen.exe.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadheading">
+     A .ZIP file containing all the binaries (except PuTTYtel), and also the help files 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">Zip file:</span> <span class="downloadfile"><a href="0.67/x86/putty.zip"><code>putty.zip</code></a></span> <span class="downloadftp"> <a href="ftp://ftp.chiark.greenend.org.uk/users/sgtatham/putty-latest/x86/putty.zip">(or by FTP)</a> </span> <span class="downloadsig"><a href="0.67/x86/putty.zip.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadheading">
+     A Windows MSI installer package for everything except PuTTYtel 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">Installer:</span> <span class="downloadfile"><a href="0.67/x86/putty-0.67-installer.msi"><code>putty-0.67-<wbr>installer.msi</code></a></span> <span class="downloadftp"> <a href="ftp://ftp.chiark.greenend.org.uk/users/sgtatham/putty-latest/x86/putty-0.67-installer.msi">(or by FTP)</a> </span> <span class="downloadsig"><a href="0.67/x86/putty-0.67-installer.msi.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadheading">
+     Legacy Inno Setup installer. <a href="https://packetstormsecurity.com/files/134694/jrsoft-dllhijack.txt">Reportedly insecure</a>! Use with caution, if the MSI fails. 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">Legacy installer:</span> <span class="downloadfile"><a href="0.67/x86/putty-0.67-installer.exe"><code>putty-0.67-<wbr>installer.exe</code></a></span> <span class="downloadftp"> <a href="ftp://ftp.chiark.greenend.org.uk/users/sgtatham/putty-latest/x86/putty-0.67-installer.exe">(or by FTP)</a> </span> <span class="downloadsig"><a href="0.67/x86/putty-0.67-installer.exe.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadheading">
+     Checksums for all the above files 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">MD5:</span> <span class="downloadfile"><a href="0.67/md5sums"><code>md5sums</code></a></span> <span class="downloadftp"> <a href="ftp://ftp.chiark.greenend.org.uk/users/sgtatham/putty-latest/md5sums">(or by FTP)</a> </span> <span class="downloadsig"><a href="0.67/md5sums.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">SHA-<wbr>1:</span> <span class="downloadfile"><a href="0.67/sha1sums"><code>sha1sums</code></a></span> <span class="downloadftp"> <a href="ftp://ftp.chiark.greenend.org.uk/users/sgtatham/putty-latest/sha1sums">(or by FTP)</a> </span> <span class="downloadsig"><a href="0.67/sha1sums.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">SHA-<wbr>256:</span> <span class="downloadfile"><a href="0.67/sha256sums"><code>sha256sums</code></a></span> <span class="downloadftp"> <a href="ftp://ftp.chiark.greenend.org.uk/users/sgtatham/putty-latest/sha256sums">(or by FTP)</a> </span> <span class="downloadsig"><a href="0.67/sha256sums.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">SHA-<wbr>512:</span> <span class="downloadfile"><a href="0.67/sha512sums"><code>sha512sums</code></a></span> <span class="downloadftp"> <a href="ftp://ftp.chiark.greenend.org.uk/users/sgtatham/putty-latest/sha512sums">(or by FTP)</a> </span> <span class="downloadsig"><a href="0.67/sha512sums.gpg">(signature)</a></span> 
+   </div> 
+  </div> 
+  <div class="snapshot"> 
+   <div class="buildtype">
+    The latest development snapshot
+   </div> 
+   <p> This will be built every day, automatically, from the current development code - in <em>whatever</em> state it's currently in. If you need a fix for a particularly inconvenient bug, you may well be able to find a fixed PuTTY here well before the fix makes it into the release version above. On the other hand, these snapshots might sometimes be unstable. </p> 
+   <p> (The filename of the development snapshot installer contains the snapshot date, so it will change every night.) </p> 
+   <div class="downloadheading">
+     For Windows on Intel x86 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">PuTTY:</span> <span class="downloadfile"><a href="https://tartarus.org/~simon/putty-snapshots/x86/putty.exe"><code>putty.exe</code></a></span> <span class="downloadftp"> </span> <span class="downloadsig"><a href="https://tartarus.org/~simon/putty-snapshots/x86/putty.exe.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">PuTTY<wbr>tel:</span> <span class="downloadfile"><a href="https://tartarus.org/~simon/putty-snapshots/x86/puttytel.exe"><code>puttytel.exe</code></a></span> <span class="downloadftp"> </span> <span class="downloadsig"><a href="https://tartarus.org/~simon/putty-snapshots/x86/puttytel.exe.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">PSCP:</span> <span class="downloadfile"><a href="https://tartarus.org/~simon/putty-snapshots/x86/pscp.exe"><code>pscp.exe</code></a></span> <span class="downloadftp"> </span> <span class="downloadsig"><a href="https://tartarus.org/~simon/putty-snapshots/x86/pscp.exe.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">PSFTP:</span> <span class="downloadfile"><a href="https://tartarus.org/~simon/putty-snapshots/x86/psftp.exe"><code>psftp.exe</code></a></span> <span class="downloadftp"> </span> <span class="downloadsig"><a href="https://tartarus.org/~simon/putty-snapshots/x86/psftp.exe.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">Plink:</span> <span class="downloadfile"><a href="https://tartarus.org/~simon/putty-snapshots/x86/plink.exe"><code>plink.exe</code></a></span> <span class="downloadftp"> </span> <span class="downloadsig"><a href="https://tartarus.org/~simon/putty-snapshots/x86/plink.exe.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">Pageant:</span> <span class="downloadfile"><a href="https://tartarus.org/~simon/putty-snapshots/x86/pageant.exe"><code>pageant.exe</code></a></span> <span class="downloadftp"> </span> <span class="downloadsig"><a href="https://tartarus.org/~simon/putty-snapshots/x86/pageant.exe.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">PuTTY<wbr>gen:</span> <span class="downloadfile"><a href="https://tartarus.org/~simon/putty-snapshots/x86/puttygen.exe"><code>puttygen.exe</code></a></span> <span class="downloadftp"> </span> <span class="downloadsig"><a href="https://tartarus.org/~simon/putty-snapshots/x86/puttygen.exe.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadheading">
+     A .ZIP file containing all the binaries (except PuTTYtel), and also the help files 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">Zip file:</span> <span class="downloadfile"><a href="https://tartarus.org/~simon/putty-snapshots/x86/putty.zip"><code>putty.zip</code></a></span> <span class="downloadftp"> </span> <span class="downloadsig"><a href="https://tartarus.org/~simon/putty-snapshots/x86/putty.zip.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadheading">
+     A Windows MSI installer package for everything except PuTTYtel 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">Installer:</span> <span class="downloadfile"><a href="https://tartarus.org/~simon/putty-snapshots/x86/putty-installer.msi"><code>putty-</code><i>&lt;version&gt;</i><code>-<wbr>installer.msi</code></a></span> <span class="downloadftp"> </span> <span class="downloadsig"><a href="https://tartarus.org/~simon/putty-snapshots/x86/putty-installer.msi.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadheading">
+     Legacy Inno Setup installer. <a href="https://packetstormsecurity.com/files/134694/jrsoft-dllhijack.txt">Reportedly insecure</a>! Use with caution, if the MSI fails. 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">Legacy installer:</span> <span class="downloadfile"><a href="https://tartarus.org/~simon/putty-snapshots/x86/putty-installer.exe"><code>putty-</code><i>&lt;version&gt;</i><code>-<wbr>installer.exe</code></a></span> <span class="downloadftp"> </span> <span class="downloadsig"><a href="https://tartarus.org/~simon/putty-snapshots/x86/putty-installer.exe.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadheading">
+     Checksums for all the above files 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">MD5:</span> <span class="downloadfile"><a href="https://tartarus.org/~simon/putty-snapshots/md5sums"><code>md5sums</code></a></span> <span class="downloadftp"> </span> <span class="downloadsig"><a href="https://tartarus.org/~simon/putty-snapshots/md5sums.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">SHA-<wbr>1:</span> <span class="downloadfile"><a href="https://tartarus.org/~simon/putty-snapshots/sha1sums"><code>sha1sums</code></a></span> <span class="downloadftp"> </span> <span class="downloadsig"><a href="https://tartarus.org/~simon/putty-snapshots/sha1sums.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">SHA-<wbr>256:</span> <span class="downloadfile"><a href="https://tartarus.org/~simon/putty-snapshots/sha256sums"><code>sha256sums</code></a></span> <span class="downloadftp"> </span> <span class="downloadsig"><a href="https://tartarus.org/~simon/putty-snapshots/sha256sums.gpg">(signature)</a></span> 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">SHA-<wbr>512:</span> <span class="downloadfile"><a href="https://tartarus.org/~simon/putty-snapshots/sha512sums"><code>sha512sums</code></a></span> <span class="downloadftp"> </span> <span class="downloadsig"><a href="https://tartarus.org/~simon/putty-snapshots/sha512sums.gpg">(signature)</a></span> 
+   </div> 
+  </div> 
+  <h2>Source code</h2> 
+  <p> This is the source code for all of the PuTTY utilities. </p>
+  <p> For convenience, we provide several versions of the source code, for different platforms. The actual content does not differ substantially between Windows and Unix archives; the differences are mostly in formatting (filenames, line endings, etc). </p>
+  <p> If you want to do any PuTTY development work, we <em>strongly</em> recommend starting with development snapshot code. We frequently make large changes to the code after major releases, so code based on the current release will be hard for us to use. </p>
+  <h3>Unix source code</h3> 
+  <p> These <code>.tar.gz</code> source archives should build the latest release version, and latest development snapshot, of PuTTY for Unix. </p>
+  <p> To build the release source, you will need to unpack one of these archives, change into the "<code>unix</code>" subdirectory, and type "<code>make -f Makefile.gtk</code>". To build the development snapshot source, you can just do the standard thing of <code>./configure &amp;&amp; make</code>. See the file "<code>README</code>" for more information. </p>
+  <p> (The filename of the development snapshot source archive contains the snapshot date, so it will change every night.) </p> 
+  <div class="release"> 
+   <div class="downloadheading">
+     0.67 release source code for Unix 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">Source:</span> <span class="downloadfile"><a href="0.67/putty-0.67.tar.gz"><code>putty-0.67.<wbr>tar.gz</code></a></span> <span class="downloadftp"> <a href="ftp://ftp.chiark.greenend.org.uk/users/sgtatham/putty-latest/putty-0.67.tar.gz">(or by FTP)</a> </span> <span class="downloadsig"><a href="0.67/putty-0.67.tar.gz.gpg">(signature)</a> </span> 
+   </div> 
+  </div> 
+  <div class="snapshot"> 
+   <div class="downloadheading">
+     Development snapshot source code for Unix 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">Source:</span> <span class="downloadfile"><a href="https://tartarus.org/~simon/putty-snapshots/putty.tar.gz"><code>putty-</code><i>&lt;version&gt;</i><code>.<wbr>tar.gz</code></a></span> <span class="downloadftp"> </span> <span class="downloadsig"><a href="https://tartarus.org/~simon/putty-snapshots/putty.tar.gz.gpg">(signature)</a> </span> 
+   </div> 
+  </div> 
+  <h3>Windows source code</h3> 
+  <p> See the file "<code>README</code>" for more information on building PuTTY from source. </p> 
+  <div class="release"> 
+   <div class="downloadheading">
+     0.67 release source code for Windows 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">Source:</span> <span class="downloadfile"><a href="0.67/putty-src.zip"><code>putty-src.zip</code></a></span> <span class="downloadftp"> <a href="ftp://ftp.chiark.greenend.org.uk/users/sgtatham/putty-latest/putty-src.zip">(or by FTP)</a> </span> <span class="downloadsig"><a href="0.67/putty-src.zip.gpg">(signature)</a></span> 
+   </div> 
+  </div> 
+  <div class="snapshot"> 
+   <div class="downloadheading">
+     Development snapshot source code for Windows 
+   </div> 
+   <div class="downloadrow"> <span class="downloadname">Source:</span> <span class="downloadfile"><a href="https://tartarus.org/~simon/putty-snapshots/putty-src.zip"><code>putty-src.zip</code></a></span> <span class="downloadftp"> </span> <span class="downloadsig"><a href="https://tartarus.org/~simon/putty-snapshots/putty-src.zip.gpg">(signature)</a></span> 
+   </div> 
+  </div> 
+  <h3>Access via <code>git</code></h3> 
+  <p> If you want to keep track of the PuTTY development right up to the minute, or view the change logs for each of the files in the source base, you can access the PuTTY master <code>git</code> repository directly, using a command such as </p>
+  <div>
+   <code>git clone https://git.tartarus.org/simon/putty.git</code>
+  </div> 
+  <p> Alternatively, you can <a href="https://git.tartarus.org/?p=simon/putty.git">browse the git repository</a> on the web. </p> 
+  <p></p>
+  <hr> If you want to comment on this web site, see the <a href="feedback.html">Feedback page</a>. 
+  <br> (last modified on <!--LASTMOD-->Thu Sep 29 14:45:07 2016<!--END-->) 
+ </body>
+</html>

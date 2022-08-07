@@ -1,0 +1,129 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html> 
+ <head> 
+  <style type="text/css" media="all">@import "style.css";</style> 
+  <title>J. David Eisenberg's Chronological Resume by Skills</title> 
+ </head> 
+ <body class="body-style"> 
+  <div class="top-navig"> <a id="top"></a> <a href="index.html">Home Page</a> &gt; <a href="about.html">About This Site</a> &gt; Chronological Resume 
+  </div> 
+  <h1>J. David Eisenberg</h1> 
+  <h4>San Jose, CA 95129<br> E-mail: <a href="mailto:david@catcode.com">david@catcode.com</a></h4> 
+  <p> <a href="index.html">Back to the index</a> </p> 
+  <hr> 
+  <h3>Writing</h3> 
+  <ul> 
+   <li>Author, <cite><a href="http://www.oreilly.com/catalog/svgess/">SVG Essentials</a></cite>, <a href="http://wwww.oreilly.com/">O'Reilly &amp; Associates</a>, 2002</li> 
+  </ul> 
+  <h3>Contract Programming / Design and Development 1991-Present</h3> 
+  <h3>Internet (1996-Present)</h3> 
+  <div>
+   Web-based tutorials
+  </div> 
+  <ul style="list-style-type: circle;"> 
+   <li><a href="/imgguide/">The HTML <tt>&lt;img&gt;</tt> tag</a></li> 
+   <li><a href="/linkguide/">Links in HTML</a></li> 
+   <li><a href="/formguide/">Forms in HTML</a></li> 
+  </ul> 
+  <ul style="list-style-type: circle;"> 
+   <li><a href="/domcontent/">The Document Object Model</a></li> 
+   <li><a href="/relax_tut/">RELAX - an XML Specification Language</a></li> 
+   <li><a href="/schema/">XML Schema - an XML Specification Language</a></li> 
+  </ul> 
+  <ul style="list-style-type: circle;"> 
+   <li><a href="http://langintro.com/rintro/index.htm">Russian</a></li> 
+   <li><a href="http://langintro.com/kintro/index.htm">Korean</a></li> 
+   <li><a href="http://langintro.com/greek/index.htm">Modern Greek</a></li> 
+  </ul> 
+  <ul style="list-style-type: circle;"> 
+   <li><a href="/teachmod/">Using the UNIX chmod command</a></li> 
+  </ul> 
+  <div>
+   Miscellaneous
+  </div> 
+  <ul style="list-style-type: circle;"> 
+   <li>Writing CGI scripts in Perl and Java Servlets for <a href="http://www.dvptechdoc.com">DVP Techdoc</a>. Also set up <a href="http://www.linux.org">Linux</a> system with <a href="http://www.apache.org">Apache Server</a> and <a href="http://www.mysql.org">MySQL</a> database. </li> 
+   <li>Convert instructional material for <a href="http://www.sofsource.com">SofSource</a> to HTML and Javascript </li> 
+   <li>Sample <a href="js-today.html">Javascript calendar program</a> was used as an example in the book <i>Teach Yourself JavaScript in a Week</i> by Arman Danesh, published by Sams (ISBN:&nbsp;1575210738). </li> 
+   <li>Constructed and host site for <a href="scvwa/index.html">Santa Clara Valley Wrestling Association</a> </li> 
+   <li>Developed a sample set of Java applets to show <a href="trig/index.html">educational uses of Java</a> </li> 
+  </ul> 
+  <p> Contractor at Apple Integration Quality group from March to September 1996. Duties included writing testing tools for floppy disk driver and Open Firmware. Tools were written in Metrowerks C with utility programs in perl. </p> 
+  <p> Here is a list of products I have worked on. They are in the form of </p> 
+  <ul style="list-style-type: circle;"> 
+   <li><span class="ital">Product name (year produced)</span><br> <span class="ital">Programming tools used in product</span> </li> 
+  </ul> 
+  <ul style="list-style-type: circle;"> 
+   <li><a href="http://www.wkbradford.com">W.K.Bradford´s</a> <span class="bold">The Algebra Class</span> (1996)<br> Macintosh CodeWarrior / PowerPlant </li> 
+   <li><a href="http://www.expertsoftware.com">Expert Software´s</a> <span class="bold">Algebra CD</span>(1995)<br> Windows 3.1-Borland C </li> 
+   <li>DinoSoft children´s educational software (1994)<br> Windows 3.1-Borland C; Macintosh-Think C</li> 
+   <li><span class="bold">Annabel´s Dream of Medieval England</span> interactive story CD-ROM (1994)<br> Macintosh-Think C with Think Class Library, QuickTime, Mac Toolbox</li> 
+   <li>Texas Caviar´s <span class="bold">Vital Signs­the Good Health Resource</span> information CD-ROM (1993)<br> Macintosh-Think C with Think Class Library</li> 
+   <li><a href="http://www.avantext.com">Avantext´s</a> The Aviation Database­FAA databases on CD-ROM (1993)<br> Macintosh-Think C with Think Class Library</li> 
+   <li>Fisher Idea Systems´ <span class="bold">IdeaFisher</span> (1993)<br> Macintosh-Think Pascal</li> 
+   <li>Apple Newton Point of Purchase demonstration (1993)<br> NewtonScript</li> 
+   <li><span class="bold">Whale of a Tale</span> interactive story CD-ROM (1992)<br> Macintosh-Think C with Think Class Library, QuickTime</li> 
+   <li><span class="bold">Annabel´s Dream of Ancient Egypt</span> interactive story CD-ROM (1991)<br> Macintosh-Think C with Think Class Library</li> 
+  </ul> 
+  <h3>Instruction/Training Experience 1990-Present</h3> 
+  <ul style="list-style-type: circle;"> 
+   <li>Instructor, Evergreen Valley College (Fall 2002 - present)<br> Teach Perl, HTML, and Introduction to Computers</li> 
+   <li>Part-time Instructor, De Anza College (2000-present)<br> Teach C, Perl, XML, and HTML courses.</li> 
+   <li>Instructor, <a href="http://www.keypoint.com">KeyPoint Software</a> (Nov. 1996-present)<br> Wrote XML, CGI and CSS courses, edited and expanded JavaScript course; teach HTML, JavaScript, CGI, and CSS.</li> 
+   <li>Instructor, Computer Learning Center, San Jose, CA.<br> Taught a C programming course, introductory mathematics for electronics, and Microsoft Word.</li> 
+   <li>Secondary school teaching credential in mathematics through National University.<br> Did student teaching at Gunderson High School in San Jose.</li> 
+   <li>Volunteer Assistant, Computer Laboratory at Del Mar High School, Campbell, CA, Sept. 1993-1995. </li> 
+   <li>Bilingual Instructional Aide, English Language Development program, Campbell Union High School District, 1990-1992.</li> 
+  </ul> 
+  <h3><a href="http://www.apple.com/">Apple Computer</a> 1979-1985</h3> 
+  <ul style="list-style-type: circle;"> 
+   <li>Co-wrote <i>Apple presents...Apple</i>, <i>Exploring Apple Logo</i>, and <i>Apple Logo II Product Training Disk</i><br> (Apple Pascal)</li> 
+   <li>Programming for Dutch, Swedish, and Spanish version of Apple IIc in-box training disks</li> 
+   <li>Implemented Kanji Word Processor for Apple II; not commercially released<br> (Apple Pascal, 6502 Assembler Language)</li> 
+  </ul> 
+  <h3>Burroughs Corporation, Plymouth MI 1978-1979</h3> 
+  <p> Worked on utility software for VM1, a small business system based on the B-80. </p> 
+  <h3><a href="http://www.udel.edu/">University of Delaware</a> Computing Center, 1975-1977</h3> 
+  <ul style="list-style-type: circle;"> 
+   <li>Systems programmer on Burroughs B6700. Main language used: Burroughs ALGOL</li> 
+   <li>Implemented changes to system editor</li> 
+   <li>Team-taught course for computing center users</li> 
+   <li>Implemented library of 2-d graphics routines for plasma panel display</li> 
+  </ul> 
+  <h3><a href="http://www.uiuc.edu/extern/UofI_intro.html">University of Illinois</a> PLATO project, 1973-1975</h3> 
+  <ul style="list-style-type: circle;"> 
+   <li>Consulting programmer, PLATO Computer-Assisted Instruction Language Laboratory at University of Illinois.</li> 
+   <li>Lead programmer, University of Illinois PLATO Modern Hebrew CAI project</li> 
+   <li>Co-author of <i>Beginning Tutor</i>, textbook used with programming classes at University of Illinois PLATO project. Other authors: Tom Schaefges and Roberta Stock</li> 
+  </ul> 
+  <h3>Languages (human)</h3> 
+  <ul style="list-style-type: circle;"> 
+   <li>Spanish (excellent)</li> 
+   <li>Russian (good) </li> 
+   <li>Korean (beginning)</li> 
+   <li>Modern Greek (beginning)</li> 
+   <li>Mandarin Chinese (beginning)</li> 
+   <li>German (reading only)</li> 
+   <li>French, Hebrew, Dutch (smatterings)</li> 
+   <li>American Sign Language (beginning)</li> 
+  </ul> 
+  <h3>Education</h3> 
+  <ul style="list-style-type: circle;"> 
+   <li>M.S. in Psychology (Applied Measurement Option) ­ Sept. 1973-Dec. 1974</li> 
+   <li>B.S. in Mathematics (Computer Science Minor) ­ Feb. 1970-June 1973<br> Both from University of Illinois, Urbana IL</li> 
+  </ul> 
+  <hr> 
+  <h3>Skill Summary: Computer Systems and Languages</h3> 
+  <table border="1"> 
+   <tbody>
+    <tr> 
+     <td valign="top"> WWW<br> &nbsp; &nbsp; Perl<br> &nbsp; &nbsp; HTML 4.0<br> &nbsp; &nbsp; JavaScript<br> &nbsp; &nbsp; Java<br> &nbsp; &nbsp; CGI<br> &nbsp; &nbsp; CSS<br> &nbsp; &nbsp; Dynamic HTML <p> UNIX<br> &nbsp; &nbsp; vi<br> &nbsp; &nbsp; file manipulation<br> &nbsp; &nbsp; shell scripting<br> &nbsp; &nbsp; Linux setup<br> &nbsp; &nbsp; Apache setup<br> &nbsp; &nbsp; MySQL operations<br> </p> </td> 
+     <td valign="top"> Macintosh<br> &nbsp; &nbsp; Macintosh Toolbox<br> &nbsp; &nbsp; CodeWarrior Metrowerks C++<br> &nbsp; &nbsp; &nbsp; &nbsp; PowerPlant<br> &nbsp; &nbsp; Think C with TCL<br> &nbsp; &nbsp; &nbsp; &nbsp; (Think Class Library)<br> &nbsp; &nbsp; Think Pascal<br> &nbsp; &nbsp; ResEdit <p> Windows 3.1<br> &nbsp; &nbsp; Borland C 4.0<br> &nbsp; &nbsp; Resource Compiler<br> </p> </td> 
+     <td valign="top"> Miscellaneous<br> &nbsp; &nbsp; NewtonScript,<br> &nbsp; &nbsp; BASIC, ALGOL,<br> &nbsp; &nbsp; SNOBOL, RPG <p> Applications<br> &nbsp; &nbsp; Microsoft Word<br> &nbsp; &nbsp; Adobe Photoshop (basics)<br> &nbsp; &nbsp; ClarisWorks<br> &nbsp; &nbsp; MPW<br> &nbsp; &nbsp; BBEdit<br> &nbsp; &nbsp; DeBabelizer<br> </p> </td> 
+    </tr> 
+   </tbody>
+  </table> 
+  <hr> 
+  <p> <a href="index.html">Back to the index</a> </p>  
+ </body>
+</html>

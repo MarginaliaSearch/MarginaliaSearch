@@ -1,0 +1,151 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html> 
+ <head> 
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=utf-8"> 
+  <meta name="GENERATOR" content="OpenOffice.org 3.3  (Linux)"> 
+  <meta name="CREATED" content="0;0"> 
+  <meta name="CHANGEDBY" content="David Gesswein"> 
+  <meta name="CHANGED" content="20140610;7485300"> 
+  <style type="text/css">
+	<!--
+		H2.cjk { font-family: "Droid Sans" }
+	-->
+	</style> 
+  <title>Rev B &amp; C Board Assembly, testing, and usage</title> 
+ </head> 
+ <body lang="en-US" dir="LTR"> 
+  <center>
+   Revision B &amp; C Board testing and usage
+  </center> 
+  <p> <a href="../mfm.shtml">Top of MFM project information</a> </p>
+  <p> If you have any questions, improvements, or corrections email me at the address at the bottom of the page or use the forum. </p>
+  <p> <a href="https://github.com/dgesswein/mfm/issues">Issue tracker is here.</a> </p>
+  <p> <a href="../forum.shtml">Forum for discussing this project is here,</a> </p>
+  <p> I have tested the <a href="http://www.seeed.cc/beaglebone_green/"> BeagleBone Green (BBG)</a> and it works fine for the MFM emulator and is cheaper. The green has some functions removed that are not needed for the MFM board. The micro USB cable it comes with is only 7" long. All references in these pages to BeagleBone Black (BBB) also apply to BBG unless otherwise noted. </p>
+  <h1>File Information</h1> 
+  <p>The board was created using the <a href="http://www.kicad-pcb.org/display/KICAD/KiCad+EDA+Software+Suite">KiCad software suite</a>. See <a href="../board/mfm_revb_pcb/info/license.html">License file</a> for license of this board and license information and attribution for included files. </p> 
+  <p>The directory <a href="../board/mfm_revb_pcb/pdf">pdf</a> has the board schematic (top.pdf) for the actual PCB layout. </p> 
+  <p>The directory <a href="../board/mfm_revb_pcb/info">info</a> has a spreadsheet of the BeagleBone Black (BBB) pins used, and the board license. </p> 
+  <p>The directory <a href="../board/mfm_revb_pcb/bom">bom</a> has the bill of materials for building the board. </p> 
+  <p>The directory <a href="../board/datasheets">datasheets</a> has datasheets for the chips used. </p> 
+  <h1>Mechanical Information</h1> 
+  <p>The board is laid out such that it matches the normal drive connector locations and orientation when installed with the component side up. The BBB plugs into the bottom solder side of the board. The assembled height should allow installation in a half height 5.25" drive bay. </p> 
+  <p>The mounting holes in the board match the standard 5.25" drive bottom mounting holes. If the drive being emulated was mounted with screws into the bottom of the drive the board can be mounted using standoffs. The board is shorter than a normal drive so the connectors will be further back. </p> 
+  <p>For drives that mounted using screws into the side, mounting blocks for the board will need to be made. Space has been left along the side of the board to allow the board to be screwed to the blocks using #6 screws and then screwed to mounting rails or the drive cage as needed. This is a partially assembled example of the original revision A board with a mounting rail: </p>
+  <p> <a href="mounting_top.jpg"><img src="mounting_top_small.jpg"></a> <a href="mounting_bottom.jpg"><img src="mounting_bottom_small.jpg"></a> </p> 
+  <p> Richard Muse created 3D printable mounts for his boards. <a href="https://groups.google.com/d/msg/mfm-discuss/SAKyljKaqsw/qpUCfS7rCQAJ"> See his post to the discussion list with picture here</a> </p>
+  <h1>Assembly Notes</h1> <a href="revb_board_assembly.shtml">See this page</a> if you are assembling the PCB or for some notes on the board design. 
+  <p> You may wish to remove or move P9 caps jumper to drain until you are ready to install the board in a computer to use for MFM emulation. This way the board won't have any voltages on it after you remove power. </p>
+  <p> <a name="sw_install"></a> </p>
+  <h1>Reflashing BBB/BBG</h1> 
+  <p> NOTE: BeagleBone normally run from on-board flash unlike some some other boards that always run from SD card. This card image is for loading the on-board flash with the proper image. BB's can run from the micro SD card but my image doesn't support that. </p>
+  <p>If you got a prebuilt board with BBB you can skip this step since the latest software at time of shipping was installed. You can check your software against the website version to see when updated or subscribe to the forum announcements. I only announce major changes. Minor changes such as adding a new format are not announced. </p>
+  <p> You may wish to follow the <a href="http://beagleboard.org/static/beaglebone/latest/README.htm">Getting started</a> instructions to first power up and log into the BBB without attaching it to the MFM board to verify you know how to access it before changing its configuration. </p>
+  <p> The easiest way to get stuff setup is to copy <a href="BBB-mfm-emu_v2.21.img.xz">This prebuilt image BBB-mfm-emu_v2.21.img.xz</a> (last modified Sunday, 18-Oct-2020 21:03:03 EDT ) to a micro SD card and <a href="http://beagleboard.org/getting-started#update">flash your BBB from windows.</a> From Linux use xzcat imagefile.xz | dd of=/dev/sdx where sdx is the device your microSD card was detected at. May also be detected as mmcblkx. Make sure you get the device right or you may wipe out your hard disk. </p>
+  <p> Note that is it is not securely configured so don't use it if it will be accessible from untrusted machine or the Internet. I think my image will work on all BBB revisions. This image is based on the console version so most of the flash storage is free but doesn't have graphical tools installed. If you wish to do it manually see <a href="software_install.shtml">software installation</a> </p>
+  <p> Install the microSD card in the BBB and power it on. The lights should switch to one LED on running back and forth after a minute if programming is working. If it doesn't power off the board and power it on while holding down the boot button. The LEDs go out when flashing is done. Wait 10 seconds after lights go out to ensure it's done and then remove the microSD card and then reset the BBB. </p>
+  <p> I'm not planning to update the image with each software release so you likely will need to update the software. <a name="sw_update"></a> </p>
+  <h2>MFM software installation/update</h2> You can check your current version with ./mfm_util --version in the mfm directory. If later <a href="../code/"> download latest mfm code .tgz file</a> and copy it to BBB and build. I had some requests so the code is also on github at <a href="https://github.com/dgesswein/mfm">https://github.com/dgesswein/mfm</a> 
+  <p> It is probably easiest to connect the USB cable for installing the software. I use the Ethernet which needs a DHCP server on your network. It allows access to the Internet the way my network is configured. If the Ethernet cable isn't plugged in at boot it may take 20 seconds for the board to activate the Ethernet after the cable is plugged in. </p>
+  <p> It is also possible to access the board using the USB serial port and move files using a USB stick. The USB stick doesn't automount with my image. Use mount /dev/sda /mnt or mount /dev/sda1 /mnt. For the micro SD card use one of the following. <br> If it was mounted at boot mount /dev/mmcblk0p1 /mnt or mount /dev/mmcblk0 /mnt <br> If it was inserted after boot mount /dev/mmcblk1p1 /mnt mount /dev/mmcblk1 /mnt </p>
+  <p> Note that after the MFM daughter card is installed the board will not power up from the USB port. You will need to power the board through the drive power connector J5. </p>
+  <p> Don't use the barrel jack when the MFM board is installed if the DC/DC converter U12 is also installed on the MFM board. </p>
+  <p> If you are using windows you will need a scp and ssh program. I use putty and pscp from <a href="http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html">here</a>. Login to the BBB is root with no password. ipaddr in the commands below is the IP address of the BBB. The USB IP address is 192.168.7.2. Delete (rm) all except the latest file for the * in the following commands to work. </p>
+  <p> Make can get confused if the clock is wrong. To check use th date command. If its wrong set with date command. Date command format is [MMDDhhmm[[CC]YY][.ss]] and my image the date is in UTC. For January 3 2021 4pm 31 minutes 30 seconds </p>
+  <pre>date 010316312021.30
+</pre> 
+  <pre># If your BeagleBone has Internet access you can download on BBB using wget
+# otherwise from machine you downloaded image to. Make clean helps
+# prevent issues with make not rebuilding all files but shouldn't be needed.
+scp mfm_emu_powerfail*.tgz root@ipaddr:
+#On BBB
+tar -xzf mfm_emu_powerfail_*.tgz
+cd mfm
+make clean
+make
+cd ../emu
+make clean
+make
+cd ../powerfail
+make clean
+make
+exit (or poweroff)
+</pre> 
+  <h1>Board Testing with BBB</h1> 
+  <h2>MFM board testing Power functions</h2> 
+  <p>If you bought a pre-assembled board this testing has already been performed. It may be worth running the powerfail command below to test the input 12V power. </p>
+  <p> Power up board. With the MFM board installed the power must be supplied from the MFM board power connector J5. If U12 isn't installed skip these tests. Ssh into the BBB. </p>
+  <p> If you installed the holdup capacitors first try the powerfail command. </p>
+  <pre>echo cape-bone-iio &gt; /sys/devices/bone_capemgr.*/slots
+cd ~/powerfail
+./powerfail --debug --powercmd true --threshold 0
+</pre> It should print after several seconds something like 
+  <pre>Average 12.27V max 12.30V min 12.24V
+</pre> Control-c it after it prints the message. Verify the voltage matches the input voltage and min to max difference is reasonable for your supply ripple. For more information see <a href="../code/powerfail/powerfail_doc.html"> the command documentation</a>. 
+  <p> <br> <br> To test the auto power on when power available ssh into the BBB and enter the command: </p>
+  <pre>poweroff -f
+</pre> The board should power down then immediately power back on. This function is to ensure the BB does not get stuck in a powered off state if you turn off for a short time the computer you have it installed in as an emulator using the capacitors and powerfail shutdown. 
+  <p> If you really wish to power off the board you need to remove the 12V either before or during the poweroff. I use halt -f then remove the 12V when I'm shutting down the board. This halts but doesn't power off the board. Someone decided to be "helpful" and do poweroff when you use the halt command unless you specify -f. The -f prevents running the shutdown scripts. </p>
+  <p> If you don't want this behavior you can either put a short across R27 or short U17 pin 2 or 3 to ground. You could glue down jumper pins or a little switch if you want it selectable. <br> <a name="checkout"></a> </p>
+  <h2>MFM board testing disk reading</h2> <b>The write jumper P1 should be removed before reading a disk to ensure that it can't be written to.</b> I have seen corruption of disk contents when connected to a drive with jumper installed and hot plugging cables and power cycling beaglbone. I haven't seen it when the jumper is removed. Powering the drive up after the beaglebone is booted and setup_mfm run is advisable. 
+  <p> To test disk reading attach cables from J3 and J4 to a drive <b>Ensure the cables are attached in the proper orientation. Data can be erased if they are plugged in backward.</b> Note that <a href="hard_floppy_cable.jpg">PC hard and floppy cables look similar</a> but are not interchangeable. Verify the drive has a terminating resistor installed. Power up the board and drive. Note that setup_mfm_read only needs to be done once per boot. It will give errors if you run it twice or after setup_emu is run. If you set up automatic starting of the emulator at boot you will need to turn that off. For now you need to reboot the board to switch between reading disks and emulating. If you get the error permission denied verify user has permission (I just use root) and the execute bit is set (chmod +x setup_mfm_read). mfm_read may take a minute to detect the format without visible progress indication so don't give up. </p>
+  <pre>cd ~/mfm
+./setup_mfm_read
+./mfm_read  --analyze --emulation_file ../emu_file --extracted_data_file filename
+   or
+./mfm_read --emulation_file ../emu_file --cylinders # --heads # --drive #
+</pre> If you specify the extracted_data_file the program will retry on read error and report uncorrectable errors. This way you get the best emulation file and know where the errors are. If analyze doesn't understand your drive format use the second command where you will need to specify the number of cylinders, heads, and which drive select your drive is on. <b>For reading important drives</b> you should also use --transitions_file filename to archive the drive since it retains the most information if further work is needed and it least likely to be corrupted by software errors. You may also wish to use the script command to capture the messages from reading the disk and store it with the image so you know what errors the drive had. 
+  <p> If you use --analyze verify that the number of cylinders and heads found match your drive specifications. If they don't and retries weren't needed to recover marginal sectors use the second form of the command to read the entire disk. Otherwise you can use the parameters mfm_read prints out adjusted for your drive to manually read the entire disk. You can use mfm_util to see what errors are in the file read. Sometimes the mismatch is due to the system not using all the cylinders or heads. Others are due to how the controller formats the tracks and limitations in my decoding software. You can contact me if you need help understanding why the mismatch. </p>
+  <p> If you get "Unable to find drive. If just powered on retry in 30 seconds" it didn't see the drive selected signal come back when it raised any of the drive select lines. If your drive had a light did it come on? If you have test equipment test J4 pin 26, 28, 30, and 32 are being driven low and see if the drive responds by pulling J3 pin 1 low. </p>
+  <p> If analyze doesn't find the format see <a href="revb/adding_new_formats.shtml">adding new formats</a>. </p>
+  <p> I have found with some drives that if you are getting read errors reorienting the drive may get rid of them. I normally start with lying flat then try on the sides. Probably best to start with the orientation the drive was originally used. </p>
+  <p> I have found that with Seagate ST-251 drives if I am getting read errors that if I push on the shaft of the head stepper motor during the retries most of the time it will get a good read. This may work with other drives with external stepper motors. I first do a read without touching anything in case it damages the drive. Then I increase the retries and position the drive so I can touch the shaft. When I hear it retrying I put a little pressure on the shaft and hopefully it will say all sectors recovered. If I press too hard I get seek errors. The program will recover from seek errors. <a href="https://atariage.com/forums/topic/314038-update-on-hard-drive-recovery/">Users results with ST-225</a>. </p>
+  <p> If getting error free read took multiple retries its possible the emulator file will have errors since the way it puts together the sectors from multiple reads doesn't always work. Use mfm_util to check the emulator file to see if it has more sectors with errors than the original read. If this is an issue I may be able to adjust some parameters to help. </p>
+  <p> For more information see <a href="../code/mfm/mfm_read_util_doc.html"> the command documentation</a>. </p>
+  <p> </p>
+  <h2>MFM board testing disk emulation</h2> 
+  <p> Remove cables for reading a drive before trying to emulate a drive. Set P9 jumper as desired for caps used or disabled. </p>
+  <p> To test disk emulation attach cables from controller to J1 and J2. Set the P7 jumper to the drive number you wish to emulate. Leave P8 open. RN1 should be installed unless you are trying to use it with another drive that is terminated at the end of the cable. Make sure RN1 is installed with the dot on the resistor at the pin 1 of the socket marked with dot and square pad. Power up board and run the following if you previously read the drive you wish to emulate. Note that setup_emu only needs to be run once per boot. </p>
+  <pre>cd ~/emu
+./setup_emu
+./mfm_emu  --drive 1 --file ../emu_file
+</pre> Then try to boot the computer attached to the drive emulator or access the emulated disk drive. The mfm emulator should print messages like shown in the documentation and the computer should act like it has the disk attached. 
+  <p> If you didn't read a disk to emulate you will need to start with an unformatted drive: </p>
+  <pre>cd ~/emu
+./mfm_emu  --drive 1 --file ../emu_file --initialize --cylinders # --heads #
+</pre> Replace # with the proper numbers for the drive you wish to emulate (you don't need number of sectors). Then run the low level format command on the computer attached to the drive emulator. The mfm emulator should print messages like shown in the documentation and the format should complete without errors. 
+  <p> If you wish to try emulating two drives connect J6 to your controller and use --drive 1,2 --file file1,file2 on the command line and set P8 to the drive select you want the second drive to be detected as. This will only work if the system uses the same control cable for both drives being emulated. The <a href="../board/mfm_revb_pcb/bom">Bill of materials</a> at the bottom has possible cables for J6 if you don't have a suitable female-female 20 pin cable. </p>
+  <p> For more information see <a href="../code/emu/mfm_emu_doc.html"> the command documentation</a>. </p>
+  <p> <b>Note:</b> mfm_emu has a number of internal consistency checks where if they fail the program will dump its state and exit. This is a large amount of hex data. If you see this send me the logfile.txt from the directory you start the program from. <br> </p>
+  <h1>Board Usage</h1> 
+  <p> See the usage information in <a href="#checkout">Board Testing</a>. <a name="J7expansion"></a> </p>
+  <p>J7 is for connecting operator controls or status displays. Currently only drive selected LED's are supported. Any I/O must be 3.3V to prevent damage. </p>
+  <p> The emulator software will drive pin 16 low when the first drive emulated is selected and pin 10 low when the second drive is selected. The LED anode (+) should be connected through a resistor to pin 1 (3.3V). Since only one LED is on at a time both LED's can share the same resistor. The BBB outputs are rated for 6 mA current. The resistors values should be (3.3V - LED Vf) / .006. For Vf (LED forward voltage) of 1.6V that gives 300 ohms rounded up to 5% value or 287 for 1%. Other usage of this connector is expected to be developed by the user community. <a href="../board/mfm_revc_pcb/info">See BBB_Pins</a> for what functions the BBB supports for the expansion connector pins. <a href="../board/mfm_revc_pcb/bom/bom.html">See the bottom of the BOM</a> for possible mates to J7 for making LED cable. </p> 
+  <h2>Starting Emulation on Power On</h2> You should install P9 jumper for rev B or move P9 caps jumper to fill for rev C boards. 
+  <p> Using my prebuilt image the default when enabled is to emulate a single drive from /root/emufile_a. The emulation file will not be backed up on boot. If you want to start the emulator at boot with these options execute the following command </p>
+  <pre>systemctl enable mfm_emu.service
+</pre> 
+  <p> If you wish to change the options edit /etc/mfm_emu.conf. The file has comments describing what the configuration variables do. For example if you wish to emulate two drives set EmuFN2 to the second file name. If your emulated drive has information you wish not to lose you may wish to enable backup. Set the Backup variable to the type of backup. Copy just copies the emulator file. rdiff and xdelta do a binary difference between the files to take less space. If you do something that changes most of the image file such as defragment the binary difference may take long enough for your computer to timeout. The straight copy is quicker but for small changes will take much more space. I didn't find a clear winner between rdiff and xdelta. </p>
+  <p> It seems to take about 12 seconds from power on until the mfm emulator is running if no backup is performed. </p>
+  <p> To stop automatic starting of the emulator </p>
+  <pre>systemctl disable mfm_emu.service
+</pre> 
+  <h2>Debugging</h2> If the emulator fails to start see /var/log/syslog, /var/log/daemon.log and /root/emu/logfile.txt. If they don't show anything useful try changing StandardOutput=null to StandardOutput=journal+console in /etc/systemd/system/mfm_emu.service then execute: 
+  <pre>systemctl --system daemon-reload
+systemctl restart mfm_emu.service
+</pre> To see output of mfm_emu started by systemd change /etc/mfm_emu.conf NoLineBuffer to yes, restart as above, then run: 
+  <pre>reptyr -s `ps -C mfm_emu -o pid=`
+</pre> Without setting NoLineBuffer the output will be delayed by output buffering. 
+  <p> </p>
+  <h2>Editing Files</h2> I used vi for editing files. If you haven't used vi there are manuals online. <a href="http://www.cs.fsu.edu/general/vimanual.html">Here is one</a>. 
+  <p>You may use any editor. <a href="http://www.nano-editor.org/dist/v2.1/nano.html">The nano editor</a> may be easier to use if you are not familiar with vi. </p>
+  <p> You can also copy off the file to another system to edit and copy back. You may need an editor under windows that can handle Unix line ending conventions. <br> </p>
+  <p> </p>
+  <hr width="100%"> 
+  <br>Feel free to contact me, David Gesswein <a href="mailto:djg@pdp8online.com">djg@pdp8online.com</a> with any questions, comments on the web site, or if you have related equipment, documentation, software etc. you are willing to part with.&nbsp; I am interested in anything PDP-8 related, computers, peripherals used with them, DEC or third party, or documentation.&nbsp; 
+  <br> 
+  <br> <a href="../../index.shtml">PDP-8 Home Page</a> &nbsp;&nbsp;<a href="../../sitemap.shtml">PDP-8 Site Map</a> &nbsp;&nbsp;<a href="../../sitesearch.shtml">PDP-8 Site Search</a> 
+  <br> 
+  <br>  
+ </body>
+</html>

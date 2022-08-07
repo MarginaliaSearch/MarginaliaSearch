@@ -1,0 +1,86 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+ <head> 
+  <title>PuTTY bug local-proxy-telnet</title> 
+  <link rel="canonical" href="https://www.chiark.greenend.org.uk/~sgtatham/putty/wishlist/local-proxy-telnet.html"> 
+  <link rel="stylesheet" type="text/css" href="../sitestyle.css" title="PuTTY Home Page Style"> 
+  <link rel="shortcut icon" href="putty.ico"> 
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8"> 
+  <meta name="robots" content="noindex,nofollow"> 
+  <style type="text/css">
+<!--
+body {
+    margin:30px;
+}
+.mirror_info {
+    background-color:#f0f0f0;
+    border-top:1px solid #FFDD61;
+    border-bottom:1px solid #e0e0e0;
+    margin:0;
+    padding:2px 0 5px 0;
+    color:#000000;
+    text-align:center;
+    font-family:verdana,arial,helvetica,sans-serif;
+    font-size:0.7em;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+
+}
+.mirror_info strong {
+    font-size:13px;
+}
+.mirror_info span {
+    vertical-align:middle;
+    border:0;
+    padding:0 0 5px 0;
+}
+.mirror_info img {
+    vertical-align:bottom;
+    border:0;
+    margin:0;
+    padding:0;
+    height:24px;
+}
+div.mirror_info a {
+    border:0;
+    text-decoration:none;
+    color:#000;
+    
+}
+-->
+</style>
+ </head> 
+ <body> 
+  <div class="mirror_info"> <span>German mirror provided by / Deutscher Spiegelserver von</span> <span style="padding:0"><a href="http://www.obengelb.de/" title="Ecommerce, Onlineshops und Webdesign in Duisburg - obengelb GmbH"> <img src="data:image/png;base64,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" alt="E-Commerce Onlineshops und Webdesign in Duisburg - obengelb GmbH"> <span>&nbsp;&amp;&nbsp;</span> <span></span></a><a href="http://www.seo-leo.com/" target="_blank" title="Weboptimierung, PR und klassische Werbung - SEO LEO"><strong>SEO LEO</strong></a></span> 
+  </div> 
+  <div style="clear:both">
+   &nbsp;
+  </div> 
+  <h1 align="center">PuTTY bug local-proxy-telnet</h1> 
+  <div align="center" class="mirrorwarning">
+    This is a mirror. Follow this link to find <a href="https://www.chiark.greenend.org.uk/~sgtatham/putty/">the primary PuTTY web site</a>. 
+  </div> 
+  <p align="center"> <a href="../">Home</a> | <a href="../faq.html">FAQ</a> | <a href="../feedback.html">Feedback</a> | <a href="../licence.html">Licence</a> | <a href="../maillist.html">Updates</a> | <a href="../mirrors.html">Mirrors</a> | <a href="../keys.html">Keys</a> | <a href="../links.html">Links</a> | <a href="../team.html">Team</a> <br> Download: <a href="../latest.html">Stable</a> · <a href="../snapshot.html">Snapshot</a> | <a href="../docs.html">Docs</a> | <a href="../changes.html">Changes</a> | <a href="./">Wishlist</a> </p> <b>summary</b>: Data received from local proxy commands tagged as TCP Urgent (breaks telnet)
+  <br> <b>class</b>: <i>bug:</i> This is clearly an actual problem we want fixed.
+  <br> <b>difficulty</b>: <i>fun:</i> Just needs tuits, and not many of them.
+  <br> <b>blocks</b>: <em><a href="cygwin-terminal-window.html">cygwin-terminal-window</a></em>
+  <br> <b>priority</b>: <i>low:</i> We aren't sure whether to fix this or not.
+  <br> <b>absent-in</b>: r6807
+  <br> <b>present-in</b>: r6808
+  <br> <b>fixed-in</b>: r8158 <a href="https://git.tartarus.org/?p=simon/putty.git;a=commitdiff;h=4829802c43d46584cd2292785d77552fb94bfa4e">4829802c43d46584cd2292785d77552fb94bfa4e</a> (0.61)
+  <br> 
+  <p> When I implemented the <a href="proxy-command.html">proxy-command</a> feature, I accidentally set it up so that all data received from a local proxy subprocess (on both Unix and Windows) was tagged as TCP Urgent. </p>
+  <p> This made no difference to SSH (which is how I didn't notice), but it completely breaks Telnet. Fixed in r8158. </p>
+  <p></p>
+  <hr> If you want to comment on this web site, see the <a href="../feedback.html">Feedback page</a>. 
+  <br> 
+  <div class="audit">
+   <a href="https://git.tartarus.org/?p=simon/putty-wishlist.git;a=history;f=data/local-proxy-telnet;hb=refs/heads/main">Audit trail</a> for this bug.
+  </div> 
+  <div class="timestamp">
+   (last revision of this bug record was at 2017-04-28 16:52:45 +0100)
+  </div> 
+ </body>
+</html>

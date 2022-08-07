@@ -250,7 +250,7 @@ public class DocumentProcessor {
     }
 
     private String getDescription(Document doc) {
-        return summaryExtractor.extractSummary(doc).orElse("");
+        return summaryExtractor.extractSummary(doc);
     }
 
     private int getLength(Document doc) {
