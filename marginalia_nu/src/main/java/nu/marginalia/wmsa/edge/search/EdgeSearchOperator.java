@@ -73,7 +73,8 @@ public class EdgeSearchOperator {
         this.valuator = valuator;
 
         Comparator<EdgeUrlDetails> c = Comparator.comparing(ud -> Math.round(10*(ud.getTermScore() - ud.rankingIdAdjustment())));
-        resultListComparator = c.thenComparing(EdgeUrlDetails::getRanking).thenComparing(EdgeUrlDetails::getId);
+        resultListComparator = c.thenComparing(EdgeUrlDetails::getRanking)
+                                .thenComparing(EdgeUrlDetails::getId);
     }
 
     public List<EdgeUrlDetails> doApiSearch(Context ctx,

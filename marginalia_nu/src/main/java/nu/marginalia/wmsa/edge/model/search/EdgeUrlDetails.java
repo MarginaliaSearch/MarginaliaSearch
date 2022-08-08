@@ -92,9 +92,10 @@ public class EdgeUrlDetails {
     public String getQualityPercent() {
         return String.format("%2.2f%%", 100*Math.exp(urlQuality+urlQualityAdjustment.getScore()));
     }
+
     public double getRanking() {
         double lengthAdjustment = Math.max(1, words / (words + 1000.));
-        return (1+termScore)*Math.sqrt(1+rankingId)/Math.max(1E-10, lengthAdjustment *(0.7+0.3*Math.exp(urlQualityAdjustment.getScore())));
+        return getFeatureScore()*Math.sqrt(1+rankingId)/Math.max(1E-10, lengthAdjustment *(0.7+0.3*Math.exp(urlQualityAdjustment.getScore())));
     }
 
     public int getSuperficialHash() {
@@ -142,5 +143,24 @@ public class EdgeUrlDetails {
 
     public String getRankingSymbolDesc() {
         return EdgeSearchRankingSymbols.getRankingSymbolDescription(termScore);
+    }
+
+    public double getFeatureScore() {
+        double score = 1;
+        if (isScripts()) {
+            score+=1;
+        } else if(!"HTML5".equals(format)) {
+            score+=0.5;
+        }
+        if (isAffiliate()) {
+            score += 2.5;
+        }
+        if (isTracking()) {
+            score += 1.5;
+        }
+        if (isCookies()) {
+            score += 1.5;
+        }
+        return score;
     }
 }
