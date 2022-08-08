@@ -112,7 +112,7 @@ public class DocumentProcessor {
         return ret;
     }
 
-    private boolean isAcceptedContentType(CrawledDocument crawledDocument) {
+    public static boolean isAcceptedContentType(CrawledDocument crawledDocument) {
         if (crawledDocument.contentType == null) {
             return false;
         }
