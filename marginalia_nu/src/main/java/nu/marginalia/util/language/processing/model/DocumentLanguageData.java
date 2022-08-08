@@ -6,6 +6,9 @@ import lombok.AllArgsConstructor;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
+/**
+ * @see nu.marginalia.util.language.processing.SentenceExtractor
+ */
 @AllArgsConstructor
 public class DocumentLanguageData {
     public final DocumentSentence[] sentences;
