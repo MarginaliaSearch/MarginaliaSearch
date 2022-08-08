@@ -11,6 +11,7 @@
                 <option {{#eq profile "modern"}}selected{{/eq}} value="modern">Blogs and Personal Websites</option>
                 <option {{#eq profile "academia"}}selected{{/eq}} value="academia">Academia, Forums, Big Websites</option>
                 <option {{#eq profile "yolo"}}selected{{/eq}} value="yolo">Default Ranking Algorithm</option>
+                <option {{#eq profile "food"}}selected{{/eq}} value="food">Recipes &#127859;</option>
                 <option {{#eq profile "corpo"}}selected{{/eq}} value="corpo">Experimental</option>
             </select>
             <select name="js" id="js">

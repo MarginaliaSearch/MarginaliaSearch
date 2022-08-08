@@ -5,12 +5,12 @@ import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.util.language.conf.LanguageModels;
 import nu.marginalia.util.language.processing.KeywordExtractor;
 import nu.marginalia.util.language.processing.SentenceExtractor;
 import nu.marginalia.util.language.processing.model.DocumentSentence;
 import nu.marginalia.util.language.processing.model.WordSpan;
+import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import opennlp.tools.stemmer.PorterStemmer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,7 +115,6 @@ public class QueryVariants {
 
         for (var span : goodSpans) {
             alternativeQueries.addAll(joinTerms(span));
-//            alternativeQueries.addAll(swapTerms(span));
         }
 
         for (var ls : goodSpans) {
@@ -134,8 +133,11 @@ public class QueryVariants {
             }
 
         }
+
         QueryVariantSet returnValue = new QueryVariantSet();
+
         returnValue.faithful.addAll(evaluateQueries(faithfulQueries));
+
         returnValue.faithful.addAll(evaluateQueries(alternativeQueries));
 
         returnValue.faithful.sort(Comparator.comparing(QueryVariant::getValue));

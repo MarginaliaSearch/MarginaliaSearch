@@ -54,7 +54,6 @@ public class QueryFactory {
     }
 
     private List<EdgeSearchSubquery> reevaluateSubqueries(EdgeSearchQuery processedQuery, EdgeUserSearchParameters params) {
-        final var jsSetting = params.jsSetting();
         final var profile = params.profile();
 
         List<EdgeSearchSubquery> subqueries =
@@ -65,10 +64,6 @@ public class QueryFactory {
                 subqueries.add(sq.withBlock(block));
             }
         }
-
-        subqueries.forEach(sq -> {
-            sq.searchTermsExclude.addAll(Arrays.asList(jsSetting.implictExcludeSearchTerms));
-        });
 
         subqueries.sort(Comparator.comparing(sq -> -sq.termSize()*2.3 + sq.block.sortOrder));
 
@@ -132,7 +127,12 @@ public class QueryFactory {
                 }
             }
 
-            subqueries.add(new EdgeSearchSubquery(searchTermsInclude, searchTermsExclude, IndexBlock.TitleKeywords));
+            EdgeSearchSubquery subquery = new EdgeSearchSubquery(searchTermsInclude, searchTermsExclude, IndexBlock.TitleKeywords);
+
+            params.profile().addTacitTerms(subquery);
+            params.jsSetting().addTacitTerms(subquery);
+
+            subqueries.add(subquery);
         }
 
 

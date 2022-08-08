@@ -1,6 +1,8 @@
 package nu.marginalia.wmsa.edge.search;
 
+import nu.marginalia.wmsa.edge.converting.processor.logic.HtmlFeature;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
+import nu.marginalia.wmsa.edge.model.search.EdgeSearchSubquery;
 
 import java.util.Arrays;
 import java.util.List;
@@ -25,6 +27,9 @@ public enum EdgeSearchProfile {
     ACADEMIA("academia",
             List.of(IndexBlock.TitleKeywords, IndexBlock.Title, IndexBlock.Top, IndexBlock.Middle, IndexBlock.Low, IndexBlock.Link,  IndexBlock.Words, IndexBlock.NamesWords),
             3),
+    FOOD("food",
+            List.of(IndexBlock.TitleKeywords, IndexBlock.Title, IndexBlock.Top, IndexBlock.Middle, IndexBlock.Low, IndexBlock.Link,  IndexBlock.Words, IndexBlock.NamesWords),
+            2, 0),
     ;
 
 
@@ -49,7 +54,15 @@ public enum EdgeSearchProfile {
             case "default" -> DEFAULT;
             case "corpo" -> CORPO;
             case "academia" -> ACADEMIA;
+            case "food" -> FOOD;
             default -> YOLO;
         };
+    }
+
+    public void addTacitTerms(EdgeSearchSubquery subquery) {
+        if (this == FOOD) {
+            subquery.searchTermsInclude.add(HtmlFeature.CATEGORY_FOOD.getKeyword());
+        }
+
     }
 }

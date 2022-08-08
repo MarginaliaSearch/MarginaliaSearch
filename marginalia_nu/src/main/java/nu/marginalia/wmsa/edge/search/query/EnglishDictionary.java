@@ -46,9 +46,15 @@ public class EnglishDictionary {
         var variants = findWordVariants(s);
         long freqBaseline = dict.getTermFreq(s);
 
-        return variants.stream()
+        var ret = variants.stream()
                 .filter(var -> freqBaseline*10 > dict.getTermFreq(var) && freqBaseline/10 < dict.getTermFreq(var)
         ).collect(Collectors.toList());
+
+        if (s.equals("recipe") || s.equals("recipes")) {
+            ret.add("category:food");
+        }
+
+        return ret;
     }
 
 

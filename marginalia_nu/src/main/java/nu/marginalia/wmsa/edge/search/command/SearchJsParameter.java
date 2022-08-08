@@ -1,6 +1,9 @@
 package nu.marginalia.wmsa.edge.search.command;
 
+import nu.marginalia.wmsa.edge.model.search.EdgeSearchSubquery;
+
 import javax.annotation.Nullable;
+import java.util.Arrays;
 
 public enum SearchJsParameter {
     DEFAULT("default"),
@@ -20,5 +23,9 @@ public enum SearchJsParameter {
         if (REQUIRE_JS.value.equals(value)) return REQUIRE_JS;
 
         return DEFAULT;
+    }
+
+    public void addTacitTerms(EdgeSearchSubquery subquery) {
+        subquery.searchTermsExclude.addAll(Arrays.asList(implictExcludeSearchTerms));
     }
 }
