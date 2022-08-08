@@ -7,7 +7,9 @@ public enum HtmlFeature {
     JS("special:scripts"),
     AFFILIATE_LINK( "special:affiliate"),
     TRACKING("special:tracking"),
-    COOKIES("special:cookies")
+    COOKIES("special:cookies"),
+
+    CATEGORY_FOOD("category:food"),
     ;
 
     private final String keyword;
@@ -30,5 +32,9 @@ public enum HtmlFeature {
 
     public static boolean hasFeature(int value, HtmlFeature feature) {
         return (value & (1<< feature.ordinal())) != 0;
+    }
+
+    public int getFeatureBit() {
+        return (1<< ordinal());
     }
 }
