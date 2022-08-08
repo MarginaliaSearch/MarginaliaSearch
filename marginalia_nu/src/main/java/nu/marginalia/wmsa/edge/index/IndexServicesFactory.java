@@ -26,6 +26,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 import static nu.marginalia.wmsa.edge.index.EdgeIndexService.DYNAMIC_BUCKET_LENGTH;
@@ -39,7 +41,7 @@ public class IndexServicesFactory {
 
     private final PartitionedDataFile writerIndexFile;
     private final RootDataFile keywordLexiconFile;
-    private final PartitionedDataFile preconverterOutputFile;
+    private final DoublePartitionedDataFile preconverterOutputFile;
     private final DoublePartitionedDataFile indexReadWordsFile;
     private final DoublePartitionedDataFile indexReadUrlsFile;
     private final DoublePartitionedDataFile indexWriteWordsFile;
@@ -75,7 +77,7 @@ public class IndexServicesFactory {
         this.indexReadUrlsFile = new DoublePartitionedDataFile(partitionRootFast, indexReadUrlsFile);
         this.indexWriteWordsFile = new DoublePartitionedDataFile(partitionRootFast, indexWriteWordsFile);
         this.indexWriteUrlsFile = new DoublePartitionedDataFile(partitionRootFast, indexWriteUrlsFile);
-        this.preconverterOutputFile = new PartitionedDataFile(partitionRootSlowTmp, "preconverted.dat");
+        this.preconverterOutputFile = new DoublePartitionedDataFile(partitionRootSlowTmp, "preconverted.dat");
         this.partitioner = partitioner;
     }
 
@@ -101,7 +103,7 @@ public class IndexServicesFactory {
 
     public void convertIndex(int id, IndexBlock block) throws ConversionUnnecessaryException, IOException {
         var converter = new SearchIndexConverter(block, id, tmpFileDir,
-                preconverterOutputFile.get(id),
+                preconverterOutputFile.get(id, block.ordinal()),
                 indexWriteWordsFile.get(id, block.id),
                 indexWriteUrlsFile.get(id, block.id),
                 partitioner,
@@ -112,19 +114,23 @@ public class IndexServicesFactory {
 
     @SneakyThrows
     public SearchIndexPreconverter getIndexPreconverter() {
-        File[] outputFiles = new File[DYNAMIC_BUCKET_LENGTH+1];
-        for (int i = 0; i < outputFiles.length; i++) {
-            outputFiles[i] = getPreconverterOutputFile(i);
+        Map<SearchIndexPreconverter.Shard, File> shards = new HashMap<>();
+
+        for (int index = 0; index < (DYNAMIC_BUCKET_LENGTH + 1); index++) {
+            for (IndexBlock block : IndexBlock.values()) {
+                shards.put(new SearchIndexPreconverter.Shard(index, block.ordinal()), getPreconverterOutputFile(index, block.ordinal()));
+            }
         }
+
         return new SearchIndexPreconverter(writerIndexFile.get(0),
-                outputFiles,
+                shards,
                 partitioner,
                 domainBlacklist
         );
     }
 
-    private File getPreconverterOutputFile(int i) {
-        return preconverterOutputFile.get(i);
+    private File getPreconverterOutputFile(int index, int block) {
+        return preconverterOutputFile.get(index, block);
     }
 
     @SneakyThrows
