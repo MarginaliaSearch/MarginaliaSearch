@@ -22,5 +22,12 @@ public class CrawledDomainReader {
             return gson.fromJson(br, CrawledDomain.class);
         }
     }
-
+    public CrawledDomain readRuntimeExcept(Path path) {
+        try (var br = new BufferedReader(new InputStreamReader(new ZstdInputStream(new BufferedInputStream(new FileInputStream(path.toFile())))))) {
+            return gson.fromJson(br, CrawledDomain.class);
+        }
+        catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
 }

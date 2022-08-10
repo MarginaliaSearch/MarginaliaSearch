@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.edge.converting.processor.logic;
+package nu.marginalia.wmsa.edge.converting.processor.logic.topic;
 
 import ca.rmen.porterstemmer.PorterStemmer;
 import nu.marginalia.util.language.processing.model.DocumentLanguageData;
@@ -205,7 +205,7 @@ public class RecipeDetector {
 
     }
 
-    public double recipeP(DocumentLanguageData dld) {
+    public double testP(DocumentLanguageData dld) {
 
         Map<String, Double> values = new HashMap<>();
         int count = 0;
