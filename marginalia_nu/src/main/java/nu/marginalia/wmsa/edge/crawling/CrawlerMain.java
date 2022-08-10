@@ -4,68 +4,44 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import nu.marginalia.wmsa.configuration.UserAgent;
 import nu.marginalia.wmsa.configuration.WmsaHome;
-import nu.marginalia.wmsa.edge.crawling.model.CrawledDomain;
 import nu.marginalia.wmsa.edge.crawling.model.CrawlingSpecification;
 import nu.marginalia.wmsa.edge.crawling.retreival.CrawlerRetreiver;
 import nu.marginalia.wmsa.edge.crawling.retreival.HttpFetcher;
-import nu.marginalia.util.ParallelPipe;
 import nu.marginalia.wmsa.edge.model.EdgeCrawlPlan;
 import okhttp3.Dispatcher;
 import okhttp3.internal.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
 import java.nio.file.Path;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class CrawlerMain implements AutoCloseable {
     public static Gson gson = new GsonBuilder().create();
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final Path inputSpec;
+    private final EdgeCrawlPlan plan;
+    private final Path crawlDataDir;
 
     private final WorkLog workLog;
-    private final CrawledDomainWriter domainWriter;
 
-    private final int numberOfThreads;
-    private final ParallelPipe<CrawlingSpecification, CrawledDomain> pipe;
     private final Dispatcher dispatcher = new Dispatcher(new ThreadPoolExecutor(0, Integer.MAX_VALUE, 5, TimeUnit.SECONDS,
             new SynchronousQueue<>(), Util.threadFactory("OkHttp Dispatcher", true)));
 
     private final UserAgent userAgent;
+    private final ThreadPoolExecutor pool;
+    final int poolSize = 256;
+    final int poolQueueSize = 32;
 
     public CrawlerMain(EdgeCrawlPlan plan) throws Exception {
-        this.inputSpec = plan.getJobSpec();
-        this.numberOfThreads = 512;
+        this.plan = plan;
         this.userAgent = WmsaHome.getUserAgent();
 
-        workLog = new WorkLog(plan.crawl.getLogFile());
-        domainWriter = new CrawledDomainWriter(plan.crawl.getDir());
+        BlockingQueue<Runnable> queue = new LinkedBlockingQueue<>(poolQueueSize);
+        pool = new ThreadPoolExecutor(poolSize/128, poolSize, 5, TimeUnit.MINUTES, queue); // maybe need to set -Xss for JVM to deal with this?
 
-        Semaphore sem = new Semaphore(250_000);
-
-        pipe = new ParallelPipe<>("Crawler", numberOfThreads, 2, 1) {
-            @Override
-            protected CrawledDomain onProcess(CrawlingSpecification crawlingSpecification) throws Exception {
-                int toAcquire = crawlingSpecification.urls.size();
-                sem.acquire(toAcquire);
-                try {
-                    return fetchDomain(crawlingSpecification);
-                }
-                finally {
-                    sem.release(toAcquire);
-                }
-            }
-
-            @Override
-            protected void onReceive(CrawledDomain crawledDomain) throws IOException {
-                writeDomain(crawledDomain);
-            }
-        };
+        workLog = plan.createCrawlWorkLog();
+        crawlDataDir = plan.crawl.getDir();
     }
 
     public static void main(String... args) throws Exception {
@@ -84,55 +60,74 @@ public class CrawlerMain implements AutoCloseable {
             crawler.run();
         }
 
-        // TODO (2022-05-24): Some thread isn't set to daemon mode, need to explicitly harakiri the process, find why?
         System.exit(0);
     }
 
-    private CrawledDomain fetchDomain(CrawlingSpecification specification) {
+    private void fetchDomain(CrawlingSpecification specification) {
         if (workLog.isJobFinished(specification.id))
-            return null;
+            return;
 
         var fetcher = new HttpFetcher(userAgent.uaString(), dispatcher);
 
-        try {
-            var retreiver = new CrawlerRetreiver(fetcher, specification);
+        try (var writer = new CrawledDomainWriter(crawlDataDir, specification.domain, specification.id)) {
+            var retreiver = new CrawlerRetreiver(fetcher, specification, writer);
 
-            return retreiver.fetch();
+            int size = retreiver.fetch();
+
+            workLog.setJobToFinished(specification.id, writer.getOutputFile().toString(), size);
+
+            logger.info("Fetched {}", specification.domain);
         } catch (Exception e) {
             logger.error("Error fetching domain", e);
-            return null;
         }
-    }
-
-    private void writeDomain(CrawledDomain crawledDomain) throws IOException {
-        String name = domainWriter.accept(crawledDomain);
-        workLog.setJobToFinished(crawledDomain.id, name, crawledDomain.size());
     }
 
     public void run() throws InterruptedException {
         // First a validation run to ensure the file is all good to parse
 
         logger.info("Validating JSON");
-        CrawlerSpecificationLoader.readInputSpec(inputSpec, spec -> {});
+        plan.forEachCrawlingSpecification(unused -> {});
 
-        logger.info("Starting pipe");
-        CrawlerSpecificationLoader.readInputSpec(inputSpec, pipe::accept);
+        logger.info("Let's go");
 
-        if (!AbortMonitor.getInstance().isAlive()) {
-            logger.info("Aborting");
-            pipe.clearQueues();
-        }
-        else {
-            logger.info("All jobs queued, waiting for pipe to finish");
-        }
-        pipe.join();
+        AbortMonitor abortMonitor = AbortMonitor.getInstance();
 
-        logger.info("All finished");
+
+        Semaphore taskSem = new Semaphore(poolSize);
+
+        plan.forEachCrawlingSpecification(spec -> {
+            if (abortMonitor.isAlive()) {
+                try {
+                    taskSem.acquire();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
+                pool.execute(() -> {
+                    try {
+                        fetchDomain(spec);
+                    }
+                    finally {
+                        taskSem.release();
+                    }
+                });
+            }
+        });
+
+
     }
 
     public void close() throws Exception {
+        logger.info("Awaiting termination");
+        pool.shutdown();
+
+        while (!pool.awaitTermination(1, TimeUnit.SECONDS));
+        logger.info("All finished");
+
         workLog.close();
         dispatcher.executorService().shutdownNow();
+
+
     }
 
 }

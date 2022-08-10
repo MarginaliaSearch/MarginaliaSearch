@@ -7,7 +7,7 @@ import lombok.Data;
 import java.util.List;
 
 @AllArgsConstructor @Data @Builder
-public class CrawledDomain {
+public class CrawledDomain implements SerializableCrawlData {
     public String id;
     public String domain;
 
@@ -23,5 +23,11 @@ public class CrawledDomain {
     public int size() {
         if (doc == null) return 0;
         return doc.size();
+    }
+
+    public static final String SERIAL_IDENTIFIER = "// DOMAIN";
+    @Override
+    public String getSerialIdentifier() {
+        return SERIAL_IDENTIFIER;
     }
 }

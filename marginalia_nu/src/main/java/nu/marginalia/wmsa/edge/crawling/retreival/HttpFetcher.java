@@ -7,7 +7,6 @@ import crawlercommons.robots.SimpleRobotRulesParser;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.ToString;
-import nu.marginalia.wmsa.edge.converting.processor.logic.LinkParser;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDocument;
 import nu.marginalia.wmsa.edge.crawling.model.CrawlerDocumentStatus;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
@@ -42,8 +41,6 @@ public class HttpFetcher {
     private final Cookies cookies = new Cookies();
 
     private static final SimpleRobotRulesParser robotsParser = new SimpleRobotRulesParser();
-
-    private final LinkParser linkParser = new LinkParser();
 
     public void setAllowAllContentTypes(boolean allowAllContentTypes) {
         this.allowAllContentTypes = allowAllContentTypes;

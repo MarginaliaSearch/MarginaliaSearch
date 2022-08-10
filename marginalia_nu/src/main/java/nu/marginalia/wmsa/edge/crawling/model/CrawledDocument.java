@@ -3,7 +3,7 @@ package nu.marginalia.wmsa.edge.crawling.model;
 import lombok.Builder;
 
 @Builder
-public class CrawledDocument {
+public class CrawledDocument implements SerializableCrawlData {
     public String crawlId;
 
     public String url;
@@ -22,4 +22,10 @@ public class CrawledDocument {
 
     public String canonicalUrl;
     public String redirectUrl;
+
+    public static final String SERIAL_IDENTIFIER = "// DOCUMENT";
+    @Override
+    public String getSerialIdentifier() {
+        return SERIAL_IDENTIFIER;
+    }
 }

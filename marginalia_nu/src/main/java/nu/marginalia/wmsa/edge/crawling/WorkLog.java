@@ -1,9 +1,11 @@
 package nu.marginalia.wmsa.edge.crawling;
 
+import com.google.errorprone.annotations.MustBeClosed;
 import nu.marginalia.wmsa.edge.crawling.model.CrawlLogEntry;
 import org.apache.logging.log4j.util.Strings;
 
-import java.io.*;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,6 +14,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 public class WorkLog implements AutoCloseable {
     private final Set<String> finishedJobs = new HashSet<>();
@@ -29,15 +32,21 @@ public class WorkLog implements AutoCloseable {
             return;
         }
 
-        try (var lines = Files.lines(logFile)) {
-            lines.filter(WorkLog::isJobId).map(line -> {
-                String[] parts = line.split("\\s+");
-                return new CrawlLogEntry(parts[0], parts[1], parts[2], Integer.parseInt(parts[3]));
-            }).forEach(entryConsumer);
+        try (var entries = streamLog(logFile)) {
+            entries.forEach(entryConsumer);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+    @MustBeClosed
+    public static Stream<CrawlLogEntry> streamLog(Path logFile) throws IOException {
+        return Files.lines(logFile).filter(WorkLog::isJobId).map(line -> {
+            String[] parts = line.split("\\s+");
+            return new CrawlLogEntry(parts[0], parts[1], parts[2], Integer.parseInt(parts[3]));
+        });
+    }
+
     private void loadLog(Path logFile) throws IOException  {
         if (!Files.exists(logFile)) {
             return;

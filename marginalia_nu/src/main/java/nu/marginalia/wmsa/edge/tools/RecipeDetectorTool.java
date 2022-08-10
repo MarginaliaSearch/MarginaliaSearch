@@ -5,9 +5,10 @@ import nu.marginalia.util.language.processing.SentenceExtractor;
 import nu.marginalia.util.language.processing.model.DocumentLanguageData;
 import nu.marginalia.wmsa.configuration.WmsaHome;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
-import nu.marginalia.wmsa.edge.converting.processor.logic.RecipeDetector;
+import nu.marginalia.wmsa.edge.converting.processor.logic.topic.RecipeDetector;
+import nu.marginalia.wmsa.edge.converting.processor.logic.topic.TextileCraftDetector;
+import nu.marginalia.wmsa.edge.converting.processor.logic.topic.WoodworkingDetector;
 import nu.marginalia.wmsa.edge.crawling.CrawlPlanLoader;
-import nu.marginalia.wmsa.edge.crawling.CrawledDomainReader;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDocument;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDomain;
 import nu.marginalia.wmsa.edge.model.EdgeCrawlPlan;
@@ -25,8 +26,10 @@ import java.util.concurrent.TimeUnit;
 import static nu.marginalia.wmsa.edge.converting.processor.DocumentProcessor.isAcceptedContentType;
 
 public class RecipeDetectorTool {
-    private static final CrawledDomainReader reader = new CrawledDomainReader();
-    private static final RecipeDetector detector = new RecipeDetector();
+    private static final TextileCraftDetector textileCraftDetector = new TextileCraftDetector();
+    private static final WoodworkingDetector woodworkingDetector = new WoodworkingDetector();
+    private static final RecipeDetector recipeDetector = new RecipeDetector();
+
     private static final LanguageModels lm = WmsaHome.getLanguageModels();
     private static final SentenceExtractor sentenceExtractor = new SentenceExtractor(lm);
 
@@ -49,7 +52,12 @@ public class RecipeDetectorTool {
         }
 
         ForkJoinPool pool = new ForkJoinPool(16);
-        plan.forEachCrawledDomain(data -> pool.execute(() -> processDomain(data)));
+
+        try (var iterable = plan.domainsIterable()) {
+            for (var domain : iterable) {
+                pool.execute(() -> processDomain(domain));
+            }
+        }
 
         while (!pool.awaitQuiescence(1, TimeUnit.HOURS));
     }
@@ -74,9 +82,20 @@ public class RecipeDetectorTool {
         parsedDocument.getElementsByTag("nav").remove();
 
         DocumentLanguageData dld = sentenceExtractor.extractSentences(parsedDocument);
-        double prob = 100*detector.recipeP(dld);
+
+        double prob = 100*recipeDetector.testP(dld);
         if (prob > 50) {
-            System.out.printf("%3.2f\t%s\n", prob, doc.url);
+            System.out.printf("#%3.2f recipe\t%s\n%s\n", prob, parsedDocument.title(), doc.url);
+        }
+
+        prob = 100*woodworkingDetector.testP(dld);
+        if (prob > 20) {
+            System.out.printf("#%3.2f woodworking\t%s\n%s\n", prob, parsedDocument.title(), doc.url);
+        }
+
+        prob = 100*textileCraftDetector.testP(dld);
+        if (prob > 20) {
+            System.out.printf("#%3.2f textilecraft\t%s\n%s\n", prob, parsedDocument.title(), doc.url);
         }
     }
 }
