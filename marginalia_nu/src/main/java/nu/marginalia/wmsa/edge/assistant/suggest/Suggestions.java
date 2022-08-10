@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.wmsa.edge.assistant.dict.SpellChecker;
+import nu.marginalia.wmsa.edge.converting.processor.logic.HtmlFeature;
 import org.apache.commons.collections4.trie.PatriciaTrie;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +49,13 @@ public class Suggestions {
                     .filter(line -> line.length()<32)
                     .map(String::toLowerCase)
                     .forEach(w -> ret.put(w, w));
+
+            for (var feature : HtmlFeature.values()) {
+                String keyword = feature.getKeyword();
+
+                ret.put(keyword, keyword);
+                ret.put("-" + keyword, "-"+ keyword);
+            }
 
             return ret;
         }
