@@ -29,10 +29,16 @@ public class CrawlerMain implements AutoCloseable {
             new SynchronousQueue<>(), Util.threadFactory("OkHttp Dispatcher", true)));
 
     private final UserAgent userAgent;
+    private final ThreadPoolExecutor pool;
+    final int poolSize = 256;
+    final int poolQueueSize = 32;
 
     public CrawlerMain(EdgeCrawlPlan plan) throws Exception {
         this.plan = plan;
         this.userAgent = WmsaHome.getUserAgent();
+
+        BlockingQueue<Runnable> queue = new LinkedBlockingQueue<>(poolQueueSize);
+        pool = new ThreadPoolExecutor(poolSize/128, poolSize, 5, TimeUnit.MINUTES, queue); // maybe need to set -Xss for JVM to deal with this?
 
         workLog = plan.createCrawlWorkLog();
         crawlDataDir = plan.crawl.getDir();
@@ -84,31 +90,44 @@ public class CrawlerMain implements AutoCloseable {
 
         logger.info("Let's go");
 
-        final int poolSize = 1024;
-
-        BlockingQueue<Runnable> queue = new LinkedBlockingQueue<>(10);
-        ThreadPoolExecutor pool = new ThreadPoolExecutor(poolSize/128, poolSize, 5, TimeUnit.MINUTES, queue); // maybe need to set -Xss for JVM to deal with this?
-
         AbortMonitor abortMonitor = AbortMonitor.getInstance();
+
+
+        Semaphore taskSem = new Semaphore(poolSize);
 
         plan.forEachCrawlingSpecification(spec -> {
             if (abortMonitor.isAlive()) {
-                pool.execute(() -> fetchDomain(spec));
+                try {
+                    taskSem.acquire();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
+                pool.execute(() -> {
+                    try {
+                        fetchDomain(spec);
+                    }
+                    finally {
+                        taskSem.release();
+                    }
+                });
             }
         });
 
-        logger.info("Awaiting termination");
 
-        pool.shutdown();
-
-        while (!pool.awaitTermination(1, TimeUnit.SECONDS));
-
-        logger.info("All finished");
     }
 
     public void close() throws Exception {
+        logger.info("Awaiting termination");
+        pool.shutdown();
+
+        while (!pool.awaitTermination(1, TimeUnit.SECONDS));
+        logger.info("All finished");
+
         workLog.close();
         dispatcher.executorService().shutdownNow();
+
+
     }
 
 }

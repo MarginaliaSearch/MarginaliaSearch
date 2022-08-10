@@ -83,8 +83,6 @@ public class CrawlerRetreiver {
     }
 
     public int fetch() throws IOException {
-        logger.info("Fetching {}", domain);
-
         Optional<CrawledDomain> probeResult = probeDomainForProblems(domain);
 
         if (probeResult.isPresent()) {
@@ -272,10 +270,10 @@ public class CrawlerRetreiver {
     @SneakyThrows
     private void delay(long crawlDelay, long timeParsed) {
         if (crawlDelay >= 1) {
-            if (timeParsed/1000 > crawlDelay)
+            if (timeParsed > crawlDelay)
                 return;
 
-            Thread.sleep(Math.min(1000*crawlDelay-timeParsed, 5000));
+            Thread.sleep(Math.min(crawlDelay-timeParsed, 5000));
         }
         else {
             if (timeParsed > DEFAULT_CRAWL_DELAY_MS)
