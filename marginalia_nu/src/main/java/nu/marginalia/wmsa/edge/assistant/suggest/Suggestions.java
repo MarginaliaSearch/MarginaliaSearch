@@ -61,7 +61,7 @@ public class Suggestions {
         }
         catch (IOException ex) {
             logger.error("Failed to load suggestions file", ex);
-            return new PatriciaTrie<String>();
+            return new PatriciaTrie<>();
         }
     }
 
