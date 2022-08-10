@@ -61,6 +61,7 @@ public class LinkKeywordExtractorMain {
                 .forEach(crawledUrls::add);
 
         logger.info("Loading input spec");
+
         CrawlerSpecificationLoader.readInputSpec(plan.getJobSpec(),
                 spec -> { crawledDomains.add(spec.domain); });
 

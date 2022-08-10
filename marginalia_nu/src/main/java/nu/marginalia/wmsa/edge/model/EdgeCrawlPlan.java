@@ -5,9 +5,11 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import nu.marginalia.wmsa.edge.crawling.CrawledDomainReader;
+import nu.marginalia.wmsa.edge.crawling.CrawlerSpecificationLoader;
 import nu.marginalia.wmsa.edge.crawling.WorkLog;
 import nu.marginalia.wmsa.edge.crawling.model.CrawlLogEntry;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDomain;
+import nu.marginalia.wmsa.edge.crawling.model.CrawlingSpecification;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -51,7 +53,26 @@ public class EdgeCrawlPlan {
         return process.getDir().resolve(sp1).resolve(sp2).resolve(fileName);
     }
 
-     public void forEachCrawledDomain(Consumer<CrawledDomain> consumer) {
+    public WorkLog createCrawlWorkLog() throws IOException {
+        return new WorkLog(crawl.getLogFile());
+    }
+
+    public WorkLog createProcessWorkLog() throws IOException {
+        return new WorkLog(process.getLogFile());
+    }
+
+    public void forEachCrawlingSpecification(Consumer<CrawlingSpecification> consumer) {
+        CrawlerSpecificationLoader.readInputSpec(getJobSpec(), consumer);
+    }
+
+    public void forEachCrawlingLogEntry(Consumer<CrawlLogEntry> consumer) {
+        WorkLog.readLog(this.crawl.getLogFile(), consumer);
+    }
+    public void forEachProcessingLogEntry(Consumer<CrawlLogEntry> consumer) {
+        WorkLog.readLog(this.process.getLogFile(), consumer);
+    }
+
+    public void forEachCrawledDomain(Consumer<CrawledDomain> consumer) {
         final CrawledDomainReader reader = new CrawledDomainReader();
 
         try (Stream<CrawlLogEntry> entryStream = WorkLog.streamLog(crawl.getLogFile())) {

@@ -1,6 +1,5 @@
 package nu.marginalia.wmsa.edge.converting;
 
-import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -10,8 +9,6 @@ import nu.marginalia.wmsa.edge.converting.interpreter.Instruction;
 import nu.marginalia.wmsa.edge.converting.processor.DomainProcessor;
 import nu.marginalia.wmsa.edge.converting.processor.InstructionsCompiler;
 import nu.marginalia.wmsa.edge.crawling.CrawlPlanLoader;
-import nu.marginalia.wmsa.edge.crawling.CrawledDomainReader;
-import nu.marginalia.wmsa.edge.crawling.CrawlerSpecificationLoader;
 import nu.marginalia.wmsa.edge.crawling.WorkLog;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDomain;
 import nu.marginalia.wmsa.edge.model.EdgeCrawlPlan;
@@ -20,23 +17,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class ConverterMain {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final DomainProcessor processor;
-    private final InstructionsCompiler compiler;
-    private final WorkLog processLog;
     private final CrawledInstructionWriter instructionWriter;
-
-    private final Gson gson;
-    private final CrawledDomainReader reader = new CrawledDomainReader();
-
-    private final Map<String, String> domainToId = new HashMap<>();
-    private final Map<String, String> idToFileName = new HashMap<>();
 
     public static void main(String... args) throws IOException {
 
@@ -60,65 +46,42 @@ public class ConverterMain {
             InstructionsCompiler compiler,
             Gson gson
             ) throws Exception {
-        this.processor = processor;
-        this.compiler = compiler;
-        this.gson = gson;
 
         instructionWriter = new CrawledInstructionWriter(plan.process.getDir(), gson);
 
-        logger.info("Loading input spec");
-        CrawlerSpecificationLoader.readInputSpec(plan.getJobSpec(),
-                spec -> domainToId.put(spec.domain, spec.id));
-
-        logger.info("Replaying crawl log");
-        WorkLog.readLog(plan.crawl.getLogFile(),
-                entry -> idToFileName.put(entry.id(), entry.path()));
-
         logger.info("Starting pipe");
-        processLog = new WorkLog(plan.process.getLogFile());
 
+        try (WorkLog processLog = plan.createProcessWorkLog()) {
+            var pipe = new ParallelPipe<CrawledDomain, ProcessingInstructions>("Crawler", 48, 4, 2) {
 
-        var pipe = new ParallelPipe<CrawledDomain, ProcessingInstructions>("Crawler", 48, 4, 2) {
-            @Override
-            protected ProcessingInstructions onProcess(CrawledDomain domainData) {
-                var processed = processor.process(domainData);
-                return new ProcessingInstructions(domainData.id, compiler.compile(processed));
-            }
+                @Override
+                protected ProcessingInstructions onProcess(CrawledDomain domainData) {
+                    var processed = processor.process(domainData);
+                    var compiled = compiler.compile(processed);
 
-            @Override
-            protected void onReceive(ProcessingInstructions processedInstructions) throws IOException {
-                var instructions = processedInstructions.instructions;
-                instructions.removeIf(Instruction::isNoOp);
-
-                String where = instructionWriter.accept(processedInstructions.id, instructions);
-                processLog.setJobToFinished(processedInstructions.id, where, instructions.size());
-            }
-        };
-
-        domainToId.forEach((domain, id) -> {
-            String fileName = idToFileName.get(id);
-
-            if (Strings.isNullOrEmpty(fileName))
-                return;
-
-            Path dest = plan.getCrawledFilePath(fileName);
-
-            logger.info("{} - {} - {}", domain, id, dest);
-
-            if (!processLog.isJobFinished(id)) {
-                try {
-                    var cd = reader.read(dest);
-                    pipe.accept(cd);
-
-                } catch (IOException e) {
-                    logger.error("Failed to read {}", dest);
+                    return new ProcessingInstructions(domainData.id, compiled);
                 }
-            }
-        });
 
-        pipe.join();
+                @Override
+                protected void onReceive(ProcessingInstructions processedInstructions) throws IOException {
+                    var instructions = processedInstructions.instructions;
+                    instructions.removeIf(Instruction::isNoOp);
 
-        processLog.close();
+                    String where = instructionWriter.accept(processedInstructions.id, instructions);
+                    processLog.setJobToFinished(processedInstructions.id, where, instructions.size());
+                }
+
+            };
+
+            plan.forEachCrawledDomain(domain -> {
+                if (!processLog.isJobFinished(domain.id)) {
+                    logger.info("{} - {}", domain.domain, domain.id);
+                    pipe.accept(domain);
+                }
+            });
+
+            pipe.join();
+        }
 
         logger.info("Finished");
 

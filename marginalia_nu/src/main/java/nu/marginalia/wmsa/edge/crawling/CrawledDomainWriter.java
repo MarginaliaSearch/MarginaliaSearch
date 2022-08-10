@@ -3,40 +3,44 @@ package nu.marginalia.wmsa.edge.crawling;
 import com.github.luben.zstd.ZstdOutputStream;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import nu.marginalia.wmsa.edge.crawling.model.CrawledDomain;
+import nu.marginalia.wmsa.edge.crawling.model.SerializableCrawlData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedOutputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class CrawledDomainWriter {
+public class CrawledDomainWriter implements AutoCloseable {
     private final Path outputDir;
     private final Gson gson = new GsonBuilder().create();
     private static final Logger logger = LoggerFactory.getLogger(CrawledDomainWriter.class);
+    private final Writer writer;
+    private final Path outputFile;
 
-    public CrawledDomainWriter(Path outputDir) {
+    public CrawledDomainWriter(Path outputDir, String name, String id) throws IOException {
         this.outputDir = outputDir;
 
         if (!Files.isDirectory(outputDir)) {
             throw new IllegalArgumentException("Output dir " + outputDir + " does not exist");
         }
+
+        outputFile = getOutputFile(id, name);
+        writer =  new OutputStreamWriter(new ZstdOutputStream(new BufferedOutputStream(Files.newOutputStream(outputFile))));
     }
 
-    public String accept(CrawledDomain domainData) throws IOException {
-        Path outputFile = getOutputFile(domainData.id, domainData.domain);
+    public Path getOutputFile() {
+        return outputFile;
+    }
 
-        try (var outputStream = new OutputStreamWriter(new ZstdOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile.toFile()))))) {
-            logger.info("Writing {} - {}", domainData.id, domainData.domain);
-
-            gson.toJson(domainData, outputStream);
-        }
-
-        return outputFile.getFileName().toString();
+    public void accept(SerializableCrawlData data) throws IOException {
+        writer.write(data.getSerialIdentifier());
+        writer.write('\n');
+        gson.toJson(data, writer);
+        writer.write('\n');
     }
 
     private Path getOutputFile(String id, String name) throws IOException {
@@ -62,5 +66,10 @@ public class CrawledDomainWriter {
 
         return nameSaneBuilder.toString();
 
+    }
+
+    @Override
+    public void close() throws IOException {
+        writer.close();
     }
 }

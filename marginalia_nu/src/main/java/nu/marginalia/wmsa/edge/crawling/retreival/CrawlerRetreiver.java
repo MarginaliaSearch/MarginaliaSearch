@@ -4,6 +4,7 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.edge.converting.processor.logic.LinkParser;
+import nu.marginalia.wmsa.edge.crawling.CrawledDomainWriter;
 import nu.marginalia.wmsa.edge.crawling.blocklist.GeoIpBlocklist;
 import nu.marginalia.wmsa.edge.crawling.blocklist.IpBlockList;
 import nu.marginalia.wmsa.edge.crawling.blocklist.UrlBlocklist;
@@ -14,6 +15,7 @@ import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.LocalDateTime;
@@ -29,6 +31,7 @@ public class CrawlerRetreiver {
     private final int depth;
     private final String id;
     private final String domain;
+    private final CrawledDomainWriter crawledDomainWriter;
 
     private static final LinkParser linkParser = new LinkParser();
     private static final Logger logger = LoggerFactory.getLogger(CrawlerRetreiver.class);
@@ -45,7 +48,7 @@ public class CrawlerRetreiver {
         }
     }
 
-    public CrawlerRetreiver(HttpFetcher fetcher, CrawlingSpecification specs) {
+    public CrawlerRetreiver(HttpFetcher fetcher, CrawlingSpecification specs, CrawledDomainWriter crawledDomainWriter) {
         this.fetcher = fetcher;
         visited = new HashSet<>((int)(specs.urls.size() * 1.5));
         known = new HashSet<>(specs.urls.size() * 10);
@@ -53,6 +56,7 @@ public class CrawlerRetreiver {
         depth = specs.crawlDepth;
         id = specs.id;
         domain = specs.domain;
+        this.crawledDomainWriter = crawledDomainWriter;
 
         specs.urls.stream()
                 .map(this::parseUrl)
@@ -78,12 +82,18 @@ public class CrawlerRetreiver {
         }
     }
 
-    public CrawledDomain fetch() {
+    public int fetch() throws IOException {
         logger.info("Fetching {}", domain);
 
         Optional<CrawledDomain> probeResult = probeDomainForProblems(domain);
 
-        return probeResult.orElseGet(this::crawlDomain);
+        if (probeResult.isPresent()) {
+            crawledDomainWriter.accept(probeResult.get());
+            return 1;
+        }
+        else {
+            return crawlDomain();
+        }
     }
 
     private Optional<CrawledDomain> probeDomainForProblems(String domain) {
@@ -118,7 +128,7 @@ public class CrawlerRetreiver {
         return Optional.empty();
     }
 
-    private CrawledDomain crawlDomain() {
+    private int crawlDomain() throws IOException {
         String ip = findIp(domain);
 
         assert !queue.isEmpty();
@@ -130,6 +140,8 @@ public class CrawlerRetreiver {
         CrawledDomain ret = new CrawledDomain(id, domain, null, CrawlerDomainStatus.OK.name(), null, ip, docs, null);
 
         int visitedCount = 0;
+        int fetchedCount = 0;
+
         while (!queue.isEmpty() && visitedCount < depth) {
             var top = queue.removeFirst();
 
@@ -150,7 +162,11 @@ public class CrawlerRetreiver {
             logger.debug("Fetching {}", top);
             long startTime = System.currentTimeMillis();
 
-            fetchUrl(top).ifPresent(ret.doc::add);
+            var doc = fetchUrl(top);
+            if (doc.isPresent()) {
+                fetchedCount++;
+                crawledDomainWriter.accept(doc.get());
+            }
 
             long crawledTime = System.currentTimeMillis() - startTime;
             delay(crawlDelay, crawledTime);
@@ -160,7 +176,9 @@ public class CrawlerRetreiver {
 
         ret.cookies = fetcher.getCookies();
 
-        return ret;
+        crawledDomainWriter.accept(ret);
+
+        return fetchedCount;
     }
 
     private Optional<CrawledDocument> fetchUrl(EdgeUrl top) {
