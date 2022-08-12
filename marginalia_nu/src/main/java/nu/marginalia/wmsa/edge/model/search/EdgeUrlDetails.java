@@ -132,6 +132,8 @@ public class EdgeUrlDetails {
     public boolean isCookies() {
         return HtmlFeature.hasFeature(features, HtmlFeature.COOKIES);
     }
+    public boolean isAds() { return HtmlFeature.hasFeature(features, HtmlFeature.ADVERTISEMENT); }
+
     public boolean isSpecialDomain() {
         return domainState == EdgeDomainIndexingState.SPECIAL;
     }

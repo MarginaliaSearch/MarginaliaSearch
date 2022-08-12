@@ -28,9 +28,9 @@ public class QueryParams {
 
     public static boolean isPermittedParam(String path, String param) {
         if (path.endsWith("index.php")) {
-            if (param.startsWith("showtopic"))
+            if (param.startsWith("showtopic="))
                 return true;
-            if (param.startsWith("showforum"))
+            if (param.startsWith("showforum="))
                 return true;
         }
         if (path.endsWith("viewtopic.php")) {
@@ -44,6 +44,10 @@ public class QueryParams {
         }
         if (path.endsWith("showforum.php")) {
             return param.startsWith("v=");
+        }
+
+        if (path.endsWith("StoryView.py")) { // folklore.org is neat
+            return param.startsWith("project=") || param.startsWith("story=");
         }
         return false;
     }

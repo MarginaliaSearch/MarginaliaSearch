@@ -10,6 +10,8 @@ public enum HtmlFeature {
     COOKIES("special:cookies"),
 
     CATEGORY_FOOD("category:food"),
+
+    ADVERTISEMENT("special:ads"),
     ;
 
     private final String keyword;

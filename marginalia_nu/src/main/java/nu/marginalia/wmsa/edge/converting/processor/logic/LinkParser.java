@@ -40,6 +40,17 @@ public class LinkParser {
                 .flatMap(this::createEdgeUrl);
     }
 
+    @Contract(pure=true)
+    public Optional<EdgeUrl> parseLinkPermissive(EdgeUrl relativeBaseUrl, Element l) {
+        return Optional.of(l)
+                .map(this::getUrl)
+                .map(link -> resolveUrl(relativeBaseUrl, link))
+                .flatMap(this::createURI)
+                .map(URI::normalize)
+                .map(this::renormalize)
+                .flatMap(this::createEdgeUrl);
+    }
+
     private Optional<URI> createURI(String s) {
         try {
             return Optional.of(new URI(s));
@@ -146,15 +157,18 @@ public class LinkParser {
         return  s.matches("^[a-zA-Z]+:.*$");
     }
 
-    private boolean shouldIndexLink(Element link) {
+    public boolean shouldIndexLink(Element link) {
         return isUrlRelevant(link.attr("href"))
                 && isRelRelevant(link.attr("rel"));
-
     }
 
-    private boolean isRelRelevant(String rel) {
+    public boolean isRelRelevant(String rel) {
         // this is null safe
         return !"noindex".equalsIgnoreCase(rel);
+    }
+
+    public boolean hasBinarySuffix(String href) {
+        return blockSuffixList.stream().anyMatch(href::endsWith);
     }
 
     private boolean isUrlRelevant(String href) {
@@ -164,7 +178,7 @@ public class LinkParser {
         if (blockPrefixList.stream().anyMatch(href::startsWith)) {
             return false;
         }
-        if (blockSuffixList.stream().anyMatch(href::endsWith)) {
+        if (hasBinarySuffix(href)) {
             return false;
         }
         if (href.length() > 128) {
