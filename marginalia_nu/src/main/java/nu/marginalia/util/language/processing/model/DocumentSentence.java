@@ -118,6 +118,10 @@ public class DocumentSentence implements Iterable<DocumentSentence.SentencePos>{
         public String stemmed() { return stemmedWords[pos]; }
         public int separator() { return separators[pos]; }
         public boolean isStopWord() { return DocumentSentence.this.isStopWord(pos); }
+
+        public WordRep rep() {
+            return new WordRep(DocumentSentence.this, new WordSpan(pos, pos+1));
+        }
     }
 }
 

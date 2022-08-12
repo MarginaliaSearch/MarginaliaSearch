@@ -72,6 +72,8 @@ public class DocumentKeywordExtractor {
         for (var w : topKeywords)
             words.remove(w.word);
 
+        Collection<String> artifacts = getArtifacts(documentLanguageData);
+
         var wordSet = new EdgePageWordSet(
                 createWords(IndexBlock.TitleKeywords, overlappingStems(titleWords, wordsToMatchWithTitle)),
                 createWords(IndexBlock.Topic, subjects),
@@ -79,12 +81,39 @@ public class DocumentKeywordExtractor {
                 createWords(IndexBlock.NamesWords, wordsNamesAll),
                 createWords(IndexBlock.Top, topKeywords),
                 createWords(IndexBlock.Middle, midKeywords),
-                createWords(IndexBlock.Low, lowKeywords)
+                createWords(IndexBlock.Low, lowKeywords),
+                new EdgePageWords(IndexBlock.Artifacts, artifacts)
         );
 
         wordSet.append(IndexBlock.Words, words);
 
         return wordSet;
+    }
+
+    private Collection<String> getArtifacts(DocumentLanguageData documentLanguageData) {
+        Set<String> reps = new HashSet<>();
+
+
+        for (var sent : documentLanguageData.sentences) {
+            for (var word : sent) {
+                String lc = word.wordLowerCase();
+                if (lc.matches("[a-zA-Z0-9._\\-]+@[a-zA-Z0-9]+(\\.[a-zA-Z0-9]+)+")) {
+                    reps.add(lc);
+
+                    String domain = lc.substring(lc.indexOf('@'));
+                    String user = lc.substring(0, lc.indexOf('@'));
+
+                    if (!domain.equals("@hotmail.com") && !domain.equals("@gmail.com")  && !domain.equals("@paypal.com")) {
+                        reps.add(domain);
+                    }
+                    if (!user.equals("info") && !user.equals("legal") && !user.equals("contact") && !user.equals("donotreply")) {
+                        reps.add(user);
+                    }
+
+                }
+            }
+        }
+        return reps;
     }
 
     private List<WordRep> extractTitleWords(DocumentLanguageData documentLanguageData) {
