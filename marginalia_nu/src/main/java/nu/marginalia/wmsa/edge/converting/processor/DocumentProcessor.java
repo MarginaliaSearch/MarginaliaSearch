@@ -16,6 +16,7 @@ import nu.marginalia.wmsa.edge.crawling.model.CrawledDocument;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDomain;
 import nu.marginalia.wmsa.edge.crawling.model.CrawlerDocumentStatus;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
+import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeHtmlStandard;
 import nu.marginalia.wmsa.edge.model.crawl.EdgePageWordSet;
@@ -26,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.*;
 
 import static nu.marginalia.wmsa.edge.model.crawl.EdgeHtmlStandard.UNKNOWN;
@@ -199,8 +201,19 @@ public class DocumentProcessor {
 
         baseUrl = linkParser.getBaseLink(doc, baseUrl);
 
+        EdgeDomain domain = baseUrl.domain;
+
         for (var atag : doc.getElementsByTag("a")) {
-            linkParser.parseLink(baseUrl, atag).ifPresent(lp::accept);
+            var linkOpt = linkParser.parseLinkPermissive(baseUrl, atag);
+            if (linkParser.shouldIndexLink(atag)) {
+                linkOpt.ifPresent(lp::accept);
+            }
+            else if (linkOpt.isPresent()) {
+                if (linkParser.hasBinarySuffix(linkOpt.get().toString())) {
+                    linkOpt.ifPresent(lp::acceptNonIndexable);
+                }
+            }
+
         }
         for (var frame : doc.getElementsByTag("frame")) {
             linkParser.parseFrame(baseUrl, frame).ifPresent(lp::accept);
@@ -216,13 +229,44 @@ public class DocumentProcessor {
 
         final Set<String> linkTerms = new HashSet<>();
 
-        for (var domain : lp.getForeignDomains()) {
-            linkTerms.add("links:"+domain.toString().toLowerCase());
-            linkTerms.add("links:"+domain.getDomain().toLowerCase());
+        for (var fd : lp.getForeignDomains()) {
+            linkTerms.add("links:"+fd.toString().toLowerCase());
+            linkTerms.add("links:"+fd.getDomain().toLowerCase());
         }
 
         words.append(IndexBlock.Meta, linkTerms);
 
+        Set<String> fileKeywords = new HashSet<>(100);
+        for (var link : lp.getNonIndexableUrls()) {
+
+            if (!Objects.equals(domain, link.domain)) {
+                continue;
+            }
+
+            synthesizeFilenameKeyword(fileKeywords, link);
+
+        }
+
+        words.append(IndexBlock.Artifacts, fileKeywords);
+    }
+
+    private void synthesizeFilenameKeyword(Set<String> fileKeywords, EdgeUrl link) {
+
+
+        Path pFilename = Path.of(link.path.toLowerCase()).getFileName();
+
+        if (pFilename == null) return;
+
+        String filename = pFilename.toString();
+        if (filename.length() > 32
+                || filename.endsWith(".xml")
+                || filename.endsWith(".jpg")
+                || filename.endsWith(".png")
+                || filename.endsWith(".pdf")
+                || filename.endsWith(".gif"))
+            return;
+
+        fileKeywords.add(filename.replace(' ', '_'));
     }
 
     private void checkDocumentLanguage(DocumentLanguageData dld) throws DisqualifiedException {

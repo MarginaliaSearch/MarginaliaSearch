@@ -19,7 +19,7 @@ public class AdblockTesterTool {
 
     static {
         try {
-            simulator = new AdblockSimulator(Path.of("/home/vlofgren/easylist.txt"));
+            simulator = new AdblockSimulator();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -28,7 +28,6 @@ public class AdblockTesterTool {
 
     public static void main(String... args) throws IOException {
         EdgeCrawlPlan plan = new CrawlPlanLoader().load(Path.of(args[0]));
-
 
         try (var iterable = plan.domainsIterable()) {
             for (var domain : iterable) {

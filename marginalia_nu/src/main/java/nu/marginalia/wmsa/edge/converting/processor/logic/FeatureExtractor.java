@@ -1,5 +1,8 @@
 package nu.marginalia.wmsa.edge.converting.processor.logic;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import nu.marginalia.wmsa.edge.converting.processor.logic.topic.AdblockSimulator;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDomain;
 import org.jsoup.nodes.Document;
 
@@ -7,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+@Singleton
 public class FeatureExtractor {
 
     private static final List<String> trackers = List.of("adform.net",
@@ -29,6 +33,13 @@ public class FeatureExtractor {
             "d31qbv1cthcecs.cloudfront.net",
             "linkedin.com");
 
+    private AdblockSimulator adblockSimulator;
+
+    @Inject
+    public FeatureExtractor(AdblockSimulator adblockSimulator) {
+        this.adblockSimulator = adblockSimulator;
+    }
+
     public Set<HtmlFeature> getFeatures(CrawledDomain domain, Document doc) {
         Set<HtmlFeature> features = new HashSet<>();
 
@@ -36,6 +47,9 @@ public class FeatureExtractor {
 
         if (scriptTags.size() > 0) {
             features.add(HtmlFeature.JS);
+        }
+        else if(adblockSimulator.hasAds(doc.clone())) { // Only look for ads if there is javascript
+            features.add(HtmlFeature.ADVERTISEMENT);
         }
 
         if (!doc.getElementsByTag("object").isEmpty()
@@ -56,7 +70,7 @@ public class FeatureExtractor {
         if (doc.getElementsByTag("a").stream().map(e -> e.attr("href"))
                 .map(String::toLowerCase)
                 .anyMatch(href ->
-                        href.contains("amzn.to/") || href.contains("amazon.com/"))) {
+                        href.contains("amzn.to/") || (href.contains("amazon.com/") & href.contains("tag=")))) {
             features.add(HtmlFeature.AFFILIATE_LINK);
         }
 

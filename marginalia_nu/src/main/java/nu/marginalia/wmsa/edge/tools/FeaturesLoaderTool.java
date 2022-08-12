@@ -3,6 +3,7 @@ package nu.marginalia.wmsa.edge.tools;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
 import nu.marginalia.wmsa.configuration.server.Context;
+import nu.marginalia.wmsa.edge.converting.processor.logic.HtmlFeature;
 import nu.marginalia.wmsa.edge.index.client.EdgeIndexClient;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.EdgeId;
@@ -20,19 +21,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static nu.marginalia.wmsa.edge.converting.processor.logic.HtmlFeature.CATEGORY_FOOD;
-
-public class RecipesLoaderTool {
+public class FeaturesLoaderTool {
     public static void main(String... args) {
+
+        HtmlFeature feature = HtmlFeature.valueOf(args[0]);
+        Path file = Path.of(args[1]);
 
         try (EdgeIndexClient client = new EdgeIndexClient();
              HikariDataSource ds = new DatabaseModule().provideConnection();
              Connection conn = ds.getConnection();
              PreparedStatement ps = conn.prepareStatement("UPDATE EC_PAGE_DATA SET FEATURES = FEATURES | ? WHERE ID=?");
-             var linesStream = Files.lines(Path.of(args[0]))) {
+             var linesStream = Files.lines(file)) {
 
             var urls = getUrls(ds);
-            var wordSet = new EdgePageWordSet(new EdgePageWords(IndexBlock.Meta, List.of(CATEGORY_FOOD.getKeyword())));
+            var wordSet = new EdgePageWordSet(new EdgePageWords(IndexBlock.Meta, List.of(feature.getKeyword())));
             linesStream
                     .map(urls::get)
                     .filter(Objects::nonNull)
@@ -42,7 +44,7 @@ public class RecipesLoaderTool {
 
                         try {
                             ps.setInt(2, urlId);
-                            ps.setInt(1, CATEGORY_FOOD.getFeatureBit());
+                            ps.setInt(1, feature.getFeatureBit());
                             ps.executeUpdate();
                         }
                         catch (SQLException ex) {

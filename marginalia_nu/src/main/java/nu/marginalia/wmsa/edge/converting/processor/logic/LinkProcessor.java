@@ -13,6 +13,9 @@ import java.util.Set;
 public class LinkProcessor {
     private final ProcessedDocumentDetails ret;
     private final EdgeUrl baseUrl;
+
+    private final Set<EdgeUrl> nonIndexable = new HashSet<>();
+
     private final Set<EdgeUrl> seenUrls = new HashSet<>();
     private final Set<EdgeDomain> foreignDomains = new HashSet<>();
 
@@ -31,6 +34,10 @@ public class LinkProcessor {
 
     public Set<EdgeDomain> getForeignDomains() {
         return foreignDomains;
+    }
+    
+    public Set<EdgeUrl> getNonIndexableUrls() {
+        return nonIndexable;
     }
 
     public void accept(EdgeUrl link) {
@@ -86,5 +93,9 @@ public class LinkProcessor {
     private boolean isProtoSupported(String proto) {
         return proto.equalsIgnoreCase("http")
             || proto.equalsIgnoreCase("https");
+    }
+
+    public void acceptNonIndexable(EdgeUrl edgeUrl) {
+        nonIndexable.add(edgeUrl);
     }
 }

@@ -46,6 +46,10 @@ public class WmsaHome {
         }
     }
 
+    public static Path getAdsDefinition() {
+        return getHomePath().resolve("data").resolve("adblock.txt");
+    }
+
     public static Path getIPLocationDatabse() {
         return getHomePath().resolve("data").resolve("IP2LOCATION-LITE-DB1.CSV");
     }
@@ -90,4 +94,5 @@ public class WmsaHome {
                 home.resolve("model/English.DICT"),
                 home.resolve("model/opennlp-tok.bin"));
     }
+
 }
