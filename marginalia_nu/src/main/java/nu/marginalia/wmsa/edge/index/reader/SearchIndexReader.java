@@ -1,14 +1,11 @@
 package nu.marginalia.wmsa.edge.index.reader;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.index.reader.query.IndexQueryBuilder;
 import nu.marginalia.wmsa.edge.index.reader.query.IndexSearchBudget;
 import nu.marginalia.wmsa.edge.index.reader.query.Query;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +24,6 @@ public class SearchIndexReader implements AutoCloseable {
     private final EnumMap<IndexBlock, IndexQueryBuilder> underspecifiedQueryBuilders;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Cache<Pair<IndexBlock, Integer>, Long> numHitsCache = CacheBuilder.newBuilder().maximumSize(1000).build();
 
     private static final IndexBlock[] indicesBySearchOrder = new IndexBlock[] {
             IndexBlock.Top,
@@ -131,26 +127,20 @@ public class SearchIndexReader implements AutoCloseable {
         for (var idx : indices.values()) {
             idx.close();
         }
-        numHitsCache.invalidateAll();
-        numHitsCache.cleanUp();
     }
 
     @SneakyThrows
     public long numHits(IndexBlock block, int word) {
-        return numHitsCache.get(Pair.of(block, word), () -> numHitsForBlockWord(block, word));
-    }
-
-    private long numHitsForBlockWord(IndexBlock block, int word) {
         IndexQueryBuilder builder = queryBuilders.get(block);
 
         if (builder == null)
             return 0L;
 
-        return builder
-                .getIndicies()
-                .stream()
-                .mapToLong(idx -> idx.numUrls(word))
-                .sum();
+        long hits = 0;
+        for (var index : builder.getIndicies()) {
+            hits += index.numUrls(word);
+        }
+        return hits;
     }
 
     public IndexBlock getBlockForResult(int searchTerm, long urlId) {
@@ -163,7 +153,7 @@ public class SearchIndexReader implements AutoCloseable {
 
             var range = index.rangeForWord(searchTerm);
 
-            if (index.hasUrl(urlId, range)) {
+            if (range.hasUrl(urlId)) {
                 return block;
             }
         }
@@ -174,8 +164,8 @@ public class SearchIndexReader implements AutoCloseable {
         final var index = indices.get(block);
         if (null == index) return false;
 
-        final var range = index.rangeForWord(searchTerm);
-
-        return index.hasUrl(urlId, range);
+        return index
+                .rangeForWord(searchTerm)
+                .hasUrl(urlId);
     }
 }

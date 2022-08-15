@@ -125,8 +125,11 @@ public class EdgeIndexBucket {
         else {
             query = indexReader.findWord(block, budget, filter, orderedIncludes[0]);
         }
-
-        for (int i = 1; i < orderedIncludes.length; i++) {
+        int i;
+        for (i = 1; (i < 2 && i < orderedIncludes.length) || i < orderedIncludes.length-1; i++) {
+            query = query.alsoCached(orderedIncludes[i]);
+        }
+        for (; i < orderedIncludes.length; i++) {
             query = query.also(orderedIncludes[i]);
         }
         for (int term : searchTerms.excludes) {

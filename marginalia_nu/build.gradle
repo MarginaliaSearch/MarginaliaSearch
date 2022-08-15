@@ -36,6 +36,16 @@ sourceSets {
             resources.srcDir file('src/e2e/resources')
         }
     }
+    jmh {
+        java {
+            java {
+                compileClasspath += main.output + test.output
+                runtimeClasspath += main.output + test.output
+                srcDir file('src/jmh/java')
+            }
+            resources.srcDir file('src/jmh/resources')
+        }
+    }
 }
 
 java {
@@ -43,7 +53,9 @@ java {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
-
+jmhJar {
+    zip64 true
+}
 dependencies {
     implementation project(':third_party')
 
@@ -142,6 +154,9 @@ dependencies {
     implementation 'org.seleniumhq.selenium:selenium-chrome-driver:4.1.4'
     implementation 'org.seleniumhq.selenium:selenium-java:4.3.0'
     implementation 'org.sejda.imageio:webp-imageio:0.1.6'
+
+    jmh 'org.openjdk.jmh:jmh-core:1.35'
+    jmh 'org.openjdk.jmh:jmh-generator-annprocess:1.35'
 }
 
 configurations {

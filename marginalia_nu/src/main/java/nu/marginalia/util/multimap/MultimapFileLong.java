@@ -93,7 +93,7 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
         channel = file.getChannel();
         mappedSize = 0;
 
-        logger.debug("Creating multimap file size = {} / buffer size = {}, mode = {}",
+        logger.trace("Creating multimap file size = {} / buffer size = {}, mode = {}",
                 readableSize(mapSizeBytes), readableSize(8L*bufferSizeWords), mode);
     }
 
@@ -149,7 +149,7 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
     }
 
     public void force() {
-        logger.debug("Forcing");
+        logger.trace("Forcing");
 
         for (MappedByteBuffer buffer: mappedByteBuffers) {
             buffer.force();
