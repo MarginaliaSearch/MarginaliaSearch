@@ -147,7 +147,7 @@ public class EdgeSearchService extends Service {
             return null;
         }
 
-        final String profileStr = Optional.ofNullable(request.queryParams("profile")).orElse("yolo");
+        final String profileStr = Optional.ofNullable(request.queryParams("profile")).orElse(EdgeSearchProfile.YOLO.name);
         final String humanQuery = queryParam.trim();
 
         var params = new SearchParameters(
