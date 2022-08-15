@@ -14,7 +14,10 @@ import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeId;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
-import nu.marginalia.wmsa.edge.model.search.*;
+import nu.marginalia.wmsa.edge.model.search.EdgePageScoreAdjustment;
+import nu.marginalia.wmsa.edge.model.search.EdgeSearchSpecification;
+import nu.marginalia.wmsa.edge.model.search.EdgeSearchSubquery;
+import nu.marginalia.wmsa.edge.model.search.EdgeUrlDetails;
 import nu.marginalia.wmsa.edge.model.search.domain.EdgeDomainSearchSpecification;
 import nu.marginalia.wmsa.edge.search.model.BrowseResult;
 import nu.marginalia.wmsa.edge.search.model.DecoratedSearchResultSet;
@@ -85,7 +88,7 @@ public class EdgeSearchOperator {
 
         logger.info("Human terms (API): {}", Strings.join(processedQuery.searchTermsHuman, ','));
 
-        DecoratedSearchResultSet queryResults = performQuery(ctx, processedQuery, true);
+        DecoratedSearchResultSet queryResults = performQuery(ctx, processedQuery);
 
         return queryResults.resultSet;
     }
@@ -96,7 +99,7 @@ public class EdgeSearchOperator {
 
         logger.info("Human terms: {}", Strings.join(processedQuery.searchTermsHuman, ','));
 
-        DecoratedSearchResultSet queryResults = performQuery(ctx, processedQuery, false);
+        DecoratedSearchResultSet queryResults = performQuery(ctx, processedQuery);
 
         String evalResult = getEvalResult(eval);
 
@@ -180,22 +183,16 @@ public class EdgeSearchOperator {
 
         EdgeSearchSpecification specs = new EdgeSearchSpecification(profile.buckets, sqs, 100, limitPerDomain, limitTotal, "", EdgeSearchProfile.YOLO.equals(profile), false);
 
-        return performQuery(ctx, new EdgeSearchQuery(specs), true);
+        return performQuery(ctx, new EdgeSearchQuery(specs));
     }
 
-    private DecoratedSearchResultSet performQuery(Context ctx, EdgeSearchQuery processedQuery, boolean asFastAsPossible) {
+    private DecoratedSearchResultSet performQuery(Context ctx, EdgeSearchQuery processedQuery) {
 
         AccumulatedQueryResults queryResults = new AccumulatedQueryResults();
         UrlDeduplicator deduplicator = new UrlDeduplicator(processedQuery.specs.limitByDomain);
         List<EdgeUrlDetails> resultList = new ArrayList<>(queryResults.size());
 
-        wmsa_search_index_api_time.time(() -> {
-                    if (processedQuery.searchTermsHuman.size() <= 4 && !asFastAsPossible) {
-                        fetchResultsMulti(ctx, processedQuery, queryResults, deduplicator);
-                    } else {
-                        fetchResultsSimple(ctx, processedQuery, queryResults, deduplicator);
-                    }
-                });
+        wmsa_search_index_api_time.time(() -> fetchResultsSimple(ctx, processedQuery, queryResults, deduplicator));
 
         wmsa_search_result_decoration_time.time(() -> {
             for (var details : queryResults.results) {
@@ -297,51 +294,6 @@ public class EdgeSearchOperator {
                 )
                 .onErrorReturn(e -> new WikiArticles())
                 .subscribeOn(Schedulers.io());
-    }
-
-    private void fetchResultsMulti(Context ctx, EdgeSearchQuery processedQuery, AccumulatedQueryResults queryResults, UrlDeduplicator deduplicator) {
-
-        boolean debug = processedQuery.specs.subqueries.get(0).searchTermsExclude.contains("special:debug");
-
-        var blocksOrder = processedQuery.specs.subqueries.stream().map(sq -> sq.block).distinct().sorted(Comparator.comparing(block -> block.sortOrder)).toList();
-
-
-        EdgeSearchSpecification[] specsArray =
-                processedQuery.specs.subqueries.stream()
-                        .filter(sq -> sq.block == IndexBlock.TitleKeywords)
-                        .map(sq -> processedQuery.specs.withSubqueries(blocksOrder.stream().map(sq::withBlock).collect(Collectors.toList())))
-                        .toArray(EdgeSearchSpecification[]::new);
-        var resultSets = indexClient.multiQuery(ctx, specsArray);
-
-        Set<EdgeId<EdgeUrl>> seenUrls = new HashSet<>();
-        for (IndexBlock block : indexBlockSearchOrder) {
-            var resultsJoined = resultSets.stream().flatMap(rs -> rs.resultsList.getOrDefault(block, Collections.emptyList()).stream())
-                    .map(EdgeSearchResults::getResults)
-                    .flatMap(m -> m.entrySet().stream())
-                    .flatMap(m -> m.getValue().stream())
-                    .sorted(Comparator.comparing(item -> preEvaluateItem(item, block)))
-                    .filter(item -> seenUrls.add(item.url))
-                    .collect(Collectors.toList());
-
-            queryResults.append( 100, resultDecorator.decorateSearchResults(resultsJoined, block, deduplicator));
-
-            if (debug) {
-                logger.info("{} -> {} items", resultsJoined, queryResults.size());
-            }
-
-        }
-        if (debug) {
-            logger.info("-> {} items", queryResults.size());
-        }
-
-
-    }
-
-    private final WeakHashMap<EdgeSearchResultItem, Double> scoreCache = new WeakHashMap<>();
-    private double preEvaluateItem(EdgeSearchResultItem item, IndexBlock block) {
-        synchronized (scoreCache) {
-            return scoreCache.computeIfAbsent(item, i -> valuator.evaluateTerms(i.scores, block, 1000));
-        }
     }
 
     private void fetchResultsSimple(Context ctx, EdgeSearchQuery processedQuery, AccumulatedQueryResults queryResults, UrlDeduplicator deduplicator) {
