@@ -8,6 +8,9 @@ public interface Query {
         public Query also(int wordId) { return this; }
 
         @Override
+        public Query alsoCached(int wordId) { return this; }
+
+        @Override
         public Query not(int wordId) { return this; }
 
         @Override
@@ -15,6 +18,8 @@ public interface Query {
     };
 
     Query also(int wordId);
+    Query alsoCached(int wordId);
+
     Query not(int wordId);
 
     LongStream stream();

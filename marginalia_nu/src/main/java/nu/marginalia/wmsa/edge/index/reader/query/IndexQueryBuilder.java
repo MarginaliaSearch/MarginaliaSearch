@@ -6,7 +6,6 @@ import nu.marginalia.wmsa.edge.index.reader.SearchIndex;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.function.LongPredicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -51,13 +50,13 @@ public class IndexQueryBuilder {
 
         var fstRange = requiredIndices.get(relevantIndices[0]).rangeForWord(wordId);
 
-        return new QueryForIndices(budget, () ->
-            Streams.concat(IntStream.range(1, relevantIndices.length)
-                            .mapToObj(i -> underspecifiedPairStream(budget, 1000, relevantIndices[0], relevantIndices[i], wordId))
-                            .flatMapToLong(Function.identity()),
-                    fstRange.stream().takeWhile(budget::take))
-                .filter(filter)
-        );
+        LongStream priorityStream = underspecifiedPairStream(budget, 1000, relevantIndices[0], relevantIndices[0], wordId);
+        for (int i = 1; i < relevantIndices.length; i++) {
+            priorityStream = Streams.concat(priorityStream, underspecifiedPairStream(budget, 1000, relevantIndices[0], relevantIndices[i], wordId));
+        }
+        LongStream stream = LongStream.concat(priorityStream, fstRange.stream().takeWhile(budget::take)).filter(filter);
+
+        return new QueryForIndices(budget, () -> stream);
     }
 
     private LongStream underspecifiedPairStream(IndexSearchBudget budget, int limit, int firstIdx, int otherIdx, int wordId) {
@@ -77,10 +76,9 @@ public class IndexQueryBuilder {
         }
 
         var sndRange = snd.rangeForWord(wordId);
+        var cache = sndRange.createIndexCache();
 
-        return fst.rangeForWord(wordId).stream().takeWhile(budget::take).limit(limit).filter(
-                url -> snd.hasUrl(url, sndRange)
-        );
+        return fst.rangeForWord(wordId).stream().takeWhile(budget::take).limit(limit).filter(data -> sndRange.hasUrl(cache, data));
     }
 
 
@@ -111,6 +109,12 @@ public class IndexQueryBuilder {
         }
 
         @Override
+        public Query alsoCached(int wordId) {
+            return new QueryForIndices(budget,
+                    () -> requiredIndices.stream().flatMapToLong(idx -> alsoStreamCached(idx, wordId)));
+        }
+
+        @Override
         public Query not(int wordId) {
             // Happens when an index simply isn't present, won't find data anyway
             // so it's safe to no-op the query
@@ -123,12 +127,21 @@ public class IndexQueryBuilder {
         private LongStream alsoStream(SearchIndex idx, int wordId) {
             var range = idx.rangeForWord(wordId);
 
-            return stream().filter(url -> idx.hasUrl(url, range)).takeWhile(budget::take);
+            return stream().filter(range::hasUrl).takeWhile(budget::take);
+        }
+
+        private LongStream alsoStreamCached(SearchIndex idx, int wordId) {
+            var range = idx.rangeForWord(wordId);
+            var cache = range.createIndexCache();
+
+            return stream().filter(data -> range.hasUrl(cache, data)).takeWhile(budget::take);
         }
 
         private LongStream notStream(int wordId) {
             var bodyRange = excludeIndex.rangeForWord(wordId);
-            return stream().filter(url -> !excludeIndex.hasUrl(url, bodyRange)).takeWhile(budget::take);
+            var cache = bodyRange.createIndexCache();
+
+            return stream().filter(url -> !bodyRange.hasUrl(cache, url)).takeWhile(budget::take);
         }
 
         public LongStream stream() {
