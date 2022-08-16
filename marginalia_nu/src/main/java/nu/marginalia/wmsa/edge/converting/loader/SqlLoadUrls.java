@@ -35,7 +35,7 @@ public class SqlLoadUrls {
                             IN PATH_HASH BIGINT
                             )
                         BEGIN
-                            INSERT IGNORE INTO EC_URL (PROTO,DOMAIN_ID,PORT,PATH,PATH_HASH) SELECT PROTO,ID,PORT,PATH,PATH_HASH FROM EC_DOMAIN WHERE DOMAIN_NAME=DOMAIN;
+                            INSERT IGNORE INTO EC_URL (PROTO,DOMAIN_ID,PORT,PATH,PARAM,PATH_HASH) SELECT PROTO,ID,PORT,PATH,PARAM,PATH_HASH FROM EC_DOMAIN WHERE DOMAIN_NAME=DOMAIN;
                         END
                         """);
             }

@@ -27,23 +27,20 @@ public class QueryParams {
     }
 
     public static boolean isPermittedParam(String path, String param) {
+        if (path.endsWith(".cgi")) return true;
+
+        if (param.startsWith("id=")) return true;
+        if (param.startsWith("p=")) return true;
+        if (param.startsWith("i=")) return true;
+        if (param.startsWith("t=")) return true;
+        if (param.startsWith("v=")) return true;
+        if (param.startsWith("post=")) return true;
+
         if (path.endsWith("index.php")) {
             if (param.startsWith("showtopic="))
                 return true;
             if (param.startsWith("showforum="))
                 return true;
-        }
-        if (path.endsWith("viewtopic.php")) {
-            return (param.startsWith("t=") || param.startsWith("p="));
-        }
-        if (path.endsWith("viewforum.php")) {
-            return param.startsWith("v=");
-        }
-        if (path.endsWith("showthread.php")) {
-            return (param.startsWith("t=") || param.startsWith("p="));
-        }
-        if (path.endsWith("showforum.php")) {
-            return param.startsWith("v=");
         }
 
         if (path.endsWith("StoryView.py")) { // folklore.org is neat
