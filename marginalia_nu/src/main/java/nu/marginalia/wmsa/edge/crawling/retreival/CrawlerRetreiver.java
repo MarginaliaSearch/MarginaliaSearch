@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -163,7 +164,15 @@ public class CrawlerRetreiver {
             var doc = fetchUrl(top);
             if (doc.isPresent()) {
                 fetchedCount++;
-                crawledDomainWriter.accept(doc.get());
+
+                var d = doc.get();
+                crawledDomainWriter.accept(d);
+
+                try {
+                    visited.add(new EdgeUrl(d.url));
+                }
+                catch (URISyntaxException ex) {}
+
             }
 
             long crawledTime = System.currentTimeMillis() - startTime;
