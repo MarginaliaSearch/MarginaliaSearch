@@ -198,7 +198,7 @@ public class HttpFetcher {
     private CrawledDocument extractBody(EdgeUrl url, Response rsp) throws IOException, URISyntaxException {
 
         var responseUrl = new EdgeUrl(rsp.request().url().toString());
-        if (!responseUrl.equals(url)) {
+        if (!Objects.equals(responseUrl.domain, url.domain)) {
             return createRedirectResponse(url, rsp, responseUrl);
         }
 
@@ -242,7 +242,7 @@ public class HttpFetcher {
                 .timestamp(LocalDateTime.now().toString())
                 .canonicalUrl(canonical)
                 .httpStatus(rsp.code())
-                .url(url.toString())
+                .url(responseUrl.toString())
                 .documentBody(strData)
                 .build();
     }
