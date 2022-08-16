@@ -35,7 +35,7 @@ public class EdgeDomainBlacklistImpl implements EdgeDomainBlacklist {
 
             spamDomainSet = getSpamDomains();
 
-            if (oldSetSize == 0) {
+            if (oldSetSize == 0 && spamDomainSet.size() > 0) {
                 logger.info("Synchronized {} spam domains", spamDomainSet.size());
             }
         }

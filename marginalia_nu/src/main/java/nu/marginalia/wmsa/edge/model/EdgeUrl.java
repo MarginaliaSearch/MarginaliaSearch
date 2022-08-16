@@ -98,10 +98,25 @@ public class EdgeUrl implements WideHashable {
     }
 
     public String toString() {
-        String portPart = port == null ? "" : (":" + port);
-        String queryPart = param == null ? "" : ("?" + param);
+        StringBuilder sb = new StringBuilder(256);
 
-        return proto + "://" + domain + portPart + path + queryPart;
+        sb.append(proto);
+        sb.append("://");
+        sb.append(domain);
+
+        if (port != null) {
+            sb.append(':');
+            sb.append(port);
+        }
+
+        sb.append(path);
+
+        if (param != null) {
+            sb.append('?');
+            sb.append(param);
+        }
+
+        return sb.toString();
     }
 
     public String dir() {

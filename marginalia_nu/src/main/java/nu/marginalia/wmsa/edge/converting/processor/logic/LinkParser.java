@@ -114,6 +114,7 @@ public class LinkParser {
     }
 
     private static final Pattern spaceRegex = Pattern.compile(" ");
+    private static final Pattern paramSeparatorPattern = Pattern.compile("\\?");
 
     @SneakyThrows
     private String resolveUrl(EdgeUrl baseUrl, String s) {
@@ -123,7 +124,7 @@ public class LinkParser {
             return s;
         }
 
-        String[] parts = s.split("\\?", 2);
+        String[] parts = paramSeparatorPattern.split(s, 2);
         String path = parts[0];
         String param;
         if (parts.length > 1) {

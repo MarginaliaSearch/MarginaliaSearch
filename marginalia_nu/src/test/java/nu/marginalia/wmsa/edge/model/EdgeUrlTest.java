@@ -10,7 +10,11 @@ class EdgeUrlTest {
     public void testHashCode() throws URISyntaxException {
         System.out.println(new EdgeUrl("https://memex.marginalia.nu").hashCode());
     }
-
+    @Test
+    public void testParam() throws URISyntaxException {
+        System.out.println(new EdgeUrl("https://memex.marginalia.nu/index.php?id=1").toString());
+        System.out.println(new EdgeUrl("https://memex.marginalia.nu/showthread.php?id=1&count=5&tracking=123").toString());
+    }
     @Test
     void urlencodeFixer() throws URISyntaxException {
         System.out.println(EdgeUrl.urlencodeFixer("https://www.example.com/%-sign"));

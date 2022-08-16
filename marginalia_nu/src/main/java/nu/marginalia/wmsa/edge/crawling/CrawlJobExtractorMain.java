@@ -45,7 +45,13 @@ public class CrawlJobExtractorMain {
                     INDEXED DESC,
                     EC_DOMAIN.ID
             """;
-
+    private static final String queuedDomainsSql =
+            """
+               SELECT IFNULL(ID, -1), LOWER(CRAWL_QUEUE.DOMAIN_NAME)
+               FROM CRAWL_QUEUE
+               LEFT JOIN EC_DOMAIN
+               ON CRAWL_QUEUE.DOMAIN_NAME=EC_DOMAIN.DOMAIN_NAME
+            """;
     private static final String urlsSql =
             """
                 SELECT URL
@@ -66,8 +72,8 @@ public class CrawlJobExtractorMain {
                 AND VISITED
                 ;
             """;
-    private static final int MIN_VISIT_COUNT = 100;
-    private static final int MAX_VISIT_COUNT = 5000;
+    private static final int MIN_VISIT_COUNT = 1000;
+    private static final int MAX_VISIT_COUNT = 100000;
 
     private final EdgeDomainBlacklistImpl blacklist;
 
@@ -109,14 +115,25 @@ public class CrawlJobExtractorMain {
         }
     }
 
-    private record DomainWithId(String domainName, int id) {}
+    private record DomainWithId(String domainName, int id) {
+    }
 
     private Stream<CrawlingSpecification> extractDomains() {
-        List<DomainWithId> ids = new ArrayList<>(100_000);
+        Set<DomainWithId> ids = new HashSet<>(1_000_000);
 
-        try (var stmt = conn.prepareStatement(domainsSql)) {
-            stmt.setFetchSize(10_000);
-            var rsp = stmt.executeQuery();
+        try (var stmtDomains = conn.prepareStatement(domainsSql);
+             var stmtQueue = conn.prepareStatement(queuedDomainsSql);
+        ) {
+            ResultSet rsp;
+
+            stmtDomains.setFetchSize(10_000);
+            rsp = stmtDomains.executeQuery();
+            while (rsp.next()) {
+                ids.add(new DomainWithId(rsp.getString(2), rsp.getInt(1)));
+            }
+
+            stmtQueue.setFetchSize(10_000);
+            rsp = stmtQueue.executeQuery();
             while (rsp.next()) {
                 ids.add(new DomainWithId(rsp.getString(2), rsp.getInt(1)));
             }
@@ -125,7 +142,6 @@ public class CrawlJobExtractorMain {
             ex.printStackTrace();
         }
 
-        Collections.shuffle(ids);
         return ids.stream()
                 .filter(id -> !blacklist.isBlacklisted(id.id))
                 .map(this::createCrawlJobForDomain);
@@ -140,8 +156,7 @@ public class CrawlJobExtractorMain {
 
         try (var stmt = conn.prepareStatement(urlsSql)) {
             stmt.setFetchSize(1000);
-            stmt.setString(1, domainWithId.domainName);
-            stmt.setInt(2, domainWithId.id);
+            stmt.setInt(1, domainWithId.id);
             var rsp = stmt.executeQuery();
 
             while (rsp.next()) {
@@ -221,7 +236,7 @@ public class CrawlJobExtractorMain {
     }
 
     private int calculateCrawlDepthFromVisitedCount(int count) {
-        count = count + 100 + count / 4;
+        count = count + 1000 + count / 4;
 
         if (count < MIN_VISIT_COUNT) {
             count = MIN_VISIT_COUNT;
