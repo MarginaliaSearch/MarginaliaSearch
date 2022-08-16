@@ -168,10 +168,11 @@ public class CrawlerRetreiver {
                 var d = doc.get();
                 crawledDomainWriter.accept(d);
 
-                try {
-                    visited.add(new EdgeUrl(d.url));
+                if (d.url != null) {
+                    try {
+                        visited.add(new EdgeUrl(d.url));
+                    } catch (URISyntaxException ex) {}
                 }
-                catch (URISyntaxException ex) {}
 
             }
 
