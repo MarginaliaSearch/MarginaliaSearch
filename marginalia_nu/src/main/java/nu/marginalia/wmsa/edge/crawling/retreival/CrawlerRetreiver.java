@@ -151,6 +151,8 @@ public class CrawlerRetreiver {
 
             if (urlBlocklist.isUrlBlocked(top))
                 continue;
+            if (!isAllowedProtocol(top.proto))
+                continue;
             if (top.toString().length() > 255)
                 continue;
 
@@ -187,6 +189,11 @@ public class CrawlerRetreiver {
         crawledDomainWriter.accept(ret);
 
         return fetchedCount;
+    }
+
+    private boolean isAllowedProtocol(String proto) {
+        return proto.equalsIgnoreCase("http")
+                || proto.equalsIgnoreCase("https");
     }
 
     private Optional<CrawledDocument> fetchUrl(EdgeUrl top) {
