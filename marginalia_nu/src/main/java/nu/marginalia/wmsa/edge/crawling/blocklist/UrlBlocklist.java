@@ -19,6 +19,7 @@ public class UrlBlocklist {
     public UrlBlocklist() {
         // Don't deep-crawl git repos
         patterns.add(Pattern.compile("\\.git/.+").asPredicate());
+        patterns.add(Pattern.compile("wp-content/upload").asPredicate());
 
         // long base64-strings in URLs are typically git hashes or the like, rarely worth crawling
         patterns.add(Pattern.compile(".*/[^/]*[a-f0-9]{32,}(/|$)").asPredicate());
