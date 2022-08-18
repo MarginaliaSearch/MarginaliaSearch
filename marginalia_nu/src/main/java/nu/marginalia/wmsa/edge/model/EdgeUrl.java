@@ -8,6 +8,7 @@ import nu.marginalia.wmsa.edge.converting.processor.logic.QueryParams;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 @Getter @Setter @Builder @EqualsAndHashCode
@@ -28,6 +29,14 @@ public class EdgeUrl implements WideHashable {
 
     public EdgeUrl(String url) throws URISyntaxException {
         this(new URI(urlencodeFixer(url)));
+    }
+
+    public static Optional<EdgeUrl> parse(String url) {
+        try {
+            return Optional.of(new EdgeUrl(url));
+        } catch (URISyntaxException e) {
+            return Optional.empty();
+        }
     }
 
     private static Pattern badCharPattern = Pattern.compile("[ \t\n\"<>\\[\\]()',|]");

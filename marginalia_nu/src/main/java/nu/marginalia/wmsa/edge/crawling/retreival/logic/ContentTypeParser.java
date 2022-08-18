@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.edge.crawling.retreival;
+package nu.marginalia.wmsa.edge.crawling.retreival.logic;
 
 import crawlercommons.mimetypes.MimeTypeDetector;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeContentType;

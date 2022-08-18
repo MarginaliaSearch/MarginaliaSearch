@@ -3,6 +3,7 @@ package nu.marginalia.wmsa.edge.crawling;
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.edge.crawling.retreival.HttpFetcher;
 import nu.marginalia.wmsa.edge.crawling.retreival.HttpRedirectResolver;
+import nu.marginalia.wmsa.edge.crawling.retreival.logic.ContentTypeLogic;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -14,15 +15,15 @@ class HttpFetcherTest {
     @SneakyThrows
     @Test
     void testUrlPattern() {
-        var fetcher = new HttpFetcher("nu.marginalia.edge-crawler");
+        ContentTypeLogic contentTypeLogic = new ContentTypeLogic();
 
-        Assertions.assertFalse(fetcher.isUrlLikeBinary(new EdgeUrl("https://marginalia.nu/log.txt")));
-        Assertions.assertTrue(fetcher.isUrlLikeBinary(new EdgeUrl("https://marginalia.nu/log.bin")));
-        Assertions.assertTrue(fetcher.isUrlLikeBinary(new EdgeUrl("https://marginalia.nu/log.tar.gz")));
-        Assertions.assertFalse(fetcher.isUrlLikeBinary(new EdgeUrl("https://marginalia.nu/log.htm")));
-        Assertions.assertFalse(fetcher.isUrlLikeBinary(new EdgeUrl("https://marginalia.nu/log.html")));
-        Assertions.assertFalse(fetcher.isUrlLikeBinary(new EdgeUrl("https://marginalia.nu/log")));
-        Assertions.assertFalse(fetcher.isUrlLikeBinary(new EdgeUrl("https://marginalia.nu/log.php?id=1")));
+        Assertions.assertFalse(contentTypeLogic.isUrlLikeBinary(new EdgeUrl("https://marginalia.nu/log.txt")));
+        Assertions.assertTrue(contentTypeLogic.isUrlLikeBinary(new EdgeUrl("https://marginalia.nu/log.bin")));
+        Assertions.assertTrue(contentTypeLogic.isUrlLikeBinary(new EdgeUrl("https://marginalia.nu/log.tar.gz")));
+        Assertions.assertFalse(contentTypeLogic.isUrlLikeBinary(new EdgeUrl("https://marginalia.nu/log.htm")));
+        Assertions.assertFalse(contentTypeLogic.isUrlLikeBinary(new EdgeUrl("https://marginalia.nu/log.html")));
+        Assertions.assertFalse(contentTypeLogic.isUrlLikeBinary(new EdgeUrl("https://marginalia.nu/log")));
+        Assertions.assertFalse(contentTypeLogic.isUrlLikeBinary(new EdgeUrl("https://marginalia.nu/log.php?id=1")));
     }
 
     @Test

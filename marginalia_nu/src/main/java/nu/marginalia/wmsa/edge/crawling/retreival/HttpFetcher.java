@@ -9,6 +9,8 @@ import lombok.SneakyThrows;
 import lombok.ToString;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDocument;
 import nu.marginalia.wmsa.edge.crawling.model.CrawlerDocumentStatus;
+import nu.marginalia.wmsa.edge.crawling.retreival.logic.ContentTypeLogic;
+import nu.marginalia.wmsa.edge.crawling.retreival.logic.ContentTypeParser;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import okhttp3.Dispatcher;
@@ -29,8 +31,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
 public class HttpFetcher {
@@ -42,11 +42,11 @@ public class HttpFetcher {
 
     private static final SimpleRobotRulesParser robotsParser = new SimpleRobotRulesParser();
 
-    public void setAllowAllContentTypes(boolean allowAllContentTypes) {
-        this.allowAllContentTypes = allowAllContentTypes;
-    }
+    private final ContentTypeLogic contentTypeLogic = new ContentTypeLogic();
 
-    private boolean allowAllContentTypes = false;
+    public void setAllowAllContentTypes(boolean allowAllContentTypes) {
+        contentTypeLogic.setAllowAllContentTypes(allowAllContentTypes);
+    }
 
     private final OkHttpClient client;
 
@@ -142,8 +142,8 @@ public class HttpFetcher {
 
     @SneakyThrows
     public CrawledDocument fetchContent(EdgeUrl url) {
-        if (isUrlLikeBinary(url)) {
 
+        if (contentTypeLogic.isUrlLikeBinary(url)) {
             logger.debug("Probing suspected binary {}", url);
 
             var head = createHeadRequest(url);
@@ -151,7 +151,7 @@ public class HttpFetcher {
 
             try (var rsp = call.execute()) {
                 var contentTypeHeader = rsp.header("Content-type");
-                if (contentTypeHeader != null && !isAllowableContentType(contentTypeHeader)) {
+                if (contentTypeHeader != null && !contentTypeLogic.isAllowableContentType(contentTypeHeader)) {
                     return createErrorResponse(url, rsp, CrawlerDocumentStatus.BAD_CONTENT_TYPE, "Early probe failed");
                 }
             }
@@ -162,9 +162,6 @@ public class HttpFetcher {
 
         var get = createGetRequest(url);
         var call = client.newCall(get);
-
-
-
 
         try (var rsp = call.execute()) {
             return extractBody(url, rsp);
@@ -217,14 +214,14 @@ public class HttpFetcher {
         byteStream = new BOMInputStream(byteStream);
 
         var contentTypeHeader = rsp.header("Content-type");
-        if (contentTypeHeader != null && !isAllowableContentType(contentTypeHeader)) {
+        if (contentTypeHeader != null && !contentTypeLogic.isAllowableContentType(contentTypeHeader)) {
             return createErrorResponse(url, rsp, CrawlerDocumentStatus.BAD_CONTENT_TYPE, "");
         }
 
         byte[] data = byteStream.readNBytes(maxFetchSize);
 
         var contentType = ContentTypeParser.parse(contentTypeHeader, data);
-        if (!isAllowableContentType(contentType.contentType)) {
+        if (!contentTypeLogic.isAllowableContentType(contentType.contentType)) {
             return createErrorResponse(url, rsp, CrawlerDocumentStatus.BAD_CONTENT_TYPE, "");
         }
 
@@ -262,25 +259,6 @@ public class HttpFetcher {
     }
 
 
-    private final Predicate<String> probableHtmlPattern = Pattern.compile("^.*\\.(htm|html|php|txt)(\\?.*)?$").asPredicate();
-    private final Predicate<String> probableBinaryPattern = Pattern.compile("^.*\\.[a-z]+$").asPredicate();
-
-    public boolean isUrlLikeBinary(EdgeUrl url) {
-        String urlString = url.toString().toLowerCase();
-
-        return (!probableHtmlPattern.test(urlString) && probableBinaryPattern.test(urlString));
-    }
-
-    private boolean isAllowableContentType(String contentType) {
-        return allowAllContentTypes || contentType.startsWith("text")
-                || contentType.startsWith("application/xhtml")
-                || contentType.startsWith("application/xml")
-                || contentType.startsWith("application/atom+xml")
-                || contentType.startsWith("application/rss+xml")
-                || contentType.startsWith("application/x-rss+xml")
-                || contentType.startsWith("application/rdf+xml")
-                || contentType.startsWith("x-rss+xml");
-    }
 
     public SimpleRobotRules fetchRobotRules(EdgeDomain domain) {
         return fetchRobotsForProto("https", domain)
