@@ -20,7 +20,7 @@ import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.time.LocalDateTime;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Optional;
@@ -129,7 +129,7 @@ public class CrawlerRetreiver {
         var robotsRules = fetcher.fetchRobotRules(queue.peek().domain);
         long crawlDelay = robotsRules.getCrawlDelay();
 
-        CrawledDomain ret = new CrawledDomain(id, domain, null, CrawlerDomainStatus.OK.name(), null, ip, Collections.emptyList(), null);
+        CrawledDomain ret = new CrawledDomain(id, domain, null, CrawlerDomainStatus.OK.name(), null, ip, new ArrayList<>(), null);
 
         int fetchedCount = 0;
 
@@ -137,7 +137,7 @@ public class CrawlerRetreiver {
             var top = queue.removeFirst();
 
             if (!robotsRules.isAllowed(top.toString())) {
-                ret.doc.add(createRobotsError(top));
+                crawledDomainWriter.accept(createRobotsError(top));
                 continue;
             }
 
