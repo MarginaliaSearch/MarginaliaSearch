@@ -20,7 +20,10 @@ import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Optional;
 
 public class CrawlerRetreiver {
     private static final long DEFAULT_CRAWL_DELAY_MS = Long.getLong("defaultCrawlDelay", 1000);
@@ -49,7 +52,7 @@ public class CrawlerRetreiver {
         }
     }
 
-    public CrawlerRetreiver(HttpFetcher fetcher, CrawlingSpecification specs, CrawledDomainWriter crawledDomainWriter) {
+    public CrawlerRetreiver(HttpFetcher fetcher, CrawlingSpecification specs, CrawledDomainWriter writer) {
         this.fetcher = fetcher;
         visited = new HashSet<>((int)(specs.urls.size() * 1.5));
         known = new HashSet<>(specs.urls.size() * 10);
@@ -57,29 +60,20 @@ public class CrawlerRetreiver {
         depth = specs.crawlDepth;
         id = specs.id;
         domain = specs.domain;
-        this.crawledDomainWriter = crawledDomainWriter;
 
-        specs.urls.stream()
-                .map(this::parseUrl)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .filter(known::add)
-                .forEach(queue::addLast);
+        crawledDomainWriter = writer;
+
+        for (String urlStr : specs.urls) {
+            EdgeUrl.parse(urlStr)
+                    .filter(known::add)
+                    .ifPresent(queue::addLast);
+        }
 
         if (queue.peek() != null) {
             var fst = queue.peek();
             var root = fst.domain.toRootUrl();
             if (known.add(root))
                 queue.addFirst(root);
-        }
-    }
-
-    private Optional<EdgeUrl> parseUrl(String str) {
-        try {
-            return Optional.of(new EdgeUrl(str));
-        }
-        catch (Exception ex) {
-            return Optional.empty();
         }
     }
 
@@ -135,13 +129,11 @@ public class CrawlerRetreiver {
         var robotsRules = fetcher.fetchRobotRules(queue.peek().domain);
         long crawlDelay = robotsRules.getCrawlDelay();
 
-        List<CrawledDocument> docs = new ArrayList<>(depth);
-        CrawledDomain ret = new CrawledDomain(id, domain, null, CrawlerDomainStatus.OK.name(), null, ip, docs, null);
+        CrawledDomain ret = new CrawledDomain(id, domain, null, CrawlerDomainStatus.OK.name(), null, ip, Collections.emptyList(), null);
 
-        int visitedCount = 0;
         int fetchedCount = 0;
 
-        while (!queue.isEmpty() && visitedCount < depth) {
+        while (!queue.isEmpty() && visited.size() < depth) {
             var top = queue.removeFirst();
 
             if (!robotsRules.isAllowed(top.toString())) {
@@ -155,33 +147,12 @@ public class CrawlerRetreiver {
                 continue;
             if (top.toString().length() > 255)
                 continue;
-
-            if (!visited.add(top)) {
+            if (!visited.add(top))
                 continue;
-            }
 
-            logger.debug("Fetching {}", top);
-            long startTime = System.currentTimeMillis();
-
-            var doc = fetchUrl(top);
-            if (doc.isPresent()) {
+            if (fetchDocument(top, crawlDelay)) {
                 fetchedCount++;
-
-                var d = doc.get();
-                crawledDomainWriter.accept(d);
-
-                if (d.url != null) {
-                    try {
-                        visited.add(new EdgeUrl(d.url));
-                    } catch (URISyntaxException ex) {}
-                }
-
             }
-
-            long crawledTime = System.currentTimeMillis() - startTime;
-            delay(crawlDelay, crawledTime);
-
-            visitedCount ++;
         }
 
         ret.cookies = fetcher.getCookies();
@@ -189,6 +160,29 @@ public class CrawlerRetreiver {
         crawledDomainWriter.accept(ret);
 
         return fetchedCount;
+    }
+
+    private boolean fetchDocument(EdgeUrl top, long crawlDelay) throws IOException {
+        logger.debug("Fetching {}", top);
+        long startTime = System.currentTimeMillis();
+
+        var doc = fetchUrl(top);
+        if (doc.isPresent()) {
+            var d = doc.get();
+            crawledDomainWriter.accept(d);
+
+            if (d.url != null) {
+                try {
+                    visited.add(new EdgeUrl(d.url));
+                } catch (URISyntaxException ex) {}
+            }
+
+        }
+
+        long crawledTime = System.currentTimeMillis() - startTime;
+        delay(crawlDelay, crawledTime);
+
+        return doc.isPresent();
     }
 
     private boolean isAllowedProtocol(String proto) {
@@ -285,18 +279,18 @@ public class CrawlerRetreiver {
     }
 
     @SneakyThrows
-    private void delay(long crawlDelay, long timeParsed) {
-        if (crawlDelay >= 1) {
-            if (timeParsed > crawlDelay)
+    private void delay(long sleepTime, long spentTime) {
+        if (sleepTime >= 1) {
+            if (spentTime > sleepTime)
                 return;
 
-            Thread.sleep(Math.min(crawlDelay-timeParsed, 5000));
+            Thread.sleep(Math.min(sleepTime-spentTime, 5000));
         }
         else {
-            if (timeParsed > DEFAULT_CRAWL_DELAY_MS)
+            if (spentTime > DEFAULT_CRAWL_DELAY_MS)
                 return;
 
-            Thread.sleep(DEFAULT_CRAWL_DELAY_MS - timeParsed);
+            Thread.sleep(DEFAULT_CRAWL_DELAY_MS - spentTime);
         }
     }
 
