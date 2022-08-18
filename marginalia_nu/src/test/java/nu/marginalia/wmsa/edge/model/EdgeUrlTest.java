@@ -10,6 +10,12 @@ class EdgeUrlTest {
     public void testHashCode() throws URISyntaxException {
         System.out.println(new EdgeUrl("https://memex.marginalia.nu").hashCode());
     }
+
+    @Test
+    public void testFragment() throws URISyntaxException {
+        var url = new EdgeUrl("https://memex.marginalia.nu/#here");
+        System.out.println(url.path);
+    }
     @Test
     public void testParam() throws URISyntaxException {
         System.out.println(new EdgeUrl("https://memex.marginalia.nu/index.php?id=1").toString());
