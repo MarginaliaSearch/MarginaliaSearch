@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 
 import java.net.URISyntaxException;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 class EdgeUrlTest {
 
     @Test
@@ -13,8 +15,10 @@ class EdgeUrlTest {
 
     @Test
     public void testFragment() throws URISyntaxException {
-        var url = new EdgeUrl("https://memex.marginalia.nu/#here");
-        System.out.println(url.path);
+        assertEquals(
+                new EdgeUrl("https://memex.marginalia.nu/"),
+                new EdgeUrl("https://memex.marginalia.nu/#here")
+        );
     }
     @Test
     public void testParam() throws URISyntaxException {
