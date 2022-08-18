@@ -4,11 +4,21 @@ import org.junit.jupiter.api.Test;
 
 import java.net.URISyntaxException;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 class EdgeUrlTest {
 
     @Test
     public void testHashCode() throws URISyntaxException {
         System.out.println(new EdgeUrl("https://memex.marginalia.nu").hashCode());
+    }
+
+    @Test
+    public void testFragment() throws URISyntaxException {
+        assertEquals(
+                new EdgeUrl("https://memex.marginalia.nu/"),
+                new EdgeUrl("https://memex.marginalia.nu/#here")
+        );
     }
     @Test
     public void testParam() throws URISyntaxException {

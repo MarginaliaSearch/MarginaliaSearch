@@ -34,7 +34,7 @@ public class EdgeUrl implements WideHashable {
 
     public static String urlencodeFixer(String url) throws URISyntaxException {
         var s = new StringBuilder();
-        String goodChars = "&.?:/-;+$";
+        String goodChars = "&.?:/-;+$#";
         String hexChars = "0123456789abcdefABCDEF";
 
         int pathIdx = findPathIdx(url);
