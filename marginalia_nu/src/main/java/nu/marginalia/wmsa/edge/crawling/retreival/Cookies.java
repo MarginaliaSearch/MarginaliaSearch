@@ -9,21 +9,22 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Cookies {
-    final ThreadLocal<ConcurrentHashMap<HttpUrl, List<Cookie>>> cookieJar = ThreadLocal.withInitial(ConcurrentHashMap::new);
+    final ThreadLocal<ConcurrentHashMap<String, List<Cookie>>> cookieJar = ThreadLocal.withInitial(ConcurrentHashMap::new);
 
     public CookieJar getJar() {
         return new CookieJar() {
 
             @Override
             public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
+
                 if (!cookies.isEmpty()) {
-                    cookieJar.get().put(url, cookies);
+                    cookieJar.get().put(url.host(), cookies);
                 }
             }
 
             @Override
             public List<Cookie> loadForRequest(HttpUrl url) {
-                return cookieJar.get().getOrDefault(url, Collections.emptyList());
+                return cookieJar.get().getOrDefault(url.host(), Collections.emptyList());
             }
         };
     }
