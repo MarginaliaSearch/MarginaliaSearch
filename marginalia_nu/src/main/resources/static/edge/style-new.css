@@ -90,6 +90,7 @@ article > section > p { display: none; }
 .card .info {
   flex-grow: 1;
   padding-left: 1ch;
+  padding-right: 1ch;
   line-height: 1.6;
 }
 .card {
