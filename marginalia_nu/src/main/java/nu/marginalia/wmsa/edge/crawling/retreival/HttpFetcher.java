@@ -141,7 +141,7 @@ public class HttpFetcher {
     }
 
     @SneakyThrows
-    public CrawledDocument fetchContent(EdgeUrl url) {
+    public CrawledDocument fetchContent(EdgeUrl url) throws RateLimitException {
 
         if (contentTypeLogic.isUrlLikeBinary(url)) {
             logger.debug("Probing suspected binary {}", url);
@@ -192,11 +192,15 @@ public class HttpFetcher {
                 .build();
     }
 
-    private CrawledDocument extractBody(EdgeUrl url, Response rsp) throws IOException, URISyntaxException {
+    private CrawledDocument extractBody(EdgeUrl url, Response rsp) throws IOException, URISyntaxException, RateLimitException {
 
         var responseUrl = new EdgeUrl(rsp.request().url().toString());
         if (!Objects.equals(responseUrl.domain, url.domain)) {
             return createRedirectResponse(url, rsp, responseUrl);
+        }
+
+        if (rsp.code() == 429) {
+            throw new RateLimitException(rsp.header("Retry-After", "1000"));
         }
 
         var body = rsp.body();

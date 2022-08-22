@@ -30,7 +30,7 @@ public class CrawlerMain implements AutoCloseable {
 
     private final UserAgent userAgent;
     private final ThreadPoolExecutor pool;
-    final int poolSize = 256;
+    final int poolSize = 512;
     final int poolQueueSize = 32;
 
     public CrawlerMain(EdgeCrawlPlan plan) throws Exception {
@@ -91,7 +91,6 @@ public class CrawlerMain implements AutoCloseable {
         logger.info("Let's go");
 
         AbortMonitor abortMonitor = AbortMonitor.getInstance();
-
 
         Semaphore taskSem = new Semaphore(poolSize);
 
