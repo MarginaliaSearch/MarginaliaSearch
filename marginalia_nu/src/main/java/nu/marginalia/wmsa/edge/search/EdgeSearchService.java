@@ -15,10 +15,12 @@ import nu.marginalia.wmsa.configuration.server.MetricsServer;
 import nu.marginalia.wmsa.configuration.server.Service;
 import nu.marginalia.wmsa.edge.index.client.EdgeIndexClient;
 import nu.marginalia.wmsa.edge.search.command.CommandEvaluator;
+import nu.marginalia.wmsa.edge.search.command.IndexCommand;
 import nu.marginalia.wmsa.edge.search.command.SearchJsParameter;
 import nu.marginalia.wmsa.edge.search.command.SearchParameters;
 import nu.marginalia.wmsa.edge.search.exceptions.RedirectException;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeUserSearchParameters;
+import nu.marginalia.wmsa.resource_store.StaticResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -36,6 +38,8 @@ public class EdgeSearchService extends Service {
     private final EdgeSearchOperator searchOperator;
     private final CommandEvaluator searchCommandEvaulator;
     private final WebsiteUrl websiteUrl;
+    private StaticResources staticResources;
+
     private static final Logger logger = LoggerFactory.getLogger(EdgeSearchService.class);
 
     @SneakyThrows
@@ -47,13 +51,16 @@ public class EdgeSearchService extends Service {
                              MetricsServer metricsServer,
                              EdgeSearchOperator searchOperator,
                              CommandEvaluator searchCommandEvaulator,
-                             WebsiteUrl websiteUrl) {
+                             WebsiteUrl websiteUrl,
+                             StaticResources staticResources,
+                             IndexCommand indexCommand) {
         super(ip, port, initialization, metricsServer);
         this.indexClient = indexClient;
 
         this.searchOperator = searchOperator;
         this.searchCommandEvaulator = searchCommandEvaulator;
         this.websiteUrl = websiteUrl;
+        this.staticResources = staticResources;
 
         Spark.staticFiles.expireTime(600);
 
@@ -63,8 +70,12 @@ public class EdgeSearchService extends Service {
 
         Spark.get("/api/search", this::apiSearch, gson::toJson);
         Spark.get("/public/search", this::pathSearch);
-        Spark.get("/site-search/:site/*", this::siteSearchRedir);
         Spark.get("/public/site-search/:site/*", this::siteSearchRedir);
+        Spark.get("/public/", indexCommand::render);
+        Spark.get("/public/:resource", this::serveStatic);
+
+        Spark.get("/site-search/:site/*", this::siteSearchRedir);
+
 
         Spark.exception(Exception.class, (e,p,q) -> {
             logger.error("Error during processing", e);
@@ -72,6 +83,12 @@ public class EdgeSearchService extends Service {
         });
 
         Spark.awaitInitialization();
+    }
+
+    private Object serveStatic(Request request, Response response) {
+        String resource = request.params("resource");
+        staticResources.serveStatic("edge", resource, request, response);
+        return "";
     }
 
     private Object siteSearchRedir(Request request, Response response) {
