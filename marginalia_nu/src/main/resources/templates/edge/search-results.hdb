@@ -18,7 +18,9 @@
 
 <article>
 {{>edge/parts/search-form}}
-<hr class="w3m-helper" />
+
+{{#each domainResults}}{{>edge/browse-result-rb}}{{/each}}
+
 <section class="cards">
     {{#if maintenanceMessage}}<section class="card problems onlyscreen"><h2>Maintenance</h2><p class="description">{{maintenanceMessage}}</p></section>{{/if}}
     {{#if evalResult}}<section class="card semantic onlyscreen"><h2>Evaluation</h2><p class="description">{{query}} = {{evalResult}}</p><hr class="w3m-helper" /></section>{{/if}}
@@ -37,7 +39,6 @@
     </section>
     {{/if}}
 
-    {{#each domainResults}}{{>edge/browse-result}}{{/each}}
     {{#each results}}{{>edge/search-result}}{{/each}}
 
     {{#unless evalResult}}{{#if problems}}<section class="card problems onlyscreen"><h2>Suggestions</h2><ul class="onlyscreen search-problems">{{#each problems}}<li>{{{.}}}</li>{{/each}}</ul></section> {{/if}}{{/unless}}

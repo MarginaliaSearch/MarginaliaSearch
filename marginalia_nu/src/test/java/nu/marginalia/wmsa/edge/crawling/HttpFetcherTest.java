@@ -3,6 +3,7 @@ package nu.marginalia.wmsa.edge.crawling;
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.edge.crawling.retreival.HttpFetcher;
 import nu.marginalia.wmsa.edge.crawling.retreival.HttpRedirectResolver;
+import nu.marginalia.wmsa.edge.crawling.retreival.RateLimitException;
 import nu.marginalia.wmsa.edge.crawling.retreival.logic.ContentTypeLogic;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import org.junit.jupiter.api.Assertions;
@@ -27,14 +28,14 @@ class HttpFetcherTest {
     }
 
     @Test
-    void fetchUTF8() throws URISyntaxException {
+    void fetchUTF8() throws URISyntaxException, RateLimitException {
         var fetcher = new HttpFetcher("nu.marginalia.edge-crawler");
         var str = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu"));
         System.out.println(str.contentType);
     }
 
     @Test
-    void fetchText() throws URISyntaxException {
+    void fetchText() throws URISyntaxException, RateLimitException {
         var fetcher = new HttpFetcher("nu.marginalia.edge-crawler");
         var str = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu/robots.txt"));
         System.out.println(str);

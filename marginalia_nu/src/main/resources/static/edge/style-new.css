@@ -7,6 +7,12 @@ body {
   background-color: #f8f8ee;
 }
 
+.rightbox {
+  float: right;
+  display: block;
+  max-width: 40ch;
+  clear: both;
+}
 
 .sticker {
   ruby-position: under;
@@ -69,6 +75,9 @@ ul.semantic-results a {
 }
 
 article > section > p { display: none; }
+
+.cards.big .card { flex-grow: 1 }
+.cards.big { padding-right: 1ch; }
 
 .w3m-helper {
     display: none;
@@ -296,6 +305,7 @@ select {
 }
 
 footer {
+  clear: both;
   padding: 2ch;
   margin: 16ch 0px 0px 0px;
   background-color: #acae89;
@@ -337,7 +347,7 @@ a.underline {
 }
 
 @media only screen and (max-device-width: 1024px)  {
-
+  .rightbox { width: 30ch !important; }
   .card {
     margin-right: 2ch;
   }
@@ -355,6 +365,7 @@ a.underline {
 }
 
 @media only screen and (max-device-width: 800px) {
+  .rightbox { display: none; }
   .search-box {
     flex-direction: column;
   }

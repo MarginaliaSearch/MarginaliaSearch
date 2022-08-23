@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import spark.Spark;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -41,7 +40,7 @@ class ResourceStoreServiceTest {
         tempDir = Files.createTempDirectory("ResourceStoreServiceTest");
         resourceStore  = new ResourceEntityStore(tempDir);
         service = new ResourceStoreService("127.0.0.1", testPort, null,
-                resourceStore, new Initialization(), null);
+                resourceStore, new Initialization(), null, new StaticResources());
 
         Spark.awaitInitialization();
     }
