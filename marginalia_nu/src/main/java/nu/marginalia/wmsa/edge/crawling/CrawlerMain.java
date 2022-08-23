@@ -8,6 +8,7 @@ import nu.marginalia.wmsa.edge.crawling.model.CrawlingSpecification;
 import nu.marginalia.wmsa.edge.crawling.retreival.CrawlerRetreiver;
 import nu.marginalia.wmsa.edge.crawling.retreival.HttpFetcher;
 import nu.marginalia.wmsa.edge.model.EdgeCrawlPlan;
+import okhttp3.ConnectionPool;
 import okhttp3.Dispatcher;
 import okhttp3.internal.Util;
 import org.slf4j.Logger;
@@ -24,6 +25,8 @@ public class CrawlerMain implements AutoCloseable {
     private final Path crawlDataDir;
 
     private final WorkLog workLog;
+
+    private final ConnectionPool connectionPool = new ConnectionPool(5, 10, TimeUnit.SECONDS);
 
     private final Dispatcher dispatcher = new Dispatcher(new ThreadPoolExecutor(0, Integer.MAX_VALUE, 5, TimeUnit.SECONDS,
             new SynchronousQueue<>(), Util.threadFactory("OkHttp Dispatcher", true)));
@@ -67,9 +70,10 @@ public class CrawlerMain implements AutoCloseable {
         if (workLog.isJobFinished(specification.id))
             return;
 
-        var fetcher = new HttpFetcher(userAgent.uaString(), dispatcher);
 
-        try (var writer = new CrawledDomainWriter(crawlDataDir, specification.domain, specification.id)) {
+        HttpFetcher fetcher = new HttpFetcher(userAgent.uaString(), dispatcher, connectionPool);
+        try (CrawledDomainWriter writer = new CrawledDomainWriter(crawlDataDir, specification.domain, specification.id))
+        {
             var retreiver = new CrawlerRetreiver(fetcher, specification, writer);
 
             int size = retreiver.fetch();
