@@ -5,6 +5,8 @@ import com.google.inject.Singleton;
 import nu.marginalia.wmsa.edge.converting.processor.logic.topic.AdblockSimulator;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDomain;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.util.HashSet;
 import java.util.List;
@@ -41,14 +43,17 @@ public class FeatureExtractor {
     }
 
     public Set<HtmlFeature> getFeatures(CrawledDomain domain, Document doc) {
-        Set<HtmlFeature> features = new HashSet<>();
+        final Set<HtmlFeature> features = new HashSet<>();
 
-        var scriptTags = doc.getElementsByTag("script");
+        final Elements scriptTags = doc.getElementsByTag("script");
 
-        if (scriptTags.size() > 0) {
-            features.add(HtmlFeature.JS);
+        for (var scriptTag : scriptTags) {
+            if (isJavascriptTag(scriptTag)) {
+                features.add(HtmlFeature.JS);
+            }
         }
-        else if(adblockSimulator.hasAds(doc.clone())) { // Only look for ads if there is javascript
+
+        if (features.contains(HtmlFeature.JS) && adblockSimulator.hasAds(doc.clone())) {
             features.add(HtmlFeature.ADVERTISEMENT);
         }
 
@@ -58,20 +63,22 @@ public class FeatureExtractor {
             features.add(HtmlFeature.MEDIA);
         }
 
-        if (scriptTags.stream()
-                .anyMatch(tag -> trackers.stream().anyMatch(tracker -> tag.attr("src").contains(tracker)))) {
-            features.add(HtmlFeature.TRACKING);
+        for (var scriptTag : scriptTags) {
+            if (hasTrackingScript(scriptTag)) {
+                features.add(HtmlFeature.TRACKING);
+                break;
+            }
         }
 
         if (scriptTags.html().contains("google-analytics.com")) {
             features.add(HtmlFeature.TRACKING);
         }
 
-        if (doc.getElementsByTag("a").stream().map(e -> e.attr("href"))
-                .map(String::toLowerCase)
-                .anyMatch(href ->
-                        href.contains("amzn.to/") || (href.contains("amazon.com/") & href.contains("tag=")))) {
-            features.add(HtmlFeature.AFFILIATE_LINK);
+        for (var aTag : doc.getElementsByTag("a")) {
+            if (isAmazonAffiliateLink(aTag)) {
+                features.add(HtmlFeature.AFFILIATE_LINK);
+                break;
+            }
         }
 
         if (!domain.cookies.isEmpty()) {
@@ -79,5 +86,35 @@ public class FeatureExtractor {
         }
 
         return features;
+    }
+
+    private boolean hasTrackingScript(Element scriptTag) {
+        for (var tracker : trackers) {
+            if (scriptTag.attr("src").contains(tracker)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isJavascriptTag(Element scriptTag) {
+        final String type = scriptTag.attr("type");
+
+        if ("application/ld+json".equalsIgnoreCase(type)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    boolean isAmazonAffiliateLink(Element aTag) {
+        final String href = aTag.attr("href").toLowerCase();
+
+        if (href.contains("amzn.to/"))
+            return true;
+        if (href.contains("amazon.com/") && href.contains("tag="))
+            return true;
+
+        return false;
     }
 }

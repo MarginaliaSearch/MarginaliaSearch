@@ -13,10 +13,7 @@ import nu.marginalia.wmsa.edge.crawling.retreival.logic.ContentTypeLogic;
 import nu.marginalia.wmsa.edge.crawling.retreival.logic.ContentTypeParser;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
-import okhttp3.Dispatcher;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import okhttp3.*;
 import org.apache.commons.io.input.BOMInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,15 +63,18 @@ public class HttpFetcher {
         }
     }
 
+    private static final FastTerminatingSocketFactory ftSocketFactory = new FastTerminatingSocketFactory();
     @SneakyThrows
-    private OkHttpClient createClient(Dispatcher dispatcher) {
+    private OkHttpClient createClient(Dispatcher dispatcher, ConnectionPool pool) {
         var builder = new OkHttpClient.Builder();
         if (dispatcher != null) {
             builder.dispatcher(dispatcher);
         }
 
         return builder.sslSocketFactory(NoSecuritySSL.buildSocketFactory(), (X509TrustManager) NoSecuritySSL.trustAllCerts[0])
+            .socketFactory(ftSocketFactory)
             .hostnameVerifier(NoSecuritySSL.buildHostnameVerifyer())
+            .connectionPool(pool)
             .cookieJar(cookies.getJar())
             .followRedirects(true)
             .followSslRedirects(true)
@@ -82,6 +82,7 @@ public class HttpFetcher {
             .readTimeout(10, TimeUnit.SECONDS)
             .writeTimeout(10, TimeUnit.SECONDS)
             .build();
+
     }
 
     public List<String> getCookies() {
@@ -93,13 +94,13 @@ public class HttpFetcher {
     }
 
     @Inject
-    public HttpFetcher(@Named("user-agent") String userAgent, Dispatcher dispatcher) {
-        this.client = createClient(dispatcher);
+    public HttpFetcher(@Named("user-agent") String userAgent, Dispatcher dispatcher, ConnectionPool connectionPool) {
+        this.client = createClient(dispatcher, connectionPool);
         this.userAgent = userAgent;
     }
 
     public HttpFetcher(@Named("user-agent") String userAgent) {
-        this.client = createClient(null);
+        this.client = createClient(null, new ConnectionPool());
         this.userAgent = userAgent;
     }
 
@@ -141,7 +142,7 @@ public class HttpFetcher {
     }
 
     @SneakyThrows
-    public CrawledDocument fetchContent(EdgeUrl url) {
+    public CrawledDocument fetchContent(EdgeUrl url) throws RateLimitException {
 
         if (contentTypeLogic.isUrlLikeBinary(url)) {
             logger.debug("Probing suspected binary {}", url);
@@ -192,11 +193,15 @@ public class HttpFetcher {
                 .build();
     }
 
-    private CrawledDocument extractBody(EdgeUrl url, Response rsp) throws IOException, URISyntaxException {
+    private CrawledDocument extractBody(EdgeUrl url, Response rsp) throws IOException, URISyntaxException, RateLimitException {
 
         var responseUrl = new EdgeUrl(rsp.request().url().toString());
         if (!Objects.equals(responseUrl.domain, url.domain)) {
             return createRedirectResponse(url, rsp, responseUrl);
+        }
+
+        if (rsp.code() == 429) {
+            throw new RateLimitException(rsp.header("Retry-After", "1000"));
         }
 
         var body = rsp.body();
@@ -258,8 +263,6 @@ public class HttpFetcher {
 
     }
 
-
-
     public SimpleRobotRules fetchRobotRules(EdgeDomain domain) {
         return fetchRobotsForProto("https", domain)
                 .or(() -> fetchRobotsForProto("http", domain))
@@ -282,4 +285,5 @@ public class HttpFetcher {
                 doc.contentType,
                 userAgent);
     }
+
 }

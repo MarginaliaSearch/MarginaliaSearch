@@ -22,7 +22,6 @@ import spark.Spark;
 import spark.resource.ClassPathResource;
 import spark.staticfiles.MimeType;
 
-import java.io.FileNotFoundException;
 import java.net.URLEncoder;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -35,6 +34,7 @@ public class ResourceStoreService extends Service {
 
     private final AuthClient authClient;
     private final ResourceEntityStore resourceStore;
+    private StaticResources staticResources;
 
     @Inject
     public ResourceStoreService(@Named("service-host") String ip,
@@ -42,11 +42,13 @@ public class ResourceStoreService extends Service {
                                 AuthClient authClient,
                                 ResourceEntityStore resourceStore,
                                 Initialization initialization,
-                                MetricsServer metricsServer
+                                MetricsServer metricsServer,
+                                StaticResources staticResources
                                 ) {
         super(ip, port, initialization, metricsServer);
         this.authClient = authClient;
         this.resourceStore = resourceStore;
+        this.staticResources = staticResources;
 
         Schedulers.io().schedulePeriodicallyDirect(resourceStore::reapStaleResources,
                 5, 5, TimeUnit.MINUTES);
@@ -109,12 +111,9 @@ public class ResourceStoreService extends Service {
 
             return serveDynamic(data, request, response);
         }
-        else if (serveStatic(domain + "/" + resource, request, response)) {
-            logger.info("getResource({}/{}, static)", domain, resource);
-        }
         else {
-            logger.info("Could not serve  {}/{}", domain, resource);
-            Spark.halt(404, "Not Found");
+            logger.info("getResource({}/{}, static)", domain, resource);
+            staticResources.serveStatic(domain, resource, request, response);
         }
         return "";
     }
@@ -138,19 +137,7 @@ public class ResourceStoreService extends Service {
         return data.data;
     }
 
-    @SneakyThrows
-    private boolean serveStatic(String path, Request req, Response rsp) {
-        try {
-            ClassPathResource resource = new ClassPathResource("static/" + path);
-            handleEtagStatic(resource, req, rsp);
-            resource.getInputStream().transferTo(rsp.raw().getOutputStream());
-        }
-        catch (IllegalArgumentException|FileNotFoundException ex) {
-            return false;
-        }
 
-        return true;
-    }
 
     @SneakyThrows
     private void handleEtag(RenderedResource page, Request req, Response rsp) {
