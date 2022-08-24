@@ -144,9 +144,7 @@ public class EdgeSearchOperator {
             results.addAll(result.getResults());
         }
 
-        var ret = edgeDataStoreDao.getBrowseResultFromUrlIds(new ArrayList<>(results));
-        ret.removeIf(result -> !resultDomains.contains(result.url.domain));
-        return ret;
+        return edgeDataStoreDao.getBrowseResultFromUrlIds(new ArrayList<>(results));
     }
 
     private String getEvalResult(@Nullable Future<String> eval) {
