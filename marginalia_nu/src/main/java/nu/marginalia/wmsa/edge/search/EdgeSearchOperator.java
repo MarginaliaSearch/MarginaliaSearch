@@ -119,18 +119,17 @@ public class EdgeSearchOperator {
 
         Set<EdgeDomain> resultDomains = queryResults.resultSet.stream().map(rs -> rs.url.domain).collect(Collectors.toSet());
 
-        List<Integer> buckets = specs.buckets.stream().limit(specs.stagger ? 2 : 1).toList();
         List<String> keywords = specs.subqueries.stream()
                 .filter(sq -> sq.searchTermsExclude.isEmpty() && sq.searchTermsInclude.size() == 1)
                 .map(sq -> sq.searchTermsInclude.get(0))
                 .distinct()
                 .toList();
 
-        List<EdgeDomainSearchSpecification> requests = new ArrayList<>(keywords.size() * buckets.size());
+        List<EdgeDomainSearchSpecification> requests = new ArrayList<>(keywords.size() * specs.buckets.size());
 
         for (var keyword : keywords) {
-            for (var bucket : buckets) {
-                requests.add(new EdgeDomainSearchSpecification(bucket, IndexBlock.TitleKeywords, keyword,
+            for (var bucket : specs.buckets) {
+                requests.add(new EdgeDomainSearchSpecification(bucket, IndexBlock.Link, keyword,
                         1_000_000, 5, 25));
             }
         }
