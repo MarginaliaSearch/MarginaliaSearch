@@ -33,7 +33,7 @@ public class CrawlerMain implements AutoCloseable {
 
     private final UserAgent userAgent;
     private final ThreadPoolExecutor pool;
-    final int poolSize = 512;
+    final int poolSize = Integer.getInteger("crawler.pool-size", 512);
     final int poolQueueSize = 32;
 
     public CrawlerMain(EdgeCrawlPlan plan) throws Exception {
@@ -72,8 +72,7 @@ public class CrawlerMain implements AutoCloseable {
 
 
         HttpFetcher fetcher = new HttpFetcher(userAgent.uaString(), dispatcher, connectionPool);
-        try (CrawledDomainWriter writer = new CrawledDomainWriter(crawlDataDir, specification.domain, specification.id))
-        {
+        try (CrawledDomainWriter writer = new CrawledDomainWriter(crawlDataDir, specification.domain, specification.id)) {
             var retreiver = new CrawlerRetreiver(fetcher, specification, writer);
 
             int size = retreiver.fetch();

@@ -8,7 +8,6 @@ import lombok.SneakyThrows;
 import nu.marginalia.wmsa.client.exception.NetworkException;
 import nu.marginalia.wmsa.edge.converting.processor.logic.LinkParser;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
-import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -16,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.X509TrustManager;
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 // TODO: Is this used?
@@ -64,10 +64,12 @@ public class HttpRedirectResolver {
                 .addHeader("Accept-Encoding", "gzip")
                 .build();
 
-        return Observable.just(client.newCall(head))
-                .map(Call::execute)
-                .flatMap(data -> resolveRedirects(depth, url, data))
-                .timeout(10, TimeUnit.SECONDS);
+        var call = client.newCall(head);
+        try (var rsp = call.execute()) {
+            return resolveRedirects(depth, url, rsp);
+        } catch (IOException e) {
+            return Observable.error(e);
+        }
     }
 
     @SneakyThrows
