@@ -13,6 +13,7 @@ import nu.marginalia.wmsa.edge.crawling.retreival.logic.ContentTypeLogic;
 import nu.marginalia.wmsa.edge.crawling.retreival.logic.ContentTypeParser;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
+import nu.marginalia.wmsa.edge.model.crawl.EdgeContentType;
 import okhttp3.*;
 import org.apache.commons.io.input.BOMInputStream;
 import org.slf4j.Logger;
@@ -20,9 +21,12 @@ import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.StandardCharsets;
+import java.nio.charset.UnsupportedCharsetException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -122,6 +126,7 @@ public class HttpFetcher {
             return new FetchResult(FetchResultState.OK, requestDomain);
         }
         catch (Exception ex) {
+            logger.debug("Error during fetching {}[{}]", ex.getClass().getSimpleName(), ex.getMessage());
             return new FetchResult(FetchResultState.ERROR, url.domain);
         }
     }
@@ -156,7 +161,11 @@ public class HttpFetcher {
                     return createErrorResponse(url, rsp, CrawlerDocumentStatus.BAD_CONTENT_TYPE, "Early probe failed");
                 }
             }
+            catch (SocketTimeoutException ex) {
+                return createTimeoutErrorRsp(url, ex);
+            }
             catch (Exception ex) {
+                logger.error("Error during fetching {}[{}]", ex.getClass().getSimpleName(), ex.getMessage());
                 return createHardErrorRsp(url, ex);
             }
         }
@@ -167,7 +176,17 @@ public class HttpFetcher {
         try (var rsp = call.execute()) {
             return extractBody(url, rsp);
         }
+        catch (RateLimitException rle) {
+            throw rle;
+        }
+        catch (SocketTimeoutException ex) {
+            return createTimeoutErrorRsp(url, ex);
+        }
+        catch (IllegalCharsetNameException ex) {
+            return createHardErrorRsp(url, ex);
+        }
         catch (Exception ex) {
+            logger.error("Error during fetching {}[{}]", ex.getClass().getSimpleName(), ex.getMessage());
             return createHardErrorRsp(url, ex);
         }
     }
@@ -180,7 +199,14 @@ public class HttpFetcher {
                 .url(url.toString())
                 .build();
     }
-
+    private CrawledDocument createTimeoutErrorRsp(EdgeUrl url, Exception why) {
+        return CrawledDocument.builder()
+                .crawlerStatus("Timeout")
+                .crawlerStatusDesc(why.getMessage())
+                .timestamp(LocalDateTime.now().toString())
+                .url(url.toString())
+                .build();
+    }
     private CrawledDocument createErrorResponse(EdgeUrl url, Response rsp, CrawlerDocumentStatus status, String why) {
         return CrawledDocument.builder()
                 .crawlerStatus(status.toString())
@@ -234,7 +260,7 @@ public class HttpFetcher {
             return createErrorResponse(url, rsp, CrawlerDocumentStatus.BAD_CHARSET, "");
         }
 
-        var strData = new String(data, Charset.forName(contentType.charset));
+        var strData = getStringData(data, contentType);
         var canonical = rsp.header("rel=canonical", "");
 
         return CrawledDocument.builder()
@@ -247,6 +273,24 @@ public class HttpFetcher {
                 .url(responseUrl.toString())
                 .documentBody(strData)
                 .build();
+    }
+
+    private String getStringData(byte[] data, EdgeContentType contentType) {
+        Charset charset;
+        try {
+            charset = Charset.forName(contentType.charset);
+        }
+        catch (IllegalCharsetNameException ex) {
+            charset = StandardCharsets.UTF_8;
+        }
+        catch (UnsupportedCharsetException ex) {
+            // This is usually like Macintosh Latin
+            // (https://en.wikipedia.org/wiki/Macintosh_Latin_encoding)
+            //
+            // It's close enough to 8859-1 to serve
+            charset = StandardCharsets.ISO_8859_1;
+        }
+        return new String(data, charset);
     }
 
     private CrawledDocument createRedirectResponse(EdgeUrl url, Response rsp, EdgeUrl responseUrl) {
