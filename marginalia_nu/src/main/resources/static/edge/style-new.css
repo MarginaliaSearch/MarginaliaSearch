@@ -1,4 +1,18 @@
 /* If you need to borrow something from below, that's fine */
+.extra a {
+  background: linear-gradient(45deg, rgba(255,220,220,1) 0%, rgba(219,255,196,1) 50%, rgba(212,216,255,1) 100%);
+  color: #000;
+  padding: 0.5ch;
+  border-radius: 0.5ch;
+  text-decoration: none;
+  border: 3px outset #000;
+  word-break: none;
+  white-space: nowrap;
+}
+
+.extra a:active {
+  border: 3px inset #000;
+}
 
 body {
   margin: 0px;
@@ -395,6 +409,14 @@ a.underline {
 
 /* https://www.youtube.com/watch?v=v0nmHymgM7Y */
 @media (prefers-color-scheme: dark) {
+  .extra a {
+    background: linear-gradient(45deg, rgba(135,93,93,1) 0%, rgba(106,135,87,1) 50%, rgba(76,83,118,1) 100%);
+    font-weight: bold;
+    color: #fff;
+    border: 3px outset #000;
+  }
+
+
   a {
     color: #acf;
   }
