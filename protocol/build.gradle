@@ -5,6 +5,12 @@ plugins {
 repositories {
     gradlePluginPortal()
 }
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
 protobuf {
     protoc {
         artifact = 'com.google.protobuf:protoc:3.0.0'

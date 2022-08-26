@@ -1,14 +1,12 @@
 package nu.marginalia.wmsa.edge.model.crawl;
 
-import com.dslplatform.json.JsonObject;
-import com.dslplatform.json.JsonWriter;
 import lombok.Data;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 
 import java.util.*;
 
 @Data
-public class EdgePageWordSet implements JsonObject {
+public class EdgePageWordSet {
     public Map<IndexBlock, EdgePageWords> wordSets;
 
     public EdgePageWordSet(EdgePageWords... words) {
@@ -48,17 +46,4 @@ public class EdgePageWordSet implements JsonObject {
         return sj.toString();
     }
 
-    @Override
-    public void serialize(JsonWriter writer, boolean minimal) {
-        writer.writeAscii("[");
-        boolean first = false;
-        for (var w : wordSets.values()) {
-            if (!first) first = true;
-            else writer.writeAscii(", ");
-
-            w.serialize(writer, minimal);
-        }
-        writer.writeAscii("]}");
-
-    }
 }
