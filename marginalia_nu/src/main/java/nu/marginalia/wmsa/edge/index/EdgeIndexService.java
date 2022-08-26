@@ -4,11 +4,11 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.google.protobuf.InvalidProtocolBufferException;
 import gnu.trove.map.TLongIntMap;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TLongIntHashMap;
 import gnu.trove.set.hash.TIntHashSet;
-import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import marcono1234.gson.recordadapter.RecordTypeAdapterFactory;
@@ -22,18 +22,16 @@ import nu.marginalia.wmsa.edge.index.journal.model.SearchIndexJournalEntry;
 import nu.marginalia.wmsa.edge.index.journal.model.SearchIndexJournalEntryHeader;
 import nu.marginalia.wmsa.edge.index.lexicon.KeywordLexicon;
 import nu.marginalia.wmsa.edge.index.model.EdgeIndexSearchTerms;
-import nu.marginalia.wmsa.edge.index.model.EdgePutWordsRequest;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.index.reader.SearchIndexes;
 import nu.marginalia.wmsa.edge.index.reader.query.IndexSearchBudget;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeId;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
-import nu.marginalia.wmsa.edge.model.crawl.EdgePageWordSet;
-import nu.marginalia.wmsa.edge.model.crawl.EdgePageWords;
 import nu.marginalia.wmsa.edge.model.search.*;
 import nu.marginalia.wmsa.edge.model.search.domain.EdgeDomainSearchResults;
 import nu.marginalia.wmsa.edge.model.search.domain.EdgeDomainSearchSpecification;
+import nu.wmsa.wmsa.edge.index.proto.IndexPutKeywordsReq;
 import org.apache.http.HttpStatus;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -52,7 +50,7 @@ import static spark.Spark.get;
 import static spark.Spark.halt;
 
 public class EdgeIndexService extends Service {
-    private static final int SEARCH_BUDGET_TIMEOUT_MS = 100;
+    private static final int SEARCH_BUDGET_TIMEOUT_MS = 3000;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -66,11 +64,9 @@ public class EdgeIndexService extends Service {
             .create();
 
     private static final Histogram wmsa_edge_index_query_time
-            = Histogram.build().name("wmsa_edge_index_query_time").help("-").register();
-    private static final Counter wmsa_edge_index_query_count
-            = Counter.build().name("wmsa_edge_index_query_count").help("-").register();
-    private static final Histogram wmsa_edge_index_put_words_time
-            = Histogram.build().name("wmsa_edge_index_put_words_time").help("-").register();
+            = Histogram.build().name("wmsa_edge_index_query_time")
+                               .linearBuckets(50, 50, 15)
+                               .help("-").register();
 
     public static final int DYNAMIC_BUCKET_LENGTH = 7;
 
@@ -162,12 +158,15 @@ public class EdgeIndexService extends Service {
         indexes.initialize(init);
     }
 
-    private Object putWords(Request request, Response response) {
-        var putWordsRequest = gson.fromJson(request.body(), EdgePutWordsRequest.class);
+    private Object putWords(Request request, Response response) throws InvalidProtocolBufferException {
+        var req = IndexPutKeywordsReq.parseFrom(request.bodyAsBytes());
 
-        synchronized (this) {
-            putWords(putWordsRequest.getDomainId(), putWordsRequest.getUrlId(),
-                    putWordsRequest.wordSet, putWordsRequest.getIndex());
+        EdgeId<EdgeDomain> domainId = new EdgeId<>(req.getDomain());
+        EdgeId<EdgeUrl> urlId = new EdgeId<>(req.getUrl());
+        int idx = req.getIndex();
+
+        for (int ws = 0; ws < req.getWordSetCount(); ws++) {
+            putWords(domainId, urlId, req.getWordSet(ws), idx);
         }
 
         response.status(HttpStatus.SC_ACCEPTED);
@@ -175,26 +174,16 @@ public class EdgeIndexService extends Service {
     }
 
     public void putWords(EdgeId<EdgeDomain> domainId, EdgeId<EdgeUrl> urlId,
-                         EdgePageWordSet wordSet, int idx
-    ) {
-
-        wmsa_edge_index_put_words_time.time(() -> {
-            for (EdgePageWords words : wordSet.values()) {
-                putWords(domainId, urlId, words, idx);
-            }
-        });
-
-    }
-
-    public void putWords(EdgeId<EdgeDomain> domainId, EdgeId<EdgeUrl> urlId,
-                         EdgePageWords words, int idx
+                         IndexPutKeywordsReq.WordSet words, int idx
     ) {
         SearchIndexJournalWriterImpl indexWriter = indexes.getIndexWriter(idx);
 
-        for (var chunk : ListChunker.chopList(words.words, SearchIndexJournalEntry.MAX_LENGTH)) {
+        IndexBlock block = IndexBlock.values()[words.getIndex()];
+
+        for (var chunk : ListChunker.chopList(words.getWordsList(), SearchIndexJournalEntry.MAX_LENGTH)) {
 
             var entry = new SearchIndexJournalEntry(getOrInsertWordIds(chunk));
-            var header = new SearchIndexJournalEntryHeader(domainId, urlId, words.block);
+            var header = new SearchIndexJournalEntryHeader(domainId, urlId, block);
 
             indexWriter.put(header, entry);
         };
@@ -257,7 +246,6 @@ public class EdgeIndexService extends Service {
         }
         finally {
             wmsa_edge_index_query_time.observe(System.currentTimeMillis() - start);
-            wmsa_edge_index_query_count.inc();
         }
     }
 
@@ -408,16 +396,6 @@ public class EdgeIndexService extends Service {
                 bucket.isTermInBucket(IndexBlock.Link, termId, urlId)
                 );
 
-    }
-
-    public LongStream getHotDomainsQuery(int bucket, IndexBlock block, int wordId,
-                                         int queryDepth, int minHitCount, int maxResults) {
-        if (!indexes.isValidBucket(bucket)) {
-            logger.warn("Invalid bucket {}", bucket);
-            return LongStream.empty();
-        }
-
-        return indexes.getBucket(bucket).findHotDomainsForKeyword(block, wordId, queryDepth, minHitCount, maxResults);
     }
 
     private LongStream getQuery(int bucket, IndexSearchBudget budget, IndexBlock block,

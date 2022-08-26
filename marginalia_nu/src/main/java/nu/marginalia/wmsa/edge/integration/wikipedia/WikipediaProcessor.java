@@ -1,13 +1,13 @@
 package nu.marginalia.wmsa.edge.integration.wikipedia;
 
-import nu.marginalia.wmsa.edge.converting.processor.logic.LinkParser;
 import nu.marginalia.util.language.processing.DocumentKeywordExtractor;
 import nu.marginalia.util.language.processing.SentenceExtractor;
+import nu.marginalia.wmsa.edge.converting.processor.logic.LinkParser;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.integration.model.BasicDocumentData;
 import nu.marginalia.wmsa.edge.integration.wikipedia.model.WikipediaArticle;
-import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainLink;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
+import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainLink;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -42,8 +42,8 @@ public class WikipediaProcessor {
         var keywords = documentKeywordExtractor.extractKeywords(dld);
 
         keywords.get(IndexBlock.Meta).addJust("site:"+post.getUrl().domain);
-        keywords.get(IndexBlock.Words).addJust("site:"+post.getUrl().domain);
-        keywords.get(IndexBlock.Words).addJust("special:stackoverflow");
+        keywords.get(IndexBlock.Words_1).addJust("site:"+post.getUrl().domain);
+        keywords.get(IndexBlock.Words_1).addJust("special:stackoverflow");
         keywords.get(IndexBlock.Meta).addJust("special:stackoverflow");
         keywords.get(IndexBlock.Meta).addJust("js:true");
 

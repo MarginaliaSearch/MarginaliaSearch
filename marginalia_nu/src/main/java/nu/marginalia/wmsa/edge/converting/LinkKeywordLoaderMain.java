@@ -76,7 +76,7 @@ public class LinkKeywordLoaderMain {
 
 //                    System.out.println(lastLine + " -/- " + domainId + ":" + urlId + " : " + keywords);
 
-                    indexClient.putWords(Context.internal(), new EdgeId<>(domainId), new EdgeId<>(urlId), -5, new EdgePageWordSet(
+                    indexClient.putWords(Context.internal(), new EdgeId<>(domainId), new EdgeId<>(urlId), new EdgePageWordSet(
                             new EdgePageWords(IndexBlock.Link, new HashSet<>(keywords))), 0
                     ).blockingSubscribe();
                 }

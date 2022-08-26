@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 public class SearchIndexJournalWriterImpl implements SearchIndexJournalWriter {
@@ -36,6 +37,8 @@ public class SearchIndexJournalWriterImpl implements SearchIndexJournalWriter {
 
         byteBuffer = ByteBuffer.allocate(MAX_BLOCK_SIZE);
 
+        new Thread(this::journalWriterThread, "Journal Writer").start();
+
         writerTask = Schedulers.io().schedulePeriodicallyDirect(this::forceWrite, 1, 1, TimeUnit.SECONDS);
         Runtime.getRuntime().addShutdownHook(new Thread(this::forceWrite));
     }
@@ -56,25 +59,45 @@ public class SearchIndexJournalWriterImpl implements SearchIndexJournalWriter {
         }
     }
 
+    private record WriteJob(SearchIndexJournalEntryHeader header, SearchIndexJournalEntry entryData) {}
+    private final LinkedBlockingQueue<WriteJob> writeQueue = new LinkedBlockingQueue<>(512);
+
     @Override
     @SneakyThrows
-    public synchronized void put(SearchIndexJournalEntryHeader header, SearchIndexJournalEntry entryData) {
+    public void put(SearchIndexJournalEntryHeader header, SearchIndexJournalEntry entryData) {
+        writeQueue.put(new WriteJob(header, entryData));
+    }
 
-        byteBuffer.clear();
+    @SneakyThrows
+    public void journalWriterThread() {
 
-        byteBuffer.putInt(entryData.size());
-        byteBuffer.putInt(header.block().id);
-        byteBuffer.putLong(header.documentId());
+        while (true) {
+            var job = writeQueue.take();
 
-        entryData.write(byteBuffer);
+            writeEntry(job.header, job.entryData);
+        }
+    }
+    private synchronized void writeEntry(SearchIndexJournalEntryHeader header, SearchIndexJournalEntry entryData) {
 
-        byteBuffer.limit(byteBuffer.position());
-        byteBuffer.rewind();
+        try {
+            byteBuffer.clear();
 
-        while (byteBuffer.position() < byteBuffer.limit())
-            channel.write(byteBuffer);
+            byteBuffer.putInt(entryData.size());
+            byteBuffer.putInt(header.block().id);
+            byteBuffer.putLong(header.documentId());
 
-        writePositionMarker();
+            entryData.write(byteBuffer);
+
+            byteBuffer.limit(byteBuffer.position());
+            byteBuffer.rewind();
+
+            while (byteBuffer.position() < byteBuffer.limit())
+                channel.write(byteBuffer);
+
+            writePositionMarker();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -94,13 +117,11 @@ public class SearchIndexJournalWriterImpl implements SearchIndexJournalWriter {
     }
 
     private void writePositionMarker() throws IOException {
-        var lock = channel.lock(0, 16, false);
         pos = channel.size();
         raf.seek(0);
         raf.writeLong(pos);
         raf.writeLong(dictionaryWriter.size());
         raf.seek(pos);
-        lock.release();
     }
 
     public synchronized void close() throws IOException {

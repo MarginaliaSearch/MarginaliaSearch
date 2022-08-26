@@ -8,7 +8,6 @@ import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.crawl.EdgePageWordSet;
 import nu.marginalia.wmsa.edge.model.crawl.EdgePageWords;
-import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 import java.util.*;
@@ -45,7 +44,6 @@ public class DocumentKeywordExtractor {
         List<WordRep> wordsNamesRepeated = nameCounter.count(documentLanguageData, 2);
         List<WordRep> wordsNamesAll = nameCounter.count(documentLanguageData, 1);
         List<WordRep> subjects = subjectCounter.count(documentLanguageData);
-        List<WordRep> wordsLongName = longNameCounter.count(documentLanguageData);
 
         int totalSize = wordsTfIdf.size();
 
@@ -61,17 +59,6 @@ public class DocumentKeywordExtractor {
 
         var wordsToMatchWithTitle = joinWordLists(topKeywords, midKeywords, wordsNamesRepeated, subjects);
 
-        var words = getSimpleWords(documentLanguageData);
-
-        for (var w : wordsLongName)
-            words.add(w.word);
-        for (var w : lowKeywords)
-            words.remove(w.word);
-        for (var w : midKeywords)
-            words.remove(w.word);
-        for (var w : topKeywords)
-            words.remove(w.word);
-
         Collection<String> artifacts = getArtifacts(documentLanguageData);
 
         var wordSet = new EdgePageWordSet(
@@ -85,14 +72,80 @@ public class DocumentKeywordExtractor {
                 new EdgePageWords(IndexBlock.Artifacts, artifacts)
         );
 
-        wordSet.append(IndexBlock.Words, words);
+        getSimpleWords(wordSet, documentLanguageData,
+                IndexBlock.Words_1, IndexBlock.Words_2, IndexBlock.Words_4, IndexBlock.Words_8, IndexBlock.Words_16Plus);
 
         return wordSet;
     }
 
+    private void getSimpleWords(EdgePageWordSet wordSet, DocumentLanguageData documentLanguageData, IndexBlock...  blocks) {
+
+        int start = 0;
+        int lengthGoal = 32;
+
+        for (int blockIdx = 0; blockIdx < blocks.length-1 && start < documentLanguageData.sentences.length; blockIdx++) {
+            IndexBlock block = blocks[blockIdx];
+            Set<String> words = new HashSet<>(lengthGoal+100);
+
+            int pos;
+            int length = 0;
+            for (pos = start; pos < documentLanguageData.sentences.length && length < lengthGoal; pos++) {
+                var sent = documentLanguageData.sentences[pos];
+                length += sent.length();
+
+                for (var word : sent) {
+                    if (!word.isStopWord()) {
+                        String w = AsciiFlattener.flattenUnicode(word.wordLowerCase());
+                        if (WordPatterns.singleWordQualitiesPredicate.test(w)) {
+                            words.add(w);
+                        }
+                    }
+                }
+            }
+            wordSet.append(block, words);
+            start = pos;
+            lengthGoal+=32;
+        }
+
+        if (start < documentLanguageData.sentences.length) {
+
+            Map<String, Integer> counts = new HashMap<>(documentLanguageData.totalNumWords());
+            for (int pos = start; pos < documentLanguageData.sentences.length && counts.size() < lengthGoal; pos++) {
+                var sent = documentLanguageData.sentences[pos];
+                for (var word : sent) {
+                    if (!word.isStopWord()) {
+                        String w = AsciiFlattener.flattenUnicode(word.wordLowerCase());
+                        if (counts.containsKey(w) || (WordPatterns.singleWordQualitiesPredicate.test(w))) {
+                            counts.merge(w, 1, Integer::sum);
+                        }
+                    }
+                }
+            }
+
+            Set<String> lastSet;
+            if (counts.size() < 1024) {
+                lastSet = counts.keySet();
+            }
+            else {
+                lastSet = counts.entrySet().stream()
+                        .sorted(Comparator.comparing(e -> {
+                            double N = 11820118.; // Number of documents in term freq dictionary
+
+                            // Caveat: This is actually the *negated* term score, because the second logarithm has
+                            // its parameter inverted (log(a^b) = b log(a); here b = -1)
+                            return (1 + Math.log(e.getValue())) * Math.log((1. + dict.getTermFreq(e.getKey())) / N);
+                        }))
+                        .map(Map.Entry::getKey)
+                        .limit(1024)
+                        .collect(Collectors.toCollection(LinkedHashSet::new));
+            }
+
+            wordSet.append(blocks[blocks.length - 1], lastSet);
+        }
+    }
+
     private Collection<String> getArtifacts(DocumentLanguageData documentLanguageData) {
         Set<String> reps = new HashSet<>();
-
 
         for (var sent : documentLanguageData.sentences) {
             for (var word : sent) {
@@ -136,33 +189,6 @@ public class DocumentKeywordExtractor {
             ret.addAll(lst);
         }
         return ret;
-    }
-
-    @NotNull
-    private Set<String> getSimpleWords(DocumentLanguageData documentLanguageData) {
-        Map<String, Integer> counts = new HashMap<>(documentLanguageData.totalNumWords());
-
-        for (var sent : documentLanguageData.sentences) {
-            for (int i = 0; i < sent.length(); i++) {
-                if (!sent.isStopWord(i)) {
-                    String w = AsciiFlattener.flattenUnicode(sent.wordsLowerCase[i]);
-                    if (counts.containsKey(w) || (WordPatterns.wordQualitiesPredicate.test(w) && WordPatterns.filter(w))) {
-                        counts.merge(w, 1, Integer::sum);
-                    }
-                }
-            }
-        }
-
-        return counts.entrySet().stream()
-                .sorted(Comparator.comparing(e -> {
-                    double N = 11820118.; // Number of documents in term freq dictionary
-
-                    // Caveat: This is actually the *negated* term score, because the second logarithm has
-                    // its parameter inverted (log(a^b) = b log(a); here b = -1)
-                    return (1+Math.log(e.getValue())) * Math.log((1.+dict.getTermFreq(e.getKey()))/N);
-                }))
-                .map(Map.Entry::getKey)
-                .limit(512).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
 

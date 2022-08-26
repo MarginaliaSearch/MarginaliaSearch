@@ -58,7 +58,7 @@ jmhJar {
 }
 dependencies {
     implementation project(':third_party')
-
+    implementation project(':protocol')
 
     implementation 'org.projectlombok:lombok:1.18.24'
     annotationProcessor 'org.projectlombok:lombok:1.18.24'
@@ -157,6 +157,9 @@ dependencies {
 
     jmh 'org.openjdk.jmh:jmh-core:1.35'
     jmh 'org.openjdk.jmh:jmh-generator-annprocess:1.35'
+
+    implementation 'com.dslplatform:dsl-json:1.9.9'
+    annotationProcessor 'com.dslplatform:dsl-json-processor:1.9.9'
 }
 
 configurations {

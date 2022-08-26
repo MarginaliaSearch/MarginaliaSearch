@@ -9,7 +9,6 @@ import nu.marginalia.wmsa.client.AbstractDynamicClient;
 import nu.marginalia.wmsa.client.HttpStatusCode;
 import nu.marginalia.wmsa.configuration.ServiceDescriptor;
 import nu.marginalia.wmsa.configuration.server.Context;
-import nu.marginalia.wmsa.edge.index.model.EdgePutWordsRequest;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeId;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
@@ -18,6 +17,7 @@ import nu.marginalia.wmsa.edge.model.search.EdgeSearchResultSet;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchSpecification;
 import nu.marginalia.wmsa.edge.model.search.domain.EdgeDomainSearchResults;
 import nu.marginalia.wmsa.edge.model.search.domain.EdgeDomainSearchSpecification;
+import nu.wmsa.wmsa.edge.index.proto.IndexPutKeywordsReq;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,13 +37,27 @@ public class EdgeIndexClient extends AbstractDynamicClient {
     }
 
     @CheckReturnValue
-    public Observable<HttpStatusCode> putWords(Context ctx, EdgeId<EdgeDomain> domain, EdgeId<EdgeUrl> url, double quality,
+    public Observable<HttpStatusCode> putWords(Context ctx, EdgeId<EdgeDomain> domain, EdgeId<EdgeUrl> url,
                                                EdgePageWordSet wordSet, int writer
                                                )
     {
-        EdgePutWordsRequest request = new EdgePutWordsRequest(domain, url, quality, wordSet, writer);
 
-        return this.post(ctx, "/words/", request);
+        var keywordBuilder =
+                IndexPutKeywordsReq.newBuilder()
+                    .setDomain(domain.id())
+                    .setUrl(url.id())
+                    .setIndex(writer);
+
+        for (var set : wordSet.wordSets.values()) {
+            var wordSetBuilder = IndexPutKeywordsReq.WordSet.newBuilder();
+            wordSetBuilder.setIndex(set.block.ordinal());
+            wordSetBuilder.addAllWords(set.words);
+            keywordBuilder.addWordSet(wordSetBuilder.build());
+        }
+
+        var req = keywordBuilder.build();
+
+        return this.post(ctx, "/words/", req);
     }
 
 

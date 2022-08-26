@@ -27,7 +27,8 @@ public class IndexQueryBuilder {
 
     public Query build(IndexSearchBudget budget,
                        LongPredicate filter,
-                       int wordId) {
+                       int wordId)
+    {
         return new QueryForIndices(budget, filter, wordId);
     }
 

@@ -19,7 +19,12 @@ public class WordPatterns {
     public static final Pattern wordBreakPattern = Pattern.compile("([^_#@.a-zA-Z'+\\-0-9\\u00C0-\\u00D6\\u00D8-\\u00f6\\u00f8-\\u00ff]+)|[|]|(\\.(\\s+|$))");
     public static final Pattern characterNoisePattern = Pattern.compile("^[/+\\-]+$");
 
+    public static final Pattern singleWordAdditionalPattern =
+            Pattern.compile("[\\da-zA-Z]{1,15}([.\\-_/:][\\da-zA-Z]{1,10}){0,4}");
+
+    public static final Predicate<String> singleWordQualitiesPredicate = singleWordAdditionalPattern.asMatchPredicate();
     public static final Predicate<String> wordQualitiesPredicate = wordPattern.asMatchPredicate();
+
     public static final Predicate<String> wordAppendixPredicate = wordAppendixPattern.asMatchPredicate();
     public static final Predicate<String> wordPredicateEither = wordQualitiesPredicate.or(wordAppendixPredicate);
     public static final Predicate<String> characterNoisePredicate = characterNoisePattern.asMatchPredicate();

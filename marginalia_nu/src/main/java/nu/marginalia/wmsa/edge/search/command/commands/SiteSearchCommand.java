@@ -62,7 +62,7 @@ public class SiteSearchCommand implements SearchCommandInterface {
         DecoratedSearchResultSet resultSet;
         Path screenshotPath = null;
         if (null != domain) {
-            resultSet = searchOperator.performDumbQuery(ctx, EdgeSearchProfile.CORPO, IndexBlock.Words, 100, 100, "site:"+domain);
+            resultSet = searchOperator.performDumbQuery(ctx, EdgeSearchProfile.CORPO, IndexBlock.Words_1, 100, 100, "site:"+domain);
 
             screenshotPath = Path.of("/screenshot/" + dataStoreDao.getDomainId(domain).id());
         }

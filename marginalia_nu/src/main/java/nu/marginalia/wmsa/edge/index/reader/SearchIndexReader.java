@@ -29,8 +29,12 @@ public class SearchIndexReader implements AutoCloseable {
             IndexBlock.Top,
             IndexBlock.Middle,
             IndexBlock.Low,
-            IndexBlock.Words,
             IndexBlock.NamesWords,
+            IndexBlock.Words_1,
+            IndexBlock.Words_2,
+            IndexBlock.Words_4,
+            IndexBlock.Words_8,
+            IndexBlock.Words_16Plus,
     };
 
     @Inject
@@ -44,24 +48,29 @@ public class SearchIndexReader implements AutoCloseable {
         var linkIndex  = indices.get(IndexBlock.Link);
         var titleIndex  = indices.get(IndexBlock.Title);
         var namesIndex  = indices.get(IndexBlock.NamesWords);
-        var positionIndex  = indices.get(IndexBlock.PositionWords);
         var titleKeywordsIndex  = indices.get(IndexBlock.TitleKeywords);
-        var wordsIndex  = indices.get(IndexBlock.Words);
         var metaIndex  = indices.get(IndexBlock.Meta);
         var topicIndex  = indices.get(IndexBlock.Topic);
+
+        var words1  = indices.get(IndexBlock.Words_1);
+        var words2  = indices.get(IndexBlock.Words_2);
+        var words4  = indices.get(IndexBlock.Words_4);
+        var words8  = indices.get(IndexBlock.Words_8);
+        var words16  = indices.get(IndexBlock.Words_16Plus);
+        var artifacts  = indices.get(IndexBlock.Artifacts);
 
         queryBuilders = new EnumMap<>(IndexBlock.class);
         underspecifiedQueryBuilders = new EnumMap<>(IndexBlock.class);
 
-        queryBuilders.put(IndexBlock.Words, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, topIndex, midIndex, lowIndex, linkIndex, namesIndex, wordsIndex), wordsIndex));
-        queryBuilders.put(IndexBlock.Low, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, topIndex, midIndex, lowIndex, linkIndex), wordsIndex));
-        queryBuilders.put(IndexBlock.Top, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, topIndex), wordsIndex));
-        queryBuilders.put(IndexBlock.Title, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex), wordsIndex));
-        queryBuilders.put(IndexBlock.TitleKeywords, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex), wordsIndex));
+        queryBuilders.put(IndexBlock.Words_1, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, titleIndex, topIndex, words1), words1));
+        queryBuilders.put(IndexBlock.Words_2, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, titleIndex, topIndex, words2), words1));
+        queryBuilders.put(IndexBlock.Words_4, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, titleIndex, topIndex, words4), words1));
+        queryBuilders.put(IndexBlock.Words_8, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, titleIndex, topIndex, words8), words1));
+        queryBuilders.put(IndexBlock.Words_16Plus, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, titleIndex, topIndex, words1, words2, words4, words8, words16, artifacts), words1));
 
-        underspecifiedQueryBuilders.put(IndexBlock.TitleKeywords, new IndexQueryBuilder(listOfNonNulls(titleKeywordsIndex, linkIndex, topicIndex, topIndex, midIndex, lowIndex, namesIndex, positionIndex, metaIndex), wordsIndex));
-        underspecifiedQueryBuilders.put(IndexBlock.Title, new IndexQueryBuilder(listOfNonNulls(titleIndex, topicIndex, linkIndex, topicIndex, topIndex, midIndex, lowIndex, namesIndex, positionIndex, metaIndex), wordsIndex));
-        underspecifiedQueryBuilders.put(IndexBlock.Top, new IndexQueryBuilder(listOfNonNulls(topIndex, linkIndex, midIndex, lowIndex, namesIndex, positionIndex, metaIndex), wordsIndex));
+        underspecifiedQueryBuilders.put(IndexBlock.TitleKeywords, new IndexQueryBuilder(listOfNonNulls(titleKeywordsIndex, linkIndex, topicIndex, topIndex, midIndex, lowIndex, namesIndex, metaIndex), words1));
+        underspecifiedQueryBuilders.put(IndexBlock.Title, new IndexQueryBuilder(listOfNonNulls(titleIndex, topicIndex, linkIndex, topicIndex, topIndex, midIndex, lowIndex, namesIndex, metaIndex), words1));
+        underspecifiedQueryBuilders.put(IndexBlock.Top, new IndexQueryBuilder(listOfNonNulls(topIndex, linkIndex, midIndex, lowIndex, namesIndex, metaIndex), words1));
     }
 
     @SafeVarargs
@@ -157,7 +166,7 @@ public class SearchIndexReader implements AutoCloseable {
                 return block;
             }
         }
-        return IndexBlock.Words;
+        return IndexBlock.Words_1;
     }
 
     public boolean isTermInBucket(IndexBlock block, int searchTerm, long urlId) {

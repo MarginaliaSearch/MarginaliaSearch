@@ -1,4 +1,7 @@
 package nu.marginalia.wmsa.edge.model.crawl;
+import com.dslplatform.json.JsonObject;
+import com.dslplatform.json.JsonWriter;
+import com.dslplatform.json.NumberConverter;
 import lombok.Getter;
 import lombok.ToString;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
@@ -8,7 +11,7 @@ import java.util.Collection;
 import java.util.List;
 
 @ToString @Getter
-public class EdgePageWords {
+public class EdgePageWords implements JsonObject {
     public final IndexBlock block;
     public final List<String> words = new ArrayList<>();
 
@@ -31,4 +34,19 @@ public class EdgePageWords {
         return words.size();
     }
     public void addJust(String word) { words.add(word); }
+
+    @Override
+    public void serialize(JsonWriter writer, boolean minimal) {
+        writer.writeAscii("{\"b\":");
+        NumberConverter.serialize(block.ordinal(), writer);
+        writer.writeAscii(", \"w\": [");
+        boolean first = false;
+        for (var word : words) {
+            if (!first) first = true;
+            else { writer.writeAscii(","); }
+
+            writer.writeString(word);
+        }
+        writer.writeAscii("]}");
+    }
 }

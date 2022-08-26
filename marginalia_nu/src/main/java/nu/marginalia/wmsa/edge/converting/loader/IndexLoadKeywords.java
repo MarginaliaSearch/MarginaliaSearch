@@ -39,7 +39,7 @@ public class IndexLoadKeywords implements Runnable {
         while (!canceled) {
             var data = insertQueue.poll(1, TimeUnit.SECONDS);
             if (data != null) {
-                client.putWords(Context.internal(), new EdgeId<>(data.domainId), new EdgeId<>(data.urlId), -5., data.wordSet, index).blockingSubscribe();
+                client.putWords(Context.internal(), new EdgeId<>(data.domainId), new EdgeId<>(data.urlId), data.wordSet, index).blockingSubscribe();
             }
         }
     }

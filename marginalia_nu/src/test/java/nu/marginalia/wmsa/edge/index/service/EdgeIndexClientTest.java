@@ -11,12 +11,15 @@ import nu.marginalia.wmsa.edge.index.client.EdgeIndexClient;
 import nu.marginalia.wmsa.edge.index.conversion.SearchIndexPartitioner;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.index.reader.SearchIndexes;
-import nu.marginalia.wmsa.edge.model.crawl.EdgePageWordSet;
-import nu.marginalia.wmsa.edge.model.search.EdgeSearchSpecification;
 import nu.marginalia.wmsa.edge.model.EdgeId;
-import nu.marginalia.wmsa.edge.model.crawl.EdgePageWords;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
-import org.junit.jupiter.api.*;
+import nu.marginalia.wmsa.edge.model.crawl.EdgePageWordSet;
+import nu.marginalia.wmsa.edge.model.crawl.EdgePageWords;
+import nu.marginalia.wmsa.edge.model.search.EdgeSearchSpecification;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.api.parallel.ResourceAccessMode;
@@ -141,7 +144,7 @@ public class EdgeIndexClientTest {
     void putWords(int didx, int idx, double quality, String... words) {
         EdgePageWords epw = new EdgePageWords(IndexBlock.Title);
         epw.addAll(Arrays.asList(words));
-        client.putWords(Context.internal(), new EdgeId<>(didx), new EdgeId<>(idx), quality,
+        client.putWords(Context.internal(), new EdgeId<>(didx), new EdgeId<>(idx),
                 new EdgePageWordSet(epw), 0).blockingSubscribe();
     }
 

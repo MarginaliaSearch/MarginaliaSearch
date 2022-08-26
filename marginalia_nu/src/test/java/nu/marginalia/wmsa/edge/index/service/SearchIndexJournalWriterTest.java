@@ -61,7 +61,7 @@ class SearchIndexJournalWriterTest {
     void put() throws IOException {
         writer.put(new SearchIndexJournalEntryHeader(4, (1234L << 32) | 5678, IndexBlock.Link),
                 new SearchIndexJournalEntry(new long[] { 1, 2, 3, 4 }));
-        writer.put(new SearchIndexJournalEntryHeader(4, (2345L << 32) | 2244, IndexBlock.Words),
+        writer.put(new SearchIndexJournalEntryHeader(4, (2345L << 32) | 2244, IndexBlock.Words_1),
                 new SearchIndexJournalEntry(new long[] { 5, 6, 7 }));
         writer.forceWrite();
 

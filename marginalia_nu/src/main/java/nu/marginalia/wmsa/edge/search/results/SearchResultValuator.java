@@ -30,7 +30,7 @@ public class SearchResultValuator {
         EdgeSearchResultKeywordScore[] scores = rawScores.stream().filter(w -> !w.keyword.contains(":")).toArray(EdgeSearchResultKeywordScore[]::new);
 
         if (scores.length == 0) {
-            return IndexBlock.Words.sortOrder;
+            return IndexBlock.Words_1.sortOrder;
         }
 
         final double[] weights = getTermWeights(scores);

@@ -51,7 +51,7 @@ public class FeaturesLoaderTool {
                             throw new RuntimeException(ex);
                         }
 
-                        client.putWords(Context.internal(), new EdgeId<>(domainId), new EdgeId<>(urlId), -5, wordSet, 0)
+                        client.putWords(Context.internal(), new EdgeId<>(domainId), new EdgeId<>(urlId), wordSet, 0)
                                 .blockingSubscribe();
                     });
 

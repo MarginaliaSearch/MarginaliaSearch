@@ -147,7 +147,10 @@ public class DocumentProcessor {
             throw new DisqualifiedException(DisqualificationReason.ACCEPTABLE_ADS);
         }
 
-        var dld = sentenceExtractor.extractSentences(doc.clone());
+        DomPruner domPruner = new DomPruner();
+        Document prunedDoc = doc.clone();
+        domPruner.prune(prunedDoc, 0.5);
+        var dld = sentenceExtractor.extractSentences(prunedDoc);
 
         checkDocumentLanguage(dld);
 
@@ -192,7 +195,7 @@ public class DocumentProcessor {
         ret.features.stream().map(HtmlFeature::getKeyword).forEach(tagWords::add);
 
         words.append(IndexBlock.Meta, tagWords);
-        words.append(IndexBlock.Words, tagWords);
+        words.append(IndexBlock.Words_1, tagWords);
     }
 
     private void getLinks(EdgeUrl baseUrl, ProcessedDocumentDetails ret, Document doc, EdgePageWordSet words) {

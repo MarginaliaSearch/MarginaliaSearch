@@ -1,10 +1,8 @@
 package nu.marginalia.wmsa.edge.crawling;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import nu.marginalia.util.TestLanguageModels;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
+import nu.marginalia.util.language.WordPatterns;
 import nu.marginalia.util.language.conf.LanguageModels;
 import nu.marginalia.util.language.processing.DocumentKeywordExtractor;
 import nu.marginalia.util.language.processing.KeywordExtractor;
@@ -12,11 +10,9 @@ import nu.marginalia.util.language.processing.SentenceExtractor;
 import nu.marginalia.util.language.processing.model.WordRep;
 import nu.marginalia.util.language.processing.model.WordSpan;
 import nu.marginalia.util.language.processing.model.tag.WordSeparator;
-import nu.marginalia.util.ranking.BuggyReversePageRank;
-import nu.marginalia.util.ranking.BuggyStandardPageRank;
+import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.wmsa.edge.integration.wikipedia.WikipediaReader;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
-import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -102,6 +98,11 @@ class SentenceExtractorTest {
                     System.out.println(newRes);
                 });
         reader.join();
+    }
+
+    @Test
+    public void testPattern() {
+        System.out.println(WordPatterns.singleWordAdditionalPattern.matcher("2.6.18164.el5pae").matches());
     }
     @Test
     void extractSentences() throws IOException {
