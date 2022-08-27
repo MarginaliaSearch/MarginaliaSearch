@@ -40,35 +40,27 @@ public class DocumentKeywordExtractor {
 
         List<WordRep> titleWords = extractTitleWords(documentLanguageData);
 
-        List<WordRep> wordsTfIdf = tfIdfCounter.count(documentLanguageData);
+        KeywordCounter.WordHistogram wordsTfIdf = tfIdfCounter.countHisto(documentLanguageData);
         List<WordRep> wordsNamesRepeated = nameCounter.count(documentLanguageData, 2);
         List<WordRep> wordsNamesAll = nameCounter.count(documentLanguageData, 1);
         List<WordRep> subjects = subjectCounter.count(documentLanguageData);
 
-        int totalSize = wordsTfIdf.size();
+        List<WordRep> lowKeywords = new ArrayList<>(wordsTfIdf.lower());
+        List<WordRep> midKeywords = new ArrayList<>(wordsTfIdf.mid());
+        List<WordRep> topKeywords = new ArrayList<>(wordsTfIdf.top());
 
-        List<WordRep> lowKeywords = new ArrayList<>(totalSize / 2);
-        List<WordRep> midKeywords = new ArrayList<>(totalSize / 2);
-        List<WordRep> topKeywords = new ArrayList<>(totalSize / 2);
-
-        for(var v : wordsTfIdf) {
-            if (topKeywords.size() <= totalSize / 10) topKeywords.add(v);
-            else if (midKeywords.size() <= totalSize / 5) midKeywords.add(v);
-            else lowKeywords.add(v);
-        }
-
-        var wordsToMatchWithTitle = joinWordLists(topKeywords, midKeywords, wordsNamesRepeated, subjects);
+        var wordsToMatchWithTitle = joinWordLists(topKeywords, wordsNamesRepeated, subjects);
 
         Collection<String> artifacts = getArtifacts(documentLanguageData);
 
         var wordSet = new EdgePageWordSet(
                 createWords(IndexBlock.TitleKeywords, overlappingStems(titleWords, wordsToMatchWithTitle)),
-                createWords(IndexBlock.Topic, subjects),
+                createWords(IndexBlock.Subjects, subjects),
                 createWords(IndexBlock.Title, titleWords),
                 createWords(IndexBlock.NamesWords, wordsNamesAll),
-                createWords(IndexBlock.Top, topKeywords),
-                createWords(IndexBlock.Middle, midKeywords),
-                createWords(IndexBlock.Low, lowKeywords),
+                createWords(IndexBlock.Tfidf_Top, topKeywords),
+                createWords(IndexBlock.Tfidf_Middle, midKeywords),
+                createWords(IndexBlock.Tfidf_Lower, lowKeywords),
                 new EdgePageWords(IndexBlock.Artifacts, artifacts)
         );
 

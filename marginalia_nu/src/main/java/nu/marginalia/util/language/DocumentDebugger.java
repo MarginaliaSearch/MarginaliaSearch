@@ -69,7 +69,7 @@ public class DocumentDebugger {
         Set<String> reps = new HashSet<>();
 
 //        kc.count(languageData, 0.75).forEach(rep -> reps.add(rep.stemmed));
-        kc.count(languageData).forEach(rep -> reps.add(rep.stemmed));
+//        kc.count(languageData).forEach(rep -> reps.add(rep.stemmed));
 
         try (var pw = new PrintWriter(new FileOutputStream(output.toFile()))) {
 
