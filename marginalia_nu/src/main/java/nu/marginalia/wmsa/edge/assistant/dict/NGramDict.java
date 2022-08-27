@@ -2,7 +2,16 @@ package nu.marginalia.wmsa.edge.assistant.dict;
 
 import ca.rmen.porterstemmer.PorterStemmer;
 import gnu.trove.map.hash.TLongIntHashMap;
+import nu.marginalia.util.language.LanguageFilter;
 import nu.marginalia.util.language.conf.LanguageModels;
+import nu.marginalia.util.language.processing.SentenceExtractor;
+import nu.marginalia.util.language.processing.model.DocumentLanguageData;
+import nu.marginalia.wmsa.configuration.WmsaHome;
+import nu.marginalia.wmsa.edge.converting.processor.logic.DomPruner;
+import nu.marginalia.wmsa.edge.crawling.CrawlPlanLoader;
+import opennlp.tools.langdetect.LanguageDetector;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +21,7 @@ import javax.inject.Singleton;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -55,30 +64,53 @@ public class NGramDict {
     }
 
 
-    public static void main(String... args) {
+    public static void main(String... args) throws IOException {
         if (args.length != 2) {
-            System.err.println("Expected arguments: in-file out-file");
+            System.err.println("Expected arguments: plan.yaml out-file");
         }
         String inFile = args[0];
         String outFile = args[1];
 
-        var wordPattern = Pattern.compile("\\w+(_\\w+)*").asMatchPredicate();
-        try (var linesStr = Files.lines(Path.of(inFile));
-             var dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outFile)))
-        ) {
-            linesStr
-                    .filter(wordPattern)
-                    .mapToLong(NGramDict::getStringHash).forEach(l ->
-            {
-                try {
-                    dos.writeLong(l);
-                } catch (IOException e) {
-                    e.printStackTrace();
+        var plan = new CrawlPlanLoader().load(Path.of(args[0]));
+
+        SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
+        DomPruner pruner = new DomPruner();
+        LanguageFilter lf = new LanguageFilter();
+
+        Map<String, Integer> counts = new HashMap<>(100_000_000);
+
+        for (var domain : plan.domainsIterable()) { // leaks file descriptor, is fine
+
+            if (domain.doc == null)
+                continue;
+
+            for (var doc : domain.doc) {
+                if (doc.documentBody == null)
+                    continue;
+
+                Document parsed = Jsoup.parse(doc.documentBody);
+                pruner.prune(parsed, 0.5);
+
+                DocumentLanguageData dld = se.extractSentences(parsed);
+
+                if (lf.dictionaryAgreement(dld) < 0.1) {
+                    continue;
                 }
-            });
-        } catch (IOException e) {
-            e.printStackTrace();
+
+                for (var sent : dld.sentences) {
+                    for (var word : sent) {
+                        counts.merge(word.stemmed(), 1, Integer::sum);
+                    }
+                }
+            }
         }
+
+        counts.forEach((w,c) -> {
+            if (c > 3) {
+                System.out.println(w + ":" + c);
+            }
+        });
+
     }
 
     public static long getStringHash(String s) {
