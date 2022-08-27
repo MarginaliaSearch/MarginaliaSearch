@@ -78,6 +78,7 @@ public class NGramDict {
         LanguageFilter lf = new LanguageFilter();
 
         Map<String, Integer> counts = new HashMap<>(100_000_000);
+        Set<String> words = new HashSet<>(10_000);
 
         for (var domain : plan.domainsIterable()) { // leaks file descriptor, is fine
 
@@ -97,11 +98,18 @@ public class NGramDict {
                     continue;
                 }
 
+
                 for (var sent : dld.sentences) {
                     for (var word : sent) {
-                        counts.merge(word.stemmed(), 1, Integer::sum);
+                        words.add(word.stemmed());
                     }
                 }
+
+                for (var word : words) {
+                    counts.merge(word,  1, Integer::sum);
+                }
+
+                words.clear();
             }
         }
 
