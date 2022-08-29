@@ -10,7 +10,7 @@ import nu.marginalia.util.language.processing.SentenceExtractor;
 import nu.marginalia.util.language.processing.model.WordRep;
 import nu.marginalia.util.language.processing.model.WordSpan;
 import nu.marginalia.util.language.processing.model.tag.WordSeparator;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
+import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import nu.marginalia.wmsa.edge.integration.wikipedia.WikipediaReader;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import org.jsoup.Jsoup;
@@ -45,7 +45,7 @@ class SentenceExtractorTest {
 
         System.out.println("Running");
 
-        var dict = new NGramDict(lm);
+        var dict = new TermFrequencyDict(lm);
 
         SentenceExtractor se = new SentenceExtractor(lm);
         KeywordExtractor keywordExtractor = new KeywordExtractor();
@@ -85,7 +85,7 @@ class SentenceExtractorTest {
 
         System.out.println("Running");
 
-        var dict = new NGramDict(lm);
+        var dict = new TermFrequencyDict(lm);
 
         DocumentKeywordExtractor documentKeywordExtractor = new DocumentKeywordExtractor(dict);
 
@@ -110,7 +110,7 @@ class SentenceExtractorTest {
 
         System.out.println("Running");
 
-        var dict = new NGramDict(lm);
+        var dict = new TermFrequencyDict(lm);
 
         DocumentKeywordExtractor documentKeywordExtractor = new DocumentKeywordExtractor(dict);
 
@@ -154,7 +154,7 @@ class SentenceExtractorTest {
     public void testSE() {
         var result = newSe.extractSentences(Jsoup.parse(new URL("https://memex.marginalia.nu/log/26-personalized-pagerank.gmi"), 10000));
 
-        var dict = new NGramDict(lm);
+        var dict = new TermFrequencyDict(lm);
         System.out.println(new DocumentKeywordExtractor(dict).extractKeywords(result));
 
 

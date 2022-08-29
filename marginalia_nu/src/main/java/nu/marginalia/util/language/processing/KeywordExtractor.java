@@ -1,9 +1,9 @@
 package nu.marginalia.util.language.processing;
 
+import nu.marginalia.util.language.WordPatterns;
 import nu.marginalia.util.language.processing.model.DocumentSentence;
 import nu.marginalia.util.language.processing.model.WordSpan;
 import nu.marginalia.util.language.processing.model.tag.WordSeparator;
-import nu.marginalia.util.language.WordPatterns;
 
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
@@ -377,4 +377,6 @@ public class KeywordExtractor {
 
         return (posTag.startsWith("JJ") || posTag.startsWith("R") || posTag.startsWith("VBG"));
     }
+
+
 }

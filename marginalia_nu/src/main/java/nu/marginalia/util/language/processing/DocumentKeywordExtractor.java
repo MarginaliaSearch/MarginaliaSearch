@@ -4,7 +4,7 @@ import com.google.common.collect.Sets;
 import nu.marginalia.util.language.WordPatterns;
 import nu.marginalia.util.language.processing.model.DocumentLanguageData;
 import nu.marginalia.util.language.processing.model.WordRep;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
+import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.crawl.EdgePageWordSet;
 import nu.marginalia.wmsa.edge.model.crawl.EdgePageWords;
@@ -19,29 +19,54 @@ public class DocumentKeywordExtractor {
     private final KeywordExtractor keywordExtractor;
     private final KeywordCounter tfIdfCounter;
     private final NameCounter nameCounter;
-    private final LongNameCounter longNameCounter;
     private final SubjectCounter subjectCounter;
 
-    private final NGramDict dict;
+    private final TermFrequencyDict dict;
+    private final double docCount;
 
     @Inject
-    public DocumentKeywordExtractor(NGramDict dict) {
+    public DocumentKeywordExtractor(TermFrequencyDict dict) {
         this.dict = dict;
+        docCount = dict.docCount();
 
         keywordExtractor = new KeywordExtractor();
 
         tfIdfCounter = new KeywordCounter(dict, keywordExtractor);
         nameCounter = new NameCounter(keywordExtractor);
-        longNameCounter = new LongNameCounter(dict, keywordExtractor);
         subjectCounter = new SubjectCounter(keywordExtractor);
     }
+
+
+    public EdgePageWordSet extractKeywordsMinimal(DocumentLanguageData documentLanguageData) {
+
+        List<WordRep> titleWords = extractTitleWords(documentLanguageData);
+
+        KeywordCounter.WordHistogram wordsTfIdf = tfIdfCounter.countHisto(documentLanguageData);
+        List<WordRep> wordsNamesAll = nameCounter.count(documentLanguageData, 1);
+        List<WordRep> subjects = subjectCounter.count(documentLanguageData);
+
+        List<WordRep> midKeywords = new ArrayList<>(wordsTfIdf.mid());
+        List<WordRep> topKeywords = new ArrayList<>(wordsTfIdf.top());
+
+        Collection<String> artifacts = getArtifacts(documentLanguageData);
+
+        return new EdgePageWordSet(
+                createWords(IndexBlock.Subjects, subjects),
+                createWords(IndexBlock.Title, titleWords),
+                createWords(IndexBlock.NamesWords, wordsNamesAll),
+                createWords(IndexBlock.Tfidf_Top, topKeywords),
+                createWords(IndexBlock.Tfidf_Middle, midKeywords),
+                new EdgePageWords(IndexBlock.Artifacts, artifacts)
+        );
+    }
+
+
 
     public EdgePageWordSet extractKeywords(DocumentLanguageData documentLanguageData) {
 
         List<WordRep> titleWords = extractTitleWords(documentLanguageData);
 
         KeywordCounter.WordHistogram wordsTfIdf = tfIdfCounter.countHisto(documentLanguageData);
-        List<WordRep> wordsNamesRepeated = nameCounter.count(documentLanguageData, 2);
         List<WordRep> wordsNamesAll = nameCounter.count(documentLanguageData, 1);
         List<WordRep> subjects = subjectCounter.count(documentLanguageData);
 
@@ -49,12 +74,9 @@ public class DocumentKeywordExtractor {
         List<WordRep> midKeywords = new ArrayList<>(wordsTfIdf.mid());
         List<WordRep> topKeywords = new ArrayList<>(wordsTfIdf.top());
 
-        var wordsToMatchWithTitle = joinWordLists(topKeywords, wordsNamesRepeated, subjects);
-
         Collection<String> artifacts = getArtifacts(documentLanguageData);
 
         var wordSet = new EdgePageWordSet(
-                createWords(IndexBlock.TitleKeywords, overlappingStems(titleWords, wordsToMatchWithTitle)),
                 createWords(IndexBlock.Subjects, subjects),
                 createWords(IndexBlock.Title, titleWords),
                 createWords(IndexBlock.NamesWords, wordsNamesAll),
@@ -121,7 +143,7 @@ public class DocumentKeywordExtractor {
             else {
                 lastSet = counts.entrySet().stream()
                         .sorted(Comparator.comparing(e -> {
-                            double N = 11820118.; // Number of documents in term freq dictionary
+                            double N = docCount; // Number of documents in term freq dictionary
 
                             // Caveat: This is actually the *negated* term score, because the second logarithm has
                             // its parameter inverted (log(a^b) = b log(a); here b = -1)

@@ -1,10 +1,10 @@
 package nu.marginalia.wmsa.edge.integration.arxiv;
 
 import nu.marginalia.util.TestLanguageModels;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.util.language.conf.LanguageModels;
 import nu.marginalia.util.language.processing.DocumentKeywordExtractor;
 import nu.marginalia.util.language.processing.SentenceExtractor;
+import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import nu.marginalia.wmsa.edge.integration.arxiv.model.ArxivMetadata;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -26,7 +26,7 @@ class ArxivParserTest {
 
     @Test
     void extractKeywords() throws IOException {
-        var dict = new NGramDict(lm);
+        var dict = new TermFrequencyDict(lm);
 
         DocumentKeywordExtractor documentKeywordExtractor = new DocumentKeywordExtractor(dict);
 

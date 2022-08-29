@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Marginalia Search}</title>
+    <title>Marginalia Search</title>
 
     <link rel="stylesheet" href="/style-new.css" />
     <link rel="search" type="application/opensearchdescription+xml" href="/opensearch.xml" title="Marginalia">

@@ -9,7 +9,6 @@ import nu.marginalia.util.language.processing.model.DocumentLanguageData;
 import nu.marginalia.wmsa.configuration.WmsaHome;
 import nu.marginalia.wmsa.edge.converting.processor.logic.DomPruner;
 import nu.marginalia.wmsa.edge.crawling.CrawlPlanLoader;
-import opennlp.tools.langdetect.LanguageDetector;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
@@ -21,12 +20,17 @@ import javax.inject.Singleton;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Singleton
-public class NGramDict {
+public class TermFrequencyDict {
 
     private final TLongIntHashMap wordRates = new TLongIntHashMap(1_000_000, 0.5f, 0, 0);
 
@@ -34,21 +38,22 @@ public class NGramDict {
     private static final Pattern separator = Pattern.compile("[_ ]+");
     private static final PorterStemmer ps = new PorterStemmer();
 
+    private static final long DOC_COUNT_KEY = ~0L;
     private static long fileSize(Path p) throws IOException {
         return Files.size(p);
     }
 
     @Inject
-    public NGramDict(@Nullable LanguageModels models) {
+    public TermFrequencyDict(@Nullable LanguageModels models) {
         if (models == null) {
             return;
         }
 
-        if (models.ngramFrequency != null) {
+        if (models.termFrequencies != null) {
 
-            try (var frequencyData = new DataInputStream(new BufferedInputStream(new FileInputStream(models.ngramFrequency.toFile())))) {
+            try (var frequencyData = new DataInputStream(new BufferedInputStream(new FileInputStream(models.termFrequencies.toFile())))) {
 
-                wordRates.ensureCapacity((int)(fileSize(models.ngramFrequency)/16));
+                wordRates.ensureCapacity((int)(fileSize(models.termFrequencies)/16));
 
                 for (;;) {
                     wordRates.put(frequencyData.readLong(), (int) frequencyData.readLong());
@@ -56,7 +61,7 @@ public class NGramDict {
             } catch (EOFException eof) {
                 // ok
             } catch (IOException e) {
-                logger.error("IO Exception reading " + models.ngramFrequency, e);
+                logger.error("IO Exception reading " + models.termFrequencies, e);
             }
         }
 
@@ -64,60 +69,100 @@ public class NGramDict {
     }
 
 
-    public static void main(String... args) throws IOException {
+    public int docCount() {
+        int cnt = wordRates.get(DOC_COUNT_KEY);
+
+        if (cnt == 0) {
+            cnt = 11820118; // legacy
+        }
+        return cnt;
+    }
+
+    public static void main(String... args) throws IOException, InterruptedException {
         if (args.length != 2) {
             System.err.println("Expected arguments: plan.yaml out-file");
         }
-        String inFile = args[0];
         String outFile = args[1];
 
         var plan = new CrawlPlanLoader().load(Path.of(args[0]));
 
-        SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
+        ThreadLocal<SentenceExtractor> se = ThreadLocal.withInitial(() -> new SentenceExtractor(WmsaHome.getLanguageModels()));
         DomPruner pruner = new DomPruner();
         LanguageFilter lf = new LanguageFilter();
 
-        Map<String, Integer> counts = new HashMap<>(100_000_000);
-        Set<String> words = new HashSet<>(10_000);
+        TLongIntHashMap counts = new TLongIntHashMap(100_000_000, 0.7f, -1, -1);
+
+        ForkJoinPool fjp = new ForkJoinPool(24);
+        AtomicInteger docCount = new AtomicInteger();
 
         for (var domain : plan.domainsIterable()) { // leaks file descriptor, is fine
 
             if (domain.doc == null)
                 continue;
 
-            for (var doc : domain.doc) {
-                if (doc.documentBody == null)
-                    continue;
+            fjp.execute(() -> {
 
-                Document parsed = Jsoup.parse(doc.documentBody);
-                pruner.prune(parsed, 0.5);
+                for (var doc : domain.doc) {
+                    if (doc.documentBody == null)
+                        continue;
+                    docCount.incrementAndGet();
 
-                DocumentLanguageData dld = se.extractSentences(parsed);
+                    Document parsed = Jsoup.parse(doc.documentBody);
+                    pruner.prune(parsed, 0.5);
 
-                if (lf.dictionaryAgreement(dld) < 0.1) {
-                    continue;
-                }
+                    DocumentLanguageData dld = se.get().extractSentences(parsed);
 
-
-                for (var sent : dld.sentences) {
-                    for (var word : sent) {
-                        words.add(word.stemmed());
+                    if (lf.dictionaryAgreement(dld) < 0.1) {
+                        return;
                     }
-                }
 
-                for (var word : words) {
-                    counts.merge(word,  1, Integer::sum);
-                }
+                    Set<String> words = new HashSet<>(10_000);
 
-                words.clear();
+                    for (var sent : dld.sentences) {
+                        for (var word : sent) {
+                            words.add(word.stemmed());
+                        }
+                    }
+
+                    fjp.execute(() -> {
+                        synchronized (counts) {
+                            for (var word : words) {
+                                counts.adjustOrPutValue(longHash(word.getBytes()),  1, 1);
+                            }
+                        }
+                    });
+
+                }
+            });
+        }
+
+        fjp.shutdown();
+        fjp.awaitTermination(10, TimeUnit.SECONDS);
+
+        try (var dos = new DataOutputStream(Files.newOutputStream(Path.of(outFile)))) {
+            synchronized (counts) {
+                counts.put(DOC_COUNT_KEY, docCount.get());
+
+                counts.forEachEntry((hash, cnt) -> {
+                    try {
+                        dos.writeLong(hash);
+                        dos.writeLong(cnt);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    return true;
+                });
             }
         }
 
-        counts.forEach((w,c) -> {
-            if (c > 3) {
-                System.out.println(w + ":" + c);
-            }
-        });
+        System.out.println(docCount.get());
+//
+//        counts.forEachEntry((w,c) -> {
+//            if (c > 3L) {
+//                System.out.println(w + ":" + c);
+//            }
+//            return true;
+//        });
 
     }
 

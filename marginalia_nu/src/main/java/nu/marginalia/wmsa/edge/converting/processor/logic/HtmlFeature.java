@@ -12,6 +12,8 @@ public enum HtmlFeature {
     CATEGORY_FOOD("category:food"),
 
     ADVERTISEMENT("special:ads"),
+
+    CATEGORY_CRAFTS("category:crafts"),
     ;
 
     private final String keyword;

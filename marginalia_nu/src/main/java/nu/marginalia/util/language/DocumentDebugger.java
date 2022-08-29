@@ -8,7 +8,7 @@ import nu.marginalia.util.language.processing.SentenceExtractor;
 import nu.marginalia.util.language.processing.model.DocumentSentence;
 import nu.marginalia.util.language.processing.model.WordRep;
 import nu.marginalia.util.language.processing.model.tag.WordSeparator;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
+import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import org.jsoup.nodes.Document;
 
 import java.io.FileNotFoundException;
@@ -30,7 +30,7 @@ public class DocumentDebugger {
     Path tempDir;
     public DocumentDebugger(LanguageModels lm) throws IOException {
         se = new SentenceExtractor(lm);
-        var dict = new NGramDict(lm);
+        var dict = new TermFrequencyDict(lm);
         ke = new KeywordExtractor();
 
         kc = new KeywordCounter(dict, ke);

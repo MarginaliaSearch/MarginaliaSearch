@@ -2,7 +2,7 @@ package nu.marginalia.util.language.processing;
 
 import nu.marginalia.util.language.processing.model.DocumentLanguageData;
 import nu.marginalia.util.language.processing.model.WordRep;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
+import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,11 +12,13 @@ import java.util.regex.Pattern;
 
 public class KeywordCounter {
     private final KeywordExtractor keywordExtractor;
-    private final NGramDict dict;
+    private final TermFrequencyDict dict;
+    private final double docCount;
 
-    public KeywordCounter(NGramDict dict, KeywordExtractor keywordExtractor) {
+    public KeywordCounter(TermFrequencyDict dict, KeywordExtractor keywordExtractor) {
         this.dict = dict;
         this.keywordExtractor = keywordExtractor;
+        this.docCount = (double) dict.docCount();
     }
 
     public WordHistogram countHisto(DocumentLanguageData dld) {
@@ -71,7 +73,7 @@ public class KeywordCounter {
         if (freq < 1) {
             freq = 10;
         }
-        return (0.1 + 0.9*value/maxValue) * Math.log((1.1+freq)/11820118.);
+        return (0.1 + 0.9*value/maxValue) * Math.log((1.1+freq)/docCount);
     }
 
     public record WordHistogram(Set<WordRep> lower, Set<WordRep> mid, Set<WordRep> top) { }

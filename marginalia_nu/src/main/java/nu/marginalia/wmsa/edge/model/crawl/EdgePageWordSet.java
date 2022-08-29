@@ -19,7 +19,8 @@ public class EdgePageWordSet {
     public EdgePageWords get(IndexBlock block) {
         var words = wordSets.get(block);
         if (words == null) {
-            return new EdgePageWords(block);
+            words = new EdgePageWords(block);
+            wordSets.put(block, words);
         }
         return words;
     }

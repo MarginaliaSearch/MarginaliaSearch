@@ -1,8 +1,8 @@
 package nu.marginalia.wmsa.edge.search.query;
 
 import nu.marginalia.util.TestLanguageModels;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.util.language.conf.LanguageModels;
+import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import org.junit.jupiter.api.Test;
 
 class EnglishDictionaryTest {
@@ -11,7 +11,7 @@ class EnglishDictionaryTest {
     void getWordVariants() {
         LanguageModels lm = TestLanguageModels.getLanguageModels();
 
-        var dict = new NGramDict(lm);
+        var dict = new TermFrequencyDict(lm);
         new EnglishDictionary(dict).getWordVariants("dos").forEach(System.out::println);
     }
 }

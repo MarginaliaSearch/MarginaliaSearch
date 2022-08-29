@@ -4,7 +4,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.util.language.WordPatterns;
 import nu.marginalia.util.language.conf.LanguageModels;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
+import nu.marginalia.wmsa.edge.assistant.dict.NGramBloomFilter;
+import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchSpecification;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchSubquery;
@@ -22,20 +23,22 @@ import java.util.*;
 public class QueryFactory {
 
     private final LanguageModels lm;
-    private final NGramDict dict;
+    private final TermFrequencyDict dict;
     private final EnglishDictionary englishDictionary;
+    private final NGramBloomFilter nGramBloomFilter;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
-    public QueryFactory(LanguageModels lm, NGramDict dict, EnglishDictionary englishDictionary) {
+    public QueryFactory(LanguageModels lm, TermFrequencyDict dict, EnglishDictionary englishDictionary, NGramBloomFilter nGramBloomFilter) {
         this.lm = lm;
         this.dict = dict;
 
         this.englishDictionary = englishDictionary;
+        this.nGramBloomFilter = nGramBloomFilter;
     }
 
     public QueryParser getParser() {
-        return new QueryParser(englishDictionary, new QueryVariants(lm ,dict, englishDictionary));
+        return new QueryParser(englishDictionary, new QueryVariants(lm ,dict, nGramBloomFilter, englishDictionary));
     }
 
     public EdgeSearchQuery createQuery(EdgeUserSearchParameters params) {

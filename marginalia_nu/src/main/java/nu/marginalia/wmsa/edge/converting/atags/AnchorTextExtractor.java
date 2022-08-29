@@ -6,7 +6,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.util.DenseBitMap;
 import nu.marginalia.util.language.WordPatterns;
 import nu.marginalia.wmsa.configuration.WmsaHome;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
+import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import nu.marginalia.wmsa.edge.converting.processor.logic.LinkParser;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import org.apache.logging.log4j.util.Strings;
@@ -36,7 +36,7 @@ public class AnchorTextExtractor {
     // de-duplicating billions of shuffled (url, word) tuples on limited hardware
     private final DenseBitMap deduplicateHashBitset = new DenseBitMap(DenseBitMap.MAX_CAPACITY_2GB_16BN_ITEMS);
 
-    private final NGramDict ngramDict = new NGramDict(WmsaHome.getLanguageModels());
+    private final TermFrequencyDict ngramDict = new TermFrequencyDict(WmsaHome.getLanguageModels());
 
     public AnchorTextExtractor(Predicate<String> includeDomainPredicate,
                                Predicate<EdgeUrl> includeUrlPredicate,

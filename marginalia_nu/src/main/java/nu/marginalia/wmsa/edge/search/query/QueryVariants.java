@@ -10,7 +10,8 @@ import nu.marginalia.util.language.processing.KeywordExtractor;
 import nu.marginalia.util.language.processing.SentenceExtractor;
 import nu.marginalia.util.language.processing.model.DocumentSentence;
 import nu.marginalia.util.language.processing.model.WordSpan;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
+import nu.marginalia.wmsa.edge.assistant.dict.NGramBloomFilter;
+import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import opennlp.tools.stemmer.PorterStemmer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,14 +25,18 @@ public class QueryVariants {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final KeywordExtractor keywordExtractor;
     private final SentenceExtractor sentenceExtractor;
-    private final NGramDict dict;
+    private final TermFrequencyDict dict;
     private final PorterStemmer ps = new PorterStemmer();
 
-    private final static int MAX_NGRAM_LENGTH = 4;
+    private final NGramBloomFilter nGramBloomFilter;
     private final EnglishDictionary englishDictionary;
 
     @Inject
-    public QueryVariants(LanguageModels lm, NGramDict dict, EnglishDictionary englishDictionary) {
+    public QueryVariants(LanguageModels lm,
+                         TermFrequencyDict dict,
+                         NGramBloomFilter nGramBloomFilter,
+                         EnglishDictionary englishDictionary) {
+        this.nGramBloomFilter = nGramBloomFilter;
         this.englishDictionary = englishDictionary;
         this.keywordExtractor = new KeywordExtractor();
         this.sentenceExtractor = new SentenceExtractor(lm);
@@ -154,11 +159,11 @@ public class QueryVariants {
             double q = 0;
             for (var word : lst) {
                 String[] parts = underscore.split(word);
-                StringJoiner combined = new StringJoiner("_");
+                double qp = 0;
                 for (String part : parts) {
-                    combined.add(ps.stem(part));
+                    qp += 1./(1+ dict.getTermFreq(part));
                 }
-                q += Math.log(1 + dict.getTermFreqStemmed(combined.toString()));
+                q += 1.0 / qp;
             }
             ret.add(new QueryVariant(lst, q));
         }
@@ -215,8 +220,8 @@ public class QueryVariants {
             while (wordMatcher.find(ws) && stemmedMatcher.find(ss)) {
                 ws = wordMatcher.start()+1;
                 ss = stemmedMatcher.start()+1;
-                if (dict.getTermFreqStemmed(splitAtNumBoundaryAndStem(span.word, stemmedMatcher.start(), "_")) > 0
-                        || dict.getTermFreqStemmed(splitAtNumBoundaryAndStem(span.word, stemmedMatcher.start(), "-")) > 0)
+                if (nGramBloomFilter.isKnownNGram(splitAtNumBoundary(span.word, stemmedMatcher.start(), "_"))
+                        || nGramBloomFilter.isKnownNGram(splitAtNumBoundary(span.word, stemmedMatcher.start(), "-")))
                 {
                     String combined = splitAtNumBoundary(span.word, wordMatcher.start(), "_");
                     asTokens2.add(combined);
@@ -242,7 +247,7 @@ public class QueryVariants {
 
         for (var span : ls) {
             var matcher = dashBoundary.matcher(span.word);
-            if (matcher.find() && dict.getTermFreqStemmed(ps.stem(dashBoundary.matcher(span.word).replaceAll(""))) > 0) {
+            if (matcher.find() && nGramBloomFilter.isKnownNGram(ps.stem(dashBoundary.matcher(span.word).replaceAll("")))) {
                 dash = true;
                 String combined = dashBoundary.matcher(span.word).replaceAll("");
                 asTokens2.add(combined);
@@ -260,10 +265,6 @@ public class QueryVariants {
 
     private String splitAtNumBoundary(String in, int splitPoint, String joiner) {
         return in.substring(0, splitPoint+1) + joiner + in.substring(splitPoint+1);
-    }
-
-    private String splitAtNumBoundaryAndStem(String in, int splitPoint, String joiner) {
-        return ps.stem(in.substring(0, splitPoint+1)) + joiner + ps.stem(in.substring(splitPoint+1));
     }
 
     private List<List<Word>> getWordSpans(TreeMap<Integer, List<WordSpan>> byStart, DocumentSentence sentence, List<ArrayList<WordSpan>> livingSpans) {

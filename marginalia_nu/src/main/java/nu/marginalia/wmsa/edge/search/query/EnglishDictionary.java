@@ -1,7 +1,7 @@
 package nu.marginalia.wmsa.edge.search.query;
 
 import com.google.inject.Inject;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
+import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,11 +13,11 @@ import java.util.stream.Collectors;
 
 public class EnglishDictionary {
     private final Set<String> englishWords = new HashSet<>();
-    private final NGramDict dict;
+    private final TermFrequencyDict dict;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
-    public EnglishDictionary(NGramDict dict) {
+    public EnglishDictionary(TermFrequencyDict dict) {
         this.dict = dict;
         try (var resource = Objects.requireNonNull(ClassLoader.getSystemResourceAsStream("dictionary/en-words"),
                 "Could not load word frequency table");

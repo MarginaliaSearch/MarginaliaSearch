@@ -15,7 +15,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 
-public class KeywordLexiconJournalFile {
+public class KeywordLexiconJournalFile implements AutoCloseable {
     private final RandomAccessFile journalFileRAF;
     private final File journalFile;
     private final Logger logger = LoggerFactory.getLogger(getClass());

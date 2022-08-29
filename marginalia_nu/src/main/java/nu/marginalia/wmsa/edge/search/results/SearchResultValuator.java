@@ -3,7 +3,7 @@ package nu.marginalia.wmsa.edge.search.results;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.util.language.WordPatterns;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
+import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchResultKeywordScore;
 
@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 
 @Singleton
 public class SearchResultValuator {
-    private final NGramDict dict;
+    private final TermFrequencyDict dict;
 
     private static final Pattern separator = Pattern.compile("_");
 
@@ -20,7 +20,7 @@ public class SearchResultValuator {
     private static final int AVG_LENGTH = 1400;
 
     @Inject
-    public SearchResultValuator(NGramDict dict) {
+    public SearchResultValuator(TermFrequencyDict dict) {
         this.dict = dict;
     }
 

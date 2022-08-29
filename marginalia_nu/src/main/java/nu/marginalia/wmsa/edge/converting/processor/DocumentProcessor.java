@@ -86,10 +86,6 @@ public class DocumentProcessor {
                 if (isAcceptedContentType(crawledDocument)) {
                     var detailsWords = createDetails(crawledDomain, crawledDocument);
 
-                    if (detailsWords.details().quality < minDocumentQuality) {
-                        throw new DisqualifiedException(DisqualificationReason.QUALITY);
-                    }
-
                     ret.details = detailsWords.details();
                     ret.words = detailsWords.words();
                 }
@@ -141,10 +137,13 @@ public class DocumentProcessor {
     private DetailsWithWords createDetails(CrawledDomain crawledDomain, CrawledDocument crawledDocument)
             throws DisqualifiedException, URISyntaxException {
 
-        var doc = Jsoup.parse(crawledDocument.documentBody);
+        Document doc = Jsoup.parse(crawledDocument.documentBody);
 
         if (AcceptableAds.hasAcceptableAdsTag(doc)) {
             throw new DisqualifiedException(DisqualificationReason.ACCEPTABLE_ADS);
+        }
+        if (doc.select("meta[name=robots]").attr("content").contains("noindex")) {
+            throw new DisqualifiedException(DisqualificationReason.FORBIDDEN);
         }
 
         DomPruner domPruner = new DomPruner();
@@ -160,11 +159,17 @@ public class DocumentProcessor {
         ret.length = getLength(doc);
         ret.standard = getHtmlStandard(doc);
         ret.title = titleExtractor.getTitleAbbreviated(doc, dld, crawledDocument.url);
-        ret.features = featureExtractor.getFeatures(crawledDomain, doc);
+        ret.features = featureExtractor.getFeatures(crawledDomain, doc, dld);
         ret.quality = documentValuator.getQuality(ret.standard, doc, dld);
         ret.hashCode = HashCode.fromString(crawledDocument.documentBodyHash).asLong();
 
-        var words = getWords(dld);
+        EdgePageWordSet words;
+        if (ret.quality < minDocumentQuality || dld.totalNumWords() < minDocumentLength) {
+            words = keywordExtractor.extractKeywordsMinimal(dld);
+        }
+        else {
+            words = keywordExtractor.extractKeywords(dld);
+        }
 
         var url = new EdgeUrl(crawledDocument.url);
         addMetaWords(ret, url, crawledDomain, words);
@@ -195,7 +200,6 @@ public class DocumentProcessor {
         ret.features.stream().map(HtmlFeature::getKeyword).forEach(tagWords::add);
 
         words.append(IndexBlock.Meta, tagWords);
-        words.append(IndexBlock.Words_1, tagWords);
     }
 
     private void getLinks(EdgeUrl baseUrl, ProcessedDocumentDetails ret, Document doc, EdgePageWordSet words) {
@@ -255,7 +259,6 @@ public class DocumentProcessor {
 
     private void synthesizeFilenameKeyword(Set<String> fileKeywords, EdgeUrl link) {
 
-
         Path pFilename = Path.of(link.path.toLowerCase()).getFileName();
 
         if (pFilename == null) return;
@@ -273,10 +276,6 @@ public class DocumentProcessor {
     }
 
     private void checkDocumentLanguage(DocumentLanguageData dld) throws DisqualifiedException {
-        if (dld.totalNumWords() < minDocumentLength) {
-            throw new DisqualifiedException(DisqualificationReason.LENGTH);
-        }
-
         double languageAgreement = languageFilter.dictionaryAgreement(dld);
         if (languageAgreement < 0.1) {
             throw new DisqualifiedException(DisqualificationReason.LANGUAGE);
@@ -290,10 +289,6 @@ public class DocumentProcessor {
             return HtmlStandardExtractor.sniffHtmlStandard(doc);
         }
         return htmlStandard;
-    }
-
-    private EdgePageWordSet getWords(DocumentLanguageData dld) {
-        return keywordExtractor.extractKeywords(dld);
     }
 
     private String getDescription(Document doc) {

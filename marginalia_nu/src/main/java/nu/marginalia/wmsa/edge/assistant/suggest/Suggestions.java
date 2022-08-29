@@ -2,8 +2,8 @@ package nu.marginalia.wmsa.edge.assistant.suggest;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.wmsa.edge.assistant.dict.SpellChecker;
+import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import nu.marginalia.wmsa.edge.converting.processor.logic.HtmlFeature;
 import org.apache.commons.collections4.trie.PatriciaTrie;
 import org.slf4j.Logger;
@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 
 public class Suggestions {
     private final PatriciaTrie<String> suggestionsTrie;
-    private final NGramDict nGramDict;
+    private final TermFrequencyDict termFrequencyDict;
     private final SpellChecker spellChecker;
 
     private static final Pattern suggestionPattern = Pattern.compile("^[a-zA-Z0-9]+( [a-zA-Z0-9]+)*$");
@@ -31,12 +31,12 @@ public class Suggestions {
     @Inject
     public Suggestions(@Named("suggestions-file") Path suggestionsFile,
                        SpellChecker spellChecker,
-                       NGramDict dict
+                       TermFrequencyDict dict
                        ) {
         this.spellChecker = spellChecker;
 
         suggestionsTrie = loadSuggestions(suggestionsFile);
-        nGramDict = dict;
+        termFrequencyDict = dict;
 
         logger.info("Loaded {} suggestions", suggestionsTrie.size());
     }
@@ -138,7 +138,7 @@ public class Suggestions {
         }
 
         Map<String, Long> scach = new HashMap<>(512);
-        Function<String, Long> valr = s -> -nGramDict.getTermFreqHash(scach.computeIfAbsent(s, NGramDict::getStringHash));
+        Function<String, Long> valr = s -> -termFrequencyDict.getTermFreqHash(scach.computeIfAbsent(s, TermFrequencyDict::getStringHash));
 
         return Stream.iterate(start.getKey(), Objects::nonNull, suggestionsTrie::nextKey)
                 .takeWhile(s -> s.startsWith(prefix))
