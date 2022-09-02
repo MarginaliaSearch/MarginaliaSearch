@@ -7,7 +7,7 @@ import nu.marginalia.util.language.conf.LanguageModels;
 import nu.marginalia.util.language.processing.SentenceExtractor;
 import nu.marginalia.util.language.processing.model.DocumentLanguageData;
 import nu.marginalia.wmsa.configuration.WmsaHome;
-import nu.marginalia.wmsa.edge.converting.processor.logic.DomPruner;
+import nu.marginalia.wmsa.edge.converting.processor.logic.DomPruningFilter;
 import nu.marginalia.wmsa.edge.crawling.CrawlPlanLoader;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -87,7 +87,6 @@ public class TermFrequencyDict {
         var plan = new CrawlPlanLoader().load(Path.of(args[0]));
 
         ThreadLocal<SentenceExtractor> se = ThreadLocal.withInitial(() -> new SentenceExtractor(WmsaHome.getLanguageModels()));
-        DomPruner pruner = new DomPruner();
         LanguageFilter lf = new LanguageFilter();
 
         TLongIntHashMap counts = new TLongIntHashMap(100_000_000, 0.7f, -1, -1);
@@ -108,7 +107,7 @@ public class TermFrequencyDict {
                     docCount.incrementAndGet();
 
                     Document parsed = Jsoup.parse(doc.documentBody);
-                    pruner.prune(parsed, 0.5);
+                    parsed.body().filter(new DomPruningFilter(0.5));
 
                     DocumentLanguageData dld = se.get().extractSentences(parsed);
 

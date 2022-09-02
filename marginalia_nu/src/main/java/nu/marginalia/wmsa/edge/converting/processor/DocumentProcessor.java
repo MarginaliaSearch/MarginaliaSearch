@@ -171,15 +171,14 @@ public class DocumentProcessor {
             throw new DisqualifiedException(DisqualificationReason.FORBIDDEN);
         }
 
-        DomPruner domPruner = new DomPruner();
         Document prunedDoc = doc.clone();
-        domPruner.prune(prunedDoc, 0.5);
+        prunedDoc.body().filter(new DomPruningFilter(0.5));
+
         var dld = sentenceExtractor.extractSentences(prunedDoc);
 
         checkDocumentLanguage(dld);
 
         var ret = new ProcessedDocumentDetails();
-
 
         ret.length = getLength(doc);
         ret.standard = getHtmlStandard(doc);
@@ -246,12 +245,11 @@ public class DocumentProcessor {
             if (linkParser.shouldIndexLink(atag)) {
                 linkOpt.ifPresent(lp::accept);
             }
-            else if (linkOpt.isPresent()) {
-                if (linkParser.hasBinarySuffix(linkOpt.get().toString())) {
-                    linkOpt.ifPresent(lp::acceptNonIndexable);
-                }
+            else {
+                linkOpt
+                        .filter(url -> linkParser.hasBinarySuffix(url.path.toLowerCase()))
+                        .ifPresent(lp::acceptNonIndexable);
             }
-
         }
         for (var frame : doc.getElementsByTag("frame")) {
             linkParser.parseFrame(baseUrl, frame).ifPresent(lp::accept);
@@ -271,21 +269,20 @@ public class DocumentProcessor {
             linkTerms.add("links:"+fd.toString().toLowerCase());
             linkTerms.add("links:"+fd.getDomain().toLowerCase());
         }
-
         words.append(IndexBlock.Meta, linkTerms);
 
         Set<String> fileKeywords = new HashSet<>(100);
         for (var link : lp.getNonIndexableUrls()) {
 
-            if (!Objects.equals(domain, link.domain)) {
+            if (!domain.hasSameTopDomain(link.domain)) {
                 continue;
             }
 
             synthesizeFilenameKeyword(fileKeywords, link);
 
         }
-
         words.append(IndexBlock.Artifacts, fileKeywords);
+
     }
 
     private void synthesizeFilenameKeyword(Set<String> fileKeywords, EdgeUrl link) {

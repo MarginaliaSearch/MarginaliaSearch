@@ -1,6 +1,5 @@
 package nu.marginalia.wmsa.edge.converting.processor.logic;
 
-import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
@@ -9,22 +8,14 @@ import org.jsoup.select.NodeFilter;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DomPruner {
+public class DomPruningFilter implements NodeFilter {
 
-    public void prune(Document document, double pruneThreshold) {
-        document.filter(new PruningFilter(pruneThreshold));
-    }
-
-}
-
-
-class PruningFilter implements NodeFilter {
+    private final double pruneThreshold;
 
     private final Map<Node, NodeData> data = new HashMap<>();
     private final NodeData dummy = new NodeData(Integer.MAX_VALUE, 1, 0);
-    private double pruneThreshold;
 
-    public PruningFilter(double pruneThreshold) {
+    public DomPruningFilter(double pruneThreshold) {
         this.pruneThreshold = pruneThreshold;
     }
 

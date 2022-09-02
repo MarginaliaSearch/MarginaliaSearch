@@ -7,7 +7,7 @@ import nu.marginalia.util.language.processing.SentenceExtractor;
 import nu.marginalia.wmsa.configuration.WmsaHome;
 import nu.marginalia.wmsa.edge.converting.ConverterModule;
 import nu.marginalia.wmsa.edge.converting.processor.DomainProcessor;
-import nu.marginalia.wmsa.edge.converting.processor.logic.DomPruner;
+import nu.marginalia.wmsa.edge.converting.processor.logic.DomPruningFilter;
 import nu.marginalia.wmsa.edge.converting.processor.logic.topic.RecipeDetector;
 import nu.marginalia.wmsa.edge.converting.processor.logic.topic.TextileCraftDetector;
 import nu.marginalia.wmsa.edge.converting.processor.logic.topic.WoodworkingDetector;
@@ -25,7 +25,6 @@ public class ConverterLogicTestTool {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    DomPruner domPruner = new DomPruner();
     RecipeDetector recipeDetector = new RecipeDetector();
     WoodworkingDetector woodworkingDetector = new WoodworkingDetector();
     TextileCraftDetector textileCraftDetector = new TextileCraftDetector();
@@ -64,7 +63,7 @@ public class ConverterLogicTestTool {
                 Runnable task = () -> {
                     var parsed = Jsoup.parse(doc.documentBody);
 
-                    domPruner.prune(parsed, 0.5);
+                    parsed.body().filter(new DomPruningFilter(0.5));
                     var dld = se.extractSentences(parsed);
 
                     if (dld.totalNumWords() < 250)

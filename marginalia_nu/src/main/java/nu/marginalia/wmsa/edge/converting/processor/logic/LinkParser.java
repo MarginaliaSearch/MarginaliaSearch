@@ -19,10 +19,14 @@ import java.util.regex.Pattern;
 
 public class LinkParser {
     private final Logger logger = LoggerFactory.getLogger(getClass());
+
     private final List<String> blockPrefixList = List.of(
             "mailto:", "javascript:", "tel:", "itpc:", "#", "file:");
-    private final List<String> blockSuffixList = List.of(
+
+    private final List<String> binarySuffixList = List.of(
             ".pdf", ".mp3", ".wmv", ".avi", ".zip", ".7z",
+            ".mpv", ".mp4", ".avi", ".mkv", ".tiff", ".dat", ".tar",
+            ".com", ".bat", ".sh",
             ".bin", ".exe", ".tar.gz", ".tar.bz2", ".xml", ".swf",
             ".wav", ".ogg", ".jpg", ".jpeg", ".png", ".gif", ".webp",
             ".webm", ".bmp", ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx",
@@ -33,7 +37,7 @@ public class LinkParser {
         return Optional.of(l)
                 .filter(this::shouldIndexLink)
                 .map(this::getUrl)
-                .map(link -> resolveUrl(relativeBaseUrl, link))
+                .map(link -> resolveRelativeUrl(relativeBaseUrl, link))
                 .flatMap(this::createURI)
                 .map(URI::normalize)
                 .map(this::renormalize)
@@ -44,7 +48,7 @@ public class LinkParser {
     public Optional<EdgeUrl> parseLinkPermissive(EdgeUrl relativeBaseUrl, Element l) {
         return Optional.of(l)
                 .map(this::getUrl)
-                .map(link -> resolveUrl(relativeBaseUrl, link))
+                .map(link -> resolveRelativeUrl(relativeBaseUrl, link))
                 .flatMap(this::createURI)
                 .map(URI::normalize)
                 .map(this::renormalize)
@@ -74,7 +78,7 @@ public class LinkParser {
     @Contract(pure=true)
     public Optional<EdgeUrl> parseLink(EdgeUrl baseUrl, String str) {
         return Optional.of(str)
-                .map(link -> resolveUrl(baseUrl, link))
+                .map(link -> resolveRelativeUrl(baseUrl, link))
                 .flatMap(this::createURI)
                 .map(URI::normalize)
                 .map(this::renormalize)
@@ -85,7 +89,7 @@ public class LinkParser {
     public Optional<EdgeUrl> parseFrame(EdgeUrl baseUrl, Element frame) {
         return Optional.of(frame)
                 .map(l -> l.attr("src"))
-                .map(link -> resolveUrl(baseUrl, link))
+                .map(link -> resolveRelativeUrl(baseUrl, link))
                 .flatMap(this::createURI)
                 .map(URI::normalize)
                 .map(this::renormalize)
@@ -95,10 +99,10 @@ public class LinkParser {
     @SneakyThrows
     private URI renormalize(URI uri) {
         if (uri.getPath() == null) {
-            return renormalize(new URI(uri.getScheme(), uri.getHost(), "/", uri.getFragment()));
+            return renormalize(new URI(uri.getScheme(), uri.getHost(), "/", uri.getQuery(), uri.getFragment()));
         }
         if (uri.getPath().startsWith("/../")) {
-            return renormalize(new URI(uri.getScheme(), uri.getHost(), uri.getPath().substring(3), uri.getFragment()));
+            return renormalize(new URI(uri.getScheme(), uri.getHost(), uri.getPath().substring(3), uri.getQuery(), uri.getFragment()));
         }
         return uri;
     }
@@ -117,10 +121,10 @@ public class LinkParser {
     private static final Pattern paramSeparatorPattern = Pattern.compile("\\?");
 
     @SneakyThrows
-    private String resolveUrl(EdgeUrl baseUrl, String s) {
+    private String resolveRelativeUrl(EdgeUrl baseUrl, String s) {
 
         // url looks like http://www.marginalia.nu/
-        if (isAbsoluteDomain(s)) {
+        if (doesUrlStringHaveProtocol(s)) {
             return s;
         }
 
@@ -154,8 +158,15 @@ public class LinkParser {
         return url.path.substring(0, lastSlash+1);
     }
 
-    private boolean isAbsoluteDomain(String s) {
-        return  s.matches("^[a-zA-Z]+:.*$");
+    private boolean doesUrlStringHaveProtocol(String s) {
+        int i = 0;
+        for (; i < s.length(); i++) {
+            if (!Character.isAlphabetic(s.charAt(i)))
+                break;
+        }
+        if (i == 0 || i == s.length())
+            return false;
+        return ':' == s.charAt(i);
     }
 
     public boolean shouldIndexLink(Element link) {
@@ -168,24 +179,27 @@ public class LinkParser {
         return !"noindex".equalsIgnoreCase(rel);
     }
 
-    public boolean hasBinarySuffix(String href) {
-        return blockSuffixList.stream().anyMatch(href::endsWith);
-    }
-
     private boolean isUrlRelevant(String href) {
         if (null == href || "".equals(href)) {
             return false;
         }
+        if (href.length() > 128) {
+            return false;
+        }
+        href = href.toLowerCase();
+
         if (blockPrefixList.stream().anyMatch(href::startsWith)) {
             return false;
         }
         if (hasBinarySuffix(href)) {
             return false;
         }
-        if (href.length() > 128) {
-            return false;
-        }
+
         return true;
+    }
+
+    public boolean hasBinarySuffix(String str) {
+        return binarySuffixList.stream().anyMatch(str::endsWith);
     }
 
     @Nullable
@@ -196,7 +210,7 @@ public class LinkParser {
             for (var tag : baseTags) {
                 String href = tag.attr("href");
                 if (!Strings.isNullOrEmpty(href)) {
-                    return new EdgeUrl(resolveUrl(documentUrl, href));
+                    return new EdgeUrl(resolveRelativeUrl(documentUrl, href));
                 }
             }
         }
