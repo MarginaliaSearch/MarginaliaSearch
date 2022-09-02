@@ -509,3 +509,44 @@ a.underline {
   }
 
 }
+
+@media only print {
+  article {
+    margin-left: 4ch !important;
+    margin-right: 4ch !important;
+  }
+  .rightbox { display: none !important; }
+  .cards {
+    display: block !important;
+  }
+  .card h2 {
+    font-size: 16pt;
+    font-family: serif !important;
+  }
+  .card .description {
+    font-family: serif;
+    text-align: justify;
+    word-break: all;
+  }
+  .card {
+    border-left: none !important;
+    border-right: none !important;
+    border-top: none !important;
+    border-bottom: 3px double #000 !important;
+    box-shadow: none !important;
+  }
+  .card > .utils {
+    display: none !important;
+  }
+  footer {
+    display: none;
+  }
+  nav {
+    display: none !important;
+    box-shadow: none !important;
+  }
+  .search-box {
+    display: none !important;
+    box-shadow: none !important;
+  }
+}
