@@ -113,38 +113,13 @@ class SentenceExtractorTest {
         var dict = new TermFrequencyDict(lm);
 
         DocumentKeywordExtractor documentKeywordExtractor = new DocumentKeywordExtractor(dict);
-
-//        documentKeywordExtractorLegacy.setLegacy(true);
-
-//        for (;;) {
-            long st = System.currentTimeMillis();
-            for (var file : Objects.requireNonNull(data.toFile().listFiles())) {
-
-
-                var newResult = newSe.extractSentences(Jsoup.parse(Files.readString(file.toPath())));
-
-                var newRes = documentKeywordExtractor.extractKeywords(newResult);
-
-
-//                var legacyRes = documentKeywordExtractorLegacy.extractKeywords(newResult);
-//
-//                EdgePageWordSet difference = new EdgePageWordSet();
-//                for (IndexBlock block : IndexBlock.values()) {
-
-//                    var newWords = new HashSet<>(newRes.get(block).words);
-//                    var oldWords = new HashSet<>(legacyRes.get(block).words);
-//                    newWords.removeAll(oldWords);
-
-//                    if (!newWords.isEmpty()) {
-//                        difference.append(block, newWords);
-//                    }
-//                }
-//                System.out.println(difference);
-                System.out.println(newRes);
-//                System.out.println("---");
-            }
-            System.out.println(System.currentTimeMillis() - st);
-//        }
+        long st = System.currentTimeMillis();
+        for (var file : Objects.requireNonNull(data.toFile().listFiles())) {
+            var newResult = newSe.extractSentences(Jsoup.parse(Files.readString(file.toPath())));
+            var newRes = documentKeywordExtractor.extractKeywords(newResult);
+            System.out.println(newRes);
+        }
+        System.out.println(System.currentTimeMillis() - st);
 
     }
 

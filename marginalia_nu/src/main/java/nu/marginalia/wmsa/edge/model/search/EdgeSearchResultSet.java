@@ -10,7 +10,7 @@ import java.util.Map;
 
 @AllArgsConstructor @Getter @ToString
 public class EdgeSearchResultSet {
-    public Map<IndexBlock, List<EdgeSearchResults>> resultsList;
+    public Map<IndexBlock, List<EdgeSearchResultItem>> resultsList;
 
     public int size() {
         return resultsList.values().stream().mapToInt(List::size).sum();

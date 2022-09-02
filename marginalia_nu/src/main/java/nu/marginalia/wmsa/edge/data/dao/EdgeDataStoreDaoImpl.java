@@ -1,5 +1,6 @@
 package nu.marginalia.wmsa.edge.data.dao;
 
+import com.google.common.base.Strings;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.util.concurrent.UncheckedExecutionException;
@@ -113,9 +114,12 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
                             Double.MAX_VALUE, // termScore
                             0 // queryLength
                             );
-                    if (val.urlQuality >= QUALITY_LOWER_BOUND_CUTOFF) {
-                        result.add(val);
+                    if (val.urlQuality <= QUALITY_LOWER_BOUND_CUTOFF
+                    && Strings.isNullOrEmpty(val.description)
+                    && val.url.path.length() > 1) {
+                        continue;
                     }
+                    result.add(val);
 
                 }
             }

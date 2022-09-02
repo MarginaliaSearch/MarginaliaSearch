@@ -10,31 +10,31 @@ import java.util.stream.Collectors;
 
 public enum EdgeSearchProfile {
     DEFAULT("default",
-            List.of(IndexBlock.TitleKeywords, IndexBlock.Title, IndexBlock.Tfidf_Top, IndexBlock.Link,
+            List.of(IndexBlock.Title, IndexBlock.Tfidf_Top, IndexBlock.Tfidf_Middle, IndexBlock.Link,
                     IndexBlock.Words_1, IndexBlock.Words_2, IndexBlock.Words_4, IndexBlock.Words_8, IndexBlock.Words_16Plus
                     ),
             0, 1),
     MODERN("modern",
-            List.of(IndexBlock.TitleKeywords, IndexBlock.Title, IndexBlock.Tfidf_Top, IndexBlock.Tfidf_Middle, IndexBlock.Link, IndexBlock.NamesWords,
+            List.of(IndexBlock.Title, IndexBlock.Tfidf_Top, IndexBlock.Tfidf_Middle, IndexBlock.Link, IndexBlock.NamesWords,
                     IndexBlock.Words_1, IndexBlock.Words_2, IndexBlock.Words_4, IndexBlock.Words_8, IndexBlock.Words_16Plus
                     ),
             2),
     CORPO("corpo",
-            List.of(IndexBlock.TitleKeywords, IndexBlock.Title, IndexBlock.Tfidf_Top, IndexBlock.Tfidf_Lower, IndexBlock.Link, IndexBlock.NamesWords,
+            List.of(IndexBlock.Title, IndexBlock.Tfidf_Top, IndexBlock.Tfidf_Middle, IndexBlock.Tfidf_Lower, IndexBlock.Link, IndexBlock.NamesWords,
                     IndexBlock.Words_1, IndexBlock.Words_2, IndexBlock.Words_4, IndexBlock.Words_8, IndexBlock.Words_16Plus),
             4, 5, 7),
     YOLO("yolo",
-            List.of(IndexBlock.TitleKeywords, IndexBlock.Title, IndexBlock.Tfidf_Top, IndexBlock.Tfidf_Lower, IndexBlock.Link, IndexBlock.NamesWords,
+            List.of(IndexBlock.Title, IndexBlock.Tfidf_Top, IndexBlock.Tfidf_Lower, IndexBlock.Link, IndexBlock.NamesWords,
                     IndexBlock.Words_1, IndexBlock.Words_2, IndexBlock.Words_4, IndexBlock.Words_8, IndexBlock.Words_16Plus),
             0, 2, 1, 3, 4, 6),
     CORPO_CLEAN("corpo-clean",
-            List.of(IndexBlock.TitleKeywords, IndexBlock.Title, IndexBlock.Tfidf_Top, IndexBlock.Tfidf_Middle, IndexBlock.Tfidf_Lower, IndexBlock.Link, IndexBlock.NamesWords),
+            List.of(IndexBlock.Title, IndexBlock.Tfidf_Top, IndexBlock.Tfidf_Middle, IndexBlock.Tfidf_Lower, IndexBlock.Link, IndexBlock.NamesWords),
             4, 5),
     ACADEMIA("academia",
-            List.of(IndexBlock.TitleKeywords, IndexBlock.Title, IndexBlock.Tfidf_Top, IndexBlock.Tfidf_Middle, IndexBlock.Tfidf_Lower, IndexBlock.Link, IndexBlock.NamesWords),
+            List.of( IndexBlock.Title, IndexBlock.Tfidf_Top, IndexBlock.Tfidf_Middle, IndexBlock.Tfidf_Lower, IndexBlock.Link, IndexBlock.NamesWords),
             3),
     FOOD("food",
-            List.of(IndexBlock.TitleKeywords, IndexBlock.Title, IndexBlock.Tfidf_Top, IndexBlock.Tfidf_Middle, IndexBlock.Tfidf_Lower, IndexBlock.Link,  IndexBlock.Words_1, IndexBlock.NamesWords),
+            List.of(IndexBlock.Title, IndexBlock.Tfidf_Top, IndexBlock.Tfidf_Middle, IndexBlock.Tfidf_Lower, IndexBlock.Link,  IndexBlock.Words_1, IndexBlock.NamesWords),
             2, 0),
     ;
 

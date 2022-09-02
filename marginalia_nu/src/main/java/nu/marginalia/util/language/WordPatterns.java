@@ -63,7 +63,7 @@ public class WordPatterns {
         if (word.isBlank()) {
             return false;
         }
-        if (hasMoreThanTwo(word, '-', 2)) {
+        if (hasMoreThanTwo(word, '-', 4)) {
             return false;
         }
         if (hasMoreThanTwo(word, '+', 2)) {
@@ -80,7 +80,7 @@ public class WordPatterns {
             if (Character.isDigit(word.charAt(i))) {
                 numDigits++;
             }
-            if (numDigits > 6)
+            if (numDigits > 16)
                 return false;
         }
 

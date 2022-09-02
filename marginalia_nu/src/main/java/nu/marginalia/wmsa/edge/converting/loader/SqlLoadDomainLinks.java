@@ -40,12 +40,19 @@ public class SqlLoadDomainLinks {
         }
     }
 
-    public void load(DomainLink[] links) {
+    public void load(LoaderData data, DomainLink[] links) {
 
         try (var connection = dataSource.getConnection();
+             var nukeExistingLinksForDomain =
+                     connection.prepareStatement("""
+                             DELETE FROM EC_DOMAIN_LINK WHERE SOURCE_DOMAIN_ID=?
+                             """);
              var stmt =
                      connection.prepareCall("CALL INSERT_LINK(?,?)"))
         {
+
+            nukeExistingLinksForDomain.setInt(1, data.getDomainId(links[0].from()));
+            nukeExistingLinksForDomain.executeUpdate();
 
             for (DomainLink link : links) {
                 stmt.setString(1, link.from().toString());

@@ -72,7 +72,7 @@ public class Loader implements Interpreter {
     @Override
     public void loadDomainLink(DomainLink[] links) {
         logger.debug("loadDomainLink({})", links, null);
-        sqlLoadDomainLinks.load(links);
+        sqlLoadDomainLinks.load(data, links);
     }
 
     @Override

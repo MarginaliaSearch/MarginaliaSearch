@@ -24,7 +24,7 @@ class BodyQueryParserTest {
     public static void init() throws IOException {
         dict = new TermFrequencyDict(lm);
         nGramBloomFilter = new NGramBloomFilter(lm);
-        englishDictionary = new EnglishDictionary(dict);
+        englishDictionary = new EnglishDictionary(nGramBloomFilter);
     }
 
     @BeforeEach

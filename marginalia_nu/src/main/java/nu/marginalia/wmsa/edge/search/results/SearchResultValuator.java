@@ -16,8 +16,8 @@ public class SearchResultValuator {
 
     private static final Pattern separator = Pattern.compile("_");
 
-    private static final int MIN_LENGTH = 500;
-    private static final int AVG_LENGTH = 1400;
+    private static final int MIN_LENGTH = 2000;
+    private static final int AVG_LENGTH = 5000;
 
     @Inject
     public SearchResultValuator(TermFrequencyDict dict) {
@@ -26,58 +26,85 @@ public class SearchResultValuator {
 
 
     // This is basically a bargain bin BM25
-    public double evaluateTerms(List<EdgeSearchResultKeywordScore> rawScores, IndexBlock block, int length) {
-        EdgeSearchResultKeywordScore[] scores = rawScores.stream().filter(w -> !w.keyword.contains(":")).toArray(EdgeSearchResultKeywordScore[]::new);
+    public double evaluateTerms(List<EdgeSearchResultKeywordScore> rawScores, IndexBlock block, int length, int titleLength) {
+        int sets = 1 + rawScores.stream().mapToInt(EdgeSearchResultKeywordScore::set).max().orElse(0);
 
-        if (scores.length == 0) {
-            return IndexBlock.Words_1.sortOrder;
-        }
+        double bestScore = 1000;
+        double bestLtsFactor = 1.;
 
-        final double[] weights = getTermWeights(scores);
-        final double lengthPenalty = getLengthPenalty(length);
+        for (int set = 0; set <= sets; set++) {
+            int thisSet = set;
+            EdgeSearchResultKeywordScore[] scores = rawScores.stream().filter(w -> w.set() == thisSet && !w.keyword().contains(":")).toArray(EdgeSearchResultKeywordScore[]::new);
 
-        double termSum = 0.;
-        double factorSum = 0.;
-
-        for (int i = 0; i < scores.length; i++) {
-
-            final double factor = 1. / (1.0 + weights[i]);
-
-            factorSum += factor;
-
-            double termValue = (scores[i].index.sortOrder + 0.5) * factor;
-
-            if (!scores[i].link && !scores[i].title) {
-                termValue *= lengthPenalty;
-            }
-            else if (scores[i].link) {
-                termValue /= 4.75;
+            if (scores.length == 0) {
+                continue;
             }
 
-            termSum += termValue;
+            final double[] weights = getTermWeights(scores);
+            final double lengthPenalty = getLengthPenalty(length);
+
+            double termSum = 0.;
+            double factorSum = 0.;
+
+            double ltsFactor = 1.0;
+
+            for (int i = 0; i < scores.length; i++) {
+
+                final double factor = 1. / (1.0 + weights[i]);
+
+                factorSum += factor;
+
+                double termValue = (scores[i].index().sortOrder + 0.5) * factor;
+
+                termValue /= lengthPenalty;
+
+                if (scores[i].link()) {
+                    ltsFactor *= Math.pow(0.5, 1. / scores.length);
+                }
+                if (scores[i].title()) {
+                    if (titleLength <= 64) {
+                        ltsFactor *= Math.pow(0.5, 1. / scores.length);
+                    }
+                    else if (titleLength < 96) {
+                        ltsFactor *= Math.pow(0.75, 1. / scores.length);
+                    }
+                    else {
+                        ltsFactor *= Math.pow(0.9, 1. / scores.length);
+                    }
+                }
+                if (scores[i].subject()) {
+                    ltsFactor *= Math.pow(0.8, 1. / scores.length);
+                }
+
+                termSum += termValue;
+            }
+
+            assert factorSum != 0;
+
+            double value = termSum / factorSum;
+
+            bestLtsFactor = Math.min(bestLtsFactor, ltsFactor);
+            bestScore = Math.min(bestScore, value);
         }
 
-        assert factorSum != 0 ;
-
-        if (block == IndexBlock.Title || block == IndexBlock.TitleKeywords) {
-            return block.sortOrder + (termSum / factorSum) / 5;
-        }
-
-        return termSum / factorSum;
+        return (0.7+0.3*block.sortOrder)*bestScore * bestLtsFactor;
     }
 
     private double getLengthPenalty(int length) {
         if (length < MIN_LENGTH) {
             length = MIN_LENGTH;
         }
-        return (0.7 + 0.3 * length / AVG_LENGTH);
+        if (length > AVG_LENGTH) {
+            length = AVG_LENGTH;
+        }
+        return (0.5 + 0.5 * length / AVG_LENGTH);
     }
 
     private double[] getTermWeights(EdgeSearchResultKeywordScore[] scores) {
         double[] weights = new double[scores.length];
 
         for (int i = 0; i < scores.length; i++) {
-            String[] parts = separator.split(scores[i].keyword);
+            String[] parts = separator.split(scores[i].keyword());
             double sumScore = 0.;
 
             int count = 0;

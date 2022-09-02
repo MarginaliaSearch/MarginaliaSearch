@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 @AllArgsConstructor @NoArgsConstructor @ToString
@@ -86,7 +87,21 @@ public class EdgeCrawlPlan {
             throw new RuntimeException(ex);
         }
     }
+    public void forEachCrawledDomain(Predicate<String> idReadPredicate, Consumer<CrawledDomain> consumer) {
+        final CrawledDomainReader reader = new CrawledDomainReader();
 
+        try (Stream<CrawlLogEntry> entryStream = WorkLog.streamLog(crawl.getLogFile())) {
+            entryStream
+                    .filter(entry -> idReadPredicate.test(entry.id()))
+                    .map(CrawlLogEntry::path)
+                    .map(this::getCrawledFilePath)
+                    .map(reader::readRuntimeExcept)
+                    .forEach(consumer);
+        }
+        catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
     @MustBeClosed
     public DomainsIterable domainsIterable() throws IOException {
         return new DomainsIterable();

@@ -47,7 +47,7 @@ public class SearchIndexReader implements AutoCloseable {
         var linkIndex  = indices.get(IndexBlock.Link);
         var titleIndex  = indices.get(IndexBlock.Title);
         var namesIndex  = indices.get(IndexBlock.NamesWords);
-        var titleKeywordsIndex  = indices.get(IndexBlock.TitleKeywords);
+        var siteIndex  = indices.get(IndexBlock.Site);
         var metaIndex  = indices.get(IndexBlock.Meta);
         var topicIndex  = indices.get(IndexBlock.Subjects);
 
@@ -61,14 +61,17 @@ public class SearchIndexReader implements AutoCloseable {
         queryBuilders = new EnumMap<>(IndexBlock.class);
         underspecifiedQueryBuilders = new EnumMap<>(IndexBlock.class);
 
+        queryBuilders.put(IndexBlock.Title, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleIndex, linkIndex), words1));
         queryBuilders.put(IndexBlock.Words_1, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleIndex, topIndex, words1), words1));
         queryBuilders.put(IndexBlock.Words_2, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleIndex, topIndex, words2), words1));
         queryBuilders.put(IndexBlock.Words_4, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleIndex, topIndex, words4), words1));
         queryBuilders.put(IndexBlock.Words_8, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleIndex, topIndex, words8), words1));
         queryBuilders.put(IndexBlock.Words_16Plus, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleIndex, topIndex, words1, words2, words4, words8, words16, artifacts), words1));
 
-        underspecifiedQueryBuilders.put(IndexBlock.Title, new IndexQueryBuilder(listOfNonNulls(titleIndex, linkIndex, topIndex, namesIndex, topicIndex, metaIndex), words1));
-        underspecifiedQueryBuilders.put(IndexBlock.Tfidf_Top, new IndexQueryBuilder(listOfNonNulls(linkIndex, namesIndex, topIndex, midIndex, lowIndex, topicIndex, metaIndex), words1));
+        underspecifiedQueryBuilders.put(IndexBlock.Title, new IndexQueryBuilder(listOfNonNulls(titleIndex, linkIndex, topIndex, siteIndex, namesIndex, topicIndex, metaIndex), words1));
+        underspecifiedQueryBuilders.put(IndexBlock.Tfidf_Top, new IndexQueryBuilder(listOfNonNulls(topIndex, linkIndex, namesIndex, siteIndex, midIndex, topicIndex, metaIndex), words1));
+        underspecifiedQueryBuilders.put(IndexBlock.Tfidf_Middle, new IndexQueryBuilder(listOfNonNulls(midIndex, linkIndex, namesIndex, topIndex, siteIndex, midIndex, lowIndex, topicIndex, metaIndex), words1));
+        underspecifiedQueryBuilders.put(IndexBlock.Tfidf_Lower, new IndexQueryBuilder(listOfNonNulls(midIndex, linkIndex, namesIndex, topIndex, siteIndex, midIndex, lowIndex, topicIndex, metaIndex, artifacts), words1));
     }
 
     @SafeVarargs

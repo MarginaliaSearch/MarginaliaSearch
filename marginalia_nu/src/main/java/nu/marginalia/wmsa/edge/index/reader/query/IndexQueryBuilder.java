@@ -46,7 +46,7 @@ public class IndexQueryBuilder {
             return new QueryForIndices(budget, LongStream::empty);
         }
         else if (relevantIndices.length == 1 || relevantIndices[0] != 0) {
-            return build(budget, filter, wordId);
+            return new QueryForIndices(budget, LongStream::empty);
         }
 
         var fstRange = requiredIndices.get(relevantIndices[0]).rangeForWord(wordId);

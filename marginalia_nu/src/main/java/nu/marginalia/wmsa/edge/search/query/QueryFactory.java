@@ -130,7 +130,7 @@ public class QueryFactory {
                 }
             }
 
-            EdgeSearchSubquery subquery = new EdgeSearchSubquery(searchTermsInclude, searchTermsExclude, IndexBlock.TitleKeywords);
+            EdgeSearchSubquery subquery = new EdgeSearchSubquery(searchTermsInclude, searchTermsExclude, IndexBlock.Title);
 
             params.profile().addTacitTerms(subquery);
             params.jsSetting().addTacitTerms(subquery);

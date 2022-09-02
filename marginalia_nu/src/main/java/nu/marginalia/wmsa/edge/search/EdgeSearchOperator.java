@@ -39,6 +39,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -236,6 +237,8 @@ public class EdgeSearchOperator {
     }
 
 
+    private final Pattern titleSplitPattern = Pattern.compile("[:!|./]|(\\s-|-\\s)|\\s{2,}");
+
     private EdgePageScoreAdjustment adjustScoreBasedOnQuery(EdgeUrlDetails p, EdgeSearchSpecification specs) {
         String titleLC = p.title == null ? "" : p.title.toLowerCase();
         String descLC = p.description == null ? "" : p.description.toLowerCase();
@@ -248,11 +251,16 @@ public class EdgeSearchOperator {
                 .toArray(String[]::new);
         int termCount = searchTermsLC.length;
 
-        String[] titleParts = titleLC.split("[:!|./]|(\\s-|-\\s)|\\s{2,}");
         double titleHitsAdj = 0.;
+        final String[] titleParts = titleSplitPattern.split(titleLC);
         for (String titlePart : titleParts) {
-            titleHitsAdj += Arrays.stream(searchTermsLC).filter(titlePart::contains).mapToInt(String::length).sum()
-                    / (double) Math.max(1, titlePart.trim().length());
+            double hits = 0;
+            for (String term : searchTermsLC) {
+                if (titlePart.contains(term)) {
+                    hits += term.length();
+                }
+            }
+            titleHitsAdj += hits / Math.max(1, titlePart.length());
         }
 
         double titleFullHit = 0.;
@@ -299,10 +307,8 @@ public class EdgeSearchOperator {
         logger.debug("{}", resultSet);
 
         for (IndexBlock block : indexBlockSearchOrder) {
-            for (var results : resultSet.resultsList.getOrDefault(block, Collections.emptyList())) {
-                var items = results.getAllItems();
-                queryResults.append(100, resultDecorator.decorateSearchResults(items, block, deduplicator));
-            }
+            queryResults.append(100, resultDecorator.decorateSearchResults(resultSet.resultsList.getOrDefault(block, Collections.emptyList()),
+                    block, deduplicator));
         }
     }
 

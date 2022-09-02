@@ -52,7 +52,7 @@ public class ConverterMain {
         logger.info("Starting pipe");
 
         try (WorkLog processLog = plan.createProcessWorkLog()) {
-            var pipe = new ParallelPipe<CrawledDomain, ProcessingInstructions>("Crawler", 48, 4, 2) {
+            var pipe = new ParallelPipe<CrawledDomain, ProcessingInstructions>("Crawler", 16, 4, 2) {
 
                 @Override
                 protected ProcessingInstructions onProcess(CrawledDomain domainData) {
@@ -73,12 +73,7 @@ public class ConverterMain {
 
             };
 
-            plan.forEachCrawledDomain(domain -> {
-                if (!processLog.isJobFinished(domain.id)) {
-                    logger.info("{} - {}", domain.domain, domain.id);
-                    pipe.accept(domain);
-                }
-            });
+            plan.forEachCrawledDomain(id -> !processLog.isJobFinished(id), pipe::accept);
 
             pipe.join();
         }

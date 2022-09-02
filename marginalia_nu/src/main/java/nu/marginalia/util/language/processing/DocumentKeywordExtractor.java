@@ -1,6 +1,5 @@
 package nu.marginalia.util.language.processing;
 
-import com.google.common.collect.Sets;
 import nu.marginalia.util.language.WordPatterns;
 import nu.marginalia.util.language.processing.model.DocumentLanguageData;
 import nu.marginalia.util.language.processing.model.WordRep;
@@ -12,7 +11,6 @@ import nu.marginalia.wmsa.edge.model.crawl.EdgePageWords;
 import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class DocumentKeywordExtractor {
 
@@ -42,7 +40,7 @@ public class DocumentKeywordExtractor {
         List<WordRep> titleWords = extractTitleWords(documentLanguageData);
 
         KeywordCounter.WordHistogram wordsTfIdf = tfIdfCounter.countHisto(documentLanguageData);
-        List<WordRep> wordsNamesAll = nameCounter.count(documentLanguageData, 1);
+        List<WordRep> wordsNamesAll = nameCounter.count(documentLanguageData, 2);
         List<WordRep> subjects = subjectCounter.count(documentLanguageData);
 
         List<WordRep> midKeywords = new ArrayList<>(wordsTfIdf.mid());
@@ -190,30 +188,7 @@ public class DocumentKeywordExtractor {
                 .collect(Collectors.toList());
     }
 
-    private Collection<WordRep> joinWordLists(List<WordRep>... words) {
-        int size = 0;
-        for (var lst : words) {
-            size += lst.size();
-        }
-        if (size == 0)
-            return Collections.emptyList();
-
-        final LinkedHashSet<WordRep> ret = new LinkedHashSet<>(size);
-        for (var lst : words) {
-            ret.addAll(lst);
-        }
-        return ret;
-    }
-
-
     public EdgePageWords createWords(IndexBlock block, Collection<WordRep> words) {
         return new EdgePageWords(block, words.stream().map(w -> w.word).map(AsciiFlattener::flattenUnicode).filter(WordPatterns.wordQualitiesPredicate).collect(Collectors.toSet()));
-    }
-
-    private Set<WordRep> overlappingStems(Collection<WordRep> wordsA, Collection<WordRep> wordsB) {
-        Set<String> stemmedA = wordsA.stream().map(WordRep::getStemmed).collect(Collectors.toSet());
-        Set<String> stemmedB = wordsB.stream().map(WordRep::getStemmed).collect(Collectors.toSet());
-        Set<String> stemmedIntersect = Sets.intersection(stemmedA, stemmedB);
-        return Stream.concat(wordsA.stream(), wordsB.stream()).filter(w -> stemmedIntersect.contains(w.getStemmed())).collect(Collectors.toSet());
     }
 }

@@ -70,11 +70,22 @@ public class DocumentProcessor {
         this.summaryExtractor = summaryExtractor;
     }
 
+    public ProcessedDocument makeDisqualifiedStub(CrawledDocument crawledDocument) {
+        ProcessedDocument ret = new ProcessedDocument();
+
+        try {
+            ret.state = EdgeUrlState.DISQUALIFIED;
+            ret.url = getDocumentUrl(crawledDocument);
+        }
+        catch (Exception ex) {}
+
+        return ret;
+    }
     public ProcessedDocument process(CrawledDocument crawledDocument, CrawledDomain crawledDomain) {
         ProcessedDocument ret = new ProcessedDocument();
 
         try {
-            ret.url = new EdgeUrl(crawledDocument.url);
+            ret.url = getDocumentUrl(crawledDocument);
             ret.state = crawlerStatusToUrlState(crawledDocument.crawlerStatus, crawledDocument.httpStatus);
 
             if (ret.state == EdgeUrlState.OK) {
@@ -99,15 +110,29 @@ public class DocumentProcessor {
         }
         catch (DisqualifiedException ex) {
             ret.state = EdgeUrlState.DISQUALIFIED;
+            ret.stateReason = ex.reason.toString();
             logger.debug("Disqualified {}: {}", ret.url, ex.reason);
         }
         catch (Exception ex) {
             ret.state = EdgeUrlState.DISQUALIFIED;
-            logger.info("Failed to convert " + ret.url, ex);
+            logger.info("Failed to convert " + crawledDocument.url, ex);
             ex.printStackTrace();
         }
 
         return ret;
+    }
+
+    private EdgeUrl getDocumentUrl(CrawledDocument crawledDocument)
+            throws URISyntaxException
+    {
+        if (crawledDocument.canonicalUrl != null) {
+            try {
+                return new EdgeUrl(crawledDocument.canonicalUrl);
+            }
+            catch (URISyntaxException ex) { /* fallthrough */ }
+        }
+
+        return new EdgeUrl(crawledDocument.url);
     }
 
     public static boolean isAcceptedContentType(CrawledDocument crawledDocument) {
@@ -155,20 +180,26 @@ public class DocumentProcessor {
 
         var ret = new ProcessedDocumentDetails();
 
-        ret.description = getDescription(doc);
+
         ret.length = getLength(doc);
         ret.standard = getHtmlStandard(doc);
         ret.title = titleExtractor.getTitleAbbreviated(doc, dld, crawledDocument.url);
-        ret.features = featureExtractor.getFeatures(crawledDomain, doc, dld);
+
         ret.quality = documentValuator.getQuality(ret.standard, doc, dld);
         ret.hashCode = HashCode.fromString(crawledDocument.documentBodyHash).asLong();
 
+        final boolean doSimpleProcessing = ret.quality < minDocumentQuality;
+
         EdgePageWordSet words;
-        if (ret.quality < minDocumentQuality || dld.totalNumWords() < minDocumentLength) {
+        if (doSimpleProcessing) {
+            ret.features = Set.of(HtmlFeature.UNKNOWN);
             words = keywordExtractor.extractKeywordsMinimal(dld);
+            ret.description = "";
         }
         else {
+            ret.features = featureExtractor.getFeatures(crawledDomain, doc, dld);
             words = keywordExtractor.extractKeywords(dld);
+            ret.description = getDescription(doc);
         }
 
         var url = new EdgeUrl(crawledDocument.url);
@@ -276,6 +307,10 @@ public class DocumentProcessor {
     }
 
     private void checkDocumentLanguage(DocumentLanguageData dld) throws DisqualifiedException {
+        if (dld.totalNumWords() < minDocumentLength) {
+            throw new DisqualifiedException(DisqualificationReason.LENGTH);
+        }
+
         double languageAgreement = languageFilter.dictionaryAgreement(dld);
         if (languageAgreement < 0.1) {
             throw new DisqualifiedException(DisqualificationReason.LANGUAGE);

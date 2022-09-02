@@ -6,7 +6,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.InvalidProtocolBufferException;
 import gnu.trove.map.TLongIntMap;
-import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TLongIntHashMap;
 import gnu.trove.set.hash.TIntHashSet;
 import io.prometheus.client.Histogram;
@@ -227,12 +226,7 @@ public class EdgeIndexService extends Service {
 
         long start = System.currentTimeMillis();
         try {
-            if (specsSet.isStagger()) {
-                return new EdgeSearchResultSet(searchStaggered(specsSet));
-            }
-            else {
-                return new EdgeSearchResultSet(searchStraight(specsSet));
-            }
+            return new EdgeSearchResultSet(searchStraight(specsSet));
         }
         catch (HaltException ex) {
             logger.warn("Halt", ex);
@@ -249,59 +243,9 @@ public class EdgeIndexService extends Service {
         }
     }
 
-    private Map<IndexBlock, List<EdgeSearchResults>> searchStaggered(EdgeSearchSpecification specsSet) {
-        int count = 0;
-
-        final Map<IndexBlock, List<EdgeSearchResults>> results = new HashMap<>();
-        final TIntHashSet seenResults = new TIntHashSet();
-
-        final DomainResultCountFilter[] domainCountFilter =  new DomainResultCountFilter[] {
-                new DomainResultCountFilter(specsSet.limitByDomain),
-                new DomainResultCountFilter(specsSet.limitByDomain)
-        };
-
-        final IndexSearchBudget budget = new IndexSearchBudget(SEARCH_BUDGET_TIMEOUT_MS);
-        final TIntIntHashMap limitsPerBucketRemaining = new TIntIntHashMap(6, 0.7f, 0, specsSet.limitByBucket);
-
-        for (int i = 0; i < specsSet.buckets.size(); i+=2) {
-            for (var sq : specsSet.subqueries) {
-                for (int j = 0; j < 2 && i + j < specsSet.buckets.size(); j++) {
-                    Optional<EdgeIndexSearchTerms> searchTerms = getSearchTerms(sq);
-
-                    if (searchTerms.isEmpty())
-                        continue;
-
-                    var result = performSearch(searchTerms.get(),
-                            budget,
-                            seenResults,
-                            domainCountFilter[j],
-                            sq,
-                            List.of(specsSet.buckets.get(i+j)),
-                            specsSet,
-                            Math.min(limitsPerBucketRemaining.get(i+j), specsSet.limitTotal - count)
-                    );
-
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("{} -> {} {} {}", sq.block, specsSet.buckets.get(i+j), sq.searchTermsInclude, result.results.values().stream().mapToInt(List::size).sum());
-                    }
-
-                    int sz = result.size();
-                    count += sz;
-                    limitsPerBucketRemaining.adjustOrPutValue(i+j, -sz, specsSet.limitByBucket-sz);
-
-                    if (sz > 0) {
-                        results.computeIfAbsent(sq.block, s -> new ArrayList<>()).add(result);
-                    }
-                }
-            }
-        }
-
-        return results;
-    }
-
     @NotNull
-    private Map<IndexBlock, List<EdgeSearchResults>> searchStraight(EdgeSearchSpecification specsSet) {
-        Map<IndexBlock, List<EdgeSearchResults>> results = new HashMap<>();
+    private Map<IndexBlock, List<EdgeSearchResultItem>> searchStraight(EdgeSearchSpecification specsSet) {
+        Map<IndexBlock, List<EdgeSearchResultItem>> results = new HashMap<>();
         int count = 0;
         TIntHashSet seenResults = new TIntHashSet();
 
@@ -314,25 +258,38 @@ public class EdgeIndexService extends Service {
             if (searchTerms.isEmpty())
                 continue;
 
-            var result = performSearch(searchTerms.get(),
+            var resultForSq = performSearch(searchTerms.get(),
                     budget, seenResults, domainCountFilter,
                     sq, specsSet.buckets, specsSet,
                     specsSet.limitTotal - count);
 
             if (logger.isDebugEnabled()) {
-                logger.debug("{} -> {} {}", sq.block, sq.searchTermsInclude, result.size());
+                logger.debug("{} -> {} {}", sq.block, sq.searchTermsInclude, resultForSq.size());
             }
 
-            count += result.size();
-            if (result.size() > 0) {
-                results.computeIfAbsent(sq.block, s -> new ArrayList<>()).add(result);
+            count += resultForSq.size();
+            if (resultForSq.size() > 0) {
+                results.computeIfAbsent(sq.block, s -> new ArrayList<>()).addAll(resultForSq);
             }
         }
+
+
+        List<List<String>> distinctSearchTerms = specsSet.subqueries.stream().map(sq -> sq.searchTermsInclude).distinct().toList();
+
+        results.forEach((index, blockResults) -> {
+            for (var result : blockResults) {
+                for (int i = 0; i < distinctSearchTerms.size(); i++) {
+                    for (var term : distinctSearchTerms.get(i)) {
+                        result.scores.add(getSearchTermScore(i, result.bucketId, term, result.getCombinedId()));
+                    }
+                }
+            }
+        });
 
         return results;
     }
 
-    private EdgeSearchResults performSearch(EdgeIndexSearchTerms searchTerms,
+    private List<EdgeSearchResultItem>  performSearch(EdgeIndexSearchTerms searchTerms,
                                             IndexSearchBudget budget,
                                             TIntHashSet seenResults,
                                             DomainResultCountFilter domainCountFilter,
@@ -342,14 +299,14 @@ public class EdgeIndexService extends Service {
                                             int limit)
     {
         if (limit <= 0) {
-            return new EdgeSearchResults();
+            return new ArrayList<>();
         }
 
-        final Map<Integer, List<EdgeSearchResultItem>> results = new HashMap<>();
+        final List<EdgeSearchResultItem> results = new ArrayList<>();
         final DomainResultCountFilter localFilter = new DomainResultCountFilter(specs.limitByDomain);
 
         for (int i : specBuckets) {
-            int foundResultsCount = results.values().stream().mapToInt(List::size).sum();
+            int foundResultsCount = results.size();
 
             if (foundResultsCount >= specs.limitTotal || foundResultsCount >= limit)
                 break;
@@ -362,38 +319,33 @@ public class EdgeIndexService extends Service {
                     .limit(specs.limitTotal * 3L)
                     .distinct()
                     .limit(Math.min(specs.limitByBucket
-                            - results.values().stream().mapToInt(Collection::size).sum(), limit - foundResultsCount))
+                            - results.size(), limit - foundResultsCount))
                     .forEach(resultsForBucket::add);
 
 
             for (var result : resultsForBucket) {
                 seenResults.add(result.url.id());
             }
-            for (var result : resultsForBucket) {
-                for (var searchTerm : sq.searchTermsInclude) {
-                    result.scores.add(getSearchTermScore(i, searchTerm, result.getCombinedId()));
-                }
-            }
 
             domainCountFilter.addAll(i, resultsForBucket);
 
-            if (!resultsForBucket.isEmpty()) {
-                results.put(i, resultsForBucket);
-            }
+            results.addAll(resultsForBucket);
         }
 
-        return new EdgeSearchResults(results);
+        return results;
     }
 
-    private EdgeSearchResultKeywordScore getSearchTermScore(int bucketId, String term, long urlId) {
+    private EdgeSearchResultKeywordScore getSearchTermScore(int set, int bucketId, String term, long urlId) {
         final int termId = indexes.getDictionaryReader().get(term);
 
         var bucket = indexes.getBucket(bucketId);
 
-        return new EdgeSearchResultKeywordScore(term,
+        return new EdgeSearchResultKeywordScore(set, term,
                 bucket.getTermScore(termId, urlId),
                 bucket.isTermInBucket(IndexBlock.Title, termId, urlId),
-                bucket.isTermInBucket(IndexBlock.Link, termId, urlId)
+                bucket.isTermInBucket(IndexBlock.Link, termId, urlId),
+                bucket.isTermInBucket(IndexBlock.Site, termId, urlId),
+                bucket.isTermInBucket(IndexBlock.Subjects, termId, urlId)
                 );
 
     }

@@ -1,5 +1,6 @@
 package nu.marginalia.util.language.processing;
 
+import nu.marginalia.util.language.WordPatterns;
 import nu.marginalia.util.language.processing.model.DocumentLanguageData;
 import nu.marginalia.util.language.processing.model.WordRep;
 import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
@@ -22,17 +23,20 @@ public class KeywordCounter {
     }
 
     public WordHistogram countHisto(DocumentLanguageData dld) {
-        HashMap<String, Double> counts = new HashMap<>(1000);
+        HashMap<String, Integer> counts = new HashMap<>(1000);
         HashMap<String, HashSet<WordRep>> instances = new HashMap<>(1000);
 
 
         for (var sent : dld.sentences) {
             var keywords = keywordExtractor.getKeywordsFromSentence(sent);
             for (var span : keywords) {
+                if (span.size() == 1 &&
+                        WordPatterns.isStopWord(sent.words[span.start]))
+                    continue;
 
                 String stemmed = sent.constructStemmedWordFromSpan(span);
 
-                counts.merge(stemmed, 1., Double::sum);
+                counts.merge(stemmed, 1, Integer::sum);
                 instances.computeIfAbsent(stemmed, k -> new HashSet<>()).add(new WordRep(sent, span));
             }
         }
@@ -43,15 +47,23 @@ public class KeywordCounter {
         Set<WordRep> h10 = new HashSet<>();
         Set<WordRep> h15 = new HashSet<>();
 
+        int doubleWordCount = 0;
+
         for (var entry : counts.entrySet()) {
             double value = getTermValue(entry, maxC);
+
+            double avgCnt = entry.getValue();
+            String wordStemmed = entry.getKey();
+
             Set<WordRep> histogram;
-            if (value < -3) histogram = h15;
-            else if (value < -2) histogram = h10;
-            else if (value < -1) histogram = h5;
+            if (value < -3 && avgCnt>1) histogram = h15;
+            else if (value < -1.75 && avgCnt>1) histogram = h10;
+            else if (value < -1 &&
+                    (!wordStemmed.contains("_") || doubleWordCount++ < 50))
+                histogram = h5;
             else continue;
 
-            histogram.addAll(instances.get(entry.getKey()));
+            histogram.addAll(instances.get(wordStemmed));
         }
 
         return new WordHistogram(h5, h10, h15);
@@ -59,7 +71,7 @@ public class KeywordCounter {
 
     private static final Pattern separator = Pattern.compile("_");
 
-    public double getTermValue(Map.Entry<String, Double> e, double maxValue) {
+    public double getTermValue(Map.Entry<String, Integer> e, double maxValue) {
         String[] parts = separator.split(e.getKey());
         double totalValue = 0.;
         for (String part : parts) {
@@ -71,9 +83,9 @@ public class KeywordCounter {
     double value(String key, double value, double maxValue) {
         double freq = dict.getTermFreqStemmed(key);
         if (freq < 1) {
-            freq = 10;
+            freq = 1;
         }
-        return (0.1 + 0.9*value/maxValue) * Math.log((1.1+freq)/docCount);
+        return (0.1 + 0.9*value/maxValue) * Math.log(freq/docCount);
     }
 
     public record WordHistogram(Set<WordRep> lower, Set<WordRep> mid, Set<WordRep> top) { }
