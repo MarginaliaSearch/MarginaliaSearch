@@ -3,7 +3,6 @@ package nu.marginalia.wmsa.edge.converting.processor;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import nu.marginalia.wmsa.edge.converting.model.ProcessedDocument;
 import nu.marginalia.wmsa.edge.converting.model.ProcessedDomain;
 import nu.marginalia.wmsa.edge.converting.processor.logic.CommonKeywordExtractor;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDocument;
@@ -108,22 +107,6 @@ public class DomainProcessor {
             }
         }
 
-    }
-
-    private double getAverageQuality(List<ProcessedDocument> documents) {
-        int n = 0;
-        double q = 0.;
-        for (var doc : documents) {
-            if (doc.quality().isPresent()) {
-                n++;
-                q += doc.quality().getAsDouble();
-            }
-        }
-
-        if (n > 0) {
-            return q / n;
-        }
-        return -5.;
     }
 
     private EdgeDomainIndexingState getState(String crawlerStatus) {

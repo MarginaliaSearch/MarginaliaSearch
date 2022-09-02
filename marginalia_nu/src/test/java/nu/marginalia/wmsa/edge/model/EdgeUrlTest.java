@@ -27,6 +27,7 @@ class EdgeUrlTest {
     }
     @Test
     void urlencodeFixer() throws URISyntaxException {
+        System.out.println(EdgeUrl.urlencodeFixer("https://www.example.com/#heredoc"));
         System.out.println(EdgeUrl.urlencodeFixer("https://www.example.com/%-sign"));
         System.out.println(EdgeUrl.urlencodeFixer("https://www.example.com/%22-sign"));
         System.out.println(EdgeUrl.urlencodeFixer("https://www.example.com/\n \"huh\""));
