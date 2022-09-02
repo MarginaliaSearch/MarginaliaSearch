@@ -52,7 +52,7 @@ public class ConverterMain {
         logger.info("Starting pipe");
 
         try (WorkLog processLog = plan.createProcessWorkLog()) {
-            var pipe = new ParallelPipe<CrawledDomain, ProcessingInstructions>("Crawler", 16, 4, 2) {
+            var pipe = new ParallelPipe<CrawledDomain, ProcessingInstructions>("Crawler", 20, 4, 2) {
 
                 @Override
                 protected ProcessingInstructions onProcess(CrawledDomain domainData) {

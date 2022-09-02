@@ -3,7 +3,7 @@
 {{#if media}}<abbr title="audio or video" class="meta">🎞️</abbr>{{/if}}
 {{#if affiliate}}<abbr title="possible amazon affiliate link" class="meta">💳️</abbr>{{/if}}
 {{#if cookies}}<abbr title="cookies" class="meta">👁️️</abbr>{{/if}}
-{{#if ads}}<abbr title="ads (experimental)" class="meta">⚠️️️</abbr>{{/if}}
+{{#if ads}}<abbr title="possible annoying ads or popovers (experimental)" class="meta">⚠️️️</abbr>{{/if}}
 <span class="meta">{{format}}</span>
 {{#unless focusDomain}}
 <span class="rank-symbol" title="{{rankingSymbolDesc}}">{{{rankingSymbol}}}</span>
