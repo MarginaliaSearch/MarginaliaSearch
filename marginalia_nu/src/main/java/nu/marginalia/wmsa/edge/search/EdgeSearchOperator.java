@@ -189,7 +189,18 @@ public class EdgeSearchOperator {
         }
 
         resultList.sort(resultListComparator);
-        resultList.removeIf(new UrlDeduplicator(processedQuery.specs.limitByDomain)::shouldRemove);
+
+        UrlDeduplicator deduplicator = new UrlDeduplicator(processedQuery.specs.limitByDomain);
+        List<EdgeUrlDetails> retList = new ArrayList<>(processedQuery.specs.limitTotal);
+
+        for (var item : resultList) {
+            if (retList.size() >= processedQuery.specs.limitTotal)
+                break;
+
+            if (!deduplicator.shouldRemove(item)) {
+                retList.add(item);
+            }
+        }
 
         return new DecoratedSearchResultSet(resultList);
     }
@@ -207,14 +218,11 @@ public class EdgeSearchOperator {
                 problems.add("Try rephrasing the query, changing the word order or using synonyms to get different results. <a href=\"https://memex.marginalia.nu/projects/edge/search-tips.gmi\">Tips</a>.");
             }
 
-            if (humanQuery.toLowerCase().matches(".*(definition|define).*")) {
+            Set<String> representativeKeywords = processedQuery.getAllKeywords();
+            if (representativeKeywords.size()>1 && (representativeKeywords.contains("definition") || representativeKeywords.contains("define") || representativeKeywords.contains("meaning")))
+            {
                 problems.add("Tip: Try using a query that looks like <tt>define:word</tt> if you want a dictionary definition");
             }
-        }
-
-        if (humanQuery.contains("/")) {
-            problems.clear();
-            problems.add("<b>There is a known bug with search terms that contain a slash that causes them to be marked as unsupported; as a workaround, try using a dash instead. AC-DC will work, AC/DC does not.</b>");
         }
 
         return problems;
@@ -289,21 +297,14 @@ public class EdgeSearchOperator {
         EdgeSearchResultSet resultSet = indexClient.query(ctx, processedQuery.specs);
         Set<EdgeUrlDetails> ret = new HashSet<>();
 
-        logger.debug("{}", resultSet);
-
-        for (IndexBlock block : indexBlockSearchOrder) {
+        for (IndexBlock block : IndexBlock.values()) {
             var results = resultSet.resultsList.getOrDefault(block, Collections.emptyList());
 
-            for (var result : resultDecorator.getAllUrlDetails(results, block)) {
-                if (ret.size() > 100) break;
-                ret.add(result);
-            }
+            ret.addAll(resultDecorator.getAllUrlDetails(results, block));
         }
 
         return ret;
     }
-
-    static final IndexBlock[] indexBlockSearchOrder = Arrays.stream(IndexBlock.values()).sorted(Comparator.comparing(i -> i.sortOrder)).toArray(IndexBlock[]::new);
 
     private Iterable<String> spellCheckTerms(Context ctx, EdgeSearchQuery disjointedQuery) {
         return Observable.fromIterable(disjointedQuery.searchTermsHuman)
