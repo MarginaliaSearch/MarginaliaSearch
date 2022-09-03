@@ -12,6 +12,7 @@ import nu.marginalia.wmsa.edge.model.search.EdgeSearchSubquery;
 import nu.marginalia.wmsa.edge.search.EdgeSearchProfile;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeSearchQuery;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeUserSearchParameters;
+import nu.marginalia.wmsa.edge.search.results.SearchResultValuator;
 import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,14 +28,16 @@ public class QueryFactory {
     private final EnglishDictionary englishDictionary;
     private final NGramBloomFilter nGramBloomFilter;
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final SearchResultValuator searchResultValuator;
 
     @Inject
-    public QueryFactory(LanguageModels lm, TermFrequencyDict dict, EnglishDictionary englishDictionary, NGramBloomFilter nGramBloomFilter) {
+    public QueryFactory(LanguageModels lm, TermFrequencyDict dict, EnglishDictionary englishDictionary, NGramBloomFilter nGramBloomFilter, SearchResultValuator searchResultValuator) {
         this.lm = lm;
         this.dict = dict;
 
         this.englishDictionary = englishDictionary;
         this.nGramBloomFilter = nGramBloomFilter;
+        this.searchResultValuator = searchResultValuator;
     }
 
     public QueryParser getParser() {
@@ -46,7 +49,6 @@ public class QueryFactory {
         final var processedQuery =  createQuery(getParser(), params);
 
         processedQuery.specs.experimental = EdgeSearchProfile.CORPO.equals(profile);
-        processedQuery.specs.stagger = EdgeSearchProfile.YOLO.equals(profile);
 
         final var newSubqueries = reevaluateSubqueries(processedQuery, params);
 
@@ -63,12 +65,16 @@ public class QueryFactory {
                 new ArrayList<>(processedQuery.specs.subqueries.size() * profile.indexBlocks.size());
 
         for (var sq : processedQuery.specs.subqueries) {
+            sq.setValue(searchResultValuator.preEvaluate(sq));
+        }
+
+        for (var sq : processedQuery.specs.subqueries) {
             for (var block : profile.indexBlocks) {
-                subqueries.add(sq.withBlock(block));
+                subqueries.add(sq.withBlock(block).setValue(sq.getValue() * block.sortOrder));
             }
         }
 
-        subqueries.sort(Comparator.comparing(sq -> -sq.termSize()*2.3 + sq.block.sortOrder));
+        subqueries.sort(Comparator.comparing(EdgeSearchSubquery::getValue));
 
         return subqueries;
     }

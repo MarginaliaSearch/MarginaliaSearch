@@ -10,7 +10,8 @@ public class IndexSearchBudget {
 
     // Used for short-circuiting Stream-objects using takeWhile, we don't care
     public boolean take(long unused) {
-        return System.currentTimeMillis() < timeout;
+        return hasTimeLeft();
     }
+    public boolean hasTimeLeft() { return System.currentTimeMillis() < timeout; }
 
 }

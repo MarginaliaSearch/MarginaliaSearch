@@ -364,7 +364,7 @@ public class QueryVariants {
             var stemmed = ps.stem(a.word + b.word);
 
             double scoreCombo = dict.getTermFreqStemmed(stemmed);
-            if (scoreCombo > 0) {
+            if (scoreCombo > 10000) {
                 List<String> asTokens = new ArrayList<>();
 
                 for (int j = 0; j < i; j++) {

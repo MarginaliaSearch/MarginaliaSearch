@@ -14,10 +14,7 @@ import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeId;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
-import nu.marginalia.wmsa.edge.model.search.EdgePageScoreAdjustment;
-import nu.marginalia.wmsa.edge.model.search.EdgeSearchSpecification;
-import nu.marginalia.wmsa.edge.model.search.EdgeSearchSubquery;
-import nu.marginalia.wmsa.edge.model.search.EdgeUrlDetails;
+import nu.marginalia.wmsa.edge.model.search.*;
 import nu.marginalia.wmsa.edge.model.search.domain.EdgeDomainSearchSpecification;
 import nu.marginalia.wmsa.edge.search.model.BrowseResult;
 import nu.marginalia.wmsa.edge.search.model.DecoratedSearchResultSet;
@@ -26,9 +23,7 @@ import nu.marginalia.wmsa.edge.search.query.QueryFactory;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeSearchQuery;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeUserSearchParameters;
 import nu.marginalia.wmsa.edge.search.results.SearchResultDecorator;
-import nu.marginalia.wmsa.edge.search.results.SearchResultValuator;
 import nu.marginalia.wmsa.edge.search.results.UrlDeduplicator;
-import nu.marginalia.wmsa.edge.search.results.model.AccumulatedQueryResults;
 import nu.marginalia.wmsa.encyclopedia.EncyclopediaClient;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -52,11 +47,9 @@ public class EdgeSearchOperator {
     private final EdgeIndexClient indexClient;
     private final QueryFactory queryFactory;
     private final SearchResultDecorator resultDecorator;
-    private final SearchResultValuator valuator;
     private final Comparator<EdgeUrlDetails> resultListComparator;
 
     private static final Summary wmsa_search_index_api_time = Summary.build().name("wmsa_search_index_api_time").help("-").register();
-    private static final Summary wmsa_search_result_decoration_time = Summary.build().name("wmsa_search_result_decoration_time").help("-").register();
 
     @Inject
     public EdgeSearchOperator(AssistantClient assistantClient,
@@ -64,8 +57,7 @@ public class EdgeSearchOperator {
                               EdgeDataStoreDao edgeDataStoreDao,
                               EdgeIndexClient indexClient,
                               QueryFactory queryFactory,
-                              SearchResultDecorator resultDecorator,
-                              SearchResultValuator valuator
+                              SearchResultDecorator resultDecorator
                               ) {
 
         this.assistantClient = assistantClient;
@@ -74,7 +66,6 @@ public class EdgeSearchOperator {
         this.indexClient = indexClient;
         this.queryFactory = queryFactory;
         this.resultDecorator = resultDecorator;
-        this.valuator = valuator;
 
         Comparator<EdgeUrlDetails> c = Comparator.comparing(ud -> Math.round(10*(ud.getTermScore() - ud.rankingIdAdjustment())));
         resultListComparator = c.thenComparing(EdgeUrlDetails::getRanking)
@@ -104,7 +95,7 @@ public class EdgeSearchOperator {
 
         String evalResult = getEvalResult(eval);
 
-        List<BrowseResult> domainResults = getDomainResults(ctx, processedQuery.specs, queryResults);
+        List<BrowseResult> domainResults = getDomainResults(ctx, processedQuery.specs);
 
         return new DecoratedSearchResults(params,
                 getProblems(ctx, params.humanQuery(), evalResult, queryResults, processedQuery),
@@ -116,9 +107,7 @@ public class EdgeSearchOperator {
                 getDomainId(processedQuery.domain));
     }
 
-    private List<BrowseResult> getDomainResults(Context ctx, EdgeSearchSpecification specs, DecoratedSearchResultSet queryResults) {
-
-        Set<EdgeDomain> resultDomains = queryResults.resultSet.stream().map(rs -> rs.url.domain).collect(Collectors.toSet());
+    private List<BrowseResult> getDomainResults(Context ctx, EdgeSearchSpecification specs) {
 
         List<String> keywords = specs.subqueries.stream()
                 .filter(sq -> sq.searchTermsExclude.isEmpty() && sq.searchTermsInclude.size() == 1)
@@ -179,33 +168,34 @@ public class EdgeSearchOperator {
 
         sqs.add(new EdgeSearchSubquery(Arrays.asList(termsInclude), Collections.emptyList(), block));
 
-        EdgeSearchSpecification specs = new EdgeSearchSpecification(profile.buckets, sqs, 100, limitPerDomain, limitTotal, "", EdgeSearchProfile.YOLO.equals(profile), false);
+        EdgeSearchSpecification specs = new EdgeSearchSpecification(profile.buckets, sqs, 100, limitPerDomain, limitTotal, "", false);
 
         return performQuery(ctx, new EdgeSearchQuery(specs));
     }
 
     private DecoratedSearchResultSet performQuery(Context ctx, EdgeSearchQuery processedQuery) {
 
-        AccumulatedQueryResults queryResults = new AccumulatedQueryResults();
-        UrlDeduplicator deduplicator = new UrlDeduplicator(processedQuery.specs.limitByDomain);
-        List<EdgeUrlDetails> resultList = new ArrayList<>(queryResults.size());
+        List<EdgeUrlDetails> resultList = new ArrayList<>(100);
 
-        wmsa_search_index_api_time.time(() -> fetchResultsSimple(ctx, processedQuery, queryResults, deduplicator));
+        for (var s : processedQuery.specs.subqueries) {
+            System.out.println(s.block + " : " + s.searchTermsInclude);
+        }
+        Set<EdgeUrlDetails> queryResults = wmsa_search_index_api_time.time(() -> fetchResultsSimple(ctx, processedQuery));
 
-        wmsa_search_result_decoration_time.time(() -> {
-            for (var details : queryResults.results) {
-                if (details.getUrlQuality() < -100) {
-                    continue;
-                }
-                var scoreAdjustment = adjustScoreBasedOnQuery(details, processedQuery.specs);
-                details = details.withUrlQualityAdjustment(scoreAdjustment);
-
-                resultList.add(details);
+        for (var details : queryResults) {
+            if (details.getUrlQuality() <= -100) {
+                continue;
             }
 
-            resultList.sort(resultListComparator);
+            details = details.withUrlQualityAdjustment(
+                    adjustScoreBasedOnQuery(details, processedQuery.specs));
+
+            resultList.add(details);
         }
-        );
+
+
+        resultList.sort(resultListComparator);
+        resultList.removeIf(new UrlDeduplicator(processedQuery.specs.limitByDomain)::shouldRemove);
 
         return new DecoratedSearchResultSet(resultList);
     }
@@ -301,15 +291,22 @@ public class EdgeSearchOperator {
                 .subscribeOn(Schedulers.io());
     }
 
-    private void fetchResultsSimple(Context ctx, EdgeSearchQuery processedQuery, AccumulatedQueryResults queryResults, UrlDeduplicator deduplicator) {
-        var resultSet = indexClient.query(ctx, processedQuery.specs);
+    private Set<EdgeUrlDetails> fetchResultsSimple(Context ctx, EdgeSearchQuery processedQuery) {
+        EdgeSearchResultSet resultSet = indexClient.query(ctx, processedQuery.specs);
+        Set<EdgeUrlDetails> ret = new HashSet<>();
 
         logger.debug("{}", resultSet);
 
         for (IndexBlock block : indexBlockSearchOrder) {
-            queryResults.append(100, resultDecorator.decorateSearchResults(resultSet.resultsList.getOrDefault(block, Collections.emptyList()),
-                    block, deduplicator));
+            var results = resultSet.resultsList.getOrDefault(block, Collections.emptyList());
+
+            for (var result : resultDecorator.getAllUrlDetails(results, block)) {
+                if (ret.size() > 100) break;
+                ret.add(result);
+            }
         }
+
+        return ret;
     }
 
     static final IndexBlock[] indexBlockSearchOrder = Arrays.stream(IndexBlock.values()).sorted(Comparator.comparing(i -> i.sortOrder)).toArray(IndexBlock[]::new);

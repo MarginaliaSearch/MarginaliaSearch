@@ -5,7 +5,9 @@ import com.google.inject.Singleton;
 import nu.marginalia.util.language.WordPatterns;
 import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
+import nu.marginalia.wmsa.edge.index.model.IndexBlockType;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchResultKeywordScore;
+import nu.marginalia.wmsa.edge.model.search.EdgeSearchSubquery;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -25,12 +27,30 @@ public class SearchResultValuator {
     }
 
 
-    // This is basically a bargain bin BM25
+    public double preEvaluate(EdgeSearchSubquery sq) {
+        final String[] terms = sq.searchTermsInclude.stream().filter(f -> !f.contains(":")).toArray(String[]::new);
+        final IndexBlock index = sq.block;
+
+        double termSum = 0.;
+        double factorSum = 0.;
+
+        final double[] weights = getTermWeights(terms);
+
+        for (int i = 0; i < terms.length; i++) {
+            final double factor = 1. / (1.0 + weights[i]);
+
+            factorSum += factor;
+            termSum += (index.sortOrder + 0.5) * factor;
+        }
+
+        return termSum / factorSum;
+    }
+
     public double evaluateTerms(List<EdgeSearchResultKeywordScore> rawScores, IndexBlock block, int length, int titleLength) {
         int sets = 1 + rawScores.stream().mapToInt(EdgeSearchResultKeywordScore::set).max().orElse(0);
 
         double bestScore = 1000;
-        double bestLtsFactor = 1.;
+        double bestAllTermsFactor = 1.;
 
         for (int set = 0; set <= sets; set++) {
             int thisSet = set;
@@ -46,48 +66,70 @@ public class SearchResultValuator {
             double termSum = 0.;
             double factorSum = 0.;
 
-            double ltsFactor = 1.0;
+            double allTermsFactor = 1.0;
 
             for (int i = 0; i < scores.length; i++) {
 
                 final double factor = 1. / (1.0 + weights[i]);
 
                 factorSum += factor;
+                termSum += (scores[i].index().sortOrder + 0.5) * factor / lengthPenalty;
 
-                double termValue = (scores[i].index().sortOrder + 0.5) * factor;
-
-                termValue /= lengthPenalty;
-
-                if (scores[i].link()) {
-                    ltsFactor *= Math.pow(0.5, 1. / scores.length);
-                }
-                if (scores[i].title()) {
-                    if (titleLength <= 64) {
-                        ltsFactor *= Math.pow(0.5, 1. / scores.length);
-                    }
-                    else if (titleLength < 96) {
-                        ltsFactor *= Math.pow(0.75, 1. / scores.length);
-                    }
-                    else {
-                        ltsFactor *= Math.pow(0.9, 1. / scores.length);
-                    }
-                }
-                if (scores[i].subject()) {
-                    ltsFactor *= Math.pow(0.8, 1. / scores.length);
-                }
-
-                termSum += termValue;
             }
 
             assert factorSum != 0;
 
             double value = termSum / factorSum;
 
-            bestLtsFactor = Math.min(bestLtsFactor, ltsFactor);
+            for (int i = 0; i < scores.length; i++) {
+                final double factor = 1. / (1.0 + weights[i]);
+
+                allTermsFactor *= getAllTermsFactorForScore(scores[i], scores[i].index(), factor/factorSum, scores.length, titleLength);
+            }
+
+            bestAllTermsFactor = Math.min(bestAllTermsFactor, allTermsFactor);
             bestScore = Math.min(bestScore, value);
         }
 
-        return (0.7+0.3*block.sortOrder)*bestScore * bestLtsFactor;
+        return (0.7+0.3*block.sortOrder) * bestScore * bestAllTermsFactor;
+    }
+
+    private double getAllTermsFactorForScore(EdgeSearchResultKeywordScore score, IndexBlock block, double termWeight, int scoreCount, int titleLength) {
+        double f = 1.;
+
+
+        if (score.link()) {
+            f *= Math.pow(0.5, termWeight / scoreCount);
+        }
+
+        if (score.title()) {
+            if (block.type.equals(IndexBlockType.PAGE_DATA)) {
+                f *= Math.pow(0.8, termWeight / scoreCount);
+            }
+            else if (titleLength <= 64) {
+                f *= Math.pow(0.5, termWeight / scoreCount);
+            }
+            else if (titleLength < 96) {
+                f *= Math.pow(0.75, termWeight / scoreCount);
+            }
+            else { // likely keyword stuffing if the title is this long
+                f *= Math.pow(0.9, termWeight / scoreCount);
+            }
+        }
+
+        if (score.site()) {
+            f *= Math.pow(0.75, termWeight / scoreCount);
+        }
+
+        if (score.subject()) {
+            f *= Math.pow(0.8, termWeight / scoreCount);
+        }
+
+        if (!score.title() && !score.subject() && score.name()) {
+            f *= Math.pow(0.9, termWeight / scoreCount);
+        }
+
+        return f;
     }
 
     private double getLengthPenalty(int length) {
@@ -105,6 +147,29 @@ public class SearchResultValuator {
 
         for (int i = 0; i < scores.length; i++) {
             String[] parts = separator.split(scores[i].keyword());
+            double sumScore = 0.;
+
+            int count = 0;
+            for (String part : parts) {
+                if (!WordPatterns.isStopWord(part)) {
+                    sumScore += dict.getTermFreq(part);
+                    count++;
+                }
+            }
+            if (count == 0) count = 1;
+
+            weights[i] = Math.sqrt(sumScore)/count;
+        }
+
+        return weights;
+    }
+
+
+    private double[] getTermWeights(String[] words) {
+        double[] weights = new double[words.length];
+
+        for (int i = 0; i < words.length; i++) {
+            String[] parts = separator.split(words[i]);
             double sumScore = 0.;
 
             int count = 0;
