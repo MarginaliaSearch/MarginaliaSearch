@@ -175,14 +175,9 @@ public class EdgeSearchOperator {
 
     private DecoratedSearchResultSet performQuery(Context ctx, EdgeSearchQuery processedQuery) {
 
-        List<EdgeUrlDetails> resultList = new ArrayList<>(100);
+        List<EdgeUrlDetails> resultList = new ArrayList<>(processedQuery.specs.limitTotal);
 
-        for (var s : processedQuery.specs.subqueries) {
-            System.out.println(s.block + " : " + s.searchTermsInclude);
-        }
-        Set<EdgeUrlDetails> queryResults = wmsa_search_index_api_time.time(() -> fetchResultsSimple(ctx, processedQuery));
-
-        for (var details : queryResults) {
+        for (var details : wmsa_search_index_api_time.time(()->fetchResultsSimple(ctx, processedQuery))) {
             if (details.getUrlQuality() <= -100) {
                 continue;
             }
@@ -192,7 +187,6 @@ public class EdgeSearchOperator {
 
             resultList.add(details);
         }
-
 
         resultList.sort(resultListComparator);
         resultList.removeIf(new UrlDeduplicator(processedQuery.specs.limitByDomain)::shouldRemove);

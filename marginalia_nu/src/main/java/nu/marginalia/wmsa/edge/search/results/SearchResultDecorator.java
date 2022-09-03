@@ -72,21 +72,13 @@ public class SearchResultDecorator {
     }
 
     private double calculateTermScore(IndexBlock block, EdgeSearchResultItem resultItem, EdgeUrlDetails details) {
-        int titleLength = details.title.length();
 
-        double value =  valuator.evaluateTerms(resultItem.scores, block, details.words,titleLength) / Math.sqrt(1 + resultItem.queryLength)
-                + ((details.domainState == EdgeDomainIndexingState.SPECIAL) ? 1.25 : 0);
+        final double lengthPenalty = 1.0 / Math.sqrt(resultItem.queryLength);
+        final double statePenalty = (details.domainState == EdgeDomainIndexingState.SPECIAL) ? 1.25 : 0;
 
-        System.out.println("---");
-        System.out.println(details.getUrl());
-        System.out.println(details.getTitle());
-        System.out.println(details.words);
-        for (var score : resultItem.scores) {
-            System.out.println(block + ":" + score);
-        }
-        System.out.println(value);
+        final double value =  valuator.evaluateTerms(resultItem.scores, block, details.words, details.title.length());
 
-        return value;
+        return value + lengthPenalty + statePenalty;
     }
 
 }
