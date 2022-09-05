@@ -27,7 +27,6 @@ public class LoaderMain {
 
     private static final Logger logger = LoggerFactory.getLogger(LoaderMain.class);
 
-    private final Path processDir;
     private final EdgeCrawlPlan plan;
     private final ConvertedDomainReader instructionsReader;
     private final LoaderFactory loaderFactory;
@@ -59,7 +58,6 @@ public class LoaderMain {
                       LoaderFactory loaderFactory,
                       EdgeIndexClient indexClient) {
 
-        this.processDir = plan.process.getDir();
         this.plan = plan;
         this.instructionsReader = instructionsReader;
         this.loaderFactory = loaderFactory;

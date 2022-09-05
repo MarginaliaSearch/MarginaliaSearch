@@ -52,6 +52,8 @@ public class SqlLoadUrls {
              )
         {
             conn.setAutoCommit(false);
+
+            int cnt = 0; int batchOffset = 0;
             for (var url : urls) {
                 if (url.path.length() >= 255) {
                     logger.warn("Skipping bad URL {}", url);
@@ -70,11 +72,29 @@ public class SqlLoadUrls {
                 insertCall.setString(5, url.param);
                 insertCall.setLong(6, hashPath(url.path, url.param));
                 insertCall.addBatch();
+
+                if (++cnt == 250) {
+                    var ret = insertCall.executeBatch();
+                    conn.commit();
+
+                    for (int rv = 0; rv < cnt; rv++) {
+                        if (ret[rv] < 0 && ret[rv] != SUCCESS_NO_INFO) {
+                            logger.warn("load({}) -- bad row count {}", urls[batchOffset + rv], ret[rv]);
+                        }
+                    }
+
+                    cnt = 0;
+                    batchOffset += 250;
+                }
             }
-            var ret = insertCall.executeBatch();
-            for (int rv = 0; rv < ret.length; rv++) {
-                if (ret[rv] < 0 && ret[rv] != SUCCESS_NO_INFO) {
-                    logger.warn("load({}) -- bad row count {}", urls[rv], ret[rv]);
+            if (cnt > 0) {
+                var ret = insertCall.executeBatch();
+                conn.commit();
+
+                for (int rv = 0; rv < cnt; rv++) {
+                    if (ret[rv] < 0 && ret[rv] != SUCCESS_NO_INFO) {
+                        logger.warn("load({}) -- bad row count {}", urls[batchOffset + rv], ret[rv]);
+                    }
                 }
             }
 
@@ -86,6 +106,7 @@ public class SqlLoadUrls {
             queryCall.setInt(1, data.getDomainId(targetDomain));
 
             var rsp = queryCall.executeQuery();
+            rsp.setFetchSize(urls.length);
 
             while (rsp.next()) {
                 int urlId = rsp.getInt(1);

@@ -19,7 +19,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 public class SearchIndexJournalWriterImpl implements SearchIndexJournalWriter {
-    private final KeywordLexicon dictionaryWriter;
+    private final KeywordLexicon lexicon;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Disposable writerTask;
@@ -31,8 +31,8 @@ public class SearchIndexJournalWriterImpl implements SearchIndexJournalWriter {
     private long pos;
 
     @SneakyThrows
-    public SearchIndexJournalWriterImpl(KeywordLexicon dictionaryWriter, File indexFile) {
-        this.dictionaryWriter = dictionaryWriter;
+    public SearchIndexJournalWriterImpl(KeywordLexicon lexicon, File indexFile) {
+        this.lexicon = lexicon;
         initializeIndexFile(indexFile);
 
         byteBuffer = ByteBuffer.allocate(MAX_BLOCK_SIZE);
@@ -113,14 +113,14 @@ public class SearchIndexJournalWriterImpl implements SearchIndexJournalWriter {
 
     @Override
     public void flushWords() {
-        dictionaryWriter.commitToDisk();
+        lexicon.commitToDisk();
     }
 
     private void writePositionMarker() throws IOException {
         pos = channel.size();
         raf.seek(0);
         raf.writeLong(pos);
-        raf.writeLong(dictionaryWriter.size());
+        raf.writeLong(lexicon.size());
         raf.seek(pos);
     }
 

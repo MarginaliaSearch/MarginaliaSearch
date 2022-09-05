@@ -190,10 +190,20 @@ public class EdgeIndexService extends Service {
     }
 
     private long[] getOrInsertWordIds(List<String> words) {
-        return words.stream()
-                .filter(w -> w.getBytes().length < Byte.MAX_VALUE)
-                .mapToLong(keywordLexicon::getOrInsert)
-                .toArray();
+        long[] ids = new long[words.size()];
+        int putId = 0;
+
+        for (String word : words) {
+            long id = keywordLexicon.getOrInsert(word);
+            if (id != DictionaryHashMap.NO_VALUE) {
+                ids[putId++] = id;
+            }
+        }
+
+        if (putId != words.size()) {
+            ids = Arrays.copyOf(ids, putId);
+        }
+        return ids;
     }
 
     private Object searchDomain(Request request, Response response) {

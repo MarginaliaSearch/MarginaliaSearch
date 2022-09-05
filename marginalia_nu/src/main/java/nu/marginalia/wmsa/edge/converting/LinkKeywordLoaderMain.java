@@ -2,11 +2,10 @@ package nu.marginalia.wmsa.edge.converting;
 
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
 import nu.marginalia.wmsa.configuration.server.Context;
+import nu.marginalia.wmsa.edge.converting.interpreter.instruction.DocumentKeywords;
 import nu.marginalia.wmsa.edge.index.client.EdgeIndexClient;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.EdgeId;
-import nu.marginalia.wmsa.edge.model.crawl.EdgePageWordSet;
-import nu.marginalia.wmsa.edge.model.crawl.EdgePageWords;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -76,9 +75,8 @@ public class LinkKeywordLoaderMain {
 
 //                    System.out.println(lastLine + " -/- " + domainId + ":" + urlId + " : " + keywords);
 
-                    indexClient.putWords(Context.internal(), new EdgeId<>(domainId), new EdgeId<>(urlId), new EdgePageWordSet(
-                            new EdgePageWords(IndexBlock.Link, new HashSet<>(keywords))), 0
-                    ).blockingSubscribe();
+                    indexClient.putWords(Context.internal(), new EdgeId<>(domainId), new EdgeId<>(urlId),
+                            new DocumentKeywords(IndexBlock.Link, keywords.toArray(String[]::new)), 0);
                 }
 
                 lastLine = urlKeyword.url;

@@ -3,12 +3,11 @@ package nu.marginalia.wmsa.edge.tools;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
 import nu.marginalia.wmsa.configuration.server.Context;
+import nu.marginalia.wmsa.edge.converting.interpreter.instruction.DocumentKeywords;
 import nu.marginalia.wmsa.edge.converting.processor.logic.HtmlFeature;
 import nu.marginalia.wmsa.edge.index.client.EdgeIndexClient;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.EdgeId;
-import nu.marginalia.wmsa.edge.model.crawl.EdgePageWordSet;
-import nu.marginalia.wmsa.edge.model.crawl.EdgePageWords;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,7 +16,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -34,7 +32,6 @@ public class FeaturesLoaderTool {
              var linesStream = Files.lines(file)) {
 
             var urls = getUrls(ds);
-            var wordSet = new EdgePageWordSet(new EdgePageWords(IndexBlock.Meta, List.of(feature.getKeyword())));
             linesStream
                     .map(urls::get)
                     .filter(Objects::nonNull)
@@ -51,8 +48,9 @@ public class FeaturesLoaderTool {
                             throw new RuntimeException(ex);
                         }
 
-                        client.putWords(Context.internal(), new EdgeId<>(domainId), new EdgeId<>(urlId), wordSet, 0)
-                                .blockingSubscribe();
+                        client.putWords(Context.internal(), new EdgeId<>(domainId), new EdgeId<>(urlId),
+                                new DocumentKeywords(IndexBlock.Meta, feature.getKeyword())
+                                , 0);
                     });
 
         } catch (IOException e) {

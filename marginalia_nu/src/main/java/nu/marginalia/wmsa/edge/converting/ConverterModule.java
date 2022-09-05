@@ -6,11 +6,15 @@ import com.google.inject.name.Names;
 import marcono1234.gson.recordadapter.RecordTypeAdapterFactory;
 import nu.marginalia.util.language.conf.LanguageModels;
 import nu.marginalia.wmsa.configuration.WmsaHome;
+import nu.marginalia.wmsa.edge.index.client.EdgeIndexClient;
+import nu.marginalia.wmsa.edge.index.client.EdgeIndexLocalService;
+import nu.marginalia.wmsa.edge.index.client.EdgeIndexWriterClient;
 import nu.marginalia.wmsa.edge.model.EdgeCrawlPlan;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 
 public class ConverterModule extends AbstractModule {
 
@@ -30,6 +34,15 @@ public class ConverterModule extends AbstractModule {
         bind(Integer.class).annotatedWith(Names.named("min-document-length")).toInstance(250);
         bind(Integer.class).annotatedWith(Names.named("max-title-length")).toInstance(128);
         bind(Integer.class).annotatedWith(Names.named("max-summary-length")).toInstance(255);
+
+        if (null != System.getProperty("local-index-path")) {
+            bind(Path.class).annotatedWith(Names.named("local-index-path")).toInstance(Path.of(System.getProperty("local-index-path")));
+            bind(EdgeIndexWriterClient.class).to(EdgeIndexLocalService.class);
+        }
+        else {
+            bind(EdgeIndexWriterClient.class).to(EdgeIndexClient.class);
+        }
+
 
         bind(LanguageModels.class).toInstance(WmsaHome.getLanguageModels());
     }

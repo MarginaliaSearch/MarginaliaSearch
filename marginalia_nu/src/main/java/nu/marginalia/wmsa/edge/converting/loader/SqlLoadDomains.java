@@ -67,16 +67,34 @@ public class SqlLoadDomains {
 
             try (var insertCall = connection.prepareCall("CALL INSERT_DOMAIN(?,?)")) {
 
+
+                int cnt = 0; int batchOffset = 0;
                 for (var domain : domains) {
                     insertCall.setString(1, domain.toString());
                     insertCall.setString(2, domain.domain);
                     insertCall.addBatch();
-                }
-                var ret = insertCall.executeBatch();
 
-                for (int rv = 0; rv < domains.length; rv++) {
-                    if (ret[rv] < 0 && ret[rv] != SUCCESS_NO_INFO) {
-                        logger.warn("load({}) -- bad row count {}", domains[rv], ret[rv]);
+                    if (++cnt == 1000) {
+                        var ret = insertCall.executeBatch();
+                        connection.commit();
+
+                        for (int rv = 0; rv < cnt; rv++) {
+                            if (ret[rv] < 0 && ret[rv] != SUCCESS_NO_INFO) {
+                                logger.warn("load({}) -- bad row count {}", domains[batchOffset + rv], ret[rv]);
+                            }
+                        }
+
+                        cnt = 0;
+                        batchOffset += 1000;
+                    }
+                }
+                if (cnt > 0) {
+                    var ret = insertCall.executeBatch();
+                    connection.commit();
+                    for (int rv = 0; rv < cnt; rv++) {
+                        if (ret[rv] < 0 && ret[rv] != SUCCESS_NO_INFO) {
+                            logger.warn("load({}) -- bad row count {}", domains[batchOffset + rv], ret[rv]);
+                        }
                     }
                 }
 

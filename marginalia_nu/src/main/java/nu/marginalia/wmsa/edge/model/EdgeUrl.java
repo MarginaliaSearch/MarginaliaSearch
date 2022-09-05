@@ -96,11 +96,23 @@ public class EdgeUrl implements WideHashable {
     }
 
     public EdgeUrl(URI URI) {
-        this.domain = new EdgeDomain(URI.getHost());
-        this.path = URI.getPath().isEmpty() ? "/" : URI.getPath();
-        this.proto = URI.getScheme().toLowerCase();
-        this.port = port(URI.getPort(), proto);
-        this.param = QueryParams.queryParamsSanitizer(this.path, URI.getQuery());
+        try {
+            String host = URI.getHost();
+
+            if (host == null) { // deal with a rare serialization error
+                host = "parse-error.invalid.example.com";
+            }
+
+            this.domain = new EdgeDomain(host);
+            this.path = URI.getPath().isEmpty() ? "/" : URI.getPath();
+            this.proto = URI.getScheme().toLowerCase();
+            this.port = port(URI.getPort(), proto);
+            this.param = QueryParams.queryParamsSanitizer(this.path, URI.getQuery());
+        }
+        catch (Exception ex) {
+            System.err.println("Failed to parse " + URI);
+            throw ex;
+        }
     }
 
 

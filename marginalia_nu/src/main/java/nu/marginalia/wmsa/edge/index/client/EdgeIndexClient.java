@@ -6,13 +6,12 @@ import com.google.inject.Singleton;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import nu.marginalia.wmsa.client.AbstractDynamicClient;
-import nu.marginalia.wmsa.client.HttpStatusCode;
 import nu.marginalia.wmsa.configuration.ServiceDescriptor;
 import nu.marginalia.wmsa.configuration.server.Context;
+import nu.marginalia.wmsa.edge.converting.interpreter.instruction.DocumentKeywords;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeId;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
-import nu.marginalia.wmsa.edge.model.crawl.EdgePageWordSet;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchResultSet;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchSpecification;
 import nu.marginalia.wmsa.edge.model.search.domain.EdgeDomainSearchResults;
@@ -26,7 +25,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
-public class EdgeIndexClient extends AbstractDynamicClient {
+public class EdgeIndexClient extends AbstractDynamicClient implements EdgeIndexWriterClient {
     private final Gson gson = new GsonBuilder()
             .create();
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -36,10 +35,10 @@ public class EdgeIndexClient extends AbstractDynamicClient {
         setTimeout(30);
     }
 
-    @CheckReturnValue
-    public Observable<HttpStatusCode> putWords(Context ctx, EdgeId<EdgeDomain> domain, EdgeId<EdgeUrl> url,
-                                               EdgePageWordSet wordSet, int writer
-                                               )
+    @Override
+    public void putWords(Context ctx, EdgeId<EdgeDomain> domain, EdgeId<EdgeUrl> url,
+                         DocumentKeywords wordSet, int writer
+    )
     {
 
         var keywordBuilder =
@@ -48,16 +47,16 @@ public class EdgeIndexClient extends AbstractDynamicClient {
                     .setUrl(url.id())
                     .setIndex(writer);
 
-        for (var set : wordSet.wordSets.values()) {
+        for (var set : wordSet.keywords()) {
             var wordSetBuilder = IndexPutKeywordsReq.WordSet.newBuilder();
-            wordSetBuilder.setIndex(set.block.ordinal());
-            wordSetBuilder.addAllWords(set.words);
+            wordSetBuilder.setIndex(wordSet.block().ordinal());
+            wordSetBuilder.addAllWords(List.of(wordSet.keywords()));
             keywordBuilder.addWordSet(wordSetBuilder.build());
         }
 
         var req = keywordBuilder.build();
 
-        return this.post(ctx, "/words/", req);
+        this.post(ctx, "/words/", req).blockingSubscribe();
     }
 
 
