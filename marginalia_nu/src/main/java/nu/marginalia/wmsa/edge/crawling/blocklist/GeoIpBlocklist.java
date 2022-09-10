@@ -1,7 +1,5 @@
 package nu.marginalia.wmsa.edge.crawling.blocklist;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.google.inject.Singleton;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
@@ -13,10 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.InetAddress;
-import java.nio.charset.StandardCharsets;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 

@@ -13,8 +13,10 @@ import nu.marginalia.wmsa.edge.index.journal.model.SearchIndexJournalEntryHeader
 import nu.marginalia.wmsa.edge.index.lexicon.KeywordLexicon;
 import nu.marginalia.wmsa.edge.index.lexicon.journal.KeywordLexiconJournal;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
-import nu.marginalia.wmsa.edge.model.EdgeId;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
+import nu.marginalia.wmsa.edge.model.id.EdgeId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -26,6 +28,7 @@ public class EdgeIndexLocalService implements EdgeIndexWriterClient {
 
     private final KeywordLexicon lexicon;
     private final SearchIndexJournalWriterImpl indexWriter;
+    private static final Logger logger = LoggerFactory.getLogger(EdgeIndexLocalService.class);
 
     @Inject
     public EdgeIndexLocalService(@Named("local-index-path") Path path) throws IOException {
@@ -42,12 +45,18 @@ public class EdgeIndexLocalService implements EdgeIndexWriterClient {
 
     public void putWords(Context ctx, EdgeId<EdgeDomain> domain, EdgeId<EdgeUrl> url,
                          DocumentKeywords wordSet, int writer) {
-        if (wordSet.keywords().length == 0) return;
+        if (wordSet.keywords().length == 0)
+            return;
+
+        if (domain.id() <= 0 || url.id() <= 0) {
+            logger.warn("Bad ID: {}:{}", domain, url);
+            return;
+        }
 
         for (var chunk : ListChunker.chopList(List.of(wordSet.keywords()), SearchIndexJournalEntry.MAX_LENGTH)) {
 
             var entry = new SearchIndexJournalEntry(getOrInsertWordIds(chunk));
-            var header = new SearchIndexJournalEntryHeader(domain.id(), url.id(), wordSet.block());
+            var header = new SearchIndexJournalEntryHeader(domain, url, wordSet.block());
 
             indexWriter.put(header, entry);
         }

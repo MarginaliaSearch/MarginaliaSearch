@@ -1,19 +1,16 @@
 package nu.marginalia.wmsa.edge.converting;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
-import marcono1234.gson.recordadapter.RecordTypeAdapterFactory;
 import nu.marginalia.util.language.conf.LanguageModels;
+import nu.marginalia.wmsa.client.GsonFactory;
 import nu.marginalia.wmsa.configuration.WmsaHome;
 import nu.marginalia.wmsa.edge.index.client.EdgeIndexClient;
 import nu.marginalia.wmsa.edge.index.client.EdgeIndexLocalService;
 import nu.marginalia.wmsa.edge.index.client.EdgeIndexWriterClient;
 import nu.marginalia.wmsa.edge.model.EdgeCrawlPlan;
-import nu.marginalia.wmsa.edge.model.EdgeDomain;
-import nu.marginalia.wmsa.edge.model.EdgeUrl;
 
-import java.net.URISyntaxException;
 import java.nio.file.Path;
 
 public class ConverterModule extends AbstractModule {
@@ -48,20 +45,7 @@ public class ConverterModule extends AbstractModule {
     }
 
     private Gson createGson() {
-
-        return new GsonBuilder()
-                .registerTypeAdapter(EdgeUrl.class, (JsonSerializer<EdgeUrl>) (src, typeOfSrc, context) -> new JsonPrimitive(src.toString()))
-                .registerTypeAdapter(EdgeDomain.class, (JsonSerializer<EdgeDomain>) (src, typeOfSrc, context) -> new JsonPrimitive(src.toString()))
-                .registerTypeAdapter(EdgeUrl.class, (JsonDeserializer<EdgeUrl>) (json, typeOfT, context) -> {
-                    try {
-                        return new EdgeUrl(json.getAsString());
-                    } catch (URISyntaxException e) {
-                        throw new JsonParseException("URL Parse Exception", e);
-                    }
-                })
-                .registerTypeAdapter(EdgeDomain.class, (JsonDeserializer<EdgeDomain>) (json, typeOfT, context) -> new EdgeDomain(json.getAsString()))
-                .registerTypeAdapterFactory(RecordTypeAdapterFactory.builder().allowMissingComponentValues().create())
-                .create();
+        return GsonFactory.get();
     }
 
 }

@@ -6,7 +6,10 @@ import nu.marginalia.util.language.WordPatterns;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -212,24 +215,36 @@ public class QueryParser {
                 return permuteQueries(items);
             }
 
-            List<List<Token>> basic = new ArrayList<>();
-
+            List<List<Token>> queryVariants = new ArrayList<>();
             for (var query : result.faithful) {
                 var tokens = query.terms.stream().map(term -> new Token(TokenType.LITERAL_TERM, term)).collect(Collectors.toList());
 
-                basic.add(tokens);
+                queryVariants.add(tokens);
             }
             for (var query : result.alternative) {
+                if (queryVariants.size() >= 6)
+                    break;
+
                 var tokens = query.terms.stream().map(term -> new Token(TokenType.LITERAL_TERM, term)).collect(Collectors.toList());
 
-                basic.add(tokens);
+                queryVariants.add(tokens);
             }
 
-            int si = start;
-            int ei = end;
-            return basic.stream().map(part ->
-                    concat(items.subList(0, si).stream(), concat(part.stream(), items.subList(ei, items.size()).stream())).collect(Collectors.toList()))
-                    .collect(Collectors.toList());
+            List<List<Token>> returnValue = new ArrayList<>(queryVariants.size());
+            for (var variant: queryVariants) {
+                List<Token> r = new ArrayList<>(start + variant.size() + (items.size() - end));
+                r.addAll(items.subList(0, start));
+                r.addAll(variant);
+                r.addAll(items.subList(end, items.size()));
+                returnValue.add(r);
+            }
+
+            for (var qv : returnValue) {
+                System.out.println(qv);
+            }
+
+            return returnValue;
+
         }
         else {
             return List.of(items);

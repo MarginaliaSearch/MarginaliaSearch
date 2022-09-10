@@ -1,18 +1,16 @@
 package nu.marginalia.wmsa.edge.index;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.InvalidProtocolBufferException;
-import gnu.trove.map.TLongIntMap;
-import gnu.trove.map.hash.TLongIntHashMap;
 import gnu.trove.set.hash.TIntHashSet;
+import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import io.reactivex.rxjava3.schedulers.Schedulers;
-import marcono1234.gson.recordadapter.RecordTypeAdapterFactory;
 import nu.marginalia.util.ListChunker;
 import nu.marginalia.util.dict.DictionaryHashMap;
+import nu.marginalia.wmsa.client.GsonFactory;
 import nu.marginalia.wmsa.configuration.server.Initialization;
 import nu.marginalia.wmsa.configuration.server.MetricsServer;
 import nu.marginalia.wmsa.configuration.server.Service;
@@ -22,11 +20,15 @@ import nu.marginalia.wmsa.edge.index.journal.model.SearchIndexJournalEntryHeader
 import nu.marginalia.wmsa.edge.index.lexicon.KeywordLexicon;
 import nu.marginalia.wmsa.edge.index.model.EdgeIndexSearchTerms;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
+import nu.marginalia.wmsa.edge.index.reader.IndexQueryCachePool;
+import nu.marginalia.wmsa.edge.index.reader.ResultDomainDeduplicator;
 import nu.marginalia.wmsa.edge.index.reader.SearchIndexes;
+import nu.marginalia.wmsa.edge.index.reader.query.IndexQuery;
 import nu.marginalia.wmsa.edge.index.reader.query.IndexSearchBudget;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
-import nu.marginalia.wmsa.edge.model.EdgeId;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
+import nu.marginalia.wmsa.edge.model.id.EdgeId;
+import nu.marginalia.wmsa.edge.model.id.EdgeIdArray;
 import nu.marginalia.wmsa.edge.model.search.*;
 import nu.marginalia.wmsa.edge.model.search.domain.EdgeDomainSearchResults;
 import nu.marginalia.wmsa.edge.model.search.domain.EdgeDomainSearchSpecification;
@@ -43,14 +45,14 @@ import spark.Spark;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.LongPredicate;
-import java.util.stream.LongStream;
 
-import static java.lang.Math.min;
 import static spark.Spark.get;
 import static spark.Spark.halt;
 
 public class EdgeIndexService extends Service {
     private static final int SEARCH_BUDGET_TIMEOUT_MS = 3000;
+    private static final int QUERY_FETCH_SIZE = 8192;
+    private static final int QUERY_FIRST_PASS_DOMAIN_LIMIT = 64;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -59,14 +61,10 @@ public class EdgeIndexService extends Service {
     private final SearchIndexes indexes;
     private final KeywordLexicon keywordLexicon;
 
-    private final Gson gson = new GsonBuilder()
-            .registerTypeAdapterFactory(RecordTypeAdapterFactory.builder().allowMissingComponentValues().create())
-            .create();
+    private final Gson gson = GsonFactory.get();
 
-    private static final Histogram wmsa_edge_index_query_time
-            = Histogram.build().name("wmsa_edge_index_query_time")
-                               .linearBuckets(50, 50, 15)
-                               .help("-").register();
+    private static final Histogram wmsa_edge_index_query_time = Histogram.build().name("wmsa_edge_index_query_time").linearBuckets(50, 50, 15).help("-").register();
+    private static final Counter wmsa_edge_index_query_timeouts = Counter.build().name("wmsa_edge_index_query_timeouts").help("-").register();
 
     public static final int DYNAMIC_BUCKET_LENGTH = 7;
 
@@ -191,17 +189,17 @@ public class EdgeIndexService extends Service {
 
     private long[] getOrInsertWordIds(List<String> words) {
         long[] ids = new long[words.size()];
-        int putId = 0;
+        int putIdx = 0;
 
         for (String word : words) {
             long id = keywordLexicon.getOrInsert(word);
             if (id != DictionaryHashMap.NO_VALUE) {
-                ids[putId++] = id;
+                ids[putIdx++] = id;
             }
         }
 
-        if (putId != words.size()) {
-            ids = Arrays.copyOf(ids, putId);
+        if (putIdx != words.size()) {
+            ids = Arrays.copyOf(ids, putIdx);
         }
         return ids;
     }
@@ -217,11 +215,10 @@ public class EdgeIndexService extends Service {
 
         final int wordId = keywordLexicon.getReadOnly(specsSet.keyword);
 
-        List<EdgeId<EdgeUrl>> urlIds = indexes
+        EdgeIdArray<EdgeUrl> urlIds = EdgeIdArray.gather(indexes
                 .getBucket(specsSet.bucket)
                 .findHotDomainsForKeyword(specsSet.block, wordId, specsSet.queryDepth, specsSet.minHitCount, specsSet.maxResults)
-                .mapToObj(lv -> new EdgeId<EdgeUrl>((int)(lv & 0xFFFF_FFFFL)))
-                .toList();
+                .mapToInt(lv -> (int)(lv & 0xFFFF_FFFFL)));
 
         return new EdgeDomainSearchResults(specsSet.keyword, urlIds);
     }
@@ -256,20 +253,17 @@ public class EdgeIndexService extends Service {
 
 
     private class SearchQuery {
-        private final TIntHashSet seenResults = new TIntHashSet();
-        private final ResultDomainDeduplicator domainCountFilter;
+        private final TIntHashSet seenResults = new TIntHashSet(QUERY_FETCH_SIZE, 0.5f);
         private final EdgeSearchSpecification specsSet;
         private final IndexSearchBudget budget = new IndexSearchBudget(SEARCH_BUDGET_TIMEOUT_MS);
+        private final IndexQueryCachePool cachePool = new IndexQueryCachePool();
 
         public SearchQuery(EdgeSearchSpecification specsSet) {
-            domainCountFilter = new ResultDomainDeduplicator(specsSet.limitByDomain);
-
             this.specsSet = specsSet;
         }
 
-        private Map<IndexBlock, List<EdgeSearchResultItem>> execute() {
-            final Map<IndexBlock, List<EdgeSearchResultItem>> results = new HashMap<>();
-            int totalResultsCount = 0;
+        private List<EdgeSearchResultItem> execute() {
+            final Set<EdgeSearchResultItem> results = new HashSet<>(QUERY_FETCH_SIZE);
 
             for (var sq : specsSet.subqueries) {
                 Optional<EdgeIndexSearchTerms> searchTerms = getSearchTerms(sq);
@@ -277,58 +271,65 @@ public class EdgeIndexService extends Service {
                 if (searchTerms.isEmpty())
                     continue;
 
-                var resultForSq = performSearch(searchTerms.get(), sq, totalResultsCount);
-
-                totalResultsCount += resultForSq.size();
-                if (!resultForSq.isEmpty()) {
-                    results.computeIfAbsent(sq.block, s -> new ArrayList<>()).addAll(resultForSq);
-                }
+                results.addAll(performSearch(searchTerms.get(), sq));
             }
 
-            addResultScores(results);
+            for (var result : results) {
+                addResultScores(result);
+            }
 
-            return results;
+            if (!budget.hasTimeLeft()) {
+                wmsa_edge_index_query_timeouts.inc();
+            }
+
+            var domainCountFilter = new ResultDomainDeduplicator(specsSet.limitByDomain);
+
+//            cachePool.printSummary(logger);
+            cachePool.clear();
+
+            return results.stream()
+                    .sorted(Comparator.comparing(EdgeSearchResultItem::getScore))
+                    .filter(domainCountFilter::test)
+                    .limit(specsSet.getLimitTotal()).toList();
         }
 
 
         private List<EdgeSearchResultItem> performSearch(EdgeIndexSearchTerms searchTerms,
-                                                          EdgeSearchSubquery sq,
-                                                          int totalResultsCount)
+                                                          EdgeSearchSubquery sq)
         {
-            if (specsSet.limitTotal <= totalResultsCount)
-                return new ArrayList<>();
 
-            final List<EdgeSearchResultItem> results = new ArrayList<>();
-            final ResultDomainDeduplicator localFilter = new ResultDomainDeduplicator(specsSet.limitByDomain);
+            final List<EdgeSearchResultItem> results = new ArrayList<>(QUERY_FETCH_SIZE);
+            final ResultDomainDeduplicator localFilter = new ResultDomainDeduplicator(QUERY_FIRST_PASS_DOMAIN_LIMIT);
 
-            final int remainingResults = min(
-                    specsSet.limitByBucket,
-                    specsSet.limitTotal - totalResultsCount
-            );
+            final int remainingResults = QUERY_FETCH_SIZE;
 
             for (int indexBucket : specsSet.buckets) {
 
                 if (!budget.hasTimeLeft()) {
-                    System.out.println("Timed out, omitting " + indexBucket + ":" + sq);
+                    logger.info("Query timed out, omitting {}:{} for query {}", indexBucket, sq.block, sq.searchTermsInclude);
+                    continue;
                 }
 
                 if (remainingResults <= results.size())
                     break;
 
-                PrimitiveIterator.OfLong queryIter =
-                        getQuery(indexBucket, sq.block, lv -> localFilter.filterRawValue(indexBucket, lv), searchTerms)
-                        .iterator();
+                var query = getQuery(cachePool, indexBucket, sq.block, lv -> localFilter.filterRawValue(indexBucket, lv), searchTerms);
+                long[] buf = new long[8192];
 
-                while (queryIter.hasNext() && remainingResults > results.size()) {
-                    final long id = queryIter.nextLong();
-                    final EdgeSearchResultItem ri = new EdgeSearchResultItem(indexBucket, sq.termSize(), id);
+                while (query.hasMore() && results.size() < remainingResults && budget.hasTimeLeft()) {
+                    int cnt = query.getMoreResults(buf, budget);
 
-                    if (!seenResults.add(ri.url.id()) || !localFilter.test(domainCountFilter, ri)) {
-                        continue;
+                    for (int i = 0; i < cnt && results.size() < remainingResults; i++) {
+                        long id = buf[i];
+
+                        final EdgeSearchResultItem ri = new EdgeSearchResultItem(indexBucket, id);
+
+                        if (!seenResults.add(ri.getUrlId().id()) || !localFilter.test(ri)) {
+                            continue;
+                        }
+
+                        results.add(ri);
                     }
-
-                    domainCountFilter.add(ri);
-                    results.add(ri);
                 }
 
             }
@@ -336,98 +337,83 @@ public class EdgeIndexService extends Service {
             return results;
         }
 
-        private LongStream getQuery(int bucket, IndexBlock block,
+        private IndexQuery getQuery(IndexQueryCachePool cachePool, int bucket, IndexBlock block,
                                     LongPredicate filter, EdgeIndexSearchTerms searchTerms) {
 
             if (!indexes.isValidBucket(bucket)) {
                 logger.warn("Invalid bucket {}", bucket);
-                return LongStream.empty();
+                return new IndexQuery(Collections.emptyList());
             }
 
-            return indexes.getBucket(bucket).getQuery(block, filter, budget, searchTerms);
+            return indexes.getBucket(bucket).getQuery(cachePool, block, filter, searchTerms);
         }
 
-        private void addResultScores(Map<IndexBlock, List<EdgeSearchResultItem>> results) {
-            List<List<String>> distinctSearchTerms = specsSet.subqueries.stream().map(sq -> sq.searchTermsInclude).distinct().toList();
+        private void addResultScores(EdgeSearchResultItem searchResult) {
+            final var reader = Objects.requireNonNull(indexes.getDictionaryReader());
 
-            // This looks far worse than it is, most loops are only a few iterations long
+            List<List<String>> searchTermVariants = specsSet.subqueries.stream().map(sq -> sq.searchTermsInclude).distinct().toList();
 
-            for (var blockResults : results.values()) { // typical length 1-2
-                for (var result : blockResults) { // typical length 20-100
-                    for (int i = 0; i < distinctSearchTerms.size(); i++) { // typical length 1-2
-                        for (var term : distinctSearchTerms.get(i)) {  // typical length 1-6
+            // Memoize calls to getTermData, as they're redundant and cause disk reads
+            Map<ResultTerm, ResultTermData> termMetadata = new HashMap<>(32);
 
-                            final int termId = indexes.getDictionaryReader().get(term);
-                            final EdgeIndexBucket bucket = indexes.getBucket(result.bucketId);
-                            final long combinedUrlId = result.getCombinedId();
+            double bestScore = 0;
 
-                            result.scores.add(new EdgeSearchResultKeywordScore(i, term,
-                                    bucket.getTermScore(termId, combinedUrlId),
-                                    bucket.isTermInBucket(IndexBlock.Title, termId, combinedUrlId),
-                                    bucket.isTermInBucket(IndexBlock.Link, termId, combinedUrlId),
-                                    bucket.isTermInBucket(IndexBlock.Site, termId, combinedUrlId),
-                                    bucket.isTermInBucket(IndexBlock.Subjects, termId, combinedUrlId),
-                                    bucket.isTermInBucket(IndexBlock.NamesWords, termId, combinedUrlId)
-                            ));
-                        }
-                    }
+            for (int searchTermListIdx = 0; searchTermListIdx < searchTermVariants.size(); searchTermListIdx++) {
+                double setScore = 0;
+                int setSize = 0;
+                for (var searchTerm : searchTermVariants.get(searchTermListIdx)) {
+
+                    final int termId = reader.get(searchTerm);
+
+                    ResultTermData data = termMetadata.computeIfAbsent(
+                            new ResultTerm(searchResult.bucketId, termId, searchResult.getCombinedId()), this::getTermData);
+
+                    var score = data.asScore(searchTermListIdx, searchTerm);
+                    searchResult.scores.add(score);
+                    setScore += score.value();
+                    setSize++;
                 }
+                bestScore = Math.min(bestScore, setScore/setSize);
+            }
+
+            searchResult.setScore(bestScore);
+        }
+
+        private ResultTermData getTermData(ResultTerm resultTerm) {
+            final EdgeIndexBucket bucket = indexes.getBucket(resultTerm.bucket);
+            final int termId = resultTerm.termId;
+            final long combinedUrlId = resultTerm.combinedUrlId;
+
+            return new ResultTermData(bucket.getTermScore(cachePool, termId, combinedUrlId),
+
+                    bucket.isTermInBucket(cachePool, IndexBlock.Title, termId, combinedUrlId),
+                    bucket.isTermInBucket(cachePool, IndexBlock.Link, termId, combinedUrlId),
+                    bucket.isTermInBucket(cachePool, IndexBlock.Site, termId, combinedUrlId),
+                    bucket.isTermInBucket(cachePool, IndexBlock.Subjects, termId, combinedUrlId),
+                    bucket.isTermInBucket(cachePool, IndexBlock.NamesWords, termId, combinedUrlId),
+                    bucket.isTermInBucket(cachePool, IndexBlock.Tfidf_Top, termId, combinedUrlId),
+                    bucket.isTermInBucket(cachePool, IndexBlock.Tfidf_Middle, termId, combinedUrlId),
+                    bucket.isTermInBucket(cachePool, IndexBlock.Tfidf_Lower, termId, combinedUrlId)
+                    );
+        }
+
+        record ResultTerm (int bucket, int termId, long combinedUrlId) {}
+        record ResultTermData (IndexBlock index,
+                               boolean title,
+                               boolean link,
+                               boolean site,
+                               boolean subject,
+                               boolean name,
+                               boolean high,
+                               boolean mid,
+                               boolean low
+                               ) {
+            public EdgeSearchResultKeywordScore asScore(int set, String searchTerm) {
+                return new EdgeSearchResultKeywordScore(set, searchTerm, index, title, link, site, subject, name, high, mid, low);
             }
         }
     }
 
-    private static class ResultDomainDeduplicator {
-        final TLongIntMap resultsByDomain = new TLongIntHashMap(200, 0.75f, -1, 0);
-        final int limitByDomain;
-
-        ResultDomainDeduplicator(int limitByDomain) {
-            this.limitByDomain = limitByDomain;
-        }
-
-        public boolean filterRawValue(int bucket, long value) {
-            int domain = (int)(value >>> 32);
-
-            if (domain == Integer.MAX_VALUE) {
-                return true;
-            }
-
-            return resultsByDomain.get(getKey(bucket, domain)) <= limitByDomain;
-        }
-
-        long getKey(int bucketId, int domainId) {
-            return ((long)bucketId) << 32 | domainId;
-        }
-        long getKey(EdgeSearchResultItem item) {
-            return ((long)item.bucketId) << 32 | item.domain.id();
-        }
-
-        public boolean test(EdgeSearchResultItem item) {
-            if (item.domain.id() == Integer.MAX_VALUE) {
-                return true;
-            }
-
-            return resultsByDomain.adjustOrPutValue(getKey(item), 1, 1) <= limitByDomain;
-        }
-
-        int getCount(EdgeSearchResultItem item) {
-            return resultsByDomain.get(getKey(item));
-        }
-
-        public void addAll(List<EdgeSearchResultItem> items) {
-            items.forEach(item -> {
-                resultsByDomain.adjustOrPutValue(getKey(item), 1, 1);
-            });
-        }
-        public void add(EdgeSearchResultItem item) {
-            resultsByDomain.adjustOrPutValue(getKey(item), 1, 1);
-        }
-        public boolean test(ResultDomainDeduplicator root, EdgeSearchResultItem item) {
-            if (item.domain.id() == Integer.MAX_VALUE) {
-                return true;
-            }
-            return root.getCount(item) + resultsByDomain.adjustOrPutValue(getKey(item), 1, 1) <= limitByDomain;
-        }
-    }
 
     private Optional<EdgeIndexSearchTerms> getSearchTerms(EdgeSearchSubquery request) {
         final List<Integer> excludes = new ArrayList<>();
@@ -462,4 +448,5 @@ public class EdgeIndexService extends Service {
     }
 
 }
+
 

@@ -21,7 +21,7 @@ class QueryParserTest {
     public void setUp() throws IOException {
         dict = new TermFrequencyDict(lm);
         nGramBloomFilter = new NGramBloomFilter(lm);
-        englishDictionary = new EnglishDictionary(nGramBloomFilter);
+        englishDictionary = new EnglishDictionary(dict);
 
         parser = new QueryParser(englishDictionary, new QueryVariants(lm, dict, nGramBloomFilter, englishDictionary));
     }

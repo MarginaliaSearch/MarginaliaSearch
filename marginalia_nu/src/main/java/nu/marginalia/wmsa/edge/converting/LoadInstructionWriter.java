@@ -22,12 +22,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-public class CrawledInstructionWriter {
+public class LoadInstructionWriter {
+
     private final Path outputDir;
     private final Gson gson;
-    private static final Logger logger = LoggerFactory.getLogger(CrawledInstructionWriter.class);
-
-    public CrawledInstructionWriter(Path outputDir, Gson gson) {
+    private static final Logger logger = LoggerFactory.getLogger(LoadInstructionWriter.class);
+    public LoadInstructionWriter(Path outputDir, Gson gson) {
         this.outputDir = outputDir;
         this.gson = gson;
 
@@ -35,7 +35,6 @@ public class CrawledInstructionWriter {
             throw new IllegalArgumentException("Output dir " + outputDir + " does not exist");
         }
     }
-
     public String accept(String id, List<Instruction> instructionList) throws IOException {
         Path outputFile = getOutputFile(id);
 

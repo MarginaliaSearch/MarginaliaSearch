@@ -12,6 +12,8 @@ import nu.marginalia.wmsa.edge.model.search.EdgeSearchSubquery;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import static java.lang.Math.min;
+
 @Singleton
 public class SearchResultValuator {
     private final TermFrequencyDict dict;
@@ -46,11 +48,13 @@ public class SearchResultValuator {
         return termSum / factorSum;
     }
 
-    public double evaluateTerms(List<EdgeSearchResultKeywordScore> rawScores, IndexBlock block, int length, int titleLength) {
+    public double evaluateTerms(List<EdgeSearchResultKeywordScore> rawScores, int length, int titleLength) {
         int sets = 1 + rawScores.stream().mapToInt(EdgeSearchResultKeywordScore::set).max().orElse(0);
 
         double bestScore = 1000;
         double bestAllTermsFactor = 1.;
+
+        int termCount = 5;
 
         for (int set = 0; set <= sets; set++) {
             int thisSet = set;
@@ -87,11 +91,12 @@ public class SearchResultValuator {
                 allTermsFactor *= getAllTermsFactorForScore(scores[i], scores[i].index(), factor/factorSum, scores.length, titleLength);
             }
 
-            bestAllTermsFactor = Math.min(bestAllTermsFactor, allTermsFactor);
-            bestScore = Math.min(bestScore, value);
+            termCount = min(termCount, scores.length);
+            bestAllTermsFactor = min(bestAllTermsFactor, allTermsFactor);
+            bestScore = min(bestScore, value);
         }
 
-        return (0.7+0.3*block.sortOrder) * bestScore * bestAllTermsFactor;
+        return bestScore * bestAllTermsFactor  * Math.sqrt(1. + termCount);
     }
 
     private double getAllTermsFactorForScore(EdgeSearchResultKeywordScore score, IndexBlock block, double termWeight, int scoreCount, int titleLength) {
@@ -113,6 +118,16 @@ public class SearchResultValuator {
                 f *= Math.pow(0.75, termWeight / scoreCount);
             }
             else { // likely keyword stuffing if the title is this long
+                f *= Math.pow(0.9, termWeight / scoreCount);
+            }
+        }
+
+        if (!block.type.equals(IndexBlockType.TF_IDF)) {
+            if (score.high()) {
+                f *= Math.pow(0.75, termWeight / scoreCount);
+            } else if (score.mid()) {
+                f *= Math.pow(0.8, termWeight / scoreCount);
+            } else if (score.low()) {
                 f *= Math.pow(0.9, termWeight / scoreCount);
             }
         }

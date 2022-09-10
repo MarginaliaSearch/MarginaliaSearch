@@ -1,13 +1,11 @@
 package nu.marginalia.wmsa.client;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.protobuf.GeneratedMessageV3;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableSource;
 import io.reactivex.rxjava3.plugins.RxJavaPlugins;
 import lombok.SneakyThrows;
-import marcono1234.gson.recordadapter.RecordTypeAdapterFactory;
 import nu.marginalia.wmsa.client.exception.LocalException;
 import nu.marginalia.wmsa.client.exception.NetworkException;
 import nu.marginalia.wmsa.client.exception.RemoteException;
@@ -31,9 +29,7 @@ import java.util.zip.GZIPOutputStream;
 public abstract class AbstractClient implements AutoCloseable {
     public static final String CONTEXT_OUTBOUND_REQUEST = "outbound-request";
 
-    private final Gson gson = new GsonBuilder()
-            .registerTypeAdapterFactory(RecordTypeAdapterFactory.builder().allowMissingComponentValues().create())
-            .create();
+    private final Gson gson = GsonFactory.get();
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 

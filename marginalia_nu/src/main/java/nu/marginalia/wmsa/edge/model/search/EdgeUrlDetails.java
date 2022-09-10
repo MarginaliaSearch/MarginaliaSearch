@@ -29,7 +29,6 @@ public class EdgeUrlDetails {
     public EdgePageScoreAdjustment urlQualityAdjustment;
     public long rankingId;
     public double termScore;
-    public int queryLength;
 
     public long rankingIdAdjustment() {
         int penalty = 0;

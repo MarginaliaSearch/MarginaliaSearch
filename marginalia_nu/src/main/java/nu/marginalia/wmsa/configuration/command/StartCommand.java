@@ -1,6 +1,7 @@
 package nu.marginalia.wmsa.configuration.command;
 
 import lombok.SneakyThrows;
+import nu.marginalia.wmsa.configuration.ServiceDescriptor;
 
 import java.util.Arrays;
 
@@ -14,6 +15,12 @@ public class StartCommand extends Command {
     public void execute(String... args) {
         if (args.length < 2) {
             System.err.println("Usage: start service-descriptor");
+            System.err.println();
+            System.err.println("Available services:");
+            System.err.println();
+            for (var d : ServiceDescriptor.values()) {
+                System.err.println("\t"+d.name);
+            }
             System.exit(255);
         }
         var mainMethod = getKind(args[1]).mainClass.getMethod("main", String[].class);

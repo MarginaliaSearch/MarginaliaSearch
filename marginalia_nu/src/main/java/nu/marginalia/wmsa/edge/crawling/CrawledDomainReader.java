@@ -2,7 +2,7 @@ package nu.marginalia.wmsa.edge.crawling;
 
 import com.github.luben.zstd.ZstdInputStream;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import nu.marginalia.wmsa.client.GsonFactory;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDocument;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDomain;
 
@@ -17,7 +17,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 
 public class CrawledDomainReader {
-    private final Gson gson = new GsonBuilder().create();
+    private final Gson gson = GsonFactory.get();
 
     private final ForkJoinPool pool = new ForkJoinPool(4);
 

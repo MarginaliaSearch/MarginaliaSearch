@@ -7,5 +7,6 @@ public enum CrawlerDocumentStatus {
     REDIRECT,
     ROBOTS_TXT,
     ERROR,
+    BAD_CANONICAL,
     Timeout
 }

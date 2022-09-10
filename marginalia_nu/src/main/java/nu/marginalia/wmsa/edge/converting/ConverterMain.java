@@ -22,7 +22,7 @@ import java.util.List;
 public class ConverterMain {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final CrawledInstructionWriter instructionWriter;
+    private final LoadInstructionWriter instructionWriter;
 
     public static void main(String... args) throws IOException {
 
@@ -47,7 +47,7 @@ public class ConverterMain {
             Gson gson
             ) throws Exception {
 
-        instructionWriter = new CrawledInstructionWriter(plan.process.getDir(), gson);
+        instructionWriter = new LoadInstructionWriter(plan.process.getDir(), gson);
 
         logger.info("Starting pipe");
 

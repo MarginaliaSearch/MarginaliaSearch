@@ -1,17 +1,17 @@
 package nu.marginalia.wmsa.edge.model;
 
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import nu.marginalia.wmsa.edge.converting.processor.logic.QueryParams;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-@Getter @Setter @Builder @EqualsAndHashCode
+@Getter @Setter @Builder
 public class EdgeUrl implements WideHashable {
     public final String proto;
     public final EdgeDomain domain;
@@ -170,5 +170,35 @@ public class EdgeUrl implements WideHashable {
 
     public EdgeUrl withPathAndParam(String path, String param) {
         return new EdgeUrl(proto, domain, port, path, param);
+    }
+
+    public boolean equals(Object other) {
+        if (other == null) return false;
+        if (other == this) return true;
+        if (other instanceof EdgeUrl e) {
+            return Objects.equals(e.domain, domain)
+                && Objects.equals(e.path, path)
+                && Objects.equals(e.param, param);
+        }
+
+        return true;
+    }
+
+    public boolean equalsExactly(Object other) {
+        if (other == null) return false;
+        if (other == this) return true;
+        if (other instanceof EdgeUrl e) {
+            return Objects.equals(e.proto, proto)
+                    && Objects.equals(e.domain, domain)
+                    && Objects.equals(e.port, port)
+                    && Objects.equals(e.path, path)
+                    && Objects.equals(e.param, param);
+        }
+
+        return true;
+    }
+
+    public int hashCode() {
+        return Objects.hash(domain, path, param);
     }
 }

@@ -5,8 +5,8 @@ import lombok.SneakyThrows;
 import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.edge.converting.interpreter.instruction.DocumentKeywords;
 import nu.marginalia.wmsa.edge.index.client.EdgeIndexWriterClient;
-import nu.marginalia.wmsa.edge.model.EdgeId;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
+import nu.marginalia.wmsa.edge.model.id.EdgeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,8 +15,9 @@ import java.util.concurrent.TimeUnit;
 
 public class IndexLoadKeywords implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(IndexLoadKeywords.class);
+
     private final LinkedBlockingQueue<InsertTask> insertQueue = new LinkedBlockingQueue<>(32);
-    private EdgeIndexWriterClient client;
+    private final EdgeIndexWriterClient client;
 
     private record InsertTask(int urlId, int domainId, DocumentKeywords wordSet) {}
 
@@ -51,8 +52,9 @@ public class IndexLoadKeywords implements Runnable {
         int domainId = loaderData.getDomainId(url.domain);
         int urlId = loaderData.getUrlId(url);
 
-        if (urlId < 0 || domainId < 0) {
+        if (urlId <= 0 || domainId <= 0) {
             logger.warn("Failed to get IDs for {}  -- d={},u={}", url, domainId, urlId);
+            return;
         }
 
         for (var ws : words) {

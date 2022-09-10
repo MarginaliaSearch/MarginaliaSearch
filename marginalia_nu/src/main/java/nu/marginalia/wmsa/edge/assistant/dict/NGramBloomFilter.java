@@ -8,10 +8,13 @@ import nu.marginalia.util.DenseBitMap;
 import nu.marginalia.util.language.conf.LanguageModels;
 import nu.marginalia.wmsa.configuration.WmsaHome;
 import nu.marginalia.wmsa.edge.index.lexicon.journal.KeywordLexiconJournalFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
@@ -21,13 +24,25 @@ public class NGramBloomFilter {
     private static final PorterStemmer ps = new PorterStemmer();
     private static final HashFunction hasher = Hashing.murmur3_128(0);
 
+    private static final Logger logger = LoggerFactory.getLogger(NGramBloomFilter.class);
+
     @Inject
     public NGramBloomFilter() throws IOException {
         this(WmsaHome.getLanguageModels());
     }
 
     public NGramBloomFilter(LanguageModels lm) throws IOException {
-        this(DenseBitMap.loadFromFile(lm.ngramBloomFilter));
+        this(loadSafely(lm.ngramBloomFilter));
+    }
+
+    private static DenseBitMap loadSafely(Path path) throws IOException {
+        if (Files.isRegularFile(path)) {
+            return DenseBitMap.loadFromFile(path);
+        }
+        else {
+            logger.warn("NGrams file missing " + path);
+            return new DenseBitMap(1);
+        }
     }
 
     public NGramBloomFilter(DenseBitMap bitMap) {

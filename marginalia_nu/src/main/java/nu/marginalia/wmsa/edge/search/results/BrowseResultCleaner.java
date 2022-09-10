@@ -3,7 +3,7 @@ package nu.marginalia.wmsa.edge.search.results;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.wmsa.edge.assistant.screenshot.ScreenshotService;
-import nu.marginalia.wmsa.edge.model.EdgeId;
+import nu.marginalia.wmsa.edge.model.id.EdgeId;
 import nu.marginalia.wmsa.edge.search.model.BrowseResult;
 
 import java.util.HashSet;

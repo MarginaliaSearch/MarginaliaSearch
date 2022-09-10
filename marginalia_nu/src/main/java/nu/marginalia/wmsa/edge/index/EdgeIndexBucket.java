@@ -3,13 +3,15 @@ package nu.marginalia.wmsa.edge.index;
 import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalWriter;
 import nu.marginalia.wmsa.edge.index.model.EdgeIndexSearchTerms;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
+import nu.marginalia.wmsa.edge.index.reader.IndexQueryCachePool;
 import nu.marginalia.wmsa.edge.index.reader.SearchIndexReader;
-import nu.marginalia.wmsa.edge.index.reader.query.IndexSearchBudget;
-import nu.marginalia.wmsa.edge.index.reader.query.Query;
+import nu.marginalia.wmsa.edge.index.reader.query.IndexQuery;
+import nu.marginalia.wmsa.edge.index.reader.query.IndexQueryFactory;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -104,47 +106,49 @@ public class EdgeIndexBucket {
         return indexReader.findHotDomainsForKeyword(block, wordId, queryDepth, minHitCount, maxResults);
     }
 
-    public LongStream getQuery(IndexBlock block, LongPredicate filter, IndexSearchBudget budget, EdgeIndexSearchTerms searchTerms) {
+    public IndexQuery getQuery(IndexQueryCachePool cachePool, IndexBlock block, LongPredicate filter, EdgeIndexSearchTerms searchTerms) {
         if (null == indexReader) {
             logger.warn("Index reader not neady {}", block);
-            return LongStream.empty();
+            return new IndexQuery(Collections.emptyList());
         }
 
-        var orderedIncludes = searchTerms.includes
+        final int[] orderedIncludes = searchTerms.includes
                 .stream()
-                .sorted(Comparator.comparingLong(i -> indexReader.numHits(block, i)))
+                .sorted(Comparator.comparingLong(i -> indexReader.numHits(cachePool, block, i)))
                 .distinct()
                 .mapToInt(Integer::intValue)
                 .toArray();
 
-        Query query;
+        IndexQueryFactory.IndexQueryBuilder query;
 
-        if (orderedIncludes.length == 1) {
-            query = indexReader.findUnderspecified(block, budget, filter, orderedIncludes[0]);
+        query = indexReader.findWord(cachePool, block, orderedIncludes[0]);
+        if (query == null) {
+            return new IndexQuery(Collections.emptyList());
         }
-        else {
-            query = indexReader.findWord(block, budget, filter, orderedIncludes[0]);
-        }
-        int i;
-        for (i = 1; (i < 3 && i < orderedIncludes.length) || i < orderedIncludes.length-1; i++) {
-            query = query.alsoCached(orderedIncludes[i]);
-        }
-        for (; i < orderedIncludes.length; i++) {
+
+        query.filter(filter);
+
+        for (int i = 1; i < orderedIncludes.length; i++) {
             query = query.also(orderedIncludes[i]);
         }
+
         for (int term : searchTerms.excludes) {
             query = query.not(term);
         }
 
-        return query.stream();
+        for (int term : orderedIncludes) {
+            query.prioritize(term);
+        }
+
+        return query.build();
     }
 
 
-    public IndexBlock getTermScore(int termId, long urlId) {
-        return indexReader.getBlockForResult(termId, urlId);
+    public IndexBlock getTermScore(IndexQueryCachePool cachePool, int termId, long urlId) {
+        return indexReader.getBlockForResult(cachePool, termId, urlId);
     }
 
-    public boolean isTermInBucket(IndexBlock block, int termId, long urlId) {
-        return indexReader.isTermInBucket(block, termId, urlId);
+    public boolean isTermInBucket(IndexQueryCachePool cachePool, IndexBlock block, int termId, long urlId) {
+        return indexReader.isTermInBucket(cachePool, block, termId, urlId);
     }
 }

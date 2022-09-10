@@ -1,7 +1,7 @@
 package nu.marginalia.wmsa.edge.search.query;
 
 import com.google.inject.Inject;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramBloomFilter;
+import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,12 +13,12 @@ import java.util.stream.Collectors;
 
 public class EnglishDictionary {
     private final Set<String> englishWords = new HashSet<>();
-    private final NGramBloomFilter bloomFilter;
+    private final TermFrequencyDict tfDict;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
-    public EnglishDictionary(NGramBloomFilter bloomFilter) {
-        this.bloomFilter = bloomFilter;
+    public EnglishDictionary(TermFrequencyDict tfDict) {
+        this.tfDict = tfDict;
         try (var resource = Objects.requireNonNull(ClassLoader.getSystemResourceAsStream("dictionary/en-words"),
                 "Could not load word frequency table");
              var br = new BufferedReader(new InputStreamReader(resource))
@@ -46,8 +46,8 @@ public class EnglishDictionary {
         var variants = findWordVariants(s);
 
         var ret = variants.stream()
-                .filter(bloomFilter::isKnownNGram
-        ).collect(Collectors.toList());
+                .filter(var -> tfDict.getTermFreq(var) > 100)
+                .collect(Collectors.toList());
 
         if (s.equals("recipe") || s.equals("recipes")) {
             ret.add("category:food");

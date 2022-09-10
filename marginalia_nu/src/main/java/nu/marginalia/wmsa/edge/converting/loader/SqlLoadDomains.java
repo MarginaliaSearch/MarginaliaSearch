@@ -41,16 +41,18 @@ public class SqlLoadDomains {
 
         try (var connection = dataSource.getConnection()) {
             try (var insertCall = connection.prepareCall("CALL INSERT_DOMAIN(?,?)")) {
+                connection.setAutoCommit(false);
                 insertCall.setString(1, domain.toString());
                 insertCall.setString(2, domain.domain);
-                insertCall.addBatch();
 
                 var ret = insertCall.executeUpdate();
+                connection.commit();
                 if (ret < 0) {
-                    logger.warn("load({}) -- bad row count {}", domain, ret);
+                    logger.warn("load({}) -- bad return status {}", domain, ret);
                 }
 
-                findIdForTargetDomain(connection, data);
+                findIdForDomain(connection, data, domain);
+                connection.setAutoCommit(true);
             }
         }
         catch (SQLException ex) {
@@ -101,14 +103,14 @@ public class SqlLoadDomains {
             }
             connection.commit();
             connection.setAutoCommit(true);
-            findIdForTargetDomain(connection, data);
+            findIdForDomain(connection, data, domains);
         }
         catch (SQLException ex) {
             logger.warn("SQL error inserting domains", ex);
         }
     }
 
-    void findIdForTargetDomain(Connection connection, LoaderData data) {
+    void findIdForDomain(Connection connection, LoaderData data, EdgeDomain... domains) {
         if (data.getTargetDomain() == null || data.getDomainId(data.getTargetDomain()) > 0) {
             return;
         }
@@ -116,14 +118,39 @@ public class SqlLoadDomains {
         try (var query = connection.prepareStatement("SELECT ID FROM EC_DOMAIN WHERE DOMAIN_NAME=?"))
         {
 
-            var targetDomain = data.getTargetDomain();
-            query.setString(1, targetDomain.toString());
-            var rsp = query.executeQuery();
-            if (rsp.next()) {
-                data.addDomain(targetDomain, rsp.getInt(1));
+            for (var domain : domains) {
+                if (data.getDomainId(domain) > 0)
+                    continue;
+
+                query.setString(1, domain.toString());
+                var rsp = query.executeQuery();
+                if (rsp.next()) {
+                    data.addDomain(domain, rsp.getInt(1));
+                } else {
+                    logger.warn("load() -- could not find ID for target domain {}", domain);
+                }
             }
-            else {
-                logger.warn("load() -- could not find ID for target domain {}", targetDomain);
+        }
+        catch (SQLException ex) {
+            logger.warn("SQL error finding id for domain", ex);
+        }
+    }
+
+    void loadAdditionalDomains(Connection connection, LoaderData data, EdgeDomain[] domains) {
+
+        try (var query = connection.prepareStatement("SELECT ID FROM EC_DOMAIN WHERE DOMAIN_NAME=?"))
+        {
+            for (var domain : domains) {
+
+                if (data.getDomainId(domain) == 0) continue;
+
+                query.setString(1, domain.toString());
+                var rsp = query.executeQuery();
+                if (rsp.next()) {
+                    data.addDomain(domain, rsp.getInt(1));
+                } else {
+                    logger.warn("load() -- could not find ID for target domain {}", domain);
+                }
             }
         }
         catch (SQLException ex) {

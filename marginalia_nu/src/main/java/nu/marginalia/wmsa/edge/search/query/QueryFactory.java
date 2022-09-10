@@ -30,6 +30,8 @@ public class QueryFactory {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final SearchResultValuator searchResultValuator;
 
+    private static final int RETAIN_QUERY_VARIANT_COUNT = 5;
+
     @Inject
     public QueryFactory(LanguageModels lm, TermFrequencyDict dict, EnglishDictionary englishDictionary, NGramBloomFilter nGramBloomFilter, SearchResultValuator searchResultValuator) {
         this.lm = lm;
@@ -61,12 +63,14 @@ public class QueryFactory {
     private List<EdgeSearchSubquery> reevaluateSubqueries(EdgeSearchQuery processedQuery, EdgeUserSearchParameters params) {
         final var profile = params.profile();
 
-        List<EdgeSearchSubquery> subqueries =
-                new ArrayList<>(processedQuery.specs.subqueries.size() * profile.indexBlocks.size());
-
         for (var sq : processedQuery.specs.subqueries) {
             sq.setValue(searchResultValuator.preEvaluate(sq));
         }
+
+        trimExcessiveSubqueries(processedQuery.specs.subqueries);
+
+        List<EdgeSearchSubquery> subqueries =
+                new ArrayList<>(processedQuery.specs.subqueries.size() * profile.indexBlocks.size());
 
         for (var sq : processedQuery.specs.subqueries) {
             for (var block : profile.indexBlocks) {
@@ -77,6 +81,15 @@ public class QueryFactory {
         subqueries.sort(Comparator.comparing(EdgeSearchSubquery::getValue));
 
         return subqueries;
+    }
+
+    private void trimExcessiveSubqueries(List<EdgeSearchSubquery> subqueries) {
+
+        subqueries.sort(Comparator.comparing(EdgeSearchSubquery::getValue));
+
+        if (subqueries.size() > RETAIN_QUERY_VARIANT_COUNT) {
+            subqueries.subList(0, subqueries.size() - RETAIN_QUERY_VARIANT_COUNT).clear();
+        }
     }
 
 

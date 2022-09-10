@@ -9,9 +9,10 @@ import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklist;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
-import nu.marginalia.wmsa.edge.model.EdgeId;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
+import nu.marginalia.wmsa.edge.model.id.EdgeId;
+import nu.marginalia.wmsa.edge.model.id.EdgeIdCollection;
 import nu.marginalia.wmsa.edge.model.search.EdgePageScoreAdjustment;
 import nu.marginalia.wmsa.edge.model.search.EdgeUrlDetails;
 import nu.marginalia.wmsa.edge.search.model.BrowseResult;
@@ -64,17 +65,17 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
         }
     }
 
-    private <T> String idList(List<EdgeId<T>> ids) {
+    private <T> String idList(EdgeIdCollection<EdgeUrl> ids) {
         StringJoiner j = new StringJoiner(",", "(", ")");
-        for (var id : ids) {
-            j.add(Integer.toString(id.id()));
+        for (var id : ids.values()) {
+            j.add(Integer.toString(id));
         }
         return j.toString();
     }
 
     @SneakyThrows
     @Override
-    public List<EdgeUrlDetails> getUrlDetailsMulti(List<EdgeId<EdgeUrl>> ids) {
+    public List<EdgeUrlDetails> getUrlDetailsMulti(EdgeIdCollection<EdgeUrl> ids) {
         if (ids.isEmpty()) {
             return Collections.emptyList();
         }
@@ -111,8 +112,7 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
                             rsp.getInt(11), // dataHash
                             EdgePageScoreAdjustment.zero(), // urlQualityAdjustment
                             Integer.MAX_VALUE, // rankingId
-                            Double.MAX_VALUE, // termScore
-                            0 // queryLength
+                            Double.MAX_VALUE // termScore
                             );
                     if (val.urlQuality <= QUALITY_LOWER_BOUND_CUTOFF
                     && Strings.isNullOrEmpty(val.description)
@@ -271,7 +271,7 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
     }
 
     @Override
-    public List<BrowseResult> getBrowseResultFromUrlIds(List<EdgeId<EdgeUrl>> urlIds) {
+    public List<BrowseResult> getBrowseResultFromUrlIds(EdgeIdCollection<EdgeUrl> urlIds) {
         if (urlIds.isEmpty())
             return Collections.emptyList();
 

@@ -2,12 +2,12 @@ package nu.marginalia.wmsa.edge.search;
 
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.api.model.ApiSearchResult;
 import nu.marginalia.wmsa.api.model.ApiSearchResults;
+import nu.marginalia.wmsa.client.GsonFactory;
 import nu.marginalia.wmsa.configuration.WebsiteUrl;
 import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.configuration.server.Initialization;
@@ -66,7 +66,7 @@ public class EdgeSearchService extends Service {
 
         Spark.get("/search", this::pathSearch);
 
-        Gson gson = new GsonBuilder().create();
+        Gson gson = GsonFactory.get();
 
         Spark.get("/api/search", this::apiSearch, gson::toJson);
         Spark.get("/public/search", this::pathSearch);

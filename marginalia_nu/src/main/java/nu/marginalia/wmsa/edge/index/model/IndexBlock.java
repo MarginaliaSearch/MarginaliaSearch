@@ -2,7 +2,7 @@ package nu.marginalia.wmsa.edge.index.model;
 
 public enum IndexBlock {
     TitleKeywords(IndexBlockType.QUALITY_SIGNAL, 0, 0),
-    Title(IndexBlockType.QUALITY_SIGNAL, 1, 0),
+    Title(IndexBlockType.QUALITY_SIGNAL, 1, 1),
 
     Link(IndexBlockType.QUALITY_SIGNAL, 2, 1.15),
 

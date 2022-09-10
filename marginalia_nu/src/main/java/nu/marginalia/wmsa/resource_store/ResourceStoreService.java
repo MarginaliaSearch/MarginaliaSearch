@@ -1,13 +1,13 @@
 package nu.marginalia.wmsa.resource_store;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import kotlin.text.Charsets;
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.auth.client.AuthClient;
+import nu.marginalia.wmsa.client.GsonFactory;
 import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.configuration.server.Initialization;
 import nu.marginalia.wmsa.configuration.server.MetricsServer;
@@ -28,7 +28,7 @@ import java.time.ZoneOffset;
 import java.util.concurrent.TimeUnit;
 
 public class ResourceStoreService extends Service {
-    private final Gson gson = new GsonBuilder().create();
+    private final Gson gson = GsonFactory.get();
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final long startTime = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
 

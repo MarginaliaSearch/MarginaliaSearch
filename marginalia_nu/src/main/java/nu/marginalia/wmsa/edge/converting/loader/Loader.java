@@ -27,6 +27,9 @@ public class Loader implements Interpreter {
     private final List<LoadProcessedDocument> processedDocumentList;
     private final List<LoadProcessedDocumentWithError> processedDocumentWithErrorList;
 
+    private final List<EdgeDomain> deferredDomains = new ArrayList<>();
+    private final List<EdgeUrl> deferredUrls = new ArrayList<>();
+
     public final LoaderData data;
 
     public Loader(int sizeHint,
@@ -78,22 +81,48 @@ public class Loader implements Interpreter {
     @Override
     public void loadProcessedDomain(EdgeDomain domain, EdgeDomainIndexingState state, String ip) {
         logger.debug("loadProcessedDomain({}, {}, {})", domain, state, ip);
+
         sqlLoadProcessedDomain.load(data, domain, state, ip);
     }
 
     @Override
     public void loadProcessedDocument(LoadProcessedDocument document) {
+        deferralCheck(document.url());
+
         processedDocumentList.add(document);
     }
 
     @Override
     public void loadProcessedDocumentWithError(LoadProcessedDocumentWithError document) {
+        deferralCheck(document.url());
+
         processedDocumentWithErrorList.add(document);
+    }
+
+    private void deferralCheck(EdgeUrl url) {
+        if (data.getDomainId(url.domain) <= 0)
+            deferredDomains.add(url.domain);
+
+        if (data.getUrlId(url) <= 0)
+            deferredUrls.add(url);
     }
 
     @Override
     public void loadKeywords(EdgeUrl url, DocumentKeywords[] words) {
         logger.debug("loadKeywords(#{})", words.length);
+
+        // This is a bit of a bandaid safeguard against a bug in
+        // in the converter, shouldn't be necessary in the future
+        if (!deferredDomains.isEmpty()) {
+            loadDomain(deferredDomains.toArray(EdgeDomain[]::new));
+            deferredDomains.clear();
+        }
+
+        if (!deferredUrls.isEmpty()) {
+            loadUrl(deferredUrls.toArray(EdgeUrl[]::new));
+            deferredUrls.clear();
+        }
+
         try {
             indexLoadKeywords.load(data, url, words);
         } catch (InterruptedException e) {

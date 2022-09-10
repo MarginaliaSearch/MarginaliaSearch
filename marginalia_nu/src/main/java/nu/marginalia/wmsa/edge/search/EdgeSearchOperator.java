@@ -12,8 +12,9 @@ import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
 import nu.marginalia.wmsa.edge.index.client.EdgeIndexClient;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
-import nu.marginalia.wmsa.edge.model.EdgeId;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
+import nu.marginalia.wmsa.edge.model.id.EdgeIdList;
+import nu.marginalia.wmsa.edge.model.id.EdgeIdSet;
 import nu.marginalia.wmsa.edge.model.search.*;
 import nu.marginalia.wmsa.edge.model.search.domain.EdgeDomainSearchSpecification;
 import nu.marginalia.wmsa.edge.search.model.BrowseResult;
@@ -76,7 +77,7 @@ public class EdgeSearchOperator {
                                            EdgeUserSearchParameters params) {
 
 
-        var processedQuery = queryFactory.createQuery(params);
+        EdgeSearchQuery processedQuery = queryFactory.createQuery(params);
 
         logger.info("Human terms (API): {}", Strings.join(processedQuery.searchTermsHuman, ','));
 
@@ -86,19 +87,21 @@ public class EdgeSearchOperator {
     }
 
     public DecoratedSearchResults doSearch(Context ctx, EdgeUserSearchParameters params, @Nullable Future<String> eval) {
-        Observable<WikiArticles> definitions = getWikiArticle(ctx, params.humanQuery());
-        EdgeSearchQuery processedQuery = queryFactory.createQuery(params);
 
+        Observable<WikiArticles> definitions = getWikiArticle(ctx, params.humanQuery());
+
+        EdgeSearchQuery processedQuery = queryFactory.createQuery(params);
         logger.info("Human terms: {}", Strings.join(processedQuery.searchTermsHuman, ','));
 
         DecoratedSearchResultSet queryResults = performQuery(ctx, processedQuery);
 
         String evalResult = getEvalResult(eval);
 
+
         List<BrowseResult> domainResults = getDomainResults(ctx, processedQuery.specs);
 
         return new DecoratedSearchResults(params,
-                getProblems(ctx, params.humanQuery(), evalResult, queryResults, processedQuery),
+                getProblems(ctx, evalResult, queryResults, processedQuery),
                 evalResult,
                 definitions.onErrorReturn((e) -> new WikiArticles()).blockingFirst(),
                 queryResults.resultSet,
@@ -115,6 +118,9 @@ public class EdgeSearchOperator {
                 .distinct()
                 .toList();
 
+        if (keywords.isEmpty())
+            return Collections.emptyList();
+
         List<EdgeDomainSearchSpecification> requests = new ArrayList<>(keywords.size() * specs.buckets.size());
 
         for (var keyword : keywords) {
@@ -124,17 +130,17 @@ public class EdgeSearchOperator {
             }
         }
 
-        if (requests.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        Set<EdgeId<EdgeUrl>> results = new LinkedHashSet<>();
+        EdgeIdSet<EdgeUrl> dedup = new EdgeIdSet<>();
+        EdgeIdList<EdgeUrl> values = new EdgeIdList<>();
 
         for (var result : indexClient.queryDomains(ctx, requests)) {
-            results.addAll(result.getResults());
+            for (int id : result.getResults().values()) {
+                if (dedup.add(id))
+                    values.add(id);
+            }
         }
 
-        return edgeDataStoreDao.getBrowseResultFromUrlIds(new ArrayList<>(results));
+        return edgeDataStoreDao.getBrowseResultFromUrlIds(values);
     }
 
     private String getEvalResult(@Nullable Future<String> eval) {
@@ -202,10 +208,10 @@ public class EdgeSearchOperator {
             }
         }
 
-        return new DecoratedSearchResultSet(resultList);
+        return new DecoratedSearchResultSet(retList);
     }
 
-    private List<String> getProblems(Context ctx, String humanQuery, String evalResult, DecoratedSearchResultSet queryResults, EdgeSearchQuery processedQuery) {
+    private List<String> getProblems(Context ctx, String evalResult, DecoratedSearchResultSet queryResults, EdgeSearchQuery processedQuery) {
         final List<String> problems = new ArrayList<>(processedQuery.problems);
         boolean siteSearch = processedQuery.domain != null;
 
@@ -284,24 +290,26 @@ public class EdgeSearchOperator {
 
     @NotNull
     private Observable<WikiArticles> getWikiArticle(Context ctx, String humanQuery) {
+
+        if (!encyclopediaClient.isAlive()) {
+            return Observable.just(new WikiArticles());
+        }
+
         return encyclopediaClient
                 .encyclopediaLookup(ctx,
                         humanQuery.replaceAll("\\s+", "_")
                                 .replaceAll("\"", "")
                 )
+                .subscribeOn(Schedulers.io())
                 .onErrorReturn(e -> new WikiArticles())
-                .subscribeOn(Schedulers.io());
+                ;
     }
 
     private Set<EdgeUrlDetails> fetchResultsSimple(Context ctx, EdgeSearchQuery processedQuery) {
         EdgeSearchResultSet resultSet = indexClient.query(ctx, processedQuery.specs);
-        Set<EdgeUrlDetails> ret = new HashSet<>();
 
-        for (IndexBlock block : IndexBlock.values()) {
-            var results = resultSet.resultsList.getOrDefault(block, Collections.emptyList());
-
-            ret.addAll(resultDecorator.getAllUrlDetails(results, block));
-        }
+        var results = resultSet.getResults();
+        Set<EdgeUrlDetails> ret = new HashSet<>(resultDecorator.getAllUrlDetails(results));
 
         return ret;
     }

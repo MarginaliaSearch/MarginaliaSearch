@@ -5,7 +5,7 @@ import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.edge.converting.interpreter.instruction.DocumentKeywords;
 import nu.marginalia.wmsa.edge.index.client.EdgeIndexClient;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
-import nu.marginalia.wmsa.edge.model.EdgeId;
+import nu.marginalia.wmsa.edge.model.id.EdgeId;
 
 import java.io.IOException;
 import java.nio.file.Files;

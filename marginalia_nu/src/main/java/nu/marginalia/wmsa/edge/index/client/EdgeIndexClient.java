@@ -1,7 +1,5 @@
 package nu.marginalia.wmsa.edge.index.client;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.inject.Singleton;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -10,15 +8,13 @@ import nu.marginalia.wmsa.configuration.ServiceDescriptor;
 import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.edge.converting.interpreter.instruction.DocumentKeywords;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
-import nu.marginalia.wmsa.edge.model.EdgeId;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
+import nu.marginalia.wmsa.edge.model.id.EdgeId;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchResultSet;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchSpecification;
 import nu.marginalia.wmsa.edge.model.search.domain.EdgeDomainSearchResults;
 import nu.marginalia.wmsa.edge.model.search.domain.EdgeDomainSearchSpecification;
 import nu.wmsa.wmsa.edge.index.proto.IndexPutKeywordsReq;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.CheckReturnValue;
 import java.util.List;
@@ -26,9 +22,6 @@ import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class EdgeIndexClient extends AbstractDynamicClient implements EdgeIndexWriterClient {
-    private final Gson gson = new GsonBuilder()
-            .create();
-    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public EdgeIndexClient() {
         super(ServiceDescriptor.EDGE_INDEX);
@@ -47,12 +40,10 @@ public class EdgeIndexClient extends AbstractDynamicClient implements EdgeIndexW
                     .setUrl(url.id())
                     .setIndex(writer);
 
-        for (var set : wordSet.keywords()) {
-            var wordSetBuilder = IndexPutKeywordsReq.WordSet.newBuilder();
-            wordSetBuilder.setIndex(wordSet.block().ordinal());
-            wordSetBuilder.addAllWords(List.of(wordSet.keywords()));
-            keywordBuilder.addWordSet(wordSetBuilder.build());
-        }
+        var wordSetBuilder = IndexPutKeywordsReq.WordSet.newBuilder();
+        wordSetBuilder.setIndex(wordSet.block().ordinal());
+        wordSetBuilder.addAllWords(List.of(wordSet.keywords()));
+        keywordBuilder.addWordSet(wordSetBuilder.build());
 
         var req = keywordBuilder.build();
 

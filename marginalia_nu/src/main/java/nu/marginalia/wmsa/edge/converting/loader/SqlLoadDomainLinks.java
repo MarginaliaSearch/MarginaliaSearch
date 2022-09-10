@@ -51,6 +51,7 @@ public class SqlLoadDomainLinks {
                      connection.prepareCall("CALL INSERT_LINK(?,?)"))
         {
 
+            connection.setAutoCommit(false);
             nukeExistingLinksForDomain.setInt(1, data.getDomainId(links[0].from()));
             nukeExistingLinksForDomain.executeUpdate();
 
@@ -67,6 +68,10 @@ public class SqlLoadDomainLinks {
                     logger.warn("load({}) -- bad row count {}", links[rv], ret[rv]);
                 }
             }
+
+            connection.commit();
+            connection.setAutoCommit(true);
+
         }
         catch (SQLException ex) {
             logger.warn("SQL error inserting domain links", ex);

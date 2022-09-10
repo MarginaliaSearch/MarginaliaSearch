@@ -9,6 +9,8 @@ import nu.marginalia.util.btree.CachingBTreeReader;
 import nu.marginalia.util.btree.model.BTreeHeader;
 import nu.marginalia.util.multimap.MultimapFileLong;
 import nu.marginalia.wmsa.edge.index.conversion.SearchIndexConverter;
+import nu.marginalia.wmsa.edge.index.reader.query.types.EntrySource;
+import nu.marginalia.wmsa.edge.index.reader.query.types.QueryFilterStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +24,7 @@ public class SearchIndex implements  AutoCloseable {
 
     private final MultimapFileLong urls;
     private final IndexWordsTable words;
+    public final String name;
     private final RandomAccessFile wordsFile;
     private final BTreeReader bTreeReader;
     private final CachingBTreeReader cachingBTreeReader;
@@ -36,6 +39,7 @@ public class SearchIndex implements  AutoCloseable {
             throws IOException {
 
         logger = LoggerFactory.getLogger(name);
+        this.name = name;
         wordsFile = new RandomAccessFile(inWords, "r");
 
         logger.info("{} : Loading {}", name, inUrls);
@@ -65,12 +69,23 @@ public class SearchIndex implements  AutoCloseable {
     }
 
 
-    public long numUrls(int wordId) {
+    public long numUrls(IndexQueryCachePool pool, int wordId) {
         int length = words.wordLength(wordId);
         if (length < 0) return 0;
         if (length > 0) return length;
 
-        return rangeForWord(wordId).numEntries();
+        return rangeForWord(pool, wordId).numEntries();
+    }
+
+    public UrlIndexTree rangeForWord(IndexQueryCachePool pool, int wordId) {
+        UrlIndexTree range = pool.getRange(words, wordId);
+
+        if (range == null) {
+            range = new UrlIndexTree(words.positionForWord(wordId));
+            pool.cacheRange(words, wordId, range);
+        }
+
+        return range;
     }
 
     public UrlIndexTree rangeForWord(int wordId) {
@@ -84,7 +99,7 @@ public class SearchIndex implements  AutoCloseable {
             this.dataOffset = dataOffset;
         }
 
-        public LongStream stream() {
+        public LongStream stream(int bufferSize) {
             if (dataOffset < 0) {
                 return LongStream.empty();
             }
@@ -94,7 +109,7 @@ public class SearchIndex implements  AutoCloseable {
 
             long urlOffset = header.dataOffsetLongs();
             long endOffset = header.dataOffsetLongs() + header.numEntries();
-            int stepSize = Math.min(1024, header.numEntries());
+            int stepSize = Math.min(bufferSize, header.numEntries());
 
             long[] buffer = new long[stepSize];
 
@@ -105,6 +120,19 @@ public class SearchIndex implements  AutoCloseable {
                         urls.read(buffer, sz, pos);
                         return Arrays.stream(buffer, 0, sz);
                     });
+        }
+
+        public EntrySource asEntrySource() {
+            return new AsEntrySource();
+        }
+
+        public QueryFilterStep asExcludeFilterStep(IndexQueryCachePool pool) {
+            return new AsExcludeQueryFilterStep(pool);
+        }
+
+
+        public LongStream stream() {
+            return stream(1024);
         }
 
         public boolean isPresent() {
@@ -122,34 +150,94 @@ public class SearchIndex implements  AutoCloseable {
             }
         }
 
-        public boolean hasUrl(long url) {
-            if (header != null) {
-                return bTreeReader.findEntry(header, url) >= 0;
-            }
-            else if (dataOffset < 0) return false;
-            else {
-                header = bTreeReader.getHeader(dataOffset);
-                return bTreeReader.findEntry(header, url) >= 0;
-            }
+        public boolean hasUrl(CachingBTreeReader.Cache cache, long url) {
+            if (dataOffset < 0) return false;
+
+            return cachingBTreeReader.findEntry(cache, url) >= 0;
         }
 
-        public boolean hasUrl(CachingBTreeReader.Cache cache, long url) {
-            if (header != null) {
-                return cachingBTreeReader.findEntry(header, cache, url) >= 0;
-            }
-            else if (dataOffset < 0) return false;
-            else {
-                header = bTreeReader.getHeader(dataOffset);
-                return cachingBTreeReader.findEntry(header, cache, url) >= 0;
-            }
+        public boolean hasUrl(IndexQueryCachePool pool, long url) {
+            if (dataOffset < 0)
+                return false;
+
+            CachingBTreeReader.Cache cache = pool.getIndexCache(SearchIndex.this, this);
+
+            return cachingBTreeReader.findEntry(cache, url) >= 0;
         }
 
         public CachingBTreeReader.Cache createIndexCache() {
-            return cachingBTreeReader.prepareCache();
+            if (dataOffset < 0)
+                return null;
+
+            if (header == null) {
+                header = cachingBTreeReader.getHeader(dataOffset);
+            }
+
+            return cachingBTreeReader.prepareCache(header);
         }
+
+        class AsEntrySource implements EntrySource {
+            long pos;
+            final long endOffset;
+
+            public SearchIndex getIndex() {
+                return SearchIndex.this;
+            };
+
+            public AsEntrySource() {
+                if (dataOffset <= 0) {
+                    pos = -1;
+                    endOffset = -1;
+                    return;
+                }
+
+                if (header == null) {
+                    header = bTreeReader.getHeader(dataOffset);
+                }
+
+                pos = header.dataOffsetLongs();
+                endOffset = header.dataOffsetLongs() + header.numEntries();
+            }
+
+
+            @Override
+            public int read(long[] buffer, int n) {
+                if (pos >= endOffset) {
+                    return 0;
+                }
+
+                int rb = Math.min(n, (int)(endOffset - pos));
+                urls.read(buffer, rb, pos);
+                pos += rb;
+                return rb;
+            }
+        }
+
+        class AsExcludeQueryFilterStep implements QueryFilterStep {
+            private final CachingBTreeReader.Cache cache;
+
+            public AsExcludeQueryFilterStep(IndexQueryCachePool pool) {
+                cache = pool.getIndexCache(SearchIndex.this, UrlIndexTree.this);
+            }
+
+            public SearchIndex getIndex() {
+                return SearchIndex.this;
+            };
+            public double cost() {
+                return cache.getIndexedDataSize();
+            }
+
+            @Override
+            public boolean test(long value) {
+                return !hasUrl(cache, value);
+            }
+
+            public String describe() {
+                return "Exclude["+name+"]";
+            }
+        }
+
     }
-
-
 
     @Override
     public void close() throws Exception {

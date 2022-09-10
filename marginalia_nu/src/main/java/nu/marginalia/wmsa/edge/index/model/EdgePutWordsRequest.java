@@ -4,9 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
-import nu.marginalia.wmsa.edge.model.EdgeId;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgePageWordSet;
+import nu.marginalia.wmsa.edge.model.id.EdgeId;
 
 @AllArgsConstructor @Getter
 @ToString

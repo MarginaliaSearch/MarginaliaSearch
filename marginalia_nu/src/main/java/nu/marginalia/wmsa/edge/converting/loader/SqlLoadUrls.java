@@ -4,6 +4,7 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.HashSet;
+import java.util.Set;
 
 import static java.sql.Statement.SUCCESS_NO_INFO;
 
@@ -46,6 +49,8 @@ public class SqlLoadUrls {
     }
 
     public void load(LoaderData data, EdgeUrl[] urls) {
+        Set<EdgeDomain> affectedDomains = new HashSet<>();
+
         try (var conn = dataSource.getConnection();
              var insertCall = conn.prepareCall("CALL INSERT_URL(?,?,?,?,?,?)");
              var queryCall = conn.prepareStatement("SELECT ID, PROTO, PATH, PARAM FROM EC_URL WHERE DOMAIN_ID=?")
@@ -59,6 +64,7 @@ public class SqlLoadUrls {
                     logger.warn("Skipping bad URL {}", url);
                     continue;
                 }
+                affectedDomains.add(url.domain);
 
                 insertCall.setString(1, url.proto);
                 insertCall.setString(2, url.domain.toString());
@@ -73,7 +79,7 @@ public class SqlLoadUrls {
                 insertCall.setLong(6, hashPath(url.path, url.param));
                 insertCall.addBatch();
 
-                if (++cnt == 250) {
+                if (cnt++ == 250) {
                     var ret = insertCall.executeBatch();
                     conn.commit();
 
@@ -83,8 +89,8 @@ public class SqlLoadUrls {
                         }
                     }
 
+                    batchOffset += cnt;
                     cnt = 0;
-                    batchOffset += 250;
                 }
             }
             if (cnt > 0) {
@@ -98,23 +104,22 @@ public class SqlLoadUrls {
                 }
             }
 
-            conn.commit();
             conn.setAutoCommit(true);
 
 
-            var targetDomain = data.getTargetDomain();
-            queryCall.setInt(1, data.getDomainId(targetDomain));
+            for (var domain : affectedDomains) {
+                queryCall.setInt(1, data.getDomainId(domain));
+                var rsp = queryCall.executeQuery();
+                rsp.setFetchSize(1000);
 
-            var rsp = queryCall.executeQuery();
-            rsp.setFetchSize(urls.length);
+                while (rsp.next()) {
+                    int urlId = rsp.getInt(1);
+                    String proto = rsp.getString(2);
+                    String path = rsp.getString(3);
+                    String param = rsp.getString(4);
 
-            while (rsp.next()) {
-                int urlId = rsp.getInt(1);
-                String proto = rsp.getString(2);
-                String path = rsp.getString(3);
-                String param = rsp.getString(4);
-
-                data.addUrl(new EdgeUrl(proto, targetDomain, null, path, param), urlId);
+                    data.addUrl(new EdgeUrl(proto, domain, null, path, param), urlId);
+                }
             }
 
         }

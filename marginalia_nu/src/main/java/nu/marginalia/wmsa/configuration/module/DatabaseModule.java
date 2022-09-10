@@ -84,6 +84,7 @@ public class DatabaseModule extends AbstractModule {
             config.addDataSourceProperty("cachePrepStmts", "true");
             config.addDataSourceProperty("prepStmtCacheSize", "250");
             config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+
             config.setMaximumPoolSize(100);
             config.setMinimumIdle(10);
             return new HikariDataSource(config);

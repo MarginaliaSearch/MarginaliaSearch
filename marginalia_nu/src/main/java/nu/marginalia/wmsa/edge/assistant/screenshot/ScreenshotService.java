@@ -6,7 +6,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
-import nu.marginalia.wmsa.edge.model.EdgeId;
+import nu.marginalia.wmsa.edge.model.id.EdgeId;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

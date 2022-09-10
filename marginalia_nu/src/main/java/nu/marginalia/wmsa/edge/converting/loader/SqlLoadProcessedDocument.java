@@ -60,6 +60,7 @@ public class SqlLoadProcessedDocument {
     }
 
     public void load(LoaderData data, List<LoadProcessedDocument> documents) {
+
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareCall("CALL INSERT_PAGE_VISIT(?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             conn.setAutoCommit(false);
@@ -67,7 +68,7 @@ public class SqlLoadProcessedDocument {
             int cnt = 0; int batchOffset = 0;
             for (var doc : documents) {
                 int urlId = data.getUrlId(doc.url());
-                if (urlId < 0) {
+                if (urlId <= 0) {
                     logger.warn("Failed to resolve ID for URL {}", doc.url());
                     return;
                 }
@@ -107,14 +108,19 @@ public class SqlLoadProcessedDocument {
                 }
             }
 
+            conn.setAutoCommit(true);
+
         } catch (SQLException ex) {
             logger.warn("SQL error inserting document", ex);
         }
     }
 
     public void loadWithError(LoaderData data, List<LoadProcessedDocumentWithError> documents) {
+
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareCall("CALL INSERT_PAGE_VISIT_BAD(?, ?)")) {
+
+            conn.setAutoCommit(false);
 
             int cnt = 0; int batchOffset = 0;
             for (var doc : documents) {
@@ -152,6 +158,7 @@ public class SqlLoadProcessedDocument {
                 }
             }
 
+            conn.setAutoCommit(true);
         } catch (SQLException ex) {
             logger.warn("SQL error inserting failed document", ex);
         }

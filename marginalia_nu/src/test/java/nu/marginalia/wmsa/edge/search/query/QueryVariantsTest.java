@@ -23,8 +23,8 @@ class QueryVariantsTest {
 
         var dict = new TermFrequencyDict(lm);
         var ngrams = new NGramBloomFilter(lm);
-        variants = new QueryVariants(lm, dict, ngrams, new EnglishDictionary(ngrams));
-        parser = new QueryParser(new EnglishDictionary(ngrams), variants);
+        variants = new QueryVariants(lm, dict, ngrams, new EnglishDictionary(dict));
+        parser = new QueryParser(new EnglishDictionary(dict), variants);
     }
 
     @Test

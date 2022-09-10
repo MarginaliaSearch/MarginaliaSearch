@@ -104,7 +104,12 @@ public class LoaderMain {
         public void run() {
             long startTime = System.currentTimeMillis();
             for (var i : instructionList) {
-                i.apply(loader);
+                try {
+                    i.apply(loader);
+                }
+                catch (Exception ex) {
+                    logger.error("Failed to load instruction {}", i);
+                }
             }
 
             loader.finish();

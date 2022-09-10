@@ -1,10 +1,10 @@
 package nu.marginalia.wmsa.resource_store;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.inject.name.Named;
 import io.prometheus.client.Counter;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import nu.marginalia.wmsa.client.GsonFactory;
 import nu.marginalia.wmsa.resource_store.model.RenderedResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,7 @@ public class ResourceEntityStore {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Path dataPath;
-    private final Gson gson = new GsonBuilder().create();
+    private final Gson gson = GsonFactory.get();
     private final Base64.Encoder b64encoder = Base64.getEncoder();
 
     private final static Counter wmsa_resource_store_count
