@@ -17,7 +17,7 @@ public class CommandEvaluator {
             BrowseCommand browse,
             ConvertCommand convert,
             DefinitionCommand define,
-            SiteSearchCommand site,
+            SiteListCommand site,
             BangCommand bang,
             SearchCommand search
     ) {

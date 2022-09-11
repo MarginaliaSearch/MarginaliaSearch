@@ -4,14 +4,13 @@ import com.google.inject.Inject;
 import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
-import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
 import nu.marginalia.wmsa.edge.model.search.EdgeUrlDetails;
-import nu.marginalia.wmsa.edge.search.EdgeSearchOperator;
 import nu.marginalia.wmsa.edge.search.EdgeSearchProfile;
 import nu.marginalia.wmsa.edge.search.command.SearchCommandInterface;
 import nu.marginalia.wmsa.edge.search.command.SearchParameters;
 import nu.marginalia.wmsa.edge.search.model.DomainInformation;
 import nu.marginalia.wmsa.edge.search.siteinfo.DomainInformationService;
+import nu.marginalia.wmsa.edge.search.svc.EdgeSearchQueryIndexService;
 import nu.marginalia.wmsa.renderer.mustache.MustacheRenderer;
 import nu.marginalia.wmsa.renderer.mustache.RendererFactory;
 import org.slf4j.Logger;
@@ -23,28 +22,29 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-public class SiteSearchCommand implements SearchCommandInterface {
+public class SiteListCommand implements SearchCommandInterface {
     private final EdgeDataStoreDao dataStoreDao;
-    private final EdgeSearchOperator searchOperator;
     private final DomainInformationService domainInformationService;
+    private final EdgeSearchQueryIndexService searchQueryIndexService;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final MustacheRenderer<DomainInformation> siteInfoRenderer;
 
     private final Predicate<String> queryPatternPredicate = Pattern.compile("^site:[.A-Za-z\\-0-9]+$").asPredicate();
+
     @Inject
-    public SiteSearchCommand(
+    public SiteListCommand(
             DomainInformationService domainInformationService,
             EdgeDataStoreDao dataStoreDao,
             RendererFactory rendererFactory,
-            EdgeSearchOperator searchOperator)
+            EdgeSearchQueryIndexService searchQueryIndexService)
             throws IOException
     {
         this.dataStoreDao = dataStoreDao;
-        this.searchOperator = searchOperator;
         this.domainInformationService = domainInformationService;
 
         siteInfoRenderer = rendererFactory.renderer("edge/site-info");
+        this.searchQueryIndexService = searchQueryIndexService;
     }
 
     @Override
@@ -59,7 +59,7 @@ public class SiteSearchCommand implements SearchCommandInterface {
         List<EdgeUrlDetails> resultSet;
         Path screenshotPath = null;
         if (null != domain) {
-            resultSet = searchOperator.performDumbQuery(ctx, EdgeSearchProfile.CORPO, IndexBlock.Words_1, 100, 100, "site:"+domain);
+            resultSet = searchQueryIndexService.performDumbQuery(ctx, EdgeSearchProfile.CORPO, IndexBlock.Words_1, 100, 100, "site:"+domain);
 
             screenshotPath = Path.of("/screenshot/" + dataStoreDao.getDomainId(domain).id());
         }
@@ -76,8 +76,7 @@ public class SiteSearchCommand implements SearchCommandInterface {
         String word = humanQuery.substring(definePrefix.length()).toLowerCase();
 
         logger.info("Fetching Site Info: {}", word);
-        var results = domainInformationService.domainInfo(word)
-                .orElseGet(() -> new DomainInformation(null, false, 0, 0, 0, 0, 0, 0, EdgeDomainIndexingState.UNKNOWN, Collections.emptyList()));
+        var results = domainInformationService.domainInfo(word).orElseGet(DomainInformation::new);
 
         logger.debug("Results = {}", results);
 

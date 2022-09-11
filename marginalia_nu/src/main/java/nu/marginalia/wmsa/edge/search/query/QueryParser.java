@@ -239,10 +239,6 @@ public class QueryParser {
                 returnValue.add(r);
             }
 
-            for (var qv : returnValue) {
-                System.out.println(qv);
-            }
-
             return returnValue;
 
         }
