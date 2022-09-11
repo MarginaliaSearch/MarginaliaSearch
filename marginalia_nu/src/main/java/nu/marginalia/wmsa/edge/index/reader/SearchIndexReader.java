@@ -3,7 +3,8 @@ package nu.marginalia.wmsa.edge.index.reader;
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
-import nu.marginalia.wmsa.edge.index.reader.query.IndexQueryFactory;
+import nu.marginalia.wmsa.edge.index.svc.query.IndexQueryCachePool;
+import nu.marginalia.wmsa.edge.index.svc.query.IndexQueryFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -95,4 +95,8 @@ public class WmsaHome {
                 home.resolve("model/opennlp-tok.bin"));
     }
 
+    private static final boolean debugMode = Boolean.getBoolean("wmsa-debug");
+    public static boolean isDebug() {
+        return debugMode;
+    }
 }

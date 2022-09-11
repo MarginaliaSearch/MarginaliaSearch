@@ -1,17 +1,19 @@
-package nu.marginalia.wmsa.edge.index.reader;
+package nu.marginalia.wmsa.edge.index.svc.query;
 
 import nu.marginalia.util.btree.CachingBTreeReader;
+import nu.marginalia.wmsa.edge.index.reader.IndexWordsTable;
+import nu.marginalia.wmsa.edge.index.reader.SearchIndex;
 import org.slf4j.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class IndexQueryCachePool {
-    private final Map<PoolKey, CachingBTreeReader.Cache> indexCaches = new HashMap<>();
-    private final Map<RangeKey, SearchIndex.UrlIndexTree> rangeCache = new HashMap<>();
+    private final Map<PoolKey, CachingBTreeReader.BTreeCachedIndex> indexCaches = new HashMap<>();
+    private final Map<RangeKey, SearchIndex.IndexBTreeRange> rangeCache = new HashMap<>();
     private final Map<PoolKey, Integer> savedCounts = new HashMap<>();
 
-    public CachingBTreeReader.Cache getIndexCache(SearchIndex index, SearchIndex.UrlIndexTree range) {
+    public CachingBTreeReader.BTreeCachedIndex getIndexCache(SearchIndex index, SearchIndex.IndexBTreeRange range) {
         var key = new PoolKey(index, range.dataOffset);
         var entry = indexCaches.get(key);
 
@@ -33,10 +35,10 @@ public class IndexQueryCachePool {
     }
 
     public void printSummary(Logger logger) {
-        long loadedBytes = indexCaches.values().stream().mapToLong(CachingBTreeReader.Cache::sizeBytes).sum();
+        long loadedBytes = indexCaches.values().stream().mapToLong(CachingBTreeReader.BTreeCachedIndex::sizeBytes).sum();
         long savedBytes = savedCounts.entrySet().stream().mapToLong(e -> e.getValue() * indexCaches.get(e.getKey()).sizeBytes()).sum();
 
-        long loaded = indexCaches.values().stream().filter(CachingBTreeReader.Cache::isLoaded).count();
+        long loaded = indexCaches.values().stream().filter(CachingBTreeReader.BTreeCachedIndex::isLoaded).count();
 
         logger.info("Index Cache Summary: {}/{} loaded/total, {} index blocks loaded, {} index blocks saved", loaded, indexCaches.size(), loadedBytes/4096., savedBytes/4096.);
     }
@@ -45,11 +47,11 @@ public class IndexQueryCachePool {
         indexCaches.clear();
     }
 
-    public SearchIndex.UrlIndexTree getRange(IndexWordsTable words, int wordId) {
+    public SearchIndex.IndexBTreeRange getRange(IndexWordsTable words, int wordId) {
         return rangeCache.get(new RangeKey(words, wordId));
     }
 
-    public void cacheRange(IndexWordsTable words, int wordId, SearchIndex.UrlIndexTree range) {
+    public void cacheRange(IndexWordsTable words, int wordId, SearchIndex.IndexBTreeRange range) {
         rangeCache.put(new RangeKey(words, wordId), range);
     }
 

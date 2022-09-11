@@ -1,13 +1,13 @@
-package nu.marginalia.wmsa.edge.index.reader.query.types;
+package nu.marginalia.wmsa.edge.index.svc.query.types.filter;
 
 import nu.marginalia.util.btree.CachingBTreeReader;
-import nu.marginalia.wmsa.edge.index.reader.IndexQueryCachePool;
 import nu.marginalia.wmsa.edge.index.reader.SearchIndex;
+import nu.marginalia.wmsa.edge.index.svc.query.IndexQueryCachePool;
 import org.jetbrains.annotations.Nullable;
 
-public record UrlRangeSubFilter(SearchIndex source, SearchIndex.UrlIndexTree range, CachingBTreeReader.Cache cache) implements QueryFilterStep {
+public record QueryFilterBTreeRange(SearchIndex source, SearchIndex.IndexBTreeRange range, CachingBTreeReader.BTreeCachedIndex cache) implements QueryFilterStepIf {
 
-    public UrlRangeSubFilter(SearchIndex source, SearchIndex.UrlIndexTree range, IndexQueryCachePool pool) {
+    public QueryFilterBTreeRange(SearchIndex source, SearchIndex.IndexBTreeRange range, IndexQueryCachePool pool) {
         this(source, range, pool.getIndexCache(source, range));
     }
 

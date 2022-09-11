@@ -1,7 +1,7 @@
-package nu.marginalia.wmsa.edge.index.reader.query;
+package nu.marginalia.wmsa.edge.index.svc.query;
 
-import nu.marginalia.wmsa.edge.index.reader.query.types.EntrySource;
-import nu.marginalia.wmsa.edge.index.reader.query.types.QueryFilterStep;
+import nu.marginalia.wmsa.edge.index.svc.query.types.EntrySource;
+import nu.marginalia.wmsa.edge.index.svc.query.types.filter.QueryFilterStepIf;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,18 +10,18 @@ import static java.lang.Math.min;
 
 public class IndexQuery {
     private final List<EntrySource> sources;
-    private final List<QueryFilterStep> inclusionFilter = new ArrayList<>(10);
-    private final List<QueryFilterStep> priorityFilter = new ArrayList<>(10);
+    private final List<QueryFilterStepIf> inclusionFilter = new ArrayList<>(10);
+    private final List<QueryFilterStepIf> priorityFilter = new ArrayList<>(10);
 
     public IndexQuery(List<EntrySource> sources) {
         this.sources = sources;
     }
 
-    public void addInclusionFilter(QueryFilterStep filter) {
+    public void addInclusionFilter(QueryFilterStepIf filter) {
         inclusionFilter.add(filter);
     }
 
-    public void addPriorityFilter(QueryFilterStep filter) {
+    public void addPriorityFilter(QueryFilterStepIf filter) {
         priorityFilter.add(filter);
     }
 

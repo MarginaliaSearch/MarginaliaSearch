@@ -9,8 +9,9 @@ import nu.marginalia.util.btree.CachingBTreeReader;
 import nu.marginalia.util.btree.model.BTreeHeader;
 import nu.marginalia.util.multimap.MultimapFileLong;
 import nu.marginalia.wmsa.edge.index.conversion.SearchIndexConverter;
-import nu.marginalia.wmsa.edge.index.reader.query.types.EntrySource;
-import nu.marginalia.wmsa.edge.index.reader.query.types.QueryFilterStep;
+import nu.marginalia.wmsa.edge.index.svc.query.IndexQueryCachePool;
+import nu.marginalia.wmsa.edge.index.svc.query.types.EntrySource;
+import nu.marginalia.wmsa.edge.index.svc.query.types.filter.QueryFilterStepIf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,25 +78,25 @@ public class SearchIndex implements  AutoCloseable {
         return rangeForWord(pool, wordId).numEntries();
     }
 
-    public UrlIndexTree rangeForWord(IndexQueryCachePool pool, int wordId) {
-        UrlIndexTree range = pool.getRange(words, wordId);
+    public IndexBTreeRange rangeForWord(IndexQueryCachePool pool, int wordId) {
+        IndexBTreeRange range = pool.getRange(words, wordId);
 
         if (range == null) {
-            range = new UrlIndexTree(words.positionForWord(wordId));
+            range = new IndexBTreeRange(words.positionForWord(wordId));
             pool.cacheRange(words, wordId, range);
         }
 
         return range;
     }
 
-    public UrlIndexTree rangeForWord(int wordId) {
-        return new UrlIndexTree(words.positionForWord(wordId));
+    public IndexBTreeRange rangeForWord(int wordId) {
+        return new IndexBTreeRange(words.positionForWord(wordId));
     }
 
-    public class UrlIndexTree {
-        final long dataOffset;
+    public class IndexBTreeRange {
+        public final long dataOffset;
         private BTreeHeader header;
-        public UrlIndexTree(long dataOffset) {
+        public IndexBTreeRange(long dataOffset) {
             this.dataOffset = dataOffset;
         }
 
@@ -126,7 +127,7 @@ public class SearchIndex implements  AutoCloseable {
             return new AsEntrySource();
         }
 
-        public QueryFilterStep asExcludeFilterStep(IndexQueryCachePool pool) {
+        public QueryFilterStepIf asExcludeFilterStep(IndexQueryCachePool pool) {
             return new AsExcludeQueryFilterStep(pool);
         }
 
@@ -150,7 +151,7 @@ public class SearchIndex implements  AutoCloseable {
             }
         }
 
-        public boolean hasUrl(CachingBTreeReader.Cache cache, long url) {
+        public boolean hasUrl(CachingBTreeReader.BTreeCachedIndex cache, long url) {
             if (dataOffset < 0) return false;
 
             return cachingBTreeReader.findEntry(cache, url) >= 0;
@@ -160,12 +161,12 @@ public class SearchIndex implements  AutoCloseable {
             if (dataOffset < 0)
                 return false;
 
-            CachingBTreeReader.Cache cache = pool.getIndexCache(SearchIndex.this, this);
+            CachingBTreeReader.BTreeCachedIndex cache = pool.getIndexCache(SearchIndex.this, this);
 
             return cachingBTreeReader.findEntry(cache, url) >= 0;
         }
 
-        public CachingBTreeReader.Cache createIndexCache() {
+        public CachingBTreeReader.BTreeCachedIndex createIndexCache() {
             if (dataOffset < 0)
                 return null;
 
@@ -213,11 +214,11 @@ public class SearchIndex implements  AutoCloseable {
             }
         }
 
-        class AsExcludeQueryFilterStep implements QueryFilterStep {
-            private final CachingBTreeReader.Cache cache;
+        class AsExcludeQueryFilterStep implements QueryFilterStepIf {
+            private final CachingBTreeReader.BTreeCachedIndex cache;
 
             public AsExcludeQueryFilterStep(IndexQueryCachePool pool) {
-                cache = pool.getIndexCache(SearchIndex.this, UrlIndexTree.this);
+                cache = pool.getIndexCache(SearchIndex.this, IndexBTreeRange.this);
             }
 
             public SearchIndex getIndex() {

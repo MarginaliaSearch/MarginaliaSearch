@@ -12,14 +12,14 @@ import java.util.List;
 @AllArgsConstructor @ToString @Getter
 public class EdgeSearchResultItem {
     public final int bucketId;
-    public final long combinedId; // this isn't the external domain ID, but a ranking
+    public final long combinedId;
+
     public final List<EdgeSearchResultKeywordScore> scores;
 
     public EdgeSearchResultItem(int bucketId, long val) {
         this.bucketId = bucketId;
-
-        combinedId = val;
-        scores = new ArrayList<>(16);
+        this.combinedId = val;
+        this.scores = new ArrayList<>(16);
     }
 
     public EdgeId<EdgeUrl> getUrlId() {
@@ -33,6 +33,7 @@ public class EdgeSearchResultItem {
         return (int)(combinedId >>> 32);
     }
 
+    /* Used for evaluation */
     private transient double scoreValue = 1;
     public void setScore(double score) {
         scoreValue = score;

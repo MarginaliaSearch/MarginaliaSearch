@@ -105,7 +105,7 @@ public class SearchIndexes {
     }
 
     @Nullable
-    public KeywordLexiconReadOnlyView getDictionaryReader() {
+    public KeywordLexiconReadOnlyView getLexiconReader() {
         return keywordLexiconReadOnlyView;
     }
 

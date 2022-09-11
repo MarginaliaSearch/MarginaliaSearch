@@ -1,6 +1,7 @@
 package nu.marginalia.wmsa.edge.index.client;
 
 import com.google.inject.Singleton;
+import io.prometheus.client.Summary;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import nu.marginalia.wmsa.client.AbstractDynamicClient;
@@ -10,6 +11,7 @@ import nu.marginalia.wmsa.edge.converting.interpreter.instruction.DocumentKeywor
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.id.EdgeId;
+import nu.marginalia.wmsa.edge.model.search.EdgeSearchResultItem;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchResultSet;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchSpecification;
 import nu.marginalia.wmsa.edge.model.search.domain.EdgeDomainSearchResults;
@@ -22,6 +24,8 @@ import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class EdgeIndexClient extends AbstractDynamicClient implements EdgeIndexWriterClient {
+
+    private static final Summary wmsa_search_index_api_time = Summary.build().name("wmsa_search_index_api_time").help("-").register();
 
     public EdgeIndexClient() {
         super(ServiceDescriptor.EDGE_INDEX);
@@ -52,20 +56,10 @@ public class EdgeIndexClient extends AbstractDynamicClient implements EdgeIndexW
 
 
     @CheckReturnValue
-    public EdgeSearchResultSet query(Context ctx, EdgeSearchSpecification specs) {
-        return this.postGet(ctx, "/search/", specs, EdgeSearchResultSet.class).blockingFirst();
-    }
-
-    @CheckReturnValue
-    public List<EdgeSearchResultSet> multiQuery(Context ctx, EdgeSearchSpecification... specs) {
-
-        return Observable.fromArray(specs)
-                .concatMap(s -> postGet(ctx, "/search/", s, EdgeSearchResultSet.class)
-                        .subscribeOn(Schedulers.io())
-                        .timeout(1, TimeUnit.SECONDS)
-                        .onErrorComplete())
-                .toList()
-                .blockingGet();
+    public List<EdgeSearchResultItem> query(Context ctx, EdgeSearchSpecification specs) {
+        return wmsa_search_index_api_time.time(
+                () -> this.postGet(ctx, "/search/", specs, EdgeSearchResultSet.class).blockingFirst().getResults()
+        );
     }
 
     @CheckReturnValue

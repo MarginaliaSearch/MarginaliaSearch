@@ -25,14 +25,14 @@ public class CachingBTreeReader {
         return new BTreeHeader(file.get(fileOffset), file.get(fileOffset+1), file.get(fileOffset+2));
     }
 
-    public Cache prepareCache(BTreeHeader header) {
-        return new Cache(header);
+    public BTreeCachedIndex prepareCache(BTreeHeader header) {
+        return new BTreeCachedIndex(header);
     }
     /**
      *
      * @return file offset of entry matching keyRaw, negative if absent
      */
-    public long findEntry(Cache cache, final long keyRaw) {
+    public long findEntry(BTreeCachedIndex cache, final long keyRaw) {
         BTreeHeader header = cache.header;
 
         final int blockSize = ctx.BLOCK_SIZE_WORDS();
@@ -62,7 +62,7 @@ public class CachingBTreeReader {
         return dataSearcher.binarySearch(key, searchStart, numEntries);
     }
 
-    private long searchIndex(BTreeHeader header, Cache cache, long key) {
+    private long searchIndex(BTreeHeader header, BTreeCachedIndex cache, long key) {
         final int blockSize = ctx.BLOCK_SIZE_WORDS();
         long layerOffset = 0;
 
@@ -83,13 +83,13 @@ public class CachingBTreeReader {
      * for repeated queries against the same tree. The memory consumption is typically very low
      * and the disk access pattern for reading the entire index relatively cheap.
      */
-    public class Cache {
+    public class BTreeCachedIndex {
         long[] indexData;
         final BTreeHeader header;
 
         final int indexedDataSize;
 
-        public Cache(BTreeHeader header) {
+        public BTreeCachedIndex(BTreeHeader header) {
             this.header = header;
             indexedDataSize = header.numEntries();
         }

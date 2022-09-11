@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 public class SearchResultDecorator {
@@ -67,8 +66,7 @@ public class SearchResultDecorator {
         if (!missedIds.isEmpty()) {
             logger.debug("Could not look up documents: {}", missedIds.toArray());
         }
-        retList.sort(Comparator.comparing(EdgeUrlDetails::getTermScore)
-                .thenComparing(url -> url.url.path.length()));
+
         return retList;
     }
 

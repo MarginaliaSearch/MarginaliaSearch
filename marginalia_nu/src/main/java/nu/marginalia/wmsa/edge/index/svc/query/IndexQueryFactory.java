@@ -1,11 +1,10 @@
-package nu.marginalia.wmsa.edge.index.reader.query;
+package nu.marginalia.wmsa.edge.index.svc.query;
 
-import nu.marginalia.wmsa.edge.index.reader.IndexQueryCachePool;
 import nu.marginalia.wmsa.edge.index.reader.SearchIndex;
-import nu.marginalia.wmsa.edge.index.reader.query.types.EntrySource;
-import nu.marginalia.wmsa.edge.index.reader.query.types.QueryFilterStep;
-import nu.marginalia.wmsa.edge.index.reader.query.types.QueryFilterStepFromPredicate;
-import nu.marginalia.wmsa.edge.index.reader.query.types.UrlRangeSubFilter;
+import nu.marginalia.wmsa.edge.index.svc.query.types.EntrySource;
+import nu.marginalia.wmsa.edge.index.svc.query.types.filter.QueryFilterBTreeRange;
+import nu.marginalia.wmsa.edge.index.svc.query.types.filter.QueryFilterStepFromPredicate;
+import nu.marginalia.wmsa.edge.index.svc.query.types.filter.QueryFilterStepIf;
 
 import java.util.*;
 import java.util.function.LongPredicate;
@@ -57,21 +56,21 @@ public class IndexQueryFactory {
         }
 
         public IndexQueryBuilder also(int termId) {
-            List<QueryFilterStep> filters = new ArrayList<>(requiredIndices.size());
+            List<QueryFilterStepIf> filters = new ArrayList<>(requiredIndices.size());
 
             for (var ri : requiredIndices) {
                 var range = ri.rangeForWord(cachePool, termId);
 
                 if (range.isPresent()) {
-                    filters.add(new UrlRangeSubFilter(ri, range, cachePool));
+                    filters.add(new QueryFilterBTreeRange(ri, range, cachePool));
                 }
                 else {
-                    filters.add(QueryFilterStep.noPass());
+                    filters.add(QueryFilterStepIf.noPass());
                 }
             }
 
             filters.sort(Comparator.naturalOrder());
-            query.addInclusionFilter(QueryFilterStep.anyOf(filters));
+            query.addInclusionFilter(QueryFilterStepIf.anyOf(filters));
 
             return this;
         }
@@ -92,7 +91,7 @@ public class IndexQueryFactory {
             for (var idx : priortyIndices) {
                 var range = idx.rangeForWord(cachePool, termId);
                 if (range.isPresent()) {
-                    query.addPriorityFilter(new UrlRangeSubFilter(idx, range, cachePool));
+                    query.addPriorityFilter(new QueryFilterBTreeRange(idx, range, cachePool));
                 }
             }
         }

@@ -1,13 +1,15 @@
 package nu.marginalia.wmsa.edge.index.reader.query.types;
 
+import nu.marginalia.wmsa.edge.index.svc.query.types.filter.QueryFilterStepFromPredicate;
+import nu.marginalia.wmsa.edge.index.svc.query.types.filter.QueryFilterStepIf;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-class QueryFilterStepTest {
-    QueryFilterStep even = new QueryFilterStepFromPredicate(l -> (l%2) == 0);
-    QueryFilterStep divisibleByThree = new QueryFilterStepFromPredicate(l -> (l%3) == 0);
-    QueryFilterStep either = QueryFilterStep.anyOf(List.of(even, divisibleByThree));
+class QueryFilterStepIfTest {
+    QueryFilterStepIf even = new QueryFilterStepFromPredicate(l -> (l%2) == 0);
+    QueryFilterStepIf divisibleByThree = new QueryFilterStepFromPredicate(l -> (l%3) == 0);
+    QueryFilterStepIf either = QueryFilterStepIf.anyOf(List.of(even, divisibleByThree));
     @Test
     public void test() {
         long[] values = new long[100];

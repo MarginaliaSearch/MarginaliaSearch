@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.edge.index.reader.query;
+package nu.marginalia.wmsa.edge.index.svc.query;
 
 
 public class IndexSearchBudget {

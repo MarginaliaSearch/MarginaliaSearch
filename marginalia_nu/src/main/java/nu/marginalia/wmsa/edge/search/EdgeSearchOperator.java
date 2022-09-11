@@ -2,7 +2,6 @@ package nu.marginalia.wmsa.edge.search;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import io.prometheus.client.Summary;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import nu.marginalia.wmsa.configuration.server.Context;
@@ -18,7 +17,6 @@ import nu.marginalia.wmsa.edge.model.id.EdgeIdSet;
 import nu.marginalia.wmsa.edge.model.search.*;
 import nu.marginalia.wmsa.edge.model.search.domain.EdgeDomainSearchSpecification;
 import nu.marginalia.wmsa.edge.search.model.BrowseResult;
-import nu.marginalia.wmsa.edge.search.model.DecoratedSearchResultSet;
 import nu.marginalia.wmsa.edge.search.model.DecoratedSearchResults;
 import nu.marginalia.wmsa.edge.search.query.QueryFactory;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeSearchQuery;
@@ -50,8 +48,6 @@ public class EdgeSearchOperator {
     private final SearchResultDecorator resultDecorator;
     private final Comparator<EdgeUrlDetails> resultListComparator;
 
-    private static final Summary wmsa_search_index_api_time = Summary.build().name("wmsa_search_index_api_time").help("-").register();
-
     @Inject
     public EdgeSearchOperator(AssistantClient assistantClient,
                               EncyclopediaClient encyclopediaClient,
@@ -81,9 +77,7 @@ public class EdgeSearchOperator {
 
         logger.info("Human terms (API): {}", Strings.join(processedQuery.searchTermsHuman, ','));
 
-        DecoratedSearchResultSet queryResults = performQuery(ctx, processedQuery);
-
-        return queryResults.resultSet;
+        return performQuery(ctx, processedQuery);
     }
 
     public DecoratedSearchResults doSearch(Context ctx, EdgeUserSearchParameters params, @Nullable Future<String> eval) {
@@ -91,23 +85,25 @@ public class EdgeSearchOperator {
         Observable<WikiArticles> definitions = getWikiArticle(ctx, params.humanQuery());
 
         EdgeSearchQuery processedQuery = queryFactory.createQuery(params);
+
         logger.info("Human terms: {}", Strings.join(processedQuery.searchTermsHuman, ','));
 
-        DecoratedSearchResultSet queryResults = performQuery(ctx, processedQuery);
+        List<EdgeUrlDetails> queryResults = performQuery(ctx, processedQuery);
 
         String evalResult = getEvalResult(eval);
-
-
         List<BrowseResult> domainResults = getDomainResults(ctx, processedQuery.specs);
+        WikiArticles wikiArticles = definitions.onErrorReturn((e) -> new WikiArticles()).blockingFirst();
 
-        return new DecoratedSearchResults(params,
-                getProblems(ctx, evalResult, queryResults, processedQuery),
-                evalResult,
-                definitions.onErrorReturn((e) -> new WikiArticles()).blockingFirst(),
-                queryResults.resultSet,
-                domainResults,
-                processedQuery.domain,
-                getDomainId(processedQuery.domain));
+        return DecoratedSearchResults.builder()
+                .params(params)
+                .problems(getProblems(ctx, evalResult, queryResults, processedQuery))
+                .evalResult(evalResult)
+                .wiki(wikiArticles)
+                .results(queryResults)
+                .domainResults(domainResults)
+                .focusDomain(processedQuery.domain)
+                .focusDomainId(getDomainId(processedQuery.domain))
+                .build();
     }
 
     private List<BrowseResult> getDomainResults(Context ctx, EdgeSearchSpecification specs) {
@@ -169,7 +165,7 @@ public class EdgeSearchOperator {
         return domainId;
     }
 
-    public DecoratedSearchResultSet performDumbQuery(Context ctx, EdgeSearchProfile profile, IndexBlock block, int limitPerDomain, int limitTotal, String... termsInclude) {
+    public List<EdgeUrlDetails> performDumbQuery(Context ctx, EdgeSearchProfile profile, IndexBlock block, int limitPerDomain, int limitTotal, String... termsInclude) {
         List<EdgeSearchSubquery> sqs = new ArrayList<>();
 
         sqs.add(new EdgeSearchSubquery(Arrays.asList(termsInclude), Collections.emptyList(), block));
@@ -179,11 +175,13 @@ public class EdgeSearchOperator {
         return performQuery(ctx, new EdgeSearchQuery(specs));
     }
 
-    private DecoratedSearchResultSet performQuery(Context ctx, EdgeSearchQuery processedQuery) {
+    private List<EdgeUrlDetails> performQuery(Context ctx, EdgeSearchQuery processedQuery) {
 
-        List<EdgeUrlDetails> resultList = new ArrayList<>(processedQuery.specs.limitTotal);
+        final List<EdgeSearchResultItem> results = indexClient.query(ctx, processedQuery.specs);
 
-        for (var details : wmsa_search_index_api_time.time(()->fetchResultsSimple(ctx, processedQuery))) {
+        final List<EdgeUrlDetails> resultList = new ArrayList<>(results.size());
+
+        for (var details : resultDecorator.getAllUrlDetails(results)) {
             if (details.getUrlQuality() <= -100) {
                 continue;
             }
@@ -208,10 +206,10 @@ public class EdgeSearchOperator {
             }
         }
 
-        return new DecoratedSearchResultSet(retList);
+        return retList;
     }
 
-    private List<String> getProblems(Context ctx, String evalResult, DecoratedSearchResultSet queryResults, EdgeSearchQuery processedQuery) {
+    private List<String> getProblems(Context ctx, String evalResult, List<EdgeUrlDetails> queryResults, EdgeSearchQuery processedQuery) {
         final List<String> problems = new ArrayList<>(processedQuery.problems);
         boolean siteSearch = processedQuery.domain != null;
 
@@ -303,15 +301,6 @@ public class EdgeSearchOperator {
                 .subscribeOn(Schedulers.io())
                 .onErrorReturn(e -> new WikiArticles())
                 ;
-    }
-
-    private Set<EdgeUrlDetails> fetchResultsSimple(Context ctx, EdgeSearchQuery processedQuery) {
-        EdgeSearchResultSet resultSet = indexClient.query(ctx, processedQuery.specs);
-
-        var results = resultSet.getResults();
-        Set<EdgeUrlDetails> ret = new HashSet<>(resultDecorator.getAllUrlDetails(results));
-
-        return ret;
     }
 
     private Iterable<String> spellCheckTerms(Context ctx, EdgeSearchQuery disjointedQuery) {
