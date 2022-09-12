@@ -7,12 +7,18 @@
         </div>
         <div class="settings">
             <select name="profile" id="profile">
+                <optgroup label="General Search">
                 <option {{#eq profile "default"}}selected{{/eq}} value="default">Popular Sites</option>
                 <option {{#eq profile "modern"}}selected{{/eq}} value="modern">Blogs and Personal Websites</option>
                 <option {{#eq profile "academia"}}selected{{/eq}} value="academia">Academia, Forums, Big Websites</option>
                 <option {{#eq profile "yolo"}}selected{{/eq}} value="yolo">Default Ranking Algorithm</option>
+                <option {{#eq profile "corpo"}}selected{{/eq}} value="corpo">Everything</option>
+                </optgroup>
+                <optgroup label="Topics Search">
                 <option {{#eq profile "food"}}selected{{/eq}} value="food">Recipes &#127859;</option>
-                <option {{#eq profile "corpo"}}selected{{/eq}} value="corpo">Experimental</option>
+                <option {{#eq profile "crafts"}}selected{{/eq}} value="crafts">Crafts &#129697;&#128296; (WIP; mostly textile-craft)</option>
+                </optgroup>
+
             </select>
             <select name="js" id="js">
                 <option {{#eq js "default"}}selected{{/eq}} value="default">Allow JS</option>

@@ -3,8 +3,9 @@ package nu.marginalia.wmsa.edge.data.dao;
 import com.google.inject.ImplementedBy;
 import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklist;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
-import nu.marginalia.wmsa.edge.model.EdgeId;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
+import nu.marginalia.wmsa.edge.model.id.EdgeId;
+import nu.marginalia.wmsa.edge.model.id.EdgeIdCollection;
 import nu.marginalia.wmsa.edge.model.search.EdgeUrlDetails;
 import nu.marginalia.wmsa.edge.search.model.BrowseResult;
 
@@ -18,9 +19,9 @@ public interface EdgeDataStoreDao {
 
     List<BrowseResult> getRandomDomains(int count, EdgeDomainBlacklist backlist, int set);
 
-    List<BrowseResult> getBrowseResultFromUrlIds(List<EdgeId<EdgeUrl>> urlId);
+    List<BrowseResult> getBrowseResultFromUrlIds(EdgeIdCollection<EdgeUrl> urlId);
 
-    List<EdgeUrlDetails> getUrlDetailsMulti(List<EdgeId<EdgeUrl>> ids);
+    List<EdgeUrlDetails> getUrlDetailsMulti(EdgeIdCollection<EdgeUrl> ids);
 
     EdgeDomain getDomain(EdgeId<EdgeDomain> id);
 

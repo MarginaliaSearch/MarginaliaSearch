@@ -1,10 +1,10 @@
 package nu.marginalia.wmsa.edge.assistant;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import lombok.SneakyThrows;
+import nu.marginalia.wmsa.client.GsonFactory;
 import nu.marginalia.wmsa.configuration.server.Initialization;
 import nu.marginalia.wmsa.configuration.server.MetricsServer;
 import nu.marginalia.wmsa.configuration.server.Service;
@@ -22,7 +22,7 @@ import spark.Spark;
 public class EdgeAssistantService extends Service {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Gson gson = new GsonBuilder().create();
+    private final Gson gson = GsonFactory.get();
     private final Units units;
     private final MathParser mathParser;
     private final Suggestions suggestions;

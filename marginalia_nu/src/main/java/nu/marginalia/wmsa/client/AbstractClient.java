@@ -1,12 +1,11 @@
 package nu.marginalia.wmsa.client;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.protobuf.GeneratedMessageV3;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableSource;
 import io.reactivex.rxjava3.plugins.RxJavaPlugins;
 import lombok.SneakyThrows;
-import marcono1234.gson.recordadapter.RecordTypeAdapterFactory;
 import nu.marginalia.wmsa.client.exception.LocalException;
 import nu.marginalia.wmsa.client.exception.NetworkException;
 import nu.marginalia.wmsa.client.exception.RemoteException;
@@ -17,8 +16,6 @@ import org.apache.http.HttpHost;
 import org.apache.logging.log4j.ThreadContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
-import org.slf4j.MarkerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -32,9 +29,7 @@ import java.util.zip.GZIPOutputStream;
 public abstract class AbstractClient implements AutoCloseable {
     public static final String CONTEXT_OUTBOUND_REQUEST = "outbound-request";
 
-    private final Gson gson = new GsonBuilder()
-            .registerTypeAdapterFactory(RecordTypeAdapterFactory.builder().allowMissingComponentValues().create())
-            .create();
+    private final Gson gson = GsonFactory.get();
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -184,6 +179,31 @@ public abstract class AbstractClient implements AutoCloseable {
                 .map(HttpStatusCode::new)
                 .timeout(timeout, TimeUnit.SECONDS)
                 .doFinally(() -> ThreadContext.remove("outbound-request"));
+    }
+
+    @SneakyThrows
+    protected synchronized Observable<HttpStatusCode> post(Context ctx, String endpoint, GeneratedMessageV3 data) {
+
+        ensureAlive();
+
+        RequestBody body = RequestBody.create(
+                MediaType.parse("application/protobuf"),
+                data.toByteArray());
+
+        var req = ctx.paint(new Request.Builder()).url(url + endpoint).post(body).build();
+        var call = client.newCall(req);
+
+        logInbound(call);
+        ThreadContext.put("outbound-request", url + endpoint);
+        try (var rsp = call.execute()) {
+            logOutbound(rsp);
+            int code = rsp.code();
+
+            return validateStatus(code, req).map(HttpStatusCode::new);
+        }
+        finally {
+            ThreadContext.remove("outbound-request");
+        }
     }
 
 

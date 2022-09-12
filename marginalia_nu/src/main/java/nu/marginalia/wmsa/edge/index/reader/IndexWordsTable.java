@@ -49,8 +49,8 @@ public class IndexWordsTable implements AutoCloseable {
     }
 
     public long positionForWord(int wordId) {
-
         long offset = reader.findEntry(header, wordId);
+
         if (offset < 0) {
             return -1L;
         }

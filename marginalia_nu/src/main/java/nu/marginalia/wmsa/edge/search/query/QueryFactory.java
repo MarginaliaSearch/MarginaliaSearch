@@ -4,13 +4,15 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.util.language.WordPatterns;
 import nu.marginalia.util.language.conf.LanguageModels;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
+import nu.marginalia.wmsa.edge.assistant.dict.NGramBloomFilter;
+import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchSpecification;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchSubquery;
 import nu.marginalia.wmsa.edge.search.EdgeSearchProfile;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeSearchQuery;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeUserSearchParameters;
+import nu.marginalia.wmsa.edge.search.results.SearchResultValuator;
 import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,20 +24,26 @@ import java.util.*;
 public class QueryFactory {
 
     private final LanguageModels lm;
-    private final NGramDict dict;
+    private final TermFrequencyDict dict;
     private final EnglishDictionary englishDictionary;
+    private final NGramBloomFilter nGramBloomFilter;
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final SearchResultValuator searchResultValuator;
+
+    private static final int RETAIN_QUERY_VARIANT_COUNT = 5;
 
     @Inject
-    public QueryFactory(LanguageModels lm, NGramDict dict, EnglishDictionary englishDictionary) {
+    public QueryFactory(LanguageModels lm, TermFrequencyDict dict, EnglishDictionary englishDictionary, NGramBloomFilter nGramBloomFilter, SearchResultValuator searchResultValuator) {
         this.lm = lm;
         this.dict = dict;
 
         this.englishDictionary = englishDictionary;
+        this.nGramBloomFilter = nGramBloomFilter;
+        this.searchResultValuator = searchResultValuator;
     }
 
     public QueryParser getParser() {
-        return new QueryParser(englishDictionary, new QueryVariants(lm ,dict, englishDictionary));
+        return new QueryParser(englishDictionary, new QueryVariants(lm ,dict, nGramBloomFilter, englishDictionary));
     }
 
     public EdgeSearchQuery createQuery(EdgeUserSearchParameters params) {
@@ -43,7 +51,6 @@ public class QueryFactory {
         final var processedQuery =  createQuery(getParser(), params);
 
         processedQuery.specs.experimental = EdgeSearchProfile.CORPO.equals(profile);
-        processedQuery.specs.stagger = EdgeSearchProfile.YOLO.equals(profile);
 
         final var newSubqueries = reevaluateSubqueries(processedQuery, params);
 
@@ -56,18 +63,33 @@ public class QueryFactory {
     private List<EdgeSearchSubquery> reevaluateSubqueries(EdgeSearchQuery processedQuery, EdgeUserSearchParameters params) {
         final var profile = params.profile();
 
+        for (var sq : processedQuery.specs.subqueries) {
+            sq.setValue(searchResultValuator.preEvaluate(sq));
+        }
+
+        trimExcessiveSubqueries(processedQuery.specs.subqueries);
+
         List<EdgeSearchSubquery> subqueries =
                 new ArrayList<>(processedQuery.specs.subqueries.size() * profile.indexBlocks.size());
 
         for (var sq : processedQuery.specs.subqueries) {
             for (var block : profile.indexBlocks) {
-                subqueries.add(sq.withBlock(block));
+                subqueries.add(sq.withBlock(block).setValue(sq.getValue() * block.sortOrder));
             }
         }
 
-        subqueries.sort(Comparator.comparing(sq -> -sq.termSize()*2.3 + sq.block.sortOrder));
+        subqueries.sort(Comparator.comparing(EdgeSearchSubquery::getValue));
 
         return subqueries;
+    }
+
+    private void trimExcessiveSubqueries(List<EdgeSearchSubquery> subqueries) {
+
+        subqueries.sort(Comparator.comparing(EdgeSearchSubquery::getValue));
+
+        if (subqueries.size() > RETAIN_QUERY_VARIANT_COUNT) {
+            subqueries.subList(0, subqueries.size() - RETAIN_QUERY_VARIANT_COUNT).clear();
+        }
     }
 
 
@@ -127,7 +149,7 @@ public class QueryFactory {
                 }
             }
 
-            EdgeSearchSubquery subquery = new EdgeSearchSubquery(searchTermsInclude, searchTermsExclude, IndexBlock.TitleKeywords);
+            EdgeSearchSubquery subquery = new EdgeSearchSubquery(searchTermsInclude, searchTermsExclude, IndexBlock.Title);
 
             params.profile().addTacitTerms(subquery);
             params.jsSetting().addTacitTerms(subquery);

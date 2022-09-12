@@ -2,7 +2,7 @@ package nu.marginalia.wmsa.edge.crawling;
 
 import com.github.luben.zstd.ZstdInputStream;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import nu.marginalia.wmsa.client.GsonFactory;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDocument;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDomain;
 
@@ -13,9 +13,13 @@ import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
 
 public class CrawledDomainReader {
-    private final Gson gson = new GsonBuilder().create();
+    private final Gson gson = GsonFactory.get();
+
+    private final ForkJoinPool pool = new ForkJoinPool(4);
 
     public CrawledDomainReader() {
     }
@@ -43,7 +47,12 @@ public class CrawledDomainReader {
                         if (line.equals(CrawledDomain.SERIAL_IDENTIFIER)) {
                             domain = gson.fromJson(nextLine, CrawledDomain.class);
                         } else if (line.equals(CrawledDocument.SERIAL_IDENTIFIER)) {
-                            docs.add(gson.fromJson(nextLine, CrawledDocument.class));
+                            pool.execute(() -> {
+                                var doc = gson.fromJson(nextLine, CrawledDocument.class);
+                                synchronized (docs) {
+                                    docs.add(doc);
+                                }
+                            });
                         }
                     } else if (line.charAt(0) == '{') {
                         domain = gson.fromJson(line, CrawledDomain.class);
@@ -51,6 +60,8 @@ public class CrawledDomainReader {
                 }
             }
         }
+
+        pool.awaitQuiescence(10, TimeUnit.SECONDS);
 
         if (domain == null) {
             return null;

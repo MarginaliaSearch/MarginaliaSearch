@@ -3,7 +3,7 @@ package nu.marginalia.util.language.processing;
 import nu.marginalia.util.language.processing.model.DocumentLanguageData;
 import nu.marginalia.util.language.processing.model.DocumentSentence;
 import nu.marginalia.util.language.processing.model.WordRep;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
+import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -11,10 +11,11 @@ import java.util.stream.Collectors;
 
 public class LongNameCounter {
     private final KeywordExtractor keywordExtractor;
-
-    private final NGramDict dict;
-    public LongNameCounter(NGramDict dict, KeywordExtractor keywordExtractor) {
+    private final TermFrequencyDict dict;
+    private final double docCount;
+    public LongNameCounter(TermFrequencyDict dict, KeywordExtractor keywordExtractor) {
         this.dict = dict;
+        docCount = (double) dict.docCount();
         this.keywordExtractor = keywordExtractor;
     }
 

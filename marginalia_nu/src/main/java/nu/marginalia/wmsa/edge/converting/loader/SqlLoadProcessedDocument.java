@@ -60,13 +60,15 @@ public class SqlLoadProcessedDocument {
     }
 
     public void load(LoaderData data, List<LoadProcessedDocument> documents) {
+
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareCall("CALL INSERT_PAGE_VISIT(?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             conn.setAutoCommit(false);
 
+            int cnt = 0; int batchOffset = 0;
             for (var doc : documents) {
                 int urlId = data.getUrlId(doc.url());
-                if (urlId < 0) {
+                if (urlId <= 0) {
                     logger.warn("Failed to resolve ID for URL {}", doc.url());
                     return;
                 }
@@ -81,25 +83,46 @@ public class SqlLoadProcessedDocument {
                 stmt.setDouble(8, doc.quality());
                 stmt.setInt(9, (int) doc.hash());
                 stmt.addBatch();
-            }
-            var ret = stmt.executeBatch();
 
-            for (int rv = 0; rv < documents.size(); rv++) {
-                if (ret[rv] < 1 && ret[rv] != SUCCESS_NO_INFO) {
-                    logger.warn("load({}) -- bad row count {}", documents.get(rv), ret[rv]);
+                if (++cnt == 100) {
+                    var ret = stmt.executeBatch();
+                    conn.commit();
+
+                    for (int rv = 0; rv < cnt; rv++) {
+                        if (ret[rv] < 0 && ret[rv] != SUCCESS_NO_INFO) {
+                            logger.warn("load({}) -- bad row count {}", documents.get(batchOffset + rv), ret[rv]);
+                        }
+                    }
+
+                    cnt = 0;
+                    batchOffset += 100;
+                }
+            }
+            if (cnt > 0) {
+                var ret = stmt.executeBatch();
+                conn.commit();
+                for (int rv = 0; rv < cnt; rv++) {
+                    if (ret[rv] < 0 && ret[rv] != SUCCESS_NO_INFO) {
+                        logger.warn("load({}) -- bad row count {}", documents.get(batchOffset + rv), ret[rv]);
+                    }
                 }
             }
 
-            conn.commit();
+            conn.setAutoCommit(true);
+
         } catch (SQLException ex) {
             logger.warn("SQL error inserting document", ex);
         }
     }
 
     public void loadWithError(LoaderData data, List<LoadProcessedDocumentWithError> documents) {
+
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareCall("CALL INSERT_PAGE_VISIT_BAD(?, ?)")) {
 
+            conn.setAutoCommit(false);
+
+            int cnt = 0; int batchOffset = 0;
             for (var doc : documents) {
                 int urlId = data.getUrlId(doc.url());
                 if (urlId < 0) {
@@ -110,13 +133,32 @@ public class SqlLoadProcessedDocument {
                 stmt.setInt(1, urlId);
                 stmt.setString(2, doc.state().name());
                 stmt.addBatch();
-            }
-            var ret = stmt.executeBatch();
-            for (int rv = 0; rv < documents.size(); rv++) {
-                if (ret[rv] < 0 && ret[rv] != SUCCESS_NO_INFO) {
-                    logger.warn("load({}) -- bad row count {}", documents.get(rv), ret[rv]);
+
+                if (++cnt == 100) {
+                    var ret = stmt.executeBatch();
+                    conn.commit();
+
+                    for (int rv = 0; rv < cnt; rv++) {
+                        if (ret[rv] < 0 && ret[rv] != SUCCESS_NO_INFO) {
+                            logger.warn("load({}) -- bad row count {}", documents.get(batchOffset + rv), ret[rv]);
+                        }
+                    }
+
+                    cnt = 0;
+                    batchOffset += 100;
                 }
             }
+            if (cnt > 0) {
+                var ret = stmt.executeBatch();
+                conn.commit();
+                for (int rv = 0; rv < cnt; rv++) {
+                    if (ret[rv] < 0 && ret[rv] != SUCCESS_NO_INFO) {
+                        logger.warn("load({}) -- bad row count {}", documents.get(batchOffset + rv), ret[rv]);
+                    }
+                }
+            }
+
+            conn.setAutoCommit(true);
         } catch (SQLException ex) {
             logger.warn("SQL error inserting failed document", ex);
         }

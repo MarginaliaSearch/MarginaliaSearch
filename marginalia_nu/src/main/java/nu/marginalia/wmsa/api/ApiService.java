@@ -2,11 +2,11 @@ package nu.marginalia.wmsa.api;
 
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.wmsa.api.model.ApiLicense;
+import nu.marginalia.wmsa.client.GsonFactory;
 import nu.marginalia.wmsa.configuration.server.*;
 import nu.marginalia.wmsa.edge.search.client.EdgeSearchClient;
 import org.slf4j.Logger;
@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ApiService  extends Service {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Gson gson = new GsonBuilder().create();
+    private final Gson gson = GsonFactory.get();
     private final EdgeSearchClient searchClient;
     private final HikariDataSource dataSource;
     private final ConcurrentHashMap<String, ApiLicense> licenseCache = new ConcurrentHashMap<>();

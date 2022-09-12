@@ -9,27 +9,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public enum EdgeSearchProfile {
-    DEFAULT("default",
-            List.of(IndexBlock.TitleKeywords, IndexBlock.Title, IndexBlock.Top, IndexBlock.Middle, IndexBlock.Low, IndexBlock.Link, IndexBlock.Words, IndexBlock.NamesWords),
-            0, 1),
-    MODERN("modern",
-            List.of(IndexBlock.TitleKeywords, IndexBlock.Title, IndexBlock.Top, IndexBlock.Middle, IndexBlock.Low, IndexBlock.Link, IndexBlock.Words, IndexBlock.NamesWords),
-            2),
-    CORPO("corpo",
-            List.of(IndexBlock.TitleKeywords, IndexBlock.Title, IndexBlock.Top, IndexBlock.Middle, IndexBlock.Low, IndexBlock.Link,  IndexBlock.Words, IndexBlock.NamesWords),
-            4, 5, 6, 7),
-    YOLO("yolo",
-            List.of(IndexBlock.TitleKeywords, IndexBlock.Title, IndexBlock.Top, IndexBlock.Middle, IndexBlock.Low, IndexBlock.Link, IndexBlock.Words, IndexBlock.NamesWords),
-            0, 2, 1, 3, 4, 6),
-    CORPO_CLEAN("corpo-clean",
-            List.of(IndexBlock.TitleKeywords, IndexBlock.Title, IndexBlock.Top, IndexBlock.Middle, IndexBlock.Low, IndexBlock.Link, IndexBlock.Words, IndexBlock.NamesWords),
-            4, 5),
-    ACADEMIA("academia",
-            List.of(IndexBlock.TitleKeywords, IndexBlock.Title, IndexBlock.Top, IndexBlock.Middle, IndexBlock.Low, IndexBlock.Link,  IndexBlock.Words, IndexBlock.NamesWords),
-            3),
-    FOOD("food",
-            List.of(IndexBlock.TitleKeywords, IndexBlock.Title, IndexBlock.Top, IndexBlock.Middle, IndexBlock.Low, IndexBlock.Link,  IndexBlock.Words, IndexBlock.NamesWords),
-            2, 0),
+
+    DEFAULT("default", SearchOrder.DEFAULT_ORDER, 0, 1),
+    MODERN("modern", SearchOrder.DEFAULT_ORDER, 2),
+    CORPO("corpo", SearchOrder.DEFAULT_ORDER, 4, 5, 7),
+    YOLO("yolo", SearchOrder.DEFAULT_ORDER, 0, 2, 1, 3, 4, 6),
+    CORPO_CLEAN("corpo-clean", SearchOrder.DEFAULT_ORDER, 4, 5),
+    ACADEMIA("academia",  SearchOrder.DEFAULT_ORDER, 3),
+
+    FOOD("food", SearchOrder.DEFAULT_ORDER, 2, 0),
+    CRAFTS("crafts", SearchOrder.DEFAULT_ORDER, 2, 0),
     ;
 
 
@@ -49,12 +38,14 @@ public enum EdgeSearchProfile {
         if (null == param) {
             return YOLO;
         }
+
         return switch (param) {
             case "modern" -> MODERN;
             case "default" -> DEFAULT;
             case "corpo" -> CORPO;
             case "academia" -> ACADEMIA;
             case "food" -> FOOD;
+            case "crafts" -> CRAFTS;
             default -> YOLO;
         };
     }
@@ -63,6 +54,14 @@ public enum EdgeSearchProfile {
         if (this == FOOD) {
             subquery.searchTermsInclude.add(HtmlFeature.CATEGORY_FOOD.getKeyword());
         }
+        if (this == CRAFTS) {
+            subquery.searchTermsInclude.add(HtmlFeature.CATEGORY_CRAFTS.getKeyword());
+        }
 
     }
+}
+
+class SearchOrder {
+    static List<IndexBlock> DEFAULT_ORDER
+            = List.of(IndexBlock.Title, IndexBlock.Words_1, IndexBlock.Words_2, IndexBlock.Words_4, IndexBlock.Words_8, IndexBlock.Words_16Plus);
 }

@@ -7,7 +7,7 @@ import java.util.*;
 
 @Data
 public class EdgePageWordSet {
-    public final Map<IndexBlock, EdgePageWords> wordSets;
+    public Map<IndexBlock, EdgePageWords> wordSets;
 
     public EdgePageWordSet(EdgePageWords... words) {
         wordSets = new EnumMap<>(IndexBlock.class);
@@ -19,7 +19,8 @@ public class EdgePageWordSet {
     public EdgePageWords get(IndexBlock block) {
         var words = wordSets.get(block);
         if (words == null) {
-            return new EdgePageWords(block);
+            words = new EdgePageWords(block);
+            wordSets.put(block, words);
         }
         return words;
     }
@@ -45,4 +46,5 @@ public class EdgePageWordSet {
         });
         return sj.toString();
     }
+
 }

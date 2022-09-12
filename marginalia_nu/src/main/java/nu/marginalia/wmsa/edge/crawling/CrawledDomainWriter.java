@@ -2,7 +2,7 @@ package nu.marginalia.wmsa.edge.crawling;
 
 import com.github.luben.zstd.ZstdOutputStream;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import nu.marginalia.wmsa.client.GsonFactory;
 import nu.marginalia.wmsa.edge.crawling.model.SerializableCrawlData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +16,7 @@ import java.nio.file.Path;
 
 public class CrawledDomainWriter implements AutoCloseable {
     private final Path outputDir;
-    private final Gson gson = new GsonBuilder().create();
+    private final Gson gson = GsonFactory.get();
     private static final Logger logger = LoggerFactory.getLogger(CrawledDomainWriter.class);
     private final Writer writer;
     private final Path outputFile;

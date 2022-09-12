@@ -25,14 +25,16 @@ public class CachingBTreeReader {
         return new BTreeHeader(file.get(fileOffset), file.get(fileOffset+1), file.get(fileOffset+2));
     }
 
-    public Cache prepareCache() {
-        return new Cache();
+    public BTreeCachedIndex prepareCache(BTreeHeader header) {
+        return new BTreeCachedIndex(header);
     }
     /**
      *
      * @return file offset of entry matching keyRaw, negative if absent
      */
-    public long findEntry(BTreeHeader header, Cache cache, final long keyRaw) {
+    public long findEntry(BTreeCachedIndex cache, final long keyRaw) {
+        BTreeHeader header = cache.header;
+
         final int blockSize = ctx.BLOCK_SIZE_WORDS();
 
         final long key = keyRaw & ctx.equalityMask();
@@ -46,7 +48,7 @@ public class CachingBTreeReader {
             numEntries = header.numEntries();
         }
         else {
-            cache.load(header);
+            cache.load();
 
             long dataLayerOffset = searchIndex(header, cache, key);
             if (dataLayerOffset < 0) {
@@ -60,7 +62,7 @@ public class CachingBTreeReader {
         return dataSearcher.binarySearch(key, searchStart, numEntries);
     }
 
-    private long searchIndex(BTreeHeader header, Cache cache, long key) {
+    private long searchIndex(BTreeHeader header, BTreeCachedIndex cache, long key) {
         final int blockSize = ctx.BLOCK_SIZE_WORDS();
         long layerOffset = 0;
 
@@ -77,11 +79,22 @@ public class CachingBTreeReader {
         return layerOffset;
     }
 
-
-    public class Cache {
+    /** A cache for the BTree index data that will drastically reduce the number of disk reads
+     * for repeated queries against the same tree. The memory consumption is typically very low
+     * and the disk access pattern for reading the entire index relatively cheap.
+     */
+    public class BTreeCachedIndex {
         long[] indexData;
+        final BTreeHeader header;
 
-        public void load(BTreeHeader header) {
+        final int indexedDataSize;
+
+        public BTreeCachedIndex(BTreeHeader header) {
+            this.header = header;
+            indexedDataSize = header.numEntries();
+        }
+
+        public void load() {
             if (indexData != null)
                 return;
 
@@ -106,6 +119,18 @@ public class CachingBTreeReader {
                     return mid;
             }
             return low;
+        }
+
+        public long sizeBytes() {
+            return isLoaded() ? 8L*indexData.length : 0;
+        }
+
+        public int getIndexedDataSize() {
+            return indexedDataSize;
+        }
+
+        public boolean isLoaded() {
+            return indexData != null;
         }
     }
 }

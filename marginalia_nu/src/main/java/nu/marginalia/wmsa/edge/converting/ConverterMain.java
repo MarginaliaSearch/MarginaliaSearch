@@ -22,7 +22,7 @@ import java.util.List;
 public class ConverterMain {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final CrawledInstructionWriter instructionWriter;
+    private final LoadInstructionWriter instructionWriter;
 
     public static void main(String... args) throws IOException {
 
@@ -47,12 +47,12 @@ public class ConverterMain {
             Gson gson
             ) throws Exception {
 
-        instructionWriter = new CrawledInstructionWriter(plan.process.getDir(), gson);
+        instructionWriter = new LoadInstructionWriter(plan.process.getDir(), gson);
 
         logger.info("Starting pipe");
 
         try (WorkLog processLog = plan.createProcessWorkLog()) {
-            var pipe = new ParallelPipe<CrawledDomain, ProcessingInstructions>("Crawler", 48, 4, 2) {
+            var pipe = new ParallelPipe<CrawledDomain, ProcessingInstructions>("Crawler", 20, 4, 2) {
 
                 @Override
                 protected ProcessingInstructions onProcess(CrawledDomain domainData) {
@@ -73,12 +73,7 @@ public class ConverterMain {
 
             };
 
-            plan.forEachCrawledDomain(domain -> {
-                if (!processLog.isJobFinished(domain.id)) {
-                    logger.info("{} - {}", domain.domain, domain.id);
-                    pipe.accept(domain);
-                }
-            });
+            plan.forEachCrawledDomain(id -> !processLog.isJobFinished(id), pipe::accept);
 
             pipe.join();
         }

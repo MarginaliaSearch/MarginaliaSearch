@@ -1,10 +1,8 @@
 package nu.marginalia.wmsa.edge.crawling;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import nu.marginalia.util.TestLanguageModels;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
+import nu.marginalia.util.language.WordPatterns;
 import nu.marginalia.util.language.conf.LanguageModels;
 import nu.marginalia.util.language.processing.DocumentKeywordExtractor;
 import nu.marginalia.util.language.processing.KeywordExtractor;
@@ -12,11 +10,9 @@ import nu.marginalia.util.language.processing.SentenceExtractor;
 import nu.marginalia.util.language.processing.model.WordRep;
 import nu.marginalia.util.language.processing.model.WordSpan;
 import nu.marginalia.util.language.processing.model.tag.WordSeparator;
-import nu.marginalia.util.ranking.BuggyReversePageRank;
-import nu.marginalia.util.ranking.BuggyStandardPageRank;
+import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import nu.marginalia.wmsa.edge.integration.wikipedia.WikipediaReader;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
-import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -49,7 +45,7 @@ class SentenceExtractorTest {
 
         System.out.println("Running");
 
-        var dict = new NGramDict(lm);
+        var dict = new TermFrequencyDict(lm);
 
         SentenceExtractor se = new SentenceExtractor(lm);
         KeywordExtractor keywordExtractor = new KeywordExtractor();
@@ -89,7 +85,7 @@ class SentenceExtractorTest {
 
         System.out.println("Running");
 
-        var dict = new NGramDict(lm);
+        var dict = new TermFrequencyDict(lm);
 
         DocumentKeywordExtractor documentKeywordExtractor = new DocumentKeywordExtractor(dict);
 
@@ -103,47 +99,27 @@ class SentenceExtractorTest {
                 });
         reader.join();
     }
+
+    @Test
+    public void testPattern() {
+        System.out.println(WordPatterns.singleWordAdditionalPattern.matcher("2.6.18164.el5pae").matches());
+    }
     @Test
     void extractSentences() throws IOException {
         var data = Path.of("/home/vlofgren/Code/tmp-data/");
 
         System.out.println("Running");
 
-        var dict = new NGramDict(lm);
+        var dict = new TermFrequencyDict(lm);
 
         DocumentKeywordExtractor documentKeywordExtractor = new DocumentKeywordExtractor(dict);
-
-//        documentKeywordExtractorLegacy.setLegacy(true);
-
-//        for (;;) {
-            long st = System.currentTimeMillis();
-            for (var file : Objects.requireNonNull(data.toFile().listFiles())) {
-
-
-                var newResult = newSe.extractSentences(Jsoup.parse(Files.readString(file.toPath())));
-
-                var newRes = documentKeywordExtractor.extractKeywords(newResult);
-
-
-//                var legacyRes = documentKeywordExtractorLegacy.extractKeywords(newResult);
-//
-//                EdgePageWordSet difference = new EdgePageWordSet();
-//                for (IndexBlock block : IndexBlock.values()) {
-
-//                    var newWords = new HashSet<>(newRes.get(block).words);
-//                    var oldWords = new HashSet<>(legacyRes.get(block).words);
-//                    newWords.removeAll(oldWords);
-
-//                    if (!newWords.isEmpty()) {
-//                        difference.append(block, newWords);
-//                    }
-//                }
-//                System.out.println(difference);
-                System.out.println(newRes);
-//                System.out.println("---");
-            }
-            System.out.println(System.currentTimeMillis() - st);
-//        }
+        long st = System.currentTimeMillis();
+        for (var file : Objects.requireNonNull(data.toFile().listFiles())) {
+            var newResult = newSe.extractSentences(Jsoup.parse(Files.readString(file.toPath())));
+            var newRes = documentKeywordExtractor.extractKeywords(newResult);
+            System.out.println(newRes);
+        }
+        System.out.println(System.currentTimeMillis() - st);
 
     }
 
@@ -153,7 +129,7 @@ class SentenceExtractorTest {
     public void testSE() {
         var result = newSe.extractSentences(Jsoup.parse(new URL("https://memex.marginalia.nu/log/26-personalized-pagerank.gmi"), 10000));
 
-        var dict = new NGramDict(lm);
+        var dict = new TermFrequencyDict(lm);
         System.out.println(new DocumentKeywordExtractor(dict).extractKeywords(result));
 
 

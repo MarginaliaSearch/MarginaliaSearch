@@ -3,9 +3,8 @@ package nu.marginalia.wmsa.edge.index.reader;
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
-import nu.marginalia.wmsa.edge.index.reader.query.IndexQueryBuilder;
-import nu.marginalia.wmsa.edge.index.reader.query.IndexSearchBudget;
-import nu.marginalia.wmsa.edge.index.reader.query.Query;
+import nu.marginalia.wmsa.edge.index.svc.query.IndexQueryCachePool;
+import nu.marginalia.wmsa.edge.index.svc.query.IndexQueryFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,18 +18,20 @@ import java.util.stream.Stream;
 public class SearchIndexReader implements AutoCloseable {
 
     private final EnumMap<IndexBlock, SearchIndex> indices;
-
-    private final EnumMap<IndexBlock, IndexQueryBuilder> queryBuilders;
-    private final EnumMap<IndexBlock, IndexQueryBuilder> underspecifiedQueryBuilders;
+    private final EnumMap<IndexBlock, IndexQueryFactory> queryBuilders;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private static final IndexBlock[] indicesBySearchOrder = new IndexBlock[] {
-            IndexBlock.Top,
-            IndexBlock.Middle,
-            IndexBlock.Low,
-            IndexBlock.Words,
-            IndexBlock.NamesWords,
+            IndexBlock.Title,
+            IndexBlock.Tfidf_Top,
+            IndexBlock.Tfidf_Middle,
+            IndexBlock.Tfidf_Lower,
+            IndexBlock.Words_1,
+            IndexBlock.Words_2,
+            IndexBlock.Words_4,
+            IndexBlock.Words_8,
+            IndexBlock.Words_16Plus,
     };
 
     @Inject
@@ -38,30 +39,33 @@ public class SearchIndexReader implements AutoCloseable {
             EnumMap<IndexBlock, SearchIndex> indices) {
         this.indices = indices;
 
-        var lowIndex  = indices.get(IndexBlock.Low);
-        var midIndex  = indices.get(IndexBlock.Middle);
-        var topIndex  = indices.get(IndexBlock.Top);
+        var lowIndex  = indices.get(IndexBlock.Tfidf_Lower);
+        var midIndex  = indices.get(IndexBlock.Tfidf_Middle);
+        var topIndex  = indices.get(IndexBlock.Tfidf_Top);
         var linkIndex  = indices.get(IndexBlock.Link);
         var titleIndex  = indices.get(IndexBlock.Title);
-        var namesIndex  = indices.get(IndexBlock.NamesWords);
-        var positionIndex  = indices.get(IndexBlock.PositionWords);
-        var titleKeywordsIndex  = indices.get(IndexBlock.TitleKeywords);
-        var wordsIndex  = indices.get(IndexBlock.Words);
+        var siteIndex  = indices.get(IndexBlock.Site);
         var metaIndex  = indices.get(IndexBlock.Meta);
-        var topicIndex  = indices.get(IndexBlock.Topic);
+        var topicIndex  = indices.get(IndexBlock.Subjects);
+
+        var words1  = indices.get(IndexBlock.Words_1);
+        var words2  = indices.get(IndexBlock.Words_2);
+        var words4  = indices.get(IndexBlock.Words_4);
+        var words8  = indices.get(IndexBlock.Words_8);
+        var words16  = indices.get(IndexBlock.Words_16Plus);
+        var artifacts  = indices.get(IndexBlock.Artifacts);
 
         queryBuilders = new EnumMap<>(IndexBlock.class);
-        underspecifiedQueryBuilders = new EnumMap<>(IndexBlock.class);
 
-        queryBuilders.put(IndexBlock.Words, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, topIndex, midIndex, lowIndex, linkIndex, namesIndex, wordsIndex), wordsIndex));
-        queryBuilders.put(IndexBlock.Low, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, topIndex, midIndex, lowIndex, linkIndex), wordsIndex));
-        queryBuilders.put(IndexBlock.Top, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex, topIndex), wordsIndex));
-        queryBuilders.put(IndexBlock.Title, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex, topicIndex, titleIndex), wordsIndex));
-        queryBuilders.put(IndexBlock.TitleKeywords, new IndexQueryBuilder(listOfNonNulls(metaIndex, titleKeywordsIndex), wordsIndex));
+        List<SearchIndex> excludeIndices = listOfNonNulls(metaIndex, titleIndex, topIndex, midIndex, lowIndex, words1);
+        List<SearchIndex> priorityIndices = listOfNonNulls(titleIndex, linkIndex, siteIndex, topIndex, topicIndex);
 
-        underspecifiedQueryBuilders.put(IndexBlock.TitleKeywords, new IndexQueryBuilder(listOfNonNulls(titleKeywordsIndex, linkIndex, topicIndex, topIndex, midIndex, lowIndex, namesIndex, positionIndex, metaIndex), wordsIndex));
-        underspecifiedQueryBuilders.put(IndexBlock.Title, new IndexQueryBuilder(listOfNonNulls(titleIndex, topicIndex, linkIndex, topicIndex, topIndex, midIndex, lowIndex, namesIndex, positionIndex, metaIndex), wordsIndex));
-        underspecifiedQueryBuilders.put(IndexBlock.Top, new IndexQueryBuilder(listOfNonNulls(topIndex, linkIndex, midIndex, lowIndex, namesIndex, positionIndex, metaIndex), wordsIndex));
+        queryBuilders.put(IndexBlock.Title, new IndexQueryFactory(listOfNonNulls(metaIndex, titleIndex, linkIndex), excludeIndices, priorityIndices));
+        queryBuilders.put(IndexBlock.Words_1, new IndexQueryFactory(listOfNonNulls(metaIndex, words1), excludeIndices, priorityIndices));
+        queryBuilders.put(IndexBlock.Words_2, new IndexQueryFactory(listOfNonNulls(metaIndex, words2), excludeIndices, priorityIndices));
+        queryBuilders.put(IndexBlock.Words_4, new IndexQueryFactory(listOfNonNulls(metaIndex, words4), excludeIndices, priorityIndices));
+        queryBuilders.put(IndexBlock.Words_8, new IndexQueryFactory(listOfNonNulls(metaIndex, words8), excludeIndices, priorityIndices));
+        queryBuilders.put(IndexBlock.Words_16Plus, new IndexQueryFactory(listOfNonNulls(metaIndex, words16, artifacts), excludeIndices, priorityIndices));
     }
 
     @SafeVarargs
@@ -99,27 +103,13 @@ public class SearchIndexReader implements AutoCloseable {
                 .limit(maxResults);
     }
 
-    public Query findUnderspecified(
-            IndexBlock block,
-            IndexSearchBudget budget,
-            LongPredicate filter,
-            int wordId) {
-
-        var builder = underspecifiedQueryBuilders.get(block);
-
-        if (null != builder) {
-            return builder.buildUnderspecified(budget, filter, wordId);
-        }
-        return findWord(block, budget, filter, wordId);
-    }
-
-    public Query findWord(IndexBlock block, IndexSearchBudget budget, LongPredicate filter, int wordId) {
+    public IndexQueryFactory.IndexQueryBuilder findWord(IndexQueryCachePool cachePool, IndexBlock block, int wordId) {
         var builder = queryBuilders.get(block);
 
         if (builder == null)
-            return Query.EMPTY;
+            return null;
 
-        return builder.build(budget, filter, wordId);
+        return builder.buildQuery(cachePool, wordId);
     }
 
     @Override
@@ -130,20 +120,20 @@ public class SearchIndexReader implements AutoCloseable {
     }
 
     @SneakyThrows
-    public long numHits(IndexBlock block, int word) {
-        IndexQueryBuilder builder = queryBuilders.get(block);
+    public long numHits(IndexQueryCachePool pool, IndexBlock block, int word) {
+        IndexQueryFactory builder = queryBuilders.get(block);
 
         if (builder == null)
             return 0L;
 
         long hits = 0;
         for (var index : builder.getIndicies()) {
-            hits += index.numUrls(word);
+            hits += index.numUrls(pool, word);
         }
         return hits;
     }
 
-    public IndexBlock getBlockForResult(int searchTerm, long urlId) {
+    public IndexBlock getBlockForResult(IndexQueryCachePool cachePool, int searchTerm, long urlId) {
         for (var block : indicesBySearchOrder) {
             var index = indices.get(block);
 
@@ -151,21 +141,18 @@ public class SearchIndexReader implements AutoCloseable {
                 continue;
             }
 
-            var range = index.rangeForWord(searchTerm);
-
-            if (range.hasUrl(urlId)) {
+            if (cachePool.isUrlPresent(index, searchTerm, urlId))
                 return block;
-            }
+
         }
-        return IndexBlock.Words;
+
+        return IndexBlock.Words_16Plus;
     }
 
-    public boolean isTermInBucket(IndexBlock block, int searchTerm, long urlId) {
+    public boolean isTermInBucket(IndexQueryCachePool cachePool, IndexBlock block, int searchTerm, long urlId) {
         final var index = indices.get(block);
         if (null == index) return false;
 
-        return index
-                .rangeForWord(searchTerm)
-                .hasUrl(urlId);
+        return cachePool.isUrlPresent(index, searchTerm, urlId);
     }
 }

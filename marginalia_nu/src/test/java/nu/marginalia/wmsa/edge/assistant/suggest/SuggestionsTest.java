@@ -1,9 +1,9 @@
 package nu.marginalia.wmsa.edge.assistant.suggest;
 
 import nu.marginalia.util.TestLanguageModels;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
-import nu.marginalia.wmsa.edge.assistant.dict.SpellChecker;
 import nu.marginalia.util.language.conf.LanguageModels;
+import nu.marginalia.wmsa.edge.assistant.dict.SpellChecker;
+import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +17,7 @@ class SuggestionsTest {
     public static void setUp() {
         LanguageModels lm = TestLanguageModels.getLanguageModels();
         suggestions = new Suggestions(Path.of("/home/vlofgren/Work/sql-titles-clean"),
-                new SpellChecker(), new NGramDict(lm));
+                new SpellChecker(), new TermFrequencyDict(lm));
     }
 
     @Test

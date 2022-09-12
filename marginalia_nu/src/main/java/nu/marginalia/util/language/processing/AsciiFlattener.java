@@ -5,8 +5,8 @@ import java.util.regex.Pattern;
 
 public class AsciiFlattener {
 
-    private static final Pattern nonAscii = Pattern.compile("[^a-zA-Z0-9_.'+@#:]+");
-    private static final Pattern plainAsciiPattern = Pattern.compile("^[a-zA-Z0-9_.'+@#:]+$");
+    private static final Pattern nonAscii = Pattern.compile("[^a-zA-Z0-9_.'+@#:\\-]+");
+    private static final Pattern plainAsciiPattern = Pattern.compile("^[a-zA-Z0-9_.'+@#:\\-]+$");
     private static final Predicate<String> plainAscii = plainAsciiPattern.asMatchPredicate();
 
     public static String flattenUnicode(String s) {

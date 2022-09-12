@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option java_package = "nu.wmsa.wmsa.edge.index.proto";
+option java_outer_classname = "IndexProto";
+option java_multiple_files = true;
+
+message IndexPutKeywordsReq {
+    int32 domain = 1;
+    int32 url = 2;
+    int32 index = 3;
+    repeated WordSet wordSet = 4;
+
+    message WordSet {
+        int32 index = 1;
+        repeated string words = 2;
+    }
+}
+
+message IndexSearchQueryRsp {
+
+}

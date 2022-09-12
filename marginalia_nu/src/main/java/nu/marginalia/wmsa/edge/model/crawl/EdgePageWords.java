@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.List;
 
 @ToString @Getter
-public class EdgePageWords {
+public class EdgePageWords{
     public final IndexBlock block;
     public final List<String> words = new ArrayList<>();
 
@@ -31,4 +31,5 @@ public class EdgePageWords {
         return words.size();
     }
     public void addJust(String word) { words.add(word); }
+
 }

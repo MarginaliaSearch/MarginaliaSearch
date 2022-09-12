@@ -14,6 +14,7 @@ public class SqlLoadProcessedDomain {
     private final HikariDataSource dataSource;
     private final SqlLoadDomains loadDomains;
     private static final Logger logger = LoggerFactory.getLogger(SqlLoadProcessedDomain.class);
+
     @Inject
     public SqlLoadProcessedDomain(HikariDataSource dataSource, SqlLoadDomains loadDomains) {
         this.dataSource = dataSource;
@@ -54,6 +55,7 @@ public class SqlLoadProcessedDomain {
             initCall.setInt(3, data.getDomainId(domain));
             initCall.setString(4, ip);
             int rc = initCall.executeUpdate();
+            conn.commit();
             if (rc < 1) {
                 logger.warn("load({},{}) -- bad rowcount {}", domain, state, rc);
             }
@@ -75,6 +77,7 @@ public class SqlLoadProcessedDomain {
             stmt.setString(1, link.to().toString());
             stmt.setString(2, link.from().toString());
             int rc = stmt.executeUpdate();
+            conn.commit();
             if (rc != 1) {
                 logger.warn("loadAlias({}) - unexpected row count {}", link, rc);
             }

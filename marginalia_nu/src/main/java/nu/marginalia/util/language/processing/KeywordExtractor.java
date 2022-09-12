@@ -1,92 +1,17 @@
 package nu.marginalia.util.language.processing;
 
+import nu.marginalia.util.language.WordPatterns;
 import nu.marginalia.util.language.processing.model.DocumentSentence;
 import nu.marginalia.util.language.processing.model.WordSpan;
 import nu.marginalia.util.language.processing.model.tag.WordSeparator;
-import nu.marginalia.util.language.WordPatterns;
 
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class KeywordExtractor {
-
-    public boolean isLegacy() {
-        return legacy;
-    }
-
-    public void setLegacy(boolean legacy) {
-        this.legacy = legacy;
-    }
-
-    private boolean legacy;
-
-    public WordSpan[] getNameLikes(DocumentSentence sentence) {
-        var direct = IntStream.range(0, sentence.length())
-                .filter(i -> sentence.posTags[i].startsWith("N"))
-                .mapToObj(i -> new WordSpan(i, i+1))
-                ;
-        var two = IntStream.range(1, sentence.length())
-                .filter(i -> sentence.separators[i-1] == WordSeparator.SPACE)
-                .filter(i -> isName(i, sentence, Collections.emptySet()))
-                .filter(i -> isName(i -1, sentence, Collections.emptySet()))
-                .mapToObj(i -> new WordSpan(i-1, i+1))
-                ;
-
-        var a_in_b = IntStream.range(2, sentence.length())
-                .filter(i -> sentence.separators[i-1] == WordSeparator.SPACE)
-                .filter(i -> isProperNoun(i, sentence))
-                .filter(i -> isJoiner(sentence, i-1))
-                .filter(i -> isProperNoun(i-2, sentence))
-                .mapToObj(i -> new WordSpan(i-2, i+1))
-                ;
-
-        var a_in_det_b = IntStream.range(3, sentence.length())
-                .filter(i -> sentence.separators[i-1] == WordSeparator.SPACE
-                        && sentence.separators[i-2] == WordSeparator.SPACE)
-                .filter(i -> isProperNoun(i, sentence))
-                .filter(i -> isJoiner(sentence, i-1))
-                .filter(i -> sentence.posTags[i-2].equals("DT"))
-                .filter(i -> isProperNoun(i-3, sentence))
-                .mapToObj(i -> new WordSpan(i-3, i+1))
-                ;
-        var a_in_in_b = IntStream.range(3, sentence.length())
-                .filter(i -> sentence.separators[i-1] == WordSeparator.SPACE
-                        && sentence.separators[i-2] == WordSeparator.SPACE)
-                .filter(i -> isProperNoun(i, sentence))
-                .filter(i -> isJoiner(sentence, i-1) || isProperNoun(i-1, sentence))
-                .filter(i -> isJoiner(sentence, i-2) || isProperNoun(i-2, sentence))
-                .filter(i -> isProperNoun(i-3, sentence))
-                .mapToObj(i -> new WordSpan(i-3, i+1))
-                ;
-        var three = IntStream.range(2, sentence.length())
-                .filter(i -> sentence.separators[i-1] == WordSeparator.SPACE
-                        && sentence.separators[i-2] == WordSeparator.SPACE)
-                .filter(i -> isName(i, sentence, Collections.emptySet()))
-                .filter(i -> isName(i-1, sentence, Collections.emptySet()))
-                .filter(i -> isName(i-2, sentence, Collections.emptySet()))
-                .mapToObj(i -> new WordSpan(i-2, i+1))
-                ;
-        var four = IntStream.range(3, sentence.length())
-                .filter(i -> sentence.separators[i-1] == WordSeparator.SPACE
-                        && sentence.separators[i-2] == WordSeparator.SPACE
-                        && sentence.separators[i-3] == WordSeparator.SPACE)
-                .filter(i -> isName(i, sentence, Collections.emptySet()))
-                .filter(i -> isName(i - 1, sentence, Collections.emptySet()))
-                .filter(i -> isName(i - 2, sentence, Collections.emptySet()))
-                .filter(i -> isName(i - 3, sentence, Collections.emptySet()))
-                .mapToObj(i -> new WordSpan(i-3, i+1))
-                ;
-
-        return Stream.of(direct, two, a_in_b, a_in_in_b, a_in_det_b, three, four).flatMap(Function.identity())
-                .toArray(WordSpan[]::new);
-    }
-
 
     public WordSpan[] getNames(DocumentSentence sentence) {
         List<WordSpan> spans = new ArrayList<>(sentence.length());
@@ -214,7 +139,7 @@ public class KeywordExtractor {
         }
         String word = sentence.constructWordFromSpan(w);
 
-        if (word.isBlank() || WordPatterns.isStopWord(word)) return false;
+        if (word.isBlank() || !WordPatterns.filter(word)) return false;
         if (sentence.posTags[w.start].equals("CC")) return false;
         if (sentence.posTags[w.end-1].equals("IN")) return false;
         if (sentence.posTags[w.end-1].equals("DT")) return false;
@@ -377,4 +302,6 @@ public class KeywordExtractor {
 
         return (posTag.startsWith("JJ") || posTag.startsWith("R") || posTag.startsWith("VBG"));
     }
+
+
 }

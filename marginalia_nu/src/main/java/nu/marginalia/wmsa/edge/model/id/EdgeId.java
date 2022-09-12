@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.edge.model;
+package nu.marginalia.wmsa.edge.model.id;
 
 
 /**

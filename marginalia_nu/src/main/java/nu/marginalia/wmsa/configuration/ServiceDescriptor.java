@@ -2,10 +2,7 @@ package nu.marginalia.wmsa.configuration;
 
 import nu.marginalia.wmsa.api.ApiMain;
 import nu.marginalia.wmsa.auth.AuthMain;
-import nu.marginalia.wmsa.configuration.command.Command;
-import nu.marginalia.wmsa.configuration.command.ListCommand;
-import nu.marginalia.wmsa.configuration.command.StartCommand;
-import nu.marginalia.wmsa.configuration.command.VersionCommand;
+import nu.marginalia.wmsa.configuration.command.*;
 import nu.marginalia.wmsa.edge.assistant.EdgeAssistantMain;
 import nu.marginalia.wmsa.edge.dating.DatingMain;
 import nu.marginalia.wmsa.edge.index.EdgeIndexMain;
@@ -82,6 +79,9 @@ public enum ServiceDescriptor {
         MainMapLookup.setMainArguments(args);
         Map<String, Command> functions = Stream.of(new ListCommand(),
                 new StartCommand(),
+                new ConvertCommand(),
+                new LoadCommand(),
+                new ReindexCommand(),
                 new VersionCommand()
         ).collect(Collectors.toMap(c -> c.name, c -> c));
 

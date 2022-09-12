@@ -1,6 +1,7 @@
 package nu.marginalia.wmsa.edge.search.model;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import nu.marginalia.wmsa.edge.assistant.dict.WikiArticles;
 import nu.marginalia.wmsa.edge.model.search.EdgeUrlDetails;
@@ -8,7 +9,7 @@ import nu.marginalia.wmsa.edge.search.query.model.EdgeUserSearchParameters;
 
 import java.util.List;
 
-@AllArgsConstructor @Getter
+@AllArgsConstructor @Getter @Builder
 public class DecoratedSearchResults {
     private final EdgeUserSearchParameters params;
     private final List<String> problems;

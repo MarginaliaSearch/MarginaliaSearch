@@ -6,10 +6,10 @@ import nu.marginalia.wmsa.edge.converting.interpreter.instruction.LoadProcessedD
 import nu.marginalia.wmsa.edge.converting.processor.logic.HtmlFeature;
 import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDaoImpl;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
-import nu.marginalia.wmsa.edge.model.EdgeId;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeHtmlStandard;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeUrlState;
+import nu.marginalia.wmsa.edge.model.id.EdgeIdArray;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -78,7 +78,7 @@ class SqlLoadProcessedDocumentTest {
                 -3.14
         )));
 
-        var details = dataStoreDao.getUrlDetailsMulti(List.of(new EdgeId<>(loaderData.getUrlId(new EdgeUrl("https://www.marginalia.nu/")))));
+        var details = dataStoreDao.getUrlDetailsMulti(new EdgeIdArray<>(loaderData.getUrlId(new EdgeUrl("https://www.marginalia.nu/"))));
         assertEquals(1, details.size());
 
         var urlDetails = details.get(0);

@@ -1,10 +1,10 @@
 package nu.marginalia.wmsa.encyclopedia;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import lombok.SneakyThrows;
+import nu.marginalia.wmsa.client.GsonFactory;
 import nu.marginalia.wmsa.configuration.server.Initialization;
 import nu.marginalia.wmsa.configuration.server.MetricsServer;
 import nu.marginalia.wmsa.configuration.server.Service;
@@ -48,7 +48,7 @@ public class EncyclopediaService extends Service {
             wikiSearchResultRenderer = null;
         }
 
-        Gson gson = new GsonBuilder().create();
+        Gson gson = GsonFactory.get();
 
         Spark.get("/public/wiki/*", this::getWikiPage);
         Spark.get("/public/wiki-search", this::searchWikiPage);

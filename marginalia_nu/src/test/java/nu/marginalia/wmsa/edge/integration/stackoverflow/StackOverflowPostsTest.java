@@ -1,11 +1,11 @@
 package nu.marginalia.wmsa.edge.integration.stackoverflow;
 
+import nu.marginalia.util.ParallelPipe;
 import nu.marginalia.util.TestLanguageModels;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.util.language.conf.LanguageModels;
 import nu.marginalia.util.language.processing.DocumentKeywordExtractor;
 import nu.marginalia.util.language.processing.SentenceExtractor;
-import nu.marginalia.util.ParallelPipe;
+import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import nu.marginalia.wmsa.edge.integration.model.BasicDocumentData;
 import nu.marginalia.wmsa.edge.integration.stackoverflow.model.StackOverflowPost;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
@@ -20,7 +20,7 @@ public class StackOverflowPostsTest {
 
     @Test @Disabled("this is stupidly slow")
     public void test() throws ParserConfigurationException, SAXException, InterruptedException {
-        var documentKeywordExtractor = new DocumentKeywordExtractor(new NGramDict(lm));
+        var documentKeywordExtractor = new DocumentKeywordExtractor(new TermFrequencyDict(lm));
 
         ThreadLocal<StackOverflowPostProcessor> processor = ThreadLocal.withInitial(() -> {
             return new StackOverflowPostProcessor(new SentenceExtractor(lm), documentKeywordExtractor);

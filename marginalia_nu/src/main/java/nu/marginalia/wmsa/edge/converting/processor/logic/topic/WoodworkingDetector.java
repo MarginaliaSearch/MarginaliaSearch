@@ -1,6 +1,7 @@
 package nu.marginalia.wmsa.edge.converting.processor.logic.topic;
 
 import ca.rmen.porterstemmer.PorterStemmer;
+import com.google.inject.Inject;
 import nu.marginalia.util.language.processing.model.DocumentLanguageData;
 
 import java.util.HashMap;
@@ -14,6 +15,7 @@ public class WoodworkingDetector {
 
     private final Map<String, Double> termValues = new HashMap<>();
 
+    @Inject
     public WoodworkingDetector() {
         PorterStemmer ps = new PorterStemmer();
 

@@ -53,7 +53,7 @@ public class KeywordLexicon implements AutoCloseable {
     @SneakyThrows
     private int getOrInsert(byte[] bytes) {
         if (bytes.length >= Byte.MAX_VALUE) {
-            logger.warn("getOrInsert({}), illegal length {}", bytes, bytes.length);
+            logger.warn("getOrInsert({}), illegal length {}", new String(bytes), bytes.length);
             return DictionaryHashMap.NO_VALUE;
         }
 

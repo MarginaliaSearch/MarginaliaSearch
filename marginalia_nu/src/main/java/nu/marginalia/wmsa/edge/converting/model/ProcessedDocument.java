@@ -15,6 +15,7 @@ public class ProcessedDocument {
     public EdgePageWordSet words;
 
     public EdgeUrlState state;
+    public String stateReason;
 
     public OptionalDouble quality() {
         if (details != null) {

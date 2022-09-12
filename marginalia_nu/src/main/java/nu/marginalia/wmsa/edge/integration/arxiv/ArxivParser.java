@@ -1,7 +1,7 @@
 package nu.marginalia.wmsa.edge.integration.arxiv;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import nu.marginalia.wmsa.client.GsonFactory;
 import nu.marginalia.wmsa.edge.integration.arxiv.model.ArxivMetadata;
 
 import java.io.File;
@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ArxivParser {
-    private final Gson gson = new GsonBuilder().create();
+    private final Gson gson = GsonFactory.get();
 
     public ArxivParser() {
 

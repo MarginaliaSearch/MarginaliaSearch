@@ -20,13 +20,12 @@ public class EdgeSearchSpecification {
     public final int limitTotal;
 
     public final String humanQuery;
-    public boolean stagger;
     public boolean experimental;
 
     public static EdgeSearchSpecification justIncludes(String... words) {
         return new EdgeSearchSpecification(
                 IntStream.range(0, DYNAMIC_BUCKET_LENGTH+1).boxed().toList(),
-                Collections.singletonList(new EdgeSearchSubquery(Arrays.asList(words), Collections.emptyList(), IndexBlock.Title)), 10, 10, 10, "", false, false);
+                Collections.singletonList(new EdgeSearchSubquery(Arrays.asList(words), Collections.emptyList(), IndexBlock.Title)), 10, 10, 10, "", false);
     }
 
 }

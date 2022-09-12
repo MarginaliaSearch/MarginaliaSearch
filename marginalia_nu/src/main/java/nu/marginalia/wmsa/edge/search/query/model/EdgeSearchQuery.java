@@ -18,4 +18,11 @@ public class EdgeSearchQuery {
         specs = justSpecs;
     }
 
+    public Set<String> getAllKeywords() {
+        Set<String> keywords = new HashSet<>(100);
+        for (var sq : specs.subqueries) {
+            keywords.addAll(sq.searchTermsInclude);
+        }
+        return keywords;
+    }
 }

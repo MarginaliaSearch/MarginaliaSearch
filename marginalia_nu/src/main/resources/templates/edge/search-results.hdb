@@ -39,9 +39,10 @@
     </section>
     {{/if}}
 
+    {{#unless evalResult}}{{#if problems}}<section class="card problems onlyscreen"><h2>Suggestions</h2><ul class="onlyscreen search-problems">{{#each problems}}<li>{{{.}}}</li>{{/each}}</ul></section> {{/if}}{{/unless}}
+
     {{#each results}}{{>edge/search-result}}{{/each}}
 
-    {{#unless evalResult}}{{#if problems}}<section class="card problems onlyscreen"><h2>Suggestions</h2><ul class="onlyscreen search-problems">{{#each problems}}<li>{{{.}}}</li>{{/each}}</ul></section> {{/if}}{{/unless}}
 </section>
 </article>
 

@@ -9,4 +9,8 @@ import java.util.List;
 public class EdgeIndexSearchTerms {
     public List<Integer> includes = new ArrayList<>();
     public List<Integer> excludes = new ArrayList<>();
+
+    public boolean isEmpty() {
+        return includes.isEmpty();
+    }
 }

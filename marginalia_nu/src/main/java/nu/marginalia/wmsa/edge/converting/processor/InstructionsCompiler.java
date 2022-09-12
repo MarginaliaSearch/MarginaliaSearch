@@ -26,7 +26,6 @@ public class InstructionsCompiler {
         }
         if (domain.redirect != null) {
             compileRedirect(ret, domain.domain, domain.redirect);
-
         }
 
         return ret;
