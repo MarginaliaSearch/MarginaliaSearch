@@ -84,15 +84,6 @@ public class IndexQueryFactory {
             return this;
         }
 
-        public void prioritize(int termId) {
-            for (var idx : priortyIndices) {
-                var range = idx.rangeForWord(cachePool, termId);
-                if (range.isPresent()) {
-                    query.addPriorityFilter(new QueryFilterBTreeRange(idx, range, cachePool));
-                }
-            }
-        }
-
         public IndexQuery build() {
             return query;
         }

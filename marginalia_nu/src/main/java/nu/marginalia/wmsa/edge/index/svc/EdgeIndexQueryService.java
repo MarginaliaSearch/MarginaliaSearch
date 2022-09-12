@@ -41,7 +41,7 @@ public class EdgeIndexQueryService {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private static final int SEARCH_BUDGET_TIMEOUT_MS = 3000;
+    private static final int SEARCH_BUDGET_TIMEOUT_MS = 250;
     private static final int QUERY_FETCH_SIZE = 8192;
     private static final int QUERY_FIRST_PASS_DOMAIN_LIMIT = 64;
 
@@ -301,7 +301,7 @@ public class EdgeIndexQueryService {
             var word = lookUpWord(include);
             if (word.isEmpty()) {
                 logger.debug("Unknown search term: " + include);
-                return new EdgeIndexSearchTerms(includes, excludes);
+                return new EdgeIndexSearchTerms(Collections.emptyList(), Collections.emptyList());
             }
             includes.add(word.getAsInt());
         }
