@@ -136,10 +136,6 @@ public class EdgeIndexBucket {
             query = query.not(term);
         }
 
-        for (int term : orderedIncludes) {
-            query.prioritize(term);
-        }
-
         return query.build();
     }
 

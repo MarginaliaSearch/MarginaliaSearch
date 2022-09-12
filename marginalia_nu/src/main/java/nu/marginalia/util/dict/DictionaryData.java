@@ -12,7 +12,7 @@ public class DictionaryData {
     private final int DICTIONARY_BANK_SIZE;
     private static final Logger logger = LoggerFactory.getLogger(DictionaryData.class);
 
-    private final ArrayList<DictionaryDataBank> banks = new ArrayList(100);
+    private final ArrayList<DictionaryDataBank> banks = new ArrayList<>(100);
 
     public DictionaryData(int bankSize) {
         DICTIONARY_BANK_SIZE = bankSize;

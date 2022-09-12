@@ -20,6 +20,8 @@ public class SearchResultDecorator {
     private final SearchResultValuator valuator;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
+    private final boolean dumpTermData = Boolean.getBoolean("search-dump-term-data");
+
     @Inject
     public SearchResultDecorator(EdgeDataStoreDao edgeDataStoreDao, SearchResultValuator valuator) {
         this.edgeDataStoreDao = edgeDataStoreDao;
@@ -76,15 +78,16 @@ public class SearchResultDecorator {
 
         final double value =  valuator.evaluateTerms(resultItem.scores, details.words, details.title.length());
 
-//        System.out.println("---");
-//        System.out.println(details.getUrl());
-//        System.out.println(details.getTitle());
-//        System.out.println(details.words);
-//        for (var score : resultItem.scores) {
-//            System.out.println(score);
-//        }
-//        System.out.println(value);
-
+        if (dumpTermData) {
+            System.out.println("---");
+            System.out.println(details.getUrl());
+            System.out.println(details.getTitle());
+            System.out.println(details.words);
+            for (var score : resultItem.scores) {
+                System.out.println(score);
+            }
+            System.out.println(value);
+        }
 
         return value + statePenalty;
     }

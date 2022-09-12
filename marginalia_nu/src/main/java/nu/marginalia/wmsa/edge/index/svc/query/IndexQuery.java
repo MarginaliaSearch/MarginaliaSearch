@@ -11,7 +11,6 @@ import static java.lang.Math.min;
 public class IndexQuery {
     private final List<EntrySource> sources;
     private final List<QueryFilterStepIf> inclusionFilter = new ArrayList<>(10);
-    private final List<QueryFilterStepIf> priorityFilter = new ArrayList<>(10);
 
     public IndexQuery(List<EntrySource> sources) {
         this.sources = sources;
@@ -19,10 +18,6 @@ public class IndexQuery {
 
     public void addInclusionFilter(QueryFilterStepIf filter) {
         inclusionFilter.add(filter);
-    }
-
-    public void addPriorityFilter(QueryFilterStepIf filter) {
-        priorityFilter.add(filter);
     }
 
     private int si = 0;
@@ -50,32 +45,9 @@ public class IndexQuery {
             }
         }
 
-        if (budget.hasTimeLeft()) {
-            prioritizeBuffer(dest, source, bufferUtilizedLength, budget);
-        }
-
         int count = min(bufferUtilizedLength, dest.length);
         System.arraycopy(dest, 0, dest, 0, count);
         return count;
-    }
-
-    private void prioritizeBuffer(long[] dest, EntrySource source, int remainingBufferSize, IndexSearchBudget budget) {
-        int prioStart = 0;
-
-        for (var filter : priorityFilter) {
-            if (!budget.hasTimeLeft())
-                break;
-
-            if (filter.getIndex() == source.getIndex())
-                continue;
-
-            prioStart += filter.retainReorder(dest, prioStart, remainingBufferSize);
-
-            if (prioStart >= remainingBufferSize) {
-                break;
-            }
-        }
-
     }
 
     public String toString() {
