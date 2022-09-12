@@ -83,7 +83,7 @@ public class EdgeIndexLexiconService {
             var header = new SearchIndexJournalEntryHeader(domainId, urlId, block);
 
             indexWriter.put(header, entry);
-        };
+        }
     }
 
     private long[] getOrInsertWordIds(List<String> words) {

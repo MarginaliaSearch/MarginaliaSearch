@@ -34,12 +34,17 @@ public class ResultDomainDeduplicator {
 
         return resultsByRankingId.adjustOrPutValue(ranking, 1, 1) <= limitByDomain;
     }
+
     public boolean test(EdgeSearchResultItem item) {
-        int ranking = item.getRanking();
+        final int ranking = item.getRanking();
         if (ranking == Integer.MAX_VALUE) {
             return true;
         }
 
-        return resultsByRankingId.adjustOrPutValue(ranking, 1, 1) <= limitByDomain;
+        // For ResultItems, consider bucketId as well as different buckets may use different
+        // ranking algorithms
+        final long key = ranking*32L + item.bucketId;
+
+        return resultsByRankingId.adjustOrPutValue(key, 1, 1) <= limitByDomain;
     }
 }

@@ -8,8 +8,8 @@ public enum IndexBlock {
 
     Subjects(IndexBlockType.QUALITY_SIGNAL, 3, 1.0),
     NamesWords(IndexBlockType.QUALITY_SIGNAL, 4, 3.0),
-    Artifacts(IndexBlockType.QUALITY_SIGNAL, 5, 10),
 
+    Artifacts(IndexBlockType.PAGE_DATA, 5, 10),
     Meta(IndexBlockType.PAGE_DATA, 6, 7),
 
     Tfidf_Top(IndexBlockType.TF_IDF, 7, 1.5),

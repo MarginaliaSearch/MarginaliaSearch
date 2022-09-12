@@ -62,6 +62,6 @@ public enum EdgeSearchProfile {
 }
 
 class SearchOrder {
-    static List<IndexBlock> DEFAULT_ORDER = List.of(IndexBlock.Title, IndexBlock.Tfidf_Top, IndexBlock.Tfidf_Middle,
-            IndexBlock.Words_1, IndexBlock.Words_2, IndexBlock.Words_4, IndexBlock.Words_8, IndexBlock.Words_16Plus);
+    static List<IndexBlock> DEFAULT_ORDER
+            = List.of(IndexBlock.Title, IndexBlock.Words_1, IndexBlock.Words_2, IndexBlock.Words_4, IndexBlock.Words_8, IndexBlock.Words_16Plus);
 }

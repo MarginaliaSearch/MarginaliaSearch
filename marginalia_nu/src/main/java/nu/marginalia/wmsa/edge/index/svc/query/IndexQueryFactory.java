@@ -35,10 +35,7 @@ public class IndexQueryFactory {
             }
         }
 
-
-        IndexQuery query = new IndexQuery(sources);
-
-        return new IndexQueryBuilder(query, cachePool);
+        return new IndexQueryBuilder(new IndexQuery(sources), cachePool);
     }
 
     public class IndexQueryBuilder {

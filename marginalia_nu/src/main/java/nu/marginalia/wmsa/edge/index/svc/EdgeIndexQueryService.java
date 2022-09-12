@@ -33,6 +33,7 @@ import spark.Spark;
 import java.util.*;
 import java.util.function.LongPredicate;
 
+import static java.util.Comparator.comparing;
 import static spark.Spark.halt;
 
 @Singleton
@@ -163,7 +164,11 @@ public class EdgeIndexQueryService {
             cachePool.clear();
 
             return results.stream()
-                    .sorted(Comparator.comparing(EdgeSearchResultItem::getScore))
+                    .sorted(
+                            comparing(EdgeSearchResultItem::getScore)
+                                .thenComparing(EdgeSearchResultItem::getRanking)
+                                .thenComparing(EdgeSearchResultItem::getUrlIdInt)
+                    )
                     .filter(domainCountFilter::test)
                     .limit(specsSet.getLimitTotal()).toList();
         }

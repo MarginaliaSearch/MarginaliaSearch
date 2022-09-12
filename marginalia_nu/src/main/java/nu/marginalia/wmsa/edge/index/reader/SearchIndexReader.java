@@ -18,7 +18,6 @@ import java.util.stream.Stream;
 public class SearchIndexReader implements AutoCloseable {
 
     private final EnumMap<IndexBlock, SearchIndex> indices;
-
     private final EnumMap<IndexBlock, IndexQueryFactory> queryBuilders;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -45,7 +44,6 @@ public class SearchIndexReader implements AutoCloseable {
         var topIndex  = indices.get(IndexBlock.Tfidf_Top);
         var linkIndex  = indices.get(IndexBlock.Link);
         var titleIndex  = indices.get(IndexBlock.Title);
-        var namesIndex  = indices.get(IndexBlock.NamesWords);
         var siteIndex  = indices.get(IndexBlock.Site);
         var metaIndex  = indices.get(IndexBlock.Meta);
         var topicIndex  = indices.get(IndexBlock.Subjects);
@@ -60,10 +58,9 @@ public class SearchIndexReader implements AutoCloseable {
         queryBuilders = new EnumMap<>(IndexBlock.class);
 
         List<SearchIndex> excludeIndices = listOfNonNulls(metaIndex, titleIndex, topIndex, midIndex, lowIndex, words1);
-        List<SearchIndex> priorityIndices = listOfNonNulls(titleIndex, linkIndex, siteIndex, topIndex);
+        List<SearchIndex> priorityIndices = listOfNonNulls(titleIndex, linkIndex, siteIndex, topIndex, topicIndex);
 
         queryBuilders.put(IndexBlock.Title, new IndexQueryFactory(listOfNonNulls(metaIndex, titleIndex, linkIndex), excludeIndices, priorityIndices));
-        queryBuilders.put(IndexBlock.Tfidf_Lower, new IndexQueryFactory(listOfNonNulls(metaIndex, titleIndex, linkIndex, namesIndex, topIndex, siteIndex, midIndex, lowIndex, topicIndex, artifacts), excludeIndices, priorityIndices));
         queryBuilders.put(IndexBlock.Words_1, new IndexQueryFactory(listOfNonNulls(metaIndex, words1), excludeIndices, priorityIndices));
         queryBuilders.put(IndexBlock.Words_2, new IndexQueryFactory(listOfNonNulls(metaIndex, words2), excludeIndices, priorityIndices));
         queryBuilders.put(IndexBlock.Words_4, new IndexQueryFactory(listOfNonNulls(metaIndex, words4), excludeIndices, priorityIndices));
