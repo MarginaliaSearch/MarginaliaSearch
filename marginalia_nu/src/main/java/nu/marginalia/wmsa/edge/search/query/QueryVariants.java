@@ -3,6 +3,7 @@ package nu.marginalia.wmsa.edge.search.query;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import nu.marginalia.util.language.conf.LanguageModels;
@@ -54,7 +55,7 @@ public class QueryVariants {
         public final String wordOriginal;
     }
 
-    @AllArgsConstructor @Getter @ToString
+    @AllArgsConstructor @Getter @ToString @EqualsAndHashCode
     public static class QueryVariant {
         public final List<String> terms;
         public final double value;
@@ -97,12 +98,14 @@ public class QueryVariants {
 
         var first = byStart.firstEntry();
         if (first == null) {
-            byStart.put(0, List.of(new WordSpan(0, sentence.length())));
+            var span = new WordSpan(0, sentence.length());
+            byStart.put(0, List.of(span));
         }
         else if (first.getKey() > 0) {
             List<WordSpan> elongatedFirstWords = new ArrayList<>(first.getValue().size());
 
             first.getValue().forEach(span -> {
+                elongatedFirstWords.add(new WordSpan(0, span.start));
                 elongatedFirstWords.add(new WordSpan(0, span.end));
             });
 
@@ -142,8 +145,7 @@ public class QueryVariants {
         QueryVariantSet returnValue = new QueryVariantSet();
 
         returnValue.faithful.addAll(evaluateQueries(faithfulQueries));
-
-        returnValue.faithful.addAll(evaluateQueries(alternativeQueries));
+        returnValue.alternative.addAll(evaluateQueries(alternativeQueries));
 
         returnValue.faithful.sort(Comparator.comparing(QueryVariant::getValue));
         returnValue.alternative.sort(Comparator.comparing(QueryVariant::getValue));
@@ -154,6 +156,7 @@ public class QueryVariants {
     final Pattern underscore = Pattern.compile("_");
 
     private List<QueryVariant> evaluateQueries(List<List<String>> queryStrings) {
+        Set<QueryVariant> variantsSet = new HashSet<>();
         List<QueryVariant> ret = new ArrayList<>();
         for (var lst : queryStrings) {
             double q = 0;
@@ -165,7 +168,10 @@ public class QueryVariants {
                 }
                 q += 1.0 / qp;
             }
-            ret.add(new QueryVariant(lst, q));
+            var qv = new QueryVariant(lst, q);
+            if (variantsSet.add(qv)) {
+                ret.add(qv);
+            }
         }
         return ret;
     }
@@ -269,7 +275,7 @@ public class QueryVariants {
 
     private List<List<Word>> getWordSpans(TreeMap<Integer, List<WordSpan>> byStart, DocumentSentence sentence, List<ArrayList<WordSpan>> livingSpans) {
         List<List<Word>> goodSpans = new ArrayList<>();
-        for (int i = 0; i < sentence.length(); i++) {
+        for (int i = 0; i < 1; i++) {
             var spans = byStart.get(i);
 
 
