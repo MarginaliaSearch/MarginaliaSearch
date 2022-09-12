@@ -152,6 +152,7 @@ article > section > p { display: none; }
 
 .problems ul {
   flex-grow: 1;
+  margin-left: -1em;
 }
 
 .card .description {

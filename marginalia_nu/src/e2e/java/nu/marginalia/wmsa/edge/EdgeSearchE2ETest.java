@@ -188,7 +188,7 @@ public class EdgeSearchE2ETest extends E2ETestBase {
         System.out.println(driver.getTitle());
 
         var html = driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML");
-        assertEquals(List.of("Bird"), getTitlesFromSearchResults(html));
+        assertEquals(List.of("Bird", "Washington, D.C."), getTitlesFromSearchResults(html));
 
         Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("query"));
     }
@@ -201,7 +201,7 @@ public class EdgeSearchE2ETest extends E2ETestBase {
         System.out.println(driver.getTitle());
 
         var html = driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML");
-        assertNotEquals(List.of("Bird"), getTitlesFromSearchResults(html));
+        assertNotEquals(List.of("Bird", "Washington, D.C."), getTitlesFromSearchResults(html));
 
         Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("query-yes-js"));
     }
@@ -214,7 +214,7 @@ public class EdgeSearchE2ETest extends E2ETestBase {
         System.out.println(driver.getTitle());
 
         var html = driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML");
-        assertEquals(List.of("Bird"), getTitlesFromSearchResults(html));
+        assertEquals(List.of("Bird", "Washington, D.C."), getTitlesFromSearchResults(html));
 
         Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("query-no-js"));
     }
@@ -240,7 +240,7 @@ public class EdgeSearchE2ETest extends E2ETestBase {
 
         Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("site-search"));
 
-        assertEquals(List.of("Frog", "Binomial nomenclature", "Mantis", "Amphibian"), getTitlesFromSearchResults(html));
+        assertEquals(List.of("Frog", "Amphibian"), getTitlesFromSearchResults(html));
     }
 
     @Test

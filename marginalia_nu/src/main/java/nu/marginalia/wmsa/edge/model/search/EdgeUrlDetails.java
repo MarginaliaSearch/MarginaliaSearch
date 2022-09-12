@@ -29,7 +29,6 @@ public class EdgeUrlDetails {
     public EdgePageScoreAdjustment urlQualityAdjustment;
     public long rankingId;
     public double termScore;
-    public int queryLength;
 
     public long rankingIdAdjustment() {
         int penalty = 0;
@@ -94,7 +93,7 @@ public class EdgeUrlDetails {
     }
 
     public double getRanking() {
-        double lengthAdjustment = Math.max(1, words / (words + 1000.));
+        double lengthAdjustment = Math.max(1, words / (words + 10000.));
         return getFeatureScore()*Math.sqrt(1+rankingId)/Math.max(1E-10, lengthAdjustment *(0.7+0.3*Math.exp(urlQualityAdjustment.getScore())));
     }
 
@@ -132,6 +131,7 @@ public class EdgeUrlDetails {
     public boolean isCookies() {
         return HtmlFeature.hasFeature(features, HtmlFeature.COOKIES);
     }
+    public boolean isUnknown() { return HtmlFeature.hasFeature(features, HtmlFeature.UNKNOWN); }
     public boolean isAds() { return HtmlFeature.hasFeature(features, HtmlFeature.ADVERTISEMENT); }
 
     public boolean isSpecialDomain() {

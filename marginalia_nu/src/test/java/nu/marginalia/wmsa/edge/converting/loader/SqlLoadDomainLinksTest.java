@@ -42,7 +42,7 @@ class SqlLoadDomainLinksTest {
     @Test
     public void loadDomainLinks() {
         var loader = new SqlLoadDomainLinks(dataSource);
-        loader.load(new DomainLink[] { new DomainLink(new EdgeDomain("www.marginalia.nu"), new EdgeDomain("memex.marginalia.nu")) });
+        loader.load(loaderData, new DomainLink[] { new DomainLink(new EdgeDomain("www.marginalia.nu"), new EdgeDomain("memex.marginalia.nu")) });
     }
 
 }

@@ -40,12 +40,20 @@ public class SqlLoadDomainLinks {
         }
     }
 
-    public void load(DomainLink[] links) {
+    public void load(LoaderData data, DomainLink[] links) {
 
         try (var connection = dataSource.getConnection();
+             var nukeExistingLinksForDomain =
+                     connection.prepareStatement("""
+                             DELETE FROM EC_DOMAIN_LINK WHERE SOURCE_DOMAIN_ID=?
+                             """);
              var stmt =
                      connection.prepareCall("CALL INSERT_LINK(?,?)"))
         {
+
+            connection.setAutoCommit(false);
+            nukeExistingLinksForDomain.setInt(1, data.getDomainId(links[0].from()));
+            nukeExistingLinksForDomain.executeUpdate();
 
             for (DomainLink link : links) {
                 stmt.setString(1, link.from().toString());
@@ -60,6 +68,10 @@ public class SqlLoadDomainLinks {
                     logger.warn("load({}) -- bad row count {}", links[rv], ret[rv]);
                 }
             }
+
+            connection.commit();
+            connection.setAutoCommit(true);
+
         }
         catch (SQLException ex) {
             logger.warn("SQL error inserting domain links", ex);

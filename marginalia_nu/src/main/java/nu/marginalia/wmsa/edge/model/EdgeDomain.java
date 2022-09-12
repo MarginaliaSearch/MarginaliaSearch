@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 @AllArgsConstructor
 @Getter @Setter @Builder
-public class EdgeDomain implements WideHashable {
+public class EdgeDomain {
 
     private static final Predicate<String> ipPatternTest = Pattern.compile("[\\d]{1,3}\\.[\\d]{1,3}\\.[\\d]{1,3}\\.[\\d]{1,3}").asMatchPredicate();
     private static final Predicate<String> govListTest = Pattern.compile(".*\\.(ac|co|org|gov|edu|com)\\.[a-z]{2}").asMatchPredicate();
@@ -22,6 +22,8 @@ public class EdgeDomain implements WideHashable {
     @SneakyThrows
     public EdgeDomain(String host) {
         Objects.requireNonNull(host, "domain name must not be null");
+
+        host = host.toLowerCase();
 
         var dot = host.lastIndexOf('.');
 
@@ -99,9 +101,11 @@ public class EdgeDomain implements WideHashable {
         return ret.toString().toLowerCase();
     }
 
-    @Override
-    public long wideHash() {
-        return ((long) Objects.hash(domain, subDomain) << 32) | toString().hashCode();
+
+    public boolean hasSameTopDomain(EdgeDomain other) {
+        if (other == null) return false;
+
+        return domain.equalsIgnoreCase(other.domain);
     }
 
     public boolean equals(final Object o) {

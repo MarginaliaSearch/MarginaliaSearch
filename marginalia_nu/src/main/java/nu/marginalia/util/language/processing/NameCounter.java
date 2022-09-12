@@ -22,6 +22,9 @@ public class NameCounter {
             DocumentSentence sent = dld.sentences[i];
             var keywords = keywordExtractor.getNames(sent);
             for (var span : keywords) {
+                if (span.size() <= 1)
+                    continue;
+
                 var stemmed = sent.constructStemmedWordFromSpan(span);
 
                 counts.merge(stemmed, 1., Double::sum);

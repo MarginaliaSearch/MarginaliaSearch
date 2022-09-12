@@ -87,7 +87,7 @@ public class WmsaHome {
         final Path home = getHomePath();
 
         return new LanguageModels(
-                home.resolve("model/ngrams-generous-emstr.bin"),
+                home.resolve("model/ngrams.bin"),
                 home.resolve("model/tfreq-new-algo3.bin"),
                 home.resolve("model/opennlp-sentence.bin"),
                 home.resolve("model/English.RDR"),
@@ -95,4 +95,8 @@ public class WmsaHome {
                 home.resolve("model/opennlp-tok.bin"));
     }
 
+    private static final boolean debugMode = Boolean.getBoolean("wmsa-debug");
+    public static boolean isDebug() {
+        return debugMode;
+    }
 }

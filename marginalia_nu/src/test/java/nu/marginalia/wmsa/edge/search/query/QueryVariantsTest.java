@@ -3,9 +3,12 @@ package nu.marginalia.wmsa.edge.search.query;
 import nu.marginalia.util.TestLanguageModels;
 import nu.marginalia.util.language.conf.LanguageModels;
 import nu.marginalia.util.language.processing.SentenceExtractor;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
+import nu.marginalia.wmsa.edge.assistant.dict.NGramBloomFilter;
+import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
 
 class QueryVariantsTest {
     QueryVariants variants;
@@ -13,13 +16,14 @@ class QueryVariantsTest {
     SentenceExtractor se;
 
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws IOException {
         LanguageModels lm = TestLanguageModels.getLanguageModels();
 
         se  = new SentenceExtractor(lm);
 
-        var dict = new NGramDict(lm);
-        variants = new QueryVariants(lm, dict, new EnglishDictionary(dict));
+        var dict = new TermFrequencyDict(lm);
+        var ngrams = new NGramBloomFilter(lm);
+        variants = new QueryVariants(lm, dict, ngrams, new EnglishDictionary(dict));
         parser = new QueryParser(new EnglishDictionary(dict), variants);
     }
 

@@ -2,12 +2,12 @@ package nu.marginalia.wmsa.edge.search;
 
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.api.model.ApiSearchResult;
 import nu.marginalia.wmsa.api.model.ApiSearchResults;
+import nu.marginalia.wmsa.client.GsonFactory;
 import nu.marginalia.wmsa.configuration.WebsiteUrl;
 import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.configuration.server.Initialization;
@@ -20,6 +20,7 @@ import nu.marginalia.wmsa.edge.search.command.SearchJsParameter;
 import nu.marginalia.wmsa.edge.search.command.SearchParameters;
 import nu.marginalia.wmsa.edge.search.exceptions.RedirectException;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeUserSearchParameters;
+import nu.marginalia.wmsa.edge.search.svc.EdgeSearchErrorPageService;
 import nu.marginalia.wmsa.resource_store.StaticResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,7 @@ public class EdgeSearchService extends Service {
     private final WebsiteUrl websiteUrl;
     private StaticResources staticResources;
 
+    private final EdgeSearchErrorPageService errorPageService;
     private static final Logger logger = LoggerFactory.getLogger(EdgeSearchService.class);
 
     @SneakyThrows
@@ -53,7 +55,8 @@ public class EdgeSearchService extends Service {
                              CommandEvaluator searchCommandEvaulator,
                              WebsiteUrl websiteUrl,
                              StaticResources staticResources,
-                             IndexCommand indexCommand) {
+                             IndexCommand indexCommand,
+                             EdgeSearchErrorPageService errorPageService) {
         super(ip, port, initialization, metricsServer);
         this.indexClient = indexClient;
 
@@ -61,12 +64,13 @@ public class EdgeSearchService extends Service {
         this.searchCommandEvaulator = searchCommandEvaulator;
         this.websiteUrl = websiteUrl;
         this.staticResources = staticResources;
+        this.errorPageService = errorPageService;
 
         Spark.staticFiles.expireTime(600);
 
         Spark.get("/search", this::pathSearch);
 
-        Gson gson = new GsonBuilder().create();
+        Gson gson = GsonFactory.get();
 
         Spark.get("/api/search", this::apiSearch, gson::toJson);
         Spark.get("/public/search", this::pathSearch);
@@ -79,7 +83,7 @@ public class EdgeSearchService extends Service {
 
         Spark.exception(Exception.class, (e,p,q) -> {
             logger.error("Error during processing", e);
-            serveError(Context.fromRequest(p), q);
+            errorPageService.serveError(Context.fromRequest(p), q);
         });
 
         Spark.awaitInitialization();
@@ -103,26 +107,6 @@ public class EdgeSearchService extends Service {
         return null;
     }
 
-
-    private void serveError(Context ctx, Response rsp) {
-        boolean isIndexUp = indexClient.isAlive();
-
-        try {
-            if (!isIndexUp) {
-                rsp.body("<html><head><title>Error</title><link rel=\"stylesheet\" href=\"https://www.marginalia.nu/style.css\"> <meta http-equiv=\"refresh\" content=\"5\"> </head><body><article><h1>Error</h1><p>Oops! It appears the index server is <span class=\"headline\">offline</span>.</p> <p>The server was probably restarted to bring online some changes. Restarting the index typically takes a few minutes, during which searches can't be served. </p><p>This page will attempt to refresh automatically every few seconds.</p></body></html>");
-            } else if (indexClient.isBlocked(ctx).blockingFirst()) {
-                rsp.body("<html><head><title>Error</title><link rel=\"stylesheet\" href=\"https://www.marginalia.nu/style.css\"> <meta http-equiv=\"refresh\" content=\"5\"> </head><body><article><h1>Error</h1><p>Oops! It appears the index server is <span class=\"headline\">starting up</span>.</p> <p>The server was probably restarted to bring online some changes. Restarting the index typically takes a few minutes, during which searches can't be served. </p><p>This page will attempt to refresh automatically every few seconds.</p></body></html>");
-            }
-            else {
-                rsp.body("<html><head><title>Error</title><link rel=\"stylesheet\" href=\"https://www.marginalia.nu/style.css\"></head><body><article><h1>Error</h1><p>Oops! An unknown error occurred. The index server seems to be up, so I don't know why this is. Please send an email to kontakt@marginalia.nu telling me what you did :-) </p></body></html>");
-            }
-        }
-        catch (Exception ex) {
-            logger.error("Error", ex);
-            rsp.body("<html><head><title>Error</title><link rel=\"stylesheet\" href=\"https://www.marginalia.nu/style.css\"> <meta http-equiv=\"refresh\" content=\"5\"> </head><body><article><h1>Error</h1><p>Oops! It appears the index server is <span class=\"headline\">unresponsive</span>.</p> <p>The server was probably restarted to bring online some changes. Restarting the index typically takes a few minutes, during which searches can't be served. </p><p>This page will attempt to refresh automatically every few seconds.</p></body></html>");
-        }
-
-    }
 
     @SneakyThrows
     private Object apiSearch(Request request, Response response) {
@@ -180,7 +164,7 @@ public class EdgeSearchService extends Service {
         }
         catch (Exception ex) {
             logger.error("Error", ex);
-            serveError(ctx, response);
+            errorPageService.serveError(ctx, response);
         }
 
         return "";

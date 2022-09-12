@@ -105,7 +105,7 @@ public class SearchIndexes {
     }
 
     @Nullable
-    public KeywordLexiconReadOnlyView getDictionaryReader() {
+    public KeywordLexiconReadOnlyView getLexiconReader() {
         return keywordLexiconReadOnlyView;
     }
 
@@ -146,6 +146,7 @@ public class SearchIndexes {
     public EdgeIndexBucket getBucket(int bucketId) {
         return buckets[bucketId];
     }
+
     public boolean isValidBucket(int bucketId) {
         return bucketId >= 0 && bucketId < buckets.length;
     }

@@ -17,6 +17,7 @@ public class DisqualifiedException extends Exception {
         LANGUAGE,
         STATUS,
         QUALITY,
-        ACCEPTABLE_ADS
+        ACCEPTABLE_ADS,
+        FORBIDDEN
     }
 }

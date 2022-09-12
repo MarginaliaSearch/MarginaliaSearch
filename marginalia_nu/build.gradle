@@ -58,7 +58,7 @@ jmhJar {
 }
 dependencies {
     implementation project(':third_party')
-
+    implementation project(':protocol')
 
     implementation 'org.projectlombok:lombok:1.18.24'
     annotationProcessor 'org.projectlombok:lombok:1.18.24'
@@ -157,6 +157,7 @@ dependencies {
 
     jmh 'org.openjdk.jmh:jmh-core:1.35'
     jmh 'org.openjdk.jmh:jmh-generator-annprocess:1.35'
+
 }
 
 configurations {

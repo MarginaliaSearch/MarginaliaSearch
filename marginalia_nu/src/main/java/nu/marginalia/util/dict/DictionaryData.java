@@ -1,18 +1,18 @@
 package nu.marginalia.util.dict;
 
-import nu.marginalia.util.SeekDictionary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
+import java.util.ArrayList;
 
 public class DictionaryData {
 
     private final int DICTIONARY_BANK_SIZE;
     private static final Logger logger = LoggerFactory.getLogger(DictionaryData.class);
 
-    private final SeekDictionary<DictionaryDataBank> banks = SeekDictionary.of(DictionaryDataBank::getSize);
+    private final ArrayList<DictionaryDataBank> banks = new ArrayList(100);
 
     public DictionaryData(int bankSize) {
         DICTIONARY_BANK_SIZE = bankSize;
@@ -20,12 +20,8 @@ public class DictionaryData {
         banks.add(new DictionaryDataBank(0, bankSize));
     }
 
-    public int size() {
-        return banks.end();
-    }
-
     public int add(long key) {
-        var activeBank = banks.last();
+        var activeBank = banks.get(banks.size()-1);
         int rb = activeBank.add(key);
 
         if (rb == -1) {
@@ -42,10 +38,10 @@ public class DictionaryData {
 
 
     public long getKey(int offset) {
-        return banks.bankForOffset(offset).getKey(offset);
+        return banks.get(offset/DICTIONARY_BANK_SIZE).getKey(offset);
     }
     public boolean keyEquals(int offset, long otherKey) {
-        return banks.bankForOffset(offset).keyEquals(offset, otherKey);
+        return banks.get(offset/DICTIONARY_BANK_SIZE).keyEquals(offset, otherKey);
     }
 
     private static class DictionaryDataBank {

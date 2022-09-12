@@ -3,7 +3,7 @@ package nu.marginalia.wmsa.edge.data.dao.task;
 import com.google.inject.ImplementedBy;
 import gnu.trove.set.hash.TIntHashSet;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
-import nu.marginalia.wmsa.edge.model.EdgeId;
+import nu.marginalia.wmsa.edge.model.id.EdgeId;
 
 @ImplementedBy(EdgeDomainBlacklistImpl.class)
 public interface EdgeDomainBlacklist {

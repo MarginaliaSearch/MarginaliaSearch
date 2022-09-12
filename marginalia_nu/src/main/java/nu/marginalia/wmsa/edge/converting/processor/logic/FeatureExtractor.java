@@ -2,7 +2,11 @@ package nu.marginalia.wmsa.edge.converting.processor.logic;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.util.language.processing.model.DocumentLanguageData;
 import nu.marginalia.wmsa.edge.converting.processor.logic.topic.AdblockSimulator;
+import nu.marginalia.wmsa.edge.converting.processor.logic.topic.RecipeDetector;
+import nu.marginalia.wmsa.edge.converting.processor.logic.topic.TextileCraftDetector;
+import nu.marginalia.wmsa.edge.converting.processor.logic.topic.WoodworkingDetector;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDomain;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -35,14 +39,20 @@ public class FeatureExtractor {
             "d31qbv1cthcecs.cloudfront.net",
             "linkedin.com");
 
-    private AdblockSimulator adblockSimulator;
+    private final AdblockSimulator adblockSimulator;
+    private final RecipeDetector recipeDetector;
+    private final TextileCraftDetector textileCraftDetector;
+    private final WoodworkingDetector woodworkingDetector;
 
     @Inject
-    public FeatureExtractor(AdblockSimulator adblockSimulator) {
+    public FeatureExtractor(AdblockSimulator adblockSimulator, RecipeDetector recipeDetector, TextileCraftDetector textileCraftDetector, WoodworkingDetector woodworkingDetector) {
         this.adblockSimulator = adblockSimulator;
+        this.recipeDetector = recipeDetector;
+        this.textileCraftDetector = textileCraftDetector;
+        this.woodworkingDetector = woodworkingDetector;
     }
 
-    public Set<HtmlFeature> getFeatures(CrawledDomain domain, Document doc) {
+    public Set<HtmlFeature> getFeatures(CrawledDomain domain, Document doc, DocumentLanguageData dld) {
         final Set<HtmlFeature> features = new HashSet<>();
 
         final Elements scriptTags = doc.getElementsByTag("script");
@@ -81,9 +91,14 @@ public class FeatureExtractor {
             }
         }
 
-        if (!domain.cookies.isEmpty()) {
+        if (!domain.cookies.isEmpty())
             features.add(HtmlFeature.COOKIES);
-        }
+
+        if (recipeDetector.testP(dld) > 0.5)
+            features.add(HtmlFeature.CATEGORY_FOOD);
+        // these should be mutually exclusive
+        else if (woodworkingDetector.testP(dld) > 0.3 || textileCraftDetector.testP(dld) > 0.3)
+            features.add(HtmlFeature.CATEGORY_CRAFTS);
 
         return features;
     }

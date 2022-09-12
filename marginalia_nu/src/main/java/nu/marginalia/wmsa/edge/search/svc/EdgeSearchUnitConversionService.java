@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.edge.search;
+package nu.marginalia.wmsa.edge.search.svc;
 
 import nu.marginalia.wmsa.client.exception.RemoteException;
 import nu.marginalia.wmsa.configuration.server.Context;
@@ -9,15 +9,13 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.CheckForNull;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 @Singleton
-public class UnitConversion {
+public class EdgeSearchUnitConversionService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Pattern conversionPattern = Pattern.compile("((\\d+|\\s+|[.()\\-^+%*/]|log[^a-z]|log2[^a-z]|sqrt[^a-z]|log10|cos[^a-z]|sin[^a-z]|tan[^a-z]|log2|pi[^a-z]|e[^a-z]|2pi[^a-z])+)\\s*([a-zA-Z][a-zA-Z^.0-9]*\\s?[a-zA-Z^.0-9]*)\\s+in\\s+([a-zA-Z^.0-9]+\\s?[a-zA-Z^.0-9]*)");
     private final Predicate<String> evalPredicate = Pattern.compile("(\\d+|\\s+|[.()\\-^+%*/]|log|log2|sqrt|log10|cos|sin|tan|pi|e|2pi)+").asMatchPredicate();
@@ -25,7 +23,7 @@ public class UnitConversion {
     private final AssistantClient assistantClient;
 
     @Inject
-    public UnitConversion(AssistantClient assistantClient) {
+    public EdgeSearchUnitConversionService(AssistantClient assistantClient) {
         this.assistantClient = assistantClient;
     }
 

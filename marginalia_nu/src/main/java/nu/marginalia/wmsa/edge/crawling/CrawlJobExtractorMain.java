@@ -4,8 +4,8 @@ import com.github.luben.zstd.ZstdOutputStream;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.wmsa.client.GsonFactory;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
 import nu.marginalia.wmsa.edge.crawling.model.CrawlingSpecification;
 import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklistImpl;
@@ -84,7 +84,7 @@ public class CrawlJobExtractorMain {
         Driver driver = new Driver();
         var outFile = Path.of(args[0]);
 
-        Gson gson = new GsonBuilder().create();
+        Gson gson = GsonFactory.get();
         String[] targetDomains = Arrays.stream(args).skip(1).toArray(String[]::new);
 
 
@@ -103,7 +103,7 @@ public class CrawlJobExtractorMain {
     }
 
     public static void writeSpec(Path outFile, String domain, List<String> urls) throws IOException {
-        Gson gson = new GsonBuilder().create();
+        Gson gson = GsonFactory.get();
 
         try (var out = new PrintWriter(new ZstdOutputStream(new BufferedOutputStream(new FileOutputStream(outFile.toFile()))))) {
             var job = new CrawlingSpecification();

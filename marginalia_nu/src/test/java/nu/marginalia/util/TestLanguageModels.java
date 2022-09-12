@@ -1,7 +1,7 @@
 package nu.marginalia.util;
 
-import nu.marginalia.wmsa.configuration.WmsaHome;
 import nu.marginalia.util.language.conf.LanguageModels;
+import nu.marginalia.wmsa.configuration.WmsaHome;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,7 +26,7 @@ public class TestLanguageModels {
         var languageModelsHome = getLanguageModelsPath();
 
         return new LanguageModels(
-                languageModelsHome.resolve("ngrams-generous-emstr.bin"),
+                languageModelsHome.resolve("ngrams.bin"),
                 languageModelsHome.resolve("tfreq-generous-emstr.bin"),
                 languageModelsHome.resolve("opennlp-sentence.bin"),
                 languageModelsHome.resolve("English.RDR"),

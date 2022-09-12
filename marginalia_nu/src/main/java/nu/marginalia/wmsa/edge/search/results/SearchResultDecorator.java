@@ -3,21 +3,17 @@ package nu.marginalia.wmsa.edge.search.results;
 import com.google.inject.Inject;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import io.reactivex.rxjava3.annotations.NonNull;
 import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
+import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
+import nu.marginalia.wmsa.edge.model.id.EdgeIdList;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchResultItem;
 import nu.marginalia.wmsa.edge.model.search.EdgeUrlDetails;
-import nu.marginalia.wmsa.edge.search.results.model.TieredSearchResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.TreeMap;
-import java.util.stream.Collectors;
 
 public class SearchResultDecorator {
     private final EdgeDataStoreDao edgeDataStoreDao;
@@ -30,42 +26,12 @@ public class SearchResultDecorator {
         this.valuator = valuator;
     }
 
-    @NonNull
-    public List<TieredSearchResult> decorateSearchResults(List<EdgeSearchResultItem> items, IndexBlock block, UrlDeduplicator deduplicator) {
-        List<TieredSearchResult> results = new ArrayList<>();
-
-        int dedups = 0;
-        for (var details : getAllUrlDetails(items, block)) {
-            if (deduplicator.filter(details)) {
-                results.add(new TieredSearchResult(details.queryLength, getEffectiveBlock(details), details));
-            }
-            else {
-                dedups++;
-            }
-        }
-        if (dedups > 0) {
-            logger.debug("dedups: {}", dedups);
-        }
-
-        return results;
-    }
-
-
-    private static final TreeMap<Double, IndexBlock> blocksByOrder = new TreeMap<>();
-    static {
-        for (var block : IndexBlock.values()) {
-            blocksByOrder.put((double) block.sortOrder, block);
-        }
-    }
-
-    private IndexBlock getEffectiveBlock(EdgeUrlDetails details) {
-        return blocksByOrder.floorEntry(details.termScore).getValue();
-    }
-
-    private List<EdgeUrlDetails> getAllUrlDetails(List<EdgeSearchResultItem> resultItems, IndexBlock block) {
+    public List<EdgeUrlDetails> getAllUrlDetails(List<EdgeSearchResultItem> resultItems) {
         TIntObjectHashMap<EdgeUrlDetails> detailsById = new TIntObjectHashMap<>(resultItems.size());
 
-        var idList = resultItems.stream().map(EdgeSearchResultItem::getUrl).collect(Collectors.toList());
+        EdgeIdList<EdgeUrl> idList = resultItems.stream()
+                                                .mapToInt(EdgeSearchResultItem::getUrlIdInt)
+                                                .collect(EdgeIdList::new, EdgeIdList::add, EdgeIdList::addAll);
 
         List<EdgeUrlDetails> ret = edgeDataStoreDao.getUrlDetailsMulti(idList);
 
@@ -78,8 +44,8 @@ public class SearchResultDecorator {
         TIntArrayList missedIds = new TIntArrayList();
         for (var resultItem : resultItems) {
 
-            var did = resultItem.getDomain().id();
-            var uid = resultItem.getUrl().id();
+            var rankingId = resultItem.getRanking();
+            var uid = resultItem.getUrlId().id();
 
             var details = detailsById.get(uid);
             if (details == null) {
@@ -88,26 +54,39 @@ public class SearchResultDecorator {
             }
 
             if (details.rankingId == Integer.MAX_VALUE) {
-                details.rankingId = did;
+                details.rankingId = rankingId;
             }
 
-            details.termScore = calculateTermScore(block, resultItem, details);
-            details.queryLength = resultItem.queryLength;
+            details.termScore = calculateTermScore(resultItem, details);
 
             logger.debug("{} -> {}", details.url, details.termScore);
 
             retList.add(details);
         }
         if (!missedIds.isEmpty()) {
-            logger.warn("Could not look up documents: {}", missedIds.toArray());
+            logger.debug("Could not look up documents: {}", missedIds.toArray());
         }
-        retList.sort(Comparator.comparing(EdgeUrlDetails::getTermScore));
+
         return retList;
     }
 
-    private double calculateTermScore(IndexBlock block, EdgeSearchResultItem resultItem, EdgeUrlDetails details) {
-        return valuator.evaluateTerms(resultItem.scores, block, details.words) / Math.sqrt(1 + resultItem.queryLength)
-                + ((details.domainState == EdgeDomainIndexingState.SPECIAL) ? 1.25 : 0);
+    private double calculateTermScore(EdgeSearchResultItem resultItem, EdgeUrlDetails details) {
+
+        final double statePenalty = (details.domainState == EdgeDomainIndexingState.SPECIAL) ? 1.25 : 0;
+
+        final double value =  valuator.evaluateTerms(resultItem.scores, details.words, details.title.length());
+
+//        System.out.println("---");
+//        System.out.println(details.getUrl());
+//        System.out.println(details.getTitle());
+//        System.out.println(details.words);
+//        for (var score : resultItem.scores) {
+//            System.out.println(score);
+//        }
+//        System.out.println(value);
+
+
+        return value + statePenalty;
     }
 
 }

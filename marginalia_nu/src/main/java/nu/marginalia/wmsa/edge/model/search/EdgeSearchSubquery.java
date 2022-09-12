@@ -17,22 +17,28 @@ public class EdgeSearchSubquery {
     public final List<String> searchTermsExclude;
     public final IndexBlock block;
 
-    private final int termSize;
+    private double value = 0;
+
     public EdgeSearchSubquery(List<String> searchTermsInclude, List<String> searchTermsExclude, IndexBlock block) {
         this.searchTermsInclude = searchTermsInclude;
         this.searchTermsExclude = searchTermsExclude;
         this.block = block;
-        this.termSize = (int) searchTermsInclude.stream().flatMapToInt(String::chars).filter(i -> '_'==i).count();
     }
 
     public EdgeSearchSubquery withBlock(IndexBlock block) {
         return new EdgeSearchSubquery(
                 new CopyOnWriteArrayList<>(searchTermsInclude),
                 new CopyOnWriteArrayList<>(searchTermsExclude),
-                block);
+                block).setValue(value);
     }
 
-    public int termSize() {
-        return termSize;
+    public EdgeSearchSubquery setValue(double value) {
+        if (Double.isInfinite(value) || Double.isNaN(value)) {
+            this.value = Double.MAX_VALUE;
+        } else {
+            this.value = value;
+        }
+        return this;
     }
+
 }

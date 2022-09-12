@@ -2,36 +2,24 @@ package nu.marginalia.wmsa.edge.search;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import io.prometheus.client.Summary;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.edge.assistant.client.AssistantClient;
 import nu.marginalia.wmsa.edge.assistant.dict.WikiArticles;
 import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
-import nu.marginalia.wmsa.edge.index.client.EdgeIndexClient;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
-import nu.marginalia.wmsa.edge.model.EdgeId;
-import nu.marginalia.wmsa.edge.model.EdgeUrl;
-import nu.marginalia.wmsa.edge.model.search.EdgePageScoreAdjustment;
-import nu.marginalia.wmsa.edge.model.search.EdgeSearchSpecification;
-import nu.marginalia.wmsa.edge.model.search.EdgeSearchSubquery;
 import nu.marginalia.wmsa.edge.model.search.EdgeUrlDetails;
-import nu.marginalia.wmsa.edge.model.search.domain.EdgeDomainSearchSpecification;
 import nu.marginalia.wmsa.edge.search.model.BrowseResult;
-import nu.marginalia.wmsa.edge.search.model.DecoratedSearchResultSet;
 import nu.marginalia.wmsa.edge.search.model.DecoratedSearchResults;
 import nu.marginalia.wmsa.edge.search.query.QueryFactory;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeSearchQuery;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeUserSearchParameters;
-import nu.marginalia.wmsa.edge.search.results.SearchResultDecorator;
-import nu.marginalia.wmsa.edge.search.results.SearchResultValuator;
-import nu.marginalia.wmsa.edge.search.results.UrlDeduplicator;
-import nu.marginalia.wmsa.edge.search.results.model.AccumulatedQueryResults;
-import nu.marginalia.wmsa.encyclopedia.EncyclopediaClient;
+import nu.marginalia.wmsa.edge.search.svc.EdgeSearchDomainSearchService;
+import nu.marginalia.wmsa.edge.search.svc.EdgeSearchQueryIndexService;
+import nu.marginalia.wmsa.edge.search.svc.EdgeSearchUnitConversionService;
+import nu.marginalia.wmsa.edge.search.svc.EdgeSearchWikiArticlesService;
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,117 +34,82 @@ public class EdgeSearchOperator {
 
     private static final Logger logger = LoggerFactory.getLogger(EdgeSearchOperator.class);
     private final AssistantClient assistantClient;
-    private final EncyclopediaClient encyclopediaClient;
     private final EdgeDataStoreDao edgeDataStoreDao;
-    private final EdgeIndexClient indexClient;
     private final QueryFactory queryFactory;
-    private final SearchResultDecorator resultDecorator;
-    private final SearchResultValuator valuator;
-    private final Comparator<EdgeUrlDetails> resultListComparator;
 
-    private static final Summary wmsa_search_index_api_time = Summary.build().name("wmsa_search_index_api_time").help("-").register();
-    private static final Summary wmsa_search_result_decoration_time = Summary.build().name("wmsa_search_result_decoration_time").help("-").register();
+    private final EdgeSearchQueryIndexService searchQueryService;
+    private final EdgeSearchDomainSearchService domainSearchService;
+    private final EdgeSearchWikiArticlesService wikiArticlesService;
+    private final EdgeSearchUnitConversionService edgeSearchUnitConversionService;
+
 
     @Inject
     public EdgeSearchOperator(AssistantClient assistantClient,
-                              EncyclopediaClient encyclopediaClient,
                               EdgeDataStoreDao edgeDataStoreDao,
-                              EdgeIndexClient indexClient,
                               QueryFactory queryFactory,
-                              SearchResultDecorator resultDecorator,
-                              SearchResultValuator valuator
-                              ) {
+
+                              EdgeSearchQueryIndexService searchQueryService,
+                              EdgeSearchDomainSearchService domainSearchService,
+                              EdgeSearchWikiArticlesService wikiArticlesService,
+                              EdgeSearchUnitConversionService edgeSearchUnitConversionService) {
 
         this.assistantClient = assistantClient;
-        this.encyclopediaClient = encyclopediaClient;
         this.edgeDataStoreDao = edgeDataStoreDao;
-        this.indexClient = indexClient;
         this.queryFactory = queryFactory;
-        this.resultDecorator = resultDecorator;
-        this.valuator = valuator;
 
-        Comparator<EdgeUrlDetails> c = Comparator.comparing(ud -> Math.round(10*(ud.getTermScore() - ud.rankingIdAdjustment())));
-        resultListComparator = c.thenComparing(EdgeUrlDetails::getRanking)
-                                .thenComparing(EdgeUrlDetails::getId);
+        this.searchQueryService = searchQueryService;
+        this.domainSearchService = domainSearchService;
+        this.wikiArticlesService = wikiArticlesService;
+        this.edgeSearchUnitConversionService = edgeSearchUnitConversionService;
     }
 
     public List<EdgeUrlDetails> doApiSearch(Context ctx,
                                            EdgeUserSearchParameters params) {
 
 
-        var processedQuery = queryFactory.createQuery(params);
+        EdgeSearchQuery processedQuery = queryFactory.createQuery(params);
 
         logger.info("Human terms (API): {}", Strings.join(processedQuery.searchTermsHuman, ','));
 
-        DecoratedSearchResultSet queryResults = performQuery(ctx, processedQuery);
-
-        return queryResults.resultSet;
+        return searchQueryService.performQuery(ctx, processedQuery);
     }
 
-    public DecoratedSearchResults doSearch(Context ctx, EdgeUserSearchParameters params, @Nullable Future<String> eval) {
-        Observable<WikiArticles> definitions = getWikiArticle(ctx, params.humanQuery());
+    public DecoratedSearchResults doSearch(Context ctx, EdgeUserSearchParameters params) {
+
+        Future<WikiArticles> definitions = wikiArticlesService.getWikiArticle(ctx, params.humanQuery());
+        Future<String> eval = edgeSearchUnitConversionService.tryEval(ctx, params.humanQuery());
         EdgeSearchQuery processedQuery = queryFactory.createQuery(params);
 
         logger.info("Human terms: {}", Strings.join(processedQuery.searchTermsHuman, ','));
 
-        DecoratedSearchResultSet queryResults = performQuery(ctx, processedQuery);
+        List<EdgeUrlDetails> queryResults = searchQueryService.performQuery(ctx, processedQuery);
+        List<BrowseResult> domainResults = domainSearchService.getDomainResults(ctx, processedQuery.specs);
 
-        String evalResult = getEvalResult(eval);
+        String evalResult = getFutureOrDefault(eval, "");
+        WikiArticles wikiArticles = getFutureOrDefault(definitions, new WikiArticles());
 
-        List<BrowseResult> domainResults = getDomainResults(ctx, processedQuery.specs, queryResults);
-
-        return new DecoratedSearchResults(params,
-                getProblems(ctx, params.humanQuery(), evalResult, queryResults, processedQuery),
-                evalResult,
-                definitions.onErrorReturn((e) -> new WikiArticles()).blockingFirst(),
-                queryResults.resultSet,
-                domainResults,
-                processedQuery.domain,
-                getDomainId(processedQuery.domain));
+        return DecoratedSearchResults.builder()
+                .params(params)
+                .problems(getProblems(ctx, evalResult, queryResults, processedQuery))
+                .evalResult(evalResult)
+                .wiki(wikiArticles)
+                .results(queryResults)
+                .domainResults(domainResults)
+                .focusDomain(processedQuery.domain)
+                .focusDomainId(getDomainId(processedQuery.domain))
+                .build();
     }
 
-    private List<BrowseResult> getDomainResults(Context ctx, EdgeSearchSpecification specs, DecoratedSearchResultSet queryResults) {
-
-        Set<EdgeDomain> resultDomains = queryResults.resultSet.stream().map(rs -> rs.url.domain).collect(Collectors.toSet());
-
-        List<String> keywords = specs.subqueries.stream()
-                .filter(sq -> sq.searchTermsExclude.isEmpty() && sq.searchTermsInclude.size() == 1)
-                .map(sq -> sq.searchTermsInclude.get(0))
-                .distinct()
-                .toList();
-
-        List<EdgeDomainSearchSpecification> requests = new ArrayList<>(keywords.size() * specs.buckets.size());
-
-        for (var keyword : keywords) {
-            for (var bucket : specs.buckets) {
-                requests.add(new EdgeDomainSearchSpecification(bucket, IndexBlock.Link, keyword,
-                        1_000_000, 3, 25));
-            }
-        }
-
-        if (requests.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        Set<EdgeId<EdgeUrl>> results = new LinkedHashSet<>();
-
-        for (var result : indexClient.queryDomains(ctx, requests)) {
-            results.addAll(result.getResults());
-        }
-
-        return edgeDataStoreDao.getBrowseResultFromUrlIds(new ArrayList<>(results));
-    }
-
-    private String getEvalResult(@Nullable Future<String> eval) {
-        if (eval == null || eval.isCancelled())  {
-            return "";
+    private <T> T getFutureOrDefault(@Nullable Future<T> fut, T defaultValue) {
+        if (fut == null || fut.isCancelled())  {
+            return defaultValue;
         }
         try {
-            return eval.get(50, TimeUnit.MILLISECONDS);
+            return fut.get(50, TimeUnit.MILLISECONDS);
         }
         catch (Exception ex) {
             logger.warn("Error fetching eval result", ex);
-            return "";
+            return defaultValue;
         }
     }
 
@@ -173,43 +126,7 @@ public class EdgeSearchOperator {
         return domainId;
     }
 
-    public DecoratedSearchResultSet performDumbQuery(Context ctx, EdgeSearchProfile profile, IndexBlock block, int limitPerDomain, int limitTotal, String... termsInclude) {
-        List<EdgeSearchSubquery> sqs = new ArrayList<>();
-
-        sqs.add(new EdgeSearchSubquery(Arrays.asList(termsInclude), Collections.emptyList(), block));
-
-        EdgeSearchSpecification specs = new EdgeSearchSpecification(profile.buckets, sqs, 100, limitPerDomain, limitTotal, "", EdgeSearchProfile.YOLO.equals(profile), false);
-
-        return performQuery(ctx, new EdgeSearchQuery(specs));
-    }
-
-    private DecoratedSearchResultSet performQuery(Context ctx, EdgeSearchQuery processedQuery) {
-
-        AccumulatedQueryResults queryResults = new AccumulatedQueryResults();
-        UrlDeduplicator deduplicator = new UrlDeduplicator(processedQuery.specs.limitByDomain);
-        List<EdgeUrlDetails> resultList = new ArrayList<>(queryResults.size());
-
-        wmsa_search_index_api_time.time(() -> fetchResultsSimple(ctx, processedQuery, queryResults, deduplicator));
-
-        wmsa_search_result_decoration_time.time(() -> {
-            for (var details : queryResults.results) {
-                if (details.getUrlQuality() < -100) {
-                    continue;
-                }
-                var scoreAdjustment = adjustScoreBasedOnQuery(details, processedQuery.specs);
-                details = details.withUrlQualityAdjustment(scoreAdjustment);
-
-                resultList.add(details);
-            }
-
-            resultList.sort(resultListComparator);
-        }
-        );
-
-        return new DecoratedSearchResultSet(resultList);
-    }
-
-    private List<String> getProblems(Context ctx, String humanQuery, String evalResult, DecoratedSearchResultSet queryResults, EdgeSearchQuery processedQuery) {
+    private List<String> getProblems(Context ctx, String evalResult, List<EdgeUrlDetails> queryResults, EdgeSearchQuery processedQuery) {
         final List<String> problems = new ArrayList<>(processedQuery.problems);
         boolean siteSearch = processedQuery.domain != null;
 
@@ -222,91 +139,16 @@ public class EdgeSearchOperator {
                 problems.add("Try rephrasing the query, changing the word order or using synonyms to get different results. <a href=\"https://memex.marginalia.nu/projects/edge/search-tips.gmi\">Tips</a>.");
             }
 
-            if (humanQuery.toLowerCase().matches(".*(definition|define).*")) {
+            Set<String> representativeKeywords = processedQuery.getAllKeywords();
+            if (representativeKeywords.size()>1 && (representativeKeywords.contains("definition") || representativeKeywords.contains("define") || representativeKeywords.contains("meaning")))
+            {
                 problems.add("Tip: Try using a query that looks like <tt>define:word</tt> if you want a dictionary definition");
             }
-        }
-
-        if (humanQuery.contains("/")) {
-            problems.clear();
-            problems.add("<b>There is a known bug with search terms that contain a slash that causes them to be marked as unsupported; as a workaround, try using a dash instead. AC-DC will work, AC/DC does not.</b>");
         }
 
         return problems;
     }
 
-
-    private EdgePageScoreAdjustment adjustScoreBasedOnQuery(EdgeUrlDetails p, EdgeSearchSpecification specs) {
-        String titleLC = p.title == null ? "" : p.title.toLowerCase();
-        String descLC = p.description == null ? "" : p.description.toLowerCase();
-        String urlLC = p.url == null ? "" : p.url.path.toLowerCase();
-        String domainLC = p.url == null ? "" : p.url.domain.toString().toLowerCase();
-
-        String[] searchTermsLC = specs.subqueries.get(0).searchTermsInclude.stream()
-                .map(String::toLowerCase)
-                .flatMap(s -> Arrays.stream(s.split("_")))
-                .toArray(String[]::new);
-        int termCount = searchTermsLC.length;
-
-        String[] titleParts = titleLC.split("[:!|./]|(\\s-|-\\s)|\\s{2,}");
-        double titleHitsAdj = 0.;
-        for (String titlePart : titleParts) {
-            titleHitsAdj += Arrays.stream(searchTermsLC).filter(titlePart::contains).mapToInt(String::length).sum()
-                    / (double) Math.max(1, titlePart.trim().length());
-        }
-
-        double titleFullHit = 0.;
-        if (termCount > 1 && titleLC.contains(specs.humanQuery.replaceAll("\"", "").toLowerCase())) {
-            titleFullHit = termCount;
-        }
-        long descHits = Arrays.stream(searchTermsLC).filter(descLC::contains).count();
-        long urlHits = Arrays.stream(searchTermsLC).filter(urlLC::contains).count();
-        long domainHits = Arrays.stream(searchTermsLC).filter(domainLC::contains).count();
-
-        double descHitsAdj = 0.;
-        for (String word : descLC.split("[^\\w]+")) {
-            descHitsAdj += Arrays.stream(searchTermsLC)
-                    .filter(term -> term.length() > word.length())
-                    .filter(term -> term.contains(word))
-                    .mapToDouble(term -> word.length() / (double) term.length())
-                    .sum();
-        }
-
-        return EdgePageScoreAdjustment.builder()
-                .descAdj(Math.min(termCount, descHits) / (10. * termCount))
-                .descHitsAdj(descHitsAdj / 10.)
-                .domainAdj(2 * Math.min(termCount, domainHits) / (double) termCount)
-                .urlAdj(Math.min(termCount, urlHits) / (10. * termCount))
-                .titleAdj(5 * titleHitsAdj / (Math.max(1, titleParts.length) * Math.log(titleLC.length() + 2)))
-                .titleFullHit(titleFullHit)
-                .build();
-    }
-
-    @NotNull
-    private Observable<WikiArticles> getWikiArticle(Context ctx, String humanQuery) {
-        return encyclopediaClient
-                .encyclopediaLookup(ctx,
-                        humanQuery.replaceAll("\\s+", "_")
-                                .replaceAll("\"", "")
-                )
-                .onErrorReturn(e -> new WikiArticles())
-                .subscribeOn(Schedulers.io());
-    }
-
-    private void fetchResultsSimple(Context ctx, EdgeSearchQuery processedQuery, AccumulatedQueryResults queryResults, UrlDeduplicator deduplicator) {
-        var resultSet = indexClient.query(ctx, processedQuery.specs);
-
-        logger.debug("{}", resultSet);
-
-        for (IndexBlock block : indexBlockSearchOrder) {
-            for (var results : resultSet.resultsList.getOrDefault(block, Collections.emptyList())) {
-                var items = results.getAllItems();
-                queryResults.append(100, resultDecorator.decorateSearchResults(items, block, deduplicator));
-            }
-        }
-    }
-
-    static final IndexBlock[] indexBlockSearchOrder = Arrays.stream(IndexBlock.values()).sorted(Comparator.comparing(i -> i.sortOrder)).toArray(IndexBlock[]::new);
 
     private Iterable<String> spellCheckTerms(Context ctx, EdgeSearchQuery disjointedQuery) {
         return Observable.fromIterable(disjointedQuery.searchTermsHuman)

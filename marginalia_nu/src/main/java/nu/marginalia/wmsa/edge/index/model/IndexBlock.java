@@ -1,23 +1,36 @@
 package nu.marginalia.wmsa.edge.index.model;
 
 public enum IndexBlock {
-    TitleKeywords(0, 0),
-    Title(1, 1),
-    Link(2, 1.25),
-    Top(3, 2),
-    Middle(4, 3),
-    Low(5, 4),
-    Words(6, 6),
-    Meta(7, 7),
-    PositionWords(8, 4.5),
-    NamesWords(9, 5),
-    Artifacts(10, 10),
-    Topic(11, 0.5);
+    TitleKeywords(IndexBlockType.QUALITY_SIGNAL, 0, 0),
+    Title(IndexBlockType.QUALITY_SIGNAL, 1, 1),
 
+    Link(IndexBlockType.QUALITY_SIGNAL, 2, 1.15),
+
+    Subjects(IndexBlockType.QUALITY_SIGNAL, 3, 1.0),
+    NamesWords(IndexBlockType.QUALITY_SIGNAL, 4, 3.0),
+
+    Artifacts(IndexBlockType.PAGE_DATA, 5, 10),
+    Meta(IndexBlockType.PAGE_DATA, 6, 7),
+
+    Tfidf_Top(IndexBlockType.TF_IDF, 7, 1.5),
+    Tfidf_Middle(IndexBlockType.TF_IDF, 8, 2),
+    Tfidf_Lower(IndexBlockType.TF_IDF, 9, 3.5),
+
+    Words_1(IndexBlockType.PAGE_DATA, 10, 2.0),
+    Words_2(IndexBlockType.PAGE_DATA,11, 3.5),
+    Words_4(IndexBlockType.PAGE_DATA,12, 4.0),
+    Words_8(IndexBlockType.PAGE_DATA,13, 4.5),
+    Words_16Plus(IndexBlockType.PAGE_DATA,14, 7.0),
+
+    Site(IndexBlockType.QUALITY_SIGNAL, 15, 1.2)
+    ;
+
+    public final IndexBlockType type;
     public final int id;
     public final double sortOrder;
 
-    IndexBlock(int id, double sortOrder) {
+    IndexBlock(IndexBlockType type, int id, double sortOrder) {
+        this.type = type;
         this.sortOrder = sortOrder;
         this.id = id;
     }
@@ -31,3 +44,5 @@ public enum IndexBlock {
         throw new IllegalArgumentException("Bad block id");
     }
 }
+
+

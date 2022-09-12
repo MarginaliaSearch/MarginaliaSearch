@@ -1,13 +1,13 @@
 package nu.marginalia.wmsa.edge.integration.wikipedia;
 
 import lombok.SneakyThrows;
+import nu.marginalia.util.ParallelPipe;
 import nu.marginalia.util.TestLanguageModels;
-import nu.marginalia.wmsa.edge.assistant.dict.NGramDict;
 import nu.marginalia.util.language.DocumentDebugger;
 import nu.marginalia.util.language.conf.LanguageModels;
 import nu.marginalia.util.language.processing.DocumentKeywordExtractor;
 import nu.marginalia.util.language.processing.SentenceExtractor;
-import nu.marginalia.util.ParallelPipe;
+import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import nu.marginalia.wmsa.edge.integration.model.BasicDocumentData;
 import nu.marginalia.wmsa.edge.integration.wikipedia.model.WikipediaArticle;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
@@ -21,7 +21,7 @@ public class WikipediaTest {
 
     @Test @SneakyThrows
     public void test() {
-        var documentKeywordExtractor = new DocumentKeywordExtractor(new NGramDict(lm));
+        var documentKeywordExtractor = new DocumentKeywordExtractor(new TermFrequencyDict(lm));
         ThreadLocal<WikipediaProcessor> processor = ThreadLocal.withInitial(() -> {
             return new WikipediaProcessor(new SentenceExtractor(lm), documentKeywordExtractor);
         });
@@ -48,7 +48,7 @@ public class WikipediaTest {
 
     @Test @SneakyThrows
     public void test2() {
-        var documentKeywordExtractor = new DocumentKeywordExtractor(new NGramDict(lm));
+        var documentKeywordExtractor = new DocumentKeywordExtractor(new TermFrequencyDict(lm));
         var debugger = new DocumentDebugger(lm);
 
         ThreadLocal<WikipediaProcessor> processor = ThreadLocal.withInitial(() -> {

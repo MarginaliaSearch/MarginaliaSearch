@@ -70,11 +70,22 @@ public class DocumentProcessor {
         this.summaryExtractor = summaryExtractor;
     }
 
+    public ProcessedDocument makeDisqualifiedStub(CrawledDocument crawledDocument) {
+        ProcessedDocument ret = new ProcessedDocument();
+
+        try {
+            ret.state = EdgeUrlState.DISQUALIFIED;
+            ret.url = getDocumentUrl(crawledDocument);
+        }
+        catch (Exception ex) {}
+
+        return ret;
+    }
     public ProcessedDocument process(CrawledDocument crawledDocument, CrawledDomain crawledDomain) {
         ProcessedDocument ret = new ProcessedDocument();
 
         try {
-            ret.url = new EdgeUrl(crawledDocument.url);
+            ret.url = getDocumentUrl(crawledDocument);
             ret.state = crawlerStatusToUrlState(crawledDocument.crawlerStatus, crawledDocument.httpStatus);
 
             if (ret.state == EdgeUrlState.OK) {
@@ -85,10 +96,6 @@ public class DocumentProcessor {
 
                 if (isAcceptedContentType(crawledDocument)) {
                     var detailsWords = createDetails(crawledDomain, crawledDocument);
-
-                    if (detailsWords.details().quality < minDocumentQuality) {
-                        throw new DisqualifiedException(DisqualificationReason.QUALITY);
-                    }
 
                     ret.details = detailsWords.details();
                     ret.words = detailsWords.words();
@@ -103,15 +110,29 @@ public class DocumentProcessor {
         }
         catch (DisqualifiedException ex) {
             ret.state = EdgeUrlState.DISQUALIFIED;
+            ret.stateReason = ex.reason.toString();
             logger.debug("Disqualified {}: {}", ret.url, ex.reason);
         }
         catch (Exception ex) {
             ret.state = EdgeUrlState.DISQUALIFIED;
-            logger.info("Failed to convert " + ret.url, ex);
+            logger.info("Failed to convert " + crawledDocument.url, ex);
             ex.printStackTrace();
         }
 
         return ret;
+    }
+
+    private EdgeUrl getDocumentUrl(CrawledDocument crawledDocument)
+            throws URISyntaxException
+    {
+        if (crawledDocument.canonicalUrl != null) {
+            try {
+                return new EdgeUrl(crawledDocument.canonicalUrl);
+            }
+            catch (URISyntaxException ex) { /* fallthrough */ }
+        }
+
+        return new EdgeUrl(crawledDocument.url);
     }
 
     public static boolean isAcceptedContentType(CrawledDocument crawledDocument) {
@@ -141,27 +162,44 @@ public class DocumentProcessor {
     private DetailsWithWords createDetails(CrawledDomain crawledDomain, CrawledDocument crawledDocument)
             throws DisqualifiedException, URISyntaxException {
 
-        var doc = Jsoup.parse(crawledDocument.documentBody);
+        Document doc = Jsoup.parse(crawledDocument.documentBody);
 
         if (AcceptableAds.hasAcceptableAdsTag(doc)) {
             throw new DisqualifiedException(DisqualificationReason.ACCEPTABLE_ADS);
         }
+        if (doc.select("meta[name=robots]").attr("content").contains("noindex")) {
+            throw new DisqualifiedException(DisqualificationReason.FORBIDDEN);
+        }
 
-        var dld = sentenceExtractor.extractSentences(doc.clone());
+        Document prunedDoc = doc.clone();
+        prunedDoc.body().filter(new DomPruningFilter(0.5));
+
+        var dld = sentenceExtractor.extractSentences(prunedDoc);
 
         checkDocumentLanguage(dld);
 
         var ret = new ProcessedDocumentDetails();
 
-        ret.description = getDescription(doc);
         ret.length = getLength(doc);
         ret.standard = getHtmlStandard(doc);
         ret.title = titleExtractor.getTitleAbbreviated(doc, dld, crawledDocument.url);
-        ret.features = featureExtractor.getFeatures(crawledDomain, doc);
+
         ret.quality = documentValuator.getQuality(ret.standard, doc, dld);
         ret.hashCode = HashCode.fromString(crawledDocument.documentBodyHash).asLong();
 
-        var words = getWords(dld);
+        final boolean doSimpleProcessing = ret.quality < minDocumentQuality;
+
+        EdgePageWordSet words;
+        if (doSimpleProcessing) {
+            ret.features = Set.of(HtmlFeature.UNKNOWN);
+            words = keywordExtractor.extractKeywordsMinimal(dld);
+            ret.description = "";
+        }
+        else {
+            ret.features = featureExtractor.getFeatures(crawledDomain, doc, dld);
+            words = keywordExtractor.extractKeywords(dld);
+            ret.description = getDescription(doc);
+        }
 
         var url = new EdgeUrl(crawledDocument.url);
         addMetaWords(ret, url, crawledDomain, words);
@@ -192,7 +230,6 @@ public class DocumentProcessor {
         ret.features.stream().map(HtmlFeature::getKeyword).forEach(tagWords::add);
 
         words.append(IndexBlock.Meta, tagWords);
-        words.append(IndexBlock.Words, tagWords);
     }
 
     private void getLinks(EdgeUrl baseUrl, ProcessedDocumentDetails ret, Document doc, EdgePageWordSet words) {
@@ -208,12 +245,11 @@ public class DocumentProcessor {
             if (linkParser.shouldIndexLink(atag)) {
                 linkOpt.ifPresent(lp::accept);
             }
-            else if (linkOpt.isPresent()) {
-                if (linkParser.hasBinarySuffix(linkOpt.get().toString())) {
-                    linkOpt.ifPresent(lp::acceptNonIndexable);
-                }
+            else {
+                linkOpt
+                        .filter(url -> linkParser.hasBinarySuffix(url.path.toLowerCase()))
+                        .ifPresent(lp::acceptNonIndexable);
             }
-
         }
         for (var frame : doc.getElementsByTag("frame")) {
             linkParser.parseFrame(baseUrl, frame).ifPresent(lp::accept);
@@ -233,25 +269,23 @@ public class DocumentProcessor {
             linkTerms.add("links:"+fd.toString().toLowerCase());
             linkTerms.add("links:"+fd.getDomain().toLowerCase());
         }
-
         words.append(IndexBlock.Meta, linkTerms);
 
         Set<String> fileKeywords = new HashSet<>(100);
         for (var link : lp.getNonIndexableUrls()) {
 
-            if (!Objects.equals(domain, link.domain)) {
+            if (!domain.hasSameTopDomain(link.domain)) {
                 continue;
             }
 
             synthesizeFilenameKeyword(fileKeywords, link);
 
         }
-
         words.append(IndexBlock.Artifacts, fileKeywords);
+
     }
 
     private void synthesizeFilenameKeyword(Set<String> fileKeywords, EdgeUrl link) {
-
 
         Path pFilename = Path.of(link.path.toLowerCase()).getFileName();
 
@@ -287,10 +321,6 @@ public class DocumentProcessor {
             return HtmlStandardExtractor.sniffHtmlStandard(doc);
         }
         return htmlStandard;
-    }
-
-    private EdgePageWordSet getWords(DocumentLanguageData dld) {
-        return keywordExtractor.extractKeywords(dld);
     }
 
     private String getDescription(Document doc) {

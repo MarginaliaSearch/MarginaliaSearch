@@ -1,9 +1,9 @@
 package nu.marginalia.wmsa.renderer;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
+import nu.marginalia.wmsa.client.GsonFactory;
 import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.podcasts.model.Podcast;
 import nu.marginalia.wmsa.podcasts.model.PodcastEpisode;
@@ -19,14 +19,13 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 
 public class PodcastRendererService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Gson gson = new GsonBuilder().create();
+    private final Gson gson = GsonFactory.get();
 
     private final RendererFactory rendererFactory = new RendererFactory();
 

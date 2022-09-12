@@ -12,7 +12,7 @@ import nu.marginalia.wmsa.edge.assistant.dict.SpellChecker;
 import nu.marginalia.wmsa.edge.assistant.eval.MathParser;
 import nu.marginalia.wmsa.edge.assistant.eval.Units;
 import nu.marginalia.wmsa.edge.assistant.screenshot.ScreenshotService;
-import nu.marginalia.wmsa.edge.search.UnitConversion;
+import nu.marginalia.wmsa.edge.search.svc.EdgeSearchUnitConversionService;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -105,7 +105,7 @@ class AssistantTest {
 
     @Test
     public void testConvertUnitsWithParser() {
-        var conversion = new UnitConversion(client);
+        var conversion = new EdgeSearchUnitConversionService(client);
         assertEquals("0.3 m", conversion.tryConversion(Context.internal(), "30 cm in m").get());
         assertEquals("500 m", conversion.tryConversion(Context.internal(), "0.5 km in m").get());
         assertEquals("500 m", conversion.tryConversion(Context.internal(), "0.1+0.4 km in m").get());
@@ -125,7 +125,7 @@ class AssistantTest {
 
     @Test
     public void testEvalWithParser() throws ExecutionException, InterruptedException {
-        var conversion = new UnitConversion(client);
+        var conversion = new EdgeSearchUnitConversionService(client);
         assertEquals("305", conversion.tryEval(Context.internal(), "300+5").get());
         assertEquals("1.772", conversion.tryEval(Context.internal(), "sqrt(pi)").get());
 
