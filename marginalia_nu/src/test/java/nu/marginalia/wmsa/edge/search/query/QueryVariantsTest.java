@@ -36,6 +36,7 @@ class QueryVariantsTest {
     @Test
     void getQueryVariants() {
         System.out.println(se.extractSentence("we are alone"));
+        testCase("inside job reviews");
         testCase("DOS");
         testCase("dos");
         testCase("we are alone");

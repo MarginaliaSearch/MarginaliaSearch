@@ -82,7 +82,8 @@ public enum ServiceDescriptor {
                 new ConvertCommand(),
                 new LoadCommand(),
                 new ReindexCommand(),
-                new VersionCommand()
+                new VersionCommand(),
+                new IndexDataDumpCommand()
         ).collect(Collectors.toMap(c -> c.name, c -> c));
 
         if(args.length > 0) {
