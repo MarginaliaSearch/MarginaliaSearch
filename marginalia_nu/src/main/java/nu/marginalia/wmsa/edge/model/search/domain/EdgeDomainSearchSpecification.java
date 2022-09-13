@@ -7,8 +7,10 @@ import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 @ToString @AllArgsConstructor
 public class EdgeDomainSearchSpecification {
     public final int bucket;
+
     public final IndexBlock block;
     public final String keyword;
+
     public final int queryDepth;
     public final int minHitCount;
     public final int maxResults;

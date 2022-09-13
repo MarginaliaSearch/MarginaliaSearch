@@ -9,7 +9,6 @@ import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchSpecification;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchSubquery;
-import nu.marginalia.wmsa.edge.search.EdgeSearchProfile;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeSearchQuery;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeUserSearchParameters;
 import nu.marginalia.wmsa.edge.search.results.SearchResultValuator;
@@ -47,10 +46,7 @@ public class QueryFactory {
     }
 
     public EdgeSearchQuery createQuery(EdgeUserSearchParameters params) {
-        final var profile = params.profile();
         final var processedQuery =  createQuery(getParser(), params);
-
-        processedQuery.specs.experimental = EdgeSearchProfile.CORPO.equals(profile);
 
         final var newSubqueries = reevaluateSubqueries(processedQuery, params);
 
@@ -126,7 +122,6 @@ public class QueryFactory {
         var queryPermutations = queryParser.permuteQueriesNew(basicQuery);
         List<EdgeSearchSubquery> subqueries = new ArrayList<>();
 
-
         for (var parts : queryPermutations) {
             List<String> searchTermsExclude = new ArrayList<>();
             List<String> searchTermsInclude = new ArrayList<>();
@@ -158,12 +153,13 @@ public class QueryFactory {
         }
 
 
-        var specsBuilder = EdgeSearchSpecification.builder()
+        EdgeSearchSpecification.EdgeSearchSpecificationBuilder specsBuilder = EdgeSearchSpecification.builder()
                 .subqueries(subqueries)
-                .limitByBucket(50)
                 .limitTotal(100)
                 .humanQuery(query)
-                .buckets(profile.buckets);
+                .buckets(profile.buckets)
+                .timeoutMs(250)
+                .fetchSize(4096);
 
         if (domain != null) {
             specsBuilder = specsBuilder.limitByDomain(100);
