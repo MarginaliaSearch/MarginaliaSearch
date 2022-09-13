@@ -13,16 +13,14 @@ import java.util.stream.Collectors;
 public class IndexQueryFactory {
     private final List<SearchIndex> requiredIndices;
     private final List<SearchIndex> excludeIndex;
-    private final List<SearchIndex> priortyIndices;
 
     public Collection<SearchIndex> getIndicies() {
         return requiredIndices;
     }
 
-    public IndexQueryFactory(List<SearchIndex> requiredIndices, List<SearchIndex> excludeIndex, List<SearchIndex> priortyIndices) {
+    public IndexQueryFactory(List<SearchIndex> requiredIndices, List<SearchIndex> excludeIndex) {
         this.requiredIndices = requiredIndices.stream().filter(Objects::nonNull).collect(Collectors.toList());
         this.excludeIndex = excludeIndex;
-        this.priortyIndices = priortyIndices;
     }
 
     public IndexQueryBuilder buildQuery(IndexQueryCachePool cachePool, int firstWordId) {

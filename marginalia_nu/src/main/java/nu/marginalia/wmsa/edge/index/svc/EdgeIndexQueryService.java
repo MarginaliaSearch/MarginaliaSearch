@@ -34,6 +34,7 @@ import java.util.*;
 import java.util.function.LongPredicate;
 
 import static java.util.Comparator.comparing;
+import static nu.marginalia.wmsa.edge.index.EdgeIndexService.DYNAMIC_BUCKET_LENGTH;
 import static spark.Spark.halt;
 
 @Singleton
@@ -114,16 +115,33 @@ public class EdgeIndexQueryService {
     public EdgeDomainSearchResults queryDomain(EdgeDomainSearchSpecification specsSet) {
 
         final OptionalInt wordId = lookUpWord(specsSet.keyword);
-        EdgeIdList<EdgeUrl> urlIds;
+
+        final EdgeIdList<EdgeUrl> urlIds = new EdgeIdList<>();
+
+        final IndexQueryCachePool pool = new IndexQueryCachePool();
+        final IndexSearchBudget budget = new IndexSearchBudget(50);
 
         if (wordId.isEmpty()) {
-            urlIds = new EdgeIdList<>();
-        } else {
-            urlIds = indexes
-                    .getBucket(specsSet.bucket)
-                    .findHotDomainsForKeyword(specsSet.block, wordId.getAsInt(), specsSet.queryDepth, specsSet.minHitCount, specsSet.maxResults)
-                    .mapToInt(lv -> (int) (lv & 0xFFFF_FFFFL))
-                    .collect(EdgeIdList::new, EdgeIdList::add, EdgeIdList::addAll);
+
+            return new EdgeDomainSearchResults(specsSet.keyword, urlIds);
+        }
+
+        for (int bucket = 0; budget.hasTimeLeft() && bucket < DYNAMIC_BUCKET_LENGTH+1; bucket++) {
+
+            final ResultDomainDeduplicator localFilter = new ResultDomainDeduplicator(1);
+
+            var query = indexes.getBucket(bucket).getDomainQuery(pool, wordId.getAsInt(), localFilter);
+            long[] buffer = new long[512];
+
+            while (query.hasMore() && urlIds.size() < specsSet.maxResults) {
+                int cnt = query.getMoreResults(buffer, budget);
+                for (int i = 0; i < cnt && urlIds.size() < specsSet.maxResults; i++) {
+                    long result = buffer[i];
+                    if (localFilter.test(result)) {
+                        urlIds.add((int) (result & 0xFFFF_FFFFL));
+                    }
+                }
+            }
         }
 
         return new EdgeDomainSearchResults(specsSet.keyword, urlIds);

@@ -7,6 +7,8 @@ import nu.marginalia.wmsa.edge.index.reader.SearchIndexReader;
 import nu.marginalia.wmsa.edge.index.svc.query.IndexQuery;
 import nu.marginalia.wmsa.edge.index.svc.query.IndexQueryCachePool;
 import nu.marginalia.wmsa.edge.index.svc.query.IndexQueryFactory;
+import nu.marginalia.wmsa.edge.index.svc.query.ResultDomainDeduplicator;
+import nu.marginalia.wmsa.edge.index.svc.query.types.filter.QueryFilterStepFromPredicate;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +19,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.LongPredicate;
-import java.util.stream.LongStream;
 
 public class EdgeIndexBucket {
 
@@ -102,10 +103,6 @@ public class EdgeIndexBucket {
         return indexReader != null;
     }
 
-    public LongStream findHotDomainsForKeyword(IndexBlock block, int wordId, int queryDepth, int minHitCount, int maxResults) {
-        return indexReader.findHotDomainsForKeyword(block, wordId, queryDepth, minHitCount, maxResults);
-    }
-
     public IndexQuery getQuery(IndexQueryCachePool cachePool, IndexBlock block, LongPredicate filter, EdgeIndexSearchTerms searchTerms) {
         if (null == indexReader) {
             logger.warn("Index reader not neady {}", block);
@@ -140,6 +137,14 @@ public class EdgeIndexBucket {
     }
 
 
+    public IndexQuery getDomainQuery(IndexQueryCachePool pool, int wordId, ResultDomainDeduplicator localFilter) {
+        var query = indexReader.findDomain(pool, wordId);
+
+        query.addInclusionFilter(new QueryFilterStepFromPredicate(localFilter::filterRawValue));
+
+        return query;
+    }
+
     public IndexBlock getTermScore(IndexQueryCachePool cachePool, int termId, long urlId) {
         return indexReader.getBlockForResult(cachePool, termId, urlId);
     }
@@ -147,4 +152,5 @@ public class EdgeIndexBucket {
     public boolean isTermInBucket(IndexQueryCachePool cachePool, IndexBlock block, int termId, long urlId) {
         return indexReader.isTermInBucket(cachePool, block, termId, urlId);
     }
+
 }
