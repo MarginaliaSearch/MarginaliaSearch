@@ -35,7 +35,7 @@ public class EdgeSearchQueryIndexService {
 
         sqs.add(new EdgeSearchSubquery(Arrays.asList(termsInclude), Collections.emptyList(), block));
 
-        EdgeSearchSpecification specs = new EdgeSearchSpecification(profile.buckets, sqs, 100, limitPerDomain, limitTotal, "", false);
+        EdgeSearchSpecification specs = new EdgeSearchSpecification(profile.buckets, sqs, limitPerDomain, limitTotal, "", 150, 2048);
 
         return performQuery(ctx, new EdgeSearchQuery(specs));
     }

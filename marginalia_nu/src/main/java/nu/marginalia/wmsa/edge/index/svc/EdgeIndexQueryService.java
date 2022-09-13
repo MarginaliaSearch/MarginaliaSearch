@@ -41,8 +41,6 @@ public class EdgeIndexQueryService {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private static final int SEARCH_BUDGET_TIMEOUT_MS = 250;
-    private static final int QUERY_FETCH_SIZE = 8192;
     private static final int QUERY_FIRST_PASS_DOMAIN_LIMIT = 64;
 
     private static final Counter wmsa_edge_index_query_timeouts = Counter.build().name("wmsa_edge_index_query_timeouts").help("-").register();
@@ -132,17 +130,21 @@ public class EdgeIndexQueryService {
     }
 
     private class SearchQuery {
-        private final TIntHashSet seenResults = new TIntHashSet(QUERY_FETCH_SIZE, 0.5f);
+        private final int fetchSize;
+        private final TIntHashSet seenResults;
         private final EdgeSearchSpecification specsSet;
-        private final IndexSearchBudget budget = new IndexSearchBudget(SEARCH_BUDGET_TIMEOUT_MS);
+        private final IndexSearchBudget budget;
         private final IndexQueryCachePool cachePool = new IndexQueryCachePool();
 
         public SearchQuery(EdgeSearchSpecification specsSet) {
             this.specsSet = specsSet;
+            this.budget = new IndexSearchBudget(specsSet.timeoutMs);
+            this.fetchSize = specsSet.fetchSize;
+            this.seenResults =  new TIntHashSet(fetchSize, 0.5f);
         }
 
         private List<EdgeSearchResultItem> execute() {
-            final Set<EdgeSearchResultItem> results = new HashSet<>(QUERY_FETCH_SIZE);
+            final Set<EdgeSearchResultItem> results = new HashSet<>(fetchSize);
 
             for (var sq : specsSet.subqueries) {
                 results.addAll(performSearch(sq));
@@ -177,7 +179,7 @@ public class EdgeIndexQueryService {
         private List<EdgeSearchResultItem> performSearch(EdgeSearchSubquery sq)
         {
 
-            final List<EdgeSearchResultItem> results = new ArrayList<>(QUERY_FETCH_SIZE);
+            final List<EdgeSearchResultItem> results = new ArrayList<>(fetchSize);
             final EdgeIndexSearchTerms searchTerms = getSearchTerms(sq);
 
             if (searchTerms.isEmpty())
@@ -191,16 +193,16 @@ public class EdgeIndexQueryService {
                     continue;
                 }
 
-                if (QUERY_FETCH_SIZE <= results.size())
+                if (fetchSize <= results.size())
                     break;
 
                 IndexQuery query = getQuery(cachePool, indexBucket, sq.block, localFilter::filterRawValue, searchTerms);
                 long[] buf = new long[8192];
 
-                while (query.hasMore() && results.size() < QUERY_FETCH_SIZE && budget.hasTimeLeft()) {
+                while (query.hasMore() && results.size() < fetchSize && budget.hasTimeLeft()) {
                     int cnt = query.getMoreResults(buf, budget);
 
-                    for (int i = 0; i < cnt && results.size() < QUERY_FETCH_SIZE; i++) {
+                    for (int i = 0; i < cnt && results.size() < fetchSize; i++) {
                         final long id = buf[i];
 
                         if (!seenResults.add((int)(id & 0xFFFF_FFFFL)) || !localFilter.test(id)) {
