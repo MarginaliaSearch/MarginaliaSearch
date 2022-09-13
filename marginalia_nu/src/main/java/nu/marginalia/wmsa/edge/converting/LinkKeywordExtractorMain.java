@@ -122,15 +122,6 @@ public class LinkKeywordExtractorMain {
 
     public static void getKeywordsFromCrawl(EdgeCrawlPlan plan) throws IOException {
 
-        TIntHashSet crawledUrls = new TIntHashSet(50_000_000);
-
-        logger.info("Loading URLs");
-        Files.lines(Path.of("/home/vlofgren/good-urls3.txt"))
-                .filter(url -> !url.contains("stackoverflow") && !url.contains("stackexchange"))
-                .mapToInt(String::hashCode)
-                .forEach(crawledUrls::add);
-
-
         logger.info("Loading input spec");
 
         HashSet<String> crawledDomains = new HashSet<>();

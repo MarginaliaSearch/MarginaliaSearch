@@ -3,6 +3,8 @@ package nu.marginalia.wmsa.edge.index.reader;
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
+import nu.marginalia.wmsa.edge.index.svc.query.IndexDomainQueryFactory;
+import nu.marginalia.wmsa.edge.index.svc.query.IndexQuery;
 import nu.marginalia.wmsa.edge.index.svc.query.IndexQueryCachePool;
 import nu.marginalia.wmsa.edge.index.svc.query.IndexQueryFactory;
 import org.slf4j.Logger;
@@ -11,15 +13,13 @@ import org.slf4j.LoggerFactory;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.LongPredicate;
-import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 public class SearchIndexReader implements AutoCloseable {
 
     private final EnumMap<IndexBlock, SearchIndex> indices;
     private final EnumMap<IndexBlock, IndexQueryFactory> queryBuilders;
-
+    private final IndexDomainQueryFactory domainQueryFactory;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private static final IndexBlock[] indicesBySearchOrder = new IndexBlock[] {
@@ -58,14 +58,15 @@ public class SearchIndexReader implements AutoCloseable {
         queryBuilders = new EnumMap<>(IndexBlock.class);
 
         List<SearchIndex> excludeIndices = listOfNonNulls(metaIndex, titleIndex, topIndex, midIndex, lowIndex, words1);
-        List<SearchIndex> priorityIndices = listOfNonNulls(titleIndex, linkIndex, siteIndex, topIndex, topicIndex);
 
-        queryBuilders.put(IndexBlock.Title, new IndexQueryFactory(listOfNonNulls(metaIndex, titleIndex, linkIndex), excludeIndices, priorityIndices));
-        queryBuilders.put(IndexBlock.Words_1, new IndexQueryFactory(listOfNonNulls(metaIndex, words1), excludeIndices, priorityIndices));
-        queryBuilders.put(IndexBlock.Words_2, new IndexQueryFactory(listOfNonNulls(metaIndex, words2), excludeIndices, priorityIndices));
-        queryBuilders.put(IndexBlock.Words_4, new IndexQueryFactory(listOfNonNulls(metaIndex, words4), excludeIndices, priorityIndices));
-        queryBuilders.put(IndexBlock.Words_8, new IndexQueryFactory(listOfNonNulls(metaIndex, words8), excludeIndices, priorityIndices));
-        queryBuilders.put(IndexBlock.Words_16Plus, new IndexQueryFactory(listOfNonNulls(metaIndex, words16, artifacts), excludeIndices, priorityIndices));
+        queryBuilders.put(IndexBlock.Title, new IndexQueryFactory(listOfNonNulls(metaIndex, titleIndex, linkIndex), excludeIndices));
+        queryBuilders.put(IndexBlock.Words_1, new IndexQueryFactory(listOfNonNulls(metaIndex, words1), excludeIndices));
+        queryBuilders.put(IndexBlock.Words_2, new IndexQueryFactory(listOfNonNulls(metaIndex, words2), excludeIndices));
+        queryBuilders.put(IndexBlock.Words_4, new IndexQueryFactory(listOfNonNulls(metaIndex, words4), excludeIndices));
+        queryBuilders.put(IndexBlock.Words_8, new IndexQueryFactory(listOfNonNulls(metaIndex, words8), excludeIndices));
+        queryBuilders.put(IndexBlock.Words_16Plus, new IndexQueryFactory(listOfNonNulls(metaIndex, words16, artifacts), excludeIndices));
+
+        domainQueryFactory = new IndexDomainQueryFactory(siteIndex, listOfNonNulls(topicIndex));
     }
 
     @SafeVarargs
@@ -74,35 +75,6 @@ public class SearchIndexReader implements AutoCloseable {
     }
 
 
-    public LongStream findHotDomainsForKeyword(IndexBlock block, int wordId, int queryDepth, int minHitCount, int maxResults) {
-        var index = indices.get(block);
-
-        if (index == null)
-            return LongStream.empty();
-
-        return index.rangeForWord(wordId)
-                .stream()
-                .limit(queryDepth)
-                .filter(new LongPredicate() {
-                    long last = Long.MIN_VALUE;
-                    int count = 0;
-
-                    @Override
-                    public boolean test(long value) {
-                        if ((last >>> 32L) == (value >>> 32L)) {
-                            return count++ == minHitCount;
-                        }
-                        else {
-                            last = value;
-                            count = 0;
-
-                        }
-                        return false;
-                    }
-                })
-                .limit(maxResults);
-    }
-
     public IndexQueryFactory.IndexQueryBuilder findWord(IndexQueryCachePool cachePool, IndexBlock block, int wordId) {
         var builder = queryBuilders.get(block);
 
@@ -110,6 +82,10 @@ public class SearchIndexReader implements AutoCloseable {
             return null;
 
         return builder.buildQuery(cachePool, wordId);
+    }
+
+    public IndexQuery findDomain(IndexQueryCachePool cachePool, int wordId) {
+        return domainQueryFactory.buildQuery(cachePool, wordId);
     }
 
     @Override

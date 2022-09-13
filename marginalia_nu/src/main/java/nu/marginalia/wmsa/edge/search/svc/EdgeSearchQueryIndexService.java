@@ -43,7 +43,6 @@ public class EdgeSearchQueryIndexService {
     public List<EdgeUrlDetails> performQuery(Context ctx, EdgeSearchQuery processedQuery) {
 
         final List<EdgeSearchResultItem> results = indexClient.query(ctx, processedQuery.specs);
-
         final List<EdgeUrlDetails> resultList = new ArrayList<>(results.size());
 
         for (var details : resultDecorator.getAllUrlDetails(results)) {

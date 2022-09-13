@@ -6,6 +6,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.util.DenseBitMap;
 import nu.marginalia.util.language.WordPatterns;
 import nu.marginalia.wmsa.configuration.WmsaHome;
+import nu.marginalia.wmsa.edge.assistant.dict.NGramBloomFilter;
 import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import nu.marginalia.wmsa.edge.converting.processor.logic.LinkParser;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
@@ -14,6 +15,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Objects;
@@ -36,16 +38,18 @@ public class AnchorTextExtractor {
     // de-duplicating billions of shuffled (url, word) tuples on limited hardware
     private final DenseBitMap deduplicateHashBitset = new DenseBitMap(DenseBitMap.MAX_CAPACITY_2GB_16BN_ITEMS);
 
-    private final TermFrequencyDict ngramDict = new TermFrequencyDict(WmsaHome.getLanguageModels());
+    private final NGramBloomFilter nGramBloomFilter;
+    private final TermFrequencyDict termFrequencyDict;
 
     public AnchorTextExtractor(Predicate<String> includeDomainPredicate,
                                Predicate<EdgeUrl> includeUrlPredicate,
-                               BiConsumer<EdgeUrl, String> linkKeywordConsumer) {
+                               BiConsumer<EdgeUrl, String> linkKeywordConsumer) throws IOException {
         this.includeDomainPredicate = includeDomainPredicate;
         this.includeUrlPredicate = includeUrlPredicate;
         this.linkKeywordConsumer = linkKeywordConsumer;
 
-
+        nGramBloomFilter = new NGramBloomFilter(WmsaHome.getLanguageModels());
+        termFrequencyDict = new TermFrequencyDict(WmsaHome.getLanguageModels());
     }
 
     @SneakyThrows
@@ -169,7 +173,7 @@ public class AnchorTextExtractor {
     }
 
     private void addKeywordIfExistsInTermFreqDictionary(EdgeUrl linkUrl, String word) {
-        if (ngramDict.getTermFreq(word) > 0) {
+        if (termFrequencyDict.getTermFreq(word) > 0 || nGramBloomFilter.isKnownNGram(word)) {
             if (isNewKeywordForLink(word, linkUrl.toString())) {
                 linkKeywordConsumer.accept(linkUrl, word);
             }
