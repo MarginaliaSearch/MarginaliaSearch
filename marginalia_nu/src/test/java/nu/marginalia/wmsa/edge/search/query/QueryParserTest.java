@@ -27,6 +27,12 @@ class QueryParserTest {
     }
 
     @Test
+    public void testAdviceString() {
+        System.out.println(parser.parse("alcibiades (plato) \"my query\" -cars"));
+        System.out.println(parser.parse("universals plato"));
+    }
+
+    @Test
     void variantQueries() {
         var r = parser.parse("car stemming");
         parser.variantQueries(r).forEach(query -> {

@@ -33,7 +33,7 @@ public class EdgeSearchQueryIndexService {
     public List<EdgeUrlDetails> performDumbQuery(Context ctx, EdgeSearchProfile profile, IndexBlock block, int limitPerDomain, int limitTotal, String... termsInclude) {
         List<EdgeSearchSubquery> sqs = new ArrayList<>();
 
-        sqs.add(new EdgeSearchSubquery(Arrays.asList(termsInclude), Collections.emptyList(), block));
+        sqs.add(new EdgeSearchSubquery(Arrays.asList(termsInclude), Collections.emptyList(), Collections.emptyList(), block));
 
         EdgeSearchSpecification specs = new EdgeSearchSpecification(profile.buckets, sqs, limitPerDomain, limitTotal, "", 150, 2048);
 

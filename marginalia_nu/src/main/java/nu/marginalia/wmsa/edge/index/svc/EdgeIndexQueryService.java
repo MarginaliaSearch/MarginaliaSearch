@@ -168,6 +168,7 @@ public class EdgeIndexQueryService {
                 results.addAll(performSearch(sq));
             }
 
+
             for (var result : results) {
                 addResultScores(result);
             }
@@ -207,15 +208,17 @@ public class EdgeIndexQueryService {
                 final ResultDomainDeduplicator localFilter = new ResultDomainDeduplicator(QUERY_FIRST_PASS_DOMAIN_LIMIT);
 
                 if (!budget.hasTimeLeft()) {
-                    logger.info("Query timed out, omitting {}:{} for query {}", indexBucket, sq.block, sq.searchTermsInclude);
+                    logger.info("Query timed out, omitting {}:{} for query {}, ({}), -{}", indexBucket, sq.block, sq.searchTermsInclude, sq.searchTermsAdvice, sq.searchTermsExclude);
                     continue;
+
                 }
 
-                if (fetchSize <= results.size())
+                if (results.size() >= fetchSize) {
                     break;
+                }
 
                 IndexQuery query = getQuery(cachePool, indexBucket, sq.block, localFilter::filterRawValue, searchTerms);
-                long[] buf = new long[8192];
+                long[] buf = new long[fetchSize];
 
                 while (query.hasMore() && results.size() < fetchSize && budget.hasTimeLeft()) {
                     int cnt = query.getMoreResults(buf, budget);
@@ -321,6 +324,16 @@ public class EdgeIndexQueryService {
             var word = lookUpWord(include);
             if (word.isEmpty()) {
                 logger.debug("Unknown search term: " + include);
+                return new EdgeIndexSearchTerms(Collections.emptyList(), Collections.emptyList());
+            }
+            includes.add(word.getAsInt());
+        }
+
+
+        for (var advice : request.searchTermsAdvice) {
+            var word = lookUpWord(advice);
+            if (word.isEmpty()) {
+                logger.debug("Unknown search term: " + advice);
                 return new EdgeIndexSearchTerms(Collections.emptyList(), Collections.emptyList());
             }
             includes.add(word.getAsInt());

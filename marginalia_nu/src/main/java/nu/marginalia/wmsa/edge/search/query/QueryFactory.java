@@ -125,11 +125,15 @@ public class QueryFactory {
         for (var parts : queryPermutations) {
             List<String> searchTermsExclude = new ArrayList<>();
             List<String> searchTermsInclude = new ArrayList<>();
+            List<String> searchTermsAdvice = new ArrayList<>();
 
             for (Token t : parts) {
                 switch (t.type) {
                     case EXCLUDE_TERM:
                         searchTermsExclude.add(t.str);
+                        break;
+                    case ADVICE_TERM:
+                        searchTermsAdvice.add(t.str);
                         break;
                     case LITERAL_TERM: // fallthrough;
                     case QUOT_TERM:
@@ -144,7 +148,7 @@ public class QueryFactory {
                 }
             }
 
-            EdgeSearchSubquery subquery = new EdgeSearchSubquery(searchTermsInclude, searchTermsExclude, IndexBlock.Title);
+            EdgeSearchSubquery subquery = new EdgeSearchSubquery(searchTermsInclude, searchTermsExclude, searchTermsAdvice, IndexBlock.Title);
 
             params.profile().addTacitTerms(subquery);
             params.jsSetting().addTacitTerms(subquery);

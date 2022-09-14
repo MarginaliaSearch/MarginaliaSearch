@@ -15,13 +15,15 @@ public class EdgeSearchSubquery {
 
     public final List<String> searchTermsInclude;
     public final List<String> searchTermsExclude;
+    public final List<String> searchTermsAdvice;
     public final IndexBlock block;
 
     private double value = 0;
 
-    public EdgeSearchSubquery(List<String> searchTermsInclude, List<String> searchTermsExclude, IndexBlock block) {
+    public EdgeSearchSubquery(List<String> searchTermsInclude, List<String> searchTermsExclude, List<String> searchTermsAdvice, IndexBlock block) {
         this.searchTermsInclude = searchTermsInclude;
         this.searchTermsExclude = searchTermsExclude;
+        this.searchTermsAdvice = searchTermsAdvice;
         this.block = block;
     }
 
@@ -29,6 +31,7 @@ public class EdgeSearchSubquery {
         return new EdgeSearchSubquery(
                 new CopyOnWriteArrayList<>(searchTermsInclude),
                 new CopyOnWriteArrayList<>(searchTermsExclude),
+                new CopyOnWriteArrayList<>(searchTermsAdvice),
                 block).setValue(value);
     }
 
