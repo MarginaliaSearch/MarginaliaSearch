@@ -28,12 +28,14 @@ public class QueryParser {
     }
 
     public List<Token> parse(String query) {
-        List<Token> tokens = extractBasicTokens(query);
+        List<Token> basicTokens = extractBasicTokens(query);
+        List<Token> parsedTokens = new ArrayList<>(basicTokens.size());
 
-        for (int i = 0; i < tokens.size(); i++) {
-            var t = tokens.get(i);
+        for (int i = 0; i < basicTokens.size(); i++) {
+            var t = basicTokens.get(i);
+
             if (t.type == TokenType.QUOT) {
-                tokens.set(i, new Token(TokenType.QUOT_TERM,
+                parsedTokens.add(new Token(TokenType.QUOT_TERM,
                         t.str.replaceAll("\\s+", WordPatterns.WORD_TOKEN_JOINER),
                         t.displayStr));
             }
@@ -41,26 +43,54 @@ public class QueryParser {
                 && (t.str.endsWith(":")||t.str.endsWith("."))
                 && t.str.length() > 1)
             {
-                tokens.set(i,
-                        new Token(TokenType.LITERAL_TERM, t.str.substring(0, t.str.length()-1),
-                                t.displayStr));
+                parsedTokens.add(new Token(TokenType.LITERAL_TERM, t.str.substring(0, t.str.length()-1), t.displayStr));
             }
         }
 
-        for (int i = 0; i < tokens.size() - 1; i++) {
-            var t = tokens.get(i);
-            var tn = tokens.get(i+1);
+        for (int i = 0; i < basicTokens.size() - 1; i++) {
+            var t = basicTokens.get(i);
+            var tn = basicTokens.get(i+1);
 
-            if (t.type == TokenType.MINUS) {
-                tokens.set(i, new Token(TokenType.EXCLUDE_TERM, tn.str, "-"+tn.str));
-                tokens.remove(i+1);
+            if (t.type == TokenType.MINUS && tn.type == TokenType.LITERAL_TERM) {
+                parsedTokens.add(new Token(TokenType.EXCLUDE_TERM, tn.str, "-"+tn.str));
+                i++;
             }
         }
 
-        return tokens;
+        for (int i = 0; i < basicTokens.size(); i++) {
+            var t = basicTokens.get(i);
+
+            if (t.type == TokenType.LITERAL_TERM) {
+                parsedTokens.add(t);
+                continue;
+            }
+            else if (t.type != TokenType.LPAREN) {
+                continue;
+            }
+
+            int end = i+1;
+            for (; end < basicTokens.size(); end++) {
+                if (basicTokens.get(end).type == TokenType.RPAREN) {
+                    break;
+                }
+            }
+            if (end == basicTokens.size()) {
+                continue;
+            }
+
+            for (int j = i+1; j < end; j++) {
+                var tok = basicTokens.get(j);
+                if (tok.type == TokenType.LITERAL_TERM) {
+                    parsedTokens.add(new Token(TokenType.ADVICE_TERM, tok.str, "(" + tok.str + ")"));
+                }
+            }
+            i = end;
+        }
+
+        return parsedTokens;
     }
 
-    private static final Pattern noisePattern = Pattern.compile("[(),]");
+    private static final Pattern noisePattern = Pattern.compile("[,]");
 
     public List<Token> extractBasicTokens(String rawQuery) {
         List<Token> tokens = new ArrayList<>();
@@ -69,7 +99,14 @@ public class QueryParser {
 
         for (int i = 0; i < query.length(); i++) {
             int chr = query.charAt(i);
-            if ('"' == chr) {
+
+            if ('(' == chr) {
+                tokens.add(new Token(TokenType.LPAREN, query.substring(i, i+1).toLowerCase(), query.substring(i, i+1)));
+            }
+            else if (')' == chr) {
+                tokens.add(new Token(TokenType.RPAREN, query.substring(i, i+1).toLowerCase(), query.substring(i, i+1)));
+            }
+            else if ('"' == chr) {
                 int end = query.indexOf('"', i+1);
                 if (end == -1) {
                     end = query.length();
@@ -96,14 +133,16 @@ public class QueryParser {
                 //
             }
             else {
-                int end = query.indexOf(' ', i);
-                if (end == -1) {
-                    end = query.length();
+
+                int end = i+1;
+                for (; end < query.length(); end++) {
+                    if (query.charAt(end) == ' ' || query.charAt(end) == ')')
+                        break;
                 }
                 tokens.add(new Token(TokenType.LITERAL_TERM,
                         query.substring(i, end).toLowerCase(),
                         query.substring(i, end)));
-                i = end;
+                i = end-1;
             }
         }
         return tokens;
@@ -431,9 +470,15 @@ class Token {
 
 enum TokenType {
     TERM,
-    QUOT,
-    MINUS,
+
+
     LITERAL_TERM,
     QUOT_TERM,
     EXCLUDE_TERM,
+    ADVICE_TERM,
+
+    QUOT,
+    MINUS,
+    LPAREN,
+    RPAREN
 }
