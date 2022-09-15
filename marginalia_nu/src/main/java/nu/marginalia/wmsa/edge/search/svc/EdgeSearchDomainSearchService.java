@@ -27,13 +27,10 @@ public class EdgeSearchDomainSearchService {
         this.edgeDataStoreDao = edgeDataStoreDao;
     }
 
+
     public List<BrowseResult> getDomainResults(Context ctx, EdgeSearchSpecification specs) {
 
-        List<String> keywords = specs.subqueries.stream()
-                .filter(sq -> sq.searchTermsExclude.isEmpty() && sq.searchTermsInclude.size() == 1)
-                .map(sq -> sq.searchTermsInclude.get(0))
-                .distinct()
-                .toList();
+        List<String> keywords = getKeywordsFromSpecs(specs);
 
         if (keywords.isEmpty())
             return Collections.emptyList();
@@ -61,4 +58,11 @@ public class EdgeSearchDomainSearchService {
     }
 
 
+    private List<String> getKeywordsFromSpecs(EdgeSearchSpecification specs) {
+        return specs.subqueries.stream()
+                .filter(sq -> sq.searchTermsExclude.isEmpty() && sq.searchTermsInclude.size() == 1 && sq.searchTermsAdvice.isEmpty())
+                .map(sq -> sq.searchTermsInclude.get(0))
+                .distinct()
+                .toList();
+    }
 }
