@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import gnu.trove.set.hash.TIntHashSet;
 import io.prometheus.client.Counter;
+import io.prometheus.client.Gauge;
 import io.prometheus.client.Histogram;
 import nu.marginalia.util.dict.DictionaryHashMap;
 import nu.marginalia.wmsa.client.GsonFactory;
@@ -47,8 +48,9 @@ public class EdgeIndexQueryService {
 
     private static final Counter wmsa_edge_index_query_timeouts = Counter.build().name("wmsa_edge_index_query_timeouts").help("-").register();
 
-    private static final Histogram wmsa_edge_index_query_time = Histogram.build().name("wmsa_edge_index_query_time").linearBuckets(50, 50, 15).help("-").register();
-    private static final Histogram wmsa_edge_index_domain_query_time = Histogram.build().name("wmsa_edge_index_domain_query_time").linearBuckets(50, 50, 15).help("-").register();
+    private static final Gauge wmsa_edge_index_query_cost = Gauge.build().name("wmsa_edge_index_query_cost").help("-").register();
+    private static final Histogram wmsa_edge_index_query_time = Histogram.build().name("wmsa_edge_index_query_time").linearBuckets(25/1000., 25/1000., 15).help("-").register();
+    private static final Histogram wmsa_edge_index_domain_query_time = Histogram.build().name("wmsa_edge_index_domain_query_time").linearBuckets(25/1000., 25/1000., 15).help("-").register();
 
     private final Gson gson = GsonFactory.get();
 
@@ -109,7 +111,12 @@ public class EdgeIndexQueryService {
 
 
     public EdgeSearchResultSet query(EdgeSearchSpecification specsSet) {
-        List<EdgeSearchResultItem> results = new SearchQuery(specsSet).execute();
+        SearchQuery searchQuery = new SearchQuery(specsSet);
+
+        List<EdgeSearchResultItem> results = searchQuery.execute();
+
+        wmsa_edge_index_query_cost.set(searchQuery.getDataCost());
+
         return new EdgeSearchResultSet(results);
     }
 
@@ -154,6 +161,8 @@ public class EdgeIndexQueryService {
         private final EdgeSearchSpecification specsSet;
         private final IndexSearchBudget budget;
         private final IndexQueryCachePool cachePool = new IndexQueryCachePool();
+
+        private long dataCost = 0;
 
         public SearchQuery(EdgeSearchSpecification specsSet) {
             this.specsSet = specsSet;
@@ -245,6 +254,8 @@ public class EdgeIndexQueryService {
                     }
                 }
 
+                dataCost += query.dataCost();
+
             }
 
             return results;
@@ -307,6 +318,10 @@ public class EdgeIndexQueryService {
                     bucket.isTermInBucket(cachePool, IndexBlock.Tfidf_Middle, termId, combinedUrlId),
                     bucket.isTermInBucket(cachePool, IndexBlock.Tfidf_Lower, termId, combinedUrlId)
             );
+        }
+
+        public long getDataCost() {
+            return dataCost;
         }
 
         record ResultTerm (int bucket, int termId, long combinedUrlId) {}

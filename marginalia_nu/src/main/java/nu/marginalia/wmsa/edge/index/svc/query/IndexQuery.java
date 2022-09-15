@@ -21,6 +21,7 @@ public class IndexQuery {
     }
 
     private int si = 0;
+    private int dataCost;
 
     public boolean hasMore() {
         return si < sources.size();
@@ -36,8 +37,12 @@ public class IndexQuery {
             return 0;
         }
 
+        dataCost += bufferUtilizedLength;
+
         for (var filter : inclusionFilter) {
             bufferUtilizedLength = filter.retainDestructive(dest, bufferUtilizedLength);
+
+            dataCost += bufferUtilizedLength;
 
             if (bufferUtilizedLength <= 0) {
                 si++;
@@ -47,9 +52,13 @@ public class IndexQuery {
 
         int count = min(bufferUtilizedLength, dest.length);
         System.arraycopy(dest, 0, dest, 0, count);
+
         return count;
     }
 
+    public long dataCost() {
+        return dataCost;
+    }
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Sources:\n");
