@@ -112,7 +112,8 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
                             rsp.getInt(11), // dataHash
                             EdgePageScoreAdjustment.zero(), // urlQualityAdjustment
                             Integer.MAX_VALUE, // rankingId
-                            Double.MAX_VALUE // termScore
+                            Double.MAX_VALUE, // termScore
+                            1 // resultsFromSameDomain
                             );
                     if (val.urlQuality <= QUALITY_LOWER_BOUND_CUTOFF
                     && Strings.isNullOrEmpty(val.description)

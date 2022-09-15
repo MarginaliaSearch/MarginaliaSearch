@@ -36,15 +36,18 @@ public class ResultDomainDeduplicator {
     }
 
     public boolean test(EdgeSearchResultItem item) {
-        final int ranking = item.getRanking();
-        if (ranking == Integer.MAX_VALUE) {
+        final long key = item.deduplicationKey();
+        if (key == 0)
             return true;
-        }
-
-        // For ResultItems, consider bucketId as well as different buckets may use different
-        // ranking algorithms
-        final long key = ranking*32L + item.bucketId;
 
         return resultsByRankingId.adjustOrPutValue(key, 1, 1) <= limitByDomain;
+    }
+
+    public int getCount(EdgeSearchResultItem item) {
+        final long key = item.deduplicationKey();
+        if (key == 0)
+            return 1;
+
+        return resultsByRankingId.get(key);
     }
 }

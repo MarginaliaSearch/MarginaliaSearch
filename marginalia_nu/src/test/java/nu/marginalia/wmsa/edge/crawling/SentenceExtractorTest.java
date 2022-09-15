@@ -38,6 +38,31 @@ class SentenceExtractorTest {
         legacySe.setLegacyMode(true);
     }
 
+
+    public static void main(String... args) throws IOException {
+        final LanguageModels lm = TestLanguageModels.getLanguageModels();
+
+        var data = Path.of("/home/vlofgren/Code/tmp-data/");
+
+        System.out.println("Running");
+
+        SentenceExtractor se = new SentenceExtractor(lm);
+
+        var dict = new TermFrequencyDict(lm);
+        DocumentKeywordExtractor documentKeywordExtractor = new DocumentKeywordExtractor(dict);
+        for (;;) {
+            long total = 0;
+            for (var file : Objects.requireNonNull(data.toFile().listFiles())) {
+                var doc = Jsoup.parse(Files.readString(file.toPath()));
+                long start = System.currentTimeMillis();
+                var dld = se.extractSentences(doc);
+                documentKeywordExtractor.extractKeywords(dld);
+                total += (System.currentTimeMillis() - start);
+            }
+            System.out.println(total);
+        }
+    }
+
     @SneakyThrows
     @Test
     void testExtractSubject() {

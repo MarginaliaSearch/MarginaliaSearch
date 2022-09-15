@@ -1,8 +1,6 @@
 package com.github.datquocnguyen;
 
 import java.util.HashMap;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 
 /** GPLv3
  * @author DatQuocNguyen
@@ -10,18 +8,106 @@ import java.util.regex.Pattern;
  */
 public class InitialTagger
 {
-	private static final Pattern QUOTATION = Pattern.compile("(“)|(”)|(\")");
+	static public boolean jj1(String s) {
+		int idx = s.indexOf('-');
+		while (idx >= 0) {
+			if (idx > 0 && isDigit(s.charAt(idx-1)))
+				return true;
+			if (idx+1 < s.length() && isDigit(s.charAt(idx+1)))
+				return true;
 
-	private static final Predicate<String> CD = Pattern.compile("[0-9]+").asPredicate();
-	private static final Predicate<String> URL = Pattern.compile("[A-Za-z]\\w*(\\.[A-Za-z]\\w+)+").asPredicate();
-	private static final Predicate<String> JJ1 = Pattern.compile("([0-9]+-)|(-[0-9]+)").asPredicate();
-	private static final Predicate<String> JJ2 = Pattern.compile("(^[Ii]nter.*)|(^[nN]on.*)|(^[Dd]is.*)|(^[Aa]nti.*)").asPredicate();
-	private static final Predicate<String> JJ3 = Pattern.compile("(.*ful$)|(.*ous$)|(.*ble$)|(.*ic$)|(.*ive$)|(.*est$)|(.*able$)|(.*al$)").asPredicate();
-	private static final Predicate<String> NN = Pattern.compile("(.*ness$)|(.*ment$)|(.*ship$)|(^[Ee]x-.*)|(^[Ss]elf-.*)").asPredicate();
-	private static final Predicate<String> NNS = Pattern.compile(".*s$").asPredicate();
-	private static final Predicate<String> VBG = Pattern.compile(".*ing$").asPredicate();
-	private static final Predicate<String> VBN = Pattern.compile(".*ed$").asPredicate();
-	private static final Predicate<String> RB = Pattern.compile(".*ly$").asPredicate();
+			idx = s.indexOf('-', idx+1);
+		}
+		return false;
+	}
+
+	static public boolean nn(String s) {
+		if (s.endsWith("ness"))
+			return true;
+		if (s.endsWith("ment"))
+			return true;
+		if (s.endsWith("ship"))
+			return true;
+		if (s.startsWith("Ex"))
+			return true;
+		if (s.startsWith("ex"))
+			return true;
+		if (s.startsWith("Self-"))
+			return true;
+		if (s.startsWith("self-"))
+			return true;
+
+		return false;
+	}
+	static public boolean jj2(String s) {
+		if (s.startsWith("Inter"))
+			return true;
+		if (s.startsWith("inter"))
+			return true;
+		if (s.startsWith("Dis"))
+			return true;
+		if (s.startsWith("dis"))
+			return true;
+		if (s.startsWith("Anti"))
+			return true;
+		if (s.startsWith("anti"))
+			return true;
+
+		return false;
+	}
+	static public boolean jj3(String s) {
+		if (s.contains("-"))
+			return true;
+		if (s.endsWith("ful"))
+			return true;
+		if (s.endsWith("ous"))
+			return true;
+		if (s.endsWith("ble"))
+			return true;
+		if (s.endsWith("ic"))
+			return true;
+		if (s.endsWith("ive"))
+			return true;
+		if (s.endsWith("est"))
+			return true;
+		if (s.endsWith("able"))
+			return true;
+		if (s.endsWith("al"))
+			return true;
+
+		return false;
+	}
+	static public boolean url(String s) {
+		int pointIdx = s.indexOf('.');
+		return pointIdx >= 0 && pointIdx != s.length()-1;
+	}
+	static public boolean cd(String s) {
+		for (int i = 0; i < s.length(); i++) {
+			char c = s.charAt(i);
+			if (isDigit(c)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static boolean isDigit(char c) {
+		return c >= '0' && c <= '9';
+	}
+
+	static public boolean rb(String s) {
+		return s.endsWith("ly");
+	}
+	static public boolean vbn(String s) {
+		return s.endsWith("vbn");
+	}
+	static public boolean vbg(String s) {
+		return s.endsWith("vbg");
+	}
+
+	static public boolean nns(String s) {
+		return Character.isLowerCase(s.charAt(0)) && s.endsWith("s");
+	}
 
 	public static String[] EnInitTagger4Sentence(
 		HashMap<String, String> DICT, String[] sentence)
@@ -35,9 +121,9 @@ public class InitialTagger
 	}
 
 	private static String getTagForWordEn(HashMap<String, String> DICT, String word) {
-		if (QUOTATION.matcher(word).find()) {
+		if (word.contains("\"") || word.contains("“") || word.contains("”"))
 			return DICT.get("''");
-		}
+
 		if ("[]()<>!".contains(word)) {
 			return "?";
 		}
@@ -47,28 +133,27 @@ public class InitialTagger
 		String lowerW = word.toLowerCase();
 		if (DICT.containsKey(lowerW))
 			return DICT.get(lowerW);
-		if (JJ1.test(word))
+		if (jj1(word))
 			return "JJ";
-		if (URL.test(word))
+		if (url(word))
 			return "NN";
-		if (CD.test(word))
+		if (cd(word))
 			return "CD";
-		if (NN.test(word))
+		if (nn(word))
 			return "NN";
-		if (NNS.test(word)
-				&& Character.isLowerCase(word.charAt(0)))
+		if (nns(word))
 			return "NNS";
 		if (Character.isUpperCase(word.charAt(0)))
 			return "NNP";
-		if (JJ2.test(word))
+		if (jj2(word))
 			return "JJ";
-		if (VBG.test(word))
+		if (vbg(word))
 			return "VBG";
-		if (VBN.test(word))
+		if (vbn(word))
 			return "VBN";
-		if (word.contains("-") || JJ3.test(word))
+		if (jj3(word))
 			return "JJ";
-		if (RB.test(word))
+		if (rb(word))
 			return "RB";
 
 		return "NN";

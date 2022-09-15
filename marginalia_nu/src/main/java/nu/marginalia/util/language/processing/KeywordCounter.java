@@ -23,8 +23,8 @@ public class KeywordCounter {
     }
 
     public WordHistogram countHisto(DocumentLanguageData dld) {
-        HashMap<String, Integer> counts = new HashMap<>(1000);
-        HashMap<String, HashSet<WordRep>> instances = new HashMap<>(1000);
+        HashMap<String, Integer> counts = new HashMap<>(15000);
+        HashMap<String, HashSet<WordRep>> instances = new HashMap<>(15000);
 
 
         for (var sent : dld.sentences) {
@@ -37,15 +37,15 @@ public class KeywordCounter {
                 String stemmed = sent.constructStemmedWordFromSpan(span);
 
                 counts.merge(stemmed, 1, Integer::sum);
-                instances.computeIfAbsent(stemmed, k -> new HashSet<>()).add(new WordRep(sent, span));
+                instances.computeIfAbsent(stemmed, k -> new HashSet<>(500)).add(new WordRep(sent, span));
             }
         }
 
         double maxC = counts.values().stream().mapToDouble(Double::valueOf).max().orElse(1);
 
-        Set<WordRep> h5 = new HashSet<>();
-        Set<WordRep> h10 = new HashSet<>();
-        Set<WordRep> h15 = new HashSet<>();
+        Set<WordRep> h5 = new HashSet<>(2500);
+        Set<WordRep> h10 = new HashSet<>(500);
+        Set<WordRep> h15 = new HashSet<>(500);
 
         int doubleWordCount = 0;
 
@@ -65,19 +65,24 @@ public class KeywordCounter {
 
             histogram.addAll(instances.get(wordStemmed));
         }
-
         return new WordHistogram(h5, h10, h15);
     }
 
     private static final Pattern separator = Pattern.compile("_");
 
     public double getTermValue(Map.Entry<String, Integer> e, double maxValue) {
-        String[] parts = separator.split(e.getKey());
-        double totalValue = 0.;
-        for (String part : parts) {
-            totalValue += value(part, e.getValue(), maxValue);
+        String key = e.getKey();
+        if (key.contains("_")) {
+            String[] parts = separator.split(e.getKey());
+            double totalValue = 0.;
+            for (String part : parts) {
+                totalValue += value(part, e.getValue(), maxValue);
+            }
+            return totalValue / parts.length;
         }
-        return totalValue / parts.length;
+        else {
+            return value(key, e.getValue(), maxValue);
+        }
     }
 
     double value(String key, double value, double maxValue) {

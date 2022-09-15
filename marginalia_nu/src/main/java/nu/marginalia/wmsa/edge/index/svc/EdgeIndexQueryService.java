@@ -32,6 +32,7 @@ import spark.Spark;
 
 import java.util.*;
 import java.util.function.LongPredicate;
+import java.util.stream.Collectors;
 
 import static java.util.Comparator.comparing;
 import static nu.marginalia.wmsa.edge.index.EdgeIndexService.DYNAMIC_BUCKET_LENGTH;
@@ -184,14 +185,24 @@ public class EdgeIndexQueryService {
             }
             cachePool.clear();
 
-            return results.stream()
+            List<EdgeSearchResultItem> resultList = results.stream()
                     .sorted(
                             comparing(EdgeSearchResultItem::getScore)
                                 .thenComparing(EdgeSearchResultItem::getRanking)
                                 .thenComparing(EdgeSearchResultItem::getUrlIdInt)
                     )
                     .filter(domainCountFilter::test)
-                    .limit(specsSet.getLimitTotal()).toList();
+                    .collect(Collectors.toList());
+
+            if (resultList.size() > specsSet.getLimitTotal()) {
+                resultList.subList(specsSet.getLimitTotal(), resultList.size()).clear();
+            }
+
+            for (var result : resultList) {
+                result.resultsFromDomain = domainCountFilter.getCount(result);
+            }
+
+            return resultList;
         }
 
 

@@ -67,7 +67,12 @@ public class SiteListCommand implements SearchCommandInterface {
             resultSet = Collections.emptyList();
         }
 
-        return Optional.of(siteInfoRenderer.render(results, Map.of("query", query, "focusDomain", Objects.requireNonNullElse(domain, ""), "profile", parameters.profileStr(), "results", resultSet, "screenshot", screenshotPath == null ? "" : screenshotPath.toString())));
+        return Optional.of(siteInfoRenderer.render(results, Map.of("query", query,
+                "hideRanking", true,
+                "focusDomain", Objects.requireNonNullElse(domain, ""),
+                "profile", parameters.profileStr(),
+                "results", resultSet, "screenshot",
+                screenshotPath == null ? "" : screenshotPath.toString())));
     }
 
 

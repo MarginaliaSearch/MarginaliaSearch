@@ -28,11 +28,11 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static nu.marginalia.wmsa.configuration.ServiceDescriptor.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 @Tag("e2e")
 @Testcontainers
@@ -188,7 +188,7 @@ public class EdgeSearchE2ETest extends E2ETestBase {
         System.out.println(driver.getTitle());
 
         var html = driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML");
-        assertEquals(List.of("Bird", "Washington, D.C."), getTitlesFromSearchResults(html));
+        assertEquals(List.of("Bird"), getTitlesFromSearchResults(html));
 
         Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("query"));
     }
@@ -201,7 +201,7 @@ public class EdgeSearchE2ETest extends E2ETestBase {
         System.out.println(driver.getTitle());
 
         var html = driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML");
-        assertNotEquals(List.of("Bird", "Washington, D.C."), getTitlesFromSearchResults(html));
+        assertEquals(Collections.emptyList(), getTitlesFromSearchResults(html));
 
         Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("query-yes-js"));
     }
@@ -214,7 +214,7 @@ public class EdgeSearchE2ETest extends E2ETestBase {
         System.out.println(driver.getTitle());
 
         var html = driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML");
-        assertEquals(List.of("Bird", "Washington, D.C."), getTitlesFromSearchResults(html));
+        assertEquals(List.of("Bird"), getTitlesFromSearchResults(html));
 
         Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("query-no-js"));
     }

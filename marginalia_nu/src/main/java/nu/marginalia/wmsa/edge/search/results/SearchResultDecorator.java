@@ -59,6 +59,7 @@ public class SearchResultDecorator {
                 details.rankingId = rankingId;
             }
 
+            details.resultsFromSameDomain = resultItem.resultsFromDomain;
             details.termScore = calculateTermScore(resultItem, details);
 
             logger.debug("{} -> {}", details.url, details.termScore);

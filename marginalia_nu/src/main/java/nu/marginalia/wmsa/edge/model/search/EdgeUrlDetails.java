@@ -30,6 +30,12 @@ public class EdgeUrlDetails {
     public long rankingId;
     public double termScore;
 
+    public int resultsFromSameDomain;
+
+    public boolean hasMoreResults() {
+        return resultsFromSameDomain > 1;
+    }
+
     public long rankingIdAdjustment() {
         int penalty = 0;
 

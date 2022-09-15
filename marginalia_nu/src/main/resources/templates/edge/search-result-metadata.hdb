@@ -5,6 +5,6 @@
 {{#if cookies}}<abbr title="cookies" class="meta">👁️️</abbr>{{/if}}
 {{#if ads}}<abbr title="possible annoying ads or popovers (experimental)" class="meta">⚠️️️</abbr>{{/if}}
 <span class="meta">{{format}}</span>
-{{#unless focusDomain}}
+{{#unless hideRanking}}
 <span class="rank-symbol" title="{{rankingSymbolDesc}}">{{{rankingSymbol}}}</span>
 {{/unless}}

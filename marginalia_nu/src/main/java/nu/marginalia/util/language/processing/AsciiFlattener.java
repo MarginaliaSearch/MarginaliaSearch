@@ -1,16 +1,23 @@
 package nu.marginalia.util.language.processing;
 
-import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 public class AsciiFlattener {
 
     private static final Pattern nonAscii = Pattern.compile("[^a-zA-Z0-9_.'+@#:\\-]+");
-    private static final Pattern plainAsciiPattern = Pattern.compile("^[a-zA-Z0-9_.'+@#:\\-]+$");
-    private static final Predicate<String> plainAscii = plainAsciiPattern.asMatchPredicate();
 
+    private static boolean isPlainAscii(String s) {
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if ((c & 0x80) != 0) {
+                return false;
+            }
+        }
+        return true;
+    }
     public static String flattenUnicode(String s) {
-        if (plainAscii.test(s)) {
+
+        if (isPlainAscii(s)) {
             return s;
         }
 
