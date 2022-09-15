@@ -19,7 +19,6 @@
 <article>
 {{>edge/parts/search-form}}
 
-{{#each domainResults}}{{>edge/browse-result-rb}}{{/each}}
 
 <section class="cards">
     {{#if maintenanceMessage}}<section class="card problems onlyscreen"><h2>Maintenance</h2><p class="description">{{maintenanceMessage}}</p></section>{{/if}}
@@ -41,6 +40,7 @@
 
     {{#unless evalResult}}{{#if problems}}<section class="card problems onlyscreen"><h2>Suggestions</h2><ul class="onlyscreen search-problems">{{#each problems}}<li>{{{.}}}</li>{{/each}}</ul></section> {{/if}}{{/unless}}
 
+    {{#each domainResults}}{{>edge/browse-result}}{{/each}}
     {{#each results}}{{>edge/search-result}}{{/each}}
 
 </section>

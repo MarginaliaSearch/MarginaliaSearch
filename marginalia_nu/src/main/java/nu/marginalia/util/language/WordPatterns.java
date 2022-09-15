@@ -31,7 +31,7 @@ public class WordPatterns {
 
     public static final Set<String> topWords;
     static {
-        topWords = new HashSet<>(200);
+        topWords = new HashSet<>(200, 0.25f);
         try (var resource = Objects.requireNonNull(ClassLoader.getSystemResourceAsStream("dictionary/en-stopwords"),
                 "Could not load word frequency table");
              var br = new BufferedReader(new InputStreamReader(resource))
@@ -87,11 +87,33 @@ public class WordPatterns {
         return true;
     }
 
+    public static boolean hasWordQualities(String s) {
+        int start = 0;
+        int end = s.length();
+        if (s.charAt(0) == '#') start++;
+        if (end > 1 && s.charAt(end-1) == '#') end--;
+
+        for (int i = start; i < end; i++) {
+            char c = s.charAt(i);
+            if (!("_@.'+-".indexOf(c) >= 0)
+                && !(c >= 'a' && c <= 'z')
+                && !(c >= 'A' && c <= 'Z')
+                && !(c >= '0' && c <= '9')
+                && !(c >= '\u00C0' && c <= '\u00D6')
+                && !(c >= '\u00D8' && c <= '\u00f6')
+                && !(c >= '\u00f8' && c <= '\u00ff')) {
+                        return false;
+            }
+        }
+
+        return true;
+    }
+
     public static boolean isStopWord(String s) {
         if (s.length() < MIN_WORD_LENGTH) {
             return true;
         }
-        if (!wordQualitiesPredicate.test(s)) {
+        if (!hasWordQualities(s)) {
             return true;
         }
         if (!filter(s)) {

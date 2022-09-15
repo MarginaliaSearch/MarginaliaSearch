@@ -6,10 +6,10 @@ import gnu.trove.map.hash.TObjectIntHashMap;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.SneakyThrows;
+import nu.marginalia.util.language.conf.LanguageModels;
 import nu.marginalia.util.language.processing.model.DocumentLanguageData;
 import nu.marginalia.util.language.processing.model.DocumentSentence;
 import nu.marginalia.util.language.processing.model.tag.WordSeparator;
-import nu.marginalia.util.language.conf.LanguageModels;
 import opennlp.tools.sentdetect.SentenceDetectorME;
 import opennlp.tools.sentdetect.SentenceModel;
 import opennlp.tools.stemmer.PorterStemmer;
@@ -127,8 +127,9 @@ public class SentenceExtractor {
 
     private static final Pattern dotPattern = Pattern.compile("\\.+$");
     private static final Pattern splitPattern = Pattern.compile("( -|- |\\|)");
+    private static final Pattern spacesPattern = Pattern.compile("\\s+");
+
     private static final Pattern badCharPattern = Pattern.compile("([^_#@.a-zA-Z'+\\-0-9\\u00C0-\\u00D6\\u00D8-\\u00f6\\u00f8-\\u00ff]+)|(\\.(\\s+|$))");
-    private static final Pattern possessivePattern = Pattern.compile("'(s)?$");
 
     public DocumentSentence extractSentence(String text) {
         var wordsAndSeps = splitSegment(text);
@@ -142,10 +143,20 @@ public class SentenceExtractor {
         );
     }
 
+    public String normalizeSpaces(String s) {
+        if (s.indexOf('\t') >= 0) {
+            s = s.replace('\t', ' ');
+        }
+        if (s.indexOf('\n') >= 0) {
+            s = s.replace('\n', ' ');
+        }
+        return s;
+    }
+
     public DocumentSentence[] extractSentencesFromString(String text) {
         String[] sentences;
 
-        String textNormalizedSpaces = text.replaceAll("\\s", " ");
+        String textNormalizedSpaces = normalizeSpaces(text);
         try {
             sentences = sentenceDetector.sentDetect(textNormalizedSpaces);
         }
@@ -157,10 +168,17 @@ public class SentenceExtractor {
             sentences = Arrays.copyOf(sentences, 250);
         }
 
-        sentences = Arrays.stream(sentences)
-                .filter(s -> !s.isBlank())
-                .flatMap(s -> Arrays.stream(splitPattern.split(s)))
-                .toArray(String[]::new);
+        List<String> sentenceList = new ArrayList<>();
+        for (var s : sentences) {
+            if (s.isBlank()) continue;
+            if (s.contains("-") || s.contains("|")) {
+                sentenceList.addAll(Arrays.asList(splitPattern.split(s)));
+            }
+            else {
+                sentenceList.add(s);
+            }
+        }
+        sentences = sentenceList.toArray(String[]::new);
 
         final String[][] tokens = new String[sentences.length][];
         final int[][] separators = new int[sentences.length][];
@@ -178,7 +196,9 @@ public class SentenceExtractor {
                 separators[i] = Arrays.copyOf(separators[i], 250);
             }
             for (int j = 0; j < tokens[i].length; j++) {
-                tokens[i][j] = dotPattern.matcher(tokens[i][j]).replaceAll( "");
+                if (tokens[i][j].endsWith(".")) {
+                    tokens[i][j] = dotPattern.matcher(tokens[i][j]).replaceAll("");
+                }
             }
         }
 
@@ -204,7 +224,7 @@ public class SentenceExtractor {
     private String[] stemSentence(String[] strings) {
         String[] stemmed = new String[strings.length];
         for (int i = 0; i < stemmed.length; i++) {
-            var sent = possessivePattern.matcher(strings[i]).replaceAll("");
+            var sent = cleanPossessive(strings[i]);
             try {
                 stemmed[i] = porterStemmer.stem(sent);
             }
@@ -215,10 +235,23 @@ public class SentenceExtractor {
         return stemmed;
     }
 
+    private String cleanPossessive(String s) {
+        int end = s.length();
+
+        if (s.endsWith("\'")) {
+            return s.substring(0, end-1);
+        } else if (end > 2 && s.charAt(end-2) == '\'' && "sS".indexOf(s.charAt(end-1))>=0) {
+            return s.substring(0, end-2).toLowerCase();
+        }
+        else {
+            return s;
+        }
+    }
+
     private String[] toLc(String[] words) {
         String[] lower = new String[words.length];
         for (int i = 0; i < lower.length; i++) {
-            lower[i] = possessivePattern.matcher(words[i].toLowerCase()).replaceAll("");
+            lower[i] = cleanPossessive(words[i]).toLowerCase();
         }
         return lower;
     }

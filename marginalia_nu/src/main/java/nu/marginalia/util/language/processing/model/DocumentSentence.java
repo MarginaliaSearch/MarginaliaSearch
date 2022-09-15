@@ -8,7 +8,6 @@ import java.lang.ref.SoftReference;
 import java.util.BitSet;
 import java.util.Iterator;
 import java.util.StringJoiner;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -53,26 +52,70 @@ public class DocumentSentence implements Iterable<DocumentSentence.SentencePos>{
         return words.length;
     }
 
-    private final static Pattern trailingJunkPattern = Pattern.compile("(^[\"'_*]+|[_*'\"]+$)");
-    private final static Pattern joinerPattern = Pattern.compile("[-+.]+");
+    private String removeJunk(String s) {
+        int start = 0;
+        int end = s.length();
 
-    public String constructWordFromSpan(WordSpan span) {
-        StringJoiner sj = new StringJoiner("_");
-        for (int i = span.start; i < span.end; i++) {
-            sj.add(wordsLowerCase[i]);
+        for (; start < end; start++) {
+            if ("\"'_*".indexOf(s.charAt(start)) < 0)
+                break;
         }
 
-        return trailingJunkPattern.matcher(sj.toString()).replaceAll("");
+        for (; end > start; end--) {
+            if ("\"'_*".indexOf(s.charAt(end-1)) < 0)
+                break;
+        }
+
+        if (start > 0 || end < s.length()) {
+            return s.substring(start, end);
+        }
+        else {
+            return s;
+        }
     }
 
-    public String constructStemmedWordFromSpan(WordSpan span) {
-        StringJoiner sj = new StringJoiner("_");
-        for (int i = span.start; i < span.end; i++) {
-            if (includeInStemming(i))
-                sj.add(joinerPattern.matcher(stemmedWords[i]).replaceAll("_"));
-
+    public String constructWordFromSpan(WordSpan span) {
+        if (span.size() == 1) {
+            return removeJunk(wordsLowerCase[span.start]);
         }
-        return sj.toString();
+        else {
+            StringJoiner sj = new StringJoiner("_");
+            for (int i = span.start; i < span.end; i++) {
+                sj.add(wordsLowerCase[i]);
+            }
+            return removeJunk(sj.toString());
+        }
+    }
+
+
+    private String normalizeJoiner(String s) {
+
+        if (s.indexOf('+') >= 0) {
+            s = s.replace('+', '_');
+        }
+        if (s.indexOf('.') >= 0) {
+            s = s.replace('.', '_');
+        }
+        if (s.indexOf('-') >= 0) {
+            s = s.replace('-', '_');
+        }
+        return s;
+    }
+    public String constructStemmedWordFromSpan(WordSpan span) {
+        if (span.size() > 1) {
+
+            StringJoiner sj = new StringJoiner("_");
+            for (int i = span.start; i < span.end; i++) {
+                if (includeInStemming(i))
+                    sj.add(normalizeJoiner(stemmedWords[i]));
+
+            }
+            return sj.toString();
+        }
+        else if (includeInStemming(span.start)) {
+            return normalizeJoiner(stemmedWords[span.start]);
+        }
+        else return "";
     }
 
     private boolean includeInStemming(int i) {

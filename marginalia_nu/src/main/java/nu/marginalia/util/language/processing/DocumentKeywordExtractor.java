@@ -10,6 +10,7 @@ import nu.marginalia.wmsa.edge.model.crawl.EdgePageWords;
 
 import javax.inject.Inject;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class DocumentKeywordExtractor {
@@ -156,13 +157,16 @@ public class DocumentKeywordExtractor {
         }
     }
 
+    private static final Pattern mailLikePattern = Pattern.compile("[a-zA-Z0-9._\\-]+@[a-zA-Z0-9]+(\\.[a-zA-Z0-9]+)+");
     private Collection<String> getArtifacts(DocumentLanguageData documentLanguageData) {
         Set<String> reps = new HashSet<>();
 
         for (var sent : documentLanguageData.sentences) {
             for (var word : sent) {
                 String lc = word.wordLowerCase();
-                if (lc.matches("[a-zA-Z0-9._\\-]+@[a-zA-Z0-9]+(\\.[a-zA-Z0-9]+)+")) {
+                if (lc.length() > 6
+                    && lc.indexOf('@') > 0
+                    && mailLikePattern.matcher(lc).matches()) {
                     reps.add(lc);
 
                     String domain = lc.substring(lc.indexOf('@'));
@@ -189,6 +193,6 @@ public class DocumentKeywordExtractor {
     }
 
     public EdgePageWords createWords(IndexBlock block, Collection<WordRep> words) {
-        return new EdgePageWords(block, words.stream().map(w -> w.word).map(AsciiFlattener::flattenUnicode).filter(WordPatterns.wordQualitiesPredicate).collect(Collectors.toSet()));
+        return new EdgePageWords(block, words.stream().map(w -> w.word).map(AsciiFlattener::flattenUnicode).filter(WordPatterns::hasWordQualities).collect(Collectors.toSet()));
     }
 }

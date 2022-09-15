@@ -16,6 +16,8 @@ public class EdgeSearchResultItem {
 
     public final List<EdgeSearchResultKeywordScore> scores;
 
+    public int resultsFromDomain;
+
     public EdgeSearchResultItem(int bucketId, long val) {
         this.bucketId = bucketId;
         this.combinedId = val;
@@ -32,6 +34,7 @@ public class EdgeSearchResultItem {
     public int getRanking() {
         return (int)(combinedId >>> 32);
     }
+    public int getResultsFromDomain() { return resultsFromDomain; }
 
     /* Used for evaluation */
     private transient double scoreValue = 1;
@@ -55,5 +58,15 @@ public class EdgeSearchResultItem {
             return o.getUrlIdInt()  == getUrlIdInt();
         }
         return false;
+    }
+
+    public long deduplicationKey() {
+        final int ranking = getRanking();
+
+        if (ranking == Integer.MAX_VALUE) {
+            return 0;
+        }
+
+        return ranking*32L + bucketId;
     }
 }
