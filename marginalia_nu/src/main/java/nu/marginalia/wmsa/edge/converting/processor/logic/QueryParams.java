@@ -29,6 +29,8 @@ public class QueryParams {
     public static boolean isPermittedParam(String path, String param) {
         if (path.endsWith(".cgi")) return true;
 
+        if (path.endsWith("/posting.php")) return false;
+
         if (param.startsWith("id=")) return true;
         if (param.startsWith("p=")) {
             // Don't retain forum links with post-id:s, they're always non-canonical and eat up a lot of
