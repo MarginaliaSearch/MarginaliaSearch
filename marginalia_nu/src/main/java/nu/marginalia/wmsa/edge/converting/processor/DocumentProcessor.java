@@ -176,6 +176,8 @@ public class DocumentProcessor {
             throw new DisqualifiedException(DisqualificationReason.FORBIDDEN);
         }
 
+        final EdgeUrl url = new EdgeUrl(crawledDocument.url);
+
         Document prunedDoc = doc.clone();
 
         prunedDoc.getElementsByTag("svg").remove();
@@ -194,10 +196,12 @@ public class DocumentProcessor {
         ret.quality = documentValuator.getQuality(ret.standard, doc, dld);
         ret.hashCode = HashCode.fromString(crawledDocument.documentBodyHash).asLong();
 
-        final boolean doSimpleProcessing = ret.quality < minDocumentQuality;
-
         EdgePageWordSet words;
-        if (doSimpleProcessing) {
+        if (shouldDoSimpleProcessing(url, ret)) {
+            /* Some documents we'll index, but only superficially. This is a compromise
+               to allow them to be discoverable, without having them show up without specific
+               queries. This also saves a lot of processing power.
+             */
             ret.features = Set.of(HtmlFeature.UNKNOWN);
             words = keywordExtractor.extractKeywordsMinimal(dld);
             ret.description = "";
@@ -208,12 +212,34 @@ public class DocumentProcessor {
             ret.description = getDescription(doc);
         }
 
-        var url = new EdgeUrl(crawledDocument.url);
         addMetaWords(ret, url, crawledDomain, words);
 
         getLinks(url, ret, doc, words);
 
         return new DetailsWithWords(ret, words);
+    }
+
+    private boolean shouldDoSimpleProcessing(EdgeUrl url, ProcessedDocumentDetails ret) {
+        if (ret.quality < minDocumentQuality) {
+            return true;
+        }
+
+        // These pages shouldn't be publicly accessible
+        if ("phpinfo()".equals(ret.title)) {
+            return true;
+        }
+
+        // Urls that look like /@foo are typically Mastodon or other twitter-like feeds,
+        // we don't want to index them because they change so rapidly; subdirectories are
+        // fine though
+        //
+        // The first startsWith criteria is a performance optimization, even with a compiled
+        // pattern it is something like 50x faster
+        if (url.path.startsWith("/@") && url.path.matches("^/@[^/]+/?$")) {
+            return true;
+        }
+
+        return false;
     }
 
     private void addMetaWords(ProcessedDocumentDetails ret, EdgeUrl url, CrawledDomain domain, EdgePageWordSet words) {

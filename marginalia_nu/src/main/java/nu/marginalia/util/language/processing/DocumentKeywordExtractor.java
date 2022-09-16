@@ -167,6 +167,7 @@ public class DocumentKeywordExtractor {
                 if (lc.length() > 6
                     && lc.indexOf('@') > 0
                     && mailLikePattern.matcher(lc).matches()) {
+
                     reps.add(lc);
 
                     String domain = lc.substring(lc.indexOf('@'));
