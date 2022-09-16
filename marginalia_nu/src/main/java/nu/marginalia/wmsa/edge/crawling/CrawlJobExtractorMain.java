@@ -115,6 +115,16 @@ public class CrawlJobExtractorMain {
         }
     }
 
+    public static void writeSpec(Path outFile, CrawlingSpecification... specs) throws IOException {
+        Gson gson = GsonFactory.get();
+
+        try (var out = new PrintWriter(new ZstdOutputStream(new BufferedOutputStream(new FileOutputStream(outFile.toFile()))))) {
+            for (var spec : specs) {
+                out.println(gson.toJson(spec));
+            }
+        }
+    }
+
     private record DomainWithId(String domainName, int id) {
     }
 

@@ -9,7 +9,10 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 @Singleton
 public class LanguageFilter {
@@ -78,7 +81,10 @@ public class LanguageFilter {
     }
 
     public boolean isBlockedUnicodeRange(String data) {
-        return Arrays.stream(UnicodeRanges.values())
-                .parallel().anyMatch(range -> range.test(data));
+        for (var range: UnicodeRanges.values()) {
+            if (range.test(data))
+                return true;
+        }
+        return false;
     }
 }

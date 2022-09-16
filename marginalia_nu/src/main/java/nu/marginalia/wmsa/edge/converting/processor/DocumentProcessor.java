@@ -162,16 +162,23 @@ public class DocumentProcessor {
     private DetailsWithWords createDetails(CrawledDomain crawledDomain, CrawledDocument crawledDocument)
             throws DisqualifiedException, URISyntaxException {
 
+        if (languageFilter.isBlockedUnicodeRange(crawledDocument.documentBody)) {
+            throw new DisqualifiedException(DisqualificationReason.LANGUAGE);
+        }
+
         Document doc = Jsoup.parse(crawledDocument.documentBody);
 
         if (AcceptableAds.hasAcceptableAdsTag(doc)) {
             throw new DisqualifiedException(DisqualificationReason.ACCEPTABLE_ADS);
         }
+
         if (doc.select("meta[name=robots]").attr("content").contains("noindex")) {
             throw new DisqualifiedException(DisqualificationReason.FORBIDDEN);
         }
 
         Document prunedDoc = doc.clone();
+
+        prunedDoc.getElementsByTag("svg").remove();
         prunedDoc.body().filter(new DomPruningFilter(0.5));
 
         var dld = sentenceExtractor.extractSentences(prunedDoc);

@@ -28,7 +28,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 public class CrawlerRetreiver {
-    private static final long DEFAULT_CRAWL_DELAY_MIN_MS = Long.getLong("defaultCrawlDelay", 250);
+    private static final long DEFAULT_CRAWL_DELAY_MIN_MS = Long.getLong("defaultCrawlDelay", 500);
     private static final long DEFAULT_CRAWL_DELAY_MAX_MS = Long.getLong("defaultCrawlDelaySlow", 2500);
 
     private final LinkedList<EdgeUrl> queue = new LinkedList<>();
@@ -75,7 +75,7 @@ public class CrawlerRetreiver {
 
         if (queue.peek() != null) {
             var fst = queue.peek();
-            var root = fst.domain.toRootUrl();
+            var root = fst.withPathAndParam("/", null);
             if (known.add(root.toString()))
                 queue.addFirst(root);
         }
@@ -117,7 +117,7 @@ public class CrawlerRetreiver {
                     .build());
         }
 
-        var fetchResult = fetcher.probeDomain(fst.domain.toRootUrl());
+        var fetchResult = fetcher.probeDomain(fst.withPathAndParam("/", null));
         if (!fetchResult.ok()) {
             logger.debug("Bad status on {}", domain);
             return Optional.of(createErrorPostFromStatus(fetchResult));

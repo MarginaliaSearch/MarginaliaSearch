@@ -111,7 +111,7 @@ public class HttpFetcher {
     @SneakyThrows
     public FetchResult probeDomain(EdgeUrl url) {
         var head = new Request.Builder().head().addHeader("User-agent", userAgent)
-                .url(url.domain.toRootUrl().toString())
+                .url(url.toString())
                 .build();
 
         var call = client.newCall(head);

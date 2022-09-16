@@ -80,6 +80,7 @@ public enum ServiceDescriptor {
         Map<String, Command> functions = Stream.of(new ListCommand(),
                 new StartCommand(),
                 new ConvertCommand(),
+                new CrawlCommand(),
                 new LoadCommand(),
                 new ReindexCommand(),
                 new VersionCommand(),
