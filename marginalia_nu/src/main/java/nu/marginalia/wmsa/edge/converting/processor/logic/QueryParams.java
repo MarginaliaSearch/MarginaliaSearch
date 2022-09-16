@@ -39,10 +39,17 @@ public class QueryParams {
             }
             return true;
         }
+        if (param.startsWith("f=")) {
+            if (path.endsWith("showthread.php") || path.endsWith("viewtopic.php")) {
+                return false;
+            }
+            return true;
+        }
         if (param.startsWith("i=")) return true;
         if (param.startsWith("start=")) return true;
         if (param.startsWith("t=")) return true;
         if (param.startsWith("v=")) return true;
+
         if (param.startsWith("post=")) return true;
 
         if (path.endsWith("index.php")) {
