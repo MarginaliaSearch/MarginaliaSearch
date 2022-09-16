@@ -30,8 +30,17 @@ public class QueryParams {
         if (path.endsWith(".cgi")) return true;
 
         if (param.startsWith("id=")) return true;
-        if (param.startsWith("p=")) return true;
+        if (param.startsWith("p=")) {
+            // Don't retain forum links with post-id:s, they're always non-canonical and eat up a lot of
+            // crawling bandwidth
+
+            if (path.endsWith("showthread.php") || path.endsWith("viewtopic.php")) {
+                return false;
+            }
+            return true;
+        }
         if (param.startsWith("i=")) return true;
+        if (param.startsWith("start=")) return true;
         if (param.startsWith("t=")) return true;
         if (param.startsWith("v=")) return true;
         if (param.startsWith("post=")) return true;
