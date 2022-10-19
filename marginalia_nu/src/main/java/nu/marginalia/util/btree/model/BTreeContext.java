@@ -19,7 +19,7 @@ public record BTreeContext(int MAX_LAYERS,
     }
 
     public int numIndexLayers(int numEntries) {
-        if (numEntries <= BLOCK_SIZE_WORDS*2) {
+        if (numEntries <= BLOCK_SIZE_WORDS*2/entrySize) {
             return 0;
         }
         for (int i = 1; i < MAX_LAYERS; i++) {

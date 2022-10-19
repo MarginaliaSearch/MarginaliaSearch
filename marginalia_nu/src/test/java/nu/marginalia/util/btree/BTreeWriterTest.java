@@ -16,7 +16,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.StringJoiner;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BTreeWriterTest {
 
@@ -100,10 +101,9 @@ class BTreeWriterTest {
             }
 
             {
-                var reader = new BTreeReader(mmf, ctx);
-                var header = reader.getHeader(0);
+                var reader = new BTreeReader(mmf, ctx, 0);
                 for (int i = 0; i < data.length; i++) {
-                    long offset = reader.findEntry(header, data[i]);
+                    long offset = reader.findEntry(data[i]);
                     assertTrue(offset >= 0, "Negative offset for " + i + " -> " + offset);
                     assertEquals(i, mmf.get(offset+1));
                 }
@@ -143,10 +143,9 @@ class BTreeWriterTest {
             }
 
             {
-                var reader = new BTreeReader(mmf, ctx);
-                var header = reader.getHeader(0);
+                var reader = new BTreeReader(mmf, ctx, 0);
                 for (int i = 0; i < data.length; i++) {
-                    long offset = reader.findEntry(header, data[i]);
+                    long offset = reader.findEntry(data[i]);
                     assertTrue(offset >= 0, "Negative offset for " + i + " -> " + offset);
                     assertEquals(i, mmf.get(offset+1));
                 }
@@ -154,7 +153,7 @@ class BTreeWriterTest {
                 for (int i = 0; i < 500; i++) {
                     long val = (long)(Long.MAX_VALUE * Math.random());
                     while (toPut.contains((int)val)) val = (long)(Long.MAX_VALUE * Math.random());
-                    assertEquals(-1, reader.findEntry(header, val));
+                    assertEquals(-1, reader.findEntry( val));
                 }
             }
         } catch (Exception e) {
@@ -191,13 +190,12 @@ class BTreeWriterTest {
                 }
 
                 {
-                    var reader = new BTreeReader(mmf, ctx);
-                    var header = reader.getHeader(0);
+                    var reader = new BTreeReader(mmf, ctx, 0);
 
-                    printTreeLayout(toPut.size(), header, ctx);
+                    printTreeLayout(toPut.size(), reader.getHeader(), ctx);
 
                     for (int i = 0; i < data.length; i++) {
-                        long offset = reader.findEntry(header, data[i]);
+                        long offset = reader.findEntry(data[i]);
                         assertTrue(offset >= 0, "Negative offset for " + i + " -> " + offset);
                         assertEquals(data[i], mmf.get(offset));
                     }
@@ -205,7 +203,7 @@ class BTreeWriterTest {
                     for (int i = 0; i < 500; i++) {
                         long val = (long) (Long.MAX_VALUE * Math.random());
                         while (toPut.contains(val)) val = (long) (Long.MAX_VALUE * Math.random());
-                        assertEquals(-1, reader.findEntry(header, val));
+                        assertEquals(-1, reader.findEntry(val));
                     }
                 }
             } catch (Exception e) {
@@ -244,13 +242,12 @@ class BTreeWriterTest {
                 }
 
                 {
-                    var reader = new BTreeReader(mmf, ctx);
-                    var header = reader.getHeader(0);
+                    var reader = new BTreeReader(mmf, ctx, 0);
 
-                    printTreeLayout(toPut.size(), header, ctx);
+                    printTreeLayout(toPut.size(), reader.getHeader(), ctx);
 
                     for (int i = 0; i < data.length; i++) {
-                        long offset = reader.findEntry(header, data[i] & mask);
+                        long offset = reader.findEntry(data[i] & mask);
                         assertTrue(offset >= 0, "Negative offset for " + i + " -> " + offset);
                         assertEquals(data[i], mmf.get(offset));
                     }
@@ -258,7 +255,7 @@ class BTreeWriterTest {
                     for (int i = 0; i < 500; i++) {
                         long val = (long) (Long.MAX_VALUE * Math.random());
                         while (toPut.contains(val)) val = (long) (Long.MAX_VALUE * Math.random());
-                        assertEquals(-1, reader.findEntry(header, val & mask));
+                        assertEquals(-1, reader.findEntry(val & mask));
                     }
                 }
             } catch (Exception e) {
@@ -298,13 +295,12 @@ class BTreeWriterTest {
                 }
 
                 {
-                    var reader = new BTreeReader(mmf, ctx);
-                    var header = reader.getHeader(0);
+                    var reader = new BTreeReader(mmf, ctx, 0);
 
-                    printTreeLayout(toPut.size(), header, ctx);
+                    printTreeLayout(toPut.size(), reader.getHeader(), ctx);
 
                     for (int i = 0; i < data.length; i++) {
-                        long offset = reader.findEntry(header, data[i] & mask);
+                        long offset = reader.findEntry(data[i] & mask);
                         assertTrue(offset >= 0, "Negative offset for " + i + " -> " + offset);
                         assertEquals(data[i], mmf.get(offset));
                         assertEquals(i, mmf.get(offset+1));
@@ -313,7 +309,7 @@ class BTreeWriterTest {
                     for (int i = 0; i < 500; i++) {
                         long val = (long) (Long.MAX_VALUE * Math.random());
                         while (toPut.contains(val)) val = (long) (Long.MAX_VALUE * Math.random());
-                        assertEquals(-1, reader.findEntry(header, val & mask));
+                        assertEquals(-1, reader.findEntry(val & mask));
                     }
                 }
             } catch (Exception e) {

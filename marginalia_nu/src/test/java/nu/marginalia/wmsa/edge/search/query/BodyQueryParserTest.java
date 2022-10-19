@@ -65,6 +65,15 @@ class BodyQueryParserTest {
     }
 
     @Test
+    void parseNear() {
+        var results = parser.parse("near:memex.marginalia.nu");
+        results.forEach(System.out::println);
+        assertEquals(TokenType.NEAR_TERM, results.get(0).type);
+        assertEquals("memex.marginalia.nu", results.get(0).str);
+        assertEquals("near:memex.marginalia.nu", results.get(0).displayStr);
+    }
+
+    @Test
     void parseCombined() {
         for (var list : parser.permuteQueries(parser.parse("dune 2 remake"))) {
             for (var t: list) {

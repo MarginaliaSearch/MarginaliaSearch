@@ -103,9 +103,9 @@ public class IndexServicesFactory {
 
     public void convertIndex(int id, IndexBlock block) throws ConversionUnnecessaryException, IOException {
         var converter = new SearchIndexConverter(block, id, tmpFileDir,
-                preconverterOutputFile.get(id, block.ordinal()),
-                indexWriteWordsFile.get(id, block.id),
-                indexWriteUrlsFile.get(id, block.id),
+                preconverterOutputFile.get(id, block),
+                indexWriteWordsFile.get(id, block),
+                indexWriteUrlsFile.get(id, block),
                 partitioner,
                 domainBlacklist
                 );
@@ -118,7 +118,7 @@ public class IndexServicesFactory {
 
         for (int index = 0; index < (DYNAMIC_BUCKET_LENGTH + 1); index++) {
             for (IndexBlock block : IndexBlock.values()) {
-                shards.put(new SearchIndexPreconverter.Shard(index, block.ordinal()), getPreconverterOutputFile(index, block.ordinal()));
+                shards.put(new SearchIndexPreconverter.Shard(index, block.ordinal()), getPreconverterOutputFile(index, block));
             }
         }
 
@@ -129,7 +129,7 @@ public class IndexServicesFactory {
         );
     }
 
-    private File getPreconverterOutputFile(int index, int block) {
+    private File getPreconverterOutputFile(int index, IndexBlock block) {
         return preconverterOutputFile.get(index, block);
     }
 
@@ -141,7 +141,7 @@ public class IndexServicesFactory {
                 indexMap.put(block, createSearchIndex(id, block));
             }
             catch (Exception ex) {
-                logger.error("Could not create index {}-{}", id, block);
+                logger.error("Could not create index {}-{} ({})", id, block, ex.getMessage());
             }
         }
         return new SearchIndexReader(indexMap);
@@ -150,8 +150,8 @@ public class IndexServicesFactory {
     private SearchIndex createSearchIndex(int bucketId, IndexBlock block) {
         try {
             return new SearchIndex("IndexReader"+bucketId+":"+ block.name(),
-                    indexReadUrlsFile.get(bucketId, block.id),
-                    indexReadWordsFile.get(bucketId, block.id));
+                    indexReadUrlsFile.get(bucketId, block),
+                    indexReadWordsFile.get(bucketId, block));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -159,9 +159,10 @@ public class IndexServicesFactory {
 
     public Callable<Boolean> switchFilesJob(int id) {
         return () -> {
-            for (int block = 0; block < IndexBlock.values().length; block++) {
+
+            for (var block : IndexBlock.values()) {
                 if (Files.exists(indexWriteWordsFile.get(id, block).toPath()) &&
-                    Files.exists(indexWriteUrlsFile.get(id, block).toPath())) {
+                        Files.exists(indexWriteUrlsFile.get(id, block).toPath())) {
                     Files.move(
                             indexWriteWordsFile.get(id, block).toPath(),
                             indexReadWordsFile.get(id, block).toPath(),
@@ -172,6 +173,7 @@ public class IndexServicesFactory {
                             StandardCopyOption.REPLACE_EXISTING);
                 }
             }
+
             return true;
         };
     }
@@ -205,8 +207,8 @@ class PartitionedDataFile {
         this.pattern = pattern;
     }
 
-    public File get(int id) {
-        Path partitionDir = partition.resolve(Integer.toString(id));
+    public File get(Object id) {
+        Path partitionDir = partition.resolve(id.toString());
         if (!partitionDir.toFile().exists()) {
             partitionDir.toFile().mkdir();
         }
@@ -223,13 +225,13 @@ class DoublePartitionedDataFile {
         this.pattern = pattern;
     }
 
-    public File get(int id, int id2) {
-        Path partitionDir = partition.resolve(Integer.toString(id));
+    public File get(Object id, Object id2) {
+        Path partitionDir = partition.resolve(id.toString());
 
         if (!partitionDir.toFile().exists()) {
             partitionDir.toFile().mkdir();
         }
-        partitionDir = partitionDir.resolve(Integer.toString(id2));
+        partitionDir = partitionDir.resolve(id2.toString());
         if (!partitionDir.toFile().exists()) {
             partitionDir.toFile().mkdir();
         }

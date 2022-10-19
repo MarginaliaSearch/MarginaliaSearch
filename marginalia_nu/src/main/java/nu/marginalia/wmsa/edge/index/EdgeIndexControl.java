@@ -2,8 +2,8 @@ package nu.marginalia.wmsa.edge.index;
 
 
 import com.google.inject.Inject;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.index.conversion.ConversionUnnecessaryException;
+import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 
 import java.io.IOException;
 
@@ -18,9 +18,6 @@ public class EdgeIndexControl {
     }
 
     public void regenerateIndex(int id) {
-        System.runFinalization();
-        System.gc();
-
         for (IndexBlock block : IndexBlock.values()) {
             try {
                 servicesFactory.convertIndex(id, block);

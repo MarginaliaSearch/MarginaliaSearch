@@ -2,6 +2,7 @@ package nu.marginalia.util.multimap;
 
 import com.upserve.uppend.blobs.NativeIO;
 import lombok.SneakyThrows;
+import nu.marginalia.util.btree.BTreeQueryBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,15 +101,15 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
     public MultimapSearcherBase createSearcher() {
         return new MultimapSearcherBase(this);
     }
-    public MultimapSorter createSorter(Path tmpFile, int internalSortLimit) {
-        return new MultimapSorter(this, tmpFile, internalSortLimit);
+    public MultimapSorter createSorter(Path tmpFile, int internalSortLimit, int minStepSize) {
+        return new MultimapSorter(this, tmpFile, internalSortLimit, minStepSize);
     }
 
     @SneakyThrows
     public void advice(NativeIO.Advice advice) {
         this.defaultAdvice = advice;
         for (var buffer : mappedByteBuffers) {
-                NativeIO.madvise(buffer, advice);
+            NativeIO.madvise(buffer, advice);
         }
     }
 
@@ -340,6 +341,49 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
 
     }
 
+
+    @Override
+    public void write(LongBuffer vals, int n, long idx) {
+        if (idx+n >= mappedSize) {
+            grow(idx+n);
+        }
+        int iN = (int)((idx + n) / bufferSize);
+
+        for (int i = 0; i < n; ) {
+            int i0 = (int)((idx + i) / bufferSize);
+
+            int bufferOffset = (int) ((idx+i) % bufferSize);
+            var buffer = buffers.get(i0);
+
+            final int l;
+
+            if (i0 < iN) l = bufferSize - bufferOffset;
+            else l = Math.min(n - i, bufferSize - bufferOffset);
+
+            buffer.put(bufferOffset, vals, vals.position() + i, l);
+            i+=l;
+        }
+
+    }
+
+    @Override
+    public void swapn(int n, long idx1, long idx2) {
+        for (int i = 0; i < n; i++)
+            swap(idx1+i, idx2+i);
+    }
+
+    private void swap(long idx1, long idx2) {
+        LongBuffer buff1 = buffers.get((int)(idx1) / bufferSize);
+        final int o1 = (int) (idx1) % bufferSize;
+
+        LongBuffer buff2 = buffers.get((int)(idx2) / bufferSize);
+        final int o2 = (int) (idx2) % bufferSize;
+
+        long tmp = buff1.get(o1);
+        buff1.put(o1, buff2.get(o2));
+        buff2.put(o2, tmp);
+    }
+
     @Override
     public void setRange(long idx, int n, long val) {
         if (n == 0) return;
@@ -410,6 +454,387 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
 
     }
 
+    @Override
+    public long binarySearchInternal(long key, long fromIndex, int step, long n, long mask) {
+        if (fromIndex + n*step >= mappedSize)
+            grow(fromIndex + n*step);
+
+        long low = 0;
+        long high = n - 1;
+
+        if (fromIndex/bufferSize == (fromIndex+step*n)/bufferSize) {
+            int idx = (int)(fromIndex / bufferSize);
+
+            while (low <= high) {
+                long mid = (low + high) >>> 1;
+                long off = fromIndex + mid*step;
+                long midVal = buffers.get(idx).get((int)(off % bufferSize)) & mask;
+
+                if (midVal < key)
+                    low = mid + 1;
+                else if (midVal > key)
+                    high = mid - 1;
+                else
+                    return fromIndex + mid*step;
+            }
+        }
+        else {
+            while (low <= high) {
+                long mid = (low + high) >>> 1;
+                long off = fromIndex + mid*step;
+                long midVal = buffers.get((int)(off / bufferSize)).get((int)(off % bufferSize)) & mask;
+
+                if (midVal < key)
+                    low = mid + 1;
+                else if (midVal > key)
+                    high = mid - 1;
+                else
+                    return fromIndex + mid*step;
+            }
+        }
+
+        return -1L-(fromIndex + high*step);
+    }
+
+    @Override
+    public long binarySearchInternal(long key, long fromIndex, long n, long mask) {
+        if (fromIndex + n >= mappedSize)
+            grow(fromIndex + n);
+
+        long low = 0;
+        long high = n - 1;
+
+        if (fromIndex/bufferSize == (fromIndex+n)/bufferSize) {
+            int idx = (int)(fromIndex / bufferSize);
+
+            while (low <= high) {
+                long mid = (low + high) >>> 1;
+                long off = fromIndex + mid;
+                long midVal = buffers.get(idx).get((int)(off % bufferSize)) & mask;
+
+                if (midVal < key)
+                    low = mid + 1;
+                else if (midVal > key)
+                    high = mid - 1;
+                else
+                    return fromIndex + mid;
+            }
+        }
+        else {
+            while (low <= high) {
+                long mid = (low + high) >>> 1;
+                long off = fromIndex + mid;
+                long midVal = buffers.get((int)(off / bufferSize)).get((int)(off % bufferSize)) & mask;
+
+                if (midVal < key)
+                    low = mid + 1;
+                else if (midVal > key)
+                    high = mid - 1;
+                else
+                    return fromIndex + mid;
+            }
+        }
+
+        return -1L-(fromIndex + high);
+    }
+
+
+
+    @Override
+    public long binarySearchInternal(long key, long fromIndex, long n) {
+        if (fromIndex + n >= mappedSize)
+            grow(fromIndex + n);
+
+        long low = 0;
+        long high = n - 1;
+
+        if (fromIndex/bufferSize == (fromIndex+n)/bufferSize) {
+            int idx = (int)(fromIndex / bufferSize);
+
+            while (low <= high) {
+                long mid = (low + high) >>> 1;
+                long off = fromIndex + mid;
+                long midVal = buffers.get(idx).get((int)(off % bufferSize));
+
+                if (midVal < key)
+                    low = mid + 1;
+                else if (midVal > key)
+                    high = mid - 1;
+                else
+                    return fromIndex + mid;
+            }
+        }
+        else {
+            while (low <= high) {
+                long mid = (low + high) >>> 1;
+                long off = fromIndex + mid;
+                long midVal = buffers.get((int)(off / bufferSize)).get((int)(off % bufferSize));
+
+                if (midVal < key)
+                    low = mid + 1;
+                else if (midVal > key)
+                    high = mid - 1;
+                else
+                    return fromIndex + mid;
+            }
+        }
+
+        return -1L-(fromIndex + high);
+    }
+
+
+    @Override
+    public long binarySearchUpperInternal(long key, long fromIndex, long n) {
+        if (fromIndex + n >= mappedSize)
+            grow(fromIndex + n);
+
+        long low = 0;
+        long high = n - 1;
+
+        if (fromIndex/bufferSize == (fromIndex+n)/bufferSize) {
+            int idx = (int)(fromIndex / bufferSize);
+
+            while (low <= high) {
+                long mid = (low + high) >>> 1;
+                long off = fromIndex + mid;
+                long midVal = buffers.get(idx).get((int)(off % bufferSize));
+
+                if (midVal < key)
+                    low = mid + 1;
+                else if (midVal > key)
+                    high = mid - 1;
+                else
+                    return fromIndex + mid;
+            }
+        }
+        else {
+            while (low <= high) {
+                long mid = (low + high) >>> 1;
+                long off = fromIndex + mid;
+                long midVal = buffers.get((int)(off / bufferSize)).get((int)(off % bufferSize));
+
+                if (midVal < key)
+                    low = mid + 1;
+                else if (midVal > key)
+                    high = mid - 1;
+                else
+                    return fromIndex + mid;
+            }
+        }
+
+        return fromIndex + low;
+    }
+
+    private boolean isSameBuffer(long a, long b) {
+        return a / bufferSize == b/bufferSize;
+    }
+
+    @Override
+    public long quickSortPartition(int wordSize, long low, long high) {
+        if (high >= mappedSize)
+            grow(high + wordSize - 1);
+
+        if (isSameBuffer(low, high + wordSize - 1)) {
+            // Specialization that circumvents the need for expensive calls to
+            // MultimapFileLong.get() in the most common scenario
+
+            return quickSortPartitionSameBuffer(wordSize, low, high);
+        }
+        else {
+            return quickSortPartitionDifferentBuffers(wordSize, low, high);
+        }
+    }
+
+    @Override
+    public void insertionSort(int wordSize, long start, int n) {
+        if (start + n + wordSize - 1 >= mappedSize)
+            grow(start + n + wordSize - 1);
+
+        if (n == 1) {
+            return;
+        }
+
+        if (isSameBuffer(start, start + (long)n*wordSize-1L)) {
+            final var buffer = buffers.get((int) (start / bufferSize));
+            int off = (int) (start % bufferSize);
+
+            for (int i = 1; i < n; i++) {
+                for (int j = i; j > 0; j--) {
+                    int a = off + wordSize*(j-1);
+                    int b = off + wordSize*j;
+
+                    if (buffer.get(a) > buffer.get(b)) {
+                        for (int w = 0; w < wordSize; w++) {
+                            long tmp = buffer.get(a+w);
+                            buffer.put(a+w, buffer.get(b+w));
+                            buffer.put(b+w, tmp);
+                        }
+                    }
+                    else break;
+                }
+            }
+        }
+        else for (int i = 1; i < n; i++) {
+            for (int j = i; j > 0; j--) {
+                long a = start + (long)wordSize*(j-1);
+                long b = start + (long)wordSize*j;
+
+                if (get(a) > get(b)) {
+                    swap(a, b);
+                }
+                else {
+                    break;
+                }
+            }
+        }
+    }
+
+
+    private long quickSortPartitionDifferentBuffers(int wordSize, long low, long high) {
+
+        long pivotPoint = ((low + high) / (2L*wordSize)) * wordSize;
+        long pivot = get(pivotPoint);
+
+        long i = low - wordSize;
+        long j = high + wordSize;
+
+        for (;;) {
+            do {
+                i+=wordSize;
+            } while (get(i) < pivot);
+
+            do {
+                j-=wordSize;
+            }
+            while (get(j) > pivot);
+
+            if (i >= j) return j;
+            else swapn(wordSize, i, j);
+        }
+    }
+
+    private long quickSortPartitionSameBuffer(int wordSize, long low, long high) {
+
+        final var buffer = buffers.get((int) (low / bufferSize));
+
+        int pivotPoint = (int) ((low + high) / (2L*wordSize)) * wordSize % bufferSize;
+        long pivot = buffer.get(pivotPoint);
+
+        int j = (int) (high) % bufferSize + wordSize;
+        int i = (int) (low) % bufferSize - wordSize;
+
+        long j0 = high + wordSize - j;
+
+        for (;;) {
+            do {
+                i+=wordSize;
+            } while (buffer.get(i) < pivot);
+
+            do {
+                j-=wordSize;
+            }
+            while (buffer.get(j) > pivot);
+
+            if (i >= j) return j0 + j;
+            else {
+                for (int w = 0; w < wordSize; w++) {
+                    long tmp = buffer.get(i+w);
+                    buffer.put(i+w, buffer.get(j+w));
+                    buffer.put(j+w, tmp);
+                }
+            }
+        }
+    }
+
+
+
+    public void retain(BTreeQueryBuffer buffer, long boundary, long searchStart, long numEntries, long mask, int stepSize) {
+
+        final long end = searchStart + stepSize * numEntries;
+        if (end < mappedSize) {
+            grow(end);
+        }
+
+        long bv = buffer.currentValue() & mask;
+        long av = get(searchStart) & mask;
+        long pos = searchStart;
+
+        int bi = (int)(searchStart / bufferSize);
+        int bo = (int)(searchStart % bufferSize);
+
+        LongBuffer data = buffers.get(bi);
+
+        while (bv <= boundary && buffer.hasMore()) {
+            if (bv < av) {
+                if (!buffer.rejectAndAdvance()) break;
+                bv = buffer.currentValue() & mask;
+                continue;
+            }
+            else if (bv == av) {
+                if (!buffer.retainAndAdvance()) break;
+                bv = buffer.currentValue() & mask;
+                continue;
+            }
+
+            pos += stepSize;
+            if (pos < end) {
+                bo += stepSize;
+                if (bo >= bufferSize) {
+                    data = buffers.get(++bi);
+                    bo = 0;
+                }
+                av = data.get(bo) & mask;
+            }
+            else {
+                break;
+            }
+        }
+
+    }
+
+    public void reject(BTreeQueryBuffer buffer, long boundary, long searchStart, long numEntries, long mask, int stepSize) {
+
+        final long end = searchStart + stepSize * numEntries;
+        if (end < mappedSize) {
+            grow(end);
+        }
+
+        long bv = buffer.currentValue() & mask;
+        long av = get(searchStart) & mask;
+        long pos = searchStart;
+
+        int bi = (int)(searchStart / bufferSize);
+        int bo = (int)(searchStart % bufferSize);
+
+        LongBuffer data = buffers.get(bi);
+
+        while (bv <= boundary && buffer.hasMore()) {
+            if (bv < av) {
+                if (!buffer.retainAndAdvance()) break;
+                bv = buffer.currentValue() & mask;
+                continue;
+            }
+            else if (bv == av) {
+                if (!buffer.rejectAndAdvance()) break;
+                bv = buffer.currentValue() & mask;
+                continue;
+            }
+
+            pos += stepSize;
+            if (pos < end) {
+                bo += stepSize;
+                if (bo >= bufferSize) {
+                    data = buffers.get(++bi);
+                    bo = 0;
+                }
+                av = data.get(bo) & mask;
+            }
+            else {
+                break;
+            }
+        }
+
+    }
 
     @Override
     public void close() throws IOException {
@@ -424,6 +849,4 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
         System.runFinalization();
         System.gc();
     }
-
-
 }

@@ -8,7 +8,8 @@ import nu.marginalia.wmsa.edge.model.crawl.EdgeUrlState;
 
 
 public record LoadProcessedDocumentWithError(EdgeUrl url,
-                                             EdgeUrlState state) implements Instruction
+                                             EdgeUrlState state,
+                                             String reason) implements Instruction
 {
     @Override
     public void apply(Interpreter interpreter) {

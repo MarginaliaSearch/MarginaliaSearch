@@ -29,26 +29,12 @@ public class MultimapSearcherBase {
         return false;
     }
 
-    public long binarySearchUpper(long key, long fromIndex, long n) {
-        long low = 0;
-        long high = n - 1;
-
-        while (low <= high) {
-            long mid = (low + high) >>> 1;
-            long midVal = get(fromIndex + mid);
-
-            if (midVal < key)
-                low = mid + 1;
-            else if (midVal > key)
-                high = mid - 1;
-            else
-                return fromIndex + mid;
-        }
-        return fromIndex + low;
+    public long binarySearchLower(long key, long fromIndex, long n) {
+        return mmf.binarySearchUpperInternal(key, fromIndex, n);
     }
 
 
-    public long binarySearchUpper(long key, long fromIndex, long n, long mask) {
+    public long binarySearchLower(long key, long fromIndex, long n, long mask) {
         long low = 0;
         long high = n - 1;
 
@@ -67,7 +53,7 @@ public class MultimapSearcherBase {
     }
 
 
-    public long binarySearchUpper(long key, long fromIndex, int step, long n, long mask) {
+    public long binarySearchLower(long key, long fromIndex, int step, long n, long mask) {
         long low = 0;
         long high = n - 1;
 
@@ -82,62 +68,19 @@ public class MultimapSearcherBase {
             else
                 return fromIndex + mid*step;
         }
-        return fromIndex + low;
+        return fromIndex + low*step;
     }
 
     public long binarySearch(long key, long fromIndex, long n) {
-        long low = 0;
-        long high = n - 1;
-
-        while (low <= high) {
-            long mid = (low + high) >>> 1;
-            long midVal = get(fromIndex + mid);
-
-            if (midVal < key)
-                low = mid + 1;
-            else if (midVal > key)
-                high = mid - 1;
-            else
-                return fromIndex + mid;
-        }
-        return -1;
+        return mmf.binarySearchInternal(key, fromIndex, n);
     }
 
 
     public long binarySearch(long key, long fromIndex, long n, long mask) {
-        long low = 0;
-        long high = n - 1;
-
-        while (low <= high) {
-            long mid = (low + high) >>> 1;
-            long midVal = get(fromIndex + mid) & mask;
-
-            if (midVal < key)
-                low = mid + 1;
-            else if (midVal > key)
-                high = mid - 1;
-            else
-                return fromIndex + mid;
-        }
-        return -1;
+        return mmf.binarySearchInternal(key, fromIndex, n, mask);
     }
 
-
     public long binarySearch(long key, long fromIndex, int step, long n, long mask) {
-        long low = 0;
-        long high = n - 1;
-
-        while (low <= high) {
-            long mid = (low + high) >>> 1;
-            long midVal = get(fromIndex + mid*step) & mask;
-
-            if (midVal < key)
-                low = mid + 1;
-            else if (midVal > key)
-                high = mid - 1;
-            else
-                return fromIndex + mid*step;
-        }
-        return -1;
+        return mmf.binarySearchInternal(key, fromIndex, step, n, mask);
     }
 }

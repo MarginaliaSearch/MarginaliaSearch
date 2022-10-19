@@ -1,7 +1,7 @@
 package nu.marginalia.util.multimap;
 
 public interface MultimapSearcher {
-    long binarySearchUpper(long key, long fromIndex, long n);
+    long binarySearchLower(long key, long fromIndex, long n);
     long binarySearch(long key, long fromIndex, long n);
 
     static MultimapSearcher forContext(MultimapFileLongSlice slice, long mask, int stepSize) {
@@ -25,8 +25,8 @@ class SimpleMultimapSearcher implements  MultimapSearcher {
     }
 
     @Override
-    public long binarySearchUpper(long key, long fromIndex, long n) {
-        return base.binarySearchUpper(key, fromIndex, n);
+    public long binarySearchLower(long key, long fromIndex, long n) {
+        return base.binarySearchLower(key, fromIndex, n);
     }
 
     @Override
@@ -46,8 +46,8 @@ class MaskedMultimapSearcher implements  MultimapSearcher {
     }
 
     @Override
-    public long binarySearchUpper(long key, long fromIndex, long n) {
-        return base.binarySearchUpper(key, fromIndex, n, mask);
+    public long binarySearchLower(long key, long fromIndex, long n) {
+        return base.binarySearchLower(key, fromIndex, n, mask);
     }
 
     @Override
@@ -69,8 +69,8 @@ class SteppingMaskedMultimapSearcher implements  MultimapSearcher {
     }
 
     @Override
-    public long binarySearchUpper(long key, long fromIndex, long n) {
-        return base.binarySearchUpper(key, fromIndex, step, n, mask);
+    public long binarySearchLower(long key, long fromIndex, long n) {
+        return base.binarySearchLower(key, fromIndex, step, n, mask);
     }
 
     @Override

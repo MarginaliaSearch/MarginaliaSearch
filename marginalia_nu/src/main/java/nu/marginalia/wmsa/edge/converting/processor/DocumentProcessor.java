@@ -7,6 +7,7 @@ import nu.marginalia.util.language.LanguageFilter;
 import nu.marginalia.util.language.processing.DocumentKeywordExtractor;
 import nu.marginalia.util.language.processing.SentenceExtractor;
 import nu.marginalia.util.language.processing.model.DocumentLanguageData;
+import nu.marginalia.util.language.processing.model.KeywordMetadata;
 import nu.marginalia.wmsa.edge.converting.model.DisqualifiedException;
 import nu.marginalia.wmsa.edge.converting.model.DisqualifiedException.DisqualificationReason;
 import nu.marginalia.wmsa.edge.converting.model.ProcessedDocument;
@@ -81,32 +82,12 @@ public class DocumentProcessor {
 
         return ret;
     }
+
     public ProcessedDocument process(CrawledDocument crawledDocument, CrawledDomain crawledDomain) {
         ProcessedDocument ret = new ProcessedDocument();
 
         try {
-            ret.url = getDocumentUrl(crawledDocument);
-            ret.state = crawlerStatusToUrlState(crawledDocument.crawlerStatus, crawledDocument.httpStatus);
-
-            if (ret.state == EdgeUrlState.OK) {
-
-                if (AcceptableAds.hasAcceptableAdsHeader(crawledDocument)) {
-                    throw new DisqualifiedException(DisqualificationReason.ACCEPTABLE_ADS);
-                }
-
-                if (isAcceptedContentType(crawledDocument)) {
-                    var detailsWords = createDetails(crawledDomain, crawledDocument);
-
-                    ret.details = detailsWords.details();
-                    ret.words = detailsWords.words();
-                }
-                else {
-                    throw new DisqualifiedException(DisqualificationReason.CONTENT_TYPE);
-                }
-            }
-            else {
-                throw new DisqualifiedException(DisqualificationReason.STATUS);
-            }
+            processDocument(crawledDocument, crawledDomain, ret);
         }
         catch (DisqualifiedException ex) {
             ret.state = EdgeUrlState.DISQUALIFIED;
@@ -115,12 +96,39 @@ public class DocumentProcessor {
         }
         catch (Exception ex) {
             ret.state = EdgeUrlState.DISQUALIFIED;
+            ret.stateReason = DisqualificationReason.PROCESSING_EXCEPTION.toString();
             logger.info("Failed to convert " + crawledDocument.url, ex);
             ex.printStackTrace();
         }
 
         return ret;
     }
+
+    private void processDocument(CrawledDocument crawledDocument, CrawledDomain crawledDomain, ProcessedDocument ret) throws URISyntaxException, DisqualifiedException {
+
+        var crawlerStatus = CrawlerDocumentStatus.valueOf(crawledDocument.crawlerStatus);
+        if (crawlerStatus != CrawlerDocumentStatus.OK) {
+            throw new DisqualifiedException(crawlerStatus);
+        }
+
+        if (AcceptableAds.hasAcceptableAdsHeader(crawledDocument)) {
+            throw new DisqualifiedException(DisqualificationReason.ACCEPTABLE_ADS);
+        }
+
+        if (!isAcceptedContentType(crawledDocument)) {
+            throw new DisqualifiedException(DisqualificationReason.CONTENT_TYPE);
+        }
+
+
+        ret.url = getDocumentUrl(crawledDocument);
+        ret.state = crawlerStatusToUrlState(crawledDocument.crawlerStatus, crawledDocument.httpStatus);
+
+        var detailsWithWordsLinks = createDetails(crawledDomain, crawledDocument);
+
+        ret.details = detailsWithWordsLinks.details();
+        ret.words = detailsWithWordsLinks.words();
+    }
+
 
     private EdgeUrl getDocumentUrl(CrawledDocument crawledDocument)
             throws URISyntaxException
@@ -193,8 +201,10 @@ public class DocumentProcessor {
         ret.standard = getHtmlStandard(doc);
         ret.title = titleExtractor.getTitleAbbreviated(doc, dld, crawledDocument.url);
 
-        ret.quality = documentValuator.getQuality(ret.standard, doc, dld);
+        ret.quality = documentValuator.getQuality(crawledDocument, ret.standard, doc, dld);
         ret.hashCode = HashCode.fromString(crawledDocument.documentBodyHash).asLong();
+
+        KeywordMetadata keywordMetadata = new KeywordMetadata(ret.quality);
 
         EdgePageWordSet words;
         if (shouldDoSimpleProcessing(url, ret)) {
@@ -203,12 +213,12 @@ public class DocumentProcessor {
                queries. This also saves a lot of processing power.
              */
             ret.features = Set.of(HtmlFeature.UNKNOWN);
-            words = keywordExtractor.extractKeywordsMinimal(dld);
+            words = keywordExtractor.extractKeywordsMinimal(dld, keywordMetadata);
             ret.description = "";
         }
         else {
             ret.features = featureExtractor.getFeatures(crawledDomain, doc, dld);
-            words = keywordExtractor.extractKeywords(dld);
+            words = keywordExtractor.extractKeywords(dld, keywordMetadata);
             ret.description = getDescription(doc);
         }
 
@@ -239,6 +249,10 @@ public class DocumentProcessor {
             return true;
         }
 
+        // Annoying wordpress crap
+        if (url.path.startsWith("/tag/") && url.path.endsWith("/")) {
+            return true;
+        }
         return false;
     }
 
@@ -262,7 +276,7 @@ public class DocumentProcessor {
 
         ret.features.stream().map(HtmlFeature::getKeyword).forEach(tagWords::add);
 
-        words.append(IndexBlock.Meta, tagWords);
+        words.appendWithNoMeta(IndexBlock.Meta, tagWords);
     }
 
     private void getLinks(EdgeUrl baseUrl, ProcessedDocumentDetails ret, Document doc, EdgePageWordSet words) {
@@ -296,14 +310,21 @@ public class DocumentProcessor {
                     .ifPresent(lp::acceptFeed);
         }
 
+        createLinkKeywords(words, lp);
+        createFileLinkKeywords(words, lp, domain);
+    }
+
+    private void createLinkKeywords(EdgePageWordSet words, LinkProcessor lp) {
         final Set<String> linkTerms = new HashSet<>();
 
         for (var fd : lp.getForeignDomains()) {
             linkTerms.add("links:"+fd.toString().toLowerCase());
             linkTerms.add("links:"+fd.getDomain().toLowerCase());
         }
-        words.append(IndexBlock.Meta, linkTerms);
+        words.appendWithNoMeta(IndexBlock.Meta, linkTerms);
+    }
 
+    private void createFileLinkKeywords(EdgePageWordSet words, LinkProcessor lp, EdgeDomain domain) {
         Set<String> fileKeywords = new HashSet<>(100);
         for (var link : lp.getNonIndexableUrls()) {
 
@@ -314,8 +335,8 @@ public class DocumentProcessor {
             synthesizeFilenameKeyword(fileKeywords, link);
 
         }
-        words.append(IndexBlock.Artifacts, fileKeywords);
 
+        words.appendWithNoMeta(IndexBlock.Artifacts, fileKeywords);
     }
 
     private void synthesizeFilenameKeyword(Set<String> fileKeywords, EdgeUrl link) {
@@ -364,5 +385,7 @@ public class DocumentProcessor {
         return doc.text().length();
     }
 
-    private record DetailsWithWords(ProcessedDocumentDetails details, EdgePageWordSet words) {}
+    private record DetailsWithWords(ProcessedDocumentDetails details,
+                                    EdgePageWordSet words) {}
+
 }

@@ -25,34 +25,13 @@ public class SqlLoadUrls {
     @Inject
     public SqlLoadUrls(HikariDataSource dataSource) {
         this.dataSource = dataSource;
-        try (var conn = dataSource.getConnection()) {
-            try (var stmt = conn.createStatement()) {
-                stmt.execute("DROP PROCEDURE IF EXISTS INSERT_URL");
-                stmt.execute("""
-                        CREATE PROCEDURE INSERT_URL (
-                            IN PROTO VARCHAR(255),
-                            IN DOMAIN VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-                            IN PORT INT,
-                            IN PATH VARCHAR(255),
-                            IN PARAM VARCHAR(255),
-                            IN PATH_HASH BIGINT
-                            )
-                        BEGIN
-                            INSERT IGNORE INTO EC_URL (PROTO,DOMAIN_ID,PORT,PATH,PARAM,PATH_HASH) SELECT PROTO,ID,PORT,PATH,PARAM,PATH_HASH FROM EC_DOMAIN WHERE DOMAIN_NAME=DOMAIN;
-                        END
-                        """);
-            }
-        }
-        catch (SQLException ex) {
-            throw new RuntimeException("Failed to set up loader", ex);
-        }
     }
 
     public void load(LoaderData data, EdgeUrl[] urls) {
         Set<EdgeDomain> affectedDomains = new HashSet<>();
 
         try (var conn = dataSource.getConnection();
-             var insertCall = conn.prepareCall("CALL INSERT_URL(?,?,?,?,?,?)");
+             var insertCall = conn.prepareStatement("INSERT IGNORE INTO EC_URL (PROTO,DOMAIN_ID,PORT,PATH,PARAM,PATH_HASH) VALUES (?,?,?,?,?,?)");
              var queryCall = conn.prepareStatement("SELECT ID, PROTO, PATH, PARAM FROM EC_URL WHERE DOMAIN_ID=?")
              )
         {
@@ -67,7 +46,7 @@ public class SqlLoadUrls {
                 affectedDomains.add(url.domain);
 
                 insertCall.setString(1, url.proto);
-                insertCall.setString(2, url.domain.toString());
+                insertCall.setInt(2, data.getDomainId(url.domain));
                 if (url.port != null) {
                     insertCall.setInt(3, url.port);
                 }
@@ -79,7 +58,7 @@ public class SqlLoadUrls {
                 insertCall.setLong(6, hashPath(url.path, url.param));
                 insertCall.addBatch();
 
-                if (cnt++ == 250) {
+                if (cnt++ == 1000) {
                     var ret = insertCall.executeBatch();
                     conn.commit();
 

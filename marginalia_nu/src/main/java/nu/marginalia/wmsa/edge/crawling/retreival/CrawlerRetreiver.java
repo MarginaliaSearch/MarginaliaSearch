@@ -31,6 +31,8 @@ public class CrawlerRetreiver {
     private static final long DEFAULT_CRAWL_DELAY_MIN_MS = Long.getLong("defaultCrawlDelay", 500);
     private static final long DEFAULT_CRAWL_DELAY_MAX_MS = Long.getLong("defaultCrawlDelaySlow", 2500);
 
+    private static final int MAX_ERRORS = 10;
+
     private final LinkedList<EdgeUrl> queue = new LinkedList<>();
     private final HttpFetcher fetcher;
 
@@ -49,6 +51,8 @@ public class CrawlerRetreiver {
     private static final HashFunction hashMethod = Hashing.murmur3_128(0);
     private static final IpBlockList ipBlocklist;
     private static final UrlBlocklist urlBlocklist = new UrlBlocklist();
+
+    int errorCount = 0;
 
     static {
         try {
@@ -137,7 +141,7 @@ public class CrawlerRetreiver {
 
         int fetchedCount = 0;
 
-        while (!queue.isEmpty() && visited.size() < depth) {
+        while (!queue.isEmpty() && visited.size() < depth && errorCount < MAX_ERRORS ) {
             var top = queue.removeFirst();
 
             if (!robotsRules.isAllowed(top.toString())) {
@@ -177,6 +181,10 @@ public class CrawlerRetreiver {
 
             if (d.url != null) {
                 EdgeUrl.parse(d.url).map(EdgeUrl::toString).ifPresent(visited::add);
+            }
+
+            if ("ERROR".equals(d.crawlerStatus)) {
+                errorCount++;
             }
 
         }

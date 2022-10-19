@@ -8,8 +8,10 @@ import nu.marginalia.wmsa.edge.index.reader.IndexWordsTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 
+import static nu.marginalia.wmsa.edge.index.conversion.SearchIndexConverter.ENTRY_SIZE;
 import static nu.marginalia.wmsa.edge.index.conversion.SearchIndexConverter.urlsBTreeContext;
 
 public class WordsTableWriter {
@@ -23,7 +25,9 @@ public class WordsTableWriter {
     }
 
     public void acceptWord(int wordId) {
-        table.lengths().increment(wordId);
+        for (int i = 0; i < ENTRY_SIZE; i++) {
+            table.lengths().increment(wordId);
+        }
     }
 
     public WordIndexOffsetsTable getTable() {
@@ -58,7 +62,7 @@ public class WordsTableWriter {
             mapSlice.put(idx++, (long)length<<32);
             mapSlice.put(idx++, 0);
 
-            urlFileOffset += (urlsBTreeContext.calculateSize(length));
+            urlFileOffset += (urlsBTreeContext.calculateSize(length / ENTRY_SIZE));
         }
 
         for (int i = 1; i < offsetTable.length; i++) {
@@ -68,7 +72,7 @@ public class WordsTableWriter {
                 mapSlice.put(idx++, (long)length << 32 | i);
                 mapSlice.put(idx++, urlFileOffset);
 
-                urlFileOffset += (urlsBTreeContext.calculateSize(length));
+                urlFileOffset += (urlsBTreeContext.calculateSize(length / ENTRY_SIZE));
             }
         }
     }

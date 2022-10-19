@@ -6,7 +6,7 @@ import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.edge.index.client.EdgeIndexClient;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.search.*;
-import nu.marginalia.wmsa.edge.search.EdgeSearchProfile;
+import nu.marginalia.wmsa.edge.search.model.EdgeSearchProfile;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeSearchQuery;
 import nu.marginalia.wmsa.edge.search.results.SearchResultDecorator;
 import nu.marginalia.wmsa.edge.search.results.UrlDeduplicator;
@@ -20,13 +20,15 @@ public class EdgeSearchQueryIndexService {
     private final SearchResultDecorator resultDecorator;
     private final Comparator<EdgeUrlDetails> resultListComparator;
     private final EdgeIndexClient indexClient;
+
     @Inject
     public EdgeSearchQueryIndexService(SearchResultDecorator resultDecorator, EdgeIndexClient indexClient) {
         this.resultDecorator = resultDecorator;
         this.indexClient = indexClient;
 
         Comparator<EdgeUrlDetails> c = Comparator.comparing(ud -> Math.round(10*(ud.getTermScore() - ud.rankingIdAdjustment())));
-        resultListComparator = c.thenComparing(EdgeUrlDetails::getRanking)
+        resultListComparator = c
+                .thenComparing(EdgeUrlDetails::getRanking)
                 .thenComparing(EdgeUrlDetails::getId);
     }
 
@@ -35,7 +37,7 @@ public class EdgeSearchQueryIndexService {
 
         sqs.add(new EdgeSearchSubquery(Arrays.asList(termsInclude), Collections.emptyList(), Collections.emptyList(), block));
 
-        EdgeSearchSpecification specs = new EdgeSearchSpecification(profile.buckets, sqs, limitPerDomain, limitTotal, "", 150, 2048);
+        EdgeSearchSpecification specs = new EdgeSearchSpecification(profile.buckets, sqs, Collections.emptyList(), limitPerDomain, limitTotal, "", 150, 2048, null, null);
 
         return performQuery(ctx, new EdgeSearchQuery(specs));
     }
@@ -43,10 +45,13 @@ public class EdgeSearchQueryIndexService {
     public List<EdgeUrlDetails> performQuery(Context ctx, EdgeSearchQuery processedQuery) {
 
         final List<EdgeSearchResultItem> results = indexClient.query(ctx, processedQuery.specs);
+
         final List<EdgeUrlDetails> resultList = new ArrayList<>(results.size());
 
+        long badQCount = 0;
         for (var details : resultDecorator.getAllUrlDetails(results)) {
             if (details.getUrlQuality() <= -100) {
+                badQCount++;
                 continue;
             }
 
@@ -61,6 +66,9 @@ public class EdgeSearchQueryIndexService {
         UrlDeduplicator deduplicator = new UrlDeduplicator(processedQuery.specs.limitByDomain);
         List<EdgeUrlDetails> retList = new ArrayList<>(processedQuery.specs.limitTotal);
 
+        if (badQCount > 0) {
+            System.out.println(badQCount);
+        }
         for (var item : resultList) {
             if (retList.size() >= processedQuery.specs.limitTotal)
                 break;
@@ -108,7 +116,7 @@ public class EdgeSearchQueryIndexService {
         long domainHits = Arrays.stream(searchTermsLC).filter(domainLC::contains).count();
 
         double descHitsAdj = 0.;
-        for (String word : descLC.split("[^\\w]+")) {
+        for (String word : descLC.split("\\W+")) {
             descHitsAdj += Arrays.stream(searchTermsLC)
                     .filter(term -> term.length() > word.length())
                     .filter(term -> term.contains(word))

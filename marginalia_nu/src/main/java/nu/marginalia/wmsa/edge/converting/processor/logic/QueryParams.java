@@ -1,9 +1,13 @@
 package nu.marginalia.wmsa.edge.converting.processor.logic;
 
+import org.apache.commons.lang3.StringUtils;
+
 import javax.annotation.Nullable;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.StringJoiner;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class QueryParams {
 
@@ -15,10 +19,28 @@ public class QueryParams {
             return null;
         }
 
-        var ret = Arrays.stream(paramSplitterPattern.split(queryParams))
-                .filter(param -> QueryParams.isPermittedParam(path, param))
-                .sorted()
-                .collect(Collectors.joining("&"));
+        String ret;
+        if (queryParams.indexOf('&') >= 0) {
+
+            List<String> parts = new ArrayList<>();
+            for (var part : StringUtils.split(queryParams, '&')) {
+                if (QueryParams.isPermittedParam(path, part)) {
+                    parts.add(part);
+                }
+            }
+            if (parts.size() > 1) {
+                parts.sort(Comparator.naturalOrder());
+            }
+            StringJoiner retJoiner = new StringJoiner("&");
+            parts.forEach(retJoiner::add);
+            ret = retJoiner.toString();
+        }
+        else if (isPermittedParam(path, queryParams)) {
+            ret = queryParams;
+        }
+        else {
+            return null;
+        }
 
         if (ret.isBlank())
             return null;

@@ -9,7 +9,6 @@ import gnu.trove.set.hash.TIntHashSet;
 import lombok.SneakyThrows;
 import nu.marginalia.util.ranking.BetterReversePageRank;
 import nu.marginalia.util.ranking.BetterStandardPageRank;
-import nu.marginalia.util.ranking.BuggyStandardPageRank;
 import nu.marginalia.util.ranking.RankingDomainFetcher;
 import nu.marginalia.wmsa.edge.index.model.RankingSettings;
 import org.slf4j.Logger;
@@ -87,8 +86,25 @@ public class SearchIndexDao {
 
     @SneakyThrows
     public TIntList getStandardDomains() {
-        var spr = new BuggyStandardPageRank(rankingDomains,rankingSettings.standard.toArray(String[]::new));
-        return spr.pageRankWithPeripheralNodes(spr.size()/2);
+        TIntArrayList results = new TIntArrayList();
+
+        try (var connection = dataSource.getConnection();
+             var stmt = connection.prepareStatement(
+            """
+            SELECT ID FROM EC_DOMAIN 
+            WHERE INDEXED>0 
+            AND STATE='ACTIVE' 
+            AND DOMAIN_ALIAS IS NULL 
+            ORDER BY ID ASC
+            """);
+        ) {
+            var rs = stmt.executeQuery();
+            while (rs.next()) {
+                results.add(rs.getInt(1));
+            }
+        }
+        return results;
+
     }
 
     @SneakyThrows

@@ -20,12 +20,14 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static nu.marginalia.wmsa.edge.index.journal.model.SearchIndexJournalEntry.MAX_LENGTH;
-
 public class SearchIndexConverter {
-    public static final BTreeContext urlsBTreeContext = new BTreeContext(5, 1, ~0, 8);
+    public static final int ENTRY_URL_OFFSET = 0;
+    public static final int ENTRY_METADATA_OFFSET = 1;
+    public static final int ENTRY_SIZE = 2;
 
-    private final long[] tmpWordsBuffer = new long[MAX_LENGTH];
+    public static final BTreeContext urlsBTreeContext = new BTreeContext(5, ENTRY_SIZE, ~0, 8);
+
+    private final long[] tmpWordsBuffer = SearchIndexJournalReader.createAdequateTempBuffer();
 
     private final Path tmpFileDir;
 
@@ -72,7 +74,7 @@ public class SearchIndexConverter {
             return;
         }
 
-        logger.info("Converting {} ({}) {} {}", block.id, block, inputFile, journalReader.fileHeader);
+        logger.info("Converting {} ({}) {} {}", block.ordinal(), block, inputFile, journalReader.fileHeader);
 
         var lock = partitioner.getReadLock();
         try {
@@ -80,10 +82,10 @@ public class SearchIndexConverter {
 
             var tmpUrlsFile = Files.createTempFile(tmpFileDir, "urls-sorted", ".dat");
 
-            logger.info("Creating word index table {} for block {} ({})", outputFileWords, block.id, block);
+            logger.info("Creating word index table {} for block {}", outputFileWords, block.ordinal());
             WordIndexOffsetsTable wordIndexTable = createWordIndexTable(journalReader, outputFileWords);
 
-            logger.info("Creating word urls table {} for block {} ({})", outputFileUrls, block.id, block);
+            logger.info("Creating word urls table {} for block {}", outputFileUrls, block.ordinal());
             createUrlTable(journalReader, tmpUrlsFile, wordIndexTable);
 
             Files.delete(tmpUrlsFile);
@@ -111,10 +113,10 @@ public class SearchIndexConverter {
 
             final SearchIndexJournalEntry entryData = entry.readEntryUsingBuffer(tmpWordsBuffer);
 
-            for (int i = 0; i < entryData.size(); i++) {
-                int wordId = (int) entryData.get(i);
+            for (var record : entryData) {
+                int wordId = record.wordId();
                 if (wordId < 0 || wordId >= topWord) {
-                    logger.warn("Bad wordId {}", wordId);
+                    logger.warn("Bad word {}", record);
                 }
                 wordsTableWriter.acceptWord(wordId);
             }
@@ -138,7 +140,7 @@ public class SearchIndexConverter {
         try (RandomAccessFile urlsTmpFileRAF = new RandomAccessFile(tmpUrlsFile.toFile(), "rw");
              FileChannel urlsTmpFileChannel = urlsTmpFileRAF.getChannel()) {
 
-            try (RandomWriteFunnel rwf = new RandomWriteFunnel(tmpFileDir, numberOfWordsTotal, 10_000_000)) {
+            try (RandomWriteFunnel rwf = new RandomWriteFunnel(tmpFileDir, ENTRY_SIZE * numberOfWordsTotal, 10_000_000)) {
                 int[] wordWriteOffset = new int[wordOffsetsTable.length()];
 
                 for (var entry : journalReader) {
@@ -146,21 +148,29 @@ public class SearchIndexConverter {
 
                     var entryData = entry.readEntryUsingBuffer(tmpWordsBuffer);
 
-                    for (int i = 0; i < entryData.size(); i++) {
-                        int wordId = (int) entryData.get(i);
+                    for (var record : entryData) {
+                        int wordId = record.wordId();
+                        long metadata = record.metadata();
 
-                        if (wordId >= wordWriteOffset.length)
+                        if (wordId >= wordWriteOffset.length) {
+                            logger.warn("Overflowing wordId {}", wordId);
                             continue;
+                        }
+
                         if (wordId < 0) {
                             logger.warn("Negative wordId {}", wordId);
                         }
 
                         final long urlInternal = translateUrl(entry.docId());
-                        if (wordId > 0) {
-                            rwf.put(wordOffsetsTable.get(wordId - 1) + wordWriteOffset[wordId]++, urlInternal);
-                        } else {
-                            rwf.put(wordWriteOffset[wordId]++, urlInternal);
-                        }
+
+                        long offset;
+                        if (wordId > 0) offset = wordOffsetsTable.get(wordId - 1) + wordWriteOffset[wordId];
+                        else offset = wordWriteOffset[wordId];
+
+                        rwf.put(offset + ENTRY_URL_OFFSET, urlInternal);
+                        rwf.put(offset + ENTRY_METADATA_OFFSET, metadata);
+
+                        wordWriteOffset[wordId] += ENTRY_SIZE;
                     }
                 }
 
@@ -171,9 +181,9 @@ public class SearchIndexConverter {
 
             try (var urlsTmpFileMap = MultimapFileLong.forOutput(tmpUrlsFile, numberOfWordsTotal)) {
                 if (wordOffsetsTable.length() > 0) {
-                    var urlTmpFileSorter = urlsTmpFileMap.createSorter(tmpFileDir, internalSortLimit);
+                    var urlTmpFileSorter = urlsTmpFileMap.createSorter(tmpFileDir, internalSortLimit, ENTRY_SIZE);
 
-                    wordOffsetsTable.forEachRange(urlTmpFileSorter::sort);
+                    wordOffsetsTable.forEachRange(urlTmpFileSorter::sortRange);
 
                     urlsTmpFileMap.force();
                 } else {
@@ -187,7 +197,7 @@ public class SearchIndexConverter {
                 wordOffsetsTable.foldRanges((accumulatorIdx, start, length) -> {
                     // Note: The return value is accumulated into accumulatorIdx!
 
-                    return writer.write(accumulatorIdx, length,
+                    return writer.write(accumulatorIdx, length/ENTRY_SIZE,
                             slice -> slice.transferFromFileChannel(urlsTmpFileChannel, 0, start, start + length));
                 });
 

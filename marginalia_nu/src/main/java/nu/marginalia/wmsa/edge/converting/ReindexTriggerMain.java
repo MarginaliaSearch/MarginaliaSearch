@@ -70,7 +70,11 @@ public class ReindexTriggerMain {
         };
 
         client.newCall(new Request.Builder().post(rb).url(new URL("http", args[0], ServiceDescriptor.EDGE_INDEX.port, "/ops/repartition")).build()).execute();
-        client.newCall(new Request.Builder().post(rb).url(new URL("http", args[0], ServiceDescriptor.EDGE_INDEX.port, "/ops/preconvert")).build()).execute();
+
+        if (!Boolean.getBoolean("no-preconvert")) {
+            client.newCall(new Request.Builder().post(rb).url(new URL("http", args[0], ServiceDescriptor.EDGE_INDEX.port, "/ops/preconvert")).build()).execute();
+        }
+
         for (int i = 0; i < DYNAMIC_BUCKET_LENGTH+1; i++) {
             client.newCall(new Request.Builder().post(rb).url(new URL("http", args[0], ServiceDescriptor.EDGE_INDEX.port, "/ops/reindex/" + i)).build()).execute();
         }

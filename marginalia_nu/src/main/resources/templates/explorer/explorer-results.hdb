@@ -1,0 +1,23 @@
+<h2>Websites Similar To <a rel="nofollow" class="external" href="http://{{query}}/">{{query}}</a></h2>
+<table border>
+ <tr>
+    <th>Similarity</th>
+    <th>Domain Name</th>
+ </tr>
+ {{#each resultList}}
+ <tr>
+    <td>{{relatedness}} %</td>
+    <td><a class="external" rel="nofollow" href="{{url}}">{{#unless active}}<s>{{domain}}</s>{{/unless}}{{#if active}}{{domain}}{{/if}}</a></td>
+
+    <td>{{#if indexed}}<a class="info" href="https://search.marginalia.nu/site/{{domain}}" title="Marginalia Search">MS</a>{{/if}}</td>
+    <td><a class="wayback" href="https://web.archive.org/web/*/{{domain}}/" title="Wayback Machine">WM</a></td>
+    <td>{{#if hasMore}}<a class="related" href="search?domain={{domain}}">Show Related</a>{{/if}}</td>
+ </tr>
+ {{/each}}
+</table>
+
+<hr>
+If this is your jam, you may also like other takes on the same problem:
+<a href="https://explore.marginalia.nu">explore.marginalia.nu</a>,
+<a href="https://search.marginalia.nu/explore/random">search.marginalia.nu/explore/random</a>.<p>
+They use a worse algorithm, but the visual aspect does quite a lot too.

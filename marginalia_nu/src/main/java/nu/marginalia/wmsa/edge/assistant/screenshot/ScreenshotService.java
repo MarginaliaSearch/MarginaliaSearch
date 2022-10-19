@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
+import spark.Spark;
 
 import java.sql.SQLException;
 
@@ -85,6 +86,12 @@ public class ScreenshotService {
     }
 
     private Object serveSvgPlaceholder(Response response, int id) {
+
+        var domainName = edgeDataStoreDao.getDomain(new EdgeId<>(id)).map(Object::toString);
+        if (domainName.isEmpty()) {
+            Spark.halt(404);
+        }
+
         response.type("image/svg+xml");
         return String.format("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n" +
                 "<svg\n" +
@@ -111,6 +118,6 @@ public class ScreenshotService {
                 "       style=\"font-size:32px;fill:#000000;font-family:monospace;\"\n" +
                 "       x=\"320\" y=\"240\" dominant-baseline=\"middle\" text-anchor=\"middle\">%s</text>\n" +
                 "  </g>\n" +
-                "</svg>\n", edgeDataStoreDao.getDomain(new EdgeId<>(id)));
+                "</svg>\n", domainName.get());
     }
 }

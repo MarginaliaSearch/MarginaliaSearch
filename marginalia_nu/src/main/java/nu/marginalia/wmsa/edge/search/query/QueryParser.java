@@ -61,7 +61,18 @@ public class QueryParser {
             var t = basicTokens.get(i);
 
             if (t.type == TokenType.LITERAL_TERM) {
-                parsedTokens.add(t);
+                if (t.str.startsWith("q:") && t.str.matches("q:[+-]?\\d+")) {
+                    parsedTokens.add(new Token(TokenType.QUALITY_TERM, t.str.substring(2), t.displayStr));
+                }
+                else if (t.str.startsWith("r:") && t.str.matches("r:\\d+")) {
+                    parsedTokens.add(new Token(TokenType.RANK_TERM, t.str.substring(2), t.displayStr));
+                }
+                else if (t.str.startsWith("near:")) {
+                    parsedTokens.add(new Token(TokenType.NEAR_TERM, t.str.substring(5), t.displayStr));
+                }
+                else {
+                    parsedTokens.add(t);
+                }
                 continue;
             }
             else if (t.type != TokenType.LPAREN) {
@@ -476,6 +487,11 @@ enum TokenType {
     QUOT_TERM,
     EXCLUDE_TERM,
     ADVICE_TERM,
+
+    QUALITY_TERM,
+    RANK_TERM,
+
+    NEAR_TERM,
 
     QUOT,
     MINUS,

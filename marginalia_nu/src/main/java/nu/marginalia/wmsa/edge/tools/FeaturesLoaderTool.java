@@ -49,7 +49,7 @@ public class FeaturesLoaderTool {
                         }
 
                         client.putWords(Context.internal(), new EdgeId<>(domainId), new EdgeId<>(urlId),
-                                new DocumentKeywords(IndexBlock.Meta, feature.getKeyword())
+                                new DocumentKeywords(IndexBlock.Meta, new String[] { feature.getKeyword() }, new long[] { 0 })
                                 , 0);
                     });
 

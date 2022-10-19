@@ -2,24 +2,26 @@ package nu.marginalia.wmsa.edge.model.search;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.ToString;
+import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.id.EdgeId;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@AllArgsConstructor @ToString @Getter
+@AllArgsConstructor @Getter
 public class EdgeSearchResultItem {
     public final int bucketId;
+    public final IndexBlock block;
     public final long combinedId;
 
     public final List<EdgeSearchResultKeywordScore> scores;
 
     public int resultsFromDomain;
 
-    public EdgeSearchResultItem(int bucketId, long val) {
+    public EdgeSearchResultItem(int bucketId, IndexBlock block, long val) {
         this.bucketId = bucketId;
+        this.block = block;
         this.combinedId = val;
         this.scores = new ArrayList<>(16);
     }
@@ -49,6 +51,10 @@ public class EdgeSearchResultItem {
         return getUrlIdInt();
     }
 
+    public String toString() {
+        return getClass().getSimpleName() + "[ url= " + getUrlId() + ", rank=" + getRanking() + "; bucket = " + bucketId + "]";
+    }
+
     public boolean equals(Object other) {
         if (other == null)
             return false;
@@ -63,7 +69,7 @@ public class EdgeSearchResultItem {
     public long deduplicationKey() {
         final int ranking = getRanking();
 
-        if (ranking == Integer.MAX_VALUE) {
+        if (ranking == Integer.MAX_VALUE || ranking == Integer.MIN_VALUE) {
             return 0;
         }
 

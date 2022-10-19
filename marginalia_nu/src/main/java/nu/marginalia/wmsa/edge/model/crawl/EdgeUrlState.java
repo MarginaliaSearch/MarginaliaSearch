@@ -5,6 +5,6 @@ public enum EdgeUrlState {
     OK,
     REDIRECT,
     DEAD,
-    ARCHIVED,
-    DISQUALIFIED
+    DISQUALIFIED;
+
 }

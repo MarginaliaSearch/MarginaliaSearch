@@ -1,12 +1,12 @@
 package com.upserve.uppend.blobs;
 
 
-import jnr.ffi.*;
-import jnr.ffi.types.size_t;
 import com.kenai.jffi.MemoryIO;
+import jnr.ffi.LibraryLoader;
+import jnr.ffi.types.size_t;
 
 import java.io.IOException;
-import java.nio.*;
+import java.nio.MappedByteBuffer;
 
 // https://github.com/upserve/uppend/blob/70967c6f24d7f1a3bbc18799f485d981da93f53b/src/main/java/com/upserve/uppend/blobs/NativeIO.java
 // MIT License

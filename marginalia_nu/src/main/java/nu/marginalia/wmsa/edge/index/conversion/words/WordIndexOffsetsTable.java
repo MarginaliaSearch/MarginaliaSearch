@@ -23,10 +23,10 @@ public class WordIndexOffsetsTable {
 
         for (int i = 1; i < table.length; i++) {
             long start = table[i-1];
-            int length = (int) (table[i] - start);
+            long end = table[i];
 
-            if (length != 0) {
-                o.accept(start, length);
+            if (start != end) {
+                o.accept(start, end);
             }
         }
     }
@@ -58,7 +58,7 @@ public class WordIndexOffsetsTable {
     }
 
     public interface OffsetTableEntryConsumer {
-        void accept(long start, int length) throws IOException;
+        void accept(long start, long end) throws IOException;
     }
 
     public interface OffsetTableEntryFoldConsumer {

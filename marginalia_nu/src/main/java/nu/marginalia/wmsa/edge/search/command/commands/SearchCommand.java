@@ -10,7 +10,6 @@ import nu.marginalia.wmsa.edge.search.command.SearchParameters;
 import nu.marginalia.wmsa.edge.search.model.DecoratedSearchResults;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeUserSearchParameters;
 import nu.marginalia.wmsa.edge.search.results.BrowseResultCleaner;
-import nu.marginalia.wmsa.edge.search.svc.EdgeSearchUnitConversionService;
 import nu.marginalia.wmsa.renderer.mustache.MustacheRenderer;
 import nu.marginalia.wmsa.renderer.mustache.RendererFactory;
 
@@ -21,9 +20,8 @@ public class SearchCommand implements SearchCommandInterface {
     private final EdgeDomainBlacklist blacklist;
     private final EdgeDataStoreDao dataStoreDao;
     private final EdgeSearchOperator searchOperator;
-    private final EdgeSearchUnitConversionService edgeSearchUnitConversionService;
     private final MustacheRenderer<DecoratedSearchResults> searchResultsRenderer;
-    private BrowseResultCleaner browseResultCleaner;
+    private final BrowseResultCleaner browseResultCleaner;
 
     public static final int MAX_DOMAIN_RESULTS = 3;
 
@@ -31,14 +29,12 @@ public class SearchCommand implements SearchCommandInterface {
     public SearchCommand(EdgeDomainBlacklist blacklist,
                          EdgeDataStoreDao dataStoreDao,
                          EdgeSearchOperator searchOperator,
-                         EdgeSearchUnitConversionService edgeSearchUnitConversionService,
                          RendererFactory rendererFactory,
                          BrowseResultCleaner browseResultCleaner
                          ) throws IOException {
         this.blacklist = blacklist;
         this.dataStoreDao = dataStoreDao;
         this.searchOperator = searchOperator;
-        this.edgeSearchUnitConversionService = edgeSearchUnitConversionService;
         this.browseResultCleaner = browseResultCleaner;
 
         searchResultsRenderer = rendererFactory.renderer("edge/search-results");

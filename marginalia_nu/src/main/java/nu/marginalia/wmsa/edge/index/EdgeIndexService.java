@@ -9,6 +9,7 @@ import nu.marginalia.wmsa.configuration.server.Initialization;
 import nu.marginalia.wmsa.configuration.server.MetricsServer;
 import nu.marginalia.wmsa.configuration.server.Service;
 import nu.marginalia.wmsa.edge.index.reader.SearchIndexes;
+import nu.marginalia.wmsa.edge.index.svc.EdgeIndexDomainQueryService;
 import nu.marginalia.wmsa.edge.index.svc.EdgeIndexLexiconService;
 import nu.marginalia.wmsa.edge.index.svc.EdgeIndexOpsService;
 import nu.marginalia.wmsa.edge.index.svc.EdgeIndexQueryService;
@@ -39,7 +40,9 @@ public class EdgeIndexService extends Service {
 
                             EdgeIndexOpsService opsService,
                             EdgeIndexLexiconService lexiconService,
-                            EdgeIndexQueryService indexQueryService)
+                            EdgeIndexQueryService indexQueryService,
+                            EdgeIndexDomainQueryService domainQueryService
+                            )
     {
         super(ip, port, init, metricsServer);
 
@@ -51,7 +54,7 @@ public class EdgeIndexService extends Service {
         Spark.post("/words/", lexiconService::putWords);
 
         Spark.post("/search/", indexQueryService::search, gson::toJson);
-        Spark.post("/search-domain/", indexQueryService::searchDomain, gson::toJson);
+        Spark.post("/search-domain/", domainQueryService::searchDomain, gson::toJson);
 
         Spark.get("/dictionary/*", lexiconService::getWordId, gson::toJson);
 

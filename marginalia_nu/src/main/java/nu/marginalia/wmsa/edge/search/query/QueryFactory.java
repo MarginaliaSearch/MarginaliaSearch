@@ -9,9 +9,10 @@ import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchSpecification;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchSubquery;
+import nu.marginalia.wmsa.edge.search.model.EdgeSearchProfile;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeSearchQuery;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeUserSearchParameters;
-import nu.marginalia.wmsa.edge.search.results.SearchResultValuator;
+import nu.marginalia.wmsa.edge.search.valuation.SearchResultValuator;
 import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,17 +29,24 @@ public class QueryFactory {
     private final NGramBloomFilter nGramBloomFilter;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final SearchResultValuator searchResultValuator;
+    private NearQueryProcessor nearQueryProcessor;
 
     private static final int RETAIN_QUERY_VARIANT_COUNT = 5;
 
     @Inject
-    public QueryFactory(LanguageModels lm, TermFrequencyDict dict, EnglishDictionary englishDictionary, NGramBloomFilter nGramBloomFilter, SearchResultValuator searchResultValuator) {
+    public QueryFactory(LanguageModels lm,
+                        TermFrequencyDict dict,
+                        EnglishDictionary englishDictionary,
+                        NGramBloomFilter nGramBloomFilter,
+                        SearchResultValuator searchResultValuator,
+                        NearQueryProcessor nearQueryProcessor) {
         this.lm = lm;
         this.dict = dict;
 
         this.englishDictionary = englishDictionary;
         this.nGramBloomFilter = nGramBloomFilter;
         this.searchResultValuator = searchResultValuator;
+        this.nearQueryProcessor = nearQueryProcessor;
     }
 
     public QueryParser getParser() {
@@ -70,7 +78,7 @@ public class QueryFactory {
 
         for (var sq : processedQuery.specs.subqueries) {
             for (var block : profile.indexBlocks) {
-                subqueries.add(sq.withBlock(block).setValue(sq.getValue() * block.sortOrder));
+                subqueries.add(sq.withBlock(block).setValue(sq.getValue() * block.ordinal()));
             }
         }
 
@@ -108,6 +116,9 @@ public class QueryFactory {
             basicQuery.clear();
         }
 
+        Integer qualityLimit = null;
+        Integer rankLimit = null;
+
         for (Token t : basicQuery) {
             if (t.type == TokenType.QUOT_TERM || t.type == TokenType.LITERAL_TERM) {
                 if (t.str.startsWith("site:")) {
@@ -117,10 +128,24 @@ public class QueryFactory {
                 searchTermsHuman.addAll(toHumanSearchTerms(t));
                 analyzeSearchTerm(problems, t);
             }
+            if (t.type == TokenType.QUALITY_TERM) {
+                qualityLimit = Integer.parseInt(t.str);
+            }
+            if (t.type == TokenType.RANK_TERM) {
+                if (profile == EdgeSearchProfile.CORPO) {
+                    problems.add("Rank limit (" + t.displayStr + ") ignored in unranked query");
+                } else {
+                    rankLimit = Integer.parseInt(t.str);
+                }
+            }
         }
+
+
 
         var queryPermutations = queryParser.permuteQueriesNew(basicQuery);
         List<EdgeSearchSubquery> subqueries = new ArrayList<>();
+
+        String near = profile.getNearDomain();
 
         for (var parts : queryPermutations) {
             List<String> searchTermsExclude = new ArrayList<>();
@@ -141,7 +166,11 @@ public class QueryFactory {
                         if (t.str.toLowerCase().startsWith("site:")) {
                             domain = t.str.substring("site:".length());
                         }
-
+                        break;
+                    case QUALITY_TERM:
+                        break; //
+                    case NEAR_TERM:
+                        near = t.str;
                         break;
                     default:
                         logger.warn("Unexpected token type {}", t);
@@ -156,14 +185,30 @@ public class QueryFactory {
             subqueries.add(subquery);
         }
 
+        List<Integer> domains = Collections.emptyList();
+
+        if (near != null) {
+            if (domain == null) {
+                domains = nearQueryProcessor.getRelatedDomains(near, problems::add);
+            }
+        }
+
+        if (qualityLimit != null && domains.isEmpty()) {
+            problems.add("Quality limit will be ignored when combined with 'near:'");
+        }
+
+        var buckets = domains.isEmpty() ? profile.buckets : EdgeSearchProfile.CORPO.buckets;
 
         EdgeSearchSpecification.EdgeSearchSpecificationBuilder specsBuilder = EdgeSearchSpecification.builder()
                 .subqueries(subqueries)
                 .limitTotal(100)
                 .humanQuery(query)
-                .buckets(profile.buckets)
+                .buckets(buckets)
                 .timeoutMs(250)
-                .fetchSize(4096);
+                .fetchSize(4096)
+                .quality(qualityLimit)
+                .rank(rankLimit)
+                .domains(domains);
 
         if (domain != null) {
             specsBuilder = specsBuilder.limitByDomain(100);

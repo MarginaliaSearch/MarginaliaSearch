@@ -88,6 +88,9 @@ public class WordPatterns {
     }
 
     public static boolean hasWordQualities(String s) {
+        if (s.isBlank())
+            return false;
+
         int start = 0;
         int end = s.length();
         if (s.charAt(0) == '#') start++;
@@ -95,13 +98,14 @@ public class WordPatterns {
 
         for (int i = start; i < end; i++) {
             char c = s.charAt(i);
-            if (!("_@.'+-".indexOf(c) >= 0)
+            if (("_@.'+-".indexOf(c) < 0)
                 && !(c >= 'a' && c <= 'z')
                 && !(c >= 'A' && c <= 'Z')
                 && !(c >= '0' && c <= '9')
                 && !(c >= '\u00C0' && c <= '\u00D6')
                 && !(c >= '\u00D8' && c <= '\u00f6')
-                && !(c >= '\u00f8' && c <= '\u00ff')) {
+                && !(c >= '\u00f8' && c <= '\u00ff'))
+            {
                         return false;
             }
         }
@@ -119,10 +123,14 @@ public class WordPatterns {
         if (!filter(s)) {
             return true;
         }
-        if (topWords.contains(s.toLowerCase())) {
+        if (isTopWord(s)) {
             return true;
         }
         return false;
+    }
+
+    public static boolean isTopWord(String s) {
+        return topWords.contains(s.toLowerCase());
     }
 
 }

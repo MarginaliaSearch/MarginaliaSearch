@@ -10,6 +10,7 @@ import nu.marginalia.wmsa.edge.model.search.EdgeUrlDetails;
 import nu.marginalia.wmsa.edge.search.model.BrowseResult;
 
 import java.util.List;
+import java.util.Optional;
 
 @ImplementedBy(EdgeDataStoreDaoImpl.class)
 public interface EdgeDataStoreDao {
@@ -23,7 +24,7 @@ public interface EdgeDataStoreDao {
 
     List<EdgeUrlDetails> getUrlDetailsMulti(EdgeIdCollection<EdgeUrl> ids);
 
-    EdgeDomain getDomain(EdgeId<EdgeDomain> id);
+    Optional<EdgeDomain> getDomain(EdgeId<EdgeDomain> id);
 
 
 }

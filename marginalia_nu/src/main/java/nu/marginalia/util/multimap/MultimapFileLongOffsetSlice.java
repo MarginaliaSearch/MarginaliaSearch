@@ -62,6 +62,17 @@ public class MultimapFileLongOffsetSlice implements MultimapFileLongSlice {
     }
 
     @Override
+    public void write(LongBuffer vals, int n, long idx) {
+        map.write(vals,  n,idx+off);
+    }
+
+    @Override
+    public void swapn(int n, long idx1, long idx2) {
+        map.swapn(n, idx1+off, idx2+off);
+    }
+
+
+    @Override
     public void transferFromFileChannel(FileChannel sourceChannel, long destOffset, long sourceStart, long sourceEnd)
             throws IOException {
         map.transferFromFileChannel(sourceChannel, destOffset + off, sourceStart, sourceEnd);
@@ -74,5 +85,36 @@ public class MultimapFileLongOffsetSlice implements MultimapFileLongSlice {
         // if this is called iteratively (e.g. to walk over a file)
 
         return new MultimapFileLongOffsetSlice(map, this.off + off);
+    }
+
+    @Override
+    public long binarySearchInternal(long key, long fromIndex, int step, long n, long mask) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public long binarySearchInternal(long key, long fromIndex, long n, long mask) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public long binarySearchInternal(long key, long fromIndex, long n) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public long binarySearchUpperInternal(long key, long fromIndex, long n) {
+        throw new UnsupportedOperationException();
+
+    }
+
+    @Override
+    public long quickSortPartition(int wordSize, long low, long highInclusive) {
+        return map.quickSortPartition(wordSize, low+off, highInclusive+off);
+    }
+
+    @Override
+    public void insertionSort(int wordSize, long start, int n) {
+        map.insertionSort(wordSize, start+off, n);
     }
 }

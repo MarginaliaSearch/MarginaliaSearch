@@ -72,7 +72,7 @@ public enum UnicodeRanges {
         int count = 0;
         int max = sensitive ? 15 : 100;
 
-        for (int i = 0; i < text.length(); i++) {
+        for (int i = 0; i < Math.min(2000, text.length()); i++) {
             char c = text.charAt(i);
             if (c >= min && c <= max) {
                 if (count++ > max) {

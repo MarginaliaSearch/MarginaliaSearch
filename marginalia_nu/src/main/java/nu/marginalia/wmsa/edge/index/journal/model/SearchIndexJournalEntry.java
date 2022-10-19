@@ -2,12 +2,14 @@ package nu.marginalia.wmsa.edge.index.journal.model;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Iterator;
 
-public class SearchIndexJournalEntry {
+public class SearchIndexJournalEntry implements Iterable<SearchIndexJournalEntry.Record> {
     private final int size;
     private final long[] underlyingArray;
 
     public static final int MAX_LENGTH = 1000;
+    public static final int ENTRY_SIZE = 2;
 
     public SearchIndexJournalEntry(long[] underlyingArray) {
         this.size = underlyingArray.length;
@@ -46,4 +48,24 @@ public class SearchIndexJournalEntry {
         return String.format("%s[%s]", getClass().getSimpleName(), Arrays.toString(toArray()));
     }
 
+    public Iterator<Record> iterator() {
+        return new EntryIterator();
+    }
+
+    private class EntryIterator implements Iterator<Record> {
+        int pos = -ENTRY_SIZE;
+
+        public boolean hasNext() {
+            return pos + ENTRY_SIZE < size;
+        }
+
+        @Override
+        public Record next() {
+            pos+=ENTRY_SIZE;
+
+            return new Record((int) underlyingArray[pos], underlyingArray[pos+1]);
+        }
+    }
+
+    public record Record(int wordId, long metadata) {}
 }

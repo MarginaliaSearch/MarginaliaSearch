@@ -26,7 +26,7 @@ public class SearchIndexJournalWriterImpl implements SearchIndexJournalWriter {
     private RandomAccessFile raf;
     private FileChannel channel;
 
-    public static final int MAX_BLOCK_SIZE = SearchIndexJournalEntry.MAX_LENGTH*32*8*4;
+    public static final int MAX_BLOCK_SIZE = SearchIndexJournalEntry.MAX_LENGTH*128*8*4;
     private final ByteBuffer byteBuffer;
     private long pos;
 
@@ -83,7 +83,7 @@ public class SearchIndexJournalWriterImpl implements SearchIndexJournalWriter {
             byteBuffer.clear();
 
             byteBuffer.putInt(entryData.size());
-            byteBuffer.putInt(header.block().id);
+            byteBuffer.putInt(header.block().ordinal());
             byteBuffer.putLong(header.documentId());
 
             entryData.write(byteBuffer);

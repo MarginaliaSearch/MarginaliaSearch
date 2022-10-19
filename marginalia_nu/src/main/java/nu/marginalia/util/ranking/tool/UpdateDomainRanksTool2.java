@@ -11,26 +11,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class UpdateDomainRanksTool2 {
 
     private static final Logger logger = LoggerFactory.getLogger(UpdateDomainRanksTool2.class);
 
-    public Set<String> originDomains = new HashSet<>();
-    public Set<Integer> originDomainIds = new HashSet<>();
     public final long domainIdMax = -1;
     public int domainCount;
     private volatile static int rankMax;
-
-    public int maxId() {
-        return (int) domainIdMax;
-    }
-    public int domainCount() {
-        return domainCount;
-    }
 
     static final LinkedBlockingQueue<Integer> uploadQueue = new LinkedBlockingQueue<>(10);
     volatile static boolean running = true;
@@ -44,22 +33,13 @@ public class UpdateDomainRanksTool2 {
         var uploader = new Thread(() -> uploadThread(conn), "Uploader");
 
         logger.info("Ranking");
-        // "memex.marginalia.nu", "wiki.xxiivv.com", "bikobatanari.art", "sadgrl.online", "lileks.com",
-        // "www.rep.routledge.com", "www.personal.kent.edu", "xroads.virginia.edu", "classics.mit.edu", "faculty.washington.edu", "monadnock.net"
         var ds = new DatabaseModule().provideConnection();
         var domains = new RankingDomainFetcher(ds, new EdgeDomainBlacklistImpl(ds));
          var rpr = new BetterReversePageRank(domains,  "memex.marginalia.nu", "bikobatanari.art", "sadgrl.online", "wiki.xxiivv.com", "%neocities.org");
-//        var rpr = new BetterStandardPageRank(new DatabaseModule().provideConnection(),  "%edu");
-//        var spr = new BetterStandardPageRank(new DatabaseModule().provideConnection(), "memex.marginalia.nu");
 
         var rankVector = rpr.pageRankVector();
-        var norm = rankVector.norm();
         rankMax = rpr.size();
         uploader.start();
-
-
-        rankMax = rpr.size();
-
 
         rpr.pageRankWithPeripheralNodes(rankMax).forEach(i -> {
             try {

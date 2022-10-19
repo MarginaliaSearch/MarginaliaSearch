@@ -4,9 +4,10 @@ import lombok.*;
 import nu.marginalia.wmsa.edge.converting.processor.logic.HtmlFeature;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
-import nu.marginalia.wmsa.edge.search.model.EdgeSearchRankingSymbols;
 
+import java.util.EnumSet;
 import java.util.Objects;
+import java.util.StringJoiner;
 
 @AllArgsConstructor @NoArgsConstructor @With @Getter @ToString
 public class EdgeUrlDetails {
@@ -31,6 +32,9 @@ public class EdgeUrlDetails {
     public double termScore;
 
     public int resultsFromSameDomain;
+
+    public String positions;
+    public EdgeSearchResultItem resultItem;
 
     public boolean hasMoreResults() {
         return resultsFromSameDomain > 1;
@@ -122,6 +126,42 @@ public class EdgeUrlDetails {
          return "PLAIN".equals(format);
     }
 
+    public int getProblemCount() {
+        int numProblems = 0;
+
+        for (var problem :EnumSet.of(
+                HtmlFeature.JS,
+                HtmlFeature.TRACKING,
+                HtmlFeature.AFFILIATE_LINK,
+                HtmlFeature.COOKIES,
+                HtmlFeature.ADVERTISEMENT)) {
+            if (HtmlFeature.hasFeature(features, problem)) {
+                numProblems++;
+            }
+        }
+        return numProblems;
+    }
+
+    public String getProblems() {
+        StringJoiner sj = new StringJoiner(", ");
+
+        if (isScripts()) {
+            sj.add("Javascript");
+        }
+        if (isCookies()) {
+            sj.add("Cookies");
+        }
+        if (isTracking()) {
+            sj.add("Tracking/Analytics");
+        }
+        if (isAffiliate()) {
+            sj.add("Affiliate Linking");
+        }
+
+        return sj.toString();
+
+    }
+
     public boolean isScripts() {
         return HtmlFeature.hasFeature(features, HtmlFeature.JS);
     }
@@ -137,7 +177,6 @@ public class EdgeUrlDetails {
     public boolean isCookies() {
         return HtmlFeature.hasFeature(features, HtmlFeature.COOKIES);
     }
-    public boolean isUnknown() { return HtmlFeature.hasFeature(features, HtmlFeature.UNKNOWN); }
     public boolean isAds() { return HtmlFeature.hasFeature(features, HtmlFeature.ADVERTISEMENT); }
 
     public boolean isSpecialDomain() {
@@ -145,12 +184,13 @@ public class EdgeUrlDetails {
     }
     public int getLogRank() { return (int) Math.round(Math.min(Math.log(1+rankingId),10)); }
 
-    public String getRankingSymbol() {
-        return EdgeSearchRankingSymbols.getRankingSymbol(termScore);
-    }
+    public int getMatchRank() {
+        if (termScore <= 1) return 1;
+        if (termScore <= 2) return 2;
+        if (termScore <= 3) return 3;
+        if (termScore <= 5) return 5;
 
-    public String getRankingSymbolDesc() {
-        return EdgeSearchRankingSymbols.getRankingSymbolDescription(termScore);
+        return 10;
     }
 
     public double getFeatureScore() {

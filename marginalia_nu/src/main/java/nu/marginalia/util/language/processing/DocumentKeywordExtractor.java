@@ -2,8 +2,10 @@ package nu.marginalia.util.language.processing;
 
 import nu.marginalia.util.language.WordPatterns;
 import nu.marginalia.util.language.processing.model.DocumentLanguageData;
+import nu.marginalia.util.language.processing.model.KeywordMetadata;
 import nu.marginalia.util.language.processing.model.WordRep;
 import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
+import nu.marginalia.wmsa.edge.index.model.EdgePageWordFlags;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.crawl.EdgePageWordSet;
 import nu.marginalia.wmsa.edge.model.crawl.EdgePageWords;
@@ -20,14 +22,9 @@ public class DocumentKeywordExtractor {
     private final NameCounter nameCounter;
     private final SubjectCounter subjectCounter;
 
-    private final TermFrequencyDict dict;
-    private final double docCount;
 
     @Inject
     public DocumentKeywordExtractor(TermFrequencyDict dict) {
-        this.dict = dict;
-        docCount = dict.docCount();
-
         keywordExtractor = new KeywordExtractor();
 
         tfIdfCounter = new KeywordCounter(dict, keywordExtractor);
@@ -36,69 +33,105 @@ public class DocumentKeywordExtractor {
     }
 
 
-    public EdgePageWordSet extractKeywordsMinimal(DocumentLanguageData documentLanguageData) {
+    public EdgePageWordSet extractKeywordsMinimal(DocumentLanguageData documentLanguageData, KeywordMetadata keywordMetadata) {
 
         List<WordRep> titleWords = extractTitleWords(documentLanguageData);
-
-        KeywordCounter.WordHistogram wordsTfIdf = tfIdfCounter.countHisto(documentLanguageData);
         List<WordRep> wordsNamesAll = nameCounter.count(documentLanguageData, 2);
         List<WordRep> subjects = subjectCounter.count(documentLanguageData);
 
-        List<WordRep> midKeywords = new ArrayList<>(wordsTfIdf.mid());
-        List<WordRep> topKeywords = new ArrayList<>(wordsTfIdf.top());
+        tfIdfCounter.countHisto(keywordMetadata, documentLanguageData);
 
-        Collection<String> artifacts = getArtifacts(documentLanguageData);
+        for (var rep : titleWords) keywordMetadata.titleKeywords().add(rep.stemmed);
+        for (var rep : wordsNamesAll) keywordMetadata.namesKeywords().add(rep.stemmed);
+        for (var rep : subjects) keywordMetadata.subjectKeywords().add(rep.stemmed);
+
+        List<String> artifacts = getArtifacts(documentLanguageData);
+
+        keywordMetadata.flagsTemplate().add(EdgePageWordFlags.Simple);
 
         return new EdgePageWordSet(
-                createWords(IndexBlock.Subjects, subjects),
-                createWords(IndexBlock.Title, titleWords),
-                createWords(IndexBlock.NamesWords, wordsNamesAll),
-                createWords(IndexBlock.Tfidf_Top, topKeywords),
-                createWords(IndexBlock.Tfidf_Middle, midKeywords),
-                new EdgePageWords(IndexBlock.Artifacts, artifacts)
+                createWords(keywordMetadata, IndexBlock.Title, titleWords),
+                EdgePageWords.withBlankMetadata(IndexBlock.Artifacts, artifacts)
         );
     }
 
-
-
-    public EdgePageWordSet extractKeywords(DocumentLanguageData documentLanguageData) {
+    public EdgePageWordSet extractKeywords(DocumentLanguageData documentLanguageData, KeywordMetadata keywordMetadata) {
 
         List<WordRep> titleWords = extractTitleWords(documentLanguageData);
 
-        KeywordCounter.WordHistogram wordsTfIdf = tfIdfCounter.countHisto(documentLanguageData);
-        List<WordRep> wordsNamesAll = nameCounter.count(documentLanguageData, 1);
+        getWordPositions(keywordMetadata, documentLanguageData);
+
+        List<WordRep> wordsNamesAll = nameCounter.count(documentLanguageData, 2);
         List<WordRep> subjects = subjectCounter.count(documentLanguageData);
 
-        List<WordRep> lowKeywords = new ArrayList<>(wordsTfIdf.lower());
-        List<WordRep> midKeywords = new ArrayList<>(wordsTfIdf.mid());
-        List<WordRep> topKeywords = new ArrayList<>(wordsTfIdf.top());
+        List<WordRep> wordsTfIdf = tfIdfCounter.countHisto(keywordMetadata, documentLanguageData);
 
-        Collection<String> artifacts = getArtifacts(documentLanguageData);
+        for (var rep : titleWords) keywordMetadata.titleKeywords().add(rep.stemmed);
+        for (var rep : wordsNamesAll) keywordMetadata.namesKeywords().add(rep.stemmed);
+        for (var rep : subjects) keywordMetadata.subjectKeywords().add(rep.stemmed);
+
+        List<String> artifacts = getArtifacts(documentLanguageData);
 
         var wordSet = new EdgePageWordSet(
-                createWords(IndexBlock.Subjects, subjects),
-                createWords(IndexBlock.Title, titleWords),
-                createWords(IndexBlock.NamesWords, wordsNamesAll),
-                createWords(IndexBlock.Tfidf_Top, topKeywords),
-                createWords(IndexBlock.Tfidf_Middle, midKeywords),
-                createWords(IndexBlock.Tfidf_Lower, lowKeywords),
-                new EdgePageWords(IndexBlock.Artifacts, artifacts)
+                createWords(keywordMetadata, IndexBlock.Title, titleWords),
+                createWords(keywordMetadata, IndexBlock.Tfidf_High, wordsTfIdf),
+                createWords(keywordMetadata, IndexBlock.Subjects, subjects),
+                EdgePageWords.withBlankMetadata(IndexBlock.Artifacts, artifacts)
         );
 
-        getSimpleWords(wordSet, documentLanguageData,
+        getSimpleWords(keywordMetadata, wordSet, documentLanguageData,
                 IndexBlock.Words_1, IndexBlock.Words_2, IndexBlock.Words_4, IndexBlock.Words_8, IndexBlock.Words_16Plus);
 
         return wordSet;
     }
 
-    private void getSimpleWords(EdgePageWordSet wordSet, DocumentLanguageData documentLanguageData, IndexBlock...  blocks) {
+
+    public void getWordPositions(KeywordMetadata keywordMetadata, DocumentLanguageData dld) {
+        Map<String, Integer> ret = keywordMetadata.positionMask();
+
+        int posCtr = 0;
+        for (var sent : dld.titleSentences) {
+            int posBit = (int)((1L << (posCtr/4)) & 0xFFFF_FFFFL);
+
+            for (var word : sent) {
+                ret.merge(word.stemmed(), posBit, this::bitwiseOr);
+            }
+
+            for (var span : keywordExtractor.getNames(sent)) {
+                ret.merge(sent.constructStemmedWordFromSpan(span), posBit, this::bitwiseOr);
+            }
+        }
+        posCtr+=4;
+        for (var sent : dld.sentences) {
+            int posBit = (int)((1L << (posCtr/4)) & 0xFFFF_FFFFL);
+
+            for (var word : sent) {
+                ret.merge(word.stemmed(), posBit, this::bitwiseOr);
+            }
+
+            for (var span : keywordExtractor.getNames(sent)) {
+                ret.merge(sent.constructStemmedWordFromSpan(span), posBit, this::bitwiseOr);
+            }
+
+            posCtr++;
+        }
+    }
+
+    private int bitwiseOr(int a, int b) {
+        return a | b;
+    }
+
+
+    private void getSimpleWords(KeywordMetadata metadata, EdgePageWordSet wordSet, DocumentLanguageData documentLanguageData, IndexBlock...  blocks) {
+
+        EnumSet<EdgePageWordFlags> flagsTemplate = EnumSet.noneOf(EdgePageWordFlags.class);
 
         int start = 0;
         int lengthGoal = 32;
 
-        for (int blockIdx = 0; blockIdx < blocks.length-1 && start < documentLanguageData.sentences.length; blockIdx++) {
+        for (int blockIdx = 0; blockIdx < blocks.length && start < documentLanguageData.sentences.length; blockIdx++) {
             IndexBlock block = blocks[blockIdx];
-            Set<String> words = new HashSet<>(lengthGoal+100);
+            Set<EdgePageWords.Entry> words = new HashSet<>(lengthGoal+100);
 
             int pos;
             int length = 0;
@@ -110,55 +143,26 @@ public class DocumentKeywordExtractor {
                     if (!word.isStopWord()) {
                         String w = AsciiFlattener.flattenUnicode(word.wordLowerCase());
                         if (WordPatterns.singleWordQualitiesPredicate.test(w)) {
-                            words.add(w);
+                            words.add(new EdgePageWords.Entry(w, metadata.forWord(flagsTemplate, word.stemmed())));
                         }
                     }
+                }
+
+                for (var names : keywordExtractor.getNames(sent)) {
+                    var rep = new WordRep(sent, names);
+                    String w = AsciiFlattener.flattenUnicode(rep.word);
+
+                    words.add(new EdgePageWords.Entry(w, metadata.forWord(flagsTemplate, rep.stemmed)));
                 }
             }
             wordSet.append(block, words);
             start = pos;
             lengthGoal+=32;
         }
-
-        if (start < documentLanguageData.sentences.length) {
-
-            Map<String, Integer> counts = new HashMap<>(documentLanguageData.totalNumWords());
-            for (int pos = start; pos < documentLanguageData.sentences.length && counts.size() < lengthGoal; pos++) {
-                var sent = documentLanguageData.sentences[pos];
-                for (var word : sent) {
-                    if (!word.isStopWord()) {
-                        String w = AsciiFlattener.flattenUnicode(word.wordLowerCase());
-                        if (counts.containsKey(w) || (WordPatterns.singleWordQualitiesPredicate.test(w))) {
-                            counts.merge(w, 1, Integer::sum);
-                        }
-                    }
-                }
-            }
-
-            Set<String> lastSet;
-            if (counts.size() < 1024) {
-                lastSet = counts.keySet();
-            }
-            else {
-                lastSet = counts.entrySet().stream()
-                        .sorted(Comparator.comparing(e -> {
-                            double N = docCount; // Number of documents in term freq dictionary
-
-                            // Caveat: This is actually the *negated* term score, because the second logarithm has
-                            // its parameter inverted (log(a^b) = b log(a); here b = -1)
-                            return (1 + Math.log(e.getValue())) * Math.log((1. + dict.getTermFreq(e.getKey())) / N);
-                        }))
-                        .map(Map.Entry::getKey)
-                        .limit(1024)
-                        .collect(Collectors.toCollection(LinkedHashSet::new));
-            }
-
-            wordSet.append(blocks[blocks.length - 1], lastSet);
-        }
     }
 
     private static final Pattern mailLikePattern = Pattern.compile("[a-zA-Z0-9._\\-]+@[a-zA-Z0-9]+(\\.[a-zA-Z0-9]+)+");
-    private Collection<String> getArtifacts(DocumentLanguageData documentLanguageData) {
+    private List<String> getArtifacts(DocumentLanguageData documentLanguageData) {
         Set<String> reps = new HashSet<>();
 
         for (var sent : documentLanguageData.sentences) {
@@ -183,7 +187,7 @@ public class DocumentKeywordExtractor {
                 }
             }
         }
-        return reps;
+        return new ArrayList<>(reps);
     }
 
     private List<WordRep> extractTitleWords(DocumentLanguageData documentLanguageData) {
@@ -193,7 +197,21 @@ public class DocumentKeywordExtractor {
                 .collect(Collectors.toList());
     }
 
-    public EdgePageWords createWords(IndexBlock block, Collection<WordRep> words) {
-        return new EdgePageWords(block, words.stream().map(w -> w.word).map(AsciiFlattener::flattenUnicode).filter(WordPatterns::hasWordQualities).collect(Collectors.toSet()));
+    public EdgePageWords createWords(KeywordMetadata metadata,
+                                     IndexBlock block,
+                                     Collection<WordRep> words) {
+
+        Set<EdgePageWords.Entry> entries = new HashSet<>(words.size());
+        for (var word : words) {
+
+            String flatWord = AsciiFlattener.flattenUnicode(word.word);
+            if (!WordPatterns.hasWordQualities(flatWord)) {
+                continue;
+            }
+
+            entries.add(new EdgePageWords.Entry(flatWord, metadata.forWord(metadata.flagsTemplate(), word.stemmed)));
+        }
+
+        return new EdgePageWords(block, entries);
     }
 }

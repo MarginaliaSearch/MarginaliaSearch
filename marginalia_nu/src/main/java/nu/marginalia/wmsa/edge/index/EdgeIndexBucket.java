@@ -1,20 +1,19 @@
 package nu.marginalia.wmsa.edge.index;
 
 import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalWriter;
-import nu.marginalia.wmsa.edge.index.model.EdgeIndexSearchTerms;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.index.reader.SearchIndexReader;
 import nu.marginalia.wmsa.edge.index.svc.query.IndexQuery;
-import nu.marginalia.wmsa.edge.index.svc.query.IndexQueryCachePool;
 import nu.marginalia.wmsa.edge.index.svc.query.IndexQueryFactory;
+import nu.marginalia.wmsa.edge.index.svc.query.IndexQueryParams;
 import nu.marginalia.wmsa.edge.index.svc.query.ResultDomainDeduplicator;
 import nu.marginalia.wmsa.edge.index.svc.query.types.filter.QueryFilterStepFromPredicate;
+import nu.marginalia.wmsa.edge.index.svc.query.types.filter.QueryRankLimitingFilter;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -103,54 +102,65 @@ public class EdgeIndexBucket {
         return indexReader != null;
     }
 
-    public IndexQuery getQuery(IndexQueryCachePool cachePool, IndexBlock block, LongPredicate filter, EdgeIndexSearchTerms searchTerms) {
+    public IndexQuery getQuery(LongPredicate filter, IndexQueryParams params) {
+
         if (null == indexReader) {
-            logger.warn("Index reader not neady {}", block);
+            logger.warn("Index reader not neady {}", params.block());
             return new IndexQuery(Collections.emptyList());
         }
 
-        final int[] orderedIncludes = searchTerms.includes
-                .stream()
-                .sorted(Comparator.comparingLong(i -> indexReader.numHits(cachePool, block, i)))
-                .distinct()
-                .mapToInt(Integer::intValue)
-                .toArray();
+        final int[] orderedIncludes = params.searchTerms()
+                .sortedDistinctIncludes((a, b) -> compareKeywords(params.block(), a, b));
 
-        IndexQueryFactory.IndexQueryBuilder query;
+        IndexQueryFactory.IndexQueryBuilder query = createQueryBuilder(orderedIncludes[0], params);
 
-        query = indexReader.findWord(cachePool, block, orderedIncludes[0]);
         if (query == null) {
             return new IndexQuery(Collections.emptyList());
         }
 
-        query.filter(filter);
+        query.addInclusionFilter(new QueryFilterStepFromPredicate(filter));
+        if (params.rankLimit() != null) {
+            query.addInclusionFilter(new QueryRankLimitingFilter(params.rankLimit()));
+        }
 
         for (int i = 1; i < orderedIncludes.length; i++) {
             query = query.also(orderedIncludes[i]);
         }
 
-        for (int term : searchTerms.excludes) {
+        for (int term : params.searchTerms().excludes()) {
             query = query.not(term);
         }
 
         return query.build();
     }
 
+    private IndexQueryFactory.IndexQueryBuilder createQueryBuilder(int firstKeyword, IndexQueryParams params) {
 
-    public IndexQuery getDomainQuery(IndexQueryCachePool pool, int wordId, ResultDomainDeduplicator localFilter) {
-        var query = indexReader.findDomain(pool, wordId);
+        if (params.targetDomains() != null && !params.targetDomains().isEmpty()) {
+            return indexReader.findWordForDomainList(params.block(), params.targetDomains(), firstKeyword);
+        }
+        return indexReader.findWord(params.block(), params.qualityLimit(), firstKeyword);
+
+    }
+
+    private int compareKeywords(IndexBlock block, int a, int b) {
+        return Long.compare(
+                indexReader.numHits(block, a),
+                indexReader.numHits(block, b)
+        );
+    }
+
+
+    public IndexQuery getDomainQuery(int wordId, ResultDomainDeduplicator localFilter) {
+        var query = indexReader.findDomain(wordId);
 
         query.addInclusionFilter(new QueryFilterStepFromPredicate(localFilter::filterRawValue));
 
         return query;
     }
 
-    public IndexBlock getTermScore(IndexQueryCachePool cachePool, int termId, long urlId) {
-        return indexReader.getBlockForResult(cachePool, termId, urlId);
+    /** Replaces the values of ids with their associated metadata, or 0L if absent */
+    public long[] getMetadata(IndexBlock block, int termId, long[] ids) {
+        return indexReader.getMetadata(block, termId, ids);
     }
-
-    public boolean isTermInBucket(IndexQueryCachePool cachePool, IndexBlock block, int termId, long urlId) {
-        return indexReader.isTermInBucket(cachePool, block, termId, urlId);
-    }
-
 }

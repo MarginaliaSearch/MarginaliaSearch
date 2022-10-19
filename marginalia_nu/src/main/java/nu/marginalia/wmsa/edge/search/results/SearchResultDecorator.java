@@ -3,12 +3,15 @@ package nu.marginalia.wmsa.edge.search.results;
 import com.google.inject.Inject;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntObjectHashMap;
+import nu.marginalia.util.BrailleBlockPunchCards;
 import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
 import nu.marginalia.wmsa.edge.model.id.EdgeIdList;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchResultItem;
+import nu.marginalia.wmsa.edge.model.search.EdgeSearchResultKeywordScore;
 import nu.marginalia.wmsa.edge.model.search.EdgeUrlDetails;
+import nu.marginalia.wmsa.edge.search.valuation.SearchResultValuator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,22 +58,37 @@ public class SearchResultDecorator {
                 continue;
             }
 
-            if (details.rankingId == Integer.MAX_VALUE) {
-                details.rankingId = rankingId;
-            }
+            details.rankingId = rankingId;
 
             details.resultsFromSameDomain = resultItem.resultsFromDomain;
             details.termScore = calculateTermScore(resultItem, details);
+            details.positions = getPositions(resultItem);
+            details.resultItem = resultItem;
 
             logger.debug("{} -> {}", details.url, details.termScore);
 
             retList.add(details);
         }
         if (!missedIds.isEmpty()) {
-            logger.debug("Could not look up documents: {}", missedIds.toArray());
+            logger.info("Could not look up documents: {}", missedIds.toArray());
         }
 
         return retList;
+    }
+
+    private String getPositions(EdgeSearchResultItem resultItem) {
+        int bits = resultItem.scores.stream()
+                .filter(EdgeSearchResultKeywordScore::isRegular)
+                .mapToInt(EdgeSearchResultKeywordScore::positions)
+                .reduce(this::or)
+                .orElse(0);
+
+        return BrailleBlockPunchCards.printBits(bits, 32);
+
+    }
+
+    private int or(int a, int b) {
+        return a | b;
     }
 
     private double calculateTermScore(EdgeSearchResultItem resultItem, EdgeUrlDetails details) {
@@ -78,7 +96,6 @@ public class SearchResultDecorator {
         final double statePenalty = (details.domainState == EdgeDomainIndexingState.SPECIAL) ? 1.25 : 0;
 
         final double value =  valuator.evaluateTerms(resultItem.scores, details.words, details.title.length());
-
         if (dumpTermData) {
             System.out.println("---");
             System.out.println(details.getUrl());

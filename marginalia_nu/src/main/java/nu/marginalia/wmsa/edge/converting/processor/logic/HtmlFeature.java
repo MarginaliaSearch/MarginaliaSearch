@@ -7,13 +7,13 @@ public enum HtmlFeature {
     JS("special:scripts"),
     AFFILIATE_LINK( "special:affiliate"),
     TRACKING("special:tracking"),
+
     COOKIES("special:cookies"),
-
     CATEGORY_FOOD("category:food"),
-
     ADVERTISEMENT("special:ads"),
-
     CATEGORY_CRAFTS("category:crafts"),
+
+    GA_SPAM("special:gaspam"),
 
     UNKNOWN("special:uncategorized")
     ;

@@ -1,0 +1,20 @@
+body {
+    max-width: 80ch;
+    margin: auto;
+    font-size: 14pt;
+    font-family: sans-serif;
+    color: #222;
+    line-height: 1.5;
+}
+th { text-align: left; }
+input { font-family: monospace; font-size: 14pt; }
+input[type="text"] { width: 50%; }
+table { width: 100%; font-size: 14pt; }
+
+a.external {
+    color: darkcyan !important;
+}
+a.external:before {
+    content: '\01F30E';
+    padding-right: .25ch;
+}

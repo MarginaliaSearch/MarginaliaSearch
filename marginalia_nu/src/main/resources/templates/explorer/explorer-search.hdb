@@ -1,0 +1,7 @@
+<h2>Search</h2>
+<form action="search" method="get">
+    <label for="domain">Domain Name</label>
+    <input type="text" name="domain" id="domain" value="{{query}}">
+    <input type="submit" />
+</form>
+<hr>

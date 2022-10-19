@@ -16,7 +16,7 @@ import static nu.marginalia.util.FileSizeUtil.readableSize;
  *  Spiritually influenced by GNU Trove's hash maps
  *  LGPL 2.1
  */
-public class DictionaryHashMap {
+public class DictionaryHashMap implements DictionaryMap {
     private static final Logger logger = LoggerFactory.getLogger(DictionaryHashMap.class);
     private static final Gauge probe_count_metrics
             = Gauge.build("wmsa_dictionary_hash_map_probe_count", "Probing Count")
@@ -81,6 +81,7 @@ public class DictionaryHashMap {
         }
     }
 
+    @Override
     public int size() {
         return sz.get();
     }
@@ -97,6 +98,7 @@ public class DictionaryHashMap {
         buffers[buffer].put(bufferIdx, val);
     }
 
+    @Override
     public int put(long key) {
 
         long hash = key & 0x7FFF_FFFF_FFFF_FFFFL;
@@ -143,6 +145,7 @@ public class DictionaryHashMap {
         return di;
     }
 
+    @Override
     public int get(long key) {
         final long hash = key & 0x7FFF_FFFF_FFFF_FFFFL;
         final long cell = hash % hashTableSize;

@@ -29,7 +29,7 @@ public class CrawlJobExtractorMain {
             """
                 SELECT ID
                 FROM EC_DOMAIN
-                WHERE URL_PART=?
+                WHERE DOMAIN_NAME=?
             """;
 
     private static final String domainsSql =

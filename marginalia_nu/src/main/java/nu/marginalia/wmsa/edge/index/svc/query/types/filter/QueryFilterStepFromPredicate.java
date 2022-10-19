@@ -1,8 +1,5 @@
 package nu.marginalia.wmsa.edge.index.svc.query.types.filter;
 
-import nu.marginalia.wmsa.edge.index.reader.SearchIndex;
-import org.jetbrains.annotations.Nullable;
-
 import java.util.function.LongPredicate;
 
 public class QueryFilterStepFromPredicate implements QueryFilterStepIf {
@@ -10,12 +7,6 @@ public class QueryFilterStepFromPredicate implements QueryFilterStepIf {
 
     public QueryFilterStepFromPredicate(LongPredicate pred) {
         this.pred = pred;
-    }
-
-    @Nullable
-    @Override
-    public SearchIndex getIndex() {
-        return null;
     }
 
     @Override
