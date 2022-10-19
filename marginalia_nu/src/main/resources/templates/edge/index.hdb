@@ -28,6 +28,8 @@
         <h2>Publicity, Discussion and Events</h2>
         <div class="info">
             <dl>
+                <dt><a href="https://www.hs.fi/visio/art-2000009139237.html">Google ei en&auml;&auml; tide&auml;</a></dt>
+                <dd>Helsing Sanomat &#127467;&#127470; 2022-10-19</dd>
                 <dt><a href="https://www.deutschlandfunkkultur.de/google-suche-100.html">Kritik an Googles Suche - Platzhirsch auf dem Nebenschauplatz</a></dt>
                 <dd>Deutschlandfunk Kultur &#x1f1e9;&#x1f1ea;, 2022-08-18</dd>
                 <dt><a href="https://news.ycombinator.com/item?id=31536626" rel="nofollow">Marginalia Goes Open Source</a></dt>
@@ -74,6 +76,9 @@
                     done in-house. The project is open source. Feel free to poke about in the <a
                         href="https://git.marginalia.nu/marginalia/marginalia.nu">source code</a> or contribute
                     to the development!
+                </p>
+                <p>
+                    The entire search engine is hosted off a single PC in Sweden, albeit with pretty solid specs.
                 </p>
                 <p>Consider <a href="https://memex.marginalia.nu/projects/edge/supporting.gmi">supporting the
                     project</a>!</p>
