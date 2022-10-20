@@ -136,14 +136,12 @@ class IndexQueryTest {
 
         IndexQuery query = new IndexQuery(List.of(threesRange().asPrefixSource(102, 200)));
 
-        /** Read from 17s range */
-
-        // 17s range is shorter and should read fully in one go
+        /** Read from 3s range */
 
         query.getMoreResults(buffer);
         System.out.println(Arrays.toString(buffer.copyData()));
         assertFalse(buffer.isEmpty());
-        assertArrayEquals(LongStream.range(0, 100).map(l -> l*17).toArray(), buffer.copyData());
+        assertArrayEquals(LongStream.range(100, 200).filter(v -> (v % 3) == 0).toArray(), buffer.copyData());
 
     }
 

@@ -153,7 +153,7 @@ class BTreeWriterTest {
                 for (int i = 0; i < 500; i++) {
                     long val = (long)(Long.MAX_VALUE * Math.random());
                     while (toPut.contains((int)val)) val = (long)(Long.MAX_VALUE * Math.random());
-                    assertEquals(-1, reader.findEntry( val));
+                    assertTrue(reader.findEntry( val) < 0);
                 }
             }
         } catch (Exception e) {
@@ -203,7 +203,7 @@ class BTreeWriterTest {
                     for (int i = 0; i < 500; i++) {
                         long val = (long) (Long.MAX_VALUE * Math.random());
                         while (toPut.contains(val)) val = (long) (Long.MAX_VALUE * Math.random());
-                        assertEquals(-1, reader.findEntry(val));
+                        assertTrue(reader.findEntry( val) < 0);
                     }
                 }
             } catch (Exception e) {
@@ -255,7 +255,7 @@ class BTreeWriterTest {
                     for (int i = 0; i < 500; i++) {
                         long val = (long) (Long.MAX_VALUE * Math.random());
                         while (toPut.contains(val)) val = (long) (Long.MAX_VALUE * Math.random());
-                        assertEquals(-1, reader.findEntry(val & mask));
+                        assertTrue(reader.findEntry(val & mask) < 0);
                     }
                 }
             } catch (Exception e) {
@@ -309,7 +309,7 @@ class BTreeWriterTest {
                     for (int i = 0; i < 500; i++) {
                         long val = (long) (Long.MAX_VALUE * Math.random());
                         while (toPut.contains(val)) val = (long) (Long.MAX_VALUE * Math.random());
-                        assertEquals(-1, reader.findEntry(val & mask));
+                        assertTrue(reader.findEntry(val & mask) < 0);
                     }
                 }
             } catch (Exception e) {

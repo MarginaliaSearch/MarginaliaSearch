@@ -74,7 +74,7 @@ public enum UnicodeRanges {
 
         for (int i = 0; i < Math.min(2000, text.length()); i++) {
             char c = text.charAt(i);
-            if (c >= min && c <= max) {
+            if (c >= min && c <= this.max) {
                 if (count++ > max) {
                     return true;
                 }

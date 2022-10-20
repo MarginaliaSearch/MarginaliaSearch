@@ -135,7 +135,7 @@ public class MultimapSorter {
         if (low >= 0 && highInclusive >= 0 && low < highInclusive) {
 
             if (highInclusive - low < 32) {
-                multimapFileLong.insertionSort(wordSize, low, (int) (1 + (highInclusive - low) / wordSize));
+                multimapFileLong.insertionSort(wordSize, low, (int) ((wordSize + highInclusive - low) / wordSize));
             }
             else {
                 long p = multimapFileLong.quickSortPartition(wordSize, low, highInclusive);

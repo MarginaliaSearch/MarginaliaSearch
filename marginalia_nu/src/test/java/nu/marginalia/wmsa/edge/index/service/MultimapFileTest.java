@@ -103,6 +103,7 @@ class MultimapFileTest {
         var sorter = file.createSorter(Path.of("/tmp"), 16, 2);
 
         for (int start = 0; start < 8; start+=2) {
+            System.out.println("~");
             for (int end = start; end < 128; end+=2) {
                 for (int i = 0; i < 128; i+=2) {
                     file.put(i, -i/2);
@@ -110,9 +111,17 @@ class MultimapFileTest {
                 }
                 sorter.quickSortLH(start, end);
                 for (int i = start+2; i < end; i+=2) {
+
+                    System.out.println("**" + i);
+                    System.out.println(file.get(i-2));
+                    System.out.println(file.get(i-1));
+                    System.out.println(file.get(i));
+                    System.out.println(file.get(i+1));
+
                     assertTrue(file.get(i-2) <= file.get(i));
                     assertEquals(file.get(i+1), -file.get(i));
                 }
+                System.out.println("~");
             }
         }
 
@@ -158,13 +167,17 @@ class MultimapFileTest {
         var file = new MultimapFileLong(new RandomAccessFile(tmp, "rw"), FileChannel.MapMode.READ_WRITE, 128, 8);
         var sorter = file.createSorter(Path.of("/tmp"), 16, 2);
 
-        for (int start = 0; start < 8; start+=2) {
+        for (int start = 2; start < 8; start+=2) {
             for (int end = start+2; end < 126; end+=2) {
                 for (int i = 0; i < 128; i+=2) {
                     file.put(i, -(128-i/2));
-                    file.put(i+1, (128-i)/2);
+                    file.put(i+1, (128-i/2));
                 }
-                sorter.insertionSort(start, (end - start));
+                file.put(0, 0xFFFF_FFFFL);
+                file.put(end, 0x7FFF_FFFFL);
+                sorter.insertionSort(start, (end - start)/2);
+                assertEquals(0xFFFF_FFFFL, file.get(0));
+                assertEquals(file.get(end), 0x7FFF_FFFFL);
                 for (int i = start+2; i < end; i+=2) {
                     assertTrue(file.get(i-2) <= file.get(i));
                     assertEquals(file.get(i+1), -file.get(i));
@@ -178,14 +191,14 @@ class MultimapFileTest {
         var file = new MultimapFileLong(new RandomAccessFile(tmp, "rw"), FileChannel.MapMode.READ_WRITE, 128, 8);
         var sorter = file.createSorter(Path.of("/tmp"), 16, 2);
 
-        for (int start = 0; start < 512; start+=2) {
+        for (int start = 0; start < 512; start+=18) {
             System.out.println(start);
-            for (int end = start+2; end < 8192; end+=2) {
+            for (int end = start+2; end < 8192; end+=68) {
                 for (int i = 0; i < 8192; i+=2) {
                     file.put(i, -i/2);
                     file.put(i+1, i/2);
                 }
-                sorter.quickSortLH(start, end);
+                sorter.mergeSort(start, end-start);
 
                 assertEquals(file.get(start+1), -file.get(start));
                 for (int i = start+2; i < end; i+=2) {
@@ -217,24 +230,6 @@ class MultimapFileTest {
     }
 
     @Test
-    void sortInternalSS2() throws IOException {
-        var file = new MultimapFileLong(new RandomAccessFile(tmp, "rw"), FileChannel.MapMode.READ_WRITE, 32, 8);
-        var sorter = file.createSorter(Path.of("/tmp"), 16, 2);
-        for (int i = 0; i < 32; i+=2) {
-            file.put(i, 32-i/2);
-            file.put(i+1, ~(32-i/2));
-        }
-
-        sorter.sortRange( 2, 14);
-
-        for (int i = 2+2; i < 16; i+=2) {
-            System.out.println(file.get(i) + "-" + ~file.get(i+1));
-            assertTrue(file.get(i) > file.get(i-2));
-        }
-    }
-
-
-    @Test
     void sortExternal() throws IOException {
         var file = new MultimapFileLong(new RandomAccessFile(tmp, "rw"), FileChannel.MapMode.READ_WRITE, 32, 8);
         var sorter = file.createSorter(Path.of("/tmp"), 2, 1);
@@ -252,25 +247,7 @@ class MultimapFileTest {
             assertTrue(searcher.binarySearchTest(file.get(i), 2, 16));
         }
     }
-    @Test
-    void sortExternalSS2() throws IOException {
-        var file = new MultimapFileLong(new RandomAccessFile(tmp, "rw"), FileChannel.MapMode.READ_WRITE, 32, 8);
-        var sorter = file.createSorter(Path.of("/tmp"), 2, 2);
-        var searcher = file.createSearcher();
 
-        for (int i = 0; i < 32; i+=2) {
-            file.put(i, 32-i/2);
-            file.put(i+1, ~(32-i/2));
-        }
-
-        sorter.sortRange( 2, 14);
-        file.force();
-
-        for (int i = 2+2; i < 16; i+=2) {
-            System.out.println(file.get(i) + "-" + ~file.get(i+1));
-            assertTrue(file.get(i) > file.get(i-2));
-        }
-    }
 
     @Test
     void close() {

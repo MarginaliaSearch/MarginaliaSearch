@@ -216,6 +216,9 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
 
     @Override
     public long get(long idx) {
+        if (idx < 0)
+            throw new IllegalArgumentException("get("+idx+")");
+
         if (idx >= mappedSize)
             grow(idx);
 
@@ -650,7 +653,7 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
         if (start + n + wordSize - 1 >= mappedSize)
             grow(start + n + wordSize - 1);
 
-        if (n == 1) {
+        if (n <= 1) {
             return;
         }
 
@@ -659,33 +662,29 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
             int off = (int) (start % bufferSize);
 
             for (int i = 1; i < n; i++) {
-                for (int j = i; j > 0; j--) {
-                    int a = off + wordSize*(j-1);
-                    int b = off + wordSize*j;
+                long key = buffer.get(off + i * wordSize);
 
-                    if (buffer.get(a) > buffer.get(b)) {
-                        for (int w = 0; w < wordSize; w++) {
-                            long tmp = buffer.get(a+w);
-                            buffer.put(a+w, buffer.get(b+w));
-                            buffer.put(b+w, tmp);
-                        }
+                int j = i - 1;
+                while (j >= 0 && buffer.get(off + wordSize*j) > key) {
+                    for (int w = 0; w < wordSize; w++) {
+                        long tmp = buffer.get(off+wordSize*j+w);
+                        buffer.put(off+wordSize*j+w, buffer.get(off+wordSize*(j+1)+w));
+                        buffer.put(off+wordSize*(j+1)+w, tmp);
                     }
-                    else break;
+                    j--;
                 }
+                buffer.put(off + (j+1) * wordSize, key);
             }
         }
         else for (int i = 1; i < n; i++) {
-            for (int j = i; j > 0; j--) {
-                long a = start + (long)wordSize*(j-1);
-                long b = start + (long)wordSize*j;
+            long key = get(start + (long) i * wordSize);
 
-                if (get(a) > get(b)) {
-                    swap(a, b);
-                }
-                else {
-                    break;
-                }
+            int j = i - 1;
+            while (j >= 0 && get(start + (long)wordSize*j) > key) {
+                swapn(wordSize, start + (long)wordSize*j, start + (long)wordSize*(j+1));
+                j--;
             }
+            put(start + (long) (j+1) * wordSize, key);
         }
     }
 
