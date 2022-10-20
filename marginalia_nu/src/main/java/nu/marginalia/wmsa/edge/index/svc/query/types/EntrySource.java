@@ -1,9 +1,10 @@
 package nu.marginalia.wmsa.edge.index.svc.query.types;
 
-import nu.marginalia.wmsa.edge.index.reader.SearchIndex;
+import nu.marginalia.util.btree.BTreeQueryBuffer;
 
 public interface EntrySource {
-    SearchIndex getIndex();
-    int read(long[] buffer, int n);
+    void skip(int n);
+    void read(BTreeQueryBuffer buffer);
 
+    boolean hasMore();
 }

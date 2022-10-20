@@ -1,7 +1,11 @@
 package nu.marginalia.wmsa.edge.crawling.model;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+
 import java.util.List;
 
+@AllArgsConstructor @NoArgsConstructor
 public class CrawlingSpecification {
     public String id;
 

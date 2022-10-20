@@ -11,6 +11,17 @@ import java.util.regex.Pattern;
 public class UrlBlocklist {
     private final List<Predicate<String>> patterns = new ArrayList<>();
 
+    private record UrlPatternContains(String contains, Pattern pattern) implements Predicate<String> {
+        public boolean test(String s) {
+            return s.contains(contains) && pattern.matcher(s).find();
+        }
+    }
+    private record UrlPatternMinLength(int minLength, Pattern pattern) implements Predicate<String> {
+        public boolean test(String s) {
+            return s.length() >= minLength && pattern.matcher(s).find();
+        }
+    }
+
     // domains that have a lot of links but we know we don't want to crawl
     private final Set<String> badDomains = Set.of("t.co", "facebook.com",
             "instagram.com", "youtube.com",
@@ -18,18 +29,24 @@ public class UrlBlocklist {
 
     public UrlBlocklist() {
         // Don't deep-crawl git repos
-        patterns.add(Pattern.compile("\\.git/.+").asPredicate());
-        patterns.add(Pattern.compile("wp-content/upload").asPredicate());
+        patterns.add(s -> s.contains(".git/"));
+
+        patterns.add(s -> s.contains("wp-content/upload"));
+        patterns.add(s -> s.contains("-download-free"));
 
         // long base64-strings in URLs are typically git hashes or the like, rarely worth crawling
-        patterns.add(Pattern.compile(".*/[^/]*[a-f0-9]{32,}(/|$)").asPredicate());
+        patterns.add(new UrlPatternMinLength(48, Pattern.compile(".*/[^/]*[a-f0-9]{32,}(/|$)")));
 
         // link farms &c
-        patterns.add(Pattern.compile("/download(-([A-Za-z]+|[0-9]+)){4,}\\.(htm|html|php)$").asPredicate());
-        patterns.add(Pattern.compile("/permalink/[a-z]+(-([A-Za-z]+|[0-9]+)){3,}\\.(htm|html|php)$").asPredicate());
-        patterns.add(Pattern.compile("(webrx3|lib|pdf|book|720p).*/[A-Za-z]+(-([A-Za-z]+|[0-9]+)){3,}((-[0-9]+)?/|\\.(php|htm|html))$").asPredicate());
-        patterns.add(Pattern.compile("/node/.*/[a-z]+(-[a-z0-9]+)+.htm$").asPredicate());
-        patterns.add(Pattern.compile(".*-download-free$").asPredicate());
+        patterns.add(new UrlPatternContains("/download", Pattern.compile("/download(-([A-Za-z]+|[0-9]+)){4,}\\.(htm|html|php)$")));
+        patterns.add(new UrlPatternContains("/permalink", Pattern.compile("/permalink/[a-z]+(-([A-Za-z]+|[0-9]+)){3,}\\.(htm|html|php)$")));
+        patterns.add(new UrlPatternContains("/webrx", Pattern.compile("webrx3.*/[A-Za-z]+(-([A-Za-z]+|[0-9]+)){3,}((-[0-9]+)?/|\\.(php|htm|html))$")));
+        patterns.add(new UrlPatternContains("/lib", Pattern.compile("lib.*/[A-Za-z]+(-([A-Za-z]+|[0-9]+)){3,}((-[0-9]+)?/|\\.(php|htm|html))$")));
+        patterns.add(new UrlPatternContains("/pdf", Pattern.compile("pdf.*/[A-Za-z]+(-([A-Za-z]+|[0-9]+)){3,}((-[0-9]+)?/|\\.(php|htm|html))$")));
+        patterns.add(new UrlPatternContains("/book", Pattern.compile("book.*/[A-Za-z]+(-([A-Za-z]+|[0-9]+)){3,}((-[0-9]+)?/|\\.(php|htm|html))$")));
+        patterns.add(new UrlPatternContains("/720p", Pattern.compile("720p.*/[A-Za-z]+(-([A-Za-z]+|[0-9]+)){3,}((-[0-9]+)?/|\\.(php|htm|html))$")));
+        patterns.add(new UrlPatternContains("/node", Pattern.compile("/node/.*/[a-z]+(-[a-z0-9]+)+.htm$")));
+
     }
 
     public boolean isUrlBlocked(EdgeUrl url) {

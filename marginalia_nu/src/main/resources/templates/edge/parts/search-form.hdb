@@ -12,11 +12,12 @@
                 <option {{#eq profile "modern"}}selected{{/eq}} value="modern">Blogs and Personal Websites</option>
                 <option {{#eq profile "academia"}}selected{{/eq}} value="academia">Academia, Forums, Big Websites</option>
                 <option {{#eq profile "yolo"}}selected{{/eq}} value="yolo">Default Ranking Algorithm</option>
-                <option {{#eq profile "corpo"}}selected{{/eq}} value="corpo">Everything</option>
+                <option {{#eq profile "corpo"}}selected{{/eq}} value="corpo">No Domain Ranking</option>
                 </optgroup>
                 <optgroup label="Topics Search">
                 <option {{#eq profile "food"}}selected{{/eq}} value="food">Recipes &#127859;</option>
                 <option {{#eq profile "crafts"}}selected{{/eq}} value="crafts">Crafts &#129697;&#128296; (WIP; mostly textile-craft)</option>
+                <option {{#eq profile "classics"}}selected{{/eq}} value="classics">Classics and Antiquity &#128220;</option>
                 </optgroup>
 
             </select>

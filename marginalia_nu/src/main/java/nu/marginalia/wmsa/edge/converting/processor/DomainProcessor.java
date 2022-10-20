@@ -3,17 +3,22 @@ package nu.marginalia.wmsa.edge.converting.processor;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import nu.marginalia.wmsa.edge.converting.model.DisqualifiedException;
 import nu.marginalia.wmsa.edge.converting.model.ProcessedDomain;
 import nu.marginalia.wmsa.edge.converting.processor.logic.CommonKeywordExtractor;
+import nu.marginalia.wmsa.edge.converting.processor.logic.InternalLinkGraph;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDocument;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDomain;
 import nu.marginalia.wmsa.edge.crawling.model.CrawlerDomainStatus;
+import nu.marginalia.wmsa.edge.index.model.EdgePageWordFlags;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
+import nu.marginalia.wmsa.edge.index.model.IndexBlockType;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static nu.marginalia.wmsa.edge.crawling.model.CrawlerDocumentStatus.BAD_CANONICAL;
 
@@ -47,6 +52,8 @@ public class DomainProcessor {
 
             fixBadCanonicalTags(crawledDomain.doc);
 
+            InternalLinkGraph internalLinkGraph = new InternalLinkGraph();
+
             DocumentDisqualifier disqualifier = new DocumentDisqualifier();
             for (var doc : crawledDomain.doc) {
                 if (disqualifier.isQualified()) {
@@ -54,6 +61,9 @@ public class DomainProcessor {
 
                     if (processedDoc.url != null) {
                         ret.documents.add(processedDoc);
+
+                        internalLinkGraph.accept(processedDoc);
+
                         processedDoc.quality().ifPresent(disqualifier::offer);
                     }
                     else if ("LANGUAGE".equals(processedDoc.stateReason)) {
@@ -62,24 +72,16 @@ public class DomainProcessor {
                 }
                 else { // Short-circuit processing if quality is too low
                     var stub = documentProcessor.makeDisqualifiedStub(doc);
+                    stub.stateReason = DisqualifiedException.DisqualificationReason.SHORT_CIRCUIT.toString();
                     if (stub.url != null) {
                         ret.documents.add(stub);
                     }
                 }
             }
 
-            Set<String> commonSiteWords = new HashSet<>(10);
+            flagCommonSiteWords(ret);
+            flagAdjacentSiteWords(internalLinkGraph, ret);
 
-            commonSiteWords.addAll(commonKeywordExtractor.getCommonSiteWords(ret, IndexBlock.Tfidf_Top, IndexBlock.Subjects));
-            commonSiteWords.addAll(commonKeywordExtractor.getCommonSiteWords(ret, IndexBlock.Title));
-
-            if (!commonSiteWords.isEmpty()) {
-                for (var doc : ret.documents) {
-                    if (doc.words != null) {
-                        doc.words.get(IndexBlock.Site).addAll(commonSiteWords);
-                    }
-                }
-            }
         }
         else {
             ret.documents = Collections.emptyList();
@@ -89,6 +91,70 @@ public class DomainProcessor {
 
         return ret;
     }
+
+    private void flagCommonSiteWords(ProcessedDomain processedDomain) {
+        Set<String> commonSiteWords = new HashSet<>(10);
+
+        commonSiteWords.addAll(commonKeywordExtractor.getCommonSiteWords(processedDomain, IndexBlock.Tfidf_High, IndexBlock.Subjects));
+        commonSiteWords.addAll(commonKeywordExtractor.getCommonSiteWords(processedDomain, IndexBlock.Title));
+
+        if (commonSiteWords.isEmpty()) {
+            return;
+        }
+
+        for (var doc : processedDomain.documents) {
+            if (doc.words != null) {
+                for (var block : IndexBlock.values()) {
+                    if (block.type == IndexBlockType.PAGE_DATA) {
+                        doc.words.get(block).setFlagOnMetadataForWords(EdgePageWordFlags.Site, commonSiteWords);
+                    }
+                }
+            }
+        }
+    }
+
+    private void flagAdjacentSiteWords(InternalLinkGraph internalLinkGraph, ProcessedDomain processedDomain) {
+        var invertedGraph = internalLinkGraph.trimAndInvert();
+
+        Map<EdgeUrl, Set<String>> linkedKeywords = new HashMap<>(100);
+
+        invertedGraph.forEach((url, linkingUrls) -> {
+            Map<String, Integer> keywords = new HashMap<>(100);
+
+            for (var linkingUrl : linkingUrls) {
+                for (var keyword : internalLinkGraph.getKeywords(linkingUrl)) {
+                    keywords.merge(keyword, 1, Integer::sum);
+                }
+            }
+
+            var words = keywords.entrySet().stream()
+                    .filter(e -> e.getValue() > 3)
+                    .map(Map.Entry::getKey)
+                    .filter(internalLinkGraph.getCandidateKeywords(url)::contains)
+                    .collect(Collectors.toSet());
+            if (!words.isEmpty()) {
+                linkedKeywords.put(url, words);
+            }
+        });
+
+        for (var doc : processedDomain.documents) {
+            if (doc.words == null)
+                continue;
+
+            final Set<String> keywords = linkedKeywords.get(doc.url);
+            if (keywords == null)
+                continue;
+
+            for (var block : IndexBlock.values()) {
+                if (block.type == IndexBlockType.PAGE_DATA) {
+                    doc.words.get(block).setFlagOnMetadataForWords(EdgePageWordFlags.SiteAdjacent, keywords);
+                }
+            }
+        }
+
+
+    }
+
 
     private void fixBadCanonicalTags(List<CrawledDocument> docs) {
         Map<String, Set<String>> seenCanonicals = new HashMap<>();
@@ -162,7 +228,8 @@ public class DomainProcessor {
         }
 
         boolean isQualified() {
-            return count < 25 || goodCount*10 >= count;
+            return true;
+//            return count < 25 || goodCount*10 >= count;
         }
     }
 }

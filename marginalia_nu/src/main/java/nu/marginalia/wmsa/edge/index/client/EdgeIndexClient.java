@@ -47,6 +47,9 @@ public class EdgeIndexClient extends AbstractDynamicClient implements EdgeIndexW
         var wordSetBuilder = IndexPutKeywordsReq.WordSet.newBuilder();
         wordSetBuilder.setIndex(wordSet.block().ordinal());
         wordSetBuilder.addAllWords(List.of(wordSet.keywords()));
+        for (var meta : wordSet.metadata()) {
+            wordSetBuilder.addMeta(meta);
+        }
         keywordBuilder.addWordSet(wordSetBuilder.build());
 
         var req = keywordBuilder.build();

@@ -1,11 +1,7 @@
 package nu.marginalia.wmsa.edge.converting;
 
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
-import nu.marginalia.wmsa.configuration.server.Context;
-import nu.marginalia.wmsa.edge.converting.interpreter.instruction.DocumentKeywords;
 import nu.marginalia.wmsa.edge.index.client.EdgeIndexClient;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
-import nu.marginalia.wmsa.edge.model.id.EdgeId;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -34,9 +30,9 @@ public class LinkKeywordLoaderMain {
 
     private record UrlKeyword(String url, String keyword) {
         public static UrlKeyword parseLine(String line) {
-            String[] parts = line.split("\t");
-            if (parts.length == 2) {
-                return new UrlKeyword(parts[0], parts[1]);
+            int idx = line.indexOf('\t');
+            if (idx > 0) {
+                return new UrlKeyword(line.substring(0, idx), line.substring(idx+1));
             }
             return null;
         }
@@ -73,10 +69,10 @@ public class LinkKeywordLoaderMain {
                     int urlId = (int)(id & 0xFFFF_FFFFL);
                     int domainId = (int)(id >>> 32L);
 
-//                    System.out.println(lastLine + " -/- " + domainId + ":" + urlId + " : " + keywords);
+                    System.out.println(lastLine + " -/- " + domainId + ":" + urlId + " : " + keywords);
 
-                    indexClient.putWords(Context.internal(), new EdgeId<>(domainId), new EdgeId<>(urlId),
-                            new DocumentKeywords(IndexBlock.Link, keywords.toArray(String[]::new)), 0);
+//                    indexClient.putWords(Context.internal(), new EdgeId<>(domainId), new EdgeId<>(urlId),
+//                            new DocumentKeywords(IndexBlock.Link, keywords.toArray(String[]::new)), 0);
                 }
 
                 lastLine = urlKeyword.url;
@@ -94,6 +90,7 @@ public class LinkKeywordLoaderMain {
              var conn = ds.getConnection();
              var stmt = conn.createStatement())
         {
+            stmt.setFetchSize(10000);
             var rsp = stmt.executeQuery("SELECT URL, ID, DOMAIN_ID FROM EC_URL_VIEW WHERE TITLE IS NOT NULL");
 
             while (rsp.next()) {

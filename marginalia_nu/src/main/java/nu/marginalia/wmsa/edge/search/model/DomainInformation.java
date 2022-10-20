@@ -1,15 +1,11 @@
 package nu.marginalia.wmsa.edge.search.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
-import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
 
 import java.util.List;
 
-@Getter @AllArgsConstructor @NoArgsConstructor
+@Getter @AllArgsConstructor @NoArgsConstructor @Builder
 @ToString
 public class DomainInformation {
     EdgeDomain domain;
@@ -22,6 +18,9 @@ public class DomainInformation {
     int outboundLinks;
     double ranking;
 
-    EdgeDomainIndexingState state;
+    boolean suggestForCrawling;
+    boolean inCrawlQueue;
+
+    String state;
     List<EdgeDomain> linkingDomains;
 }

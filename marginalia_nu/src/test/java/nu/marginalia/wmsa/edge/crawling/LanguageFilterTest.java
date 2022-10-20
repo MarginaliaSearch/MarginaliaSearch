@@ -4,7 +4,8 @@ import nu.marginalia.util.language.LanguageFilter;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class LanguageFilterTest {
 
@@ -17,7 +18,7 @@ class LanguageFilterTest {
     }
 
     @Test
-    public void isStringChinsese() {
+    public void isStringChinese() {
         var languageFilter = new LanguageFilter();
         assertTrue(languageFilter.isBlockedUnicodeRange("溶岩ドームの手前に広がる斜面（木が生えているところ）は普賢岳の山体です．今回の噴火にともない，このあたりの山体がマグマに押されて変形し，北（写真では左）にむかって100mほどせりだしました\n"));
     }

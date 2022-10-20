@@ -28,32 +28,8 @@ public class ReindexTriggerMain {
                 .followRedirects(true)
                 .build();
 
-        try (var ds =  db.provideConnection(); var conn = ds.getConnection(); var stmt = conn.createStatement()) {
-            var rs = stmt.executeQuery("SELECT ID, DOMAIN_NAME, STATE, INDEXED FROM EC_DOMAIN LIMIT 100");
-            while (rs.next()) {
-                System.out.printf("%d %s %s %d\n",
-                        rs.getInt(1),
-                        rs.getString(2),
-                        rs.getString(3),
-                        rs.getInt(4));
-            }
-
-            rs = stmt.executeQuery("SELECT ID, DOMAIN_ID, PATH, VISITED, STATE FROM EC_URL LIMIT 100");
-            while (rs.next()) {
-                System.out.printf("%d %d %s %d %s\n",
-                        rs.getInt(1),
-                        rs.getInt(2),
-                        rs.getString(3),
-                        rs.getInt(4),
-                        rs.getString(5));
-
-            }
-
-            stmt.executeUpdate("INSERT IGNORE INTO DOMAIN_METADATA(ID,GOOD_URLS,KNOWN_URLS,VISITED_URLS) SELECT ID,0,0,0 FROM EC_DOMAIN WHERE INDEXED>0");
-            stmt.executeUpdate("UPDATE DOMAIN_METADATA INNER JOIN (SELECT DOMAIN_ID,COUNT(*) CNT FROM EC_URL WHERE VISITED AND STATE='ok' GROUP BY DOMAIN_ID) T ON T.DOMAIN_ID=ID SET GOOD_URLS=CNT");
-            stmt.executeUpdate("UPDATE DOMAIN_METADATA INNER JOIN (SELECT DOMAIN_ID,COUNT(*) CNT FROM EC_URL GROUP BY DOMAIN_ID) T ON T.DOMAIN_ID=ID SET KNOWN_URLS=CNT");
-            stmt.executeUpdate("UPDATE DOMAIN_METADATA INNER JOIN (SELECT DOMAIN_ID,COUNT(*) CNT FROM EC_URL WHERE VISITED GROUP BY DOMAIN_ID) T ON T.DOMAIN_ID=ID SET VISITED_URLS=CNT");
-        }
+        var updateStatistics = new UpdateDomainStatistics(db.provideConnection());
+        updateStatistics.run();
 
         var rb = new RequestBody() {
 
@@ -70,7 +46,11 @@ public class ReindexTriggerMain {
         };
 
         client.newCall(new Request.Builder().post(rb).url(new URL("http", args[0], ServiceDescriptor.EDGE_INDEX.port, "/ops/repartition")).build()).execute();
-        client.newCall(new Request.Builder().post(rb).url(new URL("http", args[0], ServiceDescriptor.EDGE_INDEX.port, "/ops/preconvert")).build()).execute();
+
+        if (!Boolean.getBoolean("no-preconvert")) {
+            client.newCall(new Request.Builder().post(rb).url(new URL("http", args[0], ServiceDescriptor.EDGE_INDEX.port, "/ops/preconvert")).build()).execute();
+        }
+
         for (int i = 0; i < DYNAMIC_BUCKET_LENGTH+1; i++) {
             client.newCall(new Request.Builder().post(rb).url(new URL("http", args[0], ServiceDescriptor.EDGE_INDEX.port, "/ops/reindex/" + i)).build()).execute();
         }

@@ -52,7 +52,7 @@ public class SearchIndexPreconverter {
         var lock = partitioner.getReadLock();
         try {
             lock.lock();
-            ByteBuffer buffer = ByteBuffer.allocateDirect(8192);
+            ByteBuffer buffer = ByteBuffer.allocateDirect(65536);
             for (var entry : indexJournalReader) {
                 if (!partitioner.isGoodUrl(entry.urlId())
                     || spamDomains.contains(entry.domainId())) {
@@ -93,7 +93,7 @@ public class SearchIndexPreconverter {
         }
 
         public boolean shouldWrite(SearchIndexPartitioner partitioner, SearchIndexJournalReader.JournalEntry entry) {
-            return shard.block == entry.header.block().id
+            return shard.block == entry.header.block().ordinal()
                     && partitioner.filterUnsafe(entry.domainId(), shard.bucket);
         }
 

@@ -24,28 +24,8 @@
 
   <div class="card info">
 
-    <h2>Indexing Information</h2>
-    <p class="description">
-        Blacklisted: {{blacklisted}}<br/>
-        Pages Known: {{pagesKnown}} <br/>
-        Pages Crawled: {{pagesFetched}} <br/>
-        Pages Indexed: {{pagesIndexed}} <br/>
-        Crawl State: {{state}}<br/>
-    </p>
-  </div>
-
-  <div class="card info">
-      <h2>Links</h2>
-      <p class="description">
-          Crawl Ranking: {{ranking}}%<br/>
-          Incoming Links: {{incomingLinks}} <br/>
-          Outbound Links: {{outboundLinks}} <br/>
-      </p>
-      <div class="utils">
-        <a href="/links/{{domain.domain}}">Linking Pages</a>
-        <a href="/explore/{{domain}}" title="Get a list of similar domains">Explore</a>
-      </div>
-    </div>
+    {{>edge/parts/site-info-index}}
+    {{>edge/parts/site-info-links}}
 
     {{#each results}}{{>edge/search-result}}{{/each}}
 </section>

@@ -37,7 +37,8 @@ public class NameCounter {
                 .sorted(Comparator.comparing(e -> -e.getValue()))
                 .limit(150)
                 .map(Map.Entry::getKey)
-                .flatMap(w -> instances.get(w).stream()).collect(Collectors.toList());
+                .flatMap(w -> instances.get(w).stream())
+                .collect(Collectors.toList());
     }
 
 }

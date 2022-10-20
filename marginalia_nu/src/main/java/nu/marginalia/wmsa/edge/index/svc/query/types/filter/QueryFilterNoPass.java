@@ -1,6 +1,6 @@
 package nu.marginalia.wmsa.edge.index.svc.query.types.filter;
 
-import nu.marginalia.wmsa.edge.index.reader.SearchIndex;
+import nu.marginalia.util.btree.BTreeQueryBuffer;
 
 class QueryFilterNoPass implements QueryFilterStepIf {
     static final QueryFilterStepIf instance = new QueryFilterNoPass();
@@ -10,8 +10,8 @@ class QueryFilterNoPass implements QueryFilterStepIf {
         return false;
     }
 
-    public SearchIndex getIndex() {
-        return null;
+    public void apply(BTreeQueryBuffer buffer) {
+        buffer.finalizeFiltering();
     }
 
     public double cost() {

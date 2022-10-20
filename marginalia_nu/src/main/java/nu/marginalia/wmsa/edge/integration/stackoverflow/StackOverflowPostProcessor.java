@@ -3,6 +3,7 @@ package nu.marginalia.wmsa.edge.integration.stackoverflow;
 import com.google.inject.Inject;
 import nu.marginalia.util.language.processing.DocumentKeywordExtractor;
 import nu.marginalia.util.language.processing.SentenceExtractor;
+import nu.marginalia.util.language.processing.model.KeywordMetadata;
 import nu.marginalia.wmsa.edge.converting.processor.logic.LinkParser;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.integration.model.BasicDocumentData;
@@ -43,13 +44,13 @@ public class StackOverflowPostProcessor {
         }
 
         var dld = sentenceExtractor.extractSentences(doc);
-        var keywords = documentKeywordExtractor.extractKeywords(dld);
+        var keywords = documentKeywordExtractor.extractKeywords(dld, new KeywordMetadata(-15));
 
-        keywords.get(IndexBlock.Meta).addJust("site:"+post.getUrl().domain);
-        keywords.get(IndexBlock.Words_1).addJust("site:"+post.getUrl().domain);
-        keywords.get(IndexBlock.Words_1).addJust("special:wikipedia");
-        keywords.get(IndexBlock.Meta).addJust("special:wikipedia");
-        keywords.get(IndexBlock.Meta).addJust("js:true");
+        keywords.get(IndexBlock.Meta).addJustNoMeta("site:"+post.getUrl().domain);
+        keywords.get(IndexBlock.Words_1).addJustNoMeta("site:"+post.getUrl().domain);
+        keywords.get(IndexBlock.Words_1).addJustNoMeta("special:wikipedia");
+        keywords.get(IndexBlock.Meta).addJustNoMeta("special:wikipedia");
+        keywords.get(IndexBlock.Meta).addJustNoMeta("js:true");
 
         String title = StringUtils.abbreviate(post.getTitle(), 255);
         String description = StringUtils.abbreviate(Jsoup.parseBodyFragment(post.getJustBody()).text(), 255);

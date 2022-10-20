@@ -1,10 +1,3 @@
-{{#if scripts}}<abbr title="scripts" class="meta">🏭️</abbr>{{/if}}
-{{#if tracking}}<abbr title="analytics or tracking" class="meta">🕵️️</abbr>{{/if}}
-{{#if media}}<abbr title="audio or video" class="meta">🎞️</abbr>{{/if}}
-{{#if affiliate}}<abbr title="possible amazon affiliate link" class="meta">💳️</abbr>{{/if}}
-{{#if cookies}}<abbr title="cookies" class="meta">👁️️</abbr>{{/if}}
-{{#if ads}}<abbr title="possible annoying ads or popovers (experimental)" class="meta">⚠️️️</abbr>{{/if}}
-<span class="meta">{{format}}</span>
-{{#unless hideRanking}}
-<span class="rank-symbol" title="{{rankingSymbolDesc}}">{{{rankingSymbol}}}</span>
-{{/unless}}
+{{#if problems}} <span class="problems" title="{{problems}}"> ⚠ {{problemCount}} </span> {{/if}}
+
+<span class="meta positions" title="Visually indicates positions where keywords were found within the document">{{positions}}</span>

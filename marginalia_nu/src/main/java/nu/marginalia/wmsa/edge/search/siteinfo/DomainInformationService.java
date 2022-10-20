@@ -46,19 +46,59 @@ public class DomainInformationService {
         if (domainId == null) {
             return Optional.empty();
         }
-        EdgeDomain domain = dataStoreDao.getDomain(domainId);
 
-        boolean blacklisted = isBlacklisted(domain);
+        Optional<EdgeDomain> domain = dataStoreDao.getDomain(domainId);
+        if (domain.isEmpty()) {
+            return Optional.empty();
+        }
+
+        boolean blacklisted = isBlacklisted(domain.get());
         int pagesKnown = getPagesKnown(domainId);
         int pagesVisited = getPagesVisited(domainId);
         int pagesIndexed = getPagesIndexed(domainId);
         int incomingLinks = getIncomingLinks(domainId);
         int outboundLinks = getOutboundLinks(domainId);
+
+        boolean inCrawlQueue = inCrawlQueue(domainId);
+
         double rank = Math.round(10000.0*(1.0-getRank(domainId)))/100;
+
         EdgeDomainIndexingState state = getDomainState(domainId);
         List<EdgeDomain> linkingDomains = getLinkingDomains(domainId);
 
-        return Optional.of(new DomainInformation(domain, blacklisted, pagesKnown, pagesVisited, pagesIndexed, incomingLinks, outboundLinks, rank, state, linkingDomains));
+        var di = DomainInformation.builder()
+                .domain(domain.get())
+                .blacklisted(blacklisted)
+                .pagesKnown(pagesKnown)
+                .pagesFetched(pagesVisited)
+                .pagesIndexed(pagesIndexed)
+                .incomingLinks(incomingLinks)
+                .outboundLinks(outboundLinks)
+                .ranking(rank)
+                .state(state.desc)
+                .linkingDomains(linkingDomains)
+                .inCrawlQueue(inCrawlQueue)
+                .suggestForCrawling((pagesVisited == 0 && !inCrawlQueue))
+                .build();
+
+        return Optional.of(di);
+    }
+
+    @SneakyThrows
+    private boolean inCrawlQueue(EdgeId<EdgeDomain> domainId) {
+        try (var connection = dataSource.getConnection()) {
+            try (var stmt = connection.prepareStatement(
+                """
+                    SELECT 1 FROM CRAWL_QUEUE
+                    INNER JOIN EC_DOMAIN ON CRAWL_QUEUE.DOMAIN_NAME = EC_DOMAIN.DOMAIN_NAME
+                    WHERE EC_DOMAIN.ID=?
+                    """))
+            {
+                stmt.setInt(1, domainId.id());
+                var rsp = stmt.executeQuery();
+                return rsp.next();
+            }
+        }
     }
 
     private EdgeId<EdgeDomain> getDomainFromPartial(String site) {
@@ -66,12 +106,7 @@ public class DomainInformationService {
             return dataStoreDao.getDomainId(new EdgeDomain(site));
         }
         catch (Exception ex) {
-            try {
-                return dataStoreDao.getDomainId(new EdgeDomain(site));
-            }
-            catch (Exception ex2) {
-                return null;
-            }
+            return null;
         }
 
     }

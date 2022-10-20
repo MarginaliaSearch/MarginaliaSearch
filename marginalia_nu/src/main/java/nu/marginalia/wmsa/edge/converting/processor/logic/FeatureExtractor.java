@@ -3,10 +3,7 @@ package nu.marginalia.wmsa.edge.converting.processor.logic;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.util.language.processing.model.DocumentLanguageData;
-import nu.marginalia.wmsa.edge.converting.processor.logic.topic.AdblockSimulator;
-import nu.marginalia.wmsa.edge.converting.processor.logic.topic.RecipeDetector;
-import nu.marginalia.wmsa.edge.converting.processor.logic.topic.TextileCraftDetector;
-import nu.marginalia.wmsa.edge.converting.processor.logic.topic.WoodworkingDetector;
+import nu.marginalia.wmsa.edge.converting.processor.logic.topic.*;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDomain;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -43,19 +40,25 @@ public class FeatureExtractor {
     private final RecipeDetector recipeDetector;
     private final TextileCraftDetector textileCraftDetector;
     private final WoodworkingDetector woodworkingDetector;
+    private final GoogleAnwersSpamDetector googleAnwersSpamDetector;
 
     @Inject
-    public FeatureExtractor(AdblockSimulator adblockSimulator, RecipeDetector recipeDetector, TextileCraftDetector textileCraftDetector, WoodworkingDetector woodworkingDetector) {
+    public FeatureExtractor(AdblockSimulator adblockSimulator, RecipeDetector recipeDetector, TextileCraftDetector textileCraftDetector, WoodworkingDetector woodworkingDetector, GoogleAnwersSpamDetector googleAnwersSpamDetector) {
         this.adblockSimulator = adblockSimulator;
         this.recipeDetector = recipeDetector;
         this.textileCraftDetector = textileCraftDetector;
         this.woodworkingDetector = woodworkingDetector;
+        this.googleAnwersSpamDetector = googleAnwersSpamDetector;
     }
 
     public Set<HtmlFeature> getFeatures(CrawledDomain domain, Document doc, DocumentLanguageData dld) {
         final Set<HtmlFeature> features = new HashSet<>();
 
         final Elements scriptTags = doc.getElementsByTag("script");
+
+        if (googleAnwersSpamDetector.testP(doc) > 0.5) {
+            features.add(HtmlFeature.GA_SPAM);
+        }
 
         for (var scriptTag : scriptTags) {
             if (isJavascriptTag(scriptTag)) {

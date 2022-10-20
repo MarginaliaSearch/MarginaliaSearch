@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+{{#if query}} <title>Websites Similar To {{query}}</title> {{/if}}
+{{#unless query}} <title>Marginalia Similar Website Finder</title> {{/unless}}
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+{{>explorer/explorer-about}}
+{{>explorer/explorer-search}}
+{{>explorer/explorer-messages}}
+{{#if resultList}}{{>explorer/explorer-results}}{{/if}}
+{{#unless query}}
+Don't know what to try? How about
+<ul>
+  <li><a href="search?domain=classics.mit.edu">classics.mit.edu</a></li>
+  <li><a href="search?domain=wiby.me">wiby.me</a></li>
+  <li><a href="search?domain=keenwiki.shikadi.net">keenwiki.shikadi.net</a></li>
+  <li><a href="search?domain=bikobatanari.art">bikobatanari.art</a></li>
+  <li><a href="search?domain=www.gameboomers.com">www.gameboomers.com</a></li>
+</ul>
+{{/unless}}
+</body>
+</html>

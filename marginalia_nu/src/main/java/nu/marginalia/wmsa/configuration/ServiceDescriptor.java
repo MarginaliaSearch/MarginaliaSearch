@@ -5,6 +5,7 @@ import nu.marginalia.wmsa.auth.AuthMain;
 import nu.marginalia.wmsa.configuration.command.*;
 import nu.marginalia.wmsa.edge.assistant.EdgeAssistantMain;
 import nu.marginalia.wmsa.edge.dating.DatingMain;
+import nu.marginalia.wmsa.edge.explorer.ExplorerMain;
 import nu.marginalia.wmsa.edge.index.EdgeIndexMain;
 import nu.marginalia.wmsa.edge.search.EdgeSearchMain;
 import nu.marginalia.wmsa.encyclopedia.EncyclopediaMain;
@@ -37,6 +38,7 @@ public enum ServiceDescriptor {
     ENCYCLOPEDIA("encyclopedia", 5040, EncyclopediaMain.class),
 
     DATING("dating", 5070, DatingMain.class),
+    EXPLORER("explorer", 5071, ExplorerMain.class),
 
     TEST_1("test-1", 0, null),
     TEST_2("test-2", 0, null);
@@ -77,9 +79,11 @@ public enum ServiceDescriptor {
 
     public static void main(String... args) {
         MainMapLookup.setMainArguments(args);
-        Map<String, Command> functions = Stream.of(new ListCommand(),
+        Map<String, Command> functions = Stream.of(
+                new ListCommand(),
                 new StartCommand(),
                 new ConvertCommand(),
+                new CrawlCommand(),
                 new LoadCommand(),
                 new ReindexCommand(),
                 new VersionCommand(),

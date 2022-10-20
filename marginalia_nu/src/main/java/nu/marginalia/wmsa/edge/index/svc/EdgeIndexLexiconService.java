@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 import com.google.protobuf.InvalidProtocolBufferException;
 import nu.marginalia.util.ListChunker;
 import nu.marginalia.util.dict.DictionaryHashMap;
+import nu.marginalia.wmsa.edge.converting.interpreter.instruction.DocumentKeywords;
 import nu.marginalia.wmsa.edge.index.IndexServicesFactory;
 import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalWriterImpl;
 import nu.marginalia.wmsa.edge.index.journal.model.SearchIndexJournalEntry;
@@ -21,7 +22,6 @@ import spark.Request;
 import spark.Response;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Singleton
 public class EdgeIndexLexiconService {
@@ -33,6 +33,11 @@ public class EdgeIndexLexiconService {
     public EdgeIndexLexiconService(SearchIndexes indexes, IndexServicesFactory servicesFactory) {
         this.indexes = indexes;
         this.keywordLexicon = servicesFactory.getKeywordLexicon();
+    }
+
+    public EdgeIndexLexiconService(SearchIndexes indexes, KeywordLexicon lexicon) {
+        this.indexes = indexes;
+        this.keywordLexicon = lexicon;
     }
 
     public Object getWordId(Request request, Response response) {
@@ -73,31 +78,37 @@ public class EdgeIndexLexiconService {
     public void putWords(EdgeId<EdgeDomain> domainId, EdgeId<EdgeUrl> urlId,
                          IndexPutKeywordsReq.WordSet words, int idx
     ) {
-        SearchIndexJournalWriterImpl indexWriter = indexes.getIndexWriter(idx);
 
+        SearchIndexJournalWriterImpl indexWriter = indexes.getIndexWriter(idx);
         IndexBlock block = IndexBlock.values()[words.getIndex()];
 
-        for (var chunk : ListChunker.chopList(words.getWordsList(), SearchIndexJournalEntry.MAX_LENGTH)) {
+        var wordArray = words.getWordsList().toArray(String[]::new);
+        var metaArray = words.getMetaList().stream().mapToLong(Long::valueOf).toArray();
 
-            var entry = new SearchIndexJournalEntry(getOrInsertWordIds(chunk));
+        DocumentKeywords documentKeywords = new DocumentKeywords(block, wordArray, metaArray);
+        for (var chunk : ListChunker.chopList(documentKeywords, SearchIndexJournalEntry.MAX_LENGTH)) {
+            var entry = new SearchIndexJournalEntry(getOrInsertWordIds(chunk.keywords(), chunk.metadata()));
             var header = new SearchIndexJournalEntryHeader(domainId, urlId, block);
 
             indexWriter.put(header, entry);
         }
     }
 
-    private long[] getOrInsertWordIds(List<String> words) {
-        long[] ids = new long[words.size()];
+    private long[] getOrInsertWordIds(String[] words, long[] meta) {
+        long[] ids = new long[words.length*2];
         int putIdx = 0;
 
-        for (String word : words) {
+        for (int i = 0; i < words.length; i++) {
+            String word = words[i];
+
             long id = keywordLexicon.getOrInsert(word);
             if (id != DictionaryHashMap.NO_VALUE) {
                 ids[putIdx++] = id;
+                ids[putIdx++] = meta[i];
             }
         }
 
-        if (putIdx != words.size()) {
+        if (putIdx != words.length*2) {
             ids = Arrays.copyOf(ids, putIdx);
         }
         return ids;

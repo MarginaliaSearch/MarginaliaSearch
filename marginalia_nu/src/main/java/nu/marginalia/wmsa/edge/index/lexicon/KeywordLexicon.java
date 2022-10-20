@@ -5,6 +5,7 @@ import com.google.common.hash.Hashing;
 import io.prometheus.client.Gauge;
 import lombok.SneakyThrows;
 import nu.marginalia.util.dict.DictionaryHashMap;
+import nu.marginalia.util.dict.DictionaryMap;
 import nu.marginalia.wmsa.edge.index.lexicon.journal.KeywordLexiconJournal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +17,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class KeywordLexicon implements AutoCloseable {
-    private final DictionaryHashMap reverseIndex;
+    private final DictionaryMap reverseIndex;
 
     private final ReadWriteLock memoryLock = new ReentrantReadWriteLock();
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -30,7 +31,7 @@ public class KeywordLexicon implements AutoCloseable {
     private final KeywordLexiconJournal journal;
 
     @SneakyThrows
-    public KeywordLexicon(KeywordLexiconJournal keywordLexiconJournal, DictionaryHashMap reverseIndexHashMap) {
+    public KeywordLexicon(KeywordLexiconJournal keywordLexiconJournal, DictionaryMap reverseIndexHashMap) {
 
         journal = keywordLexiconJournal;
         reverseIndex = reverseIndexHashMap;

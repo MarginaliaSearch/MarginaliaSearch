@@ -1,0 +1,50 @@
+<h2>Indexing Information</h2>
+    <div class="description">
+        <br>
+        {{#if blacklisted}}
+        This website is <em>blacklisted</em>. This excludes it from crawling and indexing.
+
+        <p>This is usually because of some form of misbehavior on the webmaster's end.
+           Either annoying search engine spam, or tasteless content bad faith content.
+
+        <p>Occasionally this is done hastily and in error. If you would like the decision
+           reviewed, you may use <a href="/site/flag-site/{{domainId}}">this form</a> to file a report.</tt>
+        {{/if}}
+
+        {{#unless blacklisted}}
+        <fieldset>
+        <legend>Index</legend>
+        State: {{state}}<br/>
+        Pages Known: {{pagesKnown}} <br/>
+        Pages Crawled: {{pagesFetched}} <br/>
+        Pages Indexed: {{pagesIndexed}} <br/>
+        </fieldset>
+        <br/>
+        {{#if inCrawlQueue}}
+        This website is in the queue for crawling.
+        It may take up to a month before it is indexed.
+        {{/if}}
+
+        {{#if suggestForCrawling}}
+        <form method="POST" action="/site/suggest/">
+        <fieldset>
+            <legend>Crawling</legend>
+            This website is not queued for crawling. If you would like it to be crawled,
+            use the checkbox and button below.<p/>
+            <input type="hidden" name="id" value="{{domainId}}" />
+            <input type="checkbox" id="nomisclick" name="nomisclick" /> <label for="nomisclick"> This is not a mis-click </label>
+            <br/>
+            <br/>
+            <input type="submit" value="Add {{domain}} to queue" />
+        </fieldset>
+        </form>
+        {{/if}}
+        {{#if pagesFetched}}
+        <p>
+        If you've found a reason why this website should not be indexed,
+        you may use <a href="/site/flag-site/{{domainId}}">this form</a> to file a report.<p>
+        {{/if}}
+        {{/unless}}
+    </div>
+    </p>
+  </div>

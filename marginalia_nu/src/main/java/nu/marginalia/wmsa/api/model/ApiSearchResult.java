@@ -2,7 +2,13 @@ package nu.marginalia.wmsa.api.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import nu.marginalia.wmsa.edge.model.search.EdgeSearchResultKeywordScore;
 import nu.marginalia.wmsa.edge.model.search.EdgeUrlDetails;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor @Getter
 public class ApiSearchResult {
@@ -11,10 +17,30 @@ public class ApiSearchResult {
     public String description;
     public double quality;
 
+    public List<List<ApiSearchResultQueryDetails>> details = new ArrayList<>();
+
     public ApiSearchResult(EdgeUrlDetails url) {
         this.url = url.url.toString();
         this.title = url.getTitle();
         this.description = url.getDescription();
         this.quality = url.getTermScore();
+
+        if (url.resultItem != null) {
+            var bySet = url.resultItem.scores.stream().collect(Collectors.groupingBy(EdgeSearchResultKeywordScore::set));
+
+            outer:
+            for (var entries : bySet.values()) {
+                List<ApiSearchResultQueryDetails> lst = new ArrayList<>();
+                for (var entry : entries) {
+                    var metadata = entry.metadata();
+                    if (metadata.isEmpty())
+                        continue outer;
+
+                    Set<String> flags = metadata.flags().stream().map(Object::toString).collect(Collectors.toSet());
+                    lst.add(new ApiSearchResultQueryDetails(entry.keyword(), metadata.tfIdf(),metadata.count(), flags));
+                }
+                details.add(lst);
+            }
+        }
     }
 }

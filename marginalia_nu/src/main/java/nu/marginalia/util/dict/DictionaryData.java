@@ -26,7 +26,6 @@ public class DictionaryData {
 
         if (rb == -1) {
             int end = activeBank.getEnd();
-            logger.debug("Switching bank @ {}", end);
             var newBank = new DictionaryDataBank(end, DICTIONARY_BANK_SIZE);
             rb = newBank.add(key);
 

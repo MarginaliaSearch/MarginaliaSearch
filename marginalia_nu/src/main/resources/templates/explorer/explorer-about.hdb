@@ -1,0 +1,15 @@
+<h1>Marginalia Similar Website Finder</h1>
+    This is an experiment in website similarity ranking. It will be integrated into
+    <a href="https://search.marginalia.nu/">Marginalia Search</a> in the future, but it's
+    cool enough it merits its own page for now.
+<p>
+    <details>
+    <summary>How does it work?</summary>
+    In plain English, this service looks at which websites link to a particular target website,
+    and then it ranks websites that are popular among those linking websites using a method commonly
+    used in recommendation algorithms.
+<p>
+    In technical jargon, it reinterprets the incident edges in the adjacency matrix as sparse high dimensional vector,
+    and uses cosine similarity to find the nearest neighbors nodes within this feature-space.
+</p>
+    </details>

@@ -3,6 +3,7 @@ package nu.marginalia.wmsa.edge.converting.processor.logic;
 import crawlercommons.utils.Strings;
 import nu.marginalia.util.language.processing.model.DocumentLanguageData;
 import nu.marginalia.wmsa.edge.converting.model.DisqualifiedException;
+import nu.marginalia.wmsa.edge.crawling.model.CrawledDocument;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeHtmlStandard;
 import org.jsoup.nodes.Document;
 
@@ -23,13 +24,12 @@ public class DocumentValuator {
 
     );
 
-    public double getQuality(EdgeHtmlStandard htmlStandard, Document doc, DocumentLanguageData dld) throws DisqualifiedException {
+    public double getQuality(CrawledDocument crawledDocument, EdgeHtmlStandard htmlStandard, Document parsedDocument, DocumentLanguageData dld) throws DisqualifiedException {
         double smutCoefficient = dld.streamLowerCase().filter(filthTable::contains).count();
-        double scriptPenalty = getScriptPenalty(doc);
+        double scriptPenalty = getScriptPenalty(parsedDocument);
 
-
-        int textBodyLength = doc.text().length();
-        int rawLength = doc.html().length();
+        int textBodyLength = parsedDocument.text().length();
+        int rawLength = crawledDocument.documentBody.length();
 
         if (textBodyLength == 0) {
             throw new DisqualifiedException(LENGTH);

@@ -59,7 +59,7 @@ public class SearchIndexScrubberMain {
             channel.read(inByteBuffer);
 
 
-            if (chunkBlock == IndexBlock.Link.id) {
+            if (chunkBlock == IndexBlock.Link.ordinal()) {
                 for (int i = 0; i < randomAccessFiles.length; i++) {
                     inByteBuffer.flip();
                     fileChannels[i].write(inByteBuffer);

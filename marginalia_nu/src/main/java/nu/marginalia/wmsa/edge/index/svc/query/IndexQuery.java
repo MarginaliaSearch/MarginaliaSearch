@@ -1,12 +1,11 @@
 package nu.marginalia.wmsa.edge.index.svc.query;
 
+import nu.marginalia.util.btree.BTreeQueryBuffer;
 import nu.marginalia.wmsa.edge.index.svc.query.types.EntrySource;
 import nu.marginalia.wmsa.edge.index.svc.query.types.filter.QueryFilterStepIf;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static java.lang.Math.min;
 
 public class IndexQuery {
     private final List<EntrySource> sources;
@@ -27,33 +26,39 @@ public class IndexQuery {
         return si < sources.size();
     }
 
-    public int getMoreResults(long[] dest, IndexSearchBudget budget) {
-        final EntrySource source = sources.get(si);
-
-        int bufferUtilizedLength = source.read(dest, dest.length);
-
-        if (bufferUtilizedLength <= 0) {
-            si++;
-            return 0;
-        }
-
-        dataCost += bufferUtilizedLength;
+    public void getMoreResults(BTreeQueryBuffer dest) {
+        if (!fillBuffer(dest))
+            return;
 
         for (var filter : inclusionFilter) {
-            bufferUtilizedLength = filter.retainDestructive(dest, bufferUtilizedLength);
+            filter.apply(dest);
 
-            dataCost += bufferUtilizedLength;
+            dataCost += dest.size();
 
-            if (bufferUtilizedLength <= 0) {
-                si++;
-                return 0;
+            if (dest.isEmpty()) {
+                return;
             }
         }
+    }
 
-        int count = min(bufferUtilizedLength, dest.length);
-        System.arraycopy(dest, 0, dest, 0, count);
+    private boolean fillBuffer(BTreeQueryBuffer dest) {
+        for (;;) {
+            dest.reset();
 
-        return count;
+            EntrySource source = sources.get(si);
+            source.read(dest);
+
+            if (!dest.isEmpty()) {
+                break;
+            }
+
+            if (!source.hasMore() && ++si >= sources.size())
+                return false;
+        }
+
+        dataCost += dest.size();
+
+        return !dest.isEmpty();
     }
 
     public long dataCost() {
@@ -62,9 +67,8 @@ public class IndexQuery {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Sources:\n");
-
-        for (var source: sources) {
-            sb.append("\t").append(source.getIndex().name).append("\n");
+        for (var source : sources) {
+            sb.append(source).append('\n');
         }
         sb.append("Includes:\n");
         for (var include : inclusionFilter) {

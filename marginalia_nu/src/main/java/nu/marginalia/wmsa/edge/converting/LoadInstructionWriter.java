@@ -24,10 +24,13 @@ import java.util.List;
 
 public class LoadInstructionWriter {
 
+    private ConversionLog log;
     private final Path outputDir;
     private final Gson gson;
     private static final Logger logger = LoggerFactory.getLogger(LoadInstructionWriter.class);
-    public LoadInstructionWriter(Path outputDir, Gson gson) {
+
+    public LoadInstructionWriter(ConversionLog log, Path outputDir, Gson gson) {
+        this.log = log;
         this.outputDir = outputDir;
         this.gson = gson;
 
@@ -35,6 +38,7 @@ public class LoadInstructionWriter {
             throw new IllegalArgumentException("Output dir " + outputDir + " does not exist");
         }
     }
+
     public String accept(String id, List<Instruction> instructionList) throws IOException {
         Path outputFile = getOutputFile(id);
 
@@ -48,6 +52,8 @@ public class LoadInstructionWriter {
             logger.info("Writing {} - {} - {}", id, instructionList.size(), summary);
 
             for (var instr : instructionList) {
+                instr.apply(log);
+
                 outputStream.append(instr.tag().name());
                 outputStream.append(' ');
                 gson.toJson(instr, outputStream);
@@ -66,6 +72,7 @@ public class LoadInstructionWriter {
         if (!Files.exists(destDir)) {
             Files.createDirectories(destDir);
         }
+
         return destDir.resolve(id + ".pzstd");
     }
 

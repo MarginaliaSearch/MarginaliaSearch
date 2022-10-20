@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.List;
 
 @Singleton
 public class EdgeIndexLocalService implements EdgeIndexWriterClient {
@@ -53,9 +52,9 @@ public class EdgeIndexLocalService implements EdgeIndexWriterClient {
             return;
         }
 
-        for (var chunk : ListChunker.chopList(List.of(wordSet.keywords()), SearchIndexJournalEntry.MAX_LENGTH)) {
+        for (var chunk : ListChunker.chopList(wordSet, SearchIndexJournalEntry.MAX_LENGTH)) {
 
-            var entry = new SearchIndexJournalEntry(getOrInsertWordIds(chunk));
+            var entry = new SearchIndexJournalEntry(getOrInsertWordIds(chunk.keywords(), chunk.metadata()));
             var header = new SearchIndexJournalEntryHeader(domain, url, wordSet.block());
 
             indexWriter.put(header, entry);
@@ -63,19 +62,22 @@ public class EdgeIndexLocalService implements EdgeIndexWriterClient {
 
     }
 
-    private long[] getOrInsertWordIds(List<String> words) {
-        long[] ids = new long[words.size()];
-        int putId = 0;
+    private long[] getOrInsertWordIds(String[] words, long[] meta) {
+        long[] ids = new long[words.length*2];
+        int putIdx = 0;
 
-        for (String word : words) {
+        for (int i = 0; i < words.length; i++) {
+            String word = words[i];
+
             long id = lexicon.getOrInsert(word);
             if (id != DictionaryHashMap.NO_VALUE) {
-                ids[putId++] = id;
+                ids[putIdx++] = id;
+                ids[putIdx++] = meta[i];
             }
         }
 
-        if (putId != words.size()) {
-            ids = Arrays.copyOf(ids, putId);
+        if (putIdx != words.length*2) {
+            ids = Arrays.copyOf(ids, putIdx);
         }
         return ids;
     }

@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import gnu.trove.set.hash.TIntHashSet;
-import io.prometheus.client.Counter;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import lombok.SneakyThrows;
 import org.slf4j.Logger;
@@ -18,8 +17,6 @@ public class EdgeDomainBlacklistImpl implements EdgeDomainBlacklist {
     private final HikariDataSource dataSource;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private static final Counter wmsa_blacklist_intercept = Counter.build("wmsa_blacklist_intercept",
-            "wmsa_blacklist_intercept").register();
     @Inject
     public EdgeDomainBlacklistImpl(HikariDataSource dataSource) {
         this.dataSource = dataSource;
@@ -65,7 +62,6 @@ public class EdgeDomainBlacklistImpl implements EdgeDomainBlacklist {
     @Override
     public boolean isBlacklisted(int domainId) {
         if (spamDomainSet.contains(domainId)) {
-            wmsa_blacklist_intercept.inc();
             return true;
         }
 

@@ -7,6 +7,7 @@ import nu.marginalia.util.language.conf.LanguageModels;
 import nu.marginalia.util.language.processing.DocumentKeywordExtractor;
 import nu.marginalia.util.language.processing.KeywordExtractor;
 import nu.marginalia.util.language.processing.SentenceExtractor;
+import nu.marginalia.util.language.processing.model.KeywordMetadata;
 import nu.marginalia.util.language.processing.model.WordRep;
 import nu.marginalia.util.language.processing.model.WordSpan;
 import nu.marginalia.util.language.processing.model.tag.WordSeparator;
@@ -15,11 +16,9 @@ import nu.marginalia.wmsa.edge.integration.wikipedia.WikipediaReader;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -56,7 +55,7 @@ class SentenceExtractorTest {
                 var doc = Jsoup.parse(Files.readString(file.toPath()));
                 long start = System.currentTimeMillis();
                 var dld = se.extractSentences(doc);
-                documentKeywordExtractor.extractKeywords(dld);
+                documentKeywordExtractor.extractKeywords(dld, new KeywordMetadata(0));
                 total += (System.currentTimeMillis() - start);
             }
             System.out.println(total);
@@ -119,7 +118,7 @@ class SentenceExtractorTest {
 
                     var newResult = newSe.extractSentences(Jsoup.parse(post.body));
 
-                    var newRes = documentKeywordExtractor.extractKeywords(newResult);
+                    var newRes = documentKeywordExtractor.extractKeywords(newResult, new KeywordMetadata(0));
                     System.out.println(newRes);
                 });
         reader.join();
@@ -141,7 +140,7 @@ class SentenceExtractorTest {
         long st = System.currentTimeMillis();
         for (var file : Objects.requireNonNull(data.toFile().listFiles())) {
             var newResult = newSe.extractSentences(Jsoup.parse(Files.readString(file.toPath())));
-            var newRes = documentKeywordExtractor.extractKeywords(newResult);
+            var newRes = documentKeywordExtractor.extractKeywords(newResult, new KeywordMetadata(0));
             System.out.println(newRes);
         }
         System.out.println(System.currentTimeMillis() - st);
@@ -150,12 +149,12 @@ class SentenceExtractorTest {
 
     @SneakyThrows
     @Test
-    @Disabled
     public void testSE() {
-        var result = newSe.extractSentences(Jsoup.parse(new URL("https://memex.marginalia.nu/log/26-personalized-pagerank.gmi"), 10000));
+        var result = newSe.extractSentences(
+                Jsoup.parse(Files.readString(Path.of("/home/vlofgren/man open (2) openat.html"))));
 
         var dict = new TermFrequencyDict(lm);
-        System.out.println(new DocumentKeywordExtractor(dict).extractKeywords(result));
+        System.out.println(new DocumentKeywordExtractor(dict).extractKeywords(result, new KeywordMetadata(0)));
 
 
 //

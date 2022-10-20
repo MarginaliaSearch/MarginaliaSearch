@@ -175,7 +175,7 @@ public class EdgeSearchE2ETest extends E2ETestBase {
 
         driver.get("http://proxyNginx/");
         System.out.println(driver.getTitle());
-        System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
+//        System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
 
         Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("frontpage"));
     }
@@ -249,7 +249,7 @@ public class EdgeSearchE2ETest extends E2ETestBase {
 
         driver.get("http://proxyNginx/search?query=browse:wikipedia.local");
         System.out.println(driver.getTitle());
-        System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
+//        System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
 
         Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("browse"));
     }
@@ -259,7 +259,7 @@ public class EdgeSearchE2ETest extends E2ETestBase {
 
         driver.get("http://proxyNginx/search?query=define:adiabatic");
         System.out.println(driver.getTitle());
-        System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
+//        System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
 
         Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("define"));
     }
@@ -269,7 +269,7 @@ public class EdgeSearchE2ETest extends E2ETestBase {
 
         driver.get("http://proxyNginx/search?query=3%2B3");
         System.out.println(driver.getTitle());
-        System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
+//        System.out.println(driver.findElement(new By.ByXPath("//*")).getAttribute("outerHTML"));
 
         Files.move(driver.getScreenshotAs(OutputType.FILE).toPath(), screenshotFilename("eval"));
     }

@@ -5,7 +5,6 @@ import com.google.common.base.Strings;
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
@@ -202,7 +201,6 @@ public class LinkParser {
         return binarySuffixList.stream().anyMatch(str::endsWith);
     }
 
-    @Nullable
     public EdgeUrl getBaseLink(Document parsed, EdgeUrl documentUrl) {
         var baseTags = parsed.getElementsByTag("base");
 

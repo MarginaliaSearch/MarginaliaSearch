@@ -25,9 +25,23 @@ public interface MultimapFileLongSlice {
 
     void write(LongBuffer vals, long idx);
 
+    void write(LongBuffer vals, int n, long idx);
+
+    void swapn(int n, long idx1, long idx2);
+
     void transferFromFileChannel(FileChannel sourceChannel, long destOffset, long sourceStart, long sourceEnd) throws IOException;
 
     default MultimapFileLongSlice atOffset(long off) {
         return new MultimapFileLongOffsetSlice(this, off);
     }
+    long binarySearchInternal(long key, long fromIndex, int step, long n, long mask);
+    long binarySearchInternal(long key, long fromIndex, long n, long mask);
+
+    long binarySearchInternal(long key, long fromIndex, long n);
+
+    long binarySearchUpperInternal(long key, long fromIndex, long n);
+
+    long quickSortPartition(int wordSize, long low, long highInclusive);
+
+    void insertionSort(int wordSize, long start, int n);
 }

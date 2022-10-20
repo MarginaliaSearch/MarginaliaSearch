@@ -2,7 +2,6 @@ package nu.marginalia.wmsa.edge.index.reader;
 
 import com.upserve.uppend.blobs.NativeIO;
 import nu.marginalia.util.btree.BTreeReader;
-import nu.marginalia.util.btree.model.BTreeHeader;
 import nu.marginalia.util.multimap.MultimapFileLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +16,6 @@ import static nu.marginalia.wmsa.edge.index.conversion.words.WordsTableWriter.wo
 public class IndexWordsTable implements AutoCloseable {
     protected final MultimapFileLong words;
     protected final BTreeReader reader;
-    protected final BTreeHeader header;
     protected final int HEADER_OFFSET = 1;
     final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -26,8 +24,7 @@ public class IndexWordsTable implements AutoCloseable {
     public IndexWordsTable(MultimapFileLong words) {
         this.words = words;
 
-        reader = new BTreeReader(words, wordsBTreeContext);
-        header = reader.getHeader(HEADER_OFFSET);
+        reader = new BTreeReader(words, wordsBTreeContext, HEADER_OFFSET);
 
         madvise();
     }
@@ -49,7 +46,7 @@ public class IndexWordsTable implements AutoCloseable {
     }
 
     public long positionForWord(int wordId) {
-        long offset = reader.findEntry(header, wordId);
+        long offset = reader.findEntry(wordId);
 
         if (offset < 0) {
             return -1L;
@@ -60,7 +57,7 @@ public class IndexWordsTable implements AutoCloseable {
 
     public int wordLength(int wordId) {
 
-        long offset = reader.findEntry(header, wordId);
+        long offset = reader.findEntry(wordId);
         if (offset < 0) {
             return -1;
         }
@@ -72,7 +69,7 @@ public class IndexWordsTable implements AutoCloseable {
         words.advice(NativeIO.Advice.Random);
         words.advice0(NativeIO.Advice.WillNeed);
 
-        var h = reader.getHeader(HEADER_OFFSET);
+        var h = reader.getHeader();
         int length = (int)(h.dataOffsetLongs() - h.indexOffsetLongs());
 
         words.adviceRange(NativeIO.Advice.WillNeed, h.indexOffsetLongs(), length);
@@ -80,8 +77,8 @@ public class IndexWordsTable implements AutoCloseable {
     }
 
     public void forEachWordsOffset(LongConsumer offsetConsumer) {
-        int n = header.numEntries();
-        long offset = header.dataOffsetLongs();
+        int n = reader.numEntries();
+        long offset = reader.getHeader().dataOffsetLongs();
 
         for (int i = 0; i < n; i++) {
             try {

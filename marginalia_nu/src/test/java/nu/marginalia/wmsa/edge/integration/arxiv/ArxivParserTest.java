@@ -4,6 +4,7 @@ import nu.marginalia.util.TestLanguageModels;
 import nu.marginalia.util.language.conf.LanguageModels;
 import nu.marginalia.util.language.processing.DocumentKeywordExtractor;
 import nu.marginalia.util.language.processing.SentenceExtractor;
+import nu.marginalia.util.language.processing.model.KeywordMetadata;
 import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import nu.marginalia.wmsa.edge.integration.arxiv.model.ArxivMetadata;
 import org.junit.jupiter.api.Disabled;
@@ -35,6 +36,6 @@ class ArxivParserTest {
 
         var se = new SentenceExtractor(lm);
 
-        data.stream().map(meta -> documentKeywordExtractor.extractKeywords(se.extractSentences(meta.getAbstract(), meta.getTitle()))).limit(100).forEach(System.out::println);
+        data.stream().map(meta -> documentKeywordExtractor.extractKeywords(se.extractSentences(meta.getAbstract(), meta.getTitle()), new KeywordMetadata(0))).limit(100).forEach(System.out::println);
     }
 }

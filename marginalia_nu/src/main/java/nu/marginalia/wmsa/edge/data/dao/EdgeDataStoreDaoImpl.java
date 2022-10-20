@@ -93,7 +93,9 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
                                     WORDS_TOTAL, FORMAT, FEATURES,
                                     IP, DOMAIN_STATE,
                                     DATA_HASH
-                                    FROM EC_URL_VIEW WHERE ID IN
+                                    FROM EC_URL_VIEW
+                                    WHERE TITLE IS NOT NULL 
+                                    AND ID IN
                             """ + idString)) {
                 stmt.setFetchSize(ids.size());
 
@@ -113,7 +115,9 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
                             EdgePageScoreAdjustment.zero(), // urlQualityAdjustment
                             Integer.MAX_VALUE, // rankingId
                             Double.MAX_VALUE, // termScore
-                            1 // resultsFromSameDomain
+                            1, // resultsFromSameDomain
+                            "", // positions
+                            null // result item
                             );
                     if (val.urlQuality <= QUALITY_LOWER_BOUND_CUTOFF
                     && Strings.isNullOrEmpty(val.description)
@@ -309,18 +313,17 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
 
     @Override
     @SneakyThrows
-    public EdgeDomain getDomain(EdgeId<EdgeDomain> id) {
+    public Optional<EdgeDomain> getDomain(EdgeId<EdgeDomain> id) {
         try (var connection = dataSource.getConnection()) {
 
             try (var stmt = connection.prepareStatement("SELECT DOMAIN_NAME FROM EC_DOMAIN WHERE ID=?")) {
                 stmt.setInt(1, id.id());
                 var rsp = stmt.executeQuery();
                 if (rsp.next()) {
-                    return new EdgeDomain(rsp.getString(1));
+                    return Optional.of(new EdgeDomain(rsp.getString(1)));
                 }
-                throw new NoSuchElementException();
+                return Optional.empty();
             }
         }
     }
-
 }

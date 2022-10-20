@@ -17,6 +17,10 @@ public class ProcessedDocument {
     public EdgeUrlState state;
     public String stateReason;
 
+    public boolean isOk() {
+        return EdgeUrlState.OK == state;
+    }
+
     public OptionalDouble quality() {
         if (details != null) {
             return OptionalDouble.of(details.quality);

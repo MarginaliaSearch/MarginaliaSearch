@@ -5,10 +5,10 @@ import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
 import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.search.EdgeUrlDetails;
-import nu.marginalia.wmsa.edge.search.EdgeSearchProfile;
 import nu.marginalia.wmsa.edge.search.command.SearchCommandInterface;
 import nu.marginalia.wmsa.edge.search.command.SearchParameters;
 import nu.marginalia.wmsa.edge.search.model.DomainInformation;
+import nu.marginalia.wmsa.edge.search.model.EdgeSearchProfile;
 import nu.marginalia.wmsa.edge.search.siteinfo.DomainInformationService;
 import nu.marginalia.wmsa.edge.search.svc.EdgeSearchQueryIndexService;
 import nu.marginalia.wmsa.renderer.mustache.MustacheRenderer;
@@ -58,21 +58,27 @@ public class SiteListCommand implements SearchCommandInterface {
 
         List<EdgeUrlDetails> resultSet;
         Path screenshotPath = null;
+        Integer domainId = -1;
         if (null != domain) {
             resultSet = searchQueryIndexService.performDumbQuery(ctx, EdgeSearchProfile.CORPO, IndexBlock.Words_1, 100, 100, "site:"+domain);
-
-            screenshotPath = Path.of("/screenshot/" + dataStoreDao.getDomainId(domain).id());
+            domainId = dataStoreDao.getDomainId(domain).id();
+            screenshotPath = Path.of("/screenshot/" + domainId);
         }
         else {
             resultSet = Collections.emptyList();
         }
 
-        return Optional.of(siteInfoRenderer.render(results, Map.of("query", query,
-                "hideRanking", true,
-                "focusDomain", Objects.requireNonNullElse(domain, ""),
-                "profile", parameters.profileStr(),
-                "results", resultSet, "screenshot",
-                screenshotPath == null ? "" : screenshotPath.toString())));
+        Map<String, Object> renderObject = new HashMap<>(10);
+
+        renderObject.put("query", query);
+        renderObject.put("hideRanking", true);
+        renderObject.put("profile", parameters.profileStr());
+        renderObject.put("results", resultSet);
+        renderObject.put("screenshot", screenshotPath == null ? "" : screenshotPath.toString());
+        renderObject.put("domainId", domainId);
+        renderObject.put("focusDomain", domain);
+
+        return Optional.of(siteInfoRenderer.render(results, renderObject));
     }
 
 

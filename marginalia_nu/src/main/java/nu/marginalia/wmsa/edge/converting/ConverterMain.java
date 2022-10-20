@@ -5,9 +5,9 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import nu.marginalia.util.ParallelPipe;
+import nu.marginalia.wmsa.edge.converting.compiler.InstructionsCompiler;
 import nu.marginalia.wmsa.edge.converting.interpreter.Instruction;
 import nu.marginalia.wmsa.edge.converting.processor.DomainProcessor;
-import nu.marginalia.wmsa.edge.converting.processor.InstructionsCompiler;
 import nu.marginalia.wmsa.edge.crawling.CrawlPlanLoader;
 import nu.marginalia.wmsa.edge.crawling.WorkLog;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDomain;
@@ -47,11 +47,15 @@ public class ConverterMain {
             Gson gson
             ) throws Exception {
 
-        instructionWriter = new LoadInstructionWriter(plan.process.getDir(), gson);
+        ;
+
+
 
         logger.info("Starting pipe");
 
-        try (WorkLog processLog = plan.createProcessWorkLog()) {
+        try (WorkLog processLog = plan.createProcessWorkLog();
+             ConversionLog log = new ConversionLog(plan.process.getDir())) {
+            instructionWriter = new LoadInstructionWriter(log, plan.process.getDir(), gson);
             var pipe = new ParallelPipe<CrawledDomain, ProcessingInstructions>("Crawler", 20, 4, 2) {
 
                 @Override

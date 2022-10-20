@@ -1,0 +1,2 @@
+{{#if message}}<p>{{message}}</p>{{/if}}
+{{#if aliasDomain}}<p><b>Note: </b> <tt>{{query}}</tt> redirects to <a href="search?domain={{aliasDomain}}">{{aliasDomain}}</a> according to the Marginalia Search crawler.</p>{{/if}}

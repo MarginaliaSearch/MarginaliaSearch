@@ -12,6 +12,8 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 
+import static nu.marginalia.wmsa.edge.index.journal.model.SearchIndexJournalEntry.ENTRY_SIZE;
+import static nu.marginalia.wmsa.edge.index.journal.model.SearchIndexJournalEntry.MAX_LENGTH;
 import static nu.marginalia.wmsa.edge.index.journal.model.SearchIndexJournalEntryHeader.HEADER_SIZE_LONGS;
 
 public class SearchIndexJournalReader implements Iterable<SearchIndexJournalReader.JournalEntry>  {
@@ -22,6 +24,10 @@ public class SearchIndexJournalReader implements Iterable<SearchIndexJournalRead
 
     private final MultimapFileLongSlice map;
     private final long committedSize;
+
+    public static long[] createAdequateTempBuffer() {
+        return new long[MAX_LENGTH*ENTRY_SIZE];
+    }
 
     public SearchIndexJournalReader(MultimapFileLong map) {
         fileHeader = new SearchIndexJournalFileHeader(map.get(0), map.get(1));
@@ -92,7 +98,7 @@ public class SearchIndexJournalReader implements Iterable<SearchIndexJournalRead
         public IndexBlock block() {
             return header.block();
         }
-        public int wordCount() { return header.entrySize(); }
+        public int wordCount() { return header.entrySize() / ENTRY_SIZE; }
 
         public SearchIndexJournalEntry readEntry() {
             long[] dest = new long[header.entrySize()];

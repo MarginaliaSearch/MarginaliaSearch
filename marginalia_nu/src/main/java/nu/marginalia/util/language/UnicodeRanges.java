@@ -68,10 +68,19 @@ public enum UnicodeRanges {
         this.max = max;
     }
 
-    boolean test(String text) {
-        return text.chars().limit(1000).parallel()
-                .filter(i -> i >= min && i < max)
-                .count() >= (sensitive ? 15 : 100);
+    public boolean test(String text) {
+        int count = 0;
+        int max = sensitive ? 15 : 100;
 
+        for (int i = 0; i < Math.min(2000, text.length()); i++) {
+            char c = text.charAt(i);
+            if (c >= min && c <= this.max) {
+                if (count++ > max) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

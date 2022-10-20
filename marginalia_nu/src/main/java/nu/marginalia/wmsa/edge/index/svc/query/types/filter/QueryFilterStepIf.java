@@ -1,14 +1,10 @@
 package nu.marginalia.wmsa.edge.index.svc.query.types.filter;
 
-import nu.marginalia.wmsa.edge.index.reader.SearchIndex;
+import nu.marginalia.util.btree.BTreeQueryBuffer;
 
-import javax.annotation.Nullable;
 import java.util.List;
 
 public interface QueryFilterStepIf extends Comparable<QueryFilterStepIf> {
-    @Nullable
-    SearchIndex getIndex();
-
     boolean test(long value);
 
     double cost();
@@ -19,45 +15,26 @@ public interface QueryFilterStepIf extends Comparable<QueryFilterStepIf> {
 
     String describe();
 
-    /**
-     * Move each value in items to the beginning of the array,
-     * and return the number of matching items.
+    /** <p>For each item in buffer from READ to END, retain the items that
+     *  satisfy the filter, maintaining their order, and update END
+     *  to the length of the retained items.</p>
      *
-     * The remaining values are undefined.
+     *  <p>Items that are rejected are moved past the new END, all items
+     *  are kept, but their order is not guaranteed.</p>
+     *
+     * <p>ASSUMPTION: buffer is sorted up until end.</p>
      */
-    default int retainDestructive(long[] items, int max) {
-        int keep = 0;
-        for (int i = 0; i < max; i++) {
-            if (test(items[i])) {
-                if (i != keep) {
-                    items[keep] = items[i];
-                }
-                keep++;
+    default void apply(BTreeQueryBuffer buffer) {
+        while (buffer.hasMore()) {
+            if (test(buffer.currentValue())) {
+                buffer.retainAndAdvance();
+            }
+            else {
+                buffer.rejectAndAdvance();
             }
         }
-        return keep;
+        buffer.finalizeFiltering();
     }
-
-    /**
-     * Move each value in items to the beginning of the array,
-     * and return the number of matching items. The values that do
-     * not pass the test are moved to the end of the array.
-     */
-    default int retainReorder(long[] items, int start, int max) {
-        int keep = 0;
-        for (int i = start; i < max; i++) {
-            if (test(items[i])) {
-                if (i != keep) {
-                    long tmp = items[keep];
-                    items[keep] = items[i];
-                    items[i] = tmp;
-                }
-                keep++;
-            }
-        }
-        return keep;
-    }
-
 
     static QueryFilterStepIf noPass() {
         return QueryFilterNoPass.instance;

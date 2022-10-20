@@ -29,7 +29,7 @@ public class CrawlJobExtractorMain {
             """
                 SELECT ID
                 FROM EC_DOMAIN
-                WHERE URL_PART=?
+                WHERE DOMAIN_NAME=?
             """;
 
     private static final String domainsSql =
@@ -112,6 +112,16 @@ public class CrawlJobExtractorMain {
             job.id = createId(new EdgeDomain(domain));
             job.urls = urls;
             out.println(gson.toJson(job));
+        }
+    }
+
+    public static void writeSpec(Path outFile, CrawlingSpecification... specs) throws IOException {
+        Gson gson = GsonFactory.get();
+
+        try (var out = new PrintWriter(new ZstdOutputStream(new BufferedOutputStream(new FileOutputStream(outFile.toFile()))))) {
+            for (var spec : specs) {
+                out.println(gson.toJson(spec));
+            }
         }
     }
 

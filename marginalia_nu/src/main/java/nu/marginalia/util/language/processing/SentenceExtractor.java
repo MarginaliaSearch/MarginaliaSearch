@@ -1,6 +1,7 @@
 package nu.marginalia.util.language.processing;
 
 import com.github.datquocnguyen.RDRPOSTagger;
+import com.github.jknack.handlebars.internal.lang3.StringUtils;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TObjectIntHashMap;
 import lombok.AllArgsConstructor;
@@ -125,11 +126,45 @@ public class SentenceExtractor {
         return counts;
     }
 
-    private static final Pattern dotPattern = Pattern.compile("\\.+$");
     private static final Pattern splitPattern = Pattern.compile("( -|- |\\|)");
-    private static final Pattern spacesPattern = Pattern.compile("\\s+");
 
-    private static final Pattern badCharPattern = Pattern.compile("([^_#@.a-zA-Z'+\\-0-9\\u00C0-\\u00D6\\u00D8-\\u00f6\\u00f8-\\u00ff]+)|(\\.(\\s+|$))");
+//    private static final Pattern badCharPattern = Pattern.compile("([^_#@.a-zA-Z'+\\-0-9\\u00C0-\\u00D6\\u00D8-\\u00f6\\u00f8-\\u00ff]+)|(\\.(\\s+|$))");
+
+    private boolean isBadChar(char c) {
+        if (c >= 'a' && c <= 'z') return false;
+        if (c >= 'A' && c <= 'Z') return false;
+        if (c >= '0' && c <= '9') return false;
+        if ("_#@.".indexOf(c) >= 0) return false;
+        if (c >= '\u00C0' && c <= '\u00D6') return false;
+        if (c >= '\u00D8' && c <= '\u00F6') return false;
+        if (c >= '\u00F8' && c <= '\u00FF') return false;
+
+        return true;
+    }
+    private String sanitizeString(String s) {
+        char[] newChars = new char[s.length()];
+        int pi = 0;
+
+        for (int i = 0; i < newChars.length; i++) {
+            char c = s.charAt(i);
+            if (!isBadChar(c)) {
+                newChars[pi++] = c;
+            }
+            else {
+                newChars[pi++] = ' ';
+            }
+        }
+
+        s = new String(newChars, 0, pi);
+
+        if (s.startsWith(".")) {
+            s = s.substring(1);
+            if (s.isBlank())
+                return "";
+        }
+        return s;
+
+    }
 
     public DocumentSentence extractSentence(String text) {
         var wordsAndSeps = splitSegment(text);
@@ -139,7 +174,7 @@ public class SentenceExtractor {
         var lc = toLc(wordsAndSeps.words);
 
         return new DocumentSentence(
-            badCharPattern.matcher(text).replaceAll(" "), words, seps, lc, rdrposTagger.tagsForEnSentence(words), stemSentence(lc)
+            sanitizeString(text), words, seps, lc, rdrposTagger.tagsForEnSentence(words), stemSentence(lc)
         );
     }
 
@@ -161,7 +196,7 @@ public class SentenceExtractor {
             sentences = sentenceDetector.sentDetect(textNormalizedSpaces);
         }
         catch (Exception ex) {
-            sentences = textNormalizedSpaces.split("[.]");
+            sentences = StringUtils.split(textNormalizedSpaces, '.');
         }
 
         if (sentences.length > 250) {
@@ -196,8 +231,8 @@ public class SentenceExtractor {
                 separators[i] = Arrays.copyOf(separators[i], 250);
             }
             for (int j = 0; j < tokens[i].length; j++) {
-                if (tokens[i][j].endsWith(".")) {
-                    tokens[i][j] = dotPattern.matcher(tokens[i][j]).replaceAll("");
+                while (tokens[i][j].endsWith(".")) {
+                    tokens[i][j] = StringUtils.removeEnd(tokens[i][j], ".");
                 }
             }
         }
@@ -216,7 +251,7 @@ public class SentenceExtractor {
 
         DocumentSentence[] ret = new DocumentSentence[sentences.length];
         for (int i = 0; i < ret.length; i++) {
-            ret[i] = new DocumentSentence(badCharPattern.matcher(sentences[i]).replaceAll(" "), tokens[i], separators[i], tokensLc[i], posTags[i], stemmedWords[i]);
+            ret[i] = new DocumentSentence(sanitizeString(sentences[i]), tokens[i], separators[i], tokensLc[i], posTags[i], stemmedWords[i]);
         }
         return ret;
     }

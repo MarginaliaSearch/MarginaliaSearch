@@ -110,9 +110,10 @@ public class SearchIndexPartitioner {
             return true;
         if (academiaRanking.hasBucket(bucketId, domainId))
             return true;
-        if (standardRanking.hasBucket(bucketId, domainId))
-            return true;
         if (specialDomainRanking.hasBucket(bucketId, domainId))
+            return true;
+
+        if (standardRanking.hasBucket(bucketId, domainId))
             return true;
 
         return DYNAMIC_BUCKET_LENGTH == bucketId;
@@ -148,15 +149,15 @@ public class SearchIndexPartitioner {
         if (academiaRanking != null && academiaRanking.ownsBucket(bucketId)) {
             return academiaRanking.translateId(id);
         }
-        if (standardRanking != null && standardRanking.ownsBucket(bucketId)) {
-            return standardRanking.translateId(id);
-        }
         if (specialDomainRanking != null && specialDomainRanking.ownsBucket(bucketId)) {
             return specialDomainRanking.translateId(id);
         }
-        if (retroRanking != null) {
-            return retroRanking.translateId(id);
+
+        // standard gets passed traight through
+        if (standardRanking != null && standardRanking.ownsBucket(bucketId)) {
+            return id;
         }
+
         return id;
     }
 

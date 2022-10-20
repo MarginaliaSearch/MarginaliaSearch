@@ -3,6 +3,8 @@ package nu.marginalia.util.btree;
 import nu.marginalia.util.btree.model.BTreeContext;
 import nu.marginalia.util.btree.model.BTreeHeader;
 import nu.marginalia.util.multimap.MultimapFileLongSlice;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -10,6 +12,7 @@ import java.io.IOException;
 public class BTreeWriter {
     private final BTreeContext ctx;
     private final MultimapFileLongSlice map;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public BTreeWriter(MultimapFileLongSlice map, BTreeContext ctx) {
         this.map = map;
@@ -39,7 +42,16 @@ public class BTreeWriter {
 
         header.write(map, offset);
 
-        writeIndexCallback.write(map.atOffset(header.dataOffsetLongs()));
+
+        var slice = map.atOffset(header.dataOffsetLongs());
+
+        BTreeDogEar dogEar = new BTreeDogEar(ctx, header, slice);
+
+        writeIndexCallback.write(slice);
+
+        if (!dogEar.verify()) {
+            logger.error("Dog ear was not overwritten: {}", header);
+        }
 
         if (header.layers() < 1) { // The data is too small to benefit from indexing
             return ctx.calculateSize(numEntries);

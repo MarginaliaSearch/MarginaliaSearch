@@ -8,6 +8,7 @@ import nu.marginalia.wmsa.configuration.WmsaHome;
 import nu.marginalia.wmsa.edge.converting.ConverterModule;
 import nu.marginalia.wmsa.edge.converting.processor.DomainProcessor;
 import nu.marginalia.wmsa.edge.converting.processor.logic.DomPruningFilter;
+import nu.marginalia.wmsa.edge.converting.processor.logic.topic.GoogleAnwersSpamDetector;
 import nu.marginalia.wmsa.edge.converting.processor.logic.topic.RecipeDetector;
 import nu.marginalia.wmsa.edge.converting.processor.logic.topic.TextileCraftDetector;
 import nu.marginalia.wmsa.edge.converting.processor.logic.topic.WoodworkingDetector;
@@ -28,6 +29,7 @@ public class ConverterLogicTestTool {
     RecipeDetector recipeDetector = new RecipeDetector();
     WoodworkingDetector woodworkingDetector = new WoodworkingDetector();
     TextileCraftDetector textileCraftDetector = new TextileCraftDetector();
+    GoogleAnwersSpamDetector spamDetector = new GoogleAnwersSpamDetector();
 
     SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
 
@@ -72,11 +74,14 @@ public class ConverterLogicTestTool {
                     if (textileCraftDetector.testP(dld) > 0.3) {
                         System.out.println("textilecraft\t" + doc.url);
                     }
-                    if (woodworkingDetector.testP(dld) > 0.2) {
+                    if (woodworkingDetector.testP(dld) > 0.1) {
                         System.out.println("woodworking\t" + doc.url);
                     }
                     if (recipeDetector.testP(dld) > 0.5) {
                         System.out.println("recipe\t" + doc.url);
+                    }
+                    if (spamDetector.testP(parsed) > 0.5) {
+                        System.out.println("GA spam\t" + doc.url);
                     }
                 };
 
