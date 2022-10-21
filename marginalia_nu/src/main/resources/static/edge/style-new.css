@@ -647,6 +647,12 @@ a.underline {
     background-color: #222;
     color: #fff;
   }
+  .query-samples dt {
+    color :#000;
+  }
+  .query-samples dd sample {
+    color: #ee8 !important;
+  }
 
 }
 

@@ -376,11 +376,11 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
     }
 
     private void swap(long idx1, long idx2) {
-        LongBuffer buff1 = buffers.get((int)(idx1) / bufferSize);
-        final int o1 = (int) (idx1) % bufferSize;
+        LongBuffer buff1 = buffers.get((int)(idx1 / bufferSize));
+        final int o1 = (int) (idx1 % bufferSize);
 
-        LongBuffer buff2 = buffers.get((int)(idx2) / bufferSize);
-        final int o2 = (int) (idx2) % bufferSize;
+        LongBuffer buff2 = buffers.get((int)(idx2 / bufferSize));
+        final int o2 = (int) (idx2 % bufferSize);
 
         long tmp = buff1.get(o1);
         buff1.put(o1, buff2.get(o2));
@@ -436,13 +436,13 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
         }
         if (i0 != iN) {
             int startBuf0 = (int) ((destOffset) % bufferSize) * 8;
-            int endBuf0 = buffers[0].capacity() - (int) ((destOffset) % bufferSize) * 8;
+            int endBuf0 = buffers[0].capacity() - (int) (destOffset % bufferSize) * 8;
             int endBufN = (int)((destOffset + length) % bufferSize)*8;
             buffers[0] = buffers[0].slice(startBuf0, endBuf0);
             buffers[numBuffers-1] = buffers[numBuffers-1].slice(0, endBufN);
         }
         else {
-            buffers[0] = buffers[0].slice((int) ((destOffset) % bufferSize) * 8, 8*length);
+            buffers[0] = buffers[0].slice((int) (destOffset % bufferSize) * 8, 8*length);
         }
 
         sourceChannel.position(sourceStart*8);
@@ -465,13 +465,14 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
         long low = 0;
         long high = n - 1;
 
-        if (fromIndex/bufferSize == (fromIndex+step*n)/bufferSize) {
+        if (isSameBuffer(fromIndex, fromIndex+step*n)) {
             int idx = (int)(fromIndex / bufferSize);
+            var buffer = buffers.get(idx);
 
             while (low <= high) {
                 long mid = (low + high) >>> 1;
                 long off = fromIndex + mid*step;
-                long midVal = buffers.get(idx).get((int)(off % bufferSize)) & mask;
+                long midVal = buffer.get((int)(off % bufferSize)) & mask;
 
                 if (midVal < key)
                     low = mid + 1;
@@ -507,13 +508,14 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
         long low = 0;
         long high = n - 1;
 
-        if (fromIndex/bufferSize == (fromIndex+n)/bufferSize) {
+        if (isSameBuffer(fromIndex, fromIndex+n)) {
             int idx = (int)(fromIndex / bufferSize);
+            var buffer = buffers.get(idx);
 
             while (low <= high) {
                 long mid = (low + high) >>> 1;
                 long off = fromIndex + mid;
-                long midVal = buffers.get(idx).get((int)(off % bufferSize)) & mask;
+                long midVal = buffer.get((int)(off % bufferSize)) & mask;
 
                 if (midVal < key)
                     low = mid + 1;
@@ -551,13 +553,15 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
         long low = 0;
         long high = n - 1;
 
-        if (fromIndex/bufferSize == (fromIndex+n)/bufferSize) {
+        if (isSameBuffer(fromIndex, fromIndex+n)) {
             int idx = (int)(fromIndex / bufferSize);
+            var buffer = buffers.get(idx);
+
 
             while (low <= high) {
                 long mid = (low + high) >>> 1;
                 long off = fromIndex + mid;
-                long midVal = buffers.get(idx).get((int)(off % bufferSize));
+                long midVal = buffer.get((int)(off % bufferSize));
 
                 if (midVal < key)
                     low = mid + 1;
@@ -594,13 +598,15 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
         long low = 0;
         long high = n - 1;
 
-        if (fromIndex/bufferSize == (fromIndex+n)/bufferSize) {
+        if (isSameBuffer(fromIndex, fromIndex+n)) {
             int idx = (int)(fromIndex / bufferSize);
+            var buffer = buffers.get(idx);
+
 
             while (low <= high) {
                 long mid = (low + high) >>> 1;
                 long off = fromIndex + mid;
-                long midVal = buffers.get(idx).get((int)(off % bufferSize));
+                long midVal = buffer.get((int)(off % bufferSize));
 
                 if (midVal < key)
                     low = mid + 1;
@@ -716,11 +722,13 @@ public class MultimapFileLong implements AutoCloseable, MultimapFileLongSlice {
 
         final var buffer = buffers.get((int) (low / bufferSize));
 
-        int pivotPoint = (int) ((low + high) / (2L*wordSize)) * wordSize % bufferSize;
-        long pivot = buffer.get(pivotPoint);
+        final long pivotPointLong = ((low + high) / (2L*wordSize)) * wordSize;
+        final int pivotPoint = (int) (pivotPointLong % bufferSize);
 
-        int j = (int) (high) % bufferSize + wordSize;
-        int i = (int) (low) % bufferSize - wordSize;
+        final long pivot = buffer.get(pivotPoint);
+
+        int j = (int) (high % bufferSize) + wordSize;
+        int i = (int) (low % bufferSize) - wordSize;
 
         long j0 = high + wordSize - j;
 

@@ -38,15 +38,17 @@ public class MultimapSorter {
             mergeSort(start, (int) (end - start));
         }
 
-        for (long lp = start + wordSize; lp < end; lp += wordSize) {
-            if (multimapFileLong.get(lp - wordSize) > multimapFileLong.get(lp)) {
+        if (MultimapSorter.class.desiredAssertionStatus()) {
+            for (long lp = start + wordSize; lp < end; lp += wordSize) {
+                if (multimapFileLong.get(lp - wordSize) > multimapFileLong.get(lp)) {
 
-                logger.error("Sort contract breached [{}:{} ({}), ws={}, <isl={}, bc={}]",
-                        start, end,
-                        end - start,
-                        wordSize, end - start < internalSortLimit,
-                        buffer.capacity());
+                    logger.error("Sort contract breached [{}:{} ({}), ws={}, <isl={}, bc={}]",
+                            start, end,
+                            end - start,
+                            wordSize, end - start < internalSortLimit,
+                            buffer.capacity());
 
+                }
             }
         }
     }
