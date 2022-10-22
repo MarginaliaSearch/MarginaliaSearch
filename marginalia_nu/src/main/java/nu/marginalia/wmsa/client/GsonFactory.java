@@ -24,6 +24,7 @@ public class GsonFactory {
                 .registerTypeAdapter(EdgeDomain.class, (JsonDeserializer<EdgeDomain>) (json, typeOfT, context) -> new EdgeDomain(json.getAsString()))
                 .registerTypeAdapter(EdgeId.class, (JsonDeserializer<EdgeId<?>>) (json, typeOfT, context) -> new EdgeId<>(json.getAsInt()))
                 .registerTypeAdapter(EdgeId.class, (JsonSerializer<EdgeId<?>>) (src, typeOfSrc, context) -> new JsonPrimitive(src.id()))
+                .serializeSpecialFloatingPointValues()
                 .create();
     }
 }
