@@ -2,6 +2,7 @@ package nu.marginalia.wmsa.edge.converting;
 
 import com.zaxxer.hikari.HikariDataSource;
 import gnu.trove.map.hash.TIntIntHashMap;
+import nu.marginalia.wmsa.configuration.module.DatabaseModule;
 
 import java.sql.SQLException;
 
@@ -10,6 +11,10 @@ public class UpdateDomainStatistics {
 
     public UpdateDomainStatistics(HikariDataSource dataSource) {
         this.dataSource = dataSource;
+    }
+
+    public static void main(String... args) throws SQLException {
+        new UpdateDomainStatistics(new DatabaseModule().provideConnection()).run();
     }
 
     public void run() throws SQLException {
@@ -22,7 +27,7 @@ public class UpdateDomainStatistics {
         try (var conn = dataSource.getConnection();
              var stmt = conn.createStatement();
              var domainInfoQuery = conn.prepareStatement("SELECT DOMAIN_ID, VISITED, STATE='ok' FROM EC_URL");
-             var insertDomainInfo = conn.prepareStatement("INSERT INTO DOMAIN_METADATA(ID,KNOWN_URLS,GOOD_URLS,VISITED_URLS) VALUES (?, ?, ?, ?)")
+             var insertDomainInfo = conn.prepareStatement("INSERT INTO DOMAIN_METADATA(ID,KNOWN_URLS,VISITED_URLS,GOOD_URLS) VALUES (?, ?, ?, ?)")
         ) {
 
             stmt.executeUpdate("DELETE FROM DOMAIN_METADATA");
