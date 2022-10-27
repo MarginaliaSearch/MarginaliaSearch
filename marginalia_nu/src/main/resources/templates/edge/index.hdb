@@ -28,38 +28,28 @@
         <h2>Publicity, Discussion and Events</h2>
         <div class="info">
             <dl>
-                <dt><a href="https://www.hs.fi/visio/art-2000009139237.html">Google ei en&auml;&auml; tide&auml;</a></dt>
+                <dt><a href="https://memex.marginalia.nu/log/64-hundred-million.gmi" rel="nofollow">Marginalia's Index Reaches 100,000,000 Documents</a> &#127882;</dt>
+                <dd>2022-10-21</dd>
+                <dt><a href="https://www.hs.fi/visio/art-2000009139237.html" rel="nofollow">Google ei en&auml;&auml; tide&auml;</a></dt>
                 <dd>Helsing Sanomat &#127467;&#127470; 2022-10-19</dd>
-                <dt><a href="https://www.deutschlandfunkkultur.de/google-suche-100.html">Kritik an Googles Suche - Platzhirsch auf dem Nebenschauplatz</a></dt>
+                <dt><a href="https://www.deutschlandfunkkultur.de/google-suche-100.html" rel="nofollow">Kritik an Googles Suche - Platzhirsch auf dem Nebenschauplatz</a></dt>
                 <dd>Deutschlandfunk Kultur &#x1f1e9;&#x1f1ea;, 2022-08-18</dd>
                 <dt><a href="https://news.ycombinator.com/item?id=31536626" rel="nofollow">Marginalia Goes Open Source</a></dt>
                 <dd>Hacker News, 2022-05-28</dd>
                 <dt><a href="https://www.youtube.com/watch?v=rTSEr0cRJY8" rel="nofollow">You Should Check Out the Indie Web</a> &#x1F39E;&#xFE0F;</dt>
                 <dd>YouTube, You've Got Kat, 2022-03-15 </dd>
-                <dt>
-                    <a href="https://www.newyorker.com/culture/infinite-scroll/what-google-search-isnt-showing-you" rel="nofollow">What Google Search Isn't Showing You</a>
-                </dt>
+                <dt> <a href="https://www.newyorker.com/culture/infinite-scroll/what-google-search-isnt-showing-you" rel="nofollow">What Google Search Isn't Showing You</a> </dt>
                 <dd>The New Yorker &#127913;, 2022-03-10</dd>
-                <dt>
-                    <a href="https://www.metafilter.com/194653/Marginalia-Search-Serendipity-Engineering" rel="nofollow">Marginalia Search - Serendipity Engineering</a>
-                </dt>
+                <dt> <a href="https://www.metafilter.com/194653/Marginalia-Search-Serendipity-Engineering" rel="nofollow">Marginalia Search - Serendipity Engineering</a> </dt>
                 <dd>MetaFilter, 2022-03-09</dd>
-                <dt>
-                    &#127874; <a href="https://memex.marginalia.nu/log/49-marginalia-1-year.gmi">First anniversary</a>! &#127882;
-                </dt>
-                <dd>
-                    2022-02-26
-                </dd>
-                <dt>
-                    <a href="https://onezero.medium.com/a-search-engine-designed-to-surprise-you-b81944ed5c06" rel="nofollow">A Search Engine Designed To Surprise You</a>
-                </dt>
+                <dt> &#127874; <a href="https://memex.marginalia.nu/log/49-marginalia-1-year.gmi">First anniversary</a>! &#127882; </dt>
+                <dd> 2022-02-26 </dd>
+                <dt> <a href="https://onezero.medium.com/a-search-engine-designed-to-surprise-you-b81944ed5c06" rel="nofollow">A Search Engine Designed To Surprise You</a> </dt>
                 <dd>Clive Thompson OneZero, 2021-09-16</dd>
-                <dt>
-                    <a href="https://news.ycombinator.com/item?id=28550764" rel="nofollow">	A search engine that favors text-heavy sites and punishes modern web design</a>
-                </dt>
-                <dd>
-                    Hacker News, 2021-09-16
-                </dd>
+                <dt> <a href="https://news.ycombinator.com/item?id=28550764" rel="nofollow"> A search engine that favors text-heavy sites and punishes modern web design</a> </dt>
+                <dd> Hacker News, 2021-09-16 </dd>
+                <dt>Development begins </dt>
+                <dd>2021-02-26</dd>
             </dl>
         </div>
     </section>
