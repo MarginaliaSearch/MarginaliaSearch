@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.List;
 
 import static java.sql.Statement.SUCCESS_NO_INFO;
@@ -34,10 +35,11 @@ public class SqlLoadProcessedDocument {
                                IN FEATURES INT,
                                IN STANDARD VARCHAR(32),
                                IN QUALITY DOUBLE,
-                               IN HASH INT)
+                               IN HASH INT,
+                               IN PUB_YEAR SMALLINT)
                        BEGIN
                                SET FOREIGN_KEY_CHECKS=0;
-                               REPLACE INTO EC_PAGE_DATA(ID, TITLE, DESCRIPTION, WORDS_TOTAL, FORMAT, FEATURES, DATA_HASH, QUALITY) VALUES (URL_ID, TITLE, DESCRIPTION, LENGTH, STANDARD, FEATURES, HASH, QUALITY);
+                               REPLACE INTO EC_PAGE_DATA(ID, TITLE, DESCRIPTION, WORDS_TOTAL, FORMAT, FEATURES, DATA_HASH, QUALITY, PUB_YEAR) VALUES (URL_ID, TITLE, DESCRIPTION, LENGTH, STANDARD, FEATURES, HASH, QUALITY, PUB_YEAR);
                                UPDATE EC_URL SET VISITED=1, STATE=STATE WHERE ID=URL_ID;
                                SET FOREIGN_KEY_CHECKS=1;
                        END
@@ -62,7 +64,7 @@ public class SqlLoadProcessedDocument {
     public void load(LoaderData data, List<LoadProcessedDocument> documents) {
 
         try (var conn = dataSource.getConnection();
-             var stmt = conn.prepareCall("CALL INSERT_PAGE_VISIT(?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+             var stmt = conn.prepareCall("CALL INSERT_PAGE_VISIT(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             conn.setAutoCommit(false);
 
             int cnt = 0; int batchOffset = 0;
@@ -82,6 +84,12 @@ public class SqlLoadProcessedDocument {
                 stmt.setString(7, doc.standard().name());
                 stmt.setDouble(8, doc.quality());
                 stmt.setInt(9, (int) doc.hash());
+                if (doc.pubYear() != null) {
+                    stmt.setShort(10, (short) doc.pubYear().intValue());
+                }
+                else {
+                    stmt.setInt(10, Types.SMALLINT);
+                }
                 stmt.addBatch();
 
                 if (++cnt == 100) {

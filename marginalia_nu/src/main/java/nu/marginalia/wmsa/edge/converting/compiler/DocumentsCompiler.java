@@ -30,7 +30,7 @@ public class DocumentsCompiler {
         var details = doc.details;
 
         if (details != null) {
-            ret.add(new LoadProcessedDocument(doc.url, doc.state, details.title, details.description, HtmlFeature.encode(details.features), details.standard, details.length, details.hashCode, details.quality));
+            ret.add(new LoadProcessedDocument(doc.url, doc.state, details.title, details.description, HtmlFeature.encode(details.features), details.standard, details.length, details.hashCode, details.quality, details.pubYear));
         }
         else {
             ret.add(new LoadProcessedDocumentWithError(doc.url, doc.state, doc.stateReason));

@@ -75,7 +75,8 @@ class SqlLoadProcessedDocumentTest {
                 EdgeHtmlStandard.HTML5,
                 100,
                 12345,
-                -3.14
+                -3.14,
+                null
         )));
 
         var details = dataStoreDao.getUrlDetailsMulti(new EdgeIdArray<>(loaderData.getUrlId(new EdgeUrl("https://www.marginalia.nu/"))));
