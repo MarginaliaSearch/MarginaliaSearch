@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 public class SummaryExtractor {
     private final int maxSummaryLength;
 
-    private final Pattern truncatedCharacters = Pattern.compile("[^a-zA-Z0-9.,!?\\-'\"]+|[\\-.,!?' ]{3,}");
+    private final Pattern truncatedCharacters = Pattern.compile("[\\-.,!?' ]{3,}");
 
     @Inject
     public SummaryExtractor(@Named("max-summary-length") Integer maxSummaryLength) {
@@ -19,12 +19,9 @@ public class SummaryExtractor {
     }
 
     public String extractSummary(Document parsed) {
-        var cleanDoc = parsed.clone();
-        cleanDoc.select("header,nav,#header,#nav,#navigation,.header,.nav,.navigation,ul,li").remove();
-
         String summaryString;
 
-        summaryString = extractSummaryRaw(cleanDoc);
+        summaryString = extractSummaryRaw(parsed);
         summaryString = truncatedCharacters.matcher(summaryString).replaceAll(" ");
         summaryString = StringUtils.abbreviate(summaryString, "", maxSummaryLength);
 
@@ -36,9 +33,13 @@ public class SummaryExtractor {
 
         String maybe;
 
-        // Plan A
+        parsed.select("header,nav,#header,#nav,#navigation,.header,.nav,.navigation,ul,li").remove();
 
-        maybe = getSummaryByTagDensity(parsed);
+        // Plan A
+        maybe = getSummaryNew(parsed.clone());
+        if (!maybe.isBlank()) return maybe;
+
+        maybe = getSummaryByTagDensity(parsed.clone());
         if (!maybe.isBlank()) return maybe;
 
         // Plan B: Open Graph Description
@@ -51,6 +52,14 @@ public class SummaryExtractor {
 
         // Plan D: The kitchen sink?
         return lastDitchSummaryEffort(parsed);
+    }
+
+    private String getSummaryNew(Document parsed) {
+        var filter = new SummaryExtractionFilter();
+
+        parsed.filter(filter);
+
+        return filter.getSummary(maxSummaryLength+32);
     }
 
     private String getSummaryByTagDensity(Document parsed) {
@@ -92,6 +101,7 @@ public class SummaryExtractor {
 
         return parsed.body().text();
     }
+
     private double htmlTagDensity(Element elem) {
         return (double) elem.text().length() / elem.html().length();
     }
