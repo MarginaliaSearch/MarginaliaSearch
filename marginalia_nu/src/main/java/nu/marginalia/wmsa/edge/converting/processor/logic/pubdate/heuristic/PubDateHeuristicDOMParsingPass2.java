@@ -8,14 +8,13 @@ import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeHtmlStandard;
 import org.jetbrains.annotations.NotNull;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.NodeFilter;
 
 import java.util.Optional;
 
-public class PubDateHeuristicDOMParsing implements PubDateHeuristic {
+public class PubDateHeuristicDOMParsingPass2 implements PubDateHeuristic {
 
     @Override
     public Optional<PubDate> apply(PubDateEffortLevel effortLevel, String headers, EdgeUrl url, Document document, EdgeHtmlStandard htmlStandard) {
@@ -42,7 +41,6 @@ public class PubDateHeuristicDOMParsing implements PubDateHeuristic {
         @Override
         public FilterResult head(@NotNull Node node, int depth) {
             if (node instanceof TextNode tn) onTextNode(tn);
-            if (node instanceof Element el) onElementNode(el);
 
             if (hasPubDate()) {
                 return FilterResult.STOP;
@@ -53,64 +51,8 @@ public class PubDateHeuristicDOMParsing implements PubDateHeuristic {
         public void onTextNode(TextNode tn) {
             String text = tn.getWholeText();
 
-            if (isCandidatForCopyrightNotice(text)) {
+            if (isPossibleCandidate(text)) {
                 parse(text);
-            }
-        }
-
-        public void onElementNode(Element el) {
-            if (hasCommonClass(el)) {
-                parse(el.text());
-            }
-
-            if (!hasPubDate())
-                tryParsePhpBBDate(el);
-        }
-
-
-        public boolean isCandidatForCopyrightNotice(String text) {
-            if (text.contains("ublished"))
-                return true;
-            if (text.contains("opyright"))
-                return true;
-            if (text.contains("&copy;"))
-                return true;
-            if (text.contains("(c)"))
-                return true;
-
-            return false;
-        }
-
-
-        public boolean hasCommonClass(Element el) {
-            var classes = el.classNames();
-
-            return classes.contains("entry-meta") // wordpress
-                    || classes.contains("byline")
-                    || classes.contains("author")
-                    || classes.contains("submitted")
-                    || classes.contains("footer-info-lastmod"); // mediawiki
-        }
-
-        public void tryParsePhpBBDate(Element el) {
-
-            /* Match HTML on the form <div>[...] <b>Posted:</b> Sun Oct 03, 2010 5:37 pm&nbsp;</div>
-             * this is used on old phpBB message boards
-             *
-             * Schematically the DOM looks like this
-             *
-             *              b - TextNode[ Sun Oct 03, 2010 5:37 pm&nbsp;]
-             *              |
-             *          TextNode[Posted:]
-             */
-            if ("b".equals(el.tagName())
-                        && el.childNodeSize() == 1
-                        && el.childNode(0) instanceof TextNode ctn
-                        && "Posted:".equals(ctn.getWholeText())
-                        && el.nextSibling() instanceof TextNode ntn
-                )
-            {
-                parse(ntn.getWholeText());
             }
         }
 
@@ -144,5 +86,38 @@ public class PubDateHeuristicDOMParsing implements PubDateHeuristic {
 
     }
 
+    // This is basically the regex (^|[ ./\-])(\d{4})([ ./\-]$), but
+    // unchecked regexes are too slow
+
+    public static boolean isPossibleCandidate(String text) {
+        if (text.length() >= 4 && text.length() < 24) {
+            int ct = 0;
+            char prevC = ' ';
+            boolean goodStart = true;
+            for (int i = 0; i < text.length(); i++) {
+                char c = text.charAt(i);
+                if (Character.isDigit(c)) {
+                    if (ct++ == 0) {
+                        goodStart = isGoodBreak(prevC);
+                    }
+                }
+                else {
+                    if (ct == 4 && goodStart && isGoodBreak(c)) return true;
+                    else {
+                        ct = 0;
+                    }
+                }
+                prevC = c;
+            }
+
+            if (ct == 4 && goodStart)
+                return true;
+        }
+        return false;
+    }
+
+    private static boolean isGoodBreak(char c) {
+        return "./-,".indexOf(c) >= 0 || Character.isSpaceChar(c);
+    }
 
 }

@@ -9,14 +9,10 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
 
 public class PubDateParser {
-
-    // ThreadLocalRandom lacks a few methods we need out of Random
-    private static ThreadLocal<Random> localRandom = ThreadLocal.withInitial(Random::new);
 
     public static Optional<PubDate> attemptParseDate(String date) {
         return Optional.ofNullable(date)
@@ -66,7 +62,7 @@ public class PubDateParser {
             return Optional.of(new PubDate(null, guessYear(min, max)));
         }
 
-        if (max > PubDate.MIN_YEAR)
+        if (max >= PubDate.MIN_YEAR)
             return Optional.of(new PubDate(null, max));
         else
             return Optional.empty();
@@ -98,7 +94,7 @@ public class PubDateParser {
             return Optional.of(new PubDate(null, guessYear(min, max, guess)));
         }
 
-        if (max > PubDate.MIN_YEAR)
+        if (max >= PubDate.MIN_YEAR)
             return Optional.of(new PubDate(null, max));
         else
             return Optional.empty();

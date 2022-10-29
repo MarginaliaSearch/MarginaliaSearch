@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.regex.Pattern;
 
-public class PubDateHeuristicUrlPattern implements PubDateHeuristic {
+public class PubDateHeuristicUrlPatternPass2 implements PubDateHeuristic {
 
     private static final Pattern yearUrlPattern = Pattern.compile("/\\d{4}/");
 

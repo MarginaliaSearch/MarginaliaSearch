@@ -21,7 +21,7 @@ public class PubDateHeuristicHtml5AnyTimeTag implements PubDateHeuristic {
                 return maybeDate;
             }
 
-            maybeDate = PubDateParser.attemptParseDate(tag.text());
+            maybeDate = PubDateParser.attemptParseDate(tag.wholeText());
             if (maybeDate.isPresent()) {
                 return maybeDate;
             }

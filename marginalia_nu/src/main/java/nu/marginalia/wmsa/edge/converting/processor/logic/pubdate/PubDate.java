@@ -6,8 +6,10 @@ import java.time.format.DateTimeFormatter;
 public record PubDate(String dateIso8601, int year) {
 
     // First year we'll believe something can have been published on the web
-    // ... Tim Berners Lee's recipe collection or something
-    public static final int MIN_YEAR = 1989;
+    // cut off at 1995 to reduce false positive error rate; number of bona fide
+    // documents from these years are so few almost all hits are wrong
+    
+    public static final int MIN_YEAR = 1995;
 
     // Last year we'll believe something can be published in
     public static final int MAX_YEAR = LocalDate.now().getYear() + 1;

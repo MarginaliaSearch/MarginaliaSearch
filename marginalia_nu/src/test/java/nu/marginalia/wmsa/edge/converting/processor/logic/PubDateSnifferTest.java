@@ -2,12 +2,16 @@ package nu.marginalia.wmsa.edge.converting.processor.logic;
 
 import nu.marginalia.wmsa.edge.converting.processor.logic.pubdate.PubDateParser;
 import nu.marginalia.wmsa.edge.converting.processor.logic.pubdate.PubDateSniffer;
+import nu.marginalia.wmsa.edge.converting.processor.logic.pubdate.heuristic.PubDateHeuristicDOMParsingPass2;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeHtmlStandard;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -53,6 +57,10 @@ class PubDateSnifferTest {
         assertEquals("2018-10-21", ret.get().dateIso8601());
         assertEquals(2018, ret.get().year());
 
+        ret = PubDateParser.attemptParseDate("July 13, 2006");
+        assertTrue(ret.isPresent());
+        assertEquals(2006, ret.get().year());
+
     }
 
 
@@ -87,6 +95,39 @@ class PubDateSnifferTest {
 
         assertFalse(ret.isEmpty());
         assertEquals("2022-08-24", ret.dateIso8601());
+    }
+
+    @Test
+    public void testHtml5C() throws URISyntaxException {
+        var ret = dateSniffer.getPubDate("",
+                new EdgeUrl("https://www.example.com/"),
+                Jsoup.parse("""
+                        <!doctype html>
+                        <html>
+                        <time class="published" datetime="July 13, 2006">July 13, 2006</time>
+                        Wow, sure lor 'em boss
+                        </article>
+                        """), EdgeHtmlStandard.UNKNOWN, true);
+
+        assertFalse(ret.isEmpty());
+        assertEquals(2006, ret.year());
+    }
+
+    @Test
+    public void testProblemCases() throws IOException, URISyntaxException {
+        var ret = dateSniffer.getPubDate("",
+                new EdgeUrl("https://www.example.com/"),
+                Jsoup.parse(Files.readString(Path.of("/home/vlofgren/Code/tmp-data/The Switch to Linux Begins .html"))), EdgeHtmlStandard.HTML5, true);
+
+        assertFalse(ret.isEmpty());
+        assertEquals(2006, ret.year());
+
+        ret = dateSniffer.getPubDate("",
+                new EdgeUrl("https://www.example.com/"),
+                Jsoup.parse(Files.readString(Path.of("/home/vlofgren/Code/tmp-data/Black Hat USA 2010 Understanding and Deploying DNSSEC by Paul Wouters and Patrick Nauber.html"))), EdgeHtmlStandard.XHTML, true);
+
+        assertFalse(ret.isEmpty());
+        assertEquals(2010, ret.year());
     }
 
     @Test
@@ -168,6 +209,8 @@ class PubDateSnifferTest {
         assertFalse(ret.isEmpty());
         assertEquals("2022-02-03", ret.dateIso8601());
     }
+
+
     @Test
     public void testDOM() throws URISyntaxException {
         var ret = dateSniffer.getPubDate("",
@@ -181,6 +224,17 @@ class PubDateSnifferTest {
         assertFalse(ret.isEmpty());
         assertNull(ret.dateIso8601());
         assertEquals(2015, ret.year());
+    }
+
+    @Test
+    public void testCandidate() {
+        System.out.println(PubDateHeuristicDOMParsingPass2.isPossibleCandidate("(C) 2007"));
+        System.out.println(PubDateHeuristicDOMParsingPass2.isPossibleCandidate("(C) 2007-01-01"));
+        System.out.println(PubDateHeuristicDOMParsingPass2.isPossibleCandidate("(C) 01-01.2007"));
+        System.out.println(PubDateHeuristicDOMParsingPass2.isPossibleCandidate("Only $1999"));
+        System.out.println(PubDateHeuristicDOMParsingPass2.isPossibleCandidate("1998B"));
+        System.out.println(PubDateHeuristicDOMParsingPass2.isPossibleCandidate("1998B"));
+        System.out.println(PubDateHeuristicDOMParsingPass2.isPossibleCandidate("2010 black hat ™"));
     }
 
     @Test
