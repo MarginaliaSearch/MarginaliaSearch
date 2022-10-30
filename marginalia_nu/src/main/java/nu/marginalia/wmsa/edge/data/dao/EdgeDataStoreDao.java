@@ -16,6 +16,8 @@ import java.util.Optional;
 public interface EdgeDataStoreDao {
     EdgeId<EdgeDomain> getDomainId(EdgeDomain domain);
 
+    List<BrowseResult> getDomainNeighborsAdjacentCosine(EdgeId<EdgeDomain> domainId, EdgeDomainBlacklist blacklist, int count);
+
     List<BrowseResult> getDomainNeighborsAdjacent(EdgeId<EdgeDomain> domainId, EdgeDomainBlacklist backlist, int count);
 
     List<BrowseResult> getRandomDomains(int count, EdgeDomainBlacklist backlist, int set);

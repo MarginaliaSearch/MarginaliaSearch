@@ -61,39 +61,51 @@ public class BrowseCommand implements SearchCommandInterface {
         String definePrefix = "browse:";
         String word = humanQuery.substring(definePrefix.length()).toLowerCase();
 
-        Set<String> domainHashes = new HashSet<>();
-
         try {
             if ("random".equals(word)) {
-                var results = edgeDataStoreDao.getRandomDomains(25, blacklist, 0);
-
-                results.removeIf(browseResultCleaner.shouldRemoveResultPredicate());
-
-                return new BrowseResultSet(results);
+                return getRandomEntries(0);
             }
             if (word.startsWith("random:")) {
                 int set = Integer.parseInt(word.split(":")[1]);
-
-                var results = edgeDataStoreDao.getRandomDomains(25, blacklist, set);
-
-                results.removeIf(browseResultCleaner.shouldRemoveResultPredicate());
-
-                return new BrowseResultSet(results);
+                return getRandomEntries(set);
             }
             else {
-                var domain = edgeDataStoreDao.getDomainId(new EdgeDomain(word));
-                var neighbors = edgeDataStoreDao.getDomainNeighborsAdjacent(domain, blacklist, 45);
-
-                neighbors.removeIf(browseResultCleaner.shouldRemoveResultPredicate());
-                neighbors.sort(Comparator.comparing(BrowseResult::relatedness).reversed());
-
-                return new BrowseResultSet(neighbors);
+                return getRelatedEntries(word);
             }
         }
         catch (Exception ex) {
             logger.info("No Results");
             return null;
         }
+    }
+
+    private BrowseResultSet getRandomEntries(int set) {
+        var results = edgeDataStoreDao.getRandomDomains(25, blacklist, set);
+
+        results.removeIf(browseResultCleaner.shouldRemoveResultPredicate());
+
+        return new BrowseResultSet(results);
+    }
+
+    private BrowseResultSet getRelatedEntries(String word) {
+        var domain = edgeDataStoreDao.getDomainId(new EdgeDomain(word));
+
+        var neighbors = edgeDataStoreDao.getDomainNeighborsAdjacentCosine(domain, blacklist, 256);
+        neighbors.removeIf(browseResultCleaner.shouldRemoveResultPredicate());
+
+        // If the results are very few, supplement with the alternative shitty algorithm
+        if (neighbors.size() < 25) {
+            Set<BrowseResult> allNeighbors = new HashSet<>(neighbors);
+            allNeighbors.addAll(edgeDataStoreDao.getDomainNeighborsAdjacent(domain, blacklist, 50));
+
+            neighbors.clear();
+            neighbors.addAll(allNeighbors);
+            neighbors.removeIf(browseResultCleaner.shouldRemoveResultPredicate());
+        }
+
+        neighbors.sort(Comparator.comparing(BrowseResult::relatedness).reversed());
+
+        return new BrowseResultSet(neighbors);
     }
 
 }
