@@ -134,9 +134,52 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
     }
 
 
+    public List<BrowseResult> getDomainNeighborsAdjacentCosine(EdgeId<EdgeDomain> domainId, EdgeDomainBlacklist blacklist, int count) {
+        List<BrowseResult> domains = new ArrayList<>(count);
+
+        String q = """
+                        SELECT
+                            EC_DOMAIN.ID,
+                            NV.NEIGHBOR_NAME
+                        FROM EC_NEIGHBORS_VIEW NV
+                        INNER JOIN DATA_DOMAIN_SCREENSHOT ON DATA_DOMAIN_SCREENSHOT.DOMAIN_NAME=NV.NEIGHBOR_NAME
+                        INNER JOIN EC_DOMAIN ON EC_DOMAIN.ID=NV.NEIGHBOR_ID
+                        WHERE NV.DOMAIN_ID=?
+                        GROUP BY NV.NEIGHBOR_ID
+                        ORDER BY NV.RELATEDNESS DESC
+                        """;
+
+        try (var connection = dataSource.getConnection()) {
+            try (var stmt = connection.prepareStatement(q)) {
+                stmt.setFetchSize(count);
+                stmt.setInt(1, domainId.id());
+                stmt.setInt(2, count);
+                var rsp = stmt.executeQuery();
+                while (rsp.next() && domains.size() < count) {
+                    int id = rsp.getInt(1);
+                    String domain = rsp.getString(2);
+
+                    if (!blacklist.isBlacklisted(id)) {
+                        domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id));
+                    }
+                }
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+
+        return domains;
+    }
+
     @Override
     public List<BrowseResult> getDomainNeighborsAdjacent(EdgeId<EdgeDomain> domainId, EdgeDomainBlacklist blacklist, int count) {
         final Set<BrowseResult> domains = new HashSet<>(count*3);
+
+        domains.addAll(getDomainNeighborsAdjacentCosine(domainId, blacklist, count));
+
+        if (domains.size() >= count) {
+            return new ArrayList<>(domains);
+        }
 
         final String q = """
                             SELECT EC_DOMAIN.ID AS NEIGHBOR_ID, DOMAIN_NAME, COUNT(*) AS CNT 
