@@ -177,12 +177,6 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
     public List<BrowseResult> getDomainNeighborsAdjacent(EdgeId<EdgeDomain> domainId, EdgeDomainBlacklist blacklist, int count) {
         final Set<BrowseResult> domains = new HashSet<>(count*3);
 
-        domains.addAll(getDomainNeighborsAdjacentCosine(domainId, blacklist, count));
-
-        if (domains.size() >= count) {
-            return new ArrayList<>(domains);
-        }
-
         final String q = """
                             SELECT EC_DOMAIN.ID AS NEIGHBOR_ID, DOMAIN_NAME, COUNT(*) AS CNT 
                             FROM EC_DOMAIN_NEIGHBORS 
