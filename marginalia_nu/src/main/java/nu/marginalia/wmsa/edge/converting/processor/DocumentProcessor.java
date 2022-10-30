@@ -13,6 +13,8 @@ import nu.marginalia.wmsa.edge.converting.model.DisqualifiedException.Disqualifi
 import nu.marginalia.wmsa.edge.converting.model.ProcessedDocument;
 import nu.marginalia.wmsa.edge.converting.model.ProcessedDocumentDetails;
 import nu.marginalia.wmsa.edge.converting.processor.logic.*;
+import nu.marginalia.wmsa.edge.converting.processor.logic.pubdate.PubDate;
+import nu.marginalia.wmsa.edge.converting.processor.logic.pubdate.PubDateSniffer;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDocument;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDomain;
 import nu.marginalia.wmsa.edge.crawling.model.CrawlerDocumentStatus;
@@ -47,6 +49,7 @@ public class DocumentProcessor {
     private final TitleExtractor titleExtractor;
     private final DocumentKeywordExtractor keywordExtractor;
     private final SummaryExtractor summaryExtractor;
+    private final PubDateSniffer pubDateSniffer;
 
     private static final DocumentValuator documentValuator = new DocumentValuator();
     private static final LanguageFilter languageFilter = new LanguageFilter();
@@ -60,7 +63,8 @@ public class DocumentProcessor {
                              FeatureExtractor featureExtractor,
                              TitleExtractor titleExtractor,
                              DocumentKeywordExtractor keywordExtractor,
-                             SummaryExtractor summaryExtractor)
+                             SummaryExtractor summaryExtractor,
+                             PubDateSniffer pubDateSniffer)
     {
         this.minDocumentLength = minDocumentLength;
         this.minDocumentQuality = minDocumentQuality;
@@ -69,6 +73,7 @@ public class DocumentProcessor {
         this.titleExtractor = titleExtractor;
         this.keywordExtractor = keywordExtractor;
         this.summaryExtractor = summaryExtractor;
+        this.pubDateSniffer = pubDateSniffer;
     }
 
     public ProcessedDocument makeDisqualifiedStub(CrawledDocument crawledDocument) {
@@ -177,6 +182,9 @@ public class DocumentProcessor {
         Document doc = Jsoup.parse(crawledDocument.documentBody);
 
         if (AcceptableAds.hasAcceptableAdsTag(doc)) {
+            // I've never encountered a website where this hasn't been a severe indicator
+            // of spam
+
             throw new DisqualifiedException(DisqualificationReason.ACCEPTABLE_ADS);
         }
 
@@ -204,8 +212,10 @@ public class DocumentProcessor {
         ret.quality = documentValuator.getQuality(crawledDocument, ret.standard, doc, dld);
         ret.hashCode = HashCode.fromString(crawledDocument.documentBodyHash).asLong();
 
+
         KeywordMetadata keywordMetadata = new KeywordMetadata(ret.quality);
 
+        PubDate pubDate;
         EdgePageWordSet words;
         if (shouldDoSimpleProcessing(url, ret)) {
             /* Some documents we'll index, but only superficially. This is a compromise
@@ -215,16 +225,24 @@ public class DocumentProcessor {
             ret.features = Set.of(HtmlFeature.UNKNOWN);
             words = keywordExtractor.extractKeywordsMinimal(dld, keywordMetadata);
             ret.description = "";
+
+            pubDate = pubDateSniffer.getPubDate(crawledDocument.headers, url, doc, ret.standard, false);
         }
         else {
             ret.features = featureExtractor.getFeatures(crawledDomain, doc, dld);
             words = keywordExtractor.extractKeywords(dld, keywordMetadata);
             ret.description = getDescription(doc);
+
+            pubDate = pubDateSniffer.getPubDate(crawledDocument.headers, url, doc, ret.standard, true);
         }
 
-        addMetaWords(ret, url, crawledDomain, words);
+        addMetaWords(ret, url, pubDate, crawledDomain, words);
 
         getLinks(url, ret, doc, words);
+
+        if (pubDate.hasYear()) {
+            ret.pubYear = pubDate.year();
+        }
 
         return new DetailsWithWords(ret, words);
     }
@@ -256,7 +274,7 @@ public class DocumentProcessor {
         return false;
     }
 
-    private void addMetaWords(ProcessedDocumentDetails ret, EdgeUrl url, CrawledDomain domain, EdgePageWordSet words) {
+    private void addMetaWords(ProcessedDocumentDetails ret, EdgeUrl url, PubDate pubDate, CrawledDomain domain, EdgePageWordSet words) {
         List<String> tagWords = new ArrayList<>();
 
         var edgeDomain = url.domain;
@@ -275,6 +293,13 @@ public class DocumentProcessor {
         }
 
         ret.features.stream().map(HtmlFeature::getKeyword).forEach(tagWords::add);
+
+        if (pubDate.year() > 1900) {
+            tagWords.add("year:" + pubDate.year());
+        }
+        if (pubDate.dateIso8601() != null) {
+            tagWords.add("pub:" + pubDate.dateIso8601());
+        }
 
         words.appendWithNoMeta(IndexBlock.Meta, tagWords);
     }

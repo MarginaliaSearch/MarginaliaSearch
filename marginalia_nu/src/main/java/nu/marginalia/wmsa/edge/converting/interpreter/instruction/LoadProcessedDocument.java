@@ -7,6 +7,8 @@ import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeHtmlStandard;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeUrlState;
 
+import javax.annotation.Nullable;
+
 
 public record LoadProcessedDocument(EdgeUrl url,
                                     EdgeUrlState state,
@@ -16,7 +18,8 @@ public record LoadProcessedDocument(EdgeUrl url,
                                     EdgeHtmlStandard standard,
                                     int length,
                                     long hash,
-                                    double quality) implements Instruction
+                                    double quality,
+                                    @Nullable Integer pubYear) implements Instruction
 {
     @Override
     public void apply(Interpreter interpreter) {

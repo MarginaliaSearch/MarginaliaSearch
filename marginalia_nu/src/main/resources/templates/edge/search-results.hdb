@@ -20,7 +20,9 @@
 {{>edge/parts/search-form}}
 
 
+<hr class="w3m-helper" />
 <section class="cards">
+
     {{#if maintenanceMessage}}<section class="card problems onlyscreen"><h2>Maintenance</h2><p class="description">{{maintenanceMessage}}</p></section>{{/if}}
     {{#if evalResult}}<section class="card semantic onlyscreen"><h2>Evaluation</h2><p class="description">{{query}} = {{evalResult}}</p><hr class="w3m-helper" /></section>{{/if}}
     {{#each wiki.entries}}<section class="card semantic onlyscreen"><h2>Encyclopedia</h2><p class="description"><a href="https://encyclopedia.marginalia.nu/wiki/{{.}}"><em>{{.}}</em> Encyclopedia Page</a></p><hr class="w3m-helper" /></section>{{/each}}

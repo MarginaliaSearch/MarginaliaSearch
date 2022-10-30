@@ -5,6 +5,7 @@ import nu.marginalia.wmsa.edge.converting.processor.logic.HtmlFeature;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeHtmlStandard;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Set;
 
@@ -12,6 +13,9 @@ import java.util.Set;
 public class ProcessedDocumentDetails {
     public String title;
     public String description;
+
+    @Nullable
+    public Integer pubYear;
 
     public int length;
     public double quality;
