@@ -8,6 +8,7 @@ import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklist;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.search.command.SearchCommandInterface;
 import nu.marginalia.wmsa.edge.search.command.SearchParameters;
+import nu.marginalia.wmsa.edge.search.model.BrowseResult;
 import nu.marginalia.wmsa.edge.search.model.BrowseResultSet;
 import nu.marginalia.wmsa.edge.search.results.BrowseResultCleaner;
 import nu.marginalia.wmsa.renderer.mustache.MustacheRenderer;
@@ -16,10 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -87,6 +85,7 @@ public class BrowseCommand implements SearchCommandInterface {
                 var neighbors = edgeDataStoreDao.getDomainNeighborsAdjacent(domain, blacklist, 45);
 
                 neighbors.removeIf(browseResultCleaner.shouldRemoveResultPredicate());
+                neighbors.sort(Comparator.comparing(BrowseResult::relatedness).reversed());
 
                 return new BrowseResultSet(neighbors);
             }
