@@ -117,12 +117,12 @@ public class ExplorerService extends Service {
                     NV.NEIGHBOR_NAME,
                     NV.RELATEDNESS,
                     (LV.DOMAIN_ID IS NOT NULL),
-                    (STATE = 'ACTIVE' OR STATE='SOCIAL_MEDIA'),
+                    (STATE = 'ACTIVE' OR STATE='SOCIAL_MEDIA' OR STATE='REDIR'),
                     INDEXED > 0
                 FROM EC_NEIGHBORS_VIEW NV
                 LEFT JOIN EC_NEIGHBORS_VIEW LV ON (NV.NEIGHBOR_ID=LV.DOMAIN_ID)
                 INNER JOIN EC_DOMAIN ON EC_DOMAIN.ID=NV.NEIGHBOR_ID
-                WHERE NV.DOMAIN_ID=?
+                WHERE NV.DOMAIN_ID IN (?,?)
                 GROUP BY NV.NEIGHBOR_ID
                 ORDER BY NV.RELATEDNESS DESC
                 """);
@@ -131,12 +131,12 @@ public class ExplorerService extends Service {
                     NV.DOMAIN_NAME,
                     NV.RELATEDNESS,
                     (LV.NEIGHBOR_ID IS NOT NULL),
-                    (STATE = 'ACTIVE' OR STATE='SOCIAL_MEDIA'),
+                    (STATE = 'ACTIVE' OR STATE='SOCIAL_MEDIA' OR STATE='REDIR'),
                     INDEXED > 0
                 FROM EC_NEIGHBORS_VIEW NV
                 LEFT JOIN EC_NEIGHBORS_VIEW LV ON (NV.DOMAIN_ID=LV.NEIGHBOR_ID)
                 INNER JOIN EC_DOMAIN ON EC_DOMAIN.ID=NV.DOMAIN_ID
-                WHERE NV.NEIGHBOR_ID=?
+                WHERE NV.NEIGHBOR_ID IN (?,?)
                 GROUP BY NV.DOMAIN_ID
                 ORDER BY NV.RELATEDNESS DESC
                 """
@@ -145,6 +145,8 @@ public class ExplorerService extends Service {
              ) {
 
             stmt.setInt(1, domainIdInformation.domainId);
+            stmt.setInt(2, domainIdInformation.aliasId);
+
             var rsp = stmt.executeQuery();
             while (rsp.next()) {
 
@@ -172,6 +174,8 @@ public class ExplorerService extends Service {
             }
 
             stmtRev.setInt(1, domainIdInformation.domainId);
+            stmtRev.setInt(2, domainIdInformation.aliasId);
+
             rsp = stmtRev.executeQuery();
             while (rsp.next()) {
 
@@ -211,22 +215,24 @@ public class ExplorerService extends Service {
 
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                SELECT IFNULL(ALIAS.ID, DOMAIN.ID), DOMAIN.INDEXED>0 OR ALIAS.INDEXED>0, ALIAS.DOMAIN_NAME 
+                SELECT DOMAIN.ID, IFNULL(ALIAS.ID, DOMAIN.ID), DOMAIN.INDEXED>0 OR ALIAS.INDEXED>0, ALIAS.DOMAIN_NAME 
                 FROM EC_DOMAIN DOMAIN 
-                LEFT JOIN EC_DOMAIN ALIAS ON DOMAIN.DOMAIN_ALIAS=ALIAS.ID                
+                LEFT JOIN EC_DOMAIN ALIAS ON DOMAIN.DOMAIN_ALIAS=ALIAS.ID
                 WHERE DOMAIN.DOMAIN_NAME=?
                 """)) {
+
             stmt.setString(1, query);
             var rsp = stmt.executeQuery();
             if (rsp.next()) {
                 return new DomainIdInformation(
                         rsp.getInt(1),
-                        rsp.getBoolean(2),
-                        rsp.getString(3)
+                        rsp.getInt(2),
+                        rsp.getBoolean(3),
+                        rsp.getString(4)
                 );
             }
         }
-        return new DomainIdInformation(-1,  false, null);
+        return new DomainIdInformation(-1, -1,  false, null);
     }
 
     private String trimUrlJunk(String query) {
@@ -245,7 +251,7 @@ public class ExplorerService extends Service {
         return query;
     }
 
-    record DomainIdInformation(int domainId, boolean indexed, String alias) {
+    record DomainIdInformation(int domainId, int aliasId, boolean indexed, String alias) {
         boolean isPresent() {
             return domainId >= 0;
         }
