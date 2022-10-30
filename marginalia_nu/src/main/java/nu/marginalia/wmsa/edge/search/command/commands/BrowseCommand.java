@@ -23,7 +23,6 @@ import java.util.regex.Pattern;
 
 public class BrowseCommand implements SearchCommandInterface {
     private final EdgeDataStoreDao edgeDataStoreDao;
-    private final ScreenshotService screenshotService;
     private final EdgeDomainBlacklist blacklist;
     private final MustacheRenderer<BrowseResultSet> browseResultsRenderer;
     private final BrowseResultCleaner browseResultCleaner;
@@ -32,14 +31,12 @@ public class BrowseCommand implements SearchCommandInterface {
 
     @Inject
     public BrowseCommand(EdgeDataStoreDao edgeDataStoreDao,
-                         ScreenshotService screenshotService,
                          EdgeDomainBlacklist blacklist,
                          RendererFactory rendererFactory,
                          BrowseResultCleaner browseResultCleaner)
             throws IOException
     {
         this.edgeDataStoreDao = edgeDataStoreDao;
-        this.screenshotService = screenshotService;
         this.blacklist = blacklist;
         this.browseResultCleaner = browseResultCleaner;
 
