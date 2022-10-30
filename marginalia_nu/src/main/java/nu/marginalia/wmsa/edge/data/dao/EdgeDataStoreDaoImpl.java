@@ -140,7 +140,8 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
         String q = """
                         SELECT
                             EC_DOMAIN.ID,
-                            NV.NEIGHBOR_NAME
+                            NV.NEIGHBOR_NAME,
+                            NV.RELATEDNESS
                         FROM EC_NEIGHBORS_VIEW NV
                         INNER JOIN DATA_DOMAIN_SCREENSHOT ON DATA_DOMAIN_SCREENSHOT.DOMAIN_NAME=NV.NEIGHBOR_NAME
                         INNER JOIN EC_DOMAIN ON EC_DOMAIN.ID=NV.NEIGHBOR_ID
@@ -158,9 +159,10 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
                 while (rsp.next() && domains.size() < count) {
                     int id = rsp.getInt(1);
                     String domain = rsp.getString(2);
+                    double relatedness = rsp.getDouble(3);
 
                     if (!blacklist.isBlacklisted(id)) {
-                        domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id));
+                        domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id, relatedness));
                     }
                 }
             }
@@ -209,7 +211,7 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
                     String domain = rsp.getString(2);
 
                     if (!blacklist.isBlacklisted(id)) {
-                        domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id));
+                        domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id, 0));
                     }
                 }
             }
@@ -238,7 +240,7 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
                         String domain = rsp.getString(2);
 
                         if (!blacklist.isBlacklisted(id)) {
-                            domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id));
+                            domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id, 0));
                         }
                     }
                 }
@@ -270,7 +272,7 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
                         String domain = rsp.getString(2);
 
                         if (!blacklist.isBlacklisted(id)) {
-                            domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id));
+                            domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id, 0));
                         }
                     }
                 }
@@ -307,7 +309,7 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
                     String domain = rsp.getString(2);
 
                     if (!blacklist.isBlacklisted(id)) {
-                        domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id));
+                        domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id, 0));
                     }
                  }
             }
@@ -343,7 +345,7 @@ public class EdgeDataStoreDaoImpl implements EdgeDataStoreDao {
                     int id = rsp.getInt(1);
                     String domain = rsp.getString(2);
 
-                    ret.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id));
+                    ret.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id, 0));
                 }
             }
         }

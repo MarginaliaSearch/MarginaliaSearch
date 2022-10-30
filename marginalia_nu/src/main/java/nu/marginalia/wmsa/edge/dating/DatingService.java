@@ -169,7 +169,7 @@ public class DatingService extends Service {
 
     @NotNull
     private BrowseResult findViableDomain(DatingSessionObject session, BrowseResult res) {
-        while (!screenshotService.hasScreenshot(new EdgeId<>(res.domainId)) || session.isRecent(res)) {
+        while (!screenshotService.hasScreenshot(new EdgeId<>(res.domainId())) || session.isRecent(res)) {
             res = session.next(edgeDataStoreDao, blacklist);
         }
         return res;

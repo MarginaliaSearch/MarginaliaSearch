@@ -22,7 +22,7 @@ public class BrowseResultCleaner {
     public Predicate<BrowseResult> shouldRemoveResultPredicate() {
         Set<String> domainHashes = new HashSet<>(100);
 
-        return (res) -> !screenshotService.hasScreenshot(new EdgeId<>(res.domainId))
+        return (res) -> !screenshotService.hasScreenshot(new EdgeId<>(res.domainId()))
                      || !domainHashes.add(res.domainHash());
     }
 }
