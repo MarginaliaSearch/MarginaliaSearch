@@ -23,7 +23,8 @@ public class ApiSearchResult {
         this.url = url.url.toString();
         this.title = url.getTitle();
         this.description = url.getDescription();
-        this.quality = url.getTermScore();
+
+        this.quality = sanitizeNaN(url.getTermScore(), -100);
 
         if (url.resultItem != null) {
             var bySet = url.resultItem.scores.stream().collect(Collectors.groupingBy(EdgeSearchResultKeywordScore::set));
@@ -42,5 +43,12 @@ public class ApiSearchResult {
                 details.add(lst);
             }
         }
+    }
+
+    private double sanitizeNaN(double value, double alternative) {
+        if (!Double.isFinite(value)) {
+            return alternative;
+        }
+        return value;
     }
 }
