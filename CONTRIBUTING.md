@@ -26,13 +26,13 @@ once per 6-8 weeks, coinciding with the crawling
 cycle. Where model-breaking changes and changes to
 the crawler can be introduced. 
 
-## Quick Set Up
+## Running and set-up
 
-There is a [Set Up Guide](https://git.marginalia.nu/marginalia/marginalia.nu/wiki/Setup/Search)
-in the wiki. It has a small tendency to oxidize rather
-rapidly since the project currently does not have a
-lot of contributors to test it. If you find a problem
-with the guide, email <kontakt@marginalia.nu>.
+There is a complementary project, wmsa.local, which
+contains scripts and instructions for running this
+code base. 
+
+[https://git.marginalia.nu/marginalia/wmsa.local](https://git.marginalia.nu/marginalia/wmsa.local)
 
 ## Documentation
 
