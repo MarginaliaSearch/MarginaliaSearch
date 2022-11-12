@@ -23,7 +23,7 @@ Documentation is a work in progress. See the [wiki](https://git.marginalia.nu/ma
 
 ## Contributing
 
-The project is still being set up, but if you are interested in contributing, please contact me. 
+[CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Supporting
 
