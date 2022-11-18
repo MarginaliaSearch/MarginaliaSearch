@@ -23,15 +23,13 @@ import java.util.*;
 @Singleton
 public class QueryFactory {
 
-    private final LanguageModels lm;
-    private final TermFrequencyDict dict;
     private final EnglishDictionary englishDictionary;
-    private final NGramBloomFilter nGramBloomFilter;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final SearchResultValuator searchResultValuator;
-    private NearQueryProcessor nearQueryProcessor;
+    private final NearQueryProcessor nearQueryProcessor;
 
     private static final int RETAIN_QUERY_VARIANT_COUNT = 5;
+    private final ThreadLocal<QueryVariants> queryVariants;
 
     @Inject
     public QueryFactory(LanguageModels lm,
@@ -40,17 +38,16 @@ public class QueryFactory {
                         NGramBloomFilter nGramBloomFilter,
                         SearchResultValuator searchResultValuator,
                         NearQueryProcessor nearQueryProcessor) {
-        this.lm = lm;
-        this.dict = dict;
 
         this.englishDictionary = englishDictionary;
-        this.nGramBloomFilter = nGramBloomFilter;
         this.searchResultValuator = searchResultValuator;
         this.nearQueryProcessor = nearQueryProcessor;
+
+        this.queryVariants = ThreadLocal.withInitial(() -> new QueryVariants(lm, dict, nGramBloomFilter, englishDictionary));
     }
 
     public QueryParser getParser() {
-        return new QueryParser(englishDictionary, new QueryVariants(lm ,dict, nGramBloomFilter, englishDictionary));
+        return new QueryParser(englishDictionary, queryVariants.get());
     }
 
     public EdgeSearchQuery createQuery(EdgeUserSearchParameters params) {
@@ -219,7 +216,6 @@ public class QueryFactory {
         EdgeSearchSpecification specs = specsBuilder.build();
 
         return new EdgeSearchQuery(specs, searchTermsHuman, domain);
-
     }
 
     private String normalizeDomainName(String str) {
