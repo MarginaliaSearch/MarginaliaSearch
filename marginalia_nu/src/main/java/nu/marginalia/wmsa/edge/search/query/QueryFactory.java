@@ -204,6 +204,7 @@ public class QueryFactory {
                 .timeoutMs(250)
                 .fetchSize(4096)
                 .quality(qualityLimit)
+                .rank(rankLimit)
                 .domains(domains);
 
         if (domain != null) {
