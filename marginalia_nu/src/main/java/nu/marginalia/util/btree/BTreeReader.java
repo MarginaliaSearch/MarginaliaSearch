@@ -52,7 +52,9 @@ public class BTreeReader {
     public void retainEntries(BTreeQueryBuffer buffer) {
         if (header.layers() == 0) {
             BTreePointer pointer = new BTreePointer(header);
-            pointer.retainData(buffer);
+            while (buffer.hasMore()) {
+                pointer.retainData(buffer);
+            }
         }
         retainSingle(buffer);
     }
@@ -61,7 +63,9 @@ public class BTreeReader {
     public void rejectEntries(BTreeQueryBuffer buffer) {
         if (header.layers() == 0) {
             BTreePointer pointer = new BTreePointer(header);
-            pointer.rejectData(buffer);
+            while (buffer.hasMore()) {
+                pointer.rejectData(buffer);
+            }
         }
         rejectSingle(buffer);
     }
