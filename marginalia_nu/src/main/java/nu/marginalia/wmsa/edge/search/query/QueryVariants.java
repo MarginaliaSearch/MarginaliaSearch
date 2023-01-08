@@ -66,19 +66,22 @@ public class QueryVariants {
         final List<QueryVariant> faithful = new ArrayList<>();
         final List<QueryVariant> alternative = new ArrayList<>();
 
+        final List<Token> nonLiterals = new ArrayList<>();
+
         public boolean isEmpty() {
-            return faithful.isEmpty() && alternative.isEmpty();
+            return faithful.isEmpty() && alternative.isEmpty() && nonLiterals.isEmpty();
         }
     }
 
     public QueryVariantSet getQueryVariants(List<Token> query) {
-        final String queryAsString = joinQuery(query);
+        final JoinedQueryAndNonLiteralTokens joinedQuery = joinQuery(query);
 
         final TreeMap<Integer, List<WordSpan>> byStart = new TreeMap<>();
 
-        logger.debug("QAS: {}", queryAsString);
+        logger.debug("Q: {}", query);
+        logger.debug("QAS: {}", joinedQuery);
 
-        var sentence = sentenceExtractor.extractSentence(queryAsString);
+        var sentence = sentenceExtractor.extractSentence(joinedQuery.joinedQuery);
 
         for (int i = 0; i < sentence.posTags.length; i++) {
             if (sentence.posTags[i].startsWith("N") || sentence.posTags[i].startsWith("V")) {
@@ -149,6 +152,8 @@ public class QueryVariants {
 
         returnValue.faithful.sort(Comparator.comparing(QueryVariant::getValue));
         returnValue.alternative.sort(Comparator.comparing(QueryVariant::getValue));
+
+        returnValue.nonLiterals.addAll(joinedQuery.nonLiterals);
 
         return returnValue;
     }
@@ -327,39 +332,6 @@ public class QueryVariants {
         return goodSpans;
     }
 
-    private List<List<String>> swapTerms(List<Word> span) {
-        List<List<String>> ret = new ArrayList<>();
-
-        for (int i = 0; i < span.size()-1; i++) {
-            var a = span.get(i);
-            var b = span.get(i+1);
-
-            var stemmed = b.stemmed + "_" + a.stemmed;
-
-            if (dict.getTermFreqStemmed(stemmed) > 0) {
-                List<String> asTokens = new ArrayList<>();
-
-                for (int j = 0; j < i; j++) {
-                    var word = span.get(j).word;
-                    asTokens.add(word);
-                }
-                {
-                    var word = b.word + "_" + a.word;
-                    asTokens.add(word);
-                }
-                for (int j = i+2; j < span.size(); j++) {
-                    var word = span.get(j).word;
-                    asTokens.add(word);
-                }
-
-                ret.add(asTokens);
-            }
-        }
-
-        return ret;
-    }
-
-
     private List<List<String>> joinTerms(List<Word> span) {
         List<List<String>> ret = new ArrayList<>();
 
@@ -393,13 +365,21 @@ public class QueryVariants {
         return ret;
     }
 
-    private String joinQuery(List<Token> query) {
+    private JoinedQueryAndNonLiteralTokens joinQuery(List<Token> query) {
         StringJoiner s = new StringJoiner(" ");
+        List<Token> leftovers = new ArrayList<>(5);
 
         for (var t : query) {
-            s.add(t.displayStr);
+            if (t.type == TokenType.LITERAL_TERM) {
+                s.add(t.displayStr);
+            }
+            else {
+                leftovers.add(t);
+            }
         }
 
-        return s.toString();
+        return new JoinedQueryAndNonLiteralTokens(s.toString(), leftovers);
     }
+
+    record JoinedQueryAndNonLiteralTokens(String joinedQuery, List<Token> nonLiterals) {}
 }

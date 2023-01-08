@@ -7,7 +7,7 @@ import gnu.trove.set.hash.TIntHashSet;
 import lombok.SneakyThrows;
 import nu.marginalia.util.AndCardIntSet;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
-import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDaoImpl;
+import nu.marginalia.wmsa.edge.dbcommon.EdgeDataStoreDaoImpl;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.id.EdgeId;
 import org.roaringbitmap.RoaringBitmap;

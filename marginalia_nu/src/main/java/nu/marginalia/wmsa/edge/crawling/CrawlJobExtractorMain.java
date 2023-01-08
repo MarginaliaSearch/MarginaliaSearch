@@ -8,7 +8,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.wmsa.client.GsonFactory;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
 import nu.marginalia.wmsa.edge.crawling.model.CrawlingSpecification;
-import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklistImpl;
+import nu.marginalia.wmsa.edge.dbcommon.EdgeDomainBlacklistImpl;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import org.mariadb.jdbc.Driver;
 

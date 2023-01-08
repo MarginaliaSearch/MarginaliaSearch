@@ -4,8 +4,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.edge.index.client.EdgeIndexClient;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
+import nu.marginalia.wmsa.edge.index.model.QueryStrategy;
 import nu.marginalia.wmsa.edge.model.search.*;
+import nu.marginalia.wmsa.edge.model.search.domain.SpecificationLimit;
 import nu.marginalia.wmsa.edge.search.model.EdgeSearchProfile;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeSearchQuery;
 import nu.marginalia.wmsa.edge.search.results.SearchResultDecorator;
@@ -32,12 +33,30 @@ public class EdgeSearchQueryIndexService {
                 .thenComparing(EdgeUrlDetails::getId);
     }
 
-    public List<EdgeUrlDetails> performDumbQuery(Context ctx, EdgeSearchProfile profile, IndexBlock block, int limitPerDomain, int limitTotal, String... termsInclude) {
+    public List<EdgeUrlDetails> performDumbQuery(Context ctx, EdgeSearchProfile profile, int limitPerDomain, int limitTotal, String... termsInclude) {
         List<EdgeSearchSubquery> sqs = new ArrayList<>();
 
-        sqs.add(new EdgeSearchSubquery(Arrays.asList(termsInclude), Collections.emptyList(), Collections.emptyList(), block));
+        sqs.add(new EdgeSearchSubquery(
+                Arrays.asList(termsInclude),
+                Collections.emptyList(),
+                Collections.emptyList(),
+                Collections.emptyList()
+        ));
 
-        EdgeSearchSpecification specs = new EdgeSearchSpecification(profile.buckets, sqs, Collections.emptyList(), limitPerDomain, limitTotal, "", 150, 2048, null, null);
+        var specs = EdgeSearchSpecification.builder()
+                .subqueries(sqs)
+                .domains(Collections.emptyList())
+                .searchSetIdentifier(profile.searchSetIdentifier)
+                .limitByDomain(limitPerDomain)
+                .limitTotal(limitTotal)
+                .humanQuery("")
+                .timeoutMs(150)
+                .fetchSize(2048)
+                .year(SpecificationLimit.none())
+                .size(SpecificationLimit.none())
+                .quality(SpecificationLimit.none())
+                .queryStrategy(QueryStrategy.AUTO)
+                .build();
 
         return performQuery(ctx, new EdgeSearchQuery(specs));
     }

@@ -4,19 +4,22 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import lombok.SneakyThrows;
+import nu.marginalia.util.array.LongArray;
 import nu.marginalia.util.dict.DictionaryHashMap;
-import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklist;
-import nu.marginalia.wmsa.edge.index.conversion.ConversionUnnecessaryException;
-import nu.marginalia.wmsa.edge.index.conversion.SearchIndexConverter;
-import nu.marginalia.wmsa.edge.index.conversion.SearchIndexPartitioner;
-import nu.marginalia.wmsa.edge.index.conversion.SearchIndexPreconverter;
-import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalWriterImpl;
+import nu.marginalia.wmsa.edge.dbcommon.EdgeDomainBlacklist;
 import nu.marginalia.wmsa.edge.index.lexicon.KeywordLexicon;
 import nu.marginalia.wmsa.edge.index.lexicon.KeywordLexiconReadOnlyView;
 import nu.marginalia.wmsa.edge.index.lexicon.journal.KeywordLexiconJournal;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
-import nu.marginalia.wmsa.edge.index.reader.SearchIndex;
-import nu.marginalia.wmsa.edge.index.reader.SearchIndexReader;
+import nu.marginalia.wmsa.edge.index.postings.SearchIndex;
+import nu.marginalia.wmsa.edge.index.postings.SearchIndexReader;
+import nu.marginalia.wmsa.edge.index.postings.forward.ForwardIndexConverter;
+import nu.marginalia.wmsa.edge.index.postings.forward.ForwardIndexReader;
+import nu.marginalia.wmsa.edge.index.postings.journal.reader.SearchIndexJournalReaderSingleFile;
+import nu.marginalia.wmsa.edge.index.postings.journal.writer.SearchIndexJournalWriterImpl;
+import nu.marginalia.wmsa.edge.index.postings.reverse.ReverseIndexConverter;
+import nu.marginalia.wmsa.edge.index.postings.reverse.ReverseIndexPrioReader;
+import nu.marginalia.wmsa.edge.index.postings.reverse.ReverseIndexPriorityParameters;
+import nu.marginalia.wmsa.edge.index.postings.reverse.ReverseIndexReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,12 +28,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.Callable;
-
-import static nu.marginalia.wmsa.edge.index.EdgeIndexService.DYNAMIC_BUCKET_LENGTH;
 
 @Singleton
 public class IndexServicesFactory {
@@ -41,44 +39,55 @@ public class IndexServicesFactory {
 
     private final PartitionedDataFile writerIndexFile;
     private final RootDataFile keywordLexiconFile;
-    private final DoublePartitionedDataFile preconverterOutputFile;
-    private final DoublePartitionedDataFile indexReadWordsFile;
-    private final DoublePartitionedDataFile indexReadUrlsFile;
-    private final DoublePartitionedDataFile indexWriteWordsFile;
-    private final DoublePartitionedDataFile indexWriteUrlsFile;
+    private final PartitionedDataFile fwdIndexDocId;
+    private final PartitionedDataFile fwdIndexDocData;
+    private final PartitionedDataFile revIndexDoc;
+    private final PartitionedDataFile revIndexWords;
+
+    private final PartitionedDataFile revPrioIndexDoc;
+    private final PartitionedDataFile revPrioIndexWords;
+
     private volatile static KeywordLexicon keywordLexicon;
     private final Long dictionaryHashMapSize;
-    private final SearchIndexPartitioner partitioner;
 
+    private final Path searchSetsBase;
+
+    int LIVE_PART = 0;
+
+    int NEXT_PART = 1;
     @Inject
     public IndexServicesFactory(
             @Named("tmp-file-dir") Path tmpFileDir,
             @Named("partition-root-slow") Path partitionRootSlow,
-            @Named("partition-root-slow-tmp") Path partitionRootSlowTmp,
             @Named("partition-root-fast") Path partitionRootFast,
-            @Named("edge-writer-page-index-file") String writerIndexFile,
-            @Named("edge-writer-dictionary-file") String keywordLexiconFile,
-            @Named("edge-index-read-words-file") String indexReadWordsFile,
-            @Named("edge-index-read-urls-file") String indexReadUrlsFile,
-            @Named("edge-index-write-words-file") String indexWriteWordsFile,
-            @Named("edge-index-write-urls-file") String indexWriteUrlsFile,
             @Named("edge-dictionary-hash-map-size") Long dictionaryHashMapSize,
-            EdgeDomainBlacklist domainBlacklist,
-            SearchIndexPartitioner partitioner
-            ) {
+            EdgeDomainBlacklist domainBlacklist
+            ) throws IOException {
 
         this.tmpFileDir = tmpFileDir;
         this.dictionaryHashMapSize = dictionaryHashMapSize;
         this.domainBlacklist = domainBlacklist;
 
-        this.writerIndexFile = new PartitionedDataFile(partitionRootSlow, writerIndexFile);
-        this.keywordLexiconFile = new RootDataFile(partitionRootSlow, keywordLexiconFile);
-        this.indexReadWordsFile = new DoublePartitionedDataFile(partitionRootFast, indexReadWordsFile);
-        this.indexReadUrlsFile = new DoublePartitionedDataFile(partitionRootFast, indexReadUrlsFile);
-        this.indexWriteWordsFile = new DoublePartitionedDataFile(partitionRootFast, indexWriteWordsFile);
-        this.indexWriteUrlsFile = new DoublePartitionedDataFile(partitionRootFast, indexWriteUrlsFile);
-        this.preconverterOutputFile = new DoublePartitionedDataFile(partitionRootSlowTmp, "preconverted.dat");
-        this.partitioner = partitioner;
+        this.writerIndexFile = new PartitionedDataFile(partitionRootSlow, "page-index.dat");
+        this.keywordLexiconFile = new RootDataFile(partitionRootSlow, "dictionary.dat");
+
+        fwdIndexDocId = new PartitionedDataFile(partitionRootFast, "fwd-doc-id.dat");
+        fwdIndexDocData = new PartitionedDataFile(partitionRootFast, "fwd-doc-data.dat");
+
+        revIndexDoc = new PartitionedDataFile(partitionRootFast, "rev-doc.dat");
+        revIndexWords = new PartitionedDataFile(partitionRootFast, "rev-words.dat");
+
+        revPrioIndexDoc = new PartitionedDataFile(partitionRootFast, "rev-prio-doc.dat");
+        revPrioIndexWords = new PartitionedDataFile(partitionRootFast, "rev-prio-words.dat");
+
+        searchSetsBase = partitionRootSlow.resolve("search-sets");
+        if (!Files.isDirectory(searchSetsBase)) {
+            Files.createDirectory(searchSetsBase);
+        }
+    }
+
+    public Path getSearchSetsBase() {
+        return searchSetsBase;
     }
 
     public SearchIndexJournalWriterImpl getIndexWriter(int idx) {
@@ -89,8 +98,7 @@ public class IndexServicesFactory {
     public KeywordLexicon getKeywordLexicon() {
         if (keywordLexicon == null) {
             final var journal = new KeywordLexiconJournal(keywordLexiconFile.get());
-            keywordLexicon = new KeywordLexicon(journal,
-                    new DictionaryHashMap(dictionaryHashMapSize));
+            keywordLexicon = new KeywordLexicon(journal, new DictionaryHashMap(dictionaryHashMapSize));
         }
         return keywordLexicon;
     }
@@ -101,85 +109,105 @@ public class IndexServicesFactory {
 
     }
 
-    public void convertIndex(int id, IndexBlock block) throws ConversionUnnecessaryException, IOException {
-        var converter = new SearchIndexConverter(block, id, tmpFileDir,
-                preconverterOutputFile.get(id, block),
-                indexWriteWordsFile.get(id, block),
-                indexWriteUrlsFile.get(id, block),
-                partitioner,
-                domainBlacklist
-                );
+    public void convertIndex() throws IOException {
+        convertForwardIndex();
+        convertFullReverseIndex();
+        convertPriorityReverseIndex();
+
+
+    }
+
+    private void convertFullReverseIndex() throws IOException {
+
+        logger.info("Converting full reverse index");
+
+        var longArray = LongArray.mmapRead(writerIndexFile.get(0).toPath());
+        var journalReader = new SearchIndexJournalReaderSingleFile(longArray);
+        var converter = new ReverseIndexConverter(tmpFileDir,
+                journalReader,
+                revIndexWords.get(NEXT_PART).toPath(),
+                revIndexDoc.get(NEXT_PART).toPath());
+
         converter.convert();
     }
 
-    @SneakyThrows
-    public SearchIndexPreconverter getIndexPreconverter() {
-        Map<SearchIndexPreconverter.Shard, File> shards = new HashMap<>();
+    private void convertPriorityReverseIndex() throws IOException {
 
-        for (int index = 0; index < (DYNAMIC_BUCKET_LENGTH + 1); index++) {
-            for (IndexBlock block : IndexBlock.values()) {
-                shards.put(new SearchIndexPreconverter.Shard(index, block.ordinal()), getPreconverterOutputFile(index, block));
-            }
-        }
+        logger.info("Converting priority reverse index");
 
-        return new SearchIndexPreconverter(writerIndexFile.get(0),
-                shards,
-                partitioner,
-                domainBlacklist
+
+        var longArray = LongArray.mmapRead(writerIndexFile.get(0).toPath());
+
+        var journalReader = new SearchIndexJournalReaderSingleFile(longArray, null, ReverseIndexPriorityParameters::filterPriorityRecord);
+
+        var converter = new ReverseIndexConverter(tmpFileDir,
+                journalReader,
+                revPrioIndexWords.get(NEXT_PART).toPath(),
+                revPrioIndexDoc.get(NEXT_PART).toPath());
+
+        converter.convert();
+    }
+
+    private void convertForwardIndex() throws IOException {
+        logger.info("Converting forward index data");
+
+        new ForwardIndexConverter(tmpFileDir,
+                writerIndexFile.get(0),
+                fwdIndexDocId.get(NEXT_PART).toPath(),
+                fwdIndexDocData.get(NEXT_PART).toPath())
+                .convert();
+    }
+
+
+    public ReverseIndexReader getReverseIndexReader() throws IOException {
+        return new ReverseIndexReader(
+                revIndexWords.get(LIVE_PART).toPath(),
+                revIndexDoc.get(LIVE_PART).toPath());
+    }
+    public ReverseIndexPrioReader getReverseIndexPrioReader() throws IOException {
+        return new ReverseIndexPrioReader(
+                revPrioIndexWords.get(LIVE_PART).toPath(),
+                revPrioIndexDoc.get(LIVE_PART).toPath());
+    }
+    public ForwardIndexReader getForwardIndexReader() throws IOException {
+        return new ForwardIndexReader(
+                fwdIndexDocId.get(LIVE_PART).toPath(),
+                fwdIndexDocData.get(LIVE_PART).toPath()
         );
     }
 
-    private File getPreconverterOutputFile(int index, IndexBlock block) {
-        return preconverterOutputFile.get(index, block);
-    }
-
-    @SneakyThrows
-    public SearchIndexReader getIndexReader(int id) {
-        EnumMap<IndexBlock, SearchIndex> indexMap = new EnumMap<>(IndexBlock.class);
-        for (IndexBlock block : IndexBlock.values()) {
-            try {
-                indexMap.put(block, createSearchIndex(id, block));
-            }
-            catch (Exception ex) {
-                logger.error("Could not create index {}-{} ({})", id, block, ex.getMessage());
-            }
-        }
-        return new SearchIndexReader(indexMap);
-    }
-
-    private SearchIndex createSearchIndex(int bucketId, IndexBlock block) {
-        try {
-            return new SearchIndex("IndexReader"+bucketId+":"+ block.name(),
-                    indexReadUrlsFile.get(bucketId, block),
-                    indexReadWordsFile.get(bucketId, block));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public Callable<Boolean> switchFilesJob(int id) {
+    public Callable<Boolean> switchFilesJob() {
         return () -> {
 
-            for (var block : IndexBlock.values()) {
-                if (Files.exists(indexWriteWordsFile.get(id, block).toPath()) &&
-                        Files.exists(indexWriteUrlsFile.get(id, block).toPath())) {
-                    Files.move(
-                            indexWriteWordsFile.get(id, block).toPath(),
-                            indexReadWordsFile.get(id, block).toPath(),
-                            StandardCopyOption.REPLACE_EXISTING);
-                    Files.move(
-                            indexWriteUrlsFile.get(id, block).toPath(),
-                            indexReadUrlsFile.get(id, block).toPath(),
-                            StandardCopyOption.REPLACE_EXISTING);
-                }
-            }
+            switchFile(revIndexDoc.get(NEXT_PART).toPath(), revIndexDoc.get(LIVE_PART).toPath());
+            switchFile(revIndexWords.get(NEXT_PART).toPath(), revIndexWords.get(LIVE_PART).toPath());
+
+            switchFile(revPrioIndexDoc.get(NEXT_PART).toPath(), revPrioIndexDoc.get(LIVE_PART).toPath());
+            switchFile(revPrioIndexWords.get(NEXT_PART).toPath(), revPrioIndexWords.get(LIVE_PART).toPath());
+
+            switchFile(fwdIndexDocId.get(NEXT_PART).toPath(), fwdIndexDocId.get(LIVE_PART).toPath());
+            switchFile(fwdIndexDocData.get(NEXT_PART).toPath(), fwdIndexDocData.get(LIVE_PART).toPath());
 
             return true;
         };
     }
 
-    public EdgeIndexBucket createIndexBucket(int id) {
-        return new EdgeIndexBucket(this, new EdgeIndexControl(this), id);
+    public void switchFile(Path from, Path to) throws IOException {
+        if (Files.exists(from)) {
+            Files.move(from, to, StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
+    public SearchIndex createIndexBucket() {
+        return new SearchIndex(this, new EdgeIndexControl(this));
+    }
+
+    public SearchIndexReader getSearchIndexReader() throws IOException {
+        return new SearchIndexReader(
+                getForwardIndexReader(),
+                getReverseIndexReader(),
+                getReverseIndexPrioReader()
+        );
     }
 }
 
@@ -212,30 +240,6 @@ class PartitionedDataFile {
         if (!partitionDir.toFile().exists()) {
             partitionDir.toFile().mkdir();
         }
-        return partitionDir.resolve(pattern).toFile();
-    }
-}
-
-class DoublePartitionedDataFile {
-    private final Path partition;
-    private final String pattern;
-
-    DoublePartitionedDataFile(Path partition, String pattern) {
-        this.partition = partition;
-        this.pattern = pattern;
-    }
-
-    public File get(Object id, Object id2) {
-        Path partitionDir = partition.resolve(id.toString());
-
-        if (!partitionDir.toFile().exists()) {
-            partitionDir.toFile().mkdir();
-        }
-        partitionDir = partitionDir.resolve(id2.toString());
-        if (!partitionDir.toFile().exists()) {
-            partitionDir.toFile().mkdir();
-        }
-
         return partitionDir.resolve(pattern).toFile();
     }
 

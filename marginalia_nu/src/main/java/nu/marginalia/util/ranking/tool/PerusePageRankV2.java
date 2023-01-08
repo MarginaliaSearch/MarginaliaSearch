@@ -14,7 +14,7 @@ import nu.marginalia.util.ranking.RankingAlgorithm;
 import nu.marginalia.util.ranking.RankingDomainData;
 import nu.marginalia.util.ranking.RankingDomainFetcher;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
-import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklistImpl;
+import nu.marginalia.wmsa.edge.dbcommon.EdgeDomainBlacklistImpl;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

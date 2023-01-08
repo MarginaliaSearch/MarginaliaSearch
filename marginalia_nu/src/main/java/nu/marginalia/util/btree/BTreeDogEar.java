@@ -1,8 +1,8 @@
 package nu.marginalia.util.btree;
 
+import nu.marginalia.util.array.LongArray;
 import nu.marginalia.util.btree.model.BTreeContext;
 import nu.marginalia.util.btree.model.BTreeHeader;
-import nu.marginalia.util.multimap.MultimapFileLongSlice;
 
 /*
  * End-of-page mark that's used as a sentinel to verify that
@@ -12,14 +12,16 @@ import nu.marginalia.util.multimap.MultimapFileLongSlice;
  */
 public class BTreeDogEar {
 
-    private MultimapFileLongSlice sentinelSlice;
+    private LongArray sentinelSlice;
 
-    public BTreeDogEar(BTreeContext ctx, BTreeHeader header, MultimapFileLongSlice base) {
+    public BTreeDogEar(BTreeContext ctx, BTreeHeader header, LongArray base) {
         if (header.numEntries() > 3) {
-            sentinelSlice = base.atOffset((long) header.numEntries() * ctx.entrySize() - 3);
-            sentinelSlice.put(0, 4L);
-            sentinelSlice.put(1, 5L);
-            sentinelSlice.put(2, 1L);
+            sentinelSlice = base.range(
+                    (long) header.numEntries() * ctx.entrySize() - 3,
+                    (long) header.numEntries() * ctx.entrySize());
+            sentinelSlice.set(0, 4L);
+            sentinelSlice.set(1, 5L);
+            sentinelSlice.set(2, 1L);
         }
     }
 

@@ -9,8 +9,6 @@ import nu.marginalia.wmsa.configuration.module.ConfigurationModule;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
 import nu.marginalia.wmsa.configuration.server.Initialization;
 
-import java.io.IOException;
-
 public class EdgeIndexMain extends MainClass {
     private final EdgeIndexService service;
 
@@ -23,7 +21,7 @@ public class EdgeIndexMain extends MainClass {
         init(ServiceDescriptor.EDGE_INDEX, args);
 
         Injector injector = Guice.createInjector(
-                new EdgeTablesModule(),
+                new EdgeIndexTablesModule(),
                 new EdgeIndexModule(),
                 new DatabaseModule(),
                 new ConfigurationModule()

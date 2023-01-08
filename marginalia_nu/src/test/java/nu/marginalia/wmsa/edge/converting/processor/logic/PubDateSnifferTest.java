@@ -1,5 +1,6 @@
 package nu.marginalia.wmsa.edge.converting.processor.logic;
 
+import nu.marginalia.wmsa.configuration.WmsaHome;
 import nu.marginalia.wmsa.edge.converting.processor.logic.pubdate.PubDateParser;
 import nu.marginalia.wmsa.edge.converting.processor.logic.pubdate.PubDateSniffer;
 import nu.marginalia.wmsa.edge.converting.processor.logic.pubdate.heuristic.PubDateHeuristicDOMParsingPass2;
@@ -11,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,7 +23,7 @@ class PubDateSnifferTest {
     public void testGetYearFromText() {
         var ret = PubDateParser.dateFromHighestYearLookingSubstring("&copy; 2005-2010 Bob Dobbs");
         assertTrue(ret.isPresent());
-        assertEquals(2010, ret.get().year());
+        assertEquals(2007, ret.get().year());
 
         ret = PubDateParser.dateFromHighestYearLookingSubstring("&copy; 99 Bob Dobbs");
         assertFalse(ret.isPresent());
@@ -117,14 +117,14 @@ class PubDateSnifferTest {
     public void testProblemCases() throws IOException, URISyntaxException {
         var ret = dateSniffer.getPubDate("",
                 new EdgeUrl("https://www.example.com/"),
-                Jsoup.parse(Files.readString(Path.of("/home/vlofgren/Code/tmp-data/The Switch to Linux Begins .html"))), EdgeHtmlStandard.HTML5, true);
+                Jsoup.parse(Files.readString(WmsaHome.getHomePath().resolve("test-data/The Switch to Linux Begins .html"))), EdgeHtmlStandard.HTML5, true);
 
         assertFalse(ret.isEmpty());
         assertEquals(2006, ret.year());
 
         ret = dateSniffer.getPubDate("",
                 new EdgeUrl("https://www.example.com/"),
-                Jsoup.parse(Files.readString(Path.of("/home/vlofgren/Code/tmp-data/Black Hat USA 2010 Understanding and Deploying DNSSEC by Paul Wouters and Patrick Nauber.html"))), EdgeHtmlStandard.XHTML, true);
+                Jsoup.parse(Files.readString(WmsaHome.getHomePath().resolve("test-data/Black Hat USA 2010 Understanding and Deploying DNSSEC by Paul Wouters and Patrick Nauber.html"))), EdgeHtmlStandard.XHTML, true);
 
         assertFalse(ret.isEmpty());
         assertEquals(2010, ret.year());

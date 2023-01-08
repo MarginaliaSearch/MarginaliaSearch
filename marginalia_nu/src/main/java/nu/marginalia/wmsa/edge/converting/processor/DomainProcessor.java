@@ -2,43 +2,33 @@ package nu.marginalia.wmsa.edge.converting.processor;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
-import nu.marginalia.wmsa.edge.converting.model.DisqualifiedException;
+import nu.marginalia.util.StringPool;
 import nu.marginalia.wmsa.edge.converting.model.ProcessedDomain;
-import nu.marginalia.wmsa.edge.converting.processor.logic.CommonKeywordExtractor;
 import nu.marginalia.wmsa.edge.converting.processor.logic.InternalLinkGraph;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDocument;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDomain;
 import nu.marginalia.wmsa.edge.crawling.model.CrawlerDomainStatus;
-import nu.marginalia.wmsa.edge.index.model.EdgePageWordFlags;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
-import nu.marginalia.wmsa.edge.index.model.IndexBlockType;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static nu.marginalia.wmsa.edge.crawling.model.CrawlerDocumentStatus.BAD_CANONICAL;
 
 public class DomainProcessor {
-    private static final CommonKeywordExtractor commonKeywordExtractor = new CommonKeywordExtractor();
-
     private final DocumentProcessor documentProcessor;
-    private final Double minAvgDocumentQuality;
-
-
+    private final SiteWords siteWords;
     @Inject
     public DomainProcessor(DocumentProcessor documentProcessor,
-                           @Named("min-avg-document-quality") Double minAvgDocumentQuality
-                           ) {
+                           SiteWords siteWords) {
         this.documentProcessor = documentProcessor;
-        this.minAvgDocumentQuality = minAvgDocumentQuality;
+        this.siteWords = siteWords;
     }
 
     public ProcessedDomain process(CrawledDomain crawledDomain) {
         var ret = new ProcessedDomain();
+
 
         ret.domain = new EdgeDomain(crawledDomain.domain);
         ret.ip = crawledDomain.ip;
@@ -52,35 +42,37 @@ public class DomainProcessor {
 
             fixBadCanonicalTags(crawledDomain.doc);
 
-            InternalLinkGraph internalLinkGraph = new InternalLinkGraph();
+            StringPool stringPool = new StringPool(1000 + 100 * crawledDomain.doc.size());
 
-            DocumentDisqualifier disqualifier = new DocumentDisqualifier();
             for (var doc : crawledDomain.doc) {
-                if (disqualifier.isQualified()) {
-                    var processedDoc = documentProcessor.process(doc, crawledDomain);
+                var processedDoc = documentProcessor.process(doc, crawledDomain);
 
-                    if (processedDoc.url != null) {
-                        ret.documents.add(processedDoc);
+                if (processedDoc.words != null) {
+                    // The word data is extremely redundant, and may encompass something like
+                    // 5,000,000 words per domain (and multiple domains are processed at the same time).
 
-                        internalLinkGraph.accept(processedDoc);
-
-                        processedDoc.quality().ifPresent(disqualifier::offer);
-                    }
-                    else if ("LANGUAGE".equals(processedDoc.stateReason)) {
-                        disqualifier.offer(-100);
-                    }
+                    processedDoc.words.internalize(stringPool::internalize);
                 }
-                else { // Short-circuit processing if quality is too low
-                    var stub = documentProcessor.makeDisqualifiedStub(doc);
-                    stub.stateReason = DisqualifiedException.DisqualificationReason.SHORT_CIRCUIT.toString();
-                    if (stub.url != null) {
-                        ret.documents.add(stub);
-                    }
+
+                if (processedDoc.url != null) {
+                    ret.documents.add(processedDoc);
                 }
+
             }
 
-            flagCommonSiteWords(ret);
-            flagAdjacentSiteWords(internalLinkGraph, ret);
+            stringPool.flush();
+
+            InternalLinkGraph internalLinkGraph = new InternalLinkGraph();
+
+            ret.documents.forEach(internalLinkGraph::accept);
+            ret.documents.forEach(doc -> {
+                if (doc.details != null && doc.details.metadata != null) {
+                    doc.details.metadata = doc.details.metadata.withSize(internalLinkGraph.numKnownUrls());
+                }
+            });
+
+            siteWords.flagCommonSiteWords(ret);
+            siteWords.flagAdjacentWords(internalLinkGraph, ret);
 
         }
         else {
@@ -92,70 +84,6 @@ public class DomainProcessor {
         return ret;
     }
 
-    private void flagCommonSiteWords(ProcessedDomain processedDomain) {
-        Set<String> commonSiteWords = new HashSet<>(10);
-
-        commonSiteWords.addAll(commonKeywordExtractor.getCommonSiteWords(processedDomain, IndexBlock.Tfidf_High, IndexBlock.Subjects));
-        commonSiteWords.addAll(commonKeywordExtractor.getCommonSiteWords(processedDomain, IndexBlock.Title));
-
-        if (commonSiteWords.isEmpty()) {
-            return;
-        }
-
-        for (var doc : processedDomain.documents) {
-            if (doc.words != null) {
-                for (var block : IndexBlock.values()) {
-                    if (block.type == IndexBlockType.PAGE_DATA) {
-                        doc.words.get(block).setFlagOnMetadataForWords(EdgePageWordFlags.Site, commonSiteWords);
-                    }
-                }
-            }
-        }
-    }
-
-    private void flagAdjacentSiteWords(InternalLinkGraph internalLinkGraph, ProcessedDomain processedDomain) {
-        var invertedGraph = internalLinkGraph.trimAndInvert();
-
-        Map<EdgeUrl, Set<String>> linkedKeywords = new HashMap<>(100);
-
-        invertedGraph.forEach((url, linkingUrls) -> {
-            Map<String, Integer> keywords = new HashMap<>(100);
-
-            for (var linkingUrl : linkingUrls) {
-                for (var keyword : internalLinkGraph.getKeywords(linkingUrl)) {
-                    keywords.merge(keyword, 1, Integer::sum);
-                }
-            }
-
-            var words = keywords.entrySet().stream()
-                    .filter(e -> e.getValue() > 3)
-                    .map(Map.Entry::getKey)
-                    .filter(internalLinkGraph.getCandidateKeywords(url)::contains)
-                    .collect(Collectors.toSet());
-            if (!words.isEmpty()) {
-                linkedKeywords.put(url, words);
-            }
-        });
-
-        for (var doc : processedDomain.documents) {
-            if (doc.words == null)
-                continue;
-
-            final Set<String> keywords = linkedKeywords.get(doc.url);
-            if (keywords == null)
-                continue;
-
-            for (var block : IndexBlock.values()) {
-                if (block.type == IndexBlockType.PAGE_DATA) {
-                    doc.words.get(block).setFlagOnMetadataForWords(EdgePageWordFlags.SiteAdjacent, keywords);
-                }
-            }
-        }
-
-
-    }
-
-
     private void fixBadCanonicalTags(List<CrawledDocument> docs) {
         Map<String, Set<String>> seenCanonicals = new HashMap<>();
         Set<String> seenUrls = new HashSet<>();
@@ -164,7 +92,8 @@ public class DomainProcessor {
         // this removes such links from consideration
 
         for (var document : docs) {
-            if (!Strings.isNullOrEmpty(document.canonicalUrl) && !Objects.equals(document.canonicalUrl, document.url)) {
+            if (!Strings.isNullOrEmpty(document.canonicalUrl)
+                    && !Objects.equals(document.canonicalUrl, document.url)) {
                 seenCanonicals.computeIfAbsent(document.canonicalUrl, url -> new HashSet<>()).add(document.documentBodyHash);
             }
             seenUrls.add(document.url);
@@ -201,7 +130,9 @@ public class DomainProcessor {
             Optional<EdgeUrl> cUrl = EdgeUrl.parse(document.canonicalUrl);
             Optional<EdgeUrl> dUrl = EdgeUrl.parse(document.url);
 
-            if (cUrl.isPresent() && dUrl.isPresent() && !Objects.equals(cUrl.get().domain, dUrl.get().domain)) {
+            if (cUrl.isPresent() && dUrl.isPresent()
+                    && !Objects.equals(cUrl.get().domain, dUrl.get().domain))
+            {
                 document.canonicalUrl = document.url;
             }
         }
@@ -216,20 +147,4 @@ public class DomainProcessor {
         };
     }
 
-    class DocumentDisqualifier {
-        int count;
-        int goodCount;
-
-        void offer(double quality) {
-            count++;
-            if (quality > minAvgDocumentQuality) {
-                goodCount++;
-            }
-        }
-
-        boolean isQualified() {
-            return true;
-//            return count < 25 || goodCount*10 >= count;
-        }
-    }
 }

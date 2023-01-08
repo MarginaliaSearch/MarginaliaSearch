@@ -4,17 +4,18 @@ import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrays;
 import it.unimi.dsi.fastutil.ints.IntComparator;
-import nu.marginalia.wmsa.configuration.module.DatabaseModule;
-import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklistImpl;
+import org.roaringbitmap.RoaringBitmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.IntToDoubleFunction;
 import java.util.stream.IntStream;
-import it.unimi.dsi.fastutil.ints.IntArrays;
 
 public abstract class RankingAlgorithm {
     protected final TIntObjectHashMap<RankingDomainData> domainsById = new TIntObjectHashMap<>();
@@ -154,7 +155,7 @@ public abstract class RankingAlgorithm {
     }
 
 
-    public TIntList pageRank(int resultCount) {
+    public RoaringBitmap pageRank(int resultCount) {
         RankVector rank = new RankVector(1.d / domainsById.size());
 
         int iter_max = 100;
@@ -176,7 +177,7 @@ public abstract class RankingAlgorithm {
         return rank.getRanking(resultCount);
     }
 
-    public TIntList pageRankWithPeripheralNodes(int resultCount) {
+    public RoaringBitmap pageRankWithPeripheralNodes(int resultCount) {
         RankVector rank = new RankVector(1.d / domainsById.size());
 
         int iter_max = 100;
@@ -303,7 +304,7 @@ public abstract class RankingAlgorithm {
             return list;
         }
 
-        public TIntList getRanking(int numResults) {
+        public RoaringBitmap getRanking(int numResults) {
             if (numResults < 0) {
                 numResults = domainIdToIndex.size();
             }
@@ -311,7 +312,7 @@ public abstract class RankingAlgorithm {
                 numResults = rank.length;
             }
 
-            TIntArrayList list = new TIntArrayList(numResults);
+            RoaringBitmap list = new RoaringBitmap();
 
             int[] nodes = new int[rank.length];
             Arrays.setAll(nodes, i->i);

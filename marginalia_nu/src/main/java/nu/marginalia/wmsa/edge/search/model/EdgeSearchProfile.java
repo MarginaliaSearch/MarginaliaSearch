@@ -1,40 +1,34 @@
 package nu.marginalia.wmsa.edge.search.model;
 
 import nu.marginalia.wmsa.edge.converting.processor.logic.HtmlFeature;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
+import nu.marginalia.wmsa.edge.index.svc.searchset.SearchSetIdentifier;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchSubquery;
+import nu.marginalia.wmsa.edge.model.search.domain.SpecificationLimit;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 public enum EdgeSearchProfile {
 
-    DEFAULT("default", SearchOrder.DEFAULT_ORDER, 0, 1),
-    MODERN("modern", SearchOrder.DEFAULT_ORDER, 2),
-    CORPO("corpo", SearchOrder.DEFAULT_ORDER, 4, 5, 7),
-    YOLO("yolo", SearchOrder.DEFAULT_ORDER, 0, 2, 1, 3, 6),
-    CORPO_CLEAN("corpo-clean", SearchOrder.DEFAULT_ORDER, 0, 1),
-    ACADEMIA("academia",  SearchOrder.DEFAULT_ORDER, 3),
+    DEFAULT("default",  SearchSetIdentifier.RETRO),
+    MODERN("modern", SearchSetIdentifier.SMALLWEB),
+    CORPO("corpo", SearchSetIdentifier.NONE),
+    YOLO("yolo", SearchSetIdentifier.NONE),
+    CORPO_CLEAN("corpo-clean",  SearchSetIdentifier.NONE),
+    ACADEMIA("academia",  SearchSetIdentifier.ACADEMIA),
 
-    FOOD("food", SearchOrder.DEFAULT_ORDER, 2, 0),
-    CRAFTS("crafts", SearchOrder.DEFAULT_ORDER, 2, 0),
+    FOOD("food", SearchSetIdentifier.NONE),
+    CRAFTS("crafts", SearchSetIdentifier.NONE),
 
-    CLASSICS("classics", SearchOrder.DEFAULT_ORDER, 4, 5, 7),
+    CLASSICS("classics", SearchSetIdentifier.NONE),
     ;
 
 
     public final String name;
-    public final List<Integer> buckets;
-    public final List<IndexBlock> indexBlocks;
+    public final SearchSetIdentifier searchSetIdentifier;
 
-    EdgeSearchProfile(String name,
-                      List<IndexBlock> indexBlocks,
-                      int... buckets) {
+    EdgeSearchProfile(String name, SearchSetIdentifier searchSetIdentifier) {
         this.name = name;
-        this.indexBlocks = indexBlocks;
-        this.buckets = Arrays.stream(buckets).boxed().collect(Collectors.toList());
+        this.searchSetIdentifier = searchSetIdentifier;
     }
 
     private final static EdgeSearchProfile[] values = values();
@@ -53,6 +47,9 @@ public enum EdgeSearchProfile {
     }
 
     public void addTacitTerms(EdgeSearchSubquery subquery) {
+        if (this == ACADEMIA) {
+            subquery.searchTermsPriority.add("tld:edu");
+        }
         if (this == FOOD) {
             subquery.searchTermsInclude.add(HtmlFeature.CATEGORY_FOOD.getKeyword());
         }
@@ -60,6 +57,30 @@ public enum EdgeSearchProfile {
             subquery.searchTermsInclude.add(HtmlFeature.CATEGORY_CRAFTS.getKeyword());
         }
     }
+
+    public SpecificationLimit getYearLimit() {
+        if (this == MODERN) {
+            return SpecificationLimit.greaterThan(2015);
+        }
+        else return SpecificationLimit.none();
+    }
+
+    public SpecificationLimit getSizeLimit() {
+        if (this == MODERN) {
+            return SpecificationLimit.lessThan(500);
+        }
+        else return SpecificationLimit.none();
+    }
+
+
+    public SpecificationLimit getQualityLimit() {
+        if (this == MODERN) {
+            return SpecificationLimit.lessThan(5);
+        }
+        else return SpecificationLimit.none();
+    }
+
+
 
     public String getNearDomain() {
         if (this == CLASSICS) {

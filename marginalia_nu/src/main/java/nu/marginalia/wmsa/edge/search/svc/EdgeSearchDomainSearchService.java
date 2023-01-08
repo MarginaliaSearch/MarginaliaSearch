@@ -2,9 +2,8 @@ package nu.marginalia.wmsa.edge.search.svc;
 
 import com.google.inject.Inject;
 import nu.marginalia.wmsa.configuration.server.Context;
-import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
+import nu.marginalia.wmsa.edge.dbcommon.EdgeDataStoreDao;
 import nu.marginalia.wmsa.edge.index.client.EdgeIndexClient;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.id.EdgeIdList;
 import nu.marginalia.wmsa.edge.model.id.EdgeIdSet;
@@ -35,13 +34,11 @@ public class EdgeSearchDomainSearchService {
         if (keywords.isEmpty())
             return Collections.emptyList();
 
-        List<EdgeDomainSearchSpecification> requests = new ArrayList<>(keywords.size() * specs.buckets.size());
+        List<EdgeDomainSearchSpecification> requests = new ArrayList<>(keywords.size());
 
         for (var keyword : keywords) {
-            for (var bucket : specs.buckets) {
-                requests.add(new EdgeDomainSearchSpecification(bucket, IndexBlock.Link, keyword,
-                        1_000_000, 3, 25));
-            }
+            requests.add(new EdgeDomainSearchSpecification(keyword,
+                    1_000_000, 3, 25));
         }
 
         EdgeIdSet<EdgeUrl> dedup = new EdgeIdSet<>();

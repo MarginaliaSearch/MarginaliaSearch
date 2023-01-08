@@ -27,7 +27,7 @@ public class TestLanguageModels {
 
         return new LanguageModels(
                 languageModelsHome.resolve("ngrams.bin"),
-                languageModelsHome.resolve("tfreq-generous-emstr.bin"),
+                languageModelsHome.resolve("tfreq-new-algo3.bin"),
                 languageModelsHome.resolve("opennlp-sentence.bin"),
                 languageModelsHome.resolve("English.RDR"),
                 languageModelsHome.resolve("English.DICT"),

@@ -2,7 +2,7 @@ package nu.marginalia.wmsa.edge.converting.model;
 
 import lombok.ToString;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
-import nu.marginalia.wmsa.edge.model.crawl.EdgePageWordSet;
+import nu.marginalia.wmsa.edge.model.crawl.EdgePageWords;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeUrlState;
 
 import java.util.OptionalDouble;
@@ -12,7 +12,7 @@ public class ProcessedDocument {
     public EdgeUrl url;
 
     public ProcessedDocumentDetails details;
-    public EdgePageWordSet words;
+    public EdgePageWords words;
 
     public EdgeUrlState state;
     public String stateReason;

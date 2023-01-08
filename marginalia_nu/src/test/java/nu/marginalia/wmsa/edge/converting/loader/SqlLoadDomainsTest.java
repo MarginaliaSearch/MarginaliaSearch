@@ -2,13 +2,15 @@ package nu.marginalia.wmsa.edge.converting.loader;
 
 import nu.marginalia.util.TestUtil;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Tag("slow")
 @Testcontainers
 class SqlLoadDomainsTest {
     @Container

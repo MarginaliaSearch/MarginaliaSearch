@@ -3,27 +3,30 @@ package nu.marginalia.wmsa.edge.index.svc;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import gnu.trove.set.hash.TIntHashSet;
+import gnu.trove.list.TLongList;
+import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.set.hash.TLongHashSet;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import io.prometheus.client.Histogram;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntComparator;
 import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import it.unimi.dsi.fastutil.longs.LongAVLTreeSet;
-import nu.marginalia.util.btree.BTreeQueryBuffer;
+import nu.marginalia.util.array.buffer.LongQueryBuffer;
 import nu.marginalia.util.dict.DictionaryHashMap;
 import nu.marginalia.wmsa.client.GsonFactory;
-import nu.marginalia.wmsa.edge.index.EdgeIndexBucket;
-import nu.marginalia.wmsa.edge.index.model.EdgePageWordMetadata;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
-import nu.marginalia.wmsa.edge.index.reader.SearchIndexes;
-import nu.marginalia.wmsa.edge.index.svc.query.IndexQuery;
-import nu.marginalia.wmsa.edge.index.svc.query.IndexQueryParams;
-import nu.marginalia.wmsa.edge.index.svc.query.IndexSearchBudget;
-import nu.marginalia.wmsa.edge.index.svc.query.ResultDomainDeduplicator;
-import nu.marginalia.wmsa.edge.model.search.*;
+import nu.marginalia.wmsa.edge.index.postings.EdgeIndexQuerySearchTerms;
+import nu.marginalia.wmsa.edge.index.postings.IndexResultValuator;
+import nu.marginalia.wmsa.edge.index.postings.SearchIndexControl;
+import nu.marginalia.wmsa.edge.index.query.IndexQuery;
+import nu.marginalia.wmsa.edge.index.query.IndexQueryParams;
+import nu.marginalia.wmsa.edge.index.query.IndexResultDomainDeduplicator;
+import nu.marginalia.wmsa.edge.index.query.IndexSearchBudget;
+import nu.marginalia.wmsa.edge.index.svc.searchset.SearchSet;
+import nu.marginalia.wmsa.edge.index.svc.searchset.SmallSearchSet;
+import nu.marginalia.wmsa.edge.model.search.EdgeSearchResultItem;
+import nu.marginalia.wmsa.edge.model.search.EdgeSearchResultSet;
+import nu.marginalia.wmsa.edge.model.search.EdgeSearchSpecification;
+import nu.marginalia.wmsa.edge.model.search.EdgeSearchSubquery;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,11 +35,12 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.OptionalInt;
 import java.util.function.LongPredicate;
-import java.util.stream.Collectors;
 
-import static java.util.Comparator.comparing;
+import static java.util.Comparator.comparingDouble;
 import static spark.Spark.halt;
 
 @Singleton
@@ -44,20 +48,19 @@ public class EdgeIndexQueryService {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private static final int QUERY_FIRST_PASS_DOMAIN_LIMIT = 64;
-
     private static final Counter wmsa_edge_index_query_timeouts = Counter.build().name("wmsa_edge_index_query_timeouts").help("-").register();
-
     private static final Gauge wmsa_edge_index_query_cost = Gauge.build().name("wmsa_edge_index_query_cost").help("-").register();
     private static final Histogram wmsa_edge_index_query_time = Histogram.build().name("wmsa_edge_index_query_time").linearBuckets(25/1000., 25/1000., 15).help("-").register();
 
     private final Gson gson = GsonFactory.get();
 
-    private final SearchIndexes indexes;
+    private final SearchIndexControl indexes;
+    private final EdgeIndexSearchSetsService searchSetsService;
 
     @Inject
-    public EdgeIndexQueryService(SearchIndexes indexes) {
+    public EdgeIndexQueryService(SearchIndexControl indexes, EdgeIndexSearchSetsService searchSetsService) {
         this.indexes = indexes;
+        this.searchSetsService = searchSetsService;
     }
 
     public Object search(Request request, Response response) {
@@ -68,7 +71,6 @@ public class EdgeIndexQueryService {
 
         String json = request.body();
         EdgeSearchSpecification specsSet = gson.fromJson(json, EdgeSearchSpecification.class);
-
 
         try {
             return wmsa_edge_index_query_time.time(() -> query(specsSet));
@@ -102,258 +104,169 @@ public class EdgeIndexQueryService {
 
     private class SearchQuery {
         private final int fetchSize;
-        private final TIntHashSet seenResults;
-        private final EdgeSearchSpecification specsSet;
         private final IndexSearchBudget budget;
-        private final Integer qualityLimit;
-        private final Integer rankLimit;
+        private final List<EdgeSearchSubquery> subqueries;
         private long dataCost = 0;
+        private final IndexQueryParams queryParams;
+
+        private final int limitByDomain;
+        private final int limitTotal;
+
+        TLongHashSet consideredUrlIds;
 
         public SearchQuery(EdgeSearchSpecification specsSet) {
-            this.specsSet = specsSet;
-            this.budget = new IndexSearchBudget(specsSet.timeoutMs);
             this.fetchSize = specsSet.fetchSize;
-            this.seenResults =  new TIntHashSet(fetchSize, 0.5f);
-            this.qualityLimit = specsSet.quality;
-            this.rankLimit = specsSet.rank;
+            this.budget = new IndexSearchBudget(specsSet.timeoutMs);
+            this.subqueries = specsSet.subqueries;
+            this.limitByDomain = specsSet.limitByDomain;
+            this.limitTotal = specsSet.limitTotal;
+
+            this.consideredUrlIds = new TLongHashSet(fetchSize * 4);
+
+            queryParams = new IndexQueryParams(
+                    specsSet.quality,
+                    specsSet.year,
+                    specsSet.size,
+                    getSearchSet(specsSet),
+                    specsSet.queryStrategy);
         }
 
         private List<EdgeSearchResultItem> execute() {
-            final Set<EdgeSearchResultItem> results = new HashSet<>(fetchSize);
+            final TLongList results = new TLongArrayList(fetchSize);
 
-            for (var sq : specsSet.subqueries) {
-                results.addAll(performSearch(sq));
-            }
+            for (var sq : subqueries) {
+                final EdgeIndexQuerySearchTerms searchTerms = getSearchTerms(sq);
 
-            final SearchTermEvaluator evaluator = new SearchTermEvaluator(specsSet, results);
-            for (var result : results) {
-                evaluator.addResultScores(result);
-            }
+                if (searchTerms.isEmpty()) {
+                    continue;
+                }
 
-            return createResultList(results);
-        }
-
-        private List<EdgeSearchResultItem> createResultList(Set<EdgeSearchResultItem> results) {
-
-            var domainCountFilter = new ResultDomainDeduplicator(specsSet.limitByDomain);
-
-            List<EdgeSearchResultItem> resultList = results.stream()
-                    .sorted(
-                            comparing(EdgeSearchResultItem::getScore)
-                                    .thenComparing(EdgeSearchResultItem::getRanking)
-                                    .thenComparing(EdgeSearchResultItem::getUrlIdInt)
-                    )
-                    .filter(domainCountFilter::test)
-                    .collect(Collectors.toList());
-
-            if (resultList.size() > specsSet.getLimitTotal()) {
-                // This can't be made a stream limit() operation because we need domainCountFilter
-                // to run over the entire list to provide accurate statistics
-
-                resultList.subList(specsSet.getLimitTotal(), resultList.size()).clear();
-            }
-
-            for (var result : resultList) {
-                result.resultsFromDomain = domainCountFilter.getCount(result);
-            }
-
-            return resultList;
-        }
-
-
-        private List<EdgeSearchResultItem> performSearch(EdgeSearchSubquery sq)
-        {
-
-            final List<EdgeSearchResultItem> results = new ArrayList<>(fetchSize);
-            final SearchTerms searchTerms = getSearchTerms(sq);
-
-            if (searchTerms.isEmpty()) {
-                return Collections.emptyList();
-            }
-
-            final BTreeQueryBuffer buffer = new BTreeQueryBuffer(fetchSize);
-
-            for (int indexBucket : specsSet.buckets) {
-                final ResultDomainDeduplicator localFilter = new ResultDomainDeduplicator(QUERY_FIRST_PASS_DOMAIN_LIMIT);
+                TLongArrayList resultsForSubquery = performSearch(searchTerms);
+                results.addAll(resultsForSubquery);
 
                 if (!budget.hasTimeLeft()) {
-                    logger.info("Query timed out, omitting {}:{} for query {}, ({}), -{}",
-                            indexBucket, sq.block, sq.searchTermsInclude, sq.searchTermsAdvice, sq.searchTermsExclude);
-                    continue;
-
-                }
-
-                if (results.size() >= fetchSize) {
+                    logger.info("Query timed out {}, ({}), -{}",
+                            sq.searchTermsInclude, sq.searchTermsAdvice, sq.searchTermsExclude);
                     break;
                 }
+            }
 
-                IndexQueryParams queryParams = new IndexQueryParams(sq.block, searchTerms, qualityLimit, rankLimit, specsSet.domains);
+            final var evaluator = new IndexResultValuator(indexes, results, subqueries);
 
-                IndexQuery query = getQuery(indexBucket, localFilter::filterRawValue, queryParams);
+            ArrayList<EdgeSearchResultItem> items = new ArrayList<>(results.size());
+            ArrayList<EdgeSearchResultItem> refusedItems = new ArrayList<>(results.size());
 
-                while (query.hasMore() && results.size() < fetchSize && budget.hasTimeLeft()) {
-                    buffer.reset();
-                    query.getMoreResults(buffer);
+            // Sorting the result ids results in better paging characteristics
+            results.sort();
 
-                    for (int i = 0; i < buffer.size() && results.size() < fetchSize; i++) {
-                        final long id = buffer.data[i];
+            results.forEach(id -> {
+                var item = evaluator.evaluateResult(id);
 
-                        if (!seenResults.add((int)(id & 0xFFFF_FFFFL)) || !localFilter.test(id)) {
-                            continue;
-                        }
-
-                        results.add(new EdgeSearchResultItem(indexBucket, sq.block, id));
-                    }
+                // Score value is zero when the best query variant consists of low-value terms that are just scattered
+                // throughout the document, with no indicators of importance associated with them.
+                if (item.getScoreValue() < 0) {
+                    items.add(item);
+                }
+                else {
+                    refusedItems.add(item);
                 }
 
-                dataCost += query.dataCost();
+                return true;
+            });
 
+            if (items.isEmpty()) {
+                items.addAll(refusedItems);
             }
+
+            return selectResults(items);
+        }
+
+
+        private TLongArrayList performSearch(EdgeIndexQuerySearchTerms terms)
+        {
+            final TLongArrayList results = new TLongArrayList(fetchSize);
+            final LongQueryBuffer buffer = new LongQueryBuffer(fetchSize);
+
+
+            IndexQuery query = getQuery(terms, queryParams, consideredUrlIds::add);
+
+            while (query.hasMore() && results.size() < fetchSize && budget.hasTimeLeft()) {
+                buffer.reset();
+                query.getMoreResults(buffer);
+
+                for (int i = 0; i < buffer.size() && results.size() < fetchSize; i++) {
+                    results.add(buffer.data[i]);
+                }
+            }
+
+            dataCost += query.dataCost();
 
             return results;
         }
 
-        private IndexQuery getQuery(int bucket, LongPredicate filter, IndexQueryParams params) {
+        private SearchSet getSearchSet(EdgeSearchSpecification specsSet) {
 
-            if (!indexes.isValidBucket(bucket)) {
-                logger.warn("Invalid bucket {}", bucket);
-                return new IndexQuery(Collections.emptyList());
+            if (specsSet.domains != null && !specsSet.domains.isEmpty()) {
+                return new SmallSearchSet(specsSet.domains);
             }
 
-            return indexes.getBucket(bucket).getQuery(filter, params);
+            return searchSetsService.getSearchSetByName(specsSet.searchSetIdentifier);
+        }
+
+        private List<EdgeSearchResultItem> selectResults(List<EdgeSearchResultItem> results) {
+
+            var domainCountFilter = new IndexResultDomainDeduplicator(limitByDomain);
+
+            results.sort(comparingDouble(EdgeSearchResultItem::getScore)
+                    .thenComparingInt(EdgeSearchResultItem::getRanking)
+                    .thenComparingInt(EdgeSearchResultItem::getUrlIdInt));
+
+            List<EdgeSearchResultItem> resultsList = new ArrayList<>(results.size());
+
+            for (var item : results) {
+                if (domainCountFilter.test(item)) {
+                    resultsList.add(item);
+                }
+            }
+
+            if (resultsList.size() > limitTotal) {
+                // This can't be made a stream limit() operation because we need domainCountFilter
+                // to run over the entire list to provide accurate statistics
+
+                resultsList.subList(limitTotal, resultsList.size()).clear();
+            }
+
+            for (var result : resultsList) {
+                result.resultsFromDomain = domainCountFilter.getCount(result);
+            }
+
+            return resultsList;
+        }
+
+        private IndexQuery getQuery(EdgeIndexQuerySearchTerms terms, IndexQueryParams params, LongPredicate includePred) {
+            return indexes.getIndex().getQuery(terms, params, includePred);
         }
 
         public boolean hasTimeLeft() {
             return budget.hasTimeLeft();
         }
 
-        private record IndexAndBucket(IndexBlock block, int bucket) {}
-
         public long getDataCost() {
             return dataCost;
         }
 
-        record ResultTerm (int bucket, int termId, long combinedUrlId) {}
     }
 
-    public class SearchTermEvaluator {
-        private static final EdgePageWordMetadata blankMetadata = new EdgePageWordMetadata(EdgePageWordMetadata.emptyValue());
-
-        private final Map<SearchQuery.ResultTerm, EdgePageWordMetadata> termData = new HashMap<>(16);
-
-        private final List<List<String>> searchTermVariants;
-
-        public SearchTermEvaluator(EdgeSearchSpecification specsSet, Set<EdgeSearchResultItem> results) {
-            this.searchTermVariants = specsSet.subqueries.stream().map(sq -> sq.searchTermsInclude).distinct().toList();
-
-            final int[] termIdsAll = getIncludeTermIds(specsSet);
-
-            Map<SearchQuery.IndexAndBucket, LongAVLTreeSet> resultIdsByBucket = new HashMap<>(7);
-
-            for (int termId : termIdsAll) {
-
-                for (var result: results) {
-                    resultIdsByBucket
-                            .computeIfAbsent(new SearchQuery.IndexAndBucket(result.block, result.bucketId),
-                                    id -> new LongAVLTreeSet())
-                            .add(result.combinedId);
-                }
-
-                resultIdsByBucket.forEach((indexAndBucket, resultIds) ->
-                        loadMetadata(termId, indexAndBucket.bucket, indexAndBucket.block, resultIds));
-
-                resultIdsByBucket.clear();
-            }
-        }
-
-        private int[] getIncludeTermIds(EdgeSearchSpecification specsSet) {
-
-            final var reader = Objects.requireNonNull(indexes.getLexiconReader());
-
-            final List<String> terms = specsSet.allIncludeSearchTerms();
-            final IntList ret = new IntArrayList(terms.size());
-
-            for (var term : terms) {
-                int id = reader.get(term);
-
-                if (id >= 0)
-                    ret.add(id);
-            }
-
-            return ret.toIntArray();
-        }
-
-        private void loadMetadata(int termId, int bucket, IndexBlock indexBlock,
-                                  LongAVLTreeSet docIdsMissingMetadata)
-        {
-            EdgeIndexBucket index = indexes.getBucket(bucket);
-
-            if (docIdsMissingMetadata.isEmpty())
-                return;
-
-
-            long[] ids = docIdsMissingMetadata.toLongArray();
-            long[] metadata = index.getMetadata(indexBlock, termId, ids);
-
-            for (int i = 0; i < metadata.length; i++) {
-                if (metadata[i] == 0L)
-                    continue;
-
-                termData.put(
-                        new SearchQuery.ResultTerm(bucket, termId, ids[i]),
-                        new EdgePageWordMetadata(metadata[i])
-                );
-
-                docIdsMissingMetadata.remove(ids[i]);
-            }
-        }
-
-        public void addResultScores(EdgeSearchResultItem searchResult) {
-            final var reader = Objects.requireNonNull(indexes.getLexiconReader());
-
-            double bestScore = 0;
-
-            for (int searchTermListIdx = 0; searchTermListIdx < searchTermVariants.size(); searchTermListIdx++) {
-                double setScore = 0;
-                int setSize = 0;
-                var termList = searchTermVariants.get(searchTermListIdx);
-
-                for (int termIdx = 0; termIdx < termList.size(); termIdx++) {
-                    String searchTerm = termList.get(termIdx);
-
-                    final int termId = reader.get(searchTerm);
-
-                    var key = new SearchQuery.ResultTerm(searchResult.bucketId, termId, searchResult.getCombinedId());
-                    var metadata = termData.getOrDefault(key, blankMetadata);
-
-                    EdgeSearchResultKeywordScore score = new EdgeSearchResultKeywordScore(searchTermListIdx, searchTerm, metadata);
-
-                    searchResult.scores.add(score);
-                    setScore += score.termValue();
-                    if (termIdx == 0) {
-                        setScore += score.documentValue();
-                    }
-
-                    setSize++;
-                }
-                bestScore = Math.min(bestScore, setScore/setSize);
-            }
-
-            searchResult.setScore(bestScore);
-        }
-
-
-    }
-
-    private SearchTerms getSearchTerms(EdgeSearchSubquery request) {
+    private EdgeIndexQuerySearchTerms getSearchTerms(EdgeSearchSubquery request) {
         final IntList excludes = new IntArrayList();
         final IntList includes = new IntArrayList();
+        final IntList priority = new IntArrayList();
 
         for (var include : request.searchTermsInclude) {
             var word = lookUpWord(include);
             if (word.isEmpty()) {
                 logger.debug("Unknown search term: " + include);
-                return new SearchTerms();
+                return new EdgeIndexQuerySearchTerms();
             }
             includes.add(word.getAsInt());
         }
@@ -362,7 +275,7 @@ public class EdgeIndexQueryService {
             var word = lookUpWord(advice);
             if (word.isEmpty()) {
                 logger.debug("Unknown search term: " + advice);
-                return new SearchTerms();
+                return new EdgeIndexQuerySearchTerms();
             }
             includes.add(word.getAsInt());
         }
@@ -370,27 +283,11 @@ public class EdgeIndexQueryService {
         for (var exclude : request.searchTermsExclude) {
             lookUpWord(exclude).ifPresent(excludes::add);
         }
-
-        return new SearchTerms(includes, excludes);
-    }
-
-    public record SearchTerms(IntList includes, IntList excludes) {
-        public SearchTerms() {
-            this(IntList.of(), IntList.of());
+        for (var exclude : request.searchTermsPriority) {
+            lookUpWord(exclude).ifPresent(priority::add);
         }
 
-        public boolean isEmpty() {
-            return includes.isEmpty();
-        }
-
-        public int[] sortedDistinctIncludes(IntComparator comparator) {
-            if (includes.isEmpty())
-                return includes.toIntArray();
-
-            IntList list = new IntArrayList(new IntOpenHashSet(includes));
-            list.sort(comparator);
-            return list.toIntArray();
-        }
+        return new EdgeIndexQuerySearchTerms(includes, excludes, priority);
     }
 
 

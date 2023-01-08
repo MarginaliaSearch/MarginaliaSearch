@@ -3,15 +3,16 @@ package nu.marginalia.wmsa.edge.index.client;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import nu.marginalia.util.ListChunker;
 import nu.marginalia.util.dict.DictionaryHashMap;
 import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.edge.converting.interpreter.instruction.DocumentKeywords;
-import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalWriterImpl;
-import nu.marginalia.wmsa.edge.index.journal.model.SearchIndexJournalEntry;
-import nu.marginalia.wmsa.edge.index.journal.model.SearchIndexJournalEntryHeader;
+import nu.marginalia.wmsa.edge.converting.interpreter.instruction.KeywordListChunker;
 import nu.marginalia.wmsa.edge.index.lexicon.KeywordLexicon;
 import nu.marginalia.wmsa.edge.index.lexicon.journal.KeywordLexiconJournal;
+import nu.marginalia.wmsa.edge.index.model.EdgePageDocumentsMetadata;
+import nu.marginalia.wmsa.edge.index.postings.journal.model.SearchIndexJournalEntry;
+import nu.marginalia.wmsa.edge.index.postings.journal.model.SearchIndexJournalEntryHeader;
+import nu.marginalia.wmsa.edge.index.postings.journal.writer.SearchIndexJournalWriterImpl;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.id.EdgeId;
@@ -43,6 +44,7 @@ public class EdgeIndexLocalService implements EdgeIndexWriterClient {
     }
 
     public void putWords(Context ctx, EdgeId<EdgeDomain> domain, EdgeId<EdgeUrl> url,
+                         EdgePageDocumentsMetadata metadata,
                          DocumentKeywords wordSet, int writer) {
         if (wordSet.keywords().length == 0)
             return;
@@ -52,10 +54,10 @@ public class EdgeIndexLocalService implements EdgeIndexWriterClient {
             return;
         }
 
-        for (var chunk : ListChunker.chopList(wordSet, SearchIndexJournalEntry.MAX_LENGTH)) {
+        for (var chunk : KeywordListChunker.chopList(wordSet, SearchIndexJournalEntry.MAX_LENGTH)) {
 
             var entry = new SearchIndexJournalEntry(getOrInsertWordIds(chunk.keywords(), chunk.metadata()));
-            var header = new SearchIndexJournalEntryHeader(domain, url, wordSet.block());
+            var header = new SearchIndexJournalEntryHeader(domain, url, metadata.encode());
 
             indexWriter.put(header, entry);
         }

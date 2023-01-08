@@ -2,8 +2,8 @@ package nu.marginalia.wmsa.edge.tools;
 
 import com.google.common.hash.Hashing;
 import net.agkn.hll.HLL;
-import nu.marginalia.util.multimap.MultimapFileLong;
-import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalReader;
+import nu.marginalia.util.array.LongArray;
+import nu.marginalia.wmsa.edge.index.postings.journal.reader.SearchIndexJournalReaderSingleFile;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -27,7 +27,7 @@ public class IndexJournalDumpTool {
     }
 
     private static void cardinality(Path file) throws IOException {
-        var reader = new SearchIndexJournalReader(MultimapFileLong.forReading(file));
+        var reader = new SearchIndexJournalReaderSingleFile(LongArray.mmapRead(file));
         HLL hyperloglog = new HLL(30, 1);
         var hashFunction = Hashing.murmur3_128();
 
@@ -39,9 +39,9 @@ public class IndexJournalDumpTool {
     }
 
     private static void dump(Path file) throws IOException {
-        var reader = new SearchIndexJournalReader(MultimapFileLong.forReading(file));
+        var reader = new SearchIndexJournalReaderSingleFile(LongArray.mmapRead(file));
         for (var entry : reader) {
-            System.out.printf("%s\t%010d\t%06d:%08d\n", entry.block(), entry.docId(), entry.domainId(), entry.urlId());
+            System.out.printf("%s\t%010d\t%06d:%08d\n", entry.docId(), entry.domainId(), entry.urlId());
         }
     }
 }

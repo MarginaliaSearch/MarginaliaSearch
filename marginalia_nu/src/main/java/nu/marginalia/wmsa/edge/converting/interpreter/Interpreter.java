@@ -4,6 +4,7 @@ import nu.marginalia.wmsa.edge.converting.interpreter.instruction.DocumentKeywor
 import nu.marginalia.wmsa.edge.converting.interpreter.instruction.DomainLink;
 import nu.marginalia.wmsa.edge.converting.interpreter.instruction.LoadProcessedDocument;
 import nu.marginalia.wmsa.edge.converting.interpreter.instruction.LoadProcessedDocumentWithError;
+import nu.marginalia.wmsa.edge.index.model.EdgePageDocumentsMetadata;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
@@ -18,7 +19,7 @@ public interface Interpreter {
     void loadProcessedDocument(LoadProcessedDocument loadProcessedDocument);
     void loadProcessedDocumentWithError(LoadProcessedDocumentWithError loadProcessedDocumentWithError);
 
-    void loadKeywords(EdgeUrl url, DocumentKeywords[] words);
+    void loadKeywords(EdgeUrl url, EdgePageDocumentsMetadata metadata, DocumentKeywords words);
 
     void loadDomainRedirect(DomainLink link);
 }

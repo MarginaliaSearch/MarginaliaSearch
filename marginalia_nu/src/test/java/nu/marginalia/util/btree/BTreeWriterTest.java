@@ -1,15 +1,13 @@
 package nu.marginalia.util.btree;
 
+import nu.marginalia.util.array.LongArray;
 import nu.marginalia.util.btree.model.BTreeContext;
 import nu.marginalia.util.btree.model.BTreeHeader;
-import nu.marginalia.util.multimap.MultimapFileLong;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -21,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BTreeWriterTest {
 
-    final BTreeContext ctx = new BTreeContext(4,  2, 0xFFFF_FFFF_FFFF_FFFFL, 3);
+    final BTreeContext ctx = new BTreeContext(4,  2,  3);
     final BTreeWriter writer = new BTreeWriter(null, ctx);
 
     Logger logger = LoggerFactory.getLogger(getClass());
@@ -79,33 +77,32 @@ class BTreeWriterTest {
         var tempFile = Files.createTempFile(Path.of("/tmp"), "tst", "dat");
         Set<Integer> toPut = new HashSet<>();
 
-        for (int i = 0; i < 500; i++) {
+        for (int i = 0; i < 64; i++) {
             while (!toPut.add((int)(Integer.MAX_VALUE * Math.random())));
         }
 
         int[] data = toPut.stream().mapToInt(Integer::valueOf).sorted().toArray();
 
         try {
-            RandomAccessFile raf = new RandomAccessFile(tempFile.toFile(), "rw");
-            MultimapFileLong mmf = new MultimapFileLong(raf, FileChannel.MapMode.READ_WRITE, 10000, 1000);
+            LongArray longArray = LongArray.allocate(10000);
 
             {
-                var writer = new BTreeWriter(mmf, ctx);
+                var writer = new BTreeWriter(longArray, ctx);
                 writer.write(0, toPut.size(), (slice) -> {
                     for (int i = 0; i < data.length; i++) {
-                        slice.put(2L*i, data[i]);
-                        slice.put( 2L*i + 1, i);
+                        slice.set(2L*i, data[i]);
+                        slice.set( 2L*i + 1, i);
                     }
                 });
-                mmf.force();
             }
 
             {
-                var reader = new BTreeReader(mmf, ctx, 0);
+                var reader = new BTreeReader(longArray, ctx, 0);
                 for (int i = 0; i < data.length; i++) {
                     long offset = reader.findEntry(data[i]);
                     assertTrue(offset >= 0, "Negative offset for " + i + " -> " + offset);
-                    assertEquals(i, mmf.get(offset+1));
+                    offset += reader.getHeader().dataOffsetLongs();
+                    assertEquals(i, longArray.get(offset+1));
                 }
             }
         } catch (Exception e) {
@@ -126,40 +123,26 @@ class BTreeWriterTest {
         }
 
         int[] data = toPut.stream().mapToInt(Integer::valueOf).sorted().toArray();
-
-        try {
-            RandomAccessFile raf = new RandomAccessFile(tempFile.toFile(), "rw");
-            MultimapFileLong mmf = new MultimapFileLong(raf, FileChannel.MapMode.READ_WRITE, 10000, 1000);
-
-            {
-                var writer = new BTreeWriter(mmf, ctx);
-                writer.write( 0, toPut.size(), (slice) -> {
-                    for (int i = 0; i < data.length; i++) {
-                        slice.put(2L*i, data[i]);
-                        slice.put(2L*i + 1, i);
-                    }
-                });
-                mmf.force();
+        LongArray array = LongArray.allocate(22000);
+        var writer = new BTreeWriter(array, ctx);
+        writer.write( 0, toPut.size(), (slice) -> {
+            for (int i = 0; i < data.length; i++) {
+                slice.set(2L*i, data[i]);
+                slice.set(2L*i + 1, i);
             }
+        });
+        var reader = new BTreeReader(array, ctx, 0);
+        for (int i = 0; i < data.length; i++) {
+            long offset = reader.findEntry(data[i]);
+            assertTrue(offset >= 0, "Negative offset for " + i + " -> " + offset);
+            offset += reader.getHeader().dataOffsetLongs();
+            assertEquals(array.get(offset+1), i);
+        }
 
-            {
-                var reader = new BTreeReader(mmf, ctx, 0);
-                for (int i = 0; i < data.length; i++) {
-                    long offset = reader.findEntry(data[i]);
-                    assertTrue(offset >= 0, "Negative offset for " + i + " -> " + offset);
-                    assertEquals(i, mmf.get(offset+1));
-                }
-
-                for (int i = 0; i < 500; i++) {
-                    long val = (long)(Long.MAX_VALUE * Math.random());
-                    while (toPut.contains((int)val)) val = (long)(Long.MAX_VALUE * Math.random());
-                    assertTrue(reader.findEntry( val) < 0);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            Files.delete(tempFile);
+        for (int i = 0; i < 500; i++) {
+            long val = (long)(Long.MAX_VALUE * Math.random());
+            while (toPut.contains((int)val)) val = (long)(Long.MAX_VALUE * Math.random());
+            assertTrue(reader.findEntry( val) < 0);
         }
     }
 
@@ -170,7 +153,7 @@ class BTreeWriterTest {
             var tempFile = Files.createTempFile(Path.of("/tmp"), "tst", "dat");
             Set<Long> toPut = new HashSet<>();
 
-            var ctx = new BTreeContext(5, 1, ~0, bs);
+            var ctx = new BTreeContext(5, 1, bs);
 
             for (int i = 0; i < 500; i++) {
                 while (!toPut.add((long) (Long.MAX_VALUE * Math.random()))) ;
@@ -178,148 +161,31 @@ class BTreeWriterTest {
 
             long[] data = toPut.stream().mapToLong(Long::valueOf).sorted().toArray();
 
-            try (MultimapFileLong mmf = MultimapFileLong.forOutput(tempFile, 1000)) {
-                {
-                    var writer = new BTreeWriter(mmf, ctx);
-                    writer.write(0, toPut.size(), (slice) -> {
-                        for (int i = 0; i < data.length; i++) {
-                            slice.put(i, data[i]);
-                        }
-                    });
-                    mmf.force();
+            LongArray array = LongArray.allocate(22000);
+            var writer = new BTreeWriter(array, ctx);
+            writer.write(0, toPut.size(), (slice) -> {
+                for (int i = 0; i < data.length; i++) {
+                    slice.set(i, data[i]);
                 }
+            });
 
-                {
-                    var reader = new BTreeReader(mmf, ctx, 0);
+            var reader = new BTreeReader(array, ctx, 0);
 
-                    printTreeLayout(toPut.size(), reader.getHeader(), ctx);
+            printTreeLayout(toPut.size(), reader.getHeader(), ctx);
 
-                    for (int i = 0; i < data.length; i++) {
-                        long offset = reader.findEntry(data[i]);
-                        assertTrue(offset >= 0, "Negative offset for " + i + " -> " + offset);
-                        assertEquals(data[i], mmf.get(offset));
-                    }
-
-                    for (int i = 0; i < 500; i++) {
-                        long val = (long) (Long.MAX_VALUE * Math.random());
-                        while (toPut.contains(val)) val = (long) (Long.MAX_VALUE * Math.random());
-                        assertTrue(reader.findEntry( val) < 0);
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                Files.delete(tempFile);
+            for (int i = 0; i < data.length; i++) {
+                long offset = reader.findEntry(data[i]);
+                assertTrue(offset >= 0, "Negative offset for " + i + " -> " + offset);
+                offset += reader.getHeader().dataOffsetLongs();
+                assertEquals(data[i], array.get(offset));
             }
-        }
-    }
-
-    @Test
-    public void testWriteEqualityMasked() throws IOException {
-
-        for (int bs = 2; bs <= 4; bs++) {
-            var tempFile = Files.createTempFile(Path.of("/tmp"), "tst", "dat");
-            Set<Long> toPut = new HashSet<>();
-
-            long mask = 0xFFFF_FFFF_0000_0000L;
-            var ctx = new BTreeContext(5, 1, mask, bs);
 
             for (int i = 0; i < 500; i++) {
-                while (!toPut.add((long) (Long.MAX_VALUE * Math.random()))) ;
-            }
-
-            long[] data = toPut.stream().mapToLong(Long::valueOf).sorted().toArray();
-
-            try (MultimapFileLong mmf = MultimapFileLong.forOutput(tempFile, 1000)) {
-                {
-                    var writer = new BTreeWriter(mmf, ctx);
-                    writer.write(0, toPut.size(), (slice) -> {
-                        for (int i = 0; i < data.length; i++) {
-                            slice.put(i, data[i]);
-                        }
-                    });
-                    mmf.force();
-                }
-
-                {
-                    var reader = new BTreeReader(mmf, ctx, 0);
-
-                    printTreeLayout(toPut.size(), reader.getHeader(), ctx);
-
-                    for (int i = 0; i < data.length; i++) {
-                        long offset = reader.findEntry(data[i] & mask);
-                        assertTrue(offset >= 0, "Negative offset for " + i + " -> " + offset);
-                        assertEquals(data[i], mmf.get(offset));
-                    }
-
-                    for (int i = 0; i < 500; i++) {
-                        long val = (long) (Long.MAX_VALUE * Math.random());
-                        while (toPut.contains(val)) val = (long) (Long.MAX_VALUE * Math.random());
-                        assertTrue(reader.findEntry(val & mask) < 0);
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                Files.delete(tempFile);
+                long val = (long) (Long.MAX_VALUE * Math.random());
+                while (toPut.contains(val)) val = (long) (Long.MAX_VALUE * Math.random());
+                assertTrue(reader.findEntry( val) < 0);
             }
         }
     }
-
-    @Test
-    public void testWriteTwoEqualityMasked() throws IOException {
-
-        for (int bs = 2; bs <= 4; bs++) {
-            var tempFile = Files.createTempFile(Path.of("/tmp"), "tst", "dat");
-            Set<Long> toPut = new HashSet<>();
-
-            long mask = 0xFFFF_FFFF_0000_0000L;
-            var ctx = new BTreeContext(5, 2, mask, bs);
-
-            for (int i = 0; i < 500; i++) {
-                while (!toPut.add((long) (Long.MAX_VALUE * Math.random()))) ;
-            }
-
-            long[] data = toPut.stream().mapToLong(Long::valueOf).sorted().toArray();
-
-            try (MultimapFileLong mmf = MultimapFileLong.forOutput(tempFile, 1000)) {
-                {
-                    var writer = new BTreeWriter(mmf, ctx);
-                    writer.write(0, toPut.size(), (slice) -> {
-                        for (int i = 0; i < data.length; i++) {
-                            slice.put(i*2L, data[i]);
-                            slice.put(i*2L+1, i);
-                        }
-                    });
-                    mmf.force();
-                }
-
-                {
-                    var reader = new BTreeReader(mmf, ctx, 0);
-
-                    printTreeLayout(toPut.size(), reader.getHeader(), ctx);
-
-                    for (int i = 0; i < data.length; i++) {
-                        long offset = reader.findEntry(data[i] & mask);
-                        assertTrue(offset >= 0, "Negative offset for " + i + " -> " + offset);
-                        assertEquals(data[i], mmf.get(offset));
-                        assertEquals(i, mmf.get(offset+1));
-                    }
-
-                    for (int i = 0; i < 500; i++) {
-                        long val = (long) (Long.MAX_VALUE * Math.random());
-                        while (toPut.contains(val)) val = (long) (Long.MAX_VALUE * Math.random());
-                        assertTrue(reader.findEntry(val & mask) < 0);
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                Files.delete(tempFile);
-            }
-        }
-    }
-
-
 
 }

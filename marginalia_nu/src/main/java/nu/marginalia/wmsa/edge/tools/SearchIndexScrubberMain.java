@@ -1,6 +1,5 @@
 package nu.marginalia.wmsa.edge.tools;
 
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,15 +56,6 @@ public class SearchIndexScrubberMain {
             inByteBuffer.putInt(chunkBlock);
             inByteBuffer.putInt(count);
             channel.read(inByteBuffer);
-
-
-            if (chunkBlock == IndexBlock.Link.ordinal()) {
-                for (int i = 0; i < randomAccessFiles.length; i++) {
-                    inByteBuffer.flip();
-                    fileChannels[i].write(inByteBuffer);
-                }
-            }
-
         }
 
         long size = randomAccessFiles[0].getFilePointer();

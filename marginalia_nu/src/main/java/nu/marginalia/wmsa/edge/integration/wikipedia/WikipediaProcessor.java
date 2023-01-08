@@ -4,7 +4,6 @@ import nu.marginalia.util.language.processing.DocumentKeywordExtractor;
 import nu.marginalia.util.language.processing.SentenceExtractor;
 import nu.marginalia.util.language.processing.model.KeywordMetadata;
 import nu.marginalia.wmsa.edge.converting.processor.logic.LinkParser;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.integration.model.BasicDocumentData;
 import nu.marginalia.wmsa.edge.integration.wikipedia.model.WikipediaArticle;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
@@ -40,13 +39,12 @@ public class WikipediaProcessor {
         EdgeDomainLink[] domainLinks = getDomainLinks(docUrl, doc);
 
         var dld = sentenceExtractor.extractSentences(doc);
-        var keywords = documentKeywordExtractor.extractKeywords(dld, new KeywordMetadata(15));
+        var keywords = documentKeywordExtractor.extractKeywords(dld, new KeywordMetadata());
 
-        keywords.get(IndexBlock.Meta).addJustNoMeta("site:"+post.getUrl().domain);
-        keywords.get(IndexBlock.Words_1).addJustNoMeta("site:"+post.getUrl().domain);
-        keywords.get(IndexBlock.Words_1).addJustNoMeta("special:stackoverflow");
-        keywords.get(IndexBlock.Meta).addJustNoMeta("special:stackoverflow");
-        keywords.get(IndexBlock.Meta).addJustNoMeta("js:true");
+        keywords.addJustNoMeta("site:"+post.getUrl().domain);
+        keywords.addJustNoMeta("special:stackoverflow");
+        keywords.addJustNoMeta("special:stackoverflow");
+        keywords.addJustNoMeta("js:true");
 
         return new BasicDocumentData(docUrl, title, description, post.body.hashCode(), keywords, domainLinks,
                 dld.totalNumWords());

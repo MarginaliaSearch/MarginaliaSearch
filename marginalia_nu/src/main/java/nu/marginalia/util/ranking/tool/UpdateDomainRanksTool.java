@@ -5,7 +5,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.util.ranking.BuggyStandardPageRank;
 import nu.marginalia.util.ranking.RankingDomainFetcher;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
-import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklistImpl;
+import nu.marginalia.wmsa.edge.dbcommon.EdgeDomainBlacklistImpl;
 import org.mariadb.jdbc.Driver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,14 +51,14 @@ public class UpdateDomainRanksTool {
         rankMax = spr.size()*2;
         uploader.start();
 
-        spr.pageRankWithPeripheralNodes(rankMax).forEach(i -> {
+        var rankData = spr.pageRankWithPeripheralNodes(rankMax);
+        for (int i : rankData) {
             try {
                 uploadQueue.put(i);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            return true;
-        });
+        }
 
         long end = System.currentTimeMillis();
         running = false;

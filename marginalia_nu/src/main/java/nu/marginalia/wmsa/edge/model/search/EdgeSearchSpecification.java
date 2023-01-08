@@ -1,18 +1,18 @@
 package nu.marginalia.wmsa.edge.model.search;
 
 import lombok.*;
+import nu.marginalia.wmsa.edge.index.model.QueryStrategy;
+import nu.marginalia.wmsa.edge.index.svc.searchset.SearchSetIdentifier;
+import nu.marginalia.wmsa.edge.model.search.domain.SpecificationLimit;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @ToString @Getter @Builder @With @AllArgsConstructor
 public class EdgeSearchSpecification {
 
-    public List<Integer> buckets;
     public List<EdgeSearchSubquery> subqueries;
     public List<Integer> domains;
+    public SearchSetIdentifier searchSetIdentifier;
 
     public final int limitByDomain;
     public final int limitTotal;
@@ -22,14 +22,10 @@ public class EdgeSearchSpecification {
     public final int timeoutMs;
     public final int fetchSize;
 
-    public final Integer quality;
-    public final Integer rank;
+    public final SpecificationLimit quality;
+    public final SpecificationLimit year;
+    public final SpecificationLimit size;
 
-    public List<String> allIncludeSearchTerms() {
-        Set<String> searchTerms = new HashSet<>(64);
-        for (var query : subqueries) {
-            searchTerms.addAll(query.searchTermsInclude);
-        }
-        return new ArrayList<>(searchTerms);
-    }
+    public final QueryStrategy queryStrategy;
+
 }

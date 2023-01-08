@@ -2,7 +2,7 @@ package nu.marginalia.util.ranking;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklistImpl;
+import nu.marginalia.wmsa.edge.dbcommon.EdgeDomainBlacklistImpl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,9 +87,9 @@ public class RankingDomainFetcher {
 
     public void domainsByPattern(String pattern, IntConsumer idConsumer) {
         try (var conn = dataSource.getConnection();
-             var stmt = conn.prepareStatement("SELECT ID FROM EC_DOMAIN WHERE DOMAIN_NAME LIKE ?")) {
-            stmt.setString(1, pattern);
-            var rsp = stmt.executeQuery();
+             var stmt = conn.createStatement()) {
+                                                                    // This is sourced from a config file --v
+            var rsp = stmt.executeQuery("SELECT ID FROM EC_DOMAIN WHERE DOMAIN_NAME LIKE '" + pattern + "'");
             while (rsp.next()) {
                 idConsumer.accept(rsp.getInt(1));
             }

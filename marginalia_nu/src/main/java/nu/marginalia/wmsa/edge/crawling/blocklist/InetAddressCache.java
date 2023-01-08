@@ -12,9 +12,7 @@ public class InetAddressCache {
     private static final Cache<EdgeDomain, InetAddress> cache = CacheBuilder.newBuilder().maximumSize(10_000_000).expireAfterAccess(1, TimeUnit.HOURS).build();
     public static InetAddress getAddress(EdgeDomain domain) throws Throwable {
         try {
-            return cache.get(domain, ()->{
-                return InetAddress.getByName(domain.getAddress());
-            });
+            return cache.get(domain, ()-> InetAddress.getByName(domain.getAddress()));
         }
         catch (ExecutionException ex) {
             throw ex.getCause();

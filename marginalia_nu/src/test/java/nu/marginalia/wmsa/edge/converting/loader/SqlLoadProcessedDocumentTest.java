@@ -4,7 +4,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.util.TestUtil;
 import nu.marginalia.wmsa.edge.converting.interpreter.instruction.LoadProcessedDocument;
 import nu.marginalia.wmsa.edge.converting.processor.logic.HtmlFeature;
-import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDaoImpl;
+import nu.marginalia.wmsa.edge.dbcommon.EdgeDataStoreDaoImpl;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeHtmlStandard;
@@ -12,6 +12,7 @@ import nu.marginalia.wmsa.edge.model.crawl.EdgeUrlState;
 import nu.marginalia.wmsa.edge.model.id.EdgeIdArray;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -24,6 +25,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Tag("slow")
 @Testcontainers
 class SqlLoadProcessedDocumentTest {
     @Container

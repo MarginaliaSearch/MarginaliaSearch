@@ -3,6 +3,8 @@ package nu.marginalia.wmsa.edge.converting.processor;
 import com.google.common.hash.HashCode;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import nu.marginalia.util.gregex.GuardedRegex;
+import nu.marginalia.util.gregex.GuardedRegexFactory;
 import nu.marginalia.util.language.LanguageFilter;
 import nu.marginalia.util.language.processing.DocumentKeywordExtractor;
 import nu.marginalia.util.language.processing.SentenceExtractor;
@@ -18,11 +20,12 @@ import nu.marginalia.wmsa.edge.converting.processor.logic.pubdate.PubDateSniffer
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDocument;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDomain;
 import nu.marginalia.wmsa.edge.crawling.model.CrawlerDocumentStatus;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
+import nu.marginalia.wmsa.edge.index.model.EdgePageDocumentFlags;
+import nu.marginalia.wmsa.edge.index.model.EdgePageDocumentsMetadata;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeHtmlStandard;
-import nu.marginalia.wmsa.edge.model.crawl.EdgePageWordSet;
+import nu.marginalia.wmsa.edge.model.crawl.EdgePageWords;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeUrlState;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -128,10 +131,10 @@ public class DocumentProcessor {
         ret.url = getDocumentUrl(crawledDocument);
         ret.state = crawlerStatusToUrlState(crawledDocument.crawlerStatus, crawledDocument.httpStatus);
 
-        var detailsWithWordsLinks = createDetails(crawledDomain, crawledDocument);
+        var detailsWithWords = createDetails(crawledDomain, crawledDocument);
 
-        ret.details = detailsWithWordsLinks.details();
-        ret.words = detailsWithWordsLinks.words();
+        ret.details = detailsWithWords.details();
+        ret.words = detailsWithWords.words();
     }
 
 
@@ -212,12 +215,11 @@ public class DocumentProcessor {
         ret.quality = documentValuator.getQuality(crawledDocument, ret.standard, doc, dld);
         ret.hashCode = HashCode.fromString(crawledDocument.documentBodyHash).asLong();
 
-
-        KeywordMetadata keywordMetadata = new KeywordMetadata(ret.quality);
+        KeywordMetadata keywordMetadata = new KeywordMetadata();
 
         PubDate pubDate;
-        EdgePageWordSet words;
-        if (shouldDoSimpleProcessing(url, ret)) {
+        EdgePageWords words;
+        if (shouldDoSimpleProcessing(url, dld, ret)) {
             /* Some documents we'll index, but only superficially. This is a compromise
                to allow them to be discoverable, without having them show up without specific
                queries. This also saves a lot of processing power.
@@ -227,6 +229,9 @@ public class DocumentProcessor {
             ret.description = "";
 
             pubDate = pubDateSniffer.getPubDate(crawledDocument.headers, url, doc, ret.standard, false);
+
+            ret.metadata = new EdgePageDocumentsMetadata(url.depth(), pubDate.yearByte(), 0, (int) -ret.quality, EnumSet.of(EdgePageDocumentFlags.Simple));
+
         }
         else {
             ret.features = featureExtractor.getFeatures(crawledDomain, doc, dld);
@@ -234,6 +239,8 @@ public class DocumentProcessor {
             ret.description = getDescription(doc);
 
             pubDate = pubDateSniffer.getPubDate(crawledDocument.headers, url, doc, ret.standard, true);
+
+            ret.metadata = new EdgePageDocumentsMetadata(url.depth(), pubDate.yearByte(), 0, (int) -ret.quality, EnumSet.noneOf(EdgePageDocumentFlags.class));
         }
 
         addMetaWords(ret, url, pubDate, crawledDomain, words);
@@ -247,11 +254,15 @@ public class DocumentProcessor {
         return new DetailsWithWords(ret, words);
     }
 
-    private boolean shouldDoSimpleProcessing(EdgeUrl url, ProcessedDocumentDetails ret) {
+    private static final GuardedRegex mastodonFeedRegex = GuardedRegexFactory.startsWith("/@", "^/@[^/]+/?$");
+
+    private boolean shouldDoSimpleProcessing(EdgeUrl url, DocumentLanguageData dld, ProcessedDocumentDetails ret) {
         if (ret.quality < minDocumentQuality) {
             return true;
         }
-
+        if (dld.totalNumWords() < minDocumentLength) {
+            return true;
+        }
         // These pages shouldn't be publicly accessible
         if ("phpinfo()".equals(ret.title)) {
             return true;
@@ -261,9 +272,7 @@ public class DocumentProcessor {
         // we don't want to index them because they change so rapidly; subdirectories are
         // fine though
         //
-        // The first startsWith criteria is a performance optimization, even with a compiled
-        // pattern it is something like 50x faster
-        if (url.path.startsWith("/@") && url.path.matches("^/@[^/]+/?$")) {
+        if (mastodonFeedRegex.test(url.path)) {
             return true;
         }
 
@@ -274,7 +283,7 @@ public class DocumentProcessor {
         return false;
     }
 
-    private void addMetaWords(ProcessedDocumentDetails ret, EdgeUrl url, PubDate pubDate, CrawledDomain domain, EdgePageWordSet words) {
+    private void addMetaWords(ProcessedDocumentDetails ret, EdgeUrl url, PubDate pubDate, CrawledDomain domain, EdgePageWords words) {
         List<String> tagWords = new ArrayList<>();
 
         var edgeDomain = url.domain;
@@ -284,6 +293,8 @@ public class DocumentProcessor {
         if (!Objects.equals(edgeDomain.toString(), edgeDomain.domain)) {
             tagWords.add("site:" + edgeDomain.domain.toLowerCase());
         }
+
+        tagWords.add("tld:" + edgeDomain.getTld());
 
         tagWords.add("proto:"+url.proto.toLowerCase());
         tagWords.add("js:" + Boolean.toString(ret.features.contains(HtmlFeature.JS)).toLowerCase());
@@ -301,10 +312,10 @@ public class DocumentProcessor {
             tagWords.add("pub:" + pubDate.dateIso8601());
         }
 
-        words.appendWithNoMeta(IndexBlock.Meta, tagWords);
+        words.addAllSyntheticTerms(tagWords);
     }
 
-    private void getLinks(EdgeUrl baseUrl, ProcessedDocumentDetails ret, Document doc, EdgePageWordSet words) {
+    private void getLinks(EdgeUrl baseUrl, ProcessedDocumentDetails ret, Document doc, EdgePageWords words) {
 
         final LinkProcessor lp = new LinkProcessor(ret, baseUrl);
 
@@ -339,17 +350,17 @@ public class DocumentProcessor {
         createFileLinkKeywords(words, lp, domain);
     }
 
-    private void createLinkKeywords(EdgePageWordSet words, LinkProcessor lp) {
+    private void createLinkKeywords(EdgePageWords words, LinkProcessor lp) {
         final Set<String> linkTerms = new HashSet<>();
 
         for (var fd : lp.getForeignDomains()) {
             linkTerms.add("links:"+fd.toString().toLowerCase());
             linkTerms.add("links:"+fd.getDomain().toLowerCase());
         }
-        words.appendWithNoMeta(IndexBlock.Meta, linkTerms);
+        words.addAllSyntheticTerms(linkTerms);
     }
 
-    private void createFileLinkKeywords(EdgePageWordSet words, LinkProcessor lp, EdgeDomain domain) {
+    private void createFileLinkKeywords(EdgePageWords words, LinkProcessor lp, EdgeDomain domain) {
         Set<String> fileKeywords = new HashSet<>(100);
         for (var link : lp.getNonIndexableUrls()) {
 
@@ -361,7 +372,7 @@ public class DocumentProcessor {
 
         }
 
-        words.appendWithNoMeta(IndexBlock.Artifacts, fileKeywords);
+        words.addAllSyntheticTerms(fileKeywords);
     }
 
     private void synthesizeFilenameKeyword(Set<String> fileKeywords, EdgeUrl link) {
@@ -383,10 +394,6 @@ public class DocumentProcessor {
     }
 
     private void checkDocumentLanguage(DocumentLanguageData dld) throws DisqualifiedException {
-        if (dld.totalNumWords() < minDocumentLength) {
-            throw new DisqualifiedException(DisqualificationReason.LENGTH);
-        }
-
         double languageAgreement = languageFilter.dictionaryAgreement(dld);
         if (languageAgreement < 0.1) {
             throw new DisqualifiedException(DisqualificationReason.LANGUAGE);
@@ -411,6 +418,6 @@ public class DocumentProcessor {
     }
 
     private record DetailsWithWords(ProcessedDocumentDetails details,
-                                    EdgePageWordSet words) {}
+                                    EdgePageWords words) {}
 
 }

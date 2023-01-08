@@ -4,12 +4,12 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.prometheus.client.Histogram;
-import nu.marginalia.util.btree.BTreeQueryBuffer;
+import nu.marginalia.util.array.buffer.LongQueryBuffer;
 import nu.marginalia.util.dict.DictionaryHashMap;
 import nu.marginalia.wmsa.client.GsonFactory;
-import nu.marginalia.wmsa.edge.index.reader.SearchIndexes;
-import nu.marginalia.wmsa.edge.index.svc.query.IndexSearchBudget;
-import nu.marginalia.wmsa.edge.index.svc.query.ResultDomainDeduplicator;
+import nu.marginalia.wmsa.edge.index.postings.SearchIndexControl;
+import nu.marginalia.wmsa.edge.index.query.IndexResultDomainDeduplicator;
+import nu.marginalia.wmsa.edge.index.query.IndexSearchBudget;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.id.EdgeIdList;
 import nu.marginalia.wmsa.edge.model.search.domain.EdgeDomainSearchResults;
@@ -24,7 +24,6 @@ import spark.Spark;
 
 import java.util.OptionalInt;
 
-import static nu.marginalia.wmsa.edge.index.EdgeIndexService.DYNAMIC_BUCKET_LENGTH;
 import static spark.Spark.halt;
 
 @Singleton
@@ -36,10 +35,10 @@ public class EdgeIndexDomainQueryService {
 
     private final Gson gson = GsonFactory.get();
 
-    private final SearchIndexes indexes;
+    private final SearchIndexControl indexes;
 
     @Inject
-    public EdgeIndexDomainQueryService(SearchIndexes indexes) {
+    public EdgeIndexDomainQueryService(SearchIndexControl indexes) {
         this.indexes = indexes;
     }
 
@@ -53,7 +52,9 @@ public class EdgeIndexDomainQueryService {
         EdgeDomainSearchSpecification specsSet = gson.fromJson(json, EdgeDomainSearchSpecification.class);
 
         try {
-            return wmsa_edge_index_domain_query_time.time(() -> queryDomain(specsSet));
+            return new EdgeDomainSearchResults("", new EdgeIdList<>());
+            // fixme
+            // return wmsa_edge_index_domain_query_time.time(() -> queryDomain(specsSet));
         }
         catch (HaltException ex) {
             logger.warn("Halt", ex);
@@ -78,21 +79,19 @@ public class EdgeIndexDomainQueryService {
             return new EdgeDomainSearchResults(specsSet.keyword, urlIds);
         }
 
-        BTreeQueryBuffer buffer = new BTreeQueryBuffer(512);
+        LongQueryBuffer buffer = new LongQueryBuffer(512);
 
-        for (int bucket = 0; budget.hasTimeLeft() && bucket < DYNAMIC_BUCKET_LENGTH+1; bucket++) {
 
-            final ResultDomainDeduplicator localFilter = new ResultDomainDeduplicator(1);
-            var query = indexes.getBucket(bucket).getDomainQuery(wordId.getAsInt(), localFilter);
+        final IndexResultDomainDeduplicator localFilter = new IndexResultDomainDeduplicator(1);
+        var query = indexes.getIndex().getDomainQuery(wordId.getAsInt(), localFilter);
 
-            while (query.hasMore() && urlIds.size() < specsSet.maxResults) {
-                query.getMoreResults(buffer);
+        while (query.hasMore() && urlIds.size() < specsSet.maxResults) {
+            query.getMoreResults(buffer);
 
-                for (int i = 0; i < buffer.end && urlIds.size() < specsSet.maxResults; i++) {
-                    long result = buffer.data[i];
-                    if (localFilter.test(result)) {
-                        urlIds.add((int) (result & 0xFFFF_FFFFL));
-                    }
+            for (int i = 0; i < buffer.end && urlIds.size() < specsSet.maxResults; i++) {
+                long result = buffer.data[i];
+                if (localFilter.test(result)) {
+                    urlIds.add((int) (result & 0xFFFF_FFFFL));
                 }
             }
         }

@@ -2,7 +2,6 @@ package nu.marginalia.wmsa.edge.model.search;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.id.EdgeId;
 
@@ -11,17 +10,13 @@ import java.util.List;
 
 @AllArgsConstructor @Getter
 public class EdgeSearchResultItem {
-    public final int bucketId;
-    public final IndexBlock block;
     public final long combinedId;
 
     public final List<EdgeSearchResultKeywordScore> scores;
 
     public int resultsFromDomain;
 
-    public EdgeSearchResultItem(int bucketId, IndexBlock block, long val) {
-        this.bucketId = bucketId;
-        this.block = block;
+    public EdgeSearchResultItem(long val) {
         this.combinedId = val;
         this.scores = new ArrayList<>(16);
     }
@@ -36,7 +31,6 @@ public class EdgeSearchResultItem {
     public int getRanking() {
         return (int)(combinedId >>> 32);
     }
-    public int getResultsFromDomain() { return resultsFromDomain; }
 
     /* Used for evaluation */
     private transient double scoreValue = 1;
@@ -47,12 +41,20 @@ public class EdgeSearchResultItem {
         return scoreValue;
     }
 
+    private transient int domainId = 0;
+    public void setDomainId(int domainId) {
+        this.domainId = domainId;
+    }
+    public int getDomainId() {
+        return this.domainId;
+    }
+
     public int hashCode() {
         return getUrlIdInt();
     }
 
     public String toString() {
-        return getClass().getSimpleName() + "[ url= " + getUrlId() + ", rank=" + getRanking() + "; bucket = " + bucketId + "]";
+        return getClass().getSimpleName() + "[ url= " + getUrlId() + ", rank=" + getRanking() + "]";
     }
 
     public boolean equals(Object other) {
@@ -67,12 +69,12 @@ public class EdgeSearchResultItem {
     }
 
     public long deduplicationKey() {
-        final int ranking = getRanking();
+        final int ranking = getDomainId();
 
         if (ranking == Integer.MAX_VALUE || ranking == Integer.MIN_VALUE) {
             return 0;
         }
 
-        return ranking*32L + bucketId;
+        return ranking;
     }
 }

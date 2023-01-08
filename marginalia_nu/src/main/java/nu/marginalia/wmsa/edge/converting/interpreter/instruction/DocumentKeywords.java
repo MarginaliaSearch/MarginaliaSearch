@@ -1,18 +1,16 @@
 package nu.marginalia.wmsa.edge.converting.interpreter.instruction;
 
 import nu.marginalia.wmsa.edge.index.model.EdgePageWordMetadata;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
 import nu.marginalia.wmsa.edge.model.crawl.EdgePageWords;
 
 import java.util.Arrays;
 
-public record DocumentKeywords(IndexBlock block,
+public record DocumentKeywords(
                                String[] keywords,
                                long[] metadata) {
 
     public DocumentKeywords(EdgePageWords words) {
-        this(words.block,
-                words.words.toArray(String[]::new),
+        this(words.words.toArray(String[]::new),
                 words.metadata.toArray());
     }
 
@@ -20,7 +18,7 @@ public record DocumentKeywords(IndexBlock block,
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(getClass().getSimpleName());
-        sb.append('[').append(block).append(", ");
+        sb.append('[');
         for (int i = 0; i < keywords.length; i++) {
             sb.append("\n\t ");
             if (metadata[i] != 0) {
@@ -42,6 +40,6 @@ public record DocumentKeywords(IndexBlock block,
     }
 
     public DocumentKeywords subList(int start, int end) {
-        return new DocumentKeywords(block, Arrays.copyOfRange(keywords, start, end), Arrays.copyOfRange(metadata, start, end));
+        return new DocumentKeywords(Arrays.copyOfRange(keywords, start, end), Arrays.copyOfRange(metadata, start, end));
     }
 }

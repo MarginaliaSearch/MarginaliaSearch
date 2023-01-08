@@ -10,10 +10,10 @@ class FloydSteinbergDitherTest {
 
     @Test
     public void test() throws IOException {
-        convert("/home/vlofgren/Work/dither/volvo.jpg", "/home/vlofgren/Work/dither/volvo-raster.png");
-        convert("/home/vlofgren/Work/dither/dog.jpg", "/home/vlofgren/Work/dither/dog-raster.png");
-        convert("/home/vlofgren/Work/dither/robocop.jpg", "/home/vlofgren/Work/dither/robocop-raster.png");
-        convert("/home/vlofgren/Work/dither/socrates.jpeg", "/home/vlofgren/Work/dither/socrates-raster.png");
+//        convert("/home/vlofgren/Work/dither/volvo.jpg", "/home/vlofgren/Work/dither/volvo-raster.png");
+//        convert("/home/vlofgren/Work/dither/dog.jpg", "/home/vlofgren/Work/dither/dog-raster.png");
+//        convert("/home/vlofgren/Work/dither/robocop.jpg", "/home/vlofgren/Work/dither/robocop-raster.png");
+//        convert("/home/vlofgren/Work/dither/socrates.jpeg", "/home/vlofgren/Work/dither/socrates-raster.png");
 
 
 //        convert("C:\\Users\\vlofg\\Documents\\volvo.jpg",

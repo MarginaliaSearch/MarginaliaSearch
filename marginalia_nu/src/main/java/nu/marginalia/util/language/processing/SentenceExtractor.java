@@ -98,7 +98,6 @@ public class SentenceExtractor {
             }
         }
 
-
         TObjectIntHashMap<String> counts = calculateWordCounts(textSentences);
 
         return new DocumentLanguageData(textSentences, extractSentencesFromString(title.toLowerCase()), counts);

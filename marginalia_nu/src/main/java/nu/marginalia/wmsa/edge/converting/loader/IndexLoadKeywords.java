@@ -5,6 +5,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.edge.converting.interpreter.instruction.DocumentKeywords;
 import nu.marginalia.wmsa.edge.index.client.EdgeIndexWriterClient;
+import nu.marginalia.wmsa.edge.index.model.EdgePageDocumentsMetadata;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.id.EdgeId;
 import org.slf4j.Logger;
@@ -19,7 +20,7 @@ public class IndexLoadKeywords implements Runnable {
     private final LinkedBlockingQueue<InsertTask> insertQueue = new LinkedBlockingQueue<>(32);
     private final EdgeIndexWriterClient client;
 
-    private record InsertTask(int urlId, int domainId, DocumentKeywords wordSet) {}
+    private record InsertTask(int urlId, int domainId, EdgePageDocumentsMetadata metadata, DocumentKeywords wordSet) {}
 
     private final Thread runThread;
     private volatile boolean canceled = false;
@@ -38,7 +39,7 @@ public class IndexLoadKeywords implements Runnable {
         while (!canceled) {
             var data = insertQueue.poll(1, TimeUnit.SECONDS);
             if (data != null) {
-                client.putWords(Context.internal(), new EdgeId<>(data.domainId), new EdgeId<>(data.urlId), data.wordSet, index);
+                client.putWords(Context.internal(), new EdgeId<>(data.domainId), new EdgeId<>(data.urlId), data.metadata(), data.wordSet, index);
             }
         }
     }
@@ -48,7 +49,7 @@ public class IndexLoadKeywords implements Runnable {
         runThread.join();
     }
 
-    public void load(LoaderData loaderData, EdgeUrl url, DocumentKeywords[] words) throws InterruptedException {
+    public void load(LoaderData loaderData, EdgeUrl url, EdgePageDocumentsMetadata metadata, DocumentKeywords words) throws InterruptedException {
         int domainId = loaderData.getDomainId(url.domain);
         int urlId = loaderData.getUrlId(url);
 
@@ -57,8 +58,6 @@ public class IndexLoadKeywords implements Runnable {
             return;
         }
 
-        for (var ws : words) {
-            insertQueue.put(new InsertTask(urlId, domainId, ws));
-        }
+        insertQueue.put(new InsertTask(urlId, domainId, metadata, words));
     }
 }

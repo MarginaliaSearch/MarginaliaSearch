@@ -2,6 +2,7 @@ package nu.marginalia.wmsa.api.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import nu.marginalia.wmsa.edge.index.model.EdgePageWordMetadata;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchResultKeywordScore;
 import nu.marginalia.wmsa.edge.model.search.EdgeUrlDetails;
 
@@ -33,12 +34,12 @@ public class ApiSearchResult {
             for (var entries : bySet.values()) {
                 List<ApiSearchResultQueryDetails> lst = new ArrayList<>();
                 for (var entry : entries) {
-                    var metadata = entry.metadata();
+                    var metadata = new EdgePageWordMetadata(entry.encodedWordMetadata());
                     if (metadata.isEmpty())
                         continue outer;
 
-                    Set<String> flags = metadata.flags().stream().map(Object::toString).collect(Collectors.toSet());
-                    lst.add(new ApiSearchResultQueryDetails(entry.keyword(), metadata.tfIdf(),metadata.count(), flags));
+                    Set<String> flags = metadata.flagSet().stream().map(Object::toString).collect(Collectors.toSet());
+                    lst.add(new ApiSearchResultQueryDetails(entry.keyword(), metadata.tfIdf(), metadata.count(), flags));
                 }
                 details.add(lst);
             }

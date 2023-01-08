@@ -12,10 +12,16 @@ The canonical git server for this project is [https://git.marginalia.nu](https:/
 It is fine to mirror it on other hosts, but if you have issues or questions
 git.marginalia.nu is where you want to go.
 
-As it stands now, the project is still being set up and is a bit of a mess as 
-it wasn't developed with the intention of going open source, a lot of tests
-and so on make assumptions about the directory structure, much configuration 
-is hard coded and so on. Please stand by. A lot of the mess is fairly superficial.
+## Important note about wmsa.local
+
+This project has a [sister repository called wmsa.local](https://git.marginalia.nu/marginalia/wmsa.local)
+that contains scripts and configuration files for running and developing the code. 
+
+Without it, development is very unpleasant. 
+
+While developing the code, you will want an environment variable WMSA_HOME pointing to 
+the directory in which wmsa.local is checked out, otherwise the code will not run and
+several tests will fail.
 
 ## Documentation
 

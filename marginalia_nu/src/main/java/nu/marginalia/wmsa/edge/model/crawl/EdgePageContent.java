@@ -9,7 +9,7 @@ import java.util.Set;
 @Data
 public class EdgePageContent {
     public final EdgeUrl url;
-    public final EdgePageWordSet words;
+    public final EdgePageWords words;
     public final Map<EdgeUrl, Set<String>> linkWords;
     public final EdgePageMetadata metadata;
     public final int hash;

@@ -12,16 +12,16 @@ class EdgePageWordMetadataTest {
 
     @Test
     public void codecTest() {
-        verifyCodec("Vanilla case", new EdgePageWordMetadata(32, 0x7f0f0000, 5, 1, EnumSet.allOf(EdgePageWordFlags.class)));
-        verifyCodec("Position high", new EdgePageWordMetadata(32, 0xff0f0000, 5, 1, EnumSet.allOf(EdgePageWordFlags.class)));
-        verifyCodec("No flags", new EdgePageWordMetadata(32, 0xff0f0000, 5, 1, EnumSet.noneOf(EdgePageWordFlags.class)));
-        System.out.println(new EdgePageWordMetadata(32, 0x7f0f0005, 5, 1, EnumSet.allOf(EdgePageWordFlags.class)));
-        System.out.println(new EdgePageWordMetadata(32, 0xff0f0013, 5, 1, EnumSet.noneOf(EdgePageWordFlags.class)));
+        verifyCodec("Vanilla case", new EdgePageWordMetadata(32, 0x7f0f0000, 1, EnumSet.allOf(EdgePageWordFlags.class)));
+        verifyCodec("Position high", new EdgePageWordMetadata(32, 0xff0f0000, 1, EnumSet.allOf(EdgePageWordFlags.class)));
+        verifyCodec("No flags", new EdgePageWordMetadata(32, 0xff0f0000, 1, EnumSet.noneOf(EdgePageWordFlags.class)));
+        System.out.println(new EdgePageWordMetadata(32, 0x7f0f0005, 1, EnumSet.allOf(EdgePageWordFlags.class)));
+        System.out.println(new EdgePageWordMetadata(32, 0xff0f0013, 1, EnumSet.noneOf(EdgePageWordFlags.class)));
     }
 
     @Test
     public void testClampTfIdfLow() {
-        var original = new EdgePageWordMetadata(0x8000FFFF, 0, 5, 1, EnumSet.noneOf(EdgePageWordFlags.class));
+        var original = new EdgePageWordMetadata(0x8000FFFF, 0, 1, EnumSet.noneOf(EdgePageWordFlags.class));
         var encoded = new EdgePageWordMetadata(original.encode());
 
         assertEquals(original.positions(), encoded.positions());
@@ -30,7 +30,7 @@ class EdgePageWordMetadataTest {
 
     @Test
     public void testClampTfIdfHigh() {
-        var original = new EdgePageWordMetadata(0x7000FFFF, 0, 5, 1, EnumSet.noneOf(EdgePageWordFlags.class));
+        var original = new EdgePageWordMetadata(0x7000FFFF, 0, 1, EnumSet.noneOf(EdgePageWordFlags.class));
         var encoded = new EdgePageWordMetadata(original.encode());
 
         assertEquals(original.positions(), encoded.positions());
@@ -39,7 +39,7 @@ class EdgePageWordMetadataTest {
 
     @Test
     public void testClampCountLow() {
-        var original = new EdgePageWordMetadata(40, 0, 5, -1, EnumSet.noneOf(EdgePageWordFlags.class));
+        var original = new EdgePageWordMetadata(40, 0, -1, EnumSet.noneOf(EdgePageWordFlags.class));
         var encoded = new EdgePageWordMetadata(original.encode());
 
         assertEquals(original.positions(), encoded.positions());
@@ -48,7 +48,7 @@ class EdgePageWordMetadataTest {
 
     @Test
     public void testClampCountHigh() {
-        var original = new EdgePageWordMetadata(40, 0, 5, 17, EnumSet.noneOf(EdgePageWordFlags.class));
+        var original = new EdgePageWordMetadata(40, 0, 17, EnumSet.noneOf(EdgePageWordFlags.class));
         var encoded = new EdgePageWordMetadata(original.encode());
 
         assertEquals(original.positions(), encoded.positions());

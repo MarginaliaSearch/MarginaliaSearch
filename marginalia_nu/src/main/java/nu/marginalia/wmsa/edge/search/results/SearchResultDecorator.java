@@ -3,13 +3,13 @@ package nu.marginalia.wmsa.edge.search.results;
 import com.google.inject.Inject;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntObjectHashMap;
+import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 import nu.marginalia.util.BrailleBlockPunchCards;
-import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
+import nu.marginalia.wmsa.edge.dbcommon.EdgeDataStoreDao;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
 import nu.marginalia.wmsa.edge.model.id.EdgeIdList;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchResultItem;
-import nu.marginalia.wmsa.edge.model.search.EdgeSearchResultKeywordScore;
 import nu.marginalia.wmsa.edge.model.search.EdgeUrlDetails;
 import nu.marginalia.wmsa.edge.search.valuation.SearchResultValuator;
 import org.slf4j.Logger;
@@ -77,16 +77,24 @@ public class SearchResultDecorator {
     }
 
     private String getPositions(EdgeSearchResultItem resultItem) {
-        int bits = resultItem.scores.stream()
-                .filter(EdgeSearchResultKeywordScore::isRegular)
-                .mapToInt(EdgeSearchResultKeywordScore::positions)
-                .reduce(this::or)
-                .orElse(0);
+        Int2IntArrayMap positionsPerSet = new Int2IntArrayMap(8);
+
+        for (var score : resultItem.scores) {
+            if (!score.isRegular()) {
+                continue;
+            }
+            positionsPerSet.merge(score.set(), score.positions(), this::and);
+        }
+
+        int bits = positionsPerSet.values().intStream().reduce(this::or).orElse(0);
 
         return BrailleBlockPunchCards.printBits(bits, 32);
 
     }
 
+    private int and(int a, int b) {
+        return a & b;
+    }
     private int or(int a, int b) {
         return a | b;
     }

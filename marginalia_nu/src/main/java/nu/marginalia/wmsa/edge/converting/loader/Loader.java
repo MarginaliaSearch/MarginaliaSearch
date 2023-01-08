@@ -5,6 +5,7 @@ import nu.marginalia.wmsa.edge.converting.interpreter.instruction.DocumentKeywor
 import nu.marginalia.wmsa.edge.converting.interpreter.instruction.DomainLink;
 import nu.marginalia.wmsa.edge.converting.interpreter.instruction.LoadProcessedDocument;
 import nu.marginalia.wmsa.edge.converting.interpreter.instruction.LoadProcessedDocumentWithError;
+import nu.marginalia.wmsa.edge.index.model.EdgePageDocumentsMetadata;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
@@ -108,8 +109,8 @@ public class Loader implements Interpreter {
     }
 
     @Override
-    public void loadKeywords(EdgeUrl url, DocumentKeywords[] words) {
-        logger.debug("loadKeywords(#{})", words.length);
+    public void loadKeywords(EdgeUrl url, EdgePageDocumentsMetadata metadata, DocumentKeywords words) {
+        logger.debug("loadKeywords()");
 
         // This is a bit of a bandaid safeguard against a bug in
         // in the converter, shouldn't be necessary in the future
@@ -124,7 +125,7 @@ public class Loader implements Interpreter {
         }
 
         try {
-            indexLoadKeywords.load(data, url, words);
+            indexLoadKeywords.load(data, url, metadata, words);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }

@@ -6,37 +6,32 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.channels.ByteChannel;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 
-/** For managing random writes on SSDs
- *
- * See https://en.wikipedia.org/wiki/Write_amplification
+/** For managing random writes on SSDs.
+ * Because SSDs do not deal well with random small writes,
+ *  see https://en.wikipedia.org/wiki/Write_amplification,
+ * it is beneficial to pigeonhole the writes first
+ * within the same general region
  * */
 public class RandomWriteFunnel implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(RandomWriteFunnel.class);
-    private final DataBin[] bins;
-
+    private final ArrayList<DataBin> bins;
+    private final Path tempDir;
     private final int binSize;
 
-    public RandomWriteFunnel(Path tempDir, long size, int binSize) throws IOException {
+    public RandomWriteFunnel(Path tempDir, int binSize) throws IOException {
         this.binSize = binSize;
+        this.tempDir = tempDir;
 
-        if (size > 0) {
-            int binCount = (int) (size / binSize + ((size % binSize) != 0L ? 1 : 0));
-            bins = new DataBin[binCount];
-            for (int i = 0; i < binCount; i++) {
-                bins[i] = new DataBin(tempDir, (int)
-                        Math.min((size - (long)binSize * i), binSize));
-            }
-        }
-        else {
-            bins = new DataBin[0];
-        }
+        bins = new ArrayList<>();
     }
 
     @SneakyThrows
@@ -44,10 +39,21 @@ public class RandomWriteFunnel implements AutoCloseable {
         int bin = (int)(address / binSize);
         int offset = (int)(address%binSize);
 
-        bins[bin].put(offset, data);
+        if (bin >= bins.size()) {
+            grow(bin);
+        }
+
+        bins.get(bin).put(offset, data);
     }
 
-    public void write(FileChannel o) throws IOException {
+    @SneakyThrows
+    private void grow(int bin) {
+        while (bins.size() <= bin) {
+            bins.add(new DataBin(tempDir, binSize));
+        }
+    }
+
+    public void write(ByteChannel o) throws IOException {
         ByteBuffer buffer = ByteBuffer.allocateDirect(binSize*8);
 
         for (var bin : bins) {
@@ -67,7 +73,7 @@ public class RandomWriteFunnel implements AutoCloseable {
         }
     }
 
-    static class DataBin implements AutoCloseable {
+    static class DataBin {
         private final ByteBuffer buffer;
         private final int size;
         private final FileChannel channel;
@@ -77,7 +83,7 @@ public class RandomWriteFunnel implements AutoCloseable {
             buffer = ByteBuffer.allocateDirect(360_000);
             this.size = size;
             file = Files.createTempFile(tempDir, "scatter-writer", ".dat").toFile();
-            channel = new RandomAccessFile(file, "rw").getChannel();
+            channel = (FileChannel) Files.newByteChannel(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.READ);
         }
 
         void put(int address, long data) throws IOException {
@@ -133,7 +139,6 @@ public class RandomWriteFunnel implements AutoCloseable {
             }
         }
 
-        @Override
         public void close() throws IOException {
             channel.close();
             file.delete();

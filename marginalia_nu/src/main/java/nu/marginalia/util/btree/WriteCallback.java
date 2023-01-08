@@ -1,9 +1,9 @@
 package nu.marginalia.util.btree;
 
-import nu.marginalia.util.multimap.MultimapFileLongSlice;
+import nu.marginalia.util.array.LongArray;
 
 import java.io.IOException;
 
 public interface WriteCallback {
-    void write(MultimapFileLongSlice slice) throws IOException;
+    void write(LongArray slice) throws IOException;
 }

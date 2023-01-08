@@ -8,7 +8,7 @@ import nu.marginalia.wmsa.client.GsonFactory;
 import nu.marginalia.wmsa.configuration.server.Initialization;
 import nu.marginalia.wmsa.configuration.server.MetricsServer;
 import nu.marginalia.wmsa.configuration.server.Service;
-import nu.marginalia.wmsa.edge.index.reader.SearchIndexes;
+import nu.marginalia.wmsa.edge.index.postings.SearchIndexControl;
 import nu.marginalia.wmsa.edge.index.svc.EdgeIndexDomainQueryService;
 import nu.marginalia.wmsa.edge.index.svc.EdgeIndexLexiconService;
 import nu.marginalia.wmsa.edge.index.svc.EdgeIndexOpsService;
@@ -26,9 +26,7 @@ public class EdgeIndexService extends Service {
 
     @NotNull
     private final Initialization init;
-    private final SearchIndexes indexes;
-
-    public static final int DYNAMIC_BUCKET_LENGTH = 7;
+    private final SearchIndexControl indexes;
 
 
     @Inject
@@ -36,7 +34,7 @@ public class EdgeIndexService extends Service {
                             @Named("service-port") Integer port,
                             Initialization init,
                             MetricsServer metricsServer,
-                            SearchIndexes indexes,
+                            SearchIndexControl indexes,
 
                             EdgeIndexOpsService opsService,
                             EdgeIndexLexiconService lexiconService,
@@ -59,8 +57,7 @@ public class EdgeIndexService extends Service {
         Spark.get("/dictionary/*", lexiconService::getWordId, gson::toJson);
 
         Spark.post("/ops/repartition", opsService::repartitionEndpoint);
-        Spark.post("/ops/preconvert", opsService::preconvertEndpoint);
-        Spark.post("/ops/reindex/:id", opsService::reindexEndpoint);
+        Spark.post("/ops/reindex", opsService::reindexEndpoint);
 
         get("/is-blocked", this::isBlocked, gson::toJson);
 
@@ -76,11 +73,9 @@ public class EdgeIndexService extends Service {
         if (!initialized) {
             init.waitReady();
             initialized = true;
+            indexes.initialize(init);
         }
-        else {
-            return;
-        }
-        indexes.initialize(init);
+
     }
 
 

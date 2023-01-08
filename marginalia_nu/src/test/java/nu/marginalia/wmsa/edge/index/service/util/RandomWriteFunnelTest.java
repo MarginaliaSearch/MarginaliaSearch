@@ -15,7 +15,7 @@ class RandomWriteFunnelTest {
     @Test
     public void test() {
         new File("/tmp/test.bin").delete();
-        try (var funnel = new RandomWriteFunnel(Path.of("/tmp"), 10_000, 5001);
+        try (var funnel = new RandomWriteFunnel(Path.of("/tmp"), 5001);
              var out = new RandomAccessFile("/tmp/test.bin", "rw")) {
             for (int i = 10_000-1; i >= 0; i--) {
                 System.out.println(i);
@@ -40,7 +40,7 @@ class RandomWriteFunnelTest {
     public void testSparse() {
         new File("/tmp/test.bin").delete();
         for (int j = 1; j <= 20; j++) {
-            try (var funnel = new RandomWriteFunnel(Path.of("/tmp"), 10, j);
+            try (var funnel = new RandomWriteFunnel(Path.of("/tmp"), j);
                  var out = new RandomAccessFile("/tmp/test.bin", "rw")) {
                 for (int i = 10 - 1; i >= 0; i -= 2) {
                     funnel.put(i, 10 - i);
@@ -73,7 +73,7 @@ class RandomWriteFunnelTest {
     public void testYuge() {
         new File("/tmp/test.bin").delete();
         for (int j = 1; j <= 20; j++) {
-            try (var funnel = new RandomWriteFunnel(Path.of("/tmp"), 10, j);
+            try (var funnel = new RandomWriteFunnel(Path.of("/tmp"), j);
                  var out = new RandomAccessFile("/tmp/test.bin", "rw")) {
                 for (int i = 10 - 1; i >= 0; i -= 2) {
                     funnel.put(i, Long.MAX_VALUE - i);
