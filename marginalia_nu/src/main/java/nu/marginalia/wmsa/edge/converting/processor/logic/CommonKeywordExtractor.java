@@ -2,7 +2,7 @@ package nu.marginalia.wmsa.edge.converting.processor.logic;
 
 import ca.rmen.porterstemmer.PorterStemmer;
 import nu.marginalia.wmsa.edge.converting.model.ProcessedDomain;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
+import nu.marginalia.wmsa.edge.index.model.EdgePageWordFlags;
 
 import java.util.*;
 
@@ -16,7 +16,7 @@ public class CommonKeywordExtractor {
 
     private static final int MAX_SITE_KEYWORDS_TO_EXTRACT = 5;
 
-    public List<String> getCommonSiteWords(ProcessedDomain ret, IndexBlock... sourceBlocks) {
+    public List<String> getCommonSiteWords(ProcessedDomain ret, EdgePageWordFlags... flags) {
 
         if (ret.documents.size() < MIN_REQUIRED_DOCUMENTS)
             return Collections.emptyList();
@@ -27,21 +27,20 @@ public class CommonKeywordExtractor {
         final Map<String, Set<String>> stemmedToNonstemmedVariants = new HashMap<>(ret.documents.size()*10);
 
         int qualifiedDocCount = 0;
+        long wordFlags = Arrays.stream(flags).mapToInt(EdgePageWordFlags::asBit).reduce(0, (a,b) -> a|b);
         for (var doc : ret.documents) {
             if (doc.words == null)
                 continue;
 
             qualifiedDocCount++;
 
-            for (var block : sourceBlocks) {
-                for (var word : doc.words.get(block).words) {
-                    String wordStemmed = wordToStemmedMemoized.computeIfAbsent(word, ps::stemWord);
+            for (var word : doc.words.getWordsWithAnyFlag(wordFlags)) {
+                String wordStemmed = wordToStemmedMemoized.computeIfAbsent(word, ps::stemWord);
 
-                    // Count by negative values to sort by Map.Entry.comparingByValue() in reverse
-                    topStemmedKeywordCount.merge(wordStemmed, -1, Integer::sum);
+                // Count by negative values to sort by Map.Entry.comparingByValue() in reverse
+                topStemmedKeywordCount.merge(wordStemmed, -1, Integer::sum);
 
-                    stemmedToNonstemmedVariants.computeIfAbsent(wordStemmed, w -> new HashSet<>()).add(word);
-                }
+                stemmedToNonstemmedVariants.computeIfAbsent(wordStemmed, w -> new HashSet<>()).add(word);
             }
         }
 

@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import nu.marginalia.util.language.WordPatterns;
 import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import nu.marginalia.wmsa.edge.index.model.EdgePageWordFlags;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
+import nu.marginalia.wmsa.edge.index.model.EdgePageWordMetadata;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchResultKeywordScore;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchSubquery;
 import org.jetbrains.annotations.NotNull;
@@ -26,16 +26,17 @@ public class SearchResultValuator {
 
     private static final int MIN_LENGTH = 2000;
     private static final int AVG_LENGTH = 5000;
+    private final int docCount;
 
     @Inject
     public SearchResultValuator(TermFrequencyDict dict) {
         this.dict = dict;
+        docCount = dict.docCount();
     }
 
 
     public double preEvaluate(EdgeSearchSubquery sq) {
         final String[] terms = sq.searchTermsInclude.stream().filter(f -> !f.contains(":")).toArray(String[]::new);
-        final IndexBlock index = sq.block;
 
         double termSum = 0.;
         double factorSum = 0.;
@@ -46,7 +47,10 @@ public class SearchResultValuator {
             final double factor = 1. / (1.0 + weights[i]);
 
             factorSum += factor;
-            termSum += (index.ordinal() + 0.5) * factor;
+            termSum += factor; // fixme
+
+            // This logic is the casualty of refactoring. It is intended to prioritize search queries
+            // according to sum-of-idf, but right now it uses many CPU cycles to always calculate the value 1.
         }
 
         return termSum / factorSum;
@@ -55,9 +59,17 @@ public class SearchResultValuator {
     public double evaluateTerms(List<EdgeSearchResultKeywordScore> rawScores, int length, int titleLength) {
         int sets = 1 + rawScores.stream().mapToInt(EdgeSearchResultKeywordScore::set).max().orElse(0);
 
-        double bestPosFactor = 10;
         double bestScore = 10;
         double bestAllTermsFactor = 1.;
+
+        final double priorityTermBonus;
+
+        if (hasPriorityTerm(rawScores)) {
+            priorityTermBonus = 0.5;
+        }
+        else {
+            priorityTermBonus = 1;
+        }
 
         for (int set = 0; set <= sets; set++) {
             SearchResultsKeywordSet keywordSet = createKeywordSet(rawScores, set);
@@ -65,18 +77,23 @@ public class SearchResultValuator {
             if (keywordSet == null)
                 continue;
 
-            final double lengthPenalty = getLengthPenalty(length);
-
-            final double bm25Factor = getBM25(keywordSet, lengthPenalty);
+            final double bm25Factor = getBM25(keywordSet, length);
             final double minCountFactor = getMinCountFactor(keywordSet);
-            final double posFactor = posFactor(keywordSet);
 
             bestScore = min(bestScore, bm25Factor * minCountFactor);
-            bestPosFactor = min(bestPosFactor, posFactor);
+
             bestAllTermsFactor = min(bestAllTermsFactor, getAllTermsFactorForSet(keywordSet, titleLength));
+
         }
 
-        return (0.7 + 0.3 * bestPosFactor) * bestScore * (0.3 + 0.7 * bestAllTermsFactor);
+        return bestScore * (0.3 + 0.7 * bestAllTermsFactor) * priorityTermBonus;
+    }
+
+    private boolean hasPriorityTerm(List<EdgeSearchResultKeywordScore> rawScores) {
+        return rawScores.stream()
+                .findAny()
+                .map(EdgeSearchResultKeywordScore::hasPriorityTerms)
+                .orElse(false);
     }
 
     private double getMinCountFactor(SearchResultsKeywordSet keywordSet) {
@@ -85,54 +102,36 @@ public class SearchResultValuator {
         int min = 32;
 
         for (var keyword : keywordSet) {
-            min = min(min, keyword.count());
+            if (!keyword.wordMetadata.hasFlag(EdgePageWordFlags.Title) && keyword.score.isRegular()) {
+                min = min(min, keyword.count());
+            }
         }
 
         if (min <= 1) return 2;
-        if (min <= 2) return 1;
-        if (min <= 3) return 0.75;
-        return 0.5;
+        if (min <= 2) return 1.5;
+        if (min <= 3) return 1.25;
+        return 1;
     }
 
-    private double getBM25(SearchResultsKeywordSet keywordSet, double lengthPenalty) {
+    private double getBM25(SearchResultsKeywordSet keywordSet, int length) {
+        final double scalingFactor = 750.;
 
-        // This is a fairly bastardized BM25; the weight factors below are used to
-        // transform it on a scale from 0 ... 10; where 0 is best, 10+ is worst.
-        //
-        // ... for historical reasons
-        //
+        final double wf1 = 0.7;
+        double k = 2;
 
-        final double wf1 = 1.0;
-        final double wf2 = 2000.;
-
-        double termSum = 0.;
-        double factorSum = 0.;
+        double sum = 0.;
 
         for (var keyword : keywordSet) {
-            double tfIdf = Math.min(255, keyword.tfIdf());
-            final double factor = 1.0 / (1.0 + keyword.weight());
+            double count = Math.min(255, keyword.count());
+            double wt = keyword.weight() * keyword.weight() / keywordSet.length();
 
-            factorSum += factor;
-            termSum += (1 + wf1*tfIdf) * factor;
+            final double invFreq = Math.log(1.0 + (docCount - wt + 0.5)/(wt + 0.5));
+
+            sum += invFreq * (count * (k + 1)) / (count + k * (1 - wf1 + wf1 * AVG_LENGTH/length));
         }
 
-        termSum /= lengthPenalty;
-
-        return Math.sqrt(wf2 / (termSum / factorSum));
+        return Math.sqrt(scalingFactor / sum);
     }
-
-    private double posFactor(SearchResultsKeywordSet keywordSet) {
-        // Penalize keywords that first appear late in the document
-
-        double avgPos = 0;
-        for (var keyword : keywordSet) {
-            avgPos += keyword.score().firstPos();
-        }
-        avgPos /= keywordSet.length();
-
-        return Math.sqrt(1 + avgPos / 3.);
-    }
-
 
     private double getAllTermsFactorForSet(SearchResultsKeywordSet set, int titleLength) {
         double totalFactor = 1.;
@@ -146,7 +145,53 @@ public class SearchResultValuator {
             totalFactor *= getAllTermsFactor(keyword, totalWeight, titleLength);
         }
 
+        totalFactor = calculateTermCoherencePenalty(set, totalFactor);
+
         return totalFactor;
+    }
+
+    private double calculateTermCoherencePenalty(SearchResultsKeywordSet keywordSet, double f) {
+        long maskDirect = ~0;
+        long maskAdjacent = ~0;
+        byte excludeMask = (byte) (EdgePageWordFlags.Title.asBit() | EdgePageWordFlags.Subjects.asBit() | EdgePageWordFlags.Synthetic.asBit());
+
+        for (var keyword : keywordSet.keywords) {
+            var meta = keyword.wordMetadata;
+            long positions;
+
+            if (meta.isEmpty()) {
+                return f;
+            }
+
+            positions = meta.positions();
+
+            if (!EdgePageWordMetadata.hasAnyFlags(meta.flags(),  excludeMask))
+             {
+                maskDirect &= positions;
+                maskAdjacent &= (positions | (positions << 1) | (positions >>> 1));
+            }
+        }
+
+        if (maskAdjacent == 0) {
+            return 1.2 * f;
+        }
+
+        if (maskDirect == 0) {
+            return 1.1 * f;
+        }
+
+
+        if (maskDirect != ~0L) {
+            double locationFactor = 0.65 + Math.max(0.,
+                    0.35 * Long.numberOfTrailingZeros(maskDirect) / 16.
+                        - Math.sqrt(Long.bitCount(maskDirect) - 1) / 5.
+            );
+
+            return f * locationFactor;
+        }
+        else {
+            return f;
+        }
     }
 
     private double getAllTermsFactor(SearchResultsKeyword keyword, double totalWeight, int titleLength) {
@@ -264,15 +309,19 @@ public class SearchResultValuator {
     }
 
 
-    private record SearchResultsKeyword(EdgeSearchResultKeywordScore score, double weight) {
+    private record SearchResultsKeyword(EdgeSearchResultKeywordScore score, EdgePageWordMetadata wordMetadata, double weight) {
+        public SearchResultsKeyword(EdgeSearchResultKeywordScore score,  double weight) {
+            this(score, new EdgePageWordMetadata(score.encodedWordMetadata()), weight);
+        }
+
         public int tfIdf() {
-            return score.metadata().tfIdf();
+            return wordMetadata.tfIdf();
         }
         public int count() {
-            return score.metadata().count();
+            return wordMetadata.count();
         }
         public EnumSet<EdgePageWordFlags> flags() {
-            return score().metadata().flags();
+            return wordMetadata.flagSet();
         }
     }
 

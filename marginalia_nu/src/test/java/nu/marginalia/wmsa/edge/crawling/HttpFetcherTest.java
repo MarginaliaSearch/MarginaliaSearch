@@ -49,13 +49,6 @@ class HttpFetcherTest {
     }
 
     @Test
-    void resolveRedirectRitEdu() throws URISyntaxException {
-        var fetcher = new HttpRedirectResolver("nu.marginalia.edge-crawler");
-        var str = fetcher.probe(new EdgeUrl("http://www.rit.edu/cla/philosophy/Suits.html")).blockingFirst();
-        System.out.println(str);
-    }
-
-    @Test
     void resolveRedirect2() throws URISyntaxException {
         var fetcher = new HttpRedirectResolver("nu.marginalia.edge-crawler");
         var str = fetcher.probe(new EdgeUrl("https://www.marginalia.nu/robots.txt")).blockingFirst();

@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.net.URISyntaxException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class EdgeDomainTest {
 
@@ -22,6 +22,16 @@ class EdgeDomainTest {
         assertEquals("http", domain.proto);
         assertEquals("l7072i3", domain.domain.subDomain);
         assertEquals("l7c.net", domain.domain.domain);
+        assertEquals("net", domain.domain.getTld());
+    }
+
+    @Test
+    public void testEndlessHorse() throws URISyntaxException {
+        var domain = new EdgeUrl("http://endless.horse/");
+        assertEquals("http", domain.proto);
+        assertEquals("", domain.domain.subDomain);
+        assertEquals("endless.horse", domain.domain.domain);
+        assertEquals("horse", domain.domain.getTld());
     }
 
     @Test
@@ -30,6 +40,7 @@ class EdgeDomainTest {
         assertEquals("http", domain.proto);
         assertEquals("", domain.domain.subDomain);
         assertEquals("uj.edu.pl", domain.domain.domain);
+        assertEquals("edu.pl", domain.domain.getTld());
     }
 
 
@@ -40,6 +51,7 @@ class EdgeDomainTest {
         assertEquals("www", domain.domain.subDomain);
         assertEquals("marginalia.nu", domain.domain.domain);
         assertEquals("http://www.marginalia.nu/", domain.toString());
+        assertEquals("nu", domain.domain.getTld());
     }
 
     @Test
@@ -49,6 +61,7 @@ class EdgeDomainTest {
         assertEquals("http", domain.proto);
         assertEquals("", domain.domain.subDomain);
         assertEquals("http://marginalia.co.uk/", domain.toString());
+        assertEquals("co.uk", domain.domain.getTld());
     }
 
     @Test
@@ -58,6 +71,7 @@ class EdgeDomainTest {
         assertEquals("http", domain.proto);
         assertEquals("", domain.domain.subDomain);
         assertEquals("http://withcandour.co.uk/", domain.toString());
+        assertEquals("co.uk", domain.domain.getTld());
     }
 
     @Test
@@ -75,6 +89,7 @@ class EdgeDomainTest {
         assertEquals("http", domain.proto);
         assertEquals("abcf.de", domain.domain.domain);
         assertEquals("www.marginalia", domain.domain.subDomain);
+        assertEquals("de", domain.domain.getTld());
     }
 
     @Test
@@ -84,6 +99,7 @@ class EdgeDomainTest {
         assertEquals("", domain.domain.subDomain);
         assertEquals("marginalia.nu", domain.domain.domain);
         assertEquals("http://marginalia.nu/", domain.toString());
+        assertEquals("nu", domain.domain.getTld());
     }
 
     @Test
@@ -93,6 +109,7 @@ class EdgeDomainTest {
         assertEquals("", domain.domain.subDomain);
         assertEquals("127.0.0.1", domain.domain.domain);
         assertEquals("https://127.0.0.1:8080/", domain.toString());
+        assertEquals("IP", domain.domain.getTld());
     }
 
     @Test
@@ -102,5 +119,6 @@ class EdgeDomainTest {
         assertEquals("", domain.domain.subDomain);
         assertEquals("192.168.1.32", domain.domain.domain);
         assertEquals("https://192.168.1.32/", domain.toString());
+        assertEquals("IP", domain.domain.getTld());
     }
 }

@@ -14,7 +14,6 @@ import nu.marginalia.wmsa.podcasts.PodcastScraperMain;
 import nu.marginalia.wmsa.renderer.RendererMain;
 import nu.marginalia.wmsa.resource_store.ResourceStoreMain;
 import nu.marginalia.wmsa.smhi.scraper.SmhiScraperMain;
-import org.apache.logging.log4j.core.lookup.MainMapLookup;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -78,7 +77,6 @@ public enum ServiceDescriptor {
     }
 
     public static void main(String... args) {
-        MainMapLookup.setMainArguments(args);
         Map<String, Command> functions = Stream.of(
                 new ListCommand(),
                 new StartCommand(),

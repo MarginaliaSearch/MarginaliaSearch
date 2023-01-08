@@ -2,7 +2,7 @@ package nu.marginalia.wmsa.edge.search.siteinfo;
 
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
-import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDaoImpl;
+import nu.marginalia.wmsa.edge.dbcommon.EdgeDataStoreDaoImpl;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
 import nu.marginalia.wmsa.edge.model.id.EdgeId;

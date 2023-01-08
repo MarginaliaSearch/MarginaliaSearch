@@ -2,8 +2,8 @@ package nu.marginalia.wmsa.edge.search.command;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
-import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklist;
+import nu.marginalia.wmsa.edge.dbcommon.EdgeDataStoreDao;
+import nu.marginalia.wmsa.edge.dbcommon.EdgeDomainBlacklist;
 import nu.marginalia.wmsa.edge.search.model.BrowseResultSet;
 import nu.marginalia.wmsa.edge.search.results.BrowseResultCleaner;
 import nu.marginalia.wmsa.renderer.mustache.MustacheRenderer;

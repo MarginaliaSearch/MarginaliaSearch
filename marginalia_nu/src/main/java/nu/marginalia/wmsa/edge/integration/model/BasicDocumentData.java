@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainLink;
-import nu.marginalia.wmsa.edge.model.crawl.EdgePageWordSet;
+import nu.marginalia.wmsa.edge.model.crawl.EdgePageWords;
 
 
 @Data
@@ -16,7 +16,7 @@ public class BasicDocumentData {
     public final String description;
     public int hashCode;
 
-    public final EdgePageWordSet words;
+    public final EdgePageWords words;
     public final EdgeDomainLink[] domainLinks;
     public final int wordCount;
 }

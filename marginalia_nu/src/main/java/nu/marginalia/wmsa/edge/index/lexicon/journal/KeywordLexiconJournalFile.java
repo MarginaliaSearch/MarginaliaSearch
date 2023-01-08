@@ -121,7 +121,6 @@ public class KeywordLexiconJournalFile implements AutoCloseable {
         journalFileRAF.seek(pos);
     }
 
-
     private final ByteBuffer writeBuffer = ByteBuffer.allocateDirect(4096);
 
     public void writeEntriesToJournal(List<byte[]> data) {

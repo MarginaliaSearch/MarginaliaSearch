@@ -2,6 +2,7 @@ package nu.marginalia.wmsa.edge.search.query;
 
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import nu.marginalia.util.TransformList;
 import nu.marginalia.util.language.WordPatterns;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -29,76 +31,83 @@ public class QueryParser {
 
     public List<Token> parse(String query) {
         List<Token> basicTokens = extractBasicTokens(query);
-        List<Token> parsedTokens = new ArrayList<>(basicTokens.size());
 
-        for (int i = 0; i < basicTokens.size(); i++) {
-            var t = basicTokens.get(i);
+        TransformList<Token> list = new TransformList<>(basicTokens);
 
-            if (t.type == TokenType.QUOT) {
-                parsedTokens.add(new Token(TokenType.QUOT_TERM,
-                        t.str.replaceAll("\\s+", WordPatterns.WORD_TOKEN_JOINER),
-                        t.displayStr));
-            }
-            else if (t.type == TokenType.LITERAL_TERM
-                && (t.str.endsWith(":")||t.str.endsWith("."))
-                && t.str.length() > 1)
-            {
-                parsedTokens.add(new Token(TokenType.LITERAL_TERM, t.str.substring(0, t.str.length()-1), t.displayStr));
-            }
+        list.transformEach(QueryParser::handleQuoteTokens);
+        list.transformEach(QueryParser::trimLiterals);
+        list.transformEachPair(QueryParser::createNegatedTerms);
+        list.transformEachPair(QueryParser::createPriorityTerms);
+        list.transformEach(QueryParser::handleSpecialOperations);
+        list.scanAndTransform(TokenType.LPAREN, TokenType.RPAREN, QueryParser::handleAdvisoryTerms);
+
+        return list.getBackingList();
+    }
+
+    private static void handleQuoteTokens(TransformList<Token>.Entity entity) {
+        var t = entity.value;
+        if (t.type == TokenType.QUOT) {
+            entity.replace(new Token(TokenType.QUOT_TERM,
+                    t.str.replaceAll("\\s+", WordPatterns.WORD_TOKEN_JOINER),
+                    t.displayStr));
+        }
+    }
+
+    private static void trimLiterals(TransformList<Token>.Entity entity) {
+        var t = entity.value;
+
+        if (t.type == TokenType.LITERAL_TERM
+                && (t.str.endsWith(":") || t.str.endsWith("."))
+                && t.str.length() > 1) {
+            entity.replace(new Token(TokenType.LITERAL_TERM, t.str.substring(0, t.str.length() - 1), t.displayStr));
         }
 
-        for (int i = 0; i < basicTokens.size() - 1; i++) {
-            var t = basicTokens.get(i);
-            var tn = basicTokens.get(i+1);
+    }
 
-            if (t.type == TokenType.MINUS && tn.type == TokenType.LITERAL_TERM) {
-                parsedTokens.add(new Token(TokenType.EXCLUDE_TERM, tn.str, "-"+tn.str));
-                i++;
+    private static void createNegatedTerms(TransformList<Token>.Entity first, TransformList<Token>.Entity second) {
+        var t = first.value;
+        var tn = second.value;
+
+        if (t.type == TokenType.MINUS && tn.type == TokenType.LITERAL_TERM) {
+            first.remove();
+            second.replace(new Token(TokenType.EXCLUDE_TERM, tn.str, "-" + tn.str));
+        }
+    }
+    private static void createPriorityTerms(TransformList<Token>.Entity first, TransformList<Token>.Entity second) {
+        var t = first.value;
+        var tn = second.value;
+
+        if (t.type == TokenType.QMARK && tn.type == TokenType.LITERAL_TERM) {
+            first.remove();
+            second.replace(new Token(TokenType.PRIORTY_TERM, tn.str, "?" + tn.str));
+        }
+    }
+    private static void handleSpecialOperations(TransformList<Token>.Entity entity) {
+        var t = entity.value;
+        if (t.type == TokenType.LITERAL_TERM) {
+            if (t.str.startsWith("q") && t.str.matches("q[=><]\\d+")) {
+                entity.replace(new Token(TokenType.QUALITY_TERM, t.str.substring(1), t.displayStr));
+            } else if (t.str.startsWith("near:")) {
+                entity.replace(new Token(TokenType.NEAR_TERM, t.str.substring(5), t.displayStr));
+            } else if (t.str.startsWith("year") && t.str.matches("year[=><]\\d{4}")) {
+                entity.replace(new Token(TokenType.YEAR_TERM, t.str.substring(4), t.displayStr));
+            } else if (t.str.startsWith("size") && t.str.matches("size[=><]\\d+")) {
+                entity.replace(new Token(TokenType.SIZE_TERM, t.str.substring(4), t.displayStr));
+            } else if (t.str.contains(":")) {
+                entity.replace(new Token(TokenType.ADVICE_TERM, t.str, t.displayStr));
             }
         }
+    }
 
-        for (int i = 0; i < basicTokens.size(); i++) {
-            var t = basicTokens.get(i);
-
-            if (t.type == TokenType.LITERAL_TERM) {
-                if (t.str.startsWith("q:") && t.str.matches("q:[+-]?\\d+")) {
-                    parsedTokens.add(new Token(TokenType.QUALITY_TERM, t.str.substring(2), t.displayStr));
-                }
-                else if (t.str.startsWith("r:") && t.str.matches("r:\\d+")) {
-                    parsedTokens.add(new Token(TokenType.RANK_TERM, t.str.substring(2), t.displayStr));
-                }
-                else if (t.str.startsWith("near:")) {
-                    parsedTokens.add(new Token(TokenType.NEAR_TERM, t.str.substring(5), t.displayStr));
-                }
-                else {
-                    parsedTokens.add(t);
-                }
-                continue;
-            }
-            else if (t.type != TokenType.LPAREN) {
-                continue;
-            }
-
-            int end = i+1;
-            for (; end < basicTokens.size(); end++) {
-                if (basicTokens.get(end).type == TokenType.RPAREN) {
-                    break;
-                }
-            }
-            if (end == basicTokens.size()) {
-                continue;
-            }
-
-            for (int j = i+1; j < end; j++) {
-                var tok = basicTokens.get(j);
-                if (tok.type == TokenType.LITERAL_TERM) {
-                    parsedTokens.add(new Token(TokenType.ADVICE_TERM, tok.str, "(" + tok.str + ")"));
-                }
-            }
-            i = end;
+    private static void handleAdvisoryTerms(TransformList<Token>.Entity entity) {
+        var t = entity.value;
+        if (t.type == TokenType.LPAREN) {
+            entity.remove();
+        } else if (t.type == TokenType.RPAREN) {
+            entity.remove();
+        } else if (t.type == TokenType.LITERAL_TERM) {
+            entity.replace(new Token(TokenType.ADVICE_TERM, t.str, "(" + t.str + ")"));
         }
-
-        return parsedTokens;
     }
 
     private static final Pattern noisePattern = Pattern.compile("[,]");
@@ -138,7 +147,10 @@ public class QueryParser {
                 i = end;
             }
             else if ('-' == chr) {
-                tokens.add(new Token(TokenType.MINUS, "\""));
+                tokens.add(new Token(TokenType.MINUS, "-"));
+            }
+            else if ('?' == chr) {
+                tokens.add(new Token(TokenType.QMARK, "?"));
             }
             else if (Character.isSpaceChar(chr)) {
                 //
@@ -268,6 +280,7 @@ public class QueryParser {
             List<List<Token>> queryVariants = new ArrayList<>();
             for (var query : result.faithful) {
                 var tokens = query.terms.stream().map(term -> new Token(TokenType.LITERAL_TERM, term)).collect(Collectors.toList());
+                tokens.addAll(result.nonLiterals);
 
                 queryVariants.add(tokens);
             }
@@ -276,6 +289,7 @@ public class QueryParser {
                     break;
 
                 var tokens = query.terms.stream().map(term -> new Token(TokenType.LITERAL_TERM, term)).collect(Collectors.toList());
+                tokens.addAll(result.nonLiterals);
 
                 queryVariants.add(tokens);
             }
@@ -456,7 +470,7 @@ outer: for (int i = size - 1; i >= 1; i--) {
 
 @ToString @EqualsAndHashCode
 class Token {
-    public final TokenType type;
+    public TokenType type;
     public String str;
     public final String displayStr;
 
@@ -479,7 +493,7 @@ class Token {
     }
 }
 
-enum TokenType {
+enum TokenType implements Predicate<Token> {
     TERM,
 
 
@@ -487,14 +501,22 @@ enum TokenType {
     QUOT_TERM,
     EXCLUDE_TERM,
     ADVICE_TERM,
+    PRIORTY_TERM,
 
     QUALITY_TERM,
-    RANK_TERM,
-
+    YEAR_TERM,
+    SIZE_TERM,
     NEAR_TERM,
 
     QUOT,
     MINUS,
+    QMARK,
     LPAREN,
-    RPAREN
+    RPAREN,
+
+    IGNORE;
+
+    public boolean test(Token t) {
+        return t.type == this;
+    }
 }

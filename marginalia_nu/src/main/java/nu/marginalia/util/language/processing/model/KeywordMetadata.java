@@ -13,23 +13,22 @@ public record KeywordMetadata(HashSet<String> titleKeywords,
                               HashSet<String> namesKeywords,
                               HashMap<String, KeywordCounter.WordFrequencyData> wordsTfIdf,
                               HashMap<String, Integer> positionMask,
-                              EnumSet<EdgePageWordFlags> flagsTemplate,
-                              int quality
+                              EnumSet<EdgePageWordFlags> wordFlagsTemplate
 )
 {
 
     private static final KeywordCounter.WordFrequencyData empty = new KeywordCounter.WordFrequencyData(0, 0);
+    private static final int TF_IDF_HIGH_LIMIT = 64;
 
-    public KeywordMetadata(double quality, EnumSet<EdgePageWordFlags> flags) {
+    public KeywordMetadata(EnumSet<EdgePageWordFlags> flags) {
         this(new HashSet<>(50), new HashSet<>(10), new HashSet<>(50),
                 new HashMap<>(15_000),
                 new HashMap<>(10_000),
-                flags,
-                (int)(-quality));
+                flags);
     }
 
-    public KeywordMetadata(double quality) {
-        this(quality, EnumSet.noneOf(EdgePageWordFlags.class));
+    public KeywordMetadata() {
+        this(EnumSet.noneOf(EdgePageWordFlags.class));
     }
 
     public long forWord(EnumSet<EdgePageWordFlags> flagsTemplate, String stemmed) {
@@ -48,11 +47,7 @@ public record KeywordMetadata(HashSet<String> titleKeywords,
 
         int positions = positionMask.getOrDefault(stemmed, 0);
 
-        return new EdgePageWordMetadata(tfidf.tfIdfNormalized(), positions, quality, tfidf.count(), flags).encode();
-    }
-
-    public int quality() {
-        return -quality;
+        return new EdgePageWordMetadata(tfidf.tfIdfNormalized(), positions, tfidf.count(), flags).encode();
     }
 
 }

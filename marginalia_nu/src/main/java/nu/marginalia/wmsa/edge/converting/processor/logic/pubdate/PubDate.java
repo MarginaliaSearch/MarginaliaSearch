@@ -8,7 +8,7 @@ public record PubDate(String dateIso8601, int year) {
     // First year we'll believe something can have been published on the web
     // cut off at 1995 to reduce false positive error rate; number of bona fide
     // documents from these years are so few almost all hits are wrong
-    
+
     public static final int MIN_YEAR = 1995;
 
     // Last year we'll believe something can be published in
@@ -22,6 +22,7 @@ public record PubDate(String dateIso8601, int year) {
     public PubDate(LocalDate date) {
         this(date.format(DateTimeFormatter.ISO_DATE), date.getYear());
     }
+
 
     public boolean isEmpty() {
         return year == Integer.MIN_VALUE;
@@ -43,4 +44,18 @@ public record PubDate(String dateIso8601, int year) {
     public boolean hasYear() {
         return isValidYear(this.year);
     }
+
+    private static final int ENCODING_OFFSET = MIN_YEAR + 1;
+
+    public int yearByte() {
+        if (hasYear()) {
+            return year - ENCODING_OFFSET;
+        }
+        else return 0;
+    }
+
+    public static int fromYearByte(int yearByte) {
+        return yearByte + ENCODING_OFFSET;
+    }
+
 }

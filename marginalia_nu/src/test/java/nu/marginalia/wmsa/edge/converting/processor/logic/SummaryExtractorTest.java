@@ -1,5 +1,6 @@
 package nu.marginalia.wmsa.edge.converting.processor.logic;
 
+import nu.marginalia.wmsa.configuration.WmsaHome;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +43,7 @@ class SummaryExtractorTest {
     }
     @Test
     public void testSummaryFilter3() throws IOException {
-        var data = Path.of("/home/vlofgren/Code/tmp-data/url-327999153");
+        var data = WmsaHome.getHomePath().resolve("test-data/url-327999153");
         String html = Files.readString(data);
         var doc = Jsoup.parse(html);
         var filter = new SummaryExtractionFilter();
@@ -50,9 +51,10 @@ class SummaryExtractorTest {
 
         filter.getSummary(255);
     }
+
     @Test
     public void testSummaryFilter2() throws IOException {
-        var data = Path.of("/home/vlofgren/Code/tmp-data/");
+        var data = WmsaHome.getHomePath().resolve("test-data/");
 
         System.out.println("Running");
 
@@ -144,7 +146,7 @@ class SummaryExtractorTest {
         String index = readClassPathFile("html/work-set/index");
         String[] files = index.split("\n");
 
-        Map<Path, String> result = new HashMap();
+        Map<Path, String> result = new HashMap<>();
         for (String file : files) {
             Path p = Path.of("html/work-set/").resolve(file);
 

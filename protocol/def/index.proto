@@ -8,7 +8,8 @@ message IndexPutKeywordsReq {
     int32 domain = 1;
     int32 url = 2;
     int32 index = 3;
-    repeated WordSet wordSet = 4;
+    int64 metadata = 4;
+    repeated WordSet wordSet = 5;
 
     message WordSet {
         int32 index = 1;

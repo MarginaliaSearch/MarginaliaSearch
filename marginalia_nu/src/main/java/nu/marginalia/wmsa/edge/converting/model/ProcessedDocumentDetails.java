@@ -2,6 +2,7 @@ package nu.marginalia.wmsa.edge.converting.model;
 
 import lombok.ToString;
 import nu.marginalia.wmsa.edge.converting.processor.logic.HtmlFeature;
+import nu.marginalia.wmsa.edge.index.model.EdgePageDocumentsMetadata;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeHtmlStandard;
 
@@ -27,4 +28,6 @@ public class ProcessedDocumentDetails {
     public List<EdgeUrl> linksInternal;
     public List<EdgeUrl> linksExternal;
     public List<EdgeUrl> feedLinks;
+
+    public EdgePageDocumentsMetadata metadata;
 }

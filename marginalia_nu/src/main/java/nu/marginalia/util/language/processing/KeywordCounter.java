@@ -1,7 +1,7 @@
 package nu.marginalia.util.language.processing;
 
 import com.github.jknack.handlebars.internal.lang3.StringUtils;
-import gnu.trove.map.hash.TObjectIntHashMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import nu.marginalia.util.language.WordPatterns;
 import nu.marginalia.util.language.processing.model.DocumentLanguageData;
 import nu.marginalia.util.language.processing.model.KeywordMetadata;
@@ -27,7 +27,7 @@ public class KeywordCounter {
     }
 
     public List<WordRep> countHisto(KeywordMetadata keywordMetadata, DocumentLanguageData dld) {
-        TObjectIntHashMap<String> counts = new TObjectIntHashMap<>(10_000, 0.7f);
+        Object2IntOpenHashMap<String> counts = new Object2IntOpenHashMap<>(10_000, 0.7f);
         HashMap<String, HashSet<WordRep>> instances = new HashMap<>(15000);
 
 
@@ -41,7 +41,8 @@ public class KeywordCounter {
 
                 var rep = new WordRep(sent, span);
 
-                counts.adjustOrPutValue(rep.stemmed, 1, 1);
+                counts.mergeInt(rep.stemmed, 1, Integer::sum);
+
                 var instanceSet = instances.computeIfAbsent(rep.stemmed, k -> new HashSet<>(500));
                 if (instanceSet.size() < 250) {
                     instanceSet.add(rep);
@@ -54,7 +55,8 @@ public class KeywordCounter {
 
         int maxVal = maxValue(counts);
 
-        counts.forEachEntry((key, cnt) -> {
+
+        counts.forEach((key, cnt) -> {
             int value = getTermValue(key, cnt, maxVal);
 
             tfIdf.put(key, new WordFrequencyData(cnt, value));
@@ -62,18 +64,18 @@ public class KeywordCounter {
             if (cnt > 1 && value > 100) {
                 tfIdfHigh.addAll(instances.get(key));
             }
-
-            return true;
         });
 
         return tfIdfHigh;
     }
 
-    private int maxValue(TObjectIntHashMap<?> map) {
+    private int maxValue(Object2IntOpenHashMap<?> map) {
         int maxC = 0;
+
         for (int c : map.values()) {
             maxC = max(c, maxC);
         }
+
         return maxC;
     }
 

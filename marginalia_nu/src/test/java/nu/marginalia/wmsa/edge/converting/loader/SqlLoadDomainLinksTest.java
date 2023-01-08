@@ -6,11 +6,12 @@ import nu.marginalia.wmsa.edge.converting.interpreter.instruction.DomainLink;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
+@Tag("slow")
 @Testcontainers
 class SqlLoadDomainLinksTest {
     @Container

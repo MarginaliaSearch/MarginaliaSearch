@@ -5,18 +5,18 @@ import nu.marginalia.util.language.conf.LanguageModels;
 import nu.marginalia.util.language.processing.SentenceExtractor;
 import nu.marginalia.wmsa.edge.assistant.dict.NGramBloomFilter;
 import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
 class QueryVariantsTest {
-    QueryVariants variants;
-    QueryParser parser;
-    SentenceExtractor se;
+    static QueryVariants variants;
+    static QueryParser parser;
+    static SentenceExtractor se;
 
-    @BeforeEach
-    public void setUp() throws IOException {
+    @BeforeAll
+    public static void setUp() throws IOException {
         LanguageModels lm = TestLanguageModels.getLanguageModels();
 
         se  = new SentenceExtractor(lm);
@@ -32,6 +32,13 @@ class QueryVariantsTest {
         System.out.println(se.extractSentence("we are alone"));
         testCase("Omelet recipe");
     }
+
+    @Test
+    void queryNegation() {
+        System.out.println(se.extractSentence("salt lake -city"));
+        testCase("salt lake -city");
+    }
+
 
     @Test
     void getQueryVariants() {
@@ -60,7 +67,7 @@ class QueryVariantsTest {
     }
 
     private void testCase(String input) {
-        var tokens = variants.getQueryVariants(parser.extractBasicTokens(input));
+        var tokens = variants.getQueryVariants(parser.parse(input));
         System.out.println(tokens);
     }
 }

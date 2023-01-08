@@ -2,9 +2,8 @@ package nu.marginalia.wmsa.edge.search.command.commands;
 
 import com.google.inject.Inject;
 import nu.marginalia.wmsa.configuration.server.Context;
-import nu.marginalia.wmsa.edge.assistant.screenshot.ScreenshotService;
-import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
-import nu.marginalia.wmsa.edge.data.dao.task.EdgeDomainBlacklist;
+import nu.marginalia.wmsa.edge.dbcommon.EdgeDataStoreDao;
+import nu.marginalia.wmsa.edge.dbcommon.EdgeDomainBlacklist;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.search.command.SearchCommandInterface;
 import nu.marginalia.wmsa.edge.search.command.SearchParameters;

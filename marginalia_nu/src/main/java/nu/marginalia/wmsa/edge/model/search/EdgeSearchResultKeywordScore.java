@@ -1,5 +1,7 @@
 package nu.marginalia.wmsa.edge.model.search;
 
+import nu.marginalia.wmsa.edge.index.model.EdgePageDocumentFlags;
+import nu.marginalia.wmsa.edge.index.model.EdgePageDocumentsMetadata;
 import nu.marginalia.wmsa.edge.index.model.EdgePageWordFlags;
 import nu.marginalia.wmsa.edge.index.model.EdgePageWordMetadata;
 
@@ -8,38 +10,50 @@ import static java.lang.Integer.numberOfTrailingZeros;
 
 public record EdgeSearchResultKeywordScore(int set,
                                            String keyword,
-                                           EdgePageWordMetadata metadata) {
+                                           long encodedWordMetadata,
+                                           long encodedDocMetadata,
+                                           boolean hasPriorityTerms) {
     public double documentValue() {
         long sum = 0;
-        sum += metadata.quality() / 5.;
-        if (metadata.flags().contains(EdgePageWordFlags.Simple)) {
+
+        sum += EdgePageDocumentsMetadata.decodeQuality(encodedDocMetadata) / 5.;
+
+        sum += EdgePageDocumentsMetadata.decodeTopology(encodedDocMetadata);
+
+        if (EdgePageDocumentsMetadata.hasFlags(encodedDocMetadata, EdgePageDocumentFlags.Simple.asBit())) {
             sum +=  20;
         }
+
+
         return sum;
+    }
+
+    private boolean hasTermFlag(EdgePageWordFlags flag) {
+        return EdgePageWordMetadata.hasFlags(encodedWordMetadata, flag.asBit());
     }
 
     public double termValue() {
         double sum = 0;
 
-        if (metadata.flags().contains(EdgePageWordFlags.Title)) {
+        if (hasTermFlag(EdgePageWordFlags.Title)) {
             sum -=  15;
         }
 
-        if (metadata.flags().contains(EdgePageWordFlags.Site)) {
+        if (hasTermFlag(EdgePageWordFlags.Site)) {
             sum -= 10;
         }
-        else if (metadata.flags().contains(EdgePageWordFlags.SiteAdjacent)) {
+        else if (hasTermFlag(EdgePageWordFlags.SiteAdjacent)) {
             sum -= 5;
         }
 
-        if (metadata.flags().contains(EdgePageWordFlags.Subjects)) {
+        if (hasTermFlag(EdgePageWordFlags.Subjects)) {
             sum -= 10;
         }
-        if (metadata.flags().contains(EdgePageWordFlags.NamesWords)) {
+        if (hasTermFlag(EdgePageWordFlags.NamesWords)) {
             sum -= 1;
         }
 
-        sum -= metadata.tfIdf() / 50.;
+        sum -= EdgePageWordMetadata.decodeTfidf(encodedWordMetadata) / 50.;
         sum += firstPos() / 5.;
         sum -= Integer.bitCount(positions()) / 3.;
 
@@ -47,9 +61,12 @@ public record EdgeSearchResultKeywordScore(int set,
     }
 
     public int firstPos() {
-        return numberOfTrailingZeros(lowestOneBit(metadata.positions()));
+        return numberOfTrailingZeros(lowestOneBit(EdgePageWordMetadata.decodePositions(encodedWordMetadata)));
     }
-    public int positions() { return metadata.positions(); }
-    public boolean isSpecial() { return keyword.contains(":"); }
-    public boolean isRegular() { return !keyword.contains(":"); }
+    public int positions() { return EdgePageWordMetadata.decodePositions(encodedWordMetadata); }
+    public boolean isSpecial() { return keyword.contains(":") || hasTermFlag(EdgePageWordFlags.Synthetic); }
+    public boolean isRegular() {
+        return !keyword.contains(":")
+            && !hasTermFlag(EdgePageWordFlags.Synthetic);
+    }
 }

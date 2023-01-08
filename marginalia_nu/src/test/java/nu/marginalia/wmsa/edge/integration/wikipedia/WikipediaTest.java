@@ -12,10 +12,12 @@ import nu.marginalia.wmsa.edge.integration.model.BasicDocumentData;
 import nu.marginalia.wmsa.edge.integration.wikipedia.model.WikipediaArticle;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import org.jsoup.Jsoup;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
+@Tag("slow")
 public class WikipediaTest {
     final LanguageModels lm = TestLanguageModels.getLanguageModels();
 

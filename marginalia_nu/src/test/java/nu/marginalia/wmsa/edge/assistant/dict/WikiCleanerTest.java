@@ -6,21 +6,19 @@ import org.openzim.ZIMTypes.ZIMFile;
 import org.openzim.ZIMTypes.ZIMReader;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 class WikiCleanerTest {
 
     @Test
     void cleanWikiJunk() throws IOException {
-        String str = new WikiCleaner().cleanWikiJunk("https://en.wikipedia.org/wiki/Scamander", new String(Files.readAllBytes(Path.of("/home/vlofgren/Work/wiki-cleaner/Scamander.wiki.html"))));
-        String str2 = new WikiCleaner().cleanWikiJunk("https://en.wikipedia.org/wiki/Plato", new String(Files.readAllBytes(Path.of("/home/vlofgren/Work/wiki-cleaner/Plato.wiki.html"))));
-        String str3 = new WikiCleaner().cleanWikiJunk("https://en.wikipedia.org/wiki/C++", new String(Files.readAllBytes(Path.of("/home/vlofgren/Work/wiki-cleaner/Cpp.wiki.html"))));
-        String str4 = new WikiCleaner().cleanWikiJunk("https://en.wikipedia.org/wiki/Memex", new String(Files.readAllBytes(Path.of("/home/vlofgren/Work/wiki-cleaner/Memex.wiki.html"))));
-        Files.writeString(Path.of("/home/vlofgren/Work/wiki-cleaner/Scamander.out.html"), str);
-        Files.writeString(Path.of("/home/vlofgren/Work/wiki-cleaner/Plato.out.html"), str2);
-        Files.writeString(Path.of("/home/vlofgren/Work/wiki-cleaner/Cpp.out.html"), str3);
-        Files.writeString(Path.of("/home/vlofgren/Work/wiki-cleaner/Memex.out.html"), str4);
+//        String str = new WikiCleaner().cleanWikiJunk("https://en.wikipedia.org/wiki/Scamander", new String(Files.readAllBytes(Path.of("/home/vlofgren/Work/wiki-cleaner/Scamander.wiki.html"))));
+//        String str2 = new WikiCleaner().cleanWikiJunk("https://en.wikipedia.org/wiki/Plato", new String(Files.readAllBytes(Path.of("/home/vlofgren/Work/wiki-cleaner/Plato.wiki.html"))));
+//        String str3 = new WikiCleaner().cleanWikiJunk("https://en.wikipedia.org/wiki/C++", new String(Files.readAllBytes(Path.of("/home/vlofgren/Work/wiki-cleaner/Cpp.wiki.html"))));
+//        String str4 = new WikiCleaner().cleanWikiJunk("https://en.wikipedia.org/wiki/Memex", new String(Files.readAllBytes(Path.of("/home/vlofgren/Work/wiki-cleaner/Memex.wiki.html"))));
+//        Files.writeString(Path.of("/home/vlofgren/Work/wiki-cleaner/Scamander.out.html"), str);
+//        Files.writeString(Path.of("/home/vlofgren/Work/wiki-cleaner/Plato.out.html"), str2);
+//        Files.writeString(Path.of("/home/vlofgren/Work/wiki-cleaner/Cpp.out.html"), str3);
+//        Files.writeString(Path.of("/home/vlofgren/Work/wiki-cleaner/Memex.out.html"), str4);
     }
 
     @Test @Disabled

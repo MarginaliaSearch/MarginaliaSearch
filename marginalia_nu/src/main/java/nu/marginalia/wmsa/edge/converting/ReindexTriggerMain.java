@@ -8,6 +8,8 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okio.BufferedSink;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URL;
@@ -15,9 +17,9 @@ import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 
-import static nu.marginalia.wmsa.edge.index.EdgeIndexService.DYNAMIC_BUCKET_LENGTH;
 
 public class ReindexTriggerMain {
+    private static final Logger logger = LoggerFactory.getLogger(ReindexTriggerMain.class);
 
     public static void main(String... args) throws IOException, SQLException {
         var db = new DatabaseModule();
@@ -28,6 +30,7 @@ public class ReindexTriggerMain {
                 .followRedirects(true)
                 .build();
 
+        logger.info("Updating statistics");
         var updateStatistics = new UpdateDomainStatistics(db.provideConnection());
         updateStatistics.run();
 
@@ -45,15 +48,10 @@ public class ReindexTriggerMain {
             }
         };
 
+        logger.info("Repartitioning");
         client.newCall(new Request.Builder().post(rb).url(new URL("http", args[0], ServiceDescriptor.EDGE_INDEX.port, "/ops/repartition")).build()).execute();
-
-        if (!Boolean.getBoolean("no-preconvert")) {
-            client.newCall(new Request.Builder().post(rb).url(new URL("http", args[0], ServiceDescriptor.EDGE_INDEX.port, "/ops/preconvert")).build()).execute();
-        }
-
-        for (int i = 0; i < DYNAMIC_BUCKET_LENGTH+1; i++) {
-            client.newCall(new Request.Builder().post(rb).url(new URL("http", args[0], ServiceDescriptor.EDGE_INDEX.port, "/ops/reindex/" + i)).build()).execute();
-        }
+        logger.info("Reindexing");
+        client.newCall(new Request.Builder().post(rb).url(new URL("http", args[0], ServiceDescriptor.EDGE_INDEX.port, "/ops/reindex")).build()).execute();
 
     }
 

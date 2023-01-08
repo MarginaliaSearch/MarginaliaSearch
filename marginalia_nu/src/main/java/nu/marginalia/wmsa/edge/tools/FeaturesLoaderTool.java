@@ -6,7 +6,7 @@ import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.edge.converting.interpreter.instruction.DocumentKeywords;
 import nu.marginalia.wmsa.edge.converting.processor.logic.HtmlFeature;
 import nu.marginalia.wmsa.edge.index.client.EdgeIndexClient;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
+import nu.marginalia.wmsa.edge.index.model.EdgePageDocumentsMetadata;
 import nu.marginalia.wmsa.edge.model.id.EdgeId;
 
 import java.io.IOException;
@@ -49,13 +49,12 @@ public class FeaturesLoaderTool {
                         }
 
                         client.putWords(Context.internal(), new EdgeId<>(domainId), new EdgeId<>(urlId),
-                                new DocumentKeywords(IndexBlock.Meta, new String[] { feature.getKeyword() }, new long[] { 0 })
+                                new EdgePageDocumentsMetadata(EdgePageDocumentsMetadata.defaultValue()),
+                                new DocumentKeywords(new String[] { feature.getKeyword() }, new long[] { 0 })
                                 , 0);
                     });
 
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (SQLException e) {
+        } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
         }
     }

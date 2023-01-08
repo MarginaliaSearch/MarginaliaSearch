@@ -27,6 +27,7 @@ public class AndCardIntSet  {
     public static AndCardIntSet of(RoaringBitmap bmap) {
 
         TIntArrayList lst = new TIntArrayList(bmap.getCardinality());
+
         lst.addAll(bmap.toArray());
 
         return new AndCardIntSet(lst);
@@ -37,7 +38,7 @@ public class AndCardIntSet  {
         backingList = list;
         hash = 0;
 
-        if (list.size() < 128) {
+        if (list.size() < 32) {
             for (int v : list.toArray()) {
                 int bit = hasher.hashInt(v).asInt() % 64;
                 hash |= (1L << bit);
@@ -56,7 +57,7 @@ public class AndCardIntSet  {
             return false;
         }
 
-        if (backingList.size() < 128) {
+        if (backingList.size() < 32) {
             int bit = hasher.hashInt(val).asInt() % 64;
             hash |= (1L << bit);
         }
@@ -81,10 +82,10 @@ public class AndCardIntSet  {
         if (!testHash(a,b)) {
             return 0;
         }
-
-        if (a.getCardinality() + b.getCardinality() < 10) {
-            return andLinearSmall(a, b);
-        }
+//
+//        if (a.getCardinality() + b.getCardinality() < 10) {
+//            return andLinearSmall(a, b);
+//        }
 
         return andLinear(a,b);
     }

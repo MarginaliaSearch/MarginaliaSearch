@@ -3,16 +3,16 @@ package nu.marginalia.wmsa.edge.index.svc;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.InvalidProtocolBufferException;
-import nu.marginalia.util.ListChunker;
 import nu.marginalia.util.dict.DictionaryHashMap;
 import nu.marginalia.wmsa.edge.converting.interpreter.instruction.DocumentKeywords;
+import nu.marginalia.wmsa.edge.converting.interpreter.instruction.KeywordListChunker;
 import nu.marginalia.wmsa.edge.index.IndexServicesFactory;
-import nu.marginalia.wmsa.edge.index.journal.SearchIndexJournalWriterImpl;
-import nu.marginalia.wmsa.edge.index.journal.model.SearchIndexJournalEntry;
-import nu.marginalia.wmsa.edge.index.journal.model.SearchIndexJournalEntryHeader;
 import nu.marginalia.wmsa.edge.index.lexicon.KeywordLexicon;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
-import nu.marginalia.wmsa.edge.index.reader.SearchIndexes;
+import nu.marginalia.wmsa.edge.index.model.EdgePageDocumentsMetadata;
+import nu.marginalia.wmsa.edge.index.postings.SearchIndexControl;
+import nu.marginalia.wmsa.edge.index.postings.journal.model.SearchIndexJournalEntry;
+import nu.marginalia.wmsa.edge.index.postings.journal.model.SearchIndexJournalEntryHeader;
+import nu.marginalia.wmsa.edge.index.postings.journal.writer.SearchIndexJournalWriterImpl;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.id.EdgeId;
@@ -26,16 +26,16 @@ import java.util.Arrays;
 @Singleton
 public class EdgeIndexLexiconService {
 
-    private final SearchIndexes indexes;
+    private final SearchIndexControl indexes;
     private final KeywordLexicon keywordLexicon;
 
     @Inject
-    public EdgeIndexLexiconService(SearchIndexes indexes, IndexServicesFactory servicesFactory) {
+    public EdgeIndexLexiconService(SearchIndexControl indexes, IndexServicesFactory servicesFactory) {
         this.indexes = indexes;
         this.keywordLexicon = servicesFactory.getKeywordLexicon();
     }
 
-    public EdgeIndexLexiconService(SearchIndexes indexes, KeywordLexicon lexicon) {
+    public EdgeIndexLexiconService(SearchIndexControl indexes, KeywordLexicon lexicon) {
         this.indexes = indexes;
         this.keywordLexicon = lexicon;
     }
@@ -59,6 +59,9 @@ public class EdgeIndexLexiconService {
         return wordId;
     }
 
+    public long getOrInsertWord(String word) {
+        return keywordLexicon.getOrInsert(word);
+    }
 
     public Object putWords(Request request, Response response) throws InvalidProtocolBufferException {
         var req = IndexPutKeywordsReq.parseFrom(request.bodyAsBytes());
@@ -75,20 +78,25 @@ public class EdgeIndexLexiconService {
         return "";
     }
 
+    public void putWords(int idx, SearchIndexJournalEntryHeader header, SearchIndexJournalEntry entry) {
+        SearchIndexJournalWriterImpl indexWriter = indexes.getIndexWriter(idx);
+
+        indexWriter.put(header, entry);
+    }
+
     public void putWords(EdgeId<EdgeDomain> domainId, EdgeId<EdgeUrl> urlId,
                          IndexPutKeywordsReq.WordSet words, int idx
     ) {
 
         SearchIndexJournalWriterImpl indexWriter = indexes.getIndexWriter(idx);
-        IndexBlock block = IndexBlock.values()[words.getIndex()];
 
         var wordArray = words.getWordsList().toArray(String[]::new);
         var metaArray = words.getMetaList().stream().mapToLong(Long::valueOf).toArray();
 
-        DocumentKeywords documentKeywords = new DocumentKeywords(block, wordArray, metaArray);
-        for (var chunk : ListChunker.chopList(documentKeywords, SearchIndexJournalEntry.MAX_LENGTH)) {
+        DocumentKeywords documentKeywords = new DocumentKeywords(wordArray, metaArray);
+        for (var chunk : KeywordListChunker.chopList(documentKeywords, SearchIndexJournalEntry.MAX_LENGTH)) {
             var entry = new SearchIndexJournalEntry(getOrInsertWordIds(chunk.keywords(), chunk.metadata()));
-            var header = new SearchIndexJournalEntryHeader(domainId, urlId, block);
+            var header = new SearchIndexJournalEntryHeader(domainId, urlId, EdgePageDocumentsMetadata.defaultValue());
 
             indexWriter.put(header, entry);
         }

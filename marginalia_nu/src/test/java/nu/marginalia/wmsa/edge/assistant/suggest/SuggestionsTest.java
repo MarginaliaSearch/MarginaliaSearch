@@ -5,6 +5,7 @@ import nu.marginalia.util.language.conf.LanguageModels;
 import nu.marginalia.wmsa.edge.assistant.dict.SpellChecker;
 import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
@@ -21,6 +22,7 @@ class SuggestionsTest {
     }
 
     @Test
+    @Disabled
     void getSuggestions() {
         System.out.println(tryGetSuggestions("neop"));
         System.out.println(tryGetSuggestions("neopla"));

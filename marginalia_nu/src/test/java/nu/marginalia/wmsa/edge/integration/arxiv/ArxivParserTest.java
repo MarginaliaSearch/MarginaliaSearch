@@ -36,6 +36,6 @@ class ArxivParserTest {
 
         var se = new SentenceExtractor(lm);
 
-        data.stream().map(meta -> documentKeywordExtractor.extractKeywords(se.extractSentences(meta.getAbstract(), meta.getTitle()), new KeywordMetadata(0))).limit(100).forEach(System.out::println);
+        data.stream().map(meta -> documentKeywordExtractor.extractKeywords(se.extractSentences(meta.getAbstract(), meta.getTitle()), new KeywordMetadata())).limit(100).forEach(System.out::println);
     }
 }

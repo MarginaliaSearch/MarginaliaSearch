@@ -1,8 +1,8 @@
 package nu.marginalia.util.btree;
 
+import nu.marginalia.util.array.LongArray;
 import nu.marginalia.util.btree.model.BTreeContext;
 import nu.marginalia.util.btree.model.BTreeHeader;
-import nu.marginalia.util.multimap.MultimapFileLongSlice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,10 +11,10 @@ import java.io.IOException;
 
 public class BTreeWriter {
     private final BTreeContext ctx;
-    private final MultimapFileLongSlice map;
+    private final LongArray map;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public BTreeWriter(MultimapFileLongSlice map, BTreeContext ctx) {
+    public BTreeWriter(LongArray map, BTreeContext ctx) {
         this.map = map;
         this.ctx = ctx;
     }
@@ -42,8 +42,10 @@ public class BTreeWriter {
 
         header.write(map, offset);
 
+        final long startRange = header.dataOffsetLongs();
+        final long endRange = startRange + (long) numEntries * ctx.entrySize();
 
-        var slice = map.atOffset(header.dataOffsetLongs());
+        var slice = map.range(startRange, endRange);
 
         BTreeDogEar dogEar = new BTreeDogEar(ctx, header, slice);
 
@@ -53,13 +55,11 @@ public class BTreeWriter {
             logger.error("Dog ear was not overwritten: {}", header);
         }
 
-        if (header.layers() < 1) { // The data is too small to benefit from indexing
-            return ctx.calculateSize(numEntries);
-        }
-        else {
+        if (header.layers() >= 1) { // Omit layer if data fits within a single block
             writeIndex(header);
-            return ctx.calculateSize(numEntries);
         }
+
+        return ctx.calculateSize(numEntries);
     }
 
     public static BTreeHeader makeHeader(BTreeContext ctx, long offset, int numEntries) {
@@ -96,7 +96,8 @@ public class BTreeWriter {
 
     }
 
-    private void writeIndexLayer(BTreeHeader header, long[] layerOffsets,
+    private void writeIndexLayer(BTreeHeader header,
+                                 long[] layerOffsets,
                                  final long indexedDataStepSize,
                                  final int layer) {
 
@@ -115,13 +116,20 @@ public class BTreeWriter {
              dataPtr += indexedDataStepSize)
         {
             long dataOffset = dataOffsetBase + (dataPtr + lastDataEntryOffset) * entrySize;
-            map.put(indexOffsetBase + indexWord++, map.get(dataOffset) & ctx.equalityMask());
+            map.set(indexOffsetBase + indexWord++, map.get(dataOffset));
         }
 
-        // Fill the remaining block with LONG_MAX
-        map.setRange(indexOffsetBase+indexWord,
-                (int) (ctx.BLOCK_SIZE_WORDS() - (indexWord % ctx.BLOCK_SIZE_WORDS())),
-                Long.MAX_VALUE);
+            // If the index block is not completely filled with data,
+            // top up the remaining index block with LONG_MAX
+
+            final long trailerStart = indexOffsetBase + indexWord;
+            final long trailerEnd = trailerStart
+                    + ctx.BLOCK_SIZE_WORDS()
+                    - (int) (indexWord % ctx.BLOCK_SIZE_WORDS());
+
+            if (trailerStart < trailerEnd) {
+                map.fill(trailerStart, trailerEnd, Long.MAX_VALUE);
+            }
     }
 
 

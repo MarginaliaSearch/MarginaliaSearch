@@ -6,8 +6,6 @@ import nu.marginalia.util.language.processing.model.KeywordMetadata;
 import nu.marginalia.util.language.processing.model.WordRep;
 import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import nu.marginalia.wmsa.edge.index.model.EdgePageWordFlags;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
-import nu.marginalia.wmsa.edge.model.crawl.EdgePageWordSet;
 import nu.marginalia.wmsa.edge.model.crawl.EdgePageWords;
 
 import javax.inject.Inject;
@@ -33,7 +31,7 @@ public class DocumentKeywordExtractor {
     }
 
 
-    public EdgePageWordSet extractKeywordsMinimal(DocumentLanguageData documentLanguageData, KeywordMetadata keywordMetadata) {
+    public EdgePageWords extractKeywordsMinimal(DocumentLanguageData documentLanguageData, KeywordMetadata keywordMetadata) {
 
         List<WordRep> titleWords = extractTitleWords(documentLanguageData);
         List<WordRep> wordsNamesAll = nameCounter.count(documentLanguageData, 2);
@@ -47,15 +45,15 @@ public class DocumentKeywordExtractor {
 
         List<String> artifacts = getArtifacts(documentLanguageData);
 
-        keywordMetadata.flagsTemplate().add(EdgePageWordFlags.Simple);
+        WordsBuilder wordsBuilder = new WordsBuilder();
 
-        return new EdgePageWordSet(
-                createWords(keywordMetadata, IndexBlock.Title, titleWords),
-                EdgePageWords.withBlankMetadata(IndexBlock.Artifacts, artifacts)
-        );
+        createWords(wordsBuilder, keywordMetadata, titleWords, 0);
+        artifacts.forEach(wordsBuilder::addWithBlankMetadata);
+
+        return wordsBuilder.build();
     }
 
-    public EdgePageWordSet extractKeywords(DocumentLanguageData documentLanguageData, KeywordMetadata keywordMetadata) {
+    public EdgePageWords extractKeywords(DocumentLanguageData documentLanguageData, KeywordMetadata keywordMetadata) {
 
         List<WordRep> titleWords = extractTitleWords(documentLanguageData);
 
@@ -72,26 +70,25 @@ public class DocumentKeywordExtractor {
 
         List<String> artifacts = getArtifacts(documentLanguageData);
 
-        var wordSet = new EdgePageWordSet(
-                createWords(keywordMetadata, IndexBlock.Title, titleWords),
-                createWords(keywordMetadata, IndexBlock.Tfidf_High, wordsTfIdf),
-                createWords(keywordMetadata, IndexBlock.Subjects, subjects),
-                EdgePageWords.withBlankMetadata(IndexBlock.Artifacts, artifacts)
-        );
+        WordsBuilder wordsBuilder = new WordsBuilder();
 
-        getSimpleWords(keywordMetadata, wordSet, documentLanguageData,
-                IndexBlock.Words_1, IndexBlock.Words_2, IndexBlock.Words_4, IndexBlock.Words_8, IndexBlock.Words_16Plus);
+        createWords(wordsBuilder, keywordMetadata, titleWords, 0);
+        createWords(wordsBuilder, keywordMetadata, wordsTfIdf, EdgePageWordFlags.TfIdfHigh.asBit());
+        createWords(wordsBuilder, keywordMetadata, subjects, 0);
 
-        return wordSet;
+        getSimpleWords(wordsBuilder, keywordMetadata, documentLanguageData);
+
+        artifacts.forEach(wordsBuilder::addWithBlankMetadata);
+
+        return wordsBuilder.build();
     }
 
 
     public void getWordPositions(KeywordMetadata keywordMetadata, DocumentLanguageData dld) {
         Map<String, Integer> ret = keywordMetadata.positionMask();
 
-        int posCtr = 0;
         for (var sent : dld.titleSentences) {
-            int posBit = (int)((1L << (posCtr/4)) & 0xFFFF_FFFFL);
+            int posBit = 1;
 
             for (var word : sent) {
                 ret.merge(word.stemmed(), posBit, this::bitwiseOr);
@@ -101,9 +98,11 @@ public class DocumentKeywordExtractor {
                 ret.merge(sent.constructStemmedWordFromSpan(span), posBit, this::bitwiseOr);
             }
         }
-        posCtr+=4;
+
+        int pos = 1;
+        int line = 0;
         for (var sent : dld.sentences) {
-            int posBit = (int)((1L << (posCtr/4)) & 0xFFFF_FFFFL);
+            int posBit = (int)((1L << pos) & 0xFFFF_FFFFL);
 
             for (var word : sent) {
                 ret.merge(word.stemmed(), posBit, this::bitwiseOr);
@@ -113,7 +112,28 @@ public class DocumentKeywordExtractor {
                 ret.merge(sent.constructStemmedWordFromSpan(span), posBit, this::bitwiseOr);
             }
 
-            posCtr++;
+            if (pos < 4) pos ++;
+            else if (pos < 8) {
+                if (++line >= 2) {
+                    pos++;
+                    line = 0;
+                }
+            }
+            else if (pos < 24) {
+                if (++line >= 4) {
+                    pos++;
+                    line = 0;
+                }
+            }
+            else if (pos < 64) {
+                if (++line > 8) {
+                    pos++;
+                    line = 0;
+                }
+            }
+            else {
+                break;
+            }
         }
     }
 
@@ -122,43 +142,32 @@ public class DocumentKeywordExtractor {
     }
 
 
-    private void getSimpleWords(KeywordMetadata metadata, EdgePageWordSet wordSet, DocumentLanguageData documentLanguageData, IndexBlock...  blocks) {
+    private void getSimpleWords(WordsBuilder wordsBuilder, KeywordMetadata metadata, DocumentLanguageData documentLanguageData) {
 
         EnumSet<EdgePageWordFlags> flagsTemplate = EnumSet.noneOf(EdgePageWordFlags.class);
 
-        int start = 0;
-        int lengthGoal = 32;
+        for (var sent : documentLanguageData.sentences) {
 
-        for (int blockIdx = 0; blockIdx < blocks.length && start < documentLanguageData.sentences.length; blockIdx++) {
-            IndexBlock block = blocks[blockIdx];
-            Set<EdgePageWords.Entry> words = new HashSet<>(lengthGoal+100);
+            if (wordsBuilder.size() > 1500)
+                break;
 
-            int pos;
-            int length = 0;
-            for (pos = start; pos < documentLanguageData.sentences.length && length < lengthGoal; pos++) {
-                var sent = documentLanguageData.sentences[pos];
-                length += sent.length();
-
-                for (var word : sent) {
-                    if (!word.isStopWord()) {
-                        String w = AsciiFlattener.flattenUnicode(word.wordLowerCase());
-                        if (WordPatterns.singleWordQualitiesPredicate.test(w)) {
-                            words.add(new EdgePageWords.Entry(w, metadata.forWord(flagsTemplate, word.stemmed())));
-                        }
+            for (var word : sent) {
+                if (!word.isStopWord()) {
+                    String w = AsciiFlattener.flattenUnicode(word.wordLowerCase());
+                    if (WordPatterns.singleWordQualitiesPredicate.test(w)) {
+                        wordsBuilder.add(w, metadata.forWord(flagsTemplate, word.stemmed()));
                     }
                 }
-
-                for (var names : keywordExtractor.getNames(sent)) {
-                    var rep = new WordRep(sent, names);
-                    String w = AsciiFlattener.flattenUnicode(rep.word);
-
-                    words.add(new EdgePageWords.Entry(w, metadata.forWord(flagsTemplate, rep.stemmed)));
-                }
             }
-            wordSet.append(block, words);
-            start = pos;
-            lengthGoal+=32;
+
+            for (var names : keywordExtractor.getNames(sent)) {
+                var rep = new WordRep(sent, names);
+                String w = AsciiFlattener.flattenUnicode(rep.word);
+
+                wordsBuilder.add(w, metadata.forWord(flagsTemplate, rep.stemmed));
+            }
         }
+
     }
 
     private static final Pattern mailLikePattern = Pattern.compile("[a-zA-Z0-9._\\-]+@[a-zA-Z0-9]+(\\.[a-zA-Z0-9]+)+");
@@ -197,11 +206,11 @@ public class DocumentKeywordExtractor {
                 .collect(Collectors.toList());
     }
 
-    public EdgePageWords createWords(KeywordMetadata metadata,
-                                     IndexBlock block,
-                                     Collection<WordRep> words) {
+    public void createWords(WordsBuilder wordsBuilder,
+                                     KeywordMetadata metadata,
+                                     Collection<WordRep> words,
+                                     long additionalMeta) {
 
-        Set<EdgePageWords.Entry> entries = new HashSet<>(words.size());
         for (var word : words) {
 
             String flatWord = AsciiFlattener.flattenUnicode(word.word);
@@ -209,9 +218,31 @@ public class DocumentKeywordExtractor {
                 continue;
             }
 
-            entries.add(new EdgePageWords.Entry(flatWord, metadata.forWord(metadata.flagsTemplate(), word.stemmed)));
+            wordsBuilder.add(flatWord, metadata.forWord(metadata.wordFlagsTemplate(), word.stemmed) | additionalMeta);
+        }
+    }
+
+    private static class WordsBuilder {
+        private final EdgePageWords words = new EdgePageWords(1600);
+        private final Set<String> seen = new HashSet<>(1600);
+
+        public void add(String word, long meta) {
+            if (seen.add(word)) {
+                words.add(word, meta);
+            }
+        }
+        public void addWithBlankMetadata(String word) {
+            if (seen.add(word)) {
+                words.addJustNoMeta(word);
+            }
         }
 
-        return new EdgePageWords(block, entries);
+        public EdgePageWords build() {
+            return words;
+        }
+
+        public int size() {
+            return seen.size();
+        }
     }
 }

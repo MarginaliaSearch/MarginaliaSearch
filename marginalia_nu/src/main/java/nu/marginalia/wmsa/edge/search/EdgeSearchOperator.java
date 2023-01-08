@@ -7,7 +7,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.edge.assistant.client.AssistantClient;
 import nu.marginalia.wmsa.edge.assistant.dict.WikiArticles;
-import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
+import nu.marginalia.wmsa.edge.dbcommon.EdgeDataStoreDao;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.search.EdgeUrlDetails;
 import nu.marginalia.wmsa.edge.search.model.BrowseResult;

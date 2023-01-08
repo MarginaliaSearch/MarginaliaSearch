@@ -8,6 +8,7 @@ import nu.marginalia.wmsa.client.AbstractDynamicClient;
 import nu.marginalia.wmsa.configuration.ServiceDescriptor;
 import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.edge.converting.interpreter.instruction.DocumentKeywords;
+import nu.marginalia.wmsa.edge.index.model.EdgePageDocumentsMetadata;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.id.EdgeId;
@@ -34,6 +35,7 @@ public class EdgeIndexClient extends AbstractDynamicClient implements EdgeIndexW
 
     @Override
     public void putWords(Context ctx, EdgeId<EdgeDomain> domain, EdgeId<EdgeUrl> url,
+                         EdgePageDocumentsMetadata metadata,
                          DocumentKeywords wordSet, int writer
     )
     {
@@ -42,10 +44,10 @@ public class EdgeIndexClient extends AbstractDynamicClient implements EdgeIndexW
                 IndexPutKeywordsReq.newBuilder()
                     .setDomain(domain.id())
                     .setUrl(url.id())
+                    .setMetadata(metadata.encode())
                     .setIndex(writer);
 
         var wordSetBuilder = IndexPutKeywordsReq.WordSet.newBuilder();
-        wordSetBuilder.setIndex(wordSet.block().ordinal());
         wordSetBuilder.addAllWords(List.of(wordSet.keywords()));
         for (var meta : wordSet.metadata()) {
             wordSetBuilder.addMeta(meta);

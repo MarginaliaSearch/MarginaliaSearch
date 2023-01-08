@@ -108,6 +108,30 @@ public class EdgeDomain {
         return domain.equalsIgnoreCase(other.domain);
     }
 
+    public String getTld() {
+        int dot = -1;
+        int length = domain.length();
+
+        if (ipPatternTest.test(domain)) {
+            return "IP";
+        }
+
+        if (govListTest.test(domain)) {
+            dot = domain.indexOf('.', Math.max(0, length - ".edu.uk".length()));
+        }
+        else {
+            dot = domain.lastIndexOf('.');
+        }
+
+
+        if (dot < 0 || dot == domain.length() - 1) {
+            return "-";
+        }
+        else {
+            return domain.substring(dot + 1);
+        }
+    }
+
     public boolean equals(final Object o) {
         if (o == this) return true;
         if (!(o instanceof EdgeDomain)) return false;
@@ -135,4 +159,5 @@ public class EdgeDomain {
         result = result * PRIME + $domain.hashCode();
         return result;
     }
+
 }

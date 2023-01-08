@@ -11,11 +11,14 @@ import nu.marginalia.util.language.processing.model.KeywordMetadata;
 import nu.marginalia.util.language.processing.model.WordRep;
 import nu.marginalia.util.language.processing.model.WordSpan;
 import nu.marginalia.util.language.processing.model.tag.WordSeparator;
+import nu.marginalia.wmsa.configuration.WmsaHome;
 import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import nu.marginalia.wmsa.edge.integration.wikipedia.WikipediaReader;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -24,6 +27,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Pattern;
 
+@Tag("slow")
 class SentenceExtractorTest {
     SentenceExtractor newSe;
     SentenceExtractor legacySe;
@@ -41,7 +45,7 @@ class SentenceExtractorTest {
     public static void main(String... args) throws IOException {
         final LanguageModels lm = TestLanguageModels.getLanguageModels();
 
-        var data = Path.of("/home/vlofgren/Code/tmp-data/");
+        var data = WmsaHome.getHomePath().resolve("test-data/");
 
         System.out.println("Running");
 
@@ -55,7 +59,7 @@ class SentenceExtractorTest {
                 var doc = Jsoup.parse(Files.readString(file.toPath()));
                 long start = System.currentTimeMillis();
                 var dld = se.extractSentences(doc);
-                documentKeywordExtractor.extractKeywords(dld, new KeywordMetadata(0));
+                documentKeywordExtractor.extractKeywords(dld, new KeywordMetadata());
                 total += (System.currentTimeMillis() - start);
             }
             System.out.println(total);
@@ -65,7 +69,7 @@ class SentenceExtractorTest {
     @SneakyThrows
     @Test
     void testExtractSubject() {
-        var data = Path.of("/home/vlofgren/Code/tmp-data/");
+        var data = WmsaHome.getHomePath().resolve("test-data/");
 
         System.out.println("Running");
 
@@ -118,7 +122,7 @@ class SentenceExtractorTest {
 
                     var newResult = newSe.extractSentences(Jsoup.parse(post.body));
 
-                    var newRes = documentKeywordExtractor.extractKeywords(newResult, new KeywordMetadata(0));
+                    var newRes = documentKeywordExtractor.extractKeywords(newResult, new KeywordMetadata());
                     System.out.println(newRes);
                 });
         reader.join();
@@ -130,7 +134,7 @@ class SentenceExtractorTest {
     }
     @Test
     void extractSentences() throws IOException {
-        var data = Path.of("/home/vlofgren/Code/tmp-data/");
+        var data = WmsaHome.getHomePath().resolve("test-data/");
 
         System.out.println("Running");
 
@@ -140,7 +144,7 @@ class SentenceExtractorTest {
         long st = System.currentTimeMillis();
         for (var file : Objects.requireNonNull(data.toFile().listFiles())) {
             var newResult = newSe.extractSentences(Jsoup.parse(Files.readString(file.toPath())));
-            var newRes = documentKeywordExtractor.extractKeywords(newResult, new KeywordMetadata(0));
+            var newRes = documentKeywordExtractor.extractKeywords(newResult, new KeywordMetadata());
             System.out.println(newRes);
         }
         System.out.println(System.currentTimeMillis() - st);
@@ -149,12 +153,13 @@ class SentenceExtractorTest {
 
     @SneakyThrows
     @Test
+    @Disabled
     public void testSE() {
         var result = newSe.extractSentences(
                 Jsoup.parse(Files.readString(Path.of("/home/vlofgren/man open (2) openat.html"))));
 
         var dict = new TermFrequencyDict(lm);
-        System.out.println(new DocumentKeywordExtractor(dict).extractKeywords(result, new KeywordMetadata(0)));
+        System.out.println(new DocumentKeywordExtractor(dict).extractKeywords(result, new KeywordMetadata()));
 
 
 //

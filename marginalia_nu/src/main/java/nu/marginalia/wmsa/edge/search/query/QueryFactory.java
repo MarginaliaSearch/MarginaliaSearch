@@ -6,10 +6,10 @@ import nu.marginalia.util.language.WordPatterns;
 import nu.marginalia.util.language.conf.LanguageModels;
 import nu.marginalia.wmsa.edge.assistant.dict.NGramBloomFilter;
 import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
+import nu.marginalia.wmsa.edge.index.model.QueryStrategy;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchSpecification;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchSubquery;
-import nu.marginalia.wmsa.edge.search.model.EdgeSearchProfile;
+import nu.marginalia.wmsa.edge.model.search.domain.SpecificationLimit;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeSearchQuery;
 import nu.marginalia.wmsa.edge.search.query.model.EdgeUserSearchParameters;
 import nu.marginalia.wmsa.edge.search.valuation.SearchResultValuator;
@@ -43,7 +43,7 @@ public class QueryFactory {
         this.searchResultValuator = searchResultValuator;
         this.nearQueryProcessor = nearQueryProcessor;
 
-        this.queryVariants = ThreadLocal.withInitial(() -> new QueryVariants(lm, dict, nGramBloomFilter, englishDictionary));
+        this.queryVariants = ThreadLocal.withInitial(() -> new QueryVariants(lm ,dict, nGramBloomFilter, englishDictionary));
     }
 
     public QueryParser getParser() {
@@ -52,49 +52,27 @@ public class QueryFactory {
 
     public EdgeSearchQuery createQuery(EdgeUserSearchParameters params) {
         final var processedQuery =  createQuery(getParser(), params);
+        final List<EdgeSearchSubquery> subqueries = processedQuery.specs.subqueries;
 
-        final var newSubqueries = reevaluateSubqueries(processedQuery, params);
+        for (var sq : subqueries) {
+            sq.setValue(searchResultValuator.preEvaluate(sq));
+        }
 
-        processedQuery.specs.subqueries.clear();
-        processedQuery.specs.subqueries.addAll(newSubqueries);
+        subqueries.sort(Comparator.comparing(EdgeSearchSubquery::getValue));
+        trimArray(subqueries, RETAIN_QUERY_VARIANT_COUNT);
 
         return processedQuery;
     }
 
-    private List<EdgeSearchSubquery> reevaluateSubqueries(EdgeSearchQuery processedQuery, EdgeUserSearchParameters params) {
-        final var profile = params.profile();
-
-        for (var sq : processedQuery.specs.subqueries) {
-            sq.setValue(searchResultValuator.preEvaluate(sq));
-        }
-
-        trimExcessiveSubqueries(processedQuery.specs.subqueries);
-
-        List<EdgeSearchSubquery> subqueries =
-                new ArrayList<>(processedQuery.specs.subqueries.size() * profile.indexBlocks.size());
-
-        for (var sq : processedQuery.specs.subqueries) {
-            for (var block : profile.indexBlocks) {
-                subqueries.add(sq.withBlock(block).setValue(sq.getValue() * block.ordinal()));
-            }
-        }
-
-        subqueries.sort(Comparator.comparing(EdgeSearchSubquery::getValue));
-
-        return subqueries;
-    }
-
-    private void trimExcessiveSubqueries(List<EdgeSearchSubquery> subqueries) {
-
-        subqueries.sort(Comparator.comparing(EdgeSearchSubquery::getValue));
-
-        if (subqueries.size() > RETAIN_QUERY_VARIANT_COUNT) {
-            subqueries.subList(0, subqueries.size() - RETAIN_QUERY_VARIANT_COUNT).clear();
+    private void trimArray(List<?> arr, int maxSize) {
+        if (arr.size() > maxSize) {
+            arr.subList(0, arr.size() - maxSize).clear();
         }
     }
 
-
-    public EdgeSearchQuery createQuery(QueryParser queryParser, EdgeUserSearchParameters params) {
+    public EdgeSearchQuery createQuery(QueryParser queryParser,
+                                       EdgeUserSearchParameters params)
+    {
         final var query = params.humanQuery();
         final var profile = params.profile();
 
@@ -113,8 +91,9 @@ public class QueryFactory {
             basicQuery.clear();
         }
 
-        Integer qualityLimit = null;
-        Integer rankLimit = null;
+        SpecificationLimit qualityLimit = profile.getQualityLimit();
+        SpecificationLimit year = profile.getYearLimit();
+        SpecificationLimit size = profile.getSizeLimit();
 
         for (Token t : basicQuery) {
             if (t.type == TokenType.QUOT_TERM || t.type == TokenType.LITERAL_TERM) {
@@ -126,28 +105,27 @@ public class QueryFactory {
                 analyzeSearchTerm(problems, t);
             }
             if (t.type == TokenType.QUALITY_TERM) {
-                qualityLimit = Integer.parseInt(t.str);
+                qualityLimit = parseSpecificationLimit(t.str);
             }
-            if (t.type == TokenType.RANK_TERM) {
-                if (profile == EdgeSearchProfile.CORPO) {
-                    problems.add("Rank limit (" + t.displayStr + ") ignored in unranked query");
-                } else {
-                    rankLimit = Integer.parseInt(t.str);
-                }
+            if (t.type == TokenType.YEAR_TERM) {
+                year = parseSpecificationLimit(t.str);
+            }
+            if (t.type == TokenType.SIZE_TERM) {
+                size = parseSpecificationLimit(t.str);
             }
         }
-
-
 
         var queryPermutations = queryParser.permuteQueriesNew(basicQuery);
         List<EdgeSearchSubquery> subqueries = new ArrayList<>();
 
         String near = profile.getNearDomain();
 
+
         for (var parts : queryPermutations) {
             List<String> searchTermsExclude = new ArrayList<>();
             List<String> searchTermsInclude = new ArrayList<>();
             List<String> searchTermsAdvice = new ArrayList<>();
+            List<String> searchTermsPriority = new ArrayList<>();
 
             for (Token t : parts) {
                 switch (t.type) {
@@ -157,6 +135,9 @@ public class QueryFactory {
                     case ADVICE_TERM:
                         searchTermsAdvice.add(t.str);
                         break;
+                    case PRIORTY_TERM:
+                        searchTermsPriority.add(t.str);
+                        break;
                     case LITERAL_TERM: // fallthrough;
                     case QUOT_TERM:
                         searchTermsInclude.add(t.str);
@@ -165,16 +146,24 @@ public class QueryFactory {
                         }
                         break;
                     case QUALITY_TERM:
+                    case YEAR_TERM:
+                    case SIZE_TERM:
                         break; //
                     case NEAR_TERM:
                         near = t.str;
                         break;
+
                     default:
                         logger.warn("Unexpected token type {}", t);
                 }
             }
 
-            EdgeSearchSubquery subquery = new EdgeSearchSubquery(searchTermsInclude, searchTermsExclude, searchTermsAdvice, IndexBlock.Title);
+            if (searchTermsInclude.isEmpty() && !searchTermsAdvice.isEmpty()) {
+                searchTermsInclude.addAll(searchTermsAdvice);
+                searchTermsAdvice.clear();
+            }
+
+            EdgeSearchSubquery subquery = new EdgeSearchSubquery(searchTermsInclude, searchTermsExclude, searchTermsAdvice, searchTermsPriority);
 
             params.profile().addTacitTerms(subquery);
             params.jsSetting().addTacitTerms(subquery);
@@ -190,22 +179,18 @@ public class QueryFactory {
             }
         }
 
-        if (qualityLimit != null && domains.isEmpty()) {
-            problems.add("Quality limit will be ignored when combined with 'near:'");
-        }
-
-        var buckets = domains.isEmpty() ? profile.buckets : EdgeSearchProfile.CORPO.buckets;
-
         EdgeSearchSpecification.EdgeSearchSpecificationBuilder specsBuilder = EdgeSearchSpecification.builder()
                 .subqueries(subqueries)
                 .limitTotal(100)
                 .humanQuery(query)
-                .buckets(buckets)
                 .timeoutMs(250)
                 .fetchSize(4096)
                 .quality(qualityLimit)
-                .rank(rankLimit)
-                .domains(domains);
+                .year(year)
+                .size(size)
+                .domains(domains)
+                .queryStrategy(QueryStrategy.AUTO)
+                .searchSetIdentifier(profile.searchSetIdentifier);
 
         if (domain != null) {
             specsBuilder = specsBuilder.limitByDomain(100);
@@ -216,6 +201,24 @@ public class QueryFactory {
         EdgeSearchSpecification specs = specsBuilder.build();
 
         return new EdgeSearchQuery(specs, searchTermsHuman, domain);
+    }
+
+    private SpecificationLimit parseSpecificationLimit(String str) {
+        int startChar = str.charAt(0);
+
+        int val = Integer.parseInt(str.substring(1));
+        if (startChar == '=') {
+            return SpecificationLimit.equals(val);
+        }
+        else if (startChar == '<'){
+            return SpecificationLimit.lessThan(val);
+        }
+        else if (startChar == '>'){
+            return SpecificationLimit.greaterThan(val);
+        }
+        else {
+            return SpecificationLimit.none();
+        }
     }
 
     private String normalizeDomainName(String str) {

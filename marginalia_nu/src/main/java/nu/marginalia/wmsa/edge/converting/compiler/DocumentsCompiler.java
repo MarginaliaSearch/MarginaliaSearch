@@ -7,8 +7,6 @@ import nu.marginalia.wmsa.edge.converting.interpreter.instruction.LoadProcessedD
 import nu.marginalia.wmsa.edge.converting.interpreter.instruction.LoadProcessedDocumentWithError;
 import nu.marginalia.wmsa.edge.converting.model.ProcessedDocument;
 import nu.marginalia.wmsa.edge.converting.processor.logic.HtmlFeature;
-import nu.marginalia.wmsa.edge.index.model.IndexBlockType;
-import nu.marginalia.wmsa.edge.model.crawl.EdgePageWords;
 
 import java.util.List;
 
@@ -41,18 +39,8 @@ public class DocumentsCompiler {
         var words = doc.words;
 
         if (words != null) {
-
-            var wordsArray = words.values().stream()
-                    .filter(this::filterNonTransients)
-                    .map(DocumentKeywords::new)
-                    .toArray(DocumentKeywords[]::new);
-
-            ret.add(new LoadKeywords(doc.url, wordsArray));
+            ret.add(new LoadKeywords(doc.url, doc.details.metadata, new DocumentKeywords(words)));
         }
-    }
-
-    private boolean filterNonTransients(EdgePageWords words) {
-        return words.block.type != IndexBlockType.TRANSIENT;
     }
 
 }

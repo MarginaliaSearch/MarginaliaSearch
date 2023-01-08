@@ -3,7 +3,7 @@ package nu.marginalia.wmsa.edge.search.svc;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.wmsa.configuration.WebsiteUrl;
-import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
+import nu.marginalia.wmsa.edge.dbcommon.EdgeDataStoreDao;
 import nu.marginalia.wmsa.edge.model.id.EdgeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

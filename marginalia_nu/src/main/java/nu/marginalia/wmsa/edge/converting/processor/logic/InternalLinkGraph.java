@@ -1,7 +1,7 @@
 package nu.marginalia.wmsa.edge.converting.processor.logic;
 
 import nu.marginalia.wmsa.edge.converting.model.ProcessedDocument;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
+import nu.marginalia.wmsa.edge.index.model.EdgePageWordFlags;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 
 import java.util.*;
@@ -12,21 +12,20 @@ public class InternalLinkGraph {
     private final Map<EdgeUrl, Set<String>> topKeywordsByUrl = new HashMap<>(1000);
     private final Map<EdgeUrl, Set<String>> candidateKeywordsByUrl = new HashMap<>(1000);
 
+    private final Set<EdgeUrl> knownUrls = new HashSet<>(10_000);
+
     public void accept(ProcessedDocument doc) {
         if (doc.details == null || doc.details.linksInternal == null)
             return;
 
         goodUrls.add(doc.url);
         internalLinkGraph.put(doc.url, new HashSet<>(doc.details.linksInternal));
+        knownUrls.addAll(doc.details.linksInternal);
 
-        Set<String> topKeywords = new HashSet<>(doc.words.get(IndexBlock.Tfidf_High).words);
-        topKeywords.addAll(doc.words.get(IndexBlock.Subjects).words);
-        topKeywordsByUrl.put(doc.url, topKeywords);
+        List<String> topKeywords = doc.words.getWordsWithAnyFlag(EdgePageWordFlags.TfIdfHigh.asBit() | EdgePageWordFlags.Subjects.asBit());
 
-        Set<String> candidateKeywords = new HashSet<>(topKeywords);
-        candidateKeywords.addAll(doc.words.get(IndexBlock.Tfidf_High).words);
-        candidateKeywords.addAll(doc.words.get(IndexBlock.Subjects).words);
-        candidateKeywordsByUrl.put(doc.url, candidateKeywords);
+        topKeywordsByUrl.put(doc.url, new HashSet<>(topKeywords));
+        candidateKeywordsByUrl.put(doc.url, new HashSet<>(topKeywords));
     }
 
     public Map<EdgeUrl, Set<EdgeUrl>> trimAndInvert() {
@@ -43,6 +42,10 @@ public class InternalLinkGraph {
         internalLinkGraph.clear();
 
         return inverted;
+    }
+
+    public int numKnownUrls() {
+        return knownUrls.size();
     }
 
     public Set<String> getKeywords(EdgeUrl url) {

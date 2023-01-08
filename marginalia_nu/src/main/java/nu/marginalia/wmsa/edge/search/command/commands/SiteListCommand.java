@@ -2,8 +2,7 @@ package nu.marginalia.wmsa.edge.search.command.commands;
 
 import com.google.inject.Inject;
 import nu.marginalia.wmsa.configuration.server.Context;
-import nu.marginalia.wmsa.edge.data.dao.EdgeDataStoreDao;
-import nu.marginalia.wmsa.edge.index.model.IndexBlock;
+import nu.marginalia.wmsa.edge.dbcommon.EdgeDataStoreDao;
 import nu.marginalia.wmsa.edge.model.search.EdgeUrlDetails;
 import nu.marginalia.wmsa.edge.search.command.SearchCommandInterface;
 import nu.marginalia.wmsa.edge.search.command.SearchParameters;
@@ -60,7 +59,7 @@ public class SiteListCommand implements SearchCommandInterface {
         Path screenshotPath = null;
         Integer domainId = -1;
         if (null != domain) {
-            resultSet = searchQueryIndexService.performDumbQuery(ctx, EdgeSearchProfile.CORPO, IndexBlock.Words_1, 100, 100, "site:"+domain);
+            resultSet = searchQueryIndexService.performDumbQuery(ctx, EdgeSearchProfile.CORPO, 100, 100, "site:"+domain);
             domainId = dataStoreDao.getDomainId(domain).id();
             screenshotPath = Path.of("/screenshot/" + domainId);
         }
