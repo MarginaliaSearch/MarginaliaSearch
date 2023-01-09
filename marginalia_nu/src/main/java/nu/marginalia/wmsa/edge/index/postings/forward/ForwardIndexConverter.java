@@ -49,8 +49,6 @@ public class ForwardIndexConverter {
 
         logger.info("Converting  {} {}",inputFile, journalReader.fileHeader);
 
-        final Path intermediateDocsFile = Files.createTempFile(tmpFileDir, "words-sorted", ".dat");
-
         try {
             LongArray docsFileId = getDocIds(outputFileDocsId, journalReader);
 
@@ -74,14 +72,10 @@ public class ForwardIndexConverter {
             });
 
             docFileData.force();
-
-
+            docsFileId.force();
         } catch (IOException ex) {
             logger.error("Failed to convert", ex);
             throw ex;
-        }
-        finally {
-            Files.deleteIfExists(intermediateDocsFile);
         }
     }
 
