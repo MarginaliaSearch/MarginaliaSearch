@@ -75,6 +75,7 @@ public class ReverseIndexConverter {
                                  StandardOpenOption.CREATE, StandardOpenOption.READ, StandardOpenOption.WRITE))
             {
                 logger.info("Creating Intermediate Docs File");
+
                 // Construct intermediate index
                 try (RandomWriteFunnel intermediateDocumentWriteFunnel = new RandomWriteFunnel(tmpFileDir, RWF_BIN_SIZE))
                 {
