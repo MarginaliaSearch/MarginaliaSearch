@@ -77,9 +77,11 @@ public class ReverseIndexConverter {
                 logger.info("Creating Intermediate Docs File");
 
                 // Construct intermediate index
-                try (RandomWriteFunnel intermediateDocumentWriteFunnel = new RandomWriteFunnel(tmpFileDir, RWF_BIN_SIZE))
+                try (RandomWriteFunnel intermediateDocumentWriteFunnel = new RandomWriteFunnel(tmpFileDir, RWF_BIN_SIZE);
+                     IntermediateIndexConstructor intermediateIndexConstructor = new IntermediateIndexConstructor(tmpFileDir, wordsOffsets, intermediateDocumentWriteFunnel)
+                )
                 {
-                    journalReader.forEachDocIdRecord(new IntermediateIndexConstructor(wordsOffsets, intermediateDocumentWriteFunnel));
+                    journalReader.forEachDocIdRecord(intermediateIndexConstructor);
                     intermediateDocumentWriteFunnel.write(intermediateDocChannel);
                 }
                 intermediateDocChannel.force(false);
@@ -185,15 +187,19 @@ public class ReverseIndexConverter {
         }
     }
 
-    private static class IntermediateIndexConstructor implements SearchIndexJournalReaderSingleFile.LongObjectConsumer<SearchIndexJournalEntry.Record> {
+    private static class IntermediateIndexConstructor implements SearchIndexJournalReaderSingleFile.LongObjectConsumer<SearchIndexJournalEntry.Record>, AutoCloseable {
 
         private final LongArray wordRangeEnds;
         private final IntArray wordRangeOffset;
         private final RandomWriteFunnel documentsFile;
 
-        public IntermediateIndexConstructor(LongArray wordRangeEnds, RandomWriteFunnel documentsFile) {
+        private final Path tempFile;
+
+        public IntermediateIndexConstructor(Path tempDir, LongArray wordRangeEnds, RandomWriteFunnel documentsFile) throws IOException {
+            tempFile = Files.createTempFile(tempDir, "iic", "dat");
+
             this.wordRangeEnds = wordRangeEnds;
-            this.wordRangeOffset = IntArray.allocate(wordRangeEnds.size());
+            this.wordRangeOffset = IntArray.mmapForWriting(tempFile, wordRangeEnds.size());
             this.documentsFile = documentsFile;
         }
 
@@ -215,6 +221,9 @@ public class ReverseIndexConverter {
             return wordRangeEnds.get(wordId - 1);
         }
 
+        public void close() throws IOException {
+            Files.delete(tempFile);
+        }
     }
 
 }
