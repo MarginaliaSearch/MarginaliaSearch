@@ -1,5 +1,6 @@
 package nu.marginalia.wmsa.edge.index.postings.forward;
 
+import com.upserve.uppend.blobs.NativeIO;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import nu.marginalia.util.array.LongArray;
 import nu.marginalia.wmsa.edge.index.postings.journal.reader.SearchIndexJournalReader;
@@ -73,6 +74,9 @@ public class ForwardIndexConverter {
 
             docFileData.force();
             docsFileId.force();
+
+            docFileData.advice(NativeIO.Advice.DontNeed);
+            docsFileId.advice(NativeIO.Advice.DontNeed);
         } catch (IOException ex) {
             logger.error("Failed to convert", ex);
             throw ex;

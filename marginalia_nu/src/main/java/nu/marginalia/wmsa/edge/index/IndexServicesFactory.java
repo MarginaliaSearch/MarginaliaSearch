@@ -129,12 +129,13 @@ public class IndexServicesFactory {
                 revIndexDoc.get(NEXT_PART).toPath());
 
         converter.convert();
+
+        tryGc();
     }
 
     private void convertPriorityReverseIndex() throws IOException {
 
         logger.info("Converting priority reverse index");
-
 
         var longArray = LongArray.mmapRead(writerIndexFile.get(0).toPath());
 
@@ -146,6 +147,8 @@ public class IndexServicesFactory {
                 revPrioIndexDoc.get(NEXT_PART).toPath());
 
         converter.convert();
+
+        tryGc();
     }
 
     private void convertForwardIndex() throws IOException {
@@ -156,8 +159,22 @@ public class IndexServicesFactory {
                 fwdIndexDocId.get(NEXT_PART).toPath(),
                 fwdIndexDocData.get(NEXT_PART).toPath())
                 .convert();
+
+        tryGc();
     }
 
+
+    public void tryGc() {
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        System.runFinalization();
+        System.gc();
+    }
 
     public ReverseIndexReader getReverseIndexReader() throws IOException {
         return new ReverseIndexReader(
