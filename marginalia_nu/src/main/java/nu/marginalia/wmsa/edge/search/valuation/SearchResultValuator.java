@@ -86,7 +86,7 @@ public class SearchResultValuator {
 
         }
 
-        return bestScore * (0.3 + 0.7 * bestAllTermsFactor) * priorityTermBonus;
+        return bestScore * (0.1 + 0.9 * bestAllTermsFactor) * priorityTermBonus;
     }
 
     private boolean hasPriorityTerm(List<EdgeSearchResultKeywordScore> rawScores) {
@@ -153,6 +153,7 @@ public class SearchResultValuator {
     private double calculateTermCoherencePenalty(SearchResultsKeywordSet keywordSet, double f) {
         long maskDirect = ~0;
         long maskAdjacent = ~0;
+
         byte excludeMask = (byte) (EdgePageWordFlags.Title.asBit() | EdgePageWordFlags.Subjects.asBit() | EdgePageWordFlags.Synthetic.asBit());
 
         for (var keyword : keywordSet.keywords) {
@@ -163,28 +164,28 @@ public class SearchResultValuator {
                 return f;
             }
 
+
             positions = meta.positions();
 
-            if (!EdgePageWordMetadata.hasAnyFlags(meta.flags(),  excludeMask))
-             {
+            maskAdjacent &= (positions | (positions << 1) | (positions >>> 1));
+            if (positions != 0 && !EdgePageWordMetadata.hasAnyFlags(meta.flags(),  excludeMask))
+            {
                 maskDirect &= positions;
-                maskAdjacent &= (positions | (positions << 1) | (positions >>> 1));
             }
         }
 
         if (maskAdjacent == 0) {
-            return 1.2 * f;
+            return 2 * f;
         }
 
         if (maskDirect == 0) {
-            return 1.1 * f;
+            return 1.25 * f;
         }
 
-
         if (maskDirect != ~0L) {
-            double locationFactor = 0.65 + Math.max(0.,
-                    0.35 * Long.numberOfTrailingZeros(maskDirect) / 16.
-                        - Math.sqrt(Long.bitCount(maskDirect) - 1) / 5.
+            double locationFactor = 0.5 + Math.max(0.,
+                    0.5 * Long.numberOfTrailingZeros(maskDirect) / 16.
+                        - Math.sqrt(Long.bitCount(maskDirect) - 1) / 3.
             );
 
             return f * locationFactor;
@@ -235,16 +236,6 @@ public class SearchResultValuator {
         }
 
         return f;
-    }
-
-    private double getLengthPenalty(int length) {
-        if (length < MIN_LENGTH) {
-            length = MIN_LENGTH;
-        }
-        if (length > AVG_LENGTH) {
-            length = AVG_LENGTH;
-        }
-        return (0.5 + 0.5 * length / AVG_LENGTH);
     }
 
     private double[] getTermWeights(EdgeSearchResultKeywordScore[] scores) {
