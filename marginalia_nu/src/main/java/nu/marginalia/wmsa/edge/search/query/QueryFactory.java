@@ -134,6 +134,9 @@ public class QueryFactory {
                         break;
                     case ADVICE_TERM:
                         searchTermsAdvice.add(t.str);
+                        if (t.str.toLowerCase().startsWith("site:")) {
+                            domain = t.str.substring("site:".length());
+                        }
                         break;
                     case PRIORTY_TERM:
                         searchTermsPriority.add(t.str);
@@ -141,9 +144,6 @@ public class QueryFactory {
                     case LITERAL_TERM: // fallthrough;
                     case QUOT_TERM:
                         searchTermsInclude.add(t.str);
-                        if (t.str.toLowerCase().startsWith("site:")) {
-                            domain = t.str.substring("site:".length());
-                        }
                         break;
                     case QUALITY_TERM:
                     case YEAR_TERM:
