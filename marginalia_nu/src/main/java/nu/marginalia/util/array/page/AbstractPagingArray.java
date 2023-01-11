@@ -85,4 +85,23 @@ public class AbstractPagingArray<T extends BulkTransferArray<B>, B> {
             bufferStart += eOff - sOff;
         }
     }
+
+    public void get(long start, long end, B buffer, int bufferStart) {
+        assert end >= start;
+
+        int page = partitioningScheme.getPage(start);
+
+        long endPos;
+
+        for (long pos = start; pos < end; pos = endPos) {
+            endPos = partitioningScheme.getPageEnd(pos, end);
+
+            int sOff = partitioningScheme.getOffset(pos);
+            int eOff = partitioningScheme.getEndOffset(start, endPos);
+
+            pages[page++].get(sOff, eOff, buffer, bufferStart);
+
+            bufferStart += eOff - sOff;
+        }
+    }
 }

@@ -46,6 +46,10 @@ public class SearchIndexJournalReaderSingleFile implements SearchIndexJournalRea
         this.entryPredicate = entryPredicate;
     }
 
+    public SearchIndexJournalFileHeader fileHeader() {
+        return fileHeader;
+    }
+
     public boolean filter(SearchIndexJournalReadEntry entry) {
         return entryPredicate == null || entryPredicate.test(entry);
     }

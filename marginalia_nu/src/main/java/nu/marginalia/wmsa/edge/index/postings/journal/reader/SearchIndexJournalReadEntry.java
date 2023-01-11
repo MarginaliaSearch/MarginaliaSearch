@@ -5,6 +5,7 @@ import nu.marginalia.wmsa.edge.index.postings.journal.model.SearchIndexJournalEn
 import nu.marginalia.wmsa.edge.index.postings.journal.model.SearchIndexJournalEntryHeader;
 
 import java.nio.ByteBuffer;
+import java.nio.LongBuffer;
 
 public class SearchIndexJournalReadEntry {
     private final long offset;
@@ -15,6 +16,7 @@ public class SearchIndexJournalReadEntry {
     SearchIndexJournalReadEntry(long offset, LongArray map, long committedSize) {
         this.map = map;
         this.committedSize = committedSize;
+
         final long sizeBlock = this.map.get(offset);
         final long docId = this.map.get(offset + 1);
         final long meta = this.map.get(offset + 2);
@@ -74,18 +76,23 @@ public class SearchIndexJournalReadEntry {
     }
 
     public long nextId() {
-        return offset + SearchIndexJournalEntryHeader.HEADER_SIZE_LONGS + header.entrySize();
+        return offset + totalEntrySizeLongs();
     }
 
     public SearchIndexJournalReadEntry next() {
         return new SearchIndexJournalReadEntry(nextId(), map, committedSize);
     }
 
-    public void copyToBuffer(ByteBuffer buffer) {
-        var dest = buffer.asLongBuffer();
-        dest.position(buffer.position() * 8);
-        dest.limit(buffer.position() * 8 + header.entrySize() + SearchIndexJournalEntryHeader.HEADER_SIZE_LONGS);
-        map.get(offset, dest);
-        buffer.position(dest.limit() * 8);
+    public long copyTo(long pos, LongBuffer adequateBuffer, LongArray destArray) {
+        long size = totalEntrySizeLongs();
+
+        map.get(offset, offset + size, adequateBuffer, 0);
+        destArray.set(pos, pos + size, adequateBuffer, 0);
+
+        return size;
+    }
+
+    public long totalEntrySizeLongs() {
+        return header.entrySize() + SearchIndexJournalEntryHeader.HEADER_SIZE_LONGS;
     }
 }
