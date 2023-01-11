@@ -149,10 +149,10 @@ public class IndexResultValuator {
 
             positions = EdgePageWordMetadata.decodePositions(meta);
 
-            maskAdjacent &= (positions | (positions << 1) | (positions >>> 1));
             maskDirectRaw &= positions;
 
-            if (positions == 0 && !EdgePageWordMetadata.hasAnyFlags(meta, flagBitMask)) {
+            if (positions != 0 && !EdgePageWordMetadata.hasAnyFlags(meta, flagBitMask)) {
+                maskAdjacent &= (positions | (positions << 1) | (positions >>> 1));
                 maskDirectGenerous &= positions;
             }
 

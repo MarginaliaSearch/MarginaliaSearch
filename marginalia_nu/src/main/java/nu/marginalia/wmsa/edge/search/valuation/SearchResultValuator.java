@@ -145,8 +145,31 @@ public class SearchResultValuator {
             totalFactor *= getAllTermsFactor(keyword, totalWeight, titleLength);
         }
 
-        totalFactor = calculateTermCoherencePenalty(set, totalFactor);
+        if (set.keywords.length > 1) {
+            totalFactor = calculateTermCoherencePenalty(set, totalFactor);
+        }
+        else {
+            totalFactor = calculateSingleTermBonus(set, totalFactor);
+        }
 
+        return totalFactor;
+    }
+
+    private double calculateSingleTermBonus(SearchResultsKeywordSet set, double totalFactor) {
+        var theKeyword = set.iterator().next();
+
+        if (theKeyword.wordMetadata.hasFlag(EdgePageWordFlags.Title)) {
+            return totalFactor * 0.5;
+        }
+        else if (theKeyword.wordMetadata.hasFlag(EdgePageWordFlags.Subjects)) {
+            return totalFactor * 0.6;
+        }
+        else if (theKeyword.wordMetadata.hasFlag(EdgePageWordFlags.SiteAdjacent)) {
+            return totalFactor * 0.65;
+        }
+        else if (theKeyword.wordMetadata.hasFlag(EdgePageWordFlags.Site)) {
+            return totalFactor * 0.7;
+        }
         return totalFactor;
     }
 
@@ -156,7 +179,7 @@ public class SearchResultValuator {
 
         byte excludeMask = (byte) (EdgePageWordFlags.Title.asBit() | EdgePageWordFlags.Subjects.asBit() | EdgePageWordFlags.Synthetic.asBit());
 
-        for (var keyword : keywordSet.keywords) {
+        for (var keyword : keywordSet) {
             var meta = keyword.wordMetadata;
             long positions;
 
