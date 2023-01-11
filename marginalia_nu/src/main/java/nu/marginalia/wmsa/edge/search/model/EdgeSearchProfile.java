@@ -13,6 +13,7 @@ public enum EdgeSearchProfile {
     MODERN("modern", SearchSetIdentifier.SMALLWEB),
     CORPO("corpo", SearchSetIdentifier.NONE),
     YOLO("yolo", SearchSetIdentifier.NONE),
+    VINTAGE("vintage", SearchSetIdentifier.NONE),
     CORPO_CLEAN("corpo-clean",  SearchSetIdentifier.NONE),
     ACADEMIA("academia",  SearchSetIdentifier.ACADEMIA),
 
@@ -50,6 +51,10 @@ public enum EdgeSearchProfile {
         if (this == ACADEMIA) {
             subquery.searchTermsPriority.add("tld:edu");
         }
+        if (this == VINTAGE) {
+            subquery.searchTermsPriority.add("format:html123");
+            subquery.searchTermsPriority.add("js:false");
+        }
         if (this == FOOD) {
             subquery.searchTermsInclude.add(HtmlFeature.CATEGORY_FOOD.getKeyword());
         }
@@ -61,6 +66,9 @@ public enum EdgeSearchProfile {
     public SpecificationLimit getYearLimit() {
         if (this == MODERN) {
             return SpecificationLimit.greaterThan(2015);
+        }
+        if (this == VINTAGE) {
+            return SpecificationLimit.lessThan(2003);
         }
         else return SpecificationLimit.none();
     }

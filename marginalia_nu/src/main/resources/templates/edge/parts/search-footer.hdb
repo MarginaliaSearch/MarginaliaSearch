@@ -52,9 +52,9 @@
        <tr><td>q&gt;5</td><td>The amount of javascript and modern features is at least 5 (on a scale 0 to 25)</td></tr>
        <tr><td>q&lt;5</td><td>The amount of javascript and modern features is at most 5 (on a scale 0 to 25)</td></tr>
 
-       <tr><td>year&gt;2005</td><td>The document was ostensibly published in or after 2005</td></tr>
-       <tr><td>year=2005</td><td>The document was ostensibly published in 2005</td></tr>
-       <tr><td>year&lt;2005</td><td>The document was ostensibly published in or before 2005</td></tr>
+       <tr><td>year&gt;2005</td><td>(beta) The document was ostensibly published in or after 2005</td></tr>
+       <tr><td>year=2005</td><td>(beta) The document was ostensibly published in 2005</td></tr>
+       <tr><td>year&lt;2005</td><td>(beta) The document was ostensibly published in or before 2005</td></tr>
 
        <tr><td>format:html5</td><td>Filter documents using the HTML5 standard. This is typically modern websites.</td></tr>
        <tr><td>format:xhtml</td><td>Filter documents using the XHTML standard</td></tr>
