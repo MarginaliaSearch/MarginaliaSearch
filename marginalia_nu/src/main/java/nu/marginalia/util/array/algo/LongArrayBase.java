@@ -47,6 +47,7 @@ public interface LongArrayBase extends BulkTransferArray<LongBuffer> {
             set(start+i, buffer.get(i + bufferStart));
         }
     }
+
     default void get(long start, long end, LongBuffer buffer, int bufferStart) {
         for (int i = 0; i < (end-start); i++) {
             buffer.put(i + bufferStart, get(start + i));

@@ -131,7 +131,8 @@ public class IndexResultValuator {
     }
 
     private double calculateTermCoherencePenalty(int urlId, TObjectIntHashMap<String> termToId, List<String> termList) {
-        long maskDirect = ~0;
+        long maskDirectGenerous = ~0;
+        long maskDirectRaw = ~0;
         long maskAdjacent = ~0;
 
         final int flagBitMask = EdgePageWordFlags.Title.asBit()
@@ -148,21 +149,28 @@ public class IndexResultValuator {
 
             positions = EdgePageWordMetadata.decodePositions(meta);
 
-            if (!EdgePageWordMetadata.hasAnyFlags(meta, flagBitMask)) {
-                maskDirect &= positions;
+            maskDirectRaw &= positions;
+
+            if (positions != 0 && !EdgePageWordMetadata.hasAnyFlags(meta, flagBitMask)) {
                 maskAdjacent &= (positions | (positions << 1) | (positions >>> 1));
+                maskDirectGenerous &= positions;
             }
+
         }
 
         if (maskAdjacent == 0) {
             return 40;
         }
 
-        if (maskDirect == 0) {
+        if (maskDirectGenerous == 0) {
             return 20;
         }
 
-        return Long.numberOfTrailingZeros(maskDirect)/5. - Long.bitCount(maskDirect);
+        if (maskDirectRaw == 0) {
+            return 2;
+        }
+
+        return Long.numberOfTrailingZeros(maskDirectGenerous)/5. - Long.bitCount(maskDirectGenerous);
     }
 
 

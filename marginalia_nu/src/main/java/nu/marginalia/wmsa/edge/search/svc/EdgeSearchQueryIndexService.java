@@ -67,13 +67,7 @@ public class EdgeSearchQueryIndexService {
 
         final List<EdgeUrlDetails> resultList = new ArrayList<>(results.size());
 
-        long badQCount = 0;
         for (var details : resultDecorator.getAllUrlDetails(results)) {
-            if (details.getUrlQuality() <= -100) {
-                badQCount++;
-                continue;
-            }
-
             details = details.withUrlQualityAdjustment(
                     adjustScoreBasedOnQuery(details, processedQuery.specs));
 
@@ -85,9 +79,6 @@ public class EdgeSearchQueryIndexService {
         UrlDeduplicator deduplicator = new UrlDeduplicator(processedQuery.specs.limitByDomain);
         List<EdgeUrlDetails> retList = new ArrayList<>(processedQuery.specs.limitTotal);
 
-        if (badQCount > 0) {
-            System.out.println(badQCount);
-        }
         for (var item : resultList) {
             if (retList.size() >= processedQuery.specs.limitTotal)
                 break;

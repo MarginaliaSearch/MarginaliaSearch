@@ -1,6 +1,7 @@
 package nu.marginalia.wmsa.edge.index.postings.journal.reader;
 
 import nu.marginalia.wmsa.edge.index.postings.journal.model.SearchIndexJournalEntry;
+import nu.marginalia.wmsa.edge.index.postings.journal.model.SearchIndexJournalFileHeader;
 import nu.marginalia.wmsa.edge.index.postings.journal.model.SearchIndexJournalStatistics;
 import org.jetbrains.annotations.NotNull;
 
@@ -14,6 +15,8 @@ public interface SearchIndexJournalReader extends Iterable<SearchIndexJournalRea
     default long[] createAdequateTempBuffer() {
         return new long[SearchIndexJournalEntry.MAX_LENGTH * SearchIndexJournalEntry.ENTRY_SIZE];
     }
+
+    SearchIndexJournalFileHeader fileHeader();
 
     SearchIndexJournalStatistics getStatistics();
 
