@@ -126,6 +126,9 @@ public class LinkParser {
         if (doesUrlStringHaveProtocol(s)) {
             return s;
         }
+        else if (s.startsWith("//")) { // scheme-relative URL
+            return baseUrl.proto + ":" + s;
+        }
 
         String[] parts = paramSeparatorPattern.split(s, 2);
         String path = parts[0];

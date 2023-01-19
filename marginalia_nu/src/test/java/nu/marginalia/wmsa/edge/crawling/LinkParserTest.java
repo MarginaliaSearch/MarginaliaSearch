@@ -45,6 +45,7 @@ class LinkParserTest {
 
     @Test
     void testRelative() throws URISyntaxException {
+        assertEquals("http://search.marginalia.nu/", parseLink("//search.marginalia.nu", "/"));
         assertEquals("http://www.marginalia.nu/test", parseLink("../test", "/"));
         assertEquals("http://www.marginalia.nu/test", parseLink("test", "/"));
         assertEquals("http://www.marginalia.nu/foo/test", parseLink("test", "/foo/index.html"));
