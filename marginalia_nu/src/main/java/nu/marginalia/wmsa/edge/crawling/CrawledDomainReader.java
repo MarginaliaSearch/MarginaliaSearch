@@ -2,11 +2,11 @@ package nu.marginalia.wmsa.edge.crawling;
 
 import com.github.luben.zstd.ZstdInputStream;
 import com.google.gson.Gson;
+import jdkoverride.LargeLineBufferedReader;
 import nu.marginalia.wmsa.client.GsonFactory;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDocument;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDomain;
 
-import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -19,61 +19,41 @@ import java.util.concurrent.TimeUnit;
 public class CrawledDomainReader {
     private final Gson gson = GsonFactory.get();
 
-    private final ForkJoinPool pool = new ForkJoinPool(4);
+    private final ForkJoinPool pool = new ForkJoinPool(6);
 
     public CrawledDomainReader() {
     }
 
     public CrawledDomain read(Path path) throws IOException {
-        List<CrawledDocument> docs = new ArrayList<>();
-        CrawledDomain domain = null;
+        DomainDataAssembler domainData = new DomainDataAssembler();
 
+        try (var br = new LargeLineBufferedReader(new InputStreamReader(new ZstdInputStream(new FileInputStream(path.toFile()))))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (line.startsWith("//")) {
+                    String identifier = line;
+                    String data = br.readLine();
 
-        try (var br = new BufferedReader(new InputStreamReader(new ZstdInputStream(new FileInputStream(path.toFile()))))) {
-            br.mark(2);
-            boolean legacy = '{' == br.read();
-            br.reset();
-
-            if (legacy) {
-                domain = gson.fromJson(br, CrawledDomain.class);
-            }
-            else {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    if (line.startsWith("//")) {
-                        String nextLine = br.readLine();
-                        if (nextLine == null) break;
-
-                        if (line.equals(CrawledDomain.SERIAL_IDENTIFIER)) {
-                            domain = gson.fromJson(nextLine, CrawledDomain.class);
-                        } else if (line.equals(CrawledDocument.SERIAL_IDENTIFIER)) {
-                            pool.execute(() -> {
-                                var doc = gson.fromJson(nextLine, CrawledDocument.class);
-                                synchronized (docs) {
-                                    docs.add(doc);
-                                }
-                            });
-                        }
-                    } else if (line.charAt(0) == '{') {
-                        domain = gson.fromJson(line, CrawledDomain.class);
-                    }
+                    pool.execute(() -> deserializeLine(identifier, data, domainData));
                 }
             }
         }
 
-        pool.awaitQuiescence(10, TimeUnit.SECONDS);
+        while (!pool.awaitQuiescence(1, TimeUnit.SECONDS));
 
-        if (domain == null) {
-            return null;
+        return domainData.assemble();
+    }
+
+
+    private void deserializeLine(String identifier, String data, DomainDataAssembler assembler) {
+        if (null == data) {
+            return;
         }
-
-        if (!docs.isEmpty()) {
-            if (domain.doc == null)
-                domain.doc = new ArrayList<>();
-
-            domain.doc.addAll(docs);
+        if (identifier.equals(CrawledDomain.SERIAL_IDENTIFIER)) {
+            assembler.acceptDomain(gson.fromJson(data, CrawledDomain.class));
+        } else if (identifier.equals(CrawledDocument.SERIAL_IDENTIFIER)) {
+            assembler.acceptDoc(gson.fromJson(data, CrawledDocument.class));
         }
-        return domain;
     }
 
     public CrawledDomain readRuntimeExcept(Path path) {
@@ -82,6 +62,29 @@ public class CrawledDomainReader {
         }
         catch (Exception ex) {
             throw new RuntimeException(ex);
+        }
+    }
+
+    private static class DomainDataAssembler {
+        private CrawledDomain domainPrototype;
+        private final List<CrawledDocument> docs = new ArrayList<>();
+
+        public synchronized void acceptDomain(CrawledDomain domain) {
+            this.domainPrototype = domain;
+        }
+
+        public synchronized void acceptDoc(CrawledDocument doc) {
+            docs.add(doc);
+        }
+
+        public synchronized CrawledDomain assemble() {
+            if (!docs.isEmpty()) {
+                if (domainPrototype.doc == null)
+                    domainPrototype.doc = new ArrayList<>();
+
+                domainPrototype.doc.addAll(docs);
+            }
+            return domainPrototype;
         }
     }
 }
