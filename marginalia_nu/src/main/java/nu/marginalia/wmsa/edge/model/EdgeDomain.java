@@ -11,8 +11,6 @@ import java.util.regex.Pattern;
 @Getter @Setter @Builder
 public class EdgeDomain {
 
-    private static final Predicate<String> ipPatternTest = Pattern.compile("[\\d]{1,3}\\.[\\d]{1,3}\\.[\\d]{1,3}\\.[\\d]{1,3}").asMatchPredicate();
-    private static final Predicate<String> govListTest = Pattern.compile(".*\\.(ac|co|org|gov|edu|com)\\.[a-z]{2}").asMatchPredicate();
 
     @Nonnull
     public final String subDomain;
@@ -27,7 +25,7 @@ public class EdgeDomain {
 
         var dot = host.lastIndexOf('.');
 
-        if (dot < 0 || ipPatternTest.test(host)) { // IPV6 >.>
+        if (dot < 0 || looksLikeAnIp(host)) { // IPV6 >.>
             subDomain = "";
             domain = host;
         }
@@ -38,7 +36,7 @@ public class EdgeDomain {
                 domain = host;
             }
             else {
-                if (govListTest.test(host))
+                if (looksLikeGovTld(host))
                 { // Capture .ac.jp, .co.uk
                     int dot3 = host.substring(0, dot2).lastIndexOf('.');
                     if (dot3 >= 0) {
@@ -58,6 +56,35 @@ public class EdgeDomain {
             }
         }
     }
+
+    private static final Predicate<String> govListTest = Pattern.compile(".*\\.(ac|co|org|gov|edu|com)\\.[a-z]{2}").asMatchPredicate();
+    private boolean looksLikeGovTld(String host) {
+        if (host.length() < 8)
+            return false;
+        int cnt = 0;
+        for (int i = host.length() - 7; i < host.length(); i++) {
+            if (host.charAt(i) == '.')
+                cnt++;
+        }
+        return cnt >= 2 && govListTest.test(host);
+    }
+
+
+    private static final Predicate<String> ipPatternTest = Pattern.compile("[\\d]{1,3}\\.[\\d]{1,3}\\.[\\d]{1,3}\\.[\\d]{1,3}").asMatchPredicate();
+
+    private boolean looksLikeAnIp(String host) {
+        if (host.length() < 7)
+            return false;
+
+        char firstChar = host.charAt(0);
+        int lastChar = host.charAt(host.length() - 1);
+
+        return Character.isDigit(firstChar)
+                && Character.isDigit(lastChar)
+                && ipPatternTest.test(host);
+    }
+
+
 
     public EdgeUrl toRootUrl() {
         // Set default protocol to http, as most https websites redirect http->https, but few http websites redirect https->http
