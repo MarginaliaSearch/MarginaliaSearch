@@ -24,7 +24,7 @@ public class WordRep implements Comparable<WordRep> {
 
     @Override
     public int compareTo(@NotNull WordRep o) {
-        return stemmed.compareTo(o.stemmed);
+        return word.compareTo(o.word);
     }
 
     @Override
