@@ -35,9 +35,7 @@ public class DocumentKeywordExtractor {
 
         List<WordRep> titleWords = extractTitleWords(documentLanguageData);
         List<WordRep> wordsNamesAll = nameCounter.count(documentLanguageData, 2);
-        List<WordRep> subjects = subjectCounter.count(documentLanguageData);
-
-        tfIdfCounter.countHisto(keywordMetadata, documentLanguageData);
+        List<WordRep> subjects = subjectCounter.count(keywordMetadata, documentLanguageData);
 
         for (var rep : titleWords) keywordMetadata.titleKeywords().add(rep.stemmed);
         for (var rep : wordsNamesAll) keywordMetadata.namesKeywords().add(rep.stemmed);
@@ -59,10 +57,11 @@ public class DocumentKeywordExtractor {
 
         getWordPositions(keywordMetadata, documentLanguageData);
 
-        List<WordRep> wordsNamesAll = nameCounter.count(documentLanguageData, 2);
-        List<WordRep> subjects = subjectCounter.count(documentLanguageData);
-
         List<WordRep> wordsTfIdf = tfIdfCounter.countHisto(keywordMetadata, documentLanguageData);
+
+        List<WordRep> wordsNamesAll = nameCounter.count(documentLanguageData, 2);
+        List<WordRep> subjects = subjectCounter.count(keywordMetadata, documentLanguageData);
+
 
         for (var rep : titleWords) keywordMetadata.titleKeywords().add(rep.stemmed);
         for (var rep : wordsNamesAll) keywordMetadata.namesKeywords().add(rep.stemmed);
@@ -94,7 +93,7 @@ public class DocumentKeywordExtractor {
                 ret.merge(word.stemmed(), posBit, this::bitwiseOr);
             }
 
-            for (var span : keywordExtractor.getNames(sent)) {
+            for (var span : keywordExtractor.getProperNames(sent)) {
                 ret.merge(sent.constructStemmedWordFromSpan(span), posBit, this::bitwiseOr);
             }
         }
@@ -108,7 +107,7 @@ public class DocumentKeywordExtractor {
                 ret.merge(word.stemmed(), posBit, this::bitwiseOr);
             }
 
-            for (var span : keywordExtractor.getNames(sent)) {
+            for (var span : keywordExtractor.getProperNames(sent)) {
                 ret.merge(sent.constructStemmedWordFromSpan(span), posBit, this::bitwiseOr);
             }
 
@@ -160,7 +159,7 @@ public class DocumentKeywordExtractor {
                 }
             }
 
-            for (var names : keywordExtractor.getNames(sent)) {
+            for (var names : keywordExtractor.getProperNames(sent)) {
                 var rep = new WordRep(sent, names);
                 String w = AsciiFlattener.flattenUnicode(rep.word);
 

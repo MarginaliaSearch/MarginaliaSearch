@@ -20,7 +20,7 @@ public class NameCounter {
 
         for (int i = 0; i < dld.sentences.length; i++) {
             DocumentSentence sent = dld.sentences[i];
-            var keywords = keywordExtractor.getNames(sent);
+            var keywords = keywordExtractor.getProperNames(sent);
             for (var span : keywords) {
                 if (span.size() <= 1)
                     continue;
