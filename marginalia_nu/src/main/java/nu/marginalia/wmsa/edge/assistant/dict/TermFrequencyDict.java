@@ -2,9 +2,10 @@ package nu.marginalia.wmsa.edge.assistant.dict;
 
 import ca.rmen.porterstemmer.PorterStemmer;
 import gnu.trove.map.hash.TLongIntHashMap;
+import gnu.trove.set.hash.TLongHashSet;
 import nu.marginalia.util.language.LanguageFilter;
 import nu.marginalia.util.language.conf.LanguageModels;
-import nu.marginalia.util.language.processing.SentenceExtractor;
+import nu.marginalia.util.language.processing.sentence.SentenceExtractor;
 import nu.marginalia.util.language.processing.model.DocumentLanguageData;
 import nu.marginalia.wmsa.configuration.WmsaHome;
 import nu.marginalia.wmsa.edge.converting.processor.logic.DomPruningFilter;
@@ -18,11 +19,10 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -101,12 +101,15 @@ public class TermFrequencyDict {
 
             fjp.execute(() -> {
 
+                TLongHashSet words = new TLongHashSet(10_000);
+
                 for (var doc : domain.doc) {
+
                     if (doc.documentBody == null)
                         continue;
                     docCount.incrementAndGet();
 
-                    Document parsed = Jsoup.parse(doc.documentBody);
+                    Document parsed = Jsoup.parse(doc.documentBody.decode());
                     parsed.body().filter(new DomPruningFilter(0.5));
 
                     DocumentLanguageData dld = se.get().extractSentences(parsed);
@@ -115,28 +118,30 @@ public class TermFrequencyDict {
                         return;
                     }
 
-                    Set<String> words = new HashSet<>(10_000);
-
                     for (var sent : dld.sentences) {
                         for (var word : sent) {
-                            words.add(word.stemmed());
+                            words.add(longHash(word.stemmed().getBytes(StandardCharsets.UTF_8)));
                         }
                     }
 
-                    fjp.execute(() -> {
-                        synchronized (counts) {
-                            for (var word : words) {
-                                counts.adjustOrPutValue(longHash(word.getBytes()),  1, 1);
-                            }
-                        }
-                    });
+                    synchronized (counts) {
+                        words.forEach(w -> {
+                            counts.adjustOrPutValue(w,  1, 1);
+                            return true;
+                        });
+                    }
 
+                    words.clear();
                 }
+
+                System.out.println(domain.domain + "\t" + counts.size());
             });
+
+
         }
 
         fjp.shutdown();
-        fjp.awaitTermination(10, TimeUnit.SECONDS);
+        fjp.awaitTermination(10, TimeUnit.DAYS);
 
         try (var dos = new DataOutputStream(Files.newOutputStream(Path.of(outFile)))) {
             synchronized (counts) {
@@ -155,14 +160,6 @@ public class TermFrequencyDict {
         }
 
         System.out.println(docCount.get());
-//
-//        counts.forEachEntry((w,c) -> {
-//            if (c > 3L) {
-//                System.out.println(w + ":" + c);
-//            }
-//            return true;
-//        });
-
     }
 
     public static long getStringHash(String s) {

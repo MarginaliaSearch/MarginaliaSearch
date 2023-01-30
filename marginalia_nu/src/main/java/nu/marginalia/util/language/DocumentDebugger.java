@@ -4,7 +4,7 @@ import nu.marginalia.util.language.conf.LanguageModels;
 import nu.marginalia.util.language.processing.KeywordCounter;
 import nu.marginalia.util.language.processing.KeywordExtractor;
 import nu.marginalia.util.language.processing.NameCounter;
-import nu.marginalia.util.language.processing.SentenceExtractor;
+import nu.marginalia.util.language.processing.sentence.SentenceExtractor;
 import nu.marginalia.util.language.processing.model.DocumentSentence;
 import nu.marginalia.util.language.processing.model.WordRep;
 import nu.marginalia.util.language.processing.model.tag.WordSeparator;
@@ -67,9 +67,6 @@ public class DocumentDebugger {
         var languageData = se.extractSentences(document);
 
         Set<String> reps = new HashSet<>();
-
-//        kc.count(languageData, 0.75).forEach(rep -> reps.add(rep.stemmed));
-//        kc.count(languageData).forEach(rep -> reps.add(rep.stemmed));
 
         try (var pw = new PrintWriter(new FileOutputStream(output.toFile()))) {
 

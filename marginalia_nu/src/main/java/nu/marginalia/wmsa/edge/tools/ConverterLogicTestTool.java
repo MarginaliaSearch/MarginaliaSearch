@@ -3,7 +3,7 @@ package nu.marginalia.wmsa.edge.tools;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import nu.marginalia.util.language.processing.SentenceExtractor;
+import nu.marginalia.util.language.processing.sentence.SentenceExtractor;
 import nu.marginalia.wmsa.configuration.WmsaHome;
 import nu.marginalia.wmsa.edge.converting.ConverterModule;
 import nu.marginalia.wmsa.edge.converting.processor.DomainProcessor;
@@ -63,7 +63,7 @@ public class ConverterLogicTestTool {
                 if (doc.documentBody == null) continue;
 
                 Runnable task = () -> {
-                    var parsed = Jsoup.parse(doc.documentBody);
+                    var parsed = Jsoup.parse(doc.documentBody.decode());
 
                     parsed.body().filter(new DomPruningFilter(0.5));
                     var dld = se.extractSentences(parsed);
