@@ -18,7 +18,6 @@ public record KeywordMetadata(HashSet<String> titleKeywords,
 {
 
     private static final KeywordCounter.WordFrequencyData empty = new KeywordCounter.WordFrequencyData(0, 0);
-    private static final int TF_IDF_HIGH_LIMIT = 64;
 
     public KeywordMetadata(EnumSet<EdgePageWordFlags> flags) {
         this(new HashSet<>(50), new HashSet<>(10), new HashSet<>(50),

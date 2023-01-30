@@ -42,7 +42,7 @@ public abstract class ParallelPipe<INPUT,INTERMEDIATE> {
     @SneakyThrows
     private void runProcessThread() {
         while (expectingInput || !inputs.isEmpty()) {
-            var in = inputs.poll(1, TimeUnit.SECONDS);
+            var in = inputs.poll(10, TimeUnit.SECONDS);
 
             if (in != null) {
                 try {

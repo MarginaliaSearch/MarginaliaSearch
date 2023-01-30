@@ -139,6 +139,9 @@ public class IndexResultValuator {
                               | EdgePageWordFlags.Subjects.asBit()
                               | EdgePageWordFlags.Synthetic.asBit();
 
+        int termCount = 0;
+        double tfIdfSum = 1.;
+
         for (String term : termList) {
             var meta = termMetadata.getTermMetadata(termToId.get(term), urlId);
             long positions;
@@ -156,18 +159,22 @@ public class IndexResultValuator {
                 maskDirectGenerous &= positions;
             }
 
+            termCount++;
+            tfIdfSum += EdgePageWordMetadata.decodeTfidf(meta);
         }
 
+        double avgTfIdf = termCount / tfIdfSum;
+
         if (maskAdjacent == 0) {
-            return 40;
+            return Math.max(-2, 40 - 0.5 * avgTfIdf);
         }
 
         if (maskDirectGenerous == 0) {
-            return 20;
+            return Math.max(-1, 20 - 0.3 *  avgTfIdf);
         }
 
         if (maskDirectRaw == 0) {
-            return 2;
+            return Math.max(-1, 15 - 0.2 *  avgTfIdf);
         }
 
         return Long.numberOfTrailingZeros(maskDirectGenerous)/5. - Long.bitCount(maskDirectGenerous);

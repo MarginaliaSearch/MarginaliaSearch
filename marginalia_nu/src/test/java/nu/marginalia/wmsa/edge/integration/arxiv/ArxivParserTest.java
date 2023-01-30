@@ -3,7 +3,7 @@ package nu.marginalia.wmsa.edge.integration.arxiv;
 import nu.marginalia.util.TestLanguageModels;
 import nu.marginalia.util.language.conf.LanguageModels;
 import nu.marginalia.util.language.processing.DocumentKeywordExtractor;
-import nu.marginalia.util.language.processing.SentenceExtractor;
+import nu.marginalia.util.language.processing.sentence.SentenceExtractor;
 import nu.marginalia.util.language.processing.model.KeywordMetadata;
 import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import nu.marginalia.wmsa.edge.integration.arxiv.model.ArxivMetadata;
