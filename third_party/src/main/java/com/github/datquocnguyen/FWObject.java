@@ -36,4 +36,13 @@ public class FWObject
 			context = new String[13];
 		}
 	}
+
+	public void reset(boolean check) {
+		if (check) {
+			System.arraycopy(contextPrototype, 0, context, 0, 13);
+		}
+		else {
+			Arrays.fill(context, null);
+		}
+	}
 }

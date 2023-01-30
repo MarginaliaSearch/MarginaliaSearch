@@ -123,9 +123,9 @@ public class Utils
 		return condition;
 	}
 
-	public static FWObject getObject(String[] words, String[] tags, int size, int index)
+	public static FWObject getObject(FWObject object, String[] words, String[] tags, int size, int index)
 	{
-		FWObject object = new FWObject(true);
+		object.reset(true);
 
 		if (index > 1) {
 			object.context[4] = words[index-2];
@@ -175,9 +175,7 @@ public class Utils
 			else
 				return "<T>";
 		}
-		String conclusion = str.substring(str.indexOf("\"") + 1,
-			str.length() - 1);
-		return conclusion;
+		return str.substring(str.indexOf("\"") + 1, str.length() - 1);
 	}
 
 	public static void main(String[] args)
