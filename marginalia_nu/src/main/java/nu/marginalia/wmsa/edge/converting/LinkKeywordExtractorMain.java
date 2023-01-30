@@ -150,7 +150,7 @@ public class LinkKeywordExtractorMain {
 
                 for (var doc : crawledDomain.doc) {
                     if (Objects.equals(doc.crawlerStatus, CrawlerDocumentStatus.OK.name())) {
-                        anchorTextExtractor.processDocument(doc.url, doc.documentBody);
+                        anchorTextExtractor.processDocument(doc.url, doc.documentBody.decode());
                     }
                 }
             }

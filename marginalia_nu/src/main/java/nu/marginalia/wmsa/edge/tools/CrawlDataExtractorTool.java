@@ -84,7 +84,7 @@ public class CrawlDataExtractorTool {
 
 
     private static void processDocument(CrawledDocument doc) {
-        Document parsedDocument = Jsoup.parse(doc.documentBody);
+        Document parsedDocument = Jsoup.parse(doc.documentBody.decode());
 
         if (abs.hasAds(parsedDocument)) {
             System.out.println(doc.url);

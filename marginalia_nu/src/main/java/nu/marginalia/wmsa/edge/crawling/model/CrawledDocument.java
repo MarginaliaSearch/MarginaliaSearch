@@ -1,6 +1,8 @@
 package nu.marginalia.wmsa.edge.crawling.model;
 
 import lombok.Builder;
+import nu.marginalia.util.bigstring.BigString;
+import nu.marginalia.util.bigstring.CompressedBigString;
 
 @Builder
 public class CrawledDocument implements SerializableCrawlData {
@@ -16,8 +18,7 @@ public class CrawledDocument implements SerializableCrawlData {
     public String crawlerStatusDesc;
 
     public String headers;
-    public String documentBody;
-
+    public BigString documentBody;
     public String documentBodyHash;
 
     public String canonicalUrl;
