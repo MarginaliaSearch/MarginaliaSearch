@@ -1,5 +1,7 @@
 package nu.marginalia.util.language;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -123,14 +125,24 @@ public class WordPatterns {
         if (!filter(s)) {
             return true;
         }
-        if (isTopWord(s)) {
+
+        String sLc;
+        if (StringUtils.isAllLowerCase(s)) {
+            sLc = s;
+        }
+        else {
+            sLc = s.toLowerCase();
+        }
+
+        if (isTopWord(sLc)) {
             return true;
         }
+
         return false;
     }
 
-    public static boolean isTopWord(String s) {
-        return topWords.contains(s.toLowerCase());
+    public static boolean isTopWord(String strLowerCase) {
+        return topWords.contains(strLowerCase);
     }
 
 }
