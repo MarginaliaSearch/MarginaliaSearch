@@ -42,7 +42,7 @@ public class DomainProcessor {
 
             fixBadCanonicalTags(crawledDomain.doc);
 
-            StringPool stringPool = new StringPool(1000 + 100 * crawledDomain.doc.size());
+            StringPool stringPool = StringPool.create(1000 + 100 * crawledDomain.doc.size());
 
             for (var doc : crawledDomain.doc) {
                 var processedDoc = documentProcessor.process(doc, crawledDomain);
