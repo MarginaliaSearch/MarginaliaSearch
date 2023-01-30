@@ -106,8 +106,9 @@ dependencies {
 
     implementation group: 'org.yaml', name: 'snakeyaml', version: '1.30'
 
-    implementation 'com.syncthemall:boilerpipe:1.2.2'
     implementation 'com.github.luben:zstd-jni:1.5.2-2'
+    implementation 'org.lz4:lz4-java:1.8.0'
+
     implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:7.5.0'
     implementation 'de.rototor.jeuclid:jeuclid-core:3.1.14'
 
@@ -126,7 +127,6 @@ dependencies {
     implementation 'org.roaringbitmap:RoaringBitmap:0.9.32'
 
     implementation group: 'mysql', name: 'mysql-connector-java', version: '8.0.29'
-
     implementation 'com.github.Marcono1234:gson-record-type-adapter-factory:0.2.0'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
