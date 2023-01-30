@@ -33,8 +33,7 @@ public class SiteWords {
         Set<String> commonSiteWords = new HashSet<>(10);
 
         commonSiteWords.addAll(commonKeywordExtractor.getCommonSiteWords(processedDomain,
-                EdgePageWordFlags.Subjects,
-                EdgePageWordFlags.TfIdfHigh));
+                EdgePageWordFlags.Subjects));
 
         commonSiteWords.addAll(commonKeywordExtractor.getCommonSiteWords(processedDomain,
                 EdgePageWordFlags.Title));
