@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.prometheus.client.Histogram;
 import nu.marginalia.util.array.buffer.LongQueryBuffer;
-import nu.marginalia.util.dict.DictionaryHashMap;
+import nu.marginalia.util.dict.OffHeapDictionaryHashMap;
 import nu.marginalia.wmsa.client.GsonFactory;
 import nu.marginalia.wmsa.edge.index.postings.SearchIndexControl;
 import nu.marginalia.wmsa.edge.index.query.IndexResultDomainDeduplicator;
@@ -101,7 +101,7 @@ public class EdgeIndexDomainQueryService {
 
     private OptionalInt lookUpWord(String s) {
         int ret = indexes.getLexiconReader().get(s);
-        if (ret == DictionaryHashMap.NO_VALUE) {
+        if (ret == OffHeapDictionaryHashMap.NO_VALUE) {
             return OptionalInt.empty();
         }
         return OptionalInt.of(ret);

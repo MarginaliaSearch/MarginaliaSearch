@@ -1,8 +1,5 @@
 package nu.marginalia.util.dict;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
 import java.util.ArrayList;
@@ -10,7 +7,6 @@ import java.util.ArrayList;
 public class DictionaryData {
 
     private final int DICTIONARY_BANK_SIZE;
-    private static final Logger logger = LoggerFactory.getLogger(DictionaryData.class);
 
     private final ArrayList<DictionaryDataBank> banks = new ArrayList<>(100);
 

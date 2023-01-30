@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import lombok.SneakyThrows;
 import nu.marginalia.util.array.LongArray;
-import nu.marginalia.util.dict.DictionaryHashMap;
+import nu.marginalia.util.dict.DictionaryMap;
 import nu.marginalia.wmsa.edge.dbcommon.EdgeDomainBlacklist;
 import nu.marginalia.wmsa.edge.index.lexicon.KeywordLexicon;
 import nu.marginalia.wmsa.edge.index.lexicon.KeywordLexiconReadOnlyView;
@@ -48,7 +48,6 @@ public class IndexServicesFactory {
     private final PartitionedDataFile revPrioIndexWords;
 
     private volatile static KeywordLexicon keywordLexicon;
-    private final Long dictionaryHashMapSize;
 
     private final Path searchSetsBase;
 
@@ -60,12 +59,10 @@ public class IndexServicesFactory {
             @Named("tmp-file-dir") Path tmpFileDir,
             @Named("partition-root-slow") Path partitionRootSlow,
             @Named("partition-root-fast") Path partitionRootFast,
-            @Named("edge-dictionary-hash-map-size") Long dictionaryHashMapSize,
             EdgeDomainBlacklist domainBlacklist
             ) throws IOException {
 
         this.tmpFileDir = tmpFileDir;
-        this.dictionaryHashMapSize = dictionaryHashMapSize;
         this.domainBlacklist = domainBlacklist;
 
         this.writerIndexFile = new PartitionedDataFile(partitionRootSlow, "page-index.dat");
@@ -98,7 +95,7 @@ public class IndexServicesFactory {
     public KeywordLexicon getKeywordLexicon() {
         if (keywordLexicon == null) {
             final var journal = new KeywordLexiconJournal(keywordLexiconFile.get());
-            keywordLexicon = new KeywordLexicon(journal, new DictionaryHashMap(dictionaryHashMapSize));
+            keywordLexicon = new KeywordLexicon(journal, DictionaryMap.create());
         }
         return keywordLexicon;
     }

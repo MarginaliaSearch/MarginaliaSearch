@@ -39,11 +39,10 @@ public class EdgeIndexIntegrationTestModule extends AbstractModule {
     @Override
     protected void configure() {
 
+        System.setProperty("small-ram", "true");
         try {
             bind(IndexServicesFactory.class).toInstance(new IndexServicesFactory(Path.of("/tmp"),
-                    slowDir, fastDir,
-                    1L<<24,
-                    null
+                    slowDir, fastDir, null
             ));
 
             EdgeIndexSearchSetsService setsServiceMock = Mockito.mock(EdgeIndexSearchSetsService.class);

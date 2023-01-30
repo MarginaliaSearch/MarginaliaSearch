@@ -16,15 +16,14 @@ import static nu.marginalia.util.FileSizeUtil.readableSize;
  *  Spiritually influenced by GNU Trove's hash maps
  *  LGPL 2.1
  */
-public class DictionaryHashMap implements DictionaryMap {
-    private static final Logger logger = LoggerFactory.getLogger(DictionaryHashMap.class);
+public class OffHeapDictionaryHashMap implements DictionaryMap {
+    private static final Logger logger = LoggerFactory.getLogger(OffHeapDictionaryHashMap.class);
     private static final Gauge probe_count_metrics
             = Gauge.build("wmsa_dictionary_hash_map_probe_count", "Probing Count")
             .register();
 
     private final int bufferCount;
     private final IntBuffer[] buffers;
-    public static final int NO_VALUE = Integer.MIN_VALUE;
 
     private final DictionaryData dictionaryData;
 
@@ -35,7 +34,7 @@ public class DictionaryHashMap implements DictionaryMap {
 
     private final AtomicInteger sz = new AtomicInteger(0);
 
-    public DictionaryHashMap(long sizeMemory) {
+    public OffHeapDictionaryHashMap(long sizeMemory) {
         final int intSize = 4;
 
         bufferCount = 1 + (int) ((intSize*sizeMemory) / (1<<30));

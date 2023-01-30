@@ -4,7 +4,6 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import io.prometheus.client.Gauge;
 import lombok.SneakyThrows;
-import nu.marginalia.util.dict.DictionaryHashMap;
 import nu.marginalia.util.dict.DictionaryMap;
 import nu.marginalia.wmsa.edge.index.lexicon.journal.KeywordLexiconJournal;
 import org.slf4j.Logger;
@@ -55,7 +54,7 @@ public class KeywordLexicon implements AutoCloseable {
     private int getOrInsert(byte[] bytes) {
         if (bytes.length >= Byte.MAX_VALUE) {
             logger.warn("getOrInsert({}), illegal length {}", new String(bytes), bytes.length);
-            return DictionaryHashMap.NO_VALUE;
+            return DictionaryMap.NO_VALUE;
         }
 
         final long key = hashFunction.hashBytes(bytes).padToLong();

@@ -3,7 +3,7 @@ package nu.marginalia.wmsa.edge.index.postings.reverse;
 import lombok.SneakyThrows;
 import nu.marginalia.util.array.LongArray;
 import nu.marginalia.util.array.buffer.LongQueryBuffer;
-import nu.marginalia.util.dict.DictionaryHashMap;
+import nu.marginalia.util.dict.OffHeapDictionaryHashMap;
 import nu.marginalia.util.test.TestUtil;
 import nu.marginalia.wmsa.edge.index.lexicon.KeywordLexicon;
 import nu.marginalia.wmsa.edge.index.lexicon.journal.KeywordLexiconJournal;
@@ -50,7 +50,7 @@ class ReverseIndexConverterTest2 {
         dictionaryFile = Files.createTempFile("tmp", ".dict");
         dictionaryFile.toFile().deleteOnExit();
 
-        keywordLexicon = new KeywordLexicon(new KeywordLexiconJournal(dictionaryFile.toFile()), new DictionaryHashMap(1L<<18));
+        keywordLexicon = new KeywordLexicon(new KeywordLexiconJournal(dictionaryFile.toFile()), new OffHeapDictionaryHashMap(1L<<18));
         keywordLexicon.getOrInsert("0");
 
         indexFile = Files.createTempFile("tmp", ".idx");
