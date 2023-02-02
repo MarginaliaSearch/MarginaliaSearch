@@ -2,11 +2,13 @@ package nu.marginalia.util;
 
 public class BrailleBlockPunchCards {
 
+    private static final char brailleBlockBase = '\u2800';
+
     public static String printBits(int val, int bits) {
         StringBuilder builder = new StringBuilder();
 
         for (int b = 0; b < bits; b+=8, val>>>=8) {
-            builder.append((char)('\u2800'+bin2brail(val)));
+            builder.append((char)(brailleBlockBase + bin2brail(val)));
         }
 
         return builder.toString();
