@@ -115,6 +115,11 @@ public class PagingIntArray extends AbstractPagingArray<IntArrayPage, IntBuffer>
     }
 
     @Override
+    public int getAndIncrement(long pos) {
+        return pages[partitioningScheme.getPage(pos)].getAndIncrement(partitioningScheme.getOffset(pos));
+    }
+
+    @Override
     public void get(long start, long end, int[] buffer) {
         if (partitioningScheme.isSamePage(start, end)) {
             int sOff = partitioningScheme.getOffset(start);

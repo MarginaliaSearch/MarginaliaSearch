@@ -28,6 +28,7 @@ public interface LongArrayBase extends BulkTransferArray<LongBuffer> {
         set(pos2, tmp);
     }
 
+    /** Behavior not defined for overlapping ranges */
     default void swapn(int n, long pos1, long pos2) {
         for (int i = 0; i < n; i++) {
             long tmp = get(pos1+i);

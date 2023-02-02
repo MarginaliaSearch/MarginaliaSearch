@@ -120,6 +120,11 @@ public class PagingLongArray extends AbstractPagingArray<LongArrayPage, LongBuff
     }
 
     @Override
+    public long getAndIncrement(long pos) {
+        return pages[partitioningScheme.getPage(pos)].getAndIncrement(partitioningScheme.getOffset(pos));
+    }
+
+    @Override
     public void set(long pos, long value) {
         int page = partitioningScheme.getPage(pos);
         int offset = partitioningScheme.getOffset(pos);
