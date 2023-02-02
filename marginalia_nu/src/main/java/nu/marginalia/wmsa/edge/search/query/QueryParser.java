@@ -93,6 +93,8 @@ public class QueryParser {
                 entity.replace(new Token(TokenType.YEAR_TERM, t.str.substring(4), t.displayStr));
             } else if (t.str.startsWith("size") && t.str.matches("size[=><]\\d+")) {
                 entity.replace(new Token(TokenType.SIZE_TERM, t.str.substring(4), t.displayStr));
+            } else if (t.str.startsWith("qs=")) {
+                entity.replace(new Token(TokenType.QS_TERM, t.str.substring(3), t.displayStr));
             } else if (t.str.contains(":")) {
                 entity.replace(new Token(TokenType.ADVICE_TERM, t.str, t.displayStr));
             }
@@ -507,6 +509,8 @@ enum TokenType implements Predicate<Token> {
     YEAR_TERM,
     SIZE_TERM,
     NEAR_TERM,
+
+    QS_TERM,
 
     QUOT,
     MINUS,

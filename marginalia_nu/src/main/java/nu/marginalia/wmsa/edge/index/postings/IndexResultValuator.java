@@ -7,6 +7,8 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import nu.marginalia.wmsa.edge.index.model.EdgePageWordFlags;
 import nu.marginalia.wmsa.edge.index.model.EdgePageWordMetadata;
+import nu.marginalia.wmsa.edge.index.model.QueryStrategy;
+import nu.marginalia.wmsa.edge.index.query.IndexQueryParams;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchResultItem;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchResultKeywordScore;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchSubquery;
@@ -17,6 +19,7 @@ import java.util.Objects;
 public class IndexResultValuator {
     private final IndexMetadataService metadataService;
     private final List<List<String>> searchTermVariants;
+    private final IndexQueryParams queryParams;
     private final int[] termIdsAll;
 
     private final TLongHashSet resultsWithPriorityTerms;
@@ -24,9 +27,10 @@ public class IndexResultValuator {
     private final TObjectIntHashMap<String> termToId = new TObjectIntHashMap<>(10, 0.75f, -1);
     private final TermMetadata termMetadata;
 
-    public IndexResultValuator(SearchIndexControl indexes, TLongList results, List<EdgeSearchSubquery> subqueries) {
+    public IndexResultValuator(SearchIndexControl indexes, TLongList results, List<EdgeSearchSubquery> subqueries, IndexQueryParams queryParams) {
         this.metadataService = new IndexMetadataService(indexes);
         this.searchTermVariants = subqueries.stream().map(sq -> sq.searchTermsInclude).distinct().toList();
+        this.queryParams = queryParams;
 
         var lexiconReader = Objects.requireNonNull(indexes.getLexiconReader());
         IntArrayList termIdsList = new IntArrayList();
@@ -114,9 +118,14 @@ public class IndexResultValuator {
                     docMetadata,
                     resultsWithPriorityTerms.contains(searchResult.combinedId)
             );
+
             searchResult.scores.add(score);
 
             setScore += score.termValue();
+
+            if (!filterRequired(metadata, queryParams.queryStrategy())) {
+                setScore += 1000;
+            }
 
             if (termIdx == 0) {
                 setScore += score.documentValue();
@@ -128,6 +137,19 @@ public class IndexResultValuator {
         setScore += calculateTermCoherencePenalty(searchResult.getUrlIdInt(), termToId, termList);
 
         return setScore/setSize;
+    }
+
+    private boolean filterRequired(long metadata, QueryStrategy queryStrategy) {
+        if (queryStrategy == QueryStrategy.REQUIRE_FIELD_SITE) {
+            return EdgePageWordFlags.Site.isPresent(metadata);
+        }
+        else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_SUBJECT) {
+            return EdgePageWordFlags.Subjects.isPresent(metadata);
+        }
+        else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_TITLE) {
+            return EdgePageWordFlags.Title.isPresent(metadata);
+        }
+        return true;
     }
 
     private double calculateTermCoherencePenalty(int urlId, TObjectIntHashMap<String> termToId, List<String> termList) {

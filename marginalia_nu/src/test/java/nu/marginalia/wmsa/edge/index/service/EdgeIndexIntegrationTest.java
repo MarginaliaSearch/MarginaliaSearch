@@ -3,10 +3,7 @@ package nu.marginalia.wmsa.edge.index.service;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import nu.marginalia.wmsa.configuration.server.Initialization;
-import nu.marginalia.wmsa.edge.index.model.EdgePageDocumentsMetadata;
-import nu.marginalia.wmsa.edge.index.model.EdgePageWordFlags;
-import nu.marginalia.wmsa.edge.index.model.EdgePageWordMetadata;
-import nu.marginalia.wmsa.edge.index.model.QueryStrategy;
+import nu.marginalia.wmsa.edge.index.model.*;
 import nu.marginalia.wmsa.edge.index.postings.SearchIndexControl;
 import nu.marginalia.wmsa.edge.index.postings.journal.model.SearchIndexJournalEntry;
 import nu.marginalia.wmsa.edge.index.postings.journal.model.SearchIndexJournalEntryHeader;
@@ -80,10 +77,7 @@ public class EdgeIndexIntegrationTest {
 
         var rsp = queryService.query(
                 EdgeSearchSpecification.builder()
-                        .timeoutMs(Integer.MAX_VALUE)
-                        .fetchSize(4000)
-                        .limitTotal(10)
-                        .limitByDomain(10)
+                        .queryLimits(new QueryLimits(10, 10, Integer.MAX_VALUE, 4000))
                         .queryStrategy(QueryStrategy.SENTENCE)
                         .year(SpecificationLimit.none())
                         .quality(SpecificationLimit.none())
@@ -115,10 +109,7 @@ public class EdgeIndexIntegrationTest {
 
         var rsp = queryService.query(
                 EdgeSearchSpecification.builder()
-                        .timeoutMs(Integer.MAX_VALUE)
-                        .fetchSize(4000)
-                        .limitTotal(10)
-                        .limitByDomain(10)
+                        .queryLimits(new QueryLimits(10, 10, Integer.MAX_VALUE, 4000))
                         .year(SpecificationLimit.none())
                         .quality(SpecificationLimit.none())
                         .size(SpecificationLimit.none())
@@ -144,10 +135,7 @@ public class EdgeIndexIntegrationTest {
 
         var rsp = queryService.query(
                 EdgeSearchSpecification.builder()
-                        .timeoutMs(Integer.MAX_VALUE)
-                        .fetchSize(4000)
-                        .limitTotal(10)
-                        .limitByDomain(10)
+                        .queryLimits(new QueryLimits(10, 10, Integer.MAX_VALUE, 4000))
                         .quality(SpecificationLimit.none())
                         .year(SpecificationLimit.equals(1998))
                         .size(SpecificationLimit.none())

@@ -115,11 +115,13 @@ public class EdgeIndexQueryService {
         TLongHashSet consideredUrlIds;
 
         public SearchQuery(EdgeSearchSpecification specsSet) {
-            this.fetchSize = specsSet.fetchSize;
-            this.budget = new IndexSearchBudget(specsSet.timeoutMs);
+            var limits = specsSet.queryLimits;
+
+            this.fetchSize = limits.fetchSize();
+            this.budget = new IndexSearchBudget(limits.timeoutMs());
             this.subqueries = specsSet.subqueries;
-            this.limitByDomain = specsSet.limitByDomain;
-            this.limitTotal = specsSet.limitTotal;
+            this.limitByDomain = limits.resultsByDomain();
+            this.limitTotal = limits.resultsTotal();
 
             this.consideredUrlIds = new TLongHashSet(fetchSize * 4);
 
@@ -151,7 +153,7 @@ public class EdgeIndexQueryService {
                 }
             }
 
-            final var evaluator = new IndexResultValuator(indexes, results, subqueries);
+            final var evaluator = new IndexResultValuator(indexes, results, subqueries, queryParams);
 
             ArrayList<EdgeSearchResultItem> items = new ArrayList<>(results.size());
             ArrayList<EdgeSearchResultItem> refusedItems = new ArrayList<>(results.size());
