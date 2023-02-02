@@ -64,6 +64,16 @@ public class ShiftedLongArray implements LongArray {
     }
 
     @Override
+    public long getAndIncrement(long pos) {
+        return delegate.getAndIncrement(shift + pos);
+    }
+
+    @Override
+    public void fill(long start, long end, long val) {
+        delegate.fill(start + shift, end + shift, val);
+    }
+
+    @Override
     public long size() {
         return size;
     }

@@ -34,7 +34,7 @@ public class ReverseIndexConverter {
     private final SearchIndexJournalReaderSingleFile journalReader;
     private final Path outputFileWords;
     private final Path outputFileDocs;
-
+    private final SortingContext sortingContext;
 
     public ReverseIndexConverter(Path tmpFileDir,
                                  SearchIndexJournalReaderSingleFile journalReader,
@@ -44,6 +44,7 @@ public class ReverseIndexConverter {
         this.journalReader = journalReader;
         this.outputFileWords = outputFileWords;
         this.outputFileDocs = outputFileDocs;
+        this.sortingContext = new SortingContext(tmpFileDir, 64_000);
     }
 
     public void convert() throws IOException {
@@ -56,7 +57,7 @@ public class ReverseIndexConverter {
         final SearchIndexJournalStatistics statistics = journalReader.getStatistics();
 
         final Path intermediateUrlsFile = Files.createTempFile(tmpFileDir, "urls-sorted", ".dat");
-        SortingContext sortingContext = new SortingContext(tmpFileDir, 64_000);
+
 
         try {
             final long wordsFileSize = statistics.highestWord() + 1;

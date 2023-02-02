@@ -108,7 +108,6 @@ public class RandomWriteFunnel implements AutoCloseable {
 
         private void eval(ByteBuffer dest) throws IOException {
             flushBuffer();
-            channel.force(false);
 
             channel.position(0);
             buffer.clear();
