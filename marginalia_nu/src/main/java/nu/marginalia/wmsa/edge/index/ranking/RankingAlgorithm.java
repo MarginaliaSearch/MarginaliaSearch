@@ -1,21 +1,19 @@
-package nu.marginalia.util.ranking;
+package nu.marginalia.wmsa.edge.index.ranking;
 
-import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrays;
-import it.unimi.dsi.fastutil.ints.IntComparator;
-import org.roaringbitmap.RoaringBitmap;
+import nu.marginalia.wmsa.edge.index.ranking.accumulator.RankingResultAccumulator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.IntToDoubleFunction;
-import java.util.stream.IntStream;
+import java.util.function.Supplier;
+
+import static java.lang.Math.min;
 
 public abstract class RankingAlgorithm {
     protected final TIntObjectHashMap<RankingDomainData> domainsById = new TIntObjectHashMap<>();
@@ -133,29 +131,7 @@ public abstract class RankingAlgorithm {
         return domainsById.size();
     }
 
-
-    public RankVector pageRankVector() {
-        RankVector rank = new RankVector(1.d / domainsById.size());
-
-        int iter_max = 100;
-        for (int i = 0; i < iter_max; i++) {
-            RankVector newRank = createNewRankVector(rank);
-
-            double oldNorm = rank.norm();
-            double newNorm = newRank.norm();
-            double dNorm = oldNorm - newNorm ;
-            if (i < iter_max-1) {
-                adjustRankVector(newRank, dNorm, oldNorm);
-            }
-
-            rank = newRank;
-        }
-
-        return rank;
-    }
-
-
-    public RoaringBitmap pageRank(int resultCount) {
+    public <T> T pageRank(int resultCount, Supplier<RankingResultAccumulator<T>> accumulatorP) {
         RankVector rank = new RankVector(1.d / domainsById.size());
 
         int iter_max = 100;
@@ -174,10 +150,10 @@ public abstract class RankingAlgorithm {
         }
 
 
-        return rank.getRanking(resultCount);
+        return rank.getRanking(resultCount, accumulatorP).get();
     }
 
-    public RoaringBitmap pageRankWithPeripheralNodes(int resultCount) {
+    public <T> T pageRankWithPeripheralNodes(int resultCount, Supplier<RankingResultAccumulator<T>> accumulatorP) {
         RankVector rank = new RankVector(1.d / domainsById.size());
 
         int iter_max = 100;
@@ -201,31 +177,10 @@ public abstract class RankingAlgorithm {
 
         logger.info("PRWPN iteration done");
 
-        return rank.getRanking(resultCount);
+        return rank.getRanking(resultCount, accumulatorP).get();
     }
 
     abstract void adjustRankVector(RankVector vector, double dNorm, double oldNorm);
-
-    public TIntList pageRank(IntToDoubleFunction weight, int resultCount) {
-        RankVector rank = new RankVector(1.d / domainsById.size());
-
-        int iter_max = 100;
-        for (int i = 0; i < iter_max; i++) {
-            RankVector newRank = createNewRankVector(rank);
-
-            double oldNorm = rank.norm();
-            double newNorm = newRank.norm();
-            double dNorm = oldNorm - newNorm ;
-
-            if (i < iter_max-1) {
-                adjustRankVector(newRank, dNorm, oldNorm);
-            }
-
-            rank = newRank;
-        }
-
-        return rank.getRanking(weight, resultCount);
-    }
 
     abstract RankVector createNewRankVector(RankVector rank);
 
@@ -271,9 +226,8 @@ public abstract class RankingAlgorithm {
 
         public double norm() {
             double v = 0.;
-            for (int i = 0; i < rank.length; i++) {
-                if (rank[i] > 0) { v+=rank[i]; }
-                else { v -= rank[i]; }
+            for (double value : rank) {
+                v += Math.abs(value);
             }
             return v;
         }
@@ -281,73 +235,38 @@ public abstract class RankingAlgorithm {
         public double norm(RankVector other) {
             double v = 0.;
             for (int i = 0; i < rank.length; i++) {
-                double dv = rank[i] - other.get(i);
-
-                if (dv > 0) { v+=dv; }
-                else { v -= dv; }
+                v += Math.abs(rank[i] - other.get(i));
             }
             return v;
         }
 
-        public TIntList getRanking(IntToDoubleFunction other, int numResults) {
-            TIntArrayList list = new TIntArrayList(numResults);
+        public <T> RankingResultAccumulator<T> getRanking(int numResults, Supplier<RankingResultAccumulator<T>> accumulatorP) {
 
-            Comparator<Integer> comparator = Comparator.comparing(i -> Math.sqrt(other.applyAsDouble(domainIdToIndex.get(i)) * rank[i]));
-
-            IntStream.range(0, rank.length)
-                    .boxed()
-                    .sorted(comparator.reversed())
-                    .map(domainIndexToId::get)
-                    .limit(numResults)
-                    .forEach(list::add);
-
-            return list;
-        }
-
-        public RoaringBitmap getRanking(int numResults) {
             if (numResults < 0) {
                 numResults = domainIdToIndex.size();
             }
-            if (numResults >= rank.length) {
-                numResults = rank.length;
-            }
+            numResults = min(numResults, min(domainIdToIndex.size(), rank.length));
 
-            RoaringBitmap list = new RoaringBitmap();
+            int[] nodes = sortOrder(rank);
+            var accumulator = accumulatorP.get();
 
-            int[] nodes = new int[rank.length];
-            Arrays.setAll(nodes, i->i);
-            IntComparator comp = (i,j) -> (int) Math.signum(rank[j] - rank[i]);
-            IntArrays.quickSort(nodes, comp);
-
-            int i;
-
-            for (i = 0; i < numResults; i++) {
+            for (int i = 0; i < numResults; i++) {
                 int id = domainIndexToId.get(nodes[i]);
 
                 if (includeInRanking(domainsById.get(id)))
-                    list.add(id);
+                    accumulator.add(id, i);
             }
 
-            for (; i < nodes.length && domainsById.size() < numResults; i++) {
-                int id = domainIndexToId.get(nodes[i]);
-
-                if (includeInRanking(domainsById.get(id)))
-                    list.add(id);
-            }
-
-
-            return list;
+            return accumulator;
         }
 
+        private static int[] sortOrder(double[] values) {
 
-        public void incrementAll(double v) {
-            for (int i = 0; i < rank.length; i++) {
-                rank[i]+=v;
-            }
-        }
+            int[] ret = new int[values.length];
+            Arrays.setAll(ret, i->i);
+            IntArrays.quickSort(ret, (i,j) -> (int) Math.signum(values[j] - values[i]));
 
-        int size() {
-            return domainsById.size();
+            return ret;
         }
     }
 

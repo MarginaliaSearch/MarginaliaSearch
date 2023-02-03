@@ -93,6 +93,8 @@ public class QueryParser {
                 entity.replace(new Token(TokenType.YEAR_TERM, t.str.substring(4), t.displayStr));
             } else if (t.str.startsWith("size") && t.str.matches("size[=><]\\d+")) {
                 entity.replace(new Token(TokenType.SIZE_TERM, t.str.substring(4), t.displayStr));
+            } else if (t.str.startsWith("rank") && t.str.matches("rank[=><]\\d+")) {
+                entity.replace(new Token(TokenType.RANK_TERM, t.str.substring(4), t.displayStr));
             } else if (t.str.startsWith("qs=")) {
                 entity.replace(new Token(TokenType.QS_TERM, t.str.substring(3), t.displayStr));
             } else if (t.str.contains(":")) {
@@ -508,6 +510,7 @@ enum TokenType implements Predicate<Token> {
     QUALITY_TERM,
     YEAR_TERM,
     SIZE_TERM,
+    RANK_TERM,
     NEAR_TERM,
 
     QS_TERM,

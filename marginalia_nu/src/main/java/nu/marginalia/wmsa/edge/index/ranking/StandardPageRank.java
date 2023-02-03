@@ -1,19 +1,19 @@
-package nu.marginalia.util.ranking;
+package nu.marginalia.wmsa.edge.index.ranking;
 
 
-public class BuggyStandardPageRank extends RankingAlgorithm {
+public class StandardPageRank extends RankingAlgorithm {
 
-    public BuggyStandardPageRank(RankingDomainFetcher domains, String... origins) {
+    public StandardPageRank(RankingDomainFetcher domains, String... origins) {
         super(domains, origins);
     }
 
     @Override
-    RankingAlgorithm.RankVector createNewRankVector(RankingAlgorithm.RankVector rank) {
+    RankVector createNewRankVector(RankVector rank) {
         RankVector newRank = new RankVector(0);
 
         for (int domainId = 0; domainId < domainIndexToId.size(); domainId++) {
 
-            var links = linkDataSrc2Dest[domainId];
+            var links = linkDataDest2Src[domainId];
             double newRankValue = 0;
 
             if (links != null && links.size() > 0) {
@@ -37,9 +37,8 @@ public class BuggyStandardPageRank extends RankingAlgorithm {
     }
 
     @Override
-    void adjustRankVector(RankingAlgorithm.RankVector vector, double dNorm, double oldNorm) {
-        originDomainIds.forEach(id -> vector.increment(id, dNorm/originDomainIds.size()));
-        vector.incrementAll(0.14*dNorm/vector.size());
+    void adjustRankVector(RankVector vector, double dNorm, double oldNorm) {
+        originDomainIds.forEach(id -> vector.increment(id, 0.15 / originDomainIds.size() ));
     }
 
 }

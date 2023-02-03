@@ -7,6 +7,7 @@ import nu.marginalia.wmsa.edge.model.search.domain.SpecificationLimit;
 public record IndexQueryParams(SpecificationLimit qualityLimit,
                                SpecificationLimit year,
                                SpecificationLimit size,
+                               SpecificationLimit rank,
                                SearchSet searchSet,
                                QueryStrategy queryStrategy
                                )

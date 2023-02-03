@@ -82,6 +82,7 @@ public class EdgeIndexIntegrationTest {
                         .year(SpecificationLimit.none())
                         .quality(SpecificationLimit.none())
                         .size(SpecificationLimit.none())
+                        .rank(SpecificationLimit.none())
                         .domains(new ArrayList<>())
                         .searchSetIdentifier(SearchSetIdentifier.NONE)
                         .subqueries(List.of(new EdgeSearchSubquery(
@@ -113,6 +114,7 @@ public class EdgeIndexIntegrationTest {
                         .year(SpecificationLimit.none())
                         .quality(SpecificationLimit.none())
                         .size(SpecificationLimit.none())
+                        .rank(SpecificationLimit.none())
                         .queryStrategy(QueryStrategy.SENTENCE)
                         .domains(List.of(2))
                         .subqueries(List.of(new EdgeSearchSubquery(
@@ -139,6 +141,7 @@ public class EdgeIndexIntegrationTest {
                         .quality(SpecificationLimit.none())
                         .year(SpecificationLimit.equals(1998))
                         .size(SpecificationLimit.none())
+                        .rank(SpecificationLimit.none())
                         .queryStrategy(QueryStrategy.SENTENCE)
                         .searchSetIdentifier(SearchSetIdentifier.NONE)
                         .subqueries(List.of(new EdgeSearchSubquery(
@@ -161,7 +164,7 @@ public class EdgeIndexIntegrationTest {
 
         long fullId = id | ((long) (32 - (id % 32)) << 32);
 
-        var header = new SearchIndexJournalEntryHeader(factors.length, fullId, new EdgePageDocumentsMetadata(0, 0, id % 5, id, id % 20, (byte) 0).encode());
+        var header = new SearchIndexJournalEntryHeader(factors.length, fullId, new EdgePageDocumentsMetadata(0, 0, 0, id % 5, id, id % 20, (byte) 0).encode());
 
         long[] data = new long[factors.length*2];
         for (int i = 0; i < factors.length; i++) {

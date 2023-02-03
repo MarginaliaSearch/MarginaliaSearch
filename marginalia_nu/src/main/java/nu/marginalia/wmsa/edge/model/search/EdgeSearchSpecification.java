@@ -19,6 +19,7 @@ public class EdgeSearchSpecification {
     public final SpecificationLimit quality;
     public final SpecificationLimit year;
     public final SpecificationLimit size;
+    public final SpecificationLimit rank;
 
     public final QueryLimits queryLimits;
     public final QueryStrategy queryStrategy;

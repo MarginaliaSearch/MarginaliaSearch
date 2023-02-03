@@ -129,6 +129,7 @@ public class EdgeIndexQueryService {
                     specsSet.quality,
                     specsSet.year,
                     specsSet.size,
+                    specsSet.rank,
                     getSearchSet(specsSet),
                     specsSet.queryStrategy);
         }

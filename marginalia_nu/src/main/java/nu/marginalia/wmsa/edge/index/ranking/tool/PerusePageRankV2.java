@@ -1,4 +1,4 @@
-package nu.marginalia.util.ranking.tool;
+package nu.marginalia.wmsa.edge.index.ranking.tool;
 
 
 import com.zaxxer.hikari.HikariDataSource;
@@ -10,9 +10,9 @@ import it.unimi.dsi.fastutil.ints.IntArrays;
 import it.unimi.dsi.fastutil.ints.IntComparator;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
-import nu.marginalia.util.ranking.RankingAlgorithm;
-import nu.marginalia.util.ranking.RankingDomainData;
-import nu.marginalia.util.ranking.RankingDomainFetcher;
+import nu.marginalia.wmsa.edge.index.ranking.RankingAlgorithm;
+import nu.marginalia.wmsa.edge.index.ranking.RankingDomainData;
+import nu.marginalia.wmsa.edge.index.ranking.RankingDomainFetcher;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
 import nu.marginalia.wmsa.edge.dbcommon.EdgeDomainBlacklistImpl;
 import org.jetbrains.annotations.NotNull;
@@ -32,8 +32,6 @@ public class PerusePageRankV2 {
 
     TIntArrayList[] linkDataSrc2Dest;
     TIntArrayList[] linkDataDest2Src;
-
-    private static final boolean getNames = true;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 

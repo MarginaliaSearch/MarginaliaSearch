@@ -1,4 +1,4 @@
-package nu.marginalia.util.ranking.old;
+package nu.marginalia.wmsa.edge.index.ranking.old;
 
 
 import com.zaxxer.hikari.HikariDataSource;
@@ -125,7 +125,6 @@ public class StandardPageRank {
 
         final TIntArrayList empty = new TIntArrayList();
 
-        double rankNorm = rank.norm();
         RankVector newRank = new RankVector(0);
 
         for (DomainData domain : domains.valueCollection()) {
@@ -176,8 +175,6 @@ public class StandardPageRank {
                 }
             });
         }
-
-        TIntHashSet deadEnds = new TIntHashSet(domains.size());
     }
 
     private class RankVector {

@@ -97,6 +97,7 @@ public class QueryFactory {
         SpecificationLimit qualityLimit = profile.getQualityLimit();
         SpecificationLimit year = profile.getYearLimit();
         SpecificationLimit size = profile.getSizeLimit();
+        SpecificationLimit rank = SpecificationLimit.none();
 
         for (Token t : basicQuery) {
             if (t.type == TokenType.QUOT_TERM || t.type == TokenType.LITERAL_TERM) {
@@ -115,6 +116,9 @@ public class QueryFactory {
             }
             if (t.type == TokenType.SIZE_TERM) {
                 size = parseSpecificationLimit(t.str);
+            }
+            if (t.type == TokenType.RANK_TERM) {
+                rank = parseSpecificationLimit(t.str);
             }
             if (t.type == TokenType.QS_TERM) {
                 queryStrategy = parseQueryStrategy(t.str);
@@ -154,6 +158,8 @@ public class QueryFactory {
                     case QUALITY_TERM:
                     case YEAR_TERM:
                     case SIZE_TERM:
+                    case RANK_TERM:
+                    case QS_TERM:
                         break; //
                     case NEAR_TERM:
                         near = t.str;
@@ -199,6 +205,7 @@ public class QueryFactory {
                 .quality(qualityLimit)
                 .year(year)
                 .size(size)
+                .rank(rank)
                 .domains(domains)
                 .queryStrategy(queryStrategy)
                 .searchSetIdentifier(profile.searchSetIdentifier);

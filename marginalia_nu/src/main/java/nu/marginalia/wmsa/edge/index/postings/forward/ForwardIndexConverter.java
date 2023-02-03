@@ -3,6 +3,8 @@ package nu.marginalia.wmsa.edge.index.postings.forward;
 import com.upserve.uppend.blobs.NativeIO;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import nu.marginalia.util.array.LongArray;
+import nu.marginalia.wmsa.edge.index.model.EdgePageDocumentsMetadata;
+import nu.marginalia.wmsa.edge.index.postings.DomainRankings;
 import nu.marginalia.wmsa.edge.index.postings.journal.reader.SearchIndexJournalReader;
 import nu.marginalia.wmsa.edge.index.postings.journal.reader.SearchIndexJournalReaderSingleFile;
 import org.roaringbitmap.IntConsumer;
@@ -18,26 +20,26 @@ import java.nio.file.Path;
 import static nu.marginalia.wmsa.edge.index.postings.forward.ForwardIndexParameters.*;
 
 public class ForwardIndexConverter {
-    private static final int RWF_BIN_SIZE = 10_000_000;
 
-    private final Path tmpFileDir;
     private final File inputFile;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final Path outputFileDocsId;
     private final Path outputFileDocsData;
+    private final DomainRankings domainRankings;
 
 
-    public ForwardIndexConverter(Path tmpFileDir,
+    public ForwardIndexConverter(
                                  File inputFile,
                                  Path outputFileDocsId,
-                                 Path outputFileDocsData
+                                 Path outputFileDocsData,
+                                 DomainRankings domainRankings
                                  ) {
-        this.tmpFileDir = tmpFileDir;
         this.inputFile = inputFile;
         this.outputFileDocsId = outputFileDocsId;
         this.outputFileDocsData = outputFileDocsData;
+        this.domainRankings = domainRankings;
     }
 
     public void convert() throws IOException {
@@ -49,6 +51,8 @@ public class ForwardIndexConverter {
         }
 
         logger.info("Converting  {} {}",inputFile, journalReader.fileHeader);
+
+        logger.info("Domain Rankings size = {}", domainRankings.size());
 
         try {
             LongArray docsFileId = getDocIds(outputFileDocsId, journalReader);
@@ -68,7 +72,10 @@ public class ForwardIndexConverter {
             journalReader.forEach(entry -> {
                 long entryOffset = (long) ENTRY_SIZE * docIdToIdx.get(entry.urlId());
 
-                docFileData.set(entryOffset + METADATA_OFFSET, entry.docMeta());
+                int ranking = domainRankings.getRanking(entry.domainId());
+                long meta = EdgePageDocumentsMetadata.encodeRank(entry.docMeta(), ranking);
+
+                docFileData.set(entryOffset + METADATA_OFFSET, meta);
                 docFileData.set(entryOffset + DOMAIN_OFFSET, entry.domainId());
             });
 

@@ -1,9 +1,10 @@
-package nu.marginalia.util.ranking.tool;
+package nu.marginalia.wmsa.edge.index.ranking.tool;
 
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
-import nu.marginalia.util.ranking.BetterReversePageRank;
-import nu.marginalia.util.ranking.RankingDomainFetcher;
+import nu.marginalia.wmsa.edge.index.ranking.ReversePageRank;
+import nu.marginalia.wmsa.edge.index.ranking.RankingDomainFetcher;
+import nu.marginalia.wmsa.edge.index.ranking.accumulator.RankingResultListAccumulator;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
 import nu.marginalia.wmsa.edge.dbcommon.EdgeDomainBlacklistImpl;
 import org.mariadb.jdbc.Driver;
@@ -17,8 +18,6 @@ public class UpdateDomainRanksTool2 {
 
     private static final Logger logger = LoggerFactory.getLogger(UpdateDomainRanksTool2.class);
 
-    public final long domainIdMax = -1;
-    public int domainCount;
     private volatile static int rankMax;
 
     static final LinkedBlockingQueue<Integer> uploadQueue = new LinkedBlockingQueue<>(10);
@@ -35,20 +34,21 @@ public class UpdateDomainRanksTool2 {
         logger.info("Ranking");
         var ds = new DatabaseModule().provideConnection();
         var domains = new RankingDomainFetcher(ds, new EdgeDomainBlacklistImpl(ds));
-         var rpr = new BetterReversePageRank(domains,  "memex.marginalia.nu", "bikobatanari.art", "sadgrl.online", "wiki.xxiivv.com", "%neocities.org");
+         var rpr = new ReversePageRank(domains,  "memex.marginalia.nu", "bikobatanari.art", "sadgrl.online", "wiki.xxiivv.com", "%neocities.org");
 
-        var rankVector = rpr.pageRankVector();
         rankMax = rpr.size();
         uploader.start();
 
-        var rankData = rpr.pageRankWithPeripheralNodes(rankMax);
-        for (int i : rankData) {
+        var rankData = rpr.pageRankWithPeripheralNodes(rankMax, RankingResultListAccumulator::new);
+
+        rankData.forEach(i -> {
             try {
                 uploadQueue.put(i);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        }
+            return true;
+        });
 
         long end = System.currentTimeMillis();
         running = false;

@@ -24,6 +24,11 @@ public record EdgeSearchResultKeywordScore(int set,
             sum +=  20;
         }
 
+        int rank = EdgePageDocumentsMetadata.decodeRank(encodedDocMetadata) - 13;
+        if (rank < 0)
+            sum += rank / 2;
+        else
+            sum += rank / 4;
 
         return sum;
     }

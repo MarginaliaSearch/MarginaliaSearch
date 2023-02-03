@@ -33,6 +33,11 @@ public class ParamMatchingQueryFilter implements QueryFilterStepIf {
         if (!validateSize(post)) {
             return false;
         }
+
+        if (!validateRank(post)) {
+            return false;
+        }
+
         return true;
     }
 
@@ -51,6 +56,7 @@ public class ParamMatchingQueryFilter implements QueryFilterStepIf {
 
         return limit.test(quality);
     }
+
     private boolean validateYear(ForwardIndexReader.DocPost post) {
         if (params.year().type() == SpecificationLimitType.NONE)
             return true;
@@ -67,6 +73,15 @@ public class ParamMatchingQueryFilter implements QueryFilterStepIf {
         int postVal = EdgePageDocumentsMetadata.decodeSize(post.meta());
 
         return params.size().test(postVal);
+    }
+
+    private boolean validateRank(ForwardIndexReader.DocPost post) {
+        if (params.rank().type() == SpecificationLimitType.NONE)
+            return true;
+
+        int postVal = EdgePageDocumentsMetadata.decodeRank(post.meta());
+
+        return params.rank().test(postVal);
     }
 
     @Override

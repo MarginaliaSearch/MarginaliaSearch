@@ -6,6 +6,7 @@ import nu.marginalia.wmsa.configuration.server.Initialization;
 import nu.marginalia.wmsa.edge.index.IndexServicesFactory;
 import nu.marginalia.wmsa.edge.index.lexicon.KeywordLexiconReadOnlyView;
 import nu.marginalia.wmsa.edge.index.postings.journal.writer.SearchIndexJournalWriterImpl;
+import nu.marginalia.wmsa.edge.index.svc.EdgeIndexSearchSetsService;
 import nu.marginalia.wmsa.edge.index.svc.EdgeOpsLockService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,13 +27,14 @@ public class SearchIndexControl {
 
     @Inject
     public SearchIndexControl(IndexServicesFactory servicesFactory,
-                              EdgeOpsLockService opsLockService) {
+                              EdgeOpsLockService opsLockService,
+                              EdgeIndexSearchSetsService searchSetsService) {
         this.servicesFactory = servicesFactory;
 
         this.primaryIndexWriter = servicesFactory.getIndexWriter(0);
         this.secondaryIndexWriter = servicesFactory.getIndexWriter(1);
 
-        index = servicesFactory.createIndexBucket();
+        index = servicesFactory.createIndexBucket(searchSetsService);
         this.opsLockService = opsLockService;
     }
 
