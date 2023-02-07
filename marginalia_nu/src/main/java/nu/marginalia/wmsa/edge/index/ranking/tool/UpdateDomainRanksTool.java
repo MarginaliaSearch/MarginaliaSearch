@@ -2,11 +2,11 @@ package nu.marginalia.wmsa.edge.index.ranking.tool;
 
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
-import nu.marginalia.wmsa.edge.index.ranking.ReversePageRank;
-import nu.marginalia.wmsa.edge.index.ranking.RankingDomainFetcher;
+import nu.marginalia.wmsa.edge.index.ranking.StandardPageRank;
 import nu.marginalia.wmsa.edge.index.ranking.accumulator.RankingResultListAccumulator;
 import nu.marginalia.wmsa.configuration.module.DatabaseModule;
 import nu.marginalia.wmsa.edge.dbcommon.EdgeDomainBlacklistImpl;
+import nu.marginalia.wmsa.edge.index.ranking.data.RankingDomainFetcherForSimilarityData;
 import org.mariadb.jdbc.Driver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,9 +14,9 @@ import org.slf4j.LoggerFactory;
 import java.sql.SQLException;
 import java.util.concurrent.LinkedBlockingQueue;
 
-public class UpdateDomainRanksTool2 {
+public class UpdateDomainRanksTool {
 
-    private static final Logger logger = LoggerFactory.getLogger(UpdateDomainRanksTool2.class);
+    private static final Logger logger = LoggerFactory.getLogger(UpdateDomainRanksTool.class);
 
     private volatile static int rankMax;
 
@@ -33,8 +33,8 @@ public class UpdateDomainRanksTool2 {
 
         logger.info("Ranking");
         var ds = new DatabaseModule().provideConnection();
-        var domains = new RankingDomainFetcher(ds, new EdgeDomainBlacklistImpl(ds));
-         var rpr = new ReversePageRank(domains,  "memex.marginalia.nu", "bikobatanari.art", "sadgrl.online", "wiki.xxiivv.com", "%neocities.org");
+        var domains = new RankingDomainFetcherForSimilarityData(ds, new EdgeDomainBlacklistImpl(ds));
+        var rpr = new StandardPageRank(domains,  "memex.marginalia.nu", "bikobatanari.art", "sadgrl.online", "wiki.xxiivv.com");
 
         rankMax = rpr.size();
         uploader.start();

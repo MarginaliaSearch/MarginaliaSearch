@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.edge.index.ranking;
+package nu.marginalia.wmsa.edge.index.ranking.data;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,7 +10,7 @@ public class RankingDomainData {
     public final int id;
     public final String name;
     private int alias;
-    private EdgeDomainIndexingState state;
+    public EdgeDomainIndexingState state;
     public final int knownUrls;
 
     public int resolveAlias() {

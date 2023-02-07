@@ -1,6 +1,8 @@
 package nu.marginalia.wmsa.edge.index.ranking;
 
 
+import nu.marginalia.wmsa.edge.index.ranking.data.RankingDomainFetcher;
+
 public class StandardPageRank extends RankingAlgorithm {
 
     public StandardPageRank(RankingDomainFetcher domains, String... origins) {

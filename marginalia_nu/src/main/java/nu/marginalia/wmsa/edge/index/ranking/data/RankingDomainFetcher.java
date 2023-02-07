@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.edge.index.ranking;
+package nu.marginalia.wmsa.edge.index.ranking.data;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
@@ -12,16 +12,20 @@ import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 
 public class RankingDomainFetcher {
-    private final HikariDataSource dataSource;
-    private final EdgeDomainBlacklistImpl blacklist;
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    protected final HikariDataSource dataSource;
+    protected final EdgeDomainBlacklistImpl blacklist;
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final boolean getNames = false;
+    protected boolean getNames = false;
 
     @Inject
     public RankingDomainFetcher(HikariDataSource dataSource, EdgeDomainBlacklistImpl blacklist) {
         this.dataSource = dataSource;
         this.blacklist = blacklist;
+    }
+
+    public void retainNames() {
+        this.getNames = true;
     }
 
     public void getDomains(Consumer<RankingDomainData> consumer) {
@@ -49,14 +53,19 @@ public class RankingDomainFetcher {
         getDomains(query, consumer);
     }
 
-    private void getDomains(String query, Consumer<RankingDomainData> consumer) {
+    protected void getDomains(String query, Consumer<RankingDomainData> consumer) {
         try (var conn = dataSource.getConnection(); var stmt = conn.prepareStatement(query)) {
             stmt.setFetchSize(10000);
             var rsp = stmt.executeQuery();
             while (rsp.next()) {
                 int id = rsp.getInt(1);
                 if (!blacklist.isBlacklisted(id)) {
-                    consumer.accept(new RankingDomainData(id, rsp.getString(2), rsp.getInt(3), EdgeDomainIndexingState.valueOf(rsp.getString(4)), rsp.getInt(5)));
+                    consumer.accept(
+                            new RankingDomainData(id,
+                                    rsp.getString(2),
+                                    rsp.getInt(3),
+                                    EdgeDomainIndexingState.valueOf(rsp.getString(4)),
+                                    rsp.getInt(5)));
                 }
             }
         }

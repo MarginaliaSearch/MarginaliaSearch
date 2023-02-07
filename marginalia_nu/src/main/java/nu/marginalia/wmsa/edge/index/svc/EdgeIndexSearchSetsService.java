@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import lombok.SneakyThrows;
 import nu.marginalia.wmsa.edge.index.ranking.ReversePageRank;
 import nu.marginalia.wmsa.edge.index.ranking.StandardPageRank;
-import nu.marginalia.wmsa.edge.index.ranking.RankingDomainFetcher;
+import nu.marginalia.wmsa.edge.index.ranking.data.RankingDomainFetcher;
 import nu.marginalia.wmsa.edge.index.ranking.accumulator.RankingResultBitSetAccumulator;
 import nu.marginalia.wmsa.edge.index.ranking.accumulator.RankingResultHashMapAccumulator;
 import nu.marginalia.wmsa.edge.index.IndexServicesFactory;

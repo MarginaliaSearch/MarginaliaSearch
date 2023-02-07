@@ -5,6 +5,8 @@ import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrays;
 import nu.marginalia.wmsa.edge.index.ranking.accumulator.RankingResultAccumulator;
+import nu.marginalia.wmsa.edge.index.ranking.data.RankingDomainData;
+import nu.marginalia.wmsa.edge.index.ranking.data.RankingDomainFetcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,6 +83,10 @@ public abstract class RankingAlgorithm {
             });
         }
         logger.info("Origin Domains: {}", originDomainIds.size());
+    }
+
+    public RankingDomainData getDomainData(int id) {
+        return domainsById.get(id);
     }
 
     public void addPeripheralNodes() {
@@ -200,9 +206,9 @@ public abstract class RankingAlgorithm {
     public void setMaxKnownUrls(int maxKnownUrls) {
         this.maxKnownUrls = maxKnownUrls;
     }
-
     public class RankVector {
         private final double[] rank;
+
         public RankVector(double defaultValue) {
             rank = new double[domainIndexToId.size()];
             if (defaultValue != 0.) {
@@ -259,7 +265,6 @@ public abstract class RankingAlgorithm {
 
             return accumulator;
         }
-
         private static int[] sortOrder(double[] values) {
 
             int[] ret = new int[values.length];
@@ -268,6 +273,7 @@ public abstract class RankingAlgorithm {
 
             return ret;
         }
+
     }
 
 }
