@@ -29,18 +29,30 @@ public class ForwardIndexReader {
 
         logger.info("Switching forward index");
 
+        ids = loadIds(idsFile);
+        data = loadData(dataFile);
+    }
+
+    private static TLongIntHashMap loadIds(Path idsFile) throws IOException {
         var idsArray = LongArray.mmapRead(idsFile);
         idsArray.advice(NativeIO.Advice.Sequential);
 
-        ids = new TLongIntHashMap((int) idsArray.size(), 0.5f, -1, -1);
+        var ids = new TLongIntHashMap((int) idsArray.size(), 0.5f, -1, -1);
 
         // This hash table should be of the same size as the number of documents, so typically less than 1 Gb
         idsArray.forEach(0, idsArray.size(), (pos, val) -> {
             ids.put(val, (int) pos);
         });
 
-        data = LongArray.mmapRead(dataFile);
+        return ids;
+    }
+
+    private static LongArray loadData(Path dataFile) throws IOException {
+        var data = LongArray.mmapRead(dataFile);
+
         data.advice(NativeIO.Advice.Random);
+
+        return data;
     }
 
     private int idxForDoc(long docId) {
@@ -53,6 +65,7 @@ public class ForwardIndexReader {
 
         return data.get(ENTRY_SIZE * offset + METADATA_OFFSET);
     }
+
     public int getDomainId(long docId) {
         long offset = idxForDoc(docId);
         if (offset < 0) return 0;
