@@ -8,6 +8,7 @@ import nu.marginalia.util.test.TestUtil;
 import nu.marginalia.wmsa.edge.index.lexicon.KeywordLexicon;
 import nu.marginalia.wmsa.edge.index.lexicon.journal.KeywordLexiconJournal;
 import nu.marginalia.wmsa.edge.index.model.EdgePageDocumentsMetadata;
+import nu.marginalia.wmsa.edge.index.postings.DomainRankings;
 import nu.marginalia.wmsa.edge.index.postings.journal.model.SearchIndexJournalEntry;
 import nu.marginalia.wmsa.edge.index.postings.journal.model.SearchIndexJournalEntryHeader;
 import nu.marginalia.wmsa.edge.index.postings.journal.reader.SearchIndexJournalReaderSingleFile;
@@ -86,7 +87,7 @@ class ReverseIndexConverterTest {
         var docsFile = dataDir.resolve("docs.dat");
         var journalReader = new SearchIndexJournalReaderSingleFile(LongArray.mmapRead(indexFile));
 
-        new ReverseIndexConverter(tmpDir, journalReader, wordsFile, docsFile)
+        new ReverseIndexConverter(tmpDir, journalReader, new DomainRankings(), wordsFile, docsFile)
                 .convert();
 
         var reverseIndexReader = new ReverseIndexReader(wordsFile, docsFile);
@@ -104,17 +105,17 @@ class ReverseIndexConverterTest {
 
         var buffer = new LongQueryBuffer(32);
         reverseIndexReader.documents(keywordLexicon.getReadOnly("1"), ReverseIndexEntrySourceBehavior.DO_PREFER).read(buffer);
-        assertArrayEquals(LongStream.range(1, 17).toArray(), buffer.copyData());
+        assertArrayEquals(LongStream.range(1, 17).map(v -> v | (255L << 32)).toArray(), buffer.copyData());
         System.out.println(buffer);
 
         buffer.reset();
         reverseIndexReader.documents(keywordLexicon.getReadOnly("2"), ReverseIndexEntrySourceBehavior.DO_PREFER).read(buffer);
-        assertArrayEquals(LongStream.range(1, 17).map(v -> v*2).toArray(), buffer.copyData());
+        assertArrayEquals(LongStream.range(1, 17).map(v -> v*2).map(v -> v | (255L << 32)).toArray(), buffer.copyData());
         System.out.println(buffer);
 
         buffer.reset();
         reverseIndexReader.documents(keywordLexicon.getReadOnly("3"), ReverseIndexEntrySourceBehavior.DO_PREFER).read(buffer);
-        assertArrayEquals(LongStream.range(1, 17).map(v -> v*3).toArray(), buffer.copyData());
+        assertArrayEquals(LongStream.range(1, 17).map(v -> v*3).map(v -> v | (255L << 32)).toArray(), buffer.copyData());
         System.out.println(buffer);
 
         buffer.reset();

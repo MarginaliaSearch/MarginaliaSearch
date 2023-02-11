@@ -13,8 +13,8 @@ public class SmallSearchSet implements SearchSet {
     }
 
     @Override
-    public boolean contains(int urlId) {
-        return entries.contains(urlId);
+    public boolean contains(int domainId) {
+        return entries.contains(domainId);
     }
 
     public String toString() {

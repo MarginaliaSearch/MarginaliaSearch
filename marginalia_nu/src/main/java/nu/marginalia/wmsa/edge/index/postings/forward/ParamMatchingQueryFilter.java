@@ -16,7 +16,7 @@ public class ParamMatchingQueryFilter implements QueryFilterStepIf {
 
     @Override
     public boolean test(long docId) {
-        var post = forwardIndexReader.docPost(docId);
+        var post = forwardIndexReader.docPost(docId & 0xFFFF_FFFFL);
 
         if (!validateDomain(post)) {
             return false;

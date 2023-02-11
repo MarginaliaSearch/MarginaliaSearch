@@ -6,7 +6,6 @@ import com.google.inject.name.Named;
 import lombok.SneakyThrows;
 import nu.marginalia.util.array.LongArray;
 import nu.marginalia.util.dict.DictionaryMap;
-import nu.marginalia.wmsa.edge.dbcommon.EdgeDomainBlacklist;
 import nu.marginalia.wmsa.edge.index.lexicon.KeywordLexicon;
 import nu.marginalia.wmsa.edge.index.lexicon.KeywordLexiconReadOnlyView;
 import nu.marginalia.wmsa.edge.index.lexicon.journal.KeywordLexiconJournal;
@@ -107,13 +106,13 @@ public class IndexServicesFactory {
 
     public void convertIndex(DomainRankings domainRankings) throws IOException {
         convertForwardIndex(domainRankings);
-        convertFullReverseIndex();
-        convertPriorityReverseIndex();
+        convertFullReverseIndex(domainRankings);
+        convertPriorityReverseIndex(domainRankings);
 
 
     }
 
-    private void convertFullReverseIndex() throws IOException {
+    private void convertFullReverseIndex(DomainRankings domainRankings) throws IOException {
 
         logger.info("Converting full reverse index");
 
@@ -121,6 +120,7 @@ public class IndexServicesFactory {
         var journalReader = new SearchIndexJournalReaderSingleFile(longArray);
         var converter = new ReverseIndexConverter(tmpFileDir,
                 journalReader,
+                domainRankings,
                 revIndexWords.get(NEXT_PART).toPath(),
                 revIndexDoc.get(NEXT_PART).toPath());
 
@@ -129,7 +129,7 @@ public class IndexServicesFactory {
         tryGc();
     }
 
-    private void convertPriorityReverseIndex() throws IOException {
+    private void convertPriorityReverseIndex(DomainRankings domainRankings) throws IOException {
 
         logger.info("Converting priority reverse index");
 
@@ -139,6 +139,7 @@ public class IndexServicesFactory {
 
         var converter = new ReverseIndexConverter(tmpFileDir,
                 journalReader,
+                domainRankings,
                 revPrioIndexWords.get(NEXT_PART).toPath(),
                 revPrioIndexDoc.get(NEXT_PART).toPath());
 

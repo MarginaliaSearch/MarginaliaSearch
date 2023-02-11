@@ -8,6 +8,7 @@ import nu.marginalia.util.array.functional.LongBinaryIOOperation;
 import nu.marginalia.util.array.functional.LongIOTransformer;
 import nu.marginalia.util.array.functional.LongTransformer;
 import nu.marginalia.util.btree.BTreeWriter;
+import nu.marginalia.wmsa.edge.index.postings.DomainRankings;
 import nu.marginalia.wmsa.edge.index.postings.journal.model.SearchIndexJournalEntry;
 import nu.marginalia.wmsa.edge.index.postings.journal.model.SearchIndexJournalStatistics;
 import nu.marginalia.wmsa.edge.index.postings.journal.reader.SearchIndexJournalReader;
@@ -32,16 +33,19 @@ public class ReverseIndexConverter {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final SearchIndexJournalReaderSingleFile journalReader;
+    private final DomainRankings domainRankings;
     private final Path outputFileWords;
     private final Path outputFileDocs;
     private final SortingContext sortingContext;
 
     public ReverseIndexConverter(Path tmpFileDir,
                                  SearchIndexJournalReaderSingleFile journalReader,
+                                 DomainRankings domainRankings,
                                  Path outputFileWords,
                                  Path outputFileDocs) {
         this.tmpFileDir = tmpFileDir;
         this.journalReader = journalReader;
+        this.domainRankings = domainRankings;
         this.outputFileWords = outputFileWords;
         this.outputFileDocs = outputFileDocs;
         this.sortingContext = new SortingContext(tmpFileDir, 64_000);
@@ -188,7 +192,7 @@ public class ReverseIndexConverter {
         }
     }
 
-    private static class IntermediateIndexConstructor implements SearchIndexJournalReaderSingleFile.LongObjectConsumer<SearchIndexJournalEntry.Record>, AutoCloseable {
+    private class IntermediateIndexConstructor implements SearchIndexJournalReaderSingleFile.LongObjectConsumer<SearchIndexJournalEntry.Record>, AutoCloseable {
 
         private final LongArray wordRangeEnds;
         private final IntArray wordRangeOffset;
@@ -206,12 +210,26 @@ public class ReverseIndexConverter {
 
         @Override
         public void accept(long docId, SearchIndexJournalEntry.Record record) {
-            final long urlId = docId & 0xFFFF_FFFFL;
-            final int wordId = record.wordId();
 
+            /* Encode the ID as
+             *
+             *     32 bits  32 bits
+             *   [ ranking | url-id ]
+             *
+             *  in order to get low-ranking documents to be considered first
+             *  when sorting the items.
+             */
+
+            int domainId = (int) (docId >>> 32);
+            long rankingId = (long) domainRankings.getRanking(domainId) << 32;
+
+            int urlId = (int) (docId & 0xFFFF_FFFFL);
+            long rankEncodedId = rankingId | urlId;
+
+            final int wordId = record.wordId();
             long offset = startOfRange(wordId);
 
-            documentsFile.put(offset + wordRangeOffset.getAndIncrement(wordId), urlId);
+            documentsFile.put(offset + wordRangeOffset.getAndIncrement(wordId), rankEncodedId);
             documentsFile.put(offset + wordRangeOffset.getAndIncrement(wordId), record.metadata());
 
         }

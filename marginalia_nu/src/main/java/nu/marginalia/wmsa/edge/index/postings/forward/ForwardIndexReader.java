@@ -40,8 +40,6 @@ public class ForwardIndexReader {
         });
 
         data = LongArray.mmapRead(dataFile);
-
-
         data.advice(NativeIO.Advice.Random);
     }
 

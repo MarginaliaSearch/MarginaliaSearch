@@ -7,6 +7,7 @@ import nu.marginalia.util.dict.OffHeapDictionaryHashMap;
 import nu.marginalia.util.test.TestUtil;
 import nu.marginalia.wmsa.edge.index.lexicon.KeywordLexicon;
 import nu.marginalia.wmsa.edge.index.lexicon.journal.KeywordLexiconJournal;
+import nu.marginalia.wmsa.edge.index.postings.DomainRankings;
 import nu.marginalia.wmsa.edge.index.postings.journal.model.SearchIndexJournalEntry;
 import nu.marginalia.wmsa.edge.index.postings.journal.model.SearchIndexJournalEntryHeader;
 import nu.marginalia.wmsa.edge.index.postings.journal.reader.SearchIndexJournalReaderSingleFile;
@@ -114,7 +115,7 @@ class ReverseIndexConverterTest2 {
 
         Path tmpDir = Path.of("/tmp");
 
-        new ReverseIndexConverter(tmpDir, new SearchIndexJournalReaderSingleFile(LongArray.mmapRead(indexFile)), wordsFile, docsFile).convert();
+        new ReverseIndexConverter(tmpDir, new SearchIndexJournalReaderSingleFile(LongArray.mmapRead(indexFile)), new DomainRankings(), wordsFile, docsFile).convert();
 
         var reverseReader = new ReverseIndexReader(wordsFile, docsFile);
 
@@ -139,7 +140,7 @@ class ReverseIndexConverterTest2 {
 
         Path tmpDir = Path.of("/tmp");
 
-        new ReverseIndexConverter(tmpDir, new SearchIndexJournalReaderSingleFile(LongArray.mmapRead(indexFile), null, ReverseIndexPriorityParameters::filterPriorityRecord), wordsFile, docsFile).convert();
+        new ReverseIndexConverter(tmpDir, new SearchIndexJournalReaderSingleFile(LongArray.mmapRead(indexFile), null, ReverseIndexPriorityParameters::filterPriorityRecord), new DomainRankings(), wordsFile, docsFile).convert();
 
         var reverseReader = new ReverseIndexReader(wordsFile, docsFile);
 
