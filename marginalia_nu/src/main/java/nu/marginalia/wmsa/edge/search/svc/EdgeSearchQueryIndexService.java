@@ -52,6 +52,7 @@ public class EdgeSearchQueryIndexService {
                 .humanQuery("")
                 .year(SpecificationLimit.none())
                 .size(SpecificationLimit.none())
+                .rank(SpecificationLimit.none())
                 .quality(SpecificationLimit.none())
                 .queryStrategy(QueryStrategy.AUTO)
                 .build();
