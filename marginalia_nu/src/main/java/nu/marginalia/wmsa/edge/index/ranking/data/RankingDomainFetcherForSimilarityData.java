@@ -1,14 +1,41 @@
 package nu.marginalia.wmsa.edge.index.ranking.data;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.wmsa.edge.dbcommon.EdgeDomainBlacklistImpl;
+import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.function.Consumer;
 
+@Singleton
 public class RankingDomainFetcherForSimilarityData extends RankingDomainFetcher {
+    final boolean hasData;
+
+    @Inject
     public RankingDomainFetcherForSimilarityData(HikariDataSource dataSource, EdgeDomainBlacklistImpl blacklist) {
         super(dataSource, blacklist);
+
+        hasData = isDomainNeighborTablePopulated(dataSource);
+    }
+
+    private static boolean isDomainNeighborTablePopulated(HikariDataSource dataSource) {
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.createStatement();
+             var rs = stmt.executeQuery("SELECT DOMAIN_ID FROM EC_DOMAIN_NEIGHBORS_2 LIMIT 1")) {
+
+            return rs.next();
+        }
+        catch (SQLException ex) {
+            LoggerFactory
+                    .getLogger(RankingDomainFetcherForSimilarityData.class)
+                    .error("Failed to get count from EC_DOMAIN_NEIGHBORS_2", ex);
+            return false;
+        }
+    }
+    public boolean hasData() {
+        return hasData;
     }
 
     public void eachDomainLink(DomainLinkConsumer consumer) {
@@ -45,19 +72,32 @@ public class RankingDomainFetcherForSimilarityData extends RankingDomainFetcher 
 //                   HAVING COUNT(SOURCE_DOMAIN_ID)>5
 //               """;
 
-        String query =
-                """
-                    SELECT EC_DOMAIN.ID,DOMAIN_NAME,DOMAIN_ALIAS,STATE,COALESCE(KNOWN_URLS, 0)
-                    FROM EC_DOMAIN 
-                    INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID 
-                    GROUP BY EC_DOMAIN.ID 
-                """;
+        String query;
+        if (getNames) {
+            query =
+                    """
+                        SELECT EC_DOMAIN.ID,DOMAIN_NAME,DOMAIN_ALIAS,STATE,COALESCE(KNOWN_URLS, 0)
+                        FROM EC_DOMAIN 
+                        INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID 
+                        GROUP BY EC_DOMAIN.ID 
+                    """;
+        }
+        else {
+            query =
+                    """
+                        SELECT EC_DOMAIN.ID,"",DOMAIN_ALIAS,STATE,COALESCE(KNOWN_URLS, 0)
+                        FROM EC_DOMAIN 
+                        INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID 
+                        GROUP BY EC_DOMAIN.ID 
+                    """;
+        }
 
         getDomains(query, consumer);
     }
 
 
     public void getPeripheralDomains(Consumer<RankingDomainData> consumer) {
+        // This is not relevant for this variant of pagerank since it is bidirectional
     }
 
 }

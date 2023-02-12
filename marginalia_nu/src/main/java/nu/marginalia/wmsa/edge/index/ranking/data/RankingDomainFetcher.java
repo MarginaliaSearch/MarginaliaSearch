@@ -1,6 +1,7 @@
 package nu.marginalia.wmsa.edge.index.ranking.data;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.wmsa.edge.dbcommon.EdgeDomainBlacklistImpl;
 import nu.marginalia.wmsa.edge.model.crawl.EdgeDomainIndexingState;
@@ -11,6 +12,7 @@ import java.sql.SQLException;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 
+@Singleton
 public class RankingDomainFetcher {
     protected final HikariDataSource dataSource;
     protected final EdgeDomainBlacklistImpl blacklist;
