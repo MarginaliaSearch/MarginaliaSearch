@@ -88,7 +88,7 @@ public class EdgeIndexSearchSetsService {
     private void updateDomainRankings() {
         var spr = new StandardPageRank(similarityDomains, rankingSettings.retro.toArray(String[]::new));
 
-        var ranks = spr.pageRankWithPeripheralNodes(spr.size() / 2, () -> new RankingResultHashMapAccumulator(100_000));
+        var ranks = spr.pageRankWithPeripheralNodes(Math.min(100_000, spr.size() / 2), () -> new RankingResultHashMapAccumulator(100_000));
         synchronized (this) {
             domainRankings = new DomainRankings(ranks);
         }
@@ -97,7 +97,7 @@ public class EdgeIndexSearchSetsService {
     @SneakyThrows
     public void updateRetroDomainsSet() {
         var spr = new StandardPageRank(similarityDomains, rankingSettings.retro.toArray(String[]::new));
-        var data = spr.pageRankWithPeripheralNodes(spr.size() / 2, RankingResultBitSetAccumulator::new);
+        var data = spr.pageRankWithPeripheralNodes(Math.min(50_000, spr.size()), RankingResultBitSetAccumulator::new);
 
         synchronized (this) {
             retroSet = new RankingSearchSet(SearchSetIdentifier.RETRO, retroSet.source, data);
@@ -109,7 +109,7 @@ public class EdgeIndexSearchSetsService {
     public void updateSmallWebDomainsSet() {
         var rpr = new ReversePageRank(similarityDomains,  rankingSettings.small.toArray(String[]::new));
         rpr.setMaxKnownUrls(750);
-        var data = rpr.pageRankWithPeripheralNodes(rpr.size(), RankingResultBitSetAccumulator::new);
+        var data = rpr.pageRankWithPeripheralNodes(Math.min(10_000, rpr.size()), RankingResultBitSetAccumulator::new);
 
         synchronized (this) {
             smallWebSet = new RankingSearchSet(SearchSetIdentifier.SMALLWEB, smallWebSet.source, data);
@@ -120,7 +120,7 @@ public class EdgeIndexSearchSetsService {
     @SneakyThrows
     public void updateAcademiaDomainsSet() {
         var spr =  new StandardPageRank(similarityDomains,  rankingSettings.academia.toArray(String[]::new));
-        var data = spr.pageRankWithPeripheralNodes(spr.size()/2, RankingResultBitSetAccumulator::new);
+        var data = spr.pageRankWithPeripheralNodes(Math.min(15_000, spr.size()/2), RankingResultBitSetAccumulator::new);
 
         synchronized (this) {
             academiaSet = new RankingSearchSet(SearchSetIdentifier.ACADEMIA, academiaSet.source, data);
