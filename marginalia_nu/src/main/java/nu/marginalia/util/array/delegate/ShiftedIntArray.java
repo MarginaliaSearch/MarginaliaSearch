@@ -2,6 +2,7 @@ package nu.marginalia.util.array.delegate;
 
 import com.upserve.uppend.blobs.NativeIO;
 import nu.marginalia.util.array.IntArray;
+import nu.marginalia.util.array.algo.SortingContext;
 import nu.marginalia.util.array.buffer.IntQueryBuffer;
 import nu.marginalia.util.array.functional.IntBinaryIOOperation;
 import nu.marginalia.util.array.functional.IntIOTransformer;
@@ -62,6 +63,16 @@ public class ShiftedIntArray implements IntArray {
     }
 
     @Override
+    public int getAndIncrement(long pos) {
+        return delegate.getAndIncrement(shift + pos);
+    }
+
+    @Override
+    public void fill(long start, long end, int val) {
+        delegate.fill(start + shift, end + shift, val);
+    }
+
+    @Override
     public long size() {
         return size;
     }
@@ -96,6 +107,12 @@ public class ShiftedIntArray implements IntArray {
     public boolean isSorted(long start, long end) {
         return delegate.isSorted(shift + start, shift + end);
     }
+
+
+    public void sortLargeSpan(SortingContext ctx, long start, long end) throws IOException {
+        delegate.sortLargeSpan(ctx, start, end);
+    }
+
 
     public long search(int key) {
         if (size < 128) {

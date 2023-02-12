@@ -3,7 +3,7 @@ package nu.marginalia.wmsa.edge.index.svc;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.InvalidProtocolBufferException;
-import nu.marginalia.util.dict.DictionaryHashMap;
+import nu.marginalia.util.dict.OffHeapDictionaryHashMap;
 import nu.marginalia.wmsa.edge.converting.interpreter.instruction.DocumentKeywords;
 import nu.marginalia.wmsa.edge.converting.interpreter.instruction.KeywordListChunker;
 import nu.marginalia.wmsa.edge.index.IndexServicesFactory;
@@ -51,7 +51,7 @@ public class EdgeIndexLexiconService {
 
         final int wordId = lr.get(word);
 
-        if (DictionaryHashMap.NO_VALUE == wordId) {
+        if (OffHeapDictionaryHashMap.NO_VALUE == wordId) {
             response.status(404);
             return "";
         }
@@ -110,7 +110,7 @@ public class EdgeIndexLexiconService {
             String word = words[i];
 
             long id = keywordLexicon.getOrInsert(word);
-            if (id != DictionaryHashMap.NO_VALUE) {
+            if (id != OffHeapDictionaryHashMap.NO_VALUE) {
                 ids[putIdx++] = id;
                 ids[putIdx++] = meta[i];
             }

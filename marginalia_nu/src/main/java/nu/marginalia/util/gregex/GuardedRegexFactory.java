@@ -19,9 +19,6 @@ public class GuardedRegexFactory {
     public static GuardedRegex contains(String substring, @Language("RegExp") String regex) {
         return new GuardedRegexContains(substring, regex);
     }
-    public static GuardedRegex minLength(int minLength, @Language("RegExp") String regex) {
-        return new GuardedRegexMinLength(minLength, regex);
-    }
 
     private record GuardedRegexContains(String contains, Pattern pattern) implements GuardedRegex {
         public GuardedRegexContains(String contains, String pattern) {
@@ -30,15 +27,6 @@ public class GuardedRegexFactory {
 
         public boolean test(String s) {
             return s.contains(contains) && pattern.matcher(s).find();
-        }
-    }
-    private record GuardedRegexMinLength(int minLength, Pattern pattern) implements GuardedRegex {
-        public GuardedRegexMinLength(int minLength, String pattern) {
-            this(minLength, Pattern.compile(pattern));
-        }
-
-        public boolean test(String s) {
-            return s.length() >= minLength && pattern.matcher(s).find();
         }
     }
     private record GuardedRegexStartsWith(String start,  Pattern pattern) implements GuardedRegex {

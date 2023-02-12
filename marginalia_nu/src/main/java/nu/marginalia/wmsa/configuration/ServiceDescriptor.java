@@ -13,7 +13,6 @@ import nu.marginalia.wmsa.memex.MemexMain;
 import nu.marginalia.wmsa.podcasts.PodcastScraperMain;
 import nu.marginalia.wmsa.renderer.RendererMain;
 import nu.marginalia.wmsa.resource_store.ResourceStoreMain;
-import nu.marginalia.wmsa.smhi.scraper.SmhiScraperMain;
 import org.apache.logging.log4j.core.lookup.MainMapLookup;
 
 import java.util.Map;
@@ -26,7 +25,6 @@ public enum ServiceDescriptor {
     AUTH("auth", 5003, AuthMain.class),
     API("api", 5004, ApiMain.class),
 
-    SMHI_SCRAPER("smhi-scraper",5012, SmhiScraperMain.class),
     PODCST_SCRAPER("podcast-scraper", 5013, PodcastScraperMain.class),
 
     EDGE_INDEX("edge-index", 5021, EdgeIndexMain.class),

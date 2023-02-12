@@ -2,6 +2,7 @@ package nu.marginalia.util.array.page;
 
 import com.upserve.uppend.blobs.NativeIO;
 import nu.marginalia.util.array.LongArray;
+import nu.marginalia.util.array.algo.SortingContext;
 import nu.marginalia.util.array.buffer.LongQueryBuffer;
 import nu.marginalia.util.array.delegate.ReferenceImplLongArrayDelegate;
 import nu.marginalia.util.array.functional.LongBinaryIOOperation;
@@ -116,6 +117,11 @@ public class PagingLongArray extends AbstractPagingArray<LongArrayPage, LongBuff
         else {
             defaults.get(start, end, buffer);
         }
+    }
+
+    @Override
+    public long getAndIncrement(long pos) {
+        return pages[partitioningScheme.getPage(pos)].getAndIncrement(partitioningScheme.getOffset(pos));
     }
 
     @Override
@@ -437,6 +443,33 @@ public class PagingLongArray extends AbstractPagingArray<LongArrayPage, LongBuff
         }
         else {
             defaults.mergeSortN(sz, start, end, tempDir);
+        }
+    }
+    public void sortLargeSpanN(SortingContext ctx, int sz, long start, long end) throws IOException {
+        if (partitioningScheme.isSamePage(start, end)) {
+            int sOff = partitioningScheme.getOffset(start);
+            int eOff = partitioningScheme.getEndOffset(start, end);
+
+            if (eOff > sOff) {
+                pages[partitioningScheme.getPage(start)].sortLargeSpanN(ctx, sz, sOff, eOff);
+            }
+        }
+        else {
+            defaults.sortLargeSpanN(ctx, sz, start, end);
+        }
+    }
+
+    public void sortLargeSpan(SortingContext ctx, long start, long end) throws IOException {
+        if (partitioningScheme.isSamePage(start, end)) {
+            int sOff = partitioningScheme.getOffset(start);
+            int eOff = partitioningScheme.getEndOffset(start, end);
+
+            if (eOff > sOff) {
+                pages[partitioningScheme.getPage(start)].sortLargeSpan(ctx, sOff, eOff);
+            }
+        }
+        else {
+            defaults.sortLargeSpan(ctx, start, end);
         }
     }
 

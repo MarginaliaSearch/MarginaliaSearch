@@ -8,7 +8,8 @@ import java.util.Set;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-public record EdgePageDocumentsMetadata(int encSize,
+public record EdgePageDocumentsMetadata(int rank,
+                                        int encSize,
                                         int topology,
                                         int year,
                                         int sets,
@@ -16,9 +17,13 @@ public record EdgePageDocumentsMetadata(int encSize,
                                         byte flags) {
 
 
+    public static final long RANK_MASK = 0xFFL;
+    public static final int RANK_SHIFT = 48;
+
     public static final long ENCSIZE_MASK = 0xFFL;
-    public static final int ENCSIZE_SHIFT = 48;
+    public static final int ENCSIZE_SHIFT = 40;
     public static final int ENCSIZE_MULTIPLIER = 50;
+
     public static final long TOPOLOGY_MASK = 0xFFL;
 
     public static final int TOPOLOGY_SHIFT = 32;
@@ -39,7 +44,7 @@ public record EdgePageDocumentsMetadata(int encSize,
         this(defaultValue());
     }
     public EdgePageDocumentsMetadata(int topology, int year, int sets, int quality, EnumSet<EdgePageDocumentFlags> flags) {
-        this(0, topology, year, sets, quality, encodeFlags(flags));
+        this(0, 0, topology, year, sets, quality, encodeFlags(flags));
     }
 
     public EdgePageDocumentsMetadata withSize(int size) {
@@ -49,7 +54,7 @@ public record EdgePageDocumentsMetadata(int encSize,
 
         final int encSize = (int) Math.min(ENCSIZE_MASK, Math.max(1, size / ENCSIZE_MULTIPLIER));
 
-        return new EdgePageDocumentsMetadata(encSize, topology, year, sets, quality, flags);
+        return new EdgePageDocumentsMetadata(rank, encSize, topology, year, sets, quality, flags);
     }
 
     private static byte encodeFlags(Set<EdgePageDocumentFlags> flags) {
@@ -63,7 +68,8 @@ public record EdgePageDocumentsMetadata(int encSize,
     }
 
     public EdgePageDocumentsMetadata(long value) {
-        this(   (int) ((value >>> ENCSIZE_SHIFT) & ENCSIZE_MASK),
+        this(   (int) ((value >>> RANK_SHIFT) & RANK_MASK),
+                (int) ((value >>> ENCSIZE_SHIFT) & ENCSIZE_MASK),
                 (int) ((value >>> TOPOLOGY_SHIFT) & TOPOLOGY_MASK),
                 (int) ((value >>> YEAR_SHIFT) & YEAR_MASK),
                 (int) ((value >>> SETS_SHIFT) & SETS_MASK),
@@ -84,12 +90,13 @@ public record EdgePageDocumentsMetadata(int encSize,
         ret |= min(YEAR_MASK, max(0, year)) << YEAR_SHIFT;
         ret |= min(TOPOLOGY_MASK, max(0, topology)) << TOPOLOGY_SHIFT;
         ret |= min(ENCSIZE_MASK, max(0, encSize)) << ENCSIZE_SHIFT;
+        ret |= min(RANK_MASK, max(0, rank)) << RANK_SHIFT;
 
         return ret;
     }
 
     public boolean isEmpty() {
-        return encSize == 0 && topology == 0 && sets == 0 && quality == 0 && year == 0 && flags == 0;
+        return encSize == 0 && topology == 0 && sets == 0 && quality == 0 && year == 0 && flags == 0 && rank == 0;
     }
 
     public static int decodeQuality(long encoded) {
@@ -112,6 +119,12 @@ public record EdgePageDocumentsMetadata(int encSize,
         return ENCSIZE_MULTIPLIER * (int) ((encoded >>> ENCSIZE_SHIFT) & ENCSIZE_MASK);
     }
 
+    public static int decodeRank(long encoded) {
+        return  (int) ((encoded >>> RANK_SHIFT) & RANK_MASK);
+    }
 
+    public static long encodeRank(long encoded, int rank) {
+        return encoded | min(RANK_MASK, max(0, rank)) << RANK_SHIFT;
+    }
 
 }

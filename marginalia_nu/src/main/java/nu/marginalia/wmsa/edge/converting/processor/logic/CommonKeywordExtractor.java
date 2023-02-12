@@ -11,7 +11,7 @@ public class CommonKeywordExtractor {
 
     private static final int MIN_REQUIRED_DOCUMENTS = 25;
 
-    private static final int REQUIRED_TOTAL_COUNT_FOR_CONSIDERATION = 100;
+    private static final int REQUIRED_TOTAL_COUNT_FOR_CONSIDERATION = 15;
     private static final double QUALIFYING_PROPORTION_FOR_KEYWORD = .25;
 
     private static final int MAX_SITE_KEYWORDS_TO_EXTRACT = 5;

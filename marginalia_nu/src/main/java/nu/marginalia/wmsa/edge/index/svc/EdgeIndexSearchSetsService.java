@@ -2,20 +2,20 @@ package nu.marginalia.wmsa.edge.index.svc;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.zaxxer.hikari.HikariDataSource;
-import gnu.trove.list.TIntList;
-import gnu.trove.list.array.TIntArrayList;
 import lombok.SneakyThrows;
-import nu.marginalia.util.ranking.BetterReversePageRank;
-import nu.marginalia.util.ranking.BetterStandardPageRank;
-import nu.marginalia.util.ranking.RankingDomainFetcher;
+import nu.marginalia.wmsa.edge.index.ranking.ReversePageRank;
+import nu.marginalia.wmsa.edge.index.ranking.StandardPageRank;
+import nu.marginalia.wmsa.edge.index.ranking.accumulator.RankingResultHashMapAccumulator;
+import nu.marginalia.wmsa.edge.index.ranking.data.RankingDomainFetcher;
+import nu.marginalia.wmsa.edge.index.ranking.accumulator.RankingResultBitSetAccumulator;
 import nu.marginalia.wmsa.edge.index.IndexServicesFactory;
 import nu.marginalia.wmsa.edge.index.model.RankingSettings;
+import nu.marginalia.wmsa.edge.index.postings.DomainRankings;
+import nu.marginalia.wmsa.edge.index.ranking.data.RankingDomainFetcherForSimilarityData;
 import nu.marginalia.wmsa.edge.index.svc.searchset.RankingSearchSet;
 import nu.marginalia.wmsa.edge.index.svc.searchset.SearchSet;
 import nu.marginalia.wmsa.edge.index.svc.searchset.SearchSetAny;
 import nu.marginalia.wmsa.edge.index.svc.searchset.SearchSetIdentifier;
-import org.roaringbitmap.RoaringBitmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,137 +23,47 @@ import java.io.IOException;
 
 @Singleton
 public class EdgeIndexSearchSetsService {
-    private final HikariDataSource dataSource;
-    private RankingDomainFetcher rankingDomains;
-    private final RankingSettings rankingSettings;
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final RankingDomainFetcher rankingDomains;
+    private final RankingDomainFetcher similarityDomains;
+    private final RankingSettings rankingSettings;
 
-    private final SearchSet anySet = new SearchSetAny();
+
+    // Below are binary indices that are used to constrain a search
     private volatile RankingSearchSet retroSet;
     private volatile RankingSearchSet smallWebSet;
     private volatile RankingSearchSet academiaSet;
+    private final SearchSet anySet = new SearchSetAny();
+
+    // The ranking value of the domains used in sorting the domains
+    private volatile DomainRankings domainRankings = new DomainRankings();
 
     @Inject
-    public EdgeIndexSearchSetsService(HikariDataSource dataSource,
-                                      RankingDomainFetcher rankingDomains,
+    public EdgeIndexSearchSetsService(RankingDomainFetcher rankingDomains,
+                                      RankingDomainFetcherForSimilarityData similarityDomains,
                                       RankingSettings rankingSettings,
                                       IndexServicesFactory servicesFactory) throws IOException {
-        this.dataSource = dataSource;
+
         this.rankingDomains = rankingDomains;
+
+        if (similarityDomains.hasData()) {
+            this.similarityDomains = similarityDomains;
+        }
+        else {
+            // on test environments the cosine similarity graph may not be present
+            logger.info("Domain similarity is not present, falling back on link graph");
+            this.similarityDomains = rankingDomains;
+        }
+
         this.rankingSettings = rankingSettings;
 
         smallWebSet = new RankingSearchSet(SearchSetIdentifier.SMALLWEB, servicesFactory.getSearchSetsBase().resolve("small-web.dat"));
         academiaSet = new RankingSearchSet(SearchSetIdentifier.ACADEMIA, servicesFactory.getSearchSetsBase().resolve("academia.dat"));
         retroSet = new RankingSearchSet(SearchSetIdentifier.RETRO, servicesFactory.getSearchSetsBase().resolve("retro.dat"));
-
-        logger.info("SearchIndexDao ranking settings = {}", rankingSettings);
     }
 
-    public void recalculateAll() {
-        updateAcademiaDomains();
-        updateRetroDomains();
-        updateSmallWebDomains();
-    }
-
-    @SneakyThrows
-    public RoaringBitmap goodUrls() {
-        RoaringBitmap domains = new RoaringBitmap();
-        RoaringBitmap urls = new RoaringBitmap();
-
-        try (var connection = dataSource.getConnection()) {
-            try (var stmt = connection.prepareStatement("SELECT ID FROM EC_DOMAIN WHERE DOMAIN_ALIAS IS NULL AND IS_ALIVE")) {
-                stmt.setFetchSize(10_000);
-                var rsp = stmt.executeQuery();
-                while (rsp.next()) {
-                    domains.add(rsp.getInt(1));
-                }
-            }
-
-            // For some reason, doing this "INNER JOIN" in Java is significantly faster than doing it in SQL
-            try (var stmt = connection.prepareStatement("SELECT ID,DOMAIN_ID FROM EC_URL WHERE VISITED AND EC_URL.STATE='OK'")) {
-                stmt.setFetchSize(10_000);
-                var rsp = stmt.executeQuery();
-                while (rsp.next()) {
-                    if (domains.contains(rsp.getInt(2))) {
-                        urls.add(rsp.getInt(1));
-                    }
-                }
-            }
-
-        }
-
-        return urls;
-    }
-
-    @SneakyThrows
-    public void updateRetroDomains() {
-        var spr = new BetterStandardPageRank(rankingDomains,rankingSettings.retro.toArray(String[]::new));
-        var data = spr.pageRankWithPeripheralNodes(spr.size() / 2);
-
-        synchronized (this) {
-            retroSet = new RankingSearchSet(SearchSetIdentifier.RETRO, retroSet.source, data);
-            retroSet.write();
-        }
-    }
-
-    @SneakyThrows
-    public void updateSmallWebDomains() {
-        var rpr = new BetterReversePageRank(rankingDomains,  rankingSettings.small.toArray(String[]::new));
-        rpr.setMaxKnownUrls(750);
-        var data = rpr.pageRankWithPeripheralNodes(rpr.size());
-
-        synchronized (this) {
-            smallWebSet = new RankingSearchSet(SearchSetIdentifier.SMALLWEB, smallWebSet.source, data);
-            smallWebSet.write();
-        }
-    }
-
-    @SneakyThrows
-    public void updateAcademiaDomains() {
-        var spr =  new BetterStandardPageRank(rankingDomains,  rankingSettings.academia.toArray(String[]::new));
-        var data = spr.pageRankWithPeripheralNodes(spr.size()/2);
-
-        synchronized (this) {
-            academiaSet = new RankingSearchSet(SearchSetIdentifier.ACADEMIA, academiaSet.source, data);
-            academiaSet.write();
-        }
-    }
-
-    @SneakyThrows
-    public TIntList getStandardDomains() {
-        TIntArrayList results = new TIntArrayList();
-
-        try (var connection = dataSource.getConnection();
-             var stmt = connection.prepareStatement(
-            """
-            SELECT ID FROM EC_DOMAIN 
-            WHERE INDEXED>0 
-            AND STATE='ACTIVE' 
-            AND DOMAIN_ALIAS IS NULL 
-            ORDER BY ID ASC
-            """);
-        ) {
-            var rs = stmt.executeQuery();
-            while (rs.next()) {
-                results.add(rs.getInt(1));
-            }
-        }
-        return results;
-
-    }
-
-    @SneakyThrows
-    public TIntList getSpecialDomains() {
-        TIntArrayList results = new TIntArrayList();
-        try (var connection = dataSource.getConnection();
-             var stmt = connection.prepareStatement("SELECT ID FROM EC_DOMAIN WHERE STATE='SPECIAL'")
-        ) {
-            var rs = stmt.executeQuery();
-            while (rs.next()) {
-                results.add(rs.getInt(1));
-            }
-        }
-        return results;
+    public DomainRankings getDomainRankings() {
+        return domainRankings;
     }
 
     public SearchSet getSearchSetByName(SearchSetIdentifier searchSetIdentifier) {
@@ -166,5 +76,55 @@ public class EdgeIndexSearchSetsService {
             case ACADEMIA -> academiaSet;
             case SMALLWEB -> smallWebSet;
         };
+    }
+
+    public void recalculateAll() {
+        updateAcademiaDomainsSet();
+        updateRetroDomainsSet();
+        updateSmallWebDomainsSet();
+        updateDomainRankings();
+    }
+
+    private void updateDomainRankings() {
+        var spr = new StandardPageRank(similarityDomains, rankingSettings.retro.toArray(String[]::new));
+
+        var ranks = spr.pageRankWithPeripheralNodes(spr.size() / 2, () -> new RankingResultHashMapAccumulator(100_000));
+        synchronized (this) {
+            domainRankings = new DomainRankings(ranks);
+        }
+    }
+
+    @SneakyThrows
+    public void updateRetroDomainsSet() {
+        var spr = new StandardPageRank(similarityDomains, rankingSettings.retro.toArray(String[]::new));
+        var data = spr.pageRankWithPeripheralNodes(spr.size() / 2, RankingResultBitSetAccumulator::new);
+
+        synchronized (this) {
+            retroSet = new RankingSearchSet(SearchSetIdentifier.RETRO, retroSet.source, data);
+            retroSet.write();
+        }
+    }
+
+    @SneakyThrows
+    public void updateSmallWebDomainsSet() {
+        var rpr = new ReversePageRank(similarityDomains,  rankingSettings.small.toArray(String[]::new));
+        rpr.setMaxKnownUrls(750);
+        var data = rpr.pageRankWithPeripheralNodes(rpr.size(), RankingResultBitSetAccumulator::new);
+
+        synchronized (this) {
+            smallWebSet = new RankingSearchSet(SearchSetIdentifier.SMALLWEB, smallWebSet.source, data);
+            smallWebSet.write();
+        }
+    }
+
+    @SneakyThrows
+    public void updateAcademiaDomainsSet() {
+        var spr =  new StandardPageRank(similarityDomains,  rankingSettings.academia.toArray(String[]::new));
+        var data = spr.pageRankWithPeripheralNodes(spr.size()/2, RankingResultBitSetAccumulator::new);
+
+        synchronized (this) {
+            academiaSet = new RankingSearchSet(SearchSetIdentifier.ACADEMIA, academiaSet.source, data);
+            academiaSet.write();
+        }
     }
 }

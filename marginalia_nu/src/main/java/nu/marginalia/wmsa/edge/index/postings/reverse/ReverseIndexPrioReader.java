@@ -47,18 +47,6 @@ public class ReverseIndexPrioReader {
         return new ReverseIndexEntrySource(createReaderNew(offset), ReverseIndexEntrySourceBehavior.DO_PREFER);
     }
 
-    public int numDocuments(int wordId) {
-        if (wordId < 0)
-            return 0;
-
-        long offset = words.get(wordId);
-
-        if (offset < 0)
-            return 0;
-
-        return createReaderNew(offset).numEntries();
-    }
-
     private BTreeReader createReaderNew(long offset) {
         return new BTreeReader(documents, ReverseIndexParameters.bTreeContext, offset);
     }

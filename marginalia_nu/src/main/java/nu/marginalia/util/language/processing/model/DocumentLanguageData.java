@@ -2,12 +2,13 @@ package nu.marginalia.util.language.processing.model;
 
 import gnu.trove.map.hash.TObjectIntHashMap;
 import lombok.AllArgsConstructor;
+import nu.marginalia.util.language.processing.sentence.SentenceExtractor;
 
 import java.util.Arrays;
 import java.util.stream.Stream;
 
 /**
- * @see nu.marginalia.util.language.processing.SentenceExtractor
+ * @see SentenceExtractor
  */
 @AllArgsConstructor
 public class DocumentLanguageData {

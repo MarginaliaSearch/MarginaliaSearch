@@ -7,6 +7,7 @@ import crawlercommons.robots.SimpleRobotRulesParser;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.ToString;
+import nu.marginalia.util.bigstring.BigString;
 import nu.marginalia.wmsa.edge.crawling.model.CrawledDocument;
 import nu.marginalia.wmsa.edge.crawling.model.CrawlerDocumentStatus;
 import nu.marginalia.wmsa.edge.crawling.retreival.logic.ContentTypeLogic;
@@ -271,7 +272,7 @@ public class HttpFetcher {
                 .canonicalUrl(canonical)
                 .httpStatus(rsp.code())
                 .url(responseUrl.toString())
-                .documentBody(strData)
+                .documentBody(BigString.encode(strData))
                 .build();
     }
 
@@ -325,7 +326,7 @@ public class HttpFetcher {
 
     private SimpleRobotRules parseRobotsTxt(CrawledDocument doc) {
         return robotsParser.parseContent(doc.url,
-                doc.documentBody.getBytes(StandardCharsets.UTF_8),
+                doc.documentBody.getBytes(),
                 doc.contentType,
                 userAgent);
     }

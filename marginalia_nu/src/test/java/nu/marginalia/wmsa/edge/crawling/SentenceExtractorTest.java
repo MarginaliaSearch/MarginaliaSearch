@@ -6,15 +6,18 @@ import nu.marginalia.util.language.WordPatterns;
 import nu.marginalia.util.language.conf.LanguageModels;
 import nu.marginalia.util.language.processing.DocumentKeywordExtractor;
 import nu.marginalia.util.language.processing.KeywordExtractor;
-import nu.marginalia.util.language.processing.SentenceExtractor;
+import nu.marginalia.util.language.processing.sentence.SentenceExtractor;
 import nu.marginalia.util.language.processing.model.KeywordMetadata;
 import nu.marginalia.util.language.processing.model.WordRep;
 import nu.marginalia.util.language.processing.model.WordSpan;
 import nu.marginalia.util.language.processing.model.tag.WordSeparator;
 import nu.marginalia.wmsa.configuration.WmsaHome;
 import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
+import nu.marginalia.wmsa.edge.index.model.EdgePageWordFlags;
+import nu.marginalia.wmsa.edge.index.model.EdgePageWordMetadata;
 import nu.marginalia.wmsa.edge.integration.wikipedia.WikipediaReader;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -26,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 
 @Tag("slow")
 class SentenceExtractorTest {
@@ -38,7 +42,6 @@ class SentenceExtractorTest {
 
         newSe = new SentenceExtractor(lm);
         legacySe = new SentenceExtractor(lm);
-        legacySe.setLegacyMode(true);
     }
 
 
@@ -83,7 +86,7 @@ class SentenceExtractorTest {
             var dld = se.extractSentences(Jsoup.parse(Files.readString(file.toPath())));
             Map<String, Integer> counts = new HashMap<>();
             for (var sentence : dld.sentences) {
-                for (WordSpan kw : keywordExtractor.getNames(sentence)) {
+                for (WordSpan kw : keywordExtractor.getProperNames(sentence)) {
                     if (kw.end + 2 >= sentence.length()) {
                         continue;
                     }
@@ -145,7 +148,22 @@ class SentenceExtractorTest {
         for (var file : Objects.requireNonNull(data.toFile().listFiles())) {
             var newResult = newSe.extractSentences(Jsoup.parse(Files.readString(file.toPath())));
             var newRes = documentKeywordExtractor.extractKeywords(newResult, new KeywordMetadata());
-            System.out.println(newRes);
+
+            var terms = IntStream.range(0, newRes.size()).mapToObj(i -> Pair.of(newRes.words.get(i), new EdgePageWordMetadata(newRes.metadata.get(i))))
+                            .sorted(Comparator.comparing(e -> -e.getValue().tfIdf()))
+                            .limit(100)
+                            .map(Pair::getKey)
+                            .toArray(String[]::new);
+            System.out.println(Arrays.toString(terms));
+
+            var terms2 = IntStream.range(0, newRes.size()).mapToObj(i -> Pair.of(newRes.words.get(i), new EdgePageWordMetadata(newRes.metadata.get(i))))
+                    .sorted(Comparator.comparing(e -> -e.getValue().tfIdf()))
+                    .filter(e -> e.getValue().hasFlag(EdgePageWordFlags.Subjects))
+                    .limit(100)
+                    .map(Pair::getKey)
+                    .toArray(String[]::new);
+            System.out.println(Arrays.toString(terms2));
+            System.out.println("--");
         }
         System.out.println(System.currentTimeMillis() - st);
 

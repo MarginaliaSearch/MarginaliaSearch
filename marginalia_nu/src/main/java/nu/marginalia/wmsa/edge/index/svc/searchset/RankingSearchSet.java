@@ -9,21 +9,37 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
+/** A serializable bit map of domains
+ *
+ * @see SearchSetIdentifier
+ *
+ * */
 public class RankingSearchSet implements SearchSet {
 
     private final RoaringBitmap set;
     public final SearchSetIdentifier identifier;
     public final Path source;
 
+    public RankingSearchSet(SearchSetIdentifier identifier, Path source, RoaringBitmap set) {
+        this.identifier = identifier;
+        this.source = source;
+        this.set = set;
+    }
+
     public RankingSearchSet(SearchSetIdentifier identifier, Path source) throws IOException {
         this.identifier = identifier;
         this.source = source;
-        set = new RoaringBitmap();
 
         if (!Files.exists(source)) {
-            return;
+            set = new RoaringBitmap();
         }
+        else {
+            set = load(source);
+        }
+    }
 
+    private static RoaringBitmap load(Path source) throws IOException {
+        var set = new RoaringBitmap();
         try (var ds = new DataInputStream(Files.newInputStream(source, StandardOpenOption.READ))) {
             for (;;) {
                 try {
@@ -32,12 +48,7 @@ public class RankingSearchSet implements SearchSet {
                 catch (IOException ex) { break; }
             }
         }
-    }
-
-    public RankingSearchSet(SearchSetIdentifier identifier, Path source, RoaringBitmap set) {
-        this.identifier = identifier;
-        this.source = source;
-        this.set = set;
+        return set;
     }
 
     @Override
@@ -46,7 +57,11 @@ public class RankingSearchSet implements SearchSet {
     }
 
     public void write() throws IOException {
-        try (var ds = new DataOutputStream(Files.newOutputStream(source, StandardOpenOption.WRITE,  StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING))) {
+        try (var ds = new DataOutputStream(Files.newOutputStream(source,
+                StandardOpenOption.WRITE,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING)))
+        {
             for (var iter = set.getIntIterator(); iter.hasNext();) {
                 ds.writeInt(iter.next());
             }

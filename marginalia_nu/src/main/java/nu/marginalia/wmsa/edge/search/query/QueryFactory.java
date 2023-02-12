@@ -6,6 +6,7 @@ import nu.marginalia.util.language.WordPatterns;
 import nu.marginalia.util.language.conf.LanguageModels;
 import nu.marginalia.wmsa.edge.assistant.dict.NGramBloomFilter;
 import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
+import nu.marginalia.wmsa.edge.index.model.QueryLimits;
 import nu.marginalia.wmsa.edge.index.model.QueryStrategy;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchSpecification;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchSubquery;
@@ -84,6 +85,8 @@ public class QueryFactory {
         List<String> problems = new ArrayList<>();
         String domain = null;
 
+        QueryStrategy queryStrategy = QueryStrategy.AUTO;
+
         var basicQuery = queryParser.parse(query);
 
         if (basicQuery.size() >= 8) {
@@ -94,6 +97,7 @@ public class QueryFactory {
         SpecificationLimit qualityLimit = profile.getQualityLimit();
         SpecificationLimit year = profile.getYearLimit();
         SpecificationLimit size = profile.getSizeLimit();
+        SpecificationLimit rank = SpecificationLimit.none();
 
         for (Token t : basicQuery) {
             if (t.type == TokenType.QUOT_TERM || t.type == TokenType.LITERAL_TERM) {
@@ -112,6 +116,12 @@ public class QueryFactory {
             }
             if (t.type == TokenType.SIZE_TERM) {
                 size = parseSpecificationLimit(t.str);
+            }
+            if (t.type == TokenType.RANK_TERM) {
+                rank = parseSpecificationLimit(t.str);
+            }
+            if (t.type == TokenType.QS_TERM) {
+                queryStrategy = parseQueryStrategy(t.str);
             }
         }
 
@@ -148,6 +158,8 @@ public class QueryFactory {
                     case QUALITY_TERM:
                     case YEAR_TERM:
                     case SIZE_TERM:
+                    case RANK_TERM:
+                    case QS_TERM:
                         break; //
                     case NEAR_TERM:
                         near = t.str;
@@ -179,24 +191,24 @@ public class QueryFactory {
             }
         }
 
+        int domainLimit;
+        if (domain != null) {
+            domainLimit = 100;
+        } else {
+            domainLimit = 2;
+        }
+
         EdgeSearchSpecification.EdgeSearchSpecificationBuilder specsBuilder = EdgeSearchSpecification.builder()
                 .subqueries(subqueries)
-                .limitTotal(100)
+                .queryLimits(new QueryLimits(domainLimit, 100, 250, 4096))
                 .humanQuery(query)
-                .timeoutMs(250)
-                .fetchSize(4096)
                 .quality(qualityLimit)
                 .year(year)
                 .size(size)
+                .rank(rank)
                 .domains(domains)
-                .queryStrategy(QueryStrategy.AUTO)
+                .queryStrategy(queryStrategy)
                 .searchSetIdentifier(profile.searchSetIdentifier);
-
-        if (domain != null) {
-            specsBuilder = specsBuilder.limitByDomain(100);
-        } else {
-            specsBuilder = specsBuilder.limitByDomain(2);
-        }
 
         EdgeSearchSpecification specs = specsBuilder.build();
 
@@ -210,15 +222,26 @@ public class QueryFactory {
         if (startChar == '=') {
             return SpecificationLimit.equals(val);
         }
-        else if (startChar == '<'){
+        else if (startChar == '<') {
             return SpecificationLimit.lessThan(val);
         }
-        else if (startChar == '>'){
+        else if (startChar == '>') {
             return SpecificationLimit.greaterThan(val);
         }
         else {
             return SpecificationLimit.none();
         }
+    }
+
+    private QueryStrategy parseQueryStrategy(String str) {
+        return switch (str.toUpperCase()) {
+            case "RF_TITLE" -> QueryStrategy.REQUIRE_FIELD_TITLE;
+            case "RF_SUBJECT" -> QueryStrategy.REQUIRE_FIELD_SUBJECT;
+            case "RF_SITE" -> QueryStrategy.REQUIRE_FIELD_SITE;
+            case "SENTENCE" -> QueryStrategy.SENTENCE;
+            case "TOPIC" -> QueryStrategy.TOPIC;
+            default -> QueryStrategy.AUTO;
+        };
     }
 
     private String normalizeDomainName(String str) {

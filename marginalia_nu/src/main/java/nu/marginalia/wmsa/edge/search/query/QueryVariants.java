@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.ToString;
 import nu.marginalia.util.language.conf.LanguageModels;
 import nu.marginalia.util.language.processing.KeywordExtractor;
-import nu.marginalia.util.language.processing.SentenceExtractor;
+import nu.marginalia.util.language.processing.sentence.SentenceExtractor;
 import nu.marginalia.util.language.processing.model.DocumentSentence;
 import nu.marginalia.util.language.processing.model.WordSpan;
 import nu.marginalia.wmsa.edge.assistant.dict.NGramBloomFilter;
@@ -25,12 +25,12 @@ public class QueryVariants {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final KeywordExtractor keywordExtractor;
-    private final SentenceExtractor sentenceExtractor;
     private final TermFrequencyDict dict;
     private final PorterStemmer ps = new PorterStemmer();
 
     private final NGramBloomFilter nGramBloomFilter;
     private final EnglishDictionary englishDictionary;
+    private final ThreadLocal<SentenceExtractor> sentenceExtractor;
 
     @Inject
     public QueryVariants(LanguageModels lm,
@@ -40,7 +40,7 @@ public class QueryVariants {
         this.nGramBloomFilter = nGramBloomFilter;
         this.englishDictionary = englishDictionary;
         this.keywordExtractor = new KeywordExtractor();
-        this.sentenceExtractor = new SentenceExtractor(lm);
+        this.sentenceExtractor = ThreadLocal.withInitial(() -> new SentenceExtractor(lm));
         this.dict = dict;
     }
 
@@ -78,10 +78,8 @@ public class QueryVariants {
 
         final TreeMap<Integer, List<WordSpan>> byStart = new TreeMap<>();
 
-        logger.debug("Q: {}", query);
-        logger.debug("QAS: {}", joinedQuery);
-
-        var sentence = sentenceExtractor.extractSentence(joinedQuery.joinedQuery);
+        var se = sentenceExtractor.get();
+        var sentence = se.extractSentence(joinedQuery.joinedQuery);
 
         for (int i = 0; i < sentence.posTags.length; i++) {
             if (sentence.posTags[i].startsWith("N") || sentence.posTags[i].startsWith("V")) {

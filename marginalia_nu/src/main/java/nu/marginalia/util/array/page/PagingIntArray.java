@@ -2,6 +2,7 @@ package nu.marginalia.util.array.page;
 
 import com.upserve.uppend.blobs.NativeIO;
 import nu.marginalia.util.array.IntArray;
+import nu.marginalia.util.array.algo.SortingContext;
 import nu.marginalia.util.array.buffer.IntQueryBuffer;
 import nu.marginalia.util.array.delegate.ReferenceImplIntArrayDelegate;
 import nu.marginalia.util.array.functional.IntBinaryIOOperation;
@@ -111,6 +112,11 @@ public class PagingIntArray extends AbstractPagingArray<IntArrayPage, IntBuffer>
         catch (IndexOutOfBoundsException ex) {
             throw new IndexOutOfBoundsException("Index out of bounds for " + pos + " => (" + page + ":" + offset + ")");
         }
+    }
+
+    @Override
+    public int getAndIncrement(long pos) {
+        return pages[partitioningScheme.getPage(pos)].getAndIncrement(partitioningScheme.getOffset(pos));
     }
 
     @Override
@@ -271,6 +277,22 @@ public class PagingIntArray extends AbstractPagingArray<IntArrayPage, IntBuffer>
             defaults.reject(buffer, boundary, searchStart, searchEnd);
         }
     }
+
+
+    public void sortLargeSpan(SortingContext ctx, long start, long end) throws IOException {
+        if (partitioningScheme.isSamePage(start, end)) {
+            int sOff = partitioningScheme.getOffset(start);
+            int eOff = partitioningScheme.getEndOffset(start, end);
+
+            if (eOff > sOff) {
+                pages[partitioningScheme.getPage(start)].sortLargeSpan(ctx, sOff, eOff);
+            }
+        }
+        else {
+            defaults.sortLargeSpan(ctx, start, end);
+        }
+    }
+
 
     public void write(Path fileName) throws IOException {
         try (var channel = (FileChannel) Files.newByteChannel(fileName, StandardOpenOption.CREATE, StandardOpenOption.WRITE)) {

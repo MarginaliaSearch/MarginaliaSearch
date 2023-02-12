@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import nu.marginalia.util.test.TestUtil;
 import nu.marginalia.wmsa.edge.index.IndexServicesFactory;
+import nu.marginalia.wmsa.edge.index.postings.DomainRankings;
 import nu.marginalia.wmsa.edge.index.svc.EdgeIndexSearchSetsService;
 import nu.marginalia.wmsa.edge.index.svc.searchset.SearchSetAny;
 import nu.marginalia.wmsa.edge.index.svc.searchset.SearchSetIdentifier;
@@ -39,15 +40,15 @@ public class EdgeIndexIntegrationTestModule extends AbstractModule {
     @Override
     protected void configure() {
 
+        System.setProperty("small-ram", "true");
         try {
             bind(IndexServicesFactory.class).toInstance(new IndexServicesFactory(Path.of("/tmp"),
-                    slowDir, fastDir,
-                    1L<<24,
-                    null
+                    slowDir, fastDir
             ));
 
             EdgeIndexSearchSetsService setsServiceMock = Mockito.mock(EdgeIndexSearchSetsService.class);
             when(setsServiceMock.getSearchSetByName(SearchSetIdentifier.NONE)).thenReturn(new SearchSetAny());
+            when(setsServiceMock.getDomainRankings()).thenReturn(new DomainRankings());
 
             bind(EdgeIndexSearchSetsService.class).toInstance(setsServiceMock);
 

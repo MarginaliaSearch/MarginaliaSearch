@@ -1,9 +1,11 @@
 package nu.marginalia.util.language.processing;
 
 import nu.marginalia.util.language.processing.model.DocumentLanguageData;
+import nu.marginalia.util.language.processing.model.KeywordMetadata;
 import nu.marginalia.util.language.processing.model.WordRep;
 import nu.marginalia.util.language.processing.model.WordSpan;
 import nu.marginalia.util.language.processing.model.tag.WordSeparator;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -23,13 +25,13 @@ public class SubjectCounter {
     // Greeks bearing gifts -> Greeks
     // Steve McQueen drove fast | cars -> Steve McQueen
 
-    public List<WordRep> count(DocumentLanguageData dld) {
+    public List<WordRep> count(KeywordMetadata keywordMetadata, DocumentLanguageData dld) {
 
         Map<String, Integer> counts = new HashMap<>();
         Map<String, Set<WordRep>> instances = new HashMap<>();
 
         for (var sentence : dld.sentences) {
-            for (WordSpan kw : keywordExtractor.getNames(sentence)) {
+            for (WordSpan kw : keywordExtractor.getNouns(sentence)) {
                 if (kw.end + 2 >= sentence.length()) {
                     continue;
                 }
@@ -46,18 +48,44 @@ public class SubjectCounter {
 
                     String stemmed = rep.stemmed;
 
-                    counts.merge(stemmed, -1, Integer::sum);
                     instances.computeIfAbsent(stemmed, s -> new HashSet<>()).add(rep);
                 }
             }
         }
 
-        int best = counts.values().stream().mapToInt(Integer::valueOf).min().orElse(0);
+        Map<String, Integer> scores = new HashMap<>(instances.size());
+        for (String stemmed : instances.keySet()) {
+            scores.put(stemmed, getTermTfIdf(keywordMetadata, stemmed));
+        }
 
-        return counts.entrySet().stream().sorted(Map.Entry.comparingByValue())
-                .filter(e -> e.getValue()<-2 && e.getValue()<=best*0.75)
+        return scores.entrySet().stream()
+                .filter(e -> e.getValue() >= 150)
                 .flatMap(e -> instances.getOrDefault(e.getKey(), Collections.emptySet()).stream())
                 .collect(Collectors.toList());
+    }
+
+    private int getTermTfIdf(KeywordMetadata keywordMetadata, String stemmed) {
+        if (stemmed.contains("_")) {
+            int sum = 0;
+            String[] parts = StringUtils.split(stemmed, '_');
+
+            if (parts.length == 0) {
+                return  0;
+            }
+
+            for (String part : parts) {
+                sum += getTermTfIdf(keywordMetadata, part);
+            }
+
+            return sum / parts.length;
+        }
+
+        var meta = keywordMetadata.wordsTfIdf().get(stemmed);
+        if (meta != null) {
+            return meta.tfIdfNormalized();
+        }
+
+        return 0;
     }
 
     private boolean isDetOrAdverbOrVerb(String posTag) {

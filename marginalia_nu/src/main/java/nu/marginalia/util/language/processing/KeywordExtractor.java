@@ -7,14 +7,12 @@ import nu.marginalia.util.language.processing.model.tag.WordSeparator;
 
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 public class KeywordExtractor {
 
-    public WordSpan[] getNames(DocumentSentence sentence) {
-        List<WordSpan> spans = new ArrayList<>(sentence.length());
+    public WordSpan[] getProperNames(DocumentSentence sentence) {
+        List<WordSpan> spans = new ArrayList<>(2 * sentence.length());
 
         for (int i = 0; i < sentence.length(); i++) {
             if (isProperNoun(i, sentence))
@@ -57,27 +55,73 @@ public class KeywordExtractor {
         return spans.toArray(WordSpan[]::new);
     }
 
-    public WordSpan[] getKeywordsFromSentence(DocumentSentence sentence) {
-        if (sentence.keywords != null) {
-            return sentence.keywords.get();
-        }
-        List<WordSpan> spans = new ArrayList<>(sentence.length());
 
-        Set<String> topWords = Collections.emptySet();
+    public WordSpan[] getNouns(DocumentSentence sentence) {
+        List<WordSpan> spans = new ArrayList<>(2 * sentence.length());
 
         for (int i = 0; i < sentence.length(); i++) {
-            if (isName(i, sentence, topWords) || isTopAdj(i, sentence, topWords))
+            if (isNoun(i, sentence))
                 spans.add(new WordSpan(i, i+1));
         }
 
         for (int i = 1; i < sentence.length(); i++) {
             if (sentence.separators[i-1] == WordSeparator.COMMA) { continue; }
 
-            if (isName(i, sentence, topWords)) {
-                if (isName(i - 1, sentence, topWords) || isTopAdj(i-1, sentence, topWords))
+            if (isNoun(i, sentence)
+                    && (isNoun(i-1, sentence)) || "JJ".equals(sentence.posTags[i-1])) {
+                spans.add(new WordSpan(i - 1, i + 1));
+            }
+        }
+
+        for (int i = 2; i < sentence.length(); i++) {
+            if (sentence.separators[i-2] == WordSeparator.COMMA) { continue; }
+            if (sentence.separators[i-1] == WordSeparator.COMMA) { i++; continue; }
+
+            if ((isNoun(i, sentence))
+                    && (isJoiner(sentence, i-1) || isNoun(i-1, sentence))
+                    && (isNoun(i-2, sentence)) || "JJ".equals(sentence.posTags[i-2]))
+                spans.add(new WordSpan(i-2, i+1));
+        }
+
+        for (int i = 3; i < sentence.length(); i++) {
+            if (sentence.separators[i-3] == WordSeparator.COMMA) { continue; }
+            if (sentence.separators[i-2] == WordSeparator.COMMA) { i++; continue; }
+            if (sentence.separators[i-1] == WordSeparator.COMMA) { i+=2; continue; }
+
+            if (isNoun(i, sentence) && (isNoun(i-3, sentence) || "JJ".equals(sentence.posTags[i-3]))) {
+                if (isNoun(i - 1, sentence) && isNoun(i - 2, sentence))
+                    spans.add(new WordSpan(i-3, i+1));
+                else if (isJoiner(sentence, i-2) && sentence.posTags[i-1].equals("DT"))
+                    spans.add(new WordSpan(i-3, i+1));
+                else if ((isJoiner(sentence, i-1) ||isNoun(i-1, sentence))
+                        && (isJoiner(sentence, i-2)||isNoun(i-2, sentence)))
+                    spans.add(new WordSpan(i-3, i+1));
+            }
+        }
+
+        return spans.toArray(WordSpan[]::new);
+    }
+
+
+    public WordSpan[] getKeywordsFromSentence(DocumentSentence sentence) {
+        if (sentence.keywords != null) {
+            return sentence.keywords.get();
+        }
+        List<WordSpan> spans = new ArrayList<>(2 * sentence.length());
+
+        for (int i = 0; i < sentence.length(); i++) {
+            if (isName(i, sentence) || isTopAdj(i, sentence))
+                spans.add(new WordSpan(i, i+1));
+        }
+
+        for (int i = 1; i < sentence.length(); i++) {
+            if (sentence.separators[i-1] == WordSeparator.COMMA) { continue; }
+
+            if (isName(i, sentence)) {
+                if (isName(i - 1, sentence) || isTopAdj(i-1, sentence))
                     spans.add(new WordSpan(i - 1, i + 1));
             }
-            if (sentence.posTags[i].equals("CD") &&  isName(i-1, sentence, topWords)) {
+            if (sentence.posTags[i].equals("CD") &&  isName(i-1, sentence)) {
                 spans.add(new WordSpan(i - 1, i + 1));
             }
         }
@@ -86,16 +130,16 @@ public class KeywordExtractor {
             if (sentence.separators[i-1] == WordSeparator.COMMA) { i++; continue; }
             if (sentence.separators[i-2] == WordSeparator.COMMA) { continue; }
 
-            if (isName(i, sentence, topWords)) {
-                if ((isName(i-1, sentence, topWords) || isTopAdj(i-1, sentence, topWords))
-                        && (isName(i-2, sentence, topWords) || isTopAdj(i-2, sentence, topWords))) {
+            if (isName(i, sentence)) {
+                if ((isName(i-1, sentence) || isTopAdj(i-1, sentence))
+                        && (isName(i-2, sentence) || isTopAdj(i-2, sentence))) {
                     spans.add(new WordSpan(i - 2, i + 1));
                 }
                 else if ((isProperNoun(i-1, sentence) || isJoiner(sentence, i-1)) && isProperNoun(i-2, sentence)) {
                     spans.add(new WordSpan(i - 2, i + 1));
                 }
             }
-            else if (sentence.posTags[i].equals("CD") && isName(i-1, sentence, topWords) && isName(i-2, sentence, topWords)) {
+            else if (sentence.posTags[i].equals("CD") && isName(i-1, sentence) && isName(i-2, sentence)) {
                 spans.add(new WordSpan(i - 2, i + 1));
             }
         }
@@ -105,10 +149,10 @@ public class KeywordExtractor {
             if (sentence.separators[i-2] == WordSeparator.COMMA) { i++; continue; }
             if (sentence.separators[i-3] == WordSeparator.COMMA) { continue; }
 
-            if (isName(i, sentence, topWords) &&
-                    (isName(i-1, sentence, topWords) || isTopAdj(i-1, sentence, topWords)) &&
-                    (isName(i-2, sentence, topWords) || isTopAdj(i-2, sentence, topWords)) &&
-                    (isName(i-3, sentence, topWords) || isTopAdj(i-3, sentence, topWords))) {
+            if (isName(i, sentence) &&
+                    (isName(i-1, sentence) || isTopAdj(i-1, sentence)) &&
+                    (isName(i-2, sentence) || isTopAdj(i-2, sentence)) &&
+                    (isName(i-3, sentence) || isTopAdj(i-3, sentence))) {
                 spans.add(new WordSpan(i - 3, i + 1));
             }
             else if (isProperNoun(i, sentence) && isProperNoun(i-3, sentence)) {
@@ -134,7 +178,9 @@ public class KeywordExtractor {
     public boolean isProperNoun(int i, DocumentSentence sent) {
         return "NNP".equals(sent.posTags[i]) || "NNPS".equals(sent.posTags[i]);
     }
-
+    public boolean isNoun(int i, DocumentSentence sent) {
+        return sent.posTags[i].startsWith("NN");
+    }
     public boolean isJoiner(DocumentSentence sent, int i) {
         if(sent.posTags[i].equals("IN")) {
             return true;
@@ -183,21 +229,13 @@ public class KeywordExtractor {
         return true;
     }
 
-    private boolean isName(int i, DocumentSentence sentence, Set<String> topWords) {
-        if (!topWords.isEmpty()) {
-            String posTag = sentence.posTags[i];
-            String word = sentence.stemmedWords[i];
-
-            return ((topWords.contains(word)) && (posTag.startsWith("N") || "VBN".equals(posTag)) && !sentence.isStopWord(i));
-        }
-
-
+    private boolean isName(int i, DocumentSentence sentence) {
         String posTag = sentence.posTags[i];
 
-        return (posTag.startsWith("N") || "VBN".equals(posTag)) && !sentence.isStopWord(i);
+        return (posTag.startsWith("N") || "VBG".equals(posTag)|| "VBN".equals(posTag)) && !sentence.isStopWord(i);
     }
 
-    private boolean isTopAdj(int i, DocumentSentence sentence, Set<String> topWords) {
+    private boolean isTopAdj(int i, DocumentSentence sentence) {
         String posTag = sentence.posTags[i];
 
         return (posTag.startsWith("JJ") || posTag.startsWith("R") || posTag.startsWith("VBG"));

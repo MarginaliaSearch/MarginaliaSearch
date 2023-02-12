@@ -2,7 +2,7 @@ package nu.marginalia.wmsa.edge.integration.stackoverflow;
 
 import com.google.inject.Inject;
 import nu.marginalia.util.language.processing.DocumentKeywordExtractor;
-import nu.marginalia.util.language.processing.SentenceExtractor;
+import nu.marginalia.util.language.processing.sentence.SentenceExtractor;
 import nu.marginalia.util.language.processing.model.KeywordMetadata;
 import nu.marginalia.wmsa.edge.converting.processor.logic.LinkParser;
 import nu.marginalia.wmsa.edge.integration.model.BasicDocumentData;

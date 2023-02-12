@@ -24,7 +24,7 @@ public class UrlBlocklist {
         patterns.add(s -> s.contains("-download-free"));
 
         // long base64-strings in URLs are typically git hashes or the like, rarely worth crawling
-        patterns.add(GuardedRegexFactory.minLength(48, ".*/[^/]*[a-f0-9]{32,}(/|$)"));
+        patterns.add(this::hashTest);
 
         // link farms &c
         patterns.add(GuardedRegexFactory.contains("/download", "/download(-([A-Za-z]+|[0-9]+)){4,}\\.(htm|html|php)$"));
@@ -36,6 +36,33 @@ public class UrlBlocklist {
         patterns.add(GuardedRegexFactory.contains("/720p", "720p.*/[A-Za-z]+(-([A-Za-z]+|[0-9]+)){3,}((-[0-9]+)?/|\\.(php|htm|html))$"));
         patterns.add(GuardedRegexFactory.contains("/node","/node/.*/[a-z]+(-[a-z0-9]+)+.htm$"));
 
+    }
+
+    public boolean hashTest(String path) {
+        // look for strings might be a git hash (i.e. long hexadecimal strings)
+        // there is no good guard for a regular expression for this so hand-rolling this
+        // is necessary
+
+        int runLength = 0;
+        int minLength = 32;
+
+        if (path.length() <= minLength + 2)
+            return false;
+
+        for (int i = 0; i < path.length(); i++) {
+            int c = path.charAt(i);
+
+            if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')) {
+                runLength++;
+            }
+            else if (runLength >= minLength) {
+                return true;
+            }
+            else {
+                runLength = 0;
+            }
+        }
+        return runLength >= minLength;
     }
 
     public boolean isUrlBlocked(EdgeUrl url) {

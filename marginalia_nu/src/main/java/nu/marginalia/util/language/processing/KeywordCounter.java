@@ -43,8 +43,8 @@ public class KeywordCounter {
 
                 counts.mergeInt(rep.stemmed, 1, Integer::sum);
 
-                var instanceSet = instances.computeIfAbsent(rep.stemmed, k -> new HashSet<>(500));
-                if (instanceSet.size() < 250) {
+                var instanceSet = instances.computeIfAbsent(rep.stemmed, k -> new HashSet<>(16));
+                if (instanceSet.size() < 4) {
                     instanceSet.add(rep);
                 }
             }

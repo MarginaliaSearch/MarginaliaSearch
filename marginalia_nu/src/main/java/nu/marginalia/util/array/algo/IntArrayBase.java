@@ -18,22 +18,14 @@ public interface IntArrayBase extends BulkTransferArray<IntBuffer> {
         }
     }
 
-    default void increment(long pos) {
-        set(pos, get(pos) + 1);
-    }
-
     default void swap(long pos1, long pos2) {
         int tmp = get(pos1);
         set(pos1, get(pos2));
         set(pos2, tmp);
     }
 
-    default void swapn(int n, long pos1, long pos2) {
-        for (int i = 0; i < n; i++) {
-            int tmp = get(pos1+i);
-            set(pos1+i, get(pos2+i));
-            set(pos2+i, tmp);
-        }
+    default void increment(long pos) {
+        set(pos, get(pos) + 1);
     }
 
     default int getAndIncrement(long pos) {
@@ -47,6 +39,7 @@ public interface IntArrayBase extends BulkTransferArray<IntBuffer> {
             set(start+i, buffer.get(i + bufferStart));
         }
     }
+
     default void get(long start, long end, IntBuffer buffer, int bufferStart) {
         for (int i = 0; i < (end-start); i++) {
             buffer.put(i + bufferStart, get(start + i));

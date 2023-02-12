@@ -35,9 +35,7 @@ public class DocumentKeywordExtractor {
 
         List<WordRep> titleWords = extractTitleWords(documentLanguageData);
         List<WordRep> wordsNamesAll = nameCounter.count(documentLanguageData, 2);
-        List<WordRep> subjects = subjectCounter.count(documentLanguageData);
-
-        tfIdfCounter.countHisto(keywordMetadata, documentLanguageData);
+        List<WordRep> subjects = subjectCounter.count(keywordMetadata, documentLanguageData);
 
         for (var rep : titleWords) keywordMetadata.titleKeywords().add(rep.stemmed);
         for (var rep : wordsNamesAll) keywordMetadata.namesKeywords().add(rep.stemmed);
@@ -59,10 +57,11 @@ public class DocumentKeywordExtractor {
 
         getWordPositions(keywordMetadata, documentLanguageData);
 
-        List<WordRep> wordsNamesAll = nameCounter.count(documentLanguageData, 2);
-        List<WordRep> subjects = subjectCounter.count(documentLanguageData);
-
         List<WordRep> wordsTfIdf = tfIdfCounter.countHisto(keywordMetadata, documentLanguageData);
+
+        List<WordRep> wordsNamesAll = nameCounter.count(documentLanguageData, 2);
+        List<WordRep> subjects = subjectCounter.count(keywordMetadata, documentLanguageData);
+
 
         for (var rep : titleWords) keywordMetadata.titleKeywords().add(rep.stemmed);
         for (var rep : wordsNamesAll) keywordMetadata.namesKeywords().add(rep.stemmed);
@@ -94,7 +93,7 @@ public class DocumentKeywordExtractor {
                 ret.merge(word.stemmed(), posBit, this::bitwiseOr);
             }
 
-            for (var span : keywordExtractor.getNames(sent)) {
+            for (var span : keywordExtractor.getProperNames(sent)) {
                 ret.merge(sent.constructStemmedWordFromSpan(span), posBit, this::bitwiseOr);
             }
         }
@@ -108,7 +107,7 @@ public class DocumentKeywordExtractor {
                 ret.merge(word.stemmed(), posBit, this::bitwiseOr);
             }
 
-            for (var span : keywordExtractor.getNames(sent)) {
+            for (var span : keywordExtractor.getProperNames(sent)) {
                 ret.merge(sent.constructStemmedWordFromSpan(span), posBit, this::bitwiseOr);
             }
 
@@ -155,16 +154,16 @@ public class DocumentKeywordExtractor {
                 if (!word.isStopWord()) {
                     String w = AsciiFlattener.flattenUnicode(word.wordLowerCase());
                     if (WordPatterns.singleWordQualitiesPredicate.test(w)) {
-                        wordsBuilder.add(w, metadata.forWord(flagsTemplate, word.stemmed()));
+                        wordsBuilder.add(w, metadata.getMetadataForWord(flagsTemplate, word.stemmed()));
                     }
                 }
             }
 
-            for (var names : keywordExtractor.getNames(sent)) {
+            for (var names : keywordExtractor.getProperNames(sent)) {
                 var rep = new WordRep(sent, names);
                 String w = AsciiFlattener.flattenUnicode(rep.word);
 
-                wordsBuilder.add(w, metadata.forWord(flagsTemplate, rep.stemmed));
+                wordsBuilder.add(w, metadata.getMetadataForWord(flagsTemplate, rep.stemmed));
             }
         }
 
@@ -218,7 +217,7 @@ public class DocumentKeywordExtractor {
                 continue;
             }
 
-            wordsBuilder.add(flatWord, metadata.forWord(metadata.wordFlagsTemplate(), word.stemmed) | additionalMeta);
+            wordsBuilder.add(flatWord, metadata.getMetadataForWord(metadata.wordFlagsTemplate(), word.stemmed) | additionalMeta);
         }
     }
 

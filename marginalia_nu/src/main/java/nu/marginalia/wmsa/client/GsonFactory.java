@@ -2,6 +2,7 @@ package nu.marginalia.wmsa.client;
 
 import com.google.gson.*;
 import marcono1234.gson.recordadapter.RecordTypeAdapterFactory;
+import nu.marginalia.util.bigstring.BigString;
 import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import nu.marginalia.wmsa.edge.model.id.EdgeId;
@@ -24,6 +25,8 @@ public class GsonFactory {
                 .registerTypeAdapter(EdgeDomain.class, (JsonDeserializer<EdgeDomain>) (json, typeOfT, context) -> new EdgeDomain(json.getAsString()))
                 .registerTypeAdapter(EdgeId.class, (JsonDeserializer<EdgeId<?>>) (json, typeOfT, context) -> new EdgeId<>(json.getAsInt()))
                 .registerTypeAdapter(EdgeId.class, (JsonSerializer<EdgeId<?>>) (src, typeOfSrc, context) -> new JsonPrimitive(src.id()))
+                .registerTypeAdapter(BigString.class, (JsonDeserializer<BigString>) (json, typeOfT, context) -> BigString.encode(json.getAsString()))
+                .registerTypeAdapter(BigString.class, (JsonSerializer<BigString>) (src, typeOfT, context) -> new JsonPrimitive(src.decode()))
                 .serializeSpecialFloatingPointValues()
                 .create();
     }

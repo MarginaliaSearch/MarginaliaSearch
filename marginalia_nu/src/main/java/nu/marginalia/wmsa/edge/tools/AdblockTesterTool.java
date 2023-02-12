@@ -48,7 +48,7 @@ public class AdblockTesterTool {
 
 
     private static void processDocument(CrawledDocument doc) {
-        Document parsedDocument = Jsoup.parse(doc.documentBody);
+        Document parsedDocument = Jsoup.parse(doc.documentBody.decode());
 
         if (simulator.hasAds(parsedDocument)) {
             System.out.println(doc.url);

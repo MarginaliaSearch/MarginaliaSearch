@@ -53,6 +53,11 @@ public class ReverseIndexReader {
     }
 
     public EntrySource documents(int wordId, ReverseIndexEntrySourceBehavior behavior) {
+        if (null == words) {
+            logger.warn("Reverse index is not ready, dropping query");
+            return new EmptyEntrySource();
+        }
+
         if (wordId < 0 || wordId >= words.size()) return new EmptyEntrySource();
 
         long offset = words.get(wordId);

@@ -3,10 +3,11 @@ package nu.marginalia.wmsa.edge.index.postings.reverse;
 import lombok.SneakyThrows;
 import nu.marginalia.util.array.LongArray;
 import nu.marginalia.util.array.buffer.LongQueryBuffer;
-import nu.marginalia.util.dict.DictionaryHashMap;
+import nu.marginalia.util.dict.OffHeapDictionaryHashMap;
 import nu.marginalia.util.test.TestUtil;
 import nu.marginalia.wmsa.edge.index.lexicon.KeywordLexicon;
 import nu.marginalia.wmsa.edge.index.lexicon.journal.KeywordLexiconJournal;
+import nu.marginalia.wmsa.edge.index.postings.DomainRankings;
 import nu.marginalia.wmsa.edge.index.postings.journal.model.SearchIndexJournalEntry;
 import nu.marginalia.wmsa.edge.index.postings.journal.model.SearchIndexJournalEntryHeader;
 import nu.marginalia.wmsa.edge.index.postings.journal.reader.SearchIndexJournalReaderSingleFile;
@@ -50,7 +51,7 @@ class ReverseIndexConverterTest2 {
         dictionaryFile = Files.createTempFile("tmp", ".dict");
         dictionaryFile.toFile().deleteOnExit();
 
-        keywordLexicon = new KeywordLexicon(new KeywordLexiconJournal(dictionaryFile.toFile()), new DictionaryHashMap(1L<<18));
+        keywordLexicon = new KeywordLexicon(new KeywordLexiconJournal(dictionaryFile.toFile()), new OffHeapDictionaryHashMap(1L<<18));
         keywordLexicon.getOrInsert("0");
 
         indexFile = Files.createTempFile("tmp", ".idx");
@@ -114,7 +115,7 @@ class ReverseIndexConverterTest2 {
 
         Path tmpDir = Path.of("/tmp");
 
-        new ReverseIndexConverter(tmpDir, new SearchIndexJournalReaderSingleFile(LongArray.mmapRead(indexFile)), wordsFile, docsFile).convert();
+        new ReverseIndexConverter(tmpDir, new SearchIndexJournalReaderSingleFile(LongArray.mmapRead(indexFile)), new DomainRankings(), wordsFile, docsFile).convert();
 
         var reverseReader = new ReverseIndexReader(wordsFile, docsFile);
 
@@ -139,7 +140,7 @@ class ReverseIndexConverterTest2 {
 
         Path tmpDir = Path.of("/tmp");
 
-        new ReverseIndexConverter(tmpDir, new SearchIndexJournalReaderSingleFile(LongArray.mmapRead(indexFile), null, ReverseIndexPriorityParameters::filterPriorityRecord), wordsFile, docsFile).convert();
+        new ReverseIndexConverter(tmpDir, new SearchIndexJournalReaderSingleFile(LongArray.mmapRead(indexFile), null, ReverseIndexPriorityParameters::filterPriorityRecord), new DomainRankings(), wordsFile, docsFile).convert();
 
         var reverseReader = new ReverseIndexReader(wordsFile, docsFile);
 

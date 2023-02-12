@@ -103,8 +103,10 @@ public class RDRPOSTagger
 		var initialTags = InitialTagger.EnInitTagger4Sentence(FREQDICT, sentence);
 
 		String[] tags = new String[initialTags.length];
+		FWObject object = new FWObject(true);
+
 		for (int i = 0; i < initialTags.length; i++) {
-			FWObject object = Utils.getObject(sentence, initialTags, initialTags.length, i);
+			Utils.getObject(object, sentence, initialTags, initialTags.length, i);
 			tags[i] = findFiredNode(object).conclusion;
 		}
 

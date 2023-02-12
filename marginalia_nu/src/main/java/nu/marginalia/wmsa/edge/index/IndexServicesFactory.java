@@ -5,11 +5,11 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import lombok.SneakyThrows;
 import nu.marginalia.util.array.LongArray;
-import nu.marginalia.util.dict.DictionaryHashMap;
-import nu.marginalia.wmsa.edge.dbcommon.EdgeDomainBlacklist;
+import nu.marginalia.util.dict.DictionaryMap;
 import nu.marginalia.wmsa.edge.index.lexicon.KeywordLexicon;
 import nu.marginalia.wmsa.edge.index.lexicon.KeywordLexiconReadOnlyView;
 import nu.marginalia.wmsa.edge.index.lexicon.journal.KeywordLexiconJournal;
+import nu.marginalia.wmsa.edge.index.postings.DomainRankings;
 import nu.marginalia.wmsa.edge.index.postings.SearchIndex;
 import nu.marginalia.wmsa.edge.index.postings.SearchIndexReader;
 import nu.marginalia.wmsa.edge.index.postings.forward.ForwardIndexConverter;
@@ -20,6 +20,7 @@ import nu.marginalia.wmsa.edge.index.postings.reverse.ReverseIndexConverter;
 import nu.marginalia.wmsa.edge.index.postings.reverse.ReverseIndexPrioReader;
 import nu.marginalia.wmsa.edge.index.postings.reverse.ReverseIndexPriorityParameters;
 import nu.marginalia.wmsa.edge.index.postings.reverse.ReverseIndexReader;
+import nu.marginalia.wmsa.edge.index.svc.EdgeIndexSearchSetsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +34,6 @@ import java.util.concurrent.Callable;
 @Singleton
 public class IndexServicesFactory {
     private final Path tmpFileDir;
-    private final EdgeDomainBlacklist domainBlacklist;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -48,7 +48,6 @@ public class IndexServicesFactory {
     private final PartitionedDataFile revPrioIndexWords;
 
     private volatile static KeywordLexicon keywordLexicon;
-    private final Long dictionaryHashMapSize;
 
     private final Path searchSetsBase;
 
@@ -59,14 +58,10 @@ public class IndexServicesFactory {
     public IndexServicesFactory(
             @Named("tmp-file-dir") Path tmpFileDir,
             @Named("partition-root-slow") Path partitionRootSlow,
-            @Named("partition-root-fast") Path partitionRootFast,
-            @Named("edge-dictionary-hash-map-size") Long dictionaryHashMapSize,
-            EdgeDomainBlacklist domainBlacklist
+            @Named("partition-root-fast") Path partitionRootFast
             ) throws IOException {
 
         this.tmpFileDir = tmpFileDir;
-        this.dictionaryHashMapSize = dictionaryHashMapSize;
-        this.domainBlacklist = domainBlacklist;
 
         this.writerIndexFile = new PartitionedDataFile(partitionRootSlow, "page-index.dat");
         this.keywordLexiconFile = new RootDataFile(partitionRootSlow, "dictionary.dat");
@@ -98,7 +93,7 @@ public class IndexServicesFactory {
     public KeywordLexicon getKeywordLexicon() {
         if (keywordLexicon == null) {
             final var journal = new KeywordLexiconJournal(keywordLexiconFile.get());
-            keywordLexicon = new KeywordLexicon(journal, new DictionaryHashMap(dictionaryHashMapSize));
+            keywordLexicon = new KeywordLexicon(journal, DictionaryMap.create());
         }
         return keywordLexicon;
     }
@@ -109,15 +104,15 @@ public class IndexServicesFactory {
 
     }
 
-    public void convertIndex() throws IOException {
-        convertForwardIndex();
-        convertFullReverseIndex();
-        convertPriorityReverseIndex();
+    public void convertIndex(DomainRankings domainRankings) throws IOException {
+        convertForwardIndex(domainRankings);
+        convertFullReverseIndex(domainRankings);
+        convertPriorityReverseIndex(domainRankings);
 
 
     }
 
-    private void convertFullReverseIndex() throws IOException {
+    private void convertFullReverseIndex(DomainRankings domainRankings) throws IOException {
 
         logger.info("Converting full reverse index");
 
@@ -125,6 +120,7 @@ public class IndexServicesFactory {
         var journalReader = new SearchIndexJournalReaderSingleFile(longArray);
         var converter = new ReverseIndexConverter(tmpFileDir,
                 journalReader,
+                domainRankings,
                 revIndexWords.get(NEXT_PART).toPath(),
                 revIndexDoc.get(NEXT_PART).toPath());
 
@@ -133,7 +129,7 @@ public class IndexServicesFactory {
         tryGc();
     }
 
-    private void convertPriorityReverseIndex() throws IOException {
+    private void convertPriorityReverseIndex(DomainRankings domainRankings) throws IOException {
 
         logger.info("Converting priority reverse index");
 
@@ -143,6 +139,7 @@ public class IndexServicesFactory {
 
         var converter = new ReverseIndexConverter(tmpFileDir,
                 journalReader,
+                domainRankings,
                 revPrioIndexWords.get(NEXT_PART).toPath(),
                 revPrioIndexDoc.get(NEXT_PART).toPath());
 
@@ -151,13 +148,14 @@ public class IndexServicesFactory {
         tryGc();
     }
 
-    private void convertForwardIndex() throws IOException {
+    private void convertForwardIndex(DomainRankings domainRankings) throws IOException {
         logger.info("Converting forward index data");
 
-        new ForwardIndexConverter(tmpFileDir,
+        new ForwardIndexConverter(
                 writerIndexFile.get(0),
                 fwdIndexDocId.get(NEXT_PART).toPath(),
-                fwdIndexDocData.get(NEXT_PART).toPath())
+                fwdIndexDocData.get(NEXT_PART).toPath(),
+                domainRankings)
                 .convert();
 
         tryGc();
@@ -215,8 +213,8 @@ public class IndexServicesFactory {
         }
     }
 
-    public SearchIndex createIndexBucket() {
-        return new SearchIndex(this, new EdgeIndexControl(this));
+    public SearchIndex createIndexBucket(EdgeIndexSearchSetsService searchSetsService) {
+        return new SearchIndex(this, new EdgeIndexControl(this, searchSetsService));
     }
 
     public SearchIndexReader getSearchIndexReader() throws IOException {

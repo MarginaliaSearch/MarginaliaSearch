@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.wmsa.configuration.server.Context;
 import nu.marginalia.wmsa.edge.index.client.EdgeIndexClient;
+import nu.marginalia.wmsa.edge.index.model.QueryLimits;
 import nu.marginalia.wmsa.edge.index.model.QueryStrategy;
 import nu.marginalia.wmsa.edge.model.search.*;
 import nu.marginalia.wmsa.edge.model.search.domain.SpecificationLimit;
@@ -47,11 +48,8 @@ public class EdgeSearchQueryIndexService {
                 .subqueries(sqs)
                 .domains(Collections.emptyList())
                 .searchSetIdentifier(profile.searchSetIdentifier)
-                .limitByDomain(limitPerDomain)
-                .limitTotal(limitTotal)
+                .queryLimits(new QueryLimits(limitPerDomain, limitTotal, 150, 2048))
                 .humanQuery("")
-                .timeoutMs(150)
-                .fetchSize(2048)
                 .year(SpecificationLimit.none())
                 .size(SpecificationLimit.none())
                 .quality(SpecificationLimit.none())
@@ -76,11 +74,13 @@ public class EdgeSearchQueryIndexService {
 
         resultList.sort(resultListComparator);
 
-        UrlDeduplicator deduplicator = new UrlDeduplicator(processedQuery.specs.limitByDomain);
-        List<EdgeUrlDetails> retList = new ArrayList<>(processedQuery.specs.limitTotal);
+        var limits = processedQuery.specs.queryLimits;
+
+        UrlDeduplicator deduplicator = new UrlDeduplicator(limits.resultsByDomain());
+        List<EdgeUrlDetails> retList = new ArrayList<>(limits.resultsTotal());
 
         for (var item : resultList) {
-            if (retList.size() >= processedQuery.specs.limitTotal)
+            if (retList.size() >= limits.resultsTotal())
                 break;
 
             if (!deduplicator.shouldRemove(item)) {

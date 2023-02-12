@@ -7,6 +7,8 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import nu.marginalia.wmsa.edge.index.model.EdgePageWordFlags;
 import nu.marginalia.wmsa.edge.index.model.EdgePageWordMetadata;
+import nu.marginalia.wmsa.edge.index.model.QueryStrategy;
+import nu.marginalia.wmsa.edge.index.query.IndexQueryParams;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchResultItem;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchResultKeywordScore;
 import nu.marginalia.wmsa.edge.model.search.EdgeSearchSubquery;
@@ -17,6 +19,7 @@ import java.util.Objects;
 public class IndexResultValuator {
     private final IndexMetadataService metadataService;
     private final List<List<String>> searchTermVariants;
+    private final IndexQueryParams queryParams;
     private final int[] termIdsAll;
 
     private final TLongHashSet resultsWithPriorityTerms;
@@ -24,9 +27,10 @@ public class IndexResultValuator {
     private final TObjectIntHashMap<String> termToId = new TObjectIntHashMap<>(10, 0.75f, -1);
     private final TermMetadata termMetadata;
 
-    public IndexResultValuator(SearchIndexControl indexes, TLongList results, List<EdgeSearchSubquery> subqueries) {
+    public IndexResultValuator(SearchIndexControl indexes, TLongList results, List<EdgeSearchSubquery> subqueries, IndexQueryParams queryParams) {
         this.metadataService = new IndexMetadataService(indexes);
         this.searchTermVariants = subqueries.stream().map(sq -> sq.searchTermsInclude).distinct().toList();
+        this.queryParams = queryParams;
 
         var lexiconReader = Objects.requireNonNull(indexes.getLexiconReader());
         IntArrayList termIdsList = new IntArrayList();
@@ -114,9 +118,14 @@ public class IndexResultValuator {
                     docMetadata,
                     resultsWithPriorityTerms.contains(searchResult.combinedId)
             );
+
             searchResult.scores.add(score);
 
             setScore += score.termValue();
+
+            if (!filterRequired(metadata, queryParams.queryStrategy())) {
+                setScore += 1000;
+            }
 
             if (termIdx == 0) {
                 setScore += score.documentValue();
@@ -130,6 +139,19 @@ public class IndexResultValuator {
         return setScore/setSize;
     }
 
+    private boolean filterRequired(long metadata, QueryStrategy queryStrategy) {
+        if (queryStrategy == QueryStrategy.REQUIRE_FIELD_SITE) {
+            return EdgePageWordFlags.Site.isPresent(metadata);
+        }
+        else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_SUBJECT) {
+            return EdgePageWordFlags.Subjects.isPresent(metadata);
+        }
+        else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_TITLE) {
+            return EdgePageWordFlags.Title.isPresent(metadata);
+        }
+        return true;
+    }
+
     private double calculateTermCoherencePenalty(int urlId, TObjectIntHashMap<String> termToId, List<String> termList) {
         long maskDirectGenerous = ~0;
         long maskDirectRaw = ~0;
@@ -138,6 +160,9 @@ public class IndexResultValuator {
         final int flagBitMask = EdgePageWordFlags.Title.asBit()
                               | EdgePageWordFlags.Subjects.asBit()
                               | EdgePageWordFlags.Synthetic.asBit();
+
+        int termCount = 0;
+        double tfIdfSum = 1.;
 
         for (String term : termList) {
             var meta = termMetadata.getTermMetadata(termToId.get(term), urlId);
@@ -156,18 +181,22 @@ public class IndexResultValuator {
                 maskDirectGenerous &= positions;
             }
 
+            termCount++;
+            tfIdfSum += EdgePageWordMetadata.decodeTfidf(meta);
         }
 
+        double avgTfIdf = termCount / tfIdfSum;
+
         if (maskAdjacent == 0) {
-            return 40;
+            return Math.max(-2, 40 - 0.5 * avgTfIdf);
         }
 
         if (maskDirectGenerous == 0) {
-            return 20;
+            return Math.max(-1, 20 - 0.3 *  avgTfIdf);
         }
 
         if (maskDirectRaw == 0) {
-            return 2;
+            return Math.max(-1, 15 - 0.2 *  avgTfIdf);
         }
 
         return Long.numberOfTrailingZeros(maskDirectGenerous)/5. - Long.bitCount(maskDirectGenerous);

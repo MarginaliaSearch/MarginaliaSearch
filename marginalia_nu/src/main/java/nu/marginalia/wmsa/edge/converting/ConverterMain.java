@@ -46,17 +46,12 @@ public class ConverterMain {
             InstructionsCompiler compiler,
             Gson gson
             ) throws Exception {
-
-        ;
-
-
-
         logger.info("Starting pipe");
 
         try (WorkLog processLog = plan.createProcessWorkLog();
              ConversionLog log = new ConversionLog(plan.process.getDir())) {
             instructionWriter = new LoadInstructionWriter(log, plan.process.getDir(), gson);
-            var pipe = new ParallelPipe<CrawledDomain, ProcessingInstructions>("Crawler", 20, 4, 2) {
+            var pipe = new ParallelPipe<CrawledDomain, ProcessingInstructions>("Crawler", 16, 4, 2) {
 
                 @Override
                 protected ProcessingInstructions onProcess(CrawledDomain domainData) {

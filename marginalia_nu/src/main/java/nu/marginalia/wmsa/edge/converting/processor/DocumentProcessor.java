@@ -7,7 +7,7 @@ import nu.marginalia.util.gregex.GuardedRegex;
 import nu.marginalia.util.gregex.GuardedRegexFactory;
 import nu.marginalia.util.language.LanguageFilter;
 import nu.marginalia.util.language.processing.DocumentKeywordExtractor;
-import nu.marginalia.util.language.processing.SentenceExtractor;
+import nu.marginalia.util.language.processing.sentence.SentenceExtractor;
 import nu.marginalia.util.language.processing.model.DocumentLanguageData;
 import nu.marginalia.util.language.processing.model.KeywordMetadata;
 import nu.marginalia.wmsa.edge.converting.model.DisqualifiedException;
@@ -178,11 +178,13 @@ public class DocumentProcessor {
     private DetailsWithWords createDetails(CrawledDomain crawledDomain, CrawledDocument crawledDocument)
             throws DisqualifiedException, URISyntaxException {
 
-        if (languageFilter.isBlockedUnicodeRange(crawledDocument.documentBody)) {
+        String documentBody = crawledDocument.documentBody.decode();
+
+        if (languageFilter.isBlockedUnicodeRange(documentBody)) {
             throw new DisqualifiedException(DisqualificationReason.LANGUAGE);
         }
 
-        Document doc = Jsoup.parse(crawledDocument.documentBody);
+        Document doc = Jsoup.parse(documentBody);
 
         if (AcceptableAds.hasAcceptableAdsTag(doc)) {
             // I've never encountered a website where this hasn't been a severe indicator

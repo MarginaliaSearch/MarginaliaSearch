@@ -206,7 +206,7 @@ public class CrawlerRetreiver {
 
             if (doc.documentBody != null) {
 
-                doc.documentBodyHash = createHash(doc.documentBody);
+                doc.documentBodyHash = createHash(doc.documentBody.decode());
 
                 Optional<Document> parsedDoc = parseDoc(doc);
                 EdgeUrl url = new EdgeUrl(doc.url);
@@ -251,7 +251,7 @@ public class CrawlerRetreiver {
     private Optional<Document> parseDoc(CrawledDocument doc) {
         if (doc.documentBody == null)
             return Optional.empty();
-        return Optional.of(Jsoup.parse(doc.documentBody));
+        return Optional.of(Jsoup.parse(doc.documentBody.decode()));
     }
 
     public boolean isSameDomain(EdgeUrl url) {

@@ -56,6 +56,9 @@
        <tr><td>year=2005</td><td>(beta) The document was ostensibly published in 2005</td></tr>
        <tr><td>year&lt;2005</td><td>(beta) The document was ostensibly published in or before 2005</td></tr>
 
+       <tr><td>rank&gt;50</td><td>(beta) The ranking of the website is at least 50 in a span of 1 - 255</td></tr>
+       <tr><td>year&lt;50</td><td>(beta) The ranking of the website is at most 50 in a span of 1 - 255</td></tr>
+
        <tr><td>format:html5</td><td>Filter documents using the HTML5 standard. This is typically modern websites.</td></tr>
        <tr><td>format:xhtml</td><td>Filter documents using the XHTML standard</td></tr>
        <tr><td>format:html123</td><td>Filter documents using the HTML standards 1, 2, and 3. This is typically very old websites. </td></tr>

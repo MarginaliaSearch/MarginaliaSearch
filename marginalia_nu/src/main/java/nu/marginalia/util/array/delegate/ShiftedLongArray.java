@@ -3,6 +3,7 @@ package nu.marginalia.util.array.delegate;
 import com.upserve.uppend.blobs.NativeIO;
 import nu.marginalia.util.array.LongArray;
 import nu.marginalia.util.array.algo.LongArraySearch;
+import nu.marginalia.util.array.algo.SortingContext;
 import nu.marginalia.util.array.buffer.LongQueryBuffer;
 import nu.marginalia.util.array.functional.LongBinaryIOOperation;
 import nu.marginalia.util.array.functional.LongIOTransformer;
@@ -63,6 +64,16 @@ public class ShiftedLongArray implements LongArray {
     }
 
     @Override
+    public long getAndIncrement(long pos) {
+        return delegate.getAndIncrement(shift + pos);
+    }
+
+    @Override
+    public void fill(long start, long end, long val) {
+        delegate.fill(start + shift, end + shift, val);
+    }
+
+    @Override
     public long size() {
         return size;
     }
@@ -104,6 +115,14 @@ public class ShiftedLongArray implements LongArray {
 
     public boolean isSortedN(int sz, long start, long end) {
         return delegate.isSortedN(sz, shift + start, shift + end);
+    }
+
+    public void sortLargeSpanN(SortingContext ctx, int sz, long start, long end) throws IOException {
+        delegate.sortLargeSpanN(ctx, sz, start, end);
+    }
+
+    public void sortLargeSpan(SortingContext ctx, long start, long end) throws IOException {
+        delegate.sortLargeSpan(ctx, start, end);
     }
 
     public long searchN(int sz, long key) {

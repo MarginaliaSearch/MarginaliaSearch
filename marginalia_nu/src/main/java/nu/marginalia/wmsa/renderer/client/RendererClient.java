@@ -11,8 +11,6 @@ import nu.marginalia.wmsa.podcasts.model.Podcast;
 import nu.marginalia.wmsa.podcasts.model.PodcastEpisode;
 import nu.marginalia.wmsa.podcasts.model.PodcastListing;
 import nu.marginalia.wmsa.podcasts.model.PodcastNewEpisodes;
-import nu.marginalia.wmsa.renderer.request.smhi.RenderSmhiIndexReq;
-import nu.marginalia.wmsa.renderer.request.smhi.RenderSmhiPrognosReq;
 
 import javax.inject.Inject;
 import java.util.concurrent.TimeUnit;
@@ -22,19 +20,6 @@ public class RendererClient extends AbstractDynamicClient{
     @Inject
     public RendererClient() {
         super(ServiceDescriptor.RENDERER);
-    }
-
-    @SneakyThrows
-    public Observable<HttpStatusCode> render(Context ctx, RenderSmhiPrognosReq req) {
-        return post(ctx, "/render/smhi/prognos", req)
-                .timeout(5, TimeUnit.SECONDS, Observable.error(new TimeoutException("RendererClient.renderSmhiPrognos()")));
-    }
-
-
-    @SneakyThrows
-    public Observable<HttpStatusCode> render(Context ctx, RenderSmhiIndexReq req) {
-        return post(ctx, "/render/smhi/index", req)
-                .timeout(5, TimeUnit.SECONDS, Observable.error(new TimeoutException("RendererClient.renderSmhiIndex()")));
     }
 
     @SneakyThrows

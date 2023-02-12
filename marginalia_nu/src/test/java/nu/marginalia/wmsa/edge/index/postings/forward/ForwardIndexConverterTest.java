@@ -2,10 +2,11 @@ package nu.marginalia.wmsa.edge.index.postings.forward;
 
 import lombok.SneakyThrows;
 import nu.marginalia.util.array.LongArray;
-import nu.marginalia.util.dict.DictionaryHashMap;
+import nu.marginalia.util.dict.OffHeapDictionaryHashMap;
 import nu.marginalia.util.test.TestUtil;
 import nu.marginalia.wmsa.edge.index.lexicon.KeywordLexicon;
 import nu.marginalia.wmsa.edge.index.lexicon.journal.KeywordLexiconJournal;
+import nu.marginalia.wmsa.edge.index.postings.DomainRankings;
 import nu.marginalia.wmsa.edge.index.postings.journal.model.SearchIndexJournalEntry;
 import nu.marginalia.wmsa.edge.index.postings.journal.model.SearchIndexJournalEntryHeader;
 import nu.marginalia.wmsa.edge.index.postings.journal.reader.SearchIndexJournalReaderSingleFile;
@@ -36,7 +37,6 @@ class ForwardIndexConverterTest {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     Path dataDir;
-    private Path wordsFile;
     private Path docsFileId;
     private Path docsFileData;
 
@@ -47,7 +47,7 @@ class ForwardIndexConverterTest {
         dictionaryFile = Files.createTempFile("tmp", ".dict");
         dictionaryFile.toFile().deleteOnExit();
 
-        keywordLexicon = new KeywordLexicon(new KeywordLexiconJournal(dictionaryFile.toFile()), new DictionaryHashMap(1L<<18));
+        keywordLexicon = new KeywordLexicon(new KeywordLexiconJournal(dictionaryFile.toFile()), new OffHeapDictionaryHashMap(1L<<18));
         keywordLexicon.getOrInsert("0");
 
         indexFile = Files.createTempFile("tmp", ".idx");
@@ -71,7 +71,6 @@ class ForwardIndexConverterTest {
 
         var reader = new SearchIndexJournalReaderSingleFile(LongArray.mmapRead(indexFile));
 
-        wordsFile = dataDir.resolve("words.dat");
         docsFileId = dataDir.resolve("docs-i.dat");
         docsFileData = dataDir.resolve("docs-d.dat");
     }
@@ -104,18 +103,15 @@ class ForwardIndexConverterTest {
     @Test
     void testForwardIndex() throws IOException {
 
-        Path tmpDir = Path.of("/tmp");
-
-        new ForwardIndexConverter(tmpDir, indexFile.toFile(), docsFileId, docsFileData).convert();
+        new ForwardIndexConverter(indexFile.toFile(), docsFileId, docsFileData, new DomainRankings()).convert();
 
         var forwardReader = new ForwardIndexReader(docsFileId, docsFileData);
 
         for (int i = 36; i < workSetSize; i++) {
-            assertEquals(i % 5, forwardReader.getDocMeta(i));
+            assertEquals(0x00FF000000000000L | (i % 5), forwardReader.getDocMeta(i));
             assertEquals(i/20, forwardReader.getDomainId(i));
         }
 
-        TestUtil.clearTempDir(dataDir);
     }
 
 

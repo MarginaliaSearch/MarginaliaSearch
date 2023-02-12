@@ -2,7 +2,7 @@ package nu.marginalia.wmsa.edge.search.query;
 
 import nu.marginalia.util.TestLanguageModels;
 import nu.marginalia.util.language.conf.LanguageModels;
-import nu.marginalia.util.language.processing.SentenceExtractor;
+import nu.marginalia.util.language.processing.sentence.SentenceExtractor;
 import nu.marginalia.wmsa.edge.assistant.dict.NGramBloomFilter;
 import nu.marginalia.wmsa.edge.assistant.dict.TermFrequencyDict;
 import org.junit.jupiter.api.BeforeAll;
