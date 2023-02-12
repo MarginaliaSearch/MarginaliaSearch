@@ -9,7 +9,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-/** A serializable bit map of domains */
+/** A serializable bit map of domains
+ *
+ * @see SearchSetIdentifier
+ *
+ * */
 public class RankingSearchSet implements SearchSet {
 
     private final RoaringBitmap set;
