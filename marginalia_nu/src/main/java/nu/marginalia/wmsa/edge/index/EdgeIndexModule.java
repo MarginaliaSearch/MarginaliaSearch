@@ -2,9 +2,8 @@ package nu.marginalia.wmsa.edge.index;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.name.Names;
 import nu.marginalia.wmsa.configuration.WmsaHome;
-import nu.marginalia.wmsa.edge.index.model.RankingSettings;
+import nu.marginalia.wmsa.edge.index.config.RankingSettings;
 
 import java.nio.file.Path;
 

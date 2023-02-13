@@ -1,4 +1,4 @@
-package nu.marginalia.wmsa.edge.index.model;
+package nu.marginalia.wmsa.edge.index.config;
 
 import lombok.ToString;
 import org.yaml.snakeyaml.Yaml;
@@ -10,10 +10,11 @@ import java.util.List;
 
 @ToString
 public class RankingSettings {
-    public List<String> small;
-    public List<String> retro;
-    public List<String> standard;
-    public List<String> academia;
+    public RankingSettingsEntry small;
+    public RankingSettingsEntry retro;
+    public RankingSettingsEntry standard;
+    public RankingSettingsEntry academia;
+    public RankingSettingsEntry ranking;
 
     public static RankingSettings from(Path dir) {
         try {

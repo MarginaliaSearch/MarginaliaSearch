@@ -9,7 +9,7 @@ import nu.marginalia.wmsa.edge.index.ranking.accumulator.RankingResultHashMapAcc
 import nu.marginalia.wmsa.edge.index.ranking.data.RankingDomainFetcher;
 import nu.marginalia.wmsa.edge.index.ranking.accumulator.RankingResultBitSetAccumulator;
 import nu.marginalia.wmsa.edge.index.IndexServicesFactory;
-import nu.marginalia.wmsa.edge.index.model.RankingSettings;
+import nu.marginalia.wmsa.edge.index.config.RankingSettings;
 import nu.marginalia.wmsa.edge.index.postings.DomainRankings;
 import nu.marginalia.wmsa.edge.index.ranking.data.RankingDomainFetcherForSimilarityData;
 import nu.marginalia.wmsa.edge.index.svc.searchset.RankingSearchSet;
@@ -86,9 +86,11 @@ public class EdgeIndexSearchSetsService {
     }
 
     private void updateDomainRankings() {
-        var spr = new StandardPageRank(similarityDomains, rankingSettings.retro.toArray(String[]::new));
+        var entry = rankingSettings.academia;
 
-        var ranks = spr.pageRankWithPeripheralNodes(Math.min(100_000, spr.size() / 2), () -> new RankingResultHashMapAccumulator(100_000));
+        var spr = new StandardPageRank(similarityDomains, entry.domains.toArray(String[]::new));
+        var ranks = spr.pageRankWithPeripheralNodes(entry.max, () -> new RankingResultHashMapAccumulator(100_000));
+
         synchronized (this) {
             domainRankings = new DomainRankings(ranks);
         }
@@ -96,8 +98,10 @@ public class EdgeIndexSearchSetsService {
 
     @SneakyThrows
     public void updateRetroDomainsSet() {
-        var spr = new StandardPageRank(similarityDomains, rankingSettings.retro.toArray(String[]::new));
-        var data = spr.pageRankWithPeripheralNodes(Math.min(50_000, spr.size()), RankingResultBitSetAccumulator::new);
+        var entry = rankingSettings.retro;
+
+        var spr = new StandardPageRank(similarityDomains, entry.domains.toArray(String[]::new));
+        var data = spr.pageRankWithPeripheralNodes(entry.max, RankingResultBitSetAccumulator::new);
 
         synchronized (this) {
             retroSet = new RankingSearchSet(SearchSetIdentifier.RETRO, retroSet.source, data);
@@ -107,9 +111,11 @@ public class EdgeIndexSearchSetsService {
 
     @SneakyThrows
     public void updateSmallWebDomainsSet() {
-        var rpr = new ReversePageRank(similarityDomains,  rankingSettings.small.toArray(String[]::new));
+        var entry = rankingSettings.small;
+
+        var rpr = new ReversePageRank(similarityDomains,  entry.domains.toArray(String[]::new));
         rpr.setMaxKnownUrls(750);
-        var data = rpr.pageRankWithPeripheralNodes(Math.min(10_000, rpr.size()), RankingResultBitSetAccumulator::new);
+        var data = rpr.pageRankWithPeripheralNodes(entry.max, RankingResultBitSetAccumulator::new);
 
         synchronized (this) {
             smallWebSet = new RankingSearchSet(SearchSetIdentifier.SMALLWEB, smallWebSet.source, data);
@@ -119,8 +125,10 @@ public class EdgeIndexSearchSetsService {
 
     @SneakyThrows
     public void updateAcademiaDomainsSet() {
-        var spr =  new StandardPageRank(similarityDomains,  rankingSettings.academia.toArray(String[]::new));
-        var data = spr.pageRankWithPeripheralNodes(Math.min(15_000, spr.size()/2), RankingResultBitSetAccumulator::new);
+        var entry = rankingSettings.academia;
+
+        var spr =  new StandardPageRank(similarityDomains,  entry.domains.toArray(String[]::new));
+        var data = spr.pageRankWithPeripheralNodes(entry.max, RankingResultBitSetAccumulator::new);
 
         synchronized (this) {
             academiaSet = new RankingSearchSet(SearchSetIdentifier.ACADEMIA, academiaSet.source, data);
