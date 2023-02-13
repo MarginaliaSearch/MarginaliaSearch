@@ -86,7 +86,7 @@ public class EdgeIndexSearchSetsService {
     }
 
     private void updateDomainRankings() {
-        var entry = rankingSettings.academia;
+        var entry = rankingSettings.ranking;
 
         var spr = new StandardPageRank(similarityDomains, entry.domains.toArray(String[]::new));
         var ranks = spr.pageRankWithPeripheralNodes(entry.max, () -> new RankingResultHashMapAccumulator(100_000));
