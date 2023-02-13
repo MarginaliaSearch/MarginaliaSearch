@@ -2,6 +2,7 @@ package nu.marginalia.wmsa.edge.crawling;
 
 import com.github.luben.zstd.ZstdOutputStream;
 import com.google.gson.Gson;
+import lombok.SneakyThrows;
 import nu.marginalia.wmsa.client.GsonFactory;
 import nu.marginalia.wmsa.edge.crawling.model.SerializableCrawlData;
 import org.slf4j.Logger;
@@ -36,7 +37,8 @@ public class CrawledDomainWriter implements AutoCloseable {
         return outputFile;
     }
 
-    public void accept(SerializableCrawlData data) throws IOException {
+    @SneakyThrows
+    public void accept(SerializableCrawlData data) {
         writer.write(data.getSerialIdentifier());
         writer.write('\n');
         gson.toJson(data, writer);

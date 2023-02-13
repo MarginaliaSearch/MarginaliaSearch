@@ -127,7 +127,11 @@ public class HttpFetcher {
             return new FetchResult(FetchResultState.OK, requestDomain);
         }
         catch (Exception ex) {
-            logger.debug("Error during fetching {}[{}]", ex.getClass().getSimpleName(), ex.getMessage());
+            if (url.proto.equalsIgnoreCase("http") && "/".equals(url.path)) {
+                return probeDomain(new EdgeUrl("https", url.domain, url.port, url.path, url.param));
+            }
+
+            logger.info("Error during fetching {}[{}]", ex.getClass().getSimpleName(), ex.getMessage());
             return new FetchResult(FetchResultState.ERROR, url.domain);
         }
     }

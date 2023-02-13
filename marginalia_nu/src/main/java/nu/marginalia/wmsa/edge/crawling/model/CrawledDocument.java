@@ -1,10 +1,12 @@
 package nu.marginalia.wmsa.edge.crawling.model;
 
 import lombok.Builder;
+import lombok.ToString;
 import nu.marginalia.util.bigstring.BigString;
 import nu.marginalia.util.bigstring.CompressedBigString;
 
 @Builder
+@ToString
 public class CrawledDocument implements SerializableCrawlData {
     public String crawlId;
 

@@ -9,6 +9,7 @@ import nu.marginalia.wmsa.edge.crawling.blocklist.GeoIpBlocklist;
 import nu.marginalia.wmsa.edge.crawling.blocklist.IpBlockList;
 import nu.marginalia.wmsa.edge.crawling.blocklist.UrlBlocklist;
 import nu.marginalia.wmsa.edge.crawling.model.*;
+import nu.marginalia.wmsa.edge.model.EdgeDomain;
 import nu.marginalia.wmsa.edge.model.EdgeUrl;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -23,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -43,7 +45,7 @@ public class CrawlerRetreiver {
     private final int depth;
     private final String id;
     private final String domain;
-    private final CrawledDomainWriter crawledDomainWriter;
+    private final Consumer<SerializableCrawlData> crawledDomainWriter;
 
     private static final LinkParser linkParser = new LinkParser();
     private static final Logger logger = LoggerFactory.getLogger(CrawlerRetreiver.class);
@@ -62,7 +64,7 @@ public class CrawlerRetreiver {
         }
     }
 
-    public CrawlerRetreiver(HttpFetcher fetcher, CrawlingSpecification specs, CrawledDomainWriter writer) {
+    public CrawlerRetreiver(HttpFetcher fetcher, CrawlingSpecification specs, Consumer<SerializableCrawlData> writer) {
         this.fetcher = fetcher;
         visited = new HashSet<>((int)(specs.urls.size() * 1.5));
         known = new HashSet<>(specs.urls.size() * 10);
@@ -79,9 +81,14 @@ public class CrawlerRetreiver {
 
         if (queue.peek() != null) {
             var fst = queue.peek();
+
             var root = fst.withPathAndParam("/", null);
             if (known.add(root.toString()))
                 queue.addFirst(root);
+        }
+        else {
+            addToQueue(new EdgeUrl("http", new EdgeDomain(domain), null, "/", null));
+            addToQueue(new EdgeUrl("https", new EdgeDomain(domain), null, "/", null));
         }
     }
 
@@ -255,7 +262,7 @@ public class CrawlerRetreiver {
     }
 
     public boolean isSameDomain(EdgeUrl url) {
-        return domain.equals(url.domain.toString().toLowerCase());
+        return domain.equalsIgnoreCase(url.domain.toString());
     }
 
     private void findLinks(EdgeUrl baseUrl, Document parsed) {

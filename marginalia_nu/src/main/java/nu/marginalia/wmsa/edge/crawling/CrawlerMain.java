@@ -73,7 +73,7 @@ public class CrawlerMain implements AutoCloseable {
 
         HttpFetcher fetcher = new HttpFetcher(userAgent.uaString(), dispatcher, connectionPool);
         try (CrawledDomainWriter writer = new CrawledDomainWriter(crawlDataDir, specification.domain, specification.id)) {
-            var retreiver = new CrawlerRetreiver(fetcher, specification, writer);
+            var retreiver = new CrawlerRetreiver(fetcher, specification, writer::accept);
 
             int size = retreiver.fetch();
 
