@@ -8,6 +8,7 @@
   border: 3px outset #000;
   word-break: none;
   white-space: nowrap;
+  float: right;
 }
 
 .extra a:active {
