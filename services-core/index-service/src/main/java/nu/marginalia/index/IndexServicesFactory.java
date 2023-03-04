@@ -42,9 +42,8 @@ public class IndexServicesFactory {
 
     private final Path searchSetsBase;
 
-    int LIVE_PART = 0;
-
-    int NEXT_PART = 1;
+    final int LIVE_PART = 0;
+    final int NEXT_PART = 1;
 
     @Inject
     public IndexServicesFactory(
@@ -100,7 +99,6 @@ public class IndexServicesFactory {
     }
 
     private void convertFullReverseIndex(DomainRankings domainRankings) throws IOException {
-
         var source = writerIndexFile.get(0).toPath();
 
         logger.info("Converting full reverse index {}", source);

@@ -86,12 +86,18 @@ public class IndexService extends Service {
     }
 
     private void autoConvert() {
-        if (!servicesFactory.isConvertedIndexMissing() || !servicesFactory.isPreconvertedIndexPresent()) {
+        if (!servicesFactory.isConvertedIndexMissing()
+            || !servicesFactory.isPreconvertedIndexPresent()
+            || Boolean.getBoolean("no-auto-convert")
+        ) {
             return;
         }
+
         try {
+            logger.info("Auto-converting");
             searchSetsService.recalculateAll();
             searchIndex.switchIndex();
+            logger.info("Auto-conversion finished!");
         }
         catch (IOException ex) {
             logger.error("Auto convert failed", ex);
