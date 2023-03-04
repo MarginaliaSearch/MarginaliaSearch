@@ -1,7 +1,5 @@
 package nu.marginalia.crawl;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import nu.marginalia.UserAgent;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.crawling.common.AbortMonitor;

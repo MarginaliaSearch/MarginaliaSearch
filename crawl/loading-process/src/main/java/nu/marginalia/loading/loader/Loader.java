@@ -1,6 +1,5 @@
 package nu.marginalia.loading.loader;
 
-import lombok.SneakyThrows;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.EdgeDomainIndexingState;
@@ -58,14 +57,11 @@ public class Loader implements Interpreter {
 
     @Override
     public void loadUrl(EdgeUrl[] urls) {
-        logger.debug("loadUrl({})", urls, null);
-
         sqlLoadUrls.load(data, urls);
     }
 
     @Override
     public void loadDomain(EdgeDomain[] domains) {
-        logger.debug("loadDomain({})", domains, null);
         sqlLoadDomains.load(data, domains);
     }
 
@@ -76,14 +72,11 @@ public class Loader implements Interpreter {
 
     @Override
     public void loadDomainLink(DomainLink[] links) {
-        logger.debug("loadDomainLink({})", links, null);
         sqlLoadDomainLinks.load(data, links);
     }
 
     @Override
     public void loadProcessedDomain(EdgeDomain domain, EdgeDomainIndexingState state, String ip) {
-        logger.debug("loadProcessedDomain({}, {}, {})", domain, state, ip);
-
         sqlLoadProcessedDomain.load(data, domain, state, ip);
     }
 
@@ -111,8 +104,6 @@ public class Loader implements Interpreter {
 
     @Override
     public void loadKeywords(EdgeUrl url, EdgePageDocumentsMetadata metadata, DocumentKeywords words) {
-        logger.debug("loadKeywords()");
-
         // This is a bit of a bandaid safeguard against a bug in
         // in the converter, shouldn't be necessary in the future
         if (!deferredDomains.isEmpty()) {
@@ -134,11 +125,12 @@ public class Loader implements Interpreter {
 
     @Override
     public void loadDomainRedirect(DomainLink link) {
-        logger.debug("loadDomainRedirect({})", link);
         sqlLoadProcessedDomain.loadAlias(data, link);
     }
 
     public void finish() {
+        // Some work needs to be processed out of order for the database relations to work out
+
         sqlLoadProcessedDocument.load(data, processedDocumentList);
         sqlLoadProcessedDocument.loadWithError(data, processedDocumentWithErrorList);
     }

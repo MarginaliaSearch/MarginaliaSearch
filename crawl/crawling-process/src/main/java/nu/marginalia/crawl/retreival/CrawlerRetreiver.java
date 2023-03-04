@@ -135,7 +135,7 @@ public class CrawlerRetreiver {
         return Optional.empty();
     }
 
-    private int crawlDomain() throws IOException {
+    private int crawlDomain() {
         String ip = findIp(domain);
 
         assert !queue.isEmpty();
@@ -176,7 +176,7 @@ public class CrawlerRetreiver {
         return fetchedCount;
     }
 
-    private boolean fetchDocument(EdgeUrl top, long crawlDelay) throws IOException {
+    private boolean fetchDocument(EdgeUrl top, long crawlDelay) {
         logger.debug("Fetching {}", top);
         long startTime = System.currentTimeMillis();
 
