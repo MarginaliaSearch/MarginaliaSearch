@@ -7,6 +7,7 @@ import nu.marginalia.search.command.SearchCommandInterface;
 import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.search.model.DomainInformation;
 import nu.marginalia.search.model.SearchProfile;
+import nu.marginalia.search.query.QueryFactory;
 import nu.marginalia.search.siteinfo.DomainInformationService;
 import nu.marginalia.search.svc.SearchQueryIndexService;
 import nu.marginalia.client.Context;
@@ -23,6 +24,7 @@ import java.util.regex.Pattern;
 
 public class SiteListCommand implements SearchCommandInterface {
     private final DbDomainQueries domainQueries;
+    private final QueryFactory queryFactory;
     private final DomainInformationService domainInformationService;
     private final SearchQueryIndexService searchQueryIndexService;
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -35,12 +37,13 @@ public class SiteListCommand implements SearchCommandInterface {
     public SiteListCommand(
             DomainInformationService domainInformationService,
             DbDomainQueries domainQueries,
-            RendererFactory rendererFactory,
+            QueryFactory queryFactory, RendererFactory rendererFactory,
             SearchQueryIndexService searchQueryIndexService)
             throws IOException
     {
         this.domainQueries = domainQueries;
         this.domainInformationService = domainInformationService;
+        this.queryFactory = queryFactory;
 
         siteInfoRenderer = rendererFactory.renderer("search/site-info");
         this.searchQueryIndexService = searchQueryIndexService;
@@ -59,7 +62,8 @@ public class SiteListCommand implements SearchCommandInterface {
         Path screenshotPath = null;
         Integer domainId = -1;
         if (null != domain) {
-            resultSet = searchQueryIndexService.performDumbQuery(ctx, SearchProfile.CORPO, 100, 100, "site:"+domain);
+            var dumbQuery = queryFactory.createQuery(SearchProfile.CORPO, 100, 100, "site:"+domain);
+            resultSet = searchQueryIndexService.executeQuery(ctx, dumbQuery);
             domainId = domainQueries.getDomainId(domain).id();
             screenshotPath = Path.of("/screenshot/" + domainId);
         }

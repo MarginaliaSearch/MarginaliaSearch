@@ -16,6 +16,7 @@ import nu.marginalia.query_parser.QueryPermutation;
 import nu.marginalia.query_parser.QueryVariants;
 import nu.marginalia.query_parser.token.Token;
 import nu.marginalia.query_parser.token.TokenType;
+import nu.marginalia.search.model.SearchProfile;
 import nu.marginalia.search.query.model.SearchQuery;
 import nu.marginalia.search.query.model.UserSearchParameters;
 import nu.marginalia.language.WordPatterns;
@@ -76,6 +77,36 @@ public class QueryFactory {
         trimArray(subqueries, RETAIN_QUERY_VARIANT_COUNT);
 
         return processedQuery;
+    }
+
+    public SearchQuery createQuery(SearchProfile profile,
+                                               int limitPerDomain,
+                                               int limitTotal,
+                                               String... termsInclude)
+    {
+        List<EdgeSearchSubquery> sqs = new ArrayList<>();
+
+        sqs.add(new EdgeSearchSubquery(
+                Arrays.asList(termsInclude),
+                Collections.emptyList(),
+                Collections.emptyList(),
+                Collections.emptyList()
+        ));
+
+        var specs = EdgeSearchSpecification.builder()
+                .subqueries(sqs)
+                .domains(Collections.emptyList())
+                .searchSetIdentifier(profile.searchSetIdentifier)
+                .queryLimits(new QueryLimits(limitPerDomain, limitTotal, 150, 2048))
+                .humanQuery("")
+                .year(SpecificationLimit.none())
+                .size(SpecificationLimit.none())
+                .rank(SpecificationLimit.none())
+                .quality(SpecificationLimit.none())
+                .queryStrategy(QueryStrategy.AUTO)
+                .build();
+
+        return new SearchQuery(specs);
     }
 
     private void trimArray(List<?> arr, int maxSize) {

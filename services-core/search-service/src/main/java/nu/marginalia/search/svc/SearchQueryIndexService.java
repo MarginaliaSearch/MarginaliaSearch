@@ -5,13 +5,8 @@ import com.google.inject.Singleton;
 import nu.marginalia.index.client.EdgeIndexClient;
 import nu.marginalia.index.client.model.results.EdgeSearchResultItem;
 import nu.marginalia.index.client.model.query.EdgeSearchSpecification;
-import nu.marginalia.index.client.model.query.EdgeSearchSubquery;
-import nu.marginalia.index.query.limit.QueryLimits;
-import nu.marginalia.index.query.limit.QueryStrategy;
-import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.search.model.PageScoreAdjustment;
 import nu.marginalia.search.model.UrlDetails;
-import nu.marginalia.search.model.SearchProfile;
 import nu.marginalia.search.results.SearchResultDecorator;
 import nu.marginalia.search.results.UrlDeduplicator;
 import nu.marginalia.client.Context;
@@ -41,38 +36,7 @@ public class SearchQueryIndexService {
                 .thenComparing(UrlDetails::getId);
     }
 
-    public List<UrlDetails> performDumbQuery(Context ctx,
-                                             SearchProfile profile,
-                                             int limitPerDomain,
-                                             int limitTotal,
-                                             String... termsInclude)
-    {
-        List<EdgeSearchSubquery> sqs = new ArrayList<>();
-
-        sqs.add(new EdgeSearchSubquery(
-                Arrays.asList(termsInclude),
-                Collections.emptyList(),
-                Collections.emptyList(),
-                Collections.emptyList()
-        ));
-
-        var specs = EdgeSearchSpecification.builder()
-                .subqueries(sqs)
-                .domains(Collections.emptyList())
-                .searchSetIdentifier(profile.searchSetIdentifier)
-                .queryLimits(new QueryLimits(limitPerDomain, limitTotal, 150, 2048))
-                .humanQuery("")
-                .year(SpecificationLimit.none())
-                .size(SpecificationLimit.none())
-                .rank(SpecificationLimit.none())
-                .quality(SpecificationLimit.none())
-                .queryStrategy(QueryStrategy.AUTO)
-                .build();
-
-        return performQuery(ctx, new SearchQuery(specs));
-    }
-
-    public List<UrlDetails> performQuery(Context ctx, SearchQuery processedQuery) {
+    public List<UrlDetails> executeQuery(Context ctx, SearchQuery processedQuery) {
         final List<EdgeSearchResultItem> results = indexClient.query(ctx, processedQuery.specs);
 
         List<UrlDetails> urlDetails = resultDecorator.getAllUrlDetails(results);
