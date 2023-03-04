@@ -25,4 +25,8 @@ $ run/reconvert.sh
 $ docker-compose up
 ```
 
-Wait a moment and check out [http://localhost:8080](http://localhost:8080).
+Wait for the line 'Auto-conversion finished!', it should now be possible to visit
+[http://localhost:8080](http://localhost:8080) and try a few searches.
+
+`setup.sh` only needs to be run once.
+
