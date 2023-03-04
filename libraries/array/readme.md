@@ -31,10 +31,40 @@ array.forEach(0, 100, (pos, val) -> {
 ## Query Buffers
 
 The library offers many operations for sorting and dealing with sorted data.
-Especially noteworthy are the operations `retain()` and `reject()` in
-([IntArraySearch](src/main/java/nu/marginalia/array/algo/IntArraySearch.java) and [LongArraySearch](src/main/java/nu/marginalia/array/algo/LongArraySearch.java)) which act upon the
-classes [IntQueryBuffer](src/main/java/nu/marginalia/array/buffer/IntQueryBuffer.java)
-and [LongQueryBuffer](src/main/java/nu/marginalia/array/buffer/LongQueryBuffer.java);
-they keep or remove all items in the buffer that exist in the range. These are used
-to offer an intersection operation for the B-Tree that has in practice sub-linear run time.  
+The classes [IntQueryBuffer](src/main/java/nu/marginalia/array/buffer/IntQueryBuffer.java)
+and [LongQueryBuffer](src/main/java/nu/marginalia/array/buffer/LongQueryBuffer.java) are used
+heavily in the search engine's query processing.
 
+They are dual-pointer buffers that offer tools for filtering data.
+
+```java
+LongQueryBuffer buffer = new LongQueryBuffer(1000);
+
+fillBuffer(buffer);
+
+// A typical filtering operation may look like this:
+        
+while (buffer.hasMore()) { // read < end
+    if (someCondition(buffer.currentValue())) {
+        // copy the value pointed to by the read
+        // pointer to the read pointer, and
+        // advance both
+        buffer.retainAndAdvance();
+    }
+    else {
+        // advance the read pointer
+        buffer.rejectAndAdvance();
+    }
+}
+
+// set the read pointer to the read pointer
+// after this we can filter again
+
+buffer.finalizeFiltering();
+```
+
+
+Especially noteworthy are the operations `retain()` and `reject()` in
+[IntArraySearch](src/main/java/nu/marginalia/array/algo/IntArraySearch.java) and [LongArraySearch](src/main/java/nu/marginalia/array/algo/LongArraySearch.java).
+They keep or remove all items in the buffer that exist in the range. These are used
+to offer an intersection operation for the B-Tree that has in practice sub-linear run time.  
