@@ -29,7 +29,7 @@ into the database. The data is only downloaded once.
 
 Grab a cup of coffee, this takes a few minutes.
 
-This needs to be done whenever the crawler or processor has changed,
+This needs to be done whenever the crawler or processor has changed.
 
 ```
 $ docker-compose up -d mariadb
