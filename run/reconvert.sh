@@ -2,9 +2,10 @@
 
 set -e
 
-## Configuration
+SAMPLE_NAME=crawl-${1:-l}
+SAMPLE_DIR="samples/${SAMPLE_NAME}/"
 
-SAMPLE_DIR="samples/crawl-${1:-l}/"
+## Configuration
 
 CONVERTER_PROCESS_OPTS="
 -Xmx16G
@@ -41,6 +42,7 @@ pushd $(dirname $0)
 if [ ! -d ${SAMPLE_DIR} ]; then
   mkdir -p samples/
 
+  SAMPLE_TARBALL=samples/crawl-${SAMPLE_NAME}.tar.gz
   download_model ${SAMPLE_TARBALL} https://downloads.marginalia.nu/${SAMPLE_TARBALL} || rm ${SAMPLE_TARBALL}
 
   if [ ! -f ${SAMPLE_TARBALL} ]; then
