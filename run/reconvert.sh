@@ -41,7 +41,7 @@ pushd $(dirname $0)
 if [ ! -d ${SAMPLE_DIR} ]; then
   mkdir -p samples/
 
-  cmd/download_model ${SAMPLE_TARBALL} https://downloads.marginalia.nu/${SAMPLE_TARBALL} || rm ${SAMPLE_TARBALL}
+  download_model ${SAMPLE_TARBALL} https://downloads.marginalia.nu/${SAMPLE_TARBALL} || rm ${SAMPLE_TARBALL}
 
   if [ ! -f ${SAMPLE_TARBALL} ]; then
     echo "!! Failed"
