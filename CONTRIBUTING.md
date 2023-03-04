@@ -26,17 +26,4 @@ once per 6-8 weeks, coinciding with the crawling
 cycle. Where model-breaking changes and changes to
 the crawler can be introduced. 
 
-## Running and set-up
-
-There is a complementary project, wmsa.local, which
-contains scripts and instructions for running this
-code base. 
-
-[https://git.marginalia.nu/marginalia/wmsa.local](https://git.marginalia.nu/marginalia/wmsa.local)
-
-## Documentation
-
-What documentation exists resides here:
-
-https://git.marginalia.nu/marginalia/marginalia.nu/wiki
 
