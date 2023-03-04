@@ -1,0 +1,35 @@
+plugins {
+    id 'java'
+}
+
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
+dependencies {
+    implementation project(':common:service-client')
+    implementation project(':common:service-discovery')
+    implementation project(':libraries:misc')
+
+    implementation libs.lombok
+    annotationProcessor libs.lombok
+
+    implementation libs.spark
+    implementation libs.guice
+    implementation libs.rxjava
+
+    implementation libs.bundles.prometheus
+    implementation libs.bundles.slf4j
+    implementation libs.bucket4j
+
+    testImplementation libs.bundles.slf4j.test
+    implementation libs.bundles.mariadb
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+
+}

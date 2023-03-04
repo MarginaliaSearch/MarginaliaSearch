@@ -1,0 +1,41 @@
+import java.nio.file.Files
+
+ext {
+    dockerImage='openjdk:17-slim'
+    serviceJvmOpts='-Dservice-host=0.0.0.0 -ea -Dsmall-ram=true ${wmsa_jvm_param} -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=4000 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false'
+    serviceToolOpts='-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5000'
+}
+
+tasks.register('dockerFile') {
+    buildDir.mkdir()
+
+    var df = new File(buildDir, "Dockerfile")
+    doLast {
+        df.text = """#
+# I'm auto-generated, please don't make changes to me or commit me to git
+#
+# The template exists in docker-service.gradle
+#
+FROM ${dockerImage}
+
+ADD ${application.applicationName}.tar /
+RUN mkdir /wmsa
+
+ENV JAVA_TOOL_OPTIONS="${serviceToolOpts}"
+ENV JAVA_OPTS="${serviceJvmOpts} "
+
+ENTRYPOINT WMSA_HOME=/wmsa /${application.applicationName}/bin/${application.applicationName} \${arg0} \${arg1}
+"""
+    }
+    it.outputs.file(df)
+}
+
+docker {
+    dockerfile = tasks.dockerFile.outputs.files.singleFile
+    name = 'marginalia.nu/'+application.applicationName+':latest'
+    files tasks.distTar.outputs
+    tags 'latest'
+
+    dependsOn tasks.distTar
+    dependsOn tasks.dockerFile
+}

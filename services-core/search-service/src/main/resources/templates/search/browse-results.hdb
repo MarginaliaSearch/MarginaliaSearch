@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Marginalia Search - {{query}}</title>
+
+    <link rel="stylesheet" href="/style-new.css" />
+    <link rel="search" type="application/opensearchdescription+xml" href="/opensearch.xml" title="Marginalia">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+</head>
+<body>
+
+{{>search/parts/search-header}}
+
+<article>
+    {{>search/parts/search-form}}
+
+<section class="cards">
+
+{{#if focusDomain}}
+  <section class="card semantic">
+    <h2>Similar Domains</h2>
+
+    <p class="description">
+        Showing domains similar to <tt>{{focusDomain}}</tt>.
+    </p>
+  </section>
+{{/if}}
+
+{{#each results}}{{>search/browse-result}}{{/each}}
+
+{{#unless focusDomain}}
+  <section class="card semantic">
+    <h2>Random Domains</h2>
+
+    <p class="description">
+        This list of domains is random. <b>Refresh</b> to get
+        new domains, or click <b>Similar Domains</b> to
+        take the helm.
+    </p>
+  </section>
+{{/unless}}
+
+</section>
+</article>
+
+{{>search/parts/search-footer}}
+</body>

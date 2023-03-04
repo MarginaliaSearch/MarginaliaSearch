@@ -1,0 +1,31 @@
+plugins {
+    id 'java'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
+dependencies {
+    implementation libs.bundles.nlp
+    implementation libs.zstd
+    implementation libs.commons.compress
+    implementation libs.ffi
+    implementation libs.databind
+    implementation libs.bundles.gson
+
+    implementation 'org.apache.opennlp:opennlp-tools:1.9.4'
+    implementation 'edu.stanford.nlp:stanford-corenlp:4.4.0'
+
+    implementation 'com.github.luben:zstd-jni:1.5.2-2'
+    implementation 'org.apache.commons:commons-compress:1.21'
+    implementation 'com.github.jnr:jnr-ffi:2.2.12'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.2.1'
+    implementation 'com.google.code.gson:gson:2.9.0'
+}
+
+test {
+    useJUnitPlatform()
+}

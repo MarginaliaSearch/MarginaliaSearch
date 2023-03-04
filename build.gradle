@@ -1,42 +1,16 @@
 plugins {
     id 'java'
-
-    id 'com.github.johnrengelman.shadow' version '6.0.0'
 }
 
-group 'nu.marginalia'
+group 'marginalia'
 version 'SNAPSHOT'
+
 compileJava.options.encoding = "UTF-8"
 compileTestJava.options.encoding = "UTF-8"
-repositories {
-    mavenLocal()
-    maven { url "https://artifactory.cronapp.io/public-release/" }
-    maven { url "https://repo1.maven.org/maven2/" }
-    maven { url "https://www2.ph.ed.ac.uk/maven2/" }
-    maven { url "https://jitpack.io/" }
-    exclusiveContent {
-        forRepository {
-            maven {
-                url = uri("https://jitpack.io")
-            }
-        }
-        filter {
-            // Only use JitPack for the `gson-record-type-adapter-factory` library
-            includeModule("com.github.Marcono1234", "gson-record-type-adapter-factory")
-        }
-    }
-}
 
-shadowJar {
-    zip64 true
-}
-jar {
-    manifest {
-        attributes 'Main-Class': "nu.marginalia.wmsa.configuration.ServiceDescriptor"
-    }
-    from {
-        configurations.shadow.collect { it.isDirectory() ? it : zipTree(it) }
-    }
+task dist(type: Copy) {
+    from subprojects.collect { it.tasks.withType(Tar) }
+    into "$buildDir/dist"
 }
 
 java {
@@ -44,19 +18,3 @@ java {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
-
-dependencies {
-    implementation project(':marginalia_nu')
-}
-task version() { //
-}
-
-test {
-    maxParallelForks = 16
-    forkEvery = 1
-    maxHeapSize = "8G"
-    useJUnitPlatform {
-        excludeTags "nobuild"
-    }
-}
-

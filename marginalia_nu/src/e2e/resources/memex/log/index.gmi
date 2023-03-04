@@ -1,7 +1,0 @@
-# Log
-
-Log of stuff
-
-%%%FEED
-%%%LISTING
-

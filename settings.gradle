@@ -1,5 +1,161 @@
-rootProject.name = 'wmsa'
+rootProject.name = 'marginalia.nu'
 
-include 'marginalia_nu'
-include 'third_party'
+include 'services-core:index-service'
+include 'services-core:assistant-service'
+include 'services-core:search-service'
+
+include 'services-satellite:api-service'
+include 'services-satellite:dating-service'
+include 'services-satellite:explorer-service'
+
+include 'libraries:array'
+include 'libraries:btree'
+include 'libraries:misc'
+include 'libraries:language-processing'
+
+include 'features:screenshots'
+include 'features:random-websites'
+include 'features:domain-ranking'
+include 'features:renderer'
+include 'features:query-parser'
+
+include 'api:search-api'
+include 'api:index-api'
+include 'api:assistant-api'
+
+include 'index:lexicon'
+include 'index:index-journal'
+include 'index:index-query'
+include 'index:index-forward'
+include 'index:index-reverse'
+
+include 'common:service-discovery'
+include 'common:service-client'
+include 'common:service'
+include 'common:config'
+include 'common:model'
+
+include 'crawl:crawl-job-extractor-process'
+include 'crawl:crawling-process'
+include 'crawl:crawling-model'
+include 'crawl:converting-process'
+include 'crawl:converting-model'
+include 'crawl:loading-process'
+include 'crawl:common'
+include 'crawl:experimental'
+
+include 'third-party'
 include 'protocol'
+include 'other:memex'
+include 'other:wmsa_old'
+
+include 'tools:screenshot'
+
+dependencyResolutionManagement {
+
+    repositories {
+        mavenLocal()
+        maven { url "https://artifactory.cronapp.io/public-release/" }
+        maven { url "https://repo1.maven.org/maven2/" }
+        maven { url "https://www2.ph.ed.ac.uk/maven2/" }
+        maven { url "https://jitpack.io/" }
+        exclusiveContent {
+            forRepository {
+                maven {
+                    url = uri("https://jitpack.io")
+                }
+            }
+            filter {
+                // Only use JitPack for the `gson-record-type-adapter-factory` library
+                includeModule("com.github.Marcono1234", "gson-record-type-adapter-factory")
+            }
+        }
+    }
+
+    versionCatalogs {
+        libs {
+            library('lombok', 'org.projectlombok', 'lombok').version('1.18.24')
+            library('mariadb-client', 'org.mariadb.jdbc', 'mariadb-java-client').version('3.0.6')
+            library('hikaricp', 'com.zaxxer:HikariCP:5.0.1')
+
+            library('spark', 'com.sparkjava', 'spark-core').version('2.9.3')
+            library('guice', 'com.google.inject', 'guice').version('5.1.0')
+            library('guava', 'com.google.guava', 'guava').version('31.1-jre')
+
+            library('rxjava', 'io.reactivex.rxjava3', 'rxjava').version('3.1.5')
+
+            library('prometheus', 'io.prometheus', 'simpleclient').version('0.16.0')
+            library('prometheus-servlet', 'io.prometheus', 'simpleclient_servlet').version('0.16.0')
+            library('prometheus-server', 'io.prometheus', 'simpleclient_httpserver').version('0.16.0')
+            library('prometheus-hotspot', 'io.prometheus', 'simpleclient_hotspot').version('0.16.0')
+
+            library('slf4j.api', 'org.slf4j', 'slf4j-api').version('1.7.36')
+            library('slf4j.jdk14', 'org.slf4j', 'slf4j-jdk14').version('2.0.3')
+
+            library('log4j.api', 'org.apache.logging.log4j', 'log4j-api').version('2.17.2')
+            library('log4j.core', 'org.apache.logging.log4j', 'log4j-core').version('2.17.2')
+            library('log4j.slf4j', 'org.apache.logging.log4j', 'log4j-slf4j-impl').version('2.17.2')
+
+            library('notnull','org.jetbrains','annotations').version('24.0.0')
+
+            library('trove', 'net.sf.trove4j', 'trove4j').version('3.0.3')
+            library('fastutil', 'it.unimi.dsi', 'fastutil').version('8.5.8')
+
+            library('okhttp3','com.squareup.okhttp3','okhttp').version('4.10.0')
+
+            library('httpcomponents.core','org.apache.httpcomponents','httpcore').version('4.4.15')
+            library('httpcomponents.client','org.apache.httpcomponents','httpclient').version('4.5.13')
+            library('commons.net', 'commons-net','commons-net').version('3.9.0')
+            library('commons.lang3', 'org.apache.commons','commons-lang3').version('3.12.0')
+            library('commons.compress','org.apache.commons','commons-compress').version('1.21')
+            library('commons.io','commons-io','commons-io').version('2.11.0')
+
+            library('ffi','com.github.jnr','jnr-ffi').version('2.2.12')
+            library('databind','com.fasterxml.jackson.core','jackson-databind').version('2.13.2.1')
+
+            library('crawlercommons', 'com.github.crawler-commons', 'crawler-commons').version('1.2')
+
+            library('stanford.corenlp','edu.stanford.nlp','stanford-corenlp').version('4.4.0')
+            library('opennlp','org.apache.opennlp','opennlp-tools').version('1.9.4')
+
+            library('roaringbitmap','org.roaringbitmap','RoaringBitmap').version('0.9.32')
+            library('opencsv','com.opencsv','opencsv').version('5.6')
+            library('bucket4j','com.github.vladimir-bukhtoyarov','bucket4j-core').version('7.5.0')
+
+            library('protobuf','com.google.protobuf','protobuf-java').version('3.0.0')
+            library('gson','com.google.code.gson','gson').version('2.9.0')
+            library('gson-type-adapter','com.github.Marcono1234','gson-record-type-adapter-factory').version('0.2.0')
+
+            library('zstd','com.github.luben','zstd-jni').version('1.5.2-2')
+            library('lz4','org.lz4','lz4-java').version('1.8.0')
+
+            library('jsoup','org.jsoup','jsoup').version('1.15.3')
+            library('snakeyaml','org.yaml','snakeyaml').version('1.30')
+
+            library('junit.jupiter','org.junit.jupiter','junit-jupiter-api').version('5.8.2')
+            library('junit.jupiter.engine','org.junit.jupiter','junit-jupiter-engine').version('')
+            library('mockito','org.mockito','mockito-junit-jupiter').version('4.5.1')
+
+            library('selenium.chrome','org.seleniumhq.selenium','selenium-chrome-driver').version('4.5.3')
+            library('selenium.java','org.seleniumhq.selenium','selenium-java').version('4.5.3')
+
+            library('handlebars','com.github.jknack','handlebars').version('4.3.1')
+            library('handlebars.markdown','com.github.jknack','handlebars-markdown').version('4.2.1')
+
+            bundle('slf4j', ['slf4j.api', 'log4j.api', 'log4j.core', 'log4j.slf4j'])
+            bundle('slf4j.test', ['slf4j.jdk14'])
+            bundle('prometheus', ['prometheus', 'prometheus-servlet', 'prometheus-server', 'prometheus-hotspot'])
+            bundle('mariadb', ['mariadb-client', 'hikaricp'])
+            bundle('nlp', ['stanford.corenlp', 'opennlp'])
+            bundle('selenium', ['selenium.chrome', 'selenium.java'])
+            bundle('handlebars', ['handlebars', 'handlebars.markdown'])
+
+            bundle('gson', ['gson', 'gson-type-adapter'])
+            bundle('httpcomponents', ['httpcomponents.core', 'httpcomponents.client'])
+
+            bundle('junit', ['junit.jupiter', 'junit.jupiter.engine'])
+        }
+
+
+    }
+}

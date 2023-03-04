@@ -4,3 +4,6 @@ build/
 *~
 .gradle/
 .idea/
+lombok.config
+Dockerfile
+run

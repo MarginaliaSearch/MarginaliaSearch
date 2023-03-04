@@ -1,0 +1,76 @@
+plugins {
+    id 'java'
+    id "io.freefair.lombok" version "5.3.3.3"
+    id 'com.palantir.docker' version '0.34.0'
+    id 'application'
+    id 'jvm-test-suite'
+}
+
+application {
+    mainClass = 'nu.marginalia.index.IndexMain'
+    applicationName = 'index-service'
+}
+
+apply from: "$rootProject.projectDir/docker-service.gradle"
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+dependencies {
+    implementation project(':third-party')
+    implementation project(':protocol')
+    implementation project(':common:config')
+    implementation project(':common:model')
+    implementation project(':common:service')
+    implementation project(':api:index-api')
+    implementation project(':common:service-discovery')
+
+    implementation project(':libraries:array')
+    implementation project(':libraries:btree')
+    implementation project(':libraries:misc')
+
+    implementation project(':index:index-journal')
+    implementation project(':index:index-query')
+    implementation project(':index:index-forward')
+    implementation project(':index:index-reverse')
+    implementation project(':index:lexicon')
+
+    implementation project(':features:domain-ranking')
+
+
+    implementation libs.lombok
+    annotationProcessor libs.lombok
+    implementation libs.bundles.slf4j
+
+    implementation libs.prometheus
+    implementation libs.notnull
+    implementation libs.guice
+    implementation libs.protobuf
+    implementation libs.bundles.httpcomponents
+    implementation libs.roaringbitmap
+    implementation libs.snakeyaml
+    implementation libs.rxjava
+    implementation libs.spark
+    implementation libs.opencsv
+    implementation libs.trove
+    implementation libs.fastutil
+    implementation libs.bundles.gson
+    implementation libs.bundles.mariadb
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+
+}
+
+test {
+    useJUnitPlatform()
+}
+
+task fastTests(type: Test) {
+    useJUnitPlatform {
+        excludeTags "slow"
+    }
+}

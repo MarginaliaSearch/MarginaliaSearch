@@ -1,0 +1,55 @@
+plugins {
+    id 'java'
+    id "io.freefair.lombok" version "5.3.3.3"
+
+    id "me.champeau.jmh" version "0.6.6"
+    id "de.undercouch.download" version "5.1.0"
+
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
+dependencies {
+    implementation project(':third-party')
+    implementation project(':protocol')
+    implementation project(':common:model')
+    implementation project(':common:service')
+
+    implementation libs.lombok
+    annotationProcessor libs.lombok
+    implementation libs.bundles.slf4j
+
+    implementation libs.guice
+    implementation libs.roaringbitmap
+    implementation libs.trove
+    implementation libs.fastutil
+    implementation libs.bundles.mariadb
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+}
+
+configurations {
+    e2eTestImplementation.extendsFrom(testImplementation)
+
+}
+
+test {
+    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+    maxHeapSize = "8G"
+    useJUnitPlatform()
+}
+
+task fastTests(type: Test) {
+    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+    maxHeapSize = "8G"
+    useJUnitPlatform {
+        excludeTags "slow"
+    }
+}
