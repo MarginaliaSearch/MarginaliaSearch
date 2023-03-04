@@ -17,7 +17,6 @@ application {
 
 dependencies {
     implementation project(':third-party')
-    implementation project(':protocol')
     implementation project(':api:index-api')
     implementation project(':common:model')
     implementation project(':common:config')

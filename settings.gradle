@@ -45,7 +45,6 @@ include 'crawl:common'
 include 'crawl:experimental'
 
 include 'third-party'
-include 'protocol'
 include 'other:memex'
 include 'other:wmsa_old'
 

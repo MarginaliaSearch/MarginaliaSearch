@@ -20,7 +20,6 @@ java {
 }
 dependencies {
     implementation project(':third-party')
-    implementation project(':protocol')
     implementation project(':common:config')
     implementation project(':common:model')
     implementation project(':common:service')

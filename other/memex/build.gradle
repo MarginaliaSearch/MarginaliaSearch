@@ -60,7 +60,6 @@ jmhJar {
 }
 dependencies {
     implementation project(':third-party')
-    implementation project(':protocol')
     implementation project(':common:service')
     implementation project(':common:config')
     implementation project(':libraries:misc')
