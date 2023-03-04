@@ -11,7 +11,7 @@ which contains information about the data and index layout.
 BTreeContext ctx = new BTreeContext(
         4,  // num layers max
         1,  // entry size
-        512); // block size bits
+        8); // block size bits, in practice this should be 8
 
 // Allocate a memory area to work in, see the array library for how to do this with files
 LongArray array = LongArray.allocate(8192);
