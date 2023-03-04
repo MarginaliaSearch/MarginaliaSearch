@@ -30,7 +30,6 @@ array.forEach(0, 100, (pos, val) -> {
 
 ## Query Buffers
 
-The library offers many operations for sorting and dealing with sorted data.
 The classes [IntQueryBuffer](src/main/java/nu/marginalia/array/buffer/IntQueryBuffer.java)
 and [LongQueryBuffer](src/main/java/nu/marginalia/array/buffer/LongQueryBuffer.java) are used
 heavily in the search engine's query processing.
@@ -73,5 +72,7 @@ buffer.finalizeFiltering();
 
 Especially noteworthy are the operations `retain()` and `reject()` in
 [IntArraySearch](src/main/java/nu/marginalia/array/algo/IntArraySearch.java) and [LongArraySearch](src/main/java/nu/marginalia/array/algo/LongArraySearch.java).
-They keep or remove all items in the buffer that exist in the range. These are used
-to offer an intersection operation for the B-Tree that has in practice sub-linear run time.  
+They keep or remove all items in the buffer that exist in the referenced range of the array,
+which must be sorted.
+
+These are used to offer an intersection operation for the B-Tree with sub-linear run time.  
