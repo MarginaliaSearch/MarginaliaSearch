@@ -39,6 +39,14 @@ function download_model {
 
 pushd $(dirname $0)
 
+## Upgrade the tools
+
+rm -rf install/loader-process install/converter-process
+tar xf ../crawl/loading-process/build/distributions/loader-process.tar -C install/
+tar xf ../crawl/converting-process/build/distributions/converter-process.tar -C install/
+
+## Download the sample if necessary
+
 if [ ! -d ${SAMPLE_DIR} ]; then
   mkdir -p samples/
 
@@ -62,12 +70,6 @@ fi
 rm -f ${SAMPLE_DIR}/process/process.log
 rm -f vol/iw/dictionary.dat
 rm -f vol/iw/index.dat
-
-## Upgrade the tools
-
-rm -rf install/loader-process install/converter-process
-tar xf ../crawl/loading-process/build/distributions/loader-process.tar -C install/
-tar xf ../crawl/converting-process/build/distributions/converter-process.tar -C install/
 
 PATH+=":install/converter-process/bin"
 PATH+=":install/loader-process/bin"
