@@ -1,0 +1,20 @@
+ranking:
+  max: 100
+  domains:
+  - '%edu'
+retro:
+  max: 100
+  domains:
+  - '%edu'
+small:
+  max: 100
+  domains:
+  - '%neocities.org'
+academia:
+  max: 100
+  domains:
+  - '%edu'
+standard:
+  max: 100
+  domains:
+  - '%edu'
