@@ -40,7 +40,14 @@ They are dual-pointer buffers that offer tools for filtering data.
 ```java
 LongQueryBuffer buffer = new LongQueryBuffer(1000);
 
-fillBuffer(buffer);
+// later ...
+
+// Prepare the buffer for filling
+buffer.reset();
+fillBuffer(buffer); 
+
+// length is updated and data is set
+// read pointer and write pointer is now at 0
 
 // A typical filtering operation may look like this:
         
