@@ -83,14 +83,14 @@ public class IndexServicesFactory {
     }
 
     public boolean isConvertedIndexMissing() {
-        return !Stream.of(
+        return Stream.of(
                 revIndexWords.get(LIVE_PART).toPath(),
                 revIndexDoc.get(LIVE_PART).toPath(),
                 revPrioIndexWords.get(LIVE_PART).toPath(),
                 revPrioIndexDoc.get(LIVE_PART).toPath(),
                 fwdIndexDocData.get(LIVE_PART).toPath(),
                 fwdIndexDocId.get(LIVE_PART).toPath()
-        ).allMatch(Files::exists);
+        ).noneMatch(Files::exists);
     }
 
     public void convertIndex(DomainRankings domainRankings) throws IOException {
