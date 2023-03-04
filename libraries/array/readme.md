@@ -63,10 +63,12 @@ while (buffer.hasMore()) { // read < end
     }
 }
 
-// set the read pointer to the read pointer
-// after this we can filter again
-
+// set end to the write pointer, and 
+// resets the read and write pointers
 buffer.finalizeFiltering();
+
+// ... after this we can filter again, or
+// consume the data
 ```
 
 
