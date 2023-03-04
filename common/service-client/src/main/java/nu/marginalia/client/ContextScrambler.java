@@ -3,6 +3,7 @@ package nu.marginalia.client;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import spark.Request;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -31,7 +32,7 @@ public class ContextScrambler {
      * This is probably not cryptographically secure, but should at least
      * be fairly annoying to reverse-engineer.
      */
-    public static String anonymize(String connectionInfo) {
+    public static String anonymize(String connectionInfo, Request request) {
         byte[] hashData = Arrays.copyOf(seed, seed.length+4);
         int hashi = Objects.hash(connectionInfo.split("-", 2)[0]);
 
@@ -42,7 +43,10 @@ public class ContextScrambler {
             hashData[seed.length+3] = (byte)(hashi>>>24 & 0xFF);
         }
 
-        return String.format("#%x:%x", hf.hashBytes(hashData).asInt(), System.nanoTime() & 0xFFFFFFFFL);
+        final int connHash = hf.hashBytes(hashData).asInt();
+        final int requestHash = Objects.hash(request.url(), request.queryString());
+
+        return String.format("#%08x:%08x", connHash, requestHash);
     }
 
     /** Generate a humongous salt with as many moving parts as possible,

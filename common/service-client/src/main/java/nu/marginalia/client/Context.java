@@ -48,12 +48,12 @@ public class Context {
 
     private static String anonymizeContext(Request request) {
         String header = request.headers(CONTEXT_HEADER);
-        if (header != null && header.contains("-")) {
+        if (header != null && header.contains("-") && !header.startsWith("#")) {
             // The public X-Context header contains info that traces to the
             // external user's IP. Anonymize this by running it through a
             // hash code blender with rotating salt
 
-            return ContextScrambler.anonymize(header);
+            return ContextScrambler.anonymize(header, request);
         }
         else if (header != null) {
             return header;
