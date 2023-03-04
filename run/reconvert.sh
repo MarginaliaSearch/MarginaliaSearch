@@ -2,7 +2,7 @@
 
 set -e
 
-SAMPLE_NAME=crawl-${1:-l}
+SAMPLE_NAME=crawl-${1:-m}
 SAMPLE_DIR="samples/${SAMPLE_NAME}/"
 
 ## Configuration
