@@ -93,7 +93,7 @@ public class ReverseIndexConverter {
 
                 // Sort each segment of the intermediate file
                 {
-                    LongArray intermediateDocs = LongArray.mmapForWriting(intermediateUrlsFile);
+                    LongArray intermediateDocs = LongArray.mmapForModifying(intermediateUrlsFile);
                     wordsOffsets.foldIO(0, 0, wordsFileSize, (s, e) -> {
                         intermediateDocs.sortLargeSpanN(sortingContext, ReverseIndexParameters.ENTRY_SIZE, s, e);
                         return e;

@@ -1,5 +1,6 @@
 package nu.marginalia.array;
 
+import nu.marginalia.array.algo.SortingContext;
 import nu.marginalia.array.page.PagingIntArray;
 import nu.marginalia.array.page.PagingLongArray;
 import nu.marginalia.array.scheme.SequentialPartitioningScheme;
@@ -29,6 +30,22 @@ class PagingIntArrayTest {
         TestUtil.clearTempDir(tempDir);
     }
 
+    @Test
+    public void demo() throws IOException {
+        var array =
+                LongArray.mmapForWriting(Path.of("/tmp/test"), 1<<16);
+
+        array.transformEach(50, 1000, (pos, val) -> Long.hashCode(pos));
+        array.quickSort(50, 1000);
+        if (array.binarySearch(array.get(100), 50, 1000) >= 0) {
+            System.out.println("Nevermind, I found it!");
+        }
+        array.range(50, 1000).fill(0, 950, 1);
+        array.forEach(0, 100, (pos, val) -> {
+            System.out.println(pos + ":" + val);
+        });
+        
+    }
     @Test
     public void testReadLoad() throws IOException {
         SequentialPartitioningScheme partitioningScheme = new SequentialPartitioningScheme(7);

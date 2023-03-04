@@ -4,7 +4,7 @@ public class BrailleBlockPunchCards {
 
     private static final char brailleBlockBase = '\u2800';
 
-    public static String printBits(int val, int bits) {
+    public static String printBits(long val, int bits) {
         StringBuilder builder = new StringBuilder();
 
         for (int b = 0; b < bits; b+=8, val>>>=8) {
@@ -48,7 +48,7 @@ public class BrailleBlockPunchCards {
      * Thanks for coming to my TED talk.
      */
 
-    private static char bin2brail(int v) {
+    private static char bin2brail(long v) {
         return (char)((v & 0x87) | ((v & 0x70) >> 1) | ((v & 0x08) << 3));
     }
 }

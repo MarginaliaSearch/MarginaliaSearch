@@ -19,7 +19,6 @@ import java.util.OptionalInt;
 
 public class IndexResultValuator {
     private final IndexMetadataService metadataService;
-    private final SearchTermsService searchTermsSvc;
     private final List<List<String>> searchTermVariants;
     private final IndexQueryParams queryParams;
     private final int[] termIdsAll;
@@ -34,7 +33,6 @@ public class IndexResultValuator {
                                TLongList results,
                                List<EdgeSearchSubquery> subqueries,
                                IndexQueryParams queryParams) {
-        this.searchTermsSvc = searchTermsSvc;
         this.searchTermVariants = subqueries.stream().map(sq -> sq.searchTermsInclude).distinct().toList();
         this.queryParams = queryParams;
         this.metadataService = metadataService;
