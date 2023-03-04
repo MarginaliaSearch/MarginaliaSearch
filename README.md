@@ -9,26 +9,7 @@ requiring datacenters and expensive enterprise hardware, to run this operation o
 
 ## Set up instructions
 
-For local development, you're strongly encouraged to use docker or podman.
-From a fresh to running system, you'll need to do this:
-
-```
-$ ./gradlew assemble
-
-$ ./gradlew docker
-
-$ vim run/settings.profile
-
-(follow instructions in file)
-
-$ run/setup.sh
-
-$ run/reconvert.sh
-
-$ docker-compose up
-```
-
-Wait a moment and check out [https://localhost:8080](https://localhost:8080).
+Follow instructions in [run](run/).
 
 ## Documentation
 
