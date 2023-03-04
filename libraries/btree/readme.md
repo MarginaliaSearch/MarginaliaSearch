@@ -13,25 +13,25 @@ BTreeContext ctx = new BTreeContext(
         1,  // entry size
         512); // block size bits
 
-        // Allocate a memory area to work in, see the array library for how to do this with files
-        LongArray array = LongArray.allocate(8192);
+// Allocate a memory area to work in, see the array library for how to do this with files
+LongArray array = LongArray.allocate(8192);
 
-        // Write a btree at offset 123 in the area
-        long[] items = new long[400];
-        BTreeWriter writer = new BTreeWriter(array, ctx);
-        final int offsetInFile = 123;
+// Write a btree at offset 123 in the area
+long[] items = new long[400];
+BTreeWriter writer = new BTreeWriter(array, ctx);
+final int offsetInFile = 123;
 
-        long btreeSize = writer.write(offsetInFile, items.length, slice -> {
-            // we're *must* write items.length * entry.size words in slice
-            // these items must be sorted!!
+long btreeSize = writer.write(offsetInFile, items.length, slice -> {
+    // we're *must* write items.length * entry.size words in slice
+    // these items must be sorted!!
 
-            for (int i = 0; i < items.length; i++) {
-                slice.set(i, items[i]);
-            }
-        });
+    for (int i = 0; i < items.length; i++) {
+        slice.set(i, items[i]);
+    }
+});
 
-        // Read the BTree
+// Read the BTree
 
-        BTreeReader reader = new BTreeReader(array, ctx, offsetInFile);
-        reader.findEntry(items[0]);
+BTreeReader reader = new BTreeReader(array, ctx, offsetInFile);
+reader.findEntry(items[0]);
 ```
