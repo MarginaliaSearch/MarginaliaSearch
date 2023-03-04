@@ -31,6 +31,7 @@ public class IndexServicesFactory {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final PartitionedDataFile writerIndexFile;
+
     private final PartitionedDataFile fwdIndexDocId;
     private final PartitionedDataFile fwdIndexDocData;
     private final PartitionedDataFile revIndexDoc;
@@ -77,12 +78,7 @@ public class IndexServicesFactory {
 
     public boolean isPreconvertedIndexPresent() {
         return Stream.of(
-                revIndexWords.get(NEXT_PART).toPath(),
-                revIndexDoc.get(NEXT_PART).toPath(),
-                revPrioIndexWords.get(NEXT_PART).toPath(),
-                revPrioIndexDoc.get(NEXT_PART).toPath(),
-                fwdIndexDocData.get(NEXT_PART).toPath(),
-                fwdIndexDocId.get(NEXT_PART).toPath()
+                writerIndexFile.get(LIVE_PART).toPath()
         ).allMatch(Files::exists);
     }
 
