@@ -1,6 +1,6 @@
 x-svc: &service
   env_file:
-    - "env/service.env"
+    - "run/env/service.env"
   volumes:
     - vol:/vol
     - conf:/wmsa/conf:ro
@@ -73,7 +73,7 @@ services:
   mariadb:
     image: "mariadb/server:10.3"
     container_name: "mariadb"
-    env_file: "env/mariadb.env"
+    env_file: "run/env/mariadb.env"
     command: ['mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
     ports:
       - "127.0.0.1:3306:3306/tcp"
