@@ -42,7 +42,7 @@ pushd $(dirname $0)
 if [ ! -d ${SAMPLE_DIR} ]; then
   mkdir -p samples/
 
-  SAMPLE_TARBALL=samples/crawl-${SAMPLE_NAME}.tar.gz
+  SAMPLE_TARBALL=samples/${SAMPLE_NAME}.tar.gz
   download_model ${SAMPLE_TARBALL} https://downloads.marginalia.nu/${SAMPLE_TARBALL} || rm ${SAMPLE_TARBALL}
 
   if [ ! -f ${SAMPLE_TARBALL} ]; then
@@ -50,7 +50,7 @@ if [ ! -d ${SAMPLE_DIR} ]; then
     exit 255
   fi
 
-  mkdir -p samples/crawl-${SAMPLE_NAME}
+  mkdir -p samples/${SAMPLE_NAME}
   if [ ! -f $SAMPLE_DIR/plan.yaml ]; then
     echo "Uncompressing"
     tar zxf ${SAMPLE_TARBALL} --strip-components=1 -C ${SAMPLE_DIR}
