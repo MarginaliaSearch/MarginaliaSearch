@@ -4,7 +4,7 @@ set -e
 
 ## Configuration
 
-SAMPLE_DIR="samples/crawl-l/"
+SAMPLE_DIR="samples/crawl-${1:-l}/"
 
 CONVERTER_PROCESS_OPTS="
 -Xmx16G
@@ -26,7 +26,34 @@ JAVA_OPTS="
 
 ## Configuration ends
 
+function download_model {
+  model=$1
+  url=$2
+
+  if [ ! -f $model ]; then
+    echo "** Downloading $url"
+    wget -O $model $url
+  fi
+}
+
 pushd $(dirname $0)
+
+if [ ! -d ${SAMPLE_DIR} ]; then
+  mkdir -p samples/
+
+  cmd/download_model ${SAMPLE_TARBALL} https://downloads.marginalia.nu/${SAMPLE_TARBALL} || rm ${SAMPLE_TARBALL}
+
+  if [ ! -f ${SAMPLE_TARBALL} ]; then
+    echo "!! Failed"
+    exit 255
+  fi
+
+  mkdir -p samples/crawl-${SAMPLE_NAME}
+  if [ ! -f $SAMPLE_DIR/plan.yaml ]; then
+    echo "Uncompressing"
+    tar zxf ${SAMPLE_TARBALL} --strip-components=1 -C ${SAMPLE_DIR}
+  fi
+fi
 
 ## Wipe the old index data
 
