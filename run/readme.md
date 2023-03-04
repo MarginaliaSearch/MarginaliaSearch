@@ -14,7 +14,9 @@ To go from a clean check out of the git repo to a running search engine,
 follow these steps. You're assumed to sit in the project root the whole time.
 
 1. Run the one-time setup, it will create the
-basic runtime directory structure 
+basic runtime directory structure and download some models and data that doesn't
+come with the git repo.
+
 ```
 $ run/setup.sh
 ```
