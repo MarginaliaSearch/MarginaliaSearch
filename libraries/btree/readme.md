@@ -5,6 +5,9 @@ This package contains a small library for creating and reading a static b-tree.
 The b-trees are specified through a [BTreeContext](src/main/java/nu/marginalia/btree/model/BTreeContext.java)
 which contains information about the data and index layout.
 
+The b-trees are written through a [BTreeWriter](src/main/java/nu/marginalia/btree/BTreeWriter.java) and 
+read with a [BTreeReader](src/main/java/nu/marginalia/btree/BTreeReader.java). 
+
 ## Demo
 
 ```java
@@ -22,7 +25,7 @@ BTreeWriter writer = new BTreeWriter(array, ctx);
 final int offsetInFile = 123;
 
 long btreeSize = writer.write(offsetInFile, items.length, slice -> {
-    // we're *must* write items.length * entry.size words in slice
+    // here we *must* write items.length * entry.size words in slice
     // these items must be sorted!!
 
     for (int i = 0; i < items.length; i++) {
