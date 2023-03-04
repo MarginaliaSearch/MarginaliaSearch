@@ -133,7 +133,7 @@ public class ReverseIndexConverter {
     private static class SizeEstimator implements LongBinaryIOOperation {
         public long size = 0;
         @Override
-        public long apply(long start, long end) throws IOException {
+        public long apply(long start, long end) {
             if (end == start) return end;
 
             size += ReverseIndexParameters.bTreeContext.calculateSize((int) (end - start) / ReverseIndexParameters.ENTRY_SIZE);
