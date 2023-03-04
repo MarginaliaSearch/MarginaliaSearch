@@ -10,7 +10,7 @@ crosses a page boundary, it is not delegated and a bit slower.
 It's a very C++-style library that does unidiomatic things with interface default 
 functions to get diamond inheritance.
 
-# Quick demo:
+## Quick demo:
 ```java
 var array = LongArray.mmapForWriting(Path.of("/tmp/test"), 1<<16);
 
@@ -26,3 +26,15 @@ array.forEach(0, 100, (pos, val) -> {
 });
 
 ```
+
+
+## Query Buffers
+
+The library offers many operations for sorting and dealing with sorted data.
+Especially noteworthy are the operations `retain()` and `reject()` in
+([IntArraySearch](src/main/java/nu/marginalia/array/algo/IntArraySearch.java) and [LongArraySearch](src/main/java/nu/marginalia/array/algo/LongArraySearch.java)) which act upon the
+classes [IntQueryBuffer](src/main/java/nu/marginalia/array/buffer/IntQueryBuffer.java)
+and [LongQueryBuffer](src/main/java/nu/marginalia/array/buffer/LongQueryBuffer.java);
+they keep or remove all items in the buffer that exist in the range. These are used
+to offer an intersection operation for the B-Tree that has in practice sub-linear run time.  
+
