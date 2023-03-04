@@ -42,7 +42,7 @@ public class ContextScrambler {
             hashData[seed.length+3] = (byte)(hashi>>>24 & 0xFF);
         }
 
-        return String.format("#%x", hf.hashBytes(hashData).asInt());
+        return String.format("#%x:%x", hf.hashBytes(hashData).asInt(), System.nanoTime() & 0xFFFFFFFFL);
     }
 
     /** Generate a humongous salt with as many moving parts as possible,
