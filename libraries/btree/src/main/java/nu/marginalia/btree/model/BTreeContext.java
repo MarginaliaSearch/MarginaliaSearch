@@ -2,10 +2,16 @@ package nu.marginalia.btree.model;
 
 import nu.marginalia.btree.BTreeWriter;
 
-public record BTreeContext(int maxLayers,
-                           int entrySize,
-                           int blockSizeBits,
-                           int blockSizeWords) {
+/**
+ *
+ * @param maxLayers         The maximum number of index layers
+ * @param entrySize         The entry size, for size 1 the key is the data. For sizes larger than 1,
+ *                          the data will be expected to sit in the successive position to the key
+ *                          in the data layer
+ * @param blockSizeBits     Bits per data block
+ * @param blockSizeWords    Words per data block
+ */
+public record BTreeContext(int maxLayers, int entrySize, int blockSizeBits, int blockSizeWords) {
 
     // 8 pages is the breaking point where using a B-tree is actually advantageous
     // over just binary searching in a sorted list. Above 8 pages, binary search will
@@ -14,8 +20,8 @@ public record BTreeContext(int maxLayers,
 
     private static final int MIN_PAGES_FOR_BTREE = 8;
 
-    public BTreeContext(int MAX_LAYERS, int entrySize, int BLOCK_SIZE_BITS) {
-        this(MAX_LAYERS, entrySize, BLOCK_SIZE_BITS, 1 << BLOCK_SIZE_BITS);
+    public BTreeContext(int maxLayers, int entrySize, int blockSizeBits) {
+        this(maxLayers, entrySize, blockSizeBits, 1 << blockSizeBits);
     }
 
     public long calculateSize(int numEntries) {

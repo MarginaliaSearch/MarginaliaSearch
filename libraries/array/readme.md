@@ -8,9 +8,8 @@ It's a very C++-style library that does unidiomatic things with interface defaul
 functions to get diamond inheritance.
 
 # Quick demo:
-```
-var array =
-        LongArray.mmapForWriting(Path.of("/tmp/test"), 1<<16);
+```java
+var array = LongArray.mmapForWriting(Path.of("/tmp/test"), 1<<16);
 
 array.transformEach(50, 1000, (pos, val) -> Long.hashCode(pos));
 array.quickSort(50, 1000);

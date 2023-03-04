@@ -8,6 +8,5 @@ search engine code.
 * [query-parser](query-parser/) contains code for parsing the user-facing query grammar.
 * [renderer](renderer/) contains utility code for rendering website templates.
 
-
 * [screenshots](screenshots/) and [random-websites](random-websites/) contains SQL queries random
 exploration mode.
