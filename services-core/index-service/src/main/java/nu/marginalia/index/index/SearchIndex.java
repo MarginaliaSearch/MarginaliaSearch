@@ -31,7 +31,7 @@ public class SearchIndex {
 
     @NotNull
     private final IndexServicesFactory servicesFactory;
-    private IndexSearchSetsService searchSetsService;
+    private final IndexSearchSetsService searchSetsService;
 
     @Inject
     public SearchIndex(@NotNull IndexServicesFactory servicesFactory, IndexSearchSetsService searchSetsService) {

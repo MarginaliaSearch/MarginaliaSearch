@@ -85,5 +85,6 @@ converter-process ${SAMPLE_DIR}/plan.yaml
 loader-process ${SAMPLE_DIR}/plan.yaml
 
 mv vol/iw/index.dat vol/iw/0/page-index.dat
+rm -f vol/ir/0/*
 
 popd

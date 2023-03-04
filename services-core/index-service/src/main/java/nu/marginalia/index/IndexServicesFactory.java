@@ -20,7 +20,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.stream.Stream;
 
 @Singleton
 public class IndexServicesFactory {
@@ -42,6 +44,7 @@ public class IndexServicesFactory {
     int LIVE_PART = 0;
 
     int NEXT_PART = 1;
+
     @Inject
     public IndexServicesFactory(
             @Named("tmp-file-dir") Path tmpFileDir,
@@ -70,6 +73,28 @@ public class IndexServicesFactory {
 
     public Path getSearchSetsBase() {
         return searchSetsBase;
+    }
+
+    public boolean isPreconvertedIndexPresent() {
+        return Stream.of(
+                revIndexWords.get(NEXT_PART).toPath(),
+                revIndexDoc.get(NEXT_PART).toPath(),
+                revPrioIndexWords.get(NEXT_PART).toPath(),
+                revPrioIndexDoc.get(NEXT_PART).toPath(),
+                fwdIndexDocData.get(NEXT_PART).toPath(),
+                fwdIndexDocId.get(NEXT_PART).toPath()
+        ).allMatch(Files::exists);
+    }
+
+    public boolean isConvertedIndexMissing() {
+        return !Stream.of(
+                revIndexWords.get(LIVE_PART).toPath(),
+                revIndexDoc.get(LIVE_PART).toPath(),
+                revPrioIndexWords.get(LIVE_PART).toPath(),
+                revPrioIndexDoc.get(LIVE_PART).toPath(),
+                fwdIndexDocData.get(LIVE_PART).toPath(),
+                fwdIndexDocId.get(LIVE_PART).toPath()
+        ).allMatch(Files::exists);
     }
 
     public void convertIndex(DomainRankings domainRankings) throws IOException {

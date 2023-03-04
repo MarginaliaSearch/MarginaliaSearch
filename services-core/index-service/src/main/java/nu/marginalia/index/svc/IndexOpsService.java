@@ -48,7 +48,7 @@ public class IndexOpsService {
 
 
     @CheckReturnValue
-    private <T> Optional<T> run(Callable<T> c) throws Exception {
+    public <T> Optional<T> run(Callable<T> c) throws Exception {
         if (!opsLock.tryLock())
             return Optional.empty();
         try {
@@ -61,7 +61,7 @@ public class IndexOpsService {
 
 
     @CheckReturnValue
-    private boolean run(Runnable r) {
+    public boolean run(Runnable r) {
         if (!opsLock.tryLock())
             return false;
         try {
