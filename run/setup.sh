@@ -15,7 +15,7 @@ function download_model {
 pushd $(dirname $0)
 
 cp -r template/conf .
-mkdir -p model logs db samples install vol/ir vol/iw/search-sets
+mkdir -p model logs db samples install vol/ir/{0,1}/ vol/iw/{0,1}/search-sets
 
 download_model model/English.DICT https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/master/Models/POS/English.DICT
 download_model model/English.RDR https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/master/Models/POS/English.RDR

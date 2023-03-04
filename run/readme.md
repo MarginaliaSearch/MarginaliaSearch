@@ -14,9 +14,9 @@ From a fresh to running system, you'll need to do this:
 
 From the project root
 ```
-$ ./gradlew assemble docker
-
 $ run/setup.sh
+
+$ ./gradlew assemble docker
 
 $ docker-compose up -d mariadb
 
