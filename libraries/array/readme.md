@@ -43,7 +43,7 @@ LongQueryBuffer buffer = new LongQueryBuffer(1000);
 
 // Prepare the buffer for filling
 buffer.reset();
-fillBuffer(buffer); 
+fillBufferSomehow(buffer); 
 
 // length is updated and data is set
 // read pointer and write pointer is now at 0
