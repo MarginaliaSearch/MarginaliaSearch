@@ -1,35 +1,65 @@
-package nu.marginalia.index.service;
+package nu.marginalia.index.svc;
 
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import nu.marginalia.index.client.model.query.EdgeSearchSpecification;
+import nu.marginalia.index.client.model.query.EdgeSearchSubquery;
+import nu.marginalia.index.client.model.query.SearchSetIdentifier;
+import nu.marginalia.index.client.model.results.EdgeSearchResultItem;
+import nu.marginalia.index.index.SearchIndex;
+import nu.marginalia.index.journal.model.IndexJournalEntryData;
+import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
+import nu.marginalia.index.journal.writer.IndexJournalWriter;
+import nu.marginalia.index.query.limit.QueryLimits;
+import nu.marginalia.index.query.limit.QueryStrategy;
+import nu.marginalia.index.query.limit.SpecificationLimit;
+import nu.marginalia.lexicon.KeywordLexicon;
+import nu.marginalia.model.crawl.EdgePageWordFlags;
+import nu.marginalia.model.idx.EdgePageDocumentsMetadata;
+import nu.marginalia.model.idx.EdgePageWordMetadata;
+import nu.marginalia.service.server.Initialization;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
+import spark.Spark;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 
 @Execution(SAME_THREAD)
-public class EdgeIndexIntegrationTest {
-/* FIXME
+public class IndexQueryServiceIntegrationTest {
 
     @Inject
     Initialization initialization;
-    @Inject
-    EdgeIndexLexiconService lexiconService;
-    @Inject
-    EdgeIndexQueryService queryService;
-    @Inject
-    EdgeIndexOpsService opsService;
+
+    IndexQueryServiceIntegrationTestModule testModule;
 
     @Inject
-    SearchIndexControl searchIndexControl;
+    IndexQueryService queryService;
+    @Inject
+    SearchIndex searchIndex;
 
-    EdgeIndexIntegrationTestModule testModule;
+    @Inject
+    KeywordLexicon keywordLexicon;
+
+    @Inject
+    IndexJournalWriter indexJournalWriter;
 
     @BeforeEach
-    public void setUp() throws IOException, InterruptedException {
+    public void setUp() throws IOException {
 
-        testModule = new EdgeIndexIntegrationTestModule();
+        testModule = new IndexQueryServiceIntegrationTestModule();
         Guice.createInjector(testModule).injectMembers(this);
 
         initialization.setReady();
-        searchIndexControl.initialize(initialization);
     }
 
     @AfterEach
@@ -44,12 +74,11 @@ public class EdgeIndexIntegrationTest {
         for (int i = 1; i < 512; i++) {
             loadData(i);
         }
-        searchIndexControl.getIndexWriter(0).flushWords();
-        Thread.sleep(100);
 
-        opsService.reindexEndpoint(null, null);
+        indexJournalWriter.close();
+        searchIndex.switchIndex();
 
-        var rsp = queryService.query(
+        var rsp = queryService.justQuery(
                 EdgeSearchSpecification.builder()
                         .queryLimits(new QueryLimits(10, 10, Integer.MAX_VALUE, 4000))
                         .queryStrategy(QueryStrategy.SENTENCE)
@@ -77,12 +106,11 @@ public class EdgeIndexIntegrationTest {
         for (int i = 1; i < 512; i++) {
             loadDataWithDomain(i/100, i);
         }
-        searchIndexControl.getIndexWriter(0).flushWords();
-        Thread.sleep(100);
 
-        opsService.reindexEndpoint(null, null);
+        indexJournalWriter.close();
+        searchIndex.switchIndex();
 
-        var rsp = queryService.query(
+        var rsp = queryService.justQuery(
                 EdgeSearchSpecification.builder()
                         .queryLimits(new QueryLimits(10, 10, Integer.MAX_VALUE, 4000))
                         .year(SpecificationLimit.none())
@@ -104,12 +132,10 @@ public class EdgeIndexIntegrationTest {
         for (int i = 1; i < 512; i++) {
             loadData(i);
         }
-        searchIndexControl.getIndexWriter(0).flushWords();
-        Thread.sleep(100);
+        indexJournalWriter.close();
+        searchIndex.switchIndex();
 
-        opsService.reindexEndpoint(null, null);
-
-        var rsp = queryService.query(
+        var rsp = queryService.justQuery(
                 EdgeSearchSpecification.builder()
                         .queryLimits(new QueryLimits(10, 10, Integer.MAX_VALUE, 4000))
                         .quality(SpecificationLimit.none())
@@ -142,11 +168,11 @@ public class EdgeIndexIntegrationTest {
 
         long[] data = new long[factors.length*2];
         for (int i = 0; i < factors.length; i++) {
-            data[2*i] = lexiconService.getOrInsertWord(Integer.toString(factors[i]));
+            data[2*i] = keywordLexicon.getOrInsert(Integer.toString(factors[i]));
             data[2*i + 1] = new EdgePageWordMetadata(i, i, i, EnumSet.of(EdgePageWordFlags.Title)).encode();
         }
 
-        lexiconService.putWords(0, header, new IndexJournalEntryData(data));
+        indexJournalWriter.put(header, new IndexJournalEntryData(data));
     }
 
     public void loadDataWithDomain(int domain, int id) {
@@ -155,11 +181,10 @@ public class EdgeIndexIntegrationTest {
 
         long[] data = new long[factors.length*2];
         for (int i = 0; i < factors.length; i++) {
-            data[2*i] = lexiconService.getOrInsertWord(Integer.toString(factors[i]));
+            data[2*i] = keywordLexicon.getOrInsert(Integer.toString(factors[i]));
             data[2*i + 1] = new EdgePageWordMetadata(i % 20, i, i, EnumSet.of(EdgePageWordFlags.Title)).encode();
         }
 
-        lexiconService.putWords(0, header, new IndexJournalEntryData(data));
+        indexJournalWriter.put(header, new IndexJournalEntryData(data));
     }
-*/
 }

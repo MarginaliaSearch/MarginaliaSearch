@@ -102,6 +102,11 @@ public class IndexQueryService {
         }
     }
 
+    // exists for test access
+    EdgeSearchResultSet justQuery(EdgeSearchSpecification specsSet) {
+        return new EdgeSearchResultSet(executeSearch(new SearchParameters(specsSet, getSearchSet(specsSet))));
+    }
+
     private SearchSet getSearchSet(EdgeSearchSpecification specsSet) {
         if (specsSet.domains != null && !specsSet.domains.isEmpty()) {
             return new SmallSearchSet(specsSet.domains);

@@ -6,10 +6,13 @@ import com.google.inject.name.Named;
 import nu.marginalia.index.forward.ForwardIndexConverter;
 import nu.marginalia.index.forward.ForwardIndexReader;
 import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile;
+import nu.marginalia.index.journal.writer.IndexJournalWriter;
+import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
 import nu.marginalia.index.reverse.ReverseIndexConverter;
 import nu.marginalia.index.reverse.ReverseIndexPrioReader;
 import nu.marginalia.index.reverse.ReverseIndexPriorityParameters;
 import nu.marginalia.index.reverse.ReverseIndexReader;
+import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.index.index.SearchIndexReader;
 import org.slf4j.Logger;
@@ -20,7 +23,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 
@@ -90,6 +92,10 @@ public class IndexServicesFactory {
                 fwdIndexDocData.get(LIVE_PART).toPath(),
                 fwdIndexDocId.get(LIVE_PART).toPath()
         ).noneMatch(Files::exists);
+    }
+
+    public IndexJournalWriter createIndexJournalWriter(KeywordLexicon lexicon) throws IOException {
+        return new IndexJournalWriterImpl(lexicon, writerIndexFile.get(LIVE_PART).toPath());
     }
 
     public void convertIndex(DomainRankings domainRankings) throws IOException {
