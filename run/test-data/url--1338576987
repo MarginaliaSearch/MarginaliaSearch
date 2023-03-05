@@ -1,0 +1,896 @@
+<!--?xml version="1.0" encoding="UTF-8" ?--><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"> <!-- Copyright (C) 1995-2013 by Matthew Deter. All Rights Reserved. --> 
+ <head> 
+  <title>Matt's Unix Security Page</title> 
+  <meta name="description" content="Matt's Unix Security Page provides published security papers, software exploits, tools, and plenty of good links to meet your Unix Security needs."> 
+  <meta name="keywords" content="unix security, unix, security, TCP/IP, network, networking, exploit, vulnerability, hack, crack, source code, lock, lockpick, lockpicking"> 
+  <style type="text/css">
+        body {
+            background-color: White;
+        }
+
+        li {
+            margin-bottom: 0.5em;
+        }
+
+        a[href^='http'] {
+            padding-right: 15px;
+            background: transparent url(../images/external.png) no-repeat center right;
+        }
+
+        .todo {
+            color: red;
+            background-color: Yellow;
+        }
+
+        .header {
+            background-color: #87CEFA;
+            /*  light sky blue */
+        }
+
+        .hangleft {
+            margin-left: -1em;
+        }
+    </style> <!-- new tag
+    <img src="../images/new.gif" alt="New!" />
+    --> 
+ </head> 
+ <body style="margin-left: 10%; margin-right: 10%"> 
+  <p></p> 
+  <div style="text-align: center"> 
+   <h2> <i>Matt's Web World presents...</i> </h2> 
+   <img src="unix.gif" alt="Unix Security"> 
+   <br> <span style="font-size: smaller">Established November 1, 1995. <br> Last updated on May 1, 2018. </span> 
+   <p></p> <a href="#toc"> <img src="../images/bluebar.gif" alt="Click this seperator to return to the Table of Contents." width="600" height="30" style="border: 0"> </a> 
+  </div> 
+  <div> 
+   <p> <b> <span style="font-size: x-large">W</span>elcome</b> to my Unix security page! This page is not a complete listing of Unix security information and tools. What is hosted here is what I personally find useful and/or interesting. Hyperlinks to other sites are provided at the bottom of this page for those seeking something not listed here.</p> 
+   <p> This page started out as a place to store Unix-related research papers I downloaded from FTP sites, back when I was really happy to be reading <a href="http://en.wikipedia.org/wiki/Newsgroup"> Usenet newsgroups</a> at 9600bps. It's been almost 15 years since and the content here has grown a bit beyond Unix, to include Windows-based tools (I know, I know...), live CD distros, and another favorite topic of mine, lockpicking.</p> 
+   <p> I have not done a great deal in the last decade other than link maintenance. But the page remains popular and I think it presents much of the core Unix lore and security knowledge. All of the links are current now, and the content is a bit more modern in its focus. There is so much more out there in the world since I started this in '95, but here lies an early signpost, and you would do well to master its content. </p> 
+   <p> For those who might think it unwise to publicly disclose security holes and the techniques used to pass through them, I urge you to read Charles Tomlinson's <a href="papers/treatise_locks.html"> Rudimentary Treatise on the Construction of Locks</a>.</p> 
+   <p> Everything here is provided for informational purposes only. The presence of any link on this page is not an endorsement of its content. And I certainly do not endorse unauthorized access to other people's computers! Property rights exist and should be respected. Think <i>white hat</i>.</p> 
+   <p> If you wish to comment on this page please use the <a href="../contact/index.html">contact form </a> to send me a message. If you are interested in advertising on this page please contact me to discuss terms.</p> 
+  </div> 
+  <p style="text-align: center"> <a href="#toc"> <img src="../images/bluebar.gif" alt="Click this seperator to return to the Table of Contents." width="600" height="30" style="border: 0"> </a> </p> 
+  <h2 class="hangleft"> <a id="toc">Table of Contents</a> </h2> 
+  <p> Click any of the blue section separators to return to this table of contents.</p> 
+  <p> Icons <img alt="external link icon" src="../images/external.png"> indicate a link which will take you away from this site. (In the same window! Shift-click on links if you want them in a new window.)</p> 
+  <table border="0" cellpadding="0" cellspacing="0" width="100%"> 
+   <tbody>
+    <tr> 
+     <td> 
+      <ul> 
+       <li> <a href="#new">What's New?</a> </li> 
+       <li> <a href="#fileformats">File Formats &amp; Extensions</a> </li> 
+       <li> <a href="#papers">Published Security Papers</a> </li> 
+       <li> <a href="#unixcode">Unix Source Code Hacks</a> </li> 
+       <li> <a href="#unixtools">Unix Security Tools</a> </li> 
+       <li> <a href="#foss">Multi-platform Security Tools</a> </li> 
+       <li> <a href="#wintools">Windows Security Tools</a> </li> 
+       <li> <a href="#livecds">Live CDs</a> </li> 
+       <li> <a href="#lockpicking">Lockpicking</a> </li> 
+       <li> <a href="#hyperlinks">Hyperlinks</a> </li> 
+      </ul> </td> 
+     <td align="center" valign="middle" style="width: 50%"> <img src="dragon.gif" alt="Dragon"> <br> <p style="font-size: x-large"> <i> <b>There Be Dragons...</b> </i> </p> </td> 
+    </tr> 
+    <tr> 
+     <td align="center" colspan="2"> <p> <a href="http://validator.w3.org/check?uri=referer"> <img src="../images/valid-xhtml10-blue.png" alt="Valid XHTML 1.0 Transitional" style="border: 0" height="31" width="88"></a> &nbsp; <a href="http://jigsaw.w3.org/css-validator/check/referer"> <img style="border: 0; width: 88px; height: 31px" src="../images/vcss-blue.gif" alt="Valid CSS!"> </a> </p> </td> 
+    </tr> 
+   </tbody>
+  </table> 
+  <p style="text-align: center"> <a href="#toc"> <img src="../images/bluebar.gif" alt="Click this seperator to return to the Table of Contents." width="600" height="30" style="border: 0"> </a> </p> 
+  <h2 class="hangleft" style="margin-top: 1em"> <a id="new">What's New?</a> </h2> 
+  <p style="font-weight: bold; text-decoration: underline"> May 1, 2018 </p> 
+  <ul> 
+   <li>External links have been validated and freshened.</li> 
+   <li>One new external site with crypto and network security info from ShoreTel.</li> 
+  </ul> 
+  <p style="text-align: center"> <a href="#toc"> <img src="../images/bluebar.gif" alt="Click this seperator to return to the Table of Contents." width="600" height="30" style="border: 0"> </a> </p> 
+  <div style="text-align: center"> 
+   <script type="text/javascript">< !--
+                google_ad_client = "pub-7280733859006614";
+            google_ad_width = 728;
+            google_ad_height = 90;
+            google_ad_format = "728x90_as";
+            google_ad_type = "text";
+            google_ad_channel = "";
+            google_color_border = "336699";
+            google_color_bg = "FFFFFF";
+            google_color_link = "0000FF";
+            google_color_url = "008000";
+            google_color_text = "000000";
+//--></script> 
+   <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+        </script> 
+  </div> 
+  <p style="text-align: center"> <a href="#toc"> <img src="../images/bluebar.gif" alt="Click this seperator to return to the Table of Contents." width="600" height="30" style="border: 0"> </a> </p> 
+  <h2 class="hangleft"> <a id="fileformats">File Formats &amp; Extensions</a> </h2> 
+  <p> The file archive uses various extensions, sometimes with multiple extensions in series. The extensions are summarized in the following table and links to the utility software needed to read these formats are provided.</p> 
+  <div style="text-align: left;"> 
+   <table align="center" border="1" cellspacing="0" cellpadding="4" width="550"> 
+    <tbody>
+     <tr class="header"> 
+      <th> Extension </th> 
+      <th> File Format Info </th> 
+     </tr> 
+     <tr> 
+      <td align="center"> <tt>.c</tt> </td> 
+      <td> 'C' language source file. Use <a href="http://gcc.gnu.org/">gcc</a> to compile to machine code. </td> 
+     </tr> 
+     <tr> 
+      <td align="center"> <tt>.gz</tt> </td> 
+      <td> Gzip compressed file. Use <a href="http://www.gzip.org/">gzip</a> or <a href="http://www.izarc.org/"> IZArc</a> to decompress these files. </td> 
+     </tr> 
+     <tr> 
+      <td align="center"> <tt>.pdf</tt> </td> 
+      <td> Adobe Acrobat file. Use <a href="http://get.adobe.com/reader/">Acrobat Reader</a> to view and print these files. </td> 
+     </tr> 
+     <tr> 
+      <td align="center"> <tt>.ps</tt> </td> 
+      <td> Adobe Postscript file. Use <a href="http://pages.cs.wisc.edu/~ghost/">Ghostview</a> to view and print these files. Ghostscript also does Postscript-to-ASCII conversions. </td> 
+     </tr> 
+     <tr> 
+      <td align="center"> <tt>.tar</tt> </td> 
+      <td> Unix Tape Archive file. Use your Unix's native <tt>tar</tt> command or on Windows try <a href="http://www.izarc.org/">IZArc</a> to handle these files. </td> 
+     </tr> 
+     <tr> 
+      <td align="center"> <tt>.txt</tt> </td> 
+      <td> ASCII Text file. Use standard text editor or browser. </td> 
+     </tr> 
+     <tr> 
+      <td align="center"> <tt>.zip</tt> </td> 
+      <td> PKZip compressed file archive. Use <a href="http://www.info-zip.org/">Info-Zip</a> or <a href="http://www.izarc.org/">IZArc</a> to handle these files. </td> 
+     </tr> 
+    </tbody>
+   </table> 
+  </div> 
+  <p style="text-align: center"> <a href="#toc"> <img src="../images/bluebar.gif" alt="Click this seperator to return to the Table of Contents." width="600" height="30" style="border: 0"> </a> </p> 
+  <h2 class="hangleft"> <a id="papers">Published Security Papers</a> </h2> 
+  <h4> Sorted alphabetically by author name.</h4> 
+  <p> The papers here were orignally in Adobe Postscript ( <tt>.ps</tt>) format. I have converted them all to Adobe Acrobat ( <tt>.pdf</tt>), since this is the successor format from Adobe, and has many advantages to Postscript. The Postscript <tt>.ps</tt> files are all gzip'd and therefore end in <tt>.ps.gz</tt> The <tt>.pdf</tt> PDF files are almost as small as their gzip'd counterparts and therefore have not been compressed; just click and read (or print). </p> 
+  <dl> 
+   <dt> <a href="papers/unix_security_checklist.txt">Unix Computer Security Checklist</a> 
+    <br> <i>AUSCERT, Australian Computer Emergency Response Team; 1995; ASCII Text; 89k</i> 
+   </dt> 
+   <dd>
+     A comprehensive checklist for securing your Unix box. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/packets_found_bellovin.pdf">Packets Found on an Internet</a> 
+    <br> <i>Bellovin, Steven M.; 1993; Acrobat format; also available in <a href="papers/packets_found_bellovin.ps.gz"> Postscript format</a> </i> 
+   </dt> 
+   <dd>
+     A very interesting paper describing the various attacks, probes, and miscellaneous packets floating past AT&amp;T Bell Labs' net connection.
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/tcpip_problems_bellovin.pdf">Security Problems in the TCP/IP Protocol Suite </a> 
+    <br> <i>Bellovin, Steven M.; 1989; Acrobat format; also available in <a href="papers/tcpip_problems_bellovin.ps.gz"> Postscript format</a> </i> 
+   </dt> 
+   <dd>
+     A broad overview of problems within TCP/IP itself, as well as many common application layer protocols which rely on TCP/IP.
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/dragons_bellovin.pdf">There Be Dragons</a> 
+    <br> <i>Bellovin, Steven M.; 1992; Acrobat format; also available in <a href="papers/dragons_bellovin.ps.gz"> Postscript format</a> </i> 
+   </dt> 
+   <dd>
+     Another Bellovin paper discussing the various attacks made on <tt>att.research.com</tt>. This paper is also the source for this page's title.
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/ipc_tutorial.pdf">An Advanced 4.3BSD IPC Tutorial</a> 
+    <br> <i>Berkeley CSRG; date unknown; Acrobat format; also available in <a href="papers/ipc_tutorial.ps.gz"> Postscript format</a> </i> 
+   </dt> 
+   <dd>
+     This paper describes the IPC facilities new to 4.3BSD. It was written by the CSRG as a supplement to the manpages.
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/nfs_trace.txt">NFS Tracing by Passive Network Monitoring</a> 
+    <br> <i>Blaze, Matt; 1992; ASCII Text</i> 
+   </dt> 
+   <dd>
+     Blaze, now famous for cracking the Clipper chip while at Bell Labs, wrote this paper while he was a PhD candidate at Princeton.
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/cert_generic.txt">Generic Unix Security Information</a> 
+    <br> <i>CERT Advisory Team, 1993, ASCII Text</i> 
+   </dt> 
+   <dd>
+     A good general commentary on Unix security, with specific places to look for suspicious files if you believe your machine's security may be compromised. It's a bit dated, so don't pay attention to the version numbers (Sendmail 8.6.4 is definitely not current anymore!)
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/cert_ip_spoof.txt">IP Spoofing</a> 
+    <br> <i>CERT Advisory Team, 1995, ASCII Text</i> 
+   </dt> 
+   <dd>
+     Not too exciting, but useful for the uninitiated.
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/cert_anon_ftp.txt">Securing Anon FTP Servers</a> 
+    <br> <i>CERT Advisory Team, 1995, ASCII Text</i> 
+   </dt> 
+   <dd>
+     This CERT advisory details the access permissions and server configuration which should be followed to prevent anonymous FTP security breaches.
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/packet_filt_chapman.pdf">Network (In)Security Through IP Packet Filtering </a> 
+    <br> <i>Chapman, D. Brent; 1992; Acrobat format; also available in <a href="papers/packet_filt_chapman.ps.gz"> Postscript format</a> </i> 
+   </dt> 
+   <dd>
+     Why packet filtering is a difficult to use and not always secure method of securing a network.
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/berferd_cheswick.pdf">An Evening with Berferd</a> 
+    <br> <i>Cheswick, Bill; 1991; Acrobat format; also available in <a href="papers/berferd_cheswick.ps.gz"> Postscript format</a> </i> 
+   </dt> 
+   <dd>
+     A cracker from the Netherlands is "lured, endured, and studied."
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/gateway_cheswick.pdf">Design of a Secure Internet Gateway</a> 
+    <br> <i>Cheswick, Bill; 1990; Acrobat format; also available in <a href="papers/gateway_cheswick.ps.gz"> Postscript format</a> </i> 
+   </dt> 
+   <dd>
+     Details the history and design of AT&amp;T's Internet gateway.
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/improving_security_sri.pdf">Improving the Security of your Unix System </a> 
+    <br> <i>Curry, David, SRI International; 1990; Acrobat format; also available in <a href="papers/improving_security_sri.ps.gz"> Postscript format</a> </i> 
+   </dt> 
+   <dd>
+     This is the somewhat well known SRI Report on Unix Security. It's a good solid starting place for securing a Unix box.
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/internet_worm.pdf">With Microscope &amp; Tweezers</a> 
+    <br> <i>Eichin &amp; Rochlis; 1989; Acrobat format; also available in <a href="papers/internet_worm.ps.gz"> Postscript format</a> </i> 
+   </dt> 
+   <dd>
+     An analysis of the Morris Internet Worm of 1988 from MIT's perspective.
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/cops.pdf">The COPS Security Checker System</a> 
+    <br> <i>Farmer &amp; Spafford; 1994; Acrobat format; also available in <a href="papers/cops.ps.gz"> Postscript format</a> </i> 
+   </dt> 
+   <dd>
+     The original Usenix paper from 1990 republished by CERT in 1994.
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/cops_dan_farmer.txt">COPS and Robbers</a> 
+    <br> <i>Farmer, Dan; 1991; ASCII Text</i> 
+   </dt> 
+   <dd>
+     This paper discusses a bit of general security and then goes into detail regarding Unix system misconfigurations, specifically ones that <a href="#cops">COPS</a> checks for. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/improve_by_breakin.html">Improving The Security of Your System by Breaking Into It</a> 
+    <br> <i>Farmer &amp; Venema; 1993; HTML</i> 
+   </dt> 
+   <dd>
+     An excellent text by Dan Farmer and Wietse Venema. If you haven't read this before, here's your opportunity.
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/nis_paper.pdf">A Unix Network Protocol Security Study: NIS</a> 
+    <br> <i>Hess, Safford, &amp; Pooch; date unknown; Acrobat format; also available in <a href="papers/nis_paper.ps.gz">Postscript format</a> </i> 
+   </dt> 
+   <dd>
+     Outlines NIS and its design faults regarding security.
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/tcp_attack.pdf">A Simple Active Attack Against TCP</a> 
+    <br> <i>Joncheray, Laurent; 1995; Acrobat format; also available in <a href="papers/tcp_attack.ps.gz"> Postscript format</a> </i> 
+   </dt> 
+   <dd>
+     This paper describes an active attack against TCP which allows re-direction (hijacking) of the TCP stream.
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/passwords_klein.pdf">Foiling the Cracker</a> 
+    <br> <i>Klein, Daniel; 1990; Acrobat format; also available in <a href="papers/passwords_klein.ps.gz"> Postscript format</a> </i> 
+   </dt> 
+   <dd>
+     A Survey of, and Improvements to, Password Security. Basically a treatise on how to select proper passwords.
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/bsd_tcpip_weakness_morris.pdf">A Weakness in the 4.2BSD Unix TCP/IP Software </a> 
+    <br> <i>Morris, Robert T; 1985; Acrobat format; also available in <a href="papers/bsd_tcpip_weakness_morris.ps.gz"> Postscript format</a> </i> 
+   </dt> 
+   <dd>
+     This paper describes the much ballyhooed method by which one may forge packets with TCP/IP. Morris wrote this in 1985. It only took the media 10 years to make a stink about it!
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/phrack_tracks.pdf">Covering Your Tracks</a> 
+    <br> <i>Phrack Vol. 4, Issue #43; Acrobat format; also available in <a href="papers/phrack_tracks.ps.gz"> Postscript format</a> </i> 
+   </dt> 
+   <dd>
+     A Phrack article describing the unix system logs and how it is possible to reduce the footprint and visibility of unauthorized access.
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/phrack_shadow_crack.pdf">Cracking Shadowed Password Files</a> 
+    <br> <i>Phrack Vol. 5, Issue #46; Acrobat format; also available in <a href="papers/phrack_shadow_crack.ps.gz"> Postscript format</a> </i> 
+   </dt> 
+   <dd>
+     A Phrack article describing how to use the system call password function to bypass the shadow password file.
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/syn_flood_phrack.html">TCP SYN Flood (Project Neptune)</a> 
+    <br> <i>Phrack Vol. 7, Issue #48; 1996; HTML</i> 
+   </dt> 
+   <dd>
+     Includes explanation of this denial-of-service attack as well as Linux source implementation. Also of interest may be the <a href="papers/syn_flood_cert.txt">CERT document</a> warning that Phrack had published this vulnerability.
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/firewalls_ranum.pdf">Thinking About Firewalls</a> 
+    <br> <i>Ranum, Marcus; 1992; Acrobat format; also available in <a href="papers/firewalls_ranum.ps.gz"> Postscript format</a> </i> 
+   </dt> 
+   <dd>
+     A general overview of firewalls, with tips on how to select one to meet your needs.
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/dnsweak.pdf">Addressing Weaknesses in the Domain Name System Protocol</a> 
+    <br> <i>Schuba, Christoph L.; 1993; Acrobat format</i> 
+   </dt> 
+   <dd>
+     Describes problems with the DNS and one of its implementations that allow the abuse of name based authentication.
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/pkey.pdf">Public Key Certification &amp; Secure File Transfer</a> 
+    <br> <i>Shuba &amp; Sheth; approx. 1994; Acrobat format</i> 
+   </dt> 
+   <dd>
+     This document describes secure file transfer between agents, providing confidentiality and integrity of transferred files, originator authentication, and non-repudiation.
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/src_route.txt">Source Routing Info</a> 
+    <br> <i>Usenet <tt>comp.security.unix</tt>; 1995; ASCII Text</i> 
+   </dt> 
+   <dd>
+     An interesting discussion of TCP/IP source routing stuff.
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/name.pdf">Countering Abuse of Name-based Authentication</a> 
+    <br> <i>Schuba &amp; Spafford; approx. 1994; Acrobat format</i> 
+   </dt> 
+   <dd>
+     Discusses conceptual design issues of naming systems, specifically DNS, and how to address the shortcomings.
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="papers/tcp_wrapper.pdf">TCP Wrapper</a> 
+    <br> <i>Venema, Wietse; 1992; Acrobat format; also available in <a href="papers/tcp_wrapper.ps.gz"> Postscript format</a> </i> 
+   </dt> 
+   <dd>
+     Wietse's paper describing his TCP Wrapper concept, the basis for the TCP Wrappers security and logging suite.
+   </dd> 
+  </dl> 
+  <p style="text-align: center"> <a href="#toc"> <img src="../images/bluebar.gif" alt="Click this seperator to return to the Table of Contents." width="600" height="30" style="border: 0"> </a> </p> 
+  <center> 
+   <script type="text/javascript">< !--
+                google_ad_client = "pub-7280733859006614";
+            google_ad_width = 728;
+            google_ad_height = 90;
+            google_ad_format = "728x90_as";
+            google_ad_type = "text";
+            google_ad_channel = "";
+            google_color_border = "336699";
+            google_color_bg = "FFFFFF";
+            google_color_link = "0000FF";
+            google_color_url = "008000";
+            google_color_text = "000000";
+//--></script> 
+   <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+        </script> 
+  </center> 
+  <p style="text-align: center"> <a href="#toc"> <img src="../images/bluebar.gif" alt="Click this seperator to return to the Table of Contents." width="600" height="30" style="border: 0"> </a> </p> 
+  <h2 class="hangleft"> <a id="unixcode">Unix Source Code Hacks</a> </h2> 
+  <h4> Sorted alphabetically by name</h4> 
+  <dl> 
+   <dt> <a href="software/arnudp.c">arnudp.c</a> 
+   </dt> 
+   <dd>
+     Source code demonstrates how to send a single UDP packet with the source/destination address/port set to arbitrary values. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/block.c">block.c</a> 
+   </dt> 
+   <dd>
+     Prevents a user from logging in by monitoring utmp and closing down his tty port as soon as it appears in the system. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/ESniff.c">esniff.c</a> 
+   </dt> 
+   <dd>
+     Source for a basic ethernet sniffer. Originally came from an article in Phrack, I think. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/hide.c">hide.c</a> 
+   </dt> 
+   <dd>
+     Code to exploit a world-writeable /etc/utmp and allow the user to modify it interactively. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/identd.c">identd.c</a> 
+   </dt> 
+   <dd>
+     A modified identd that tests for the queue-file bug which is present in Sendmail versions earlier than 8.6.10 and possibly some versions of 5.x. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/listhosts.c">listhosts.c</a> 
+   </dt> 
+   <dd>
+     Requests a DNS name server to do a zone transfer and list the hosts it knows about. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/mnt.tgz">mnt</a> 
+   </dt> 
+   <dd>
+     This program demonstrates how to exploit a security hole in the HP-UX 9 rpc.mountd program. Essentially, it shows how to steal NFS file handles which will allow access from clients which do not normally have privileges. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/nfsbug.tgz">NFS-Bug</a> 
+   </dt> 
+   <dd>
+     Demonstrates a bug in NFS which allows non-clients to access any NFS served partition. AIX &amp; HPUX patches included. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/nfsshell.c">NFS Shell</a> 
+   </dt> 
+   <dd>
+     A shell which will access NFS disks. Very useful if you have located an insecure NFS server. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/rootkit.zip">RootKit</a> 
+   </dt> 
+   <dd>
+     A suite of programs like ps, ls, &amp; du which have been modified to prevent display of certain files &amp; processes in order to hide an intruder. Modified Berkeley source code. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/rpc_chk.sh">rpc_chk.sh</a> 
+   </dt> 
+   <dd>
+     Bourne shell script to get a list of hosts from a DNS nameserver for a given domain and return a list of hosts running <tt>rexd</tt> or <tt>ypserve</tt>. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/seq_number.c">seq_number.c</a> 
+   </dt> 
+   <dd>
+     Code to exploit the TCP Sequence Number Generator bug. An brief but clear explanation of the bug can be found in Steve Bellovin's <a href="papers/seqattack_bellovin.txt"> sequence number comment</a>. Note that this code won't compile as-is because it is missing a library that does some of the low-level work. This is how the source was released by Mike Neuman, the author. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/socket_demon13.zip">Socket Demon v1.3</a> 
+   </dt> 
+   <dd>
+     Daemon to sit on a specified IP port and provide passworded shell access. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/solsniffer.c">Solaris Sniffer</a> 
+   </dt> 
+   <dd>
+     A version of E-Sniff modified for Solaris 2. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a id="telnetd" href="software/telnetd_exploit.tgz">telnetd Exploit</a> 
+   </dt> 
+   <dd>
+     This tarfile contains source code to the <i>getpass()</i> and <i>openlog()</i> library routines which /bin/login can be made to link at runtime due to a feature of telnetd's environment variable passing. Root anyone? The fix is to make sure your /bin/login is statically linked. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/ttysurf.c">ttysurf.c</a> 
+   </dt> 
+   <dd>
+     A simple program to camp out on the /dev/tty of your choice and capture logins &amp; passwords when users log into that tty. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/xcrowbar.c">xcrowbar.c</a> 
+   </dt> 
+   <dd>
+     Source code demonstrates how to get a pointer to an X Display Screen, allowing access to a display even after " <tt>xhost -</tt>" has disabled acess. Note that access must be present to read the pointer in the first place! (Originally posted to USENET's <i>comp.unix.security</i>.) 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/xghostwriter-1.0b.tgz">xghostwriter-1.0b</a> 
+   </dt> 
+   <dd>
+     xghostwriter takes a string, or message, and ensures that this string is "typed" from the keyboard, no matter what keys are actually pressed. Useful for injecting keypress commands into an X session. More info from the auther is here in his <a href="software/xwin_sec.txt">USENET post.</a> 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/xkey.c">xkey.c</a> 
+   </dt> 
+   <dd>
+     Attach to any X server you have perms to and watch the user's keyboard. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/xspy-1.0c.tgz">xspy-1.0c</a> 
+   </dt> 
+   <dd>
+     xspy is mostly useful for spying on people; it was written on a challenge, to trick X into giving up passwords from the xdm login window or xterm secure-mode. More info from the auther is here in his <a href="software/xwin_sec.txt">USENET post.</a> 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/xwatchwin.tgz">xwatchwin</a> 
+   </dt> 
+   <dd>
+     If you have access permission to a host's X server, XWatchWin will connect via a network socket and display the window on your X server. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/ypx.sh.gz">YPX</a> 
+   </dt> 
+   <dd>
+     YP/NIS is a horrible example of "security through obscurity." YPX attempts to guess NIS domain names, which is all that's needed to extract passwd maps from the NIS server. If you already know the domain name, ypx will extract the maps directly, without configuring a host to live in the target NIS domain. (GZip'd Bourne Shell Archive) 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/ypsnarf.c">ypsnarf.c</a> 
+   </dt> 
+   <dd>
+     Exercise security holes in YP / NIS. 
+   </dd> 
+  </dl> 
+  <p style="text-align: center"> <a href="#toc"> <img src="../images/bluebar.gif" alt="Click this seperator to return to the Table of Contents." width="600" height="30" style="border: 0"> </a> </p> 
+  <h2 class="hangleft"> <a id="unixtools">Unix Security Tools</a> </h2> 
+  <h4> Sorted alphabetically by name</h4> 
+  <dl> 
+   <dt> <a id="cops" href="software/cops_104.tgz">COPS v1.04</a> 
+   </dt> 
+   <dd>
+     COPS (Computer Oracle and Password System) checks for many common Unix system misconfigurations. I find this tool very valuable, as it is non-trivial to break a system which has passed a COPS check. I run it on all the systems I admin. It's getting a bit old, but it's still an excellent way to systematically check for file permission mistakes. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/crack_4.1.tgz">Crack v4.1</a> 
+   </dt> 
+   <dd>
+     Crack is a tool for insuring that your Unix system's users have not selected easily guessed passwords which appear in standard dictionaries. (Only a very small dictionary is included so grab the one below if you wish.) 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/crack_dict.txt.gz">Crack Dictionary</a> 
+   </dt> 
+   <dd>
+     A general 50,000 word dictionary for use with Crack. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/fping-2.2b1.tgz">fping</a> 
+   </dt> 
+   <dd>
+     Like Unix ping(1), but allows efficient pinging of a large list of hosts. V2.2. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/icmpinfo-1.10.tgz">ICMPinfo v1.1</a> 
+   </dt> 
+   <dd>
+     ICMPinfo is a tool for looking at the ICMP messages received on the running host. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/iss13.tgz">ISS v1.3</a> 
+   </dt> 
+   <dd>
+     The Internet Security Scanner is used to automatically scan subnets and gather information about the hosts it finds, including the guessing of YP/NIS domainnames and the extraction of passwd maps via <b>ypx</b>. It also does things like check for verisons of sendmail which have known security holes. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/lsof_4.82.tgz">lsof v4.82</a> 
+   </dt> 
+   <dd> <b>L</b>ist <b>A</b>ll <b>O</b>pen <b>F</b>iles. Displays a listing of all files open on a Unix system. Useful for nosing around as well as trying to locate stray open files when trying to unmount an NFS-served partition. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/nc110.tgz">netcat v1.1</a> 
+   </dt> 
+   <dd>
+     Like Unix cat(1) but this one talks network packets (TCP or UDP). Very very flexible. Allows outbound connections with many options as well as life as a daemon, accepting inbound connections and allowing commands to be executed. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="http://www.protomatter.com/rscan/">RScan</a> 
+   </dt> 
+   <dd>
+     An older tool for Heterogeneous Network Interrogation. Includes links to a Usenix paper as well. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="http://www.porcupine.org/satan/">SATAN</a> 
+   </dt> 
+   <dd>
+     Security Administrator Tool for Analyzing Networks. Dan Farmer's tool that caused a huge stir in the media back in '95 when he wrote it and released it. I believe he ended up leaving SGI over this thing. So silly. Where is SGI now? That's what I thought... 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/strobe103.tgz">Strobe v1.03</a> 
+   </dt> 
+   <dd>
+     Strobe uses a bandwidth-efficient algorithm to scan TCP ports on the target machine and reveal which network server daemons are currently running. Version 1.03 is an update to 1.02. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="http://savannah.nongnu.org/projects/tiger">Tiger</a> 
+   </dt> 
+   <dd>
+     Tiger is a security tool that can be use both as a security audit and intrusion detection system. It is similar to COPS or SATAN, but has system specific extensions for SunOS, IRIX, AIX, HPUX, Linux and a few others. The original TAMU project has been resurrected and is now being maintained as part of Savannah. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/traceroute.tgz">Traceroute</a> 
+   </dt> 
+   <dd>
+     Traceroute is an indispensable tool for troubleshooting and mapping your network. 
+   </dd> 
+  </dl> 
+  <p style="text-align: center"> <a href="#toc"> <img src="../images/bluebar.gif" alt="Click this seperator to return to the Table of Contents." width="600" height="30" style="border: 0"> </a> </p> 
+  <h2 class="hangleft"> <a id="foss">Multi-platform Security Tools</a> </h2> 
+  <h4> Sorted alphabetically by name</h4> 
+  <dl> 
+   <dt> <a href="https://www.cloudwards.net/how-to-encrypt-your-hard-drive/">How to Encrypt Your Hard Drive</a> 
+   </dt> 
+   <dd>
+     Good article covering the various options for whole disk encryption on Windows, Linux, and Mac. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="http://www.kismetwireless.net">Kismet</a> 
+   </dt> 
+   <dd>
+     Kismet is an 802.11 layer 2 wireless network detector, sniffer, and intrusion detection system. Kismet will work with any wireless card which supports raw monitoring (rfmon) mode, and can sniff 802.11a, 802.11b, and 802.11g traffic. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="http://www.chiark.greenend.org.uk/~sgtatham/putty/">PuTTY</a> 
+   </dt> 
+   <dd>
+     PuTTY is a free implementation of Telnet and SSH for Windows and Unix platforms, along with an xterm terminal emulator. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="http://www.truecrypt.org/">TrueCrypt</a> 
+   </dt> 
+   <dd>
+     TrueCrypt creates virtual encrypted file-systems which can be stored as a file or as a whole disk partition. Works on USB sticks too. Don't lose your data if your PC is stolen -- encrypt it! 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="http://www.wireshark.org/">WireShark</a> 
+   </dt> 
+   <dd>
+     The best network sniffer &amp; protocol analyzer out there. 
+   </dd> 
+  </dl> 
+  <p style="text-align: center"> <a href="#toc"> <img src="../images/bluebar.gif" alt="Click this seperator to return to the Table of Contents." width="600" height="30" style="border: 0"> </a> </p> 
+  <h2 class="hangleft"> <a id="wintools">Windows Security Tools</a> </h2> 
+  <h4> Sorted alphabetically by name</h4> 
+  <dl> 
+   <dt> <a href="software/netstumblerinstaller_0_4_0.exe">NetStumbler 0.40</a> 
+   </dt> 
+   <dd>
+     NetStumbler is a wireless LAN tool which scans for access points and reports back with a list which includes signal strengths and protocols in use. More details are available here in the <a href="software/netstumbler_readme_0_4_0.htm">NetStumbler Readme</a>. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="http://www.fiddler2.com/fiddler2/">Fiddler</a> 
+   </dt> 
+   <dd>
+     Fiddler is a Web Debugging Proxy which logs all HTTP(S) traffic between your computer and the Internet. The application is Windows-only but it hooks very low level API's which allows it to work with any browser (IE, Firefox, Opera, etc.) and also decrypt SSL traffic without setting up the required private cert keys (as in WireShark). 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/nc11nt.zip">netcat NT v1.1</a> 
+   </dt> 
+   <dd>
+     Like Unix cat(1) but this one talks network packets (TCP or UDP). Very very flexible. Allows outbound connections with many options as well as life as a daemon, accepting inbound connections and allowing commands to be executed. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="http://pwsafe.org/">Password Safe</a> 
+   </dt> 
+   <dd>
+     Password Safe allows you to safely and easily create a secured and encrypted user name/password list. With Password Safe all you have to do is create and remember a single "Master Password" of your choice in order to unlock and access your entire user name/password list. Much safer than re-using passwords between sites! 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="software/sam_spade114.exe">Sam Spade 1.14</a> 
+   </dt> 
+   <dd>
+     Sam Spade is an integrated network query tool for Windows. Most of what it does can be had elsewhere, but it has the ability to parse email headers and determine where forgeries have been made in the headers and forwarding chain. Very useful for well forged spam, reduces analysis time a lot to have Sam take a crack at it first. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="http://secunia.com/vulnerability_scanning">Secunia PSI</a> 
+   </dt> 
+   <dd>
+     This is a great tool which scans your system for old and unpatched application software which has security vulnerabilities. Does for applications what Windows Update does for the Windows OS. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="http://www.microsoft.com/Security_Essentials/">Security Essentials</a> 
+   </dt> 
+   <dd>
+     Security Essentials is Microsoft's new real-time anti-virus and malware protection solution. It's reported to be better than most anti-virus compeitors and it's free. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="http://windirstat.info/">WinDirStat</a> 
+   </dt> 
+   <dd>
+     Scans NTFS filesystems and represents them as a colored, graphical heat map based on size. Great for seeing what is taking up the most space on your system. Think of it as graphical <tt>du</tt> for Windows. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="http://winscp.net/eng/index.php">WinSCP</a> 
+   </dt> 
+   <dd>
+     Free SFTP, FTP and SCP client for Windows. This is a great Windows file transfer client which also supports SCP, which most ISP's are moving to now for secure file transfer. 
+   </dd> 
+  </dl> 
+  <p style="text-align: center"> <a href="#toc"> <img src="../images/bluebar.gif" alt="Click this seperator to return to the Table of Contents." width="600" height="30" style="border: 0"> </a> </p> 
+  <h2 class="hangleft"> <a id="livecds">Live CDs</a> </h2> 
+  <h4> Sorted alphabetically by name</h4> 
+  <dl> 
+   <dt> <a href="http://www.remote-exploit.org/backtrack.html">BackTrack</a> 
+   </dt> 
+   <dd>
+     BackTrack is the #1 Linux LiveCD focused on penetration testing. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="http://www.nu2.nu/pebuilder/">BartPE</a> 
+   </dt> 
+   <dd>
+     BartPE is a preinstalled environment builder for Windows. It uses your original Windows media to create a Live CD bootable CDROM OS image. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="http://io.debian.net/~tar/gnustep/">GNUStep/OpenStep</a> 
+   </dt> 
+   <dd>
+     Remember the NeXT cube running NeXTStep? Well I do, and this LiveCD brings it all back. No other reason to include it other than it's Unix, and I miss my cube. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="https://www.e-fense.com/store/index.php?_a=viewProd&amp;productId=11&amp;review=read"> Helix</a> 
+   </dt> 
+   <dd>
+     Helix is focused on incident response, forensics, and e-discovery. Free CD with option to buy support and access to the member community. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="http://www.knopper.net/knoppix/index-en.html">Knoppix</a> 
+   </dt> 
+   <dd>
+     This is not a security distro, but it's the best general Linux Live CD going, so it gets included for general usefulness. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="http://www.knoppix-std.org/index.html">Knoppix-STD</a> 
+   </dt> 
+   <dd> <b>S</b>ecurity <b>T</b>ools <b>D</b>istribution of the Knoppix LiveCD. Zillions of things here, for all aspects of security work. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href="http://trinityhome.org/Home/index.php?wpid=1&amp;front_id=12">Trinity Rescue Kit </a> 
+   </dt> 
+   <dd>
+     Trinity Rescue Kit or TRK is a free live Linux distribution that aims specifically at recovery and repair operations on Windows machines, but is equally usable for Linux recovery issues. 
+   </dd> 
+  </dl> 
+  <dl> 
+   <dt> <a href=""></a> 
+   </dt> 
+   <dd> 
+   </dd> 
+  </dl> 
+  <p style="text-align: center"> <a href="#toc"> <img src="../images/bluebar.gif" alt="Click this seperator to return to the Table of Contents." width="600" height="30" style="border: 0"> </a> </p> 
+  <div style="text-align: center"> 
+   <script type="text/javascript">< !--
+                google_ad_client = "pub-7280733859006614";
+            google_ad_width = 728;
+            google_ad_height = 90;
+            google_ad_format = "728x90_as";
+            google_ad_type = "text";
+            google_ad_channel = "";
+            google_color_border = "336699";
+            google_color_bg = "FFFFFF";
+            google_color_link = "0000FF";
+            google_color_url = "008000";
+            google_color_text = "000000";
+//--></script> 
+   <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+        </script> 
+  </div> 
+  <p style="text-align: center"> <a href="#toc"> <img src="../images/bluebar.gif" alt="Click this seperator to return to the Table of Contents." width="600" height="30" style="border: 0"> </a> </p> 
+  <h2 class="hangleft"> <a id="lockpicking">Lockpicking</a> </h2> 
+  <p> These links aren't Unix related, but they are security related, and you may find them interesting. Ultimately, the integrity of your computer's electronic security rests on the integrity of its physical security. So you need to know how locks work because your whole security world is premised on them. Perhaps a section on alarm systems will be next... <img alt="smile" src="../images/smile.gif"> </p> 
+  <ul> 
+   <li> <a href="http://www.capricorn.org/~akira/home/lockpick/">The MIT Guide to Lock Picking</a> </li> 
+   <li> <a href="http://www.gregmiller.net/locks/">Greg Miller's Guide to Lock picking for Beginners </a> </li> 
+   <li> <a href="http://www.schneier.com/blog/archives/2009/08/lockpicking_and.html">Schneier on Security</a> -- "Lockpicking and the Internet"</li> 
+   <li> <a href="http://deviating.net/lockpicking/">Lockpicking by Deviant Ollam</a> </li> 
+   <li> <a href="http://www.crypto.com/masterkey.html">Master-Keyed Lock Vulnerability</a> -- Matt Blaze's 2003 work on physical "master keyed" lock vulnerabilities.</li> 
+  </ul> 
+  <p></p> 
+  <p style="text-align: center"> <a href="#toc"> <img src="../images/bluebar.gif" alt="Click this seperator to return to the Table of Contents." width="600" height="30" style="border: 0"> </a> </p> 
+  <h2 class="hangleft"> <a id="hyperlinks">Hyperlinks</a> </h2> 
+  <p> Links last verified July 13 <sup>th</sup>, 2015. All of these external links leave this site.</p> 
+  <h4> People</h4> 
+  <ul> 
+   <li> <a href="http://www.cs.columbia.edu/~smb/papers/">Steven Bellovin's Research Papers</a> </li> 
+   <li> <a href="http://www.xinu.nl/unix/unix.html">Edwin Kremer's Unix Page</a> -- Edwin has a nice hotlist. And he takes nice photos too!</li> 
+   <li> <a href="http://www.ranum.com/security/computer_security/index.html">Marcus Ranum's Personal Page</a> -- Marcus is a firewall &amp; Internet security expert.</li> 
+   <li> <a href="http://homes.cerias.purdue.edu/~spaf/index.html">Spaf's Homepage</a> -- Gene Spafford's home page.</li> 
+   <li> <a href="ftp://ftp.porcupine.org/pub/security/index.html">Wietse's collection of tools and papers</a> -- Excellent site.</li> 
+  </ul> 
+  <h4> Places &amp; Organizations</h4> 
+  <ul> 
+   <li> <a href="http://www.securityfocus.com/archive/1">Bugtraq Mailing List Web Archive</a> -- Exploits, good discussion, searchable.</li> 
+   <li> <a href="http://www.cerias.purdue.edu/about/history/coast/">COAST</a> -- Computer Operations, Audit, and Security Technology.</li> 
+   <li> <a href="http://www.defcon.org">DEF CON Convention</a> -- The ultimate hackercon.</li> 
+   <li> <a href="http://www.2600.com/hacked_pages/">Hacked!</a> -- 2600's archive of historical web site hacks.</li> 
+   <li> <a href="http://insecure.org">Insecure.org</a> -- home of Nmap and other exciting things. </li> 
+   <li> <a href="http://www.l0pht.com/">L0pht Heavy Industries</a> -- The now famous underground group's site.</li> -- Domain updated. Link is correct now. 
+   <li> <a href="http://www.sans.org/reading_room/">SANS Reading Room</a> -- very large and extensive coverage of security topics.</li> 
+   <li> <a href="http://www.securityfocus.com/">SecurityFocus.com</a> -- Portal for security issues. Includes famous Bugtraq Forum Archive!</li> 
+   <li> <a href="https://www.shoretel.com/web-communication-cryptography-and-network-security"> ShoreTel Cryptography and Network Security</a> <img src="../images/new.gif"> </li> 
+  </ul> 
+  <h4> Tools &amp; Download Sites</h4> 
+  <ul> 
+   <li> <a href="http://www.freefire.org">Freefire</a> -- Focused on tools and information to create free IT security systems.</li> 
+   <li> <a href="http://ftp.sunet.se/pub/security/">SUNET FTP Security Archive</a> -- Large, organized archive of files.</li> 
+   <li> <a href="http://www.unix.geek.org.uk/~arny/">unix / net / hack page</a> -- Original tools and interesting links.</li> 
+  </ul> 
+  <h4> Zines &amp; Publications</h4> 
+  <ul> 
+   <li> <a href="http://www.2600.com/">2600, The Hacker Quarterly</a> -- The original goes online. </li> 
+   <li> <a href="ftp://ftp.warwick.ac.uk/pub/cud/index.html.real">Cu Digest Archives</a> -- Computer Underground Digest Archives.</li> 
+   <li> <a href="http://www.phrack.org">Phrack Magazine Home Page</a> -- The infamous hacker zine. Sometimes on the blink.</li> 
+  </ul> 
+  <div align="center"> 
+   <img src="../images/bluebar.gif" alt="Click this seperator to return to the Table of Contents." width="600" height="30"> 
+  </div> 
+  <p align="center"> <img src="../images/buttonbar.gif" alt="Web World Button Bar" style="border: 0" usemap="#buttonbar"> <map id="buttonbar" name="buttonbar"> <area alt="Home" shape="rect" coords="0,0,125,43" href="../index.html"> <area alt="E-Mail Contact" shape="rect" coords="125,0,252,43" href="../contact/index.html"> </map> </p>  
+ </body>
+</html>

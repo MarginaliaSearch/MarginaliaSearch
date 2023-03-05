@@ -1,0 +1,26 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html> 
+ <head> 
+  <title>PuTTY bug ssh.com-userauth-refused</title> 
+  <link rel="canonical" href="ssh.com-userauth-refused.html"> 
+  <link rel="stylesheet" type="text/css" href="../sitestyle.css" title="PuTTY Home Page Style"> 
+  <link rel="shortcut icon" href="../putty.ico"> 
+  <meta http-equiv="content-type" content="text/html; charset=US-ASCII"> 
+ </head> 
+ <body> 
+  <h1 align="center">PuTTY bug ssh.com-userauth-refused</h1> 
+  <p align="center"> <a href="../index.html">Home</a> | <a href="../licence.html">Licence</a> | <a href="../faq.html">FAQ</a> | <a href="../docs.html">Docs</a> | <a href="../download.html">Download</a> | <a href="../keys.html">Keys</a> | <a href="../links.html">Links</a><br> <a href="../mirrors.html">Mirrors</a> | <a href="../maillist.html">Updates</a> | <a href="../feedback.html">Feedback</a> | <a href="../changes.html">Changes</a> | <b><a href="index.html">Wishlist</a></b> | <a href="../team.html">Team</a></p> <b>summary</b>: Breakage when compression enabled with ssh.com 3.2.0 server
+  <br> <b>class</b>: <i>bug:</i> This is clearly an actual problem we want fixed.
+  <br> <b>present-in</b>: 2002-07-02 2002-08-04
+  <br> <b>fixed-in</b>: 2002-08-09 0.53 (0.54) (0.55) (0.56) (0.57) (0.58) (0.59) (0.60) (0.61) (0.62)
+  <br> 
+  <p> We've received reports of the message "Server refused user authentication protocol" when attempting to connect to an <a href="http://www.ssh.com/products/ssh/">ssh.com</a> server (version string "SSH-2.0-3.2.0 SSH Secure Shell (non-commercial)") with compression enabled. Connection is fine when compression is disabled. </p>
+  <p> In the code, this message corresponds to not receiving the right response to a "ssh-userauth" service request in SSH-2. </p>
+  <p> We've also heard of problems with port-forwarding with compression enabled. </p>
+  <p> <em>Update:</em> We believe that the bug in talking to ssh.com 3.2 with compression enabled has been fixed as of 2002-08-09. We've had one confirmation. </p>
+  <p><a href="http://svn.tartarus.org/sgt/putty-wishlist/data/ssh.com-userauth-refused"> Audit trail</a> for this bug. </p>
+  <p></p>
+  <hr>If you want to comment on this web site, see the <a href="../feedback.html">Feedback page</a>. 
+  <br> (last revision of this bug record was at 2004-11-16 15:27:00 +0000)  
+ </body>
+</html>

@@ -1,0 +1,43 @@
+<html> 
+ <head> 
+  <title>Plato </title> 
+ </head> 
+ <body>
+  <a href="index.html"><img src="graphics/mrl.gif" alt="Metaphysics Research Lab">Home Page</a> 
+  <hr> 
+  <h1>Plato</h1> 
+  <p> Plato (b. 428 B.C.?, d. 347 B.C.?) was a student of Socrates, and wrote numerous philosophical works in the form of dialogues between Socrates and various interlocutors representing different strata of Greek society. </p>
+  <p><strong>Major Works:</strong> </p>
+  <ul> 
+   <li> <em>The Apology</em> </li>
+   <li> <em>The Phaedo</em> </li>
+   <li> <em>The Crito</em> </li>
+   <li> <em>The Meno</em> </li>
+   <li> <em>The Symposium</em> </li>
+   <li> <em>The Republic</em> </li>
+   <li> <em>Gorgias</em> </li>
+   <li> <em>Phaedrus</em> </li>
+   <li> <em>Philebus</em> </li>
+   <li> <em>Theaetetus</em> </li>
+   <li> <em>Protagoras</em> </li>
+   <li> <em>The Sophist</em> </li>
+   <li> <em>Timaeus</em> </li>
+  </ul> 
+  <p> <strong>Plato's Life:</strong> </p>
+  <ul> 
+   <li> Born, 428 B.C.(?), in Athens or Aegina </li>
+   <li> prior to 399 B.C., studied with Socrates </li>
+   <li> 399 B.C., after the execution of Socrates, took refuge in Megara </li>
+   <li> 399 - 387 B.C., traveled extensively in Greece. Egypt, and Italy </li>
+   <li> 387 B.C., founded The Academy in Athens </li>
+   <li> 367 B.C., went to Syracuse to tutor Dionysius II at the suggestion of Dion </li>
+   <li> Died, 347 B.C.(?) </li>
+  </ul> 
+  <p> <strong>Plato's Contribution to Philosophy:</strong> Plato carved out a subject matter for philosophy by formulating and discussing a wide range of metaphysical and ethical questions. To explain the similarities and resemblances among objects of the physical world, he developed a metaphysics of Forms. His views about ethical questions could be grounded in his metaphysics of Forms via the contemplation of the Form of The Good. Plato therefore found an inherent connection between metaphysics and ethics. His greatest work, <em>The Republic</em>, developed an insightful analogy between harmony in the state and harmony in the individual, and it is often considered one of the greatest works ever written. Plato wrote dialogues that considered the nature of virtue itself, as well as the nature of particular virtues. He also considered epistemological questions, such as whether knowledge is justified true belief. </p>
+  <p> <strong>Further Reading:</strong></p>
+  <ul> 
+   <li> Moravcsik, J., <em>Plato and Platonism</em>, Cambridge, MA: Blackwell, 1992 </li>
+   <li> Pelletier, J., and Zalta, E., "How to Say Goodbye to the Third Man", <i>Noûs</i>, <b>34</b>/2 (2000): 165-202 [<a href="plato.pdf">Preprint available online in PDF</a>] </li>
+  </ul>  
+ </body>
+</html>

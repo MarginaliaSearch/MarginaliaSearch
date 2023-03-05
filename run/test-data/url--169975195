@@ -1,0 +1,241 @@
+<html> 
+ <head> 
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"> 
+  <meta name="keywords" content="DAPlay software MP3 MusicMatch WinAmp digital audio music player,DAPlay software MP3 MusicMatch WinAmp digital audio music player,DAPlay software MP3 MusicMatch WinAmp digital audio music player,DAPlay software MP3 DA digital audio music player,DAPlay software MP3 MusicMatch WinAmp digital audio music player,DAPlay software MP3 DA digital audio music player,Secure iXplorer software SSH Windows,Secure iXplorer software SSH Windows,DAPlay software SSH Windows,Secure iXplorer software SSH Windows,Secure iXplorer software SSH Windows,Secure iXplorer software SSH Windows"> 
+  <meta name="description" content="Secure iXplorer software - A Windows SSH Copy"> 
+  <title>i-tree.org - Secure iXplorer Pro - a secure alternative to FTP clients</title> 
+  <meta>
+  <link href="http://i-tree.org/styles.css" type="text/css" rel="stylesheet"> 
+ </head> 
+ <body bgcolor="#FFFFFF"> 
+  <table width="100%" border="0" cellspacing="0" cellpadding="0"> 
+   <tbody>
+    <tr> 
+     <td width="96%" align="center" bgcolor="#000099" height="54"> 
+      <center>
+       <b><font color="#FFFFFF" size="7" face="Arial,Helvetica">i-tree.org</font></b>
+      </center> </td> 
+    </tr> 
+   </tbody>
+  </table> 
+  <table cellspacing="0" cellpadding="0" width="100%" border="0"> 
+   <tbody> 
+    <tr> 
+     <td width="540" height="25"><map name="SectionTabsMap"><area shape="RECT" coords="15,5,85,24" href="/index.htm"><area shape="RECT" coords="100,5,240,24" href="/secixpro/index.htm"><area shape="RECT" coords="260,5,310,24" href="/ssh_ftp.htm"><area shape="RECT" coords="335,5,400,24" href="/contact.htm"><area shape="RECT" coords="415,5,515,24" href="/gpl/index.htm"></map><img height="25" width="540" usemap="#SectionTabsMap" border="0" src="/tab2.gif"></td> 
+     <td class="TabFiller"> </td> 
+    </tr> 
+   </tbody> 
+  </table> 
+  <table class="TabGap" cellspacing="2" cellpadding="2" width="100%" border="0"> 
+   <tbody> 
+    <tr> 
+     <td width="100%" height="10"></td>
+    </tr> 
+   </tbody> 
+  </table> 
+  <table height="100%" cellspacing="0" cellpadding="0" width="100%" border="0"> 
+   <tbody> 
+    <tr> 
+     <td valign="top" align="left" width="155"> 
+      <table height="100%" cellspacing="0" cellpadding="0" border="0"> 
+       <tbody> 
+        <tr> 
+         <td valign="top"> 
+          <table class="SideBar" cellspacing="0" cellpadding="2" border="0"> 
+           <tbody> 
+            <tr> 
+             <td>
+              <table cellspacing="0" cellpadding="0" border="0"> 
+               <tbody> 
+                <tr> 
+                 <td width="155" class="SideBarItem"><a href="/index.htm">Home Page</a></td> 
+                </tr> 
+               </tbody> 
+              </table> 
+              <table cellspacing="0" cellpadding="0" border="0"> 
+               <tbody> 
+                <tr> 
+                 <td width="155" class="SideBarHeading">Secure iXplorer</td> 
+                </tr> 
+               </tbody> 
+              </table> 
+              <table cellspacing="0" cellpadding="0" border="0"> 
+               <tbody> 
+                <tr> 
+                 <td width="155" class="SideBarItem"><a href="/secixpro/index.htm">Information</a></td> 
+                </tr> 
+               </tbody> 
+              </table> 
+              <table cellspacing="0" cellpadding="0" border="0"> 
+               <tbody> 
+                <tr> 
+                 <td width="155" class="SideBarItem"><a href="/secixpro/faq.htm">FAQ</a></td> 
+                </tr> 
+               </tbody> 
+              </table> 
+              <table cellspacing="0" cellpadding="0" border="0"> 
+               <tbody> 
+                <tr> 
+                 <td width="155" class="SideBarItem"><a href="/secixpro/download.htm">Download</a></td> 
+                </tr> 
+               </tbody> 
+              </table> 
+              <table cellspacing="0" cellpadding="0" border="0"> 
+               <tbody> 
+                <tr> 
+                 <td width="155" class="SideBarItemActive"><a href="/secixpro/buy.htm">Order Now</a></td> 
+                </tr> 
+               </tbody> 
+              </table> 
+              <table cellspacing="0" cellpadding="0" border="0"> 
+               <tbody> 
+                <tr> 
+                 <td width="155" class="SideBarItem"><a href="/secixpro/history.htm">History</a></td> 
+                </tr> 
+               </tbody> 
+              </table> 
+              <table cellspacing="0" cellpadding="0" border="0"> 
+               <tbody> 
+                <tr> 
+                 <td width="155" class="SideBarHeading">General</td> 
+                </tr> 
+               </tbody> 
+              </table> 
+              <table cellspacing="0" cellpadding="0" border="0"> 
+               <tbody> 
+                <tr> 
+                 <td width="155" class="SideBarItem"><a href="/ssh_ftp.htm">Ssh versus Ftp</a></td> 
+                </tr> 
+               </tbody> 
+              </table> 
+              <table cellspacing="0" cellpadding="0" border="0"> 
+               <tbody> 
+                <tr> 
+                 <td width="155" class="SideBarItem"><a href="/opensrc.htm">Open Source</a></td> 
+                </tr> 
+               </tbody> 
+              </table> 
+              <table cellspacing="0" cellpadding="0" border="0"> 
+               <tbody> 
+                <tr> 
+                 <td width="155" class="SideBarHeading">Support</td> 
+                </tr> 
+               </tbody> 
+              </table> 
+              <table cellspacing="0" cellpadding="0" border="0"> 
+               <tbody> 
+                <tr> 
+                 <td width="155" class="SideBarItem"><a href="/contact.htm">Contact</a></td> 
+                </tr> 
+               </tbody> 
+              </table> 
+              <table cellspacing="0" cellpadding="0" border="0"> 
+               <tbody> 
+                <tr> 
+                 <td width="155" class="SideBarHeading">GPL Free Software</td> 
+                </tr> 
+               </tbody> 
+              </table> 
+              <table cellspacing="0" cellpadding="0" border="0"> 
+               <tbody> 
+                <tr> 
+                 <td width="155" class="SideBarItem"><a href="/gpl/index.htm">Information</a></td> 
+                </tr> 
+               </tbody> 
+              </table> 
+              <table cellspacing="0" cellpadding="0" border="0"> 
+               <tbody> 
+                <tr> 
+                 <td width="155" class="SideBarItem"><a href="/gpl/ixplorer.htm">Secure iXplorer GPL</a></td> 
+                </tr> 
+               </tbody> 
+              </table> 
+              <table cellspacing="0" cellpadding="0" border="0"> 
+               <tbody> 
+                <tr> 
+                 <td width="155" class="SideBarItem"><a href="/daplay.htm">DAPlay</a></td> 
+                </tr> 
+               </tbody> 
+              </table> 
+              <table cellspacing="0" cellpadding="0" border="0"> 
+               <tbody> 
+                <tr> 
+                 <td width="155" class="SideBarItem"><a href="/damon.htm">DAMonitor</a></td> 
+                </tr> 
+               </tbody> 
+              </table> </td>
+            </tr> 
+           </tbody> 
+          </table> 
+          <table class="sidebarExtra" height="100%" cellspacing="0" cellpadding="0" width="155" border="0"> 
+           <tbody> 
+            <tr> 
+             <td></td>
+            </tr> 
+            <tr> 
+             <td height="100%"></td>
+            </tr> 
+           </tbody> 
+          </table> </td> 
+        </tr> 
+       </tbody> 
+      </table> </td> 
+     <td class="ContentArea" valign="top" align="left"> 
+      <table cellspacing="0" cellpadding="0" width="100%" border="0"> 
+       <tbody> 
+        <tr> 
+         <td height="7"></td> 
+        </tr> 
+        <tr> 
+         <td width="12"></td> 
+         <td valign="top">
+          <pagetext> 
+           <h1>Secure iXplorer - Purchasing</h1> 
+           <h3>Only $29.90 per license!</h3> 
+           <h3>Purchasing Notes</h3> 
+           <p> </p>
+           <ul> 
+            <li>Buy from one of the two Internet stores below.</li> 
+            <li>After purchasing your registration code for unlocking the evaluation version will be sent by email</li> 
+            <li>The registration code is automatically valid for all upgrades within the 1.xx series</li> 
+           </ul> 
+           <p></p> 
+           <p><br></p> 
+           <p></p> 
+           <p>Purchase on-line, by fax, telephone or postal mail from:<br> <a href="http://www.regsoft.net/purchase.php3?productid=51999"> <img src="/regsoft.gif" alt="Purchase Secure iXplorer NOW at www.RegSoft.com"> </a> </p> 
+           <p>... or purchase on-line in different currencies from:<br><a href="https://order.kagi.com/?HPV"><img src="/logo_kagi.gif" border="0" alt="Purchase Secure iXplorer NOW at www.kagi.com"></a> <!--width="75" height="23"--> </p> 
+          </pagetext></td> 
+         <td width="12"></td> 
+        </tr> 
+        <tr> 
+         <td height="7"></td> 
+        </tr> 
+       </tbody> 
+      </table> <pagetext> 
+       <table width="95%" border="0" cellspacing="0" cellpadding="0" bgcolor="#99CCFF"> 
+        <tbody> 
+         <tr> 
+          <td width="97%" height="170" bgcolor="#99CCFF"><br> 
+           <blockquote> <font face="Arial,Helvetica" size="3"> <b>Latest version is 1.31</b> 
+             <hr> <p><strong>Improvements:</strong> </p>
+             <ul> 
+              <li>Latest version of Putty (0.58) is included in the install distribution</li> 
+              <li>This is a <strong>security update</strong>. Please upgrade from earlier versions to this!</li> 
+             </ul> <p></p> <p> <strong>Registered users</strong>: <br>This is a <strong>free upgrade</strong> </p> <p><strong>Non registered users</strong>: <br>Downloading this upgrade entitles to the <strong>full trial duration</strong> -even if the previous version has expired </p> </font> 
+           </blockquote> </td> 
+         </tr> 
+        </tbody> 
+       </table> 
+      </pagetext> </td> 
+     <td width="12"> </td> 
+    </tr> 
+   </tbody> 
+  </table> 
+  <table cellspacing="0" cellpadding="0" width="100%" border="0"> 
+   <tbody> 
+    <tr> 
+    </tr> 
+   </tbody> 
+  </table>  
+ </body>
+</html>

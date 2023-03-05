@@ -1,0 +1,1746 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US" lang="en-US"> 
+ <head> 
+  <script type="text/javascript" src="/twiki/pub/TWiki/JQueryPlugin/jquery.js"></script> 
+  <script type="text/javascript" src="/twiki/pub/TWiki/JQueryPlugin/jquery-migrate.js"></script> 
+  <link rel="stylesheet" href="/twiki/pub/TWiki/JQueryPlugin/jquery-all.css" type="text/css" media="all"> 
+  <script type="text/javascript" src="/twiki/pub/TWiki/JQueryPlugin/jquery-all.js"></script> 
+  <link rel="stylesheet" href="http://spyr.ch/twiki/pub/TWiki/ImagePlugin/style.css" type="text/css" media="all"> 
+  <link rel="stylesheet" href="http://spyr.ch/twiki/pub/TWiki/ImageGalleryPlugin/style.css" type="text/css" media="all"> 
+  <title> RaspiElf &lt; Cosmac &lt; TWiki</title> 
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"> 
+  <link rel="icon" href="/twiki/pub/Main/WebPreferences/spyr.ico" type="image/x-icon"> 
+  <link rel="shortcut icon" href="/twiki/pub/Main/WebPreferences/spyr.ico" type="image/x-icon"> 
+  <link rel="alternate" href="http://spyr.ch/twiki/bin/edit/Cosmac/RaspiElf?t=1618134381" type="application/x-wiki" title="Edit RaspiElf"> 
+  <link rel="edit" href="http://spyr.ch/twiki/bin/edit/Cosmac/RaspiElf?t=1618134381" title="Edit RaspiElf"> 
+  <meta name="SCRIPTURLPATH" content="/twiki/bin"> 
+  <meta name="SCRIPTSUFFIX" content=""> 
+  <meta name="TEXT_JUMP" content="Jump"> 
+  <meta name="TEXT_SEARCH" content="Search"> 
+  <meta name="TEXT_NUM_TOPICS" content="Number of topics:"> 
+  <meta name="TEXT_MODIFY_SEARCH" content="Modify search"> 
+  <link rel="alternate" type="application/rss+xml" title="RSS Feed" href="/twiki/bin/view/Cosmac/WebRss"> 
+  <base href="http://spyr.ch/twiki/bin/view/Cosmac/RaspiElf"> <!--BEHAVIOURCONTRIB-->
+  <script type="text/javascript" src="/twiki/pub/TWiki/BehaviourContrib/behaviour.compressed.js"></script> 
+  <script type="text/javascript" src="/twiki/pub/TWiki/TWikiJavascripts/twikilib.js"></script> 
+  <script type="text/javascript" src="/twiki/pub/TWiki/TWikiJavascripts/twikiWindow.js"></script> 
+  <script type="text/javascript" src="/twiki/pub/TWiki/TWikiJavascripts/twikiEvent.js"></script> 
+  <script type="text/javascript" src="/twiki/pub/TWiki/TWikiJavascripts/twikiHTML.js"></script> 
+  <script type="text/javascript" src="/twiki/pub/TWiki/TWikiJavascripts/twikiCSS.js"></script> 
+  <script type="text/javascript" src="/twiki/pub/TWiki/TWikiJavascripts/twikiForm.js"></script> 
+  <script type="text/javascript" src="/twiki/pub/TWiki/PatternSkin/pattern.js"></script>
+  <style type="text/css" media="all">
+@import url('/twiki/pub/TWiki/TWikiTemplates/base.css');
+</style> 
+  <style type="text/css" media="all">
+
+#twTopBar
+{
+  z-index: 1;  /*** Critical value for Moz/Opera Background Column colors fudge to work ***/
+  position: absolute;
+  top: 0px;
+  width: 100%;
+  height: 80px; /* top bar height; make room for header columns */
+  background: #e4e9f0;
+}
+#twTopBar img,
+#twTopBar a,
+#twTopBar a:hover {
+  background-color: transparent;
+}
+
+#twTopBarButtons {
+  width: 165px;
+  height: 35px;
+  background-color: transparent;
+  background-image: url(/twiki/pub/TWiki/TopMenuSkin/action-button-area.gif);
+  background-repeat: no-repeat;
+}
+#twTopBarButtons ul {
+  padding: 0px;
+  margin: 0 0 0 10px;
+  list-style: none;
+}
+#twTopBarButtons ul li {
+  margin: 11px 5px 0 6px;
+  float: left;
+  font: 15px Tahoma, Arial;
+  width: 60px;
+  height: 24px;
+  text-align: center;
+  white-space: nowrap;
+  background-image: url(/twiki/pub/TWiki/TopMenuSkin/button-round-disabled.gif);
+  color: #888888;
+}
+#twTopBarButtons ul li a {
+  display: block;
+  margin: 0;
+  width: 60px;
+  height: 24px;
+  text-decoration: none;
+  background-image: url(/twiki/pub/TWiki/TopMenuSkin/button-round-normal.gif);
+  color: #333333;
+}
+#twTopBarButtons ul li a:hover {
+  background-color: transparent;
+  background-image: url(/twiki/pub/TWiki/TopMenuSkin/button-round-hover.gif);
+}
+
+#patternTopBar,
+#patternClearHeaderCenter,
+#patternClearHeaderLeft,
+#patternClearHeaderRight,
+#patternTopBarContentsOuter {
+  height: 80px; /* top bar height; make room for header columns */
+  overflow: hidden;
+}
+#patternOuter {
+  background: #fff;
+}
+
+
+</style> 
+  <style type="text/css" media="all">
+@import url('/twiki/pub/TWiki/PatternSkin/layout.css');
+@import url('/twiki/pub/TWiki/PatternSkin/style.css');
+@import url('/twiki/pub/TWiki/PatternSkin/colors.css');
+</style> 
+  <style type="text/css" media="all">
+	/* Styles that are set using variables */
+	.patternBookView .twikiTopRow,
+	.patternWebIndicator a img,
+	.patternWebIndicator a:hover img {
+		background-color:#dCC0033;
+	}
+	#patternTopBarContents { background-image:url(/twiki/pub/TWiki/PatternSkin/TWiki_header.gif); background-repeat:no-repeat;}
+	
+	.patternBookView {
+		border-color:#dCC0033;
+	}
+	.patternPreviewPage #patternMain {
+		/* uncomment to set the preview image */
+		/*background-image:url("/twiki/pub/TWiki/PreviewBackground/preview2bg.gif");*/
+	}
+	
+</style>
+  <style type="text/css" media="all">
+
+
+
+</style> 
+  <style type="text/css" media="all">
+	@import url("/twiki/pub/TWiki/PatternSkin/print.css");
+</style> <!--[if IE]><style type="text/css" media="screen">
+pre {
+	overflow-x:auto;
+	padding-bottom:expression(this.scrollWidth > this.offsetWidth ? 16 : 0);
+}
+</style>
+<![endif]--> <!--[if lte IE 6]> 
+<style type="text/css">
+#patternLeftBar {
+	position:relative; /* IE 5.5 needs this or the contents won't show outside the parent container on print. IE 6.0 needs it only during printable copy! */
+}
+</style><![endif]--> 
+  <script type="text/javascript" src="/twiki/pub/TWiki/TWikiJavascripts/twikiStyles.js"></script> <!--GENERATED_HEADERS--><!-- TWISTYPLUGIN_TWISTY --> 
+  <style type="text/css" media="all">
+@import url("http://spyr.ch/twiki/pub/TWiki/TwistyContrib/twist.css");
+</style> 
+  <script type="text/javascript" src="http://spyr.ch/twiki/pub/TWiki/BehaviourContrib/behaviour.compressed.js"></script> 
+  <script type="text/javascript" src="http://spyr.ch/twiki/pub/TWiki/TWikiJavascripts/twikilib.js"></script> 
+  <script type="text/javascript" src="http://spyr.ch/twiki/pub/TWiki/TWikiJavascripts/twikiPref.js"></script> 
+  <script type="text/javascript" src="http://spyr.ch/twiki/pub/TWiki/TWikiJavascripts/twikiCSS.js"></script> 
+  <script type="text/javascript" src="http://spyr.ch/twiki/pub/TWiki/TwistyContrib/twist.compressed.js"></script> 
+  <script type="text/javascript">
+// <![CDATA[
+var styleText = '<style type="text/css" media="all">.twikiMakeVisible{display:inline;}.twikiMakeVisibleInline{display:inline;}.twikiMakeVisibleBlock{display:block;}.twikiMakeHidden{display:none;}</style>';
+document.write(styleText);
+// ]]>
+</script> <!-- TAGMEPLUGIN --> 
+  <style type="text/css" media="all">
+@import url("/twiki/pub/TWiki/TagMePlugin/tagme.css");
+</style> <!-- scroll_box_engine --> 
+  <script type="text/javascript">
+ // inspired by www.dhtmlgoodies.com/index.html?whichScript=scrolling_content
+ var scrollData = new Array();
+ function doScrollCanvas( containerID )
+ {
+  var vPos = scrollData[containerID]['canvasObj'].style.top;
+  if( scrollData[containerID]['doScroll'] ) {
+   vPos = vPos.replace(/[^\-0-9]/g,'') - scrollData[containerID]['verticalStep'];
+   if( vPos/1 + scrollData[containerID]['canvasHeight']/1 < 1 ) { vPos = 0 };
+   scrollData[containerID]['canvasObj'].style.top = vPos + 'px';
+  }
+  setTimeout('doScrollCanvas("' + containerID + '")', scrollData[containerID]['delay']);
+}
+ function doStopScroll()
+ {
+  var containerID = this.id;
+  scrollData[containerID]['doScroll'] = false;
+ }
+ function doStartScroll()
+ {
+  var containerID = this.id;
+  scrollData[containerID]['doScroll'] = true;
+ }
+ function initScrollBox( containerID, delay, vstep, width, height )
+ {
+  var scrollContainer = document.getElementById( containerID );
+  var scrollCanvas = scrollContainer.getElementsByTagName( 'DIV' )[0];
+  if( ! delay ) { delay = 1000; }
+  if( ! vstep ) { vstep = scrollContainer.clientHeight; }
+  if( width )   { scrollContainer.parentNode.style.width = width + 'px'; }
+  if( height )  { scrollContainer.style.height = height + 'px'; }
+  scrollContainer.onmouseover = doStopScroll;
+  scrollContainer.onmouseout = doStartScroll;
+  scrollData[containerID] = new Array();
+  scrollData[containerID]['canvasObj'] = scrollCanvas;
+  scrollData[containerID]['canvasHeight'] = scrollCanvas.offsetHeight;
+  scrollData[containerID]['verticalStep'] = vstep;
+  scrollData[containerID]['delay'] = delay;
+  scrollData[containerID]['doScroll'] = true;
+  scrollCanvas.style.top = scrollData[containerID]['verticalStep'] + 'px';
+  doScrollCanvas( containerID );
+ }
+</script> 
+  <style type="text/css" media="all">
+ .scrollBoxOuter {
+  border: solid #d0d0d0 1px;
+  -moz-box-shadow: 2px 2px 3px #e8e8e8;
+  -webkit-box-shadow: 2px 2px 3px #e8e8e8;
+  box-shadow: 2px 2px 3px #e8e8e8;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  width: 300px;
+  padding: 15px;
+  background-image: url(/twiki/pub/TWiki/ScrollBoxAddOn/gradient-title.png);
+  background-repeat: repeat-x;
+  background-color: #ffffff;
+ }
+ .scrollBoxTitle {
+  text-align:center;
+  font-size:19px;
+  font-weight:bold;
+  color: #333335;
+  margin: -5px 0 0 0;
+  padding: 0 0 12px 0;
+  white-space: nowrap;
+  overflow: hidden;
+ }
+ .scrollBoxTitle a:link,
+ .scrollBoxTitle a:visited {
+  color: #333335;
+ }
+ .scrollBoxContainer {
+  overflow: hidden;
+  height: 40px;
+  padding: 0px;
+  position: relative;
+ }
+ .scrollBoxContent {
+  position: relative;
+  top: 0px;
+  padding: 0px;
+  text-align: justify;
+ }
+ .scrollBoxContent img {
+  padding: 0px;
+  vertical-align: middle;
+ }
+ </style> <!-- twiki_dashboard_addon --> 
+  <style type="text/css" media="all">
+.twDashboardOuter {
+ margin: 0;
+ padding: 0;
+ width: 1040px; /* = 1024 + 2*7 margin + 2 extra */
+}
+.twDashboardOuter div div div ul {
+ padding-left: 1.7em;
+}
+.twDashboardBanner {
+ position: relative;
+ margin: 7px;
+ padding: 0;
+ width: 1024px; /* = 3 * (300w+2*15p+2*1b) + 2*2*7m */
+ height: 150px;
+ -moz-box-shadow: 2px 2px 3px #e8e8e8;
+ -webkit-box-shadow: 2px 2px 3px #e8e8e8;
+ box-shadow: 2px 2px 3px #e8e8e8;
+ -moz-border-radius: 4px;
+ border-radius: 4px;
+ background-color: #dddddd;
+ background-image: url(/twiki/pub/TWiki/TWikiDashboardImages/golden-gate-sunset.jpg);
+}
+.twDashboardBannerTitle {
+ position: absolute;
+ margin: 10px 15px;
+ padding: 0;
+ font-size: 18pt;
+ font-weight: 600;
+ color: #333333;
+}
+.twDashboardBannerText {
+ position: absolute;
+ margin: 35px 15px;
+ padding: 0;
+ color: #333333;
+}
+.twDashboardBannerButtonRow {
+ position: absolute;
+ bottom: 0;
+ right: 0;
+ margin: 0;
+ padding: 10px 10px;
+ color: #333333;
+}
+.twDashboardBannerButton {
+ float:right;
+}
+.twDashboardBannerButton a {
+ display: inline-block;
+ margin: 5px 10px;
+ padding: 3px 8px;
+}
+.ui-dialog .ui-dialog-content {
+ text-align: left;
+}
+.twDashboardBox {
+ float: left;
+ padding: 7px;
+}
+</style> <!-- TOPMENUSKIN_CSS --> 
+  <style type="text/css" media="all">
+.twTopMenuTab
+{
+  height: 22px;
+  width: auto;
+  color: #111111;
+  background-image: url(/twiki/pub/TWiki/TopMenuSkin/menu-gray-bg.png);
+  background-repeat: repeat-x;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.twTopMenuTab ul
+{
+  height: 22px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.twTopMenuTab ul li
+{
+  float: left;
+  font: 13px Tahoma, Arial;
+  vertical-align: middle;
+  width: auto;
+  white-space: nowrap;
+}
+.twTopMenuTab ul li a
+{
+  display: block;
+  padding: 2px 8px 3px 8px;
+  text-decoration: none;
+  color: #111111;
+}
+.twTopMenuTab ul li a:hover
+{
+  background-image: url(/twiki/pub/TWiki/TopMenuSkin/menu-reverse-bg.png);
+  color: #111111;
+  text-decoration: none;
+}
+.twTopMenuTab ul li ul
+{
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  visibility: hidden;
+  border-top: 1px solid white;
+  color: #111111;
+  z-index: 9000;
+}
+.twTopMenuTab ul li ul li
+{
+  float: none;
+  display: inline;
+}
+.twTopMenuTab ul li ul li a
+{
+  width: auto;
+  background-color: #F7F8F8;
+  background-image: url(/twiki/pub/TWiki/TopMenuSkin/menu-pulldown-bg.png);
+  background-repeat: repeat-y;
+  padding: 3px 8px;
+}
+.twTopMenuTab ul li ul li a:hover
+{
+  background-color: #AFB3C5;
+  background-repeat: repeat;
+}
+</style> <!-- TABLEPLUGIN_twikiAttachmentsTable --> 
+  <style type="text/css" media="all">
+.tableSortIcon img {padding-left:.3em; vertical-align:text-bottom;}
+.twikiTable#twikiAttachmentsTable td {border-style:solid none;}
+.twikiTable#twikiAttachmentsTable th {border-style:solid none;}
+.twikiTable#twikiAttachmentsTable td {vertical-align:middle;}
+.twikiTable#twikiAttachmentsTable th {vertical-align:middle;}
+.twikiTable#twikiAttachmentsTable td {vertical-align:top;}
+.twikiTable#twikiAttachmentsTable th {background-color:#ffffff;}
+.twikiTable#twikiAttachmentsTable th.twikiSortedCol {background-color:#eeeeee;}
+.twikiTable#twikiAttachmentsTable th {color:#0066cc;}
+.twikiTable#twikiAttachmentsTable th a:link {color:#0066cc;}
+.twikiTable#twikiAttachmentsTable th a:visited {color:#0066cc;}
+.twikiTable#twikiAttachmentsTable th a:link font {color:#0066cc;}
+.twikiTable#twikiAttachmentsTable th a:visited font {color:#0066cc;}
+.twikiTable#twikiAttachmentsTable th a:hover {color:#ffffff;background-color:#0066cc;}
+.twikiTable#twikiAttachmentsTable th a:hover font {color:#ffffff;background-color:#0066cc;}
+.twikiTable#twikiAttachmentsTable tr.twikiTableRowdataBg0 td {background-color:#ffffff;}
+.twikiTable#twikiAttachmentsTable tr.twikiTableRowdataBg0 td.twikiSortedCol {background-color:#f5f5f5;}
+.twikiTable#twikiAttachmentsTable td.twikiTableCol0 {text-align:center;}
+.twikiTable#twikiAttachmentsTable td.twikiTableCol1 {text-align:left;}
+.twikiTable#twikiAttachmentsTable td.twikiTableCol2 {text-align:left;}
+.twikiTable#twikiAttachmentsTable td.twikiTableCol3 {text-align:right;}
+.twikiTable#twikiAttachmentsTable td.twikiTableCol4 {text-align:left;}
+.twikiTable#twikiAttachmentsTable td.twikiTableCol5 {text-align:left;}
+.twikiTable#twikiAttachmentsTable td.twikiTableCol6 {text-align:left;}
+.twikiTable#twikiAttachmentsTable td.twikiTableCol7 {text-align:left;}
+</style>
+ </head> 
+ <body class="patternViewPage"> <a name="PageTop"></a> 
+  <div id="patternScreen"> 
+   <div id="patternPageShadow"> 
+    <div id="patternPage"> 
+     <div id="patternWrapper">
+      <div id="patternOuter"> 
+       <div id="patternFloatWrap"> 
+        <div id="patternMain">
+         <div id="patternClearHeaderCenter"></div> 
+         <div id="patternMainContents">
+          <div class="twikiContentHeader">
+           <div class="tagmetags hideInPrint">
+             Tags: 
+            <form name="tagmeshow" style="display:inline" action="http://spyr.ch/twiki/bin/viewauth/Cosmac/RaspiElf" method="post"> <span class="tagMeControl"><a rel="nofollow" href="http://spyr.ch/twiki/bin/viewauth/TWiki/TagMeCreateNewTag?from=Cosmac.RaspiElf">create new tag</a></span>
+            </form> <a class="twikiLink" href="/twiki/bin/view/TWiki/TagMeViewAllTags">view all tags</a> 
+           </div>
+          </div>
+          <div class="patternContent">
+           <div class="patternTopic"> 
+            <div class="twDashboardOuter"> 
+             <div class="twDashboardBanner" style="background-image: url(/twiki/pub/Cosmac/RaspiElf/raspi-elfmemcard-s.jpg); "> 
+              <div class="twDashboardBannerTitle" style="color:#F00000;">
+                Raspberry Pi Interface to Cosmac Elf
+              </div> 
+              <div class="twDashboardBannerText"> 
+              </div> 
+              <div class="twDashboardBannerButtonRow" style="display: none; "> 
+               <p></p> 
+              </div> 
+             </div> 
+             <script> $('.twDashboardBannerButton a').addClass('twikiButton');</script> 
+             <div style="clear: both;"></div> 
+             <div class="twDashboardBox"> 
+              <div class="scrollBoxOuter" style="width: 485px; "> 
+               <div class="scrollBoxTitle" style="">
+                 Intro 
+               </div> 
+               <div class="scrollBoxContainer" style="height: 200px; overflow:auto; "> <cite> The <a href="https://en.wikipedia.org/wiki/Unix_philosophy" target="_blank">Unix philosophy<img alt="" border="0" height="12" src="/twiki/pub/TWiki/TWikiDocGraphics/external-link.gif" width="13"></a> emphasizes building simple, short, clear, modular, and extensible code that can be easily maintained and repurposed by developers other than its creators. The Unix philosophy favors composability as opposed to monolithic design. </cite> 
+                <p></p> This is a good opportunity to merge old SBC technology (COSMAC Elf e.g. <a href="http://www.sunrise-ev.com/membershipcard.htm" target="_blank">Elf Membership Card<img alt="" border="0" height="12" src="/twiki/pub/TWiki/TWikiDocGraphics/external-link.gif" width="13"></a>) with a new one (<a href="https://www.raspberrypi.org/" target="_blank">Raspberry Pi<img alt="" border="0" height="12" src="/twiki/pub/TWiki/TWikiDocGraphics/external-link.gif" width="13"></a> and <a href="https://www.gnu.org/" target="_blank">GNU<img alt="" border="0" height="12" src="/twiki/pub/TWiki/TWikiDocGraphics/external-link.gif" width="13"></a>/<a href="https://www.linuxfoundation.org" target="_blank">Linux<img alt="" border="0" height="12" src="/twiki/pub/TWiki/TWikiDocGraphics/external-link.gif" width="13"></a>). If you are new to GNU/Linux get involved! I have always admired the UNIX philosophy, I hope this project achieves some of these UNIX goals. 
+               </div> 
+              </div> 
+             </div> 
+             <div class="twDashboardBox"> 
+              <div class="scrollBoxOuter" style="width: 460px; "> 
+               <div class="scrollBoxTitle" style="">
+                 Contents 
+               </div> 
+               <div class="scrollBoxContainer" style="height: 200px; overflow:auto; "> 
+                <div class="twikiToc"> 
+                 <ul> 
+                  <li> <a href="#elf2bin_download_tool"> elf2bin (download tool)</a> </li> 
+                  <li> <a href="#bin2elf_upload_tool"> bin2elf (upload tool)</a> </li> 
+                  <li> <a href="#elf_command_line_tool"> elf (command line tool)</a> </li> 
+                  <li> <a href="#elfdisplay_controls_hex_display"> elfdisplay (controls hex-display and hex-keypad)</a> </li> 
+                  <li> <a href="#How_to_get_and_build_the_RaspiEl"> How to get and build the RaspiElf tools</a> </li> 
+                  <li> <a href="#Sample_session"> Sample session</a> </li> 
+                  <li> <a href="#Start_BASIC3_without_EPROM"> Start BASIC3 without EPROM</a> </li> 
+                  <li> <a href="#Wiring"> Wiring </a> 
+                   <ul> 
+                    <li> <a href="#Bill_of_materials"> Bill of materials</a> </li> 
+                    <li> <a href="#Cable"> Cable</a> </li>
+                   </ul> </li>
+                 </ul> 
+                </div> 
+               </div> 
+              </div> 
+             </div> 
+             <div class="twDashboardBox"> 
+              <div class="scrollBoxOuter" style="width: 992px; "> 
+               <div class="scrollBoxContainer" style="height: 400px; overflow:auto; "> 
+                <h1><a name="elf2bin_download_tool"></a> elf2bin (download tool) </h1> 
+                <p></p> 
+                <dl> 
+                 <dt> <strong>NAME</strong> 
+                 </dt>
+                 <dd>
+                   elf2bin - Copies the Elf (Membership Card) memory to a binary file on the Raspberry Pi. 
+                 </dd>
+                </dl> 
+                <p></p> 
+                <dl> 
+                 <dt> <strong>SYNOPSIS</strong> 
+                 </dt>
+                 <dd>
+                   elf2bin [-s hexadr] [-e hexadr] [-w] [-r] [file] 
+                 </dd>
+                </dl> 
+                <p></p> 
+                <dl> 
+                 <dt> <strong>DESCRIPTION</strong> 
+                 </dt>
+                 <dd>
+                   Copies the Elf memory to a binary file (or stdout) on the Raspberry Pi. The Raspberry Pi GPIO is used as interface to the Cosmac Elf SBC (e.g. Elf Membership Card parallel port). The generated data is written to the standard output stream or to a <em>file</em>. Caution: Overwrite file if it exists. Use &gt; for redirecting (save the file) or | for piping to another command (e.g. hexdump). All toggle switches on the Elf Membership Card have to be on the up position except for the READ switch, the READ switch has to be on the down position. 
+                 </dd>
+                </dl> 
+                <p></p> 
+                <dl> 
+                 <dt> <strong>OPTIONS</strong> 
+                 </dt>
+                 <dd>
+                   Non argument options that are duplicated on the command line are not harmful. For options that require an argument, each duplication will override the previous argument value. 
+                  <dl> 
+                   <dt> <strong>-s</strong> <em>hexadr</em> 
+                   </dt>
+                   <dd>
+                     start address in hex (0 is default) 
+                   </dd> 
+                   <dt> <strong>-e</strong> <em>hexadr</em> 
+                   </dt>
+                   <dd>
+                     end adress in hex (0xFFFF is default) 
+                   </dd> 
+                   <dt> <strong>-w</strong> 
+                   </dt>
+                   <dd>
+                     write enable when copying is finished 
+                   </dd> 
+                   <dt> <strong>-r</strong> 
+                   </dt>
+                   <dd>
+                     go to run mode when copying is finished 
+                   </dd>
+                  </dl> 
+                 </dd>
+                </dl> 
+                <p></p> 
+                <p></p> 
+               </div> 
+              </div> 
+             </div> 
+             <div class="twDashboardBox"> 
+              <div class="scrollBoxOuter" style="width: 992px; "> 
+               <div class="scrollBoxContainer" style="height: 400px; overflow:auto; "> 
+                <h1><a name="bin2elf_upload_tool"></a> bin2elf (upload tool) </h1> 
+                <dl> 
+                 <dt> <strong>NAME</strong> 
+                 </dt>
+                 <dd>
+                   bin2belf - Copies the content of binary file on the Raspberry Pi to Elf (Membership Card) memory . 
+                 </dd>
+                </dl> 
+                <p></p> 
+                <dl> 
+                 <dt> <strong>SYNOPSIS</strong> 
+                 </dt>
+                 <dd>
+                   bin2elf [-s hexadr] [-e hexadr] [-w] [-r] [file] 
+                 </dd>
+                </dl> 
+                <p></p> 
+                <dl> 
+                 <dt> <strong>DESCRIPTION</strong> 
+                 </dt>
+                 <dd>
+                   Copies the content of binary file on the Raspberry Pi to Elf (Membership Card) memory. The Raspberry Pi GPIO is used as interface to the Cosmac Elf SBC (e.g. Elf Membership Card parallel port). Use &lt; for redirecting or | for piping from another command. All toggle switches on the Elf Membership Card have to be on the up position except for the READ switch, the READ switch has to be on the down position. 
+                 </dd>
+                </dl> 
+                <p></p> 
+                <dl> 
+                 <dt> <strong>OPTIONS</strong> 
+                 </dt>
+                 <dd>
+                   Non argument options that are duplicated on the command line are not harmful. For options that require an argument, each duplication will override the previous argument value. 
+                  <dl> 
+                   <dt> <strong>-s</strong> <em>hexadr</em> 
+                   </dt>
+                   <dd>
+                     start address in hex (0 is default) 
+                   </dd> 
+                   <dt> <strong>-e</strong> <em>hexadr</em> 
+                   </dt>
+                   <dd>
+                     end adress in hex (0xFFFF is default) 
+                   </dd> 
+                   <dt> <strong>-w</strong> 
+                   </dt>
+                   <dd>
+                     write enable when copying is finished 
+                   </dd> 
+                   <dt> <strong>-r</strong> 
+                   </dt>
+                   <dd>
+                     go to run mode when copying is finished 
+                   </dd>
+                  </dl> 
+                 </dd>
+                </dl> 
+                <p></p> 
+               </div> 
+              </div> 
+             </div> 
+             <div class="twDashboardBox"> 
+              <div class="scrollBoxOuter" style="width: 992px; "> 
+               <div class="scrollBoxContainer" style="height: 600px; overflow:auto; "> 
+                <h1><a name="elf_command_line_tool"></a> elf (command line tool) </h1> 
+                <dl> 
+                 <dt> <strong>NAME</strong> 
+                 </dt>
+                 <dd>
+                   elf - Controls the mode, sets data switches and gets LED data of an Elf (Membership Card). 
+                 </dd>
+                </dl> 
+                <p></p> 
+                <dl> 
+                 <dt> <strong>SYNOPSIS</strong> 
+                 </dt>
+                 <dd>
+                   elf [-s hexadr] [-i] [-n] [-v] [load|run|wait|reset|read|get|put] [switch] 
+                 </dd>
+                </dl> 
+                <p></p> 
+                <dl> 
+                 <dt> <strong>DESCRIPTION</strong> 
+                 </dt>
+                 <dd>
+                   Controls the mode, sets data switches and gets LED data of an Elf (Membership Card). The Raspberry Pi GPIO is used as interface to the Cosmac Elf SBC (e.g. Elf Membership Card parallel port). If a command is missing, the default command is then <em>get</em>. All toggle switches on the Elf Membership Card have to be on the up position except for the READ switch, the READ switch has to be on the down position. 
+                  <dl> 
+                   <dt>
+                     load 
+                   </dt>
+                   <dd>
+                     sets the mode to load (WAIT and CLR active, is equivalent to switches down) 
+                   </dd> 
+                   <dt>
+                     run 
+                   </dt>
+                   <dd>
+                     sets the mode to run (WAIT and CLR inactive, is equivalent to switches up) 
+                   </dd> 
+                   <dt>
+                     wait 
+                   </dt>
+                   <dd>
+                     sets the WAIT to active (is equivalent to switch down), option -n inverts the WAIT to inactive (is equivalent to switch down) 
+                   </dd> 
+                   <dt>
+                     reset|clear 
+                   </dt>
+                   <dd>
+                     sets the CLR to active (is equivalent to switch down), option -n inverts the CLR to inactive (is equivalent to switch down) 
+                   </dd> 
+                   <dt>
+                     read 
+                   </dt>
+                   <dd>
+                     sets the WE to active (is equivalent to switch down), option -n inverts the CLR to inactive (is equivalent to switch down) 
+                   </dd> 
+                   <dt>
+                     get 
+                   </dt>
+                   <dd>
+                     gets the mode and the switch data and the LED data 
+                   </dd> 
+                   <dt>
+                     put <em>switch</em> 
+                   </dt>
+                   <dd>
+                     puts the <em>switch</em> data to the data switches. The data is in hex. 
+                   </dd>
+                  </dl> 
+                 </dd>
+                </dl> 
+                <p></p> 
+                <dl> 
+                 <dt> <strong>OPTIONS</strong> 
+                 </dt>
+                 <dd>
+                   Non argument options that are duplicated on the command line are not harmful. For options that require an argument, each duplication will override the previous argument value. 
+                  <dl> 
+                   <dt> <strong>-s</strong> <em>hexadr</em> 
+                   </dt>
+                   <dd>
+                     start address in hex (0 is default). Pre increment to the start address before the data is read and written. 
+                   </dd> 
+                   <dt> <strong>-i</strong> 
+                   </dt>
+                   <dd>
+                     post increment. The IN is set active for &gt; 100 us after the data is read and written 
+                   </dd> 
+                   <dt> <strong>-n</strong> 
+                   </dt>
+                   <dd>
+                     not, invert the command. No effect for load, run, get, and put. 
+                   </dd> 
+                   <dt> <strong>-v</strong> 
+                   </dt>
+                   <dd>
+                     verbose, output looks like "LED:01 Q:1 Rx:1 IN:0 WAIT:1 CLR:1 READ:0 SWITCH:0c" 
+                   </dd>
+                  </dl> 
+                 </dd>
+                </dl> 
+                <p></p> 
+                <p></p> 
+               </div> 
+              </div> 
+             </div> 
+             <div class="twDashboardBox"> 
+              <div class="scrollBoxOuter" style="width: 992px; "> 
+               <div class="scrollBoxContainer" style="height: 380px; overflow:auto; "> 
+                <h1><a name="elfdisplay_controls_hex_display"></a> elfdisplay (controls hex-display and hex-keypad) </h1> 
+                <dl> 
+                 <dt> <strong>NAME</strong> 
+                 </dt>
+                 <dd>
+                   elfdisplay - Reads a hex keypad and sets the data and gets LED data of an Elf (Membership Card) and shows address and data on micro dot pHAT display. 
+                 </dd> 
+                 <dt> <strong>SYNOPSIS</strong> 
+                 </dt>
+                 <dd>
+                   elfdisplay [-v] [&lt;device-filename&gt;] 
+                 </dd>
+                </dl> 
+                <p></p> 
+                <dl> 
+                 <dt> <strong>DESCRIPTION</strong> 
+                 </dt>
+                 <dd>
+                   Reads a hex keypad and sets the data and gets LED data of an Elf (Membership Card) and shows address and data on micro dot pHAT display. The console (stdin) can be used as keyboard or the EV_KEY events from USB keypad (e.g. /dev/input/event0). 
+                 </dd>
+                </dl> 
+                <p></p> 
+                <dl> 
+                 <dt> <strong>OPTIONS</strong> 
+                 </dt>
+                 <dd>
+                   Non argument options that are duplicated on the command line are not harmful. For options that require an argument, each duplication will override the previous argument value. 
+                  <dl> 
+                   <dt> <strong>-v</strong> 
+                   </dt>
+                   <dd>
+                     verbose, output looks like "LED:01 Q:1 Rx:1 IN:0 WAIT:1 CLR:1 READ:0 SWITCH:0c" 
+                   </dd>
+                  </dl> 
+                 </dd>
+                </dl> 
+                <p></p> Function Keys 
+                <table border="1" cellpadding="0" cellspacing="0" class="twikiTable" id="table1" rules="all"> 
+                 <tbody>
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <a href="/twiki/bin/view/Cosmac/RaspiElf?sortcol=0;table=1;up=0#sorted_table" rel="nofollow" title="Sort by this column"><font color="#ffffff">Short</font></a> </th> 
+                   <th bgcolor="#687684" class="twikiTableCol1" valign="top"> <a href="/twiki/bin/view/Cosmac/RaspiElf?sortcol=1;table=1;up=0#sorted_table" rel="nofollow" title="Sort by this column"><font color="#ffffff">Mode</font></a> </th> 
+                   <th bgcolor="#687684" class="twikiTableCol2" valign="top"> <a href="/twiki/bin/view/Cosmac/RaspiElf?sortcol=2;table=1;up=0#sorted_table" rel="nofollow" title="Sort by this column"><font color="#ffffff">Key</font></a> </th> 
+                   <th bgcolor="#687684" class="twikiTableCol3" valign="top"> <a href="/twiki/bin/view/Cosmac/RaspiElf?sortcol=3;table=1;up=0#sorted_table" rel="nofollow" title="Sort by this column"><font color="#ffffff">Keycode</font></a> </th> 
+                   <th bgcolor="#687684" class="twikiTableCol4 twikiLastCol" valign="top"> <a href="/twiki/bin/view/Cosmac/RaspiElf?sortcol=4;table=1;up=0#sorted_table" rel="nofollow" title="Sort by this column"><font color="#ffffff">Notes</font></a> </th> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <td bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol" valign="top"> IN </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1" valign="top"> Input </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol2" valign="top"> I, [CR] </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol3" valign="top"> 96 </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol4 twikiLastCol" valign="top"> Increment address, in LOAD mode causes the data byte shown to be written to the address shown </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol0 twikiFirstCol" valign="top"> LD </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1" valign="top"> Load </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol2" valign="top"> L, + </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol3" valign="top"> 78 </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol4 twikiLastCol" valign="top"> Goes to the LOAD mode. In the LOAD mode goes to the address entry mode </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <td bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol" valign="top"> R/S </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1" valign="top"> Run/Wait </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol2" valign="top"> R, . </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol3" valign="top"> 83 </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol4 twikiLastCol" valign="top"> Toggles between Run and Wait. R/S is a reminiscence of HP pocket calculators </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol0 twikiFirstCol" valign="top"> MP </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1" valign="top"> Memory Protect </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol2" valign="top"> M, - </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol3" valign="top"> 74 </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol4 twikiLastCol" valign="top"> Shows data byte from the address shown </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <td bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol twikiLast" valign="top"> SW </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1 twikiLast" valign="top"> Switch/Keypad </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol2 twikiLast" valign="top"> S, [BS] </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol3 twikiLast" valign="top"> 14 </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol4 twikiLastCol twikiLast" valign="top"> Toggles between front panel switches and keypad </td> 
+                  </tr>
+                 </tbody>
+                </table> 
+                <p></p> To upload BASIC3 and the knightrider chase light and start the elfdisplay at boot add following to the <code>/etc/rc.local</code>: 
+                <pre># RaspiElf Tools init
+# -------------------
+printf "Upload BASIC3 to membership card\n"
+bin2elf -s 8000 /home/pi/elf/basic/MCSMP20J.bin
+printf "Upload knightrider to membership card\n"
+bin2elf /home/pi/elf/RaspiElf/chase/knightrider.bin
+#printf "Start BASIC\n"
+#bin2elf /home/pi/elf/basic/LBR_8000.bin
+printf "Start ElfDisplay\n"
+elfdisplay /dev/input/by-id/usb-046a_0014-event-kbd &amp;
+</pre> 
+                <p></p> 
+               </div> 
+              </div> 
+             </div> 
+             <div class="twDashboardBox"> 
+              <div class="scrollBoxOuter" style="width: 992px; "> 
+               <div class="scrollBoxContainer" style="height: 380px; overflow:auto; "> 
+                <h1><a name="How_to_get_and_build_the_RaspiEl"></a> How to get and build the <a class="twikiCurrentTopicLink twikiLink" href="/twiki/bin/view/Cosmac/RaspiElf">RaspiElf</a> tools </h1> 
+                <p></p> Get the source from the <a href="https://github.com/spyren/RaspiElf" target="_blank">GIT repository<img alt="" border="0" height="12" src="/twiki/pub/TWiki/TWikiDocGraphics/external-link.gif" width="13"></a> (if you have not installed GIT yet, then install it with <code>sudo apt-get install git</code>), type only the bold text after the $ sign: 
+                <pre>pi@cosmac:~/elf $ <b>git clone https://github.com/spyren/RaspiElf</b>
+Cloning into 'RaspiElf'...
+remote: Counting objects: 68, done.
+remote: Compressing objects: 100% (37/37), done.
+remote: Total 68 (delta 32), reused 62 (delta 29), pack-reused 0
+Unpacking objects: 100% (68/68), done.
+Checking connectivity... done.
+pi@cosmac:~/elf $
+</pre> 
+                <p></p> Build (compile) from the sources: 
+                <pre>pi@cosmac:~/elf $ <b>cd RaspiElf</b>
+pi@cosmac:~/elf/RaspiElf $ <b>cd tools/</b>
+pi@cosmac:~/elf/RaspiElf/tools $ <b>make</b>
+cc -g -c elf2bin.c
+cc -g -c raspi_gpio.c
+cc -g -o elf2bin -lwiringPi elf2bin.o raspi_gpio.o
+cc -g -c bin2elf.c
+cc -g -o bin2elf -lwiringPi bin2elf.o raspi_gpio.o
+cc -g -c elf.c
+cc -g -o elf -lwiringPi elf.o raspi_gpio.o
+pi@cosmac:~/elf/RaspiElf/tools $ 
+</pre> 
+                <p></p> Install the binaries into <code>/usr/local/bin</code> 
+                <pre>pi@cosmac:~/elf/RaspiElf/tools $ <b>sudo make install</b>
+install -m 557 elf2bin bin2elf elf /usr/local/bin
+</pre> 
+                <p></p> Install wiringPi (GPIO Interface library for the Raspberry Pi), details see <a href="http://wiringpi.com/download-and-install/" target="_blank">http://wiringpi.com/download-and-install/<img alt="" border="0" height="12" src="/twiki/pub/TWiki/TWikiDocGraphics/external-link.gif" width="13"></a> 
+                <p></p> Enable the <span class="twikiNewLink"><a href="http://spyr.ch/twiki/bin/edit/Cosmac/I2C?topicparent=Cosmac.RaspiElf;nowysiwyg=0" rel="nofollow" title="I2C (this topic does not yet exist; you can create it)">I2C</a></span> interface 
+                <pre>@cosmac:~/elf/RaspiElf/tools $ <b>sudo raspi-config</b>
+</pre> 
+                <ul> 
+                 <li> 5 Interfacing Options Configure connections to peripherals </li> 
+                 <li> P5 <span class="twikiNewLink"><a href="http://spyr.ch/twiki/bin/edit/Cosmac/I2C?topicparent=Cosmac.RaspiElf;nowysiwyg=0" rel="nofollow" title="I2C (this topic does not yet exist; you can create it)">I2C</a></span> Enable/Disable automatic loading of <span class="twikiNewLink"><a href="http://spyr.ch/twiki/bin/edit/Cosmac/I2C?topicparent=Cosmac.RaspiElf;nowysiwyg=0" rel="nofollow" title="I2C (this topic does not yet exist; you can create it)">I2C</a></span> kernel module </li>
+                </ul> 
+                <p></p> 
+                <p></p> 
+               </div> 
+              </div> 
+             </div> 
+             <div class="twDashboardBox"> 
+              <div class="scrollBoxOuter" style="width: 992px; "> 
+               <div class="scrollBoxContainer" style="height: 600px; overflow:auto; "> 
+                <h1><a name="Sample_session"></a> Sample session </h1> Type only the bold text after the $ sign. 
+                <p></p> Initialise the Elf memory with 00H (32 Kib): 
+                <pre>pi@cosmac:~/elf/RaspiElf/chase $ <b>bin2elf -e 7fff &lt;/dev/zero</b>
+0x8000 bytes written
+</pre> 
+                <p></p> Upload and run the chase lighting program (details see <a class="twikiLink" href="/twiki/bin/view/Cosmac/ChaseLighting">ChaseLighting</a>): 
+                <pre>pi@cosmac:~/elf/RaspiElf/chase $ <b>bin2elf -w -r chase.bin</b>
+0x002d bytes written
+</pre> 
+                <p></p> Stop the program an go into the load state: 
+                <pre>pi@cosmac:~/elf/RaspiElf/chase $ <b>elf load</b>
+01 1 0 0 1 1 0 0c
+</pre> 
+                <p></p> Hexdump the Elf memory until address 0x3f (hexdump is standard UNIX tool and is included in Raspbian and other GNU/Linux'): 
+                <pre>pi@cosmac:~/elf/RaspiElf/chase $ <b>elf2bin -e 3f | hexdump -C</b>
+0x0040 bytes read
+00000000  c0 00 03 e3 90 b3 f8 30  a3 f8 01 53 64 6c 23 fa  |.......0...Sdl#.|
+00000010  fe 3a 1a f0 f6 c7 f8 80  30 1f f0 fe c7 f8 01 53  |.:......0......S|
+00000020  f8 14 b2 22 92 3a 23 c5  7a 38 7b 30 0c 00 00 00  |...".:#.z8{0....|
+00000030  04 ff 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00000040
+</pre> 
+                <p></p> Get the mode and the data (LEDs and swiches) 
+                <pre>pi@cosmac:~/elf/RaspiElf/chase $ <b>elf</b>
+02 1 1 0 1 1 1 ff
+pi@cosmac:~/elf/RaspiElf/chase $ <b>elf -v </b>
+LED:01 Q:1 Rx:1 IN:0 WAIT:1 CLR:1 READ:0 SWITCH:0c
+</pre> 
+                <p></p> Write enable (not READ) 
+                <pre>pi@cosmac:~/elf/RaspiElf/chase $ <b>elf -n read</b>
+02 1 1 0 1 1 0 ff
+</pre> 
+                <p></p> Run mode (starts the chase lighting again) 
+                <pre>pi@cosmac:~/elf/RaspiElf/chase $ <b>elf run</b>
+</pre> 
+                <p></p> Put 0000'0000B to the switches (chase LEDs from right to left) 
+                <pre>pi@cosmac:~/elf/RaspiElf/chase $ <b>elf put 0</b>
+40 1 1 0 0 0 0 00
+</pre> 
+                <p></p> Put 1000'0000B to the switches (chase LEDs from left to right) 
+                <pre>pi@cosmac:~/elf/RaspiElf/chase $ <b>elf put 80</b>
+10 1 1 0 0 0 0 80
+</pre> 
+                <p></p> Get the mode and data while the program is running (LEDs and Q are changing) 
+                <pre>pi@cosmac:~/elf/RaspiElf/chase $ <b>elf -v</b>
+LED:40 Q:1 Rx:1 IN:0 WAIT:0 CLR:0 READ:0 SWITCH:80
+pi@cosmac:~/elf/RaspiElf/chase $ <b>elf -v</b>
+LED:02 Q:0 Rx:1 IN:0 WAIT:0 CLR:0 READ:0 SWITCH:80
+</pre> 
+               </div> 
+              </div> 
+             </div> 
+             <div class="twDashboardBox"> 
+              <div class="scrollBoxOuter" style="width: 992px; "> 
+               <div class="scrollBoxContainer" style="height: 600px; overflow:auto; "> 
+                <h1><a name="Start_BASIC3_without_EPROM"></a> Start BASIC3 without EPROM </h1> 
+                <p></p> There are BASIC3, Tiny BASIC, and Chuck's Super Monitor EPROM binaries on Lee Hart's <em>The COSMAC ELF Membership Card</em> <a href="http://www.sunrise-ev.com/membershipcard.htm" target="_blank">http://www.sunrise-ev.com/membershipcard.htm<img alt="" border="0" height="12" src="/twiki/pub/TWiki/TWikiDocGraphics/external-link.gif" width="13"></a> website for his famous Membership Card. I have got some old 27C256 EPROMs but no programmer nor eraser. 
+                <p></p> But the MSC needs to have 64 KiB RAM, the standard 62256 RAM in the U2 socket and the CY7C199 (or IDT71256) soldered in U8. 
+                <p></p> First of all you need a serial console (terminal program) to communicate with the Elf. I prefer to use <code>microcom</code> (<code>minicom</code> or <code>putty</code> are good alternatives) 
+                <pre>pi@cosmac:~/elf/basic $ <b>sudo apt-get install microcom</b>
+</pre> 
+                <p></p> The Raspberry Pi <a href="https://www.raspberrypi.org/documentation/configuration/uart.md" target="_blank">UART<img alt="" border="0" height="12" src="/twiki/pub/TWiki/TWikiDocGraphics/external-link.gif" width="13"></a> is used as console (default setting). Change this with <code>raspi-config</code>: 
+                <pre>pi@cosmac:~/elf/basic $ <b>sudo raspi-config</b>
+</pre> Select option 5, <em>Interfacing options</em>, then option P6, <em>Serial</em>, and select <strong>No</strong> for <em>Would you like a login shell to be accessible over serial?</em> and select <strong>Yes</strong> for <em>Would you like the serial port hardware to be enabled?</em> . Exit raspi-config. Reboot Raspi now. 
+                <p></p> Add user <code>pi</code> to the <code>tty</code> group (give user <code>pi</code> the right to write to <code>/dev/ttyS0</code>): 
+                <pre>pi@cosmac:~/elf/basic $ <b>sudo usermod -a -G tty pi</b>
+</pre> 
+                <p></p> Get the binary from <em>The COSMAC ELF Membership Card</em> <a href="http://www.sunrise-ev.com/membershipcard.htm" target="_blank">http://www.sunrise-ev.com/membershipcard.htm<img alt="" border="0" height="12" src="/twiki/pub/TWiki/TWikiDocGraphics/external-link.gif" width="13"></a> 
+                <pre>pi@cosmac:~/elf/basic $ <b>wget http://www.sunrise-ev.com/MembershipCard/MCSMP20J.bin</b>
+...
+2017-12-26 23:08:09 (140 KB/s) - 'MCSMP20J.bin' saved [32768/32768]
+pi@cosmac:~/elf/basic $ 
+</pre> 
+                <p></p> Upload the EPROM binary to the Membership Card at starting address 0x8000: 
+                <pre>pi@cosmac:~/elf/basic $ <b>bin2elf -s 8000 MCSMP20J.bin</b>
+0x8000 bytes written
+</pre> 
+                <p></p> Get the binary for <code>LBR 8000</code> from my site: 
+                <pre>pi@cosmac:~/elf/basic $ <b>wget http://spyr.ch/twiki/pub/Cosmac/RaspiElf/LBR_8000.bin</b>
+...
+2017-12-26 23:49:28 (102 KB/s) - 'LBR_8000.bin' saved [3/3]
+pi@cosmac:~/elf/basic $ ls -l
+total 36
+-rw-r--r-- 1 pi pi     3 Dec 26 22:51 LBR_8000.bin
+-rw-r--r-- 1 pi pi 32768 Dec 13 17:59 MCSMP20J.bin
+</pre> 
+                <p></p> Start from address 0x8000: 
+                <pre>pi@cosmac:~/elf/basic $ <b>bin2elf -w -r LBR_8000.bin</b>
+0x0003 bytes written
+</pre> 
+                <p></p> Start the serial console and connect to the Membership Card 
+                <pre>pi@cosmac:~/elf/basic $ <b>microcom -s 9600</b>
+connected to /dev/ttyS0
+Escape character: Ctrl-\
+Type the escape character followed by c to get to the menu or q to quit
+
+Membership Card's Serial Monitor Program Ver. 2.0
+Enter "H" for Help.
+&gt;<b>N</b> 
+
+
+C RCA 1981
+BASIC3 V1.1
+C/W?
+<b>C</b>
+ READY
+:<b>PRINT "Hello Raspberry Pi"</b>
+Hello Raspberry Pi
+
+READY
+:
+</pre> 
+                <p></p> For other than US keyboards you can use Ctrl-4 instead of Ctrl-\. 
+                <p></p> Remote access the Elf Membership Card with a GNU/Linux PC and SSH (or a Windows PC and PUTTY): 
+                <pre>psi@homer:~&gt; <b>ssh -l pi -X 192.168.1.111</b>
+pi@192.168.1.111's password: 
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Tue Jan  2 15:53:08 2018 from homer.home
+pi@cosmac:~ $ <b>cd elf/basic/</b>
+pi@cosmac:~/elf/basic $ <b>bin2elf -w -r LBR_8000.bin</b>
+0x0003 bytes written
+pi@cosmac:~/elf/basic $ <b>microcom -s 9600</b>
+connected to /dev/ttyS0
+Escape character: Ctrl-\
+Type the escape character followed by c to get to the menu or q to quit
+
+Membership Card's Serial Monitor Program Ver. 2.0
+Enter "H" for Help.
+&gt;
+</pre> If your ISP supports DMZ, static IP addresses, port forwarding and dynamic DNS you have remote access to your Elf from everywhere. 
+                <p></p> <a href="http://www.sunrise-ev.com/MembershipCard/BASIC3v11user.pdf" target="_blank">RCA 1802 BASIC level 3 ver. 1.1 User Manual<img alt="" border="0" height="12" src="/twiki/pub/TWiki/TWikiDocGraphics/external-link.gif" width="13"></a> 
+                <p></p> 
+               </div> 
+              </div> 
+             </div> 
+             <div class="twDashboardBox"> 
+              <div class="scrollBoxOuter" style="width: 992px; "> 
+               <div class="scrollBoxContainer" style="height: 800px; overflow:auto; "> 
+                <h1><a name="Wiring"></a> Wiring </h1> 
+                <p></p> 
+                <table border="1" cellpadding="0" cellspacing="0" class="twikiTable" id="table2" rules="all"> 
+                 <tbody>
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <td bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol twikiLast" valign="top"> 
+                    <div id="" class="imageFrame imageFrame_none " style="_width:182px;max-width:182px;">
+                     <a href="http://spyr.ch/twiki/pub//Cosmac/RaspiElf/harness.jpg" class="imageHref" title="harness.jpg"><img border="0" src="http://spyr.ch/twiki/pub//Cosmac/RaspiElf/_180___harness.jpg" alt="harness.jpg" width="180" height="135" longdesc="harness.jpg"></a> 
+                     <div class="imageCaption"> 
+                      <div class="imageMagnify">
+                       <a href="http://spyr.ch/twiki/pub//Cosmac/RaspiElf/harness.jpg" title="Enlarge"><img border="0" src="/twiki/pub/TWiki/ImagePlugin/magnify-clip.png" width="15" height="11" alt="Enlarge"> </a>
+                      </div> 
+                     </div> 
+                    </div> </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1 twikiLast" valign="top"> 
+                    <div id="" class="imageFrame imageFrame_none " style="_width:182px;max-width:182px;">
+                     <a href="http://spyr.ch/twiki/pub//Cosmac/RaspiElf/raspi-elfmemcard.jpg" class="imageHref" title="raspi-elfmemcard.jpg"><img border="0" src="http://spyr.ch/twiki/pub//Cosmac/RaspiElf/_180___raspi-elfmemcard.jpg" alt="raspi-elfmemcard.jpg" width="180" height="35" longdesc="raspi-elfmemcard.jpg"></a> 
+                     <div class="imageCaption"> 
+                      <div class="imageMagnify">
+                       <a href="http://spyr.ch/twiki/pub//Cosmac/RaspiElf/raspi-elfmemcard.jpg" title="Enlarge"><img border="0" src="/twiki/pub/TWiki/ImagePlugin/magnify-clip.png" width="15" height="11" alt="Enlarge"> </a>
+                      </div> 
+                     </div> 
+                    </div> </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol2 twikiLast" valign="top"> 
+                    <div id="" class="imageFrame imageFrame_none " style="_width:182px;max-width:182px;">
+                     <a href="http://spyr.ch/twiki/pub//Cosmac/MassStorage/db25-eeprom-top.jpg" class="imageHref" title="Diodes on Veroboard, additional Socket for EEPROM"><img border="0" src="http://spyr.ch/twiki/pub//Cosmac/MassStorage/_180___db25-eeprom-top.jpg" alt="db25-eeprom-top.jpg" width="180" height="154" longdesc="Diodes on Veroboard, additional Socket for EEPROM"></a> 
+                     <div class="imageCaption"> 
+                      <div class="imageMagnify">
+                       <a href="http://spyr.ch/twiki/pub//Cosmac/MassStorage/db25-eeprom-top.jpg" title="Enlarge"><img border="0" src="/twiki/pub/TWiki/ImagePlugin/magnify-clip.png" width="15" height="11" alt="Enlarge"> </a>
+                      </div>Diodes on Veroboard, additional Socket for <a class="twikiLink" href="/twiki/bin/view/Cosmac/MassStorage">EEPROM</a> 
+                     </div> 
+                    </div> </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol3 twikiLastCol twikiLast" valign="top"> 
+                    <div id="" class="imageFrame imageFrame_none " style="_width:182px;max-width:182px;">
+                     <a href="http://spyr.ch/twiki/pub//Cosmac/MassStorage/db25-eeprom-bottom.jpg" class="imageHref" title="The red wires are for the EEPROM"><img border="0" src="http://spyr.ch/twiki/pub//Cosmac/MassStorage/_180___db25-eeprom-bottom.jpg" alt="db25-eeprom-bottom.jpg" width="180" height="135" longdesc="The red wires are for the EEPROM"></a> 
+                     <div class="imageCaption"> 
+                      <div class="imageMagnify">
+                       <a href="http://spyr.ch/twiki/pub//Cosmac/MassStorage/db25-eeprom-bottom.jpg" title="Enlarge"><img border="0" src="/twiki/pub/TWiki/ImagePlugin/magnify-clip.png" width="15" height="11" alt="Enlarge"> </a>
+                      </div>The red wires are for the EEPROM 
+                     </div> 
+                    </div> </td> 
+                  </tr>
+                 </tbody>
+                </table> 
+                <p></p> 
+                <p></p> The Raspberry Pi ARM processor supply voltage is 3.3 V and the GPIOs are not 5 V tolerant. The Elf supply voltage is 5 V. This means that the GPIOs (input) have to be protected from Elf. The easiest way is to use diodes e.g. 1N4148 to protect the GPIOs from the 5 V, but the GPIOs need then pullup resistors. Thankfully the Raspi GPIOs have internal pullups and they can be controlled by software. The cathode has to be on the Elf side. 
+                <p></p> It is possible that the Elf works with 3.3 V supply voltage, but this is not within the specifications. In this case the diodes are not needed. Connect the Raspi Pin 1 to P4 Pin 3 (do NOT connect Raspi Pin 2!). 
+                <p></p> 
+                <ul> 
+                 <li> <a href="http://www.sunrise-ev.com/membershipcard.htm" target="_blank">Elf Membership Card<img alt="" border="0" height="12" src="/twiki/pub/TWiki/TWikiDocGraphics/external-link.gif" width="13"></a> </li> 
+                 <li> <a href="https://pinout.xyz/#" target="_blank">https://pinout.xyz/#<img alt="" border="0" height="12" src="/twiki/pub/TWiki/TWikiDocGraphics/external-link.gif" width="13"></a> </li> 
+                 <li> <a href="http://wiringpi.com/the-gpio-utility/" target="_blank">http://wiringpi.com/the-gpio-utility/<img alt="" border="0" height="12" src="/twiki/pub/TWiki/TWikiDocGraphics/external-link.gif" width="13"></a> </li> 
+                 <li> <a href="http://raspberrypiguide.de/howtos/raspberry-pi-gpio-how-to/" target="_blank">http://raspberrypiguide.de/howtos/raspberry-pi-gpio-how-to/<img alt="" border="0" height="12" src="/twiki/pub/TWiki/TWikiDocGraphics/external-link.gif" width="13"></a> </li>
+                </ul> 
+                <p></p> 
+                <h2><a name="Bill_of_materials"></a> Bill of materials </h2> 
+                <table border="1" cellpadding="0" cellspacing="0" class="twikiTable" id="table3" rules="all"> 
+                 <tbody>
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <a href="/twiki/bin/view/Cosmac/RaspiElf?sortcol=0;table=3;up=0#sorted_table" rel="nofollow" title="Sort by this column"><font color="#ffffff">Description</font></a> </th> 
+                   <th bgcolor="#687684" class="twikiTableCol1 twikiLastCol" valign="top"> <a href="/twiki/bin/view/Cosmac/RaspiElf?sortcol=1;table=3;up=0#sorted_table" rel="nofollow" title="Sort by this column"><font color="#ffffff">Mouser Part#</font></a> </th> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <td bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol" valign="top"> Ribbon Cable 40 conductors </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1 twikiLastCol" valign="top"> 517-3365/40FT </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol0 twikiFirstCol" valign="top"> D-Sub 25P male </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1 twikiLastCol" valign="top"> 523-L717SDBH25P </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <td bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol" valign="top"> Header Connector 40 pol </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1 twikiLastCol" valign="top"> 571-4-215911-0 </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol0 twikiFirstCol" valign="top"> 9 x 1N4148 </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1 twikiLastCol" valign="top"> 512-1N4148 </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <td bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol twikiLast" valign="top"> Socket 6 pin </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1 twikiLastCol twikiLast" valign="top"> &nbsp; </td> 
+                  </tr>
+                 </tbody>
+                </table> 
+                <p></p> Veroboard Variant 
+                <table border="1" cellpadding="0" cellspacing="0" class="twikiTable" id="table4" rules="all"> 
+                 <tbody>
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <a href="/twiki/bin/view/Cosmac/RaspiElf?sortcol=0;table=4;up=0#sorted_table" rel="nofollow" title="Sort by this column"><font color="#ffffff">Description</font></a> </th> 
+                   <th bgcolor="#687684" class="twikiTableCol1 twikiLastCol" valign="top"> <a href="/twiki/bin/view/Cosmac/RaspiElf?sortcol=1;table=4;up=0#sorted_table" rel="nofollow" title="Sort by this column"><font color="#ffffff">Mouser Part#</font></a> </th> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <td bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol" valign="top"> Veroboard </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1 twikiLastCol" valign="top"> &nbsp; </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol0 twikiFirstCol" valign="top"> Ribbon Cable 40 conductors </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1 twikiLastCol" valign="top"> 517-3365/40FT </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <td bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol" valign="top"> D-Sub 25P male for Ribbon Cable </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1 twikiLastCol" valign="top"> 571-1658613-2 </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol0 twikiFirstCol" valign="top"> 2 x Header Connector 40 pol </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1 twikiLastCol" valign="top"> 571-4-215911-0 </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <td bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol" valign="top"> Header Connector 34 pol </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1 twikiLastCol" valign="top"> 571-3-215911-4 </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol0 twikiFirstCol" valign="top"> 9 x 1N4148 </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1 twikiLastCol" valign="top"> 512-1N4148 </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <td bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol" valign="top"> Socket 1x6 pin </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1 twikiLastCol" valign="top"> &nbsp; </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol0 twikiFirstCol" valign="top"> Pin Header 40 pol </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1 twikiLastCol" valign="top"> 571-2-826925-0 </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <td bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol" valign="top"> Pin Header 34 pol </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1 twikiLastCol" valign="top"> 571-2-826925-0 </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol0 twikiFirstCol" valign="top"> DIL8 Socket, optional </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1 twikiLastCol" valign="top"> 571-2-1571552-2 </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <td bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol" valign="top"> 100 nF Capacitor, optional </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1 twikiLastCol" valign="top"> &nbsp; </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol0 twikiFirstCol" valign="top"> 1N4148, optional </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1 twikiLastCol" valign="top"> 512-1N4148 </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <td bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol twikiLast" valign="top"> 25LC1024, optional </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1 twikiLastCol twikiLast" valign="top"> 579-25LC1024-I/P </td> 
+                  </tr>
+                 </tbody>
+                </table> 
+                <p></p> 
+                <p></p> 
+                <h2><a name="Cable"></a> Cable </h2> 
+                <table border="1" cellpadding="0" cellspacing="0" class="twikiTable" id="table5" rules="all"> 
+                 <tbody>
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <a href="/twiki/bin/view/Cosmac/RaspiElf?sortcol=0;table=5;up=0#sorted_table" rel="nofollow" title="Sort by this column"><font color="#ffffff">Pi Pin#</font></a> </th> 
+                   <th bgcolor="#687684" class="twikiTableCol1" valign="top"> <a href="/twiki/bin/view/Cosmac/RaspiElf?sortcol=1;table=5;up=0#sorted_table" rel="nofollow" title="Sort by this column"><font color="#ffffff">Pi Function</font></a> </th> 
+                   <th bgcolor="#687684" class="twikiTableCol2" valign="top"> <a href="/twiki/bin/view/Cosmac/RaspiElf?sortcol=2;table=5;up=0#sorted_table" rel="nofollow" title="Sort by this column"><font color="#ffffff">Elf Pin DSUB J2</font></a> </th> 
+                   <th bgcolor="#687684" class="twikiTableCol3" valign="top"> <a href="/twiki/bin/view/Cosmac/RaspiElf?sortcol=3;table=5;up=0#sorted_table" rel="nofollow" title="Sort by this column"><font color="#ffffff">POWER P4</font></a> </th> 
+                   <th bgcolor="#687684" class="twikiTableCol4 twikiLastCol" valign="top"> <a href="/twiki/bin/view/Cosmac/RaspiElf?sortcol=4;table=5;up=0#sorted_table" rel="nofollow" title="Sort by this column"><font color="#ffffff">Elf Function</font></a> </th> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <td bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol" valign="top"> 1 </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1" valign="top"> 3.3 V </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol2" valign="top"> (18) </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol3" valign="top"> (3) </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol4 twikiLastCol" valign="top"> (VIN, +) </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <font color="#ffffff">2</font> </th> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1" valign="top"> 5 V </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol2" valign="top"> (18) </td> 
+                   <th bgcolor="#687684" class="twikiTableCol3" valign="top"> <font color="#ffffff">3</font> </th> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol4 twikiLastCol" valign="top"> VIN, + </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <td bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol" valign="top"> 3 </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1" valign="top"> BCM 2, SDA </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol2" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol4 twikiLastCol" valign="top"> &nbsp; </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol0 twikiFirstCol" valign="top"> 4 </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1" valign="top"> 5 V </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol2" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol4 twikiLastCol" valign="top"> &nbsp; </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <td bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol" valign="top"> 5 </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1" valign="top"> BCM 3, SCL </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol2" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol4 twikiLastCol" valign="top"> &nbsp; </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <font color="#ffffff">6</font> </th> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1" valign="top"> GND </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol2" valign="top"> (19) </td> 
+                   <th bgcolor="#687684" class="twikiTableCol3" valign="top"> <font color="#ffffff">1</font> </th> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol4 twikiLastCol" valign="top"> GND, - </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <font color="#ffffff">7</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1" valign="top"> BCM 4 </td> 
+                   <th bgcolor="#687684" class="twikiTableCol2" valign="top"> <font color="#ffffff">1, in</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol4 twikiLastCol" valign="top"> IN- (EF4) </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <font color="#ffffff">8</font> </th> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1" valign="top"> BCM 14, TXD </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol2" valign="top"> (20) </td> 
+                   <th bgcolor="#687684" class="twikiTableCol3" valign="top"> <font color="#ffffff">4, in</font> </th> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol4 twikiLastCol" valign="top"> RXD, RX (EF3) </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <font color="#ffffff">9</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1" valign="top"> GND </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol2" valign="top"> &nbsp; </td> 
+                   <th bgcolor="#687684" class="twikiTableCol3" valign="top"> <font color="#ffffff">6</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol4 twikiLastCol" valign="top"> GND, /ON </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <font color="#ffffff">10</font> </th> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1" valign="top"> BCM 15, RXD </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol2" valign="top"> (15) </td> 
+                   <th bgcolor="#687684" class="twikiTableCol3" valign="top"> <font color="#ffffff">5, out, Cathode</font> </th> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol4 twikiLastCol" valign="top"> TXD, TX (Q) </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <font color="#ffffff">11</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1" valign="top"> BCM 17 </td> 
+                   <th bgcolor="#687684" class="twikiTableCol2" valign="top"> <font color="#ffffff">14, in</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol4 twikiLastCol" valign="top"> WAIT- </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <font color="#ffffff">12</font> </th> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1" valign="top"> BCM 18 </td> 
+                   <th bgcolor="#687684" class="twikiTableCol2" valign="top"> <font color="#ffffff">16, in</font> </th> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol4 twikiLastCol" valign="top"> CLR- </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <font color="#ffffff">13</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1" valign="top"> BCM 27 </td> 
+                   <th bgcolor="#687684" class="twikiTableCol2" valign="top"> <font color="#ffffff">17, in</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol4 twikiLastCol" valign="top"> WE- </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol0 twikiFirstCol" valign="top"> 14 </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1" valign="top"> GND </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol2" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol4 twikiLastCol" valign="top"> &nbsp; </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <font color="#ffffff">15</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1" valign="top"> BCM 22 </td> 
+                   <th bgcolor="#687684" class="twikiTableCol2" valign="top"> <font color="#ffffff">2, in</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol4 twikiLastCol" valign="top"> IN0 </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <font color="#ffffff">16</font> </th> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1" valign="top"> BCM 23 </td> 
+                   <th bgcolor="#687684" class="twikiTableCol2" valign="top"> <font color="#ffffff">3, in</font> </th> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol4 twikiLastCol" valign="top"> IN1 </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <td bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol" valign="top"> 17 </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1" valign="top"> 3.3 V </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol2" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol4 twikiLastCol" valign="top"> &nbsp; </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <font color="#ffffff">18</font> </th> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1" valign="top"> BCM 24 </td> 
+                   <th bgcolor="#687684" class="twikiTableCol2" valign="top"> <font color="#ffffff">4, in</font> </th> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol4 twikiLastCol" valign="top"> IN2 </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <font color="#ffffff">19</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1" valign="top"> BCM 10, MOSI </td> 
+                   <th bgcolor="#687684" class="twikiTableCol2" valign="top"> <font color="#ffffff">5, in</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol4 twikiLastCol" valign="top"> IN3 </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol0 twikiFirstCol" valign="top"> 20 </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1" valign="top"> GND </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol2" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol4 twikiLastCol" valign="top"> &nbsp; </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <font color="#ffffff">21</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1" valign="top"> BCM 9, MISO </td> 
+                   <th bgcolor="#687684" class="twikiTableCol2" valign="top"> <font color="#ffffff">6, in</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol4 twikiLastCol" valign="top"> IN4 </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <font color="#ffffff">22</font> </th> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1" valign="top"> BCM 25 </td> 
+                   <th bgcolor="#687684" class="twikiTableCol2" valign="top"> <font color="#ffffff">7, in</font> </th> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol4 twikiLastCol" valign="top"> IN5 </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <font color="#ffffff">23</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1" valign="top"> BCM 11,SCLK </td> 
+                   <th bgcolor="#687684" class="twikiTableCol2" valign="top"> <font color="#ffffff">8, in</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol4 twikiLastCol" valign="top"> IN6 </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <font color="#ffffff">24</font> </th> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1" valign="top"> BCM 8, CE0 </td> 
+                   <th bgcolor="#687684" class="twikiTableCol2" valign="top"> <font color="#ffffff">9, in</font> </th> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol4 twikiLastCol" valign="top"> IN7 </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <td bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol" valign="top"> 25 </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1" valign="top"> GND </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol2" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol4 twikiLastCol" valign="top"> &nbsp; </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <font color="#ffffff">26</font> </th> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1" valign="top"> BCM 7, CE1 </td> 
+                   <th bgcolor="#687684" class="twikiTableCol2" valign="top"> <font color="#ffffff">25, out, Cathode</font> </th> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol4 twikiLastCol" valign="top"> O0 (*) </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <td bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol" valign="top"> 27 </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1" valign="top"> BCM 0 </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol2" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol4 twikiLastCol" valign="top"> &nbsp; </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol0 twikiFirstCol" valign="top"> 28 </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1" valign="top"> BCM 1 </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol2" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol4 twikiLastCol" valign="top"> &nbsp; </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <font color="#ffffff">29</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1" valign="top"> BCM 5 </td> 
+                   <th bgcolor="#687684" class="twikiTableCol2" valign="top"> <font color="#ffffff">24, out, Cathode</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol4 twikiLastCol" valign="top"> O1 (*) </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol0 twikiFirstCol" valign="top"> 30 </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1" valign="top"> GND </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol2" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol4 twikiLastCol" valign="top"> &nbsp; </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <font color="#ffffff">31</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1" valign="top"> BCM 6 </td> 
+                   <th bgcolor="#687684" class="twikiTableCol2" valign="top"> <font color="#ffffff">23, out, Cathode</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol4 twikiLastCol" valign="top"> O2 (*) </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <font color="#ffffff">32</font> </th> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1" valign="top"> BCM 12 </td> 
+                   <th bgcolor="#687684" class="twikiTableCol2" valign="top"> <font color="#ffffff">22, out, Cathode</font> </th> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol4 twikiLastCol" valign="top"> O3 (*) </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <font color="#ffffff">33</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1" valign="top"> BCM 13 </td> 
+                   <th bgcolor="#687684" class="twikiTableCol2" valign="top"> <font color="#ffffff">13, out, Cathode</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol4 twikiLastCol" valign="top"> O4 (*) </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol0 twikiFirstCol" valign="top"> 34 </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1" valign="top"> GND </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol2" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol4 twikiLastCol" valign="top"> &nbsp; </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <font color="#ffffff">35</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1" valign="top"> BCM 19 </td> 
+                   <th bgcolor="#687684" class="twikiTableCol2" valign="top"> <font color="#ffffff">12, out, Cathode</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol4 twikiLastCol" valign="top"> O5 (*) </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <font color="#ffffff">36</font> </th> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1" valign="top"> BCM 16 </td> 
+                   <th bgcolor="#687684" class="twikiTableCol2" valign="top"> <font color="#ffffff">10, out, Cathode</font> </th> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol4 twikiLastCol" valign="top"> O6 (*) </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <th bgcolor="#687684" class="twikiTableCol0 twikiFirstCol" valign="top"> <font color="#ffffff">37</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1" valign="top"> BCM 26 </td> 
+                   <th bgcolor="#687684" class="twikiTableCol2" valign="top"> <font color="#ffffff">11, out, Cathode</font> </th> 
+                   <td bgcolor="#ffffff" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol4 twikiLastCol" valign="top"> O7 (*) </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol0 twikiFirstCol" valign="top"> 38 </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1" valign="top"> BCM 20 </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol2" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol4 twikiLastCol" valign="top"> &nbsp; </td> 
+                  </tr> 
+                  <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                   <td bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol" valign="top"> 39 </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol1" valign="top"> GND </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol2" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol3" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#ffffff" class="twikiTableCol4 twikiLastCol" valign="top"> &nbsp; </td> 
+                  </tr> 
+                  <tr class="twikiTableOdd twikiTableRowdataBgSorted1 twikiTableRowdataBg1"> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol0 twikiFirstCol twikiLast" valign="top"> 40 </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol1 twikiLast" valign="top"> BCM 21 (<a class="twikiAnchorLink" href="/twiki/bin/view/Cosmac/WoodenBox#GPIO_Shutdown">shutdown</a>) </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol2 twikiLast" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol3 twikiLast" valign="top"> &nbsp; </td> 
+                   <td bgcolor="#edf4f9" class="twikiTableCol4 twikiLastCol twikiLast" valign="top"> &nbsp; </td> 
+                  </tr>
+                 </tbody>
+                </table> 
+                <p></p> 
+                <p></p> 
+               </div> 
+              </div> 
+             </div> 
+             <div style="clear: both;"></div> 
+            </div> 
+            <p></p> 
+            <p></p> 
+            <p></p> -- 
+            <style> .userReportsSig { display: inline-block; white-space: nowrap; padding: 0 2px 0 0; border: 1px solid #e8e8eb; background-color: #f4f4fa; -moz-box-shadow: 1px 1px 2px #e8e8e8; -webkit-box-shadow: 1px 1px 2px #e8e8e8; box-shadow: 1px 1px 2px #e8e8e8; -moz-border-radius: 4px; border-radius: 4px; } .userReportsSig a:link { border: 0 none; } .userReportsSig img { vertical-align: middle; } .userReportsBubble { position: absolute; background-image: url(/twiki/pub/TWiki/UserReports/faded-bubble.png); background-repeat: no-repeat; margin-top: -57px; margin-left: -18px; width: 920px; height: 90px; z-index: -1; } </style><span class="userReportsSig"> <a class="twikiLink" href="/twiki/bin/view/Main/PeterSchmid"><img src="/twiki/pub/Main/UserProfileHeader/default-user-profile.jpg" height="24" alt=""> Peter Schmid - 2017-11-26</a> </span> 
+            <p></p> 
+            <h2><a name="Comments"></a> Comments </h2> 
+           </div><!-- /patternTopic--> 
+           <div class="twikiContentFooter"></div>
+           <div class="twikiAttachments"> 
+            <div class="twistyPlugin twikiMakeVisibleInline"> <span id="topicattachmentslistshow" class="twistyRememberSetting twistyFirstStartShow twistyTrigger twikiUnvisited twistyHidden twistyInited1"><a href="#"><img src="/twiki/pub/TWiki/TWikiDocGraphics/toggleopen.gif" border="0" alt=""><span class="twikiLinkLabel twikiUnvisited">Attachments</span></a> </span> <span id="topicattachmentslisthide" class="twistyRememberSetting twistyFirstStartShow twistyTrigger twikiUnvisited twistyInited1"><a href="#"><img src="/twiki/pub/TWiki/TWikiDocGraphics/toggleclose.gif" border="0" alt=""><span class="twikiLinkLabel twikiUnvisited">Attachments</span></a> </span> 
+            </div><!--/twistyPlugin twikiMakeVisibleInline--> 
+            <div class="twistyPlugin">
+             <div id="topicattachmentslisttoggle" class="twistyRememberSetting twistyFirstStartShow twistyContent twistyInited1"> 
+              <table border="1" cellpadding="0" cellspacing="0" class="twikiTable" id="twikiAttachmentsTable" rules="rows" summary="Topic attachments">
+               <caption>
+                Topic attachments
+               </caption> 
+               <tbody>
+                <tr class="twikiTableOdd twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                 <th bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol" valign="middle"> <a href="/twiki/bin/view/Cosmac/RaspiElf?sortcol=0;table=6;up=0#sorted_table" rel="nofollow" title="Sort by this column"><font color="#0066cc">I</font></a> </th> 
+                 <th bgcolor="#ffffff" class="twikiTableCol1" valign="middle"> <a href="/twiki/bin/view/Cosmac/RaspiElf?sortcol=1;table=6;up=0#sorted_table" rel="nofollow" title="Sort by this column"><font color="#0066cc">Attachment</font></a> </th> 
+                 <th bgcolor="#ffffff" class="twikiTableCol2" valign="middle"> <a href="/twiki/bin/view/Cosmac/RaspiElf?sortcol=2;table=6;up=0#sorted_table" rel="nofollow" title="Sort by this column"><font color="#0066cc">History</font></a> </th> 
+                 <th bgcolor="#ffffff" class="twikiTableCol3" valign="middle"> <a href="/twiki/bin/view/Cosmac/RaspiElf?sortcol=3;table=6;up=0#sorted_table" rel="nofollow" title="Sort by this column"><font color="#0066cc">Action</font></a> </th> 
+                 <th bgcolor="#ffffff" class="twikiTableCol4" valign="middle"> <a href="/twiki/bin/view/Cosmac/RaspiElf?sortcol=4;table=6;up=0#sorted_table" rel="nofollow" title="Sort by this column"><font color="#0066cc">Size</font></a> </th> 
+                 <th bgcolor="#ffffff" class="twikiTableCol5" valign="middle"> <a href="/twiki/bin/view/Cosmac/RaspiElf?sortcol=5;table=6;up=0#sorted_table" rel="nofollow" title="Sort by this column"><font color="#0066cc">Date</font></a> </th> 
+                 <th bgcolor="#ffffff" class="twikiTableCol6" valign="middle"> <a href="/twiki/bin/view/Cosmac/RaspiElf?sortcol=6;table=6;up=0#sorted_table" rel="nofollow" title="Sort by this column"><font color="#0066cc">Who</font></a> </th> 
+                 <th bgcolor="#ffffff" class="twikiTableCol7 twikiLastCol" valign="middle"> <a href="/twiki/bin/view/Cosmac/RaspiElf?sortcol=7;table=6;up=0#sorted_table" rel="nofollow" title="Sort by this column"><font color="#0066cc">Comment</font></a> </th> 
+                </tr> 
+                <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                 <td align="center" bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol" valign="top"> <img src="/twiki/pub/TWiki/TWikiDocGraphics/else.gif" width="16" height="16" alt="Unknown file format" title="Unknown file format" border="0"><span class="twikiHidden">bin</span> </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol1" valign="top"> <a href="http://spyr.ch/twiki/pub/Cosmac/RaspiElf/LBR_8000.bin">LBR_8000.bin</a> </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol2" valign="top"> r1 </td> 
+                 <td align="right" bgcolor="#ffffff" class="twikiTableCol3" valign="top"> <a href="/twiki/bin/attach/Cosmac/RaspiElf?filename=LBR_8000.bin;revInfo=1" title="change, update, previous revisions, move, delete..." rel="nofollow">manage</a> </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol4" valign="top"> 0.1&nbsp;K </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol5" valign="top"> <span class="twikiNoBreak">2017-12-26 - 22:48</span> </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol6" valign="top"> <a class="twikiLink" href="/twiki/bin/view/Main/PeterSchmid">PeterSchmid</a> </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol7 twikiLastCol" valign="top"> &nbsp; </td> 
+                </tr> 
+                <tr class="twikiTableOdd twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                 <td align="center" bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol" valign="top"> <img src="/twiki/pub/TWiki/TWikiDocGraphics/png.gif" width="16" height="16" alt="PNG" title="PNG" border="0"><span class="twikiHidden">png</span> </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol1" valign="top"> <a href="http://spyr.ch/twiki/pub/Cosmac/RaspiElf/gpio-numbers-pi2.png">gpio-numbers-pi2.png</a> </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol2" valign="top"> r1 </td> 
+                 <td align="right" bgcolor="#ffffff" class="twikiTableCol3" valign="top"> <a href="/twiki/bin/attach/Cosmac/RaspiElf?filename=gpio-numbers-pi2.png;revInfo=1" title="change, update, previous revisions, move, delete..." rel="nofollow">manage</a> </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol4" valign="top"> 53.2&nbsp;K </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol5" valign="top"> <span class="twikiNoBreak">2017-11-26 - 18:46</span> </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol6" valign="top"> <a class="twikiLink" href="/twiki/bin/view/Main/PeterSchmid">PeterSchmid</a> </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol7 twikiLastCol" valign="top"> &nbsp; </td> 
+                </tr> 
+                <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                 <td align="center" bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol" valign="top"> <img src="/twiki/pub/TWiki/TWikiDocGraphics/jpg.gif" width="16" height="16" alt="JPEG" title="JPEG" border="0"><span class="twikiHidden">jpg</span> </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol1" valign="top"> <a href="http://spyr.ch/twiki/pub/Cosmac/RaspiElf/harness.jpg">harness.jpg</a> </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol2" valign="top"> r1 </td> 
+                 <td align="right" bgcolor="#ffffff" class="twikiTableCol3" valign="top"> <a href="/twiki/bin/attach/Cosmac/RaspiElf?filename=harness.jpg;revInfo=1" title="change, update, previous revisions, move, delete..." rel="nofollow">manage</a> </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol4" valign="top"> 276.2&nbsp;K </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol5" valign="top"> <span class="twikiNoBreak">2017-12-18 - 17:46</span> </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol6" valign="top"> <a class="twikiLink" href="/twiki/bin/view/Main/PeterSchmid">PeterSchmid</a> </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol7 twikiLastCol" valign="top"> &nbsp; </td> 
+                </tr> 
+                <tr class="twikiTableOdd twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                 <td align="center" bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol" valign="top"> <img src="/twiki/pub/TWiki/TWikiDocGraphics/jpg.gif" width="16" height="16" alt="JPEG" title="JPEG" border="0"><span class="twikiHidden">jpg</span> </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol1" valign="top"> <a href="http://spyr.ch/twiki/pub/Cosmac/RaspiElf/raspi-elfmemcard-s.jpg">raspi-elfmemcard-s.jpg</a> </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol2" valign="top"> r2 <a href="/twiki/bin/viewfile/Cosmac/RaspiElf?filename=raspi-elfmemcard-s.jpg;rev=1" rel="nofollow">r1</a> </td> 
+                 <td align="right" bgcolor="#ffffff" class="twikiTableCol3" valign="top"> <a href="/twiki/bin/attach/Cosmac/RaspiElf?filename=raspi-elfmemcard-s.jpg;revInfo=1" title="change, update, previous revisions, move, delete..." rel="nofollow">manage</a> </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol4" valign="top"> 55.2&nbsp;K </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol5" valign="top"> <span class="twikiNoBreak">2017-12-18 - 17:49</span> </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol6" valign="top"> <a class="twikiLink" href="/twiki/bin/view/Main/PeterSchmid">PeterSchmid</a> </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol7 twikiLastCol" valign="top"> &nbsp; </td> 
+                </tr> 
+                <tr class="twikiTableEven twikiTableRowdataBgSorted0 twikiTableRowdataBg0"> 
+                 <td align="center" bgcolor="#ffffff" class="twikiTableCol0 twikiFirstCol twikiLast" valign="top"> <img src="/twiki/pub/TWiki/TWikiDocGraphics/jpg.gif" width="16" height="16" alt="JPEG" title="JPEG" border="0"><span class="twikiHidden">jpg</span> </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol1 twikiLast" valign="top"> <a href="http://spyr.ch/twiki/pub/Cosmac/RaspiElf/raspi-elfmemcard.jpg">raspi-elfmemcard.jpg</a> </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol2 twikiLast" valign="top"> r1 </td> 
+                 <td align="right" bgcolor="#ffffff" class="twikiTableCol3 twikiLast" valign="top"> <a href="/twiki/bin/attach/Cosmac/RaspiElf?filename=raspi-elfmemcard.jpg;revInfo=1" title="change, update, previous revisions, move, delete..." rel="nofollow">manage</a> </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol4 twikiLast" valign="top"> 396.7&nbsp;K </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol5 twikiLast" valign="top"> <span class="twikiNoBreak">2017-12-18 - 18:00</span> </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol6 twikiLast" valign="top"> <a class="twikiLink" href="/twiki/bin/view/Main/PeterSchmid">PeterSchmid</a> </td> 
+                 <td align="left" bgcolor="#ffffff" class="twikiTableCol7 twikiLastCol twikiLast" valign="top"> &nbsp; </td> 
+                </tr>
+               </tbody>
+              </table> 
+             </div>
+            </div> <!--/twistyPlugin-->
+           </div><!--//twikiAttachments-->
+          </div><!-- /patternContent--> 
+          <div class="clear"></div> <a name="topic-actions"></a>
+          <div class="patternTopicActions">
+           <div class="patternTopicAction">
+            <span class="patternActionButtons"><span style=""><span><a href="http://spyr.ch/twiki/bin/edit/Cosmac/RaspiElf?t=1618134381;nowysiwyg=0" rel="nofollow" title="Edit this topic text" accesskey="e"><img src="/twiki/pub/TWiki/TWikiDocGraphics/uweb-o14.gif" width="14" height="14" border="0" alt=""> <span class="twikiAccessKey">E</span>dit</a></span><span class="twikiSeparator">&nbsp;|&nbsp;</span></span><span style=""><span><a href="/twiki/bin/attach/Cosmac/RaspiElf" rel="nofollow" title="Attach an image or document to this topic" accesskey="a"><span class="twikiAccessKey">A</span>ttach</a></span><span class="twikiSeparator">&nbsp;|&nbsp;</span></span><span>
+              <strike>
+               Watch
+              </strike></span><span class="twikiSeparator">&nbsp;|&nbsp;</span><span><a href="/twiki/bin/view/Cosmac/RaspiElf?cover=print" rel="nofollow" title="Printable version of this topic" accesskey="p"><span class="twikiAccessKey">P</span>rint version</a></span><span class="twikiSeparator">&nbsp;|&nbsp;</span><span><span><a href="/twiki/bin/rdiff/Cosmac/RaspiElf?type=history" rel="nofollow" title="View total topic history" accesskey="h"><span class="twikiAccessKey">H</span>istory</a></span>: r37&nbsp;<a href="/twiki/bin/rdiff/Cosmac/RaspiElf?rev1=37;rev2=36" rel="nofollow">&lt;</a>&nbsp;<a href="/twiki/bin/view/Cosmac/RaspiElf?rev=36" rel="nofollow">r36</a>&nbsp;<a href="/twiki/bin/rdiff/Cosmac/RaspiElf?rev1=36;rev2=35" rel="nofollow">&lt;</a>&nbsp;<a href="/twiki/bin/view/Cosmac/RaspiElf?rev=35" rel="nofollow">r35</a>&nbsp;<a href="/twiki/bin/rdiff/Cosmac/RaspiElf?rev1=35;rev2=34" rel="nofollow">&lt;</a>&nbsp;<a href="/twiki/bin/view/Cosmac/RaspiElf?rev=34" rel="nofollow">r34</a>&nbsp;<a href="/twiki/bin/rdiff/Cosmac/RaspiElf?rev1=34;rev2=33" rel="nofollow">&lt;</a>&nbsp;<a href="/twiki/bin/view/Cosmac/RaspiElf?rev=33" rel="nofollow">r33</a></span><span class="twikiSeparator">&nbsp;|&nbsp;</span><span><a href="/twiki/bin/oops/Cosmac/RaspiElf?template=backlinksweb" rel="nofollow" title="Search the Cosmac Web for topics that link to here" accesskey="b"><span class="twikiAccessKey">B</span>acklinks</a></span><span class="twikiSeparator">&nbsp;|&nbsp;</span><span><a href="/twiki/bin/view/Cosmac/RaspiElf?raw=on" rel="nofollow" title="View raw text without formatting" accesskey="r"><span class="twikiAccessKey">R</span>aw View</a></span><span class="twikiSeparator">&nbsp;|&nbsp;</span><span style=""><span><a href="http://spyr.ch/twiki/bin/edit/Cosmac/RaspiElf?t=1618134381;nowysiwyg=1" rel="nofollow" title="Raw Edit this topic text" accesskey="w">Ra<span class="twikiAccessKey">w</span> edit</a></span><span class="twikiSeparator">&nbsp;|&nbsp;</span></span><span><a href="/twiki/bin/oops/Cosmac/RaspiElf?template=oopsmore&amp;param1=37&amp;param2=37" rel="nofollow" title="Delete or rename this topic; set parent topic; view and compare revisions" accesskey="m"><span class="twikiAccessKey">M</span>ore topic actions</a></span></span>
+           </div><!--/patternTopicAction-->
+          </div><!--/patternTopicActions--> 
+          <div class="patternInfo twikiGrayText">
+           <div class="patternRevInfo">
+            Topic revision: r37 - 2019-02-11 <a href="http://spyr.ch/twiki/bin/edit/Cosmac/RaspiElf?t=1618134381;nowysiwyg=1" target="_top">-</a> <a class="twikiLink" href="/twiki/bin/view/Main/PeterSchmid">PeterSchmid</a>
+           </div><!-- /patternRevInfo-->
+          </div><!-- /patternInfo--> 
+         </div><!-- /patternMainContents--> 
+        </div><!-- /patternMain--> 
+       </div><!-- /patternFloatWrap--> 
+       <div class="clear">
+        &nbsp;
+       </div> 
+      </div><!-- /patternOuter-->
+     </div><!-- /patternWrapper-->
+     <div id="twTopBar" class="hideInPrint">
+      <!--<pre>--> 
+      <script type="text/javascript">
+var twtimeout = 600;
+var twclosetimer = null;
+var twmenuitem = null;
+function twTopMenuOpen() {
+ twTopMenuCancelTimer();
+ twTopMenuClose();
+ twmenuitem = $(this).find('ul').css('visibility', 'visible'); 
+}
+function twTopMenuClose() {
+ if(twmenuitem) { twmenuitem.css('visibility', 'hidden'); } 
+}
+function twTopMenuTimer() {
+ if(!twclosetimer) { twclosetimer = window.setTimeout(twTopMenuClose, twtimeout); }
+}
+function twTopMenuCancelTimer() {
+ if(twclosetimer) { window.clearTimeout(twclosetimer); twclosetimer = null; } 
+}
+$(document).ready(function() {
+ $('.twTopMenuTab > ul li').bind('mouseover', twTopMenuOpen);
+ $('.twTopMenuTab > ul').bind('mouseout',  twTopMenuTimer);
+});
+document.onclick = twTopMenuClose;
+</script> <!--</pre>-->
+      <div style="position: absolute; margin-left: 212px; margin-top: 30px; z-index: 1">
+       <a href="http://twiki.org/?ref=twiki.org/topmenuskin.topbar" style="display: block; width: 100px; height: 48px;"><span></span></a>
+      </div> 
+      <div style="position: fixed; min-width: 35px; height: 22px; background-image: url(/twiki/pub/TWiki/TopMenuSkin/menu-start.png); background-repeat: no-repeat;" id="topmenu-start"> 
+       <div style="position: fixed; width: 100%; height: 22px; background-image: url(/twiki/pub/TWiki/TopMenuSkin/menu-gray-bg.png); background-repeat: repeat-x; display: block;" id="topmenu-bar"> 
+        <table border="0" cellpadding="0" cellspacing="0" width="100%"> 
+         <tbody>
+          <tr style="background-image: url(/twiki/pub/TWiki/TopMenuSkin/menu-gray-bg.png); background-repeat: repeat-x;"> 
+           <td width="35"><img src="/twiki/pub/TWiki/TopMenuSkin/menu-start.png" width="35" height="22" alt=""></td> 
+           <td width="80%"> 
+            <div class="twTopMenuTab"> 
+             <ul> 
+              <li> <a href="/twiki/bin/view/Cosmac/WebHome" title="TWiki home --- Tip: This menu-bar is also a 'You are here' breadcrumb">Home <img alt="menu-down.gif" src="http://spyr.ch/twiki/pub/TWiki/TWikiDocGraphics/menu-down.gif"></a> 
+               <ul> 
+                <li> <a href="/twiki/bin/view/TWiki/SiteMap" title="Site map listing all webs"><img src="/twiki/pub/TWiki/TWikiDocGraphics/sitetree.gif" width="16" height="16" alt="Site tree" title="Site tree" border="0"> Site map</a> </li> 
+                <li> <span style="white-space:nowrap"><a href="/twiki/bin/view/Betriebssysteme/WebHome"><img src="http://spyr.ch/twiki/pub/TWiki/TWikiDocGraphics/web-bg.gif" border="0" alt="" width="16" height="16" style="background-color:#0066FF">&nbsp;Betriebssysteme web</a></span> </li> 
+                <li> <span style="white-space:nowrap"><a href="/twiki/bin/view/Cosmac/WebHome"><img src="http://spyr.ch/twiki/pub/TWiki/TWikiDocGraphics/web-bg.gif" border="0" alt="" width="16" height="16" style="background-color:#dCC0033">&nbsp;Cosmac web</a></span> </li> 
+                <li> <span style="white-space:nowrap"><a href="/twiki/bin/view/MRR/WebHome"><img src="http://spyr.ch/twiki/pub/TWiki/TWikiDocGraphics/web-bg.gif" border="0" alt="" width="16" height="16" style="background-color:#336633 ">&nbsp;MRR web</a></span> </li> 
+                <li> <span style="white-space:nowrap"><a href="/twiki/bin/view/Main/WebHome"><img src="http://spyr.ch/twiki/pub/TWiki/TWikiDocGraphics/web-bg.gif" border="0" alt="" width="16" height="16" style="background-color:#FFEFA6">&nbsp;Main web</a></span> </li> 
+                <li> <span style="white-space:nowrap"><a href="/twiki/bin/view/MecrispCube/WebHome"><img src="http://spyr.ch/twiki/pub/TWiki/TWikiDocGraphics/web-bg.gif" border="0" alt="" width="16" height="16" style="background-color:#d0d0d0">&nbsp;MecrispCube web</a></span> </li> 
+                <li> <span style="white-space:nowrap"><a href="/twiki/bin/view/Sandbox/WebHome"><img src="http://spyr.ch/twiki/pub/TWiki/TWikiDocGraphics/web-bg.gif" border="0" alt="" width="16" height="16" style="background-color:#B9DAFF">&nbsp;Sandbox web</a></span> </li> 
+                <li> <span style="white-space:nowrap"><a href="/twiki/bin/view/Spielwiese/WebHome"><img src="http://spyr.ch/twiki/pub/TWiki/TWikiDocGraphics/web-bg.gif" border="0" alt="" width="16" height="16" style="background-color:#D0D0D0">&nbsp;Spielwiese web</a></span> </li> 
+                <li> <span style="white-space:nowrap"><a href="/twiki/bin/view/TWiki/WebHome"><img src="http://spyr.ch/twiki/pub/TWiki/TWikiDocGraphics/web-bg.gif" border="0" alt="" width="16" height="16" style="background-color:#FFD8AA">&nbsp;TWiki web</a></span> </li> 
+                <li> <span style="white-space:nowrap"><a href="/twiki/bin/view/Ursula/WebHome"><img src="http://spyr.ch/twiki/pub/TWiki/TWikiDocGraphics/web-bg.gif" border="0" alt="" width="16" height="16" style="background-color:#000000">&nbsp;Ursula web</a></span> </li> 
+                <li> <span style="white-space:nowrap"><a href="/twiki/bin/view/Velo/WebHome"><img src="http://spyr.ch/twiki/pub/TWiki/TWikiDocGraphics/web-bg.gif" border="0" alt="" width="16" height="16" style="background-color:#D0D0D0">&nbsp;Velo web</a></span> </li>
+               </ul> </li> 
+              <li> <img src="http://spyr.ch/twiki/pub/TWiki/TopMenuSkin/menu-right.png" alt="" width="8" height="22"> </li> 
+              <li> <a class="twikiCurrentWebHomeLink twikiLink" href="/twiki/bin/view/Cosmac/WebHome"><img src="http://spyr.ch/twiki/pub/TWiki/TWikiDocGraphics/web-bg.gif" border="0" alt="" width="16" height="16" style="background-color:#dCC0033"> Cosmac Web <img src="/twiki/pub/TWiki/TWikiDocGraphics/menu-down.gif" width="14" height="16" alt="Menu dropdown" title="Menu dropdown" border="0"></a> 
+               <ul> 
+                <li> <a href="/twiki/bin/view/Cosmac/WebCreateNewTopic?topicparent=RaspiElf" target="_top"> <img src="/twiki/pub/TWiki/TWikiDocGraphics/newtopic.gif" width="16" height="16" alt="New topic" title="New topic" border="0"> Create New Topic</a> </li> 
+                <li> <a class="twikiLink" href="/twiki/bin/view/Cosmac/WebTopicList"> <img src="/twiki/pub/TWiki/TWikiDocGraphics/index.gif" width="16" height="16" alt="Index" title="Index" border="0"> Index</a> </li> 
+                <li> <a class="twikiLink" href="/twiki/bin/view/Cosmac/WebSearch"> <img src="/twiki/pub/TWiki/TWikiDocGraphics/searchtopic.gif" width="16" height="16" alt="Search topic" title="Search topic" border="0"> Search</a> </li> 
+                <li> <a class="twikiLink" href="/twiki/bin/view/Cosmac/WebChanges"> <img src="/twiki/pub/TWiki/TWikiDocGraphics/changes.gif" width="16" height="16" alt="Changes" title="Changes" border="0"> Changes</a> </li> 
+                <li> <a class="twikiLink" href="/twiki/bin/view/Cosmac/WebNotify"> <img src="/twiki/pub/TWiki/TWikiDocGraphics/notify.gif" width="16" height="16" alt="Notify" title="Notify" border="0"> Notifications</a> </li> 
+                <li> <a class="twikiLink" href="/twiki/bin/view/Cosmac/WebRss"> <img src="/twiki/pub/TWiki/TWikiDocGraphics/feed.gif" width="16" height="16" alt="RSS feed, rounded corners" title="RSS feed, rounded corners" border="0"> RSS Feed</a> </li> 
+                <li> <a class="twikiLink" href="/twiki/bin/view/Cosmac/WebStatistics"> <img src="/twiki/pub/TWiki/TWikiDocGraphics/statistics.gif" width="16" height="16" alt="Statistics" title="Statistics" border="0"> Statistics</a> </li> 
+                <li> <a class="twikiLink" href="/twiki/bin/view/Cosmac/WebPreferences"> <img src="/twiki/pub/TWiki/TWikiDocGraphics/wrench.gif" width="16" height="16" alt="Wrench, tools" title="Wrench, tools" border="0"> Preferences</a> </li>
+               </ul> </li> 
+              <li> </li> 
+              <li> <img src="http://spyr.ch/twiki/pub/TWiki/TopMenuSkin/menu-right.png" alt="" width="8" height="22"> </li> 
+              <li> <a href="http://spyr.ch/twiki/bin/view/Cosmac/RaspiElf" title="Topic RaspiElf -- PeterSchmid - 2019-02-11 - r37">View <img alt="menu-down.gif" src="http://spyr.ch/twiki/pub/TWiki/TWikiDocGraphics/menu-down.gif"></a> 
+               <ul> 
+                <li> <a href="/twiki/bin/view/Cosmac/RaspiElf?raw=on" rel="nofollow" title="View raw text without formatting">Raw View</a> </li> 
+                <li> <a href="/twiki/bin/view/Cosmac/RaspiElf?cover=print" rel="nofollow" title="Printable version of this topic">Print version</a> </li> 
+                <li> <a href="/twiki/bin/oops/Cosmac/RaspiElf?template=backlinksweb" rel="nofollow" title="Search the Cosmac web for topics that link to here">Find backlinks</a> </li> 
+                <li> <a href="/twiki/bin/rdiff/Cosmac/RaspiElf?type=history" rel="nofollow" title="View total topic history">History</a> </li> 
+                <li> <a href="/twiki/bin/oops/Cosmac/RaspiElf?template=oopsmore&amp;param1=37&amp;param2=37" rel="nofollow" title="Delete or rename this topic; set parent topic; view and compare revisions">More topic actions</a> </li>
+               </ul> </li> 
+              <li> <a href="http://spyr.ch/twiki/bin/edit/Cosmac/RaspiElf?t=1618134381" rel="nofollow" title="Edit this topic text">Edit <img alt="menu-down.gif" src="http://spyr.ch/twiki/pub/TWiki/TWikiDocGraphics/menu-down.gif"></a> 
+               <ul> 
+                <li> <a href="http://spyr.ch/twiki/bin/edit/Cosmac/RaspiElf?t=1618134381;nowysiwyg=1" rel="nofollow" title="Raw Edit this topic text">Raw edit</a> </li> 
+                <li> <a href="/twiki/bin/attach/Cosmac/RaspiElf" rel="nofollow" title="Attach an image or document to this topic">Attach file or image</a> </li> 
+                <li> <a href="http://spyr.ch/twiki/bin/manage/Cosmac/RaspiElf?t=1618134381;action=editSettings" target="_top">Edit topic preference settings</a> </li> 
+                <li> <a href="http://spyr.ch/twiki/bin/oops/Cosmac/RaspiElf?template=oopsmore#SetParent" target="_top">Set new parent</a> </li> 
+                <li> <a href="/twiki/bin/oops/Cosmac/RaspiElf?template=oopsmore&amp;param1=37&amp;param2=37" rel="nofollow" title="Delete or rename this topic; set parent topic; view and compare revisions">More topic actions</a> </li>
+               </ul> </li>
+             </ul> 
+             <p></p> 
+            </div></td>
+           <td>
+            <div class="twTopMenuTab" style="float:right"> 
+             <ul> 
+              <li> <a class="twikiLink" href="/twiki/bin/view/Main/TWikiGuest"> <img src="/twiki/pub/TWiki/TWikiDocGraphics/person.gif" width="16" height="16" alt="Person" title="Person" border="0"> Account <img src="/twiki/pub/TWiki/TWikiDocGraphics/menu-down.gif" width="14" height="16" alt="Menu dropdown" title="Menu dropdown" border="0"></a> 
+               <ul> 
+                <li> <a href="/twiki/bin/login/Cosmac/RaspiElf?origurl=/twiki/bin/view/Cosmac/RaspiElf">Log In</a> </li>
+               </ul> </li>
+             </ul> 
+            </div></td>
+           <td>
+            <div class="twTopMenuTab"> 
+             <ul> 
+              <li> <a class="twikiLink" href="/twiki/bin/view/TWiki/WebHome"><img src="/twiki/pub/TWiki/TWikiDocGraphics/twiki-help.gif" width="16" height="16" border="0" alt="Help" title="TWiki help" style="margin: 1px;"></a> </li>
+             </ul> 
+            </div></td> 
+           <td width="40"><img src="/twiki/pub/TWiki/TopMenuSkin/spacer.gif" width="40" height="1" alt=""></td> 
+          </tr> 
+         </tbody>
+        </table> 
+       </div> 
+      </div> 
+      <div style="height: 22px;"></div> 
+      <table border="0" cellpadding="0" cellspacing="0" width="100%"> 
+       <tbody>
+        <tr style="background-image: url(/twiki/pub/TWiki/TopMenuSkin/banner-bg.png); background-repeat: repeat-x;">
+         <td width="40"><img src="/twiki/pub/TWiki/TopMenuSkin/spacer.gif" width="40" height="58" alt=""></td> 
+         <td width="30"> <span id="twikiLogo" class="twikiImage"><a href="/twiki/bin/view/Cosmac/WebHome"><img src="/twiki/pub/Cosmac/WebPreferences/keypad-display-t.png" border="0" alt="WEBLOGOALT" title="WEBLOGOALT" style="border:none;"></a></span></td> 
+         <td align="right" style="background-image: url(/twiki/pub/TWiki/TopMenuSkin/banner-net-bg.png); background-repeat: repeat-x;" class="patternMetaMenu"> 
+          <ul> 
+           <li> 
+            <form name="jumpForm" action="/twiki/bin/view/Cosmac/RaspiElf">
+             <input id="jumpFormField" type="text" class="twikiInputField" name="topic" value="" size="10" title="Jump to a topic by its name; browse to a topic by typing a partial name">
+             <noscript>
+              &nbsp;
+              <input type="submit" class="twikiButton" size="5" name="submit" value="Jump">&nbsp;
+             </noscript> 
+            </form> </li> 
+           <li> 
+            <form name="quickSearchForm" action="/twiki/bin/view/Cosmac/WebSearch">
+             <input type="text" class="twikiInputField" id="quickSearchBox" name="search" value="" size="10" title="Search in current web. For example, to search for all topics that contain &quot;SOAP&quot;, &quot;WSDL&quot;, a literal &quot;web service&quot;, but not &quot;shampoo&quot;, write: soap wsdl &quot;web service&quot; -shampoo">
+             <input type="hidden" name="scope" value="all">
+             <input type="hidden" name="web" value="Cosmac">
+             <noscript>
+              &nbsp;
+              <input type="submit" size="5" class="twikiButton" name="submit" value="Search">&nbsp;
+             </noscript> 
+            </form> </li> 
+           <li> </li>
+          </ul> </td> 
+         <td width="15"><img src="/twiki/pub/TWiki/TopMenuSkin/spacer.gif" width="15" height="1" alt=""></td> 
+         <td width="165" valign="bottom">
+          <div id="twTopBarButtons"> 
+           <ul> 
+            <li> <span><a href="http://spyr.ch/twiki/bin/edit/Cosmac/RaspiElf?t=1618134381;nowysiwyg=0" rel="nofollow" title="Edit this topic text" accesskey="e"><img src="/twiki/pub/TWiki/TWikiDocGraphics/uweb-o14.gif" width="14" height="14" border="0" alt=""> <span class="twikiAccessKey">E</span>dit</a></span> </li> 
+            <li> <span><a href="/twiki/bin/attach/Cosmac/RaspiElf" rel="nofollow" title="Attach an image or document to this topic" accesskey="a"><span class="twikiAccessKey">A</span>ttach</a></span> </li>
+           </ul> 
+          </div></td> 
+         <td width="40"><img src="/twiki/pub/TWiki/TopMenuSkin/spacer.gif" width="40" height="1" alt=""></td> 
+        </tr> 
+       </tbody>
+      </table> 
+      <script type="text/javascript">
+var twTopMenuBarCloseTimer = null;
+var twTopMenuBarTimerMsec = 1000;
+function twToggleTopMenuBar( isHover ) {
+  if( 'off' == 'on' || 'off' == '1' ) {
+    return;
+  }
+  var displayState = 'none';
+  if( $(window).scrollTop()<22 || isHover>0 ) {
+     displayState = 'block';
+     if(twTopMenuBarCloseTimer) { window.clearTimeout(twTopMenuBarCloseTimer); twTopMenuBarCloseTimer = null; } 
+  } else {
+    if(!twTopMenuBarCloseTimer && isHover>=0 ) {
+      twTopMenuBarCloseTimer = window.setTimeout(twCloseTopMenuBar, twTopMenuBarTimerMsec);
+      return;
+    }
+  }
+  if( $('#topmenu-bar').css('display') != displayState ) {
+    $('#topmenu-bar').css('display', displayState);
+  }
+};
+function twCloseTopMenuBar() {
+  twToggleTopMenuBar(-1);
+}
+$(document).ready(function () {
+  twToggleTopMenuBar(0);
+});
+$(window).scroll(function () {  
+  twToggleTopMenuBar(0);
+});
+$('#topmenu-start').hover(
+  function () { twToggleTopMenuBar(1); }, 
+  function () { twToggleTopMenuBar(0); }
+);
+</script>
+     </div><!-- /twTopBar-->
+     <div id="patternBottomBar">
+      <div id="patternBottomBarContents">
+       <div id="patternWebBottomBar">
+        <div class="twikiCopyright">
+         <span class="twikiRight"> <a href="http://twiki.org/"><img src="/twiki/pub/TWiki/TWikiLogos/T-badge-88x31.gif" alt="This site is powered by the TWiki collaboration platform" width="88" height="31" title="This site is powered by the TWiki collaboration platform" border="0"></a></span><span class="twikiRight" style="padding:0 10px 0 10px"> <a href="http://www.perl.org/"><img src="/twiki/pub/TWiki/TWikiLogos/perl-logo-88x31.gif" alt="Powered by Perl" width="88" height="31" title="Powered by Perl" border="0"></a></span>Copyright © 2008-2021 by the contributing authors. All material on this collaboration platform is the property of the contributing authors. 
+         <br> Ideas, requests, problems regarding TWiki? <a href="mailto:peter@spyr.ch?subject=TWiki%20Feedback%20on%20Cosmac.RaspiElf">Send feedback</a>
+        </div><!--/patternWebBottomBar-->
+       </div><!-- /patternBottomBarContents-->
+      </div><!-- /patternBottomBar--> 
+     </div><!-- /patternPage--> 
+    </div><!-- /patternPageShadow--> 
+   </div><!-- /patternScreen--> 
+  </div>
+ </body>
+</html>

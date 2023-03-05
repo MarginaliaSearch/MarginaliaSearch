@@ -1,0 +1,61 @@
+<html> 
+ <head> 
+  <title>PuTTY: a free telnet/ssh client</title> 
+  <link rel="stylesheet" type="text/css" href="sitestyle.css" title="PuTTY Home Page Style"> 
+  <link rel="shortcut icon" href="putty.ico"> 
+  <meta http-equiv="content-type" content="text/html; charset=US-ASCII"> 
+ </head> 
+ <body> 
+  <h1 align="center">PuTTY: A Free Telnet/SSH Client</h1> <!--MIRRORWARNING-->
+  <div align="center" class="mirrorwarning">
+   This is a mirror. The primary PuTTY web site can be found <a href="http://www.chiark.greenend.org.uk/~sgtatham/putty/">here</a>.
+  </div> 
+  <p align="center"> <b>Home</b> | <a href="licence.html">Licence</a> | <a href="faq.html">FAQ</a> | <a href="docs.html">Docs</a> | <a href="download.html">Download</a> | <a href="keys.html">Keys</a> | <a href="links.html">Links</a><br> <a href="mirrors.html">Mirrors</a> | <a href="maillist.html">Updates</a> | <a href="feedback.html">Feedback</a> | <a href="changes.html">Changes</a> | <a href="wishlist/">Wishlist</a> | <a href="team.html">Team</a></p> 
+  <p> PuTTY is a free implementation of Telnet and SSH for Win32 and Unix platforms, along with an <code>xterm</code> terminal emulator. It is written and maintained primarily by <a href="http://www.pobox.com/~anakin/">Simon Tatham</a>. </p>
+  <p> The latest version is beta 0.60. </p>
+  <p><b>LEGAL WARNING</b>: Use of PuTTY, PSCP, PSFTP and Plink is illegal in countries where encryption is outlawed. I believe it is legal to use PuTTY, PSCP, PSFTP and Plink in England and Wales and in many other countries, but I am not a lawyer and so if in doubt you should seek legal advice before downloading it. You may find <a href="http://rechten.uvt.nl/koops/cryptolaw/">this site</a> useful (it's a survey of cryptography laws in many countries) but I can't vouch for its correctness. </p> 
+  <p> Use of the Telnet-only binary (PuTTYtel) is unrestricted by any cryptography laws. </p>
+  <h2>Latest news</h2> 
+  <p> <b>2007-04-29 PuTTY 0.60 is released</b> </p>
+  <p> PuTTY 0.60 is out, containing mostly bug fixes. </p>
+  <p> <b>2007-01-24 PuTTY 0.59 is released</b> </p>
+  <p> PuTTY 0.59 is out (finally!), and as previously announced we no longer provide Alpha binaries. </p>
+  <p> <b>2006-03-31 Proposed withdrawal of Alpha NT PuTTY</b> </p>
+  <p> From the next release, we propose to stop providing binaries for PuTTY on Windows NT on the Alpha processor. Our own original need for PuTTY on Alpha NT has gone, and our logs suggest that nobody else now uses it. If this is a problem for you let us know. </p>
+  <h2>Site map</h2> 
+  <ul> 
+   <li> <a href="licence.html">Licence conditions</a> under which you may use PuTTY. </li>
+   <li> <a href="faq.html">The FAQ</a>. </li>
+   <li> <a href="docs.html">The documentation</a>. </li>
+   <li> <a href="download.html">Download PuTTY</a>!<br> </li>
+   <li> Subscribe to the <a href="maillist.html">PuTTY-announce</a> mailing list to be notified of new releases. </li>
+   <li> <a href="feedback.html">Feedback</a> and bug reporting: contact address and guidelines. <em>Please</em> read the guidelines before sending mail; we get a very large amount of mail and it will help us answer you more quickly. </li>
+   <li> <a href="changes.html">Changes in recent releases</a>. </li>
+   <li> <a href="wishlist/">Wish list</a> and list of known bugs. </li>
+   <li> <a href="links.html">Links</a> to related software and specifications elsewhere. </li>
+   <li> A page about the PuTTY <a href="team.html">team members</a>. </li>
+  </ul> 
+  <p></p>
+  <hr>If you want to comment on this web site, see the <a href="feedback.html">Feedback page</a>. 
+  <br> (last modified on <!--LASTMOD-->Sun Apr 29 14:04:51 2007<!--END-->) 
+  <br>
+  <br> 
+  <center> 
+   <style>
+.textdesign{
+font-size:  12 px;
+font: Arial;
+}
+</style> 
+   <img alt="sl" border="0" src="sp-links/sl-w.jpg">
+   <br> 
+   <table width="80%" border="0" cellpadding="0" cellspacing="0"> 
+    <tbody>
+     <tr> 
+      <td align="center"> <a href="http://www.buyyourcar.co.uk/used-car.aspx" class="textdesign">Used Cars</a>&nbsp; <a href="http://xn--7dbeaq5af7a.com" class="textdesign">&#xfffd;&#xfffd;&#xfffd;&#xfffd;&#xfffd;&#xfffd;'&#xfffd;&#xfffd;</a>&nbsp; <a href="http://spell.wiki.co.il/index.php/Main_Page" class="textdesign">spell common errors</a>&nbsp; <a href="http://www.active.co.il/openfreewiki.html" class="textdesign">&#xfffd;&#xfffd;&#xfffd;&#xfffd;&#xfffd;&#xfffd;&#xfffd;&#xfffd;</a>&nbsp; <a href="http://www.wiki.co.il/wiki_page.php" class="textdesign">free wiki</a>&nbsp; <a href="http://www.diburim.co.il/forums/addforum.html" class="textdesign">&#xfffd;&#xfffd;&#xfffd;&#xfffd;&#xfffd;&#xfffd;&#xfffd;</a>&nbsp; <a href="http://xn----7hcgd1bs0c.com/index.php/%D7%A2%D7%9E%D7%95%D7%93_%D7%A8%D7%90%D7%A9%D7%99" class="textdesign">&#xfffd;&#xfffd;&#xfffd;&#xfffd; &#xfffd;&#xfffd;</a>&nbsp; <a href="http://www.name4u.co.il/" class="textdesign">&#xfffd;&#xfffd;&#xfffd;&#xfffd;&#xfffd;&#xfffd; &#xfffd;&#xfffd;&#xfffd;&#xfffd;&#xfffd;&#xfffd;</a>&nbsp; <a href="http://www.xn--5dbbkoc.com/nph/lemida/" class="textdesign">&#xfffd;&#xfffd;&#xfffd;&#xfffd;&#xfffd; &#xfffd;&#xfffd;&#xfffd;&#xfffd;&#xfffd;</a>&nbsp; <a href="http://xn--5dbbkoc.com/" class="textdesign">&#xfffd;&#xfffd;&#xfffd;&#xfffd;&#xfffd;</a>&nbsp; <a href="http://www.diburim.co.il/mshl/" class="textdesign">Web Hosting</a>&nbsp; <a href="http://www.diburim.co.il/" class="textdesign">&#xfffd;&#xfffd;&#xfffd;&#xfffd;&#xfffd;&#xfffd;&#xfffd;</a>&nbsp; <a href="http://polls.active.co.il/activetech/polls/" class="textdesign">&#xfffd;&#xfffd;&#xfffd;&#xfffd;</a>&nbsp; <a href="http://www.active.co.il/jobs.html" class="textdesign">Jobs</a>&nbsp; </td>
+     </tr> 
+    </tbody>
+   </table> 
+  </center> 
+ </body>
+</html>

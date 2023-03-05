@@ -1,0 +1,37 @@
+<html> 
+ <head> 
+  <title>Plato and his Dialogues: site map</title> 
+  <meta http-equiv="Content-Type" content="text/html;"> <!-- Fireworks 4.0  Dreamweaver 4.0 target.  Created Sun Sep 23 21:42:24 GMT+0200 (Paris, Madrid (heure d'�t�)) 2001--> 
+  <link rel="stylesheet" href="style.css" type="text/css"> 
+ </head> 
+ <body bgcolor="#FFFFFF" link="#0040A0" vlink="#006060" alink="#800000"> 
+  <table width="100%" border="0"> 
+   <tbody>
+    <tr> 
+     <td align="LEFT" width="47%"> <font size="-1"> © 2001 <a href="mailto:bernard.suzanne@polytechnique.org">Bernard SUZANNE</a></font></td> 
+     <td align="RIGHT" width="53%"> <font size="-1"> Last updated September 30, 2001</font> </td> 
+    </tr> 
+   </tbody>
+  </table> 
+  <hr> 
+  <table width="100%" border="0"> 
+   <tbody>
+    <tr> 
+     <td align="LEFT" width="20%"><a href="hypotsis.htm#structured"><img src="images/logo.gif" height="84" width="128" border="0"></a></td> 
+     <td align="CENTER" width="60%"><img src="images/sitemapt.gif" width="345" height="120"> </td> 
+     <td align="RIGHT" width="20%"><a href="plato.htm"><img src="images/plato83.gif" height="83" width="65" border="0"></a></td> 
+    </tr> 
+    <tr> 
+     <td colspan="3"> 
+      <hr> </td> 
+    </tr> 
+   </tbody>
+  </table> 
+  <p><font size="-1">On the map below, titles in English are links to pages in English and titles in French are links to pages in French. Some pages exist only in one or the other language, while others exist in both languages.</font></p> 
+  <p><font size="-1">Dans la carte ci-dessous, les titres en anglais sont des liens vers des pages en anglais et les titres en français sont des liens vers des pages en français. Certaines pages n'existent que dans l'une ou l'autre langues, d'autres sont disponibles dans les deux langues.</font></p> 
+  <p class="centre"><img name="sitemap" src="images/sitemap.jpg" width="637" height="637" border="0" usemap="#m_sitemap"> <!-- fwtable fwsrc="map of site.png" fwbase="sitemap" fwstyle="Dreamweaver" fwdocid = "742308039" fwnested="0" --> </p> 
+  <p class="centre"><font size="-1">Pages in English: <a href="plato.htm">home</a> - <a href="essay_en.htm">Introductory essay on Plato</a> - <a href="plato.htm#first">Introductory stuff</a>: <a href="life.htm">life</a>, <a href="works.htm">works</a>, <a href="intrpret.htm">interpretive assumptions</a>, <a href="hypotsis.htm">my hypotheses</a> - <a href="links.htm">Links to dialogues on the web</a> - <a href="tetralog.htm">Map of tetralogies</a> - <a href="faq/faqindex.htm">FAQ</a> - <a href="email/index.htm">E-mail archives</a> - Tools: chronologies: <a href="tools/chrono.htm">detailed</a>, <a href="tools/synopsis.htm">synoptic</a>, <a href="tools/compare.htm">comparative</a>; <a href="tools/mapindex.htm">maps of ancient Greek world</a>; <a href="tools/index.htm">people and places</a> - <a href="sitehist.htm">History of site updates</a> - <a href="papyrus.htm">What a book looked like in Plato's time</a> - Individual dialogues: <a href="tetra_3/apology.htm">Apology</a>, <a href="tetra_4/phaedrus.htm">Phædrus</a>, <a href="tetra_4/republic.htm">Republic</a>, <a href="tetra_4/phaedo.htm">Phædo</a><br> Pages en français&nbsp;: <a href="fr/plato.htm">page d'accueil</a> - <a href="fr/essai_fr.htm">Essai introductif sur Platon</a> - <a href="fr/plato.htm#first">Données introductives</a>&nbsp;: <a href="fr/life.htm">vie</a>, <a href="fr/works.htm">oeuvres</a>, <a href="fr/intrpret.htm">theories interprétatives</a>, <a href="fr/hypotsis.htm">mes hypothèses</a> - <a href="fr/links.htm">Liens vers les dialogues sur la toile</a> - <a href="fr/tetralog.htm">Plan des tétralogies</a> - <a href="fr/faq/faqindex.htm">FAQ</a> - <a href="fr/sitehist.htm">Histoire des mises à jour du site</a> - <a href="fr/papyrus.htm">A quoi ressemblait un livre du temps de Platon</a> - Dialogues spécifiques&nbsp;: <a href="fr/tetra_3/meno.htm">Ménon</a> (dont <a href="fr/tetra_3/meno/traductions.htm">traduction d'extraits</a>), <a href="fr/tetra_3/apology.htm">Apologie</a>, <a href="fr/tetra_4/republic.htm">République</a> (dont <a href="fr/tetra_4/republic/extraits.htm">traduction d'extraits</a>)</font></p> 
+  <p class="centre"><font size="-1">© 2001 <a href="mailto:bernard.suzanne@polytechnique.org">Bernard SUZANNE</a></font></p> 
+  <p class="centre"> <map name="m_sitemap"> <area shape="rect" coords="475,616,632,632" href="fr/sitehist.htm"> <area shape="rect" coords="498,602,614,616" href="sitehist.htm"> <area shape="rect" coords="7,602,145,631" href="fr/papyrus.htm"> <area shape="rect" coords="11,572,142,601" href="papyrus.htm"> <area shape="rect" coords="76,397,170,412" href="email/index.htm"> <area shape="rect" coords="295,412,407,428" href="fr/tetralog.htm"> <area shape="rect" coords="295,393,406,411" href="tetralog.htm"> <area shape="rect" coords="505,453,612,473" href="tools/index.htm"> <area shape="rect" coords="435,293,608,311" href="tools/mapindex.htm"> </map></p>
+ </body>
+</html>

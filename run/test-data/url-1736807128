@@ -1,0 +1,328 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+ <head> 
+  <title>PuTTY Change Log</title> 
+  <link rel="stylesheet" type="text/css" href="sitestyle.css" title="PuTTY Home Page Style"> 
+  <link rel="shortcut icon" href="putty.ico"> 
+  <meta http-equiv="content-type" content="text/html; charset=US-ASCII"> 
+ </head> 
+ <body> 
+  <h1 align="center">PuTTY Change Log</h1> <!--MIRRORWARNING-->
+  <div align="center" class="mirrorwarning">
+   This is a mirror. The primary PuTTY web site can be found <a href="http://www.chiark.greenend.org.uk/~sgtatham/putty/">here</a>.
+  </div> 
+  <p align="center"> <a href="./">Home</a> | <a href="licence.html">Licence</a> | <a href="faq.html">FAQ</a> | <a href="docs.html">Docs</a> | <a href="download.html">Download</a> | <a href="keys.html">Keys</a> | <a href="links.html">Links</a><br> <a href="mirrors.html">Mirrors</a> | <a href="maillist.html">Updates</a> | <a href="feedback.html">Feedback</a> | <b>Changes</b> | <a href="wishlist/">Wishlist</a> | <a href="team.html">Team</a></p> <!--
+<p>
+These features are planned for the next full release (and should
+therefore be available in the development snapshots, unless they're
+not updating, which happens sometimes):
+--> 
+  <p> For features planned for the next full release (and already available in the development snapshots), see the <a href="wishlist/">wishlist page</a>. </p>
+  <p>These features are new in beta 0.60 (released 2007-04-29): </p>
+  <ul> 
+   <li> Pressing Ctrl+Break now sends a serial break signal. (The previous behaviour can still be obtained with Ctrl+C.) </li>
+   <li> Serial ports higher than <code>COM9</code> now no longer need a leading <code>\\.\</code>. </li>
+   <li> You can now store a host name in the Default Settings. </li>
+   <li> Bug fix: serial connections and local proxies should no longer crash all the time. </li>
+   <li> Bug fix: configuring the default connection type to serial should no longer cause the configuration dialog to be skipped on startup. </li>
+   <li> Bug fix: "Unable to read from standard input" should now not happen, or if it still does it should produce more detailed diagnostics. </li>
+   <li> Bug fix: fixed some malformed SSH-2 packet generation. </li>
+   <li> Other minor bug fixes. </li>
+  </ul> 
+  <p>These features were new in beta 0.59 (released 2007-01-24): </p>
+  <ul> 
+   <li> PuTTY can now connect to local serial ports as well as making network connections. </li>
+   <li> Windows PuTTY now supports "local proxying", where a network connection is replaced by a local command. (Unix PuTTY has supported this since it was first released in 0.54.) Also, Plink has gained a "<code>-nc</code>" mode where the primary channel is replaced by an SSH tunnel, which makes it particularly useful as the local command to run. </li>
+   <li> Improved speed of SSH on Windows (particularly SSH-2 key exchange and public-key authentication). </li>
+   <li> Improved SFTP throughput. </li>
+   <li> Various cryptographic improvements in SSH-2, including SDCTR cipher modes, a workaround for a weakness in CBC cipher modes, and Diffie-Hellman group exchange with SHA-256. </li>
+   <li> Support for the Arcfour cipher in SSH-2. </li>
+   <li> Support for sending terminal modes in SSH. </li>
+   <li> When Pageant is running and an SSH key is specified in the configuration, PuTTY will now only try Pageant authentication with that key. This gets round a problem where some servers would only allow a limited number of keys to be offered before disconnecting. </li>
+   <li> Support for SSH-2 password expiry mechanisms, and various other improvements and bugfixes in authentication. </li>
+   <li> A change to the SSH-2 password camouflage mechanism in 0.58 upset some Cisco servers, so we have reverted to the old method. </li>
+   <li> The Windows version now comes with documentation in HTML Help format. (Windows Vista does not support the older WinHelp format. However, we still provide documentation in that format, since Win95 does not support HTML Help.) </li>
+   <li> On Windows, when pasting as RTF, attributes of the selection such as colours and formatting are also pasted. </li>
+   <li> Ability to configure font quality on Windows (including antialiasing and ClearType). </li>
+   <li> The terminal is now restored to a sensible state when reusing a window to restart a session. </li>
+   <li> We now support an escape sequence invented by xterm which lets the server clear the scrollback (CSI 3 J). This is useful for applications such as terminal locking programs. </li>
+   <li> Improvements to the Unix port: 
+    <ul> 
+     <li> now compiles cleanly with GCC 4 </li>
+     <li> now has a <code>configure</code> script, and should be portable to more platforms </li>
+    </ul> </li>
+   <li> Bug fix: 0.58 utterly failed to run on some installations of Windows XP. </li>
+   <li> Bug fix: PSCP and PSFTP now support large files (greater than 4 gigabytes), provided the underlying operating system does too. </li>
+   <li> Bug fix: PSFTP (and PSCP) sometimes ran slowly and consumed lots of CPU when started directly from Windows Explorer. </li>
+   <li> Bug fix: font linking (the automatic use of other fonts on the system to provide Unicode characters not present in the selected one) should now work again on Windows, after being broken in 0.58. (However, it unfortunately still won't work for Arabic and other right-to-left text.) </li>
+   <li> Bug fix: if the remote server saturated PuTTY with data, PuTTY could become unresponsive. </li>
+   <li> Bug fix: certain large clipboard operations could cause PuTTY to crash. </li>
+   <li> Bug fix: SSH-1 connections tended to crash, particularly when using port forwarding. </li>
+   <li> Bug fix: SSH Tectia Server would reject SSH-2 tunnels from PuTTY due to a malformed request. </li>
+   <li> Bug fix: SSH-2 login banner messages were being dropped silently under some circumstances. </li>
+   <li> Bug fix: the cursor could end up in the wrong place when a server-side application used the alternate screen. </li>
+   <li> Bug fix: on Windows, PuTTY now tries harder to find a suitable place to store its random seed file <code>PUTTY.RND</code> (previously it was tending to end up in <code>C:\</code> or <code>C:\WINDOWS</code>). </li>
+   <li> Bug fix: IPv6 should now work on Windows Vista. </li>
+   <li> Numerous other bugfixes, as usual. </li>
+  </ul> 
+  <p>These features were new in beta 0.58 (released 2005-04-05): </p>
+  <ul> 
+   <li> Wildcards (<code>mput</code>/<code>mget</code>) and recursive file transfer in PSFTP. </li>
+   <li> You can now save your session details from the Change Settings dialog box, <em>after</em> you've started your session. </li>
+   <li> Various improvements to Unicode support, including: 
+    <ul> 
+     <li> support for right-to-left and bidirectional text (Arabic, Hebrew etc). Thanks to <a href="http://www.arabeyes.org/"><code>arabeyes.org</code></a> for design and most of the implementation. </li>
+     <li> support for Arabic text shaping, again thanks to <code>arabeyes.org</code>. </li>
+     <li>support for Unicode combining characters. </li>
+    </ul> </li>
+   <li> Support for the <code>xterm</code> 256-colour control sequences. </li>
+   <li> Port forwardings can now be reconfigured in mid-session. </li>
+   <li> Support for IPv6. Thanks to <a href="http://unfix.org/"><code>unfix.org</code></a> for having patiently maintained the patch for this until we were finally ready to integrate it. </li>
+   <li> More configurability and flexibility in SSH-2 key exchange. In particular, PuTTY can now initiate repeat key exchange during the session, which means that if your server doesn't initiate it (some servers don't bother) you can still have the cryptographic benefits. </li>
+   <li> Bug fix: display artefacts caused by characters overflowing their character cell should now all be gone. (This would probably have bothered Windows ClearType users more than anyone else.) </li>
+   <li> Bug fix: keepalives are now supported everywhere. (Previously they were supported by Windows GUI PuTTY, but were missing in Plink, PSFTP and the Unix port.) </li>
+   <li> Miscellaneous improvements for CJK/IME users; many thanks to Hung-Te Lin for assistance. </li>
+  </ul> 
+  <p>These features are new in beta 0.57 (released 2005-02-20): </p>
+  <ul> 
+   <li> Security fixes: two vulnerabilities discovered by iDEFENSE, potentially allowing arbitrary code execution on an SFTP client by a malicious SFTP server (but only after host key verification), have been fixed. See <a href="http://www.chiark.greenend.org.uk/~sgtatham/putty/wishlist/vuln-sftp-readdir.html">vuln-sftp-readdir</a>, <a href="http://www.chiark.greenend.org.uk/~sgtatham/putty/wishlist/vuln-sftp-string.html">vuln-sftp-string</a>. </li>
+   <li> Fixed small bug with X forwarding to local displays. </li>
+   <li> Fixed crashing bug with remote port forwarding. </li>
+   <li> Fixed handling of SSH-2 debug messages (embarrassingly, a bug introduced when fixing the previous vulnerability - it was more secure but didn't work any more!). </li>
+  </ul> 
+  <p>These features were new in beta 0.56 (released 2004-10-26): </p>
+  <ul> 
+   <li>Security fix: a vulnerability discovered by iDEFENSE, potentially allowing arbitrary code execution on the client by a malicious SSH-2 server <em>before host key verification</em>, has been fixed. See <a href="http://www.chiark.greenend.org.uk/~sgtatham/putty/wishlist/vuln-ssh2-debug.html">vuln-ssh2-debug</a>. </li>
+   <li>Ability to restart a session within an inactive window, via a new menu option. </li>
+   <li>Minimal support for not running a shell or command at all in SSH protocol 2 (equivalent to OpenSSH's "-N" option). PuTTY/Plink still provide a normal window for interaction, and have to be explicitly killed. </li>
+   <li>Transparent support for CHAP cryptographic authentication in the SOCKS 5 proxy protocol. (Not in PuTTYtel.) </li>
+   <li>More diagnostics in the Event Log, particularly of SSH port forwarding. </li>
+   <li>Ability to request setting of environment variables in SSH (protocol 2 only). (However, we don't know of any <em>servers</em> that support this.) </li>
+   <li>Ability to send POSIX signals in SSH (protocol 2 only) via the "Special Commands" menu. (Again, we don't know of any servers supporting this.) </li>
+   <li>Bug fix: The PuTTY tools now more consistently support usernames containing "@" signs. </li>
+   <li>Support for the Polish character set "Mazovia". </li>
+   <li>When logging is enabled, the log file is flushed more frequently, so that its contents can be viewed before it is closed. </li>
+   <li>More flexibility in SSH packet logging: known passwords and session data can be omitted from the log file. Passwords are omitted by default. (This option isn't perfect for removing sensitive details; you should still review log files before letting them out of your sight.) </li>
+   <li>Unix-specific changes: 
+    <ul> 
+     <li>Ability to set environment variables in pterm. </li>
+     <li>PuTTY and pterm attempt to use a UTF-8 line character set by default if this is indicated by the locale; however, this can be overridden. </li>
+    </ul> </li> 
+  </ul> 
+  <p>These features were new in beta 0.55 (released 2004-08-03): </p>
+  <ul> 
+   <li>Security fix: a vulnerability discovered by Core Security Technologies (advisory number <a href="http://www.coresecurity.com/common/showdoc.php?idx=417&amp;idxseccion=10">CORE-2004-0705</a>), potentially allowing arbitrary code execution on the client by a malicious server <em>before host key verification</em>, has been fixed. </li>
+   <li>Bug fix: General robustness of the SSH-1 implementation has been improved, which may have fixed further potential security problems although we are not aware of any specific ones. </li>
+   <li>Bug fix: Random noise generation was hanging some computers and interfering with other processes' precision timing, and should now not do so. </li>
+   <li>Bug fix: dead key support should work better. </li>
+   <li>Bug fix: a terminal speed is now sent to the SSH server. </li>
+   <li>Bug fix: removed a spurious diagnostic message in Plink. </li>
+   <li>Bug fix: the `-load' option in PSCP and PSFTP should work better. </li>
+   <li>Bug fix: X forwarding on the Unix port can now talk to Unix sockets as well as TCP sockets. </li>
+   <li>Bug fix: various crashes and assertion failures fixed.. </li>
+  </ul> 
+  <p>These features were new in beta 0.54 (released 2004-02-12): </p>
+  <ul> 
+   <li> Port to Unix! </li>
+   <li> Dynamic SSH port forwarding. </li>
+   <li> Ability to leave DNS lookups to the proxy, when using a proxy. </li>
+   <li> Sped up PSFTP. </li>
+   <li> Fixed various bugs, notably one which was impeding port-forwarding of SMB. </li>
+   <li> Some default settings changes: SSH and SSH-2 are now default, BCE is off. </li>
+  </ul> 
+  <p>These features were new in beta 0.53b (released 2002-11-12): </p>
+  <ul> 
+   <li> Fixed an embarrassing command-line bug: the -P option didn't work at all. </li>
+   <li> Security fix: the vulnerability found by the Rapid7 SSHredder test suite is now believed fixed. See CERT advisory <a href="http://www.cert.org/advisories/CA-2002-36.html">CA-2002-36</a>. </li>
+   <li> Security fix: an improvement in random number policy when running more than one PuTTY at the same time. </li>
+  </ul> 
+  <p>These features were new in beta 0.53 (released 2002-10-01): </p>
+  <ul> 
+   <li> The feature everyone's been asking for: ANSI printer support. Currently this sends data to the printer in completely raw mode, without benefit of Windows GDI or the printer driver; so it will be fine for anyone whose server already knows what type of printer it expects to be talking to, but probably not ideal for someone who wants to print a text file and have it look nice. A less raw mode of printer access is still on the Wishlist, but is quite a big piece of coding work so it's in the Implausible section. </li>
+   <li> The <em>other</em> feature everyone's been asking for: PuTTYgen can now import and export OpenSSH and ssh.com SSH-2 private keys, as well as PuTTY's own format. </li>
+   <li> We now ship the PuTTY tool set as an installer, created using Jordan Russell's excellent and easy-to-use <a href="http://www.jrsoftware.org/isinfo.php">Inno Setup</a>. (For the other half of our users, who felt the best thing about PuTTY was that they <em>didn't</em> have to mess around with installers, we still ship the single executables and the zip file, so nobody has to use the installer if they don't want to.) </li>
+   <li> PuTTY now has a default file extension for private key files: <code>.PPK</code> (PuTTY Private Key). The installer associates this file extension with Pageant and PuTTYgen. </li>
+   <li> PuTTY now natively supports making its connection through various types of proxy. We support SOCKS 4 and 5, HTTP CONNECT (RFC 2817), and the common ad-hoc type of proxy where you telnet to the proxy and then send text of the form "<code>connect host.name 22</code>". Basic password authentication is supported in SOCKS and HTTP proxies. Many thanks to Justin Bradford for doing most of the work here. </li>
+   <li> PuTTY now supports a standard set of command-line options across all tools. Most of these options are ones that Plink has always supported; however, we also support a number of new options similar to the OpenSSH ones (<code>-A</code> and <code>-a</code>, <code>-X</code> and <code>-x</code>, and similar things; also the <code>-i</code> option to specify a private key file). </li>
+   <li> The right-button menu on Pageant's System tray icon now offers the option to start PuTTY (New Session plus the Saved Sessions submenu). This feature is disabled if Pageant can't find the PuTTY binary on startup. Thanks to Dominique Faure. </li>
+   <li> Added the Features control panel, allowing the user to disable some of the more controversial terminal capabilities. </li>
+   <li> Added the Bugs control panel, allowing the user to manually control PuTTY's various workarounds for SSH server bugs. </li>
+   <li> Various bug fixes, including (with luck) much greater stability in high-traffic port forwarding situations. </li>
+  </ul> 
+  <p>These features were new in beta 0.52 (released 2002-01-14): </p>
+  <ul> 
+   <li> A full manual has been written, and is supplied as a Windows Help file alongside the program executables. </li>
+   <li> Support for public keys in SSH-2, both RSA and DSA. Agent forwarding is supported, but only to OpenSSH servers, because ssh.com have a different agent protocol which they haven't published. 
+    <ul> 
+     <li> (Yes, I know I've been claiming DSA is horrifically insecure for ages, but now I've been told about a clever way to get round the insecurity. Details are in <code>sshdss.c</code> for anyone who's interested; credit mostly goes to Colin Plumb for letting me know about it. We still think RSA is better, and recommend you use it if you have the choice.) </li>
+    </ul> </li>
+   <li> PSCP now uses the new SFTP protocol if possible, and only falls back to the old scp1 form if SFTP can't be found (for example, if your connection is SSH-1). This should allow it to interoperate cleanly with ssh.com's product, and is a security improvement besides. </li>
+   <li> PSCP, in old-style scp1 mode, is now much tighter on security. It will refuse to let the remote host write to a file that doesn't have the same name as the file that was requested. <b>NOTE WELL</b> that this disallows remote-to-local wildcards such as "<code>pscp server:*.c .</code>". scp1's implementation of server-side wildcards is inherently unsafe. If you are sure you trust your scp server not to be malicious, you can use the "<code>-unsafe</code>" command line option to re-enable this behaviour. When using the new SFTP-based back end none of this is a problem, because SFTP is better designed. </li>
+   <li> Generic port forwarding support is now supported, thanks to a very comprehensive contribution from Nicolas Barry. </li>
+   <li> X11 forwarding support. Thanks to Andreas Schultz for doing a large part of the coding for this. Authentication munging is supported. However, PuTTY does <em>not</em> currently attempt to authenticate connections to the local X server, because finding the authentication data to do so is server-dependent and complex and I thought I'd wait to see what servers people actually want to use this with. </li>
+   <li> Added an SFTP client, for the improved file transfer protocol that comes with SSH-2. </li>
+   <li> Full-screen mode, "like a DOS box". Not really like a DOS box, since it works within the current graphics mode rather than shifting into text mode, but it seems to work. </li>
+   <li> Support for resizing the font rather than the terminal when the user changes the window size. Also supports a hybrid mode, in which window resizes change the terminal size but maximising or going full-screen changes the font size. Patch due to Robert de Bath. </li>
+   <li> Unicode support in the terminal emulator. In the first place this allows us to support servers which actually send UTF-8 down their terminal sessions; but the architecture changes also mean that instead of specifying the local <em>and</em> remote character sets in the Translation panel, you simply specify what character set you expect the server to be talking, and PuTTY handles the rest automatically. Many thanks to Robert de Bath. </li>
+   <li> Experimental rlogin support. Thanks to Delian Delchev for the patch. Note that this may fail because the rlogin protocol relies on TCP Urgent data, which not all operating systems get right, and which not all firewalls pass through correctly. Also, local flow control is unsupported as yet, and the "flush" command is not handled correctly. Despite all this, it worked fine for me! </li>
+   <li> Improved support for local echo and local line editing. These are now separate options, controllable independently. PuTTY will make sensible guesses at the right settings, but those guesses can <em>always</em> be overridden by the user. </li>
+   <li> Improved bell support. There's now a whole configuration panel; you can choose a bell that plays the Windows default sound, or plays a sound of your choice, or flashes the window, or does nothing. In addition the window's Taskbar entry can be made to flash if a bell goes off when the window is minimised, and also there's an option that disables all bells if it receives them too fast (so that if you <code>cat</code> a binary file into your terminal it won't bleep for a week). </li>
+   <li> Support for AES in SSH-2. </li>
+   <li> Default Settings can now be used to save a default protocol and port number. </li>
+   <li> Scrollback should now automatically scroll if you try to drag-select off the top of the window (or off the bottom of the window when it's scrolled back), so you can easily select more than a screenful. </li>
+   <li> We now support rectangular-block selection, triggered by holding Alt while you drag the mouse. (You can also configure rectangular selection to be the default and Alt-drag to be conventional line-by-line selection.) </li>
+   <li> The mouse pointer can now be configured to disappear when the PuTTY window is active and text is typed, and reappear when the mouse is moved, &agrave; la MS Word. Particularly useful for those of us using focus-follows-mouse, where the pointer is quite likely to be inside the window and obscuring the view. </li>
+   <li> The cursor can now be displayed as an underline or as a vertical line, as well as a block. When it's a vertical line, it does something useful when not-quite-wrapping in the rightmost column. </li>
+   <li> Keepalive timeouts can now be specified in seconds rather than minutes. </li>
+   <li> Support for Diffie-Hellman group exchange in SSH-2. </li>
+   <li> If you don't supply a username, PSCP now guesses your remote username to be the same as your local username. (On Win95/98, this might not be useful to everybody, but it's at least no worse than bombing out with a complaint. On WinNT, it might be seriously useful.) Patch due to Christian Biesinger. </li>
+   <li> You can now enter a service name such as "finger", in place of a port number. Patch due to Christian Biesinger. </li>
+   <li> It's now possible to invoke a second Pageant with some key files on the command line and have it feed those key files to the first Pageant. Also, you can make Pageant start another command once it's initialised itself; for example, "<code>pageant -c wincvs.exe</code>" to start Pageant and then start WinCVS. </li>
+   <li> Scrollback on the terminal is no longer implemented by physically copying a huge array. It should now be safe to use very large scrollback buffers without suffering noticeable slowdown. </li>
+   <li> Patch due to Roman Pompejus: the "<code>-log</code>" command line option on PuTTY is gone, replaced by a proper GUI-configurable logging facility. </li>
+   <li> Implemented a selection option to paste line drawing as the underlying characters <i>or</i> as poor-man's. Thanks to to Robert de Bath. </li>
+   <li> Ctrl+Alt can be configured to <em>either</em> have the traditional PuTTY behaviour (Ctrl+Alt+X is equivalent to ESC then Ctrl+X), <em>or</em> to behave like AltGr. Thanks to Robert de Bath. </li>
+   <li> Added SCO ANSI function key support (F1 is ESC [ M and F12 is ESC [ X, with all obvious points in between). </li>
+   <li> Font changes when the window is maximised now keep it maximised. Thanks to Robert de Bath. </li>
+   <li> The Application key on Windows keyboards now behaves like a Compose key all the time. Compose behaviour on AltGr can still be configured on and off. Thanks to Robert de Bath. </li>
+   <li> The terminal driver now returns a configurable string when it sees ^E. Thanks to Robert de Bath. </li>
+   <li> The About box now has a button that brings up a browser pointing at the PuTTY web site. Thanks to Eric Theriault. </li>
+   <li> Bug fix: the long-standing socket buffering bug should now be gone forever. If PuTTY is receiving data faster than it can send it out, it will attempt to slow down the entity it's receiving from rather than continuing to grow its buffers without bound. </li>
+   <li> Bug fix: AltGr should now be fixed. It was broken in 0.51. </li>
+   <li> Bug fix: repeat key exchange in SSH-2 is now handled correctly. You should no longer see "Server failed host key check" after your session has been running for an hour. </li>
+   <li> Bug fix: various socket-handling problems should be corrected. Crashes on network errors, bad handling of TCP Urgent data in telnet and rlogin, and truncation of output when the remote server sends a lot of data and then immediately closes the connection. Thanks to Robert de Bath for the TCP Urgent stuff. </li>
+   <li> Bug fix: the cascading-error-boxes bug should be fixed. (This occurred when you had keepalives enabled and got Connection Aborted.) </li>
+   <li> Bug fix in the configuration box: controls in panels other than the visible one should now not be able to get keyboard focus. </li>
+   <li> Bug fix: Tab and accelerator keys now work in the Event Log and in the About box while a session is running. Thanks to Roman Pompejus for the fix. </li>
+  </ul> 
+  <p>These features were new in beta 0.51 (released 2000-12-14): </p>
+  <ul> 
+   <li> Addition of PuTTYgen, an RSA key generation utility. Since PuTTY uses the same RSA key file format as SSH 1, keys generated by PuTTYgen are usable with SSH 1 as well. </li>
+   <li> SSH compression is now implemented. </li>
+   <li> Security improvement: better collection of randomness for the cryptographic random number generator. Thanks to Peter Gutmann of <a href="http://www.cs.auckland.ac.nz/~pgut001/cryptlib/">cryptlib</a> for ideas. </li>
+   <li> Security improvement: PSCP should now not be vulnerable to malicious servers sending deliberately incorrect and harmful filenames down the SCP connection. (The problem was reported in Bugtraq <a href="http://www.securityfocus.com/bid/1742">#1742</a>.) </li>
+   <li> Security improvement: the ssh client will not open agent forwarding channels unless agent forwarding has genuinely been enabled, by the user and the server. This allows a user to disable agent forwarding if they suspect the server might abuse the agent. (The problem was reported in Bugtraq <a href="http://www.securityfocus.com/bid/1949">#1949</a>.) </li>
+   <li> New configurable option: the Compose key support is now off by default and configurable on. </li>
+   <li> New configurable option: whether or not Alt on its own brings up the System menu. </li>
+   <li> New configurable option: whether or not scrollback resets to the bottom when the display changes. (Previously you could control whether it reset on a keypress.) </li>
+   <li> New configurable options: application keypad mode and application cursor keys mode can be completely disabled. (Independently.) </li>
+   <li> New configurable options: Always On Top for the PuTTY window, so you can use it to keep system logs on-screen the whole time. (Might work particularly well with a <em>really</em> small font.) </li>
+   <li> Better network error handling. All errors are now translated into plain text: "Unexpected network error 10053" is a thing of the past. </li>
+   <li> Added a small patch to improve Chinese support. Thanks to Zhong Ming-Xun. </li>
+   <li> Bug fix: ISO8859-2 to Win1250 translation accidentally got broken in the 0.50 release. It should be back to normal now. </li>
+   <li> Bug fix: restore the SSH back end's ability to distinguish stderr output from stdout output. This was breaking PSCP and potentially also Plink. </li>
+   <li> Bug fix: correct the "Lost connection while sending" problem when pasting large amounts of data into PuTTY. This should also have fixed random connection loss in Plink. <b>Note</b>: some of my experiments suggest that some SSH <em>servers</em> are not entirely happy with very large (80Kb or so) pastes, so if you still have problems, they may not be PuTTY's fault. </li>
+   <li> Bug fix: PuTTY proper now ignores trailing whitespace on the command line (this was causing problems with "<code>putty&nbsp;@sessionname&nbsp;</code>" and similar. </li>
+   <li> Bug fix: the scrollbar is now reset to the bottom whenever the scrollback is, so they don't end up out of sync any more. </li>
+   <li> Bug fix: both PuTTY and Pageant, when trying to load a private key file that turned out to be the wrong format, failed to close the file, so you couldn't delete it until the app had shut down. </li>
+   <li> Bug fix: some SSH-2 connections were reporting "Server failed host key check" on session startup. This was a bug in PuTTY's DSA implementation. </li>
+   <li> Bug fix: the "Default Settings" pseudo-saved-session was often missing from the saved session list. This was causing chaos, as the rest of the code assumed it was there and so treated the first item in the list specially. It's now back. </li>
+   <li> Bug fix: Plink and PSCP didn't load the Default Settings when presented with a simple hostname. (So a default username, default private key, etc, didn't get used.) Now they do. </li>
+   <li> Bug fix: terminal resize events weren't being sent in SSH-2. Now they are. </li>
+   <li> Bug fix: although local terminal line discipline was being turned off correctly on receipt of <code>IAC WILL ECHO</code>, it wasn't being turned on again on receipt of <code>IAC WONT ECHO</code>. This was breaking some BBS/MUD connections. Now fixed. </li>
+   <li> Bug fix: pscp's GUI interface was computing wrong percentages for very large files (within a factor of 100 of 2^32). </li>
+   <li> Bug fix: the Compose key now doesn't randomly trigger and cause keystroke loss on switching back into the PuTTY window. </li>
+   <li> Bug fix: the Colours panel now works again. (The RGB values weren't updating when the selection changed in the list box.) </li>
+   <li> Bug fix: if you tried to use a local wildcard with PSCP (for example, "<code>pscp * remotehost:</code>", that wildcard would match the special directories "<code>.</code>" and "<code>..</code>". It now doesn't; "<code>.</code>" and "<code>..</code>" can only be specified explicitly. </li>
+  </ul> 
+  <p>These features were new in beta 0.50 (released 2000-10-16): </p>
+  <ul> 
+   <li> Keep-alives to prevent overzealous idle detectors in firewalls from closing connections down. Done by sending Telnet NOP or SSH_MSG_IGNORE, so as to avoid affecting the actual data stream. </li>
+   <li> In PuTTY proper, in SSH mode, you can now specify a command to be run at the remote end. (The SSH functionality was already there, because it was required for PSCP and Plink. All it took was a bit of GUI work to make it accessible from PuTTY itself.) </li>
+   <li> You can now configure the initial window title. </li>
+   <li> Running "<code>putty -cleanup</code>" will now remove all files and registry entries created by PuTTY. If you've used PuTTY on somebody else's machine and don't want to leave any mess behind, you can run this before deleting the PuTTY executable. </li>
+   <li> The Event Log now scrolls down when new events appear on it, so that if you leave it up all the time you can watch things happen. Also, you can select items from the Event Log and copy them to the clipboard (should help for debugging). </li>
+   <li> When using NT's opaque resize feature, resizing the window doesn't send resize events at <em>every</em> step of the process, but instead sends a single one at the end. (I'd have quite liked it to do a resize event if the drag paused for maybe a second, but WM_TIMER doesn't seem to get through in the middle of a resize. Oh well, this is good enough.) </li>
+   <li> Everyone's favourite trivial change: Shift+Ins pastes. (No configurable option to control this: it wasn't doing anything interesting anyway.) </li>
+   <li> Included two extra Makefile options: <code>/DAUTO_WINSOCK</code> makes the build process assume that <code>&lt;windows.h&gt;</code> implicitly includes a WinSock header file, and <code>/DWINSOCK_TWO</code> makes PuTTY include <code>&lt;winsock2.h&gt;</code> instead of <code>&lt;winsock.h&gt;</code>. </li>
+   <li> Bug fix for a bug <em>nobody</em> had ever noticed: if you hit About twice, you only get one About box (as designed), <em>except</em> that if you open and close the Licence box then PuTTY forgets about the About box, so it will then let you open another. Now the behaviour is sane, and you can never open more than one About box. </li>
+   <li> Bug fix: choosing local-terminal line discipline together with SSH password authentication now doesn't cause the password to be echoed to the screen. </li>
+   <li> Bug fix: network errors now do not close the window if Close On Exit isn't set. </li>
+   <li> Bug fix: fonts such as 9-point (12-pixel) Courier New, which previously failed to display underlines, now do so. </li>
+   <li> Bug fix: stopped the saved-configuration-name box getting blanked when you swap away from and back to the Connection panel. </li>
+   <li> Bug fix: closing the About box returns focus to the config box, and closing the View Licence box returns focus to the About box. </li>
+   <li> The moment you've <em>all</em> been waiting for: RSA public key authentication is here! You can enter a public-key file name in the SSH configuration panel, and PuTTY will attempt to authenticate with that before falling back to passwords or TIS. Key file format is the same as "regular" ssh. Decryption of the key using a passphrase is supported. No key generation utility is provided, yet. </li>
+   <li> Created Pageant, a PuTTY authentication agent. PuTTY can use RSA keys from this for authentication, and can also forward agent communications to the remote end. Keys can be added and removed either locally or remotely. </li>
+   <li> Created Plink, a command-line version of PuTTY suitable for use as a component of a pipe assembly (for example, Windows NT CVS can use it as a transport). </li>
+   <li> SSH protocol version 2 support. This is disabled by default unless you connect to a v2-only server. Public key authentication isn't supported (this places PuTTY technically in violation of the SSH-2 specification). </li>
+   <li> Enable handling of <code>telnet://hostname:port/</code> URLs on the command line. With this feature, you can now set PuTTY as the default handler for Telnet URLs. If you run the Registry Editor and set the value in <code>HKEY_CLASSES_ROOT\telnet\shell\open\command</code> to be "<code>\path\to\putty.exe %1</code>" (with the full pathname of your PuTTY executable), you should find that clicking on telnet links in your web browser now runs PuTTY. </li>
+   <li> Re-merge the two separate forks of the ssh protocol code. PuTTY and PSCP now use the same protocol module, meaning that further SSH developments will be easily able to affect both. </li>
+  </ul> 
+  <p>These features were new in beta 0.49 (released 2000-06-28): </p>
+  <ul> 
+   <li> Stop the SSH protocol code from sending zero-length <code>SSH_CMSG_STDIN_DATA</code> packets when Shift is pressed. These appear to be harmless to Unix sshd, but cause VMS sshd to generate an Exit signal. </li>
+   <li> Fix a small bug about using special port numbers in pscp; thanks to Joris van Rantwijk. </li>
+   <li> Three security improvements. PuTTY now checks the CRC on incoming packets, checks that the packet length and string length fields on incoming <code>SSH_SMSG_*_DATA</code> packets are consistent, and outlaws attempts to set the terminal size too big by escape sequences (countering the xterm DoS attack shown in bugtraq <a href="http://www.securityfocus.com/bid/1298">#1298</a>). </li>
+   <li> High-half characters (160 and above) are now supported in username and password input. </li>
+   <li> Bug fix: RSA keys whose storage format used an odd number of bytes (i.e. the bit length of the key, mod 16, was between 1 and 8 inclusive) were being handled incorrectly. An sshd with an 850-bit server key wasn't able to accept connections from PuTTY as a result. </li>
+   <li> pscp now has the "<code>-ls</code>" option to get a directory listing of a remote host. It does this by sending the command "<code>ls -la </code><em>&lt;dirspec&gt;</em>", so it might well not work on non-Unix ssh servers. It's mainly there to allow a useful directory listing facility for potential GUI front ends. </li>
+   <li> Local line discipline is now invoked in more sensible circumstances, and understands Telnet Erase Line. Thanks to Robert de Bath. </li>
+   <li> Blinking cursor support (off by default). Thanks to Robert de Bath. </li>
+   <li> xterm mouse tracking support, thanks to Wez Furlong. </li>
+   <li> Hopefully vastly improved PuTTY's behaviour under load; also we can process incoming data even during a window move/resize. Thanks to Robert de Bath. </li>
+   <li> Better handling of the bug in which underlines are drawn outside the character cell. Now they don't get drawn at _all_, which is still non-ideal but it's better than rampaging screen corruption. Thanks to Robert de Bath. </li>
+   <li> Various terminal emulation upgrades. Thanks to Robert de Bath. </li>
+   <li> By popular demand, Shift-Tab now sends ESC [ Z instead of being indistinguishable from ordinary Tab. </li>
+   <li> ^C, ^Z and ^D now instruct the local-terminal line discipline to send Telnet special control codes. The local line discipline can also be enabled and disabled in mid-session without dropping data, and it's also linked to the Telnet ECHO option. Patch due to Robert de Bath. </li>
+   <li> Telnet SYNCH is now preceded by IAC, which it wasn't previously. Patch due to Robert de Bath. </li>
+   <li> Fixed the long-standing bug in which CSI ? Q and CSI Q were treated identically for most values of Q. Patch due to Robert de Bath. </li>
+   <li> Pressing Return in a Telnet session now sends Telnet NL instead of Telnet CR (in raw data, that's CR-LF not CR-NUL; ^J continues to send just LF). Unix telnetds should not notice any difference; others might suddenly start working. Patch due to Robert de Bath. </li>
+   <li> Much patchery in font selection code; with any luck, mixed OEM+ANSI line drawing mode will now be more reliable. Patch due to Robert de Bath. </li>
+   <li> An attempt has been made to deal with the dropping of incoming data between decoding and display. </li>
+   <li> Replaced all the algorithms that weren't already my own code. The DES, MD5, SHA, and CRC32 implementations used in PuTTY are now all written by me and distributable under the PuTTY licence, instead of being borrowed from a variety of other places. Better still, there are <em>comments</em>: the DES implementation contains a careful description of how the algorithm given in the spec was transformed into the optimised algorithm in the code, and the CRC32 implementation explains what a CRC is and how the table lookup algorithm works. </li>
+   <li> Scrollback behaviour has changed. ANSI Delete Line at the top of the screen now inserts the lines into the scrollback (previously, only genuine scroll-up would do this). However, the scrollback is never touched by scroll operations in the alternate screen. </li>
+   <li> The response to Ctrl-E is now "PuTTY" instead of the xtermalike sequence it was previously. </li>
+   <li> The command line option <code>-log</code> will now cause all data received from the remote host to be logged to a file <code>putty.log</code>. </li>
+   <li> PSCP now doesn't try to "recurse" into the directories <code>.</code> and <code>..</code> like it did before. </li>
+   <li> Add keyboard accelerators on the System menu. </li>
+   <li> "Warn On Close" no longer applies to inactive windows: you can close one of those without complaint. </li>
+   <li> There is now a system to generate Borland and Cygnus makefiles from the master makefile, so that people can build PuTTY with other compilers but I still only have to maintain one makefile. </li>
+  </ul> 
+  <p>These features were new in beta 0.48 (released 1999-11-18): </p>
+  <ul> 
+   <li> Cyrillic support: optional KOI8 to Win1251 translation, an internal version of the Cyrillic key map for machines that don't have it installed systemwide, and support for selecting a character set in the font configuration. All thanks to Oleg Panashchenko. </li>
+   <li> Support for the TIS authentication option (to the client, this looks much like a form of password authentication, so there's no local state involved). </li>
+   <li> SSH mode now shows an Event Log of all the initial protocol setup, to match the Telnet negotiation log. </li>
+   <li> Alt-F4 as "close window" can be configured off. Alt-Space as System menu is now an option and can be configured on, although it doesn't work very well (you have to press Down after hitting Alt-Space). </li>
+   <li> NetHack keypad mode mapping (shift-with-)numeric-keypad to (shift-with-)hjklyubn. Unfortunately Shift only works when NumLock is off, which is a bit odd. </li>
+   <li> An implementation of the <em>scp</em> client, as a separate binary. Many thanks to Joris van Rantwijk. </li>
+   <li> Change the default title bar format to "host.name - PuTTY" rather than "PuTTY: host.name", so as to be more useful in the taskbar. </li>
+   <li> Warning box "are you sure you want to disconnect?" on hitting the Close button or Alt-F4 or whatever. </li>
+   <li> Telnet mode was reported to drop char-255, presumably due to mishandling IAC IAC. Fix due to Robert de Bath. </li>
+   <li> Add some keyboard accelerators in the configuration box. </li>
+   <li> A raw-TCP connection option, alongside Telnet and SSH. Thanks to Mark Baker. </li>
+   <li> A local line-editing line discipline, which can be layered over any of the back end connection options. Most usefully, this can be used to make the raw-TCP back end suitable for talking to finger, SMTP, POP, NNTP etc. servers. </li>
+   <li> A small tool-tip that shows the size of the terminal window in character cells while it's being resized, so you can drag it out to a precise size. Many thanks to John Sullivan, who achieved this despite other people supporting my belief that it was impossible. </li>
+   <li> Single DES as an SSH encryption option, as well as triple DES. Thanks to Murphy Lam. </li>
+   <li> Support for using ssh by default: a <code>-ssh</code> command line option, a compile-time definition <code>SSH_DEFAULT</code>, and the ability to honour port and protocol (and host!) settings in the "Default Settings" part of the registry if they've been manually inserted. </li>
+   <li> Made stored sessions available as a submenu from the system menu. Thanks to Owen Dunn. </li>
+   <li> Minimal Win32s compatibility, as a <em>compile-time</em> option (so it's not in the snapshot binaries but is in the snapshot source releases). The configuration box apparently doesn't work, but the actual sessions will run OK. Thanks to Owen Dunn. </li>
+  </ul> 
+  <p>This feature was new in beta 0.47 (released 1999-08-27): </p>
+  <ul> 
+   <li> Fixed a potential security flaw in the random number generator. </li>
+  </ul> 
+  <p>These features were new in beta 0.46 (released 1999-07-09): </p>
+  <ul> 
+   <li>Fixed a bug causing hangs when an SSH window was resized after the connection was closed. I'd never spotted it, because I never use Close Window On Exit... </li>
+   <li>Default mouse pointer inside the PuTTY window is now an I-beam. </li>
+   <li>Support for AltGr. As it turns out, it <i>is</i> possible to do this without also changing the behaviour of Ctrl/LeftAlt. Many thanks to &lt;andre@via.ecp.fr&gt; for inventing a way to achieve this. </li>
+   <li> Resource/memory leaks are apparently fixed. I'm going to assume they <i>are</i> completely fixed, unless someone mails me to suggest otherwise. </li>
+   <li> Fixed the bug in the configuration box whereby double-clicking on a saved session leaked the double click through to the window below. </li>
+   <li> ESC[?9r was being interpreted just like ESC[9r, with disastrous results (the former turns off mouse click reporting, which PuTTY doesn't support yet anyway; the latter munges the scroll region horribly). Fixed, in a temporary sort of way. </li>
+   <li> Added Blowfish encryption as an alternative to triple-DES. </li>
+  </ul> 
+  <p>These features were new in beta 0.45 (released 1999-01-22): </p>
+  <ul> 
+   <li> Fix the GPF on maximise-then-restore. </li>
+   <li> Fix the delayed update of the window title when in always-use-window-title mode and iconic. </li>
+   <li> Employ SetCapture() to allow drag-selects to continue to work when the pointer drifts out of the window. </li>
+   <li> Some platforms apparently define the identifier "environ" as a macro; stop using it inside PuTTY. </li>
+   <li> Add an option to ask SSH not to allocate a pty. </li>
+   <li> Add a terminal setting to cause LF to imply CR (useful with the above). </li>
+  </ul> 
+  <p></p>
+  <hr>If you want to comment on this web site, see the <a href="feedback.html">Feedback page</a>. 
+  <br> (last modified on <!--LASTMOD-->Sun Feb 24 00:34:40 2008<!--END-->) 
+ </body>
+</html>

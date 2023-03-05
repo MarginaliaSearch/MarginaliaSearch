@@ -1,0 +1,1362 @@
+<!doctype html>
+<html lang="en-US">
+ <head> <!-- noptimize -->
+  <style>
+html,body,div,span,h1,h2,p,blockquote,a,em,ins,small,ul,li,form,label{border:0;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0;outline:0;padding:0;vertical-align:baseline}html{font-size:62.5%;overflow-y:scroll;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}body{background:#fff}article,aside,header,main,nav{display:block}ul{list-style:none}blockquote:before,blockquote:after{content:""}blockquote{quotes:"" ""}a img{border:0}body,input{color:#000;font-family:'Roboto',sans-serif;font-size:19px;line-height:28px}h1,h2{clear:both;margin:40px 0 10px;font-family:'Roboto',sans-serif;color:#242628}h1{font-size:42px;line-height:48px}h2{font-size:30px;line-height:38px}p{margin-bottom:20px}ul{margin:0 0 20px 20px}ul li{margin:0 0 7px 40px}ul{list-style:inside square;list-style-position:outside}li>ul{margin-bottom:0;margin-left:50px}em{font-style:italic}blockquote{margin:20px 0;font-size:24px;line-height:32px}blockquote p:last-child{margin:0}ins{background:#fff;text-decoration:none}small{font-size:75%}img{height:auto;max-width:100%}input{font-size:100%;margin:0;vertical-align:baseline;*vertical-align:middle}input{line-height:normal}input[type=search]{-webkit-appearance:textfield;-webkit-box-sizing:content-box;-moz-box-sizing:content-box;box-sizing:content-box}input[type=search]::-webkit-search-decoration{-webkit-appearance:none}input::-moz-focus-inner{border:0;padding:0}input[type=text],input[type=search]{color:#000;background:#f0f0f0;border:0;padding:10px 12px;margin:6px 0 0}a{text-decoration:none}a:link,a:visited{color:#ff6123;border-bottom:0 solid #e3e3e3}#primary .entry-content a:link{color:#ff6123;border-bottom:0 solid #e3e3e3}h2 a:link{color:#ff6123}h2 a:visited{color:#ff6123}.sidebar-left a:link{color:#000;border-bottom:0 solid #e3e3e3}.sidebar-left a:visited{color:#000;border-bottom:0 solid #e3e3e3}.clearfix:after{content:".";display:block;padding-top:0;height:0;clear:both;visibility:hidden}.clearfix{display:inline-block}.clearfix{display:block}.inside{width:90%;max-width:1196px;margin:0 auto}.sidebar-left{width:28.09364548494983%;float:left}#primary-container{width:69.39799331103679%;float:right}#primary-menu .menu-header-search{float:right}#header{margin:0 0 30px}.site-branding{margin:0 0 20px}.site-branding a{margin:0;border:0}#top{background:#242628}.main-navigation{display:block}.main-navigation ul{list-style:none;margin:0}.main-navigation a{font-family:'Roboto',sans-serif;border:0;margin-bottom:0;color:#9da3ad}.main-navigation>ul>li>a{display:block;height:55px;line-height:55px;margin:0;padding:0 20px;font-size:16px}.sf-menu,.sf-menu *{margin:0;padding:0;list-style:none}.sf-menu li{position:relative}.sf-menu ul{position:absolute;display:none;top:100%;left:0;z-index:99;min-width:300px}.sf-menu>li{float:left}.sf-menu a{display:block;position:relative}.main-navigation .sub-menu{padding:5px 10px;background:#242628}.main-navigation .sub-menu li{float:none}.main-navigation .sub-menu li a{padding:10px 5px;font-size:12px}.main-navigation .sub-menu li:last-child a{border:0}.hentry{margin:0 0 30px}.entry-title{margin:0 0 10px}.meta-sep{padding:0 7px}.single-post .entry-title{margin:0}.single-post .entry-content{margin:0 0 40px}.single-post .entry-content-smallinfo{line-height:22px;padding-top:5px}.widget{margin:0 0 40px;font-size:15px;line-height:24px}@media only screen and (max-width:987px){input[type=text],input[type=search]{width:100%;display:none}}@media only screen and (min-width:769px){#mobile-search{display:none}}@media only screen and (max-width:769px){#mobile-search{padding:0 0 15px}#top{padding:20px 0;display:none}#primary-menu{display:none}#header{margin:0 0 10px}h1{font-size:26px;line-height:30px}h2{font-size:26px;line-height:30px}small{font-size:75%}input[type=text],input[type=search]{color:#666;background:#f0f0f0;border:0;padding:10px 12px;margin:6px 0 0;width:94%;display:inline;-webkit-appearance:none;border-radius:0}.sidebar-left #widgets{display:none}.site-branding{text-align:center;display:none}.site-branding img{margin:0 auto;width:30%;height:auto}#primary-container,#sidebar,.sidebar-left{width:100%;float:none}}@media only screen and (max-width:600px){.site-branding{display:none}input{-webkit-appearance:none;border-radius:0}}
+</style><!-- /noptimize -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" media="print" onload="this.onload=null;this.media='all';" id="ao_optimized_gfonts" href="https://fonts.googleapis.com/css?family=Roboto&amp;display=swap">
+  <link rel="shortcut icon" href="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/favicon.png">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <link rel="stylesheet" media="print" href="//cdn.geckoandfly.com/wp-content/cache/autoptimize/css/autoptimize_09e091c1560940865720df092d315d2a.css" onload="this.onload=null;this.media='all';">
+  <noscript id="aonoscrcss">
+   <link media="all" href="//cdn.geckoandfly.com/wp-content/cache/autoptimize/css/autoptimize_09e091c1560940865720df092d315d2a.css" rel="stylesheet">
+  </noscript>
+  <title>8 Free Open Source VPN - Compatible OpenVPN Client Alternatives</title>
+  <meta name="description" content="A virtual private network (VPN) is a private data network that makes use of the public telecommunication infrastructure(Internet), maintaining privacy">
+  <link rel="canonical" href="https://www.geckoandfly.com/5710/free-vpn-for-windows-mac-os-x-linux-iphone-ubuntu/">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="8 Free Open Source VPN - Compatible OpenVPN Client Alternatives">
+  <meta property="og:description" content="A virtual private network (VPN) is a private data network that makes use of the public telecommunication infrastructure(Internet), maintaining privacy">
+  <meta property="og:url" content="https://www.geckoandfly.com/5710/free-vpn-for-windows-mac-os-x-linux-iphone-ubuntu/">
+  <meta property="og:site_name" content="GeckoandFly">
+  <meta property="article:publisher" content="https://www.facebook.com/geckoandfly">
+  <meta property="article:published_time" content="2020-01-02T07:00:19+00:00">
+  <meta property="article:modified_time" content="2021-03-13T03:17:08+00:00">
+  <meta property="og:image" content="https://cdn.geckoandfly.com/wp-content/uploads/2013/03/530-vpn-mac-linux.jpg">
+  <meta property="og:image:width" content="530">
+  <meta property="og:image:height" content="530">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:creator" content="@geckoandfly">
+  <meta name="twitter:site" content="@Geckoandfly">
+  <meta name="twitter:label1" content="Written by">
+  <meta name="twitter:data1" content="Ngan Tengyuen">
+  <meta name="twitter:label2" content="Est. reading time">
+  <meta name="twitter:data2" content="12 minutes"> 
+  <script type="application/ld+json" class="yoast-schema-graph">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://www.geckoandfly.com/#website","url":"https://www.geckoandfly.com/","name":"GeckoandFly","description":"","potentialAction":[{"@type":"SearchAction","target":"https://www.geckoandfly.com/?s={search_term_string}","query-input":"required name=search_term_string"}],"inLanguage":"en-US"},{"@type":"ImageObject","@id":"https://www.geckoandfly.com/5710/free-vpn-for-windows-mac-os-x-linux-iphone-ubuntu/#primaryimage","inLanguage":"en-US","url":"https://cdn.geckoandfly.com/wp-content/uploads/2013/03/530-vpn-mac-linux.jpg","contentUrl":"https://cdn.geckoandfly.com/wp-content/uploads/2013/03/530-vpn-mac-linux.jpg","width":530,"height":530},{"@type":"WebPage","@id":"https://www.geckoandfly.com/5710/free-vpn-for-windows-mac-os-x-linux-iphone-ubuntu/#webpage","url":"https://www.geckoandfly.com/5710/free-vpn-for-windows-mac-os-x-linux-iphone-ubuntu/","name":"8 Free Open Source VPN - Compatible OpenVPN Client Alternatives","isPartOf":{"@id":"https://www.geckoandfly.com/#website"},"primaryImageOfPage":{"@id":"https://www.geckoandfly.com/5710/free-vpn-for-windows-mac-os-x-linux-iphone-ubuntu/#primaryimage"},"datePublished":"2020-01-02T07:00:19+00:00","dateModified":"2021-03-13T03:17:08+00:00","author":{"@id":"https://www.geckoandfly.com/#/schema/person/ffbcc726462bc9df4d61aabdf1cf1ba7"},"description":"A virtual private network (VPN) is a private data network that makes use of the public telecommunication infrastructure(Internet), maintaining privacy","breadcrumb":{"@id":"https://www.geckoandfly.com/5710/free-vpn-for-windows-mac-os-x-linux-iphone-ubuntu/#breadcrumb"},"inLanguage":"en-US","potentialAction":[{"@type":"ReadAction","target":["https://www.geckoandfly.com/5710/free-vpn-for-windows-mac-os-x-linux-iphone-ubuntu/"]}]},{"@type":"BreadcrumbList","@id":"https://www.geckoandfly.com/5710/free-vpn-for-windows-mac-os-x-linux-iphone-ubuntu/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"WebPage","@id":"https://www.geckoandfly.com/","url":"https://www.geckoandfly.com/","name":"Home"}},{"@type":"ListItem","position":2,"item":{"@type":"WebPage","@id":"https://www.geckoandfly.com/category/security-2/","url":"https://www.geckoandfly.com/category/security-2/","name":"Computer and Internet Security"}},{"@type":"ListItem","position":3,"item":{"@type":"WebPage","@id":"https://www.geckoandfly.com/category/security-2/vpn-virtual-private-network/","url":"https://www.geckoandfly.com/category/security-2/vpn-virtual-private-network/","name":"VPN Virtual Private Network"}},{"@type":"ListItem","position":4,"item":{"@type":"WebPage","@id":"https://www.geckoandfly.com/5710/free-vpn-for-windows-mac-os-x-linux-iphone-ubuntu/","url":"https://www.geckoandfly.com/5710/free-vpn-for-windows-mac-os-x-linux-iphone-ubuntu/","name":"8 Free Open Source VPN &#8211; Compatible OpenVPN Client Alternatives"}}]},{"@type":"Person","@id":"https://www.geckoandfly.com/#/schema/person/ffbcc726462bc9df4d61aabdf1cf1ba7","name":"Ngan Tengyuen","sameAs":["https://twitter.com/geckoandfly"]}]}</script> 
+  <link rel="dns-prefetch" href="//www.google.com">
+  <link href="https://cdn.geckoandfly.com" rel="preconnect">
+  <link href="https://cdn2.geckoandfly.com" rel="preconnect">
+  <link href="https://cdn3.geckoandfly.com" rel="preconnect">
+  <link href="https://cdn4.geckoandfly.com" rel="preconnect">
+  <link href="https://adservice.google.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://pagead2.googlesyndication.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" crossorigin="anonymous" rel="preconnect">
+  <link href="https://www.google.com" rel="preconnect">
+  <link rel="stylesheet" id="yarpp-thumbnails-yarpp-thumbnail-css" href="https://www.geckoandfly.com/wp-content/plugins/yet-another-related-posts-plugin/includes/styles_thumbnails.css.php?width=120&amp;height=120&amp;ver=5.1.3" type="text/css" media="all">
+  <style type="text/css">.grecaptcha-badge{
+	visibility: collapse !important;  
+}</style> 
+  <script data-ad-client="ca-pub-8729195058859236" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> 
+ </head>
+ <body class="post-template-default single single-post postid-5710 single-format-standard">
+  <div id="page" class="hfeed site">
+   <header id="header" class="site-header" role="banner">
+    <div id="top">
+     <div class="inside">
+      <nav id="site-navigation" class="main-navigation" role="navigation">
+       <ul id="primary-menu" class="sf-menu clearfix">
+        <li id="menu-item-34525" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-has-children menu-item-34525"><a href="https://www.geckoandfly.com/category/templates/">Templates</a>
+         <ul class="sub-menu">
+          <li id="menu-item-34527" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-34527"><a href="https://www.geckoandfly.com/33518/free-powerpoint-presentation-templates/">Free PowerPoint Templates</a></li>
+          <li id="menu-item-34528" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-34528"><a href="https://www.geckoandfly.com/4374/download-free-microsoft-office-resume-sample-and-cv-template/">Free Creative Resume / CV Templates</a></li>
+          <li id="menu-item-34529" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-34529"><a href="https://www.geckoandfly.com/33972/free-instagram-stories-template/">Free Instagram Stories Templates</a></li>
+         </ul></li>
+        <li id="menu-item-22755" class="menu-item menu-item-type-post_type menu-item-object-post menu-item-has-children menu-item-22755"><a href="https://www.geckoandfly.com/14975/10-golden-rules-on-money-money-money/">Money</a>
+         <ul class="sub-menu">
+          <li id="menu-item-16548" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-16548"><a href="https://www.geckoandfly.com/34722/robo-advisor/">12 Robo-Advisor – Invest Stocks Guarantee Returns</a></li>
+          <li id="menu-item-16549" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-16549"><a href="https://www.geckoandfly.com/16889/warren-buffet-advice-investment/">28 Warren Buffet’s Advice On Wealth</a></li>
+          <li id="menu-item-23433" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-23433"><a href="https://www.geckoandfly.com/23403/best-internet-affiliate-marketing/">7 Affiliate Programs For Making Money Online</a></li>
+         </ul></li>
+        <li id="menu-item-12795" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-12795"><a href="https://www.geckoandfly.com/free-fax-online/">eFax</a>
+         <ul class="sub-menu">
+          <li id="menu-item-14319" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-14319"><a href="https://www.geckoandfly.com/3356/microsoft-fax-software-how-to-send-free-fax-online-via-computer-and-email/">Microsoft Windows Fax</a></li>
+          <li id="menu-item-14318" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-14318"><a href="https://www.geckoandfly.com/6291/free-online-fax-services-no-credit-card-verification-required/">2 No Credit Card Online Fax Services</a></li>
+          <li id="menu-item-16594" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-16594"><a href="https://www.geckoandfly.com/19621/8-best-fax-app-for-ios-iphone-ipad-and-google-android-smartphone-tablet/">8 Android iOS Faxing App</a></li>
+         </ul></li>
+        <li id="menu-item-13185" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-13185"><a href="https://www.geckoandfly.com/search/sarcastic">Sarcastic</a>
+         <ul class="sub-menu">
+          <li id="menu-item-13186" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-13186"><a href="https://www.geckoandfly.com/20934/sarcastic-quotes-annoying-boss-colleague-office/">43 Sarcastic Quotes For Your Boss</a></li>
+          <li id="menu-item-13187" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-13187"><a href="https://www.geckoandfly.com/20811/funny-birthday-quotes/">33 Anonying Birthday Wishes For Friends</a></li>
+          <li id="menu-item-16592" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-16592"><a href="https://www.geckoandfly.com/7063/how-to-delete-remove-and-block-a-friend-from-your-facebook-friends-list/">71 Insults To Use Before Un-Friending</a></li>
+         </ul></li>
+        <li id="menu-item-12797" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-12797"><a href="https://www.geckoandfly.com/category/security-2/">Antivirus</a>
+         <ul class="sub-menu">
+          <li id="menu-item-12806" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-12806"><a href="https://www.geckoandfly.com/10744/download-the-new-norton-antivirus-internet-security-and-360/">Download Norton 360 and Internet Security</a></li>
+          <li id="menu-item-12804" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-12804"><a href="https://www.geckoandfly.com/2595/free-90-days-full-version-trial-for-norton-mcafee-kaspersky-avg-trend-micro-and-more/">Top 8 Free 90 days Full Version Antivirus</a></li>
+          <li id="menu-item-16590" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-16590"><a href="https://www.geckoandfly.com/10294/kaspersky-free-antivirus/">Free Kaspersky Internet Security</a></li>
+         </ul></li>
+        <li id="menu-item-12800" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-12800"><a href="https://www.geckoandfly.com/category/lucky/">Pranks</a>
+         <ul class="sub-menu">
+          <li id="menu-item-12954" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-12954"><a href="https://www.geckoandfly.com/7468/original-apple-ipad-wallpaper-broken-and-shattered-screen-background/">4 Broken Screen Smartphone Wallpapers</a></li>
+          <li id="menu-item-13150" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-13150"><a href="https://www.geckoandfly.com/993/what-is-wrong-with-her/">What is Wrong With Her?</a></li>
+          <li id="menu-item-16591" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-16591"><a href="https://www.geckoandfly.com/15367/prank-weeping-angel-desktop-wallpaper/">Weeping Angel Desktop Prank</a></li>
+         </ul></li>
+        <li id="menu-item-18197" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-18197"><a href="https://www.geckoandfly.com/category/lucky/cats/">Cats</a>
+         <ul class="sub-menu">
+          <li id="menu-item-18198" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-18198"><a href="https://www.geckoandfly.com/17716/40-funny-doodles-for-cat-lovers-and-your-cat-crazy-lady-friend/">40 Funny Cat Comic Drawings</a></li>
+          <li id="menu-item-18199" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-18199"><a href="https://www.geckoandfly.com/12447/cat-optical-illusion/">10 Cat Optical Illusions</a></li>
+          <li id="menu-item-18200" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-18200"><a href="https://www.geckoandfly.com/20918/beautiful-tombstone-quotes-pet-cat-dog/">12 Tombstone Quotes For Pets</a></li>
+         </ul></li>
+        <li class="menu-header-search">
+         <form action="https://www.geckoandfly.com/" id="searchform" method="get">
+          <input type="text" name="s" id="s" placeholder="Search this site...">
+         </form></li>
+       </ul>
+      </nav>
+     </div>
+    </div>
+   </header>
+   <div id="content" class="site-content">
+    <div class="inside clearfix">
+     <div id="sidebar" class="sidebar-left">
+      <div class="site-branding"> <a href="https://www.geckoandfly.com/"> 
+        <picture> 
+         <source data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/lazy_placeholder.gif" media="(max-width: 769px)"> 
+         <source type="image/webp" data-srcset="https://cdn3.geckoandfly.com/wp-content/themes/billboard/images/logo-new.webp"> 
+         <source type="image/jpeg" data-srcset="https://cdn3.geckoandfly.com/wp-content/themes/billboard/images/logo-new.jpg"> 
+         <noscript>
+          <img src="https://cdn3.geckoandfly.com/wp-content/themes/billboard/images/logo-new.jpg" alt="Geckoandfly logo" width="336" height="415">
+         </noscript>
+         <img class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20336%20415%22%3E%3C/svg%3E" data-src="https://cdn3.geckoandfly.com/wp-content/themes/billboard/images/logo-new.jpg" alt="Geckoandfly logo" width="336" height="415"> 
+        </picture> </a>
+      </div>
+      <div id="mobile-search">
+       <center> <a href="https://www.geckoandfly.com/"> 
+         <picture> 
+          <source data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/lazy_placeholder.gif" media="(min-width: 769px)"> 
+          <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/mobilelogo.webp"> 
+          <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/mobilelogo.jpg"> 
+          <noscript>
+           <img src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/mobilelogo.jpg" alt="Geckoandfly logo" width="768" height="158">
+          </noscript>
+          <img class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20768%20158%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/mobilelogo.jpg" alt="Geckoandfly logo" width="768" height="158"> 
+         </picture> </a>
+        <form role="search" method="get" class="search-form" action="https://www.geckoandfly.com/"> <label> <input class="search-field" placeholder="Search this site..." value="" name="s" style="float:center; width:90%;display:inline" title="Search for:" type="search"> </label>
+        </form>
+       </center>
+      </div>
+      <div id="widgets">
+       <aside id="custom_html-13" class="widget_text widget widget_custom_html">
+        <div class="textwidget custom-html-widget">
+         <ins class="adsbygoogle" style="display: inline-block; width: 100%; height: 1200px;" data-ad-client="ca-pub-8729195058859236" data-ad-slot="5202255149"></ins> 
+         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+        </div>
+       </aside>
+       <aside id="custom_html-4" class="widget_text widget widget_custom_html">
+        <div class="textwidget custom-html-widget">
+         <p><a href="https://www.geckoandfly.com/17716/40-funny-doodles-for-cat-lovers-and-your-cat-crazy-lady-friend/"> 
+           <picture> 
+            <source type="image/webp" data-srcset="https://cdn3.geckoandfly.com/wp-content/themes/billboard/images/a-cats.webp"> 
+            <source type="image/jpeg" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/a-cats.jpg"> 
+            <noscript>
+             <img src="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/a-cats.jpg" alt="40 Funny Doodles For Cat Lovers and Your Cat Crazy Lady Friend" width="336" height="177">
+            </noscript>
+            <img class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20336%20177%22%3E%3C/svg%3E" data-src="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/a-cats.jpg" alt="40 Funny Doodles For Cat Lovers and Your Cat Crazy Lady Friend" width="336" height="177">
+           </picture> 40 Funny Doodles For Cat Lovers and Your Cat Crazy Lady Friend</a></p>
+         <p><a href="https://www.geckoandfly.com/19714/quotes-cheating-boyfriend-lying-husband/"> 
+           <picture> 
+            <source type="image/webp" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/a-cheating.webp"> 
+            <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/a-cheating.jpg"> 
+            <noscript>
+             <img src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/a-cheating.jpg" alt="60 Quotes On Cheating Boyfriend And Lying Husband" width="336" height="177">
+            </noscript>
+            <img class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20336%20177%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/a-cheating.jpg" alt="60 Quotes On Cheating Boyfriend And Lying Husband" width="336" height="177">
+           </picture> 60 Quotes On Cheating Boyfriend And Lying Husband</a></p>
+         <p><a href="https://www.geckoandfly.com/23358/free-airport-wifi-passwords/"> 
+           <picture> 
+            <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/a-free-wifi.webp"> 
+            <source type="image/jpeg" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/a-free-wifi.jpg"> 
+            <noscript>
+             <img src="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/a-free-wifi.jpg" alt="120 Free Airport WiFi Passwords From Around The World" width="336" height="177">
+            </noscript>
+            <img class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20336%20177%22%3E%3C/svg%3E" data-src="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/a-free-wifi.jpg" alt="120 Free Airport WiFi Passwords From Around The World" width="336" height="177">
+           </picture> 120 Free Airport WiFi Passwords From Around The World</a></p>
+         <p><a href="https://www.geckoandfly.com/5876/boost-and-increase-wireless-adapter-signal-strength-and-speed/"> 
+           <picture> 
+            <source type="image/webp" data-srcset="https://cdn2.geckoandfly.com/wp-content/themes/billboard/images/a-boost-wifi.webp"> 
+            <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/a-boost-wifi.jpg"> 
+            <noscript>
+             <img src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/a-boost-wifi.jpg" alt="4 Ways To Boost And Optimize Laptop’s Wireless WiFi Signal Strength And Speed" width="336" height="177">
+            </noscript>
+            <img class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20336%20177%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/a-boost-wifi.jpg" alt="4 Ways To Boost And Optimize Laptop’s Wireless WiFi Signal Strength And Speed" width="336" height="177">
+           </picture> 4 Ways To Boost And Optimize Wireless WiFi Signal Strength And Speed</a></p>
+         <p><a href="https://www.geckoandfly.com/23281/virtual-phone-number-ios-android-smartphones/"> 
+           <picture> 
+            <source type="image/webp" data-srcset="https://cdn2.geckoandfly.com/wp-content/themes/billboard/images/a-virtual-sim.webp"> 
+            <source type="image/jpeg" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/a-virtual-sim.jpg"> 
+            <noscript>
+             <img src="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/a-virtual-sim.jpg" alt="6 Virtual Phone Number Apps For iOS And Android Smartphones" width="336" height="177">
+            </noscript>
+            <img class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20336%20177%22%3E%3C/svg%3E" data-src="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/a-virtual-sim.jpg" alt="6 Virtual Phone Number Apps For iOS And Android Smartphones" width="336" height="177">
+           </picture> 6 Virtual SIM Phone Number App For iOS And Android Smartphones</a></p>
+         <p><a href="https://www.geckoandfly.com/20747/best-vpn-gaming-no-lags-0-packet-loss-reduce-ping-ms/"> 
+           <picture> 
+            <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/a-vpn-gaming.webp"> 
+            <source type="image/jpeg" data-srcset="https://cdn3.geckoandfly.com/wp-content/themes/billboard/images/a-vpn-gaming.jpg"> 
+            <noscript>
+             <img src="https://cdn3.geckoandfly.com/wp-content/themes/billboard/images/a-vpn-gaming.jpg" alt="6 Best VPN for Gaming – No Lags, 0% Packet Loss and Reduce Ping ms" width="336" height="177">
+            </noscript>
+            <img class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20336%20177%22%3E%3C/svg%3E" data-src="https://cdn3.geckoandfly.com/wp-content/themes/billboard/images/a-vpn-gaming.jpg" alt="6 Best VPN for Gaming – No Lags, 0% Packet Loss and Reduce Ping ms" width="336" height="177">
+           </picture> 6 Best VPN for Gaming – No Lags, 0% Packet Loss and Reduce Ping ms</a></p>
+         <p><a href="https://www.geckoandfly.com/12946/7-free-android-apps-track-lost-stolen-smartphone-2/"> 
+           <picture> 
+            <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/a-stolen-smartphone.webp"> 
+            <source type="image/jpeg" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/a-stolen-smartphone.jpg"> 
+            <noscript>
+             <img src="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/a-stolen-smartphone.jpg" alt="7 Free Apps To Find, Spy And Track Stolen Android Smartphone" width="336" height="177">
+            </noscript>
+            <img class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20336%20177%22%3E%3C/svg%3E" data-src="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/a-stolen-smartphone.jpg" alt="7 Free Apps To Find, Spy And Track Stolen Android Smartphone" width="336" height="177">
+           </picture> 7 Free Apps To Find, Spy And Track Stolen Android Smartphone</a></p>
+         <p><a href="https://www.geckoandfly.com/3368/free-top-wordpress-web-hosting-server-with-mysql-and-php/"> 
+           <picture> 
+            <source type="image/webp" data-srcset="https://cdn2.geckoandfly.com/wp-content/themes/billboard/images/a-wordpress-hosting.webp"> 
+            <source type="image/jpeg" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/a-wordpress-hosting.jpg"> 
+            <noscript>
+             <img src="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/a-wordpress-hosting.jpg" alt="10 Best Free WordPress Hosting With Own Domain And Secure Security" width="336" height="177">
+            </noscript>
+            <img class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20336%20177%22%3E%3C/svg%3E" data-src="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/a-wordpress-hosting.jpg" alt="10 Best Free WordPress Hosting With Own Domain And Secure Security" width="336" height="177">
+           </picture> 10 Best Free WordPress Hosting With Own Domain And Secure Security</a></p>
+         <p><a href="https://www.geckoandfly.com/23486/gps-app-tracking-child-abduction-kidnapping/"> 
+           <picture> 
+            <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/a-kidnapped.webp"> 
+            <source type="image/jpeg" data-srcset="https://cdn3.geckoandfly.com/wp-content/themes/billboard/images/a-kidnapped.jpg"> 
+            <noscript>
+             <img src="https://cdn3.geckoandfly.com/wp-content/themes/billboard/images/a-kidnapped.jpg" alt="10 GPS Tracker For Smartphones In Locating Missing, Abducted And Kidnapped Child" width="336" height="177">
+            </noscript>
+            <img class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20336%20177%22%3E%3C/svg%3E" data-src="https://cdn3.geckoandfly.com/wp-content/themes/billboard/images/a-kidnapped.jpg" alt="10 GPS Tracker For Smartphones In Locating Missing, Abducted And Kidnapped Child" width="336" height="177">
+           </picture> 10 GPS Tracker For Smartphones In Locating Missing, Abducted And Kidnapped Child</a></p>
+         <p><a href="https://www.geckoandfly.com/1875/how-to-recover-your-lost-or-stolen-laptop/"> 
+           <picture> 
+            <source type="image/webp" data-srcset="https://cdn3.geckoandfly.com/wp-content/themes/billboard/images/a-stolen-laptop.webp"> 
+            <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/a-stolen-laptop.jpg"> 
+            <noscript>
+             <img src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/a-stolen-laptop.jpg" alt="7 Laptop Theft Recovering Software with GPS Location Tracking and SpyCam" width="336" height="177">
+            </noscript>
+            <img class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20336%20177%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/a-stolen-laptop.jpg" alt="7 Laptop Theft Recovering Software with GPS Location Tracking and SpyCam" width="336" height="177">
+           </picture> 7 Laptop Theft Recovering Software with GPS Location Tracking and SpyCam</a></p>
+         <p><a href="https://www.geckoandfly.com/8666/download-free-mcafee-antivirus-plus-2011-for-90-days/"> 
+           <picture> 
+            <source type="image/webp" data-srcset="https://cdn3.geckoandfly.com/wp-content/themes/billboard/images/a-mcafee-2.webp"> 
+            <source type="image/jpeg" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/a-mcafee-2.jpg"> 
+            <noscript>
+             <img src="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/a-mcafee-2.jpg" alt="Download FREE McAfee AntiVirus Plus 2015 for 30 Days" width="336" height="177">
+            </noscript>
+            <img class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20336%20177%22%3E%3C/svg%3E" data-src="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/a-mcafee-2.jpg" alt="Download FREE McAfee AntiVirus Plus 2015 for 30 Days" width="336" height="177">
+           </picture> Download Free McAfee AntiVirus Plus for 30 Days</a></p>
+         <p><a href="https://www.geckoandfly.com/10744/download-the-new-norton-antivirus-internet-security-and-360/"> 
+           <picture> 
+            <source type="image/webp" data-srcset="https://cdn2.geckoandfly.com/wp-content/themes/billboard/images/a-norton.webp"> 
+            <source type="image/jpeg" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/a-norton.jpg"> 
+            <noscript>
+             <img src="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/a-norton.jpg" alt="Download the NEW Norton Antivirus, Internet Security And 360" width="336" height="177">
+            </noscript>
+            <img class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20336%20177%22%3E%3C/svg%3E" data-src="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/a-norton.jpg" alt="Download the NEW Norton Antivirus, Internet Security And 360" width="336" height="177">
+           </picture> Download the New Norton Antivirus, Internet Security</a></p>
+         <p><a href="https://www.geckoandfly.com/2595/free-90-days-full-version-trial-for-norton-mcafee-kaspersky-avg-trend-micro-and-more/"> 
+           <picture> 
+            <source type="image/webp" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/a-top-antivirus.webp"> 
+            <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/a-top-antivirus.jpg"> 
+            <noscript>
+             <img src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/a-top-antivirus.jpg" alt="Top 8 Free 90 days Full Version Antivirus Software Trial for Norton, McAfee, Kaspersky, AVG, Trend Micro and more" width="336" height="177">
+            </noscript>
+            <img class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20336%20177%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/a-top-antivirus.jpg" alt="Top 8 Free 90 days Full Version Antivirus Software Trial for Norton, McAfee, Kaspersky, AVG, Trend Micro and more" width="336" height="177">
+           </picture> Top 8 Free 90 days Full Version Antivirus Software Trial for Norton, McAfee, Kaspersky, AVG, Trend Micro and more</a></p>
+         <p><a href="https://www.geckoandfly.com/8583/download-free-norton-360-version-5-0-oem-for-90-days-trial/"> 
+           <picture> 
+            <source type="image/webp" data-srcset="https://cdn3.geckoandfly.com/wp-content/themes/billboard/images/a-norton-2.webp"> 
+            <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/a-norton-2.jpg"> 
+            <noscript>
+             <img src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/a-norton-2.jpg" alt="Download FREE Norton 360 Version 7.0 OEM for 90 Days Trial" width="336" height="177">
+            </noscript>
+            <img class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20336%20177%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/a-norton-2.jpg" alt="Download FREE Norton 360 Version 7.0 OEM for 90 Days Trial" width="336" height="177">
+           </picture> Download Free Norton 360 Version 7.0 OEM for 90 Days Trial</a></p>
+         <p><a href="https://www.geckoandfly.com/8313/download-free-avg-internet-security-2011-with-3-months-license-code/"> 
+           <picture> 
+            <source type="image/webp" data-srcset="https://cdn3.geckoandfly.com/wp-content/themes/billboard/images/a-avg-2.webp"> 
+            <source type="image/jpeg" data-srcset="https://cdn2.geckoandfly.com/wp-content/themes/billboard/images/a-avg-2.jpg"> 
+            <noscript>
+             <img src="https://cdn2.geckoandfly.com/wp-content/themes/billboard/images/a-avg-2.jpg" alt="Download FREE AVG Internet Security 2014 With 1 Year Serial License Code" width="336" height="177">
+            </noscript>
+            <img class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20336%20177%22%3E%3C/svg%3E" data-src="https://cdn2.geckoandfly.com/wp-content/themes/billboard/images/a-avg-2.jpg" alt="Download FREE AVG Internet Security 2014 With 1 Year Serial License Code" width="336" height="177">
+           </picture> Download Free AVG Internet Security With 1 Year Serial License Code</a></p>
+         <p><a href="https://www.geckoandfly.com/3356/microsoft-fax-software-how-to-send-free-fax-online-via-computer-and-email/"> 
+           <picture> 
+            <source type="image/webp" data-srcset="https://cdn2.geckoandfly.com/wp-content/themes/billboard/images/a-microsoft-fax-2.webp"> 
+            <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/a-microsoft-fax-2.jpg"> 
+            <noscript>
+             <img src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/a-microsoft-fax-2.jpg" alt="Microsoft Fax Software, How to Send Free Fax Online via Computer and Email" width="336" height="177">
+            </noscript>
+            <img class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20336%20177%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/a-microsoft-fax-2.jpg" alt="Microsoft Fax Software, How to Send Free Fax Online via Computer and Email" width="336" height="177">
+           </picture> Microsoft Fax Software, How to Send Free Fax Online via Computer and Email</a></p>
+         <p><a href="https://www.geckoandfly.com/3929/download-the-best-mac-os-x-anti-spyware-and-anti-virus-software-for-free/"> 
+           <picture> 
+            <source type="image/webp" data-srcset="https://cdn3.geckoandfly.com/wp-content/themes/billboard/images/a-mac-virus.webp"> 
+            <source type="image/jpeg" data-srcset="https://cdn2.geckoandfly.com/wp-content/themes/billboard/images/a-mac-virus.jpg"> 
+            <noscript>
+             <img src="https://cdn2.geckoandfly.com/wp-content/themes/billboard/images/a-mac-virus.jpg" alt=" 10 Best Mac OS X Anti-Spyware and Anti-Virus Software for Free" width="336" height="177">
+            </noscript>
+            <img class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20336%20177%22%3E%3C/svg%3E" data-src="https://cdn2.geckoandfly.com/wp-content/themes/billboard/images/a-mac-virus.jpg" alt=" 10 Best Mac OS X Anti-Spyware and Anti-Virus Software for Free" width="336" height="177">
+           </picture> 10 Best Mac OS X Anti-Spyware and Anti-Virus Software for Free</a></p>
+         <p><a href="https://www.geckoandfly.com/10294/kaspersky-free-antivirus/"> 
+           <picture> 
+            <source type="image/webp" data-srcset="https://cdn2.geckoandfly.com/wp-content/themes/billboard/images/a-kaspersky-2.webp"> 
+            <source type="image/jpeg" data-srcset="https://cdn2.geckoandfly.com/wp-content/themes/billboard/images/a-kaspersky-2.jpg"> 
+            <noscript>
+             <img src="https://cdn2.geckoandfly.com/wp-content/themes/billboard/images/a-kaspersky-2.jpg" alt="Download FREE Kaspersky Internet Security Antivirus 2013 for Windows 8" width="336" height="177">
+            </noscript>
+            <img class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20336%20177%22%3E%3C/svg%3E" data-src="https://cdn2.geckoandfly.com/wp-content/themes/billboard/images/a-kaspersky-2.jpg" alt="Download FREE Kaspersky Internet Security Antivirus 2013 for Windows 8" width="336" height="177">
+           </picture> Download Free Kaspersky Internet Security Antivirus for Windows 8</a></p>
+         <p><a href="https://www.geckoandfly.com/9056/free-panda-antivirus-and-internet-security-2011/"> 
+           <picture> 
+            <source type="image/webp" data-srcset="https://cdn3.geckoandfly.com/wp-content/themes/billboard/images/a-panda-antivirus.webp"> 
+            <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/a-panda-antivirus.jpg"> 
+            <noscript>
+             <img src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/a-panda-antivirus.jpg" alt=" 6 Months Free Genuine Serial Number For Panda Internet Security Antivirus 2014" width="336" height="177">
+            </noscript>
+            <img class="lazyload" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20336%20177%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/a-panda-antivirus.jpg" alt=" 6 Months Free Genuine Serial Number For Panda Internet Security Antivirus 2014" width="336" height="177">
+           </picture> 6 Months Free Genuine Serial Number For Panda Internet Security Antivirus</a></p>
+        </div>
+       </aside>
+      </div>
+     </div>
+     <div id="primary-container">
+      <div id="primary" class="content-area">
+       <main id="main" class="site-main" role="main">
+        <article id="post-5710" class="post-5710 post type-post status-publish format-standard has-post-thumbnail hentry category-vpn-virtual-private-network tag-show">
+         <header class="entry-header">
+          <h1 class="entry-title"> 8 Free Open Source VPN – Compatible OpenVPN Client Alternatives</h1>
+         </header>
+         <div class="entry-content">
+          <div class="entry-content-smallinfo">
+           <p><small><em>Updated: <span class="date updated">March 13, 2021 <span class="meta-sep">/</span> <span><span><a href="https://www.geckoandfly.com/">Home</a> » <span><a href="https://www.geckoandfly.com/category/security-2/">Computer and Internet Security</a> » <span><a href="https://www.geckoandfly.com/category/security-2/vpn-virtual-private-network/">VPN Virtual Private Network</a></span></span></span></span></span></em></small></p>
+          </div>
+          <p>A virtual private network (VPN) is a private data network that makes use of the public telecommunication infrastructure(Internet), maintaining privacy through the use of a tunneling protocol and security procedures. The idea of the VPN is to give a company or a person the same capabilities at much lower cost by using the shared public infrastructure rather than a private one. In our case, we use a VPN to connect you to our servers in Europe and Asia.</p><!-- noptimize --> <!-- Gecko Responsive --> 
+          <style type="text/css">
+.adslot_1 { display:inline-block;width:336px;height:280px; }
+@media (max-width:800px) { .adslot_1 {display:inline-block;width:100%;height:250px;} }
+</style> 
+          <ins class="adsbygoogle adslot_1" data-ad-client="ca-pub-8729195058859236" data-ad-slot="8854765944" data-full-width-responsive="true"></ins> 
+          <script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script> <!--/noptimize-->
+          <blockquote>
+           <p>Related Article ➤ <a href="https://www.geckoandfly.com/5717/best-vpn-free-uk-us-server-service/" title="Top 10 Free VPN Service With US UK Server [ Best Speed ]">Top 10 Free VPN Service With US UK Server [ Best Speed ]</a></p>
+          </blockquote>
+          <ul>
+           <li>Protect your computer from internet attacks and intrusions.</li>
+           <li>Prevents from unauthorized access your computers from internet.</li>
+           <li>Filter network spam by our servers firewall system.</li>
+           <li>Anonymize and secure all your Internet traffic and replace your ip address.</li>
+           <li>Works with VOIP software, web browsing, e-mail, p2p, ftp, instant messaging, streaming, games etc.</li>
+          </ul>
+          <p>If free VPN is not your cup of tea or you find them unreliable, do give this paid VPN a try. Based on my own experience, VyprVPN is really reliable and good, they are from Germany and they have their own unique ‘Chameleon’ technology that sets them apart from other VPN that uses the same open source technology.</p>
+          <ul>
+           <li><a href="https://go.nordvpn.net/aff_c?offer_id=15&amp;aff_id=24397" rel="nofollow">NordVPN</a> | Comes with P2P Servers, 100% no log. Pay 1 year and get 2 years free! 70% off!</li>
+           <li><a href="https://powerhouse.go2cloud.org/aff_c?offer_id=174&amp;aff_id=3122" rel="nofollow">VyprVPN</a> | Unique proprietary Chameleon VPN technology defeats VPN-blocking</li>
+          </ul>
+          <p>Together with a VPN service, they creat a connection called VPN. This is a secure connection that encrypts all your information and is not readable by anyone else so wherever you are your privacy is always maintained! The best part is, there is no software to install because most VPN works on all Platforms including Windows, Mac, Linux, IPhone etc using the build in VPN software in your operating system. Without further ado, here are 9 Open Source VPN that can be used with VPN Gate.</p><!-- noptimize --> <!-- Gecko Responsive 3 --> 
+          <style type="text/css">
+.adslot_2 { display:inline-block;width:336px;height:280px;}
+@media (max-width:800px) { .adslot_2 {display:inline-block;width:100%;height:280px;} }
+</style> 
+          <ins class="adsbygoogle adslot_2" data-ad-client="ca-pub-8729195058859236" data-ad-slot="8761042340" data-full-width-responsive="true"></ins> 
+          <script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script> <!--/noptimize-->
+          <div class="embed-container">
+           <iframe width="100%" height="459" src="//www.youtube.com/embed/rFg7TSwVcL4?rel=0" frameborder="0" allowfullscreen></iframe>
+          </div>
+          <h2>↓ 01 – <a href="https://libreswan.org/">Libreswan VPN</a> | <small>Linux</small></h2>
+          <p>Libreswan is a free software implementation of the most widely supported and standarized VPN protocol based on (“IPsec”) and the Internet Key Exchange (“IKE”). These standards are produced and maintained by the Internet Engineering Task Force (“IETF”). Libreswan performs some additional hardening for the IKEv1 protocol that other implementations have not implemented. This is not a vulnerability and CVE-2016-5361 was issued erroneously.</p>
+          <h2>↓ 02 – <a href="http://www.infradead.org/openconnect/">OpenConnect</a> | <small>Linux</small></h2>
+          <p>OpenConnect is an SSL VPN client initially created to support Cisco’s AnyConnect SSL VPN. It has since been ported to support the Juniper SSL VPN which is now known as Pulse Connect Secure. OpenConnect is released under the GNU Lesser Public License, version 2.1. Like vpnc, OpenConnect is not officially supported by, or associated in any way with, Cisco Systems, Juniper Networks or Pulse Secure. It just happens to interoperate with their equipment. Development of OpenConnect was started after a trial of the Cisco client under Linux found it to have many deficiencies:</p>
+          <ul>
+           <li>Inability to use SSL certificates from a TPM or PKCS#11 smartcard, or even use a passphrase.</li>
+           <li>Lack of support for Linux platforms other than i386.</li>
+           <li>Lack of integration with NetworkManager on the Linux desktop.</li>
+           <li>Lack of proper (RPM/DEB) packaging for Linux distributions.</li>
+           <li>“Stealth” use of libraries with dlopen(), even using the development-only symlinks such as libz.so — making it hard to properly discover the dependencies which proper packaging would have expressed</li>
+           <li>Tempfile races allowing unprivileged users to trick it into overwriting arbitrary files, as root.</li>
+           <li>Unable to run as an unprivileged user, which would have reduced the severity of the above bug.</li>
+           <li>Inability to audit the source code for further such “Security 101” bugs.</li>
+          </ul>
+          <p>Naturally, OpenConnect addresses all of the above issues, and more.</p>
+          <ul>
+           <li>Connection through HTTP proxy, including libproxy support for automatic proxy configuration.</li>
+           <li>Connection through SOCKS5 proxy.</li>
+           <li>Automatic detection of IPv4 and IPv6 address, routes.</li>
+           <li>Authentication via HTTP forms.</li>
+           <li>Authentication using SSL certificates — from local file, Trusted Platform Module and PKCS#11 smartcards.</li>
+           <li>Authentication using SecurID software tokens (when built with libstoken)</li>
+           <li>Authentication using OATH TOTP or HOTP software tokens.</li>
+           <li>Authentication using Yubikey OATH tokens (when built with libpcsclite)</li>
+           <li>UserGroup support for selecting between multiple configurations on a single VPN server.</li>
+           <li>Data transport over TCP (HTTPS) or UDP (DTLS or ESP).</li>
+           <li>Keepalive and Dead Peer Detection on both HTTPS and DTLS.</li>
+           <li>Automatic update of VPN server list / configuration.</li>
+           <li>Roaming support, allowing reconnection when the local IP address changes.</li>
+           <li>Run without root privileges.</li>
+          </ul>
+          <h2>↓ 03 – <a href="https://openswan.org/">Openswan</a> | <small>Linux</small></h2>
+          <p>Openswan is an IPsec implementation for Linux. It has support for most of the extensions (RFC + IETF drafts) related to IPsec, including IKEv2, X.509 Digital Certificates, NAT Traversal, and many others. Openswan has been the de-facto Virtual Private Network software for the Linux community since 2005. If you are running Fedora, Red Hat, Ubuntu, Debian (Wheezy), Gentoo, or many others, it is already included in your distribution! Just start using it right away. If you wish to download the source code directly, you can click the button below.</p>
+          <h2>↓ 04 – <a href="https://openvpn.net/community/">OpenVPN</a> | <small>Windows | macOS | Android | iOS</small></h2>
+          <p>OpenVPN is a full-featured open source SSL VPN solution that accommodates a wide range of configurations, including remote access, site-to-site VPNs, Wi-Fi security, and enterprise-scale remote access solutions with load balancing, failover, and fine-grained access-controls. Starting with the fundamental premise that complexity is the enemy of security, OpenVPN offers a cost-effective, lightweight alternative to other VPN technologies that is well-targeted for the SME and enterprise markets. With OpenVPN, you can:</p>
+          <ul>
+           <li>Tunnel any IP subnetwork or virtual ethernet adapter over a single UDP or TCP port,</li>
+           <li>Configure a scalable, load-balanced VPN server farm using one or more machines which can handle thousands of dynamic connections from incoming VPN clients,</li>
+           <li>Use all of the encryption, authentication, and certification features of the OpenSSL library to protect your private network traffic as it transits the internet,</li>
+           <li>Use any cipher, key size, or HMAC digest (for datagram integrity checking) supported by the OpenSSL library,</li>
+           <li>Choose between static-key based conventional encryption or certificate-based public key encryption,</li>
+           <li>Use static, pre-shared keys or TLS-based dynamic key exchange,</li>
+           <li>Use real-time adaptive link compression and traffic-shaping to manage link bandwidth utilization,</li>
+           <li>Tunnel networks whose public endpoints are dynamic such as DHCP or dial-in clients,</li>
+           <li>Tunnel networks through connection-oriented stateful firewalls without having to use explicit firewall rules,</li>
+           <li>Tunnel networks over NAT.</li>
+           <li>Create secure ethernet bridges using virtual tap devices, and</li>
+           <li>Control OpenVPN using a GUI on Windows or Mac OS X.</li>
+          </ul>
+          <div style="clear:both; margin-top:1em; margin-bottom:1em;">
+           <a href="https://www.geckoandfly.com/19780/most-secure-vpn-service-avast-opera-android-ios/" target="_blank" class="uf46bb6e25cc2ca7f94907013220ed7c1"><style>.uf46bb6e25cc2ca7f94907013220ed7c1 { padding:0px; margin: 0; padding-top:1em!important; padding-bottom:1em!important; width:100%; display: block; font-weight:bold; background-color:inherit; border:0!important; border-left:4px solid inherit!important; text-decoration:none; } .uf46bb6e25cc2ca7f94907013220ed7c1:active, .uf46bb6e25cc2ca7f94907013220ed7c1:hover { opacity: 1; transition: opacity 250ms; webkit-transition: opacity 250ms; text-decoration:none; } .uf46bb6e25cc2ca7f94907013220ed7c1 { transition: background-color 250ms; webkit-transition: background-color 250ms; opacity: 1; transition: opacity 250ms; webkit-transition: opacity 250ms; } .uf46bb6e25cc2ca7f94907013220ed7c1 .ctaText { font-weight:bold; color:#000000; text-decoration:none; font-size: 16px; } .uf46bb6e25cc2ca7f94907013220ed7c1 .postTitle { color:#3498DB; text-decoration: underline!important; font-size: 16px; } .uf46bb6e25cc2ca7f94907013220ed7c1:hover .postTitle { text-decoration: underline!important; }</style>
+            <div style="padding-left:0em; padding-right:1em;">
+             <span class="ctaText">Related Article ☆</span>&nbsp; <span class="postTitle">4 Encrypted Mobile VPN Services - Safer Surfing On Free Public Wi-Fi Hotspots</span>
+            </div></a>
+          </div>
+          <h2>↓ 05 – <a href="https://edgevpn.io/about/">SocialVPN</a> | <small>Windows | CentOS | Ubuntu | OpenWRT Routers</small></h2>
+          <p>SocialVPN is an open-source IPOP-based virtual network that connects your computers privately to your friends’ computers. It automatically maps online social network relationships using Jingle and XMPP to create your own user-defined peer-to-peer VPNs – with no hassle, and supporting unmodified TCP/IP applications. In the SocialVPN, each user is in control of who their VPN connects to. To scale to large online social networks, SocialVPN employs a unique dynamic IPv4 address allocation/translation approach that avoids conflicts with local networks and devices outside a user’s social network. These are some of the ways you can use SocialVPN:</p>
+          <ul>
+           <li>Private data sharing – SocialVPN allows you to create private, end-to-end virtual IP networks connecting you to your friends. You can use these links to privately share data with your friends, using existing applications for file transfer and sharing.</li>
+           <li>Mobile cloud computing – SocialVPN runs on Android devices and allows users to create VPNs connecting mobile devices as well as desktops, laptops and servers. It provides a basis for research and development on “social area networks” for data sharing and computational offloading.</li>
+           <li>Decentralized OSNs – SocialVPN creates a communication overlay that can be used as a basis to design decentralized Online Social Networks (OSNs).</li>
+          </ul>
+          <h2>↓ 06 – <a href="https://www.softether.org/">SoftEther VPN</a> | <small>Windows | Linux | macOS | FreeBSD | Solaris</small></h2>
+          <p>SoftEther VPN (“SoftEther” means “Software Ethernet”) is one of the world’s most powerful and easy-to-use multi-protocol VPN software. It runs on Windows, Linux, Mac, FreeBSD and Solaris. SoftEther VPN is open source. You can use SoftEther for any personal or commercial use for free charge.</p>
+          <p>SoftEther VPN is an optimum alternative to OpenVPN and Microsoft’s VPN servers. SoftEther VPN has a clone-function of OpenVPN Server. You can integrate from OpenVPN to SoftEther VPN smoothly. SoftEther VPN is faster than OpenVPN. SoftEther VPN also supports Microsoft SSTP VPN for Windows Vista / 7 / 8. No more need to pay expensive charges for Windows Server license for Remote-Access VPN function. Features of SoftEther VPN</p>
+          <ul>
+           <li>Easy to establish both remote-access and site-to-site VPN.</li>
+           <li>SSL-VPN Tunneling on HTTPS to pass through NATs and firewalls.</li>
+           <li>Revolutionary VPN over ICMP and VPN over DNS features.</li>
+           <li>Resistance to highly-restricted firewall.</li>
+           <li>Ethernet-bridging (L2) and IP-routing (L3) over VPN.</li>
+           <li>Embedded dynamic-DNS and NAT-traversal so that no static nor fixed IP address is required.</li>
+           <li>AES 256-bit and RSA 4096-bit encryptions.</li>
+           <li>Sufficient security features such as logging and firewall inner VPN tunnel.</li>
+           <li>1Gbps-class high-speed throughput performance with low memory and CPU usage.</li>
+           <li>Windows, Linux, Mac, Android, iPhone, iPad and Windows Mobile are supported.</li>
+           <li>SSL-VPN (HTTPS) and 6 major VPN protocols (OpenVPN, IPsec, L2TP, MS-SSTP, L2TPv3 and EtherIP) are all supported as VPN tunneling underlay protocols.</li>
+           <li>The OpenVPN clone function supports legacy OpenVPN clients.</li>
+           <li>IPv4 / IPv6 dual-stack.</li>
+           <li>The VPN server runs on Windows, Linux, FreeBSD, Solaris and Mac OS X.</li>
+           <li>Configure All settings on GUI.</li>
+           <li>Multi-languages (English, Japanese and Simplified-Chinese).</li>
+           <li>No memory leaks. High quality stable codes, intended for long-term runs. We always verify that there are no memory or resource leaks before releasing the build.</li>
+           <li>RADIUS / NT Domain user authentication function</li>
+           <li>RSA certificate authentication function</li>
+           <li>Deep-inspect packet logging function</li>
+           <li>Source IP address control list function</li>
+           <li>Syslog transfer function</li>
+          </ul>
+          <h2>↓ 07 – <a href="https://www.strongswan.org/">strongSwan</a> | <small>Linux | Ubuntu | OpenSuse | Debian | Android</small></h2>
+          <p>strongSwan is a complete IPsec implementation for Linux 2.6, 3.x, and 4.x kernels. The focus of the project is on strong authentication mechanisms using X.509 public key certificates and optional secure storage of private keys on smartcards through a standardized PKCS#11 interface.</p>
+          <ul>
+           <li>Runs on Linux 2.6, 3.x and 4.x kernels, Android, FreeBSD, OS X and Windows</li>
+           <li>Implements both the IKEv1 and IKEv2 (RFC 7296) key exchange protocols</li>
+           <li>Fully tested support of IPv6 IPsec tunnel and transport connections</li>
+           <li>Dynamical IP address and interface update with IKEv2 MOBIKE (RFC 4555)</li>
+           <li>Automatic insertion and deletion of IPsec-policy-based firewall rules</li>
+           <li>NAT-Traversal via UDP encapsulation and port floating (RFC 3947)</li>
+           <li>Support of IKEv2 message fragmentation (RFC 7383) to avoid issues with IP fragmentation</li>
+           <li>Dead Peer Detection (DPD, RFC 3706) takes care of dangling tunnels</li>
+           <li>Static virtual IPs and IKEv1 ModeConfig pull and push modes</li>
+           <li>XAUTH server and client functionality on top of IKEv1 Main Mode authentication</li>
+           <li>Virtual IP address pool managed by IKE daemon or SQL database</li>
+           <li>Secure IKEv2 EAP user authentication (EAP-SIM, EAP-AKA, EAP-TLS, EAP-MSCHAPv2, etc.)</li>
+           <li>Optional relaying of EAP messages to AAA server via EAP-RADIUS plugin</li>
+           <li>Support of IKEv2 Multiple Authentication Exchanges (RFC 4739)</li>
+           <li>Authentication based on X.509 certificates or preshared keys</li>
+           <li>Use of strong signature algorithms with Signature Authentication in IKEv2 (RFC 7427)</li>
+           <li>Retrieval and local caching of Certificate Revocation Lists via HTTP or LDAP</li>
+           <li>Full support of the Online Certificate Status Protocol (OCSP, RFC 2560).</li>
+           <li>CA management (OCSP and CRL URIs, default LDAP server)</li>
+           <li>Powerful IPsec policies based on wildcards or intermediate CAs</li>
+           <li>Storage of RSA private keys and certificates on a smartcard (PKCS #11 interface)</li>
+          </ul>
+          <div style="clear:both; margin-top:1em; margin-bottom:1em;">
+           <a href="https://www.geckoandfly.com/34696/watch-tokyo-olympic-2020-online/" target="_blank" class="u4eb4c90b7bf0764b29ee7b454c0afd5c"><style>.u4eb4c90b7bf0764b29ee7b454c0afd5c { padding:0px; margin: 0; padding-top:1em!important; padding-bottom:1em!important; width:100%; display: block; font-weight:bold; background-color:inherit; border:0!important; border-left:4px solid inherit!important; text-decoration:none; } .u4eb4c90b7bf0764b29ee7b454c0afd5c:active, .u4eb4c90b7bf0764b29ee7b454c0afd5c:hover { opacity: 1; transition: opacity 250ms; webkit-transition: opacity 250ms; text-decoration:none; } .u4eb4c90b7bf0764b29ee7b454c0afd5c { transition: background-color 250ms; webkit-transition: background-color 250ms; opacity: 1; transition: opacity 250ms; webkit-transition: opacity 250ms; } .u4eb4c90b7bf0764b29ee7b454c0afd5c .ctaText { font-weight:bold; color:#000000; text-decoration:none; font-size: 16px; } .u4eb4c90b7bf0764b29ee7b454c0afd5c .postTitle { color:#3498DB; text-decoration: underline!important; font-size: 16px; } .u4eb4c90b7bf0764b29ee7b454c0afd5c:hover .postTitle { text-decoration: underline!important; }</style>
+            <div style="padding-left:0em; padding-right:1em;">
+             <span class="ctaText">Related Article ☆</span>&nbsp; <span class="postTitle">10 FREE Sites To Watch Tokyo 2021 Olympics Online Live Via VPN</span>
+            </div></a>
+          </div>
+          <h2>↓ 08 – Tcpcrypt [ Discontinued ] | <small>Windows | macOS</small></h2>
+          <p>Tcpcrypt is a protocol that attempts to encrypt (almost) all of your network traffic. Unlike other security mechanisms, Tcpcrypt works out of the box: it requires no configuration, no changes to applications, and your network connections will continue to work even if the remote end does not support Tcpcrypt, in which case connections will gracefully fall back to standard clear-text TCP. Install Tcpcrypt and you’ll feel no difference in your every day user experience, but yet your traffic will be more secure and you’ll have made life much harder for hackers.<br> So why is now the right time to turn on encryption? Here are some reasons:</p>
+          <ul>
+           <li>Intercepting communications today is simpler than ever because of wireless networks. Ask a hacker how many e-mail passwords can be intercepted at an airport by just using a wifi-enabled laptop. This unsophisticated attack is in reach of many. The times when only a few elite had the necessary skill to eavesdrop are gone.</li>
+           <li>Computers have now become fast enough to encrypt all Internet traffic. New computers come with special hardware crypto instructions that allow encrypted networking speeds of 10Gbit/s. How many of us even achieve those speeds on the Internet or would want to download (and watch) one movie per second? Clearly, we can encrypt fast enough.</li>
+           <li>Research advances and the lessons learnt from over 10 years of experience with the web finally enabled us to design a protocol that can be used in today’s Internet, by today’s users. Our protocol is pragmatic: it requires no changes to applications, it works with NATs (i.e., compatible with your DSL router), and will work even if the other end has not yet upgraded to tcpcrypt—in which case it will gracefully fall back to using the old plain-text TCP. No user configuration is required, making it accessible to lay users—no more obscure requests like “Please generate a 2048-bit RSA-3 key and a certificate request for signing by a CA”. Tcpcrypt can be incrementally deployed today, and with time the whole Internet will become encrypted.</li>
+          </ul>
+          <h2>↓ 09 – <a href="http://www.tinc-vpn.org/">Tinc VPN</a> | <small>Windows | Linux | FreeBSD | OpenBSD | NetBSD | macOS | Solaris</small></h2>
+          <p>tinc is a Virtual Private Network (VPN) daemon that uses tunnelling and encryption to create a secure private network between hosts on the Internet. tinc is Free Software and licensed under the GNU General Public License version 2 or later. Because the VPN appears to the IP level network code as a normal network device, there is no need to adapt any existing software. This allows VPN sites to share information with each other over the Internet without exposing any information to others. In addition, tinc has the following features:</p>
+          <ul>
+           <li>Encryption, authentication and compression – All traffic is optionally compressed using zlib or LZO, and LibreSSL or OpenSSL is used to encrypt the traffic and protect it from alteration with message authentication codes and sequence numbers.</li>
+           <li>Automatic full mesh routing – Regardless of how you set up the tinc daemons to connect to each other, VPN traffic is always (if possible) sent directly to the destination, without going through intermediate hops.</li>
+           <li>Easily expand your VPN – When you want to add nodes to your VPN, all you have to do is add an extra configuration file, there is no need to start new daemons or create and configure new devices or network interfaces.</li>
+           <li>Ability to bridge ethernet segments – You can link multiple ethernet segments together to work like a single segment, allowing you to run applications and games that normally only work on a LAN over the Internet.</li>
+           <li>Runs on many operating systems and supports IPv6 – Currently Linux, FreeBSD, OpenBSD, NetBSD, OS X, Solaris, Windows 2000, XP, Vista and Windows 7 and 8 platforms are supported. See our section about supported platforms for more information about the state of the ports. tinc has also full support for IPv6, providing both the possibility of tunneling IPv6 traffic over its tunnels and of creating tunnels over existing IPv6 networks.</li>
+          </ul>
+          <h2>What is a Consumer VPN?</h2>
+          <p><a href="https://cdn4.geckoandfly.com/wp-content/uploads/2013/03/StrongVPN.png">
+            <noscript>
+             <img src="https://cdn3.geckoandfly.com/wp-content/uploads/2013/03/StrongVPN-830x2481.png" alt="What is a Consumer VPN?" width="830" height="2481" class="alignnone size-large wp-image-15213" srcset="https://cdn3.geckoandfly.com/wp-content/uploads/2013/03/StrongVPN-830x2481.png 830w, https://cdn3.geckoandfly.com/wp-content/uploads/2013/03/StrongVPN-600x1794.png 600w, https://cdn3.geckoandfly.com/wp-content/uploads/2013/03/StrongVPN.png 920w" sizes="(max-width: 830px) 100vw, 830px">
+            </noscript><img src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20830%202481%22%3E%3C/svg%3E" data-src="https://cdn3.geckoandfly.com/wp-content/uploads/2013/03/StrongVPN-830x2481.png" alt="What is a Consumer VPN?" width="830" height="2481" class="lazyload alignnone size-large wp-image-15213" data-srcset="https://cdn3.geckoandfly.com/wp-content/uploads/2013/03/StrongVPN-830x2481.png 830w, https://cdn3.geckoandfly.com/wp-content/uploads/2013/03/StrongVPN-600x1794.png 600w, https://cdn3.geckoandfly.com/wp-content/uploads/2013/03/StrongVPN.png 920w" data-sizes="(max-width: 830px) 100vw, 830px"></a></p>
+          <div class="yarpp-related">
+           <h3>Recommended for you:</h3>
+           <div class="yarpp-thumbnails-horizontal"> <a class="yarpp-thumbnail" rel="norewrite" href="https://www.geckoandfly.com/32508/api-rest-development-tools/" title="5 Open Source API / REST Development Tools – Postman Alternatives"> 
+             <noscript>
+              <img width="120" height="120" src="https://cdn2.geckoandfly.com/wp-content/uploads/2019/05/530-rest-api-120x120.jpg" class="attachment-yarpp-thumbnail size-yarpp-thumbnail wp-post-image" alt="" data-pin-nopin="true" srcset="https://cdn4.geckoandfly.com/wp-content/uploads/2019/05/530-rest-api-120x120.jpg 120w, https://cdn4.geckoandfly.com/wp-content/uploads/2019/05/530-rest-api-150x150.jpg 150w, https://cdn4.geckoandfly.com/wp-content/uploads/2019/05/530-rest-api-140x140.jpg 140w, https://cdn4.geckoandfly.com/wp-content/uploads/2019/05/530-rest-api.jpg 530w" sizes="(max-width: 120px) 100vw, 120px">
+             </noscript><img width="120" height="120" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20120%20120%22%3E%3C/svg%3E" data-src="https://cdn2.geckoandfly.com/wp-content/uploads/2019/05/530-rest-api-120x120.jpg" class="lazyload attachment-yarpp-thumbnail size-yarpp-thumbnail wp-post-image" alt="" data-pin-nopin="true" data-srcset="https://cdn4.geckoandfly.com/wp-content/uploads/2019/05/530-rest-api-120x120.jpg 120w, https://cdn4.geckoandfly.com/wp-content/uploads/2019/05/530-rest-api-150x150.jpg 150w, https://cdn4.geckoandfly.com/wp-content/uploads/2019/05/530-rest-api-140x140.jpg 140w, https://cdn4.geckoandfly.com/wp-content/uploads/2019/05/530-rest-api.jpg 530w" data-sizes="(max-width: 120px) 100vw, 120px"><span class="yarpp-thumbnail-title">5 Open Source API / REST Development Tools – Postman Alternatives</span></a> <a class="yarpp-thumbnail" rel="norewrite" href="https://www.geckoandfly.com/24710/discussion-forum-simple-modern-clean/" title="6 Open Source Forum Software – Minimalist, Simple, Modern And Clean"> 
+             <noscript>
+              <img width="120" height="120" src="https://cdn4.geckoandfly.com/wp-content/uploads/2017/02/530-discussion-forum-120x120.jpg" class="attachment-yarpp-thumbnail size-yarpp-thumbnail wp-post-image" alt="" data-pin-nopin="true" srcset="https://cdn4.geckoandfly.com/wp-content/uploads/2017/02/530-discussion-forum-120x120.jpg 120w, https://cdn4.geckoandfly.com/wp-content/uploads/2017/02/530-discussion-forum-150x150.jpg 150w, https://cdn4.geckoandfly.com/wp-content/uploads/2017/02/530-discussion-forum-140x140.jpg 140w, https://cdn4.geckoandfly.com/wp-content/uploads/2017/02/530-discussion-forum.jpg 530w" sizes="(max-width: 120px) 100vw, 120px">
+             </noscript><img width="120" height="120" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20120%20120%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/uploads/2017/02/530-discussion-forum-120x120.jpg" class="lazyload attachment-yarpp-thumbnail size-yarpp-thumbnail wp-post-image" alt="" data-pin-nopin="true" data-srcset="https://cdn4.geckoandfly.com/wp-content/uploads/2017/02/530-discussion-forum-120x120.jpg 120w, https://cdn4.geckoandfly.com/wp-content/uploads/2017/02/530-discussion-forum-150x150.jpg 150w, https://cdn4.geckoandfly.com/wp-content/uploads/2017/02/530-discussion-forum-140x140.jpg 140w, https://cdn4.geckoandfly.com/wp-content/uploads/2017/02/530-discussion-forum.jpg 530w" data-sizes="(max-width: 120px) 100vw, 120px"><span class="yarpp-thumbnail-title">6 Open Source Forum Software – Minimalist, Simple, Modern And Clean</span></a> <a class="yarpp-thumbnail" rel="norewrite" href="https://www.geckoandfly.com/31890/putty-ssh-alternatives/" title="8 Free SSH Clients For macOS And Windows – PuTTY Alternatives"> 
+             <noscript>
+              <img width="120" height="120" src="https://cdn3.geckoandfly.com/wp-content/uploads/2018/11/530-ssh-120x120.jpg" class="attachment-yarpp-thumbnail size-yarpp-thumbnail wp-post-image" alt="" data-pin-nopin="true" srcset="https://cdn.geckoandfly.com/wp-content/uploads/2018/11/530-ssh-120x120.jpg 120w, https://cdn.geckoandfly.com/wp-content/uploads/2018/11/530-ssh-150x150.jpg 150w, https://cdn.geckoandfly.com/wp-content/uploads/2018/11/530-ssh-140x140.jpg 140w, https://cdn.geckoandfly.com/wp-content/uploads/2018/11/530-ssh.jpg 530w" sizes="(max-width: 120px) 100vw, 120px">
+             </noscript><img width="120" height="120" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20120%20120%22%3E%3C/svg%3E" data-src="https://cdn3.geckoandfly.com/wp-content/uploads/2018/11/530-ssh-120x120.jpg" class="lazyload attachment-yarpp-thumbnail size-yarpp-thumbnail wp-post-image" alt="" data-pin-nopin="true" data-srcset="https://cdn.geckoandfly.com/wp-content/uploads/2018/11/530-ssh-120x120.jpg 120w, https://cdn.geckoandfly.com/wp-content/uploads/2018/11/530-ssh-150x150.jpg 150w, https://cdn.geckoandfly.com/wp-content/uploads/2018/11/530-ssh-140x140.jpg 140w, https://cdn.geckoandfly.com/wp-content/uploads/2018/11/530-ssh.jpg 530w" data-sizes="(max-width: 120px) 100vw, 120px"><span class="yarpp-thumbnail-title">8 Free SSH Clients For macOS And Windows – PuTTY Alternatives</span></a> <a class="yarpp-thumbnail" rel="norewrite" href="https://www.geckoandfly.com/23919/boot-camp-alternative/" title="3 Free Boot Camp Alternatives – Run Windows Applications And Games On macOS"> 
+             <noscript>
+              <img width="120" height="120" src="https://cdn4.geckoandfly.com/wp-content/uploads/2017/01/530-windows-on-mac-120x120.jpg" class="attachment-yarpp-thumbnail size-yarpp-thumbnail wp-post-image" alt="" data-pin-nopin="true" srcset="https://cdn.geckoandfly.com/wp-content/uploads/2017/01/530-windows-on-mac-120x120.jpg 120w, https://cdn.geckoandfly.com/wp-content/uploads/2017/01/530-windows-on-mac-150x150.jpg 150w, https://cdn.geckoandfly.com/wp-content/uploads/2017/01/530-windows-on-mac-140x140.jpg 140w, https://cdn.geckoandfly.com/wp-content/uploads/2017/01/530-windows-on-mac.jpg 530w" sizes="(max-width: 120px) 100vw, 120px">
+             </noscript><img width="120" height="120" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20120%20120%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/uploads/2017/01/530-windows-on-mac-120x120.jpg" class="lazyload attachment-yarpp-thumbnail size-yarpp-thumbnail wp-post-image" alt="" data-pin-nopin="true" data-srcset="https://cdn.geckoandfly.com/wp-content/uploads/2017/01/530-windows-on-mac-120x120.jpg 120w, https://cdn.geckoandfly.com/wp-content/uploads/2017/01/530-windows-on-mac-150x150.jpg 150w, https://cdn.geckoandfly.com/wp-content/uploads/2017/01/530-windows-on-mac-140x140.jpg 140w, https://cdn.geckoandfly.com/wp-content/uploads/2017/01/530-windows-on-mac.jpg 530w" data-sizes="(max-width: 120px) 100vw, 120px"><span class="yarpp-thumbnail-title">3 Free Boot Camp Alternatives – Run Windows Applications And Games On macOS</span></a>
+           </div>
+          </div> 
+          <br>
+         </div>
+         <div class="entry-meta">
+           Updated On <span class="date updated">March 13, 2021</span> <span class="meta-sep">/</span> Category: <a href="https://www.geckoandfly.com/category/security-2/vpn-virtual-private-network/" rel="category tag">VPN Virtual Private Network</a> <span class="meta-sep">/</span> Author: <span class="vcard author"> <span class="fn">Ngan Tengyuen</span></span>
+         </div>
+        </article>
+        <div id="comments" class="comments-area">
+         <h3 class="comments-title"> 33 Comments</h3>
+         <ol class="comment-list">
+          <li class="comment even thread-even depth-1" id="comment-108728">
+           <div class="the-comment">
+            <div class="comment-avatar"> <picture> 
+              <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+              <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+              <noscript>
+               <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+              </noscript>
+              <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+             </picture>
+            </div>
+            <div class="comment-box">
+             <div class="comment-author meta"> <strong>Mehdi taghavi</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-108728" data-commentid="108728" data-postid="5710" data-belowelement="comment-108728" data-respondelement="respond" data-replyto="Reply to Mehdi taghavi" aria-label="Reply to Mehdi taghavi"><span> [ Reply ]</span></a>
+             </div>
+             <div class="comment-text">
+              <p>Free VPN proxy apple iPhone</p>
+             </div>
+            </div>
+           </div>
+           <ul class="children">
+            <li class="comment odd alt depth-2" id="comment-113633">
+             <div class="the-comment">
+              <div class="comment-avatar"> <picture> 
+                <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+                <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+                <noscript>
+                 <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+                </noscript>
+                <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+               </picture>
+              </div>
+              <div class="comment-box">
+               <div class="comment-author meta"> <strong>majid</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-113633" data-commentid="113633" data-postid="5710" data-belowelement="comment-113633" data-respondelement="respond" data-replyto="Reply to majid" aria-label="Reply to majid"><span> [ Reply ]</span></a>
+               </div>
+               <div class="comment-text">
+                <p>salam,<br> man iPhon daram<br> shoma VPN peyda kardin ?<br> age darin adrssesho baram befrestin lotfan</p>
+               </div>
+              </div>
+             </div>
+             <ul class="children">
+              <li class="comment even depth-3" id="comment-197680">
+               <div class="the-comment">
+                <div class="comment-avatar"> <picture> 
+                  <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+                  <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+                  <noscript>
+                   <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+                  </noscript>
+                  <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+                 </picture>
+                </div>
+                <div class="comment-box">
+                 <div class="comment-author meta"> <strong>Jeevan Kumar</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-197680" data-commentid="197680" data-postid="5710" data-belowelement="comment-197680" data-respondelement="respond" data-replyto="Reply to Jeevan Kumar" aria-label="Reply to Jeevan Kumar"><span> [ Reply ]</span></a>
+                 </div>
+                 <div class="comment-text">
+                  <p>Download Hotspot Shield Free VPN Software for Windows for secure and private browsing.</p>
+                 </div>
+                </div>
+               </div></li>
+              <li class="comment odd alt depth-3" id="comment-197683">
+               <div class="the-comment">
+                <div class="comment-avatar"> <picture> 
+                  <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+                  <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+                  <noscript>
+                   <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+                  </noscript>
+                  <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+                 </picture>
+                </div>
+                <div class="comment-box">
+                 <div class="comment-author meta"> <strong>Young Yang</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-197683" data-commentid="197683" data-postid="5710" data-belowelement="comment-197683" data-respondelement="respond" data-replyto="Reply to Young Yang" aria-label="Reply to Young Yang"><span> [ Reply ]</span></a>
+                 </div>
+                 <div class="comment-text">
+                  <p>Hotspot Shield offers a free VPN solution with unlimited bandwidth for Windows and Mac.</p>
+                 </div>
+                </div>
+               </div>
+               <ul class="children">
+                <li class="comment even depth-4" id="comment-1698491">
+                 <div class="the-comment">
+                  <div class="comment-avatar"> <picture> 
+                    <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+                    <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+                    <noscript>
+                     <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+                    </noscript>
+                    <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+                   </picture>
+                  </div>
+                  <div class="comment-box">
+                   <div class="comment-author meta"> <strong>Elysium1337</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-1698491" data-commentid="1698491" data-postid="5710" data-belowelement="comment-1698491" data-respondelement="respond" data-replyto="Reply to Elysium1337" aria-label="Reply to Elysium1337"><span> [ Reply ]</span></a>
+                   </div>
+                   <div class="comment-text">
+                    <p>Hotspot shield is the shittest VPN which is probably made by NSA.<br> Cyberghost and Nordvpn ;)<br> Every “free vpn” on app store or playstore are just changing ip, not more.<br> dns leak, everything… maybe secure to dont let your internet get ddosed, but you arent secure.<br> they all are saving logs, the “free vpns”.</p>
+                   </div>
+                  </div>
+                 </div>
+                 <ul class="children">
+                  <li class="comment byuser comment-author-ngantengyuen bypostauthor odd alt depth-5" id="comment-1698559">
+                   <div class="the-comment">
+                    <div class="comment-avatar"> <picture> 
+                      <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+                      <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+                      <noscript>
+                       <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+                      </noscript>
+                      <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+                     </picture>
+                    </div>
+                    <div class="comment-box">
+                     <div class="comment-author meta"> <strong>Ngan Tengyuen</strong>
+                     </div>
+                     <div class="comment-text">
+                      <p>Honestly, I never believe in this ‘no log’ thing. It is against the law not to do so, maybe what they will not provide the logs to authority if there are no crimes involved.</p>
+                     </div>
+                    </div>
+                   </div></li>
+                 </ul></li>
+               </ul></li>
+             </ul></li>
+            <li class="comment even depth-2" id="comment-128302">
+             <div class="the-comment">
+              <div class="comment-avatar"> <picture> 
+                <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+                <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+                <noscript>
+                 <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+                </noscript>
+                <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+               </picture>
+              </div>
+              <div class="comment-box">
+               <div class="comment-author meta"> <strong>suboy</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-128302" data-commentid="128302" data-postid="5710" data-belowelement="comment-128302" data-respondelement="respond" data-replyto="Reply to suboy" aria-label="Reply to suboy"><span> [ Reply ]</span></a>
+               </div>
+               <div class="comment-text">
+                <p>i miss you.my free vpn,where is she???</p>
+               </div>
+              </div>
+             </div></li>
+           </ul></li>
+          <li class="comment odd alt thread-odd thread-alt depth-1" id="comment-108743">
+           <div class="the-comment">
+            <div class="comment-avatar"> <picture> 
+              <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+              <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+              <noscript>
+               <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+              </noscript>
+              <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+             </picture>
+            </div>
+            <div class="comment-box">
+             <div class="comment-author meta"> <strong>khaleel</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-108743" data-commentid="108743" data-postid="5710" data-belowelement="comment-108743" data-respondelement="respond" data-replyto="Reply to khaleel" aria-label="Reply to khaleel"><span> [ Reply ]</span></a>
+             </div>
+             <div class="comment-text">
+              <p>i need free vpn for iphone can u help me pls</p>
+             </div>
+            </div>
+           </div>
+           <ul class="children">
+            <li class="comment even depth-2" id="comment-1713515">
+             <div class="the-comment">
+              <div class="comment-avatar"> <picture> 
+                <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+                <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+                <noscript>
+                 <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+                </noscript>
+                <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+               </picture>
+              </div>
+              <div class="comment-box">
+               <div class="comment-author meta"> <strong>Heliozoan</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-1713515" data-commentid="1713515" data-postid="5710" data-belowelement="comment-1713515" data-respondelement="respond" data-replyto="Reply to Heliozoan" aria-label="Reply to Heliozoan"><span> [ Reply ]</span></a>
+               </div>
+               <div class="comment-text">
+                <p>Try betternet if you live in the us, if not you’ll have to pay</p>
+               </div>
+              </div>
+             </div></li>
+           </ul></li>
+          <li class="comment odd alt thread-even depth-1" id="comment-108939">
+           <div class="the-comment">
+            <div class="comment-avatar"> <picture> 
+              <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+              <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+              <noscript>
+               <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+              </noscript>
+              <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+             </picture>
+            </div>
+            <div class="comment-box">
+             <div class="comment-author meta"> <strong>Garfield</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-108939" data-commentid="108939" data-postid="5710" data-belowelement="comment-108939" data-respondelement="respond" data-replyto="Reply to Garfield" aria-label="Reply to Garfield"><span> [ Reply ]</span></a>
+             </div>
+             <div class="comment-text">
+              <p>If you need a free vpn for iphone, try hotspot shield for iphone</p>
+             </div>
+            </div>
+           </div></li>
+          <li class="comment even thread-odd thread-alt depth-1" id="comment-113635">
+           <div class="the-comment">
+            <div class="comment-avatar"> <picture> 
+              <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+              <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+              <noscript>
+               <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+              </noscript>
+              <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+             </picture>
+            </div>
+            <div class="comment-box">
+             <div class="comment-author meta"> <strong>majid</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-113635" data-commentid="113635" data-postid="5710" data-belowelement="comment-113635" data-respondelement="respond" data-replyto="Reply to majid" aria-label="Reply to majid"><span> [ Reply ]</span></a>
+             </div>
+             <div class="comment-text">
+              <p>dosnt work for me !?</p>
+             </div>
+            </div>
+           </div></li>
+          <li class="comment odd alt thread-even depth-1" id="comment-152426">
+           <div class="the-comment">
+            <div class="comment-avatar"> <picture> 
+              <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+              <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+              <noscript>
+               <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+              </noscript>
+              <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+             </picture>
+            </div>
+            <div class="comment-box">
+             <div class="comment-author meta"> <strong>changda</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-152426" data-commentid="152426" data-postid="5710" data-belowelement="comment-152426" data-respondelement="respond" data-replyto="Reply to changda" aria-label="Reply to changda"><span> [ Reply ]</span></a>
+             </div>
+             <div class="comment-text">
+              <p>how to get free VPN for macbook?</p>
+             </div>
+            </div>
+           </div>
+           <ul class="children">
+            <li class="comment even depth-2" id="comment-152430">
+             <div class="the-comment">
+              <div class="comment-avatar"> <picture> 
+                <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+                <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+                <noscript>
+                 <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+                </noscript>
+                <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+               </picture>
+              </div>
+              <div class="comment-box">
+               <div class="comment-author meta"> <strong>GeckoFly</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-152430" data-commentid="152430" data-postid="5710" data-belowelement="comment-152430" data-respondelement="respond" data-replyto="Reply to GeckoFly" aria-label="Reply to GeckoFly"><span> [ Reply ]</span></a>
+               </div>
+               <div class="comment-text">
+                <p>@changda</p>
+                <p>I think it is not free anymore. I do not encourage the usage of VPN unless you’re into hiding your traces.</p>
+               </div>
+              </div>
+             </div>
+             <ul class="children">
+              <li class="comment odd alt depth-3" id="comment-197681">
+               <div class="the-comment">
+                <div class="comment-avatar"> <picture> 
+                  <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+                  <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+                  <noscript>
+                   <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+                  </noscript>
+                  <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+                 </picture>
+                </div>
+                <div class="comment-box">
+                 <div class="comment-author meta"> <strong>James</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-197681" data-commentid="197681" data-postid="5710" data-belowelement="comment-197681" data-respondelement="respond" data-replyto="Reply to James" aria-label="Reply to James"><span> [ Reply ]</span></a>
+                 </div>
+                 <div class="comment-text">
+                  <p>GoTrusted Secure Tunnel Windows Version 2.3.4.5 is the best</p>
+                 </div>
+                </div>
+               </div></li>
+             </ul></li>
+           </ul></li>
+          <li class="comment even thread-odd thread-alt depth-1" id="comment-160313">
+           <div class="the-comment">
+            <div class="comment-avatar"> <picture> 
+              <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+              <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+              <noscript>
+               <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+              </noscript>
+              <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+             </picture>
+            </div>
+            <div class="comment-box">
+             <div class="comment-author meta"> <strong>mehran</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-160313" data-commentid="160313" data-postid="5710" data-belowelement="comment-160313" data-respondelement="respond" data-replyto="Reply to mehran" aria-label="Reply to mehran"><span> [ Reply ]</span></a>
+             </div>
+             <div class="comment-text">
+              <p>hello<br> thankyou for this software<br> please send me a vpn username &amp; password</p>
+             </div>
+            </div>
+           </div></li>
+          <li class="comment odd alt thread-even depth-1" id="comment-160584">
+           <div class="the-comment">
+            <div class="comment-avatar"> <picture> 
+              <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+              <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+              <noscript>
+               <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+              </noscript>
+              <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+             </picture>
+            </div>
+            <div class="comment-box">
+             <div class="comment-author meta"> <strong>ali</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-160584" data-commentid="160584" data-postid="5710" data-belowelement="comment-160584" data-respondelement="respond" data-replyto="Reply to ali" aria-label="Reply to ali"><span> [ Reply ]</span></a>
+             </div>
+             <div class="comment-text">
+              <p>I want a free vpn and easy connection for mac I can not connect BBC AND other sites</p>
+             </div>
+            </div>
+           </div></li>
+          <li class="comment even thread-odd thread-alt depth-1" id="comment-160776">
+           <div class="the-comment">
+            <div class="comment-avatar"> <picture> 
+              <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+              <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+              <noscript>
+               <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+              </noscript>
+              <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+             </picture>
+            </div>
+            <div class="comment-box">
+             <div class="comment-author meta"> <strong>wali baloch</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-160776" data-commentid="160776" data-postid="5710" data-belowelement="comment-160776" data-respondelement="respond" data-replyto="Reply to wali baloch" aria-label="Reply to wali baloch"><span> [ Reply ]</span></a>
+             </div>
+             <div class="comment-text">
+              <p>hi i can a free vpn for (mac osx) plase sending to email me. thanks.</p>
+             </div>
+            </div>
+           </div></li>
+          <li class="comment odd alt thread-even depth-1" id="comment-160887">
+           <div class="the-comment">
+            <div class="comment-avatar"> <picture> 
+              <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+              <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+              <noscript>
+               <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+              </noscript>
+              <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+             </picture>
+            </div>
+            <div class="comment-box">
+             <div class="comment-author meta"> <strong>darya</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-160887" data-commentid="160887" data-postid="5710" data-belowelement="comment-160887" data-respondelement="respond" data-replyto="Reply to darya" aria-label="Reply to darya"><span> [ Reply ]</span></a>
+             </div>
+             <div class="comment-text">
+              <p>i not can open eny site in iran</p>
+             </div>
+            </div>
+           </div>
+           <ul class="children">
+            <li class="comment even depth-2" id="comment-160898">
+             <div class="the-comment">
+              <div class="comment-avatar"> <picture> 
+                <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+                <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+                <noscript>
+                 <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+                </noscript>
+                <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+               </picture>
+              </div>
+              <div class="comment-box">
+               <div class="comment-author meta"> <strong>GeckoFly</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-160898" data-commentid="160898" data-postid="5710" data-belowelement="comment-160898" data-respondelement="respond" data-replyto="Reply to GeckoFly" aria-label="Reply to GeckoFly"><span> [ Reply ]</span></a>
+               </div>
+               <div class="comment-text">
+                <p>@darya – you need to enable VPN outside of Iran</p>
+               </div>
+              </div>
+             </div></li>
+           </ul></li>
+          <li class="comment odd alt thread-odd thread-alt depth-1" id="comment-172548">
+           <div class="the-comment">
+            <div class="comment-avatar"> <picture> 
+              <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+              <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+              <noscript>
+               <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+              </noscript>
+              <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+             </picture>
+            </div>
+            <div class="comment-box">
+             <div class="comment-author meta"> <strong>erfan</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-172548" data-commentid="172548" data-postid="5710" data-belowelement="comment-172548" data-respondelement="respond" data-replyto="Reply to erfan" aria-label="Reply to erfan"><span> [ Reply ]</span></a>
+             </div>
+             <div class="comment-text">
+              <p>i need vpn for mac</p>
+             </div>
+            </div>
+           </div>
+           <ul class="children">
+            <li class="comment even depth-2" id="comment-197682">
+             <div class="the-comment">
+              <div class="comment-avatar"> <picture> 
+                <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+                <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+                <noscript>
+                 <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+                </noscript>
+                <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+               </picture>
+              </div>
+              <div class="comment-box">
+               <div class="comment-author meta"> <strong>Tim Brookes</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-197682" data-commentid="197682" data-postid="5710" data-belowelement="comment-197682" data-respondelement="respond" data-replyto="Reply to Tim Brookes" aria-label="Reply to Tim Brookes"><span> [ Reply ]</span></a>
+               </div>
+               <div class="comment-text">
+                <p>A free VPN service designed for use with Windows and Mac computers</p>
+               </div>
+              </div>
+             </div></li>
+           </ul></li>
+          <li class="comment odd alt thread-even depth-1" id="comment-186667">
+           <div class="the-comment">
+            <div class="comment-avatar"> <picture> 
+              <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+              <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+              <noscript>
+               <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+              </noscript>
+              <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+             </picture>
+            </div>
+            <div class="comment-box">
+             <div class="comment-author meta"> <strong>kamilia</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-186667" data-commentid="186667" data-postid="5710" data-belowelement="comment-186667" data-respondelement="respond" data-replyto="Reply to kamilia" aria-label="Reply to kamilia"><span> [ Reply ]</span></a>
+             </div>
+             <div class="comment-text">
+              <p>I’m using Vpn one Click, it’s free for LInux, Windows and Android.</p>
+             </div>
+            </div>
+           </div>
+           <ul class="children">
+            <li class="comment even depth-2" id="comment-2018818">
+             <div class="the-comment">
+              <div class="comment-avatar"> <picture> 
+                <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+                <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+                <noscript>
+                 <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+                </noscript>
+                <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+               </picture>
+              </div>
+              <div class="comment-box">
+               <div class="comment-author meta"> <strong>deathknight</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-2018818" data-commentid="2018818" data-postid="5710" data-belowelement="comment-2018818" data-respondelement="respond" data-replyto="Reply to deathknight" aria-label="Reply to deathknight"><span> [ Reply ]</span></a>
+               </div>
+               <div class="comment-text">
+                <p>free your x, don’t give wrong info ! scammer</p>
+               </div>
+              </div>
+             </div></li>
+           </ul></li>
+          <li class="comment odd alt thread-odd thread-alt depth-1" id="comment-1352577">
+           <div class="the-comment">
+            <div class="comment-avatar"> <picture> 
+              <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+              <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+              <noscript>
+               <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+              </noscript>
+              <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+             </picture>
+            </div>
+            <div class="comment-box">
+             <div class="comment-author meta"> <strong>lzh</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-1352577" data-commentid="1352577" data-postid="5710" data-belowelement="comment-1352577" data-respondelement="respond" data-replyto="Reply to lzh" aria-label="Reply to lzh"><span> [ Reply ]</span></a>
+             </div>
+             <div class="comment-text">
+              <p>who can tell me how to use??</p>
+             </div>
+            </div>
+           </div></li>
+          <li class="comment even thread-even depth-1" id="comment-1583542">
+           <div class="the-comment">
+            <div class="comment-avatar"> <picture> 
+              <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+              <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+              <noscript>
+               <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+              </noscript>
+              <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+             </picture>
+            </div>
+            <div class="comment-box">
+             <div class="comment-author meta"> <strong>leslie</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-1583542" data-commentid="1583542" data-postid="5710" data-belowelement="comment-1583542" data-respondelement="respond" data-replyto="Reply to leslie" aria-label="Reply to leslie"><span> [ Reply ]</span></a>
+             </div>
+             <div class="comment-text">
+              <p>谢谢</p>
+             </div>
+            </div>
+           </div></li>
+          <li class="comment odd alt thread-odd thread-alt depth-1" id="comment-1590827">
+           <div class="the-comment">
+            <div class="comment-avatar"> <picture> 
+              <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+              <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+              <noscript>
+               <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+              </noscript>
+              <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+             </picture>
+            </div>
+            <div class="comment-box">
+             <div class="comment-author meta"> <strong>刘辉</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-1590827" data-commentid="1590827" data-postid="5710" data-belowelement="comment-1590827" data-respondelement="respond" data-replyto="Reply to 刘辉" aria-label="Reply to 刘辉"><span> [ Reply ]</span></a>
+             </div>
+             <div class="comment-text">
+              <p>thanks</p>
+             </div>
+            </div>
+           </div></li>
+          <li class="comment even thread-even depth-1" id="comment-1673311">
+           <div class="the-comment">
+            <div class="comment-avatar"> <picture> 
+              <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+              <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+              <noscript>
+               <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+              </noscript>
+              <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+             </picture>
+            </div>
+            <div class="comment-box">
+             <div class="comment-author meta"> <strong>Andy</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-1673311" data-commentid="1673311" data-postid="5710" data-belowelement="comment-1673311" data-respondelement="respond" data-replyto="Reply to Andy" aria-label="Reply to Andy"><span> [ Reply ]</span></a>
+             </div>
+             <div class="comment-text">
+              <p>I use to unblock bbc iplayer sometimes so many providers but this one seems to be fast and does the job for me here in spain.</p>
+             </div>
+            </div>
+           </div></li>
+          <li class="comment odd alt thread-odd thread-alt depth-1" id="comment-1719978">
+           <div class="the-comment">
+            <div class="comment-avatar"> <picture> 
+              <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+              <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+              <noscript>
+               <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+              </noscript>
+              <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+             </picture>
+            </div>
+            <div class="comment-box">
+             <div class="comment-author meta"> <strong>stanli</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-1719978" data-commentid="1719978" data-postid="5710" data-belowelement="comment-1719978" data-respondelement="respond" data-replyto="Reply to stanli" aria-label="Reply to stanli"><span> [ Reply ]</span></a>
+             </div>
+             <div class="comment-text">
+              <p>There are a lot free VPN service online, just search Free VPN in Google, then you will see the lists. But there will be some limits with Free VPN, Maybe you can try some paid ones.</p>
+             </div>
+            </div>
+           </div></li>
+          <li class="comment even thread-even depth-1" id="comment-1724585">
+           <div class="the-comment">
+            <div class="comment-avatar"> <picture> 
+              <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+              <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+              <noscript>
+               <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+              </noscript>
+              <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+             </picture>
+            </div>
+            <div class="comment-box">
+             <div class="comment-author meta"> <strong>jswoodsworth</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-1724585" data-commentid="1724585" data-postid="5710" data-belowelement="comment-1724585" data-respondelement="respond" data-replyto="Reply to jswoodsworth" aria-label="Reply to jswoodsworth"><span> [ Reply ]</span></a>
+             </div>
+             <div class="comment-text">
+              <p>@andy: I use ivacy to unblock BBC iPlayer. but it has to be a UK server because iPlayer or BBC one isn’t available outside UK.</p>
+             </div>
+            </div>
+           </div></li>
+          <li class="comment odd alt thread-odd thread-alt depth-1" id="comment-1730054">
+           <div class="the-comment">
+            <div class="comment-avatar"> <picture> 
+              <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+              <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+              <noscript>
+               <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+              </noscript>
+              <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+             </picture>
+            </div>
+            <div class="comment-box">
+             <div class="comment-author meta"> <strong>Mojtaba Rezaeian</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-1730054" data-commentid="1730054" data-postid="5710" data-belowelement="comment-1730054" data-respondelement="respond" data-replyto="Reply to Mojtaba Rezaeian" aria-label="Reply to Mojtaba Rezaeian"><span> [ Reply ]</span></a>
+             </div>
+             <div class="comment-text">
+              <p>Great Article.<br> I was searching for a more secure VPN solution like OpenVPN for my VPS server but with free licence. I think SoftEther VPN is what I was looking for. I’m going to try it.<br> Thanks for the guide.</p>
+             </div>
+            </div>
+           </div></li>
+          <li class="comment even thread-even depth-1" id="comment-1737710">
+           <div class="the-comment">
+            <div class="comment-avatar"> <picture> 
+              <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+              <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+              <noscript>
+               <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+              </noscript>
+              <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+             </picture>
+            </div>
+            <div class="comment-box">
+             <div class="comment-author meta"> <strong>erika</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-1737710" data-commentid="1737710" data-postid="5710" data-belowelement="comment-1737710" data-respondelement="respond" data-replyto="Reply to erika" aria-label="Reply to erika"><span> [ Reply ]</span></a>
+             </div>
+             <div class="comment-text">
+              <p>Well, All free VPNs are good because they provide free services :) I was wondering on google its show result about ReviewsDir, and there are many VPNs almost same from the list. I am using Spotflux which is best free VPN for iPhone.</p>
+             </div>
+            </div>
+           </div></li>
+          <li class="comment odd alt thread-odd thread-alt depth-1" id="comment-1740170">
+           <div class="the-comment">
+            <div class="comment-avatar"> <picture> 
+              <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+              <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+              <noscript>
+               <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+              </noscript>
+              <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+             </picture>
+            </div>
+            <div class="comment-box">
+             <div class="comment-author meta"> <strong>Mickel</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-1740170" data-commentid="1740170" data-postid="5710" data-belowelement="comment-1740170" data-respondelement="respond" data-replyto="Reply to Mickel" aria-label="Reply to Mickel"><span> [ Reply ]</span></a>
+             </div>
+             <div class="comment-text">
+              <p>Ivacy has the feature of OPEN vpn in their app as a feature.</p>
+             </div>
+            </div>
+           </div></li>
+          <li class="comment even thread-even depth-1" id="comment-1740568">
+           <div class="the-comment">
+            <div class="comment-avatar"> <picture> 
+              <source type="image/webp" data-srcset="https://cdn.geckoandfly.com/wp-content/themes/billboard/images/avatar2.webp"> 
+              <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg"> 
+              <noscript>
+               <img alt="Gravatar" src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="avatar avatar-45 photo" height="45" width="45">
+              </noscript>
+              <img alt="Gravatar" src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2045%2045%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/avatar2.jpg" class="lazyload avatar avatar-45 photo" height="45" width="45"> 
+             </picture>
+            </div>
+            <div class="comment-box">
+             <div class="comment-author meta"> <strong>Craig C.</strong> <a rel="nofollow" class="comment-reply-link" href="#comment-1740568" data-commentid="1740568" data-postid="5710" data-belowelement="comment-1740568" data-respondelement="respond" data-replyto="Reply to Craig C." aria-label="Reply to Craig C."><span> [ Reply ]</span></a>
+             </div>
+             <div class="comment-text">
+              <p>Private Internet Access (PIA) VPN just went Open Source too!</p>
+             </div>
+            </div>
+           </div></li>
+         </ol>
+         <div id="respond" class="comment-respond">
+          <h3 id="reply-title" class="comment-reply-title">Leave a Reply <small><a rel="nofollow" id="cancel-comment-reply-link" href="/5710/free-vpn-for-windows-mac-os-x-linux-iphone-ubuntu/#respond" style="display:none;">Cancel reply</a></small></h3>
+          <form action="https://www.geckoandfly.com/wp-comments-post.php" method="post" id="commentform" class="comment-form">
+           <p class="comment-notes"><span id="email-notes">Your email address will not be published.</span> Required fields are marked <span class="required">*</span></p>
+           <p class="comment-form-comment"><label for="comment">Comment</label><textarea id="comment" name="comment" cols="45" rows="8" maxlength="65525" required></textarea></p>
+           <p class="comment-form-author"><label for="author">Name <span class="required">*</span></label> <input id="author" name="author" type="text" value="" size="30" maxlength="245" required></p>
+           <p class="comment-form-email"><label for="email">Email <span class="required">*</span></label> <input id="email" name="email" type="text" value="" size="30" maxlength="100" aria-describedby="email-notes" required></p>
+           <p class="comment-form-url"><label for="url">Website</label> <input id="url" name="url" type="text" value="" size="30" maxlength="200"></p>
+           <p class="form-submit"><input name="submit" type="submit" id="submit" class="submit" value="Post Comment"> <input type="hidden" name="comment_post_ID" value="5710" id="comment_post_ID"> <input type="hidden" name="comment_parent" id="comment_parent" value="0"></p>
+           <div class="inv-recaptcha-holder"></div>
+          </form>
+         </div>
+        </div>
+       </main>
+      </div>
+     </div>
+    </div>
+   </div>
+   <footer id="footer" class="site-footer" role="contentinfo">
+    <section id="footer-widgets">
+     <div class="inside clearfix">
+      <div class="footer-column">
+       <aside id="custom_html-8" class="widget_text widget widget_custom_html">
+        <h3 class="widget-title">About GeckoandFly</h3>
+        <div class="textwidget custom-html-widget">
+         <a href="https://www.geckoandfly.com/about-us/"> 
+          <picture> 
+           <source data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/lazy_placeholder.gif" media="(max-width: 480px)"> 
+           <source type="image/webp" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/office2.webp"> 
+           <source type="image/jpeg" data-srcset="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/office2.jpg"> 
+           <noscript>
+            <img src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/office2.jpg" alt="About GeckoandFly Home Studio Office" width="640" height="303" class="alignnone size-large wp-image-5">
+           </noscript>
+           <img src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20640%20303%22%3E%3C/svg%3E" data-src="https://cdn4.geckoandfly.com/wp-content/themes/billboard/images/office2.jpg" alt="About GeckoandFly Home Studio Office" width="640" height="303" class="lazyload alignnone size-large wp-image-5"> 
+          </picture></a> Geckoandfly grew from strength to strength to be one of the many popular blogs around the world. It started out as a hobby and one thing lead to another, here we are now. Our goal is to create simple tutorials and beautiful quotes for the average user. More at <a href="https://www.geckoandfly.com/about-us/">About Us</a> page. Our top articles: 
+         <br>
+         <br> <h7>
+          <a href="https://www.geckoandfly.com/24654/quotes-counter-fake-news-social-media/">Counter Fake News</a> - CNN, Fox News, &amp; CNBC
+         </h7>
+         <br> <h7>
+          <a href="https://www.geckoandfly.com/22552/get-better-wifi/">6 Tips Boost Wireless WiFi</a> - Speed &amp; Signals
+         </h7>
+         <br> <h7>
+          <a href="https://www.geckoandfly.com/6081/free-microsoft-word-doc-professional-job-resume-and-cv-templates/">12 Free CV Templates</a> - Office / Google Docs
+         </h7>
+         <br> <h7>
+          <a href="https://www.geckoandfly.com/23517/best-bitcoin-alternatives-cryptocurrencies-mining/">10 BitCoins Alternatives</a> - Cryptocurrencies Mining
+         </h7>
+         <br> <h7>
+          <a href="https://www.geckoandfly.com/15683/10-best-classified-theme-wordpress-joomla-osclass/">11 Classified Scripts</a> - Craigslist &amp; eBay
+         </h7>
+        </div>
+       </aside>
+      </div>
+      <div class="footer-column">
+       <aside id="custom_html-10" class="widget_text widget widget_custom_html">
+        <div class="textwidget custom-html-widget">
+         <ul class="popular_posts_bars most_viewed_bars">
+          <li class="popular_posts_bars_li popular_posts_bars_color_red"><span class="popular_posts_bars_comment_count_hold"><a href="https://www.geckoandfly.com/8523/free-norton-antivirus-and-internet-security-2011-90-days-trial/" class="popular_posts_bars_comment_count">25488 views</a><span class="popular_posts_bars_comment_count_triangle"></span></span><a href="https://www.geckoandfly.com/8523/free-norton-antivirus-and-internet-security-2011-90-days-trial/" class="popular_posts_bars_link">Free Norton Antivirus and Internet Security 2020 – 90 Days Trial</a></li>
+          <li class="popular_posts_bars_li popular_posts_bars_color_orange"><span class="popular_posts_bars_comment_count_hold"><a href="https://www.geckoandfly.com/10744/download-the-new-norton-antivirus-internet-security-and-360/" class="popular_posts_bars_comment_count">21548 views</a><span class="popular_posts_bars_comment_count_triangle"></span></span><a href="https://www.geckoandfly.com/10744/download-the-new-norton-antivirus-internet-security-and-360/" class="popular_posts_bars_link">Download FREE 30-Days Norton Security Standard 2020 With Smart Firewall</a></li>
+          <li class="popular_posts_bars_li popular_posts_bars_color_yellow"><span class="popular_posts_bars_comment_count_hold"><a href="https://www.geckoandfly.com/8583/download-free-norton-360-version-5-0-oem-for-90-days-trial/" class="popular_posts_bars_comment_count">12530 views</a><span class="popular_posts_bars_comment_count_triangle"></span></span><a href="https://www.geckoandfly.com/8583/download-free-norton-360-version-5-0-oem-for-90-days-trial/" class="popular_posts_bars_link">Download FREE Norton Security Premium 2020 With 30-Days Trial</a></li>
+          <li class="popular_posts_bars_li popular_posts_bars_color_green"><span class="popular_posts_bars_comment_count_hold"><a href="https://www.geckoandfly.com/2595/free-90-days-full-version-trial-for-norton-mcafee-kaspersky-avg-trend-micro-and-more/" class="popular_posts_bars_comment_count">8825 views</a><span class="popular_posts_bars_comment_count_triangle"></span></span><a href="https://www.geckoandfly.com/2595/free-90-days-full-version-trial-for-norton-mcafee-kaspersky-avg-trend-micro-and-more/" class="popular_posts_bars_link">Top 16 Free 60, 90 &amp; 180 Days Antivirus Trial – Norton, McAfee, Kaspersky, AVG, Avast, BitDefender And More</a></li>
+          <li class="popular_posts_bars_li popular_posts_bars_color_blue"><span class="popular_posts_bars_comment_count_hold"><a href="https://www.geckoandfly.com/8666/download-free-mcafee-antivirus-plus-2011-for-90-days/" class="popular_posts_bars_comment_count">8447 views</a><span class="popular_posts_bars_comment_count_triangle"></span></span><a href="https://www.geckoandfly.com/8666/download-free-mcafee-antivirus-plus-2011-for-90-days/" class="popular_posts_bars_link">Download McAfee AntiVirus Plus 2020 – Free 180 Days Subscription Code</a></li>
+         </ul>
+        </div>
+       </aside>
+      </div>
+      <div class="footer-column">
+       <aside id="search-3" class="widget widget_search">
+        <h3 class="widget-title">Search</h3>
+        <form role="search" method="get" class="search-form" action="https://www.geckoandfly.com/"> <label> <input type="search" class="search-field" placeholder="Search …" value="" name="s" title="Search for:"> </label>
+        </form>
+       </aside>
+       <aside id="custom_html-11" class="widget_text widget widget_custom_html">
+        <div class="textwidget custom-html-widget">
+         Check out these top articles, we believe you will find them useful, use Google Translate for other languages. Do share them on Facebook, Twitter, LinkedIn, YouTube, Pinterest and Instagram. Thanks. 
+         <br>
+         <br> <h7>
+          <a href="https://www.geckoandfly.com/11451/download-6-free-antivirus-for-small-business-and-corporations/">6 Free Antivirus</a> - Hotel, Business &amp; Commercial
+         </h7>
+         <br> <h7>
+          <a href="https://www.geckoandfly.com/19621/8-best-fax-app-for-ios-iphone-ipad-and-google-android-smartphone-tablet/">8 Android iOS Faxing App</a> - eFax via Tablets
+         </h7>
+         <br> <h7>
+          <a href="https://www.geckoandfly.com/10744/download-the-new-norton-antivirus-internet-security-and-360/">Download Norton Antivirus</a> - Free License Key
+         </h7>
+         <br> <h7>
+          <a href="https://www.geckoandfly.com/11934/google-language-translate-offline/">4 Live Camera App Translator</a> - Translate English To Spanish
+         </h7>
+         <br> <h7>
+          <a href="https://www.geckoandfly.com/6291/free-online-fax-services-no-credit-card-verification-required/">No Credit Card Online Fax</a> - Free Internet Fax
+         </h7>
+         <br> <h7>
+          <a href="https://www.geckoandfly.com/10294/kaspersky-free-antivirus/">Free Kaspersky Internet Security</a> - Best Antivirus
+         </h7>
+         <br> <h7>
+          <a href="https://www.geckoandfly.com/5717/best-vpn-free-uk-us-server-service/">14 Free VPN</a> - Unblock Netflix &amp; Hulu 
+         </h7>
+         <br> <h7>
+          <a href="https://www.geckoandfly.com/21437/blue-light-filter/">6 Blue Light Filter For PC &amp; macOS</a> - PayPal &amp; Wikipedia
+         </h7>
+         <br> <h7>
+          <a href="https://www.geckoandfly.com/23281/virtual-phone-number-ios-android-smartphones/">6 Virtual Number For Smartphone</a> - Complete List
+         </h7>
+         <br> <h7>
+          <a href="https://www.geckoandfly.com/24224/antivirus-multi-engines/">5 Anti-Malware With 60+ Scanners</a> - Social Security
+         </h7>
+         <br> <h7>
+          <a href="https://www.geckoandfly.com/24074/ransomware-decryptor-encrypted-files/">60 Ransomware Decryptor</a> - Crack Encryption
+         </h7>
+        </div>
+       </aside>
+      </div>
+     </div>
+    </section>
+    <section id="credits">
+     <div class="inside">
+      <p class="credits">© 2006 - 2021 GeckoandFly. Some of the content is copyrighted to Geckoandfly.com and may not be reproduced on other websites. If we made any mistakes, email us, we apologize in advance. Read our <a class="privacy-policy-link" href="https://www.geckoandfly.com/about-us/privacy-policy/">Privacy Policy</a> for more information. Google serves cookies to analyze traffic to this site and for serving personalized ads, <a class="privacy-policy-link" href="https://adssettings.google.com/">visit this link to opt out.</a><br><br></p>
+     </div>
+    </section>
+   </footer>
+  </div> 
+  <noscript>
+   <style>.lazyload{display:none;}</style>
+  </noscript>
+  <script data-noptimize="1">window.lazySizesConfig=window.lazySizesConfig||{};window.lazySizesConfig.loadMode=1;</script>
+  <script async data-noptimize="1" src="//cdn.geckoandfly.com/wp-content/plugins/autoptimize/classes/external/js/lazysizes.min.js?ao_version=2.8.3"></script> 
+  <script type="text/javascript" id="google-invisible-recaptcha-js-before">var renderInvisibleReCaptcha = function() {
+
+    for (var i = 0; i < document.forms.length; ++i) {
+        var form = document.forms[i];
+        var holder = form.querySelector('.inv-recaptcha-holder');
+
+        if (null === holder) continue;
+		holder.innerHTML = '';
+
+         (function(frm){
+			var cf7SubmitElm = frm.querySelector('.wpcf7-submit');
+            var holderId = grecaptcha.render(holder,{
+                'sitekey': '6LcoZ8YUAAAAAGKclqKwgKzdXIYjZiIk_SyPAvKQ', 'size': 'invisible', 'badge' : 'inline',
+                'callback' : function (recaptchaToken) {
+					if((null !== cf7SubmitElm) && (typeof jQuery != 'undefined')){jQuery(frm).submit();grecaptcha.reset(holderId);return;}
+					 HTMLFormElement.prototype.submit.call(frm);
+                },
+                'expired-callback' : function(){grecaptcha.reset(holderId);}
+            });
+
+			if(null !== cf7SubmitElm && (typeof jQuery != 'undefined') ){
+				jQuery(cf7SubmitElm).off('click').on('click', function(clickEvt){
+					clickEvt.preventDefault();
+					grecaptcha.execute(holderId);
+				});
+			}
+			else
+			{
+				frm.onsubmit = function (evt){evt.preventDefault();grecaptcha.execute(holderId);};
+			}
+
+
+        })(form);
+    }
+};</script> 
+  <script type="text/javascript" async defer src="https://www.google.com/recaptcha/api.js?onload=renderInvisibleReCaptcha&amp;render=explicit" id="google-invisible-recaptcha-js"></script> 
+  <script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-73116-2', 'www.geckoandfly.com');
+  ga('send', 'pageview');</script> 
+  <script type="text/javascript">window.google_analytics_uacct = "UA-73116-2";</script> 
+  <script defer src="//cdn.geckoandfly.com/wp-content/cache/autoptimize/js/autoptimize_7c9bea86e87d9f4014cab4bbda61d364.js"></script>
+ </body>
+</html>

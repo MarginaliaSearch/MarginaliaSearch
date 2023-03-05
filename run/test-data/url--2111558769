@@ -1,0 +1,106 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"> 
+ <head> 
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=8,minimum-scale=0.1"> 
+  <link rel="canonical" href="https://matt.ucc.asn.au/dropbear/dropbear.html"> 
+  <style type="text/css"><!--
+body,td,a,p{font-family:Optima,Candara,times new roman,sans-serif}
+body{line-height:1.5;margin-left:3.5em;margin-right:2em; max-width:50em;background-color: #ffffff; color: #000000;cursor:default}
+h1,h2,h3{font-family:Futura,helvetica,verdana,sans-serif;text-align:left; font-weight: normal}
+#download{font-family:Futura,helvetica,verdana,sans-serif; font-weight: normal}
+#box{float:right;border:thin solid #000000;margin:1em;padding:0.5em;width:11em}
+#box li{display:block}
+#box p{text-align:center}
+.littlest{ font-size: 7pt }
+.littler{ font-size: smaller; }
+.little{ font-size: small; }
+
+@media screen and (max-width: 600px) 
+{
+body
+{
+	margin-left:0.4em;
+	margin-right:0.2em;
+	max-width:100%;
+}
+#box 
+{ 
+float: none; 
+margin:0.1em;
+}
+}
+@media (prefers-color-scheme: dark) {
+body
+{
+background-color: #120800;
+color: #D1A300;
+}
+a { color: #6f9800; }
+#box{border:thin solid #d1a300; }
+h1,h2,h3{ color: #ffa800; }
+}
+
+//-->
+</style> 
+  <title>Dropbear SSH</title> 
+ </head> 
+ <body> 
+  <div id="box"> 
+   <p> <a id="download" href="./" title="Downloads">Download</a><br> Latest is 2020.81<br> 29 October 2020<br> <a href="releases/dropbear-2020.81.tar.bz2" title="Latest Release">dropbear‑2020.81.tar.bz2</a><br> <a href="CHANGES" title="Changelog">Changelog</a><br> <a href="https://mirror.dropbear.nl/mirror/" title="Mirror">Mirror</a><br> <br> <a href="https://hg.ucc.asn.au/dropbear/file/tip" title="Source Tree">Mercurial Source</a><span class="little"> (<a href="https://github.com/mkj/dropbear">github</a>)</span><br> <a href="https://lists.ucc.asn.au/mailman/listinfo/dropbear">Mailing List</a><br> </p> 
+  </div> 
+  <h2>Dropbear SSH</h2> 
+  <p> Dropbear is a relatively small <a href="https://en.wikipedia.org/wiki/Secure_Shell">SSH</a> server and client. It runs on a variety of POSIX-based platforms. Dropbear is open source software, distributed under a <a href="https://secure.ucc.asn.au/hg/dropbear/raw-file/tip/LICENSE">MIT-style license</a>. Dropbear is particularly useful for "embedded"-type Linux (or other Unix) systems, such as wireless routers.</p> 
+  <p>If you want to be notified of new releases, or for general discussion of Dropbear, you can subscribe to the relatively low volume <a href="https://lists.ucc.gu.uwa.edu.au/mailman/listinfo/dropbear">mailing list</a>. </p> <a name="features"></a> 
+  <h3>Features</h3> 
+  <ul> 
+   <li>A small memory footprint suitable for memory-constrained environments – Dropbear can compile to a <a href="http://lists.ucc.gu.uwa.edu.au/pipermail/dropbear/2004q3/000022.html"> 110kB statically linked binary</a> with uClibc on x86 (only minimal options selected)</li> 
+   <li>Dropbear server implements X11 forwarding, and authentication-agent forwarding for <a href="http://www.openssh.org">OpenSSH</a> clients</li> 
+   <li>Can run from inetd or standalone</li> 
+   <li>Compatible with OpenSSH ~/.ssh/authorized_keys public key authentication</li> 
+   <li>The server, client, keygen, and key converter can be compiled into a single binary (like <a href="https://www.busybox.net">busybox</a>)</li> 
+   <li>Features can easily be disabled when compiling to save space</li> 
+   <li>Multi-hop mode uses SSH TCP forwarding to tunnel through multiple SSH hosts in a single command. <tt>dbclient&nbsp;<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1f6a6c7a6d2e5f77706f2e">[email&nbsp;protected]</a>,<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="4d383e283f7f0d25223d7f">[email&nbsp;protected]</a>,destination</tt></li> 
+  </ul> <a name="platforms"></a> 
+  <h3>Platforms</h3> 
+  <ul> 
+   <li>Linux – standard distributions, <a href="https://www.uclibc.org">uClibc</a> &gt;=0.9.17, <a href="https://www.fefe.de/dietlibc/">dietlibc</a>, <a href="https://www.musl-libc.org/">musl libc</a>, uClinux from inetd</li> 
+   <li>Mac OS X (compile with PAM support)</li> 
+   <li>FreeBSD, NetBSD and OpenBSD</li> 
+   <li>Solaris – tested v8 x86 and v9 Sparc</li> 
+   <li>IRIX 6.5 (with /dev/urandom, or prngd should work)</li> 
+   <li>Tru64 5.1 (using prngd for entropy)</li> 
+   <li>AIX 4.3.3 (with gcc and Linux Affinity Toolkit), AIX 5.2 (with /dev/urandom).</li> 
+   <li>HPUX 11.00 (+prngd), TCP forwarding doesn't work</li> 
+   <li>Cygwin – tested 1.5.19 on Windows XP</li> 
+  </ul> 
+  <p> It shouldn't be hard to get it to work on other POSIX platforms, it is mostly a case of setting up the configure and Makefile settings.</p> 
+  <h3>Acknowledgements</h3> 
+  <p> The cryptographic code utilises Tom St Denis's <a href="http://www.libtom.net/LibTomCrypt/">LibTomCrypt</a>, and uses his <a href="http://www.libtom.net/LibTomMath/">LibTomMath</a> library for the bignum parts. PTY handling code is taken from <a href="http://openssh.org/">OpenSSH</a> (from Tatu Ylönen's original ssh), login recording (utmp/wtmp) code is from OpenSSH by Andre Lucas, and some implementation details were gleaned from <a href="http://www.chiark.greenend.org.uk/~sgtatham/putty/">PuTTY</a>. Numerous people have contributed patches and bug reports, see <a href="CHANGES">CHANGES</a>. Particular thanks go to Mihnea Stoenescu for his work on the client portion. </p> 
+  <p>Dropbear's website is hosted by <a href="https://www.ucc.asn.au/">The University Computer Club</a> in Perth, Australia</p> 
+  <p> My email address is <a href="/cdn-cgi/l/email-protection#c6aba7b2e0e5f7f7f0fd86b3a5a5e8a7b5a8e8a7e0e5f7f7f1fd">matt<!--
+the quick brown fox jumps over the lazy dog-->@<b></b>ucc.asn.au</a><br> Matt Johnston </p> 
+  <p><a href="https://matt.ucc.asn.au/">Up to Homepage</a></p> 
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+  <script type="text/javascript">
+// HSTS loader
+(function() {
+	if (location.host == 'matt.ucc.asn.au' && location.protocol === 'http:') {
+		function al(){
+			var s = document.createElement('script');
+			s.type = 'text/javascript';
+			s.async = true;
+			s.src = 'https://matt.ucc.asn.au/blank.js';
+			var x = document.getElementsByTagName('script')[0];
+			x.parentNode.insertBefore(s, x);
+		}
+		if (window.attachEvent) {
+			window.attachEvent('onload', al);
+		} else {
+			window.addEventListener('load', al, false);
+		}
+	}
+})();
+</script>  
+ </body>
+</html>

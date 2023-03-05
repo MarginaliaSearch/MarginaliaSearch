@@ -1,0 +1,327 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+
+<head>
+<meta http-equiv="Content-Language" content="en-us" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Strongly Connected Components - Lecture by Rashid Bin Muhammad, PhD.</title>
+<meta name="Author" content="Rashid Bin Muhammad, PhD."/>
+<style type="text/css">
+.style1 {
+				font-size: large;
+}
+.style2 {
+				font-size: large;
+				margin-left: 80px;
+}
+.style3 {
+				font-size: large;
+				text-align: left;
+}
+.style4 {
+				text-decoration: underline;
+}
+.style5 {
+				font-size: large;
+				text-align: center;
+}
+.style6 {
+				margin-left: 80px;
+}
+.style7 {
+				font-size: large;
+				color: #800000;
+}
+.style8 {
+				color: #0000FF;
+}
+.style9 {
+				font-size: large;
+				color: #0000FF;
+}
+.style10 {
+				text-align: center;
+}
+.style11 {
+				font-size: large;
+				margin-left: 40px;
+}
+.style12 {
+				text-align: right;
+				font-family: "Blackadder ITC";
+}
+.style13 {
+				font-family: "Blackadder ITC";
+				font-size: xx-large;
+				color: #FF0000;
+}
+.style14 {
+				text-align: left;
+}
+.style15 {
+				font-size: x-large;
+}
+.style16 {
+				font-family: Symbol;
+}
+.style17 {
+				font-family: "Times New Roman";
+}
+</style>
+</head>
+
+<body background="../../../Maingif/Bck2.gif" link="#0000FF" vlink="#0000FF" alink="#FF0000" BODYLINK="blue">
+
+<p class="style5"><font size="4"><img SRC="../../../Maingif/redline.gif" height=2 width=640/></font></p>
+<h1 class="style10">Strongly Connected Components</h1>
+<p class="style5"><font size="4"><img SRC="../../../Maingif/redline.gif" height=2 width=640/></font></p>
+<p class="style1"><span class="style13">D</span>ecomposing a directed graph into its strongly connected 
+components is a classic application of depth-first search. The problem of 
+finding connected components is at the heart of many graph application. 
+Generally speaking, the connected components of the graph correspond to 
+different classes of objects. The first linear-time algorithm for strongly 
+connected components is due to Tarjan (1972). Perhaps, the algorithm in the CLRS 
+is easiest to code (program) to find strongly connected components and is due to 
+Sharir and Kosaraju.</p>
+<p class="style1">Given digraph or 
+directed graph G = (V, E), a strongly connected component (SCC) of G is a 
+maximal set of vertices C subset of V, such that for all <em>u</em>, <em>v</em> 
+in C, both
+<em>u</em> <span class="style16">Þ</span> <em>v</em> and <em>v</em> 
+<span class="style16">Þ</span> <em>u</em>; 
+that is, both <em>u</em> and <em>v</em> are reachable from each other. In other words, two 
+vertices of directed graph are in the same component if and only if they are 
+reachable from each other.</p>
+<p class="style1">&nbsp;</p>
+<p class="style10"><img alt="SSC example" src="Gifs/ssc4.gif" />&nbsp;</p>
+<p class="style10"><strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span class="style15">&nbsp;&nbsp; C<sub>1</sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+C<sub>2</sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+C<sub>3</sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+C<sub>4</sub></span></strong></p>
+<p class="style14"><span class="style1">The above directed graph has 4 strongly 
+connected components: C</span><sub><span class="style1">1</span></sub><span class="style1">, 
+C</span><sub><span class="style1">2</span></sub><span class="style1">, C</span><sub><span class="style1">3</span></sub><span class="style1"> 
+and C</span><sub><span class="style1">4</span></sub><span class="style1">. If G 
+has an edge from some vertex in </span>C<sub><em><span class="style1">i</span></em></sub><span class="style1"> 
+to some vertex in </span>C<sub><em><span class="style1">j</span></em></sub><span class="style1"> 
+where </span><em><span class="style1">i</span></em><span class="style1"> ≠
+</span><em><span class="style1">j</span></em><span class="style1">, then one can 
+reach any vertex in </span>C<sub><em><span class="style1">j</span></em></sub><span class="style1"> 
+from any vertex in </span>C<sub><em><span class="style1">i</span></em></sub><span class="style1"> 
+but not return. In the example, one can reach any vertex in C</span><sub><span class="style1">2</span></sub><span class="style1"> 
+from any vertex in C</span><sub><span class="style1">1</span></sub><span class="style1"> 
+but cannot return to C</span><sub><span class="style1">1</span></sub><span class="style1"> 
+from C</span><sub><span class="style1">2</span></sub>.</p>
+<p class="style1">&nbsp;</p>
+<p class="style1">The algorithm in CLRS for finding strongly connected 
+components of G = (V, E) uses the transpose of G, which define as:</p>
+<ul class="style6">
+				<li>
+				<p class="style1">G<sup>T</sup> = (V, E<sup>T</sup>), where E<sup>T</sup> = {(<em>u</em>, 
+				<em>v</em>): (<em>v</em>, <em>u</em>) in E}.</p>
+				</li>
+				<li>
+				<p class="style1">G<sup>T</sup> is G with all edges reversed.</p>
+				</li>
+</ul>
+<p class="style1">From the given graph G, one can create G<sup>T</sup> in linear time 
+(i.e., &#x398;(V + E)) if using adjacency lists.</p>
+<p class="style1">&nbsp;</p>
+<p class="style1"><strong>Observation: </strong> </p>
+<p class="style1">The graphs G and G<sup>T</sup> have the <span class="style4">same</span> SCC&#39;s. This means that 
+vertices <em>u</em> and <em>v</em> are reachable from each other in G if and only if reachable 
+from each other in G<sup>T</sup>.</p>
+<p class="style1">&nbsp;</p>
+<p class="style1"><strong>Component Graph</strong></p>
+<p class="style1">The idea behind the computation of SCC comes from a key 
+property of the component graph, which is defined as follows:</p>
+<p class="style3">G<sup>SCC</sup> = (V<sup>SCC</sup>, E<sup>SCC</sup>), where V<sup>SCC</sup> 
+has one vertex for each SCC in G and E<sup>SCC </sup>has an edge if there&#39;s an 
+edge between the corresponding SCC&#39;s in G.</p>
+<p class="style1">For our example (above) the G<sup>SCC</sup> is:</p>
+<p class="style5"><img alt="SSC example" src="Gifs/ssc5.gif" />&nbsp;</p>
+<p class="style1">&nbsp;</p>
+<p class="style1">The key property of G<sup>SCC</sup> is that the component graph is a dag, 
+which the following lemma implies.</p>
+<p class="style1"><strong>Lemma</strong>&nbsp;&nbsp;&nbsp; G<sup>SCC</sup> is a dag. More formally, let C and C&#39; be 
+distinct SCC&#39;s in G, let u, v in C, u&#39;, v&#39; in C&#39;, and suppose there is a path 
+<em>u</em> 
+<span class="style16">Þ</span> <em>u</em>&#39; in G. Then there cannot also be a path v&#39; 
+<span class="style16">Þ</span> v in G.</p>
+<p class="style1"><strong>Proof</strong>&nbsp;&nbsp;&nbsp; Suppose there is a path 
+<em>v</em>&#39; <span class="style16">Þ</span> <em>v</em> in G. Then there are paths <em>u</em> 
+<span class="style16">Þ</span> <em>u</em>&#39; <span class="style16">Þ</span> <em>v</em>&#39; and <em>v</em>&#39;
+<span class="style16">Þ</span> <em>v</em> <span class="style16">Þ</span> <em>u</em> in G. Therefore, 
+<em>u</em> and <em>v</em>&#39; are reachable from each 
+other, so they are not in separate SCC&#39;s. </p>
+<p class="style1">This completes the proof.</p>
+<p class="style1">&nbsp;</p>
+<p class="style7"><strong>ALGORITHM</strong></p>
+<p class="style1">A DFS(G) produces a forest of DFS-trees. Let C be any strongly 
+connected component of G, let <em>v</em> be the first vertex on C discovered by 
+the DFS and let T be the DFS-tree containing <em>v</em> when DFS-visit(<em>v</em>) 
+is called all vertices in C are reachable from <em>v</em> along paths containing 
+visible vertices; DFS-visit(<em>v</em>) will visit every vertex in C, add it to 
+T as a descendant of <em>v</em>.</p>
+<p class="style2">STRONGLY-CONNECTED-COMPONENTS (G)</p>
+<p class="style2">&nbsp;1. <strong>Call</strong> DFS(G) to compute finishing 
+times f[u] for all <em>u</em>.<br />
+&nbsp;2. <strong>Compute</strong> G<sup>T</sup><br />
+&nbsp;3.<strong> Call</strong> DFS(G<sup>T</sup>), but in the main loop, 
+consider vertices in order of decreasing f[<em>u</em>] (as computed in first DFS)<br />
+<strong>&nbsp;</strong>4.<strong> Output</strong> the vertices in each tree of 
+the depth-first forest formed in second DFS as a separate SCC.</p>
+<p class="style1">&nbsp;</p>
+<p class="style1"><strong>Time</strong>: The algorithm takes linear time i.e., 
+θ(V + E), to compute SCC of a digraph G.</p>
+<p class="style1">From our <strong>Example</strong> (above): </p>
+<p class="style11">1. Do DFS<br />
+2. G<sup>T</sup><br />
+3. DFS (roots blackened)</p>
+<p class="style5"><img alt="SSC example" src="Gifs/ssc6.gif" /></p>
+<p class="style1">&nbsp;</p>
+<p class="style1">&nbsp;</p>
+<p class="style1"><strong>Another Example</strong> (CLRS)&nbsp;&nbsp;&nbsp; 
+Consider a graph G = (V, E).</p>
+<p class="style1">1. Call DFS(G)</p>
+<p class="style5"><font size="4"><img border="0" src="Gifs/ssc1.gif" width="381" height="148"></font></p>
+<p class="style1">2. Compute G<sup>T</sup></p>
+<p class="style5"><font size="4"><img border="0" src="Gifs/ssc2.gif" width="379" height="149"/></font></p>
+<p class="style1">3. Call DFS(G<sup>T</sup>) but this time consider the vertices 
+in order to decreasing finish time.</p>
+<p class="style5"> 
+<font size="4"> 
+<img border="0" src="Gifs/ssc3.gif" width="322" height="108"/></font></p>
+<p class="style1">4. Output the vertices of each tree in the DFS-forest as a 
+separate strongly connected components.</p>
+<p class="style5">{<em>a</em>, <em>b</em>, <em>e</em>}, {<em>c</em>, <em>d</em>}, 
+{<em>f</em>, <em>g</em>}, and {<em>h</em>}</p>
+<p class="style1">&nbsp;</p>
+<p class="style1"><span class="style8"><strong>Now the question is how can this possibly work</strong></span>?</p>
+<p class="style1"><strong>Idea</strong>&nbsp;&nbsp;&nbsp; By considering vertices in second DFS in decreasing order of 
+finishing times from first DFS, we are visiting vertices of the component graph 
+in topological sort order.</p>
+<p class="style1">To prove that it really works, first we deal with two notational 
+issues:</p>
+<ul>
+				<li>
+				<p class="style1">We will be discussing d[<em>u</em>] and f[<em>u</em>]. These 
+				always refer to the <span class="style4">first</span> DFS in the above algorithm.</p>
+				</li>
+				<li>
+				<p class="style1">We extend notation for <em>d</em> and <em>f</em> to sets of 
+				vertices U subset V:</p>
+				<ul>
+								<li>
+								<p class="style1">d(U) = min<sub>u in U</sub> 
+								{d[<em>u</em>]}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+								(earliest discovery time of any vertex in U)</p>
+								</li>
+								<li>
+								<p class="style1">f(U) = min<sub>u in U</sub> 
+								{f[<em>u</em>]}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+								(latest finishing time of any vertex in U)</p>
+								</li>
+				</ul>
+				</li>
+</ul>
+<p class="style1">&nbsp;</p>
+<p class="style1"><strong>Lemma</strong>&nbsp;&nbsp;&nbsp; Let C and C&#39; be distinct SCC&#39;s in G = (V, E). Suppose there is 
+an edge (<em>u</em>, <em>v</em>) in E such that <em>u</em> in C and 
+<em>v</em> in C&#39;. 
+Then f(C) &gt; f(C&#39;).</p>
+<p class="style5"><img alt="scc6-Lemma1" src="Gifs/scc6-lemma.gif" />&nbsp;</p>
+<p class="style1"><strong>Proof</strong>&nbsp;&nbsp;&nbsp; There are two cases, depending on which SCC had the first 
+discovered vertex during the first DFS.</p>
+<p class="style1"><strong>Case i.</strong> If d(C) &gt; d(C&#39;), let <em>x</em> be the first vertex discovered 
+in C. At time d[<em>x</em>], all vertices in C and C&#39; are white. Thus, there exist paths 
+of white vertices from <em>x</em> to all vertices in C and C&#39;.</p>
+<p class="style1">By the white-path theorem, all vertices in C and C&#39; are 
+descendants of <em>x</em> in depth-first tree.</p>
+<p class="style1">By the parenthesis theorem, we have f[<em>x</em>] = f(C) &gt; f(C&#39;).</p>
+<p class="style1"><strong>Case ii.</strong> If d(C) &gt; d(C&#39;), let <em>y</em> be the first vertex discovered 
+in C&#39;. At time d[<em>y</em>], all vertices in C&#39; are white and there is a white path from 
+<em>y</em> to each vertex in C. This implies that all vertices in C&#39; become descendants 
+of <em>y</em>. Again, f[y] = f(C&#39;).</p>
+<p class="style1">At time d[<em>y</em>], all vertices in C are white.</p>
+<p class="style1">By earlier lemma, since there is an edge (<em>u</em>, <em>v</em>), we cannot 
+have a path from C&#39; to C. So, no vertex in C is reachable from <em>y</em>. Therefore, at 
+time f[<em>y</em>], all vertices in C are still white. Therefore, for all <em>w</em> in C, f[<em>w</em>] &gt; 
+f[<em>y</em>], which implies that f(C) &gt; f(C&#39;).</p>
+<p class="style1">This completes the proof.</p>
+<p class="style1"><strong>Corollary</strong>&nbsp;&nbsp;&nbsp; Let C and C&#39; be distinct SCC&#39;s in G = (V, E). Suppose there is 
+an edge (<em>u</em>, <em>v</em>) in E<sup>T</sup> where <em>u</em> in C and 
+<em>v</em> in C&#39;. Then f(C) &lt; 
+f(C&#39;).</p>
+<p class="style1"><strong>Proof</strong>&nbsp;&nbsp;&nbsp; Edge (<em>u</em>, <em>v</em>) 
+in E<sup>T</sup> implies (<em>v</em>,
+<em>u</em>) in E. 
+Since SCC&#39;s of G and G<sup>T</sup> are the same, f(C&#39;) &gt; f(C). This completes 
+the proof.</p>
+<p class="style1"><strong>Corollary</strong>&nbsp;&nbsp;&nbsp; Let C and C&#39; be distinct SCC&#39;s in G = (V, E), and suppose that 
+f(C) &gt; f(C&#39;). Then there cannot be an edge from C to C&#39; in G<sup>T</sup>.</p>
+<p class="style1">&nbsp;</p>
+<p class="style1"><strong>Proof Idea</strong>&nbsp;&nbsp;&nbsp; It&#39;s the contrapositive of the previous corollary.</p>
+<p class="style1">&nbsp;</p>
+<p class="style9"><strong>Now, we have the intuition to understand why the SCC procedure 
+works.</strong></p>
+<p class="style1">When we do the second DFS, on G<sup>T</sup>, start with SCC C 
+such that f(C) is maximum. The second DFS starts from some <em>x</em> in C, and it visits 
+all vertices in C. Corollary says that since f(C) &gt; f(C&#39;) for all C&#39; 
+<span class="style17">≠</span> C, there 
+are no edges from C to C&#39; in G<sup>T</sup>. Therefore, DFS will visit only vertices in C.</p>
+<p class="style1">Which means that the depth-first tree rooted at <em>x</em> contains 
+<span class="style4">exactly</span> the vertices of C.</p>
+<p class="style1">The next root chosen in the second DFS is in SCC C&#39; such that 
+f(C&#39;) is maximum over all SCC&#39;s other than C. DFS visits all vertices in C&#39;, but 
+the only edges out of C&#39; go to C, <span class="style4">which we&#39;ve already visited</span>.</p>
+<p class="style1">Therefore, the only tree edges will be to vertices in C&#39;.</p>
+<p class="style1">We can continue the process.</p>
+<p class="style1">Each time we choose a root for the second DFS, it can reach 
+only</p>
+<ul>
+				<li>
+				<p class="style1">vertices in its SCC&nbsp; &#x203E;&nbsp; get tree edges to these,</p>
+				</li>
+				<li>
+				<p class="style1">vertices in SCC&#39;s <span class="style4">already visited</span> in second 
+				DFS&nbsp; &#x203E;&nbsp; get <span class="style4">no</span> tree edges to these.</p>
+				</li>
+</ul>
+<p class="style1">We are visiting vertices of (G<sup>T</sup>)<sup>SCC</sup> in reverse of 
+topologically sorted order. [CLRS has a formal proof.]</p>
+<p class="style1">&nbsp;</p>
+<p class="style1">Before leaving strongly connected components, lets prove that 
+the component graph of G = (V, E) is a directed acyclic graph.</p>
+<p class="style1"><br />
+<strong>Proof</strong> (by contradiction)&nbsp;&nbsp;&nbsp; Suppose component 
+graph of G = (V, E) was not a DAG and G comprised of a cycle consisting of 
+vertices v<sub>1</sub>, v<sub>2</sub> , . . . , v<sub>n</sub> . Each <em>v<sub>i</sub></em> 
+corresponds to a strongly connected component (SCC) of component graph G. If v<sub>1</sub>, 
+v<sub>2</sub> , . . . , v<sub>n</sub> themselves form a cycle then each <em>v<sub>i</sub></em> 
+( <em>i</em> runs from 1 to <em>n</em>) should have been included in the SCC 
+corresponding to <em>v<sub>j</sub></em> ( <em>j</em> runs from 1 to <em>n</em> 
+and <em>i <span class="style17">≠</span> j</em>). But each of the vertices is a vertex from a 
+difference SCC of G. Hence, we have a contradiction! Therefore, SCC of G is a 
+directed acyclic graph.<br />
+</p>
+<p class="style1">&nbsp;</p>
+<p class="style1"><strong>Related Problems</strong></p>
+<p class="style11">1. Edge-vertex connectivity problem.<br />
+2. Shortest path&nbsp;problem.</p>
+<p class="style1">&nbsp;</p>
+<p class="style5"><font size="4"><img SRC="../../../Maingif/redline.gif" height=2 width=640/></font></p>
+
+<p class="style5">
+
+<a href="../../algorithm.html"> 
+
+<font size="4"> 
+
+<img src="../../../Maingif/back.gif" border=0 height=47 width=49/></font></a></p>
+<p class="style12">Updated: March 13, 2010.</p>
+
+</body>
+
+</html>

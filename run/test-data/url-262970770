@@ -1,0 +1,729 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" prefix="og: https://ogp.me/ns#"> 
+ <head profile="http://gmpg.org/xfn/11"> 
+  <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8"> 
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> 
+  <link rel="stylesheet" href="https://multigesture.net/wp-content/themes/sleek/style.css" type="text/css" media="all"> 
+  <link rel="stylesheet" href="https://multigesture.net/wp-content/themes/sleek/custom/layout.css?"> 
+  <link rel="stylesheet" href="https://multigesture.net/wp-content/themes/sleek/design/styles/default/style.css"> 
+  <link rel="stylesheet" href="https://multigesture.net/wp-content/themes/sleek/custom/custom.css?"> <!-- All in One SEO 4.0.17 --> 
+  <title>How to install MinGW, MSYS and Eclipse on windows | Multigesture.net</title> 
+  <meta name="description" content="Notes This is a short guide on how to install MinGW and MSYS using the latest stable. This guide has been updated on 21/12/2011 Requirements The MinGW installer package (mingw-get-inst-20111118.exe). Java Runtime Environment (JRE 6, update 30) Eclipse (Eclipse IDE for C/C++ Developers, select 32bit or 64bit depending on your JRE) Installing the MinGW and Msys […]"> 
+  <link rel="canonical" href="https://multigesture.net/articles/how-to-install-mingw-msys-and-eclipse-on-windows/"> 
+  <meta property="og:site_name" content="Multigesture.net | A multitouch and HCI research blog"> 
+  <meta property="og:type" content="article"> 
+  <meta property="og:title" content="How to install MinGW, MSYS and Eclipse on windows | Multigesture.net"> 
+  <meta property="og:description" content="Notes This is a short guide on how to install MinGW and MSYS using the latest stable. This guide has been updated on 21/12/2011 Requirements The MinGW installer package (mingw-get-inst-20111118.exe). Java Runtime Environment (JRE 6, update 30) Eclipse (Eclipse IDE for C/C++ Developers, select 32bit or 64bit depending on your JRE) Installing the MinGW and Msys […]"> 
+  <meta property="og:url" content="https://multigesture.net/articles/how-to-install-mingw-msys-and-eclipse-on-windows/"> 
+  <meta property="article:published_time" content="2009-12-18T20:18:20Z"> 
+  <meta property="article:modified_time" content="2012-08-14T09:59:30Z"> 
+  <meta property="twitter:card" content="summary"> 
+  <meta property="twitter:domain" content="multigesture.net"> 
+  <meta property="twitter:title" content="How to install MinGW, MSYS and Eclipse on windows | Multigesture.net"> 
+  <meta property="twitter:description" content="Notes This is a short guide on how to install MinGW and MSYS using the latest stable. This guide has been updated on 21/12/2011 Requirements The MinGW installer package (mingw-get-inst-20111118.exe). Java Runtime Environment (JRE 6, update 30) Eclipse (Eclipse IDE for C/C++ Developers, select 32bit or 64bit depending on your JRE) Installing the MinGW and Msys […]"> 
+  <script type="application/ld+json" class="aioseo-schema">
+			{"@context":"https:\/\/schema.org","@graph":[{"@type":"WebSite","@id":"https:\/\/multigesture.net\/#website","url":"https:\/\/multigesture.net\/","name":"Multigesture.net","description":"A multitouch and HCI research blog","publisher":{"@id":"https:\/\/multigesture.net\/#organization"}},{"@type":"Organization","@id":"https:\/\/multigesture.net\/#organization","name":"Multigesture.net","url":"https:\/\/multigesture.net\/"},{"@type":"BreadcrumbList","@id":"https:\/\/multigesture.net\/articles\/how-to-install-mingw-msys-and-eclipse-on-windows\/#breadcrumblist","itemListElement":[{"@type":"ListItem","@id":"https:\/\/multigesture.net\/#listItem","position":"1","item":{"@id":"https:\/\/multigesture.net\/#item","name":"Home","description":"A blog dedicated to multi-touch research and information visualization","url":"https:\/\/multigesture.net\/"},"nextItem":"https:\/\/multigesture.net\/articles\/#listItem"},{"@type":"ListItem","@id":"https:\/\/multigesture.net\/articles\/#listItem","position":"2","item":{"@id":"https:\/\/multigesture.net\/articles\/#item","name":"Articles","description":"Hardware: Building a multi-touchscreen (based on FTIR) The camera The screen (Acrylic) The frame Electronics Testing 1 2 3 Software: Touchlib compiling instructions Touchlib compiling instructions (Windows) Touchlib compiling instructions (Ubuntu 7.04) Touchlib compiling instructions (Fedora Core 9) Multitouch software development tutorials Touchlib SVN \/ Manual AS3 - Getting started with Adobe Flash using the [\u2026]","url":"https:\/\/multigesture.net\/articles\/"},"nextItem":"https:\/\/multigesture.net\/articles\/how-to-install-mingw-msys-and-eclipse-on-windows\/#listItem","previousItem":"https:\/\/multigesture.net\/#listItem"},{"@type":"ListItem","@id":"https:\/\/multigesture.net\/articles\/how-to-install-mingw-msys-and-eclipse-on-windows\/#listItem","position":"3","item":{"@id":"https:\/\/multigesture.net\/articles\/how-to-install-mingw-msys-and-eclipse-on-windows\/#item","name":"How to install MinGW, MSYS and Eclipse on windows","description":"Notes This is a short guide on how to install MinGW and MSYS using the latest stable. This guide has been updated on 21\/12\/2011 Requirements The MinGW installer package (mingw-get-inst-20111118.exe). Java Runtime Environment (JRE 6, update 30) Eclipse (Eclipse IDE for C\/C++ Developers, select 32bit or 64bit depending on your JRE) Installing the MinGW and Msys [\u2026]","url":"https:\/\/multigesture.net\/articles\/how-to-install-mingw-msys-and-eclipse-on-windows\/"},"previousItem":"https:\/\/multigesture.net\/articles\/#listItem"}]},{"@type":"WebPage","@id":"https:\/\/multigesture.net\/articles\/how-to-install-mingw-msys-and-eclipse-on-windows\/#webpage","url":"https:\/\/multigesture.net\/articles\/how-to-install-mingw-msys-and-eclipse-on-windows\/","name":"How to install MinGW, MSYS and Eclipse on windows | Multigesture.net","description":"Notes This is a short guide on how to install MinGW and MSYS using the latest stable. This guide has been updated on 21\/12\/2011 Requirements The MinGW installer package (mingw-get-inst-20111118.exe). Java Runtime Environment (JRE 6, update 30) Eclipse (Eclipse IDE for C\/C++ Developers, select 32bit or 64bit depending on your JRE) Installing the MinGW and Msys [\u2026]","inLanguage":"en-US","isPartOf":{"@id":"https:\/\/multigesture.net\/#website"},"breadcrumb":{"@id":"https:\/\/multigesture.net\/articles\/how-to-install-mingw-msys-and-eclipse-on-windows\/#breadcrumblist"},"datePublished":"2009-12-18T20:18:20+02:00","dateModified":"2012-08-14T09:59:30+02:00"}]}
+		</script> <!-- All in One SEO --> 
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script> 
+  <script type="text/javascript" src="https://multigesture.net/wp-content/themes/sleek/library/scripts/jquery.js"></script> 
+  <script type="text/javascript" src="https://multigesture.net/wp-content/themes/sleek/library/scripts/hoverIntent.js"></script> 
+  <script type="text/javascript" src="https://multigesture.net/wp-content/themes/sleek/library/scripts/superfish.js"></script> 
+  <script type="text/javascript" src="https://multigesture.net/wp-content/themes/sleek/library/scripts/jquery.fieldtag.min.js"></script> 
+  <script type="text/javascript" src="https://multigesture.net/wp-content/themes/sleek/library/scripts/functions.js"></script> 
+  <link rel="dns-prefetch" href="//s.w.org"> 
+  <link rel="alternate" type="application/rss+xml" title="Multigesture.net » Feed" href="https://multigesture.net/feed/"> 
+  <link rel="alternate" type="application/rss+xml" title="Multigesture.net » Comments Feed" href="https://multigesture.net/comments/feed/"> 
+  <link rel="alternate" type="application/rss+xml" title="Multigesture.net » How to install MinGW, MSYS and Eclipse on windows Comments Feed" href="https://multigesture.net/articles/how-to-install-mingw-msys-and-eclipse-on-windows/feed/"> 
+  <script type="text/javascript">
+			window._wpemojiSettings = {"baseUrl":"https:\/\/s.w.org\/images\/core\/emoji\/13.0.1\/72x72\/","ext":".png","svgUrl":"https:\/\/s.w.org\/images\/core\/emoji\/13.0.1\/svg\/","svgExt":".svg","source":{"concatemoji":"https:\/\/multigesture.net\/wp-includes\/js\/wp-emoji-release.min.js?ver=5.7"}};
+			!function(e,a,t){var n,r,o,i=a.createElement("canvas"),p=i.getContext&&i.getContext("2d");function s(e,t){var a=String.fromCharCode;p.clearRect(0,0,i.width,i.height),p.fillText(a.apply(this,e),0,0);e=i.toDataURL();return p.clearRect(0,0,i.width,i.height),p.fillText(a.apply(this,t),0,0),e===i.toDataURL()}function c(e){var t=a.createElement("script");t.src=e,t.defer=t.type="text/javascript",a.getElementsByTagName("head")[0].appendChild(t)}for(o=Array("flag","emoji"),t.supports={everything:!0,everythingExceptFlag:!0},r=0;r<o.length;r++)t.supports[o[r]]=function(e){if(!p||!p.fillText)return!1;switch(p.textBaseline="top",p.font="600 32px Arial",e){case"flag":return s([127987,65039,8205,9895,65039],[127987,65039,8203,9895,65039])?!1:!s([55356,56826,55356,56819],[55356,56826,8203,55356,56819])&&!s([55356,57332,56128,56423,56128,56418,56128,56421,56128,56430,56128,56423,56128,56447],[55356,57332,8203,56128,56423,8203,56128,56418,8203,56128,56421,8203,56128,56430,8203,56128,56423,8203,56128,56447]);case"emoji":return!s([55357,56424,8205,55356,57212],[55357,56424,8203,55356,57212])}return!1}(o[r]),t.supports.everything=t.supports.everything&&t.supports[o[r]],"flag"!==o[r]&&(t.supports.everythingExceptFlag=t.supports.everythingExceptFlag&&t.supports[o[r]]);t.supports.everythingExceptFlag=t.supports.everythingExceptFlag&&!t.supports.flag,t.DOMReady=!1,t.readyCallback=function(){t.DOMReady=!0},t.supports.everything||(n=function(){t.readyCallback()},a.addEventListener?(a.addEventListener("DOMContentLoaded",n,!1),e.addEventListener("load",n,!1)):(e.attachEvent("onload",n),a.attachEvent("onreadystatechange",function(){"complete"===a.readyState&&t.readyCallback()})),(n=t.source||{}).concatemoji?c(n.concatemoji):n.wpemoji&&n.twemoji&&(c(n.twemoji),c(n.wpemoji)))}(window,document,window._wpemojiSettings);
+		</script> 
+  <style type="text/css">
+img.wp-smiley,
+img.emoji {
+	display: inline !important;
+	border: none !important;
+	box-shadow: none !important;
+	height: 1em !important;
+	width: 1em !important;
+	margin: 0 .07em !important;
+	vertical-align: -0.1em !important;
+	background: none !important;
+	padding: 0 !important;
+}
+</style> 
+  <link rel="stylesheet" id="wp-block-library-css" href="https://multigesture.net/wp-includes/css/dist/block-library/style.min.css?ver=5.7" type="text/css" media="all"> 
+  <link rel="stylesheet" id="rotatingtweets-css" href="https://multigesture.net/wp-content/plugins/rotatingtweets/css/style.css?ver=5.7" type="text/css" media="all"> 
+  <link rel="stylesheet" id="dlm-frontend-css" href="https://multigesture.net/wp-content/plugins/download-monitor/assets/css/frontend.css?ver=5.7" type="text/css" media="all"> 
+  <link rel="stylesheet" id="wp-syntax-css-css" href="https://multigesture.net/wp-content/plugins/wp-syntax/css/wp-syntax.css?ver=1.1" type="text/css" media="all"> 
+  <link rel="stylesheet" id="nextgen_widgets_style-css" href="https://multigesture.net/wp-content/plugins/nextgen-gallery/products/photocrati_nextgen/modules/widget/static/widgets.css?ver=3.9.1" type="text/css" media="all"> 
+  <link rel="stylesheet" id="nextgen_basic_thumbnails_style-css" href="https://multigesture.net/wp-content/plugins/nextgen-gallery/products/photocrati_nextgen/modules/nextgen_basic_gallery/static/thumbnails/nextgen_basic_thumbnails.css?ver=3.9.1" type="text/css" media="all"> 
+  <link rel="stylesheet" id="nextgen_basic_slideshow_style-css" href="https://multigesture.net/wp-content/plugins/nextgen-gallery/products/photocrati_nextgen/modules/nextgen_basic_gallery/static/slideshow/ngg_basic_slideshow.css?ver=3.9.1" type="text/css" media="all"> 
+  <script type="text/javascript" src="https://multigesture.net/wp-includes/js/jquery/jquery.min.js?ver=3.5.1" id="jquery-core-js"></script> 
+  <script type="text/javascript" src="https://multigesture.net/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.3.2" id="jquery-migrate-js"></script> 
+  <script type="text/javascript" src="https://multigesture.net/wp-content/plugins/rotatingtweets/js/jquery.cycle.all.min.js?ver=5.7" id="jquery-cycle-js"></script> 
+  <script type="text/javascript" src="https://multigesture.net/wp-content/plugins/rotatingtweets/js/rotating_tweet.js?ver=1.9.10" id="rotating_tweet-js"></script> 
+  <link rel="https://api.w.org/" href="https://multigesture.net/wp-json/">
+  <link rel="alternate" type="application/json" href="https://multigesture.net/wp-json/wp/v2/pages/666">
+  <link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://multigesture.net/xmlrpc.php?rsd"> 
+  <link rel="wlwmanifest" type="application/wlwmanifest+xml" href="https://multigesture.net/wp-includes/wlwmanifest.xml"> 
+  <link rel="shortlink" href="https://multigesture.net/?p=666"> 
+  <link rel="alternate" type="application/json+oembed" href="https://multigesture.net/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fmultigesture.net%2Farticles%2Fhow-to-install-mingw-msys-and-eclipse-on-windows%2F"> 
+  <link rel="alternate" type="text/xml+oembed" href="https://multigesture.net/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fmultigesture.net%2Farticles%2Fhow-to-install-mingw-msys-and-eclipse-on-windows%2F&amp;format=xml"> <!-- GA Google Analytics @ https://m0n.co/ga --> 
+  <script>
+			(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+			(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+			})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+			ga('create', 'UA-387767-8', 'auto');
+			ga('set', 'forceSSL', true);
+			ga('send', 'pageview');
+		</script> 
+  <link rel="pingback" href="https://multigesture.net/xmlrpc.php"> 
+  <link rel="canonical" content="https://multigesture.net/articles/how-to-install-mingw-msys-and-eclipse-on-windows/"> 
+  <meta name="description" content="<h3>Notes</h3>
+This is a short guide on how to install MinGW and MSYS using the latest stable. This guide has been updated on 21/12/2011"> 
+  <style type="text/css">.recentcomments a{display:inline !important;padding:0 !important;margin:0 !important;}</style>
+ </head> 
+ <body class="page"> 
+  <div id="wrapper"> 
+   <div class="width "> 
+    <div id="topbar" class="clearfix"> <a class="login" href="https://multigesture.net/wp-login.php" title="Login">Login</a>
+     <ul class="sf-menu clearfix sf-js-enabled">
+      <li><a href="https://multigesture.net/">Home</a></li>
+      <li class="page_item page-item-2"><a href="https://multigesture.net/about/">About</a></li>
+      <li class="page_item page-item-5 page_item_has_children current_page_ancestor current_page_parent"><a href="https://multigesture.net/articles/">Articles</a>
+       <ul class="children">
+        <li class="page_item page-item-203"><a href="https://multigesture.net/articles/as3-getting-started-with-adobe-flash-using-the-free-flash-develop-ide/">AS3 – Getting started with Adobe Flash using the free Flash Develop IDE</a></li>
+        <li class="page_item page-item-191"><a href="https://multigesture.net/articles/as3multitouch-simulator/">AS3 – Multitouch simulator</a></li>
+        <li class="page_item page-item-2171"><a href="https://multigesture.net/articles/booting-a-macbook-pro-in-ahci-mode-on-win7/">Booting a Macbook Pro (2009) in AHCI mode on Win7</a></li>
+        <li class="page_item page-item-2357"><a href="https://multigesture.net/articles/how-to-bootstrap-a-synology-ds212/">How to bootstrap a Synology DS212+</a></li>
+        <li class="page_item page-item-691"><a href="https://multigesture.net/articles/how-to-compile-openscenegraph-2-x-using-mingw/">How to compile OpenSceneGraph 2.x using MinGW/MSYS</a></li>
+        <li class="page_item page-item-2377"><a href="https://multigesture.net/articles/how-to-compile-openttd-for-a-synology-ds212-2/">How to compile OpenTTD for a Synology DS212+</a></li>
+        <li class="page_item page-item-2368"><a href="https://multigesture.net/articles/how-to-compile-unison-for-a-synology-ds212/">How to compile Unison for a Synology DS212+</a></li>
+        <li class="page_item page-item-2688"><a href="https://multigesture.net/articles/how-to-compile-unison-for-a-synology-nas-dsm-6-2/">How to compile Unison for a Synology NAS (DSM 6.2)</a></li>
+        <li class="page_item page-item-1891"><a href="https://multigesture.net/articles/how-to-draw-pixels-to-a-texture-opengl/">How to draw pixels to a texture (OpenGL)</a></li>
+        <li class="page_item page-item-666 current_page_item"><a href="https://multigesture.net/articles/how-to-install-mingw-msys-and-eclipse-on-windows/" aria-current="page">How to install MinGW, MSYS and Eclipse on windows</a></li>
+        <li class="page_item page-item-1938"><a href="https://multigesture.net/articles/how-to-mount-nfs-on-windows-7-and-mac-os-x/">How to mount NFS on Windows 7 and Mac OS X</a></li>
+        <li class="page_item page-item-2089"><a href="https://multigesture.net/articles/how-to-repair-a-damaged-pcb-board-wd1200/">How to repair a damaged PCB board – WD1200</a></li>
+        <li class="page_item page-item-1905"><a href="https://multigesture.net/articles/how-to-setup-a-python-environment-on-mac-os-x-lion-using-macports/">How to setup a Python environment on Mac OS X Lion using macports</a></li>
+        <li class="page_item page-item-2029"><a href="https://multigesture.net/articles/how-to-setup-cocos2d-x-windows-and-android/">How to setup Cocos2d-x (Windows and Android)</a></li>
+        <li class="page_item page-item-1965"><a href="https://multigesture.net/articles/how-to-setup-openframeworks-for-android-on-windows/">How to setup openFrameworks for Android on Windows</a></li>
+        <li class="page_item page-item-1897"><a href="https://multigesture.net/articles/how-to-tunnel-with-ssh-using-putty/">How to Tunnel with SSH using Putty</a></li>
+        <li class="page_item page-item-770"><a href="https://multigesture.net/articles/how-to-upgrade-your-mingw-with-commonly-used-libraries/">How to upgrade your MinGW with commonly used libraries</a></li>
+        <li class="page_item page-item-2474"><a href="https://multigesture.net/articles/how-to-use-cron-on-a-synology-nas/">How to use cron on a Synology NAS</a></li>
+        <li class="page_item page-item-2486"><a href="https://multigesture.net/articles/how-to-use-your-own-router-on-kpn-glasvezel/">How to use your own router on KPN Glasvezel</a></li>
+        <li class="page_item page-item-1660"><a href="https://multigesture.net/articles/how-to-write-an-emulator-chip-8-interpreter/">How to write an emulator (CHIP-8 interpreter)</a></li>
+        <li class="page_item page-item-409"><a href="https://multigesture.net/articles/igraph-05x-visual-studio-2005-fix/">igraph 0.5.x visual studio 2005 ‘fix’</a></li>
+        <li class="page_item page-item-301"><a href="https://multigesture.net/articles/t-mobile-g1-downgrade-rc30rc8-rooting-update-tutorial/">T-mobile G1 downgrade (RC30/RC8) / rooting / update tutorial</a></li>
+        <li class="page_item page-item-70"><a href="https://multigesture.net/articles/touchlib-compiling-instructions-fedora-core-9/">Touchlib compiling instructions (Fedora Core 9)</a></li>
+        <li class="page_item page-item-35"><a href="https://multigesture.net/articles/touchlib-compiling-instructions-ubuntu/">Touchlib compiling instructions (Ubuntu)</a></li>
+        <li class="page_item page-item-34"><a href="https://multigesture.net/articles/touchlib-compiling-instructions/">Touchlib compiling instructions (Windows)</a></li>
+        <li class="page_item page-item-178"><a href="https://multigesture.net/articles/touchlib-svn-manual/">Touchlib SVN / Manual</a></li>
+        <li class="page_item page-item-115"><a href="https://multigesture.net/articles/zepto-znote-6224w/">Zepto Znote 6224W – Cleaning the cpu fan</a></li>
+       </ul></li>
+      <li class="page_item page-item-45"><a href="https://multigesture.net/downloads/">Downloads</a></li>
+      <li class="page_item page-item-340"><a href="https://multigesture.net/events/">Events</a></li>
+      <li class="page_item page-item-1931"><a href="https://multigesture.net/featured/">Featured</a></li>
+      <li class="page_item page-item-345 page_item_has_children"><a href="https://multigesture.net/projects/">Projects</a>
+       <ul class="children">
+        <li class="page_item page-item-1381"><a href="https://multigesture.net/projects/earth-friends/">Earth Friends</a></li>
+        <li class="page_item page-item-291"><a href="https://multigesture.net/projects/firc/">fIRC</a></li>
+        <li class="page_item page-item-1584"><a href="https://multigesture.net/projects/hack-descent-3-callsign/">Hack: Descent 3 callsign</a></li>
+        <li class="page_item page-item-79"><a href="https://multigesture.net/projects/multi-touch-media-application-pro/">Multi-touch Media Application Pro</a></li>
+        <li class="page_item page-item-76"><a href="https://multigesture.net/projects/multi-touch-video-puzzle-game/">Multi-touch video puzzle game</a></li>
+        <li class="page_item page-item-1614"><a href="https://multigesture.net/projects/mychip8-android-port/">MyChip8 Android port</a></li>
+        <li class="page_item page-item-1603"><a href="https://multigesture.net/projects/mychip8/">MyChip8 emulator</a></li>
+        <li class="page_item page-item-77"><a href="https://multigesture.net/projects/nasa-world-wind-plugin/">NASA World Wind plugin</a></li>
+        <li class="page_item page-item-2014"><a href="https://multigesture.net/projects/nodebeat/">NodeBeat</a></li>
+        <li class="page_item page-item-2245"><a href="https://multigesture.net/projects/ofxqnx/">ofxQNX</a></li>
+        <li class="page_item page-item-2570"><a href="https://multigesture.net/projects/pcsx2/">PCSX2</a></li>
+        <li class="page_item page-item-81"><a href="https://multigesture.net/projects/real-time-fluid-dynamics/">Real-Time Fluid Dynamics</a></li>
+        <li class="page_item page-item-78"><a href="https://multigesture.net/projects/tdesk/">tDesk</a></li>
+        <li class="page_item page-item-80"><a href="https://multigesture.net/projects/touch-tracer/">Touch Tracer</a></li>
+        <li class="page_item page-item-983"><a href="https://multigesture.net/projects/touchlib/">Touchlib</a></li>
+        <li class="page_item page-item-1376"><a href="https://multigesture.net/projects/visualizing-wikileaks-mirror-spread/">Visualizing Wikileaks mirror spread</a></li>
+       </ul></li>
+      <li class="page_item page-item-437"><a href="https://multigesture.net/publications/">Publications</a></li>
+      <li class="page_item page-item-1052 page_item_has_children"><a href="https://multigesture.net/research-projects/">Research projects</a>
+       <ul class="children">
+        <li class="page_item page-item-1095"><a href="https://multigesture.net/research-projects/twilight-graph-visualization/">Graph Visualization</a></li>
+        <li class="page_item page-item-1057"><a href="https://multigesture.net/research-projects/interactive-networks/">Interactive Networks</a></li>
+        <li class="page_item page-item-1118"><a href="https://multigesture.net/research-projects/involv/">Involv</a></li>
+        <li class="page_item page-item-2026"><a href="https://multigesture.net/research-projects/nemo-science-center/">NEMO Science Center</a></li>
+        <li class="page_item page-item-1124"><a href="https://multigesture.net/research-projects/phylogenie/">PhyloGenie</a></li>
+        <li class="page_item page-item-1113"><a href="https://multigesture.net/research-projects/treepanorama-tree-visualization/">Tree Visualization</a></li>
+       </ul></li>
+     </ul> 
+    </div><!-- #topbar --> 
+    <div id="header" class="clearfix"> 
+     <h1 id="blogtitle"><a href="https://multigesture.net">Multigesture.net</a></h1>
+     <p class="blogdesc">A multitouch and HCI research blog</p> 
+     <div id="subscribe"> 
+      <h3>Subscribe</h3> <a href="https://multigesture.net/feed/" title="How to install MinGW, MSYS and Eclipse on windows | Multigesture.netMultigesture.net latest post">RSS</a> | Email 
+      <form class="clearfix" id="subscribeform" action="https://feedburner.google.com/fb/a/mailverify" method="post" target="popupwindow" onsubmit="window.open('https://feedburner.google.com/fb/a/mailverify?uri=', 'popupwindow', 'scrollbars=yes,width=550,height=520');return true"> 
+       <input class="input" type="text" id="email" name="email"> 
+       <input type="hidden" value="" name="uri"> 
+       <input class="button" value="Subscribe" type="submit"> 
+      </form> 
+     </div><!-- .subscribe --> 
+    </div><!-- #header --> 
+    <div id="navbar" class="clearfix"> 
+     <ul class="sf-menu-wrap clearfix"> 
+      <li class="nav-first">A multitouch and HCI research blog</li> 
+      <li class="fleft"> 
+       <ul class="sf-menu clearfix sf-js-enabled"> 
+        <li class="cat-item cat-item-7"><a href="https://twitter.com/LaurenceMuller" title="Twitter"><img src="https://multigesture.net/wp-content/themes/sleek/images/twitter_16.png" alt="" border="0" height="16" width="16" align="bottom"> Twitter</a></li> 
+        <li class="cat-item cat-item-7"><a href="https://www.linkedin.com/in/lylmuller" title="LinkedIn Profile"><img src="https://multigesture.net/wp-content/themes/sleek/images/linkedin_16.png" alt="" border="0" height="16" width="16" align="bottom"> LinkedIn</a></li> 
+        <li class="cat-item cat-item-7"><a href="https://www.youtube.com/falcon4ever" title="Youtube Profile"><img src="https://multigesture.net/wp-content/themes/sleek/images/youtube_16.png" alt="" border="0" height="16" width="16" align="bottom"> Youtube</a></li> 
+       </ul> </li> 
+      <li class="nav-last">&nbsp;</li> 
+     </ul> 
+    </div><!-- #navbar --> 
+   </div><!-- .width --> 
+   <div id="outerwrap">
+    <div class="faux-column width ">
+     <div id="container">
+      <div id="content"> 
+       <div class="breadcrumb"> <a href="https://multigesture.net/">Home</a> » <a href="https://multigesture.net/articles/">Articles</a> » <a href="https://multigesture.net/articles/how-to-install-mingw-msys-and-eclipse-on-windows/">How to install MinGW, MSYS and Eclipse on windows</a> 
+       </div> 
+       <div class="page" id="post-666"> 
+        <h1 class="page-title">How to install MinGW, MSYS and Eclipse on windows</h1> 
+        <div class="entry-content"> 
+         <h3>Notes</h3> 
+         <p>This is a short guide on how to install MinGW and MSYS using the latest stable. This guide has been updated on 21/12/2011</p> 
+         <h3>Requirements</h3> 
+         <ul> 
+          <li>The <a href="http://sourceforge.net/projects/mingw/files/latest/download?source=files">MinGW installer package</a>&nbsp;(mingw-get-inst-20111118.exe).</li> 
+          <li><a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">Java Runtime Environment</a> (JRE 6, update 30)</li> 
+          <li><a href="http://www.eclipse.org/downloads/">Eclipse</a> (Eclipse IDE for C/C++ Developers, select 32bit or 64bit depending on your JRE)</li> 
+         </ul> 
+         <h3>Installing the MinGW and Msys</h3> 
+         <ul> 
+          <li>Run&nbsp;<strong>mingw-get-inst-20111118.exe</strong></li> 
+          <li>Choose “Download latest repository catalogues”<br> <img loading="lazy" class="alignnone size-medium wp-image-2183" title="mingw1" src="https://multigesture.net/wp-content/uploads/2009/12/mingw1-300x232.jpg" alt="" width="300" height="232" srcset="https://multigesture.net/wp-content/uploads/2009/12/mingw1-300x232.jpg 300w, https://multigesture.net/wp-content/uploads/2009/12/mingw1.jpg 513w" sizes="(max-width: 300px) 100vw, 300px"></li> 
+          <li>Accept the license agreement</li> 
+          <li>Use the default folder (<strong>C:\MinGW</strong>)</li> 
+          <li>When asked to select the components, choose: <strong>C Compiler</strong>, <strong>C++ Compiler</strong>, <strong>MSYS Basic System</strong> and <strong>MinGW Developer Toolkit</strong>.<br> <img loading="lazy" class="alignnone size-medium wp-image-2184" title="mingw2" src="https://multigesture.net/wp-content/uploads/2009/12/mingw2-300x232.jpg" alt="" width="300" height="232" srcset="https://multigesture.net/wp-content/uploads/2009/12/mingw2-300x232.jpg 300w, https://multigesture.net/wp-content/uploads/2009/12/mingw2.jpg 513w" sizes="(max-width: 300px) 100vw, 300px"></li> 
+          <li>Add <strong>C:\MinGW\bin;C:\MinGW\msys\1.0\bin;</strong>&nbsp;to your <strong>PATH</strong> system variables (at the beginning).</li> 
+          <li>Done.</li> 
+         </ul> 
+         <div>
+          Check if your <strong>PATH</strong> system variables look something like this:
+         </div> 
+         <div></div> 
+         <div></div> 
+         <div>
+          <a href="https://multigesture.net/wp-content/uploads/2009/12/mingw3.jpg"><img loading="lazy" class="size-full wp-image-2185 aligncenter" title="mingw3" src="https://multigesture.net/wp-content/uploads/2009/12/mingw3.jpg" alt="" width="394" height="436" srcset="https://multigesture.net/wp-content/uploads/2009/12/mingw3.jpg 394w, https://multigesture.net/wp-content/uploads/2009/12/mingw3-271x300.jpg 271w" sizes="(max-width: 394px) 100vw, 394px"></a>
+         </div> 
+         <h3>Install the IDE</h3> 
+         <ul> 
+          <li>Install the JRE with the default settings</li> 
+          <li>To install eclipse, unzip the content to <strong>C:\Program Files\eclipse</strong></li> 
+          <li>Create a shortcut to Eclipse.exe on the desktop</li> 
+          <li>Done.</li> 
+         </ul> 
+         <h3>Creating a HelloWorld Project</h3> 
+         <ul> 
+          <li>Open up Eclipse</li> 
+          <li>File &gt; New &gt; Project</li> 
+          <li>Select C/C++ &gt; C++ Project</li> 
+          <li>Click on Next</li> 
+          <li>Change project name to “Hello World”</li> 
+          <li>Click on Hello World C++ Project (Toolchain should show MinGW GCC)</li> 
+          <li>Click Finish</li> 
+          <li>On the left side, right click on your project (in the Project Explorer)</li> 
+          <li>Choose Build Project</li> 
+          <li>Run &gt; Run (or Run &gt; Debug)</li> 
+          <li>The Console (at the bottom) should show !!!Hello World!!!</li> 
+          <li>You’re all set.</li> 
+         </ul> 
+         <h3>Optional packages to install (use the MinGW console)</h3> 
+         <p><code>mingw-get install msys-wget</code><br> <code>mingw-get install msys-zip</code><br> <code>mingw-get install msys-unzip</code></p> 
+         <h3>Additional resources</h3> 
+         <ul> 
+          <li><a href="http://www.blogistan.co.uk/qt/2009/12/where_get_mingw_qt_46.php">http://www.blogistan.co.uk/qt/2009/12/where_get_mingw_qt_46.php</a></li> 
+          <li><a title="http://max.berger.name/howto/cdt/ar01s03.jsp" href="http://max.berger.name/howto/cdt/ar01s03.jsp" rel="nofollow">http://max.berger.name/howto/cdt/ar01s03.jsp</a></li> 
+          <li><a title="http://wiki.openttd.org/Compiling_on_MinGW" href="http://wiki.openttd.org/Compiling_on_MinGW" rel="nofollow">http://wiki.openttd.org/Compiling_on_MinGW</a></li> 
+          <li><a title="http://trac.enlightenment.org/e/wiki/EFLWindowsXP" href="http://trac.enlightenment.org/e/wiki/EFLWindowsXP" rel="nofollow">http://trac.enlightenment.org/e/wiki/EFLWindowsXP</a></li> 
+          <li><a title="http://www.mingw.org/wiki/HOWTO_Install_the_MinGW_GCC_Compiler_Suite" href="http://www.mingw.org/wiki/HOWTO_Install_the_MinGW_GCC_Compiler_Suite" rel="nofollow">http://www.mingw.org/wiki/HOWTO_Install_the_MinGW_GCC_Compiler_Suite</a></li> 
+          <li><a title="http://www.mingw.org/wiki/MSYS" href="http://www.mingw.org/wiki/MSYS" rel="nofollow">http://www.mingw.org/wiki/MSYS</a></li> 
+         </ul> 
+        </div> 
+       </div> 
+       <div class="action clearfix"> <!-- I don't quite know how to change permalink url into the accepted format. It might need urlencode() function but I don't quite sure how to implement. --> 
+        <div id="bookmark"> 
+         <h3>Bookmark &amp; Share</h3> 
+         <ul class="bookmark"> 
+          <li><a class="reddit" href="http://reddit.com/submit?url=https://multigesture.net/articles/how-to-install-mingw-msys-and-eclipse-on-windows/&amp;title=How to install MinGW, MSYS and Eclipse on windows">Reddit</a></li> 
+          <li><a class="stumbleupon" href="http://www.stumbleupon.com/submit?url=https://multigesture.net/articles/how-to-install-mingw-msys-and-eclipse-on-windows/&amp;title=How to install MinGW, MSYS and Eclipse on windows">StumbleUpon</a></li> 
+          <li><a class="delicious" href="http://delicious.com/post?url=https://multigesture.net/articles/how-to-install-mingw-msys-and-eclipse-on-windows/&amp;title=How to install MinGW, MSYS and Eclipse on windows">Delicious</a></li> 
+          <li><a class="technorati" href="http://technorati.com/faves?add=https://multigesture.net/articles/how-to-install-mingw-msys-and-eclipse-on-windows/">Technorati</a></li> 
+          <li><a class="digg" href="http://digg.com/submit?phase=2&amp;url=https://multigesture.net/articles/how-to-install-mingw-msys-and-eclipse-on-windows/&amp;title=How to install MinGW, MSYS and Eclipse on windows">Digg</a></li> 
+          <li><a class="float" href="http://www.designfloat.com/submit.php?url=https://multigesture.net/articles/how-to-install-mingw-msys-and-eclipse-on-windows/&amp;title=How to install MinGW, MSYS and Eclipse on windows">DesignFloat</a></li> 
+         </ul> 
+        </div> 
+        <div id="sharing"> 
+         <div class="tweetmeme">
+          <script type="text/javascript" src="http://tweetmeme.com/i/scripts/button.js"></script>
+         </div> 
+         <div class="facebook_share">
+          <a name="fb_share" type="box_count" href="http://www.facebook.com/sharer.php">Share</a>
+          <script src="http://static.ak.fbcdn.net/connect.php/js/FB.Share" type="text/javascript"></script>
+         </div> 
+        </div> 
+       </div> 
+       <div id="comments"> 
+        <h2 class="mainhead">12 Comment</h2>
+        <ol class="commentlist">
+         <li class="comment even thread-even depth-1" id="li-comment-6389"> 
+          <div id="comment-6389"> 
+           <div class="comment-author fleft"> 
+            <img alt="" src="https://secure.gravatar.com/avatar/6f21bd43f57e64f4dddb5ba72a1c95b5?s=60&amp;d=mm&amp;r=g" srcset="https://secure.gravatar.com/avatar/6f21bd43f57e64f4dddb5ba72a1c95b5?s=120&amp;d=mm&amp;r=g 2x" class="avatar avatar-60 photo" height="60" width="60" loading="lazy"> 
+           </div> 
+           <div class="comment-info fleft"> 
+            <div class="c_info">
+             Frank Henard
+            </div> 
+            <p>Why is the jdk required?</p> 
+            <p class="meta fleft">12 May 2010 | <a rel="nofollow" class="comment-reply-link" href="https://multigesture.net/articles/how-to-install-mingw-msys-and-eclipse-on-windows/?replytocom=6389#respond" data-commentid="6389" data-postid="666" data-belowelement="comment-6389" data-respondelement="respond" data-replyto="Reply to Frank Henard" aria-label="Reply to Frank Henard">Reply</a></p> 
+           </div> 
+           <div class="clear"></div> 
+          </div> 
+          <ul class="children"> 
+           <li class="comment byuser comment-author-lmuller bypostauthor odd alt depth-2" id="li-comment-6398"> 
+            <div id="comment-6398"> 
+             <div class="comment-author fleft"> 
+              <img alt="" src="https://secure.gravatar.com/avatar/4a503abeaa3d803e55e99093fbf1505d?s=60&amp;d=mm&amp;r=g" srcset="https://secure.gravatar.com/avatar/4a503abeaa3d803e55e99093fbf1505d?s=120&amp;d=mm&amp;r=g 2x" class="avatar avatar-60 photo" height="60" width="60" loading="lazy"> 
+             </div> 
+             <div class="comment-info fleft"> 
+              <div class="c_info">
+               <a href="https://multigesture.net" rel="external nofollow ugc" class="url">Laurence Muller</a>
+              </div> 
+              <p>Actually, that’s my mistake, the Java runtime should be enough (It’s for Eclipse)</p> 
+              <p class="meta fleft">12 May 2010 | <a rel="nofollow" class="comment-reply-link" href="https://multigesture.net/articles/how-to-install-mingw-msys-and-eclipse-on-windows/?replytocom=6398#respond" data-commentid="6398" data-postid="666" data-belowelement="comment-6398" data-respondelement="respond" data-replyto="Reply to Laurence Muller" aria-label="Reply to Laurence Muller">Reply</a></p> 
+             </div> 
+             <div class="clear"></div> 
+            </div> </li><!-- #comment-## --> 
+          </ul><!-- .children --> </li><!-- #comment-## --> 
+         <li class="comment even thread-odd thread-alt depth-1" id="li-comment-23324"> 
+          <div id="comment-23324"> 
+           <div class="comment-author fleft"> 
+            <img alt="" src="https://secure.gravatar.com/avatar/0e60839bc141e169d0af87cd8c0153be?s=60&amp;d=mm&amp;r=g" srcset="https://secure.gravatar.com/avatar/0e60839bc141e169d0af87cd8c0153be?s=120&amp;d=mm&amp;r=g 2x" class="avatar avatar-60 photo" height="60" width="60" loading="lazy"> 
+           </div> 
+           <div class="comment-info fleft"> 
+            <div class="c_info">
+             Lukas
+            </div> 
+            <p>Have you compiled new OSG version 3.0.1 with MinGW ? do you have binariers ?</p> 
+            <p class="meta fleft">23 Sep 2011 | <a rel="nofollow" class="comment-reply-link" href="https://multigesture.net/articles/how-to-install-mingw-msys-and-eclipse-on-windows/?replytocom=23324#respond" data-commentid="23324" data-postid="666" data-belowelement="comment-23324" data-respondelement="respond" data-replyto="Reply to Lukas" aria-label="Reply to Lukas">Reply</a></p> 
+           </div> 
+           <div class="clear"></div> 
+          </div> 
+          <ul class="children"> 
+           <li class="comment byuser comment-author-lmuller bypostauthor odd alt depth-2" id="li-comment-24369"> 
+            <div id="comment-24369"> 
+             <div class="comment-author fleft"> 
+              <img alt="" src="https://secure.gravatar.com/avatar/4a503abeaa3d803e55e99093fbf1505d?s=60&amp;d=mm&amp;r=g" srcset="https://secure.gravatar.com/avatar/4a503abeaa3d803e55e99093fbf1505d?s=120&amp;d=mm&amp;r=g 2x" class="avatar avatar-60 photo" height="60" width="60" loading="lazy"> 
+             </div> 
+             <div class="comment-info fleft"> 
+              <div class="c_info">
+               <a href="https://multigesture.net" rel="external nofollow ugc" class="url">Laurence Muller</a>
+              </div> 
+              <p>Haven’t tried it yet, but I think the procedure should be the same.</p> 
+              <p class="meta fleft">12 Oct 2011 | <a rel="nofollow" class="comment-reply-link" href="https://multigesture.net/articles/how-to-install-mingw-msys-and-eclipse-on-windows/?replytocom=24369#respond" data-commentid="24369" data-postid="666" data-belowelement="comment-24369" data-respondelement="respond" data-replyto="Reply to Laurence Muller" aria-label="Reply to Laurence Muller">Reply</a></p> 
+             </div> 
+             <div class="clear"></div> 
+            </div> </li><!-- #comment-## --> 
+          </ul><!-- .children --> </li><!-- #comment-## --> 
+         <li class="comment even thread-even depth-1" id="li-comment-61253"> 
+          <div id="comment-61253"> 
+           <div class="comment-author fleft"> 
+            <img alt="" src="https://secure.gravatar.com/avatar/741bd9092dc14031b5dc633094e66e97?s=60&amp;d=mm&amp;r=g" srcset="https://secure.gravatar.com/avatar/741bd9092dc14031b5dc633094e66e97?s=120&amp;d=mm&amp;r=g 2x" class="avatar avatar-60 photo" height="60" width="60" loading="lazy"> 
+           </div> 
+           <div class="comment-info fleft"> 
+            <div class="c_info">
+             Guillaume
+            </div> 
+            <p>I archieve the tutorial.<br> Mingw is working well (I succeed to compile a program using windows cmd.exe). I created a new project (with the c language instead of c++) , toolchain showed Mingw gcc. But when i tried to run (ctrl F11) a error message appeared : Launch Fail Binary not Found.</p> 
+            <p class="meta fleft">19 Jun 2012 | <a rel="nofollow" class="comment-reply-link" href="https://multigesture.net/articles/how-to-install-mingw-msys-and-eclipse-on-windows/?replytocom=61253#respond" data-commentid="61253" data-postid="666" data-belowelement="comment-61253" data-respondelement="respond" data-replyto="Reply to Guillaume" aria-label="Reply to Guillaume">Reply</a></p> 
+           </div> 
+           <div class="clear"></div> 
+          </div> 
+          <ul class="children"> 
+           <li class="comment byuser comment-author-lmuller bypostauthor odd alt depth-2" id="li-comment-61363"> 
+            <div id="comment-61363"> 
+             <div class="comment-author fleft"> 
+              <img alt="" src="https://secure.gravatar.com/avatar/4a503abeaa3d803e55e99093fbf1505d?s=60&amp;d=mm&amp;r=g" srcset="https://secure.gravatar.com/avatar/4a503abeaa3d803e55e99093fbf1505d?s=120&amp;d=mm&amp;r=g 2x" class="avatar avatar-60 photo" height="60" width="60" loading="lazy"> 
+             </div> 
+             <div class="comment-info fleft"> 
+              <div class="c_info">
+               <a href="https://multigesture.net" rel="external nofollow ugc" class="url">Laurence Muller</a>
+              </div> 
+              <p>Can you check with windows explorer if the binary is created properly? Maybe eclipse uses the wrong path when trying to launch the executable.</p> 
+              <p class="meta fleft">20 Jun 2012 | <a rel="nofollow" class="comment-reply-link" href="https://multigesture.net/articles/how-to-install-mingw-msys-and-eclipse-on-windows/?replytocom=61363#respond" data-commentid="61363" data-postid="666" data-belowelement="comment-61363" data-respondelement="respond" data-replyto="Reply to Laurence Muller" aria-label="Reply to Laurence Muller">Reply</a></p> 
+             </div> 
+             <div class="clear"></div> 
+            </div> </li><!-- #comment-## --> 
+           <li class="comment even depth-2" id="li-comment-70416"> 
+            <div id="comment-70416"> 
+             <div class="comment-author fleft"> 
+              <img alt="" src="https://secure.gravatar.com/avatar/bec749ab28463940ae4ea65ec6861217?s=60&amp;d=mm&amp;r=g" srcset="https://secure.gravatar.com/avatar/bec749ab28463940ae4ea65ec6861217?s=120&amp;d=mm&amp;r=g 2x" class="avatar avatar-60 photo" height="60" width="60" loading="lazy"> 
+             </div> 
+             <div class="comment-info fleft"> 
+              <div class="c_info">
+               <a href="http://www.adriaanwormgoor.nl" rel="external nofollow ugc" class="url">Adriaan</a>
+              </div> 
+              <p>I had the same, I did a few things and then I didn’t get the error anymore.</p> 
+              <p>1) closed all other projects: right-mouse on this project and select ‘Close Unrelated Projects’. Not sure if this one’s relevant but I had a number of Java projects opened so who knows<br> 2) “Project&gt;&gt; Clean…” &gt;&gt; clean all<br> 3) “Project&gt;&gt; Build All”</p> 
+              <p>That fixed Guillame’s error (which I was having too). I do think that there’s still something not going 100% right. This is the output in the Console now:</p> 
+              <p>—————————————————————</p> 
+              <p>**** Build of configuration Debug for project hellocplusplus ****</p> 
+              <p>**** Internal Builder is used for build ****<br> Nothing to build for hellocplusplus</p> 
+              <p>—————————————————————</p> 
+              <p>Any ideas?</p> 
+              <p class="meta fleft">13 Aug 2012 | <a rel="nofollow" class="comment-reply-link" href="https://multigesture.net/articles/how-to-install-mingw-msys-and-eclipse-on-windows/?replytocom=70416#respond" data-commentid="70416" data-postid="666" data-belowelement="comment-70416" data-respondelement="respond" data-replyto="Reply to Adriaan" aria-label="Reply to Adriaan">Reply</a></p> 
+             </div> 
+             <div class="clear"></div> 
+            </div> 
+            <ul class="children"> 
+             <li class="comment byuser comment-author-lmuller bypostauthor odd alt depth-3" id="li-comment-70524"> 
+              <div id="comment-70524"> 
+               <div class="comment-author fleft"> 
+                <img alt="" src="https://secure.gravatar.com/avatar/4a503abeaa3d803e55e99093fbf1505d?s=60&amp;d=mm&amp;r=g" srcset="https://secure.gravatar.com/avatar/4a503abeaa3d803e55e99093fbf1505d?s=120&amp;d=mm&amp;r=g 2x" class="avatar avatar-60 photo" height="60" width="60" loading="lazy"> 
+               </div> 
+               <div class="comment-info fleft"> 
+                <div class="c_info">
+                 <a href="https://multigesture.net" rel="external nofollow ugc" class="url">Laurence Muller</a>
+                </div> 
+                <p>I’ve updated the guide, seems like it doesn’t autobuild the binary. Just select your project on the left side, rightclick it and hit build project. That will give you a working binary.</p> 
+                <p class="meta fleft">14 Aug 2012 | <a rel="nofollow" class="comment-reply-link" href="https://multigesture.net/articles/how-to-install-mingw-msys-and-eclipse-on-windows/?replytocom=70524#respond" data-commentid="70524" data-postid="666" data-belowelement="comment-70524" data-respondelement="respond" data-replyto="Reply to Laurence Muller" aria-label="Reply to Laurence Muller">Reply</a></p> 
+               </div> 
+               <div class="clear"></div> 
+              </div> </li><!-- #comment-## --> 
+            </ul><!-- .children --> </li><!-- #comment-## --> 
+           <li class="comment even depth-2" id="li-comment-79314"> 
+            <div id="comment-79314"> 
+             <div class="comment-author fleft"> 
+              <img alt="" src="https://secure.gravatar.com/avatar/7462e1e4e4b6d4597354b7a5a00f6600?s=60&amp;d=mm&amp;r=g" srcset="https://secure.gravatar.com/avatar/7462e1e4e4b6d4597354b7a5a00f6600?s=120&amp;d=mm&amp;r=g 2x" class="avatar avatar-60 photo" height="60" width="60" loading="lazy"> 
+             </div> 
+             <div class="comment-info fleft"> 
+              <div class="c_info">
+               Matt
+              </div> 
+              <p>I also had this problem. To fix, I reinstalled mingw and chose the option to download the latest builds during the install and installed the optional things with mingw console.</p> 
+              <p class="meta fleft">07 Oct 2012 | <a rel="nofollow" class="comment-reply-link" href="https://multigesture.net/articles/how-to-install-mingw-msys-and-eclipse-on-windows/?replytocom=79314#respond" data-commentid="79314" data-postid="666" data-belowelement="comment-79314" data-respondelement="respond" data-replyto="Reply to Matt" aria-label="Reply to Matt">Reply</a></p> 
+             </div> 
+             <div class="clear"></div> 
+            </div> </li><!-- #comment-## --> 
+          </ul><!-- .children --> </li><!-- #comment-## --> 
+         <li class="comment odd alt thread-odd thread-alt depth-1" id="li-comment-219921"> 
+          <div id="comment-219921"> 
+           <div class="comment-author fleft"> 
+            <img alt="" src="https://secure.gravatar.com/avatar/82bc6e3ee84029a4fb706b022a1930c5?s=60&amp;d=mm&amp;r=g" srcset="https://secure.gravatar.com/avatar/82bc6e3ee84029a4fb706b022a1930c5?s=120&amp;d=mm&amp;r=g 2x" class="avatar avatar-60 photo" height="60" width="60" loading="lazy"> 
+           </div> 
+           <div class="comment-info fleft"> 
+            <div class="c_info">
+             Michel
+            </div> 
+            <p>I download the mingw-installer, it only offers to me 32 bit settings, I searched about a 64 bit version of mingw, but it doesn’t come with a setup , can you give some reference about how can i install and configure mingw-64 for OpenSceneGraph and sugest a good IDE for work?</p> 
+            <p class="meta fleft">06 May 2014 | <a rel="nofollow" class="comment-reply-link" href="https://multigesture.net/articles/how-to-install-mingw-msys-and-eclipse-on-windows/?replytocom=219921#respond" data-commentid="219921" data-postid="666" data-belowelement="comment-219921" data-respondelement="respond" data-replyto="Reply to Michel" aria-label="Reply to Michel">Reply</a></p> 
+           </div> 
+           <div class="clear"></div> 
+          </div> 
+          <ul class="children"> 
+           <li class="comment byuser comment-author-lmuller bypostauthor even depth-2" id="li-comment-223606"> 
+            <div id="comment-223606"> 
+             <div class="comment-author fleft"> 
+              <img alt="" src="https://secure.gravatar.com/avatar/4a503abeaa3d803e55e99093fbf1505d?s=60&amp;d=mm&amp;r=g" srcset="https://secure.gravatar.com/avatar/4a503abeaa3d803e55e99093fbf1505d?s=120&amp;d=mm&amp;r=g 2x" class="avatar avatar-60 photo" height="60" width="60" loading="lazy"> 
+             </div> 
+             <div class="comment-info fleft"> 
+              <div class="c_info">
+               <a href="https://multigesture.net" rel="external nofollow ugc" class="url">Laurence Muller</a>
+              </div> 
+              <p>Hi Michel, unfortunately I haven’t tried out the 64bit version of MinGW so I’m not sure if it will work well with OpenSceneGraph. For the IDE, I’d try to use the latest 64 bit Eclipse with the C/C++ plugin.</p> 
+              <p class="meta fleft">16 May 2014 | <a rel="nofollow" class="comment-reply-link" href="https://multigesture.net/articles/how-to-install-mingw-msys-and-eclipse-on-windows/?replytocom=223606#respond" data-commentid="223606" data-postid="666" data-belowelement="comment-223606" data-respondelement="respond" data-replyto="Reply to Laurence Muller" aria-label="Reply to Laurence Muller">Reply</a></p> 
+             </div> 
+             <div class="clear"></div> 
+            </div> </li><!-- #comment-## --> 
+          </ul><!-- .children --> </li><!-- #comment-## --> 
+         <li class="comment odd alt thread-even depth-1" id="li-comment-473893"> 
+          <div id="comment-473893"> 
+           <div class="comment-author fleft"> 
+            <img alt="" src="https://secure.gravatar.com/avatar/4a88a812c214a17c2e2a54201cdee5a0?s=60&amp;d=mm&amp;r=g" srcset="https://secure.gravatar.com/avatar/4a88a812c214a17c2e2a54201cdee5a0?s=120&amp;d=mm&amp;r=g 2x" class="avatar avatar-60 photo" height="60" width="60" loading="lazy"> 
+           </div> 
+           <div class="comment-info fleft"> 
+            <div class="c_info">
+             undefined reference to `DES_set_key_unchecked'
+            </div> 
+            <p>I have a problem.I have #include , but there also be a compile error when invoke the function.</p> 
+            <p class="meta fleft">06 Dec 2016 | <a rel="nofollow" class="comment-reply-link" href="https://multigesture.net/articles/how-to-install-mingw-msys-and-eclipse-on-windows/?replytocom=473893#respond" data-commentid="473893" data-postid="666" data-belowelement="comment-473893" data-respondelement="respond" data-replyto="Reply to undefined reference to `DES_set_key_unchecked'" aria-label="Reply to undefined reference to `DES_set_key_unchecked'">Reply</a></p> 
+           </div> 
+           <div class="clear"></div> 
+          </div> </li><!-- #comment-## --> 
+        </ol>
+        <ol class="ping"></ol>
+        <div class="comment_nav"> 
+         <ul> 
+          <li class="alignleft"></li> 
+          <li class="alignright"></li> 
+         </ul> 
+        </div> 
+        <div id="respond"> 
+         <h2 class="mainhead">Leave a reply</h2> 
+         <form action="https://multigesture.net/wp-comments-post.php" method="post" id="commentform"> 
+          <div class="cancel-comment-reply"> <a rel="nofollow" id="cancel-comment-reply-link" href="/articles/how-to-install-mingw-msys-and-eclipse-on-windows/#respond" style="display:none;">Cancel</a> 
+          </div> 
+          <p> <label for="author">Name</label> <input type="text" title="Name" name="author" id="author" value="" size="22" tabindex="1"> </p> 
+          <p> <label for="email">Email</label> <input type="text" title="Email" name="email" id="email" value="" size="22" tabindex="2"> </p> 
+          <p> <label for="url">URL</label> <input type="text" title="Website" name="url" id="url" value="" size="22" tabindex="3"> </p> 
+          <p><label for="comment">Comment</label><textarea name="comment" title="Your comment..." id="message" cols="60" rows="10" tabindex="4"></textarea></p> 
+          <input type="hidden" name="comment_post_ID" value="666" id="comment_post_ID"> 
+          <input type="hidden" name="comment_parent" id="comment_parent" value="0"> 
+          <input type="hidden" name="redirect_to" value="/articles/how-to-install-mingw-msys-and-eclipse-on-windows/"> 
+          <p><input class="button" name="submit" type="submit" id="submit" tabindex="5" value="Submit"> <br class="clear"></p> 
+          <p style="display: none;"><input type="hidden" id="akismet_comment_nonce" name="akismet_comment_nonce" value="52597db636"></p>
+          <input type="hidden" id="ak_js" name="ak_js" value="107"><textarea name="ak_hp_textarea" cols="45" rows="8" maxlength="100" style="display: none !important;"></textarea> 
+         </form> 
+        </div> 
+       </div>
+      </div>
+     </div> 
+     <ul id="primary" class="sidebar">
+      <!-- Default Sidebar --> 
+      <li id="search" class="widget"> <h3>Search</h3> 
+       <form method="get" id="searchform" action="https://multigesture.net/"> 
+        <div> 
+         <input type="text" size="18" value="" name="s" id="s" class="input fleft" tabindex="1"> 
+         <input type="submit" id="ksearchsubmit" value="Search" class="button fright" tabindex="2"> 
+        </div> 
+        <br class="clear"> 
+       </form> </li> 
+     </ul> 
+     <ul id="secondary" class="sidebar">
+      <!-- User Sidebar --> 
+      <li class="widget"><h3>About</h3> 
+       <div class="textwidget">
+        <p>I'm <a href="https://multigesture.net/about/">Laurence Muller</a> (<a href="http://www.studeren.uva.nl/msc-computational-science">M.Sc.</a>) <img src="https://multigesture.net/wp-content/themes/sleek/images/dutchflag2.gif" alt="Dutch flag" border="0" height="10" width="15">, a <a href="http://sdr.seas.harvard.edu/content/people">former Fellow</a> of the <a href="http://sdr.seas.harvard.edu/">Scientists' Discovery Room Lab (SDR Lab)</a> at <a href="http://www.harvard.edu/">Harvard University</a> / <a href="http://www.seas.harvard.edu/">School of Engineering and Applied Sciences (SEAS)</a>, where I worked on innovative scientific software for <a href="http://www.microsoft.com/surface/">multi-touch devices</a> and <a href="http://www.mitsubishi-megaview.com/products/rear_projection_display_cubes.html">display wall systems</a>.</p> 
+        <p>I'm also the founder of <a href="https://epicwindmill.com/">Epic Windmill</a>, a software company that develops apps and games for mobile devices.</p> 
+        <p align="center"><img src="https://multigesture.net/wp-content/themes/sleek/images/lauw_200px.jpg" alt="Me!" border="0"></p>
+       </div> </li>
+      <li class="widget"><h3>Twitter</h3> 
+       <div class="rotatingtweets rotatingtweets_format_0" id="rotatingtweets_4000_scrollUp_1000_6064ef409bdf7" data-cycle-auto-height="calc" data-cycle-fx="scrollUp" data-cycle-pause-on-hover="true" data-cycle-timeout="4000" data-cycle-speed="1000" data-cycle-easing="swing" data-cycle-slides="div.rotatingtweet" data-cycle-log="false"> 
+        <div class="rotatingtweet"> 
+         <p class="rtw_main">Spend some weeks creating my own virtual bike riding software using <a href="https://twitter.com/intent/user?screen_name=UnrealEngine" title="Unreal Engine" lang="en">@UnrealEngine</a>. Still WIP but it reads sensordata (Power) and turns it into speed. It also applies the slope % to the Wahoo smart biketrainer and also reads Cadence/Heartrate sensordata <a href="https://twitter.com/search?q=%23screenshotsaturday&amp;src=hash" title="#screenshotsaturday" class="rtw_hashtag_link">#screenshotsaturday</a> <a href="https://twitter.com/search?q=%23ue4&amp;src=hash" title="#ue4" class="rtw_hashtag_link">#ue4</a> <a href="https://t.co/WQDP6QWBMg" title="https://twitter.com/LaurenceMuller/status/1368367433266962442/photo/1" class="rtw_media_link">pic.twitter.com/WQDP6QWBMg</a></p> 
+         <p class="rtw_meta"><a href="https://twitter.com/twitterapi/status/1368367433266962442">Last month</a> from <a href="https://twitter.com/intent/user?screen_name=LaurenceMuller" title="Laurence Muller">Laurence Muller's Twitter</a></p>
+        </div> 
+        <div class="rotatingtweet" style="display:none"> 
+         <p class="rtw_main">Huawei’s HarmonyOS: “Fake it till you make it” meets OS development <a href="https://t.co/WyYawEUc5N" title="https://arstechnica.com/?post_type=post&amp;p=1733167" class="rtw_url_link">arstechnica.com/?post_type=po…</a></p> 
+         <p class="rtw_meta"><a href="https://twitter.com/twitterapi/status/1356714500217597956">About 2 months ago</a> from <a href="https://twitter.com/intent/user?screen_name=LaurenceMuller" title="Laurence Muller">Laurence Muller's Twitter</a></p>
+        </div> 
+        <div class="rotatingtweet" style="display:none"> 
+         <p class="rtw_main">RT <a href="https://twitter.com/intent/user?screen_name=PowerDNS_Bert" title="Bert Hubert" lang="en">@PowerDNS_Bert</a> In this post, we'll reverse-engineer the actual mRNA code of the <a href="https://twitter.com/intent/user?screen_name=BioNTech_Group" title="BioNTech SE" lang="en">@BioNTech_Group</a>/<a href="https://twitter.com/intent/user?screen_name=pfizer" title="Pfizer Inc." lang="en">@pfizer</a> SARS-CoV-2 vaccine, character for character. And along the way, this will also explain how the vaccine works. Surprisingly, there are some fun mysteries in there! <a href="https://t.co/HbjPFUXHUG" title="https://berthub.eu/articles/posts/reverse-engineering-source-code-of-the-biontech-pfizer-vaccine/" class="rtw_url_link">berthub.eu/articles/posts…</a></p> 
+         <p class="rtw_meta"><a href="https://twitter.com/twitterapi/status/1342815999125557248">About 3 months ago</a> from <a href="https://twitter.com/intent/user?screen_name=LaurenceMuller" title="Laurence Muller">Laurence Muller's Twitter</a></p>
+        </div> 
+        <div class="rotatingtweet" style="display:none"> 
+         <p class="rtw_main">RT <a href="https://twitter.com/intent/user?screen_name=levork" title="Julian Fong 方宇" lang="en">@levork</a> A thread about a tiny bit of tech in Soul (which I hope y'all are enjoying today!) <a href="https://t.co/oJ2MePi42G" title="https://twitter.com/levork/status/1342585635257741312/photo/1" class="rtw_media_link">pic.twitter.com/oJ2MePi42G</a></p> 
+         <p class="rtw_meta"><a href="https://twitter.com/twitterapi/status/1342608735437512706">About 3 months ago</a> from <a href="https://twitter.com/intent/user?screen_name=LaurenceMuller" title="Laurence Muller">Laurence Muller's Twitter</a></p>
+        </div> 
+        <div class="rotatingtweet" style="display:none"> 
+         <p class="rtw_main">RT <a href="https://twitter.com/intent/user?screen_name=AndroidDev" title="Android Developers" lang="en">@AndroidDev</a> 🚀 Compare APK size, build speed, and lines of code when building with <a href="https://twitter.com/search?q=%23JetpackCompose&amp;src=hash" title="#JetpackCompose" class="rtw_hashtag_link">#JetpackCompose</a>. <a href="https://twitter.com/intent/user?screen_name=chrisbanes" title="Chris Banes" lang="en">@chrisbanes</a> recently saw a 41% reduction in APK size and a 17% reduction in method count when migrating his app Tivi to Compose. Dive into the numbers with us ↓ <a href="https://t.co/KcmCZMcNII" title="http://goo.gle/2WgnLY3" class="rtw_url_link">goo.gle/2WgnLY3</a></p> 
+         <p class="rtw_meta"><a href="https://twitter.com/twitterapi/status/1339228228825833472">About 4 months ago</a> from <a href="https://twitter.com/intent/user?screen_name=LaurenceMuller" title="Laurence Muller">Laurence Muller's Twitter</a></p>
+        </div> 
+        <div class="rotatingtweet" style="display:none"> 
+         <p class="rtw_main">RT <a href="https://twitter.com/intent/user?screen_name=NehemiahKiv" title="Nehemiah" lang="en">@NehemiahKiv</a> I only code while I’m commuting, because I’m a mobile developer.</p> 
+         <p class="rtw_meta"><a href="https://twitter.com/twitterapi/status/1334839949653401601">About 4 months ago</a> from <a href="https://twitter.com/intent/user?screen_name=LaurenceMuller" title="Laurence Muller">Laurence Muller's Twitter</a></p>
+        </div> 
+        <div class="rotatingtweet" style="display:none"> 
+         <p class="rtw_main">RT <a href="https://twitter.com/intent/user?screen_name=ZacksJerryRig" title="JerryRigEverything" lang="en">@ZacksJerryRig</a> "Let's jump on a call..." "Let's discuss it over lunch..." How about we just chat on email in as few sentences as possible?</p> 
+         <p class="rtw_meta"><a href="https://twitter.com/twitterapi/status/1333957109495582724">About 4 months ago</a> from <a href="https://twitter.com/intent/user?screen_name=LaurenceMuller" title="Laurence Muller">Laurence Muller's Twitter</a></p>
+        </div> 
+        <div class="rotatingtweet" style="display:none"> 
+         <p class="rtw_main">Great overview, I'll probably skip the 1st gen ARM machines (already got burned with the first gen touchbar mbp 2016) but this is pretty exciting! <a href="https://t.co/6XnVNWlk1L" title="https://twitter.com/steipete/status/1332720603183321091" class="rtw_url_link">twitter.com/steipete/statu…</a></p> 
+         <p class="rtw_meta"><a href="https://twitter.com/twitterapi/status/1332767839590248448">About 4 months ago</a> from <a href="https://twitter.com/intent/user?screen_name=LaurenceMuller" title="Laurence Muller">Laurence Muller's Twitter</a></p>
+        </div> 
+        <div class="rotatingtweet" style="display:none"> 
+         <p class="rtw_main">RT <a href="https://twitter.com/intent/user?screen_name=KrauseFx" title="Felix Krause" lang="en">@KrauseFx</a> Who decided to have dedicated CPU chips for AI and ML? All we need is a dedicated CPU to run electron apps faster</p> 
+         <p class="rtw_meta"><a href="https://twitter.com/twitterapi/status/1319306236114984961">About 6 months ago</a> from <a href="https://twitter.com/intent/user?screen_name=LaurenceMuller" title="Laurence Muller">Laurence Muller's Twitter</a></p>
+        </div> 
+        <div class="rotatingtweet" style="display:none"> 
+         <p class="rtw_main">RT <a href="https://twitter.com/intent/user?screen_name=Anti_Hype" title="Sebastian Kaspari" lang="en">@Anti_Hype</a> Added basic support for ConstraintLayout to "recompose" - translating layout XML to Jetpack Compose Kotlin code. <a href="https://t.co/64wgcnOQ3h" title="https://github.com/pocmo/recompose/" class="rtw_url_link">github.com/pocmo/recompos…</a> <a href="https://t.co/iv2N2raDVN" title="https://twitter.com/Anti_Hype/status/1308144777934901248/video/1" class="rtw_media_link">pic.twitter.com/iv2N2raDVN</a></p> 
+         <p class="rtw_meta"><a href="https://twitter.com/twitterapi/status/1308927936511315970">About 7 months ago</a> from <a href="https://twitter.com/intent/user?screen_name=LaurenceMuller" title="Laurence Muller">Laurence Muller's Twitter</a></p>
+        </div> 
+       </div> 
+       <div class="rtw_follow follow-button">
+        <a href="https://twitter.com/LaurenceMuller" class="twitter-follow-button" title="Follow @LaurenceMuller" data-lang="en">Follow @LaurenceMuller</a>
+       </div></li>
+      <li class="widget"><h3>Random quotes</h3> 
+       <div class="execphpwidget">
+        <ul class="list-quotes"> 
+         <li>Always remember you're unique, just like everyone else. </li> 
+        </ul>
+       </div> </li>
+      <li class="widget"><h3>HCI Conferences</h3> 
+       <ul class="xoxo blogroll"> 
+        <li><a href="http://www.its2010.org/">ACM Tabletop 2010 (Saarbrucken, Germany)</a></li> 
+        <li><a href="http://www.its2011.jp/">ACM Tabletop 2011 (Japan)</a></li> 
+        <li><a href="http://its2012conf.org/">ACM Tabletop 2012 (Cambridge, MA, USA)</a></li> 
+        <li><a href="http://www.chi2009.org/" title="CHI 2009 (ACM SIGCHI)">CHI 2009 (Boston, MA, USA)</a></li> 
+        <li><a href="http://www.chi2010.org/" title="We are HCI">CHI 2010 (Atlanta, GA, USA)</a></li> 
+        <li><a href="http://www.chi2011.org/">CHI 2011 (Vancouver, BC, CA)</a></li> 
+        <li><a href="http://chi2012.acm.org/">CHI 2012 (Austin, TX, USA)</a></li> 
+        <li><a href="http://www.int-displays.com/">IDC 2009 (San Jose, CA, USA)</a></li> 
+        <li><a href="http://www.ieeetabletop.org/" title="IEEE Tabletop 2008">IEEE Tabletop 2008 (Amsterdam, NL)</a></li> 
+        <li><a href="http://www.tis2009.org/" title="IEEE Tabletops and Interactive Surfaces 2009">IEEE Tabletop 2009 (Banff, Canada)</a></li> 
+        <li><a href="http://sc08.supercomputing.org/" title="SuperComputing 2008">SuperComputing 2008 (Austin, TX, USA)</a></li> 
+        <li><a href="http://www.tei-conf.org/10/">TEI 2010 (Cambridge, MA, USA)</a></li> 
+        <li><a href="http://www.tei-conf.org/11/hm/">TEI 2011 (Funchal, Portugal)</a></li> 
+       </ul> </li> 
+      <li class="widget"><h3>Multitouch</h3> 
+       <ul class="xoxo blogroll"> 
+        <li><a href="http://www.whitenoiseaudio.com/blog/" title="Whitenoise’s blog">David Wallin (whitenoise)</a></li> 
+        <li><a href="http://www.multitouch.nl/" title="Gravano’s Blog">Harry van der Veen (gravano)</a></li> 
+        <li><a href="http://sassexperience.org/" title="Jimi Hertz">Jimi Hertz</a></li> 
+        <li><a href="http://www.gscept.com" title="Johannes Hirche">Johannes Hirche (xwolf)</a></li> 
+        <li><a href="http://nui.joshland.org/">Joshua Blake</a></li> 
+        <li><a href="http://www.justinireland.com/">Justin Ireland</a></li> 
+        <li><a href="http://interactivemultimediatechnology.blogspot.com/" title="Interactive Multimedia Technology Blog">Lynn Marentette</a></li> 
+        <li><a href="http://txzone.net/" title="Blog of Mathieu Virbel (Tito)">Mathieu Virbel (Tito)</a></li> 
+        <li><a href="http://orionmultitouch.blogspot.com/">Paul D’Intino (Fairlane)</a></li> 
+        <li><a href="http://www.intactlab.nl/" title="Ralph Das’ Blog">Ralph Das</a></li> 
+        <li><a href="http://theclevermonkey.blogspot.com/" title="Richard Monson-Haefel (Multitouch Designer &amp; Developer)">Richard Monson-Haefel (clevermonkey)</a></li> 
+        <li><a href="http://www.touchtech.se/en/" title="FooBar by Seb">Sebastian Hartman</a></li> 
+        <li><a href="http://www.sethsandler.com/" title="Multi-touch musical interface">Seth Sandler (cerupcat)</a></li> 
+        <li><a href="http://sharathpatali.wordpress.com/" title="Sharath Patali Blog">Sharath Patali</a></li> 
+        <li><a href="http://www.socoamsterdam.nl/" title="SOCO Amsterdam">SOCO Amsterdam</a></li> 
+        <li><a href="http://mtaha.wordpress.com/" title="Taha Bintahir">Taha Bintahir</a></li> 
+        <li><a href="http://blog.tehansen.de/" title="Thomas Hansenâ€™s Thoughts and Doings">Thomas Hansen</a></li> 
+        <li><a href="http://iad.projects.zhdk.ch/multitouch/" title="Tim Roth’s Project">Tim Roth</a></li> 
+        <li><a href="http://www.touchlib.com" title="Touchlib multitouch library">Touchlib</a></li> 
+       </ul> </li> 
+      <li class="widget"><h3>Multitouch (commercial)</h3> 
+       <ul class="xoxo blogroll"> 
+        <li><a href="http://www.apple.com/ipad/">Apple iPad</a></li> 
+        <li><a href="http://www.apple.com/iphone/features/multitouch.html" title="Apple iPhone using multi-touch technology">Apple iPhone</a></li> 
+        <li><a href="http://www.merl.com/projects/DiamondTouch/" title="Mitsubishi’s MERL DiamondTouch Multi-Touch Display">MERL DiamondTouch</a></li> 
+        <li><a href="http://www.microsoft.com/surface/" title="MS Surface">MS Surface</a></li> 
+        <li><a href="http://www.perceptivepixel.com/" title="Perceptive Pixel">Perceptive Pixel</a></li> 
+       </ul> </li> 
+      <li class="widget"><h3>Science</h3> 
+       <ul class="xoxo blogroll"> 
+        <li><a href="http://www.seas.harvard.edu/directory/cshen">Dr. C. Shen</a></li> 
+        <li><a href="http://staff.science.uva.nl/~robbel/">Dr. R.G. Belleman</a></li> 
+        <li><a href="http://www.seas.harvard.edu/">Harvard SEAS</a></li> 
+        <li><a href="http://sdr.seas.harvard.edu/">Harvard University SDR Lab</a></li> 
+        <li><a href="http://staff.science.uva.nl/~sloot/">Prof. Peter Sloot</a></li> 
+        <li><a href="http://www.science.uva.nl/research/scs/visualization/">Scientific Visualization and Virtual Reality Research Group</a></li> 
+        <li><a href="http://www.uva.nl" title="Universiteit van Amsterdam">Universiteit van Amsterdam</a></li> 
+       </ul> </li> 
+      <li id="archive" class="widget clearfix"> 
+       <div> 
+        <h3>Archive</h3> 
+        <ul> 
+         <li><a href="https://multigesture.net/2012/08/">August 2012</a>&nbsp;(1)</li> 
+         <li><a href="https://multigesture.net/2012/04/">April 2012</a>&nbsp;(1)</li> 
+         <li><a href="https://multigesture.net/2012/02/">February 2012</a>&nbsp;(2)</li> 
+         <li><a href="https://multigesture.net/2011/11/">November 2011</a>&nbsp;(1)</li> 
+         <li><a href="https://multigesture.net/2011/03/">March 2011</a>&nbsp;(1)</li> 
+         <li><a href="https://multigesture.net/2010/12/">December 2010</a>&nbsp;(4)</li> 
+         <li><a href="https://multigesture.net/2010/11/">November 2010</a>&nbsp;(2)</li> 
+         <li><a href="https://multigesture.net/2010/04/">April 2010</a>&nbsp;(2)</li> 
+         <li><a href="https://multigesture.net/2010/02/">February 2010</a>&nbsp;(1)</li> 
+         <li><a href="https://multigesture.net/2009/12/">December 2009</a>&nbsp;(1)</li> 
+         <li><a href="https://multigesture.net/2009/08/">August 2009</a>&nbsp;(1)</li> 
+         <li><a href="https://multigesture.net/2009/07/">July 2009</a>&nbsp;(3)</li> 
+         <li><a href="https://multigesture.net/2009/02/">February 2009</a>&nbsp;(1)</li> 
+         <li><a href="https://multigesture.net/2008/12/">December 2008</a>&nbsp;(1)</li> 
+         <li><a href="https://multigesture.net/2008/11/">November 2008</a>&nbsp;(1)</li> 
+         <li><a href="https://multigesture.net/2008/09/">September 2008</a>&nbsp;(2)</li> 
+         <li><a href="https://multigesture.net/2008/07/">July 2008</a>&nbsp;(1)</li> 
+         <li><a href="https://multigesture.net/2008/05/">May 2008</a>&nbsp;(3)</li> 
+         <li><a href="https://multigesture.net/2008/03/">March 2008</a>&nbsp;(1)</li> 
+         <li><a href="https://multigesture.net/2008/02/">February 2008</a>&nbsp;(1)</li> 
+         <li><a href="https://multigesture.net/2008/01/">January 2008</a>&nbsp;(1)</li> 
+         <li><a href="https://multigesture.net/2007/11/">November 2007</a>&nbsp;(2)</li> 
+         <li><a href="https://multigesture.net/2007/09/">September 2007</a>&nbsp;(5)</li> 
+         <li><a href="https://multigesture.net/2007/07/">July 2007</a>&nbsp;(1)</li> 
+         <li><a href="https://multigesture.net/2007/06/">June 2007</a>&nbsp;(1)</li> 
+         <li><a href="https://multigesture.net/2007/05/">May 2007</a>&nbsp;(5)</li> 
+         <li><a href="https://multigesture.net/2007/04/">April 2007</a>&nbsp;(3)</li> 
+        </ul> 
+       </div> 
+       <div> 
+        <h3>Category</h3> 
+        <ul> 
+         <li class="cat-item cat-item-11"><a href="https://multigesture.net/category/android/">Android</a> </li> 
+         <li class="cat-item cat-item-8"><a href="https://multigesture.net/category/application/">Application</a> </li> 
+         <li class="cat-item cat-item-52"><a href="https://multigesture.net/category/blackberry/">BlackBerry</a> </li> 
+         <li class="cat-item cat-item-2"><a href="https://multigesture.net/category/blogroll/">Blogroll</a> </li> 
+         <li class="cat-item cat-item-49"><a href="https://multigesture.net/category/featured/">Featured</a> </li> 
+         <li class="cat-item cat-item-7"><a href="https://multigesture.net/category/howto/">Howto</a> </li> 
+         <li class="cat-item cat-item-46"><a href="https://multigesture.net/category/infovis/">Infovis</a> </li> 
+         <li class="cat-item cat-item-6"><a href="https://multigesture.net/category/multitouch/">Multitouch</a> </li> 
+        </ul> 
+       </div> </li> 
+     </ul> <!--<div class="clearfix"></div>-->
+    </div>
+   </div> 
+   <div id="footer"> 
+    <div class="width "> 
+     <ul id="footer-widget" class="clearfix"> 
+      <li class="widget"><h3>Tags</h3>
+       <div class="tagcloud">
+        <a href="https://multigesture.net/tag/adobe-air/" class="tag-cloud-link tag-link-28 tag-link-position-1" style="font-size: 16.46511627907pt;" aria-label="adobe air (11 items)">adobe air</a> <a href="https://multigesture.net/tag/android/" class="tag-cloud-link tag-link-54 tag-link-position-2" style="font-size: 9.953488372093pt;" aria-label="Android (2 items)">Android</a> <a href="https://multigesture.net/tag/application-2/" class="tag-cloud-link tag-link-25 tag-link-position-3" style="font-size: 19.286821705426pt;" aria-label="application (21 items)">application</a> <a href="https://multigesture.net/tag/chat/" class="tag-cloud-link tag-link-15 tag-link-position-4" style="font-size: 8pt;" aria-label="chat (1 item)">chat</a> <a href="https://multigesture.net/tag/conference/" class="tag-cloud-link tag-link-18 tag-link-position-5" style="font-size: 13.209302325581pt;" aria-label="conference (5 items)">conference</a> <a href="https://multigesture.net/tag/diy/" class="tag-cloud-link tag-link-43 tag-link-position-6" style="font-size: 9.953488372093pt;" aria-label="diy (2 items)">diy</a> <a href="https://multigesture.net/tag/emulation-2/" class="tag-cloud-link tag-link-51 tag-link-position-7" style="font-size: 8pt;" aria-label="emulation (1 item)">emulation</a> <a href="https://multigesture.net/tag/facebook/" class="tag-cloud-link tag-link-48 tag-link-position-8" style="font-size: 9.953488372093pt;" aria-label="facebook (2 items)">facebook</a> <a href="https://multigesture.net/tag/flash/" class="tag-cloud-link tag-link-27 tag-link-position-9" style="font-size: 8pt;" aria-label="flash (1 item)">flash</a> <a href="https://multigesture.net/tag/games/" class="tag-cloud-link tag-link-32 tag-link-position-10" style="font-size: 11.255813953488pt;" aria-label="games (3 items)">games</a> <a href="https://multigesture.net/tag/google-earth/" class="tag-cloud-link tag-link-50 tag-link-position-11" style="font-size: 12.341085271318pt;" aria-label="google earth (4 items)">google earth</a> <a href="https://multigesture.net/tag/gsoc/" class="tag-cloud-link tag-link-24 tag-link-position-12" style="font-size: 8pt;" aria-label="gsoc (1 item)">gsoc</a> <a href="https://multigesture.net/tag/hacking/" class="tag-cloud-link tag-link-44 tag-link-position-13" style="font-size: 14.511627906977pt;" aria-label="hacking (7 items)">hacking</a> <a href="https://multigesture.net/tag/harvard/" class="tag-cloud-link tag-link-23 tag-link-position-14" style="font-size: 8pt;" aria-label="harvard (1 item)">harvard</a> <a href="https://multigesture.net/tag/hci/" class="tag-cloud-link tag-link-22 tag-link-position-15" style="font-size: 17.767441860465pt;" aria-label="hci (15 items)">hci</a> <a href="https://multigesture.net/tag/howto-2/" class="tag-cloud-link tag-link-37 tag-link-position-16" style="font-size: 8pt;" aria-label="howto (1 item)">howto</a> <a href="https://multigesture.net/tag/infovis-2/" class="tag-cloud-link tag-link-47 tag-link-position-17" style="font-size: 13.209302325581pt;" aria-label="infovis (5 items)">infovis</a> <a href="https://multigesture.net/tag/irc/" class="tag-cloud-link tag-link-14 tag-link-position-18" style="font-size: 8pt;" aria-label="IRC (1 item)">IRC</a> <a href="https://multigesture.net/tag/kinect/" class="tag-cloud-link tag-link-42 tag-link-position-19" style="font-size: 8pt;" aria-label="kinect (1 item)">kinect</a> <a href="https://multigesture.net/tag/latency/" class="tag-cloud-link tag-link-36 tag-link-position-20" style="font-size: 8pt;" aria-label="latency (1 item)">latency</a> <a href="https://multigesture.net/tag/mma/" class="tag-cloud-link tag-link-26 tag-link-position-21" style="font-size: 15.054263565891pt;" aria-label="mma (8 items)">mma</a> <a href="https://multigesture.net/tag/multitouch-2/" class="tag-cloud-link tag-link-19 tag-link-position-22" style="font-size: 22pt;" aria-label="multitouch (38 items)">multitouch</a> <a href="https://multigesture.net/tag/museum/" class="tag-cloud-link tag-link-20 tag-link-position-23" style="font-size: 8pt;" aria-label="museum (1 item)">museum</a> <a href="https://multigesture.net/tag/nasa/" class="tag-cloud-link tag-link-35 tag-link-position-24" style="font-size: 8pt;" aria-label="nasa (1 item)">nasa</a> <a href="https://multigesture.net/tag/nuigroup/" class="tag-cloud-link tag-link-29 tag-link-position-25" style="font-size: 9.953488372093pt;" aria-label="nuigroup (2 items)">nuigroup</a> <a href="https://multigesture.net/tag/projects/" class="tag-cloud-link tag-link-45 tag-link-position-26" style="font-size: 8pt;" aria-label="projects (1 item)">projects</a> <a href="https://multigesture.net/tag/showcase/" class="tag-cloud-link tag-link-21 tag-link-position-27" style="font-size: 17.550387596899pt;" aria-label="showcase (14 items)">showcase</a> <a href="https://multigesture.net/tag/sparkon/" class="tag-cloud-link tag-link-16 tag-link-position-28" style="font-size: 8pt;" aria-label="sparkon (1 item)">sparkon</a> <a href="https://multigesture.net/tag/surface-computing/" class="tag-cloud-link tag-link-40 tag-link-position-29" style="font-size: 8pt;" aria-label="surface computing (1 item)">surface computing</a> <a href="https://multigesture.net/tag/tabletop/" class="tag-cloud-link tag-link-17 tag-link-position-30" style="font-size: 9.953488372093pt;" aria-label="tabletop (2 items)">tabletop</a> <a href="https://multigesture.net/tag/technology/" class="tag-cloud-link tag-link-39 tag-link-position-31" style="font-size: 15.054263565891pt;" aria-label="technology (8 items)">technology</a> <a href="https://multigesture.net/tag/thesis/" class="tag-cloud-link tag-link-31 tag-link-position-32" style="font-size: 9.953488372093pt;" aria-label="thesis (2 items)">thesis</a> <a href="https://multigesture.net/tag/touchlib/" class="tag-cloud-link tag-link-33 tag-link-position-33" style="font-size: 9.953488372093pt;" aria-label="touchlib (2 items)">touchlib</a> <a href="https://multigesture.net/tag/touch-tracer/" class="tag-cloud-link tag-link-38 tag-link-position-34" style="font-size: 9.953488372093pt;" aria-label="touch tracer (2 items)">touch tracer</a> <a href="https://multigesture.net/tag/tutorial/" class="tag-cloud-link tag-link-41 tag-link-position-35" style="font-size: 14.511627906977pt;" aria-label="tutorial (7 items)">tutorial</a> <a href="https://multigesture.net/tag/tv/" class="tag-cloud-link tag-link-34 tag-link-position-36" style="font-size: 8pt;" aria-label="tv (1 item)">tv</a> <a href="https://multigesture.net/tag/uva/" class="tag-cloud-link tag-link-30 tag-link-position-37" style="font-size: 13.968992248062pt;" aria-label="uva (6 items)">uva</a>
+       </div> </li> 
+      <li class="widget"> <h3>Recent Posts</h3> 
+       <ul> 
+        <li> <a href="https://multigesture.net/2012/08/02/nodebeat-featured-on-the-blackberry-dev-blog/">NodeBeat featured on the BlackBerry Dev blog</a> </li> 
+        <li> <a href="https://multigesture.net/2012/04/27/playbook-add-on-ofxqnx/">PlayBook add-on (ofxQNX)</a> </li> 
+        <li> <a href="https://multigesture.net/2012/02/22/rewriting-and-porting-firc/">Rewriting and porting fIRC</a> </li> 
+        <li> <a href="https://multigesture.net/2012/02/06/epic-windmill/">Epic Windmill</a> </li> 
+        <li> <a href="https://multigesture.net/2011/11/19/nodebeat-openframeworks-and-android/">NodeBeat, openFrameworks and Android</a> </li> 
+       </ul> </li>
+      <li class="widget"><h3>Recent Comments</h3>
+       <ul id="recentcomments">
+        <li class="recentcomments"><span class="comment-author-link">RabanePaco</span> on <a href="https://multigesture.net/articles/how-to-use-cron-on-a-synology-nas/#comment-549417">How to use cron on a Synology NAS</a></li>
+        <li class="recentcomments"><span class="comment-author-link"><a href="https://multigesture.net" rel="external nofollow ugc" class="url">Laurence Muller</a></span> on <a href="https://multigesture.net/articles/how-to-compile-unison-for-a-synology-ds212/#comment-541469">How to compile Unison for a Synology DS212+</a></li>
+        <li class="recentcomments"><span class="comment-author-link">Mark</span> on <a href="https://multigesture.net/articles/how-to-compile-unison-for-a-synology-ds212/#comment-532198">How to compile Unison for a Synology DS212+</a></li>
+        <li class="recentcomments"><span class="comment-author-link"><a href="https://ntcore.com/?p=594" rel="external nofollow ugc" class="url">Porting a CHIP-8 emulator to Rust – NTCore</a></span> on <a href="https://multigesture.net/articles/how-to-write-an-emulator-chip-8-interpreter/#comment-520093">How to write an emulator (CHIP-8 interpreter)</a></li>
+        <li class="recentcomments"><span class="comment-author-link">Prox</span> on <a href="https://multigesture.net/articles/how-to-write-an-emulator-chip-8-interpreter/#comment-519066">How to write an emulator (CHIP-8 interpreter)</a></li>
+       </ul></li>
+      <li class="widget"><h3>About</h3> 
+       <div class="textwidget">
+        Site content copyright 2007-2013 Laurence Muller. All rights reserved.
+        <br>
+        <br> The website usage statistics for multigesture.net are tracked by <a href="http://www.google.com/analytics">Google Analytics</a>.
+       </div> </li> 
+     </ul> 
+     <div id="contact"> 
+     </div> 
+     <div id="credit" class="clearfix"> 
+      <div style="float:left !important;width:40% !important;white-space:nowrap;"> 
+       <p class="footer_text">© 2021 Multigesture.net is proudly powered by <a href="http://wordpress.org">WordPress</a></p> 
+       <p> <a href="https://multigesture.net?f=site">Standard</a> | <a href="https://multigesture.net?f=mobile">Mobile</a> </p> 
+      </div> 
+      <div style="float:right !important;width:40% !important;white-space:nowrap;"> 
+       <p id="kreativethemes">A quality product from<a href="http://www.kreativethemes.com/" title="KreativeThemes"></a></p> 
+      </div> 
+     </div> 
+    </div><!-- .width --> 
+   </div><!-- #footer --> 
+  </div><!-- #wrapper --> 
+  <script type="text/javascript" src="https://multigesture.net/wp-content/plugins/wp-syntax/js/wp-syntax.js?ver=1.1" id="wp-syntax-js-js"></script> 
+  <script type="text/javascript" src="https://multigesture.net/wp-includes/js/comment-reply.min.js?ver=5.7" id="comment-reply-js"></script> 
+  <script type="text/javascript" src="https://multigesture.net/wp-includes/js/wp-embed.min.js?ver=5.7" id="wp-embed-js"></script> 
+  <script async type="text/javascript" src="https://multigesture.net/wp-content/plugins/akismet/_inc/form.js?ver=4.1.9" id="akismet-form-js"></script> 
+  <script type="text/javascript" src="https://multigesture.net/wp-content/themes/sleek/library/scripts/tab.js"></script> 
+  <script type="text/javascript" src="https://twitter.com/javascripts/blogger.js"></script> 
+  <script type="text/javascript" src="https://twitter.com/statuses/user_timeline/LaurenceMuller.json?callback=twitterCallback2&amp;count=1"></script> 
+  <script type="text/javascript">
+	<!--
+	jQuery(function($){
+	    //snip
+		$("#author,#url,#email,#message").fieldtag();
+	    //snap
+	});
+	-->
+	</script>  <!-- Dynamic page generated in 0.764 seconds. --><!-- Cached page generated by WP-Super-Cache on 2021-03-31 23:53:04 --><!-- Compression = gzip -->
+ </body>
+</html>

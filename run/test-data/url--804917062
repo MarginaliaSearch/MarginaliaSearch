@@ -1,0 +1,193 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+ <head> 
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"> 
+  <title>Windows 7 Log</title> 
+ </head> 
+ <body> 
+  <pre>
+T3500 2BF8LK1 (BOB)
+-------------------
+
+07-Nov-2010
+-----------
+Installed Windows 7 on top of RAID-1 disk. 
+Configured network to static IPs, req'd ARP clear. Much wrestling, network is flaky displaying other systems!
+Installed 57 updates!
+Installed 2 more updates
+Connect USB octopus, enables Logitech wireless mouse
+Installed IATA89ENU Intel Matrix Storage Manager. Now reports RAID status on login.
+Installed Windows Grep so I can look at the archdisk index files
+Installed VB6 and VB6 SP6 update, ignoring the compatibility warnings. Right-click VB6.exe, Properties, run in XP compat and always as admin.
+Installed Dart PowerTCP WebServer for ActiveX and licensed/activated successfully.
+Installed Dart PowerTCP Server for ActiveX (for FTP) and licensed/activated. This stuff is on Archive 41.
+Installed Agent for Windows 7 (KB969168 - 64bit)  which is a stand-alone Windows Update
+Installed ASCOM Platform 5.1b with developer options
+Installed ASCOM Platform 5.5 update
+Installed Kepler 1.0.1
+Installed NOVAS 2.1.1
+INstalled Dome Simulator 5.0.8a update
+Installed POTH update 5.0.5
+Registered PointCalc.dll for ACP development (no MaxPoint installed yet). It is in the ACP dev area under MaxPoint stuff.
+Installed the SOAP Development Toolkit 3.0 (os-components)
+Registered the DC-3 Registration Component (DC3Reg.dll) from the development area (release)
+Installed Tortoise SVN 1.6.11.20210
+Required reboot, system came up very slowly and eventually the screen went black. Hard reboot, RAID reports volume #0 errors, and Matrix Storage reports it failed. I doubt it. but now's the time for a system backup so...
+Install Acronis TrueImage 2009. FAIL!!! No good on Win7/64
+Purchase and Install TrueImage 2011.
+---------------------
+Back up C drive twice (Merops and Calaeno)
+---------------------
+Restart Acronis and let it update online - FAILED!
+Login to Acronis site, register my 2011, then download the update from there.
+Install PuTTY and the DC-3 keypairs. COnfigure for SSH to the A2 sites. Test with Tortoise, OK! 
+Install Chrome standard (not the bleeding edge one!). 
+*NOTE* Other nodes in the net back to not showing. WHY?
+Installed Updated Acronis TrueImage 2011
+Installed FocusMax 3.2.1 then 3.4.40
+Installed MaxIm DL 5.12 and installed license.
+Setup MaxIm cameras and filter wheel. Calibrate guider. Disable sounds.
+Run FocusMax Simulator V-curves (2). FocusMax will now focus.
+Install ACP 6.0 alpha, set up for Red Mountain. Runs OK.
+---------------
+BACK UP C Drive (Calaeno, replace one of above)
+---------------
+Install Targus BT dongle and WIDCOM 6 software. Looks OK.
+NOTE: Device Manager shows WD SES device n/g (ugh)
+      Device Manager shows Acronis Backup Explorer n/g but TrueImage Backup Explorer OK
+Changed workgroup to DENNY and added DNS suffix, naming computer to bob.dc3.com, rebooted for that. Now other systems show in Network after about 30 sec.
+Installed RocketDock and started on icons.
+Ported over all of the FileZilla sites and settings.
+
+Installed Stacks Docklet for RocketDock and configure astro and misc dev stacks.
+Installed HyperSnap 6 and its license.
+Installed Office 2007 Enterprise (partial, not all progs/features but including script debugger)
+Installed Dreamweaver CS5 and activated. Set up window layout, saved. Found the old window layouts from CS4 work great. Bob's Best is exactly what I wanted.
+Installed PrimalScript 2009 and its license. Imported settings from XP, OK. No help documents though.
+
+Spent an hour looping through the  HP web trying to find drivers for the HP2100 LaserJet. FAIL! I got both universal PCL5 and PCL6 drivers but neither work when trying to add a networked 2100 served by my XP system SERVER. There are a bunch of .inf files in the folders but which one????? They have cryptic names. Their misnamed install.exe just opens the add new printer wizard and you end up looking in the same place. OH!!! Google search revealed you add a LOCAL printer, then use the share name for a new LOCAL port (if net share) and TCP port if ethernet printer (like our all in one 7600). Holy Shit, I did it. I let the printer wiz go to Windows Update for the big list and the 2100 was there. For the L7600 I chose a LOCAL printer again, TCP port, then that failed. I selected Custom and typed in the IP address for the TCP port. It failed to contact the printer but then showed the big list. Hand chose it and it installed and ran.
+
+08-Nov-10
+---------
+Replaced the failed 500Gb drive with brand new one. Rebuilt all.
+Installed HTML Workshop, checks OK.
+Installed Inno Setup and Pack.
+Added a bunch of exclusion patterns to Tortoise SVN, now dev trees don't show any more unversioned files.
+Moved Unix folder into place and added bin and local\wbin to path.
+Long wrestle with the BT dongle and WIDCOMM drivers. Finally got it all working as I want. Some opperator error with the headset :-).
+Installed Bria 2, configured as extension 104, working OK
+Moved Prog86 Utilities folder into place, added to path. Includes OLEVIEW, a separate checklist item.
+Installed Paint.NET 3.5.5, checked out, added RocketDock icon.
+Installed ACDSee Photo Manager 12, purchased upgrade.
+Installed TeamViewer 5.1, added to RocketDock.
+Installed VMWare 7 and checked out with a couple of VMs. OK.
+Moved CwRss and CwSvr over to Program Files. Not tested.
+Installed Araxis Merge 2010, added external commands to Tortoise SVN to use Araxis for diff and merge.
+Moved the entire My Documents folder over from old system. Large copy.
+----------------
+BACKUP TO MEROPE
+----------------
+Oops, copy of My Documents stopped at My Music. Complete move of the files.
+Removed old Web Video Editing and Publishing. I have new recipe now with Vegas 9 and YouTube, with the Sony encoder.
+Purchased and installed Araxis support/upgrades thrpough 2011. New license.
+Installed SecureCRT and set up SSH logins to all of the A2 host sites, including public key auth. Install on RocketDock. All check out OK.
+Installed TakeCommand 12, and set up alias and startup shell scripts. Install on RocketDock.
+Worked on RocketDock some more. 
+Installed Dreamweaver CS5. Using old XP/64 VM, exported then imported 22 site projects and spot tested them. Migrated window layouts from CS4 and now using Bob's Best. NOTE that some things didn't install (like AIR).
+----------------
+BACKUP TO MEROPE
+----------------
+
+09-Nov-10
+---------
+Installed WinRAR 3.90 and license.
+Installed Office 2007 Enterprise (not all components, but script editor included)
+Installed Visio 2007
+Installed 20 Microsoft updates, including those for Office
+Installed Microsoft Security Essentials (one of the updates). Hopefully this will be faster than ZoneAlarm, etc.
+Installed 21 more Microsoft updates, 20 for Office 2007 and a new Security Essentials database
+Installed Microsoft Network Monitor 3.4
+Installed CleanMyPC Registry Cleaner and license. Ran and fixed 280 problems.
+Installed Dreamweaver CS3 starter templates (extension)
+Installed XTND.US Dreamweaver JQuery extension
+Installed MySQL ODBC COnnector 5.1.8 (needed for TrackStar)
+Installed MySQL Workbench 5.2.29. Configured for A2 Forums. Can't figure out how to do scheduled backup. ALso cannot get the Health displays to activate.
+Installed MySQL Gui Tools 5.0 (obsolete) for the MySQL Administrator
+NOTE: MySQL Administrator used for daily forum backups! I had to use the XP/64 VM to find where /how those backups were scheduled. DOH!
+Set up Forum Backup project in MySQL Admin and scheduled it daily. Backups go to D:\web\commctr-backup (obviously). Tested and confirmed.
+In XP/64 VM, export all settings from VS2005, VS2008, VS2010. Noted that some things were installed as add-ons!!
+Installed Caps-Lock registry hack and saved in Arch55
+Gemini backups stopped, due to inbound file sharing being disabled! Turned on sharing for C and D drives, full contgrol for only Robert B. Denny. Tested Gemini backup, OK now. Tested access from other systems, OK now.
+Installed the SMTP control
+Tested TrackStar for Comm Center remote MySQL access (read/write) and ability to send emails. OK! Trackstar can now run.
+Installed GoldWave 5.58.
+Create System Restore checkpoint.
+
+Fun: Windows 7 doesn't have the "Stereo Mix" recording input option, apparently. It was working on this same system under Windows XP, so it's not a hardware limitation. I see it's listed in Device Manager as "High Definition Audio Device". I suspect I need real drivers. Went to Dell support, my system, found Analog Devices driver 6.10.2.7250 and installed it. It came up on reboot with those drivers. Wallah! I have it now. Open the Sound control panel, in the Recording tab, click Stereo Mix, then click the Set Default button. That will change it from Currently Unavailable to Default Device, and it will be ready to go!
+
+Tested Windows Media with MP4(!) and GoldWave recording, working OK. Can record sound output now.
+Installed uTorrent 10
+Installed Quicken 2009, let it update to R7
+Move Quicken live files to DC3SERVER\c\QUICKEN on drive Q, allowing her to use the data without needing an account on this system.
+Map Quicken backup folder on old server at \\SERVER\C\QCKNBU to drive R.
+----------------
+BACKUP TO MEROPE
+----------------
+Install VS2005 Pro from 2xCD distribution (11/2010)
+Install VS2005 SP1 KB 926601 as required (arch 34)
+Install VS2005 SP1 Update KB 932232 as required (arch 55)
+Install VS2005 MSDN doc set from Team Edition DVD
+Imported VS2005 settings saved from old system. IOE looks just like it used to!
+PROBLEM: Scheduler is looking for Jet Replication Objects) for compacting the database. It is part of ActiveX Data Objects. Now to look at what comes with Windows 7...etc... The DLL is there C:\Progx86\Common\System\ado\msjro.dll and it registers. However it does not show in COM references, and cannot be added via Browse...
+-----------------
+BACKUP TO CALAENO
+----------------- 
+Installed Visual Studio 2008 Pro from DVD
+Installed VS2008 MSDN Documentation from DVD
+Installed VS2008 SP1 Update KB 945140 as required (arch 55)
+Installed NUnit 2.5.8
+Installed Visual NUnit for VS2008 1.0.3. Check out on Morse Tools project in VS2008, OK.
+----------------
+BACKUP TO MEROPE
+----------------
+
+10-Nov-2010
+-----------
+Installed 18 Windows updates, including some huge ones for VS2008
+Installed Sizer 3.32
+Installed FileZilla 3.3.4.1
+Installed and licensed PrimalSQL 1.1.3
+Installed Fiddler 2.3.0.6
+Installed and licensed Camtasia Studio 7.0
+Installed Camtasia Studio update 7.1, runs OK. Tested Camtasia Recorder too, it's OK.
+
+Tried installing Vegas 9.0e, got error on VC++ 2005 and 2008 SP1 (x64) redistributables, failed to install them. I believe they are already there because I have both development systems installed. This is gonna take some snooping.
+
+Installed Process Monitor 2.93, required for Win7/64. Will use to see what's going on with the Vegas 9 installer.
+
+OK, I solved it. When the installer gets to the error message popup. let it sit there. Now go into C:\Users\YourName\AppData\Local\Temp\SonyInstall_1. You will find all of the bits. Hand install vcredist_x86 (the VS2005 redist), and for 64-bit install vcredist2_x64 (the VS2008 SP1 (x64) redist). Then just run the Vegas90.msi installer that is in that same folder. That will start the main Vegas 9 installer. Vegas is installed and licensed now!
+
+Installed Lagarith Lossless Video Encoder 1.3.20 (needed for video editing)
+Installed many fonts from XP/64 that did not exist in the new OS
+Activated Quicken, then set it to do automatic updates each night. Ran an update, successful. Backed up.
+Installed and licensed TheSky X Pro.
+Installed TheSky X Pro 10.0.9 update.
+Installed VisualSVN 2.0.3. Damn it, the license for 1.x isn't valid.
+Upgraded to V2.0 (50%0ff, $24.50).
+VisualSVN 2.0 licensed, integrated, and tested with VS2005 and VS2008.
+Installed CwCOM
+Installed MorseMail
+Installed Morse Code Tools 1.6
+Installed Western Digital SES drivers for Passport drives. Needed even if virtual CD is disabled in the drive.
+Installed WinAmp 5.581 and licensed for Pro.
+Initial organization of the Start menu, enough for now! Moved all of the folders into Program Data\Microsoft\Windows\Start Menu\Programs and sub folders. This is the "all users" area.
+----------------
+BACKUP TO MEROPE
+----------------
+Installed HyffyYUV video encoder, used by older video projects.
+FocusMax went into MSI Hell, had to let it see the 3.2.1 installer on the desktop. Something to do with shortcuts during start menu cleanup.
+
+
+</pre>  
+ </body>
+</html>

@@ -1,0 +1,748 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head> 
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> 
+  <link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/themes/smoothness/jquery-ui.css" rel="stylesheet"> 
+  <title>PC Engines GmbH - FAQ, HowTo, etc. ...</title> 
+  <link rel="SHORTCUT ICON" href="http://pcengines.ch/favicon_question.ico" type="image/x-icon"> 
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script> 
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js"></script> 
+  <style type="text/css">
+			body {font-size:75%;}
+			.ui-tabs .ui-tabs-nav li {height: 25px; font-size:12px; }
+			th {text-align:left;}
+			table {width:100%; padding:0; border-collapse: collapse; border:0; text-align:left; }
+			.color_table {
+				table-layout: fixed;
+				width: 100%;
+				white-space: nowrap;
+				border: 1px;
+			}
+			.color_table td {
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+			.color_table th {
+				background-color: #4CAF50;
+				color: white;
+			}
+			.color_table tr:nth-child(even) {
+				background-color: #f2f2f2
+			}
+
+			h3{
+					padding: 0px;
+					margin: 10px;
+			}
+
+		</style> 
+  <script type="text/javascript">
+			function selecttab(tab){
+					$('#tabs').tabs( "select", $('#tabs a[href="'+ tab +'"]').parent().index());
+			}
+
+			$(document).ready(function () {
+				$("#tabs_os").tabs();
+
+				$( "#esxi_button" ).click(function() { 
+					$("#old_esxi").toggle();
+				});
+
+				$("#old_esxi").hide();
+
+				$("#tabs").tabs({
+					beforeActivate: function (event, ui) {
+						window.location.hash = ui.newPanel.selector;
+					}
+
+				});
+
+				if(document.location.hash!='') {
+					selecttab(window.location.hash);
+				}
+			});
+
+			function calculate_mac(serial_nr){
+				serial_nr = parseInt(serial_nr.replace('?','_').split("_")[0].replace('WN',''), 10);
+				var mac = (serial_nr+64)*4;
+				mac = mac.toString(16);
+				mac = mac.substring(0,2) + ":" + mac.substring(2,4) + ":" + mac.substring(4,6);
+				$("#mac_id").val('00:0d:b9:' + mac);
+			};
+			function calculate_serial(mac){
+				serial_nr = mac.split(':').join('');
+				var len = serial_nr.length;
+				serial_nr = serial_nr.substring(len-6,len);
+				serial_nr = parseInt(serial_nr, 16)/4-64;
+				$("#serial_nr").val(Math.trunc(serial_nr));
+			};
+ 
+		</script> 
+ </head> 
+ <body id="body"> 
+  <div style="top:0; width:100%; background-color:#CCCCCC"> 
+   <img src="../logo.gif" alt="PC Engines Home"> 
+  </div> 
+  <div class="ui-tabs ui-widget ui-widget-content ui-corner-all" id="tabs"> 
+   <ul class="ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all"> 
+    <li class="ui-state-default ui-corner-top ui-tabs-active ui-state-active"><a class="ui-tabs-anchor" href="#home">Home</a></li> 
+    <li class="ui-state-default ui-corner-top"><a class="ui-tabs-anchor" href="#serialconsole">Serial Console</a></li> 
+    <li class="ui-state-default ui-corner-top"><a class="ui-tabs-anchor" href="#bios">coreboot / BIOS</a></li> 
+    <li class="ui-state-default ui-corner-top"><a class="ui-tabs-anchor" href="#TinyCoreLinux">TinyCore</a></li> 
+    <li class="ui-state-default ui-corner-top"><a class="ui-tabs-anchor" href="#VoyageLinux">Voyage Linux</a></li> 
+    <li class="ui-state-default ui-corner-top"><a class="ui-tabs-anchor" href="#nic">NIC speed</a></li> 
+    <li class="ui-state-default ui-corner-top"><a class="ui-tabs-anchor" href="#OS_installation">OS install</a></li> 
+    <li class="ui-state-default ui-corner-top"><a class="ui-tabs-anchor" href="#3G">3G modems</a></li> 
+    <li class="ui-state-default ui-corner-top"><a class="ui-tabs-anchor" href="#macadr">MAC ID</a></li> 
+    <li class="ui-state-default ui-corner-top"><a class="ui-tabs-anchor" href="#gpio">GPIO/I2C</a></li> 
+    <li class="ui-state-default ui-corner-top"><a class="ui-tabs-anchor" href="#images">Disk Images</a></li> 
+    <li class="ui-state-default ui-corner-top"><a class="ui-tabs-anchor" href="#add_on_cards">add-on cards</a></li> 
+   </ul> 
+   <div class="ui-tabs-panel ui-widget-content ui-corner-bottom" id="home"> 
+    <h3>Welcome to the HOW-TO pages of PC Engines</h3> This webpage contains a collection of answers to frequently asked questions and problems people have.
+    <br> Suggestions, corrections, additions, etc. may be sent to support1207[at]pcengines.ch
+    <br> Please also see our forum for more information at <a href="http://pcengines.info/forums">pcengines.info/forums</a> 
+   </div> 
+   <div style="display: none;" role="tabpanel" class="ui-tabs-panel ui-widget-content ui-corner-bottom" id="serialconsole"> 
+    <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">Troubleshooting</legend> 
+     <ul> 
+      <li>The loop-back test: put a paper clip in the female DB9 connector which would go on the alix/apu board at pins 2 and 3, then you should receive typed characters in your terminal emulation program. This tests the terminal emulation program, the USB-RS232 and the serial cable and this test <span style="color:red;">MUST</span> work before blaming any board attached to it. But this test does not prove whether or not a null-modem cable is used.</li> 
+      <li>The most common mistake people make is not using a null-modem cable: If you have a multimeter, check that the pins 2 and 3 are crossed. Do <span style="color:red;">NOT</span> use gender changers!</li> 
+      <li>The default baud rate for alix boards is 38400,8n1 and for apu boards 115200,8n1.</li> 
+      <li>The recommended terminal emulation program for any platform is <a href="http://www.chiark.greenend.org.uk/%7Esgtatham/putty/download.html">PuTTY</a>.</li> 
+      <li>Pressing the button S1 while powering up, temporarily enables a previously in the BIOS disabled serial console.</li> 
+      <li>To test if an apu board boots up, even if there is no serial console, boot it with TinyCore and a beep should be heard after about 30s-40s.</li> 
+     </ul> 
+    </fieldset>
+    <br> The output of the BIOS redirected to the serial port can be disabled, this can be useful when the port is needed for a controlling device.
+    <br>
+    <br> <strong>"May the Null modem cable be with you!"</strong>
+    <br> 
+   </div> 
+   <div class="ui-tabs-panel ui-widget-content ui-corner-bottom" id="bios"> 
+    <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">alix</legend> Prepare a CF with this <a href="http://pcengines.ch/file/freedos.zip">FreeDOS image</a> and add the files found in the BIOS file <a href="http://pcengines.ch/file/alix099m.zip">alix v0.99m</a> found <a href="http://pcengines.ch/alix2.htm">here</a>
+     <br> Then boot the alix and execute sb.com
+     <br> As an alternative there is also an Xmodem upload methode, for alix2 see <a href="http://pcengines.ch/file/alix2.upd">alix2.upd</a><a> and for alix3d2 see </a><a href="http://pcengines.ch/file/alix3.upd">alix3.upd</a><a><br> If an alix board is bricked an </a><a href="http://pcengines.ch/lpc1a.htm">LPC1a</a> adapter for the corresponding board is needed. Please leave a note when ordering which board it is needed for.
+     <br> 
+     <hr> The alix3d3 and alix1d have an AwardBIOS, because TinyBIOS does not support VGA and AC97.
+     <br> In case of the alix3d3, if the VGA port and AC97 are not used, the TinyBIOS of the alix3d2 can be used instead. 
+    </fieldset>
+    <br> 
+    <h2>All BIOS versions with release notes for apu boards: <a href="https://pcengines.github.io/" target="_new">https://pcengines.github.io/</a></h2> 
+    <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">apu boards</legend> We suggest using <a onclick="selecttab('#TinyCoreLinux');" href="#TinyCoreLinux">TinyCore</a> which comes with the tool <code>flashrom</code>. Once an USB stick is prepared with TinyCore the BIOS file needs to be copied to the USB stick.
+     <br> <!--					Please find the latest coreboot versions for the apu boards here:<br/>
+					<a href="https://github.com/pcengines/apu2-documentation#binary-releases" target="_new">https://github.com/pcengines/apu2-documentation#binary-releases</a><br/>
+					Here is the <a href="https://github.com/pcengines/coreboot/blob/coreboot-4.0.x/CHANGELOG.md">changelog</a> for the coreboot versions.<br/>
+--> 
+     <br> There are coreboot legacy versions and coreboot mainline versions for all boards
+     <br> 
+     <br> If an apu board is bricked an <a href="http://pcengines.ch/spi1a.htm">spi1a</a> is needed, except apu1 boards need a <a href="http://www.pcengines.ch/lpc1aapu.htm">lpc1aapu</a>
+     <br>
+     <br> 
+    </fieldset>
+    <br> <!--
+				<fieldset class="ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-widget ui-widget-header ui-corner-all">apu1/apu2</legend>
+					We suggest using <a onclick="selecttab('#TinyCoreLinux');" href="#TinyCoreLinux">TinyCore</a> which comes with the tool <code>flashrom</code>. Once an USB stick is prepared with TinyCore the BIOS file needs to be copied to the USB stick.
+				</fieldset><br/>
+
+
+				<fieldset class="ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-widget ui-widget-header ui-corner-all">apu1</legend>
+					To update the BIOS, enter e.g. <code>flashrom -w apu140809.rom</code><br/>
+					If an apu1 board is bricked an <a href="http://pcengines.ch/lpc1aapu.htm">LPC1aapu</a> adapter is needed.<br/>
+					<br/><a href="file/apu140908.zip">Build 9/8/2014 (beta, reduced "spew level")</a>
+					<br/><a href="file/apu140708.zip">Build 7/8/2014 (beta)</a>
+					<br/><a href="file/apu140405.zip">Build 4/5/2014 (current production)</a>
+					<br/><a href="file/apu140401.zip">Build 4/1/2014 (beta)</a>
+				</fieldset><br/>
+				<fieldset class="ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-widget ui-widget-header ui-corner-all">apu2</legend>
+					The latest BIOS versions are:<br/><br/>
+					<table>
+					<tr><td style="width:250px"><a href="http://pcengines.ch/file/apu2_v4.0.11.rom.tar.gz">apu2_v4.0.11.rom.tar.gz</a></td><td style="width:250px">see <a href="https://github.com/pcengines/coreboot/blob/coreboot-4.0.x/CHANGELOG.md">changelog</a></td><td>MD5 sum is in the zip file</td></tr>
+					<tr><td><a href="http://pcengines.ch/file/apu2_v4.6.0.rom.tar.gz">apu2_v4.6.0.rom.tar.gz</a></td><td>coreboot mainstream version</td><td>MD5 sum is in the zip file</td></tr>
+
+--> <!--
+					<tr><td><a href="http://pcengines.ch/file/apu2_v4.0.7.rom.zip">apu2_v4.0.7.rom.zip</a></td><td>various fixes, iPXE with setup</td><td>MD5 sum and change log is in the zip file</td></tr>
+					<tr><td><a href="http://pcengines.ch/file/apu2_v4.5.5.rom.tar.gz">apu2_v4.5.5.rom.tar.gz</a></td><td>coreboot mainstream version (experimental)</td><td>MD5 sum and change log is in the zip file</td></tr>
+
+					<tr><td><a href="http://www.pcengines.ch/file/apu2_160311.zip">apu2_160311.zip</a></td><td>added iPXE payload (can yet not be disabled in the setup)</td><td>MD5 sum: 780a8ffaa034e013fef7126f3f986646</td></tr>
+					<tr><td><a href="http://www.pcengines.ch/file/apu2_160307.zip">apu2_160307.zip</a></td><td>added boot from SD</td><td>MD5 sum: 9ae6747eb14df4246657fb40823adc5f</td></tr>
+
+					<tr><td><a href="http://www.pcengines.ch/file/apu2_160211.zip">apu2_160211.zip</a></td><td>(probably) fixed reboot</td><td>MD5 sum: 813f72dcdf2ffbdffd01fc42fb7a3071</td></tr>
+					<tr><td><a href="http://www.pcengines.ch/file/apu2_160120.zip">apu2_160120.zip</a></td><td>fix miniPCIe IRQ assignments, wle200nx working</td><td>MD5 sum:</td></tr>
+					<tr><td><a href="http://www.pcengines.ch/file/apu2_151109.zip">apu2_151109.zip</a></td><td>boots from mSATA</td><td>MD5 sum:</td></tr>
+					<tr><td><a href="http://www.pcengines.ch/file/apu2_151106sd.zip">apu2_151106sd.zip</a></td><td>boots from SD</td><td>MD5 sum:</td></tr>
+--> <!--					</table>
+--> <!--
+					The following Windows tool creates a bootable USB/SD which automatically flashes the apu2 Board with the BIOS version "apu151109.rom" (boot from mSATA):<br/>
+					<a href="http://www.pcengines.ch/tmp/apu2_autobiosupdate_151109.exe">apu2_autobiosupdate_151109.exe</a>
+					<br/>
+
+					<br/>
+					To update the BIOS, enter e.g. <code>flashrom -w apu151109.rom</code><br/>
+					If an apu2 board is bricked an <a href="http://pcengines.ch/spi1a.htm">spi1a</a> is needed.<br/>
+					To flash the <a href="http://pcengines.ch/spi1a.htm">spi1a</a> use <code>flashrom -w apuXYZ.rom -p internal:recovery_dongle=SPI</code><br/>
+					<a href="https://github.com/pcengines/coreboot/blob/coreboot-4.0.x/CHANGELOG.md">changelog</a></td>
+				</fieldset><br/>
+				<fieldset class="ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-widget ui-widget-header ui-corner-all">apu3</legend>
+					The latest BIOS versions are:<br/><br/>
+					<table>
+					<tr><td style="width:250px"><a href="http://pcengines.ch/file/apu3_v4.0.11.rom.tar.gz">apu3_v4.0.11.rom.tar.gz</a></td><td style="width:250px">see <a href="https://github.com/pcengines/coreboot/blob/coreboot-4.0.x/CHANGELOG.md">changelog</a></td><td>MD5 sum is in the zip file</td></tr>
+					<tr><td><a href="http://pcengines.ch/file/apu3_v4.6.0.rom.tar.gz">apu3_v4.6.0.rom.tar.gz</a></td><td>coreboot mainstream version</td><td>MD5 sum is in the zip file</td></tr>
+
+					<tr><td><a href="http://pcengines.ch/file/apu3_v4.0.7.1.rom.zip">apu3_v4.0.7.1.rom.zip</a></td><td>various fixes, enable additional USB ports, iPXE with setup, set SIM switch GPIO to high.</td><td></tr>
+					<tr><td><a href="http://pcengines.ch/file/apu3_v4.5.5.rom.tar.gz">apu3_v4.5.5.rom.tar.gz</a></td><td>coreboot mainstream version (experimental)</td><td>MD5 sum and change log is in the zip file</td></tr>
+					<tr><td><a href="http://www.pcengines.ch/file/apu3_20160519.zip">apu3_20160519.zip</a></td><td>USB enabled on all miniPCIe slots</td><td>MD5 sum: 04de2e479881198e59e794c1062a090f</td></tr>
+
+					</table>
+					<br/>
+					To update the BIOS, enter e.g. <code>flashrom -w apu3_20160519.rom</code><br/>
+					If an apu3 board is bricked an <a href="http://pcengines.ch/spi1a.htm">spi1a</a> is needed.<br/>
+					<a href="https://github.com/pcengines/coreboot/blob/coreboot-4.0.x/CHANGELOG.md">changelog</a></td>
+				</fieldset><br/>
+
+				<fieldset class="ui-widget ui-widget-content ui-corner-all">
+					<legend class="ui-widget ui-widget-header ui-corner-all">mailing list for new BIOS releases</legend>
+					<!-- Begin MailChimp Signup Form - - >
+					<form action="//pcengines.us1.list-manage.com/subscribe/post?u=0073921c24b2d3547ca8165d8&amp;id=e9e7b8b3b6" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate="">
+							<div id="mc_embed_signup_scroll">
+								<div class="mc-field-group">
+									<label for="mce-EMAIL">Subscribe to our mailing list for BIOS updates</label>
+									<input name="EMAIL" class="required email" id="mce-EMAIL" type="email">
+								</div>
+								<div id="mce-responses" class="clear">
+									<div class="response" id="mce-error-response" style="display:none"></div>
+									<div class="response" id="mce-success-response" style="display:none"></div>
+								</div>    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups- - >
+								<div style="position: absolute; left: -5000px;" aria-hidden="true"><input name="b_0073921c24b2d3547ca8165d8_e9e7b8b3b6" tabindex="-1" type="text"></div>
+								<div class="clear"><input value="Subscribe" name="subscribe" id="mc-embedded-subscribe" class="button" type="submit"></div>
+							</div>
+					</form>
+					<!--End mc_embed_signup-->  
+    <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">building corebot for apu1</legend> coreboot source: <a href="http://pcengines.ch/tmp/coreboot_140908.tar.gz">www.pcengines.ch/tmp/coreboot_140908.tar.gz</a>
+     <br> Voyage Linux image for apu with the complete toolchain to build the BIOS: <a href="http://pcengines.ch/tmp/apu_bios_builder.img.gz">www.pcengines.ch/tmp/apu_bios_builder.img.gz</a>
+     <br>
+     <br> <a href="http://pcengines.ch/file/SageBios_PCEngines_apu_sources_for_publishing_20140401_GPL_package.tar.gz">SageBios_PCEngines_apu_sources_for_publishing_20140401_GPL_package.tar.gz</a>
+     <br> <a href="http://pcengines.ch/file/SageBios_PCEngines_apu_sources_for_publishing_20140405_GPL_package.tar.gz">SageBios_PCEngines_apu_sources_for_publishing_20140405_GPL_package.tar.gz</a>
+     <br> 
+    </fieldset>
+    <br> 
+    <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">building corebot for apu2 and apu3</legend> For building apu2 coreboot please see: <a href="https://github.com/pcengines/apu2-documentation#building-firmware-using-apu2-image-builder">Building firmware using APU2 image builder</a> 
+    </fieldset> 
+   </div> 
+   <div style="display: none;" role="tabpanel" class="ui-tabs-panel ui-widget-content ui-corner-bottom" id="TinyCoreLinux">
+     Setting up of a bootable drive to support apu flash upgrades can be a bit tricky.
+    <br> <a href="http://distro.ibiblio.org/tinycorelinux/">TinyCore Linux</a> is a small system that boots up quite quickly. The apu board can boot TinyCore from an USB memory stick or from an SD card in the internal slot. 
+    <br>
+    <br> 
+    <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">Installation under Windows</legend> 
+     <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">apu1/apu2</legend> <a href="http://pcengines.ch/file/apu-bootable-usb-installer_v1.8.exe">TinyCore USB installer v1.8</a>
+      <br> 
+     </fieldset>
+     <br> 
+    </fieldset>
+    <br> 
+    <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">Installation under Linux or MacOS</legend> Format a USB stick or SD card with a FAT file system, then make it bootable with syslinux.
+     <br> Finally extract the files found in <a href="http://pcengines.ch/file/apu2-tinycore6.4.img.gz">apu2-tinycore6.4.img.gz</a> or <a href="http://pcengines.ch/file/TinyCore6.4_2017.tar.bz2">TinyCore6.4_2017.tar.bz2</a> and copy them to the USB stick.
+     <br> 
+     <br> <a href="http://pcengines.ch/tmp/Make-tinyCore-memstick-on-FreeBSD.pdf">Instructions for FreeBSD</a> 
+    </fieldset>
+    <br> Source for building <a href="http://pcengines.ch/tmp/apu-tinycore-usb-installer-source.tar.bz2">apu-tinycore-usb-installer.exe</a> using <a href="http://nsis.sourceforge.net/Main_Page">NSIS</a>
+    <br> 
+   </div> 
+   <div class="ui-tabs-panel ui-widget-content ui-corner-bottom" id="VoyageLinux">
+     Please visit <a href="http://linux.voyage.hk/">http://linux.voyage.hk/</a>.
+    <br> The root password of Voyage Linux is 'voyage'.
+    <br> 
+    <br> 
+    <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">General informations</legend> How to prepare any storage device with Voyage Linux on any Linux machine based on the official Voyage tarball:
+     <br> 
+     <ul> 
+      <li>run some Linux, perhaps Voyage Linux on an alix board or any other PC</li> 
+      <li>attach the target storage device</li> 
+      <li>get the Voyage Linux tar.gz file, wget http://...</li> 
+      <li>decompress the image with tar xfvj </li> 
+      <li>cd into the new directory and execute ./usr/local/sbin/voyage.update and follow the steps</li> 
+     </ul> 
+    </fieldset> 
+    <br> 
+    <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">apu</legend> Instead of getting an USB-mSATA adapter for a single use, you can boot the apu from USB and write an image on the mSATA inserted in the apu board.
+     <br> To install Voyage Linux on an mSATA module follow these steps:
+     <br> 
+     <ul> 
+      <li>prepare an USB stick with <a href="http://pcengines.ch/file/apu-bootable-usb-installer_v1.8.exe">TinyCore USB installer v1.8</a></li> 
+      <li>get the latest amd64.tar.bz2 file from <a href="http://www.voyage.hk/download/voyage/amd64/">http://www.voyage.hk/download/voyage/amd64/</a>, and copy it to the TinyCore USB-Stick</li> 
+      <li>boot TinyCore on the apu board</li> 
+      <li>cp voyage-0.X_amd64.tar.bz2 /tmp/</li> 
+      <li>cd /tmp/</li> 
+      <li>mkdir /mnt/cf</li> 
+      <li>tar xf voyage-0.X_amd64.tar.bz2</li> 
+      <li>cd voyage-0.X_amd64</li> 
+      <li>start the installation script with /tmp/voyage-0.X_amd64/usr/local/sbin/voyage.update</li> 
+     </ul>
+     <br> 
+    </fieldset>
+    <br>for autologin install mingetty and change /etc/inittab accordingly
+    <br> <code> #T0:23:respawn:/sbin/getty -L ttyS0 115200<br> T0:23:respawn:/sbin/mingetty --autologin root --noclear ttyS0 </code> 
+    <br> 
+   </div> 
+   <div class="ui-tabs-panel ui-widget-content ui-corner-bottom" id="nic">
+     For a nice comparision of the speed of the Ethernet port under different OS types see: <a target="_new" href="https://teklager.se/blogs/knowledge-base/apu2c0-ipfire-throughput-test-much-faster-than-pfsense">IPFire vs. pfSense</a>
+    <br> 
+    <br> 
+   </div> 
+   <div class="ui-tabs-panel ui-widget-content ui-corner-bottom" id="OS_installation"> 
+    <div class="ui-tabs ui-widget ui-widget-content ui-corner-all" id="tabs_os"> 
+     <ul class="ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all"> 
+      <li class="ui-state-default ui-corner-top ui-tabs-active ui-state-active"><a class="ui-tabs-anchor" href="#general_info">general info</a></li> 
+      <li class="ui-state-default ui-corner-top"><a class="ui-tabs-anchor" href="#voyage">Voyage Linux</a></li> 
+      <li class="ui-state-default ui-corner-top"><a class="ui-tabs-anchor" href="#opnsense">OPNSense/pfSense</a></li> 
+      <li class="ui-state-default ui-corner-top"><a class="ui-tabs-anchor" href="#ipfire">IPFire</a></li> 
+      <li class="ui-state-default ui-corner-top"><a class="ui-tabs-anchor" href="#ubuntu">Ubuntu</a></li> 
+      <li class="ui-state-default ui-corner-top"><a class="ui-tabs-anchor" href="#centos">CentOS</a></li> 
+      <li class="ui-state-default ui-corner-top"><a class="ui-tabs-anchor" href="#esxi">ESXi</a></li> 
+     </ul> 
+     <div class="ui-tabs-panel ui-widget-content ui-corner-bottom" id="general_info">
+       Many installation images do not redirect the console to the serial port.
+      <br> The redirection is usually needed in two places. 
+      <ol> 
+       <li>the bootloader: see syslinux.cfg</li> 
+       <li>the console prompt: /etc/inittab which might need something like this: <code>ttyS0::respawn:/sbin/getty -nl /sbin/autologin 115200 ttyS0</code></li> 
+      </ol> Linux installation images usually have a compressed filesystem like initrd.gz which can be expanded. After changing some files, it can be compressed again.
+      <br> These are the typical steps:
+      <br> 
+      <ol> 
+       <li>decompress 
+        <ul> 
+         <li><code>gunzip initrd.gz</code> (returns one file called 'initrd')</li> 
+         <li><code>mkdir initrd_rootfs</code></li> 
+         <li><code>sudo sh -c 'cd initrd_rootfs &amp;&amp; cpio -i' &lt; initrd</code></li> 
+        </ul> </li> 
+       <li>change some files</li> 
+       <li>compress 
+        <ul> 
+         <li><code>sh -c 'cd cinitrd_rootfs &amp;&amp; sudo find . | sudo cpio -H newc -o' | gzip -9 &gt; initrd.gz</code></li> 
+        </ul> </li> 
+      </ol> 
+     </div> 
+     <div style="display: none;" role="tabpanel" class="ui-tabs-panel ui-widget-content ui-corner-bottom" id="voyage"> 
+      <br> 
+      <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">alix</legend> 
+      </fieldset>
+      <br> 
+      <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">apu</legend> 
+      </fieldset>
+      <br> 
+     </div> 
+     <div style="display: none;" role="tabpanel" class="ui-tabs-panel ui-widget-content ui-corner-bottom" id="opnsense"> 
+      <br> 
+      <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">alix</legend> 
+       <ul> 
+        <li>download OPNSense (OPNsense-X.Y-OpenSSL-nano-x86.img.bz2) or pfSense (pfSense-X.Y.Z-RELEASE-4g-x86-nanobsd.img.gz) image. (nano, x86, non-vga)</li> 
+        <li>decompress the image and write it to a CF using a USB-CF adapter</li> 
+       </ul> 
+      </fieldset>
+      <br> 
+      <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">apu</legend> 
+       <ul> 
+        <li>download the latest serial memstick amd64 installer for OPNSense (e.g. <a href="http://mirrors.nycbug.org/pub/opnsense/releases/17.7/OPNsense-17.7-OpenSSL-serial-amd64.img.bz2">OPNsense-17.7-OpenSSL-serial-amd64.img.bz2</a>) or pfSense (e.g. <a href="https://nyifiles.pfsense.org/mirror/downloads/pfSense-CE-memstick-serial-2.3.4-RELEASE-amd64.img.gz">pfSense-CE-memstick-serial-2.3.4-RELEASE-amd64.img.gz</a>)</li> 
+        <li>write image to an USB stick using Etcher (<a href="https://etcher.io/">Etcher is a graphical writing tool for Mac OS, Linux and Windows</a>)</li> 
+        <li>boot apu1/apu2 from USB with installed mSATA/SD</li> 
+        <li>follow the instructions of the installer</li> 
+       </ul> 
+       <br> <a href="https://teklager.se/en/knowledge-base/apu2-1-gigabit-throughput-pfsense/">https://teklager.se/en/knowledge-base/apu2-1-gigabit-throughput-pfsense/</a> 
+      </fieldset>
+      <br> 
+     </div> 
+     <div style="display: none;" role="tabpanel" class="ui-tabs-panel ui-widget-content ui-corner-bottom" id="ipfire"> 
+      <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">apu1 / apu2</legend> boot via iPXE and get the installation image directly from IPfire via HTTP without the need of preparing a bootable storage device.
+       <br> These are the steps: 
+       <ul> 
+        <li>enable network boot in the apu BIOS setup</li> 
+        <li>boot the apu and press CTRL-B to get into the iPXE console</li> 
+        <li>receive an IP address from your local DHCP Server by typing: ifconf</li> 
+        <li>type: chain http://boot.ipfire.org/releases/ipfire-boot/latest/ipxe.kpxe</li> 
+        <li>install IPfire with the serial console option</li> 
+       </ul> 
+      </fieldset>
+      <br> 
+     </div> 
+     <div style="display: none;" role="tabpanel" class="ui-tabs-panel ui-widget-content ui-corner-bottom" id="ubuntu">
+       Option 1: <strong>Ubuntu</strong>
+      <br> The unmodified files 'initrd.gz' and 'linux' from <a href="http://archive.ubuntu.com/ubuntu/dists/xenial-updates/main/installer-amd64/current/images/netboot/mini.iso">mini.iso</a> plus a modified 'syslinux.cfg' can be found <a href="http://pcengines.ch/tmp/ubuntu18.10_serial.tar.bz2">here</a>.
+      <br> This allows an easy installation of Ubuntu on apu boards.
+      <br> Simply add these three files to the FAT partition of an USB stick previously prepared with the <a href="http://pcengines.ch/file/apu-bootable-usb-installer_v1.8.exe">TinyCore USB installer v1.8</a>.
+      <br> Here is another guide to prepare an USB stick with <a href="/file/howto_Ubuntu_16.04_USB_installation.txt">Ubuntu 16.04</a> 
+      <hr> Option 2: <strong>Ubuntu Server installation</strong>
+      <br> 
+      <ul> 
+       <li>Download ubuntu server iso, e.g. <a href="https://releases.ubuntu.com/16.04/ubuntu-16.04.7-server-amd64.iso">ubuntu-16.04.7-server-amd64.iso</a></li> 
+       <li>Use rufus or any suitable tool to write it to an USB drive</li> 
+       <li>Delete (or remark with #) the line "ui gfxboot bootlogo" in /isolinux/isolinux.cfg</li> 
+       <li>Power-up apu board and boot from USB</li> 
+       <li>Press TAB to modify kernel boot options and add "vga = 0x000 console=ttyS0,115200n8 --- "</li> 
+       <li>Enable ssh towards the end of the installation for remote login.</li> 
+      </ul> 
+     </div> 
+     <div style="display: none;" role="tabpanel" class="ui-tabs-panel ui-widget-content ui-corner-bottom" id="centos"> <a href="http://pcengines.ch/tmp/centos7_20181213.img.gz">CentOS7 disk image for all apu boards (Dec. 2018)</a> 
+      <ol> 
+       <li>make an USB stick bootable with syslinux or use the convenient TinyCore USB installer.<br>The USB installer labels the disc <span style="background-color: #FFFF00">TINYCORE</span>, which syslinux.cfg refers to, change as needed, see below</li> 
+       <li>copy all folders from the CentOS-7-x86_64-Minimal.iso to the USB drive</li> 
+       <li>change the content of syslinux.cfg in the root directory of the USB drive to this:<br><br> <code> SERIAL 0 115200<br> CONSOLE 0<br> <br> default centos<br> <br> ALLOWOPTIONS 0<br> TIMEOUT 600<br> <br> label centos<br> kernel isolinux/vmlinuz<br> append initrd=isolinux/initrd.img inst.stage2=hd:LABEL=<span style="background-color: #FFFF00">TINYCORE</span> quiet console=ttyS0,115200n8 <br> </code> </li> 
+      </ol> 
+      <hr> 
+      <h3>or do this:</h3> 
+      <ol> 
+       <li>dd CentOS iso image directly to USB Stick, it will be bootable dd if=CentOS-7-x86_64-Minimal-1611.iso of=/dev/&lt;USB Stick&gt;</li> 
+       <li>Boot APU2 from USB Stick â CentOS installer boot menu is automatically visible on the APU serial console (attached screenshot apu2_install_1.png)</li> 
+       <li>Select âInstall CentOS Linux Linux 7â and use TAB to edit boot options</li> 
+       <li>append âconsole=ttyS0,115200n8â and Enter to boot</li> 
+       <li>It takes about 20 seconds before the output of the installerâs boot appears.</li> 
+       <li>follow the installation as usual</li> 
+      </ol> 
+     </div> 
+     <div style="display: none;" role="tabpanel" class="ui-tabs-panel ui-widget-content ui-corner-bottom" id="esxi">
+       Why install ESXi? Because, once ESXi is installed any other OS can be installed as a guest of ESXi, even OS's which depend on a graphics adapter like Windows.
+      <br> <a href="/file/ESXi-6.5.0-20200604001-standard-customized.iso.tar.gz">ESXi 6.5 Image (root pw: vmwareesxi)</a> also see <a href="http://pcengines.ch/How_To_Install_ESXi_6.5_on_APU.txt">Instructions for vSphere Hypervisor ESXi 6.5.0 installation on APU2 (4GB RAM required)</a> 
+      <br>
+      <br> <button id="esxi_button">Here are some older instructions</button>
+      <br> 
+      <div id="old_esxi"> 
+       <ol> 
+        <li>Preparing the installation: 
+         <ul> 
+          <li>ESXi needs 4GB RAM</li> 
+          <li>Download the latest ESXi installer .ISO image from <a href="https://my.vmware.com/web/vmware/evalcenter?p=free-esxi6">VMware</a> (ESXi Version 6.0.0 Update2 or later is needed)</li> 
+          <li>Write the ESXi installer .iso file to a USB memstick. Rufus on Windows is recommended. Allow Rufus to update menu.c32.</li> 
+          <li>After the flashing process is complete, edit one line in the file boot.cfg file in the root directory of the USB stick like this:<br> <code><strong>kernelopt=runweasel text nofb com1_baud=115200 com1_Port=0x3f8 tty2Port=com1 gdbPort=none logPort=none</strong></code> </li> 
+         </ul> </li> 
+        <li>Boot the apu1/apu2 board with the USB stick and install ESXi on the SD or on the mSATA</li> 
+        <li>After the installation succeeded, the same change in boot.cfg needs to be done on the SD/mSATA to redirect the console to the serial port. Boot the apu board with TinyCore and edit the file.</li> 
+        <li>Once the apu successfully started ESXi as shown below, start VMware and connect to the remote server.</li> 
+        <li>Open a browser with the provided address and start the vSphere Web Client. Or use the depricated 'VMware vSphere Client' (Windows only) can help configure the host and the guest. Please see <a href="https://kb.vmware.com/selfservice/microsites/search.do?language=en_US&amp;cmd=displayKC&amp;externalId=2089791">VMware Knowledge Base</a></li> 
+       </ol> 
+       <img src="pic/esxi_on_apu2.png">
+       <br> <a href="/file/ESXi-6.5.0-20200604001-standard-customized.iso.tar.gz">ESXi 6.5 Image (root pw: vmwareesxi)</a> also see <a href="http://pcengines.ch/How_To_Install_ESXi_6.5_on_APU.txt"> </a>
+      </div><a href="http://pcengines.ch/How_To_Install_ESXi_6.5_on_APU.txt"> </a>
+     </div><a href="http://pcengines.ch/How_To_Install_ESXi_6.5_on_APU.txt"> </a>
+    </div><a href="http://pcengines.ch/How_To_Install_ESXi_6.5_on_APU.txt"><br> <strong>Important:</strong> the SD slot on the <font color="red">apu2 boards</font> is directly connected to the CPU and needs the module SDHCI to work.<br> Do not use an SD to boot FreeBSD based OS like pfSense and OPNSense on <font color="red">apu2 boards</font>. Only very recent kernel versions fully support booting via SDHCI.<br> Try an USB-SD adapter in case of related troubles. If it works with the USB-SD adapter, but not in the SD slot, then the SDHCI module is missing ... </a>
+   </div><a href="http://pcengines.ch/How_To_Install_ESXi_6.5_on_APU.txt"> </a>
+   <div class="ui-tabs-panel ui-widget-content ui-corner-bottom" id="3G">
+    <a href="http://pcengines.ch/How_To_Install_ESXi_6.5_on_APU.txt"> This is a short and incomplete list of working 3G miniPCIe modems:<br><br> 
+     <table class="color_table"> 
+      <tbody>
+       <tr>
+        <th>Manufacturer</th>
+        <th>Series</th>
+        <th>URL</th>
+        <th>comment</th>
+       </tr> 
+       <tr>
+        <td>Sierra Wireless</td>
+        <td>MC8790</td>
+        <td><a href="http://www.sierrawireless.com/productsandservices/airprime_wireless_modules/essential_modules/mc_series/">http://www.sierrawireless.com/...</a></td>
+        <td></td>
+       </tr> 
+       <tr>
+        <td>Sierra Wireless</td>
+        <td>MC730x</td>
+        <td><a href="http://www.sierrawireless.com/productsandservices/airprime_wireless_modules/essential_modules/mc_series/">http://www.sierrawireless.com/...</a></td>
+        <td></td>
+       </tr> 
+       <tr>
+        <td>Sierra Wireless</td>
+        <td>MC77xx</td>
+        <td><a href="http://www.sierrawireless.com/productsandservices/airprime_wireless_modules/essential_modules/mc_series/">http://www.sierrawireless.com/...</a></td>
+        <td></td>
+       </tr> 
+       <tr>
+        <td>Ericsson</td>
+        <td>f5521</td>
+        <td><a href=""></a></td>
+        <td></td>
+       </tr> 
+       <tr>
+        <td>Ericsson</td>
+        <td>f5321gw</td>
+        <td><a href=""></a></td>
+        <td></td>
+       </tr> 
+       <tr>
+        <td>HUAWEI</td>
+        <td>ME909u-521</td>
+        <td><a href="http://consumer.huawei.com/en/solutions/m2m-solutions/products/tech-specs/me909u-521mini-pcie-en.htm">http://consumer.huawei.com</a></td>
+        <td></td>
+       </tr> 
+      </tbody>
+     </table><br> Avoid Sierra Wireless modules ending with a "V" standing for voice, as they have a proprietary pinout.<br> <br> Many usefull informations can also be found here: </a><a href="https://txlab.wordpress.com/">TXLAB</a>. 
+    <p> Hint: check for SIM card with:<br> AT+CMEE=2<br> AT+cpin?<br> </p> 
+   </div> 
+   <div class="ui-tabs-panel ui-widget-content ui-corner-bottom" id="macadr">
+     The MAC address of the first NIC on all PC Engines boards is derived of its serial number, the following NICs have subsequent addresses.
+    <br> This is the conversion from MAC ID to serial number and vice versa:
+    <br> 
+    <p> MAC ID = 00:0d:b9 (our OUI) : (serial + 64) * 4<br> serial = (MAC ID &amp; 0x000000FFFFFF) / 4 - 64<br> </p> 
+    <p> </p>
+    <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">MAC ID Serial converter</legend> 
+     <table style="width:50%"> 
+      <tbody>
+       <tr>
+        <td>MAC ID</td>
+        <td><input id="mac_id"></td>
+        <td><button onclick="calculate_serial($('#mac_id').val())">calculate Serial number</button></td>
+       </tr> 
+       <tr>
+        <td>Serial number</td>
+        <td><input id="serial_nr"></td>
+        <td><button onclick="calculate_mac($('#serial_nr').val())">calculate MAC ID</button></td>
+       </tr> 
+      </tbody>
+     </table> 
+    </fieldset>
+    <br> 
+    <p></p> 
+   </div> 
+   <div class="ui-tabs-panel ui-widget-content ui-corner-bottom" id="gpio"> 
+    <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">What the all alix and apu boards have in common</legend> The LED's on the boards are connected as inputs, and should be removed if these signals are intended to be used GPIOs.
+     <br> Otherwise the LEDs will die due to the appllied 3.3V.
+     <br> The button S1 is also a regular GPIO connected to the CPU.
+     <br> 
+    </fieldset>
+    <br> 
+    <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">alix</legend> The LEDs are D4, D5, D6 plus the button S1, which all are also connected to J13.
+     <br> For additional GPIOs an <a href="#i2c" onclick="selecttab('i2c');">I2C</a> IO-Expander from various chip manufacturer are available, like <a href="http://www.nxp.com/products/interface_and_connectivity/i2c/i2c_general_purpose_i_o/#products">NXP</a> or <a href="http://www.ti.com/lsds/ti/interface/i2c-io-expander-products.page">TI</a>. There are also many inexpensive easy to use modules available at <a href="http://www.aliexpress.com/wholesale?catId=0&amp;initiative_id=SB_20150313043644&amp;SearchText=PCF8574+IO+Expansion+Board+">aliexpress.com</a>.
+     <br> Also see <a href="http://www.twam.info/linux/gpio-on-alix3d3">here</a> and <a href="http://www.twam.info/hardware/alix/leds-on-alix3d3">here</a>. 
+    </fieldset>
+    <br> 
+    <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">What all apu boards have in common</legend> The apu boards have two types of GPIOs:
+     <br> 
+     <ul> 
+      <li>GPIOs connected to the CPU, e.g. the three LEDs and button S1, see <a target="_new" href="https://github.com/pcengines/apu_gpio_lib">https://github.com/pcengines/apu_gpio_lib</a></li> 
+      <li>GPIOs connected to the NCT5104, see <a target="_new" href="https://github.com/pcengines/linux-gpio-nct5104d">https://github.com/pcengines/linux-gpio-nct5104d</a></li> 
+     </ul> 
+    </fieldset>
+    <br> 
+    <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">apu1</legend> <a href="pcengines.ch/file/apu1-leds.tgz">apu1-leds.tgz</a>
+     <br> 
+    </fieldset>
+    <br> 
+    <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">apu2/apu3/apu4</legend> <a href="https://github.com/pcengines/apu_gpio_lib">https://github.com/pcengines/apu_gpio_lib</a>
+     <br> <a href="file/NCT5104D_Datasheet_V1_9.pdf">NCT5104 Datasheet v1.9</a> 
+    </fieldset>
+    <br> 
+    <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">I2C</legend> This is what is needed under Voyage Linux to get I2C working:
+     <br> 
+     <br> <tt> root@voyage:~# apt-get install i2c-tools libi2c-dev<br> root@voyage:~# modprobe i2c-dev<br> root@voyage:~# i2cdetect 0<br> WARNING! This program can confuse your I2C bus, cause data loss and worse!<br> I will probe file /dev/i2c-0.<br> I will probe address range 0x03-0x77.<br> Continue? [Y/n]<br> 0 1 2 3 4 5 6 7 8 9 a b c d e f<br> 00: -- -- -- -- -- -- -- -- -- -- -- -- --<br> 10: 10 -- -- -- -- -- -- -- -- -- -- -- -- -- -- --<br> 20: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --<br> 30: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --<br> 40: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --<br> 50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --<br> 60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --<br> 70: -- -- -- -- -- -- -- --<br> </tt> 
+    </fieldset>
+    <br> 
+   </div> 
+   <div class="ui-tabs-panel ui-widget-content ui-corner-bottom" id="add_on_cards">
+     This section provides information about add-on cards for apu boards.
+    <br>
+    <br> 
+    <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">known good</legend> 
+     <table class="color_table"> 
+      <tbody>
+       <tr>
+        <th>Function</th> 
+        <th>Manufacturer</th> 
+        <th>Card type</th> 
+        <th>Chipset</th> 
+        <th>Comment</th> 
+        <th>Source</th>
+       </tr> 
+       <tr>
+        <td>Network</td> 
+        <td>LogiLink</td> 
+        <td>PCIe</td> 
+        <td>RTL8111</td> 
+        <td></td>
+        <td></td>
+       </tr> 
+       <tr>
+        <td>USB</td> 
+        <td>LogiLink</td> 
+        <td>PCIe</td> 
+        <td>&#x3bc;PD720202</td>
+        <td><a href="http://www.phasure.com/index.php?action=dlattach;topic=2784.0;attach=3280">datasheet</a></td>
+        <td></td>
+       </tr> 
+       <tr>
+        <td>SATA</td>
+        <td><a href="http://www.iocrest.com/en/product_details285.html" target="_new">IOcrest</a></td>
+        <td>PCIe</td>
+        <td>Marvell 88SE9215</td>
+        <td>gets rather hot</td>
+        <td><a href="https://www.amazon.com/IO-Crest-Controller-Non-Raid-SI-PEX40064/dp/B00AZ9T3OU">Amazon</a>&nbsp;<a href="http://www.aliexpress.com/item/Marvell-88SE9215-4-Ports-SATA-6G-PCI-Express-Controller-Card-PCI-e-to-SATA-III-3/32579332065.html?spm=2114.01010208.3.52.spInnC&amp;ws_ab_test=searchweb201556_0,searchweb201602_1_10037_10017_404_507_10033_10032_10040,searchweb201603_11&amp;btsid=1b22f2b6-023c-4871-9142-c756657d5432">aliexpress</a></td>
+       </tr> 
+       <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+       </tr> 
+      </tbody>
+     </table> 
+    </fieldset>
+    <br> 
+    <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">known bad</legend> 
+     <table class="color_table"> 
+      <tbody>
+       <tr>
+        <th>Function</th> 
+        <th>Manufacturer</th> 
+        <th>Card type</th> 
+        <th>Chipset</th> 
+        <th>Comment</th>
+        <th>Source</th>
+       </tr> 
+       <tr>
+        <td>Network</td> 
+        <td>unknown</td> 
+        <td>half-sized miniPCIe</td> 
+        <td>RTL8111</td> 
+        <td></td>
+        <td></td>
+       </tr> 
+       <tr>
+        <td>SATA</td> 
+        <td>asmedia</td> 
+        <td>PCIe</td> 
+        <td>asm106x</td> 
+        <td></td>
+        <td></td>
+       </tr> 
+       <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+       </tr> 
+       <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+       </tr> 
+      </tbody>
+     </table>
+     <br> 
+    </fieldset>
+    <br> 
+   </div> 
+   <div class="ui-tabs-panel ui-widget-content ui-corner-bottom" id="images"> 
+    <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">alix Disk Images</legend> 
+     <table> 
+      <tbody>
+       <tr>
+        <td><a href="http://pcengines.ch/file/winxpe_raw_files-tools-instructions.rar">winxpe_raw_files-tools-instructions.rar *</a></td>
+       </tr> 
+       <tr>
+        <td><a href="http://pcengines.ch/file/winxp16gb.img.gz">winxp16gb.img.gz *</a></td>
+       </tr> 
+       <tr>
+        <td><a href="http://pcengines.ch/file/winxp_4gb_image.rar">winxp_4gb_image.rar *</a></td>
+       </tr> 
+       <tr>
+        <td><a href="http://pcengines.ch/file/voyage-0.9.2.img.zip">voyage-0.9.2.img.zip</a></td>
+       </tr> 
+      </tbody>
+     </table>
+     <br> *Please make sure you have a valid license
+     <br>
+     <br> Use this <a href="/file/alix_FreeDOS_Installer_v1.3.exe">alix_FreeDOS_Installer_v1.3</a> to create FreeDOS bootable CF card. 
+    </fieldset>
+    <br> 
+    <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">apu Disk Images</legend> 
+     <table> 
+      <tbody> 
+       <tr>
+        <td><a href="http://pcengines.ch/tmp/centos7_20181213.img.gz">CentOS7 disk image for all apu boards (Dec. 2018)</a></td> 
+       </tr>
+       <tr>
+        <td><a href="http://pcengines.ch/tmp/centosapu20140822.gz">centosapu20140822.gz</a></td>
+       </tr> 
+       <tr>
+        <td><a href="http://pcengines.ch/tmp/OpenBSD_install55_Serial115200_amd64.img.tar.gz">OpenBSD_install55_Serial115200_amd64.img.tar.gz</a></td>
+       </tr> 
+       <tr>
+        <td><a href="http://pcengines.ch/tmp/apu_bios_builder.img.gz">apu_bios_builder.img.gz</a></td>
+       </tr> 
+       <tr>
+        <td><a href="https://github.com/ssinyagin/pcengines-apu-debian-cd/releases">debian-7.8-amd64-CD-1.iso</a></td>
+       </tr> <!--						<tr><td><a href="http://content.y-m-e.net/public/PCEngines_apu_ESXi_5-5_8GB-SDCARD-UBIT.7z">ESXi 5.5 Image â 8GB Image *</a></td></tr> 
+							<tr><td><a href="/file/ESXi-6.5.0-20200604001-standard-customized.iso.tar.gz">ESXi 6.5 Image (root pw: vmwareesxi)</a> also see <a href="http://pcengines.ch/How_To_Install_ESXi_6.5_on_APU.txt">Instructions for vSphere Hypervisor ESXi 6.5.0 installation on APU2 (4GB RAM required)</a></td></tr>
+--> 
+      </tbody> 
+     </table>
+     <br> <!--					* for apu2 ESXi 6.0.0 Update 2 is needed, see 'OS installations' --> 
+     <br> 
+     <br> 
+     <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">How to write compressed disk images to mSATA</legend> Prepare an USB stick with TinyCore, add the compressed image to the stick and boot the apu board with it.
+      <br> Use the command "fdisk -l" to determine the device name of the target storage.
+      <br> In the following commands it is presumed that /dev/sdX is the target device name (but sda or sdb is more likely):
+      <br>
+      <br> 
+      <table> 
+       <tbody>
+        <tr>
+         <td>zip</td>
+         <td><code>unzip -p diskimage.img.zip | pv | dd of=/dev/sdX bs=1M</code></td>
+        </tr> 
+        <tr>
+         <td>gz</td>
+         <td><code>gzip -dc diskimage.img.gz | pv | dd of=/dev/sdX bs=1M</code></td>
+        </tr> 
+        <tr>
+         <td>tar.gz</td>
+         <td><code>tar xzOf diskimage.img.tar.gz | pv | dd of=/dev/sdb bs=1M</code></td>
+        </tr> 
+        <tr>
+         <td>xz</td>
+         <td><code>tar xvfJ diskimage.tar.xz | pv | dd of=/dev/sdb bs=1M</code></td>
+        </tr> 
+        <tr>
+         <td>bz2</td>
+         <td><code>bzip2 -dc diskimage.img.bz2 | pv | dd of=/dev/sdb bs=1M</code></td>
+        </tr> <!--<tr><td>tar.gz</td><td><code>tar xzOf compressed_image.tar.gz | dd of=/dev/sdb bs=1M</code></td></tr>--> 
+       </tbody>
+      </table> 
+      <br>Note: "<code>pv</code>" is a pipe-viewer and displays the progress.
+      <br> 
+     </fieldset>
+     <br> 
+    </fieldset>
+    <br> 
+    <fieldset class="ui-widget ui-widget-content ui-corner-all"> <legend class="ui-widget ui-widget-header ui-corner-all">Links to installation instructions for apu</legend> 
+     <table> 
+      <tbody>
+       <tr>
+        <td><a href="http://www.cyberciti.biz/faq/centos-rhel-6-install-serial-console/">Install CentOS / RHEL v6.x</a></td>
+       </tr> <!--						<tr><td><a href="http://www.y-m-e.net/2014/06/vmware-esxi-5-5-image-fuer-pc-engines-apu1c-und-apu1c4/">VMWare ESXi 5.5</a></td></tr>
+						<tr><td><a href="https://my.vmware.com/web/vmware/details?downloadGroup=DT-ESXI55-INTEL-IGB-525&amp;productId=353/">Intel igb driver for ESXi</a></td></tr> --> 
+       <tr>
+        <td><a href="http://community.nethserver.org/t/how-to-install-nethserver-or-centos-into-pc-engine/1566">Install NethServer over CentOS</a></td>
+       </tr> 
+      </tbody>
+     </table> 
+    </fieldset>
+    <br> 
+   </div> 
+  </div> 
+  <div style="position: fixed; width:100%; left: 0px; bottom: 0px; background-color:#CCCCCC"> <font color="#CC0000" face="TrebuchetMS, Arial, sans-serif" size="3">Â© 2002-2018 PC Engines GmbH. All rights reserved.</font> 
+  </div> <!--
+https://help.ubuntu.com/community/SerialConsoleHowto
+https://github.com/ynkjm/ubuntu-serial-install
+
+--> 
+ </body>
+</html>

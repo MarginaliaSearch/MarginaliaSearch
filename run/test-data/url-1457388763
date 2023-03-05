@@ -1,0 +1,56 @@
+<html> 
+ <head> 
+  <link rel="SHORTCUT ICON" href="/images/mm-icon.png"> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii"> 
+  <title>plato.cgl.ucsf.edu Mailing Lists</title> 
+ </head> 
+ <body bgcolor="white" dir="ltr"> 
+  <table width="100%" border="0"> 
+   <tbody>
+    <tr> 
+     <td colspan="2" bgcolor="#99ccff">
+      <center>
+       <h2>plato.cgl.ucsf.edu Mailing Lists</h2>
+      </center></td> 
+    </tr> 
+    <tr> 
+     <td colspan="2"><font size="+2">Welcome!</font><p>Below is a listing of all the public mailing lists on plato.cgl.ucsf.edu. Click on a list name to get more information about the list, or to subscribe, unsubscribe, and change the preferences on your subscription. To visit the general information page for an unadvertised list, open a URL similar to this one, but with a '/' and the list name appended. </p><p>List administrators, you can visit <a href="admin">the list admin overview page</a> to find the management interface for your list. </p><p>If you are having trouble using the lists, please contact <a href="mailto:mailman@cgl.ucsf.edu">mailman@cgl.ucsf.edu</a>.</p><p></p></td> 
+    </tr> 
+    <tr> 
+     <td>&nbsp;</td> 
+     <td>&nbsp;</td> 
+    </tr> 
+    <tr> 
+     <td><strong><font size="+2">List</font></strong></td> 
+     <td><strong><font size="+2">Description</font></strong></td> 
+    </tr> 
+    <tr bgcolor="#dddddd"> 
+     <td><a href="listinfo/chimera-dev"><strong>Chimera-dev</strong></a></td> 
+     <td>Chimera developer mailing list</td> 
+    </tr> 
+    <tr> 
+     <td><a href="listinfo/chimera-users"><strong>Chimera-users</strong></a></td> 
+     <td>Chimera users discussion mailing list</td> 
+    </tr> 
+    <tr bgcolor="#dddddd"> 
+     <td><a href="listinfo/chimerax-users"><strong>ChimeraX-users</strong></a></td> 
+     <td>ChimeraX users mailing list</td> 
+    </tr> 
+    <tr> 
+     <td><a href="listinfo/sfld-users"><strong>SFLD-users</strong></a></td> 
+     <td>News about the Structure Function Linkage Database (SFLD)</td> 
+    </tr> 
+   </tbody>
+  </table> 
+  <hr> 
+  <table width="100%" border="0"> 
+   <tbody>
+    <tr> 
+     <td><img src="/images/mailman.jpg" alt="Delivered by Mailman" border="0"><br>version 2.1.15</td> 
+     <td><img src="/images/PythonPowered.png" alt="Python Powered" border="0"></td> 
+     <td><img src="/images/gnu-head-tiny.jpg" alt="GNU's Not Unix" border="0"></td> 
+    </tr> 
+   </tbody>
+  </table>  
+ </body>
+</html>

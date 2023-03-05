@@ -1,0 +1,234 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"> 
+ <head> 
+  <link rel="stylesheet" href="platostandard.css" type="text/css" media="all"> 
+  <link rel="stylesheet" href="timer.css" type="text/css" media="all"> 
+  <link rel="icon" href="plato.ico" type="image/x-icon"> 
+  <link rel="shortcut icon" href="plato.ico" type="image/x-icon"> 
+  <title>PLATO - Dome A robotic observatory</title> 
+ </head> 
+ <body> 
+  <div id="container"> 
+   <div id="header"> 
+    <h1>Plato</h1> <a href="plato.html"><img style="float:left;" src="images/platoHeader.gif" alt="Plato" width="276" height="50"> </a> <span>Dome A Robotic Observatory</span> 
+    <script language="javascript" type="text/javascript" src="platoclock.js"></script> 
+    <div id="countdown_body"> 
+     <div id="countdown_clock"> 
+      <div id="plato"> 
+       <script>PLATOTimer("plato");</script> 
+      </div> 
+     </div> 
+    </div> 
+    <div style="position:relative; float:right; padding:0 5px 0 0"> 
+     <div style="color: #006400; display:table-cell; vertical-align:middle; height:50px; font: arial, helvetica, sans-serif; font-weight:bold; text-align:center;">
+      Mission
+      <br>Time
+     </div> 
+    </div> 
+   </div> 
+   <div id="navigation"> 
+    <p>Navigation</p> 
+    <ul> 
+     <li><a href="plato.html">Home </a></li> 
+     <li><a href="science.html">Science </a></li> 
+     <li><a href="contacts.html">Contacts </a></li> <!--	<li><a href="people.pdf">Positions available </a></li>--> 
+    </ul> 
+    <p>Live updates</p> 
+    <ul> 
+     <li><a href="plots_week.html">Last 7 days</a></li> 
+     <li><a href="plots_month.html">Last 31 days</a></li> 
+     <li><a href="plots_year.html">Last 365 days</a></li> 
+     <li><a href="ephem.html">Sun and Moon</a></li> 
+     <li><a href="platowebcams.html">Webcams </a></li> 
+    </ul> 
+    <p>Plot archive</p> 
+    <ul> 
+     <li><a href="plots_2008.html">2008</a></li> 
+     <li><a href="plots_2009.html">2009</a></li> 
+     <li><a href="plots_2010.html">2010</a></li> 
+     <li><a href="plots_2011.html">2011</a></li> 
+    </ul> 
+    <p>PLATO Module</p> 
+    <ul> 
+     <li><a href="instrumentmodule.html">Instrument </a></li> 
+     <li><a href="enginemodule.html">Engine </a></li> 
+    </ul> 
+    <p>Instruments</p> 
+    <ul> 
+     <li><a href="cstar.html">CSTAR </a></li> 
+     <li><a href="dasle.html">DASLE </a></li> 
+     <li><a href="fts.html">FTS </a></li> 
+     <li><a href="gattini.html">Gattini </a></li> 
+     <li><a href="hrcam.html">HRCAM </a></li> 
+     <li><a href="nigel.html">Nigel </a></li> 
+     <li><a href="preheat.html">PreHEAT </a></li> 
+     <li><a href="snodar.html">Snodar </a></li> 
+    </ul> 
+    <p>Publications</p> 
+    <ul> 
+     <li><a href="papers.html">Papers </a></li> 
+    </ul> 
+    <p>Links</p> 
+    <ul> 
+     <li><a href="gallery.html">Images </a></li> 
+     <li><a href="http://www.antarctica.gov.au/about-antarctica/fact-files/weather/automatic-weather-stations/dome-a-details">Weather (AAD)</a></li> <!--	<li><a href="http://ccaa.pmo.ac.cn/plato/">Chinese translation </a></li>
+--> 
+    </ul> 
+   </div> 
+   <div id="content"> 
+    <h2>Dome A, Antarctica</h2> 
+    <div class="floatright"> <a href="domeA.jpg.html"><img src="images/domeA_small.jpg" alt="Dome A map" width="200" height="189"></a> Dome A (click to enlarge) 
+    </div> 
+    <p>Over a decade of site testing in Antarctica has shown that both <a href="http://www.nsf.gov/news/special_reports/livingsouthpole/index.jsp">South Pole</a> and <a href="http://www.concordiastation.org/">Dome C</a> are exceptional sites for astronomy, with certain atmospheric conditions greatly superior to those at existing mid-latitude sites. The highest point on the Antarctic plateau, Dome A, experiences even colder atmospheric temperatures, lower wind speeds, and a turbulent <a href="http://en.wikipedia.org/wiki/Boundary_layer">boundary layer</a> that is confined even closer to the ground. </p> 
+    <p>As part of the <a href="http://classic.ipy.org/development/eoi/proposal-details.php?id=313" name="PANDA">PANDA</a> and <a href="http://classic.ipy.org/development/eoi/proposal-details.php?id=124">Astropoles</a> programs of the <a href="http://www.ipy.org/">International Polar Year</a> (IPY), an agreement was signed between the the <a href="http://www.bao.ac.cn/">National Astronomical Observatories</a> of the Chinese Academy of Sciences (NAOC), the <a href="http://www.pric.gov.cn/">Polar Research Institute of China</a> (PRIC), and <a href="http://www.phys.unsw.edu.au/astro/">the University of New South Wales</a> (UNSW) to develop and deploy an autonomous observatory called PLATO to Dome A. The PANDA traverse successfully delivered PLATO to Dome A in January 2008. A large international team has contributed to PLATO and its instruments, with Iridium satellite communication being provided by the <a href="http://www.usap.gov/">U.S. Antarctic Program</a> (USAP).</p> <!--<h2><a href="people.pdf"><font color="#FF0000">Positions available - click here for information</font></a></h2>--> 
+    <div class="clearright"></div> 
+    <div class="stdImage" style="width:600px"> 
+     <img src="images/CAS_600.jpg" alt="DomeA" width="600" height="402"> Dome A (Xu Zhou and Zhenxi Zhu: 27 Jan 2008) 
+    </div> 
+    <h2>The PLATO observatory</h2> 
+    <p>PLATO, the <strong>PLAT</strong>eau <strong>O</strong>bservatory, is a self-contained automated platform for conducting year-round, experiments completely robotically from the Antarctic plateau.</p> 
+    <p>PLATO ran continuously for 204 days in 2008. It was serviced by the Chinese 2008-2009 Dome A expedition, allowing it to run throughout 2009. The Chinese 2010 expedition was greated by a warm operating PLATO when they arrived in late December 2009. PLATO was again serviced, and continues to run, uninterrupted since January 2009, until August 2012. Iridium satellite communication is used for monitoring and control, with the majority of the data to be returned by the traverse at the end of each year. Refer to the side menu on the left for detailed information regarding the instruments on PLATO.</p> 
+    <div class="clearright"></div> 
+    <div class="stdImage" style="width:600px"> 
+     <img src="images/recent-2_600.jpg" alt="Latest Camera Image" width="600" height="491"> <a href="platowebcams.html">Webcam image</a> from the instrument module looking towards the <a href="cstar.html">CSTAR telescopes</a> 
+    </div> 
+    <h2>The PLATO 2008-2009 servicing mission</h2> 
+    <p>The PLATO observatory is designed for yearly servicing. This includes replacing the diesel engines and refilling the fuel and oil tanks.</p> 
+    <p>After our first year of operation, we performed a number of upgrades to the engine module. There were also several new scientific instruments to install and commission.</p> 
+    <p>Xuefei Gong, the astronomer on the PRIC 2008-2009 Dome A expedition,&nbsp;visited the University of New South Wales for a number of months in 2008 to help prepare the servicing mission. The other Dome A expeditioners were tasked with building a summer station at Dome A that will be upgraded to a full-year manned research station in the future.</p> 
+    <p>On November 7 2008, the PRIC expedition left Fremantle for Zhongshan station on the Xue Long, a Chinese research ice breaker. The Chinese&nbsp; expedition reached Dome A in early January 2009 via overland traverse. Once at Dome A, Xuefei and other heroic volunteers from his team began work on making PLATO fully operational again before leaving Dome A on the 3rd of February 2009.</p> 
+    <p>The PRIC expedition was extremely successful, finishing the summer station and completely servicing PLATO.</p> 
+    <div class="clearright"></div> 
+    <div class="stdImage" style="width:600px"> 
+     <img src="images/xuefei_600.jpg" alt="Xuefei" width="600" height="400"> Xuefei Gong standing in front of the newly serviced engine module (Jan 2009) 
+    </div> 
+    <h3>Power systems and control</h3> 
+    <p>PLATO consists of two modules built into 10-foot shipping containers. The Engine Module contains six Hatz 1B30 diesel engines and 4000 litres of Jet-A1 fuel. The Instrument Module is 45m away and contains the computer systems, battery bank, power supplies, and some of the science instruments. Solar panels and some of the other instruments are external to both modules. The modules are extremely well thermally insulated.</p> <map name="PLATO"> <area shape="rect" coords="522,256,579,291" href="enginemodule.html" title="Engine module: 6 diesel engines for when solar power is unavailable"> <area shape="rect" title="Solar panels: 1kW of electricity when the sun is up" coords="322,258,393,314"> <area shape="rect" coords="236,267,294,329" href="instrumentmodule.html" title="Instrument module: base station for instruments, power conversion, communication and control"> <area shape="rect" title="Tower and Sonics: measurement of first 15m of wind direction, speed, and turbulence" coords="207,162,230,303" href="dasle.html"> <area shape="rect" title="SNODAR: an acoustic radar to measure the atmospheric turbulence from 0 to 100m" coords="95,252,161,323" href="snodar.html"> <area shape="rect" title="Gattini: sky background and cloud cover cameras" coords="237,245,293,265" href="gattini.html"> </map> 
+    <div class="stdImage" style="width:600px"> 
+     <img src="images/platoModules.jpg" alt="PLATO" width="600" height="400" usemap="#PLATO" border="0"> PLATO - roll mouse over image to identify objects (Zhenxi Zhu: 27 Jan 2008) 
+    </div> 
+    <p>The two modules are linked by a 120VDC cable distributing approximately 1kW of electrical power. A CAN (Controller Area Network) bus is used to control both modules. Two banks of ultracapacitors are used to start the engines. Solar panels provide an additional kW of electricity during the summer time.</p> 
+    <p>PLATO has four independent sources of power: </p> 
+    <ul> 
+     <li>Solar array 1 consisting of three solar panels</li> 
+     <li>Solar array 2 consisting of three solar panels</li> 
+     <li>Engine bank 1 consisting of three engines</li> 
+     <li>Engine bank 2 consisting of three engines</li> 
+    </ul> 
+    <p>Only one engine is used at a time except for testing purposes. The following power generation plot is updated hourly: </p> 
+    <div class="stdImage" style="width:600px"> 
+     <img src="plots_week/genCurrents_week.png" alt="PLATO Power" width="600" height="400"> PLATO power supply currents (time in UTC). Visit the <a href="plots_week.html" name="status">status page</a> for further information regarding the performance of PLATO and its instruments. 
+    </div> 
+    <p>The PLATO computer system is based on two redundant PC/104 systems, each with an Iridium satellite modem for remote control and capable of sending up to 32MB of science data back per day. The computers boot from USB flash disks tested for low temperature and high altitude performance. A readonly filesystem is used for the Debian GNU/Linux operating system to maximise reliability.</p> 
+    <h2>Instruments</h2> 
+    <p>PLATO is an international collaboration, with instruments contributed from Australia, China, New Zealand, the United Kingdom, and the United States of America.</p> 
+    <p><a href="cstar.html" name="CSTAR">CSTAR</a> is an array of four 14.5 centimetre telescopes with each having a different filter in the optical band. CSTAR will take advantage of the months of continuous darkness to search for time varying events such as the <a href="http://en.wikipedia.org/wiki/Methods_of_detecting_extrasolar_planets">transit of planets</a>, <a href="http://en.wikipedia.org/wiki/Supernovae" name="supernovae">supernovae</a>, and will accurately measure the sky background brightness.</p> 
+    <p>The <a href="preheat.html" name="preHEAT">preHEAT</a> telescope is mapping the Milky Way in the sub-millimeter band to confirm the atmospheric transmission in this region. Atmospheric modelling indicates that Dome A is probably the only place on Earth that can routinely observe at the terahertz frequencies crucial to the understanding of the <a href="http://en.wikipedia.org/wiki/Interstellar_medium">interstellar medium</a>, and in particular the <a href="http://en.wikipedia.org/wiki/Star#Formation_and_evolution">life cycle of stars</a>.</p> 
+    <p>The height of the turbulent boundary layer between the ground and smooth air is of great interest to optical astronomers. The Earth's atmosphere makes the stars (and all other objects) twinkle in a similar way that a pebble seen through a rippling stream appears distorted. If the boundary layer is very low, as it is predicted to be at Dome A, it becomes feasible to build telescopes on small towers, greatly simplifying or even eliminating the <a href="http://en.wikipedia.org/wiki/Adaptive_optics">adaptive optics</a> needed to remove the effects of a turbulent atmosphere. <a href="snodar.html" name="SNODAR">SNODAR</a> is an acoustic radar that probes the atmospheric turbulence, mapping the height of the boundary layer and other atmospheric structure. A second boundary layer experiment, <a href="dasle.html" name="DASLE">DASLE</a>, is an array of sonic anemometers placed along a fifteen meter tower. These measure the wind velocity and direction.</p> 
+    <p>The <a href="nigel.html" name="Nigel">Nigel</a> instrument is both a site-testing and scientific instrument designed to measure the optical sky brightness and the aurora contributions of the Dome A sky.</p> 
+    <p><a href="gattini.html" name="Gattini">Gattini</a> is an astronomical camera designed to accurately measure the sky brightness in a range of different wavelengths and cloud cover. These parameters are essential to predict the uninterrupted length of time a large telescope can observe for, and how deep into space it can see.</p> 
+    <p>Visit the <a href="science.html">science page</a> for information on the science that PLATO is performing.</p> 
+    <h2>Participating institutions in alphabetical order</h2> 
+    <table summary="Participating Institutions in Alphabetical Order"> 
+     <tbody>
+      <tr> 
+       <td class="center"><a href="http://www.caltech.edu/"><img src="images/CIT_logo.gif" alt="CIT"></a></td> 
+       <td>California Institute of Technology, USA</td> 
+      </tr> 
+      <tr> 
+       <td class="center"><a href="http://www.cfa.harvard.edu"><img src="images/CFA_logo.gif" alt="CFA" width="80" height="72"></a></td> 
+       <td>Harvard-Smithsonian Center for Astrophysics, USA</td> 
+      </tr> 
+      <tr> 
+       <td class="center"><a href="http://www.niaot.ac.cn/"><img src="images/NIAOT_logo.gif" alt="NIAOT" width="80" height="80"></a></td> 
+       <td>Nanjing Institute of Astronomical Optics and Technology, China</td> 
+      </tr> 
+      <tr> 
+       <td class="center"><a href="http://www.bao.ac.cn/"><img src="images/NAOC_logo.gif" alt="NAOC"></a></td> 
+       <td>National Astronomical Observatories of China</td> 
+      </tr> 
+      <tr> 
+       <td class="center"><a href="http://www.nao.ac.jp/E/"><img src="images/NAOJ_logo.gif" alt="NAOJ" width="80" height="60"></a></td> 
+       <td>National Astronomical Observatory of Japan</td> 
+      </tr> 
+      <tr> 
+       <td class="center"><a href="http://www.pric.gov.cn/"><img src="images/PRIC_logo.gif" alt="PRIC" width="80" height="80"></a></td> 
+       <td>Polar Research Institute of China</td> 
+      </tr> 
+      <tr> 
+       <td class="center"><a href="http://www.pmo.ac.cn/"><img src="images/PMO_logo.gif" alt="PMO" width="130" height="80"></a></td> 
+       <td>Purple Mountain Observatory, China</td> 
+      </tr> 
+      <tr> 
+       <td class="center"><a href="http://www.tamu.edu/"><img src="images/TAMU_logo.gif" alt="TAMU"></a></td> 
+       <td>Texas A &amp; M, USA</td> 
+      </tr> 
+      <tr> 
+       <td class="center"><a href="http://www.tjnu.edu.cn/"><img src="images/Tianjin_logo.gif" alt="Tainjin"></a></td> 
+       <td>Tianjin Normal University, China</td> 
+      </tr> 
+      <tr> 
+       <td class="center"><a href="http://www.arizona.edu/"><img src="images/Arizona_logo.gif" alt="Arizona" width="86" height="90"></a></td> 
+       <td>University of Arizona, USA</td> 
+      </tr> 
+      <tr> 
+       <td class="center"><a href="http://www.auckland.ac.nz/"><img src="images/Auckland_logo.gif" alt="Auckland" width="71" height="80"></a></td> 
+       <td>University of Auckland, NZ</td> 
+      </tr> 
+      <tr> 
+       <td class="center"><a href="http://ssl.berkeley.edu/"><img src="images/SSL_logo.gif" alt="SSL"></a></td> 
+       <td>University of California at Berkeley, USA</td> 
+      </tr> 
+      <tr> 
+       <td class="center"><a href="http://www.uchicago.edu/"><img src="images/biguofcthin_logo.gif" alt="Chicago" width="87" height="63"></a></td> 
+       <td>University of Chicago, USA</td> 
+      </tr> 
+      <tr> 
+       <td class="center"><a href="http://www.exeter.ac.uk/"><img src="images/Exeter_logo.gif" alt="Exeter"></a></td> 
+       <td>University of Exeter, UK</td> 
+      </tr> 
+      <tr> 
+       <td class="center"><a href="http://www.unsw.edu.au/"><img src="images/UNSW_logo.png" alt="UNSW" width="80" height="80"></a></td> 
+       <td>University of New South Wales, Australia</td> 
+      </tr> 
+     </tbody>
+    </table> 
+    <h2>Funding agencies in alphabetical order</h2> 
+    <table summary="Funding Agencies in Alphabetical Order"> 
+     <tbody>
+      <tr> 
+       <td class="center"><a href="http://www.aad.gov.au/"><img src="images/AAD_left_logo.gif" alt="AAD" width="84" height="80"></a></td> 
+       <td><img src="images/AAD_right_logo.gif" alt="Australian Antarctic Division" width="301" height="80"></td> 
+      </tr> 
+      <tr> 
+       <td class="center"><a href="http://www.arc.gov.au/"><img src="images/ARC_left_logo.gif" alt="ARC" width="84" height="80"></a></td> 
+       <td><img src="images/ARC_right_logo.gif" alt="Australian Research Council" width="183" height="80"></td> 
+      </tr> 
+      <tr> 
+       <td class="center"><a href="http://www.cas.ac.cn/"><img src="images/CAS_logo.gif" alt="CAS" width="80" height="80"></a></td> 
+       <td>Chinese Academy of Sciences</td> 
+      </tr> 
+      <tr> 
+       <td class="center"><a href="http://ec.europa.eu/index_en.htm"><img src="images/eu-flag.png" alt="EU" width="80" height="54"></a></td> 
+       <td>European Commission</td> 
+      </tr> 
+      <tr> 
+       <td class="center"><a href="http://www.nsfc.gov.cn/"><img src="images/NNSFC_logo.gif" alt="NSFC" width="104" height="54"></a></td> 
+       <td>National Natural Science Foundation of China</td> 
+      </tr> 
+      <tr> 
+       <td class="center"><a href="http://www.nsf.gov/"><img src="images/NSF_logo.jpg" alt="NSF" width="80" height="80"></a></td> 
+       <td>National Science Foundation, USA</td> 
+      </tr> 
+      <tr> 
+       <td class="center"><a href="http://www.usap.gov/"><img src="images/USAP_logo.gif" alt="USAP" width="80" height="79"></a></td> 
+       <td>United States Antarctic Program</td> 
+      </tr> 
+     </tbody>
+    </table> 
+   </div> 
+   <div id="footer"> <a href="mailto: m.ashley@unsw.edu.au" name="plato_team" style="color:white">The PLATO Team</a> 2008-2013 
+   </div> 
+  </div>  
+ </body>
+</html>

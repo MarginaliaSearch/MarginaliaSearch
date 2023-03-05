@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en"> 
+ <head> 
+  <meta charset="utf-8"> 
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"> 
+  <meta name="viewport" content="shrink-to-fit=no,width=device-width,height=device-height,initial-scale=1,user-scalable=1"> <!-- Rocket favicon by Adrien Coquet from the Noun Project --> 
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"> 
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"> 
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"> 
+  <link rel="manifest" href="/site.webmanifest"> 
+  <meta name="msapplication-TileColor" content="#00a300"> 
+  <meta name="theme-color" content="#ffffff"> <!-- I'm sorry you have to see JavaScript on this site, but it's here to
+         enable a manual dark mode toggle. When dark mode support improves I
+         can probably remove this again. --> 
+  <script type="text/javascript">
+      function setMode(mode, val) {
+        if (val) document.body.classList.add(mode)
+        else document.body.classList.remove(mode)
+        Array.from(document.querySelectorAll('a'))
+        .filter( el => el.href.indexOf('cosmic.voyage') !== -1)
+        .map( el => {
+          var url = el.href
+          var p = url.indexOf('?') !== -1 ? url.substr(url.indexOf('?')) : ''
+          var baseURL = url.split('?')[0]
+          const params = new URLSearchParams(p)
+          if (val) {
+            params.append(mode, 1)
+          } else {
+            params.delete(mode)
+          }
+          p = params.toString()
+          el.href = baseURL + (p ? '?' + p : '')
+        })
+      }
+
+      window.addEventListener('DOMContentLoaded', function() {
+        var params = new URLSearchParams(window.location.search)
+        if (params.has('dark')) {
+          setMode('dark', true)
+        } else if (params.has('light')) {
+          setMode('light', true)
+        }
+      })
+    </script> 
+  <title>Cosmic Voyage - How to Join</title>
+  <link rel="canonical" href="https://cosmic.voyage/join.html">
+  <style>
+  @font-face {
+    font-family: 'inconsolata';
+    src: url('/inconsolata-regular-webfont.woff2') format('woff2'),
+         url('/inconsolata-regular-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  html {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    color: #333;
+    background-color: #f2f4f4;
+    background-repeat: repeat;
+  }
+
+  a,
+  a:visited,
+  a:hover,
+  a:active {
+    color: rgb(62, 231, 123);
+    text-decoration: none;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
+
+  .dim {
+    color: rgb(62, 231, 123, 0.5);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      color: rgb(50, 200, 100);
+      background-color: #010;
+      background-image: none;
+    }
+
+    a,
+    a:visited,
+    a:hover,
+    a:active {
+      color: rgb(62, 231, 123);
+    }
+
+    .dim {
+      color: rgb(62, 231, 123, 0.5);
+    }
+  }
+
+  @media (prefers-color-scheme: light) {
+    body {
+      color: #333;
+      background-color: #f2f4f4;
+      background-repeat: repeat;
+    }
+
+    a,
+    a:visited,
+    a:hover,
+    a:active {
+      color: #333;
+      font-weight: bold;
+    }
+
+    .dim {
+      color: rgba(30, 30, 30, 0.5);
+    }
+  }
+
+  /* Manually toggled dark class on body */
+  body.dark {
+    color: rgb(50, 200, 100);
+    background-color: #010;
+    background-image: none;
+  }
+  .dark a,
+  .dark a:visited,
+  .dark a:hover,
+  .dark a:active {
+    color: rgb(62, 231, 123);
+  }
+  .dark .dim {
+    color: rgb(62, 231, 123, 0.5);
+  }
+
+  /* Manually toggled light class on body */
+  body.light {
+    color: #333;
+    background-color: #f2f4f4;
+    background-repeat: repeat;
+  }
+
+  .light a,
+  .light a:visited,
+  .light a:hover,
+  .light a:active {
+    color: #333;
+    font-weight: bold;
+  }
+
+  .light .dim {
+    color: rgba(30, 30, 30, 0.5);
+  }
+
+  .page-wrapper {
+    text-align: center;
+  }
+
+  .inner-wrapper {
+    display: inline-block;
+    text-align: left;
+    white-space: pre;
+    font-family: 'inconsolata', monospace;
+    margin: 0 auto;
+    width: auto;
+  }
+
+  ol {
+    padding: 0;
+    line-height: 0.5em;
+  }
+
+  @media screen and (min-width: 700px) {
+    body, html {
+      font-size: 18px;
+    }
+  }
+  @media screen and (min-width: 900px) {
+    body, html {
+      font-size: 24px;
+    }
+  }
+</style> 
+ </head>
+ <body>
+  <div class="page-wrapper">
+   <pre class="inner-wrapper"><a href="/"><span class="dim">&lt;&lt;</span> BACK TO COSMIC VOYAGE</a>
+
+
+              .  .            ,         .
+              |__| _ .    ,  -+- _      | _ *._
+              |  |(_) \/\/    | (_)  \__|(_)|[ )
+
+Anyone* who enjoys writing is welcome to join Cosmic.Voyage. To do
+so you will need to choose a username for the system, and create
+an SSH pubkey to log in. This is a public access unix system, so
+you will be working in a command-line shell environment to
+interact with the system. Getting started instructions:
+
+For Linux Users:
+- open a terminal
+- generate a key using ssh-keygen (just accept all the defaults)
+- your secret key is the file ~/.ssh/id_rsa
+- your public key is the file ~/.ssh/id_rsa.pub
+- send the id_rsa.pub file to james [at] tomasino.org along
+  with your desired username
+- when your account has been approved, connect using ssh and your
+  user name, e.g. ssh asimov@cosmic.voyage
+
+
+For Mac Users:
+- use Command+Space to search for Terminal
+- generate a key using ssh-keygen (just accept all the defaults)
+- your secret key is the file ~/.ssh/id_rsa
+- your public key is the file ~/.ssh/id_rsa.pub
+- send the id_rsa.pub file to james [at] tomasino.org along
+  with your desired username
+- when your account has been approved, connect using ssh and your
+  user name, e.g. ssh asimov@cosmic.voyage
+
+For Windows Users:
+- download the latest version of PuTTY
+- use puttygen to generate a key
+- save private and public keys
+- send the public key to james [at] tomasino.org along with
+  your desired username
+- when your account has been approved, start pageant (this will
+  put an icon of a computer wearing a hat into the System tray)
+- right click the icon and choose View Keys
+- click the Add Keys button
+- select the private key you created up above and open it
+- start putty and connect to your username at cosmic.voyage, e.g.
+  asimov@cosmic.voyage
+
+Once you log in to the system for the first time, you will have a
+welcome email waiting for you. You can read this message by
+running the 'alpine' or 'mutt' commands to open the respective
+mail program. Alpine is easier for those unfamiliar with the
+command line. Your welcome email will explain how to get started
+on the system and where to look for help.
+
+* To comply with COPPA in the United States, this service is not
+  intended for users under the age of 13. If you would like to
+  join and are under that age, please sign up with a parent or
+  guardian who can administer your account, and read the privacy
+  information below. Users found violating this policy will have
+  their accounts and stories removed from the system.
+
+Privacy Information:
+
+This site does not collect any personal data beyond your username
+and information volunteered, such as in the stories written and
+submitted. Server logs are rotated regularly and contain basic
+information such as timestamps, IP addresses, and some command
+debugging information. We have no third party reporting or data
+integrations.
+</pre>
+  </div>
+ </body>
+</html>

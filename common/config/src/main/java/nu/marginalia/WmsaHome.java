@@ -7,12 +7,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Properties;
 
 public class WmsaHome {
-    private static final String DEFAULT = "/var/lib/wmsa";
-
     public static UserAgent getUserAgent() throws IOException {
         var uaPath = getHomePath().resolve("conf/user-agent");
 
@@ -23,14 +22,29 @@ public class WmsaHome {
         return new UserAgent(Files.readString(uaPath).trim());
     }
 
+
     public static Path getHomePath() {
-        var retStr = Optional.ofNullable(System.getenv("WMSA_HOME")).orElse(DEFAULT);
+        var retStr = Optional.ofNullable(System.getenv("WMSA_HOME")).orElseGet(WmsaHome::findDefaultHomePath);
 
         var ret = Path.of(retStr);
         if (!Files.isDirectory(ret)) {
-            throw new IllegalStateException("Could not find WMSA_HOME, either set environment variable or ensure " + DEFAULT + " exists");
+            throw new IllegalStateException("Could not find WMSA_HOME, either set environment variable or ensure " + retStr + " exists");
         }
         return ret;
+    }
+
+    private static String findDefaultHomePath() {
+
+        for (Path p = Paths.get("").toAbsolutePath();
+             Files.exists(p);
+             p = p.getParent())
+        {
+            if (Files.exists(p.resolve("run/env")) && Files.exists(p.resolve("run/setup.sh"))) {
+                return p.resolve("run").toString();
+            }
+        }
+
+        return "/var/lib/wmsa";
     }
 
     public static HostsFile getHostsFile() {

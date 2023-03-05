@@ -1,0 +1,70 @@
+<html> 
+ <head> 
+  <style>
+.authora_0yzralYuIlrV5YJd {background-color: #6818b4}
+.removed {text-decoration: line-through; -ms-filter:'progid:DXImageTransform.Microsoft.Alpha(Opacity=80)'; filter: alpha(opacity=80); opacity: 0.8; }
+.authora_QeUUJc2XXAbjoY6z {background-color: #efcbfc}
+.authora_XmcO47pJGYHG9bLn {background-color: #faf997}
+.authora_uOBhFxZIokEoJlQe {background-color: #79d991}
+.authora_QL6DpYiqRmo1lrZX {background-color: #a091c7}
+.authora_KFv7LrOBNRovkLb2 {background-color: #fff1c7}
+.authora_kYkoSwoBYpPf4a4j {background-color: #6818b4}
+.authora_MpHSOtMGOyh0MaUt {background-color: #ff8f8f}
+.authora_3I6MSeGZBSI6yqJY {background-color: #9f2985}
+</style> 
+  <script src="/versions.js"></script> 
+  <link href="/styles.css" rel="stylesheet"> 
+  <link href="http://192.168.73.188:9001/p/local_network_carousel" rel="alternate" title="Etherpad" type="text/html"> 
+  <link href="local_network_carousel.raw.txt" rel="alternate" title="Plain text" type="text/plain"> 
+  <link href="local_network_carousel.raw.html" rel="alternate" title="HTML" type="text/html"> 
+  <link href="local_network_carousel.diff.html" rel="alternate" title="HTML with author colors" type="text/html"> 
+  <link href="local_network_carousel.meta.json" rel="alternate" title="Meta data" type="application/json"> 
+  <link href="/" rel="search" title="Index" type="text/html"> 
+  <meta charset="utf-8"> 
+  <title>local_network_carousel</title> 
+ </head> 
+ <body> <span class="authora_QeUUJc2XXAbjoY6z"> <span class="removed">Relearn 2017</span> </span> 
+  <br> <span class="authora_QeUUJc2XXAbjoY6z">To support the array of tools we wanted to have at Relearn this year, we've set up a local network and a local server to allow for outside internet connections but ensure some tools to function properly while on local networks.</span> 
+  <br> <span class="authora_QeUUJc2XXAbjoY6z">By the front door is a server called complex.local</span> 
+  <br> 
+  <br> 
+  <br> <span class="authora_uOBhFxZIokEoJlQe">First form groups of three.</span> 
+  <br> <span class="authora_uOBhFxZIokEoJlQe">One person login as the user <strong>relearn</strong> </span> 
+  <br> 
+  <br> 
+  <ul class="indent"> 
+   <li> <span class="authora_uOBhFxZIokEoJlQe">$ ssh relearn@complex.local</span> </li> 
+   <li> <span class="authora_uOBhFxZIokEoJlQe">passw is entrepot</span> </li> 
+   <li> <br> </li> 
+  </ul> <span class="authora_uOBhFxZIokEoJlQe">Then that person makes extra user accounts for the each of the three:</span> 
+  <br> 
+  <ul class="indent"> 
+   <li> <span class="authora_XmcO47pJGYHG9bLn">$ sudo adduser <em>username</em> </span> </li> 
+  </ul> 
+  <br> <span class="authora_uOBhFxZIokEoJlQe">It will first ask you to give the password for the user relearn, its entrepot&nbsp;</span> 
+  <br> 
+  <br> <span class="authora_uOBhFxZIokEoJlQe">Then it will ask you to choose and confirm a password for the new user you made.</span> 
+  <br> 
+  <br> <span class="authora_uOBhFxZIokEoJlQe">Then each user we add to the permission group <strong>'relearn'</strong> </span> 
+  <br> 
+  <br> 
+  <ul class="indent"> 
+   <li> <span class="authora_uOBhFxZIokEoJlQe">$ sudo usermod -a -G relearn $user</span> </li> 
+   <li> <br> </li> 
+   <li> <span class="authora_uOBhFxZIokEoJlQe">where $user is the username you just made.</span> </li> 
+   <li> <br> </li> 
+  </ul> <span class="authora_uOBhFxZIokEoJlQe">Once everyone has a their own user account, you can log in to complex.local with it!</span> 
+  <br> 
+  <br> 
+  <ul> 
+   <ul class="indent"> 
+    <li> <span class="authora_uOBhFxZIokEoJlQe">$ssh username@complex.local</span> </li> 
+   </ul> 
+  </ul> 
+  <br> 
+  <br> <span class="authora_uOBhFxZIokEoJlQe">On windows we need to install PuTTY in order to get unix shell</span> <span class="authora_3I6MSeGZBSI6yqJY">&nbsp; download it from --&gt;&nbsp;&nbsp; </span> <a href="https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html"> <span class="authora_3I6MSeGZBSI6yqJY">https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html</span> </a> 
+  <br> <span class="authora_3I6MSeGZBSI6yqJY">once you install it enter in the Configuration box --&gt; Host:&nbsp; 192.168.73.188&nbsp;&nbsp; . Done!</span> 
+  <br> 
+  <br>  
+ </body>
+</html>

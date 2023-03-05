@@ -1,0 +1,556 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html> 
+ <head> 
+  <meta http-equiv="content-type" content="text/html; charset=utf-8"> 
+  <link rel="stylesheet" type="text/css" href="default.css" media="screen"> 
+  <title>Open Source Software</title> 
+ </head> 
+ <body> 
+  <div class="container"> 
+   <div class="top"> <a href="index-en.html"><span>Open Source Software</span></a> 
+   </div> 
+   <div class="header"></div> 
+   <div class="main"> 
+    <div class="item"> 
+     <div class="date"> 
+      <div></div> <span></span> 
+     </div> 
+     <div class="content"> 
+      <h1>About</h1> 
+      <div class="body"> 
+       <p style="padding-bottom: 3px;"></p> 
+       <p style="padding-bottom: 9px;"> This site contains a selection of the very best open source software for the Windows™ environment. You may legally use and distribute this software free of charge! </p> 
+      </div> 
+     </div> 
+    </div> 
+    <div class="item"> 
+     <div class="date"> 
+      <div></div> <span></span> 
+     </div> 
+     <div class="content"> <a name="thebest"></a> 
+      <h1>Favourites</h1> 
+      <div class="body"> 
+       <br> 
+       <img class="logo" src="img/LibreOfficelogo.png"> 
+       <p><b>LibreOffice </b><br> Software bundle for office work, including text processing software, for work with spreadsheets, databases and presentations. It supports Microsoft Office™ and European official OpenDocument document standard.</p> 
+       <div class="links"> <a href="http://www.libreoffice.org" target="_blank">Homepage</a> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a class="dropdown-parent-libre">Download</a> 
+         <div class="links-libre"> <a href="https://www.libreoffice.org/donate/dl/win-x86/6.4.4/en-US/LibreOffice_6.4.4_Win_x86.msi" target="_blank">Windows (32-bit)</a> <a href="https://www.libreoffice.org/donate/dl/win-x86_64/6.4.4/en-US/LibreOffice_6.4.4_Win_x64.msi" target="_blank">Windows (64-bit)</a> <a href="https://www.libreoffice.org/donate/dl/mac-x86_64/6.4.4/en-US/LibreOffice_6.4.4_MacOS_x86-64.dmg" target="_blank">MacOS</a> <a href="https://www.libreoffice.org/donate/dl/deb-x86_64/6.4.4/en-US/LibreOffice_6.4.4_Linux_x86-64_deb.tar.gz" target="_blank">Linux (deb)</a> <a href="https://www.libreoffice.org/donate/dl/rpm-x86_64/6.4.4/en-US/LibreOffice_6.4.4_Linux_x86-64_rpm.tar.gz" target="_blank">Linux (rpm)</a> 
+         </div> 
+        </div> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/firefox-logo.png"> <b>Firefox </b><br>A modern, safe, full-featured web browser with many extension options. </p> 
+       <div class="links"> <a href="ss-en/ss-firefox-en.html"> Screenshots</a> 
+        <img src="img/li.gif"> <a href="http://www.mozilla.com/en-US" target="_blank">Homepage</a> 
+        <img src="img/li.gif"> <a href="https://www.mozilla.org/en-US/firefox/download/thanks/" target="_blank">Download</a> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/thunderbird-logo.png"> <b>Thunderbird </b><br> A serious application for reading e-mail and RSS-Feeds with convenient tools for organising mail and combating spam. </p> 
+       <div class="links"> <a href="ss-en/ss-thunderbird-en.html"> Screenshots</a> 
+        <img src="img/li.gif"> <a href="http://www.mozilla.com/en-US/thunderbird" target="_blank">Homepage</a> 
+        <img src="img/li.gif"> <a href="https://download.mozilla.org/?product=thunderbird-68.8.1-SSL&amp;os=win&amp;lang=en-US" target="_blank">Download</a> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/gimp-logo.jpg"> <b>GIMP </b><br> A useful image processing application for creating and editing photographs and other images. Requires the GTK+ library. </p> 
+       <div class="links"> <a href="ss-en/ss-gimp-en.html"> Screenshots</a> 
+        <img src="img/li.gif"> <a href="http://www.gimp.org" target="_blank">Homepage</a> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a>Download</a> 
+         <div class="links-gimp"> <a href="https://download.gimp.org/mirror/pub/gimp/v2.10/windows/gimp-2.10.18-setup-2.exe" target="_blank">Windows</a> <a href="https://download.gimp.org/mirror/pub/gimp/v2.10/osx/gimp-2.10.14-x86_64-1.dmg" target="_blank">Mac</a> <a href="https://flathub.org/repo/appstream/org.gimp.GIMP.flatpakref" target="_blank">Linux</a> 
+         </div> 
+        </div> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/vlc-logo.png"> <b>VLC </b><br> A video player supporting many video file formats, DVD and VCD discs plus most streaming formats on the Internet. Includes a choice of interfaces. </p> 
+       <div class="links"> <a href="ss-en/ss-vlc-en.html"> Screenshots</a> 
+        <img src="img/li.gif"> <a href="http://www.videolan.org/vlc" target="_blank">Homepage</a> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a>Download</a> 
+         <div class="links-vlc"> <a href="http://get.videolan.org/vlc/3.0.10/win32/vlc-3.0.10-win32.exe" target="_blank">Windows (32-bit)</a> <a href="http://play.google.comvlc/3.0.10/win64/vlc-3.0.10-win64.exe" target="_blank">Windows (64-bit)</a> <a href="http://get.videolan.org/vlc/3.0.10/macosx/vlc-3.0.10.dmg" target="_blank">MacOS</a> <a href="http://www.videolan.org/vlc/#download" target="_blank">Linux</a> <a href="http://www.videolan.org/vlc/download-windowsphone.html" target="_blank">Windows phone</a> <a href="http://get.videolan.org//store/apps/details?id=org.videolan.vlc" target="_blank">Android</a> <a href="http://itunes.apple.com/app/apple-store/id650377962?pt=454758&amp;ct=vodownloadpage&amp;mt=8" target="_blank">iOS</a> 
+         </div> 
+        </div> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/7zip-logo.png"> <b>7-Zip </b><br> A simple and effective file compression and extraction utility, with support for many formats and can be used to combine separate files. </p> 
+       <div class="links"> <a href="ss-en/ss-7zip-en.html"> Screenshots</a> 
+        <img src="img/li.gif"> <a href="http://www.7-zip.org" target="_blank">Homepage</a> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a>Download</a> 
+         <div class="links-7zip"> <a href="https://www.7-zip.org/a/7z1900.exe" target="_blank">Windows (32-bit)</a> <a href="https://www.7-zip.org/a/7z1900-x64.exe" target="_blank">Windows (64-bit)</a> 
+         </div> 
+        </div> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img id="ashampoo-logo" src="img/ashampoo-logo.png"> <b>Ashampoo burning studio</b><br> A CD/DVD burning application with many features and an intuitive user interface. </p> 
+       <div class="links"> 
+        <div class="links-ashampoo"> <a href="https://www.ashampoo.com/en/eur" target="_blank">Homepage</a> 
+         <img src="img/li.gif"> <a href="https://www.ashampoo.com/en/usd/dld/7110/burning-studio-free/" target="_blank">Download</a> 
+        </div>
+        <br> 
+       </div> 
+      </div> 
+     </div> 
+    </div> 
+    <div class="item"> 
+     <div class="date"> 
+      <div></div> <span></span> 
+     </div> 
+     <div class="content"> <a name="office"></a> 
+      <h1>Office Software</h1> 
+      <div class="body"> 
+       <br> 
+       <br> 
+       <img class="logo" src="img/LibreOfficelogo.png"> 
+       <p><b>LibreOffice </b><br> Software bundle for office work, including text processing software, for work with spreadsheets, databases and presentations. It supports Microsoft Office™ and European official OpenDocument document standard. </p> 
+       <div class="links"> <!-- <a href="ss-lv/ss-openoffice.org.html"> Ekrānattēli</a> --> <!-- <img src="img/li.gif" /> --><a href="http://www.libreoffice.org" target="_blank"> Homepage</a> <!--						<img src="img/li.gif" /> <a href="/files/lv_LV-0.9.4.oxt"> Pareizrakstības rīks</a>	--> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a class="dropdown-parent-libre">Download</a> 
+         <div class="links-libre"> <a href="https://www.libreoffice.org/donate/dl/win-x86/6.4.4/en-US/LibreOffice_6.4.4_Win_x86.msi" target="_blank">Windows (32-bit)</a> <a href="https://www.libreoffice.org/donate/dl/win-x86_64/6.4.4/en-US/LibreOffice_6.4.4_Win_x64.msi" target="_blank">Windows (64-bit)</a> <a href="https://www.libreoffice.org/donate/dl/mac-x86_64/6.4.4/en-US/LibreOffice_6.4.4_MacOS_x86-64.dmg" target="_blank">MacOS</a> <a href="https://www.libreoffice.org/donate/dl/deb-x86_64/6.4.4/en-US/LibreOffice_6.4.4_Linux_x86-64_deb.tar.gz" target="_blank">Linux (deb)</a> <a href="https://www.libreoffice.org/donate/dl/rpm-x86_64/6.4.4/en-US/LibreOffice_6.4.4_Linux_x86-64_rpm.tar.gz" target="_blank">Linux (rpm)</a> 
+         </div> 
+        </div> 
+       </div> 
+       <hr>
+       <br> 
+       <img class="logo" src="img/pdfcreator-logo.png"> 
+       <p><b>PDFCreator </b><br> A small utility with which you can create PDF documents from virtually any Windows™ application.</p> 
+       <div class="links"> <a href="http://www.pdfforge.org/products/pdfcreator" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> <a href="http://download.pdfforge.org/download/pdfcreator/PDFCreator-stable?download" target="_blank">Download</a> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/npp-logo.jpg"> <b>Notepad++ </b><br> A small and simple complement to the classic Notepad with features such as syntax highlighting. </p> 
+       <div class="links"> <a href="http://notepad-plus.sourceforge.net/uk/site.htm" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> <a href="https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v7.8.6/npp.7.8.6.Installer.exe" target="_blank">Download</a> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/sunbird-logo.png"> <b>Thunderbird lightning calendar </b><br> A calendar application for personal time management. Available as a supplement to Mozilla Thunderbird. </p> 
+       <div class="links"> <a href="http://www.mozilla.org/projects/calendar/sunbird" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> <a href="https://addons.thunderbird.net/thunderbird/downloads/latest/lightning/addon-2313-latest.xpi?src=dp-btn-primary" target="_blank">Download</a> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/dia-logo.jpg"> <b>Dia </b><br> A diagramming tool with support for many file formats. Microsoft Visio™ </p> 
+       <div class="links"> <a href="http://www.gnome.org/projects/dia" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a>Download</a> 
+         <div class="links-dia"> <a href="http://sourceforge.net/projects/dia-installer/files/dia-win32-installer/0.97.2/dia-setup-0.97.2-2-unsigned.exe/download" target="_blank">Windows</a> <a href="http://sourceforge.net/projects/dia-installer/files/dia/0.97.2/Dia-0.97.2-7.dmg/download" target="_blank">MacOS</a> <a href="http://sourceforge.net/projects/dia-installer/files/dia/0.97.2/dia_0.97.2-5_i386.deb/download" target="_blank">Linux (deb)</a> <a href="http://sourceforge.net/projects/dia-installer/files/dia/0.97.2/dia-0.97.2-1.ymp/download" target="_blank">Linux (rpm)</a> 
+         </div> 
+        </div> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/freeplane-logo.png"> <b>Freeplane</b><br> A useful "mind mapping" tool for organising your ideas with many options for exporting your <i>"mind maps"</i>. </p> 
+       <div class="links"> <a href="https://www.freeplane.org/wiki/index.php/Home" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> <a href="https://sourceforge.net/projects/freeplane/files/latest/download" target="_blank">Download</a> 
+       </div>
+       <br> 
+      </div> 
+     </div> 
+    </div> 
+    <div class="item"> 
+     <div class="date"> 
+      <div></div> <span></span> 
+     </div> 
+     <div class="content"> <a name="design"></a> 
+      <h1>Design Software</h1> 
+      <div class="body"> 
+       <br> 
+       <br> 
+       <p> <img class="logo" src="img/gimp-logo.jpg"> <b>GIMP </b><br> A useful image processing application for creating and editing photographs and other images. Requires the <a href="#gtk">GTK+ library.</a>. </p> 
+       <div class="links"> <a href="http://www.gimp.org" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a>Download</a> 
+         <div class="links-gimp"> <a href="https://download.gimp.org/mirror/pub/gimp/v2.10/windows/gimp-2.10.18-setup-2.exe" target="_blank">Windows</a> <a href="https://download.gimp.org/mirror/pub/gimp/v2.10/osx/gimp-2.10.14-x86_64-1.dmg" target="_blank">Mac</a> <a href="https://flathub.org/repo/appstream/org.gimp.GIMP.flatpakref" target="_blank">Linux</a> 
+         </div> 
+        </div> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/inkscape-logo.png"> <b>Inkscape </b><br> A vector graphics design tool supporting many popular file formats. </p> 
+       <div class="links"> <a href="http://www.inkscape.org" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a>Download</a> 
+         <div class="links-inkscape"> <a href="https://inkscape.org/release/inkscape-1.0/windows/32-bit/exe/dl/" target="_blank">Windows (32-bit)</a> <a href="https://inkscape.org/release/inkscape-1.0/windows/64-bit/exe/dl/" target="_blank">Windows (64-bit)</a> <a href="https://inkscape.org/release/inkscape-1.0/gnulinux/appimage/dl/" target="_blank">Linux</a> <a href="https://inkscape.org/release/inkscape-1.0/mac-os-x/1010-1015/dl/" target="_blank">MacOS</a> 
+         </div> 
+        </div> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/tuxpaint-logo.png"> <b>Tux Paint </b><br> A popular paint application for children from 3 to 12 years with a simple interface and interesting effects. </p> 
+       <div class="links"> <a href="http://www.tuxpaint.org" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a>Download</a> 
+         <div class="links-tuxpaint"> <a href="https://sourceforge.net/projects/tuxpaint/files/tuxpaint/0.9.24/tuxpaint-0.9.24-win32-installer.exe/download" target="_blank">Windows</a> <a href="https://sourceforge.net/projects/tuxpaint/files/tuxpaint/0.9.24/TuxPaint-0.9.24.dmg/download" target="_blank">MacOS</a> <a href="http://www.tuxpaint.org/download/linux-rpm/" target="_blank">Linux</a> <a href="https://sourceforge.net/projects/tuxpaint/files/tuxpaint/0.9.24/org.tuxpaint_924.apk/download" target="_blank">Android</a> <a href="https://itunes.apple.com/us/app/tux-paint-free/id944855270" target="_blank">Apple iOS</a> 
+         </div> 
+        </div> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/paintnet-logo.png"> <b>Paint.NET </b><br> An intuitive photo and image editing application. </p> 
+       <div class="links"> <a href="https://www.getpaint.net/" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> <a href="https://www.dotpdn.com/files/paint.net.4.2.12.install.zip" target="_blank">Download</a> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img id="logo-kompozer" src="img/kompozer-logo.png"> <b>Kompozer</b><br> A full-featured but simple web site design application. </p> 
+       <div class="links"> <a href="https://sourceforge.net/projects/kompozer/" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> <a href="https://sourceforge.net/projects/kompozer/files/latest/download" target="_blank">Download</a> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/scribus-logo.png"> <b>Scribus </b><br> A professional desktop publishing layout application with a modern interface. </p> 
+       <div class="links"> <a href="http://www.scribus.net" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a>Download</a> 
+         <div class="links-scribus"> <a href="https://sourceforge.net/projects/scribus/files/latest/download" target="_blank">Windows (32-bit)</a> <a href="https://sourceforge.net/projects/scribus/files/latest/download" target="_blank">Windows (64-bit)</a> <a href="https://sourceforge.net/projects/scribus/files/latest/download" target="_blank">MacOS</a> 
+         </div> 
+        </div> 
+       </div> 
+       <hr>
+       <br> 
+       <img class="logo" src="img/blender-logo.png"> 
+       <p><b>Blender </b><br> A powerful professional application for 3D modelling, animation and editing to create static images and video clips.</p> 
+       <div class="links"> <a href="http://www.blender.org" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a>Download</a> 
+         <div class="links-blender"> <a href="https://www.blender.org/download/Blender2.83/blender-2.83.0-windows64.msi/" target="_blank">Windows</a> <a href="https://www.blender.org/download/Blender2.83/blender-2.83.0-macOS.dmg/" target="_blank">MacOS</a> <a href="https://www.blender.org/download/Blender2.83/blender-2.83.0-linux64.tar.xz/" target="_blank">Linux</a> 
+         </div> 
+        </div> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/jahshaka-logo.png"> <b>Jahshaka </b><br> A simple but powerful video editing and effects tool. </p> 
+       <div class="links"> <a href="http://www.jahshaka.org" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a>Download</a> 
+         <div class="links-jahshaka"> <a href="https://sourceforge.net/projects/jahshaka/files/Studio/jahshaka-win-0.8.1-beta.exe/download" target="_blank">Windows</a> <a href="https://sourceforge.net/projects/jahshaka/files/Studio/jahshaka-osx-0.8.1-beta.dmg/download" target="_blank">MacOS</a> 
+         </div> 
+        </div> 
+       </div>
+       <br> 
+      </div> 
+     </div> 
+    </div> 
+    <div class="item"> 
+     <div class="date"> 
+      <div></div> <span></span> 
+     </div> 
+     <div class="content"> <a name="internet"></a> 
+      <h1>Internet Software</h1> 
+      <div class="body"> 
+       <br> 
+       <br> 
+       <img class="logo" src="img/firefox-logo.png"> 
+       <p><b>Firefox </b><br> A modern, safe, full-featured web browser with many extension options. Includes support for all Baltic languages.</p> 
+       <div class="links"> <a href="http://www.mozilla.com/en-US" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> <a href="https://www.mozilla.org/en-US/firefox/download/thanks/" target="_blank"> Download</a> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/thunderbird-logo.png"> <b>Thunderbird </b><br> A serious application for reading e-mail and RSS-Feeds with convenient tools for organising mail and combating spam. </p> 
+       <div class="links"> <a href="http://www.mozilla.com/en-US/thunderbird" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> <a href="https://download.mozilla.org/?product=thunderbird-68.8.1-SSL&amp;os=win&amp;lang=en-US" target="_blank"> Download</a> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/azureus-logo.png"> <b>Vuze</b><br> A BitTorrent file sharing tool with many unique features. </p> 
+       <div class="links"> <a href="https://www.vuze.com/"> Homepage</a> 
+        <img src="img/li.gif"> <a href="https://www.vuze.com/download.php" target="_blank">Download</a> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/dcpp-logo.png"> <b>RevConnect </b><br> A high-performance Direct Connect/DC++ file sharing tool. </p> 
+       <div class="links"> <a href="https://sourceforge.net/projects/reverseconnect/" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> <a href="https://sourceforge.net/projects/reverseconnect/files/latest/download" target="_blank">Download</a> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/filezilla-logo.jpg"> <b>FileZilla </b><br> A fast, friendly and reliable FTP client that also supports sFTP protocol. </p> 
+       <div class="links"> <a href="http://filezilla-project.org/" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a>Download</a> 
+         <div class="links-filezilla"> <a href="https://download.filezilla-project.org/client/FileZilla_3.48.1_win32_sponsored-setup.exe" target="_blank">Windows (32-bit)</a> <a href="https://download.filezilla-project.org/client/FileZilla_3.48.1_win64_sponsored-setup.exe" target="_blank">Windows (64-bit)</a> <a href="https://dl2.cdn.filezilla-project.org/client/FileZilla_3.48.1_macosx-x86.app.tar.bz2?h=30SNjsdodYfT_tcI1Nh6qQ&amp;x=1591623367" target="_blank">MacOS</a> <a href="https://dl4.cdn.filezilla-project.org/client/FileZilla_3.48.1_i686-linux-gnu.tar.bz2?h=Aokb2Z2trQFiBYJNJlItzQ&amp;x=1591623395" target="_blank">Linux (32-bit)</a> <a href="https://dl3.cdn.filezilla-project.org/client/FileZilla_3.48.1_x86_64-linux-gnu.tar.bz2?h=lzBHRVmM5MdUjJ77m0TJUw&amp;x=1591623380" target="_blank">Linux (64-bit)</a> 
+         </div> 
+        </div> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/pidgin-logo.png"> <b>Pidgin </b><br> An instant messaging tool that supports protocols such as AIM™, ICQ, IRC, MSN™, Google Talk and Yahoo!™. </p> 
+       <br> <!-- otherwise the <hr> line gets cut on the left --> 
+       <div class="links"> <a href="http://pidgin.im" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a>Download</a> 
+         <div class="links-pidgin"> <a href="http://sourceforge.net/projects/pidgin/files/Pidgin/2.13.0/pidgin-2.13.0.exe/download?accel_key=62%3Aa4c0d8b6-1952-11e9-abae-525400fc71c5&amp;click_id=a4c154bc-1952-11e9-abae-525400fc71c5&amp;source=accel" target="_blank">Windows</a> <a href="https://sourceforge.net/projects/pidgin/files/Pidgin/2.13.0/pidgin-2.13.0.tar.bz2/download?accel_key=62%3Abd2389f8-1952-11e9-9fd1-5254004ddb8f&amp;click_id=bd238c5a-1952-11e9-9fd1-5254004ddb8f&amp;source=accel" target="_blank">MacOS</a> 
+         </div> 
+        </div> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/emule-logo.png"> <b>eMule </b><br> A file sharing tool for the world's largest peer to peer network. </p> 
+       <div class="links"> <a href="http://www.emule-project.net/home/perl/general.cgi?l=1" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> <a href="http://prdownloads.sourceforge.net/emule/eMule0.50a-Installer.exe" target="_blank">Lejupielāde</a> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/httrack-logo.jpg"> <b>HTTrack </b><br> A useful utility for viewing web sites off-line. </p> 
+       <div class="links"> <a href="http://www.httrack.com/page/1/en" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a>Download</a> 
+         <div class="links-httrack"> <a href="https://www.tightvnc.com/download/1.3.10/tightvnc-1.3.10-setup.exe" target="_blank">Windows</a> <a href="http://download.httrack.com/cserv.php3?File=httrack.tar.gz" target="_blank">Linux</a> 
+         </div> 
+        </div> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/tightvnc-logo.png"> <b>TightVNC </b><br> A powerful remote administration tool that enables you to control your workstation over the Internet. </p> 
+       <div class="links"> <a href="http://www.tightvnc.com" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a>Download</a> 
+         <div class="links-tightvnc"> <a href="https://www.tightvnc.com/download/1.3.10/tightvnc-1.3.10-setup.exe" target="_blank">Windows</a> <a href="https://www.tightvnc.com/download/1.3.10/tightvnc-1.3.10_unixsrc.tar.bz2" target="_blank">Linux</a> 
+         </div> 
+        </div> 
+       </div>
+       <br> 
+      </div> 
+     </div> 
+    </div> 
+    <div class="item"> 
+     <div class="date"> 
+      <div></div> <span></span> 
+     </div> 
+     <div class="content"> <a name="multimedia"></a> 
+      <h1>Multimedia Software</h1> 
+      <div class="body"> 
+       <br> 
+       <br> 
+       <img class="logo" src="img/audacity-logo.png"> 
+       <p><b>Audacity </b><br> A simple but powerful tool for recording, editing and converting audio with support for many formats.</p> 
+       <div class="links"> <a href="https://www.audacityteam.org/" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a>Download</a> 
+         <div class="links-audacity"> <a href="https://www.fosshub.com/Audacity.html?dwl=audacity-win-2.4.1.exe" target="_blank">Windows</a> <a href="https://www.fosshub.com/Audacity.html?dwl=audacity-macos-2.4.1.dmg" target="_blank">MacOS</a> 
+         </div> 
+        </div> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/vlc-logo.png"> <b>VLC </b><br> A video player supporting many video file formats, DVD and VCD discs plus most streaming formats on the Internet. Includes a choice of interfaces. </p> 
+       <div class="links"> <a href="http://www.videolan.org/vlc"> Homepage</a> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a>Download</a> 
+         <div class="links-vlc"> <a href="http://get.videolan.org/vlc/3.0.10/win32/vlc-3.0.10-win32.exe" target="_blank">Windows (32-bit)</a> <a href="http://play.google.comvlc/3.0.10/win64/vlc-3.0.10-win64.exe" target="_blank">Windows (64-bit)</a> <a href="http://get.videolan.org/vlc/3.0.10/macosx/vlc-3.0.10.dmg" target="_blank">MacOS</a> <a href="http://www.videolan.org/vlc/#download" target="_blank">Linux</a> <a href="http://www.videolan.org/vlc/download-windowsphone.html" target="_blank">Windows phone</a> <a href="http://get.videolan.org//store/apps/details?id=org.videolan.vlc" target="_blank">Android</a> <a href="http://itunes.apple.com/app/apple-store/id650377962?pt=454758&amp;ct=vodownloadpage&amp;mt=8" target="_blank">iOS</a> 
+         </div> 
+        </div> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/songbird-logo.png"> <b>Songbird </b><br> A music player for not only music files but also Internet streams. Songbird supports many useful extensions. </p> 
+       <div class="links"> <a href="https://getsongbird.net/" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> <a href="https://getsongbird.net/installer/songbird.exe" target="_blank">Download</a> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/mediacoder-logo.png"> <b>MediaCoder </b><br> A universal audio/video conversion utility supporting batch processing. </p> 
+       <div class="links"> <a href="http://www.mediacoderhq.com/" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> <a href="https://www.fosshub.com/MediaCoder.html?dwl=MediaCoder-x64-0.8.61.exe" target="_blank">Download</a> 
+       </div>
+       <br> 
+      </div> 
+     </div> 
+    </div> 
+    <div class="item"> 
+     <div class="date"> 
+      <div></div> <span></span> 
+     </div> 
+     <div class="content"> <a name="games"></a> 
+      <h1>Entertainment &amp; Education Software</h1> 
+      <div class="body"> 
+       <br> 
+       <br> 
+       <img class="logo" src="img/celestia-logo.png"> 
+       <p><b>Celestia </b><br> A 3D space simulator for exploring our planet and depths of the universe.</p> 
+       <div class="links"> <a href="https://celestia.space/" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a>Download</a> 
+         <div class="links-celestia"> <a href="https://celestia.space/cc/celestia-win-161" target="_blank">Windows</a> <a href="https://celestia.space/cc/celestia-osx-161" target="_blank">MacOS</a> <a href="https://bintray.com/celestia/releases-deb/celestia/view/readmore#read" target="_blank">Linux</a> 
+         </div> 
+        </div> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/stellarium-logo.png"> <b>Stellarium </b><br> A simple application to view realistic starry skies from many parts of the world. </p> 
+       <div class="links"> <a href="https://stellarium.org/" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a>Download</a> 
+         <div class="links-stellarium"> <a href="https://github.com/Stellarium/stellarium/releases/download/v0.20.2/stellarium-0.20.2-win32.exe" target="_blank">Windows (32-bit)</a> <a href="https://github.com/Stellarium/stellarium/releases/download/v0.20.2/stellarium-0.20.2-win64.exe" target="_blank">Windows (64-bit)</a> <a href="https://github.com/Stellarium/stellarium/releases/download/v0.20.2/Stellarium-0.20.2.zip" target="_blank">MacOS</a> <a href="https://github.com/Stellarium/stellarium/releases/download/v0.20.2/Stellarium-0.20.2-x86_64.AppImage" target="_blank">Linux</a> 
+         </div> 
+        </div> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/electricsheep-logo.jpg"> <b>Electric Sheep </b><br>A distributed screen saver that uses thousands of computers over the Internet to build beautiful images. </p> 
+       <div class="links"> <a href="http://electricsheep.org" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a>Download</a> 
+         <div class="links-electricsheep"> <a href="http://d100rc88eim93q.cloudfront.net/electricsheep-3.0.2.exe" target="_blank">Windows</a> <a href="http://d100rc88eim93q.cloudfront.net/electricsheep-3.0.2.dmg" target="_blank">MacOS</a> <a href="https://electricsheep.org/linux/" target="_blank">Linux</a> 
+         </div> 
+        </div> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/wesnoth-logo.png"> <b>Battle for Wesnoth </b><br> A turn-based strategy game about the struggle to reclaim the throne of Wesnoth. </p> 
+       <div class="links"> <a href="https://www.wesnoth.org" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a>Download</a> 
+         <div class="links-wesnoth"> <a href="https://sourceforge.net/projects/wesnoth/files/wesnoth-1.14/wesnoth-1.14.13/wesnoth-1.14.13-win32.exe/download" target="_blank">Windows</a> <a href="https://sourceforge.net/projects/wesnoth/files/wesnoth-1.14/wesnoth-1.14.13/Wesnoth_1.14.13.dmg/download" target="_blank">MacOS</a> <a href="https://wiki.wesnoth.org/WesnothBinariesLinux" target="_blank">Linux</a> <a href="https://itunes.apple.com/us/app/battle-for-wesnoth-hd/id575852062" target="_blank">iOS</a> <a href="https://play.google.com/store/apps/details?id=it.alessandropira.wesnoth114" target="_blank">Android</a> 
+         </div> 
+        </div> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/neverball-logo.jpg"> <b>Neverball </b><br> An exciting action and puzzle game in which you navigate a ball through a course. </p> 
+       <div class="links"> <a href="https://icculus.org/neverball" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a>Download</a> 
+         <div class=" links-neverball"> <a href="https://neverball.org/neverball-1.6.0.zip" target="_blank">Windows</a> <a href="https://neverball.org/neverball-1.5.3.dmg" target="_blank">MacOS</a> 
+         </div> 
+        </div> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/sokoban-logo.jpg"> <b>Sokoban YASC </b><br> A simple but challenging puzzle game. </p> 
+       <div class="links"> <a href="https://sourceforge.net/projects/sokobanyasc" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> <a href="https://sourceforge.net/projects/sokobanyasc/files/latest/download" target="_blank">Download</a> 
+       </div> 
+       <hr>
+       <br> 
+       <br> 
+       <p> <img class="logo" src="img/supertux-logo.png"> <b>SuperTux</b><br> A classic arcade game. </p> 
+       <div class="links"> <a href="http://supertux.lethargik.org" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a>Download</a> 
+         <div class="links-supertux"> <a href="https://github.com/SuperTux/supertux/releases/download/v0.6.2/SuperTux-v0.6.2-win32.msi" target="_blank">Windows (32-bit)</a> <a href="https://github.com/SuperTux/supertux/releases/download/v0.6.2/SuperTux-v0.6.2-win64.msi" target="_blank">Windows (64-bit)</a> <a href="https://github.com/SuperTux/supertux/releases/download/v0.6.2/SuperTux-v0.6.2-Darwin.dmg" target="_blank">MacOS</a> <a href="https://github.com/SuperTux/supertux/releases/download/v0.6.2/SuperTux_2-v0.6.2.glibc2.27-x86_64.AppImage" target="_blank">Linux</a> 
+         </div> 
+        </div> 
+       </div> 
+      </div> 
+     </div> 
+    </div> 
+    <div class="item"> 
+     <div class="date"> 
+      <div></div> <span></span> 
+     </div> 
+     <div class="content"> <a name="utilities"></a> 
+      <h1>Utility Software</h1> 
+      <div class="body"> 
+       <br> 
+       <br> 
+       <img class="logo" src="img/7zip-logo.png"> 
+       <p><b>7-Zip </b><br> A simple and effective file compression and extraction utility, with support for many formats and can be used to combine separate files.</p> 
+       <div class="links"> <a href="http://www.7-zip.org" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a> Download</a> 
+         <div class="links-7zip"> <a href="https://www.7-zip.org/a/7z1900.exe" target="_blank">Windows (32-bit)</a> <a href="https://www.7-zip.org/a/7z1900-x64.exe" target="_blank">Windows (64-bit)</a> 
+         </div> 
+        </div> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/workrave-logo.jpg"> <b>Workrave </b><br> An utility help you take breaks and perform exercises when working at the computer. </p> 
+       <div class="links"> <a href="https://workrave.org/" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> <a href="https://github.com/rcaelers/workrave/releases/download/v1_10_44/workrave-win32-v1.10.44.exe" target="_blank">Download</a> 
+       </div>
+       <br> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/keepass-logo.gif"> <b>KeePass </b><br> A simple place to securely save passwords. </p> 
+       <div class="links"> <a href="http://keepass.info" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> <a href="https://sourceforge.net/projects/keepass/files/KeePass%202.x/2.45/KeePass-2.45-Setup.exe/download" target="_blank">Download</a> 
+       </div> 
+       <br> 
+       <hr>
+       <br> 
+       <p> <img class="eraser-logo" src="img/eraser-logo.png"> <b>Eraser </b><br> An utility to securely delete sensitive data from your computer. </p> 
+       <div class="links"> <a href="https://eraser.heidi.ie/" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> <a href="https://sourceforge.net/projects/eraser/files/Eraser%206/6.2/Eraser%206.2.0.2989.exe/download" target="_blank">Download</a> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="veracrypt-logo" src="img/veracrypt-logo.png"> <b>VeraCrypt</b><br> An utility to securely encrypt sensitive data on your computer. </p> 
+       <div class="links"> <a href="https://www.veracrypt.fr/en/Home.html" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> <a href="https://www.veracrypt.fr/en/Downloads.html" target="_blank">Download</a> 
+       </div> 
+       <hr>
+       <br> 
+       <p> <img class="logo" src="img/putty-logo.png"> <b>PuTTY </b><br> An SSH and Telnet network communication utility. </p> 
+       <div class="links"> <a href="http://www.chiark.greenend.org.uk/~sgtatham/putty" target="_blank"> Homepage</a> 
+        <img src="img/li.gif"> 
+        <div class="dropdown"> <a>Download</a> 
+         <div class="links-putty"> <a href="https://the.earth.li/~sgtatham/putty/latest/w32/putty-0.74-installer.msi" target="_blank">Windows (32-bit)</a> <a href="https://the.earth.li/~sgtatham/putty/latest/w64/putty-64bit-0.74-installer.msi" target="_blank">Windows (64-bit)</a> <a href="https://the.earth.li/~sgtatham/putty/latest/putty-0.74.tar.gz" target="_blank">Linux</a> 
+         </div> 
+        </div> 
+       </div> 
+       <hr>
+       <br> <a name="gtk"></a> 
+       <p> <img class="logo" src="img/gtk-logo.png"> <b>GTK+ </b><br> The base libraries required for some software such as the GIMP. </p> 
+       <div class="links"> <a href="http://www.gtk.org"> Homepage</a> 
+       </div>
+       <br> 
+      </div> 
+     </div> 
+    </div> 
+   </div> 
+   <div class="navigation"> 
+    <ul>
+     <li style="background: #567300;"> 
+      <div style="padding:8px 0px 4px 5px;"> <a href="index-en.html" style="display: inline; background: none;  margin: 3px;"><img src="img/en10.png" style="border: 1px solid #FFF;"></a> <a href="index-lv.html" style="display: inline; background: none;  margin: 3px;"><img src="img/lv10.png" style="border: 1px solid #FFF;"></a>
+      </div> </li>
+    </ul> 
+    <h1>Open Source Software</h1> 
+    <ul> 
+     <li><a href="index-en.html#thebest">Favourites</a></li> 
+     <li><a href="index-en.html#office">Office Software</a></li> 
+     <li><a href="index-en.html#design">Design Software</a></li> 
+     <li><a href="index-en.html#internet">Internet Software</a></li> 
+     <li><a href="index-en.html#multimedia">Multimedia Software</a></li> 
+     <li><a href="index-en.html#games">Entertainment &amp; Education</a></li> 
+     <li><a href="index-en.html#utilities">Utility Software</a></li> 
+    </ul> 
+    <h1>Remote class</h1> 
+    <ul> 
+     <li><a href="zoom-en.html">Zoom</a></li> 
+    </ul> 
+    <h1>Information</h1> 
+    <ul> 
+     <li><a href="opensource-en.html">About Open Source</a></li> <!-- <li><a href="linux-en.html">About Linux</a></li> --> <!-- <li><a href="support-en.html">Support</a></li> --> 
+     <li><a href="credits-en.html">Credits</a></li> 
+    </ul> 
+    <h1>Useful Sites</h1> 
+    <ul> 
+     <li><a href="http://linux.edu.lv">linux.edu.lv</a></li> 
+     <li><a href="http://laka.lv">laka.lv</a></li> 
+     <li><a href="http://akl.lt">akl.lt</a></li> <!-- <li><a href="web_lnch/ubuntu.lv.lch">Ubuntu.lv</a></li> --> <!-- <li><a href="web_lnch/ubuntu.lt.lch">Ubuntu.lt</a></li> --> <!-- <li><a href="web_lnch/ubuntu.ru.lch">Ubuntu.ru</a></li> --> 
+    </ul> 
+    <h1>Contact Information</h1> 
+    <ul> 
+     <li><a href="mailto:info@linux.edu.lv">info@linux.edu.lv</a></li> 
+    </ul> 
+   </div> 
+   <div class="clearer">
+    <span></span>
+   </div> 
+   <div class="footer">
+    © 2007-2020 Latvijas Universitātes Linux Centrs 
+   </div> 
+  </div>  
+ </body>
+</html>

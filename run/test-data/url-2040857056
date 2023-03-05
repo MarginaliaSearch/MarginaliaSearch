@@ -1,0 +1,101 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html> 
+ <head> 
+  <link href="images/ucon.ico" rel="shortcut icon"> 
+  <link rel="stylesheet" type="text/css" href="htmlhelp/mystyle.css"> 
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"> 
+  <title>uCon: The Embedded System Console</title> 
+  <script src="jquery.js"></script> 
+  <script> 
+    $(function(){
+      $("#includedContent").load("crcmd5.html"); 
+    });
+</script> 
+ </head> 
+ <body class="page_bg" style="color: black;" alink="#000099" link="#000099" vlink="#990099"> <font face="Verdana" size="2"> 
+   <table style="text-align: left; width: 100%; height: 100%;" border="0" cellpadding="2" cellspacing="2"> 
+    <tbody> 
+     <tr> 
+      <td style="text-align: center; height: 150px; width: 150px;"> <a href="http://www.umonfw.com"> <img style="border: 0px solid ; width: 150px;" alt="uMon Icon" src="htmlhelp/images/umonpot.jpg"> </a> </td> 
+      <td colspan="2" rowspan="1"> <big><big><big> </big></big></big>
+       <div style="margin-left: 40px; font-weight: bold;"> <big><big><big>uCon: </big><br> </big></big>
+       </div> <big><big> </big></big>
+       <div style="margin-left: 80px;"> <big><big>Embedded System Console </big></big>
+        <br> <a href="htmlhelp/WhatsNew.htm">Latest update: 01/01/1970</a>
+        <br><a href="../releases/ucon_install.exe?action=purge">Download here</a>
+       </div>
+       <div id="includedContent"></div> </td> 
+     </tr> 
+     <tr> 
+      <td colspan="1" rowspan="4"> <font size="-1"> <a href="../index.html">uMon HomePage</a><br> </font> </td> 
+      <td colspan="2" style="text-align: left; vertical-align: top;"> <br> <font size="-1"> <big style="font-family: Arial;"><big style="font-weight: bold;">uCon:</big></big> <br> <br> </font>
+       <div style="margin-left: 10px;">
+        <div style="text-align: justify;">
+         <span style="font-family: Arial;"> </span><span style="font-family: Arial;"></span><font face="Verdana" size="2"><font size="-1"><span style="font-family: Arial;"><big>At first glance, uCon is a terminal emulator (i.e. an alternative to hypterterminal). &nbsp;Dig a little deeper, and a lot of other handy "stuff" shows up: <a href="htmlhelp/Topic8.htm">scripting</a>, <a href="htmlhelp/Topic17.htm">function keys/buttons</a>, <a href="htmlhelp/Topic9.htm">timestamping</a>, <a href="htmlhelp/Topic10.htm">logging</a>, <a href="htmlhelp/Topic63.htm">telnet/plink/comport backend options</a>,</big></span></font></font><font face="Verdana" size="2"><font face="Verdana" size="2"><font size="-1"><span style="font-family: Arial;"><a href="htmlhelp/Topic15.htm"> <big>network servers</big></a><big>, <a href="htmlhelp/Topic6.htm">network access of com port</a>,</big></span></font></font></font><font face="Verdana" size="2"><font size="-1"><span style="font-family: Arial;"><big>&nbsp;etc. </big>&nbsp;</span></font></font>
+         <br>
+        </div>
+        <br>
+        <div style="text-align: center;">
+         <big><font size="-1"><big><span style="font-family: Arial;"><a href="htmlhelp/ucon_faq.html">Click here for the uCon FAQ</a></span> &nbsp; <a href="htmlhelp/Index.htm">Click here for documentation</a></big></font><br></big>
+        </div><font size="-1"><br style="font-family: Arial;"> </font>
+        <div style="text-align: justify;">
+         <font size="-1"><big><span style="font-family: Arial;">uCon was originally written to be a "terminal server" superset. &nbsp;The goal was to provide terminal emulator-ish capabilities for the user local to the PC (and the device connected to the PC's COM port), but also allow remote users to connect through the PC's network port using Telnet. &nbsp;</span><span style="font-family: Arial;">In addition to basic remote access, the requirement was to support the ability to have "multi-user-access". &nbsp;In other words, while someone was locally accessing the COM port through uCon's GUI, additional remote users could simultaneously access the same port using Telnet and uCon's terminal server. &nbsp;This, as it turns out, was the beginning. &nbsp;</span></big></font><big><font face="Verdana" size="2"><big><font face="Verdana" size="2"><big><big><font size="-1"><big><big><big><big><span style="font-family: Arial;"><small><small><small>uCon has been around since 2001 and is still an active development project. &nbsp;Features&nbsp;are regularly being added, so if you have an idea for a new feature (big or small), don't hesitate to contact the <a href="mailto:ed.sutter@alcatel-lucent.com">author</a></small>.</small></small></span></big></big></big></big></font></big></big></font></big></font></big><font size="-1"><span style="font-family: Arial;"></span></font>
+         <br><font size="-1"><span style="font-family: Arial;"></span></font>
+        </div><font size="-1"> </font>
+       </div> <font size="-1"><br> </font>
+       <div style="text-align: left;">
+        <font size="-1"><img style="border: 2px solid ; width: 100%;" alt="uCon's Terminal Server" src="htmlhelp/images/srvr_overview.jpg"><br> </font>
+       </div> <font size="-1"><br> </font>
+       <div style="margin-left: 10px; text-align: justify;">
+        <big><span style="font-family: Arial;"><font size="-1"><big>As is somewhat implied by the above diagram, uCon provides many other facilities that are applicable, but certainly not limited,&nbsp;to typical embedded systems development. &nbsp;Refer to uCon's <a href="htmlhelp/Index.htm">web-based manpages</a> </big></font></span><font face="Verdana" size="2"><big><span style="font-family: Arial;"></span></big></font><font face="Verdana" size="2"><big><font size="-1"><big><big><a href="htmlhelp/Index.htm"></a></big></big></font></big></font><span style="font-family: Arial;"><font size="-1"><big> for complete details.</big></font></span></big><font size="-1"><br style="font-family: Arial;"> </font>
+       </div> <font size="-1"><br> <big style="font-weight: bold; font-family: Arial;"><a href="htmlhelp/Topic63.htm">Multiple Back Ends</a>:</big> <br> </font>
+       <div style="margin-left: 10px; font-family: Arial;">
+        <div style="text-align: justify;">
+         <font size="-1"><big>Initially uCon was developed to support only a COM port back end. &nbsp;Since then, telnet and PuTTY Link (plink) have been added to the list (plink provides ssh).</big></font>
+        </div><font size="-1"> </font>
+       </div> <font size="-1"><br> <big style="font-weight: bold; font-family: Arial;"><a href="htmlhelp/Topic10.htm">Logging</a>:</big><br style="font-family: Arial;"> </font>
+       <div style="margin-left: 10px; font-family: Arial; text-align: justify;">
+        <font size="-1"><big>There are two types of logging in uCon: standard and long-term. &nbsp;Standard logging simply takes a log file name and copies all interaction with the target to that file. &nbsp;Long-term logging assumes that the terminal session will potentially be up for days or even weeks and the amount of data logged will be significant enough that it will need to be managed. &nbsp;In this mode, each day, uCon automatically creates a new log file and checks to see if the total accumulation of log file data has exceeded a user-defined maximum. &nbsp;If it has, it will delete the oldest log file in the bunch so that it is essentially keeping a circular queue of log files.</big><br> </font>
+       </div> <font size="-1"><br> <big style="font-weight: bold; font-family: Arial;"><a href="htmlhelp/Topic9.htm">Time Stamping</a>:</big> <br> </font>
+       <div style="margin-left: 10px; font-family: Arial; text-align: justify;">
+        <font size="-1"><big>Each line of output can be preceded by one of several different time-of-day strings. &nbsp;This allows the user to keep track of line-by-line timing if needed; yet does not require that the target itself generate the time stamps.</big><br> </font>
+       </div> <font size="-1"><br> <big style="font-weight: bold; font-family: Arial;"><a href="htmlhelp/Topic17.htm">Programmable Function Keys &amp; Clickable Buttons</a>:</big><br style="font-family: Arial;"> </font>
+       <div style="margin-left: 10px; font-family: Arial; text-align: justify;">
+        <big><font size="-1"><big>Function keys are programmable and can be activated by either a keypress or a mouse button click. &nbsp;An additional set of 16 clickable buttons are also available for ease of repetitive data entry. &nbsp;The buttons do not have any keyboard mapping; they are accessible only by the mouse.</big></font></big>
+       </div> <font size="-1"><br> <big style="font-weight: bold; font-family: Arial;">Data Transfer To/From the Target:</big><br style="font-family: Arial;"> </font>
+       <div style="margin-left: 10px; font-family: Arial; text-align: justify;">
+        <font size="-1"><big>uCon supports XMODEM and TFTP client as a means of data transfer to and from the target.</big><br> </font>
+       </div> <font size="-1"><big style="font-weight: bold; font-family: Arial;"><br><a href="htmlhelp/Topic15.htm">Servers</a>:</big><br style="font-family: Arial;"> </font>
+       <div style="margin-left: 10px; font-family: Arial; text-align: justify;">
+        <font size="-1"><big>To support typical needs of an embedded system development environment, uCon has the following servers built in: &nbsp;TFTP, FTP, DHCP/BOOTP, SYSLOG. &nbsp;Each of these servers are configurable and are useful for transactions with a single client (i.e. one at a time). &nbsp;These servers are not meant for use by a large number of simultaneous transactions with mutliple clients; rather, they provide the basic services needed to interface with a single embedded target.</big><br> </font>
+       </div> <font size="-1"><br><a href="htmlhelp/Topic8.htm"><big style="font-weight: bold; font-family: Arial;">Scripting:</big></a><br style="font-family: Arial;"> </font>
+       <div style="margin-left: 10px; font-family: Arial; text-align: justify;">
+        <font size="-1"><big>The scripting facility within uCon is fairly extensive. &nbsp;It includes the ability to interact with both the target and the user and supports conditional branching. &nbsp;Interaction with the target is through whatever back end is active (COM port, Telnet, SSH) and interaction with the user is through familiar Windows dialog boxes. &nbsp;There are about 15 different scripting commands that allow the user to build reasonably sophisticated logical control within the script. &nbsp;Click <a href="htmlhelp/Topic8.htm">here</a> for more information on uCon's scripting.</big> <br> </font>
+       </div> <font size="-1"><big style="font-weight: bold; font-family: Arial;"><br><a href="http://www.umonfw.com">MicroMonitor</a> Specific Capabilities:</big><br style="font-family: Arial;"> </font>
+       <div style="margin-left: 10px; font-family: Arial;">
+        <div style="text-align: justify;">
+         <font size="-1"><big>uCon also has knowledge of MicroMonitor (uMon). &nbsp;It can backup and/or restore a set of TFS files, edit an ASCII file on the target in TFS, and includes the MONCMD and NEWMON facilities in the scripting command set.</big></font>
+        </div><font size="-1"> </font>
+       </div> <font size="-1"><br> </font>
+       <hr style="width: 100%; height: 2px;"><font size="-1"><big><span style="font-family: Arial;"> <br> <span style="font-weight: bold;"> Look and Feel:</span> <br> </span></big> </font>
+       <div style="margin-left: 10px;">
+        <div style="text-align: justify;">
+         <font size="-1"><big><span style="font-family: Arial;"><small><big>uCon looks like a terminal emulator. &nbsp;It just has a lot of other stuff going on behind the scenes.</big></small></span></big></font>
+         <br><font size="-1"><big><span style="font-family: Arial;"></span></big></font>
+        </div><font size="-1"><big><span style="font-family: Arial;"><small> <br> </small></span></big> </font>
+        <div style="text-align: left;">
+         <font size="-1"><big><span style="font-family: Arial;"><small><img style="border: 0px solid ;" alt="uCon's Look and Feel" src="htmlhelp/images/ucon_main_window.jpg"></small></span></big><br> </font>
+        </div> 
+       </div> <font size="-1"><br> </font>
+       <hr style="width: 100%; height: 2px;"> <font size="-1"><big style="font-weight: bold;"><span style="font-family: Arial;"><br> Wanna try it?</span></big><br style="font-family: Arial;"> </font>
+       <div style="margin-left: 10px;">
+        <div style="text-align: justify;">
+         <span style="font-family: Arial;">Click <a href="../releases/ucon_install.exe?action=purge">here</a> to download a self-extracting executable. The installation is very basic. &nbsp;If the defaults are used, it simply creates a <span style="font-style: italic;">'C:/program files/ucon'</span> (or equivalent, depending on your system) directory on your machine and installs the necessary files to that directory. &nbsp;It also adds an item to your programs list, asks if you want a desktop shortcut and includes an uninstaller accessible through the program list. </span> 
+         <br>
+        </div><font size="-1"><br><br> </font>
+       </div> <font size="-1"> </font></td> 
+     </tr> 
+    </tbody> 
+   </table> </font>
+ </body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"> 
+ <head> 
+  <link rel="stylesheet" href="platostandard.css" type="text/css" media="all"> 
+  <link rel="stylesheet" href="thumbnails.css" type="text/css" media="all"> 
+  <link rel="icon" href="plato.ico" type="image/x-icon"> 
+  <link rel="shortcut icon" href="plato.ico" type="image/x-icon"> 
+  <title>PLATO - Images</title> 
+ </head> 
+ <body> 
+  <div id="container"> 
+   <div id="header"> 
+    <h1>Plato</h1> <a href="plato.html"><img src="images/platoHeader.gif" alt="Plato"></a> <span>Images</span> 
+   </div> 
+   <div id="navigation"> 
+    <p>Navigation</p> 
+    <ul> 
+     <li><a href="plato.html">Home </a></li> 
+     <li><a href="science.html">Science </a></li> 
+     <li><a href="contacts.html">Contacts </a></li> <!--	<li><a href="people.pdf">Positions available </a></li>--> 
+    </ul> 
+    <p>Live updates</p> 
+    <ul> 
+     <li><a href="plots_week.html">Last 7 days</a></li> 
+     <li><a href="plots_month.html">Last 31 days</a></li> 
+     <li><a href="plots_year.html">Last 365 days</a></li> 
+     <li><a href="ephem.html">Sun and Moon</a></li> 
+     <li><a href="platowebcams.html">Webcams </a></li> 
+    </ul> 
+    <p>Plot archive</p> 
+    <ul> 
+     <li><a href="plots_2008.html">2008</a></li> 
+     <li><a href="plots_2009.html">2009</a></li> 
+     <li><a href="plots_2010.html">2010</a></li> 
+     <li><a href="plots_2011.html">2011</a></li> 
+    </ul> 
+    <p>PLATO Module</p> 
+    <ul> 
+     <li><a href="instrumentmodule.html">Instrument </a></li> 
+     <li><a href="enginemodule.html">Engine </a></li> 
+    </ul> 
+    <p>Instruments</p> 
+    <ul> 
+     <li><a href="cstar.html">CSTAR </a></li> 
+     <li><a href="dasle.html">DASLE </a></li> 
+     <li><a href="fts.html">FTS </a></li> 
+     <li><a href="gattini.html">Gattini </a></li> 
+     <li><a href="hrcam.html">HRCAM </a></li> 
+     <li><a href="nigel.html">Nigel </a></li> 
+     <li><a href="preheat.html">PreHEAT </a></li> 
+     <li><a href="snodar.html">Snodar </a></li> 
+    </ul> 
+    <p>Publications</p> 
+    <ul> 
+     <li><a href="papers.html">Papers </a></li> 
+    </ul> 
+    <p>Links</p> 
+    <ul> 
+     <li><a href="gallery.html">Images </a></li> 
+     <li><a href="http://www.antarctica.gov.au/about-antarctica/fact-files/weather/automatic-weather-stations/dome-a-details">Weather (AAD)</a></li> <!--	<li><a href="http://ccaa.pmo.ac.cn/plato/">Chinese translation </a></li>
+--> 
+    </ul> 
+   </div> 
+   <div id="content"> 
+    <h2>PLATO Image Gallery</h2> 
+    <p>The following images were taken by Xu Zhou and Zhenxi Zhu who were the Dome A traverse members responsible for originally deploying PLATO.</p> 
+    <p>Some of the images were sent via the Iridium modem link and had to be reduced in resolution to allow for efficient use of the modest bandwidth.</p> 
+    <div class="floatfix"> <span class="tn_thumbnail"><a href="plato_gal/15mtower.jpg"><img src="plato_gal/thumbs/15mtower_t.jpg" width="120" height="100"></a><a href="plato_gal/15mtower.jpg">15mtower</a></span> <span class="tn_thumbnail"><a href="plato_gal/cas.jpg"><img src="plato_gal/thumbs/cas_t.jpg" width="120" height="100"></a><a href="plato_gal/cas.jpg">cas</a></span> <span class="tn_thumbnail"><a href="plato_gal/domea.jpg"><img src="plato_gal/thumbs/domea_t.jpg" width="120" height="100"></a><a href="plato_gal/domea.jpg">domea</a></span> <span class="tn_thumbnail"><a href="plato_gal/domea_traverse.jpg"><img src="plato_gal/thumbs/domea_traverse_t.jpg" width="120" height="100"></a><a href="plato_gal/domea_traverse.jpg">domea_traverse</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0257.jpg"><img src="plato_gal/thumbs/img_0257_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0257.jpg">img_0257</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0281.jpg"><img src="plato_gal/thumbs/img_0281_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0281.jpg">img_0281</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0302.jpg"><img src="plato_gal/thumbs/img_0302_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0302.jpg">img_0302</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0304.jpg"><img src="plato_gal/thumbs/img_0304_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0304.jpg">img_0304</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0305.jpg"><img src="plato_gal/thumbs/img_0305_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0305.jpg">img_0305</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0336.jpg"><img src="plato_gal/thumbs/img_0336_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0336.jpg">img_0336</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0337.jpg"><img src="plato_gal/thumbs/img_0337_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0337.jpg">img_0337</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0355.jpg"><img src="plato_gal/thumbs/img_0355_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0355.jpg">img_0355</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0356.jpg"><img src="plato_gal/thumbs/img_0356_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0356.jpg">img_0356</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0391.jpg"><img src="plato_gal/thumbs/img_0391_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0391.jpg">img_0391</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0401.jpg"><img src="plato_gal/thumbs/img_0401_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0401.jpg">img_0401</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0410.jpg"><img src="plato_gal/thumbs/img_0410_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0410.jpg">img_0410</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0411.jpg"><img src="plato_gal/thumbs/img_0411_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0411.jpg">img_0411</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0416.jpg"><img src="plato_gal/thumbs/img_0416_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0416.jpg">img_0416</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0441.jpg"><img src="plato_gal/thumbs/img_0441_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0441.jpg">img_0441</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0479.jpg"><img src="plato_gal/thumbs/img_0479_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0479.jpg">img_0479</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0481.jpg"><img src="plato_gal/thumbs/img_0481_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0481.jpg">img_0481</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0489.jpg"><img src="plato_gal/thumbs/img_0489_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0489.jpg">img_0489</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0490.jpg"><img src="plato_gal/thumbs/img_0490_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0490.jpg">img_0490</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0503.jpg"><img src="plato_gal/thumbs/img_0503_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0503.jpg">img_0503</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0526.jpg"><img src="plato_gal/thumbs/img_0526_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0526.jpg">img_0526</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0541.jpg"><img src="plato_gal/thumbs/img_0541_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0541.jpg">img_0541</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0544.jpg"><img src="plato_gal/thumbs/img_0544_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0544.jpg">img_0544</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0546.jpg"><img src="plato_gal/thumbs/img_0546_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0546.jpg">img_0546</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0578.jpg"><img src="plato_gal/thumbs/img_0578_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0578.jpg">img_0578</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0584.jpg"><img src="plato_gal/thumbs/img_0584_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0584.jpg">img_0584</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0585.jpg"><img src="plato_gal/thumbs/img_0585_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0585.jpg">img_0585</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0586.jpg"><img src="plato_gal/thumbs/img_0586_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0586.jpg">img_0586</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0587.jpg"><img src="plato_gal/thumbs/img_0587_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0587.jpg">img_0587</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0588.jpg"><img src="plato_gal/thumbs/img_0588_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0588.jpg">img_0588</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0605.jpg"><img src="plato_gal/thumbs/img_0605_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0605.jpg">img_0605</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_0616.jpg"><img src="plato_gal/thumbs/img_0616_t.jpg" width="120" height="100"></a><a href="plato_gal/img_0616.jpg">img_0616</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_9641.jpg"><img src="plato_gal/thumbs/img_9641_t.jpg" width="120" height="100"></a><a href="plato_gal/img_9641.jpg">img_9641</a></span> <span class="tn_thumbnail"><a href="plato_gal/img_9700.jpg"><img src="plato_gal/thumbs/img_9700_t.jpg" width="120" height="100"></a><a href="plato_gal/img_9700.jpg">img_9700</a></span> <span class="tn_thumbnail"><a href="plato_gal/jan18.jpg"><img src="plato_gal/thumbs/jan18_t.jpg" width="120" height="100"></a><a href="plato_gal/jan18.jpg">jan18</a></span> <span class="tn_thumbnail"><a href="plato_gal/jan19.jpg"><img src="plato_gal/thumbs/jan19_t.jpg" width="120" height="100"></a><a href="plato_gal/jan19.jpg">jan19</a></span> <span class="tn_thumbnail"><a href="plato_gal/niaos.jpg"><img src="plato_gal/thumbs/niaos_t.jpg" width="120" height="100"></a><a href="plato_gal/niaos.jpg">niaos</a></span> <span class="tn_thumbnail"><a href="plato_gal/s9611.jpg"><img src="plato_gal/thumbs/s9611_t.jpg" width="120" height="100"></a><a href="plato_gal/s9611.jpg">s9611</a></span> <span class="tn_thumbnail"><a href="plato_gal/s9670.jpg"><img src="plato_gal/thumbs/s9670_t.jpg" width="120" height="100"></a><a href="plato_gal/s9670.jpg">s9670</a></span> <span class="tn_thumbnail"><a href="plato_gal/s9691.jpg"><img src="plato_gal/thumbs/s9691_t.jpg" width="120" height="100"></a><a href="plato_gal/s9691.jpg">s9691</a></span> <span class="tn_thumbnail"><a href="plato_gal/s9696.jpg"><img src="plato_gal/thumbs/s9696_t.jpg" width="120" height="100"></a><a href="plato_gal/s9696.jpg">s9696</a></span> <span class="tn_thumbnail"><a href="plato_gal/s9860.jpg"><img src="plato_gal/thumbs/s9860_t.jpg" width="120" height="100"></a><a href="plato_gal/s9860.jpg">s9860</a></span> <span class="tn_thumbnail"><a href="plato_gal/snodar1.jpg"><img src="plato_gal/thumbs/snodar1_t.jpg" width="120" height="100"></a><a href="plato_gal/snodar1.jpg">snodar1</a></span> <span class="tn_thumbnail"><a href="plato_gal/spf.jpg"><img src="plato_gal/thumbs/spf_t.jpg" width="120" height="100"></a><a href="plato_gal/spf.jpg">spf</a></span> <span class="tn_thumbnail"><a href="plato_gal/sview.jpg"><img src="plato_gal/thumbs/sview_t.jpg" width="120" height="100"></a><a href="plato_gal/sview.jpg">sview</a></span> <span class="tn_thumbnail"><a href="plato_gal/szhuand.jpg"><img src="plato_gal/thumbs/szhuand_t.jpg" width="120" height="100"></a><a href="plato_gal/szhuand.jpg">szhuand</a></span> <span class="tn_thumbnail"><a href="plato_gal/szhu.jpg"><img src="plato_gal/thumbs/szhu_t.jpg" width="120" height="100"></a><a href="plato_gal/szhu.jpg">szhu</a></span> 
+    </div> 
+   </div> 
+   <div id="footer"> <a href="mailto: m.ashley@unsw.edu.au" name="plato_team" style="color:white">The PLATO Team</a> 2008-2013 
+   </div> 
+  </div>  
+ </body>
+</html>

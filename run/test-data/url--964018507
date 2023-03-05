@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+ <head>
+  <title>CoolTerm - Download</title>
+  <meta charset="utf-8">
+  <meta name="keywords" content="CoolTerm, 1.8.0.861, download, free software, Network Software, Networking Program">
+  <meta name="description" content="CoolTerm free download: Serial port terminal software for Windows. Safe PC download for Windows 32-bit and 64-bit, latest version.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta property="og:title" content="CoolTerm">
+  <meta property="og:url" content="https://coolterm.en.lo4d.com/windows">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://cdn.lo4d.com/t/icon/128/coolterm.png">
+  <meta property="og:site_name" content="LO4D.com">
+  <meta property="og:description" content="CoolTerm free download: Serial port terminal software for Windows. Safe PC download for Windows 32-bit and 64-bit, latest version.">
+  <link rel="shortcut icon" type="image/x-icon" href="https://cdn.lo4d.com/t/icon/48/coolterm.png" sizes="48x48">
+  <link rel="preconnect" href="//cdn.lo4d.com/" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="//cdn.lo4d.com/fonts/ptsansnarrow.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="//cdn.lo4d.com/fonts/roboto.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff" href="https://cdn.lo4d.com/fonts/icspr.woff" crossorigin>
+  <style>@charset "utf-8";body,body#page{background:#e6e6e6;color:#000;font:14px Roboto,Arial,"Segoe UI",Tahoma,"Trebuchet MS",Verdana,sans-serif;height:100%;margin:0;padding:0;position:relative;text-align:left;width:100%}@font-face {font-family: 'PT Sans Narrow';font-display:swap;font-style: normal;font-weight: 400;src: local('PT Sans Narrow'), local('PTSans-Narrow'), url(//cdn.lo4d.com/fonts/ptsansnarrow.woff2) format('woff2');unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}@font-face {font-family: 'Roboto';font-display:swap;font-style: normal;font-weight: 400;src: local('Roboto'), local('Roboto-Regular'), url(//cdn.lo4d.com/fonts/roboto.woff2) format('woff2');unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}#container{background:#fff;border-radius:5px;box-shadow:0 5px 3px #c9c9c9;clear:both;margin:10px auto 0;overflow:hidden;width:1000px}#headerbar{clear:both;height:25px;line-height:20px;margin:0 auto;padding-top:6px;width:1000px}#headerbar div.fr{height:25px;line-height:25px}#headerbar li{display:inline}#headerbar li,#headerbar ul{border:0 none;height:24px;list-style:none outside none;margin:3px 0 0;padding:0}#logo_sm{height:48px;width:200px}#logo_sm:hover{filter:saturate(150%)}#logo_svg{margin-left:0;margin-top:-1px}#logostuff{background:#00578f;background:linear-gradient(70deg,#00578f 0,#007ecf 26%,#00578f 50%);width:100%}#searchbar{height:50px;margin:0 auto;width:1000px}.navbit a{margin-right:0}.breadcrumb_bar{margin:0 0 40px}.breadcrumb_bar{padding:0}.btn{background-color: #fff;border: 0;border-radius: 0 5px 5px 0;box-shadow: 0 1px 4px rgba(0,0,0,.15);cursor:pointer;height:38px;}.btn:hover{background-color:#e2e2e2;background-image:linear-gradient(#e2e2e2,#c8c8c8)}.clearboth{clear:both}.colour1,a.colour1:link,a.colour1:visited{color:#42acd9}.colour2,a.colour2:link,a.colour2:visited,ul.NsMenu_list li .icon-folder-add{color:#00578f}.colour3,a.colour3:link,a.colour3:visited{color:#0e0e0e}.colour4,a.colour4:link,a.colour4:visited,ul.NsMenu_list li .icon-folder,ul.PsMenu_list li .icon-folder{color:#979797}.colour4a,a.colour4a:link,a.colour4a:visited,ul.PsMenu_list li:hover .icon-folder{color:#444}.colour4b,a.colour4b:link,a.colour4b:visited{color:#cecece}.colour5,a.colour5:link,a.colour5:visited{color:#fff}.colour6,a.colour6:link,a.colour6:visited{color:#0b9d00}.colour7,a.colour7:link,a.colour7:visited{color:#9d0000}.colour8,a.colour8:link,a.colour8:visited,ul.NsMenu_list li:hover .icon-folder{color:#f8b500}.fi{display:inline;margin:5px 0 0;position:absolute}.fl{float:left;position:relative}.followme{display:block;padding:15px}.fr{float:right;position:relative}.ip{border:0 none;border-radius:3px;box-shadow:0 0 2px rgba(0,0,0,.25),0 1px 2px rgba(0,0,0,.05);font-family:Roboto,Segoe UI,Tahoma,Trebuchet MS,Arial,Verdana,sans-serif;padding:5px;width:97%}.large{font-size:22px}.medium{font-size:17px}.navbit{display:inline;margin:0;padding:0}.navbit a{background-position:right;background-repeat:no-repeat;background-size:10px;padding-right:20px}.s_h1{font-weight:700}.s_icon{font-size:32px;height:32px;margin-left:15px;margin-right:15px;width:32px}.searchbox{margin-top:27px}.searchbutton{height:38px;width:38px}.sl_icon{font-size:64px;height:64px;line-height:64px;margin-left:15px;margin-right:15px;width:64px}.xsmall{font-size:12px;}.small{font-size:14px}.stitle1{line-height:30px;padding-bottom:20px;text-align:left}.xlarge{font-size:26px}::-moz-selection{background:#00578f;color:#fff}::selection{background:#00578f;color:#fff}a.colour1:hover{color:#248cb9}a.colour4:hover,ul.PsMenu_list li .icon-folder{color:#848484}a:hover{color:#00578f;text-decoration:none}a:link,a:visited{color:#42acd9;text-decoration:none}blockquote,li,menu,ol,ul{margin:0;padding:0}#searchfield{border-radius:0 5px 5px 0;float:right;height:38px;margin:6px 0 0;overflow:hidden;padding:0;width:310px}h1,h2,h3,h4,h5,h6{display:inline;font-weight:400;margin:0;padding:0}img{border:0}input#searchinput {border-radius: 5px 0 0 5px;border: 0;display: block;float: left;height: 38px;margin: 0;overflow: hidden;padding: 0 0 0 5px;width: 267px}input#searchinput:focus{box-shadow:0 2px 4px rgba(0,0,0,.15) inset,0 1px 2px rgba(0,0,0,.05)}input,select,textarea{outline:0}p{margin:0 0 25px}ul.breadcrumb_bar{display:block;overflow:hidden}ul.breadcrumb_bar{list-style-type:none;margin:0;padding:0}ul.breadcrumb_bar li.navbit{float:left;height:2.4em;margin:0 12px 0 0}ul.breadcrumb_bar li.navbit a{background:#ececec;color:#444;float:left;height:17px;line-height:17px;padding:.5em;position:relative;text-decoration:none}ul.breadcrumb_bar li.navbit a.active,ul.breadcrumb_bar li.navbit a.active:hover{background:0 0;color:#999;font-weight:700}ul.breadcrumb_bar li.navbit a.active::after,ul.breadcrumb_bar li.navbit a.active::before{content:normal}ul.breadcrumb_bar li.navbit a.bchome::before{content:normal}ul.breadcrumb_bar li.navbit a::after{border-bottom:1.25em solid transparent;border-left:1em solid #ececec;border-top:1.25em solid transparent;content:"";margin-top:-1.25em;position:absolute;right:-.95em;top:50%}ul.breadcrumb_bar li.navbit a::before{border-color:#ececec #ececec #ececec transparent;border-style:solid;border-width:1.25em 0 1.25em 1em;content:"";left:-.9em;margin-top:-1.25em;position:absolute;top:50%}ul.breadcrumb_bar li.navbit a:hover{background:#44a148;color:#fff}ul.breadcrumb_bar li.navbit a:hover::after{border-left-color:#44a148}ul.breadcrumb_bar li.navbit a:hover::before{border-color:#44a148 #44a148 #44a148 transparent}#copyright_footer {clear:both;height:25px;line-height:25px;margin:50px auto 0;text-align:center;width:1000px}
+</style>
+  <link rel="stylesheet" href="//cdn.lo4d.com/c/default.min.css?ver=0.9964" type="text/css" id="lo4d">
+  <link rel="canonical" href="https://coolterm.en.lo4d.com/windows">
+  <script> if (parent.frames.length > 0) { parent.location.href = location.href; } </script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-31158563-2"></script>
+  <script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'UA-31158563-2', { 'page_path': '/coolterm/windows' }); setTimeout("gtag('event', 'read', { 'event_category' : '15_seconds' })", 15000);</script>
+  <script>var lastKnownScrollY=0,currentScrollY=0,headerh="50px",ticking=!1,idOfHeader="logostuff",eleHeader=null;const classes={pinned:"header-pin",unpinned:"header-unpin"};function onScroll(){currentScrollY=window.pageYOffset,requestTick()}function requestTick(){ticking||requestAnimationFrame(update),ticking=!0}function update(){currentScrollY<150?pin():currentScrollY>150&&unpin(),lastKnownScrollY=currentScrollY,ticking=!1}function pin(){eleHeader.classList.contains(classes.unpinned)&&(eleHeader.classList.remove(classes.unpinned),eleHeader.classList.add(classes.pinned),document.getElementById("container").removeAttribute("style"))}function unpin(){!eleHeader.classList.contains(classes.pinned)&&eleHeader.classList.contains(classes.unpinned)||(eleHeader.classList.remove(classes.pinned),eleHeader.classList.add(classes.unpinned),document.getElementById("container").style.marginTop=headerh)}window.onload=function(){eleHeader=document.getElementById(idOfHeader),document.addEventListener("scroll",onScroll,!1)};</script>
+ </head>
+ <body id="page">
+  <div id="logostuff">
+   <div id="searchbar">
+    <div class="logobar fl">
+     <a href="https://www.lo4d.com/"><img src="https://cdn.lo4d.com/i/LO4D.com_dl_gr.svg" id="logo_sm" alt="LO4D.com Logo"></a>
+    </div>
+    <form action="https://www.lo4d.com/s.php" name="SearchForm" id="Search">
+     <div id="searchfield">
+      <input type="text" name="q" class="colour2 large fc2 colsh2" id="searchinput" aria-label="Search">
+      <div class="fr searchbutton">
+       <button type="submit" class="btn" name="Search" aria-label="Search"><i class="large colour4a icon icon-search lh40 colsh4"></i></button>
+      </div>
+     </div>
+    </form>
+   </div>
+  </div>
+  <div id="container">
+   <nav aria-label="Breadcrumb" class="breadcrumb_bar">
+    <ul class="breadcrumb_bar xsmall bbct" itemscope itemtype="http://schema.org/BreadcrumbList">
+     <li class="navbit" itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem"><a href="https://www.lo4d.com/" class="xsmall colour5 bchome" title="LO4D.com - Software Downloads" itemprop="item"><em title="LO4D.com - Software Downloads" class="icon icon-home fr medium"></em></a>
+      <meta itemprop="name" content="LO4D.com">
+      <meta itemprop="position" content="1"></li>
+     <li class="navbit" itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem"><span itemprop="name"><a href="https://en.lo4d.com/windows/utilities" class="colour1" itemprop="item" title="Software Utilities software">Software Utilities</a></span>
+      <meta itemprop="position" content="2"></li>
+     <li class="navbit" itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem"><span itemprop="name"><a href="https://en.lo4d.com/windows/network-software" class="colour1" itemprop="item" title="Network software">Network</a></span>
+      <meta itemprop="position" content="3"></li>
+    </ul>
+   </nav>
+   <div itemscope itemtype="http://schema.org/SoftwareApplication">
+    <header class="stitle1">
+     <img itemprop="image" alt="CoolTerm" src="https://cdn.lo4d.com/t/icon/128/coolterm.png" class="sl_icon fl"> 
+     <div class="fl">
+      <h1 class="fc2 colour2 xxlarge s_h1" itemprop="name"><a href="https://coolterm.en.lo4d.com/windows" class="colour2" itemprop="url">CoolTerm</a></h1>
+      <br><span itemprop="softwareVersion" class="colour4 large fc1"> 1.8.0.861</span>
+     </div>
+     <div class="clearboth"></div>
+    </header>
+    <nav class="tabnav">
+     <ul class="tabs">
+      <li class="proginfo active"><a href="https://coolterm.en.lo4d.com/windows" title="CoolTerm homepage">Program Info</a></li>
+      <li class="screenshots "><a href="https://coolterm.en.lo4d.com/windows#screenshot_header" title="CoolTerm screenshots">Screenshots (8)</a></li>
+      <li class="tests "><a href="https://coolterm.en.lo4d.com/virus-malware-tests" title="CoolTerm virus and malware tests">Virus Tests</a></li>
+     </ul>
+     <hr>
+    </nav>
+    <main class="container_columns_2">
+     <section class="Bcolumn_1 bbcr glbsir">
+      <div id="program_screenshot">
+       <a href="https://coolterm.en.lo4d.com/windows#screenshot_header">
+        <picture>
+         <source srcset="https://cdn.lo4d.com/t/screenshot/ipr/coolterm.webp" type="image/webp">
+         <source srcset="https://cdn.lo4d.com/t/screenshot/ipr/coolterm.png" type="image/png">
+         <img alt="Screenshot of CoolTerm 1.8, a serial port terminal app for the Windows operating system." src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="https://cdn.lo4d.com/t/screenshot/ipr/coolterm.png" class="lazy" loading="lazy">
+        </picture></a>
+       <meta itemprop="screenshot" content="https://cdn.lo4d.com/t/screenshot/800/coolterm.png">
+      </div>
+      <div id="program_data" class="followme small">
+       <span itemprop="offers" itemscope itemtype="http://schema.org/Offer">
+        <meta itemprop="price" content="0">
+        <meta itemprop="priceCurrency" content="USD"></span>
+       <dl>
+        <dt class="license_row colour4">
+         License:
+        </dt>
+        <dd class="license_row">
+         <span class="colour6"><strong>Free</strong></span> <span class="xsmall s_version colour4a colsh4 circg">Freeware</span>
+        </dd>
+        <dt class="language_row colour4">
+         Language:
+        </dt>
+        <dd title="CoolTerm Languages" class="country_flags" id="languages">
+         <em title="Available in English" class="fl icflag icflag_uk"></em>
+        </dd>
+        <dt class="colour4">
+         Publisher:
+        </dt>
+        <dd>
+         <span itemprop="publisher" itemscope itemtype="http://schema.org/Organization"><span class="author" itemprop="name">Roger Meier</span></span>
+        </dd>
+        <dt class="os_row colour4">
+         OS:
+        </dt>
+        <dd class="os_row" itemprop="operatingSystem">
+         Windows 10 / 8 / 7 / Vista / XP
+        </dd>
+        <dt class="colour4">
+         PC Type:
+        </dt>
+        <dd>
+         32-bit, 64-bit · x86_x64
+        </dd>
+        <dt class="colour4">
+         Updated:
+        </dt>
+        <dd itemprop="dateModified" content="2020-10-14T15:38:44-05:00">
+         Oct 14, 2020
+        </dd>
+       </dl>
+      </div>
+      <div class="clearboth"></div>
+      <link itemprop="applicationCategory" href="http://schema.org/NetworkingApplication">
+      <meta itemprop="applicationSubCategory" content="Network Software">
+      <div class="program_description">
+       <div id="review_header" class="MsMenu_title glbt">
+        <h2 class="large fc2 colsh3">Review</h2>
+       </div>
+       <div class="followme medium artsp">
+        <p>CoolTerm is a <strong>freeware serial port terminal</strong> software download filed under network software and made available by Roger Meier for Windows. </p>
+        <p>The review for CoolTerm has not been completed yet, but it was tested by an editor here on a PC and a list of <a href="#features">features</a> has been compiled; see below.</p>
+        <hr>
+        <div class="medium" id="pubbody">
+         <strong class="midlarge">Exchange text and other data between connected serial ports</strong>
+         <br>
+         <br> 
+         <p><strong>CoolTerm</strong> was developed as a useful and user-friendly software and acts as a serial port terminal application.</p>
+         <p>CoolTerm is a tool that's geared towards hobbyists and professionals with a need to exchange data with hardware connected to serial ports such as servo controllers, robotic kits, GPS receivers, microcontrollers etc.</p>
+         <h4 id="features" class="ohea">Features and highlights</h4>
+         <ul>
+          <li>Capability of multiple concurrent connections if multiple serial ports are available</li>
+          <li>Display of received data in textual or hexadecimal format</li>
+          <li>Sending data via keypresses as well as a "Send String" dialog that support data entry in textual or hexadecimal format</li>
+          <li>Sending data via pasting of text into the terminal window</li>
+          <li>Sending of text files</li>
+          <li>Capability of recording received data to text files</li>
+          <li>Local echoing of transmitted data</li>
+          <li>Local echoing of received data (loop back to sender)</li>
+         </ul>
+         <h4 id="compatibility" class="ohea">CoolTerm 1.8.0.861 on 32-bit and 64-bit PCs</h4>
+         <p>This download is licensed as freeware for the Windows (32-bit and 64-bit) operating system on a laptop or desktop PC from network software without restrictions. CoolTerm 1.8.0.861 is available to all software users as a free download for Windows.</p>
+         <hr><span class="colour4 medium">Filed under:</span>
+         <ol class="notes small">
+          <li>CoolTerm Download </li>
+          <li>Freeware Network Software </li>
+          <li>Major release: CoolTerm 1.8 </li>
+          <li>Serial Port Terminal Software </li>
+         </ol>
+        </div>
+       </div>
+       <div class="followyou">
+        <a href="https://coolterm.en.lo4d.com/download"><span class="fc1 midlarge colour5 dlb_mst">Download</span> <span class="s_version colour2">CoolTerm 1.8.0.861 for Windows</span></a>
+       </div>
+       <table id="awards">
+        <tbody>
+         <tr>
+          <td>
+           <div>
+            <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="https://cdn.lo4d.com/i/users_verygood.png" alt="CoolTerm has been picked by our editors as very good." class="lazy">
+           </div></td>
+          <td>
+           <div>
+            <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="https://cdn.lo4d.com/i/malware_clean.png" alt="CoolTerm has been tested for viruses and malware." class="lazy">
+           </div></td>
+          <td>
+           <div class="taj p15" style="padding: 0 10px;vertical-align: middle;height: 135px;display: table-cell">
+            <span class="colour4 xsmall">We have tested <strong>CoolTerm 1.8.0.861</strong> against malware with several different programs. We certify that <span class="colour6">this program is clean</span> of viruses, malware and trojans.</span>
+           </div></td>
+         </tr>
+        </tbody>
+       </table>
+      </div>
+      <div class="screenshot_container glbt box_below">
+       <div class="MsMenu_title" id="screenshot_header">
+        <h3><span class="large fc2 colsh3">Screenshots</span> <span class="colour4 fc2 colsh4">of CoolTerm (8)</span></h3>
+       </div>
+       <div class="followme tac">
+        <a href="https://cdn.lo4d.com/t/screenshot/coolterm.png" title="CoolTerm" class="shadowbox[program]" rel="shadowbox[program]">
+         <picture>
+          <source srcset="https://cdn.lo4d.com/t/screenshot/800/coolterm.webp" type="image/webp">
+          <source srcset="https://cdn.lo4d.com/t/screenshot/800/coolterm.png" type="image/png">
+          <img alt="#1. Screenshot of CoolTerm" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="https://cdn.lo4d.com/t/screenshot/800/coolterm.png" class="iscr" loading="lazy">
+         </picture>
+         <div class="colour5 xsmall lh16 iscrannote">
+          <i class="icon icon-search-plus fl xsmall colour5 icpadm_r"></i>CoolTerm (1354 x 1069)
+         </div></a><a href="https://cdn.lo4d.com/t/screenshot/coolterm-2.png" title="CoolTerm" class="shadowbox[program]" rel="shadowbox[program]">
+         <picture>
+          <source srcset="https://cdn.lo4d.com/t/screenshot/800/coolterm-2.webp" type="image/webp">
+          <source srcset="https://cdn.lo4d.com/t/screenshot/800/coolterm-2.png" type="image/png">
+          <img alt="#2. Screenshot of CoolTerm" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="https://cdn.lo4d.com/t/screenshot/800/coolterm-2.png" class="iscr" loading="lazy">
+         </picture>
+         <div class="colour5 xsmall lh16 iscrannote">
+          <i class="icon icon-search-plus fl xsmall colour5 icpadm_r"></i>CoolTerm (1354 x 1069)
+         </div></a><a href="https://cdn.lo4d.com/t/screenshot/coolterm-3.png" title="CoolTerm" class="shadowbox[program]" rel="shadowbox[program]">
+         <picture>
+          <source srcset="https://cdn.lo4d.com/t/screenshot/800/coolterm-3.webp" type="image/webp">
+          <source srcset="https://cdn.lo4d.com/t/screenshot/800/coolterm-3.png" type="image/png">
+          <img alt="#3. Screenshot of CoolTerm" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="https://cdn.lo4d.com/t/screenshot/800/coolterm-3.png" class="iscr" loading="lazy">
+         </picture>
+         <div class="colour5 xsmall lh16 iscrannote">
+          <i class="icon icon-search-plus fl xsmall colour5 icpadm_r"></i>CoolTerm (1354 x 1069)
+         </div></a><a href="https://cdn.lo4d.com/t/screenshot/coolterm-4.png" title="CoolTerm" class="shadowbox[program]" rel="shadowbox[program]">
+         <picture>
+          <source srcset="https://cdn.lo4d.com/t/screenshot/800/coolterm-4.webp" type="image/webp">
+          <source srcset="https://cdn.lo4d.com/t/screenshot/800/coolterm-4.png" type="image/png">
+          <img alt="#4. Screenshot of CoolTerm" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="https://cdn.lo4d.com/t/screenshot/800/coolterm-4.png" class="iscr" loading="lazy">
+         </picture>
+         <div class="colour5 xsmall lh16 iscrannote">
+          <i class="icon icon-search-plus fl xsmall colour5 icpadm_r"></i>CoolTerm (1203 x 1591)
+         </div></a><a href="https://cdn.lo4d.com/t/screenshot/coolterm-5.png" title="CoolTerm" class="shadowbox[program]" rel="shadowbox[program]">
+         <picture>
+          <source srcset="https://cdn.lo4d.com/t/screenshot/800/coolterm-5.webp" type="image/webp">
+          <source srcset="https://cdn.lo4d.com/t/screenshot/800/coolterm-5.png" type="image/png">
+          <img alt="#5. Screenshot of CoolTerm" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="https://cdn.lo4d.com/t/screenshot/800/coolterm-5.png" class="iscr" loading="lazy">
+         </picture>
+         <div class="colour5 xsmall lh16 iscrannote">
+          <i class="icon icon-search-plus fl xsmall colour5 icpadm_r"></i>CoolTerm (1203 x 1591)
+         </div></a><a href="https://cdn.lo4d.com/t/screenshot/coolterm-6.png" title="CoolTerm" class="shadowbox[program]" rel="shadowbox[program]">
+         <picture>
+          <source srcset="https://cdn.lo4d.com/t/screenshot/800/coolterm-6.webp" type="image/webp">
+          <source srcset="https://cdn.lo4d.com/t/screenshot/800/coolterm-6.png" type="image/png">
+          <img alt="#6. Screenshot of CoolTerm" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="https://cdn.lo4d.com/t/screenshot/800/coolterm-6.png" class="iscr" loading="lazy">
+         </picture>
+         <div class="colour5 xsmall lh16 iscrannote">
+          <i class="icon icon-search-plus fl xsmall colour5 icpadm_r"></i>CoolTerm (1203 x 1591)
+         </div></a><a href="https://cdn.lo4d.com/t/screenshot/coolterm-7.png" title="CoolTerm" class="shadowbox[program]" rel="shadowbox[program]">
+         <picture>
+          <source srcset="https://cdn.lo4d.com/t/screenshot/800/coolterm-7.webp" type="image/webp">
+          <source srcset="https://cdn.lo4d.com/t/screenshot/800/coolterm-7.png" type="image/png">
+          <img alt="#7. Screenshot of CoolTerm" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="https://cdn.lo4d.com/t/screenshot/800/coolterm-7.png" class="iscr" loading="lazy">
+         </picture>
+         <div class="colour5 xsmall lh16 iscrannote">
+          <i class="icon icon-search-plus fl xsmall colour5 icpadm_r"></i>CoolTerm (1203 x 1591)
+         </div></a><a href="https://cdn.lo4d.com/t/screenshot/coolterm-8.png" title="CoolTerm" class="shadowbox[program]" rel="shadowbox[program]">
+         <picture>
+          <source srcset="https://cdn.lo4d.com/t/screenshot/800/coolterm-8.webp" type="image/webp">
+          <source srcset="https://cdn.lo4d.com/t/screenshot/800/coolterm-8.png" type="image/png">
+          <img alt="#8. Screenshot of CoolTerm" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="https://cdn.lo4d.com/t/screenshot/800/coolterm-8.png" class="iscr" loading="lazy">
+         </picture>
+         <div class="colour5 xsmall lh16 iscrannote">
+          <i class="icon icon-search-plus fl xsmall colour5 icpadm_r"></i>CoolTerm (1203 x 1591)
+         </div></a>
+       </div>
+      </div>
+      <aside id="similar_titles">
+       <div class="glbt box_below">
+        <div class="MsMenu_title" id="related_header">
+         <h3 class="large fc2 colsh3">Similar Software</h3>
+        </div>
+        <ul>
+         <li class="feed">
+          <div class="feedbox">
+           <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="https://cdn.lo4d.com/t/icon/48/port-listener.png" class="feedicon lazy" alt="Port Listener Icon" width="32" height="32">
+          </div><a class="colour2 midlarge fc2" href="https://port-listener.en.lo4d.com/windows" title="Port Listener 1.03">Port Listener</a> 
+          <div class="feedtext">
+           <div class="colour4a xsmall">
+            <blockquote>
+             Simple utility to listen to TCP or UDP ports and display connections.
+            </blockquote>
+           </div>
+          </div></li>
+         <li class="feed2">
+          <div class="feedbox">
+           <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="https://cdn.lo4d.com/t/icon/48/logitech-unifying-software.png" class="feedicon lazy" alt="Logitech Unifying Software Icon" width="32" height="32">
+          </div><a class="colour2 midlarge fc2" href="https://logitech-unifying-software.en.lo4d.com/windows" title="Logitech Unifying Software 2.50.25">Logitech Unifying Software</a> 
+          <div class="feedtext">
+           <div class="colour4a xsmall">
+            <blockquote>
+             Control and manage wireless devices using a Logitech Unity receiver.
+            </blockquote>
+           </div>
+          </div></li>
+         <li class="feed">
+          <div class="feedbox">
+           <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="https://cdn.lo4d.com/t/icon/48/putty.png" class="feedicon lazy" alt="PuTTY Icon" width="32" height="32">
+          </div><a class="colour2 midlarge fc2" href="https://putty.en.lo4d.com/windows" title="PuTTY 0.74">PuTTY</a> 
+          <div class="feedtext">
+           <div class="colour4a xsmall">
+            <blockquote>
+             Highly flexible SSH client with Xterm terminal emulation and support for Rlogin, SFTP, Telnet and Serial connections.
+            </blockquote>
+           </div>
+          </div></li>
+         <li class="feed2">
+          <div class="feedbox">
+           <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="https://cdn.lo4d.com/t/icon/48/tera-term.png" class="feedicon lazy" alt="Tera Term Icon" width="32" height="32">
+          </div><a class="colour2 midlarge fc2" href="https://tera-term.en.lo4d.com/windows" title="Tera Term 4.105">Tera Term</a> 
+          <div class="feedtext">
+           <div class="colour4a xsmall">
+            <blockquote>
+             A free terminal emulation app.
+            </blockquote>
+           </div>
+          </div></li>
+        </ul>
+       </div>
+      </aside>
+     </section>
+    </main>
+    <aside class="Bcolumn_2">
+     <div class="download-button" onclick="window.open('https://coolterm.en.lo4d.com/download', '_self')">
+      <i class="icon icon-download-1 fr"></i><a href="https://coolterm.en.lo4d.com/download" title="Download CoolTerm" itemprop="downloadUrl" class="colour5 colsh5"><h2>Download</h2></a> <span>18.6 MB
+       <meta itemprop="fileFormat" content="application/octet-stream; charset=binary"> - <b class="icon icon-check vam"></b> Tested clean
+       <meta itemprop="fileSize" content="18.6 MB"> - 1.8.0.861</span>
+     </div>
+     <div class="clearboth"></div>
+     <div id="ranking_box" class="box_below xsmall">
+      <dl>
+       <dt class="dr">
+        Ranking in 
+        <br>Networking Software
+       </dt>
+       <dd class="dl">
+        #<strong class="colour6 xlarge">1</strong> of 169
+       </dd>
+      </dl>
+     </div>
+     <div class="rating_box tac" id="rate-CoolTerm">
+      <div class="rbox">
+       <div id="ratingdiv">
+        <form id="rating" action="/ajax.php" method="post" title="Average: 4.4" style="visibility: hidden">
+         <fieldset>
+          <label for="id_rating">Rating:</label><select name="rating" id="id_rating"><option value="1">1 - Poor</option><option value="2">2 - Fair</option><option value="3">3 - Good</option><option value="4">4 - Very Good</option><option value="5">5 - Excellent</option></select>
+          <input type="submit" value="Submit rating" name="submitRating">
+          <input type="hidden" id="do" name="do" value="submitrating">
+          <input type="hidden" id="ratetitle" name="ratetitle" value="CoolTerm">
+         </fieldset>
+        </form>
+       </div>
+      </div>
+      <div style="margin-bottom:5px;">
+       <span itemprop="aggregateRating" itemscope itemtype="http://schema.org/AggregateRating" class="colour4 xsmall"><span itemprop="ratingValue">4.4</span> out of <span itemprop="bestRating">5</span>
+        <meta itemprop="worstRating" content="1"> based on <span itemprop="ratingCount">35</span> ratings.</span>
+      </div>
+     </div>
+     <div class="clearboth"></div>
+     <div id="others_box" class="listings bbct">
+      <div class="MsMenu_title bbct" id="others_header">
+       <h3 class="large fc2 colsh3">Networking Downloads</h3>
+      </div>
+      <ol>
+       <li class="fc2 others_list_style top"><a href="https://netcut.en.lo4d.com/windows" class="colour1 midlarge" title="Netcut" style="background-image: url('https://cdn.lo4d.com/t/icon/48/netcut.png')">Netcut</a> 
+        <blockquote class="colour4 small icpad_r">
+         Uses pure ARP to detect IP/MAC address, and control/change MAC and network usage.
+        </blockquote></li>
+       <li class="fc2 others_list_style"><a href="https://openvpn-gui.en.lo4d.com/windows" class="colour1 midlarge" title="OpenVPN GUI" style="background-image: url('https://cdn.lo4d.com/t/icon/48/openvpn-gui.png')">OpenVPN GUI</a> 
+        <blockquote class="colour4 small icpad_r">
+         An interface which can configure and manage OpenVPN connections without the need for a command-line prompt or console window.
+        </blockquote></li>
+       <li class="fc2 others_list_style"><a href="https://speedify.en.lo4d.com/windows" class="colour1 midlarge" title="Speedify" style="background-image: url('https://cdn.lo4d.com/t/icon/48/speedify.png')">Speedify</a> 
+        <blockquote class="colour4 small icpad_r">
+         Provides the ability to use all available Internet connections for speed.
+        </blockquote></li>
+       <li class="fc2 others_list_style"><a href="https://net-scan.en.lo4d.com/windows" class="colour1 midlarge" title="Net Scan" style="background-image: url('https://cdn.lo4d.com/t/icon/48/net-scan.png')">Net Scan</a> 
+        <blockquote class="colour4 small icpad_r">
+         A freeware port scanner that supports public and private networks.
+        </blockquote></li>
+       <li class="fc2 others_list_style"><a href="https://pingplotter-free.en.lo4d.com/windows" class="colour1 midlarge" title="PingPlotter Free" style="background-image: url('https://cdn.lo4d.com/t/icon/48/pingplotter-free.png')">PingPlotter Free</a> 
+        <blockquote class="colour4 small icpad_r">
+         Plots the route from which a ping takes on the Internet.
+        </blockquote></li>
+      </ol>
+     </div>
+    </aside>
+    <div class="clearboth"></div>
+   </div>
+  </div>
+  <footer id="copyright_footer">
+   <a href="https://www.lo4d.com/corp/privacy" class="colour2 small">Privacy Policy</a><span class="colsh2 colour5 medium"> | </span><a href="https://www.lo4d.com/corp/terms" class="colour2 small">Terms of Service</a><span class="colsh2 colour5 medium"> | </span><a href="https://www.lo4d.com/corp/contact" class="colour2 small">Contact Us</a><span class="colsh2 colour5 medium"> | </span><a href="https://www.lo4d.com/corp/about" class="colour2 small">About Us</a>
+   <br>© 2012 - 2021 LO4D.com
+  </footer>
+  <script type="application/ld+json">{"@context": "http://schema.org", "@type": "WebSite", "url": "https://www.lo4d.com/", "name": "LO4D.com", "description": "A software download directory and portal offering free downloads of open source, freeware and commercial software products with built-in antivirus and reviews of software applications for the Windows operating system.", "potentialAction": { "@type": "SearchAction", "target": "https://www.lo4d.com/s.php?q={search_term_string}",  "query-input": "required name=search_term_string" }}</script>
+  <script src="https://cdn.lo4d.com/js.lo4d/custom-min.js?ver=0.9964"></script>
+  <script> rating=YAHOO.rating.main; rating.YE.onDOMReady(rating.init); </script>
+  <script> Shadowbox.init({ language: 'en', players:  ['html', 'iframe'], modal: true }); </script>
+  <script>var cookies=function(){return{setCookie:function(e,o,t){var i=new Date;i.setTime(i.getTime()+24*t*60*60*1e3);var n="expires="+i.toUTCString();document.cookie=e+"="+o+"; "+n+";domain=.lo4d.com;path=/"},getCookie:function(e){for(var o,t=e+"=",i=document.cookie.split(";"),n=0;n<i.length;n++){for(o=i[n];" "==o.charAt(0);)o=o.substring(1);if(0===o.indexOf(t))return o.substring(t.length,o.length)}return!1},showCookieNotice:function(){var e=document.createElement("div");e.setAttribute("id","eucookie-notice"),e.setAttribute("class","notice"),e.setAttribute("style","position: fixed; left: 0; bottom: 0; width: 240px; padding: 5px; background: #fff; border-top: 1px solid #e3e7e8; border-radius: 0 5px 0 0; border-right: 1px solid #e3e7e8; z-index: 9999"),e.innerHTML='<span class="colour4 xsmall">EU users: This site uses cookies, bound by our <a href="https://www.lo4d.com/corp/privacy" target="_new">privacy policy</a>. <a id="dismiss-eu-notice" href="" onclick="cookies.setCookie(\'eucookie\', true, 30); document.getElementById(\'eucookie-notice\').style.display=\'none\';" style="padding: 2px 6px; border-radius: 2px; background: #acacac;" class="colour5">OK</a></span>',document.body.appendChild(e),document.getElementById("dismiss-eu-notice").addEventListener("click",function(e){e.preventDefault()})}}}(),cookieNotice=function(){cookies.getCookie("eucookie")||cookies.showCookieNotice()};if(window.addEventListener)window.addEventListener("DOMContentLoaded",function(e){cookieNotice()});else var readyStateCheckInterval=setInterval(function(){"complete"===document.readyState&&(clearInterval(readyStateCheckInterval),cookieNotice())},10);</script>
+  <script>!function(e){function t(e,t){var n=new Image,r=e.getAttribute("data-src");n.onload=function(){e.parent?e.parent.replaceChild(n,e):e.src=r,t&&t()},n.src=r}for(var n=new Array,r=function(e,t){if(document.querySelectorAll)t=document.querySelectorAll(e);else{var n=document,r=n.styleSheets[0]||n.createStyleSheet();r.addRule(e,"f:b");for(var l=n.all,o=0,c=[],i=l.length;o<i;o++)l[o].currentStyle.f&&c.push(l[o]);r.removeRule(0),t=c}return t}("img.lazy"),l=function(){for(var r=0;r<n.length;r++)l=n[r],o=void 0,(o=l.getBoundingClientRect()).top>=0&&o.left>=0&&o.top<=(e.innerHeight||document.documentElement.clientHeight)&&t(n[r],function(){n.splice(r,r)});var l,o},o=0;o<r.length;o++)n.push(r[o]);l(),function(t,n){e.addEventListener?this.addEventListener(t,n,!1):e.attachEvent?this.attachEvent("on"+t,n):this["on"+t]=n}("scroll",l)}(this);</script>
+ </body>
+</html>

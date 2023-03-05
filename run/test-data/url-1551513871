@@ -1,0 +1,215 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US"> 
+ <head> 
+  <title>ExtraPuTTY | Fork of PuTTY</title> 
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8"> 
+  <meta name="description" content="ExtraPuTTY - fork of putty. (Add win32 API,TestStand Steps, automatic sequencing of command,shortcuts for pre-defined command ...)"> 
+  <meta name="keywords" content="TestStand,PuTTYcyg,cygterm,lua,Labview,Telnet,shortcut,Command Manager,Win32,Send,Receive,Data,Putty,SSH,Rlogin,Raw,Serial Link,CVI,National Instrument,ExtraPuTTY DLL,DLL,protocol,security,test,Addon,Fork,API,SSH API, TELNET API"> 
+  <meta name="robots" content="index,follow"> 
+  <link rel="stylesheet" href="Styles/main.css" media="screen"> 
+  <link rel="shortcut icon" href="images/favicon.ico"> 
+  <script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script> 
+  <script type="text/javascript" src="jsscript/Rounded.js"></script> 
+  <script type="text/javascript" src="jsscript/Rounded2.js"></script> 
+  <script type="text/javascript">
+if (window.navigator.appName != 'Microsoft Internet Explorer')
+{
+    $(function(){
+    $('.rounded').corner();
+    });
+}
+</script> 
+ </head> 
+ <body> 
+  <div id="fb-root"></div> 
+  <script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/fr_FR/all.js#xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script> 
+  <div id="container"> 
+   <div id="header"> 
+    <div style="background: url(images/logo.png) no-repeat; width: 656px; height: 114px;"> 
+     <ul> 
+      <li><b>Home</b></li> 
+      <li><a href="download.php">Downloads</a></li> 
+      <li><a href="license.html">license</a></li> 
+      <li><a href="docs.php">User Manual</a></li> 
+      <li><a href="screenshot.html">ScreenShots</a></li> 
+      <li><a href="support/">Help desk</a></li> 
+     </ul> 
+    </div> 
+   </div> 
+   <center> 
+    <form action="http://www.extraputty.com/search.html" id="cse-search-box"> 
+     <div> 
+      <input type="hidden" name="cx" value="partner-pub-3257793628364589:6bmqczo2q37"> 
+      <input type="hidden" name="cof" value="FORID:11"> 
+      <input type="hidden" name="ie" value="ISO-8859-1"> 
+      <input type="text" name="q" size="31"> 
+      <input type="submit" name="sa" value="Search"> 
+     </div> 
+    </form> 
+    <script type="text/javascript" src="http://www.google.fr/cse/brand?form=cse-search-box&amp;lang=en"></script> 
+    <br><a href="https://twitter.com/share" class="twitter-share-button">Tweet</a> 
+    <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script> <g:plusone></g:plusone> 
+    <div class="fb-like" data-href="https://developers.facebook.com/docs/plugins/" data-width="The pixel width of the plugin" data-height="The pixel height of the plugin" data-colorscheme="light" data-layout="button_count" data-action="like" data-show-faces="true" data-send="false"></div> 
+   </center> 
+   <br> 
+   <div id="left"> 
+    <h1><span>ExtraPuTTY</span></h1>
+    <br> 
+    <p> <b>ExtraPuTTY</b> is a fork from 0.67 version of PuTTY.</p> 
+    <p>ExtraPuTTY has all the features from the original soft and adds others.</p> <u>Below a short list of the principal features (see <a href="./features.html">all features</a>):</u> 
+    <ul> 
+     <li>DLL frontend</li> 
+     <li>TestStand API (<a href="http://digital.ni.com/public.nsf/allkb/A254FE727B22258586257B6E002DF401"> LabWindows</a> ,<a href="http://forums.ni.com/t5/NI-TestStand/Starting-TestStand-with-ExtraPuTTY-installed/m-p/2596877">TestStand 2012</a>)</li> 
+     <li>timestamp</li> 
+     <li>StatusBar</li> 
+     <li>Scripting a session with <a href="http://www.lua.org/">lua 5.3.</a></li> 
+     <li>Automatic sequencing of commands.</li> 
+     <li>Shortcuts for pre-defined commands.</li> 
+     <li>Keyboard shortcuts for pre-defined command</li> 
+     <li>Portability (use of directories structure)</li> 
+     <li>Integrates FTP,TFTP,SCP,SFTP,Ymodem,Xmodem transfert protocols</li> 
+     <li>Integrates PuTTYcyg,PuTTYSC, HyperLink, zmodem and session manager projects</li> 
+     <li>Change default settings from configuration file</li> 
+     <li>Change putty settings during session</li> 
+     <li><a href="features/puttycmdsender.html"> PuTTYcmdSender</a> : tool to send command or keyboard shortcut to multiple putty windows</li> 
+    </ul> It is written and maintained primarily by <a href="me.html">Sebastien Blavier</a> and <a href="http://www.pobox.com/~anakin/">Simon Tatham (team's) for PuTTY</a>.
+    <br> ExtraPuTTY is <b><i>free</i></b> and only designed for Microsoft Windows platform. 
+    <br>
+    <br><b>You can also be part of the success of ExtraPuTTY, by translating these pages into your own language.</b> <a href="mailto:webmaster@extraputty.com">Let us know.</a> 
+    <br> 
+    <br>
+    <br><b><font color="orange">After 14 years in the same company for the same client i need new challenges.</font></b>
+    <br> Look at my <a href="cv.html">profile</a> if you have opportunities. 
+    <br>
+    <script type="text/javascript"><!--
+google_ad_client = "ca-pub-3257793628364589";
+/* test2 */
+google_ad_slot = "3385063987";
+google_ad_width = 468;
+google_ad_height = 60;
+//-->
+</script> 
+    <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script> 
+    <h1>Latest <span>News</span></h1> 
+    <br>
+    <br> 
+    <div class="news"> 
+     <h2>ExtraPuTTY 0.30 (Ind 17) snapshot version</h2> 
+     <div class="date">
+      April-04-2016
+     </div> 
+     <p> A new version of ExtraPuTTY 0.30 snapshot (with PuTTY 0.67) is now available for download! </p> With a new <a href="license.html">licensing model (3.0)</a> 
+    </div> 
+    <div class="news"> 
+     <h2>ExtraPuTTY 0.29 RC2 released</h2> 
+     <div class="date">
+      June-25-2015
+     </div> 
+     <p> ExtraPuTTY 0.29 (with PuTTY 0.64) is now available for download!! This release candidate fixes bugs reported from the previous releases and also includes some updates. We highly recommend upgrading to 0.29.</p> 
+    </div> 
+    <div class="news"> 
+     <h2>ExtraPuTTY 0.28 RC1 released</h2> 
+     <div class="date">
+      April-02-2014
+     </div> 
+     <p> ExtraPuTTY 0.28 (with PuTTY 0.63) is now available for download! This release candidate fixes bugs reported from the previous releases and also includes some updates. We highly recommend upgrading to 0.28.</p> With a new <a href="license.html">licensing model (2.3)</a>. 
+    </div> 
+    <div class="news"> 
+     <h2>ExtraPuTTY 0.27 RC1 released</h2> 
+     <div class="date">
+      September-08-2013
+     </div> 
+     <p> ExtraPuTTY 0.27 (with PuTTY 0.62) is now available for download! This release candidate fixes bugs reported from the previous releases and also includes some updates. We highly recommend upgrading to 0.27.</p> With a new <a href="license.html">licensing model (2.3)</a>. 
+    </div> 
+    <div class="news"> 
+     <h2>ExtraPuTTY 0.26 RC1 released</h2> 
+     <div class="date">
+      August-23-2011
+     </div> 
+     <p> ExtraPuTTY 0.26 (with PuTTY 0.60) is now available for download! This release candidate fixes bugs reported from the previous releases and also includes some updates. We highly recommend upgrading to 0.26.</p> With a new <a href="license.html">licensing model (2.3)</a>. 
+    </div> 
+    <div class="news"> 
+     <h2>ExtraPuTTY 0.24 released</h2> 
+     <div class="date">
+      June-1-2009
+     </div> 
+     <p> ExtraPuTTY 0.24 (with PuTTY 0.60) is now available for download! This release candidate fixes bugs reported from the previous releases and also includes some updates. We highly recommend upgrading to 0.24.</p> 
+    </div> 
+    <div class="news"> 
+     <h2>ExtraPuTTY 0.23 released</h2> 
+     <div class="date">
+      March-20-2008
+     </div> 
+     <p> ExtraPuTTY 0.23 (with PuTTY 0.60) is now available for download! This release candidate fixes bugs reported from the previous releases and also includes some updates. We highly recommend upgrading to 0.23.</p> 
+    </div> 
+    <div class="news"> 
+     <h2>ExtraPuTTY 0.22 released</h2> 
+     <div class="date">
+      Feb-04-2008
+     </div> 
+     <p> ExtraPuTTY 0.22 (with PuTTY 0.60) is now available for download! This release candidate fixes bugs reported from the previous releases and also includes some updates. We highly recommend upgrading to 0.22.</p> 
+    </div> 
+    <div class="news"> 
+     <h2>ExtraPuTTY 0.21 released</h2> 
+     <div class="date">
+      Jan-27-2008
+     </div> 
+     <p> ExtraPuTTY 0.21 (with PuTTY 0.60) is now available for download! This release candidate fixes bugs reported from the previous releases and Telnet API for win32 application. We highly recommend upgrading to 0.21.</p> 
+    </div> 
+    <h1>ExtraPuTTY <span>Site Map</span></h1> 
+    <ul> 
+     <li> <a href="license.html">license conditions</a> under which you may use ExtraPuTTY. </li>
+     <li> <a href="faq.html">The FAQ</a>. </li>
+     <li> <a href="docs.php">The documentation</a>. </li>
+     <li> <a href="download.php">Download ExtraPuTTY</a>!<br> </li>
+     <li> A <a href="support">Help desk</a> page used to log online tickets (bugs,updates ...). </li>
+     <li> Subscribe to the <a href="maillist.html">PuTTY-announce</a> mailing list to be notified of new releases. </li>
+     <li> <a href="feedback.html">Feedback</a> and bug reporting: contact address and guidelines. <em>Please</em> read the guidelines before sending us mail; we get a very large amount of mail and it will help us answer you more quickly. </li>
+     <li> <a href="changes.html">Changes in recent releases</a>. </li>
+     <li> A page about the ExtraPuTTY <a href="team.html">team members</a>. </li>
+    </ul> 
+   </div> 
+   <div id="right"> <a class="nobg" href="download.php"><img src="images/extraputty.jpg" width="206" height="105"></a> <a href="http://fusion.google.com/add?source=atgs&amp;feedurl=http%3A//www.extraputty.com/news.xml"><img src="http://gmodules.com/ig/images/plus_google.gif" border="0" alt="Add to Google"></a> <a href="http://www.extraputty.com/news.xml"><img src="images/feed-16x16.png" border="0"></a> 
+    <br>
+    <br> 
+    <br> 
+    <h2>Links</h2> 
+    <ul> 
+     <li><a href="features.html">Features</a></li> 
+     <li><a href="wishlist.html">Wishlist</a></li> 
+     <li><a href="maillist.html">Updates</a></li> 
+     <li><a href="changes.html">Changes</a></li> 
+     <li><a href="faq.html">FAQ</a></li> 
+     <li><a href="feedback.html">Feedback</a></li> 
+     <li><a href="tracker/">Tracker</a></li> 
+     <li><a href="team.html">Team</a></li> 
+     <li><a href="talk.html">Talk about us</a></li> 
+     <li><a href="mailto:webmaster@extraputty.com">Contact Us</a></li> 
+     <li><a href="cv.html">Career opportunities for ExtraPutty's developer</a></li> 
+     <li><a href="http://www.extraputty.com/donate.html">Make Funny Donate</a> </li> 
+    </ul> 
+    <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script> 
+   </div> 
+   <div id="footer">
+    Copyright © 2015 ExtraPuTTY.com - All rights reserved.
+   </div> 
+  </div> 
+  <script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script> 
+  <script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-3010568-4");
+pageTracker._initData();
+pageTracker._trackPageview();
+</script> (last modified on <!--LASTMOD-->Fry Aug 30 22:33:14 2013<!--END-->)  
+ </body>
+</html>

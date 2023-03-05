@@ -1,0 +1,141 @@
+<!doctype html>
+<html>
+ <head>
+  <meta charset="utf-8"> 
+  <title lang="en">Web of Games: Items tagged preservation</title> 
+  <link rel="stylesheet" type="text/css" href="clinklog.css"> 
+  <link rel="icon" type="image/png" href="../assets/notimetoplay-icon.png"> 
+  <link rel="alternate" type="application/rss+xml" href="recent.xml"> 
+  <meta name="generator" content="Clinklog r2.1"> 
+  <meta name="description" content="Random old links about gaming"> 
+  <meta name="twitter:card" content="summary"> 
+  <meta property="og:title" content="Items tagged preservation"> 
+  <meta property="og:site_name" content="Web of Games"> 
+  <meta property="og:type" content="website"> 
+  <meta property="og:url" content="https://notimetoplay.org/links/"> 
+  <meta name="viewport" content="width=device-width"> 
+ </head>
+ <body>
+  <header role="banner" lang="en"> <a href="https://notimetoplay.org/links/"><img src="https://notimetoplay.org/logo.png" alt="Home" class="logo"></a> 
+   <h1><a href="https://notimetoplay.org/links/">Web of Games</a></h1> 
+   <p class="site-desc">Random old links about gaming</p> 
+   <nav>
+    <ul> 
+     <li><a href="notes.html#note-about">About</a></li> 
+     <li><a href="notes.html#note-blogroll">Blogroll</a></li> 
+     <li><a href="../index.html">Homepage</a></li> 
+    </ul>
+   </nav> 
+  </header> 
+  <main role="main" lang="en" class="h-feed"> 
+   <h2 class="p-name">Items tagged preservation</h2> 
+   <article id="item-300" class="h-entry"> 
+    <h3 class="p-name"><a href="https://www.gamasutra.com/blogs/JoshBycer/20210329/379017/Why_Videogame_Preservation_Needs_to_Change.php">Why Videogame Preservation Needs to Change</a></h3> 
+    <div class="e-content">
+     Once again game stores are shutting down, and once again people are discussing how we could (and should) preserve all those games. And yes, it's tricky not just due to copyrights, or new consoles coming up all the time. I hadn't even thought about issues like TV plugs! But you know... having just made yet another game port, with more on the way, I can't help but think that if even one of the platforms I make my games for survives, so will the games, even if they weren't open source, and they are. That alone is reason to port them widely. Even if we're no longer in the Tower of Babel that was the 80s computing. Oh wait. The simple, self-contained machines from back then are precisely those most easily emulated nowadays, whose games will run forever.
+    </div> 
+    <p>Tags: <a href="tag-hardware.html" class="p-category">hardware</a>, <a href="tag-preservation.html" class="p-category">preservation</a></p> 
+    <p><a href="2021-03.html#item-300" class="u-url"><time class="dt-published">2021-03-29</time></a></p> 
+   </article> 
+   <article id="item-260" class="h-entry"> 
+    <h3 class="p-name"><a href="https://gamehistory.org/monkeyisland/">The Secrets Of Monkey Island’s Source Code</a></h3> 
+    <div class="e-content"></div> 
+    <p>Tags: <a href="tag-classic.html" class="p-category">classic</a>, <a href="tag-adventure.html" class="p-category">adventure</a>, <a href="tag-preservation.html" class="p-category">preservation</a></p> 
+    <p><a href="2020-11.html#item-260" class="u-url"><time class="dt-published">2020-11-24</time></a></p> 
+   </article> 
+   <article id="item-258" class="h-entry"> 
+    <h3 class="p-name"><a href="http://blog.archive.org/2020/11/19/flash-animations-live-forever-at-the-internet-archive/">Flash Animations Live Forever at the Internet Archive</a></h3> 
+    <div class="e-content"></div> 
+    <p>Tags: <a href="tag-graphics.html" class="p-category">graphics</a>, <a href="tag-technology.html" class="p-category">technology</a>, <a href="tag-preservation.html" class="p-category">preservation</a></p> 
+    <p><a href="2020-11.html#item-258" class="u-url"><time class="dt-published">2020-11-19</time></a></p> 
+   </article> 
+   <article id="item-259" class="h-entry"> 
+    <h3 class="p-name"><a href="https://thehistoryofhowweplay.wordpress.com/2020/10/29/the-problems-with-plato/">The Problems with PLATO</a></h3> 
+    <div class="e-content">
+     Why digital archaeology is hard.
+    </div> 
+    <p>Tags: <a href="tag-history.html" class="p-category">history</a>, <a href="tag-preservation.html" class="p-category">preservation</a></p> 
+    <p><a href="2020-10.html#item-259" class="u-url"><time class="dt-published">2020-10-29</time></a></p> 
+   </article> 
+   <article id="item-243" class="h-entry"> 
+    <h3 class="p-name"><a href="https://www.theverge.com/2020/10/15/21516254/video-game-history-foundation-secret-of-monkey-island-code">A New Way To Think About Your Favorite Game’s Code</a></h3> 
+    <div class="e-content">
+     Frank Cifaldi and Kelsey Lewin, co-directors of the Video Game History Foundation, explain their new project
+    </div> 
+    <p>Tags: <a href="tag-history.html" class="p-category">history</a>, <a href="tag-preservation.html" class="p-category">preservation</a>, <a href="tag-interview.html" class="p-category">interview</a></p> 
+    <p><a href="2020-10.html#item-243" class="u-url"><time class="dt-published">2020-10-15</time></a></p> 
+   </article> 
+   <article id="item-241" class="h-entry"> 
+    <h3 class="p-name"><a href="https://gamehistory.org/video-game-source-project/">Introducing The Video Game Source Project</a></h3> 
+    <div class="e-content"></div> 
+    <p>Tags: <a href="tag-history.html" class="p-category">history</a>, <a href="tag-preservation.html" class="p-category">preservation</a></p> 
+    <p><a href="2020-10.html#item-241" class="u-url"><time class="dt-published">2020-10-15</time></a></p> 
+   </article> 
+   <article id="item-216" class="h-entry"> 
+    <h3 class="p-name"><a href="https://blog.asie.pl/2020/08/reconstructing-zzt/">ZZT Stories: The Reconstruction</a></h3> 
+    <div class="e-content">
+     Only 22 years late!
+    </div> 
+    <p>Tags: <a href="tag-classic.html" class="p-category">classic</a>, <a href="tag-preservation.html" class="p-category">preservation</a>, <a href="tag-programming.html" class="p-category">programming</a></p> 
+    <p><a href="2020-08.html#item-216" class="u-url"><time class="dt-published">2020-08-04</time></a></p> 
+   </article> 
+   <article id="item-222" class="h-entry"> 
+    <h3 class="p-name"><a href="https://www.fanbyte.com/features/flash-games-are-leaving-soon-but-their-memory-will-never-fade/">Flash Games Are Leaving Soon, but Their Memory Will Never Fade</a></h3> 
+    <div class="e-content"></div> 
+    <p>Tags: <a href="tag-history.html" class="p-category">history</a>, <a href="tag-preservation.html" class="p-category">preservation</a></p> 
+    <p><a href="2020-07.html#item-222" class="u-url"><time class="dt-published">2020-07-14</time></a></p> 
+   </article> 
+   <article id="item-206" class="h-entry"> 
+    <h3 class="p-name"><a href="https://www.gamasutra.com/view/news/365787/Kongregate_shuts_off_game_submissions_as_Flashs_final_days_approach.php">Kongregate shuts off game submissions as Flash's final days approach</a></h3> 
+    <div class="e-content"></div> 
+    <p>Tags: <a href="tag-business.html" class="p-category">business</a>, <a href="tag-preservation.html" class="p-category">preservation</a></p> 
+    <p><a href="2020-07.html#item-206" class="u-url"><time class="dt-published">2020-07-01</time></a></p> 
+   </article> 
+   <article id="item-201" class="h-entry"> 
+    <h3 class="p-name"><a href="https://notimetoplay.org/archive/">Changing focus</a></h3> 
+    <div class="e-content">
+     Just in case somebody's actually watching this space: as of this writing, older links will move to the archive section, and this one will become more of a staging ground for the main blog. Hopefully that will make both more interesting and useful for everyone.
+    </div> 
+    <p>Tags: <a href="tag-meta.html" class="p-category">meta</a>, <a href="tag-preservation.html" class="p-category">preservation</a></p> 
+    <p><a href="2020-06.html#item-201" class="u-url"><time class="dt-published">2020-06-16 06:18+03:00</time></a></p> 
+   </article> 
+   <article id="item-200" class="h-entry"> 
+    <h3 class="p-name"><a href="https://gamehistory.org/days-of-thunder-nes-unreleased/">Reconstructing a lost NES game from 30-year-old source code disks</a></h3> 
+    <div class="e-content"></div> 
+    <p>Tags: <a href="tag-preservation.html" class="p-category">preservation</a>, <a href="tag-retrogaming.html" class="p-category">retrogaming</a></p> 
+    <p><a href="2020-06.html#item-200" class="u-url"><time class="dt-published">2020-06-04 07:06+03:00</time></a></p> 
+   </article> 
+   <article id="item-199" class="h-entry"> 
+    <h3 class="p-name"><a href="https://vintageisthenewold.com/1983-microsoft-gw-basic-source-code-now-available-on-github/">1983 Microsoft GW-BASIC source code now available on Github!</a></h3> 
+    <div class="e-content"></div> 
+    <p>Tags: <a href="tag-preservation.html" class="p-category">preservation</a>, <a href="tag-technology.html" class="p-category">technology</a></p> 
+    <p><a href="2020-05.html#item-199" class="u-url"><time class="dt-published">2020-05-22 05:42+03:00</time></a></p> 
+   </article> 
+   <article id="item-93" class="h-entry"> 
+    <h3 class="p-name"><a href="https://www.rockpapershotgun.com/2019/05/06/how-youtube-lets-plays-are-preserving-video-game-history/">How YouTube let's plays are preserving video game history</a></h3> 
+    <div class="e-content"></div> 
+    <p>Tags: <a href="tag-history.html" class="p-category">history</a>, <a href="tag-preservation.html" class="p-category">preservation</a></p> 
+    <p><a href="2019-05.html#item-93" class="u-url"><time class="dt-published">2019-05-06 13:02+03:00</time></a></p> 
+   </article> 
+   <article id="item-82" class="h-entry"> 
+    <h3 class="p-name"><a href="https://www.pcgamer.com/machinima-is-a-good-reminder-of-just-how-disposable-the-internet-is/">Machinima is a good reminder of just how disposable the internet is</a></h3> 
+    <div class="e-content">
+     "None of our digital goods or digital communities will last forever."
+    </div> 
+    <p>Tags: <a href="tag-history.html" class="p-category">history</a>, <a href="tag-preservation.html" class="p-category">preservation</a></p> 
+    <p><a href="2019-01.html#item-82" class="u-url"><time class="dt-published">2019-01-23 08:40+02:00</time></a></p> 
+   </article> 
+  </main> 
+  <footer role="contentinfo" lang="en"> 
+   <nav> 
+    <ul> 
+     <li><a href="archives.html">Monthly archives</a></li> 
+     <li><a href="all-tags.html">All tags</a></li> 
+     <li><a href="recent.xml" rel="alternate" type="application/rss+xml">Subscribe</a></li> 
+    </ul> 
+   </nav> 
+   <p></p> 
+   <p>Made with <a href="https://felix.plesoianu.ro/web/clinklog2/">Clinklog r2.1</a></p> 
+  </footer> 
+ </body>
+</html>

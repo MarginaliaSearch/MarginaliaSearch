@@ -1,0 +1,467 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns:st1="urn:schemas-microsoft-com:office:smarttags" xmlns="http://www.w3.org/TR/REC-html40"> 
+ <head> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii"> 
+  <meta name="ProgId" content="Word.Document"> 
+  <meta name="Generator" content="Microsoft Word 11"> 
+  <meta name="Originator" content="Microsoft Word 11"> 
+  <link rel="File-List" href="aristot2_files/filelist.xml"> 
+  <link rel="Edit-Time-Data" href="aristot2_files/editdata.mso"> <!--[if !mso]>
+<style>
+v\:* {behavior:url(#default#VML);}
+o\:* {behavior:url(#default#VML);}
+w\:* {behavior:url(#default#VML);}
+.shape {behavior:url(#default#VML);}
+</style>
+<![endif]--> 
+  <title>Aristotle </title> 
+ </head>
+ <body bgcolor="white" lang="EN-US" link="blue" vlink="blue" style="tab-interval:.5in">
+  <o:smarttagtype namespaceuri="urn:schemas-microsoft-com:office:smarttags" name="PlaceName" /> <o:smarttagtype namespaceuri="urn:schemas-microsoft-com:office:smarttags" name="PlaceType" /> <o:smarttagtype namespaceuri="urn:schemas-microsoft-com:office:smarttags" name="place" /> <o:smarttagtype namespaceuri="urn:schemas-microsoft-com:office:smarttags" name="State" /> <o:smarttagtype namespaceuri="urn:schemas-microsoft-com:office:smarttags" name="City" /> <o:smarttagtype namespaceuri="urn:schemas-microsoft-com:office:smarttags" name="country-region" /> <!--[if gte mso 9]><xml>
+ <o:DocumentProperties>
+  <o:Author>Michael Fowler </o:Author>
+  <o:LastAuthor>Michael Fowler </o:LastAuthor>
+  <o:Revision>4</o:Revision>
+  <o:TotalTime>57</o:TotalTime>
+  <o:Created>2008-09-08T20:15:00Z</o:Created>
+  <o:LastSaved>2008-09-08T20:18:00Z</o:LastSaved>
+  <o:Pages>1</o:Pages>
+  <o:Words>3618</o:Words>
+  <o:Characters>18167</o:Characters>
+  <o:Company>University of Virginia</o:Company>
+  <o:Lines>288</o:Lines>
+  <o:Paragraphs>84</o:Paragraphs>
+  <o:CharactersWithSpaces>21701</o:CharactersWithSpaces>
+  <o:Version>11.9999</o:Version>
+ </o:DocumentProperties>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:WordDocument>
+  <w:DisplayBackgroundShape/>
+  <w:ValidateAgainstSchemas/>
+  <w:SaveIfXMLInvalid>false</w:SaveIfXMLInvalid>
+  <w:IgnoreMixedContent>false</w:IgnoreMixedContent>
+  <w:AlwaysShowPlaceholderText>false</w:AlwaysShowPlaceholderText>
+  <w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel>
+ </w:WordDocument>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:LatentStyles DefLockedState="false" LatentStyleCount="156">
+ </w:LatentStyles>
+</xml><![endif]--><!--[if !mso]><object
+ classid="clsid:38481807-CA0E-42D2-BF39-B33AF135CC4D" id=ieooui></object>
+<style>
+st1\:*{behavior:url(#ieooui) }
+</style>
+<![endif]--> 
+  <style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:Wingdings;
+	panose-1:5 0 0 0 0 0 0 0 0 0;
+	mso-font-charset:2;
+	mso-generic-font-family:auto;
+	mso-font-pitch:variable;
+	mso-font-signature:0 268435456 0 0 -2147483648 0;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-parent:"";
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";}
+h1
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:1;
+	font-size:16.0pt;
+	font-family:Arial;
+	mso-font-kerning:16.0pt;
+	font-weight:bold;}
+h2
+	{mso-style-update:auto;
+	mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:2;
+	font-size:13.0pt;
+	mso-bidi-font-size:18.0pt;
+	font-family:Arial;
+	mso-bidi-font-family:"Times New Roman";
+	color:red;
+	font-weight:bold;}
+h3
+	{mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:3;
+	font-size:13.5pt;
+	font-family:"Times New Roman";
+	font-weight:bold;}
+p.MsoHeader, li.MsoHeader, div.MsoHeader
+	{margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	tab-stops:center 3.0in right 6.0in;
+	font-size:12.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";}
+a:link, span.MsoHyperlink
+	{color:blue;
+	text-decoration:none;
+	text-underline:none;}
+a:visited, span.MsoHyperlinkFollowed
+	{color:blue;
+	text-decoration:underline;
+	text-underline:single;}
+p
+	{mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";}
+ /* Page Definitions */
+ @page
+	{mso-footnote-separator:url("aristot2_files/header.html") fs;
+	mso-footnote-continuation-separator:url("aristot2_files/header.html") fcs;
+	mso-endnote-separator:url("aristot2_files/header.html") es;
+	mso-endnote-continuation-separator:url("aristot2_files/header.html") ecs;}
+@page Section1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.25in 1.0in 1.25in;
+	mso-header-margin:.5in;
+	mso-footer-margin:.5in;
+	mso-title-page:yes;
+	mso-even-header:url("aristot2_files/header.html") eh1;
+	mso-header:url("aristot2_files/header.html") h1;
+	mso-paper-source:0;}
+div.Section1
+	{page:Section1;}
+ /* List Definitions */
+ @list l0
+	{mso-list-id:304430944;
+	mso-list-template-ids:347238446;}
+@list l0:level1
+	{mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l1
+	{mso-list-id:430780770;
+	mso-list-template-ids:-1801671078;}
+@list l1:level1
+	{mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l2
+	{mso-list-id:443160533;
+	mso-list-template-ids:-164231306;}
+@list l2:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l3
+	{mso-list-id:1555000007;
+	mso-list-template-ids:715786724;}
+@list l3:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l4
+	{mso-list-id:1725323713;
+	mso-list-template-ids:28859752;}
+@list l4:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l5
+	{mso-list-id:1886067067;
+	mso-list-template-ids:2031003366;}
+@list l5:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+ol
+	{margin-bottom:0in;}
+ul
+	{margin-bottom:0in;}
+-->
+</style> <!--[if gte mso 10]>
+<style>
+ /* Style Definitions */
+ table.MsoNormalTable
+	{mso-style-name:"Table Normal";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	mso-style-noshow:yes;
+	mso-style-parent:"";
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";
+	mso-ansi-language:#0400;
+	mso-fareast-language:#0400;
+	mso-bidi-language:#0400;}
+</style>
+<![endif]--><!--[if gte mso 9]><xml>
+ <o:shapedefaults v:ext="edit" spidmax="2050"/>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <o:shapelayout v:ext="edit">
+  <o:idmap v:ext="edit" data="1"/>
+ </o:shapelayout></xml><![endif]-->   
+  <div class="Section1"> 
+   <h1><span class="MsoHyperlink"><span style="font-size:8.0pt"><a href="http://galileoandeinstein.phys.virginia.edu/lectures/starry~1.html">previous</a> <a href="http://galileoandeinstein.phys.virginia.edu/lectures/lecturelist.html"><span style="mso-spacerun:yes">&nbsp;</span>index</a><span style="mso-spacerun:yes">&nbsp; </span><a href="http://galileoandeinstein.phys.virginia.edu/lectures/gkastr1.html">next</a><span style="mso-spacerun:yes">&nbsp;&nbsp; </span><a href="http://galileoandeinstein.phys.virginia.edu/lectures/aristot2.pdf">PDF</a>
+      <o:p></o:p></span></span></h1> 
+   <h1>Aristotle </h1> 
+   <p class="MsoNormal" style="tab-stops:7.0in"><i style="mso-bidi-font-style:normal">Michael Fowler,</i> <i>U. 
+     <st1:place w:st="on">
+      <st1:state w:st="on">
+       Va.
+      </st1:state>
+     </st1:place> Physics,<span style="mso-spacerun:yes">&nbsp; </span>9/3/2008</i></p> 
+   <h2>Beginnings of Science and Philosophy in <st1:place w:st="on">
+     <st1:city w:st="on">
+      Athens
+     </st1:city>
+    </st1:place></h2> 
+   <p>Let us first recap briefly the emergence of philosophy and science in <st1:place w:st="on">
+     <st1:city w:st="on">
+      Athens
+     </st1:city>
+    </st1:place> after around 450 B.C. It all began with <b>Socrates</b>, who was born in 470 B.C. Socrates was a true philosopher, a lover of wisdom, who tried to elicit the truth by what has become known as the Socratic method, in which by a series of probing questions he forced successive further clarification of thought. Of course, such clarity often reveals that the other person&#x2019;s ideas don&#x2019;t in fact make much sense, so that although Socrates made a lot of things much clearer, he wasn&#x2019;t a favorite of many establishment politicians. For example, he could argue very convincingly that traditional morality had no logical basis. He mostly lectured to the sons of well-to-do aristocrats, one of whom was <b>Plato</b>, born in 428 B.C. Plato was a young man when <st1:city w:st="on">
+     Athens
+    </st1:city> was humiliated by <st1:city w:st="on">
+     Sparta
+    </st1:city> in the Peloponnesian War, and Plato probably attributed the loss to <st1:city w:st="on">
+     Athens
+    </st1:city>&#x2019; being a democracy, as opposed to the kind of fascist war-based state <st1:city w:st="on">
+     <st1:place w:st="on">
+      Sparta
+     </st1:place>
+    </st1:city> was. Plato founded an Academy. The name came (at least in legend) from one <i>Academus</i>, a landowner on whose estate Plato and other philosophers met regularly. The important point is that this was the first university. All the people involved were probably aristocrats, and they discussed everything: politics, economics, morality, philosophy, mathematics and science. One of their main concerns was to find what constituted an ideal city-state. Democracy didn&#x2019;t seem to have worked very well in their recent past. Plato&#x2019;s ideas are set out in the <i>Republic</i>. </p> 
+   <h2>Plato&#x2019;s Idea of a Good Education</h2> 
+   <p>What is interesting about the<i> Republic</i> from our point of view is the emphasis on a good education for the elite group in charge of Plato&#x2019;s ideal society. In particular, Plato considered education in mathematics and astronomy to be excellent ways of sharpening the mind. He believed that intense mental exercise of this kind had the same effect on the mind that a rigorous physical regimen did on the body. Students at the Academy covered a vast range of subjects, but there was a sign over the door stating that some knowledge of <i>mathematics</i> was needed to enter&#x2014;nothing else was mentioned! Plato in particular loved geometry, and felt that the beauty of the five regular solids he was the first to categorize meant they must be fundamental to nature, they must somehow be the shapes of the atoms. Notice that this approach <!--[if gte vml 1]><v:shapetype
+ id="_x0000_t75" coordsize="21600,21600" o:spt="75" o:preferrelative="t"
+ path="m@4@5l@4@11@9@11@9@5xe" filled="f" stroked="f">
+ <v:stroke joinstyle="miter"/>
+ <v:formulas>
+  <v:f eqn="if lineDrawn pixelLineWidth 0"/>
+  <v:f eqn="sum @0 1 0"/>
+  <v:f eqn="sum 0 0 @1"/>
+  <v:f eqn="prod @2 1 2"/>
+  <v:f eqn="prod @3 21600 pixelWidth"/>
+  <v:f eqn="prod @3 21600 pixelHeight"/>
+  <v:f eqn="sum @0 0 1"/>
+  <v:f eqn="prod @6 1 2"/>
+  <v:f eqn="prod @7 21600 pixelWidth"/>
+  <v:f eqn="sum @8 21600 0"/>
+  <v:f eqn="prod @7 21600 pixelHeight"/>
+  <v:f eqn="sum @10 21600 0"/>
+ </v:formulas>
+ <v:path o:extrusionok="f" gradientshapeok="t" o:connecttype="rect"/>
+ <o:lock v:ext="edit" aspectratio="t"/>
+</v:shapetype><v:shape id="_x0000_s1027" type="#_x0000_t75" style='position:absolute;
+ margin-left:0;margin-top:0;width:178pt;height:237.75pt;z-index:2;
+ mso-position-horizontal:left;mso-position-horizontal-relative:text;
+ mso-position-vertical:top;mso-position-vertical-relative:line' o:allowoverlap="f">
+ <v:imagedata src="aristot2_files/image001.png" o:title=""/>
+ <w:wrap type="square"/>
+</v:shape><![endif]--><!--[if !vml]--><img width="237" height="317" src="aristot2_files/image002.jpg" align="left" hspace="12" v:shapes="_x0000_s1027"><!--[endif]-->to physics is not heavily dependent on observation and experiment. </p> 
+   <h2>Aristotle and Alexander</h2> 
+   <p>We turn now to the third member of this trio,<b> Aristotle</b>, born in 384 B.C. in <st1:city w:st="on">
+     Stagira
+    </st1:city>, in <st1:country-region w:st="on">
+     Thrace
+    </st1:country-region>, at the northern end of the Aegean, near <st1:place w:st="on">
+     <st1:country-region w:st="on">
+      Macedonia
+     </st1:country-region>
+    </st1:place>. Aristotle&#x2019;s father was the family physician of King Philip of <st1:country-region w:st="on">
+     <st1:place w:st="on">
+      Macedonia
+     </st1:place>
+    </st1:country-region>. At the age of eighteen, Aristotle came to Athens to study at Plato&#x2019;s Academy, and stayed there twenty years until Plato&#x2019;s death in 348 B.C. (Statue is a Roman copy of a Greek original, in the Louvre, photographer Eric Gaba (<a href="http://commons.wikimedia.org/wiki/User:Sting" title="User:Sting">User:Sting</a>), July 2005.)</p> 
+   <p>Five years after Plato&#x2019;s death, Aristotle took a position as tutor to King Philip of <st1:place w:st="on">
+     <st1:country-region w:st="on">
+      Macedonia
+     </st1:country-region>
+    </st1:place>&#x2019;s thirteen year old son Alexander. He stayed for three years. It is not clear what impact, if any, Aristotle&#x2019;s lessons had, but Alexander, like his father, was a great admirer of Greek civilization, even though the Athenians considered <st1:country-region w:st="on">
+     <st1:place w:st="on">
+      Macedonia
+     </st1:place>
+    </st1:country-region> the boondocks. In fact, when his father Philip died in 336 B.C., Alexander did his best to spread Greek civilization as far as he could. Macedonia had an excellent army, and over the next thirteen years Alexander organized Greece as a federation of city states, conquered Persia, the Middle East, Egypt, southern Afghanistan, some of Central Asia and the Punjab in India. </p> 
+   <p>The picture below is a fortress built by Alexander&#x2019;s army in <st1:place w:st="on">
+     <st1:city w:st="on">
+      Herat
+     </st1:city>, 
+     <st1:country-region w:st="on">
+      Afghanistan
+     </st1:country-region>
+    </st1:place>, and still standing.<span style="mso-spacerun:yes">&nbsp; </span>(Picture from <a href="http://flickr.com/photos/koldo/67606119/" title="http://flickr.com/photos/koldo/67606119/">http://flickr.com/photos/koldo/67606119/</a> ,<span style="mso-spacerun:yes">&nbsp; </span>author <a href="http://flickr.com/photos/koldo/" title="http://flickr.com/photos/koldo/">koldo / Koldo Hormaza</a> .)</p> 
+   <p>He founded Greek cities in many places, the greatest being Alexandria in Egypt, which in fact became the most important center of Greek science later on, and without which all of Greek learning might have been lost. The Greek cities became restless, predictably but rather ungratefully, when <!--[if gte vml 1]><v:shape
+ id="Picture_x0020_1" o:spid="_x0000_s1026" type="#_x0000_t75" style='position:absolute;
+ margin-left:0;margin-top:0;width:359.05pt;height:238.85pt;z-index:1;
+ visibility:visible;mso-position-horizontal:left;
+ mso-position-horizontal-relative:text;mso-position-vertical:top;
+ mso-position-vertical-relative:line' o:allowoverlap="f">
+ <v:imagedata src="aristot2_files/image003.png" o:title=""/>
+ <w:wrap type="square"/>
+</v:shape><![endif]--><!--[if !vml]--><img width="479" height="318" src="aristot2_files/image004.jpg" align="left" hspace="12" v:shapes="Picture_x0020_1"><!--[endif]-->he demanded to be treated as a god. He died of a fever at age 33. </p> 
+   <h2>
+    <o:p>
+     &nbsp;
+    </o:p></h2> 
+   <h2>Aristotle Founds the Lyceum</h2> 
+   <p>Aristotle came back to <st1:city w:st="on">
+     Athens
+    </st1:city> in 335 B.C., and spent the next twelve years running his own version of an academy, which was called the Lyceum, named after the place in <st1:city w:st="on">
+     Athens
+    </st1:city> where it was located, an old <st1:place w:st="on">
+     <st1:placetype w:st="on">
+      temple
+     </st1:placetype> of 
+     <st1:placename w:st="on">
+      Apollo
+     </st1:placename>
+    </st1:place>. (French high schools are named <i>lycee</i> after Aristotle&#x2019;s establishment.) Aristotle&#x2019;s preferred mode of operation was to spend a lot of time walking around talking with his colleagues, then write down his arguments. The Aristotelians are often called the Peripatetics: people who walk around. </p> 
+   <p>Aristotle wrote extensively on all subjects: politics, metaphysics, ethics, logic and science. He didn&#x2019;t care for Plato&#x2019;s rather communal Utopia, in which the women were shared by the men, and the children raised by everybody, because for one thing he feared the children would be raised by nobody. His ideal society was one run by cultured gentlemen. He saw nothing wrong with slavery, provided the slave was naturally inferior to the master, so slaves should not be Greeks. This all sounds uncomfortably similar to Jefferson&#x2019;s <st1:state w:st="on">
+     Virginia
+    </st1:state>, perhaps not too surprising since Greek was a central part of a gentleman&#x2019;s education in <st1:place w:st="on">
+     Jefferson
+    </st1:place>&#x2019;s day. </p> 
+   <h2>Aristotle&#x2019;s Science</h2> 
+   <p>Aristotle&#x2019;s approach to science differed from Plato&#x2019;s. He agreed that the highest human faculty was reason, and its supreme activity was contemplation. However, in addition to studying what he called &#x201c;first philosophy&#x201d; - metaphysics and mathematics, the things Plato had worked on, Aristotle thought it also very important to study &#x201c;second philosophy&#x201d;: the world around us, from physics and mechanics to biology. Perhaps being raised in the house of a physician had given him an interest in living things. </p> 
+   <p>What he achieved in those years in <st1:city w:st="on">
+     <st1:place w:st="on">
+      Athens
+     </st1:place>
+    </st1:city> was to begin a school of organized scientific inquiry on a scale far exceeding anything that had gone before. He first clearly defined what was scientific knowledge, and why it should be sought. In other words, he single-handedly invented science as the collective, organized enterprise it is today. Plato&#x2019;s Academy had the equivalent of a university mathematics department, Aristotle had the first science department, truly excellent in biology, but, as we shall see, a little weak in physics. After Aristotle, there was no comparable professional science enterprise for over 2,000 years, and his work was of such quality that it was accepted by all, and had long been a part of the official orthodoxy of the Christian Church 2,000 years later. This was unfortunate, because when Galileo questioned some of the assertions concerning simple physics, he quickly found himself in serious trouble with the Church. </p> 
+   <h2>Aristotle&#x2019;s Method</h2> 
+   <p>Aristotle&#x2019;s method of investigation varied from one natural science to another, depending on the problems encountered, but it usually included: </p> 
+   <ol start="1" type="1"> 
+    <li class="MsoNormal" style="mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l0 level1 lfo1;tab-stops:list .5in">defining the subject matter </li> 
+    <li class="MsoNormal" style="mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l0 level1 lfo1;tab-stops:list .5in">considering the difficulties involved by reviewing the generally accepted views on the subject, and suggestions of earlier writers </li> 
+    <li class="MsoNormal" style="mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l0 level1 lfo1;tab-stops:list .5in">presenting his own arguments and solutions. </li> 
+   </ol> 
+   <p>Again, this is the pattern modern research papers follow, Aristotle was laying down the standard professional approach to scientific research. The arguments he used were of two types: <i>dialectical</i>, that is, based on logical deduction; and <i>empirical</i>, based on practical considerations. </p> 
+   <p>Aristotle often refuted an opposing argument by showing that it led to an absurd conclusion, this is called <i>reductio ad absurdum</i> (reducing something to absurdity). As we shall see later, Galileo used exactly this kind of argument against Aristotle himself, to the great annoyance of Aristotelians 2,000 years after Aristotle. </p> 
+   <p>Another possibility was that an argument led to a <i>dilemma</i>: an apparent contradiction. However, dilemmas could sometimes be resolved by realizing that there was some ambiguity in a definition, say, so <i>precision of definitions</i> and usage of terms is <i>essential</i> to productive discussion in any discipline. </p> 
+   <h2>&#x201c;Causes&#x201d;</h2> 
+   <p>In contrast to Plato, who felt the only worthwhile science to be the contemplation of abstract forms, Aristotle practiced detailed observation and dissection of plants and animals, to try to understand how each fitted into the grand scheme of nature, and the importance of the different organs of animals. His motivation is made clear by the following quote from him (in Lloyd, p105): </p> 
+   <p><i>For even in those kinds [of animals] that are not attractive to the senses, yet to the intellect the craftsmanship of nature provides extraordinary pleasures for those who can recognize the causes in things and who are naturally inclined to philosophy.</i> </p> 
+   <p>His study of nature was a search for &#x201c;causes.&#x201d; What, exactly are these &#x201c;causes&#x201d;? He gave some examples (we follow Lloyd&#x2019;s discussion here). He stated that any object (animal, plant, inanimate, whatever) had four <i>attributes</i>: </p> 
+   <ul type="disc"> 
+    <li class="MsoNormal" style="mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l2 level1 lfo2;tab-stops:list .5in">matter </li> 
+   </ul> 
+   <ul type="disc"> 
+    <li class="MsoNormal" style="mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l3 level1 lfo3;tab-stops:list .5in">form </li> 
+   </ul> 
+   <ul type="disc"> 
+    <li class="MsoNormal" style="mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l4 level1 lfo4;tab-stops:list .5in">moving cause </li> 
+   </ul> 
+   <ul type="disc"> 
+    <li class="MsoNormal" style="mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l5 level1 lfo5;tab-stops:list .5in">final cause </li> 
+   </ul> 
+   <p>For a table, the matter is wood, the form is the shape, the moving cause is the carpenter and the final cause is the reason the table was made in the first place, for a family to eat at, for example. For man, he thought the matter was provided by the mother, the form was a rational two-legged animal, the moving cause was the father and the final cause was to become a fully grown human being. He did not believe nature to be conscious, he believed this final cause to be somehow innate in a human being, and similarly in other organisms. Of course, fulfilling this final cause is not inevitable, some accident may intervene, but apart from such exceptional circumstances, nature is regular and orderly. </p> 
+   <p>To give another example of this central concept, he thought the &#x201c;final cause&#x201d; of an acorn was to be an oak tree. This has also been translated by Bertrand Russell (<i>History of Western Philosophy</i>) as the &#x201c;nature&#x201d; of an acorn is to become an oak tree. It is certainly very natural on viewing the living world, especially the maturing of complex organisms, to view them as having innately the express purpose of developing into their final form. </p> 
+   <p>It is interesting to note that this whole approach to studying nature fits very well with Christianity. The idea that every organism is beautifully crafted for a particular function - its &#x201c;final cause&#x201d; - in the grand scheme of nature certainly leads naturally to the thought that all this has been designed by somebody. </p> 
+   <h2>Biology</h2> 
+   <p>Aristotle&#x2019;s really great contribution to natural science was in biology. Living creatures and their parts provide far richer evidence of form, and of &#x201c;final cause&#x201d; in the sense of design for a particular purpose, than do inanimate objects. He wrote in detail about five hundred different animals in his works, including a hundred and twenty kinds of fish and sixty kinds of insect. He was the first to use dissection extensively. In one famous example, he gave a precise description of a kind of dog-fish that was not seen again by scientists until the nineteenth century, and in fact his work on this point was disbelieved for centuries. </p> 
+   <p>Thus both Aristotle and Plato saw in the living creatures around them overwhelming evidence for &#x201c;final causes&#x201d;, that is to say, evidence for design in nature, a different design for each species to fit it for its place in the grand scheme of things. Empedocles, on the other hand, suggested that maybe creatures of different types could come together and produce mixed offspring, and those well adapted to their surroundings would survive. This would seem like an early hint of Darwinism, but it was not accepted, because as Aristotle pointed out, men begat men and oxen begat oxen, and there was no evidence of the mixed creatures Empedocles suggested. </p> 
+   <p>Although this idea of the &#x201c;nature&#x201d; of things accords well with growth of animals and plants, it leads us astray when applied to the motion of inanimate objects, as we shall see. </p> 
+   <h2>Elements</h2> 
+   <p>Aristotle&#x2019;s theory of the basic constituents of matter looks to a modern scientist perhaps something of a backward step from the work of the atomists and Plato. Aristotle assumed all substances to be compounds of four <i>elements</i>: earth, water, air and fire, and each of these to be a combination of two of four <i>opposites</i>, hot and cold, and wet and dry. (Actually, the words he used for wet and dry also have the connotation of softness and hardness). </p> 
+   <p>Aristotle&#x2019;s whole approach is more in touch with the way things present themselves to the senses, the way things really seem to be, as opposed to abstract geometric considerations. Hot and cold, wet and dry are qualities immediately apparent to anyone, this seems a very natural way to describe phenomena. He probably thought that the Platonic approach in terms of abstract concepts, which do not seem to relate to our physical senses but to our reason, was a completely wrongheaded way to go about the problem. It has turned out, centuries later, that the atomic and mathematical approach was on the right track after all, but at the time, and in fact until relatively recently, Aristotle seemed a lot closer to reality. He discussed the properties of real substances in terms of their &#x201c;elemental&#x201d; composition at great length, how they reacted to fire or water, how, for example, water evaporates on heating because it goes from cold and wet to hot and wet, becoming air, in his view. Innumerable analyses along these lines of commonly observed phenomena must have made this seem a coherent approach to understanding the natural world. </p> 
+   <h2>Dynamics: Motion, And Why Things Move</h2> 
+   <p>It is first essential to realize that the world Aristotle saw around him in everyday life was very different indeed from that we see today. Every modern child has since birth seen cars and planes moving around, and soon finds out that these things are not alive, like people and animals. In contrast, most of the motion seen in fourth century <st1:country-region w:st="on">
+     <st1:place w:st="on">
+      Greece
+     </st1:place>
+    </st1:country-region> <i>was</i> people, animals and birds, all very much alive. This motion all had a purpose, the animal was moving to someplace it would rather be, for some reason, so the motion was directed by the animal&#x2019;s <i>will</i>. For Aristotle, this motion was therefore fulfilling the &#x201c;nature&#x201d; of the animal, just as its natural growth fulfilled the nature of the animal. </p> 
+   <p>To account for motion of things obviously <i>not</i> alive, such as a stone dropped from the hand, he extended the concept of the &#x201c;nature&#x201d; of something to inanimate matter. He suggested that the motion of such inanimate objects could be understood by postulating that <i>elements tend to seek their natural place</i> in the order of things, so earth moves downwards most strongly, water flows downwards too, but not so strongly, since a stone will fall through water. In contrast, air moves up (bubbles in water) and fire goes upwards most strongly of all, since it shoots upward through air. This general theory of how elements move has to be elaborated, of course, when applied to real materials, which are mixtures of elements. He would conclude that wood, say, has both earth and air in it, since it does not sink in water. </p> 
+   <h2>Natural Motion and Violent Motion</h2> 
+   <p>Of course, things also sometimes move because they are pushed. A stone&#x2019;s natural tendency, if left alone and unsupported, is to fall, but we can lift it, or even throw it through the air. Aristotle termed such forced motion &#x201c;violent&#x201d; motion as opposed to natural motion. The term &#x201c;violent&#x201d; here connotes that some external force is applied to the body to cause the motion. (Of course, from the modern point of view, gravity is an external force that causes a stone to fall, but even Galileo did not realize that. Before <st1:city w:st="on">
+     <st1:place w:st="on">
+      Newton
+     </st1:place>
+    </st1:city>, the falling of a stone was considered natural motion that did not require any outside help.) </p> 
+   <p>(<i>Question</i>: I am walking steadily upstairs carrying a large stone when I stumble and both I and the stone go clattering down the stairs. Is the motion of the stone before the stumble natural or violent? What about the motion of the stone (and myself) after the stumble?) </p> 
+   <h2>Aristotle&#x2019;s Laws of Motion</h2> 
+   <p>Aristotle was the first to think <i>quantitatively</i> about the speeds involved in these movements. He made two quantitative assertions about how things fall (natural motion): </p> 
+   <ol start="1" type="1"> 
+    <li class="MsoNormal" style="mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l1 level1 lfo6;tab-stops:list .5in">Heavier things fall faster, the speed being proportional to the weight. </li> 
+    <li class="MsoNormal" style="mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l1 level1 lfo6;tab-stops:list .5in">The speed of fall of a given object depends <i>inversely</i> on the density of the medium it is falling through, so, for example, the same body will fall twice as fast through a medium of half the density. </li> 
+   </ol> 
+   <p>Notice that these rules have a certain elegance, an appealing quantitative simplicity. And, if you drop a stone and a piece of paper, it&#x2019;s clear that the heavier thing does fall faster, and a stone falling through water is definitely slowed down by the water, so the rules at first appear plausible. The surprising thing is, in view of Aristotle&#x2019;s painstaking observations of so many things, he didn&#x2019;t check out these rules in any serious way. It would not have taken long to find out if half a brick fell at half the speed of a whole brick, for example. Obviously, this was not something he considered important. </p> 
+   <p>From the second assertion above, he concluded that <i>a vacuum cannot exist</i>, because if it did, since it has zero density, all bodies would fall through it at infinite speed which is clearly nonsense. </p> 
+   <p>For <i>violent</i> motion, Aristotle stated that the <i>speed</i> of the moving object was <i>in direct proportion to</i> the applied <i>force</i>. </p> 
+   <p>This means first that if you stop pushing, the object stops moving. This certainly sounds like a reasonable rule for, say, pushing a box of books across a carpet, or a Grecian ox dragging a plough through a field. (This intuitively appealing picture, however, fails to take account of the large frictional force between the box and the carpet. If you put the box on a sled and pushed it across ice, it wouldn&#x2019;t stop when you stop pushing. Galileo realized the importance of friction in these situations.) </p> 
+   <h2>Planetary Dynamics</h2> 
+   <p>The idea that motion (of inanimate objects) can be accounted for in terms of them seeking their natural place clearly cannot be applied to the planets, whose motion is apparently composed of circles. Aristotle therefore postulated that the heavenly bodies were not made up of the four elements earth, water, air and fire, but of a fifth, different, element called <i>aither</i>, whose natural motion was circular. This was not very satisfying for various reasons. Somewhere between here and the moon a change must take place, but where? Recall that Aristotle did not believe that there was a void anywhere. If the sun has no heat component, why does sunlight seem so warm? He thought it somehow generated heat by friction from the sun&#x2019;s motion, but this wasn&#x2019;t very convincing, either. </p> 
+   <h2>Aristotle&#x2019;s Achievements</h2> 
+   <p>To summarize: Aristotle&#x2019;s philosophy laid out an approach to the investigation of all natural phenomena, to determine form by detailed, systematic work, and thus arrive at final causes. His logical method of argument gave a framework for putting knowledge together, and deducing new results. He created what amounted to a fully-fledged professional scientific enterprise, on a scale comparable to a modern university science department. It must be admitted that some of his work - unfortunately, some of the physics - was not up to his usual high standards. He evidently found falling stones a lot less interesting than living creatures. Yet the sheer scale of his enterprise, unmatched in antiquity and for centuries to come, gave an authority to all his writings. </p> 
+   <p>It is perhaps worth reiterating the difference between Plato and Aristotle, who agreed with each other that the world is the product of rational design, that the philosopher investigates the form and the universal, and that the only true knowledge is that which is irrefutable. The essential difference between them was that Plato felt <i>mathematical reasoning</i> could arrive at the truth with little outside help, but Aristotle believed <i>detailed empirical investigations </i>of nature were essential if progress was to be made in understanding the natural world. </p> 
+   <div class="MsoNormal" align="center" style="text-align:center"> 
+    <hr size="2" width="100%" align="center"> 
+   </div> 
+   <p><i>Books I used to prepare this lecture:</i> </p> 
+   <p><i>Early Greek Science: Thales to Aristotle</i>, G. E. R. Lloyd, <st1:place w:st="on">
+     <st1:city w:st="on">
+      Norton
+     </st1:city>, 
+     <st1:state w:st="on">
+      N.Y.
+     </st1:state>
+    </st1:place>, 1970. An excellent inexpensive paperback giving a more detailed presentation of many of the subjects we have discussed. My sections on Method and Causes, in particular, follow Lloyd&#x2019;s treatment. </p> 
+   <p><i>History of Western Philosophy</i>, Bertrand Russell. An opinionated but very entertaining book, mainly on philosophy but with a fair amount of science and social analysis. </p> 
+   <h1><span class="MsoHyperlink"><span style="font-size:8.0pt"><a href="http://galileoandeinstein.phys.virginia.edu/lectures/starry~1.html">previous</a> <a href="http://galileoandeinstein.phys.virginia.edu/lectures/lecturelist.html"><span style="mso-spacerun:yes">&nbsp;</span>index</a><span style="mso-spacerun:yes">&nbsp; </span><a href="http://galileoandeinstein.phys.virginia.edu/lectures/gkastr1.html">next</a><span style="mso-spacerun:yes">&nbsp;&nbsp; </span><a href="http://galileoandeinstein.phys.virginia.edu/lectures/aristot2.pdf">PDF</a>
+      <o:p></o:p></span></span></h1> 
+   <h1><span class="MsoHyperlink"><span style="font-size:8.0pt">
+      <o:p>
+       &nbsp;
+      </o:p></span></span></h1> 
+   <p>
+    <o:p>
+     &nbsp;
+    </o:p></p> 
+  </div>  
+ </body>
+</html>

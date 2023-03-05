@@ -1,0 +1,52 @@
+<html> 
+ <head> 
+  <title>Plato - Complete Works - Table of Contents</title> 
+ </head> 
+ <body bgcolor="#D19900" link="#0000AA"> <!-- BEGIN TOP NAVIGATION BAR--> 
+  <table border="0" cellpadding="10" cellspacing="0" width="100%" bgcolor="#FFFFFF"> 
+   <tbody>
+    <tr> 
+     <td colspan="3" bgcolor="#000000">&nbsp;</td> 
+    </tr> 
+    <tr> 
+     <td width="10%" bgcolor="#000000" valign="top"><strong><br> </strong><a href="../../index.htm"><strong><span style="color: ffffff"></span></strong> <font color="#C0C0C0" face="Verdana, Helvetica, Arial"><font onmouseover="this.style.color='#F4BB00'" onmouseout="this.style.color='#C0C0C0'"><strong>Home</strong> </font> </font></a><br> <a href="../../author.htm"><span style="color: ffffff"> <font color="#C0C0C0" face="Verdana, Helvetica, Arial"><font onmouseover="this.style.color='#F4BB00'" onmouseout="this.style.color='#C0C0C0'"><strong>Authors</strong></font></font></span></a><br> <a href="../../title.htm"><span style="color: ffffff"> <font color="#C0C0C0" face="Verdana, Helvetica, Arial"><font onmouseover="this.style.color='#F4BB00'" onmouseout="this.style.color='#C0C0C0'"><strong>Titles</strong></font></font></span></a><br> <a href="../../keyword.htm"><span style="color: ffffff"> <font color="#C0C0C0" face="Verdana, Helvetica, Arial"><font onmouseover="this.style.color='#F4BB00'" onmouseout="this.style.color='#C0C0C0'"><strong>Keyword Search</strong></font></font></span></a><br> <a href="../../reference.htm"><span style="color: ffffff"> <font color="#C0C0C0" face="Verdana, Helvetica, Arial"><font onmouseover="this.style.color='#F4BB00'" onmouseout="this.style.color='#C0C0C0'"><strong>Reference</strong></font></font></span></a> <p> <a href="../index.htm"><span style="color: ffffff"> <font color="#C0C0C0" face="Verdana, Helvetica, Arial"><font onmouseover="this.style.color='#F4BB00'" onmouseout="this.style.color='#C0C0C0'"><strong>Plato</strong></font></font></span></a></p> </td> <!--END TOP NAVIGATION BAR--> <!--BEGIN CONTENT AREA--> 
+     <td><font color="#000000" face="Arial, Verdana, Helvetica"><p><font color="#000000" face="Garamond, Times New Roman, Times, Serif" size="5"><big><b>The Dialogues of <a href="../index.htm">Plato</a></b></big></font><br> <font color="#000000" face="Garamond, Times New Roman, Times, Serif" size="4"><b>translated by Benjamin Jowett</b></font></p> <p><font color="#000000" face="Garamond, Times New Roman, Times, Serif" size="4"><b>CONTENTS</b></font></p> 
+       <ol>
+        <font face="Verdana, Arial" size="2"> <li><font face="Verdana, Arial" size="2"><a href="1_charmides.htm">Charmides</a></font></li> <li><font face="Verdana, Arial" size="2"><a href="2_lysis.htm">Lysis</a></font></li> <li><font face="Verdana, Arial" size="2"><a href="3_laches.htm">Laches</a></font></li> <li><font face="Verdana, Arial" size="2"><a href="4_protagoras.htm">Protagoras</a></font></li> <li><font face="Verdana, Arial" size="2"><a href="5_euthydemus.htm">Euthydemus</a></font></li> <li><font face="Verdana, Arial" size="2"><a href="6_cratylus.htm">Cratylus</a></font></li> <li><font face="Verdana, Arial" size="2"><a href="7_phaedrus.htm">Phaedrus</a></font></li><a href="7_phaedrus.htm"> </a><li><a href="7_phaedrus.htm"><font face="Verdana, Arial" size="2"></font></a><font face="Verdana, Arial" size="2"><a href="8_ion.htm">Ion</a></font></li> <li><font face="Verdana, Arial" size="2"><a href="9_symposium.htm">Symposium</a></font></li> <li><font face="Verdana, Arial" size="2"><a href="10_meno.htm">Meno</a></font></li> <li><font face="Verdana, Arial" size="2"><a href="11_euthyphro.htm">Euthyphro</a></font></li> <li><font face="Verdana, Arial" size="2"><a href="12_apology.htm">Apology</a></font></li> <li><font face="Verdana, Arial" size="2"><a href="13_crito.htm">Crito</a></font></li> <li><font face="Verdana, Arial" size="2"><a href="14_phaedo.htm">Phaedo</a></font></li> <li><font face="Verdana, Arial" size="2"><a href="15_gorgias.htm">Gorgias</a></font></li> <li><font face="Verdana, Arial" size="2"><a href="republic/index.htm">The Republic</a></font></li> 
+         <ul>
+          <li><a href="republic/book1.htm">Book 1 - (Of Wealth, Justice, Moderation, and their Opposites)</a></li> 
+          <li><a href="republic/book2.htm">Book 2 - (The Individual, the State, and Education)</a></li> 
+          <li><a href="republic/book3.htm">Book 3 - (The Arts in Education)</a></li> 
+          <li><a href="republic/book4.htm">Book 4 - (Wealth, Poverty, and Virtue)</a></li> 
+          <li><a href="republic/book5.htm">Book 5 - (On Matrimony and Philosophy)</a></li> 
+          <li><a href="republic/book6.htm">Book 6 - (The Philosophy of Government)</a></li> 
+          <li><a href="republic/book7.htm">Book 7 - (On Shadows and Realities in Education)</a></li> 
+          <li><a href="republic/book8.htm">Book 8 - (Four Forms of Government)</a></li> 
+          <li><a href="republic/book9.htm">Book 9 - (On Wrong or Right Government, and the Pleasures of Each)</a></li> 
+          <li><a href="republic/book10.htm">Book 10 - (The Recompense of Life)</a></li> 
+         </ul><br> <li><font face="Verdana, Arial" size="2"><a href="17_timaeus.htm">Timaeus</a></font></li> <li><font face="Verdana, Arial" size="2"><a href="18_critias.htm">Critias</a></font></li> <li><font face="Verdana, Arial" size="2"><a href="19_parmenides.htm">Parmenides</a></font></li> <li><font face="Verdana, Arial" size="2"><a href="20_theaetetus.htm">Theaetetus</a></font></li> <li><font face="Verdana, Arial" size="2"><a href="21_sophist.htm">Sophist</a></font></li> <li><font face="Verdana, Arial" size="2"><a href="22_statesman.htm">Statesman</a></font></li> <li><font face="Verdana, Arial" size="2"><a href="23_philebus.htm">Philebus</a></font></li> <li><font face="Verdana, Arial" size="2"><a href="laws/index.htm">Laws</a></font></li> 
+         <ul>
+          <li><a href="laws/book1.htm">Book 1</a></li> 
+          <li><a href="laws/book2.htm">Book 2</a></li> 
+          <li><a href="laws/book3.htm">Book 3</a></li> 
+          <li><a href="laws/book4.htm">Book 4</a></li> 
+          <li><a href="laws/book5.htm">Book 5</a></li> 
+          <li><a href="laws/book6.htm">Book 6</a></li> 
+          <li><a href="laws/book7.htm">Book 7</a></li> 
+          <li><a href="laws/book8.htm">Book 8</a></li> 
+          <li><a href="laws/book9.htm">Book 9</a></li> 
+          <li><a href="laws/book10.htm">Book 10</a></li> 
+          <li><a href="laws/book11.htm">Book 11</a></li> 
+          <li><a href="laws/book12.htm">Book 12</a></li> 
+         </ul><br> <p><font color="#000000" face="Garamond, Times New Roman, Times, Serif" size="5"><big><b>The Seventh Letter</b></big></font><br> <font color="#000000" face="Garamond, Times New Roman, Times, Serif" size="4"><b>translated by J. Harward</b></font></p> <li><font face="Verdana, Arial" size="2"><a href="25_7thletter.htm">The Seventh Letter</a></font></li> </font>
+       </ol> <p>&nbsp;</p> </font> 
+      <hr> <p align="center"><font color="#000000" face="Verdana, Helvetica, Arial"><small><small>The Classical Library, This HTML edition copyright 2000</small></small></font></p></td> <!-- END CONTENT AREA--> <!-- BEGIN BOTTOM NAVIGATION BAR--> 
+     <td width="10%" bgcolor="#000000" valign="bottom"><strong><br> </strong> <p><a href="../../index.htm"><strong><span style="color: ffffff"></span></strong> <font color="#C0C0C0" face="Verdana, Helvetica, Arial"><font onmouseover="this.style.color='#F4BB00'" onmouseout="this.style.color='#C0C0C0'"><strong>Home</strong> </font> </font></a><br> <a href="../../author.htm"><span style="color: ffffff"> <font color="#C0C0C0" face="Verdana, Helvetica, Arial"><font onmouseover="this.style.color='#F4BB00'" onmouseout="this.style.color='#C0C0C0'"><strong>Authors</strong></font></font></span></a><br> <a href="../../title.htm"><span style="color: ffffff"> <font color="#C0C0C0" face="Verdana, Helvetica, Arial"><font onmouseover="this.style.color='#F4BB00'" onmouseout="this.style.color='#C0C0C0'"><strong>Titles</strong></font></font></span></a><br> <a href="../../keyword.htm"><span style="color: ffffff"> <font color="#C0C0C0" face="Verdana, Helvetica, Arial"><font onmouseover="this.style.color='#F4BB00'" onmouseout="this.style.color='#C0C0C0'"><strong>Keyword Search</strong></font></font></span></a><br> <a href="../../reference.htm"><span style="color: ffffff"> <font color="#C0C0C0" face="Verdana, Helvetica, Arial"><font onmouseover="this.style.color='#F4BB00'" onmouseout="this.style.color='#C0C0C0'"><strong>Reference</strong></font></font></span></a> </p></td> 
+    </tr> 
+    <tr> 
+     <td colspan="3" bgcolor="#000000">&nbsp;</td> 
+    </tr> 
+   </tbody>
+  </table> <!-- END BOTTOM NAVIGATION BAR-->  
+ </body>
+</html>
