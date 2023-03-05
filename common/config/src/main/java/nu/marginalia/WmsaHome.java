@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Stream;
 
 public class WmsaHome {
     public static UserAgent getUserAgent() throws IOException {
@@ -27,24 +28,33 @@ public class WmsaHome {
         var retStr = Optional.ofNullable(System.getenv("WMSA_HOME")).orElseGet(WmsaHome::findDefaultHomePath);
 
         var ret = Path.of(retStr);
+
         if (!Files.isDirectory(ret)) {
-            throw new IllegalStateException("Could not find WMSA_HOME, either set environment variable or ensure " + retStr + " exists");
+            throw new IllegalStateException("Could not find $WMSA_HOME, either set environment variable or ensure " + retStr + " exists");
         }
+
+
+        if (!Files.isDirectory(ret.resolve("model"))) {
+            throw new IllegalStateException("You need to run 'run/setup.sh' to download models to run/ before this will work!");
+        }
+
         return ret;
     }
 
     private static String findDefaultHomePath() {
 
-        for (Path p = Paths.get("").toAbsolutePath();
-             Files.exists(p);
-             p = p.getParent())
-        {
-            if (Files.exists(p.resolve("run/env")) && Files.exists(p.resolve("run/setup.sh"))) {
-                return p.resolve("run").toString();
-            }
-        }
+        // Assume this is a local developer and not a production system, since it would have WMSA_HOME set.
+        // Developers probably have a "run/" somewhere upstream from cwd.
+        //
 
-        return "/var/lib/wmsa";
+        return Stream.iterate(Paths.get("").toAbsolutePath(), Path::getParent)
+                .takeWhile(Files::exists)
+                .filter(p -> Files.exists(p.resolve("run/env")))
+                .filter(p -> Files.exists(p.resolve("run/setup.sh")))
+                .map(p -> p.resolve("run"))
+                .findAny()
+                .orElse(Path.of("/var/lib/wmsa"))
+                .toString();
     }
 
     public static HostsFile getHostsFile() {
