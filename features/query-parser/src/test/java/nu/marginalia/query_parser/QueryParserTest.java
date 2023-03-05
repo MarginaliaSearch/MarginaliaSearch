@@ -1,35 +1,20 @@
 package nu.marginalia.query_parser;
 
-import nu.marginalia.LanguageModels;
-import nu.marginalia.language.statistics.EnglishDictionary;
-import nu.marginalia.language.statistics.NGramBloomFilter;
-import nu.marginalia.language.statistics.TermFrequencyDict;
 import nu.marginalia.query_parser.token.Token;
 import nu.marginalia.query_parser.token.TokenType;
-import nu.marginalia.util.TestLanguageModels;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class QueryParserTest {
     private static QueryParser parser;
-    private static TermFrequencyDict dict;
-    private static EnglishDictionary englishDictionary;
-    private static NGramBloomFilter nGramBloomFilter;
-    private static final LanguageModels lm = TestLanguageModels.getLanguageModels();
 
     @BeforeAll
-    public static void setUp() throws IOException {
-        dict = new TermFrequencyDict(lm);
-        nGramBloomFilter = new NGramBloomFilter(lm);
-        englishDictionary = new EnglishDictionary(dict);
-
+    public static void setUp() {
         parser = new QueryParser();
     }
 
