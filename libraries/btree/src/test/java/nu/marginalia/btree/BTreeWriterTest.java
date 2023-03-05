@@ -1,6 +1,7 @@
 package nu.marginalia.btree;
 
 import nu.marginalia.array.LongArray;
+import nu.marginalia.btree.model.BTreeBlockSize;
 import nu.marginalia.btree.model.BTreeContext;
 import nu.marginalia.btree.model.BTreeHeader;
 import org.junit.jupiter.api.Test;
@@ -23,21 +24,21 @@ class BTreeWriterTest {
 
     @Test
     void testSmallDataBlock() {
-        BTreeContext ctx = new BTreeContext(4,  2,  3);
+        BTreeContext ctx = new BTreeContext(4,  2,  BTreeBlockSize.BS_64);
         BTreeWriter writer = new BTreeWriter(null, ctx);
 
-        var header = writer.makeHeader(1024, ctx.blockSizeWords()/2);
+        var header = writer.makeHeader(1024, ctx.pageSize()/2);
         assertEquals(1024 + BTreeHeader.BTreeHeaderSizeLongs, header.dataOffsetLongs());
         assertEquals(header.dataOffsetLongs(), header.indexOffsetLongs());
     }
 
     @Test
     void testLayerCount() {
-        BTreeContext ctx = new BTreeContext(4,  2,  3);
+        BTreeContext ctx = new BTreeContext(4,  2,  BTreeBlockSize.BS_64);
         BTreeWriter writer = new BTreeWriter(null, ctx);
 
-        int wsq = ctx.blockSizeWords()*ctx.blockSizeWords();
-        int wcub = ctx.blockSizeWords()*ctx.blockSizeWords()*ctx.blockSizeWords();
+        int wsq = ctx.pageSize()*ctx.pageSize();
+        int wcub = ctx.pageSize()*ctx.pageSize()*ctx.pageSize();
 
         assertEquals(2, writer.makeHeader(1024, wsq-1).layers());
         assertEquals(2, writer.makeHeader(1024, wsq).layers());
@@ -50,10 +51,10 @@ class BTreeWriterTest {
 
     @Test
     void testLayerOffset() {
-        BTreeContext ctx = new BTreeContext(4,  2,  3);
+        BTreeContext ctx = new BTreeContext(4,  2,  BTreeBlockSize.BS_64);
         BTreeWriter writer = new BTreeWriter(null, ctx);
 
-        int wcub = ctx.blockSizeWords()*ctx.blockSizeWords()*ctx.blockSizeWords();
+        int wcub = ctx.pageSize()*ctx.pageSize()*ctx.pageSize();
         System.out.println(writer.makeHeader(1025, wcub).relativeIndexLayerOffset(ctx, 0));
         System.out.println(writer.makeHeader(1025, wcub).relativeIndexLayerOffset(ctx, 1));
         System.out.println(writer.makeHeader(1025, wcub).relativeIndexLayerOffset(ctx, 2));
@@ -65,7 +66,7 @@ class BTreeWriterTest {
             printTreeLayout(i, header, ctx);
 
             if (header.layers() >= 1) {
-                assertEquals(1, ctx.indexLayerSize(i, header.layers() - 1) / ctx.blockSizeWords());
+                assertEquals(1, ctx.indexLayerSize(i, header.layers() - 1) / ctx.pageSize());
             }
         }
     }
@@ -73,14 +74,14 @@ class BTreeWriterTest {
     private void printTreeLayout(int numEntries, BTreeHeader header, BTreeContext ctx) {
         StringJoiner sj = new StringJoiner(",");
         for (int l = 0; l < header.layers(); l++) {
-            sj.add(""+ctx.indexLayerSize(numEntries, l)/ctx.blockSizeWords());
+            sj.add(""+ctx.indexLayerSize(numEntries, l)/ctx.pageSize());
         }
         System.out.println(numEntries + ":" + sj);
     }
 
     @Test
     public void testWriteEntrySize2() throws IOException {
-        BTreeContext ctx = new BTreeContext(4,  2,  3);
+        BTreeContext ctx = new BTreeContext(4,  2,  BTreeBlockSize.BS_64);
 
         var tempFile = Files.createTempFile(Path.of("/tmp"), "tst", "dat");
 
@@ -107,7 +108,7 @@ class BTreeWriterTest {
 
     @Test
     public void testWriteEntrySize2Small() throws IOException {
-        BTreeContext ctx = new BTreeContext(4,  2,  3);
+        BTreeContext ctx = new BTreeContext(4,  2,  BTreeBlockSize.BS_64);
 
         int[] data = generateItems32(5);
         Set<Integer> items = IntStream.of(data).boxed().collect(Collectors.toSet());
@@ -135,7 +136,7 @@ class BTreeWriterTest {
     @Test
     public void testWriteEqualityNotMasked() throws IOException {
         for (int bs = 2; bs <= 4; bs++) {
-            var ctx = new BTreeContext(5, 1, bs);
+            var ctx = new BTreeContext(5, 1, BTreeBlockSize.fromBitCount(bs));
             long[] data = generateItems64(500);
             Set<Long> items = LongStream.of(data).boxed().collect(Collectors.toSet());
 

@@ -41,7 +41,7 @@ public class BTreeWriter {
         writeHeader(header, map, offset);
 
         final long startRange = header.dataOffsetLongs();
-        final long endRange = startRange + (long) numEntries * ctx.entrySize();
+        final long endRange = startRange + (long) numEntries * ctx.entrySize;
 
         var slice = map.range(startRange, endRange);
 
@@ -97,7 +97,7 @@ public class BTreeWriter {
              * a sorted list, there needs to be padding between the header and the index
              * in order to get aligned blocks
              */
-            padding = (int) (ctx.blockSizeWords() - ((offset + BTreeHeader.BTreeHeaderSizeLongs) % ctx.blockSizeWords()));
+            padding = (int) (ctx.pageSize() - ((offset + BTreeHeader.BTreeHeaderSizeLongs) % ctx.pageSize()));
         }
         return padding;
     }
@@ -110,7 +110,7 @@ public class BTreeWriter {
     private void writeIndex(BTreeHeader header) {
         var layerOffsets = header.getRelativeLayerOffsets(ctx);
 
-        long indexedDataStepSize = ctx.blockSizeWords();
+        long indexedDataStepSize = ctx.pageSize();
 
         /*  Index layer 0 indexes the data itself
             Index layer 1 indexes layer 0
@@ -118,7 +118,7 @@ public class BTreeWriter {
             And so on
          */
         for (int layer = 0; layer < header.layers(); layer++,
-                indexedDataStepSize*=ctx.blockSizeWords()) {
+                indexedDataStepSize*=ctx.pageSize()) {
 
             writeIndexLayer(header, layerOffsets, indexedDataStepSize, layer);
         }
@@ -134,7 +134,7 @@ public class BTreeWriter {
         final long dataOffsetBase = header.dataOffsetLongs();
 
         final long dataEntriesMax = header.numEntries();
-        final int entrySize = ctx.entrySize();
+        final int entrySize = ctx.entrySize;
 
         final long lastDataEntryOffset = indexedDataStepSize - 1;
 
@@ -153,8 +153,8 @@ public class BTreeWriter {
 
             final long trailerStart = indexOffsetBase + indexWord;
             final long trailerEnd = trailerStart
-                    + ctx.blockSizeWords()
-                    - (int) (indexWord % ctx.blockSizeWords());
+                    + ctx.pageSize()
+                    - (int) (indexWord % ctx.pageSize());
 
             if (trailerStart < trailerEnd) {
                 map.fill(trailerStart, trailerEnd, Long.MAX_VALUE);

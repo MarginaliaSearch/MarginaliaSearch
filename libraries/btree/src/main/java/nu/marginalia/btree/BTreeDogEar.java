@@ -22,8 +22,8 @@ class BTreeDogEar {
 
         if (header.numEntries() > 3) {
             var sentinelSlice = base.range(
-                    (long) header.numEntries() * ctx.entrySize() - 3,
-                    (long) header.numEntries() * ctx.entrySize());
+                    (long) header.numEntries() * ctx.entrySize - 3,
+                    (long) header.numEntries() * ctx.entrySize);
             sentinelSlice.set(0, 4L);
             sentinelSlice.set(1, 5L);
             sentinelSlice.set(2, 1L);

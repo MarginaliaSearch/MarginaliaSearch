@@ -14,7 +14,7 @@ read with a [BTreeReader](src/main/java/nu/marginalia/btree/BTreeReader.java).
 BTreeContext ctx = new BTreeContext(
         4,  // num layers max
         1,  // entry size
-        8); // block size bits, in practice this should be 8
+        BTreeBlockSize.BS_4096); // page size
 
 // Allocate a memory area to work in, see the array library for how to do this with files
 LongArray array = LongArray.allocate(8192);

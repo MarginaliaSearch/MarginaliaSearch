@@ -23,7 +23,7 @@ public class BTreeReader {
         this.ctx = ctx;
         this.header = readHeader(file, offset);
 
-        dataBlockEnd = (long) ctx.entrySize() * header.numEntries();
+        dataBlockEnd = (long) ctx.entrySize * header.numEntries();
         index = file.range(header.indexOffsetLongs(), header.dataOffsetLongs());
         data = file.range(header.dataOffsetLongs(), header.dataOffsetLongs() + dataBlockEnd);
 
@@ -153,7 +153,7 @@ public class BTreeReader {
         long searchStart = 0;
         for (int i = 0; i < keys.length; i++) {
             long key = keys[i];
-            searchStart = data.binarySearchN(ctx.entrySize(), key, searchStart, data.size);
+            searchStart = data.binarySearchN(ctx.entrySize, key, searchStart, data.size);
             if (searchStart < 0) {
                 searchStart = LongArraySearch.decodeSearchMiss(searchStart);
             }
@@ -218,11 +218,11 @@ public class BTreeReader {
 
             final long searchStart = layerOffsets[layer] + offset;
 
-            final long nextLayerOffset = (int) index.binarySearchUpperBound(key, searchStart, searchStart + ctx.blockSizeWords()) - searchStart;
+            final long nextLayerOffset = (int) index.binarySearchUpperBound(key, searchStart, searchStart + ctx.pageSize()) - searchStart;
 
             layer --;
             boundary = index.get(searchStart + nextLayerOffset);
-            offset = ctx.blockSizeWords() * (offset + nextLayerOffset);
+            offset = ctx.pageSize() * (offset + nextLayerOffset);
 
             return true;
         }
@@ -249,17 +249,17 @@ public class BTreeReader {
                 throw new IllegalStateException("Looking for data in an index layer");
             }
 
-            long searchStart = offset * ctx.entrySize();
-            long remainingTotal = dataBlockEnd - offset * ctx.entrySize();
+            long searchStart = offset * ctx.entrySize;
+            long remainingTotal = dataBlockEnd - offset * ctx.entrySize;
             long remainingBlock;
 
             remainingBlock = (layerOffsets.length == 0)
                     ? remainingTotal
-                    : (long) ctx.blockSizeWords() * ctx.entrySize();
+                    : (long) ctx.pageSize() * ctx.entrySize;
 
             long searchEnd = searchStart + (int) min(remainingTotal, remainingBlock);
 
-            return data.binarySearchN(ctx.entrySize(), key, searchStart, searchEnd);
+            return data.binarySearchN(ctx.entrySize, key, searchStart, searchEnd);
         }
 
         public void retainData(LongQueryBuffer buffer) {
@@ -269,15 +269,15 @@ public class BTreeReader {
                 buffer.retainAndAdvance();
 
                 if (buffer.hasMore() && buffer.currentValue() <= boundary) {
-                    long blockBase = offset * ctx.entrySize();
+                    long blockBase = offset * ctx.entrySize;
                     long relOffset = dataOffset - blockBase;
 
                     long remainingTotal = dataBlockEnd - dataOffset;
-                    long remainingBlock = ctx.blockSizeWords() - relOffset;
+                    long remainingBlock = ctx.pageSize() - relOffset;
 
                     long searchEnd = dataOffset + (int) min(remainingTotal, remainingBlock);
 
-                    data.range(dataOffset, searchEnd).retainN(buffer, ctx.entrySize(), boundary);
+                    data.range(dataOffset, searchEnd).retainN(buffer, ctx.entrySize, boundary);
                 }
             }
             else {
@@ -293,15 +293,15 @@ public class BTreeReader {
                 buffer.rejectAndAdvance();
 
                 if (buffer.hasMore() && buffer.currentValue() <= boundary) {
-                    long blockBase = offset * ctx.entrySize();
+                    long blockBase = offset * ctx.entrySize;
                     long relOffset = dataOffset - blockBase;
 
                     long remainingTotal = dataBlockEnd - dataOffset;
-                    long remainingBlock = ctx.blockSizeWords() - relOffset;
+                    long remainingBlock = ctx.pageSize() - relOffset;
 
                     long searchEnd = dataOffset + (int) min(remainingTotal, remainingBlock);
 
-                    data.range(dataOffset, searchEnd).rejectN(buffer, ctx.entrySize(), boundary);
+                    data.range(dataOffset, searchEnd).rejectN(buffer, ctx.entrySize, boundary);
                 }
             }
             else {
