@@ -12,5 +12,5 @@ The index service knows which document contains which keywords.
 ## See Also
 
 The index service relies heavily on the primitives in [index](../../index), 
-such as [index-forward](../../index/index-forward/) 
-and [index-reverse](../../index/index-reverse/).
+such as [index/index-forward](../../index/index-forward/), [index/index-reverse](../../index/index-reverse/),
+and [index/index-query](../../index/index-query).

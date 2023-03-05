@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static nu.marginalia.index.forward.ForwardIndexParameters.*;
+
 public class ForwardIndexReader {
     private final TLongIntHashMap ids;
     private final LongArray data;
@@ -58,33 +60,36 @@ public class ForwardIndexReader {
         return data;
     }
 
-    private int idxForDoc(long docId) {
-        return ids.get(docId);
-    }
-
     public long getDocMeta(long docId) {
         long offset = idxForDoc(docId);
         if (offset < 0) return 0;
 
-        return data.get(ForwardIndexParameters.ENTRY_SIZE * offset + ForwardIndexParameters.METADATA_OFFSET);
+        return data.get(ENTRY_SIZE * offset + METADATA_OFFSET);
     }
 
     public int getDomainId(long docId) {
         long offset = idxForDoc(docId);
         if (offset < 0) return 0;
 
-        return Math.max(0, (int) data.get(ForwardIndexParameters.ENTRY_SIZE * offset + ForwardIndexParameters.DOMAIN_OFFSET));
+        return Math.max(0, (int) data.get(ENTRY_SIZE * offset + DOMAIN_OFFSET));
     }
 
     public DocPost docPost(long docId) {
-        return new DocPost(idxForDoc(docId));
+        long offset = idxForDoc(docId);
+        if (offset < 0) throw new IllegalStateException("Forward index is not loaded");
+
+        return new DocPost(offset);
+    }
+
+    private int idxForDoc(long docId) {
+        return ids.get(docId);
     }
 
 
     public class DocPost {
         private final long idx;
 
-        public DocPost(int idx) {
+        public DocPost(long idx) {
             this.idx = idx;
         }
 
@@ -93,14 +98,14 @@ public class ForwardIndexReader {
             if (idx < 0)
                 return 0;
 
-            return data.get(ForwardIndexParameters.ENTRY_SIZE * idx + ForwardIndexParameters.METADATA_OFFSET);
+            return data.get(ENTRY_SIZE * idx + METADATA_OFFSET);
         }
 
         public int domainId() {
             if (idx < 0)
                 return 0;
 
-            return Math.max(0, (int) data.get(ForwardIndexParameters.ENTRY_SIZE * idx + ForwardIndexParameters.DOMAIN_OFFSET));
+            return Math.max(0, (int) data.get(ENTRY_SIZE * idx + DOMAIN_OFFSET));
         }
     }
 }
