@@ -3,13 +3,15 @@ package nu.marginalia.util;
 // This is not a fast way of finding primes
 public class PrimeUtil {
 
-    public static long nextPrime(long start, long step) {
-        if (isDivisible(start, 2)) {
-            start = start + step;
+    /** Returns the next prime value starting at start. If start is prime, return start.
+     */
+    public static long nextPrime(long start, long direction) {
+        if (isCoprime(start, 2)) {
+            start = start + direction;
         }
 
         long val;
-        for (val = start; !isPrime(val); val += 2*step) {}
+        for (val = start; !isPrime(val); val += 2*direction) {}
         return val;
     }
 
@@ -28,7 +30,7 @@ public class PrimeUtil {
         return true;
     }
 
-    public static boolean isDivisible(long a, long b) {
+    public static boolean isCoprime(long a, long b) {
         if (a == 0 || b == 0) {
             return false;
         }

@@ -63,7 +63,7 @@ class BTreeWriterTest {
             var header = writer.makeHeader(0, i);
 
 
-            printTreeLayout(i, header, ctx);
+//            printTreeLayout(i, header, ctx);
 
             if (header.layers() >= 1) {
                 assertEquals(1, ctx.indexLayerSize(i, header.layers() - 1) / ctx.pageSize());
@@ -145,7 +145,7 @@ class BTreeWriterTest {
 
             var reader = new BTreeReader(array, ctx, 0);
 
-            printTreeLayout(data.length, reader.getHeader(), ctx);
+//            printTreeLayout(data.length, reader.getHeader(), ctx);
 
             for (int i = 0; i < data.length; i++) {
                 long offset = reader.findEntry(data[i]);

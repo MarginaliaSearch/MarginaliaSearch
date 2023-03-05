@@ -43,48 +43,35 @@ public class BTreeReader {
 
     /** Keeps all items in buffer that exist in the btree */
     public void retainEntries(LongQueryBuffer buffer) {
+        BTreePointer pointer = new BTreePointer(header);
         if (header.layers() == 0) {
-            BTreePointer pointer = new BTreePointer(header);
             while (buffer.hasMore()) {
                 pointer.retainData(buffer);
             }
         }
-        retainSingle(buffer);
-    }
-
-    /** Removes all items in buffer that exist in the btree */
-    public void rejectEntries(LongQueryBuffer buffer) {
-        if (header.layers() == 0) {
-            BTreePointer pointer = new BTreePointer(header);
-            while (buffer.hasMore()) {
-                pointer.rejectData(buffer);
-            }
-        }
-        rejectSingle(buffer);
-    }
-
-    private void retainSingle(LongQueryBuffer buffer) {
-
-        BTreePointer pointer = new BTreePointer(header);
-
-        for (; buffer.hasMore(); pointer.resetToRoot()) {
-
+        else while (buffer.hasMore()) {
             long val = buffer.currentValue();
 
             if (!pointer.walkToData(val)) {
                 buffer.rejectAndAdvance();
-                continue;
+            }
+            else {
+                pointer.retainData(buffer);
             }
 
-            pointer.retainData(buffer);
+            pointer.resetToRoot();
         }
     }
 
-    private void rejectSingle(LongQueryBuffer buffer) {
+    /** Removes all items in buffer that exist in the btree */
+    public void rejectEntries(LongQueryBuffer buffer) {
         BTreePointer pointer = new BTreePointer(header);
-
-        for (; buffer.hasMore(); pointer.resetToRoot()) {
-
+        if (header.layers() == 0) {
+            while (buffer.hasMore()) {
+                pointer.rejectData(buffer);
+            }
+        }
+        else while (buffer.hasMore()) {
             long val = buffer.currentValue();
 
             if (pointer.walkToData(val) && pointer.containsData(val)) {
@@ -93,6 +80,8 @@ public class BTreeReader {
             else {
                 buffer.retainAndAdvance();
             }
+
+            pointer.resetToRoot();
         }
     }
 
@@ -132,10 +121,10 @@ public class BTreeReader {
         }
 
         if (header.layers() == 0) {
-            return queryJustIndex(keys, offset);
+            return queryDataNoIndex(keys, offset);
         }
         else {
-            return queryBtree(keys, offset);
+            return queryDataWithIndex(keys, offset);
         }
     }
 
@@ -147,7 +136,8 @@ public class BTreeReader {
         return true;
     }
 
-    private long[] queryJustIndex(long[] keys, int offset) {
+    // This b-tree doesn't have any index and is actually just a sorted list of items
+    private long[] queryDataNoIndex(long[] keys, int offset) {
         long[] ret = new long[keys.length];
 
         long searchStart = 0;
@@ -164,7 +154,7 @@ public class BTreeReader {
         return ret;
     }
 
-    private long[] queryBtree(long[] keys, int offset) {
+    private long[] queryDataWithIndex(long[] keys, int offset) {
         BTreePointer pointer = new BTreePointer(header);
         long[] ret = new long[keys.length];
 
