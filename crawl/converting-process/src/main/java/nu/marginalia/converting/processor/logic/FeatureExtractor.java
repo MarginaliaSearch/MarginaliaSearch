@@ -44,7 +44,12 @@ public class FeatureExtractor {
     private final GoogleAnwersSpamDetector googleAnwersSpamDetector;
 
     @Inject
-    public FeatureExtractor(AdblockSimulator adblockSimulator, RecipeDetector recipeDetector, TextileCraftDetector textileCraftDetector, WoodworkingDetector woodworkingDetector, GoogleAnwersSpamDetector googleAnwersSpamDetector) {
+    public FeatureExtractor(AdblockSimulator adblockSimulator,
+                            RecipeDetector recipeDetector,
+                            TextileCraftDetector textileCraftDetector,
+                            WoodworkingDetector woodworkingDetector,
+                            GoogleAnwersSpamDetector googleAnwersSpamDetector)
+    {
         this.adblockSimulator = adblockSimulator;
         this.recipeDetector = recipeDetector;
         this.textileCraftDetector = textileCraftDetector;

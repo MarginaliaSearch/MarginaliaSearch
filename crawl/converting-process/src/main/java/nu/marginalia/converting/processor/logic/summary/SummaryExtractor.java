@@ -1,4 +1,4 @@
-package nu.marginalia.converting.processor.logic;
+package nu.marginalia.converting.processor.logic.summary;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;

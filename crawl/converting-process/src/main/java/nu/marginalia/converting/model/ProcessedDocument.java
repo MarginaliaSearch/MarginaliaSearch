@@ -17,8 +17,6 @@ public class ProcessedDocument {
     public EdgeUrlState state;
     public String stateReason;
 
-    public long lshHash;
-
     public boolean isOk() {
         return EdgeUrlState.OK == state;
     }

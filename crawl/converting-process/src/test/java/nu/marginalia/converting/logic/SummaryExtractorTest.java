@@ -1,8 +1,8 @@
 package nu.marginalia.converting.logic;
 
 import nu.marginalia.WmsaHome;
-import nu.marginalia.converting.processor.logic.SummaryExtractionFilter;
-import nu.marginalia.converting.processor.logic.SummaryExtractor;
+import nu.marginalia.converting.processor.logic.summary.SummaryExtractionFilter;
+import nu.marginalia.converting.processor.logic.summary.SummaryExtractor;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;

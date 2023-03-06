@@ -2,6 +2,8 @@ package nu.marginalia.converting.processor.plugin;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import nu.marginalia.converting.processor.logic.links.LinkProcessor;
+import nu.marginalia.converting.processor.logic.summary.SummaryExtractor;
 import nu.marginalia.crawling.common.link.LinkParser;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;

@@ -1,4 +1,4 @@
-package nu.marginalia.converting.processor.logic;
+package nu.marginalia.converting.processor.logic.links;
 
 import nu.marginalia.converting.model.ProcessedDocumentDetails;
 import nu.marginalia.crawling.common.blocklist.UrlBlocklist;

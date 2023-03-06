@@ -11,7 +11,7 @@ import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.util.StringPool;
-import nu.marginalia.converting.processor.logic.InternalLinkGraph;
+import nu.marginalia.converting.processor.logic.links.InternalLinkGraph;
 import nu.marginalia.converting.processor.logic.LshDocumentDeduplicator;
 
 import java.util.*;

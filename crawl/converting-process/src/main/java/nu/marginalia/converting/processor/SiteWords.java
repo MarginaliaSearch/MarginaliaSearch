@@ -5,8 +5,8 @@ import nu.marginalia.model.crawl.EdgePageWordFlags;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.converting.processor.logic.CommonKeywordExtractor;
-import nu.marginalia.converting.processor.logic.InternalLinkGraph;
+import nu.marginalia.converting.processor.logic.links.CommonKeywordExtractor;
+import nu.marginalia.converting.processor.logic.links.InternalLinkGraph;
 
 import javax.inject.Singleton;
 import java.util.HashMap;

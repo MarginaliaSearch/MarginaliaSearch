@@ -1,4 +1,4 @@
-package nu.marginalia.converting.processor.logic;
+package nu.marginalia.converting.processor.logic.links;
 
 import ca.rmen.porterstemmer.PorterStemmer;
 import nu.marginalia.model.crawl.EdgePageWordFlags;

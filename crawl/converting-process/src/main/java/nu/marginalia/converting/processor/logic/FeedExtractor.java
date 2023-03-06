@@ -19,9 +19,6 @@ public class FeedExtractor {
 
     public Optional<EdgeUrl> getFeedFromAlternateTag(EdgeUrl crawlUrl, Element alternateTag) {
         var type = alternateTag.attr("type");
-        if (type == null) {
-            return Optional.empty();
-        }
 
         try {
             var url = linkParser.parseLink(crawlUrl, alternateTag.attr("href"));

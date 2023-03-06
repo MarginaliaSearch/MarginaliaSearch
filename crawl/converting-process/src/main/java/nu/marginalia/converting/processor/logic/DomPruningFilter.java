@@ -8,6 +8,11 @@ import org.jsoup.select.NodeFilter;
 import java.util.HashMap;
 import java.util.Map;
 
+/** Prune the DOM and remove noisy branches with a lot of tags and not a lot of text.
+ * This removes a lot of noise and keeps segments that are more or less just plain text.
+ * <p>
+ * Used with JSoup's Document.filter() method
+ */
 public class DomPruningFilter implements NodeFilter {
 
     private final double pruneThreshold;
