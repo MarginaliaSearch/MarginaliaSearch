@@ -96,10 +96,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         final EdgeUrl url = new EdgeUrl(crawledDocument.url);
 
-        Document prunedDoc = doc.clone();
-
-        prunedDoc.getElementsByTag("svg").remove();
-        prunedDoc.body().filter(new DomPruningFilter(0.5));
+        Document prunedDoc = prune(doc);
 
         var dld = sentenceExtractor.extractSentences(prunedDoc);
 
@@ -144,6 +141,15 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         }
 
         return new DetailsWithWords(ret, words);
+    }
+
+    private Document prune(Document doc) {
+        final var prunedDoc = doc.clone();
+
+        prunedDoc.getElementsByTag("svg").remove();
+        prunedDoc.body().filter(new DomPruningFilter(0.5));
+
+        return prunedDoc;
     }
 
 
