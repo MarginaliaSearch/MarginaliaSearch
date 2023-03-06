@@ -20,6 +20,9 @@ public enum EdgePageWordFlags {
      * @see NameCounter */
     NamesWords,
 
+    /** The word isn't actually a word on page, but a fake keyword from the code
+     * to aid discovery
+     */
     Synthetic,
 
     /** Word is important to site

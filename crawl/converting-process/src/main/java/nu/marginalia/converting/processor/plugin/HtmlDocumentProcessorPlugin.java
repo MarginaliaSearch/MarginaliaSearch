@@ -33,6 +33,8 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
+import static nu.marginalia.converting.model.DisqualifiedException.*;
+
 
 public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin {
 
@@ -83,13 +85,13 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         String documentBody = crawledDocument.documentBody.decode();
 
         if (languageFilter.isBlockedUnicodeRange(documentBody)) {
-            throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.LANGUAGE);
+            throw new DisqualifiedException(DisqualificationReason.LANGUAGE);
         }
 
         Document doc = Jsoup.parse(documentBody);
 
         if (doc.select("meta[name=robots]").attr("content").contains("noindex")) {
-            throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.FORBIDDEN);
+            throw new DisqualifiedException(DisqualificationReason.FORBIDDEN);
         }
 
         final EdgeUrl url = new EdgeUrl(crawledDocument.url);
@@ -113,7 +115,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         // don't move this up! it uses title and quality
         // and is run before the heavy computations below
         if (isDisqualified(url, dld, ret)) {
-            throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.QUALITY);
+            throw new DisqualifiedException(DisqualificationReason.QUALITY);
         }
 
         KeywordMetadata keywordMetadata = new KeywordMetadata();
@@ -206,10 +208,13 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
                     .ifPresent(lp::acceptFeed);
         }
 
-        createLinkKeywords(words, lp);
         createFileLinkKeywords(words, lp, domain);
+        createLinkKeywords(words, lp);
     }
 
+    // If a document links to a file on the same server, and that file has
+    // a salient file ending, then add the filename as a keyword so that it can
+    // be found
     private void createFileLinkKeywords(DocumentKeywordsBuilder words, LinkProcessor lp, EdgeDomain domain) {
         Set<String> fileKeywords = new HashSet<>(100);
         for (var link : lp.getNonIndexableUrls()) {
