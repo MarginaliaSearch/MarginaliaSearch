@@ -11,10 +11,6 @@ requiring datacenters and expensive enterprise hardware, to run this operation o
 
 Follow instructions in [run](run/).
 
-## Documentation
-
-Documentation is a work in progress.
-
 ## Contributing
 
 [CONTRIBUTING.md](CONTRIBUTING.md)

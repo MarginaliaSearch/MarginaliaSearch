@@ -4,12 +4,14 @@ When developing locally, this directory will contain run-time data required for
 the search engine. In a clean check-out, it only contains the tools required to 
 bootstrap this directory structure.
 
-## Set up
-
+## Requirements
 While the system is designed to run bare metal in production,
 for local development, you're strongly encouraged to use docker
-or podman. 
+or podman. These are a bit of a pain to install, but if you follow
+[this guide](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository) 
+you're on the right track.
 
+## Set up
 To go from a clean check out of the git repo to a running search engine,
 follow these steps. You're assumed to sit in the project root the whole time.
 
@@ -44,7 +46,7 @@ because it's educational to see the logs. Add `-d` to run in the background.
 $ docker-compose up
 ```
 
-5.  Since we've just processed new crawl data, the system needs to construct static
+5. Since we've just processed new crawl data, the system needs to construct static
 indexes. Wait for the line 'Auto-conversion finished!'  
 
 When all is done, it should be possible to visit
