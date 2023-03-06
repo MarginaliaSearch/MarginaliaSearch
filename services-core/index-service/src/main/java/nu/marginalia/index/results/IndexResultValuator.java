@@ -7,7 +7,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import nu.marginalia.index.svc.SearchTermsService;
 import nu.marginalia.model.crawl.EdgePageWordFlags;
-import nu.marginalia.model.idx.EdgePageWordMetadata;
+import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.client.model.results.EdgeSearchResultItem;
 import nu.marginalia.index.client.model.results.EdgeSearchResultKeywordScore;
@@ -175,17 +175,17 @@ public class IndexResultValuator {
                 return 1000;
             }
 
-            positions = EdgePageWordMetadata.decodePositions(meta);
+            positions = WordMetadata.decodePositions(meta);
 
             maskDirectRaw &= positions;
 
-            if (positions != 0 && !EdgePageWordMetadata.hasAnyFlags(meta, flagBitMask)) {
+            if (positions != 0 && !WordMetadata.hasAnyFlags(meta, flagBitMask)) {
                 maskAdjacent &= (positions | (positions << 1) | (positions >>> 1));
                 maskDirectGenerous &= positions;
             }
 
             termCount++;
-            tfIdfSum += EdgePageWordMetadata.decodeTfidf(meta);
+            tfIdfSum += WordMetadata.decodeTfidf(meta);
         }
 
         double avgTfIdf = termCount / tfIdfSum;

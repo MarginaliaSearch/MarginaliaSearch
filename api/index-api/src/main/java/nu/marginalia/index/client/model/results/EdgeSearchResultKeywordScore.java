@@ -1,9 +1,9 @@
 package nu.marginalia.index.client.model.results;
 
 import nu.marginalia.model.crawl.EdgePageWordFlags;
-import nu.marginalia.model.idx.EdgePageWordMetadata;
+import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.model.crawl.EdgePageDocumentFlags;
-import nu.marginalia.model.idx.EdgePageDocumentsMetadata;
+import nu.marginalia.model.idx.DocumentMetadata;
 
 import static java.lang.Integer.lowestOneBit;
 import static java.lang.Integer.numberOfTrailingZeros;
@@ -16,15 +16,15 @@ public record EdgeSearchResultKeywordScore(int set,
     public double documentValue() {
         long sum = 0;
 
-        sum += EdgePageDocumentsMetadata.decodeQuality(encodedDocMetadata) / 5.;
+        sum += DocumentMetadata.decodeQuality(encodedDocMetadata) / 5.;
 
-        sum += EdgePageDocumentsMetadata.decodeTopology(encodedDocMetadata);
+        sum += DocumentMetadata.decodeTopology(encodedDocMetadata);
 
-        if (EdgePageDocumentsMetadata.hasFlags(encodedDocMetadata, EdgePageDocumentFlags.Simple.asBit())) {
+        if (DocumentMetadata.hasFlags(encodedDocMetadata, EdgePageDocumentFlags.Simple.asBit())) {
             sum +=  20;
         }
 
-        int rank = EdgePageDocumentsMetadata.decodeRank(encodedDocMetadata) - 13;
+        int rank = DocumentMetadata.decodeRank(encodedDocMetadata) - 13;
         if (rank < 0)
             sum += rank / 2;
         else
@@ -34,7 +34,7 @@ public record EdgeSearchResultKeywordScore(int set,
     }
 
     private boolean hasTermFlag(EdgePageWordFlags flag) {
-        return EdgePageWordMetadata.hasFlags(encodedWordMetadata, flag.asBit());
+        return WordMetadata.hasFlags(encodedWordMetadata, flag.asBit());
     }
 
     public double termValue() {
@@ -58,7 +58,7 @@ public record EdgeSearchResultKeywordScore(int set,
             sum -= 1;
         }
 
-        sum -= EdgePageWordMetadata.decodeTfidf(encodedWordMetadata) / 50.;
+        sum -= WordMetadata.decodeTfidf(encodedWordMetadata) / 50.;
         sum += firstPos() / 5.;
         sum -= Integer.bitCount(positions()) / 3.;
 
@@ -66,9 +66,9 @@ public record EdgeSearchResultKeywordScore(int set,
     }
 
     public int firstPos() {
-        return numberOfTrailingZeros(lowestOneBit(EdgePageWordMetadata.decodePositions(encodedWordMetadata)));
+        return numberOfTrailingZeros(lowestOneBit(WordMetadata.decodePositions(encodedWordMetadata)));
     }
-    public int positions() { return EdgePageWordMetadata.decodePositions(encodedWordMetadata); }
+    public int positions() { return WordMetadata.decodePositions(encodedWordMetadata); }
     public boolean isSpecial() { return keyword.contains(":") || hasTermFlag(EdgePageWordFlags.Synthetic); }
     public boolean isRegular() {
         return !keyword.contains(":")

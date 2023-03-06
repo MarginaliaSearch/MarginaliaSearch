@@ -24,7 +24,7 @@ dependencies {
     implementation project(':common:service')
     implementation project(':common:service-discovery')
     implementation project(':common:service-client')
-    implementation project(':features:renderer')
+    implementation project(':common:renderer')
     implementation project(':features:screenshots')
     implementation project(':libraries:language-processing')
     implementation project(':features:random-websites')

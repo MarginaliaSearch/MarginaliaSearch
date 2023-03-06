@@ -2,7 +2,6 @@ package nu.marginalia.index.reverse;
 
 import lombok.SneakyThrows;
 import nu.marginalia.array.buffer.LongQueryBuffer;
-import nu.marginalia.dict.OffHeapDictionaryHashMap;
 import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
 import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile;

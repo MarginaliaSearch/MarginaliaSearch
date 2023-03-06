@@ -1,0 +1,24 @@
+plugins {
+    id 'java'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
+dependencies {
+
+    implementation libs.lombok
+    annotationProcessor libs.lombok
+    implementation libs.bundles.slf4j
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+}
+
+test {
+    useJUnitPlatform()
+}

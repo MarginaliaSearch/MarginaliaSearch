@@ -1,4 +1,4 @@
-package nu.marginalia.screenshot.tool;
+package nu.marginalia.screenshot;
 
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.model.EdgeDomain;
@@ -29,8 +29,8 @@ public class ScreenshotCaptureToolMain {
         DatabaseModule databaseModule = new DatabaseModule();
         var ds = databaseModule.provideConnection();
 
-        ChromeDriver driver = initChromeDriver(args);
-        List<EdgeDomain> crawlQueue = getDomains(args, ds);
+        ChromeDriver driver = initChromeDriver();
+        List<EdgeDomain> crawlQueue = fetchCrawlQueue(ds, 100);
 
         try (Connection conn = ds.getConnection()) {
             for (var domain : crawlQueue) {
@@ -49,21 +49,10 @@ public class ScreenshotCaptureToolMain {
     }
 
     @NotNull
-    private static List<EdgeDomain> getDomains(String[] args, HikariDataSource ds) {
-        List<EdgeDomain> crawlQueue;
-        if (args.length <= 1) {
-            crawlQueue = fetchCrawlQueue(ds, 100);
-        }
-        else {
-            crawlQueue = Arrays.stream(args).skip(1).map(EdgeDomain::new).toList();
-        }
-        return crawlQueue;
-    }
-
-    @NotNull
-    private static ChromeDriver initChromeDriver(String[] args) {
-        System.setProperty("webdriver.chrome.driver", args[0]);
+    private static ChromeDriver initChromeDriver() {
+        System.setProperty("webdriver.chrome.driver", "/chromedriver");
         ChromeOptions options = new ChromeOptions();
+        options.setBinary("/usr/bin/chromium-browser");
 
         options.setPageLoadStrategy(PageLoadStrategy.NORMAL);
         options.setPageLoadTimeout(Duration.ofSeconds(30));

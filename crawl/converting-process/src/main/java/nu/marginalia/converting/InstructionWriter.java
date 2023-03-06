@@ -3,10 +3,10 @@ package nu.marginalia.converting;
 import com.github.luben.zstd.ZstdOutputStream;
 import com.google.gson.Gson;
 import nu.marginalia.model.crawl.EdgeDomainIndexingState;
-import nu.marginalia.model.idx.EdgePageDocumentsMetadata;
+import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.converting.instruction.Instruction;
 import nu.marginalia.converting.instruction.Interpreter;
-import nu.marginalia.model.crawl.DocumentKeywords;
+import nu.marginalia.converting.model.DocumentKeywords;
 import nu.marginalia.converting.instruction.instructions.DomainLink;
 import nu.marginalia.converting.instruction.instructions.LoadProcessedDocument;
 import nu.marginalia.converting.instruction.instructions.LoadProcessedDocumentWithError;
@@ -121,7 +121,7 @@ public class InstructionWriter {
         }
 
         @Override
-        public void loadKeywords(EdgeUrl url, EdgePageDocumentsMetadata metadata, DocumentKeywords words) {
+        public void loadKeywords(EdgeUrl url, DocumentMetadata metadata, DocumentKeywords words) {
         }
 
         @Override

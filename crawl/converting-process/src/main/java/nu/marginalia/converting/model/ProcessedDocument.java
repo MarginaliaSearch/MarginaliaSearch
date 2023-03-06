@@ -2,7 +2,6 @@ package nu.marginalia.converting.model;
 
 import lombok.ToString;
 import nu.marginalia.model.crawl.EdgePageDocumentFlags;
-import nu.marginalia.model.crawl.EdgePageWords;
 import nu.marginalia.model.crawl.EdgeUrlState;
 import nu.marginalia.model.EdgeUrl;
 
@@ -13,7 +12,7 @@ public class ProcessedDocument {
     public EdgeUrl url;
 
     public ProcessedDocumentDetails details;
-    public EdgePageWords words;
+    public DocumentKeywordsBuilder words;
 
     public EdgeUrlState state;
     public String stateReason;

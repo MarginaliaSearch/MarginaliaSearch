@@ -7,7 +7,7 @@ import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.KeywordMetadata;
 import nu.marginalia.language.model.WordRep;
 import nu.marginalia.model.crawl.EdgePageWordFlags;
-import nu.marginalia.model.crawl.EdgePageWords;
+import nu.marginalia.converting.model.DocumentKeywordsBuilder;
 import nu.marginalia.language.statistics.TermFrequencyDict;
 
 import javax.inject.Inject;
@@ -33,7 +33,7 @@ public class DocumentKeywordExtractor {
     }
 
 
-    public EdgePageWords extractKeywordsMinimal(DocumentLanguageData documentLanguageData, KeywordMetadata keywordMetadata) {
+    public DocumentKeywordsBuilder extractKeywordsMinimal(DocumentLanguageData documentLanguageData, KeywordMetadata keywordMetadata) {
 
         List<WordRep> titleWords = extractTitleWords(documentLanguageData);
         List<WordRep> wordsNamesAll = nameCounter.count(documentLanguageData, 2);
@@ -45,7 +45,7 @@ public class DocumentKeywordExtractor {
 
         List<String> artifacts = getArtifacts(documentLanguageData);
 
-        WordsBuilder wordsBuilder = new WordsBuilder();
+        FilteringDocumentKeywordsBuilder wordsBuilder = new FilteringDocumentKeywordsBuilder();
 
         createWords(wordsBuilder, keywordMetadata, titleWords, 0);
         artifacts.forEach(wordsBuilder::addWithBlankMetadata);
@@ -53,7 +53,7 @@ public class DocumentKeywordExtractor {
         return wordsBuilder.build();
     }
 
-    public EdgePageWords extractKeywords(DocumentLanguageData documentLanguageData, KeywordMetadata keywordMetadata) {
+    public DocumentKeywordsBuilder extractKeywords(DocumentLanguageData documentLanguageData, KeywordMetadata keywordMetadata) {
 
         List<WordRep> titleWords = extractTitleWords(documentLanguageData);
 
@@ -71,7 +71,7 @@ public class DocumentKeywordExtractor {
 
         List<String> artifacts = getArtifacts(documentLanguageData);
 
-        WordsBuilder wordsBuilder = new WordsBuilder();
+        FilteringDocumentKeywordsBuilder wordsBuilder = new FilteringDocumentKeywordsBuilder();
 
         createWords(wordsBuilder, keywordMetadata, titleWords, 0);
         createWords(wordsBuilder, keywordMetadata, wordsTfIdf, EdgePageWordFlags.TfIdfHigh.asBit());
@@ -143,7 +143,7 @@ public class DocumentKeywordExtractor {
     }
 
 
-    private void getSimpleWords(WordsBuilder wordsBuilder, KeywordMetadata metadata, DocumentLanguageData documentLanguageData) {
+    private void getSimpleWords(FilteringDocumentKeywordsBuilder wordsBuilder, KeywordMetadata metadata, DocumentLanguageData documentLanguageData) {
 
         EnumSet<EdgePageWordFlags> flagsTemplate = EnumSet.noneOf(EdgePageWordFlags.class);
 
@@ -207,10 +207,10 @@ public class DocumentKeywordExtractor {
                 .collect(Collectors.toList());
     }
 
-    public void createWords(WordsBuilder wordsBuilder,
-                                     KeywordMetadata metadata,
-                                     Collection<WordRep> words,
-                                     long additionalMeta) {
+    public void createWords(FilteringDocumentKeywordsBuilder wordsBuilder,
+                            KeywordMetadata metadata,
+                            Collection<WordRep> words,
+                            long additionalMeta) {
 
         for (var word : words) {
 
@@ -223,8 +223,8 @@ public class DocumentKeywordExtractor {
         }
     }
 
-    private static class WordsBuilder {
-        private final EdgePageWords words = new EdgePageWords(1600);
+    private static class FilteringDocumentKeywordsBuilder {
+        private final DocumentKeywordsBuilder words = new DocumentKeywordsBuilder(1600);
         private final Set<String> seen = new HashSet<>(1600);
 
         public void add(String word, long meta) {
@@ -238,7 +238,7 @@ public class DocumentKeywordExtractor {
             }
         }
 
-        public EdgePageWords build() {
+        public DocumentKeywordsBuilder build() {
             return words;
         }
 

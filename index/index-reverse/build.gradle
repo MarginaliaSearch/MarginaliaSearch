@@ -14,7 +14,7 @@ java {
 dependencies {
     implementation project(':libraries:array')
     implementation project(':libraries:btree')
-    implementation project(':libraries:misc')
+    implementation project(':libraries:random-write-funnel')
     implementation project(':features:domain-ranking')
     implementation project(':index:index-query')
     implementation project(':index:index-journal')

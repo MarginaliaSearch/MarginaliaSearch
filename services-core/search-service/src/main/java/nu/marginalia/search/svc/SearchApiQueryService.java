@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import lombok.SneakyThrows;
 import nu.marginalia.index.client.model.results.EdgeSearchResultKeywordScore;
 import nu.marginalia.search.client.model.ApiSearchResultQueryDetails;
-import nu.marginalia.model.idx.EdgePageWordMetadata;
+import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.search.SearchOperator;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.client.model.ApiSearchResult;
@@ -68,7 +68,7 @@ public class SearchApiQueryService {
             for (var entries : bySet.values()) {
                 List<ApiSearchResultQueryDetails> lst = new ArrayList<>();
                 for (var entry : entries) {
-                    var metadata = new EdgePageWordMetadata(entry.encodedWordMetadata());
+                    var metadata = new WordMetadata(entry.encodedWordMetadata());
                     if (metadata.isEmpty())
                         continue outer;
 

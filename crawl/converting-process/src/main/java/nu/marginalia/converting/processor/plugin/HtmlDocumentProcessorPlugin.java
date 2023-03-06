@@ -10,8 +10,8 @@ import nu.marginalia.converting.processor.keywords.DocumentKeywordExtractor;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.model.crawl.EdgeHtmlStandard;
 import nu.marginalia.model.crawl.EdgePageDocumentFlags;
-import nu.marginalia.model.crawl.EdgePageWords;
-import nu.marginalia.model.idx.EdgePageDocumentsMetadata;
+import nu.marginalia.converting.model.DocumentKeywordsBuilder;
+import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.converting.processor.logic.*;
 import nu.marginalia.model.crawl.PubDate;
@@ -121,9 +121,9 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         ret.hashCode = dld.localitySensitiveHashCode();
 
         PubDate pubDate = pubDateSniffer.getPubDate(crawledDocument.headers, url, doc, ret.standard, true);
-        ret.metadata = new EdgePageDocumentsMetadata(url.depth(), pubDate.yearByte(), 0, (int) -ret.quality, EnumSet.noneOf(EdgePageDocumentFlags.class));
+        ret.metadata = new DocumentMetadata(url.depth(), pubDate.yearByte(), 0, (int) -ret.quality, EnumSet.noneOf(EdgePageDocumentFlags.class));
 
-        EdgePageWords words = keywordExtractor.extractKeywords(dld, keywordMetadata);
+        DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, keywordMetadata);
 
         new MetaTagsBuilder()
                 .addDomainCrawlData(crawledDomain)
@@ -173,7 +173,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     }
 
 
-    private void getLinks(EdgeUrl baseUrl, ProcessedDocumentDetails ret, Document doc, EdgePageWords words) {
+    private void getLinks(EdgeUrl baseUrl, ProcessedDocumentDetails ret, Document doc, DocumentKeywordsBuilder words) {
 
         final LinkProcessor lp = new LinkProcessor(ret, baseUrl);
 
@@ -208,7 +208,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         createFileLinkKeywords(words, lp, domain);
     }
 
-    private void createFileLinkKeywords(EdgePageWords words, LinkProcessor lp, EdgeDomain domain) {
+    private void createFileLinkKeywords(DocumentKeywordsBuilder words, LinkProcessor lp, EdgeDomain domain) {
         Set<String> fileKeywords = new HashSet<>(100);
         for (var link : lp.getNonIndexableUrls()) {
 
@@ -241,7 +241,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         fileKeywords.add(filename.replace(' ', '_'));
     }
 
-    private void createLinkKeywords(EdgePageWords words, LinkProcessor lp) {
+    private void createLinkKeywords(DocumentKeywordsBuilder words, LinkProcessor lp) {
         final Set<String> linkTerms = new HashSet<>();
 
         for (var fd : lp.getForeignDomains()) {

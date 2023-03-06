@@ -2,7 +2,6 @@ package nu.marginalia.index.reverse;
 
 import lombok.SneakyThrows;
 import nu.marginalia.array.buffer.LongQueryBuffer;
-import nu.marginalia.dict.OffHeapDictionaryHashMap;
 import nu.marginalia.index.journal.model.IndexJournalEntry;
 import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile;
 import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
@@ -11,7 +10,7 @@ import nu.marginalia.index.reverse.query.ReverseIndexEntrySourceBehavior;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
-import nu.marginalia.model.idx.EdgePageDocumentsMetadata;
+import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.test.TestUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -56,7 +55,7 @@ class ReverseIndexConverterTest {
     public void createEntry(IndexJournalWriter writer, KeywordLexicon keywordLexicon, int id) {
         int[] factors = IntStream.rangeClosed(1, id).filter(v -> (id % v) == 0).toArray();
 
-        var entryBuilder = IndexJournalEntry.builder(id, EdgePageDocumentsMetadata.defaultValue());
+        var entryBuilder = IndexJournalEntry.builder(id, DocumentMetadata.defaultValue());
 
         for (int i = 0; i < factors.length; i++) {
             entryBuilder.add(keywordLexicon.getOrInsert(Integer.toString(factors[i])), -factors[i]);

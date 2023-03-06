@@ -3,9 +3,9 @@ package nu.marginalia.loading.loader;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.EdgeDomainIndexingState;
-import nu.marginalia.model.idx.EdgePageDocumentsMetadata;
+import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.converting.instruction.Interpreter;
-import nu.marginalia.model.crawl.DocumentKeywords;
+import nu.marginalia.converting.model.DocumentKeywords;
 import nu.marginalia.converting.instruction.instructions.DomainLink;
 import nu.marginalia.converting.instruction.instructions.LoadProcessedDocument;
 import nu.marginalia.converting.instruction.instructions.LoadProcessedDocumentWithError;
@@ -103,7 +103,7 @@ public class Loader implements Interpreter {
     }
 
     @Override
-    public void loadKeywords(EdgeUrl url, EdgePageDocumentsMetadata metadata, DocumentKeywords words) {
+    public void loadKeywords(EdgeUrl url, DocumentMetadata metadata, DocumentKeywords words) {
         // This is a bit of a bandaid safeguard against a bug in
         // in the converter, shouldn't be necessary in the future
         if (!deferredDomains.isEmpty()) {

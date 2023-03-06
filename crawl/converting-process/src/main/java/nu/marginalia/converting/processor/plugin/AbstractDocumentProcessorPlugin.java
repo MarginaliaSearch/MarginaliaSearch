@@ -5,7 +5,7 @@ import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.language.LanguageFilter;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.model.crawl.EdgeHtmlStandard;
-import nu.marginalia.model.crawl.EdgePageWords;
+import nu.marginalia.converting.model.DocumentKeywordsBuilder;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.ProcessedDocumentDetails;
@@ -31,7 +31,7 @@ public abstract class AbstractDocumentProcessorPlugin {
     protected static class MetaTagsBuilder {
         private final Set<String> tagWords = new HashSet<>();
 
-        public void build(EdgePageWords dest) {
+        public void build(DocumentKeywordsBuilder dest) {
             dest.addAllSyntheticTerms(tagWords);
         }
 
@@ -84,5 +84,5 @@ public abstract class AbstractDocumentProcessorPlugin {
 
 
     public record DetailsWithWords(ProcessedDocumentDetails details,
-                                          EdgePageWords words) {}
+                                          DocumentKeywordsBuilder words) {}
 }

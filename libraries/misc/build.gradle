@@ -17,7 +17,7 @@ dependencies {
     implementation libs.bundles.slf4j
 
     implementation libs.notnull
-    implementation libs.lz4
+
     implementation libs.fastutil
 
     testImplementation libs.bundles.slf4j.test

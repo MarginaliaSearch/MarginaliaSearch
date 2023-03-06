@@ -2,7 +2,7 @@ package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.index.client.EdgeIndexClient;
+import nu.marginalia.index.client.IndexClient;
 import nu.marginalia.index.client.model.results.EdgeSearchResultItem;
 import nu.marginalia.index.client.model.query.EdgeSearchSpecification;
 import nu.marginalia.search.model.PageScoreAdjustment;
@@ -23,10 +23,10 @@ public class SearchQueryIndexService {
 
     private final SearchResultDecorator resultDecorator;
     private final Comparator<UrlDetails> resultListComparator;
-    private final EdgeIndexClient indexClient;
+    private final IndexClient indexClient;
 
     @Inject
-    public SearchQueryIndexService(SearchResultDecorator resultDecorator, EdgeIndexClient indexClient) {
+    public SearchQueryIndexService(SearchResultDecorator resultDecorator, IndexClient indexClient) {
         this.resultDecorator = resultDecorator;
         this.indexClient = indexClient;
 

@@ -5,7 +5,7 @@ import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile;
-import nu.marginalia.model.idx.EdgePageDocumentsMetadata;
+import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.ranking.DomainRankings;
 import org.roaringbitmap.IntConsumer;
 import org.roaringbitmap.RoaringBitmap;
@@ -72,7 +72,7 @@ public class ForwardIndexConverter {
                 long entryOffset = (long) ForwardIndexParameters.ENTRY_SIZE * docIdToIdx.get(entry.urlId());
 
                 int ranking = domainRankings.getRanking(entry.domainId());
-                long meta = EdgePageDocumentsMetadata.encodeRank(entry.docMeta(), ranking);
+                long meta = DocumentMetadata.encodeRank(entry.docMeta(), ranking);
 
                 docFileData.set(entryOffset + ForwardIndexParameters.METADATA_OFFSET, meta);
                 docFileData.set(entryOffset + ForwardIndexParameters.DOMAIN_OFFSET, entry.domainId());

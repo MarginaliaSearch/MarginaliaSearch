@@ -1,6 +1,6 @@
 package nu.marginalia.index.forward;
 
-import nu.marginalia.model.idx.EdgePageDocumentsMetadata;
+import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.index.query.limit.SpecificationLimitType;
 import nu.marginalia.index.query.IndexQueryParams;
 import nu.marginalia.index.query.filter.QueryFilterStepIf;
@@ -52,7 +52,7 @@ public class ParamMatchingQueryFilter implements QueryFilterStepIf {
             return true;
         }
 
-        final int quality = EdgePageDocumentsMetadata.decodeQuality(post.meta());
+        final int quality = DocumentMetadata.decodeQuality(post.meta());
 
         return limit.test(quality);
     }
@@ -61,7 +61,7 @@ public class ParamMatchingQueryFilter implements QueryFilterStepIf {
         if (params.year().type() == SpecificationLimitType.NONE)
             return true;
 
-        int postVal = EdgePageDocumentsMetadata.decodeYear(post.meta());
+        int postVal = DocumentMetadata.decodeYear(post.meta());
 
         return params.year().test(postVal);
     }
@@ -70,7 +70,7 @@ public class ParamMatchingQueryFilter implements QueryFilterStepIf {
         if (params.size().type() == SpecificationLimitType.NONE)
             return true;
 
-        int postVal = EdgePageDocumentsMetadata.decodeSize(post.meta());
+        int postVal = DocumentMetadata.decodeSize(post.meta());
 
         return params.size().test(postVal);
     }
@@ -79,7 +79,7 @@ public class ParamMatchingQueryFilter implements QueryFilterStepIf {
         if (params.rank().type() == SpecificationLimitType.NONE)
             return true;
 
-        int postVal = EdgePageDocumentsMetadata.decodeRank(post.meta());
+        int postVal = DocumentMetadata.decodeRank(post.meta());
 
         return params.rank().test(postVal);
     }

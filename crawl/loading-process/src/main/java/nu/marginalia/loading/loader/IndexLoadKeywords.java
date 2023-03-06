@@ -2,9 +2,8 @@ package nu.marginalia.loading.loader;
 
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
-import nu.marginalia.model.idx.EdgePageDocumentsMetadata;
-import nu.marginalia.client.Context;
-import nu.marginalia.model.crawl.DocumentKeywords;
+import nu.marginalia.model.idx.DocumentMetadata;
+import nu.marginalia.converting.model.DocumentKeywords;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.id.EdgeId;
 import org.slf4j.Logger;
@@ -19,7 +18,7 @@ public class IndexLoadKeywords implements Runnable {
     private final LinkedBlockingQueue<InsertTask> insertQueue = new LinkedBlockingQueue<>(32);
     private final LoaderIndexJournalWriter client;
 
-    private record InsertTask(int urlId, int domainId, EdgePageDocumentsMetadata metadata, DocumentKeywords wordSet) {}
+    private record InsertTask(int urlId, int domainId, DocumentMetadata metadata, DocumentKeywords wordSet) {}
 
     private final Thread runThread;
 
@@ -50,7 +49,7 @@ public class IndexLoadKeywords implements Runnable {
         }
     }
 
-    public void load(LoaderData loaderData, EdgeUrl url, EdgePageDocumentsMetadata metadata, DocumentKeywords words) throws InterruptedException {
+    public void load(LoaderData loaderData, EdgeUrl url, DocumentMetadata metadata, DocumentKeywords words) throws InterruptedException {
         int domainId = loaderData.getDomainId(url.domain);
         int urlId = loaderData.getUrlId(url);
 

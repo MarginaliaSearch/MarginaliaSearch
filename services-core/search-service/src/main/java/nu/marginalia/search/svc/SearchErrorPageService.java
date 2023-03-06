@@ -2,17 +2,17 @@ package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
 import nu.marginalia.client.Context;
-import nu.marginalia.index.client.EdgeIndexClient;
+import nu.marginalia.index.client.IndexClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Response;
 
 public class SearchErrorPageService {
-    private final EdgeIndexClient indexClient;
+    private final IndexClient indexClient;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
-    public SearchErrorPageService(EdgeIndexClient indexClient) {
+    public SearchErrorPageService(IndexClient indexClient) {
         this.indexClient = indexClient;
     }
 

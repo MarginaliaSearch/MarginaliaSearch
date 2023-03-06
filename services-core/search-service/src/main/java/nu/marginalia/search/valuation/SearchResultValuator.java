@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.language.statistics.TermFrequencyDict;
 import nu.marginalia.model.crawl.EdgePageWordFlags;
-import nu.marginalia.model.idx.EdgePageWordMetadata;
+import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.index.client.model.results.EdgeSearchResultKeywordScore;
 import nu.marginalia.index.client.model.query.EdgeSearchSubquery;
 import nu.marginalia.language.WordPatterns;
@@ -191,7 +191,7 @@ public class SearchResultValuator {
             positions = meta.positions();
 
             maskAdjacent &= (positions | (positions << 1) | (positions >>> 1));
-            if (positions != 0 && !EdgePageWordMetadata.hasAnyFlags(meta.flags(),  excludeMask))
+            if (positions != 0 && !WordMetadata.hasAnyFlags(meta.flags(),  excludeMask))
             {
                 maskDirect &= positions;
             }
@@ -323,9 +323,9 @@ public class SearchResultValuator {
     }
 
 
-    private record SearchResultsKeyword(EdgeSearchResultKeywordScore score, EdgePageWordMetadata wordMetadata, double weight) {
+    private record SearchResultsKeyword(EdgeSearchResultKeywordScore score, WordMetadata wordMetadata, double weight) {
         public SearchResultsKeyword(EdgeSearchResultKeywordScore score,  double weight) {
-            this(score, new EdgePageWordMetadata(score.encodedWordMetadata()), weight);
+            this(score, new WordMetadata(score.encodedWordMetadata()), weight);
         }
 
         public int tfIdf() {

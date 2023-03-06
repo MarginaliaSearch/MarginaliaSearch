@@ -26,6 +26,7 @@ dependencies {
     implementation project(':index:index-query')
 
     implementation project(':libraries:misc')
+    implementation project(':libraries:easy-lsh')
     implementation project(':libraries:language-processing')
 
     implementation project(':api:assistant-api')
@@ -33,8 +34,8 @@ dependencies {
     implementation project(':api:search-api')
     implementation project(':common:service-discovery')
     implementation project(':common:service-client')
+    implementation project(':common:renderer')
 
-    implementation project(':features:renderer')
     implementation project(':features:screenshots')
     implementation project(':features:random-websites')
     implementation project(':features:query-parser')

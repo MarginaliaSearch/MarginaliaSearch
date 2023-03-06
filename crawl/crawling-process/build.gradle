@@ -21,7 +21,7 @@ dependencies {
     implementation project(':common:model')
     implementation project(':common:config')
     implementation project(':common:service')
-    implementation project(':libraries:misc')
+    implementation project(':libraries:big-string')
     implementation project(':api:index-api')
     implementation project(':common:service-discovery')
     implementation project(':common:service-client')

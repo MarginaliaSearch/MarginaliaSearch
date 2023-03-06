@@ -15,7 +15,7 @@ dependencies {
     implementation project(':third-party')
     implementation project(':common:model')
     implementation project(':common:config')
-    implementation project(':libraries:misc')
+    implementation project(':libraries:guarded-regex')
     implementation project(':crawl:crawling-model')
 
     implementation libs.notnull

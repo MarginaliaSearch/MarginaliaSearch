@@ -3,7 +3,6 @@ package nu.marginalia.loading.loader;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import nu.marginalia.dict.DictionaryMap;
 import nu.marginalia.dict.OffHeapDictionaryHashMap;
 import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
@@ -11,9 +10,8 @@ import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
-import nu.marginalia.model.crawl.DocumentKeywords;
-import nu.marginalia.util.KeywordListChunker;
-import nu.marginalia.model.idx.EdgePageDocumentsMetadata;
+import nu.marginalia.converting.model.DocumentKeywords;
+import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.id.EdgeId;
@@ -40,7 +38,7 @@ public class LoaderIndexJournalWriter {
     }
 
     public void putWords(EdgeId<EdgeDomain> domain, EdgeId<EdgeUrl> url,
-                         EdgePageDocumentsMetadata metadata,
+                         DocumentMetadata metadata,
                          DocumentKeywords wordSet) {
         if (wordSet.keywords().length == 0)
             return;

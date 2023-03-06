@@ -1,14 +1,27 @@
 plugins {
     id 'java'
     id "io.freefair.lombok" version "5.3.3.3"
-
+    id 'application'
+    id 'com.palantir.docker' version '0.34.0'
     id 'jvm-test-suite'
+}
+
+ext {
+    dockerImage='openjdk:17-alpine'
+    serviceJvmOpts='-Dservice-host=0.0.0.0 -ea -Dsmall-ram=true ${wmsa_jvm_param} -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=4000 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false'
+    serviceToolOpts='-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5000'
+    chromeDriverVersion='93.0.4577.63'
 }
 
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
+}
+
+application {
+    mainClass = 'nu.marginalia.screenshot.ScreenshotCaptureToolMain'
+    applicationName = 'screenshot-capture-tool'
 }
 
 dependencies {
@@ -32,7 +45,6 @@ dependencies {
     testImplementation libs.mockito
 
 }
-
 
 test {
     useJUnitPlatform()

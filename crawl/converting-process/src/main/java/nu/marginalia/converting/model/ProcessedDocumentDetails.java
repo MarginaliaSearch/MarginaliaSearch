@@ -3,7 +3,7 @@ package nu.marginalia.converting.model;
 import lombok.ToString;
 import nu.marginalia.model.crawl.EdgeHtmlStandard;
 import nu.marginalia.model.crawl.HtmlFeature;
-import nu.marginalia.model.idx.EdgePageDocumentsMetadata;
+import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.EdgeUrl;
 
 import javax.annotation.Nullable;
@@ -29,5 +29,5 @@ public class ProcessedDocumentDetails {
     public List<EdgeUrl> linksExternal;
     public List<EdgeUrl> feedLinks;
 
-    public EdgePageDocumentsMetadata metadata;
+    public DocumentMetadata metadata;
 }

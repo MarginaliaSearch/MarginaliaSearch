@@ -3,8 +3,8 @@ package nu.marginalia.converting.instruction;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.EdgeDomainIndexingState;
-import nu.marginalia.model.idx.EdgePageDocumentsMetadata;
-import nu.marginalia.model.crawl.DocumentKeywords;
+import nu.marginalia.model.idx.DocumentMetadata;
+import nu.marginalia.converting.model.DocumentKeywords;
 import nu.marginalia.converting.instruction.instructions.DomainLink;
 import nu.marginalia.converting.instruction.instructions.LoadProcessedDocument;
 import nu.marginalia.converting.instruction.instructions.LoadProcessedDocumentWithError;
@@ -19,7 +19,7 @@ public interface Interpreter {
     void loadProcessedDocument(LoadProcessedDocument loadProcessedDocument);
     void loadProcessedDocumentWithError(LoadProcessedDocumentWithError loadProcessedDocumentWithError);
 
-    void loadKeywords(EdgeUrl url, EdgePageDocumentsMetadata metadata, DocumentKeywords words);
+    void loadKeywords(EdgeUrl url, DocumentMetadata metadata, DocumentKeywords words);
 
     void loadDomainRedirect(DomainLink link);
 }

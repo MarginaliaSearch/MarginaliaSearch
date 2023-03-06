@@ -9,8 +9,8 @@ import nu.marginalia.converting.processor.keywords.DocumentKeywordExtractor;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.model.crawl.EdgeHtmlStandard;
 import nu.marginalia.model.crawl.EdgePageDocumentFlags;
-import nu.marginalia.model.crawl.EdgePageWords;
-import nu.marginalia.model.idx.EdgePageDocumentsMetadata;
+import nu.marginalia.converting.model.DocumentKeywordsBuilder;
+import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.ProcessedDocumentDetails;
@@ -89,10 +89,10 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
 
         final PubDate pubDate = new PubDate(LocalDate.ofYearDay(1993, 1));
 
-        ret.metadata = new EdgePageDocumentsMetadata(url.depth(), pubDate.yearByte(), 0, (int) -ret.quality, EnumSet.of(EdgePageDocumentFlags.PlainText));
+        ret.metadata = new DocumentMetadata(url.depth(), pubDate.yearByte(), 0, (int) -ret.quality, EnumSet.of(EdgePageDocumentFlags.PlainText));
 
         KeywordMetadata keywordMetadata = new KeywordMetadata();
-        EdgePageWords words = keywordExtractor.extractKeywords(dld, keywordMetadata);
+        DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, keywordMetadata);
 
         new MetaTagsBuilder()
                 .addDomainCrawlData(crawledDomain)

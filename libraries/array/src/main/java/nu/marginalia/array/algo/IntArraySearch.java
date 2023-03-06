@@ -19,8 +19,6 @@ public interface IntArraySearch extends IntArrayBase {
         return LongArraySearch.encodeSearchMiss(pos - 1);
     }
 
-
-
     default long binarySearch(int key, long fromIndex, long toIndex) {
         long low = 0;
         long high = (toIndex - fromIndex) - 1;

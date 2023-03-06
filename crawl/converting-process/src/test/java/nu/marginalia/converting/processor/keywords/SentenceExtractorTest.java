@@ -12,7 +12,7 @@ import nu.marginalia.language.keywords.KeywordExtractor;
 import nu.marginalia.language.model.WordSeparator;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.model.crawl.EdgePageWordFlags;
-import nu.marginalia.model.idx.EdgePageWordMetadata;
+import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.test.util.TestLanguageModels;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jsoup.Jsoup;
@@ -128,14 +128,14 @@ class SentenceExtractorTest {
             var newResult = newSe.extractSentences(Jsoup.parse(Files.readString(file.toPath())));
             var newRes = documentKeywordExtractor.extractKeywords(newResult, new KeywordMetadata());
 
-            var terms = IntStream.range(0, newRes.size()).mapToObj(i -> Pair.of(newRes.words.get(i), new EdgePageWordMetadata(newRes.metadata.get(i))))
+            var terms = IntStream.range(0, newRes.size()).mapToObj(i -> Pair.of(newRes.words.get(i), new WordMetadata(newRes.metadata.get(i))))
                             .sorted(Comparator.comparing(e -> -e.getValue().tfIdf()))
                             .limit(100)
                             .map(Pair::getKey)
                             .toArray(String[]::new);
             System.out.println(Arrays.toString(terms));
 
-            var terms2 = IntStream.range(0, newRes.size()).mapToObj(i -> Pair.of(newRes.words.get(i), new EdgePageWordMetadata(newRes.metadata.get(i))))
+            var terms2 = IntStream.range(0, newRes.size()).mapToObj(i -> Pair.of(newRes.words.get(i), new WordMetadata(newRes.metadata.get(i))))
                     .sorted(Comparator.comparing(e -> -e.getValue().tfIdf()))
                     .filter(e -> e.getValue().hasFlag(EdgePageWordFlags.Subjects))
                     .limit(100)

@@ -8,7 +8,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.api.model.ApiLicense;
 import nu.marginalia.client.Context;
 import nu.marginalia.model.gson.GsonFactory;
-import nu.marginalia.search.client.EdgeSearchClient;
+import nu.marginalia.search.client.SearchClient;
 import nu.marginalia.service.server.Initialization;
 import nu.marginalia.service.server.MetricsServer;
 import nu.marginalia.service.server.RateLimiter;
@@ -25,7 +25,7 @@ public class ApiService extends Service {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Gson gson = GsonFactory.get();
-    private final EdgeSearchClient searchClient;
+    private final SearchClient searchClient;
     private final HikariDataSource dataSource;
     private final ConcurrentHashMap<String, ApiLicense> licenseCache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<ApiLicense, RateLimiter> rateLimiters = new ConcurrentHashMap<>();
@@ -35,7 +35,7 @@ public class ApiService extends Service {
                       @Named("service-port") Integer port,
                       Initialization initialization,
                       MetricsServer metricsServer,
-                      EdgeSearchClient searchClient,
+                      SearchClient searchClient,
                       HikariDataSource dataSource) {
         super(ip, port, initialization, metricsServer);
         this.searchClient = searchClient;

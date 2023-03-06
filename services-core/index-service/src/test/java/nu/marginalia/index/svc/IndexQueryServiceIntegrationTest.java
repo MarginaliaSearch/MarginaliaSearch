@@ -15,8 +15,8 @@ import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.model.crawl.EdgePageWordFlags;
-import nu.marginalia.model.idx.EdgePageDocumentsMetadata;
-import nu.marginalia.model.idx.EdgePageWordMetadata;
+import nu.marginalia.model.idx.DocumentMetadata;
+import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.service.server.Initialization;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -164,12 +164,12 @@ public class IndexQueryServiceIntegrationTest {
 
         long fullId = id | ((long) (32 - (id % 32)) << 32);
 
-        var header = new IndexJournalEntryHeader(factors.length, fullId, new EdgePageDocumentsMetadata(0, 0, 0, id % 5, id, id % 20, (byte) 0).encode());
+        var header = new IndexJournalEntryHeader(factors.length, fullId, new DocumentMetadata(0, 0, 0, id % 5, id, id % 20, (byte) 0).encode());
 
         long[] data = new long[factors.length*2];
         for (int i = 0; i < factors.length; i++) {
             data[2*i] = keywordLexicon.getOrInsert(Integer.toString(factors[i]));
-            data[2*i + 1] = new EdgePageWordMetadata(i, i, i, EnumSet.of(EdgePageWordFlags.Title)).encode();
+            data[2*i + 1] = new WordMetadata(i, i, i, EnumSet.of(EdgePageWordFlags.Title)).encode();
         }
 
         indexJournalWriter.put(header, new IndexJournalEntryData(data));
@@ -177,12 +177,12 @@ public class IndexQueryServiceIntegrationTest {
 
     public void loadDataWithDomain(int domain, int id) {
         int[] factors = IntStream.rangeClosed(1, id).filter(v -> (id % v) == 0).toArray();
-        var header = new IndexJournalEntryHeader(factors.length, id | ((long) domain << 32), EdgePageDocumentsMetadata.defaultValue());
+        var header = new IndexJournalEntryHeader(factors.length, id | ((long) domain << 32), DocumentMetadata.defaultValue());
 
         long[] data = new long[factors.length*2];
         for (int i = 0; i < factors.length; i++) {
             data[2*i] = keywordLexicon.getOrInsert(Integer.toString(factors[i]));
-            data[2*i + 1] = new EdgePageWordMetadata(i % 20, i, i, EnumSet.of(EdgePageWordFlags.Title)).encode();
+            data[2*i + 1] = new WordMetadata(i % 20, i, i, EnumSet.of(EdgePageWordFlags.Title)).encode();
         }
 
         indexJournalWriter.put(header, new IndexJournalEntryData(data));

@@ -1,7 +1,7 @@
 package nu.marginalia.converting.compiler;
 
 import nu.marginalia.converting.instruction.Instruction;
-import nu.marginalia.model.crawl.DocumentKeywords;
+import nu.marginalia.converting.model.DocumentKeywords;
 import nu.marginalia.converting.instruction.instructions.LoadKeywords;
 import nu.marginalia.converting.instruction.instructions.LoadProcessedDocument;
 import nu.marginalia.converting.instruction.instructions.LoadProcessedDocumentWithError;
@@ -39,7 +39,7 @@ public class DocumentsCompiler {
         var words = doc.words;
 
         if (words != null) {
-            ret.add(new LoadKeywords(doc.url, doc.details.metadata, new DocumentKeywords(words)));
+            ret.add(new LoadKeywords(doc.url, doc.details.metadata, words.build()));
         }
     }
 

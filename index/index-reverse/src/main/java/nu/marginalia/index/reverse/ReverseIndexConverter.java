@@ -5,7 +5,7 @@ import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.model.IndexJournalStatistics;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
 import nu.marginalia.ranking.DomainRankings;
-import nu.marginalia.util.RandomWriteFunnel;
+import nu.marginalia.rwf.RandomWriteFunnel;
 import nu.marginalia.array.IntArray;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.algo.SortingContext;

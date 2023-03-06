@@ -1,4 +1,4 @@
-package nu.marginalia.screenshot.tool;
+package nu.marginalia.screenshot;
 
 
 import nu.marginalia.service.module.DatabaseModule;

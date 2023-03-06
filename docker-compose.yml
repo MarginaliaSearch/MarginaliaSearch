@@ -95,6 +95,7 @@ services:
       - search-service
 networks:
   wmsa:
+  screenshot:
 volumes:
   db:
     driver: local

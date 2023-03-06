@@ -1,6 +1,6 @@
 package nu.marginalia.language.model;
 
-import nu.marginalia.model.idx.EdgePageWordMetadata;
+import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.model.crawl.EdgePageWordFlags;
 
 import java.util.EnumSet;
@@ -44,7 +44,7 @@ public record KeywordMetadata(HashSet<String> titleKeywords,
 
         int positions = positionMask.getOrDefault(stemmed, 0);
 
-        return new EdgePageWordMetadata(tfidf.tfIdfNormalized(), positions, tfidf.count(), flags).encode();
+        return new WordMetadata(tfidf.tfIdfNormalized(), positions, tfidf.count(), flags).encode();
     }
 
 }

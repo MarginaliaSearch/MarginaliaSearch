@@ -13,7 +13,7 @@ java {
 dependencies {
     implementation project(':common:service-discovery')
     implementation project(':common:service-client')
-    implementation project(':libraries:misc')
+    implementation project(':libraries:big-string')
 
     implementation libs.lombok
     annotationProcessor libs.lombok

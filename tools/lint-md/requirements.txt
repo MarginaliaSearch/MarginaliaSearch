@@ -1,0 +1,3 @@
+gitpython
+markdown
+beautifulsoup4
