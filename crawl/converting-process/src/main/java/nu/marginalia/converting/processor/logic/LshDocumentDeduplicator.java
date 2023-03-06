@@ -11,10 +11,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/** Deduplicates documents based on their LSH
+ *
+ * @see EasyLSH
+ */
 @Singleton
 public class LshDocumentDeduplicator {
 
-    private final int DISTANCE_THRESHOLD = 4;
+    private final int DISTANCE_THRESHOLD = 2;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public void deduplicate(List<ProcessedDocument> documents) {
@@ -40,13 +44,13 @@ public class LshDocumentDeduplicator {
             return false;
         }
 
-        if (EasyLSH.hammingDistance(thisDoc.lshHash, otherDoc.lshHash) < DISTANCE_THRESHOLD)
+        if (EasyLSH.hammingDistance(thisDoc.details.hashCode, otherDoc.details.hashCode) > DISTANCE_THRESHOLD)
             return false;
 
         if (thisDoc.url.path.length()
                 < otherDoc.url.path.length())
         {
-            logger.info("{} duplicates {}", otherDoc.url, thisDoc.url);
+            logger.debug("{} duplicates {}", otherDoc.url, thisDoc.url);
 
             otherDoc.state = EdgeUrlState.DISQUALIFIED;
             otherDoc.stateReason = "Duplicate";
