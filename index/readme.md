@@ -10,7 +10,7 @@ There are two indexes with accompanying tools for constructing them.
 about each word, such as its position. 
 * [index-reverse](index-reverse/) is the `word->document` index.
 
-These indices rely heavily on the [libraries/btree](../libraries/btree) and [libraries/btree](../libraries/array) components.
+These indices rely heavily on the [libraries/btree](../libraries/btree) and [libraries/array](../libraries/array) components.
 # Libraries
 * [index-query](index-query/) contains structures for evaluating search queries.
 * [index-journal](index-journal/) contains tools for writing and reading index data.
