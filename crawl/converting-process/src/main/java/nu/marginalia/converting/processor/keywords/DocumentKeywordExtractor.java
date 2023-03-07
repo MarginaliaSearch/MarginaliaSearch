@@ -224,7 +224,7 @@ public class DocumentKeywordExtractor {
     }
 
     private static class FilteringDocumentKeywordsBuilder {
-        private final DocumentKeywordsBuilder words = new DocumentKeywordsBuilder(1600);
+        private final DocumentKeywordsBuilder words = new DocumentKeywordsBuilder();
         private final Set<String> seen = new HashSet<>(1600);
 
         public void add(String word, long meta) {
