@@ -12,8 +12,20 @@ import java.nio.file.Path;
 
 import static nu.marginalia.index.forward.ForwardIndexParameters.*;
 
+/** Reads the forward index.
+ * <p/>
+ * The forward index is constructed of a staggered array
+ * called 'data' containing domains and document level metadata,
+ * and a mapping between document identifiers to the index into the
+ * data array.
+ * <p/>
+ * Since the total data is relatively small, this is attempted to be
+ * kept in memory to reduce the amount of disk thrashing.
+ * <p/>
+ * The metadata is a binary encoding of {@see nu.marginalia.idx.DocumentMetadata}
+ */
 public class ForwardIndexReader {
-    private final TLongIntHashMap ids;
+    private final TLongIntHashMap idToOffset;
     private final LongArray data;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -21,20 +33,20 @@ public class ForwardIndexReader {
     public ForwardIndexReader(Path idsFile, Path dataFile) throws IOException {
         if (!Files.exists(dataFile)) {
             logger.warn("Failed to create ForwardIndexReader, {} is absent", dataFile);
-            ids = null;
+            idToOffset = null;
             data = null;
             return;
         }
         else if (!Files.exists(idsFile)) {
             logger.warn("Failed to create ForwardIndexReader, {} is absent", idsFile);
-            ids = null;
+            idToOffset = null;
             data = null;
             return;
         }
 
         logger.info("Switching forward index");
 
-        ids = loadIds(idsFile);
+        idToOffset = loadIds(idsFile);
         data = loadData(dataFile);
     }
 
@@ -45,9 +57,7 @@ public class ForwardIndexReader {
         var ids = new TLongIntHashMap((int) idsArray.size(), 0.5f, -1, -1);
 
         // This hash table should be of the same size as the number of documents, so typically less than 1 Gb
-        idsArray.forEach(0, idsArray.size(), (pos, val) -> {
-            ids.put(val, (int) pos);
-        });
+        idsArray.forEach(0, idsArray.size(), (pos, val) -> ids.put(val, (int) pos));
 
         return ids;
     }
@@ -55,7 +65,8 @@ public class ForwardIndexReader {
     private static LongArray loadData(Path dataFile) throws IOException {
         var data = LongArray.mmapRead(dataFile);
 
-        data.advice(NativeIO.Advice.Random);
+        // Total data is small, try to keep it in RAM for speed
+        data.advice(NativeIO.Advice.WillNeed);
 
         return data;
     }
@@ -78,34 +89,16 @@ public class ForwardIndexReader {
         long offset = idxForDoc(docId);
         if (offset < 0) throw new IllegalStateException("Forward index is not loaded");
 
-        return new DocPost(offset);
+        final long meta = data.get(ENTRY_SIZE * offset + METADATA_OFFSET);
+        final int domain = Math.max(0, (int) data.get(ENTRY_SIZE * offset + DOMAIN_OFFSET));
+
+        return new DocPost(meta, domain);
     }
 
     private int idxForDoc(long docId) {
-        return ids.get(docId);
+        return idToOffset.get(docId);
     }
 
 
-    public class DocPost {
-        private final long idx;
-
-        public DocPost(long idx) {
-            this.idx = idx;
-        }
-
-        public long meta() {
-
-            if (idx < 0)
-                return 0;
-
-            return data.get(ENTRY_SIZE * idx + METADATA_OFFSET);
-        }
-
-        public int domainId() {
-            if (idx < 0)
-                return 0;
-
-            return Math.max(0, (int) data.get(ENTRY_SIZE * idx + DOMAIN_OFFSET));
-        }
-    }
+    public record DocPost(long meta, int domainId) {}
 }
