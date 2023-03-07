@@ -126,16 +126,21 @@ public class IndexQueryService {
     private TLongList evaluateSubqueries(SearchParameters params) {
         final TLongList results = new TLongArrayList(params.fetchSize);
 
+        logger.info(queryMarker, "{}", params.queryParams);
         for (var sq : params.subqueries) {
             final SearchIndexSearchTerms searchTerms = searchTermsSvc.getSearchTerms(sq);
+
+
 
             if (searchTerms.isEmpty()) {
                 continue;
             }
 
-            results.addAll(
-                    executeSubquery(searchTerms, params)
-            );
+            var resultsForSq = executeSubquery(searchTerms, params);
+
+            logger.info(queryMarker, "{} from {}", resultsForSq.size(), sq);
+
+            results.addAll(resultsForSq);
 
             if (!params.hasTimeLeft()) {
                 logger.info("Query timed out {}, ({}), -{}",
@@ -188,10 +193,14 @@ public class IndexQueryService {
         results.forEach(id -> {
             var item = evaluator.evaluateResult(id);
 
-            items.add(item);
+            if (item.getScore() < 100) {
+                items.add(item);
+            }
 
             return true;
         });
+
+        logger.info(queryMarker, "After filtering: {} -> {}", results.size(), items.size());
 
 
         return items;

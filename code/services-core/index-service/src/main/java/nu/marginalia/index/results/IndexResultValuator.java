@@ -80,7 +80,7 @@ public class IndexResultValuator {
 
         long docMetadata = metadataService.getDocumentMetadata(urlIdInt);
 
-        double bestScore = 0;
+        double bestScore = 1000;
         for (int querySetId = 0; querySetId < searchTermVariants.size(); querySetId++) {
             bestScore = Math.min(bestScore,
                     evaluateSubquery(searchResult,
@@ -127,7 +127,7 @@ public class IndexResultValuator {
             setScore += score.termValue();
 
             if (!filterRequired(metadata, queryParams.queryStrategy())) {
-                setScore += 1000;
+                return 1000;
             }
 
             if (termIdx == 0) {
@@ -191,15 +191,15 @@ public class IndexResultValuator {
         double avgTfIdf = termCount / tfIdfSum;
 
         if (maskAdjacent == 0) {
-            return Math.max(-2, 40 - 0.5 * avgTfIdf);
+            return Math.min(5, Math.max(-2, 40 - 0.5 * avgTfIdf));
         }
 
         if (maskDirectGenerous == 0) {
-            return Math.max(-1, 20 - 0.3 *  avgTfIdf);
+            return Math.min(5, Math.max(-1, 20 - 0.3 *  avgTfIdf));
         }
 
         if (maskDirectRaw == 0) {
-            return Math.max(-1, 15 - 0.2 *  avgTfIdf);
+            return Math.min(5, Math.max(-1, 15 - 0.2 *  avgTfIdf));
         }
 
         return Long.numberOfTrailingZeros(maskDirectGenerous)/5. - Long.bitCount(maskDirectGenerous);

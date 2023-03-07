@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @ToString
 @Getter
@@ -37,5 +38,17 @@ public class EdgeSearchSubquery {
         }
         return this;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        if (!searchTermsInclude.isEmpty()) sb.append("include=").append(searchTermsInclude.stream().collect(Collectors.joining(",", "[", "] ")));
+        if (!searchTermsExclude.isEmpty()) sb.append("exclude=").append(searchTermsExclude.stream().collect(Collectors.joining(",", "[", "] ")));
+        if (!searchTermsAdvice.isEmpty()) sb.append("advice=").append(searchTermsAdvice.stream().collect(Collectors.joining(",", "[", "] ")));
+        if (!searchTermsPriority.isEmpty()) sb.append("priority=").append(searchTermsPriority.stream().collect(Collectors.joining(",", "[", "] ")));
+
+        return sb.toString();
+    }
+
 
 }

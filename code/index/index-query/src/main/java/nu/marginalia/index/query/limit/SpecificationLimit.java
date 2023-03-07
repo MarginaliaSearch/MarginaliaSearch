@@ -1,5 +1,7 @@
 package nu.marginalia.index.query.limit;
 
+import lombok.ToString;
+
 public record SpecificationLimit(SpecificationLimitType type, int value) {
     public static SpecificationLimit none() {
         return new SpecificationLimit(SpecificationLimitType.NONE, 0);
@@ -27,5 +29,13 @@ public record SpecificationLimit(SpecificationLimitType type, int value) {
         if (type == SpecificationLimitType.LESS_THAN)
             return parameter <= value;
         throw new AssertionError("Unknown type " + type);
+    }
+
+    @Override
+    public String toString() {
+        if (type == SpecificationLimitType.NONE)
+            return type.toString();
+
+        else return "%s:%d".formatted(type, value);
     }
 }
