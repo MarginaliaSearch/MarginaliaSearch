@@ -157,7 +157,6 @@ public class EdgeIndexQueryService {
             final var evaluator = new IndexResultValuator(indexes, results, subqueries, queryParams);
 
             ArrayList<EdgeSearchResultItem> items = new ArrayList<>(results.size());
-            ArrayList<EdgeSearchResultItem> refusedItems = new ArrayList<>(results.size());
 
             // Sorting the result ids results in better paging characteristics
             results.sort();
@@ -165,21 +164,10 @@ public class EdgeIndexQueryService {
             results.forEach(id -> {
                 var item = evaluator.evaluateResult(id);
 
-                // Score value is zero when the best query variant consists of low-value terms that are just scattered
-                // throughout the document, with no indicators of importance associated with them.
-                if (item.getScoreValue() < 0) {
-                    items.add(item);
-                }
-                else {
-                    refusedItems.add(item);
-                }
+                items.add(item);
 
                 return true;
             });
-
-            if (items.isEmpty()) {
-                items.addAll(refusedItems);
-            }
 
             return selectResults(items);
         }
