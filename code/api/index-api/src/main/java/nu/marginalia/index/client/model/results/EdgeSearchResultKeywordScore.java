@@ -58,16 +58,15 @@ public record EdgeSearchResultKeywordScore(int set,
             sum -= 1;
         }
 
-        sum -= WordMetadata.decodeTfidf(encodedWordMetadata) / 50.;
-        sum += firstPos() / 5.;
-        sum -= Integer.bitCount(positions()) / 3.;
+        double tfIdf = WordMetadata.decodeTfidf(encodedWordMetadata);
+        int positionBits = WordMetadata.decodePositions(encodedWordMetadata);
+
+        sum -= tfIdf / 10.;
+        sum -= Integer.bitCount(positionBits) / 3.;
 
         return sum;
     }
 
-    public int firstPos() {
-        return numberOfTrailingZeros(lowestOneBit(WordMetadata.decodePositions(encodedWordMetadata)));
-    }
     public int positions() { return WordMetadata.decodePositions(encodedWordMetadata); }
     public boolean isSpecial() { return keyword.contains(":") || hasTermFlag(EdgePageWordFlags.Synthetic); }
     public boolean isRegular() {
