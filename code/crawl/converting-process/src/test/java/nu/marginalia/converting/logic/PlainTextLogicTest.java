@@ -246,8 +246,37 @@ class PlainTextLogicTest {
             constitutes an illegal circumvention of copyright management.
                         
             """;
+
+    private final String PXE = """
+                        
+            PXE: Installing Slackware over the network
+            ==========================================
+                        
+                        
+            Introduction
+            ------------
+                        
+                When the time comes to install Slackware on your computer, you have a\s
+            limited number of options regarding the location of your Slackware\s
+            packages.  Either you install them from the (un)official Slackware CDROM or\s
+            DVD, or you copy them to a pre-existing hard disk partition before starting\s
+            the installation procedure, or you fetch the packages from a network server
+            (using either NFS, HTTP or FTP protocol).
+                        
+            """;
+
+    private final String slackware = """
+            Announcing Slackware Linux 7.1!
+                        
+            The first major release for 2000, Slackware Linux 7.1 builds on the
+            success of Slackware 7.0.  In addition to program updates and distribution
+            enhancements, you'll find the Konfucius (1.90) and the Kleopatra (1.91)
+            developmental releases of the K Desktop Environment, XFree86 4.0,
+            OpenMotif 2.1.30, and TrollTech's Qt 2.1.1 library available as system
+            """;
     @Test
     void getDescription() {
+        System.out.println(ptl.getDescription(LineUtils.firstNLines(PXE, 25)));
         System.out.println(ptl.getDescription(LineUtils.firstNLines(uml, 25)));
         System.out.println(ptl.getDescription(LineUtils.firstNLines(cmucl, 25)));
         System.out.println(ptl.getDescription(LineUtils.firstNLines(xprint, 25)));
@@ -257,6 +286,8 @@ class PlainTextLogicTest {
 
     @Test
     void getTitle() throws URISyntaxException {
+        System.out.println(ptl.getTitle(new EdgeUrl("http://mirror.cs.princeton.edu/pub/mirrors/slackware/slackware-7.1/ANNOUNCE.TXT"), LineUtils.firstNLines(slackware, 25)));
+        System.out.println(ptl.getTitle(new EdgeUrl("https://slackjeff.com.br/slackware/slackware-14.2/usb-and-pxe-installers/README_PXE.TXT"), LineUtils.firstNLines(PXE, 25)));
         System.out.println(ptl.getTitle(new EdgeUrl("http://user-mode-linux.sourceforge.net/old/UserModeLinux-HOWTO.txt"), LineUtils.firstNLines(uml, 25)));
         System.out.println(ptl.getTitle(new EdgeUrl("https://www.cons.org/cmucl/news/release-20a.txt"), LineUtils.firstNLines(cmucl, 25)));
         System.out.println(ptl.getTitle(new EdgeUrl("https://www.x.org/docs/XPRINT/Xprint_old_FAQ.txt"), LineUtils.firstNLines(xprint, 25)));

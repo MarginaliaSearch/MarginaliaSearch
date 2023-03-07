@@ -28,7 +28,7 @@ public class PlainTextLogic {
         List<String> candidates = new ArrayList<>(firstFewLines);
 
         // Remove mailing list header type stuff
-        candidates.removeIf(line -> line.contains(":"));
+        candidates.removeIf(line -> line.length() < 32 &&  line.contains(":"));
 
         for (int line = 1; line < candidates.size(); line++) {
             String maybeUnderline = candidates.get(line);
@@ -44,6 +44,10 @@ public class PlainTextLogic {
             if (isSideline(line)) {
                 return line.replaceAll("[^a-zA-Z0-9]+", " ").trim();
             }
+        }
+
+        if (candidates.size() >= 2 && candidates.get(1).isBlank() && candidates.get(0).trim().length() > 16) {
+            return candidates.get(0).trim();
         }
 
         return url.path.substring(url.path.lastIndexOf('/'));
