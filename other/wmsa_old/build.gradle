@@ -31,9 +31,9 @@ java {
 }
 dependencies {
     implementation project(':third-party')
-    implementation project(':common:service')
-    implementation project(':common:service-discovery')
-    implementation project(':common:service-client')
+    implementation project(':code:common:service')
+    implementation project(':code:common:service-discovery')
+    implementation project(':code:common:service-client')
 
     implementation 'org.jetbrains:annotations:24.0.0'
 

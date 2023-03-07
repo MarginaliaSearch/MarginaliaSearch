@@ -1,0 +1,53 @@
+plugins {
+    id 'java'
+    id "io.freefair.lombok" version "5.3.3.3"
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
+dependencies {
+    implementation project(':code:common:service-discovery')
+    implementation project(':code:common:service-client')
+    implementation project(':code:libraries:big-string')
+
+    implementation libs.lombok
+    annotationProcessor libs.lombok
+    implementation libs.bundles.slf4j
+
+    implementation libs.guice
+    implementation libs.bundles.gson
+
+    implementation libs.notnull
+
+    implementation libs.commons.lang3
+
+    implementation libs.trove
+    implementation libs.fastutil
+
+    implementation libs.rxjava
+    implementation libs.bundles.mariadb
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+}
+
+test {
+    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+    maxHeapSize = "8G"
+    useJUnitPlatform()
+}
+
+task fastTests(type: Test) {
+    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+    maxHeapSize = "8G"
+    useJUnitPlatform {
+        excludeTags "slow"
+    }
+}
+

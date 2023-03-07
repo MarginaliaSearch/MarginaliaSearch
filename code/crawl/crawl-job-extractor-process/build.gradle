@@ -12,30 +12,28 @@ java {
 }
 
 application {
-    mainClass = 'nu.marginalia.screenshot.ScreenshotCaptureToolMain'
-    applicationName = 'screenshot-capture-tool'
+    mainClass = 'nu.marginalia.crawl.CrawlJobExtractorMain'
+    applicationName = 'crawl-job-extractor-process'
 }
 
 dependencies {
-    implementation project(':third-party')
     implementation project(':code:common:model')
-    implementation project(':code:features:screenshots')
     implementation project(':code:common:service')
+    implementation project(':code:crawl:crawling-model')
+    implementation project(':code:crawl:common')
 
     implementation libs.lombok
     annotationProcessor libs.lombok
     implementation libs.bundles.slf4j
-    implementation libs.bundles.selenium
+
     implementation libs.bundles.mariadb
-    implementation libs.notnull
-    implementation libs.commons.compress
-    implementation libs.commons.io
     implementation libs.guice
+    implementation libs.gson
+    implementation libs.zstd
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
-
 }
 
 test {

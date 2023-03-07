@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id "io.freefair.lombok" version "5.3.3.3"
-    id 'application'
+
     id 'jvm-test-suite'
 }
 
@@ -11,31 +11,29 @@ java {
     }
 }
 
-application {
-    mainClass = 'nu.marginalia.screenshot.ScreenshotCaptureToolMain'
-    applicationName = 'screenshot-capture-tool'
-}
-
 dependencies {
     implementation project(':third-party')
     implementation project(':code:common:model')
-    implementation project(':code:features:screenshots')
-    implementation project(':code:common:service')
+    implementation project(':code:common:config')
+    implementation project(':code:common:service-discovery')
+    implementation project(':code:common:service-client')
+
+    implementation project(':code:index:index-query')
 
     implementation libs.lombok
     annotationProcessor libs.lombok
     implementation libs.bundles.slf4j
-    implementation libs.bundles.selenium
-    implementation libs.bundles.mariadb
+
+    implementation libs.prometheus
     implementation libs.notnull
-    implementation libs.commons.compress
-    implementation libs.commons.io
     implementation libs.guice
+    implementation libs.rxjava
+    implementation libs.protobuf
+    implementation libs.gson
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
-
 }
 
 test {
