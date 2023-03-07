@@ -37,9 +37,6 @@ public class IndexJournalReaderSingleCompressedFile implements IndexJournalReade
         journalFile = file;
         fileHeader = readHeader(file);
 
-        var fileInputStream = Files.newInputStream(file, StandardOpenOption.READ);
-        fileInputStream.skipNBytes(FILE_HEADER_SIZE_BYTES);
-
         this.recordPredicate = recordPredicate;
         this.entryPredicate = entryPredicate;
     }
@@ -61,7 +58,7 @@ public class IndexJournalReaderSingleCompressedFile implements IndexJournalReade
         // skip the header
         fileInputStream.skipNBytes(16);
 
-        return new DataInputStream(new ZstdInputStream(fileInputStream));
+        return new DataInputStream(new ZstdInputStream(new BufferedInputStream(fileInputStream)));
     }
 
     public IndexJournalFileHeader fileHeader() {
@@ -192,6 +189,7 @@ public class IndexJournalReaderSingleCompressedFile implements IndexJournalReade
             i++;
             return IndexJournalReadEntry.read(dataInputStream);
         }
+
     }
 
 }

@@ -5,6 +5,8 @@ import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.LongBuffer;
 
 public class IndexJournalReadEntry {
     public final IndexJournalEntryHeader header;
@@ -17,6 +19,9 @@ public class IndexJournalReadEntry {
     }
 
 
+    static final byte[] bytes = new byte[8*65536];
+    static final LongBuffer longBuffer = ByteBuffer.wrap(bytes).asLongBuffer();
+
     public static IndexJournalReadEntry read(DataInputStream inputStream) throws IOException {
 
         final long sizeBlock = inputStream.readLong();
@@ -28,13 +33,12 @@ public class IndexJournalReadEntry {
                 docId,
                 meta);
 
-        long[] buffer = new long[header.entrySize()];
+        inputStream.readFully(bytes, 0, 8*header.entrySize());
 
-        for (int i = 0; i < header.entrySize(); i++) {
-            buffer[i] = inputStream.readLong();
-        }
+        long[] out = new long[header.entrySize()];
+        longBuffer.get(0, out, 0, out.length);
 
-        return new IndexJournalReadEntry(header, buffer);
+        return new IndexJournalReadEntry(header, out);
     }
 
     public long docId() {
