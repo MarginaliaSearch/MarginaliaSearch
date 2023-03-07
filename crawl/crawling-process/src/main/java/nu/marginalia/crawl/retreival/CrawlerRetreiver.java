@@ -91,7 +91,7 @@ public class CrawlerRetreiver {
         }
     }
 
-    public int fetch() throws IOException {
+    public int fetch() {
         Optional<CrawledDomain> probeResult = probeDomainForProblems(domain);
 
         if (probeResult.isPresent()) {
