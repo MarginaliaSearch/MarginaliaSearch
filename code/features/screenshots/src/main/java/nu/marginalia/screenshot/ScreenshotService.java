@@ -87,37 +87,38 @@ public class ScreenshotService {
 
     private Object serveSvgPlaceholder(Response response, int id) {
 
-        var domainName = domainQueries.getDomain(new EdgeId<>(id)).map(Object::toString);
-        if (domainName.isEmpty()) {
-            Spark.halt(404);
-        }
+        var name = domainQueries.getDomain(new EdgeId<>(id)).map(Object::toString)
+                .orElse("[Screenshot Not Yet Captured]");
 
         response.type("image/svg+xml");
-        return String.format("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n" +
-                "<svg\n" +
-                "   xmlns=\"http://www.w3.org/2000/svg\"\n" +
-                "   width=\"640px\"\n" +
-                "   height=\"480px\"\n" +
-                "   viewBox=\"0 0 640 480\"\n" +
-                "   version=\"1.1\">\n" +
-                "  <g>\n" +
-                "    <rect\n" +
-                "       style=\"fill:#808080\"\n" +
-                "       id=\"rect288\"\n" +
-                "       width=\"595.41992\"\n" +
-                "       height=\"430.01825\"\n" +
-                "       x=\"23.034981\"\n" +
-                "       y=\"27.850344\" />\n" +
-                "    <text\n" +
-                "       xml:space=\"preserve\"\n" +
-                "       style=\"font-size:100px;fill:#909090;font-family:sans-serif;\"\n" +
-                "       x=\"20\"\n" +
-                "       y=\"120\">Placeholder</text>\n" +
-                "    <text\n" +
-                "       xml:space=\"preserve\"\n" +
-                "       style=\"font-size:32px;fill:#000000;font-family:monospace;\"\n" +
-                "       x=\"320\" y=\"240\" dominant-baseline=\"middle\" text-anchor=\"middle\">%s</text>\n" +
-                "  </g>\n" +
-                "</svg>\n", domainName.get());
+        
+        return """
+                <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+                <svg
+                   xmlns="http://www.w3.org/2000/svg"
+                   width="640px"
+                   height="480px"
+                   viewBox="0 0 640 480"
+                   version="1.1">
+                  <g>
+                    <rect
+                       style="fill:#808080"
+                       id="rect288"
+                       width="595.41992"
+                       height="430.01825"
+                       x="23.034981"
+                       y="27.850344" />
+                    <text
+                       xml:space="preserve"
+                      style="font-size:100px;fill:#909090;font-family:sans-serif;"
+                       x="20"
+                       y="120">Placeholder</text>
+                    <text
+                       xml:space="preserve"
+                       style="font-size:32px;fill:#000000;font-family:monospace;"
+                       x="320" y="240" dominant-baseline="middle" text-anchor="middle">%s</text>
+                  </g>
+                </svg>\n
+                """.formatted(name);
     }
 }
