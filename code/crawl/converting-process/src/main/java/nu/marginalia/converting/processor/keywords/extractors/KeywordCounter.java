@@ -1,10 +1,9 @@
-package nu.marginalia.converting.processor.keywords;
+package nu.marginalia.converting.processor.keywords.extractors;
 
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import nu.marginalia.language.WordPatterns;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.KeywordMetadata;
-import nu.marginalia.language.model.WordFrequencyData;
 import nu.marginalia.language.model.WordRep;
 import nu.marginalia.language.keywords.KeywordExtractor;
 import nu.marginalia.language.statistics.TermFrequencyDict;
@@ -28,7 +27,7 @@ public class KeywordCounter {
         this.docCount = dict.docCount();
     }
 
-    public List<WordRep> countHisto(KeywordMetadata keywordMetadata, DocumentLanguageData dld) {
+    public List<WordRep> updateWordStatistics(KeywordMetadata keywordMetadata, DocumentLanguageData dld) {
         Object2IntOpenHashMap<String> counts = new Object2IntOpenHashMap<>(10_000, 0.7f);
         HashMap<String, HashSet<WordRep>> instances = new HashMap<>(15000);
 

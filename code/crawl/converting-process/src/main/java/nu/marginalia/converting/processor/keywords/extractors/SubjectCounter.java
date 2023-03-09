@@ -1,4 +1,4 @@
-package nu.marginalia.converting.processor.keywords;
+package nu.marginalia.converting.processor.keywords.extractors;
 
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.KeywordMetadata;

@@ -1,17 +1,15 @@
 package nu.marginalia.converting.model;
 
-import gnu.trove.list.array.TLongArrayList;
+import it.unimi.dsi.fastutil.objects.Object2LongLinkedOpenHashMap;
 import lombok.Getter;
 import lombok.ToString;
 import nu.marginalia.model.crawl.EdgePageWordFlags;
 
 import java.util.*;
-import java.util.function.UnaryOperator;
 
 @ToString @Getter
 public class DocumentKeywordsBuilder {
-    public final ArrayList<String> words = new ArrayList<>();
-    public final TLongArrayList metadata = new TLongArrayList();
+    public final Object2LongLinkedOpenHashMap<String> words;
 
     // |------64 letters is this long-------------------------------|
     // granted, some of these words are word n-grams, but 64 ought to
@@ -23,59 +21,61 @@ public class DocumentKeywordsBuilder {
     }
 
     public DocumentKeywords build() {
-        return new DocumentKeywords(this);
+        final String[] wordArray = new String[words.size()];
+        final long[] meta = new long[words.size()];
+
+        var iter = words.object2LongEntrySet().fastIterator();
+
+        for (int i = 0; iter.hasNext(); i++) {
+            var entry = iter.next();
+
+            meta[i] = entry.getLongValue();
+            wordArray[i] = entry.getKey();
+        }
+
+        return new DocumentKeywords(wordArray, meta);
     }
 
     public DocumentKeywordsBuilder(int cacpacity) {
-        words.ensureCapacity(cacpacity);
-        metadata.ensureCapacity(cacpacity);
+        words  = new Object2LongLinkedOpenHashMap<>(cacpacity);
     }
 
     public void add(String word, long meta) {
         if (word.length() > MAX_WORD_LENGTH)
             return;
 
-        words.add(word);
-        metadata.add(meta);
+        words.put(word, meta);
     }
 
     public void addJustNoMeta(String word) {
         if (word.length() > MAX_WORD_LENGTH)
             return;
 
-        words.add(word);
-        metadata.add(0);
+        words.putIfAbsent(word, 0);
     }
 
     public void setFlagOnMetadataForWords(EdgePageWordFlags flag, Set<String> flagWords) {
-        if (flagWords.isEmpty())
-            return;
-
-        for (int i = 0; i < words.size(); i++) {
-            if (flagWords.contains(words.get(i))) {
-                metadata.set(i, metadata.get(i) | flag.asBit());
-            }
-        }
+        flagWords.forEach(word ->
+            words.mergeLong(word, flag.asBit(), (a, b) -> a|b)
+        );
     }
 
     public void addAllSyntheticTerms(Collection<String> newWords) {
-        words.ensureCapacity(words.size() + newWords.size());
-        metadata.ensureCapacity(metadata.size() + newWords.size());
-
         long meta = EdgePageWordFlags.Synthetic.asBit();
 
-        for (var entry : newWords) {
-            words.add(entry);
-            metadata.add(meta);
-        }
+        newWords.forEach(word -> {
+            words.putIfAbsent(word, meta);
+        });
+
     }
 
     public List<String> getWordsWithAnyFlag(long flags) {
         List<String> ret = new ArrayList<>();
 
-        for (int i = 0; i < words.size(); i++) {
-            if ((metadata.get(i) & flags) > 0) {
-                ret.add(words.get(i));
+        for (var iter = words.object2LongEntrySet().fastIterator(); iter.hasNext();) {
+            var entry = iter.next();
+            if ((flags & entry.getLongValue()) != 0) {
+                ret.add(entry.getKey());
             }
         }
 
@@ -84,10 +84,6 @@ public class DocumentKeywordsBuilder {
 
     public int size() {
         return words.size();
-    }
-
-    public void internalize(UnaryOperator<String> internalizer) {
-        words.replaceAll(internalizer);
     }
 
 }

@@ -115,8 +115,6 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
             throw new DisqualifiedException(DisqualificationReason.QUALITY);
         }
 
-        KeywordMetadata keywordMetadata = new KeywordMetadata();
-
         ret.features = featureExtractor.getFeatures(crawledDomain, doc, dld);
         ret.description = getDescription(doc);
         ret.hashCode = dld.localitySensitiveHashCode();
@@ -124,7 +122,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         PubDate pubDate = pubDateSniffer.getPubDate(crawledDocument.headers, url, doc, ret.standard, true);
         ret.metadata = new DocumentMetadata(url.depth(), pubDate.yearByte(), 0, (int) -ret.quality, EnumSet.noneOf(EdgePageDocumentFlags.class));
 
-        DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, keywordMetadata);
+        DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld);
 
         new MetaTagsBuilder()
                 .addDomainCrawlData(crawledDomain)

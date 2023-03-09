@@ -60,7 +60,7 @@ class SentenceExtractorTest {
                 var doc = Jsoup.parse(Files.readString(file.toPath()));
                 long start = System.currentTimeMillis();
                 var dld = se.extractSentences(doc);
-                documentKeywordExtractor.extractKeywords(dld, new KeywordMetadata());
+                documentKeywordExtractor.extractKeywords(dld);
                 total += (System.currentTimeMillis() - start);
             }
             System.out.println(total);
@@ -114,40 +114,6 @@ class SentenceExtractorTest {
         System.out.println(WordPatterns.singleWordAdditionalPattern.matcher("2.6.18164.el5pae").matches());
     }
 
-    @Test
-    void extractSentences() throws IOException {
-        var data = WmsaHome.getHomePath().resolve("test-data/");
-
-        System.out.println("Running");
-
-        var dict = new TermFrequencyDict(lm);
-
-        DocumentKeywordExtractor documentKeywordExtractor = new DocumentKeywordExtractor(dict);
-        long st = System.currentTimeMillis();
-        for (var file : Objects.requireNonNull(data.toFile().listFiles())) {
-            var newResult = newSe.extractSentences(Jsoup.parse(Files.readString(file.toPath())));
-            var newRes = documentKeywordExtractor.extractKeywords(newResult, new KeywordMetadata());
-
-            var terms = IntStream.range(0, newRes.size()).mapToObj(i -> Pair.of(newRes.words.get(i), new WordMetadata(newRes.metadata.get(i))))
-                            .sorted(Comparator.comparing(e -> -e.getValue().tfIdf()))
-                            .limit(100)
-                            .map(Pair::getKey)
-                            .toArray(String[]::new);
-            System.out.println(Arrays.toString(terms));
-
-            var terms2 = IntStream.range(0, newRes.size()).mapToObj(i -> Pair.of(newRes.words.get(i), new WordMetadata(newRes.metadata.get(i))))
-                    .sorted(Comparator.comparing(e -> -e.getValue().tfIdf()))
-                    .filter(e -> e.getValue().hasFlag(EdgePageWordFlags.Subjects))
-                    .limit(100)
-                    .map(Pair::getKey)
-                    .toArray(String[]::new);
-            System.out.println(Arrays.toString(terms2));
-            System.out.println("--");
-        }
-        System.out.println(System.currentTimeMillis() - st);
-
-    }
-
     @SneakyThrows
     @Test
     @Disabled
@@ -156,16 +122,7 @@ class SentenceExtractorTest {
                 Jsoup.parse(Files.readString(Path.of("/home/vlofgren/man open (2) openat.html"))));
 
         var dict = new TermFrequencyDict(lm);
-        System.out.println(new DocumentKeywordExtractor(dict).extractKeywords(result, new KeywordMetadata()));
-
-
-//
-//        var pke = new PositionKeywordExtractor(dict, new KeywordExtractor());
-//        pke.count(result).stream().map(wr -> wr.word).distinct().forEach(System.out::println);
-//        for (var sent : result.sentences) {
-//            System.out.println(sent);
-//        }
-
+        System.out.println(new DocumentKeywordExtractor(dict).extractKeywords(result));
     }
 
     @Test

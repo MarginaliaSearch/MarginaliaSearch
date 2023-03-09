@@ -1,8 +1,8 @@
 package nu.marginalia.converting.tool;
 
 import nu.marginalia.LanguageModels;
-import nu.marginalia.converting.processor.keywords.KeywordCounter;
-import nu.marginalia.converting.processor.keywords.NameCounter;
+import nu.marginalia.converting.processor.keywords.extractors.KeywordCounter;
+import nu.marginalia.converting.processor.keywords.extractors.NameCounter;
 import nu.marginalia.language.keywords.KeywordExtractor;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.language.model.DocumentSentence;

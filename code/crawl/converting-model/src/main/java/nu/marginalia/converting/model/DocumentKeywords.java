@@ -9,11 +9,6 @@ public record DocumentKeywords(
                                String[] keywords,
                                long[] metadata) {
 
-    DocumentKeywords(DocumentKeywordsBuilder words) {
-        this(words.words.toArray(String[]::new),
-                words.metadata.toArray());
-    }
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

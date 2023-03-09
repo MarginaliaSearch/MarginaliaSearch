@@ -5,7 +5,6 @@ import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.model.crawl.EdgePageWordFlags;
 
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Objects;
 
@@ -33,6 +32,9 @@ public final class KeywordMetadata {
 
         int tfidf = wordsTfIdf.getOrDefault(stemmed, 0);
         EnumSet<EdgePageWordFlags> flags = flagsTemplate.clone();
+
+        if (tfidf > 100)
+            flags.add(EdgePageWordFlags.TfIdfHigh);
 
         if (subjectKeywords.contains(stemmed))
             flags.add(EdgePageWordFlags.Subjects);

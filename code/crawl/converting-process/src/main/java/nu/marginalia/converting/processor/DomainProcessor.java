@@ -46,25 +46,14 @@ public class DomainProcessor {
 
             fixBadCanonicalTags(crawledDomain.doc);
 
-            StringPool stringPool = StringPool.create(1000 + 100 * crawledDomain.doc.size());
-
             for (var doc : crawledDomain.doc) {
                 var processedDoc = documentProcessor.process(doc, crawledDomain);
-
-                if (processedDoc.words != null) {
-                    // The word data is extremely redundant, and may encompass something like
-                    // 5,000,000 words per domain (and multiple domains are processed at the same time).
-
-                    processedDoc.words.internalize(stringPool::internalize);
-                }
 
                 if (processedDoc.url != null) {
                     ret.documents.add(processedDoc);
                 }
 
             }
-
-            stringPool.flush();
 
             documentDeduplicator.deduplicate(ret.documents);
 
