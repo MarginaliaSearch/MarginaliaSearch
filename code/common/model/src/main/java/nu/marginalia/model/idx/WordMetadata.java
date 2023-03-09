@@ -41,7 +41,7 @@ public record WordMetadata(int tfIdf,
         this(
                 (int)((value >>> TF_IDF_SHIFT) & TF_IDF_MASK),
                 (int)((value >>> POSITIONS_SHIFT) & POSITIONS_MASK),
-                Math.max((int)((value >>> POSITIONS_SHIFT) & POSITIONS_MASK), (int)((value >>> COUNT_SHIFT) & COUNT_MASK)),
+                Integer.bitCount((int) ((value >>> POSITIONS_SHIFT) & POSITIONS_MASK)),
                 (byte) (value & FLAGS_MASK)
         );
     }
