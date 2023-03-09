@@ -13,6 +13,12 @@ public record WordMetadata(int tfIdf,
                            int positions,
                            int count,
                            byte flags) {
+    public WordMetadata {
+        if (WordMetadata.class.desiredAssertionStatus()) {
+            // invariant checks go here
+            assert(Integer.bitCount(positions) <= count);
+        }
+    }
 
     public static final long COUNT_MASK = 0xFL;
     public static final int COUNT_SHIFT = 8;
