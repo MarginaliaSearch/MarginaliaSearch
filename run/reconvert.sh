@@ -8,6 +8,7 @@ SAMPLE_DIR="samples/${SAMPLE_NAME}/"
 ## Configuration
 
 CONVERTER_PROCESS_OPTS="
+-ea
 -Xmx16G
 -XX:-CompactStrings
 -XX:+UseParallelGC
@@ -16,6 +17,7 @@ CONVERTER_PROCESS_OPTS="
 "
 
 LOADER_PROCESS_OPTS="
+-ea
 -Dsmall-ram=TRUE
 -Dlocal-index-path=vol/iw
 "
