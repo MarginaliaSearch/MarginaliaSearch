@@ -57,5 +57,8 @@ public record PubDate(String dateIso8601, int year) {
     public static int fromYearByte(int yearByte) {
         return yearByte + ENCODING_OFFSET;
     }
+    public static int toYearByte(int year) {
+        return Math.max(0, year - ENCODING_OFFSET);
+    }
 
 }

@@ -1,5 +1,6 @@
 package nu.marginalia.converting.processor.keywords;
 
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import nu.marginalia.language.WordPatterns;
 import nu.marginalia.language.encoding.AsciiFlattener;
 import nu.marginalia.language.keywords.KeywordExtractor;
@@ -32,26 +33,6 @@ public class DocumentKeywordExtractor {
         subjectCounter = new SubjectCounter(keywordExtractor);
     }
 
-
-    public DocumentKeywordsBuilder extractKeywordsMinimal(DocumentLanguageData documentLanguageData, KeywordMetadata keywordMetadata) {
-
-        List<WordRep> titleWords = extractTitleWords(documentLanguageData);
-        List<WordRep> wordsNamesAll = nameCounter.count(documentLanguageData, 2);
-        List<WordRep> subjects = subjectCounter.count(keywordMetadata, documentLanguageData);
-
-        for (var rep : titleWords) keywordMetadata.titleKeywords().add(rep.stemmed);
-        for (var rep : wordsNamesAll) keywordMetadata.namesKeywords().add(rep.stemmed);
-        for (var rep : subjects) keywordMetadata.subjectKeywords().add(rep.stemmed);
-
-        List<String> artifacts = getArtifacts(documentLanguageData);
-
-        FilteringDocumentKeywordsBuilder wordsBuilder = new FilteringDocumentKeywordsBuilder();
-
-        createWords(wordsBuilder, keywordMetadata, titleWords, 0);
-        artifacts.forEach(wordsBuilder::addWithBlankMetadata);
-
-        return wordsBuilder.build();
-    }
 
     public DocumentKeywordsBuilder extractKeywords(DocumentLanguageData documentLanguageData, KeywordMetadata keywordMetadata) {
 
@@ -86,7 +67,7 @@ public class DocumentKeywordExtractor {
 
 
     public void getWordPositions(KeywordMetadata keywordMetadata, DocumentLanguageData dld) {
-        Map<String, Integer> ret = keywordMetadata.positionMask();
+        Object2IntOpenHashMap<String> ret = keywordMetadata.positionMask();
 
         for (var sent : dld.titleSentences) {
             int posBit = 1;

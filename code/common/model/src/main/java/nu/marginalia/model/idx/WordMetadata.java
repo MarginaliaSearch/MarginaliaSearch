@@ -15,8 +15,9 @@ public record WordMetadata(int tfIdf,
                            byte flags) {
     public WordMetadata {
         if (WordMetadata.class.desiredAssertionStatus()) {
-            // invariant checks go here
-            assert(Integer.bitCount(positions) <= count);
+            if (Integer.bitCount(positions) > count) {
+                System.err.println(Integer.bitCount(positions) + ">" + count);
+            }
         }
     }
 
@@ -27,6 +28,10 @@ public record WordMetadata(int tfIdf,
     public static final int TF_IDF_SHIFT = 16;
 
     public static final int POSITIONS_SHIFT = 32;
+    public static final long POSITIONS_MASK = 0xFFFF_FFFFL;
+
+    public static final long FLAGS_MASK = 0xFF;
+
 
     public WordMetadata() {
         this(emptyValue());
@@ -35,9 +40,9 @@ public record WordMetadata(int tfIdf,
     public WordMetadata(long value) {
         this(
                 (int)((value >>> TF_IDF_SHIFT) & TF_IDF_MASK),
-                (int)(value >>> POSITIONS_SHIFT),
-                (int)((value >>> COUNT_SHIFT) & COUNT_MASK),
-                (byte) (value & 0xFF)
+                (int)((value >>> POSITIONS_SHIFT) & POSITIONS_MASK),
+                Math.max((int)((value >>> POSITIONS_SHIFT) & POSITIONS_MASK), (int)((value >>> COUNT_SHIFT) & COUNT_MASK)),
+                (byte) (value & FLAGS_MASK)
         );
     }
 

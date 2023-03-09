@@ -78,9 +78,8 @@ public class SearchResultValuator {
                 continue;
 
             final double bm25Factor = getBM25(keywordSet, length);
-            final double minCountFactor = getMinCountFactor(keywordSet);
 
-            bestScore = min(bestScore, bm25Factor * minCountFactor);
+            bestScore = min(bestScore, bm25Factor);
 
             bestAllTermsFactor = min(bestAllTermsFactor, getAllTermsFactorForSet(keywordSet, titleLength));
 
@@ -94,23 +93,6 @@ public class SearchResultValuator {
                 .findAny()
                 .map(EdgeSearchResultKeywordScore::hasPriorityTerms)
                 .orElse(false);
-    }
-
-    private double getMinCountFactor(SearchResultsKeywordSet keywordSet) {
-        // Penalize results with few keyword hits
-
-        int min = 32;
-
-        for (var keyword : keywordSet) {
-            if (!keyword.wordMetadata.hasFlag(EdgePageWordFlags.Title) && keyword.score.isRegular()) {
-                min = min(min, keyword.count());
-            }
-        }
-
-        if (min <= 1) return 2;
-        if (min <= 2) return 1.5;
-        if (min <= 3) return 1.25;
-        return 1;
     }
 
     private double getBM25(SearchResultsKeywordSet keywordSet, int length) {

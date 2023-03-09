@@ -28,6 +28,7 @@ dependencies {
     implementation libs.guice
     implementation libs.jsoup
     implementation libs.trove
+    implementation libs.fastutil
 
     implementation libs.bundles.nlp
     implementation libs.commons.lang3
