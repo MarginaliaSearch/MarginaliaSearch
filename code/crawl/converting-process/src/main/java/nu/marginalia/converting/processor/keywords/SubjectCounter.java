@@ -81,12 +81,7 @@ public class SubjectCounter {
             return sum / parts.length;
         }
 
-        var meta = keywordMetadata.wordsTfIdf().get(stemmed);
-        if (meta != null) {
-            return meta.tfIdfNormalized();
-        }
-
-        return 0;
+        return keywordMetadata.wordsTfIdf().getOrDefault(stemmed, 0);
     }
 
     private boolean isDetOrAdverbOrVerb(String posTag) {

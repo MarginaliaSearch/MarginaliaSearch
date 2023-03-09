@@ -85,7 +85,7 @@ class SearchResultValuatorTest {
                 .reduce((a,b) -> a|b)
                 .orElse(0);
 
-        return new WordMetadata(tfIdf, posBits, positions.size(), wordFlags).encode();
+        return new WordMetadata(tfIdf, posBits, wordFlags).encode();
     }
 
 }

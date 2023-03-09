@@ -52,7 +52,7 @@ public class KeywordCounter {
             }
         }
 
-        HashMap<String, WordFrequencyData> tfIdf = keywordMetadata.wordsTfIdf();
+        Object2IntOpenHashMap<String> tfIdf = keywordMetadata.wordsTfIdf();
         List<WordRep> tfIdfHigh = new ArrayList<>();
 
         int maxVal = maxValue(counts);
@@ -61,7 +61,7 @@ public class KeywordCounter {
         counts.forEach((key, cnt) -> {
             int value = getTermValue(key, cnt, maxVal);
 
-            tfIdf.put(key, new WordFrequencyData(cnt, value));
+            tfIdf.put(key, value);
 
             if (cnt > 1 && value > 100) {
                 tfIdfHigh.addAll(instances.get(key));

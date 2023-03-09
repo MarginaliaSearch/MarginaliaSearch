@@ -104,7 +104,7 @@ public class SearchResultValuator {
         double sum = 0.;
 
         for (var keyword : keywordSet) {
-            double count = Math.min(255, keyword.count());
+            double count = Math.min(255, Integer.bitCount(keyword.wordMetadata().positions()));
             double wt = keyword.weight() * keyword.weight() / keywordSet.length();
 
             final double invFreq = Math.log(1.0 + (docCount - wt + 0.5)/(wt + 0.5));
@@ -313,9 +313,7 @@ public class SearchResultValuator {
         public int tfIdf() {
             return wordMetadata.tfIdf();
         }
-        public int count() {
-            return wordMetadata.count();
-        }
+
         public EnumSet<EdgePageWordFlags> flags() {
             return wordMetadata.flagSet();
         }

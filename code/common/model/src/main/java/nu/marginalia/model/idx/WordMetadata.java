@@ -11,18 +11,9 @@ import static java.lang.Math.min;
 
 public record WordMetadata(int tfIdf,
                            int positions,
-                           int count,
                            byte flags) {
-    public WordMetadata {
-        if (WordMetadata.class.desiredAssertionStatus()) {
-            if (Integer.bitCount(positions) > count) {
-                System.err.println(Integer.bitCount(positions) + ">" + count);
-            }
-        }
-    }
 
-    public static final long COUNT_MASK = 0xFL;
-    public static final int COUNT_SHIFT = 8;
+    // 8 unsused bits at the beginning
 
     public static final long TF_IDF_MASK = 0xFFFFL;
     public static final int TF_IDF_SHIFT = 16;
@@ -41,17 +32,15 @@ public record WordMetadata(int tfIdf,
         this(
                 (int)((value >>> TF_IDF_SHIFT) & TF_IDF_MASK),
                 (int)((value >>> POSITIONS_SHIFT) & POSITIONS_MASK),
-                Integer.bitCount((int) ((value >>> POSITIONS_SHIFT) & POSITIONS_MASK)),
                 (byte) (value & FLAGS_MASK)
         );
     }
 
     public WordMetadata(int tfIdf,
                         int positions,
-                        int count,
                         Set<EdgePageWordFlags> flags)
     {
-        this(tfIdf, positions, count, encodeFlags(flags));
+        this(tfIdf, positions, encodeFlags(flags));
     }
 
     private static byte encodeFlags(Set<EdgePageWordFlags> flags) {
@@ -82,7 +71,6 @@ public record WordMetadata(int tfIdf,
         StringBuilder sb = new StringBuilder(getClass().getSimpleName());
         sb.append('[')
                 .append("tfidf=").append(tfIdf).append(", ")
-                .append("count=").append(count).append(", ")
                 .append("positions=[").append(BrailleBlockPunchCards.printBits(positions, 32)).append(']');
         sb.append(", flags=").append(flags).append(']');
         return sb.toString();
@@ -95,14 +83,13 @@ public record WordMetadata(int tfIdf,
 
         ret |= Byte.toUnsignedLong(flags);
         ret |= min(TF_IDF_MASK, max(0, tfIdf)) << TF_IDF_SHIFT;
-        ret |= min(COUNT_MASK, max(0, count)) << COUNT_SHIFT;
         ret |= ((long)(positions)) << POSITIONS_SHIFT;
 
         return ret;
     }
 
     public boolean isEmpty() {
-        return count == 0 && positions == 0 && flags == 0 && tfIdf == 0;
+        return positions == 0 && flags == 0 && tfIdf == 0;
     }
 
     public static long emptyValue() {

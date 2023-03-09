@@ -1,4 +1,4 @@
 package nu.marginalia.language.model;
 
 
-public record WordFrequencyData(int count, int tfIdfNormalized) { }
+public record WordFrequencyData(int tfIdfNormalized) { }

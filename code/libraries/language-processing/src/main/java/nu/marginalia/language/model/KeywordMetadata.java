@@ -11,17 +11,17 @@ import java.util.Objects;
 
 public final class KeywordMetadata {
 
-    private static final WordFrequencyData empty = new WordFrequencyData(0, 0);
+    private static final WordFrequencyData empty = new WordFrequencyData(0);
     private final HashSet<String> titleKeywords = new HashSet<>(50);
     private final HashSet<String> subjectKeywords = new HashSet<>(10);
     private final HashSet<String> namesKeywords = new HashSet<>(50);
-    private final HashMap<String, WordFrequencyData> wordsTfIdf;
+    private final Object2IntOpenHashMap<String> wordsTfIdf;
     private final Object2IntOpenHashMap<String> positionMask;
     private final EnumSet<EdgePageWordFlags> wordFlagsTemplate;
 
     public KeywordMetadata(EnumSet<EdgePageWordFlags> flags) {
         this.positionMask = new Object2IntOpenHashMap<>(10_000, 0.7f);
-        this.wordsTfIdf = new HashMap<>(10_000);
+        this.wordsTfIdf =  new Object2IntOpenHashMap<>(10_000, 0.7f);
         this.wordFlagsTemplate = flags;
     }
 
@@ -31,7 +31,7 @@ public final class KeywordMetadata {
 
     public long getMetadataForWord(EnumSet<EdgePageWordFlags> flagsTemplate, String stemmed) {
 
-        WordFrequencyData tfidf = wordsTfIdf.getOrDefault(stemmed, empty);
+        int tfidf = wordsTfIdf.getOrDefault(stemmed, 0);
         EnumSet<EdgePageWordFlags> flags = flagsTemplate.clone();
 
         if (subjectKeywords.contains(stemmed))
@@ -44,9 +44,8 @@ public final class KeywordMetadata {
             flags.add(EdgePageWordFlags.Title);
 
         int positions = positionMask.getOrDefault(stemmed, 0);
-        int count = Math.max(Integer.bitCount(positions), tfidf.count());
 
-        return new WordMetadata(tfidf.tfIdfNormalized(), positions, count, flags).encode();
+        return new WordMetadata(tfidf, positions, flags).encode();
     }
 
     public HashSet<String> titleKeywords() {
@@ -61,7 +60,7 @@ public final class KeywordMetadata {
         return namesKeywords;
     }
 
-    public HashMap<String, WordFrequencyData> wordsTfIdf() {
+    public Object2IntOpenHashMap<String> wordsTfIdf() {
         return wordsTfIdf;
     }
 
