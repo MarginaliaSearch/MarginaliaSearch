@@ -30,12 +30,14 @@ ENTRYPOINT WMSA_HOME=/wmsa /${application.applicationName}/bin/${application.app
     it.outputs.file(df)
 }
 
+dockerPrepare {
+    dependsOn tasks.dockerFile
+}
+
 docker {
     dockerfile = tasks.dockerFile.outputs.files.singleFile
     name = 'marginalia.nu/'+application.applicationName+':latest'
     files tasks.distTar.outputs
     tags 'latest'
-
     dependsOn tasks.distTar
-    dependsOn tasks.dockerFile
 }
