@@ -13,7 +13,9 @@ public record WordMetadata(int tfIdf,
                            int positions,
                            byte flags) {
 
-    // 8 unsused bits at the beginning
+    // Bottom 16 bits are used for flags
+
+    public static final long FLAGS_MASK = 0xFFFFL;
 
     public static final long TF_IDF_MASK = 0xFFFFL;
     public static final int TF_IDF_SHIFT = 16;
@@ -21,7 +23,6 @@ public record WordMetadata(int tfIdf,
     public static final int POSITIONS_SHIFT = 32;
     public static final long POSITIONS_MASK = 0xFFFF_FFFFL;
 
-    public static final long FLAGS_MASK = 0xFF;
 
 
     public WordMetadata() {

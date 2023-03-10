@@ -91,7 +91,7 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
 
         ret.metadata = new DocumentMetadata(url.depth(), pubDate.yearByte(), 0, (int) -ret.quality, EnumSet.of(EdgePageDocumentFlags.PlainText));
 
-        DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld);
+        DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, url);
 
         new MetaTagsBuilder()
                 .addDomainCrawlData(crawledDomain)

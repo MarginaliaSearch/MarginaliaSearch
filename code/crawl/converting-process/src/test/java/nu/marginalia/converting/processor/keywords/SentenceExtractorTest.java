@@ -11,6 +11,7 @@ import nu.marginalia.language.statistics.TermFrequencyDict;
 import nu.marginalia.language.keywords.KeywordExtractor;
 import nu.marginalia.language.model.WordSeparator;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.EdgePageWordFlags;
 import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.test.util.TestLanguageModels;
@@ -42,6 +43,7 @@ class SentenceExtractorTest {
     }
 
 
+    @SneakyThrows
     public static void main(String... args) throws IOException {
         final LanguageModels lm = TestLanguageModels.getLanguageModels();
 
@@ -52,6 +54,7 @@ class SentenceExtractorTest {
         SentenceExtractor se = new SentenceExtractor(lm);
 
         var dict = new TermFrequencyDict(lm);
+        var url = new EdgeUrl("https://memex.marginalia.nu/");
         DocumentKeywordExtractor documentKeywordExtractor = new DocumentKeywordExtractor(dict);
 
         for (;;) {
@@ -60,7 +63,7 @@ class SentenceExtractorTest {
                 var doc = Jsoup.parse(Files.readString(file.toPath()));
                 long start = System.currentTimeMillis();
                 var dld = se.extractSentences(doc);
-                documentKeywordExtractor.extractKeywords(dld);
+                documentKeywordExtractor.extractKeywords(dld, url);
                 total += (System.currentTimeMillis() - start);
             }
             System.out.println(total);
@@ -122,7 +125,7 @@ class SentenceExtractorTest {
                 Jsoup.parse(Files.readString(Path.of("/home/vlofgren/man open (2) openat.html"))));
 
         var dict = new TermFrequencyDict(lm);
-        System.out.println(new DocumentKeywordExtractor(dict).extractKeywords(result));
+        System.out.println(new DocumentKeywordExtractor(dict).extractKeywords(result, new EdgeUrl("https://memex.marginalia.nu/")));
     }
 
     @Test

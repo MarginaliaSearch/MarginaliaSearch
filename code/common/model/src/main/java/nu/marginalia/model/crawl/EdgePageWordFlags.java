@@ -33,7 +33,18 @@ public enum EdgePageWordFlags {
     /** Word is important to adjacent documents
      * @see SiteWords
      * */
-    SiteAdjacent;
+    SiteAdjacent,
+
+    /** Keyword appears in URL path
+     *
+     */
+    UrlPath,
+
+    /** Keyword appears in domain name
+     *
+     */
+    UrlDomain
+    ;
 
     public int asBit() {
         return 1 << ordinal();

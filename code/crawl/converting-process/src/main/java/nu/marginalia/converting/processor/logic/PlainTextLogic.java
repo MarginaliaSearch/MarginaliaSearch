@@ -50,7 +50,20 @@ public class PlainTextLogic {
             return candidates.get(0).trim();
         }
 
-        return url.path.substring(url.path.lastIndexOf('/'));
+        return getFileNameFromPath(url);
+
+    }
+
+    private String getFileNameFromPath(EdgeUrl url) {
+        final String path = url.path;
+
+        int lastSlash = path.lastIndexOf('/');
+
+        if (lastSlash + 1 < path.length()) {
+            return path.substring(lastSlash + 1);
+        }
+
+        return path;
     }
 
     public boolean isSideline(String s) {

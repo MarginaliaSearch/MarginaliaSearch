@@ -152,6 +152,14 @@ public class SearchResultValuator {
         else if (theKeyword.wordMetadata.hasFlag(EdgePageWordFlags.Site)) {
             return totalFactor * 0.7;
         }
+
+        if (theKeyword.wordMetadata.hasFlag(EdgePageWordFlags.UrlDomain)) {
+            return totalFactor * 0.8;
+        }
+        else if (theKeyword.wordMetadata.hasFlag(EdgePageWordFlags.UrlPath)) {
+            return totalFactor * 0.9;
+        }
+
         return totalFactor;
     }
 
@@ -212,6 +220,8 @@ public class SearchResultValuator {
         final boolean siteAdjacent = flags.contains(EdgePageWordFlags.SiteAdjacent);
         final boolean subject = flags.contains(EdgePageWordFlags.Subjects);
         final boolean names = flags.contains(EdgePageWordFlags.NamesWords);
+        final boolean urlDomain = flags.contains(EdgePageWordFlags.UrlDomain);
+        final boolean urlPath = flags.contains(EdgePageWordFlags.UrlPath);
 
         if (title) {
             if (titleLength <= 64) {
@@ -234,6 +244,13 @@ public class SearchResultValuator {
 
         if (subject) {
             f *= Math.pow(0.8, k);
+        }
+
+        if (urlDomain) {
+            f *= Math.pow(0.8, k);
+        }
+        else if (urlPath) {
+            f *= Math.pow(0.9, k);
         }
 
         if (!title && !subject && names) {

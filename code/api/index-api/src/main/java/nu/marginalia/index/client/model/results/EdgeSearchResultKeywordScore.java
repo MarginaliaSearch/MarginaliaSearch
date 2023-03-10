@@ -58,6 +58,14 @@ public record EdgeSearchResultKeywordScore(int set,
             sum -= 1;
         }
 
+        if (hasTermFlag(EdgePageWordFlags.UrlDomain)) {
+            sum -= 5;
+        }
+
+        if (hasTermFlag(EdgePageWordFlags.UrlPath)) {
+            sum -= 5;
+        }
+
         double tfIdf = WordMetadata.decodeTfidf(encodedWordMetadata);
         int positionBits = WordMetadata.decodePositions(encodedWordMetadata);
 

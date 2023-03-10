@@ -152,6 +152,12 @@ public class IndexResultValuator {
         else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_TITLE) {
             return EdgePageWordFlags.Title.isPresent(metadata);
         }
+        else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_URL) {
+            return EdgePageWordFlags.UrlPath.isPresent(metadata);
+        }
+        else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_DOMAIN) {
+            return EdgePageWordFlags.UrlDomain.isPresent(metadata);
+        }
         return true;
     }
 

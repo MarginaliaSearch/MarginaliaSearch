@@ -17,9 +17,9 @@ public enum SearchProfile {
     CORPO_CLEAN("corpo-clean",  SearchSetIdentifier.NONE),
     ACADEMIA("academia",  SearchSetIdentifier.ACADEMIA),
 
+    PLAIN_TEXT("plain-text", SearchSetIdentifier.NONE),
     FOOD("food", SearchSetIdentifier.NONE),
     CRAFTS("crafts", SearchSetIdentifier.NONE),
-
     CLASSICS("classics", SearchSetIdentifier.NONE),
     ;
 
@@ -54,6 +54,9 @@ public enum SearchProfile {
         if (this == VINTAGE) {
             subquery.searchTermsPriority.add("format:html123");
             subquery.searchTermsPriority.add("js:false");
+        }
+        if (this == PLAIN_TEXT) {
+            subquery.searchTermsInclude.add("format:plain");
         }
         if (this == FOOD) {
             subquery.searchTermsInclude.add(HtmlFeature.CATEGORY_FOOD.getKeyword());

@@ -28,7 +28,6 @@ public class SubjectCounter {
 
     public List<WordRep> count(KeywordMetadata keywordMetadata, DocumentLanguageData dld) {
 
-        Map<String, Integer> counts = new HashMap<>();
         Map<String, Set<WordRep>> instances = new HashMap<>();
 
         for (var sentence : dld.sentences) {
@@ -81,7 +80,7 @@ public class SubjectCounter {
             return sum / parts.length;
         }
 
-        return keywordMetadata.wordsTfIdf().getOrDefault(stemmed, 0);
+        return keywordMetadata.wordsTfIdf.getOrDefault(stemmed, 0);
     }
 
     private boolean isDetOrAdverbOrVerb(String posTag) {

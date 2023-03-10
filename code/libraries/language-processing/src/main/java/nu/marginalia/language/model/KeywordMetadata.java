@@ -11,11 +11,16 @@ import java.util.Objects;
 public final class KeywordMetadata {
 
     private static final WordFrequencyData empty = new WordFrequencyData(0);
-    private final HashSet<String> titleKeywords = new HashSet<>(50);
-    private final HashSet<String> subjectKeywords = new HashSet<>(10);
-    private final HashSet<String> namesKeywords = new HashSet<>(50);
-    private final Object2IntOpenHashMap<String> wordsTfIdf;
-    private final Object2IntOpenHashMap<String> positionMask;
+    public final HashSet<String> titleKeywords = new HashSet<>(50);
+    public final HashSet<String> subjectKeywords = new HashSet<>(10);
+    public final HashSet<String> namesKeywords = new HashSet<>(50);
+
+    public final HashSet<String> urlKeywords = new HashSet<>(10);
+
+    public final HashSet<String> domainKeywords = new HashSet<>(10);
+
+    public final Object2IntOpenHashMap<String> wordsTfIdf;
+    public final Object2IntOpenHashMap<String> positionMask;
     private final EnumSet<EdgePageWordFlags> wordFlagsTemplate;
 
     public KeywordMetadata(EnumSet<EdgePageWordFlags> flags) {
@@ -45,29 +50,15 @@ public final class KeywordMetadata {
         if (titleKeywords.contains(stemmed))
             flags.add(EdgePageWordFlags.Title);
 
+        if (urlKeywords.contains(stemmed))
+            flags.add(EdgePageWordFlags.UrlPath);
+
+        if (domainKeywords.contains(stemmed))
+            flags.add(EdgePageWordFlags.UrlDomain);
+
         int positions = positionMask.getOrDefault(stemmed, 0);
 
         return new WordMetadata(tfidf, positions, flags).encode();
-    }
-
-    public HashSet<String> titleKeywords() {
-        return titleKeywords;
-    }
-
-    public HashSet<String> subjectKeywords() {
-        return subjectKeywords;
-    }
-
-    public HashSet<String> namesKeywords() {
-        return namesKeywords;
-    }
-
-    public Object2IntOpenHashMap<String> wordsTfIdf() {
-        return wordsTfIdf;
-    }
-
-    public Object2IntOpenHashMap<String> positionMask() {
-        return positionMask;
     }
 
     public EnumSet<EdgePageWordFlags> wordFlagsTemplate() {

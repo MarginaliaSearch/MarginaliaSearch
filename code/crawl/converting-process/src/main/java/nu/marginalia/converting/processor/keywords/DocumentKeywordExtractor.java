@@ -9,6 +9,7 @@ import nu.marginalia.language.model.KeywordMetadata;
 import nu.marginalia.language.model.WordRep;
 import nu.marginalia.converting.model.DocumentKeywordsBuilder;
 import nu.marginalia.language.statistics.TermFrequencyDict;
+import nu.marginalia.model.EdgeUrl;
 
 import javax.inject.Inject;
 import java.util.*;
@@ -23,7 +24,10 @@ public class DocumentKeywordExtractor {
     private final ArtifactKeywords artifactKeywords;
 
     private final SimpleKeywords simpleKeywords;
+
+    private final UrlKeywords urlKeywords;
     private final DocumentKeywordPositionBitmaskExtractor keywordPositions;
+
 
 
     @Inject
@@ -33,6 +37,7 @@ public class DocumentKeywordExtractor {
         keywordPositions = new DocumentKeywordPositionBitmaskExtractor(keywordExtractor);
         artifactKeywords = new ArtifactKeywords();
 
+        urlKeywords = new UrlKeywords();
         tfIdfCounter = new KeywordCounter(dict, keywordExtractor);
         nameCounter = new NameCounter(keywordExtractor);
         subjectCounter = new SubjectCounter(keywordExtractor);
@@ -40,7 +45,7 @@ public class DocumentKeywordExtractor {
     }
 
 
-    public DocumentKeywordsBuilder extractKeywords(DocumentLanguageData documentLanguageData) {
+    public DocumentKeywordsBuilder extractKeywords(DocumentLanguageData documentLanguageData, EdgeUrl url) {
 
         KeywordMetadata keywordMetadata = keywordPositions.getWordPositions(documentLanguageData);
 
@@ -49,12 +54,14 @@ public class DocumentKeywordExtractor {
         List<WordRep> titleWords = extractTitleWords(documentLanguageData);
         List<WordRep> wordsNamesAll = nameCounter.count(documentLanguageData, 2);
         List<WordRep> subjects = subjectCounter.count(keywordMetadata, documentLanguageData);
-
         List<String> artifacts = artifactKeywords.getArtifactKeywords(documentLanguageData);
 
-        for (var rep : titleWords) keywordMetadata.titleKeywords().add(rep.stemmed);
-        for (var rep : wordsNamesAll) keywordMetadata.namesKeywords().add(rep.stemmed);
-        for (var rep : subjects) keywordMetadata.subjectKeywords().add(rep.stemmed);
+        for (var rep : titleWords) keywordMetadata.titleKeywords.add(rep.stemmed);
+        for (var rep : wordsNamesAll) keywordMetadata.namesKeywords.add(rep.stemmed);
+        for (var rep : subjects) keywordMetadata.subjectKeywords.add(rep.stemmed);
+
+        keywordMetadata.urlKeywords.addAll(urlKeywords.getUrlKeywords(url));
+        keywordMetadata.domainKeywords.addAll(urlKeywords.getDomainKeywords(url));
 
         DocumentKeywordsBuilder wordsBuilder = new DocumentKeywordsBuilder();
 

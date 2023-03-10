@@ -18,7 +18,7 @@ public class DocumentKeywordPositionBitmaskExtractor {
     public KeywordMetadata getWordPositions(DocumentLanguageData dld) {
         final KeywordMetadata keywordMetadata = new KeywordMetadata();
 
-        Object2IntOpenHashMap<String> ret = keywordMetadata.positionMask();
+        Object2IntOpenHashMap<String> ret = keywordMetadata.positionMask;
 
         // Mark the title words as position 0
         for (var sent : dld.titleSentences) {

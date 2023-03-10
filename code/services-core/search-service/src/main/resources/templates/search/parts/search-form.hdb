@@ -8,16 +8,19 @@
         <div class="settings">
             <select name="profile" id="profile">
                 <optgroup label="General Search">
-                <option {{#eq profile "default"}}selected{{/eq}} value="default">Popular Sites</option>
-                <option {{#eq profile "modern"}}selected{{/eq}} value="modern">Blogs and Personal Websites</option>
-                <option {{#eq profile "academia"}}selected{{/eq}} value="academia">Academia</option>
-                <option {{#eq profile "vintage"}}selected{{/eq}} value="vintage">Web 1.0</option>
-                <option {{#eq profile "corpo"}}selected{{/eq}} value="corpo">No Domain Ranking</option>
+                    <option {{#eq profile "default"}}selected{{/eq}} value="default">Popular Sites</option>
+                    <option {{#eq profile "modern"}}selected{{/eq}} value="modern">Blogs and Personal Websites</option>
+                    <option {{#eq profile "academia"}}selected{{/eq}} value="academia">Academia</option>
+                    <option {{#eq profile "corpo"}}selected{{/eq}} value="corpo">No Domain Ranking</option>
+                </optgroup>
+                <optgroup label="Vintage">
+                    <option {{#eq profile "vintage"}}selected{{/eq}} value="vintage">Web 1.0</option>
+                    <option {{#eq profile "plain-text"}}selected{{/eq}} value="plain-text">Text Files</option>
                 </optgroup>
                 <optgroup label="Topics Search">
-                <option {{#eq profile "food"}}selected{{/eq}} value="food">Recipes &#127859;</option>
-                <option {{#eq profile "crafts"}}selected{{/eq}} value="crafts">Crafts &#129697;&#128296; (WIP; mostly textile-craft)</option>
-                <option {{#eq profile "classics"}}selected{{/eq}} value="classics">Classics and Antiquity &#128220;</option>
+                    <option {{#eq profile "food"}}selected{{/eq}} value="food">Recipes &#127859;</option>
+                    <option {{#eq profile "crafts"}}selected{{/eq}} value="crafts">Crafts &#129697;&#128296; (WIP; mostly textile-craft)</option>
+                    <option {{#eq profile "classics"}}selected{{/eq}} value="classics">Classics and Antiquity &#128220;</option>
                 </optgroup>
 
             </select>

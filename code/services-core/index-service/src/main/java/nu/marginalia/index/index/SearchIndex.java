@@ -98,7 +98,7 @@ public class SearchIndex {
         IndexQueryBuilder query =
             switch(params.queryStrategy()) {
                 case SENTENCE               -> indexReader.findWordAsSentence(orderedIncludes);
-                case TOPIC, REQUIRE_FIELD_SITE, REQUIRE_FIELD_TITLE, REQUIRE_FIELD_SUBJECT
+                case TOPIC, REQUIRE_FIELD_SITE, REQUIRE_FIELD_TITLE, REQUIRE_FIELD_SUBJECT, REQUIRE_FIELD_DOMAIN, REQUIRE_FIELD_URL
                                             -> indexReader.findWordAsTopic(orderedIncludes);
                 case AUTO                   -> indexReader.findWordTopicDynamicMode(orderedIncludes);
             };

@@ -51,7 +51,7 @@ public class KeywordCounter {
             }
         }
 
-        Object2IntOpenHashMap<String> tfIdf = keywordMetadata.wordsTfIdf();
+        Object2IntOpenHashMap<String> tfIdf = keywordMetadata.wordsTfIdf;
         List<WordRep> tfIdfHigh = new ArrayList<>();
 
         int maxVal = maxValue(counts);

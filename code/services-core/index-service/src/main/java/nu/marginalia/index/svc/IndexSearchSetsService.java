@@ -9,6 +9,7 @@ import nu.marginalia.ranking.ReversePageRank;
 import nu.marginalia.ranking.StandardPageRank;
 import nu.marginalia.ranking.accumulator.RankingResultBitSetAccumulator;
 import nu.marginalia.ranking.accumulator.RankingResultHashMapAccumulator;
+import nu.marginalia.ranking.accumulator.RankingResultHashSetAccumulator;
 import nu.marginalia.ranking.data.RankingDomainFetcher;
 import nu.marginalia.ranking.data.RankingDomainFetcherForSimilarityData;
 import nu.marginalia.index.svc.searchset.RankingSearchSet;
@@ -101,7 +102,7 @@ public class IndexSearchSetsService {
         var entry = rankingSettings.retro;
 
         var spr = new StandardPageRank(similarityDomains, entry.domains.toArray(String[]::new));
-        var data = spr.pageRankWithPeripheralNodes(entry.max, RankingResultBitSetAccumulator::new);
+        var data = spr.pageRankWithPeripheralNodes(entry.max, RankingResultHashSetAccumulator::new);
 
         synchronized (this) {
             retroSet = new RankingSearchSet(SearchSetIdentifier.RETRO, retroSet.source, data);
@@ -115,7 +116,7 @@ public class IndexSearchSetsService {
 
         var rpr = new ReversePageRank(similarityDomains,  entry.domains.toArray(String[]::new));
         rpr.setMaxKnownUrls(750);
-        var data = rpr.pageRankWithPeripheralNodes(entry.max, RankingResultBitSetAccumulator::new);
+        var data = rpr.pageRankWithPeripheralNodes(entry.max, RankingResultHashSetAccumulator::new);
 
         synchronized (this) {
             smallWebSet = new RankingSearchSet(SearchSetIdentifier.SMALLWEB, smallWebSet.source, data);
@@ -128,7 +129,7 @@ public class IndexSearchSetsService {
         var entry = rankingSettings.academia;
 
         var spr =  new StandardPageRank(similarityDomains,  entry.domains.toArray(String[]::new));
-        var data = spr.pageRankWithPeripheralNodes(entry.max, RankingResultBitSetAccumulator::new);
+        var data = spr.pageRankWithPeripheralNodes(entry.max, RankingResultHashSetAccumulator::new);
 
         synchronized (this) {
             academiaSet = new RankingSearchSet(SearchSetIdentifier.ACADEMIA, academiaSet.source, data);

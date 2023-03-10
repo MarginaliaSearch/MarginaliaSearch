@@ -122,7 +122,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         PubDate pubDate = pubDateSniffer.getPubDate(crawledDocument.headers, url, doc, ret.standard, true);
         ret.metadata = new DocumentMetadata(url.depth(), pubDate.yearByte(), 0, (int) -ret.quality, EnumSet.noneOf(EdgePageDocumentFlags.class));
 
-        DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld);
+        DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, url);
 
         new MetaTagsBuilder()
                 .addDomainCrawlData(crawledDomain)

@@ -1,8 +1,8 @@
 package nu.marginalia.index.svc.searchset;
 
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import nu.marginalia.index.client.model.query.SearchSetIdentifier;
 import nu.marginalia.index.searchset.SearchSet;
-import org.roaringbitmap.RoaringBitmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,11 +21,11 @@ import java.nio.file.StandardOpenOption;
 public class RankingSearchSet implements SearchSet {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final RoaringBitmap set;
+    private final IntOpenHashSet set;
     public final SearchSetIdentifier identifier;
     public final Path source;
 
-    public RankingSearchSet(SearchSetIdentifier identifier, Path source, RoaringBitmap set) {
+    public RankingSearchSet(SearchSetIdentifier identifier, Path source, IntOpenHashSet set) {
         this.identifier = identifier;
         this.source = source;
         this.set = set;
@@ -36,7 +36,7 @@ public class RankingSearchSet implements SearchSet {
         this.source = source;
 
         if (!Files.exists(source)) {
-            set = new RoaringBitmap();
+            set = new IntOpenHashSet();
         }
         else {
             set = load(source);
@@ -47,8 +47,8 @@ public class RankingSearchSet implements SearchSet {
         }
     }
 
-    private static RoaringBitmap load(Path source) throws IOException {
-        var set = new RoaringBitmap();
+    private static IntOpenHashSet load(Path source) throws IOException {
+        var set = new IntOpenHashSet();
         try (var ds = new DataInputStream(Files.newInputStream(source, StandardOpenOption.READ))) {
             for (;;) {
                 try {
@@ -73,8 +73,8 @@ public class RankingSearchSet implements SearchSet {
                 StandardOpenOption.CREATE,
                 StandardOpenOption.TRUNCATE_EXISTING)))
         {
-            for (var iter = set.getIntIterator(); iter.hasNext();) {
-                ds.writeInt(iter.next());
+            for (var iter = set.intIterator(); iter.hasNext();) {
+                ds.writeInt(iter.nextInt());
             }
         }
     }

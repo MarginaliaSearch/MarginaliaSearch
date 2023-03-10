@@ -4,10 +4,13 @@ import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.model.crawl.EdgePageWordFlags;
 
 public class ReverseIndexPriorityParameters {
-    private static final long highPriorityFlags = EdgePageWordFlags.Title.asBit()
+    private static final long highPriorityFlags =
+            EdgePageWordFlags.Title.asBit()
             | EdgePageWordFlags.Subjects.asBit()
             | EdgePageWordFlags.TfIdfHigh.asBit()
             | EdgePageWordFlags.NamesWords.asBit()
+            | EdgePageWordFlags.UrlDomain.asBit()
+            | EdgePageWordFlags.UrlPath.asBit()
             | EdgePageWordFlags.Site.asBit()
             | EdgePageWordFlags.SiteAdjacent.asBit();
 
