@@ -1,8 +1,8 @@
 package nu.marginalia.index.svc.searchset;
 
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import nu.marginalia.index.client.model.query.SearchSetIdentifier;
 import org.junit.jupiter.api.Test;
-import org.roaringbitmap.RoaringBitmap;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,7 +16,7 @@ class RankingSearchSetTest {
     public void testSerDes() throws IOException {
         Path p = Files.createTempFile(getClass().getSimpleName(), ".dat");
 
-        var bm = new RoaringBitmap();
+        var bm = new IntOpenHashSet();
         bm.add(1);
         bm.add(5);
         bm.add(7);

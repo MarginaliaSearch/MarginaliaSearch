@@ -7,7 +7,6 @@ import lombok.ToString;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@ToString
 @Getter
 @AllArgsConstructor
 public class EdgeSearchSubquery {
