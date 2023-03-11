@@ -4,12 +4,10 @@ ext {
     serviceToolOpts='-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5000'
 }
 
-tasks.register('dockerFile') {
-    buildDir.mkdir()
-
+docker {
     var df = new File(buildDir, "Dockerfile")
-    doLast {
-        df.text = """#
+
+    df.text = """#
 # I'm auto-generated, please don't make changes to me or commit me to git
 #
 # The template exists in docker-service.gradle
@@ -24,23 +22,11 @@ ENV JAVA_OPTS="${serviceJvmOpts} "
 
 ENTRYPOINT WMSA_HOME=/wmsa /${application.applicationName}/bin/${application.applicationName} \${arg0} \${arg1}
 """
-    }
-    it.outputs.file(df)
-}
 
-dockerPrepare {
-    dependsOn tasks.dockerFile
-}
-
-dockerfileZip {
-    dependsOn tasks.dockerFile
-}
-
-
-docker {
-    dockerfile = tasks.dockerFile.outputs.files.singleFile
+    dockerfile = new File(buildDir, "Dockerfile")
     name = 'marginalia.nu/'+application.applicationName+':latest'
     files tasks.distTar.outputs
     tags 'latest'
+
     dependsOn tasks.distTar
 }
