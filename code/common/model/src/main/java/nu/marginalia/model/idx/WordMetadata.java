@@ -73,7 +73,7 @@ public record WordMetadata(int tfIdf,
         sb.append('[')
                 .append("tfidf=").append(tfIdf).append(", ")
                 .append("positions=[").append(BrailleBlockPunchCards.printBits(positions, 32)).append(']');
-        sb.append(", flags=").append(flags).append(']');
+        sb.append(", flags=").append(flagSet()).append(']');
         return sb.toString();
     }
 
@@ -100,5 +100,9 @@ public record WordMetadata(int tfIdf,
 
     public EnumSet<WordFlags> flagSet() {
         return WordFlags.decode(flags);
+    }
+
+    public int positionCount() {
+        return Integer.bitCount(positions);
     }
 }

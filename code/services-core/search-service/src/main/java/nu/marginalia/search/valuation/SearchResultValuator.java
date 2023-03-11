@@ -138,25 +138,29 @@ public class SearchResultValuator {
     }
 
     private double calculateSingleTermBonus(SearchResultsKeywordSet set, double totalFactor) {
-        var theKeyword = set.iterator().next();
+        final var theKeyword = set.iterator().next();
 
-        if (theKeyword.wordMetadata.hasFlag(WordFlags.Title)) {
+        final var wordMetadata = theKeyword.wordMetadata;
+        final int posCount = wordMetadata.positionCount();
+
+        if (wordMetadata.hasFlag(WordFlags.Title)) {
             return totalFactor * 0.5;
         }
-        else if (theKeyword.wordMetadata.hasFlag(WordFlags.Subjects)) {
+        else if (wordMetadata.hasFlag(WordFlags.Subjects)) {
             return totalFactor * 0.6;
         }
-        else if (theKeyword.wordMetadata.hasFlag(WordFlags.SiteAdjacent)) {
+        else if (wordMetadata.hasFlag(WordFlags.SiteAdjacent) && posCount > 0) {
             return totalFactor * 0.65;
         }
-        else if (theKeyword.wordMetadata.hasFlag(WordFlags.Site)) {
+        else if (wordMetadata.hasFlag(WordFlags.Site) && posCount > 0) {
             return totalFactor * 0.7;
         }
 
-        if (theKeyword.wordMetadata.hasFlag(WordFlags.UrlDomain)) {
+        if (wordMetadata.hasFlag(WordFlags.UrlDomain)) {
             return totalFactor * 0.8;
         }
-        else if (theKeyword.wordMetadata.hasFlag(WordFlags.UrlPath)) {
+        else if (wordMetadata.hasFlag(WordFlags.UrlPath) && posCount > 2)
+        {
             return totalFactor * 0.9;
         }
 
@@ -213,6 +217,8 @@ public class SearchResultValuator {
 
         final double k = keyword.weight() / totalWeight;
 
+        int posCount = keyword.wordMetadata.positionCount();
+
         EnumSet<WordFlags> flags = keyword.flags();
 
         final boolean title = flags.contains(WordFlags.Title);
@@ -235,11 +241,12 @@ public class SearchResultValuator {
             }
         }
 
-        if (site) {
-            f *= Math.pow(0.75, k);
-        }
-        else if (siteAdjacent) {
-            f *= Math.pow(0.8, k);
+        if (posCount != 0) {
+            if (site) {
+                f *= Math.pow(0.75, k);
+            } else if (siteAdjacent) {
+                f *= Math.pow(0.8, k);
+            }
         }
 
         if (subject) {
@@ -249,7 +256,7 @@ public class SearchResultValuator {
         if (urlDomain) {
             f *= Math.pow(0.8, k);
         }
-        else if (urlPath) {
+        else if (urlPath && posCount > 1) {
             f *= Math.pow(0.9, k);
         }
 

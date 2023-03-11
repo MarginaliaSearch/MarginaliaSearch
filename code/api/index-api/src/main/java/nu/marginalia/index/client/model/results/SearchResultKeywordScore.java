@@ -53,13 +53,16 @@ public final class SearchResultKeywordScore {
     public double termValue() {
         double sum = 0;
 
+        double tfIdf = WordMetadata.decodeTfidf(encodedWordMetadata);
+        int positionBits = WordMetadata.decodePositions(encodedWordMetadata);
+
         if (hasTermFlag(WordFlags.Title)) {
             sum -= 15;
         }
 
-        if (hasTermFlag(WordFlags.Site)) {
+        if (hasTermFlag(WordFlags.Site) && positionBits != 0) {
             sum -= 10;
-        } else if (hasTermFlag(WordFlags.SiteAdjacent)) {
+        } else if (hasTermFlag(WordFlags.SiteAdjacent) && positionBits != 0) {
             sum -= 5;
         }
 
@@ -78,8 +81,6 @@ public final class SearchResultKeywordScore {
             sum -= 5;
         }
 
-        double tfIdf = WordMetadata.decodeTfidf(encodedWordMetadata);
-        int positionBits = WordMetadata.decodePositions(encodedWordMetadata);
 
         sum -= tfIdf / 10.;
         sum -= Integer.bitCount(positionBits) / 3.;
