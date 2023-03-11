@@ -1,5 +1,3 @@
-import java.nio.file.Files
-
 ext {
     dockerImage='openjdk:17-slim'
     serviceJvmOpts='-Dservice-host=0.0.0.0 -ea -Dsmall-ram=true ${wmsa_jvm_param} -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=4000 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false'
@@ -33,6 +31,11 @@ ENTRYPOINT WMSA_HOME=/wmsa /${application.applicationName}/bin/${application.app
 dockerPrepare {
     dependsOn tasks.dockerFile
 }
+
+dockerfileZip {
+    dependsOn tasks.dockerFile
+}
+
 
 docker {
     dockerfile = tasks.dockerFile.outputs.files.singleFile

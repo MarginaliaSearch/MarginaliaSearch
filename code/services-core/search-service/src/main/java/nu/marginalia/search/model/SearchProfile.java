@@ -8,7 +8,6 @@ import nu.marginalia.index.client.model.query.SearchSetIdentifier;
 import java.util.Objects;
 
 public enum SearchProfile {
-
     DEFAULT("default",  SearchSetIdentifier.RETRO),
     MODERN("modern", SearchSetIdentifier.SMALLWEB),
     CORPO("corpo", SearchSetIdentifier.NONE),
@@ -16,7 +15,6 @@ public enum SearchProfile {
     VINTAGE("vintage", SearchSetIdentifier.NONE),
     CORPO_CLEAN("corpo-clean",  SearchSetIdentifier.NONE),
     ACADEMIA("academia",  SearchSetIdentifier.ACADEMIA),
-
     PLAIN_TEXT("plain-text", SearchSetIdentifier.NONE),
     FOOD("food", SearchSetIdentifier.NONE),
     CRAFTS("crafts", SearchSetIdentifier.NONE),
