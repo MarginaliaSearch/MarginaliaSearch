@@ -16,6 +16,8 @@ application {
     applicationName = 'crawler-process'
 }
 
+tasks.distZip.enabled = false
+
 dependencies {
     implementation project(':third-party')
     implementation project(':code:common:model')

@@ -12,11 +12,12 @@ java {
     }
 }
 
-
 application {
     mainClass = 'nu.marginalia.api.ApiMain'
     applicationName = 'api-service'
 }
+
+tasks.distZip.enabled = false
 
 apply from: "$rootProject.projectDir/docker-service.gradle"
 

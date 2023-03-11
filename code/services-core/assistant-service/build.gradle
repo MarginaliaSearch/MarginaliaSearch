@@ -11,6 +11,8 @@ application {
     applicationName = 'assistant-service'
 }
 
+tasks.distZip.enabled = false
+
 apply from: "$rootProject.projectDir/docker-service.gradle"
 
 java {

@@ -15,6 +15,8 @@ application {
     applicationName = 'loader-process'
 }
 
+tasks.distZip.enabled = false
+
 dependencies {
     implementation project(':third-party')
     implementation project(':code:api:index-api')

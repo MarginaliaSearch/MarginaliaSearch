@@ -16,6 +16,8 @@ application {
     applicationName = 'crawl-job-extractor-process'
 }
 
+tasks.distZip.enabled = false
+
 dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:service')
