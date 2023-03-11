@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.browse.model.BrowseResult;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.dbcommon.EdgeDomainBlacklist;
+import nu.marginalia.model.dbcommon.DomainBlacklist;
 import nu.marginalia.model.id.EdgeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +24,7 @@ public class DbBrowseDomainsSimilarCosine {
         this.dataSource = dataSource;
     }
 
-    public List<BrowseResult> getDomainNeighborsAdjacentCosine(EdgeId<EdgeDomain> domainId, EdgeDomainBlacklist blacklist, int count) {
+    public List<BrowseResult> getDomainNeighborsAdjacentCosine(EdgeId<EdgeDomain> domainId, DomainBlacklist blacklist, int count) {
         List<BrowseResult> domains = new ArrayList<>(count);
 
         String q = """

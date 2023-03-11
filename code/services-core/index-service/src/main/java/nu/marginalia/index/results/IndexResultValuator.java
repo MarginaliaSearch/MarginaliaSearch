@@ -6,7 +6,7 @@ import gnu.trove.set.hash.TLongHashSet;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import nu.marginalia.index.svc.SearchTermsService;
-import nu.marginalia.model.crawl.EdgePageWordFlags;
+import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.client.model.results.SearchResultItem;
@@ -144,19 +144,19 @@ public class IndexResultValuator {
 
     private boolean filterRequired(long metadata, QueryStrategy queryStrategy) {
         if (queryStrategy == QueryStrategy.REQUIRE_FIELD_SITE) {
-            return EdgePageWordFlags.Site.isPresent(metadata);
+            return WordFlags.Site.isPresent(metadata);
         }
         else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_SUBJECT) {
-            return EdgePageWordFlags.Subjects.isPresent(metadata);
+            return WordFlags.Subjects.isPresent(metadata);
         }
         else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_TITLE) {
-            return EdgePageWordFlags.Title.isPresent(metadata);
+            return WordFlags.Title.isPresent(metadata);
         }
         else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_URL) {
-            return EdgePageWordFlags.UrlPath.isPresent(metadata);
+            return WordFlags.UrlPath.isPresent(metadata);
         }
         else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_DOMAIN) {
-            return EdgePageWordFlags.UrlDomain.isPresent(metadata);
+            return WordFlags.UrlDomain.isPresent(metadata);
         }
         return true;
     }
@@ -166,9 +166,9 @@ public class IndexResultValuator {
         long maskDirectRaw = ~0;
         long maskAdjacent = ~0;
 
-        final int flagBitMask = EdgePageWordFlags.Title.asBit()
-                              | EdgePageWordFlags.Subjects.asBit()
-                              | EdgePageWordFlags.Synthetic.asBit();
+        final int flagBitMask = WordFlags.Title.asBit()
+                              | WordFlags.Subjects.asBit()
+                              | WordFlags.Synthetic.asBit();
 
         int termCount = 0;
         double tfIdfSum = 1.;

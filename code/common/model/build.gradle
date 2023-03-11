@@ -14,6 +14,7 @@ dependencies {
     implementation project(':code:common:service-discovery')
     implementation project(':code:common:service-client')
     implementation project(':code:libraries:big-string')
+    implementation project(':code:libraries:braille-block-punch-cards')
 
     implementation libs.lombok
     annotationProcessor libs.lombok

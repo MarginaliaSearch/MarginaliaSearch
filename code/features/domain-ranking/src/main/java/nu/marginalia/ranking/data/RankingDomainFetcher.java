@@ -3,8 +3,8 @@ package nu.marginalia.ranking.data;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.model.dbcommon.EdgeDomainBlacklistImpl;
-import nu.marginalia.model.crawl.EdgeDomainIndexingState;
+import nu.marginalia.model.dbcommon.DomainBlacklistImpl;
+import nu.marginalia.model.crawl.DomainIndexingState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,13 +15,13 @@ import java.util.function.IntConsumer;
 @Singleton
 public class RankingDomainFetcher {
     protected final HikariDataSource dataSource;
-    protected final EdgeDomainBlacklistImpl blacklist;
+    protected final DomainBlacklistImpl blacklist;
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     protected boolean getNames = false;
 
     @Inject
-    public RankingDomainFetcher(HikariDataSource dataSource, EdgeDomainBlacklistImpl blacklist) {
+    public RankingDomainFetcher(HikariDataSource dataSource, DomainBlacklistImpl blacklist) {
         this.dataSource = dataSource;
         this.blacklist = blacklist;
     }
@@ -66,7 +66,7 @@ public class RankingDomainFetcher {
                             new RankingDomainData(id,
                                     rsp.getString(2),
                                     rsp.getInt(3),
-                                    EdgeDomainIndexingState.valueOf(rsp.getString(4)),
+                                    DomainIndexingState.valueOf(rsp.getString(4)),
                                     rsp.getInt(5)));
                 }
             }

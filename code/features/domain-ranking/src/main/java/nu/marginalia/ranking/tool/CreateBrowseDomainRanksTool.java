@@ -2,7 +2,7 @@ package nu.marginalia.ranking.tool;
 
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
-import nu.marginalia.model.dbcommon.EdgeDomainBlacklistImpl;
+import nu.marginalia.model.dbcommon.DomainBlacklistImpl;
 import nu.marginalia.ranking.StandardPageRank;
 import nu.marginalia.ranking.accumulator.RankingResultListAccumulator;
 import nu.marginalia.ranking.data.RankingDomainFetcherForSimilarityData;
@@ -32,7 +32,7 @@ public class CreateBrowseDomainRanksTool {
 
         logger.info("Ranking");
         var ds = new DatabaseModule().provideConnection();
-        var domains = new RankingDomainFetcherForSimilarityData(ds, new EdgeDomainBlacklistImpl(ds));
+        var domains = new RankingDomainFetcherForSimilarityData(ds, new DomainBlacklistImpl(ds));
         var rpr = new StandardPageRank(domains,  args);
 
         uploader.start();

@@ -3,7 +3,7 @@ package nu.marginalia.search.siteinfo;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.crawl.EdgeDomainIndexingState;
+import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.dbcommon.DbDomainQueries;
 import nu.marginalia.model.id.EdgeId;
 import nu.marginalia.search.model.DomainInformation;
@@ -63,7 +63,7 @@ public class DomainInformationService {
 
         double rank = Math.round(10000.0*(1.0-getRank(domainId)))/100;
 
-        EdgeDomainIndexingState state = getDomainState(domainId);
+        DomainIndexingState state = getDomainState(domainId);
         List<EdgeDomain> linkingDomains = getLinkingDomains(domainId);
 
         var di = DomainInformation.builder()
@@ -229,14 +229,14 @@ public class DomainInformationService {
         }
     }
 
-    public EdgeDomainIndexingState getDomainState(EdgeId<EdgeDomain> domainId) {
+    public DomainIndexingState getDomainState(EdgeId<EdgeDomain> domainId) {
         try (var connection = dataSource.getConnection()) {
 
             try (var stmt = connection.prepareStatement("SELECT STATE FROM EC_DOMAIN WHERE ID=?")) {
                 stmt.setInt(1, domainId.id());
                 var rsp = stmt.executeQuery();
                 if (rsp.next()) {
-                    return EdgeDomainIndexingState.valueOf(rsp.getString(1));
+                    return DomainIndexingState.valueOf(rsp.getString(1));
                 }
             } catch (Exception ex) {
                 logger.error("DB error", ex);
@@ -244,7 +244,7 @@ public class DomainInformationService {
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
-        return EdgeDomainIndexingState.ERROR;
+        return DomainIndexingState.ERROR;
     }
 
     public List<EdgeDomain> getLinkingDomains(EdgeId<EdgeDomain> domainId) {

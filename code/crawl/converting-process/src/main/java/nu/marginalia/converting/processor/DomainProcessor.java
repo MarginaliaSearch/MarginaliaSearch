@@ -6,11 +6,10 @@ import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.crawling.model.CrawlerDocumentStatus;
 import nu.marginalia.crawling.model.CrawlerDomainStatus;
-import nu.marginalia.model.crawl.EdgeDomainIndexingState;
+import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.util.StringPool;
 import nu.marginalia.converting.processor.logic.links.InternalLinkGraph;
 import nu.marginalia.converting.processor.logic.LshDocumentDeduplicator;
 
@@ -134,12 +133,12 @@ public class DomainProcessor {
         }
     }
 
-    private EdgeDomainIndexingState getState(String crawlerStatus) {
+    private DomainIndexingState getState(String crawlerStatus) {
         return switch (CrawlerDomainStatus.valueOf(crawlerStatus)) {
-            case OK -> EdgeDomainIndexingState.ACTIVE;
-            case REDIRECT -> EdgeDomainIndexingState.REDIR;
-            case BLOCKED -> EdgeDomainIndexingState.BLOCKED;
-            default -> EdgeDomainIndexingState.ERROR;
+            case OK -> DomainIndexingState.ACTIVE;
+            case REDIRECT -> DomainIndexingState.REDIR;
+            case BLOCKED -> DomainIndexingState.BLOCKED;
+            default -> DomainIndexingState.ERROR;
         };
     }
 

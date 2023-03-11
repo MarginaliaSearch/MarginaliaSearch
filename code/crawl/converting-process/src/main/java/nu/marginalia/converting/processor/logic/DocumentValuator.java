@@ -2,7 +2,7 @@ package nu.marginalia.converting.processor.logic;
 
 import crawlercommons.utils.Strings;
 import nu.marginalia.crawling.model.CrawledDocument;
-import nu.marginalia.model.crawl.EdgeHtmlStandard;
+import nu.marginalia.crawling.common.model.HtmlStandard;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.converting.model.DisqualifiedException;
 import org.jsoup.nodes.Document;
@@ -22,7 +22,7 @@ public class DocumentValuator {
 
     );
 
-    public double getQuality(CrawledDocument crawledDocument, EdgeHtmlStandard htmlStandard, Document parsedDocument, DocumentLanguageData dld) throws DisqualifiedException {
+    public double getQuality(CrawledDocument crawledDocument, HtmlStandard htmlStandard, Document parsedDocument, DocumentLanguageData dld) throws DisqualifiedException {
         double smutCoefficient = dld.streamLowerCase().filter(filthTable::contains).count();
         double scriptPenalty = getScriptPenalty(parsedDocument);
 

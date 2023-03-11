@@ -2,7 +2,7 @@ package nu.marginalia.converting.model;
 
 import lombok.ToString;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.crawl.EdgeDomainIndexingState;
+import nu.marginalia.model.crawl.DomainIndexingState;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,7 +13,7 @@ public class ProcessedDomain {
     public EdgeDomain domain;
 
     public List<ProcessedDocument> documents;
-    public EdgeDomainIndexingState state;
+    public DomainIndexingState state;
     public EdgeDomain redirect;
     public String ip;
 

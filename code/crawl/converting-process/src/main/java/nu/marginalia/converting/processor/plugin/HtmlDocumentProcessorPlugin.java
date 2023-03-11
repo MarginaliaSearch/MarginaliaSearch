@@ -7,23 +7,22 @@ import nu.marginalia.converting.processor.logic.summary.SummaryExtractor;
 import nu.marginalia.crawling.common.link.LinkParser;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
-import nu.marginalia.language.model.KeywordMetadata;
 import nu.marginalia.converting.processor.keywords.DocumentKeywordExtractor;
 import nu.marginalia.language.sentence.SentenceExtractor;
-import nu.marginalia.model.crawl.EdgeHtmlStandard;
-import nu.marginalia.model.crawl.EdgePageDocumentFlags;
+import nu.marginalia.crawling.common.model.HtmlStandard;
+import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.converting.model.DocumentKeywordsBuilder;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.converting.processor.logic.*;
 import nu.marginalia.model.crawl.PubDate;
-import nu.marginalia.converting.processor.logic.pubdate.PubDateSniffer;
 import nu.marginalia.gregex.GuardedRegex;
 import nu.marginalia.gregex.GuardedRegexFactory;
 import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.ProcessedDocumentDetails;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.pubdate.PubDateSniffer;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -120,7 +119,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         ret.hashCode = dld.localitySensitiveHashCode();
 
         PubDate pubDate = pubDateSniffer.getPubDate(crawledDocument.headers, url, doc, ret.standard, true);
-        ret.metadata = new DocumentMetadata(url.depth(), pubDate.yearByte(), 0, (int) -ret.quality, EnumSet.noneOf(EdgePageDocumentFlags.class));
+        ret.metadata = new DocumentMetadata(url.depth(), pubDate.yearByte(), 0, (int) -ret.quality, EnumSet.noneOf(DocumentFlags.class));
 
         DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, url);
 
@@ -262,10 +261,10 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         words.addAllSyntheticTerms(linkTerms);
     }
 
-    private EdgeHtmlStandard getHtmlStandard(Document doc) {
-        EdgeHtmlStandard htmlStandard = HtmlStandardExtractor.parseDocType(doc.documentType());
+    private HtmlStandard getHtmlStandard(Document doc) {
+        HtmlStandard htmlStandard = HtmlStandardExtractor.parseDocType(doc.documentType());
 
-        if (EdgeHtmlStandard.UNKNOWN.equals(htmlStandard)) {
+        if (HtmlStandard.UNKNOWN.equals(htmlStandard)) {
             return HtmlStandardExtractor.sniffHtmlStandard(doc);
         }
         return htmlStandard;

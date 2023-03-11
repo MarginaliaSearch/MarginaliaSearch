@@ -1,7 +1,7 @@
 package nu.marginalia.converting.processor.logic.links;
 
 import ca.rmen.porterstemmer.PorterStemmer;
-import nu.marginalia.model.crawl.EdgePageWordFlags;
+import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.converting.model.ProcessedDomain;
 
 import java.util.*;
@@ -16,7 +16,7 @@ public class CommonKeywordExtractor {
 
     private static final int MAX_SITE_KEYWORDS_TO_EXTRACT = 5;
 
-    public List<String> getCommonSiteWords(ProcessedDomain ret, EdgePageWordFlags... flags) {
+    public List<String> getCommonSiteWords(ProcessedDomain ret, WordFlags... flags) {
 
         if (ret.documents.size() < MIN_REQUIRED_DOCUMENTS)
             return Collections.emptyList();
@@ -27,7 +27,7 @@ public class CommonKeywordExtractor {
         final Map<String, Set<String>> stemmedToNonstemmedVariants = new HashMap<>(ret.documents.size()*10);
 
         int qualifiedDocCount = 0;
-        long wordFlags = Arrays.stream(flags).mapToInt(EdgePageWordFlags::asBit).reduce(0, (a,b) -> a|b);
+        long wordFlags = Arrays.stream(flags).mapToInt(WordFlags::asBit).reduce(0, (a, b) -> a|b);
         for (var doc : ret.documents) {
             if (doc.words == null)
                 continue;

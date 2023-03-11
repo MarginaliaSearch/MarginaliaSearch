@@ -1,7 +1,7 @@
 package nu.marginalia.converting.processor.logic;
 
 import com.google.inject.Singleton;
-import nu.marginalia.model.crawl.EdgeUrlState;
+import nu.marginalia.model.crawl.UrlIndexingState;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.lsh.EasyLSH;
 import org.slf4j.Logger;
@@ -52,7 +52,7 @@ public class LshDocumentDeduplicator {
         {
             logger.debug("{} duplicates {}", otherDoc.url, thisDoc.url);
 
-            otherDoc.state = EdgeUrlState.DISQUALIFIED;
+            otherDoc.state = UrlIndexingState.DISQUALIFIED;
             otherDoc.stateReason = "Duplicate";
 
             return true;

@@ -13,7 +13,6 @@ java {
 dependencies {
     implementation project(':code:libraries:array')
     implementation project(':code:libraries:btree')
-    implementation project(':code:libraries:misc')
     implementation project(':code:features:domain-ranking')
     implementation project(':code:index:index-query')
     implementation project(':code:index:index-journal')

@@ -4,14 +4,14 @@ import com.google.inject.Inject;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
+import nu.marginalia.bbpc.BrailleBlockPunchCards;
 import nu.marginalia.search.db.DbUrlDetailsQuery;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.model.crawl.EdgeDomainIndexingState;
+import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.id.EdgeIdList;
 import nu.marginalia.index.client.model.results.SearchResultItem;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.valuation.SearchResultValuator;
-import nu.marginalia.util.BrailleBlockPunchCards;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,7 +97,7 @@ public class SearchResultDecorator {
 
     private double calculateTermScore(SearchResultItem resultItem, UrlDetails details) {
 
-        final double statePenalty = (details.domainState == EdgeDomainIndexingState.SPECIAL) ? 1.25 : 0;
+        final double statePenalty = (details.domainState == DomainIndexingState.SPECIAL) ? 1.25 : 0;
         final double value =  valuator.evaluateTerms(resultItem.scores, details.words, details.title.length());
 
         return value + statePenalty;

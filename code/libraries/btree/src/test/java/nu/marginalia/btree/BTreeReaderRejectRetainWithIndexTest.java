@@ -4,7 +4,7 @@ import nu.marginalia.array.LongArray;
 import nu.marginalia.array.buffer.LongQueryBuffer;
 import nu.marginalia.btree.model.BTreeBlockSize;
 import nu.marginalia.btree.model.BTreeContext;
-import nu.marginalia.util.PrimeUtil;
+import nu.marginalia.util.NextPrimeUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +24,7 @@ public class BTreeReaderRejectRetainWithIndexTest {
             int p = 2;
             for (int idx = 0; idx < 1000; idx++) {
                 slice.set(idx, p);
-                p = (int) PrimeUtil.nextPrime(p + 1, 1);
+                p = (int) NextPrimeUtil.nextPrime(p + 1, 1);
             }
         });
     }

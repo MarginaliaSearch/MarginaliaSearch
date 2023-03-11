@@ -1,3 +1,8 @@
 {{#if problems}} <span class="problems" title="{{problems}}"> ⚠ {{problemCount}} </span> {{/if}}
 
-<span class="meta positions" title="Visually indicates positions where keywords were found within the document">{{positions}}</span>
+<span
+    aria-hidden="true"
+    class="meta positions"
+    title="Positions where keywords were found within the document">
+{{positions}}
+</span>

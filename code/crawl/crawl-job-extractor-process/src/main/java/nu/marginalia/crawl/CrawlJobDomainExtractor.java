@@ -5,9 +5,8 @@ import com.google.common.hash.Hashing;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.crawling.model.CrawlingSpecification;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.dbcommon.EdgeDomainBlacklistImpl;
+import nu.marginalia.model.dbcommon.DomainBlacklistImpl;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -69,11 +68,11 @@ public class CrawlJobDomainExtractor {
             """;
 
 
-    private final EdgeDomainBlacklistImpl blacklist;
+    private final DomainBlacklistImpl blacklist;
     private final HikariDataSource dataSource;
     private static final HashFunction hasher = Hashing.murmur3_128(0);
 
-    public CrawlJobDomainExtractor(EdgeDomainBlacklistImpl blacklist, HikariDataSource dataSource) {
+    public CrawlJobDomainExtractor(DomainBlacklistImpl blacklist, HikariDataSource dataSource) {
         this.blacklist = blacklist;
         this.dataSource = dataSource;
     }

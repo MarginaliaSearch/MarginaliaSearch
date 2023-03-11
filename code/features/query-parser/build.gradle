@@ -13,7 +13,6 @@ java {
 }
 dependencies {
     implementation project(':code:libraries:language-processing')
-    implementation project(':code:libraries:misc')
     implementation project(':code:common:config')
     implementation project(':code:common:model')
 

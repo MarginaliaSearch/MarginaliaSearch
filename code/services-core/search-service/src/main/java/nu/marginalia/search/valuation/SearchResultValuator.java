@@ -3,7 +3,7 @@ package nu.marginalia.search.valuation;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.language.statistics.TermFrequencyDict;
-import nu.marginalia.model.crawl.EdgePageWordFlags;
+import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.index.client.model.results.SearchResultKeywordScore;
 import nu.marginalia.index.client.model.query.SearchSubquery;
@@ -140,23 +140,23 @@ public class SearchResultValuator {
     private double calculateSingleTermBonus(SearchResultsKeywordSet set, double totalFactor) {
         var theKeyword = set.iterator().next();
 
-        if (theKeyword.wordMetadata.hasFlag(EdgePageWordFlags.Title)) {
+        if (theKeyword.wordMetadata.hasFlag(WordFlags.Title)) {
             return totalFactor * 0.5;
         }
-        else if (theKeyword.wordMetadata.hasFlag(EdgePageWordFlags.Subjects)) {
+        else if (theKeyword.wordMetadata.hasFlag(WordFlags.Subjects)) {
             return totalFactor * 0.6;
         }
-        else if (theKeyword.wordMetadata.hasFlag(EdgePageWordFlags.SiteAdjacent)) {
+        else if (theKeyword.wordMetadata.hasFlag(WordFlags.SiteAdjacent)) {
             return totalFactor * 0.65;
         }
-        else if (theKeyword.wordMetadata.hasFlag(EdgePageWordFlags.Site)) {
+        else if (theKeyword.wordMetadata.hasFlag(WordFlags.Site)) {
             return totalFactor * 0.7;
         }
 
-        if (theKeyword.wordMetadata.hasFlag(EdgePageWordFlags.UrlDomain)) {
+        if (theKeyword.wordMetadata.hasFlag(WordFlags.UrlDomain)) {
             return totalFactor * 0.8;
         }
-        else if (theKeyword.wordMetadata.hasFlag(EdgePageWordFlags.UrlPath)) {
+        else if (theKeyword.wordMetadata.hasFlag(WordFlags.UrlPath)) {
             return totalFactor * 0.9;
         }
 
@@ -167,7 +167,7 @@ public class SearchResultValuator {
         long maskDirect = ~0;
         long maskAdjacent = ~0;
 
-        byte excludeMask = (byte) (EdgePageWordFlags.Title.asBit() | EdgePageWordFlags.Subjects.asBit() | EdgePageWordFlags.Synthetic.asBit());
+        byte excludeMask = (byte) (WordFlags.Title.asBit() | WordFlags.Subjects.asBit() | WordFlags.Synthetic.asBit());
 
         for (var keyword : keywordSet) {
             var meta = keyword.wordMetadata;
@@ -213,15 +213,15 @@ public class SearchResultValuator {
 
         final double k = keyword.weight() / totalWeight;
 
-        EnumSet<EdgePageWordFlags> flags = keyword.flags();
+        EnumSet<WordFlags> flags = keyword.flags();
 
-        final boolean title = flags.contains(EdgePageWordFlags.Title);
-        final boolean site = flags.contains(EdgePageWordFlags.Site);
-        final boolean siteAdjacent = flags.contains(EdgePageWordFlags.SiteAdjacent);
-        final boolean subject = flags.contains(EdgePageWordFlags.Subjects);
-        final boolean names = flags.contains(EdgePageWordFlags.NamesWords);
-        final boolean urlDomain = flags.contains(EdgePageWordFlags.UrlDomain);
-        final boolean urlPath = flags.contains(EdgePageWordFlags.UrlPath);
+        final boolean title = flags.contains(WordFlags.Title);
+        final boolean site = flags.contains(WordFlags.Site);
+        final boolean siteAdjacent = flags.contains(WordFlags.SiteAdjacent);
+        final boolean subject = flags.contains(WordFlags.Subjects);
+        final boolean names = flags.contains(WordFlags.NamesWords);
+        final boolean urlDomain = flags.contains(WordFlags.UrlDomain);
+        final boolean urlPath = flags.contains(WordFlags.UrlPath);
 
         if (title) {
             if (titleLength <= 64) {
@@ -331,7 +331,7 @@ public class SearchResultValuator {
             return wordMetadata.tfIdf();
         }
 
-        public EnumSet<EdgePageWordFlags> flags() {
+        public EnumSet<WordFlags> flags() {
             return wordMetadata.flagSet();
         }
     }

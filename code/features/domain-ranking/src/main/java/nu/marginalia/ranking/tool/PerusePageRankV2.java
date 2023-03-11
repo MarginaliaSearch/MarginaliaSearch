@@ -13,7 +13,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.ranking.RankingAlgorithm;
 import nu.marginalia.ranking.data.RankingDomainData;
 import nu.marginalia.ranking.data.RankingDomainFetcher;
-import nu.marginalia.model.dbcommon.EdgeDomainBlacklistImpl;
+import nu.marginalia.model.dbcommon.DomainBlacklistImpl;
 import nu.marginalia.service.module.DatabaseModule;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -49,7 +49,7 @@ public class PerusePageRankV2 {
     @SneakyThrows
     public static void main(String... args) {
         var ds = new DatabaseModule().provideConnection();
-        var blacklist = new EdgeDomainBlacklistImpl(ds);
+        var blacklist = new DomainBlacklistImpl(ds);
         var rank = new PerusePageRankV2(new RankingDomainFetcher(ds, blacklist));
 
         long start = System.currentTimeMillis();

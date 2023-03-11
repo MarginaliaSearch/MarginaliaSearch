@@ -1,7 +1,7 @@
 package nu.marginalia.converting.processor.logic;
 
 import com.google.common.base.Strings;
-import nu.marginalia.model.crawl.EdgeHtmlStandard;
+import nu.marginalia.crawling.common.model.HtmlStandard;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.DocumentType;
 import org.slf4j.Logger;
@@ -12,53 +12,53 @@ public class HtmlStandardExtractor {
 
     private static final Logger logger = LoggerFactory.getLogger(HtmlStandardExtractor.class);
 
-    public static EdgeHtmlStandard parseDocType(DocumentType docType) {
+    public static HtmlStandard parseDocType(DocumentType docType) {
         if (null == docType) {
-            return EdgeHtmlStandard.UNKNOWN;
+            return HtmlStandard.UNKNOWN;
         }
         String publicId = docType.publicId();
         if (Strings.isNullOrEmpty(publicId))
-            return EdgeHtmlStandard.HTML5;
+            return HtmlStandard.HTML5;
 
         publicId = publicId.toUpperCase();
         if (publicId.startsWith("-//SOFTQUAD SOFTWARE//DTD") && publicId.contains("HTML 4")) {
-            return EdgeHtmlStandard.HTML4;
+            return HtmlStandard.HTML4;
         }
         if (publicId.startsWith("-//SOFTQUAD SOFTWARE//DTD") && publicId.contains("HTML 3")) {
-            return EdgeHtmlStandard.HTML123;
+            return HtmlStandard.HTML123;
         }
         if (publicId.startsWith("-//INTERNET/RFC XXXX//EN"))
-            return EdgeHtmlStandard.HTML123;
+            return HtmlStandard.HTML123;
         if (publicId.startsWith("-//NETSCAPE COMM. CORP"))
-            return EdgeHtmlStandard.HTML123;
+            return HtmlStandard.HTML123;
         if (publicId.startsWith("-//SQ//DTD HTML 2"))
-            return EdgeHtmlStandard.HTML123;
+            return HtmlStandard.HTML123;
         if (publicId.startsWith("-//SOFTQUAD//DTD HTML 2"))
-            return EdgeHtmlStandard.HTML123;
+            return HtmlStandard.HTML123;
         if (publicId.startsWith("-//W3O//DTD W3 HTML 2"))
-            return EdgeHtmlStandard.HTML123;
+            return HtmlStandard.HTML123;
         if (publicId.startsWith("-//IETF//DTD HTML 2"))
-            return EdgeHtmlStandard.HTML123;
+            return HtmlStandard.HTML123;
         if (publicId.startsWith("-//IETF//DTD HTML//EN"))
-            return EdgeHtmlStandard.HTML123;
+            return HtmlStandard.HTML123;
         if (publicId.startsWith("-/W3C//DTD HTML 3"))
-            return EdgeHtmlStandard.HTML123;
+            return HtmlStandard.HTML123;
         if (publicId.startsWith("-/W3C/DTD HTML 3"))
-            return EdgeHtmlStandard.HTML123;
+            return HtmlStandard.HTML123;
         if (publicId.startsWith("-//IETF//DTD HTML 3"))
-            return EdgeHtmlStandard.HTML123;
+            return HtmlStandard.HTML123;
         if (publicId.startsWith("-//W3C//DTD XHTML"))
-            return EdgeHtmlStandard.XHTML;
+            return HtmlStandard.XHTML;
         if (publicId.startsWith("ISO/IEC 15445:2000//DTD"))
-            return EdgeHtmlStandard.XHTML;
+            return HtmlStandard.XHTML;
         if (publicId.startsWith("-//W3C//DTD HTML"))
-            return EdgeHtmlStandard.HTML4;
+            return HtmlStandard.HTML4;
 
         logger.debug("Unknown publicID standard {}", publicId);
-        return EdgeHtmlStandard.UNKNOWN;
+        return HtmlStandard.UNKNOWN;
     }
 
-    public static EdgeHtmlStandard sniffHtmlStandard(Document parsed) {
+    public static HtmlStandard sniffHtmlStandard(Document parsed) {
         int html4Attributes = 0;
         int html5Attributes = 0;
 
@@ -72,11 +72,11 @@ public class HtmlStandardExtractor {
             html4Attributes++;
         }
         if (html5Attributes > 0) {
-            return EdgeHtmlStandard.HTML5;
+            return HtmlStandard.HTML5;
         }
         if (html4Attributes > 0) {
-            return EdgeHtmlStandard.HTML4;
+            return HtmlStandard.HTML4;
         }
-        return EdgeHtmlStandard.HTML123;
+        return HtmlStandard.HTML123;
     }
 }

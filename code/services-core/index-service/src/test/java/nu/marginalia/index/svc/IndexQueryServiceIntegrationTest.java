@@ -14,7 +14,7 @@ import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.lexicon.KeywordLexicon;
-import nu.marginalia.model.crawl.EdgePageWordFlags;
+import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.service.server.Initialization;
@@ -169,7 +169,7 @@ public class IndexQueryServiceIntegrationTest {
         long[] data = new long[factors.length*2];
         for (int i = 0; i < factors.length; i++) {
             data[2*i] = keywordLexicon.getOrInsert(Integer.toString(factors[i]));
-            data[2*i + 1] = new WordMetadata(i, i, EnumSet.of(EdgePageWordFlags.Title)).encode();
+            data[2*i + 1] = new WordMetadata(i, i, EnumSet.of(WordFlags.Title)).encode();
         }
 
         indexJournalWriter.put(header, new IndexJournalEntryData(data));
@@ -182,7 +182,7 @@ public class IndexQueryServiceIntegrationTest {
         long[] data = new long[factors.length*2];
         for (int i = 0; i < factors.length; i++) {
             data[2*i] = keywordLexicon.getOrInsert(Integer.toString(factors[i]));
-            data[2*i + 1] = new WordMetadata(i % 20, i, EnumSet.of(EdgePageWordFlags.Title)).encode();
+            data[2*i + 1] = new WordMetadata(i % 20, i, EnumSet.of(WordFlags.Title)).encode();
         }
 
         indexJournalWriter.put(header, new IndexJournalEntryData(data));

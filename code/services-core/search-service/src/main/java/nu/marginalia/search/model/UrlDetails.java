@@ -3,7 +3,7 @@ package nu.marginalia.search.model;
 import lombok.*;
 import nu.marginalia.index.client.model.results.SearchResultItem;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.model.crawl.EdgeDomainIndexingState;
+import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.crawl.HtmlFeature;
 
 import java.util.EnumSet;
@@ -25,7 +25,7 @@ public class UrlDetails {
     public int features;
 
     public String ip;
-    public EdgeDomainIndexingState domainState;
+    public DomainIndexingState domainState;
 
     public long dataHash;
 
@@ -182,7 +182,7 @@ public class UrlDetails {
     public boolean isAds() { return HtmlFeature.hasFeature(features, HtmlFeature.ADVERTISEMENT); }
 
     public boolean isSpecialDomain() {
-        return domainState == EdgeDomainIndexingState.SPECIAL;
+        return domainState == DomainIndexingState.SPECIAL;
     }
     public int getLogRank() { return (int) Math.round(Math.min(Math.log(1+rankingId),10)); }
 

@@ -1,7 +1,7 @@
 package nu.marginalia.converting.model;
 
 import lombok.ToString;
-import nu.marginalia.model.crawl.EdgeHtmlStandard;
+import nu.marginalia.crawling.common.model.HtmlStandard;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.EdgeUrl;
@@ -23,7 +23,7 @@ public class ProcessedDocumentDetails {
     public long hashCode;
 
     public Set<HtmlFeature> features;
-    public EdgeHtmlStandard standard;
+    public HtmlStandard standard;
 
     public List<EdgeUrl> linksInternal;
     public List<EdgeUrl> linksExternal;

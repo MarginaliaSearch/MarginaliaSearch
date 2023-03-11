@@ -3,7 +3,7 @@ package nu.marginalia.query_parser;
 import nu.marginalia.language.WordPatterns;
 import nu.marginalia.query_parser.token.Token;
 import nu.marginalia.query_parser.token.TokenType;
-import nu.marginalia.util.TransformList;
+import nu.marginalia.transform_list.TransformList;
 
 import java.util.List;
 

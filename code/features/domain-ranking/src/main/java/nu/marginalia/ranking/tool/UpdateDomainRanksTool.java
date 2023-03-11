@@ -6,7 +6,7 @@ import nu.marginalia.ranking.StandardPageRank;
 import nu.marginalia.ranking.accumulator.RankingResultListAccumulator;
 import nu.marginalia.ranking.data.RankingDomainFetcherForSimilarityData;
 
-import nu.marginalia.model.dbcommon.EdgeDomainBlacklistImpl;
+import nu.marginalia.model.dbcommon.DomainBlacklistImpl;
 import nu.marginalia.service.module.DatabaseModule;
 import org.mariadb.jdbc.Driver;
 import org.slf4j.Logger;
@@ -33,7 +33,7 @@ public class UpdateDomainRanksTool {
         var uploader = new Thread(() -> uploadThread(conn), "Uploader");
 
         logger.info("Ranking");
-        var domains = new RankingDomainFetcherForSimilarityData(conn, new EdgeDomainBlacklistImpl(conn));
+        var domains = new RankingDomainFetcherForSimilarityData(conn, new DomainBlacklistImpl(conn));
         var rpr = new StandardPageRank(domains,  "memex.marginalia.nu", "bikobatanari.art", "sadgrl.online", "wiki.xxiivv.com");
 
         rankMax = rpr.size();

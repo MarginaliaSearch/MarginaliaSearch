@@ -8,7 +8,7 @@ import nu.marginalia.browse.model.BrowseResult;
 import nu.marginalia.browse.model.BrowseResultSet;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.dbcommon.DbDomainQueries;
-import nu.marginalia.model.dbcommon.EdgeDomainBlacklist;
+import nu.marginalia.model.dbcommon.DomainBlacklist;
 import nu.marginalia.search.command.SearchCommandInterface;
 import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.search.results.BrowseResultCleaner;
@@ -28,7 +28,7 @@ public class BrowseCommand implements SearchCommandInterface {
     private final DbBrowseDomainsSimilarCosine similarDomains;
     private final DbBrowseDomainsSimilarOldAlgo similarDomainsOld;
     private final DbDomainQueries domainQueries;
-    private final EdgeDomainBlacklist blacklist;
+    private final DomainBlacklist blacklist;
     private final MustacheRenderer<BrowseResultSet> browseResultsRenderer;
     private final BrowseResultCleaner browseResultCleaner;
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -38,7 +38,7 @@ public class BrowseCommand implements SearchCommandInterface {
     public BrowseCommand(DbBrowseDomainsRandom randomDomains,
                          DbBrowseDomainsSimilarCosine similarDomains,
                          DbBrowseDomainsSimilarOldAlgo similarDomainsOld, DbDomainQueries domainQueries,
-                         EdgeDomainBlacklist blacklist,
+                         DomainBlacklist blacklist,
                          RendererFactory rendererFactory,
                          BrowseResultCleaner browseResultCleaner)
             throws IOException

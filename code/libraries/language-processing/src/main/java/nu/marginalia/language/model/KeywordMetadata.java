@@ -2,7 +2,7 @@ package nu.marginalia.language.model;
 
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import nu.marginalia.model.idx.WordMetadata;
-import nu.marginalia.model.crawl.EdgePageWordFlags;
+import nu.marginalia.model.idx.WordFlags;
 
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -21,47 +21,47 @@ public final class KeywordMetadata {
 
     public final Object2IntOpenHashMap<String> wordsTfIdf;
     public final Object2IntOpenHashMap<String> positionMask;
-    private final EnumSet<EdgePageWordFlags> wordFlagsTemplate;
+    private final EnumSet<WordFlags> wordFlagsTemplate;
 
-    public KeywordMetadata(EnumSet<EdgePageWordFlags> flags) {
+    public KeywordMetadata(EnumSet<WordFlags> flags) {
         this.positionMask = new Object2IntOpenHashMap<>(10_000, 0.7f);
         this.wordsTfIdf =  new Object2IntOpenHashMap<>(10_000, 0.7f);
         this.wordFlagsTemplate = flags;
     }
 
     public KeywordMetadata() {
-        this(EnumSet.noneOf(EdgePageWordFlags.class));
+        this(EnumSet.noneOf(WordFlags.class));
     }
 
-    public long getMetadataForWord(EnumSet<EdgePageWordFlags> flagsTemplate, String stemmed) {
+    public long getMetadataForWord(EnumSet<WordFlags> flagsTemplate, String stemmed) {
 
         int tfidf = wordsTfIdf.getOrDefault(stemmed, 0);
-        EnumSet<EdgePageWordFlags> flags = flagsTemplate.clone();
+        EnumSet<WordFlags> flags = flagsTemplate.clone();
 
         if (tfidf > 100)
-            flags.add(EdgePageWordFlags.TfIdfHigh);
+            flags.add(WordFlags.TfIdfHigh);
 
         if (subjectKeywords.contains(stemmed))
-            flags.add(EdgePageWordFlags.Subjects);
+            flags.add(WordFlags.Subjects);
 
         if (namesKeywords.contains(stemmed))
-            flags.add(EdgePageWordFlags.NamesWords);
+            flags.add(WordFlags.NamesWords);
 
         if (titleKeywords.contains(stemmed))
-            flags.add(EdgePageWordFlags.Title);
+            flags.add(WordFlags.Title);
 
         if (urlKeywords.contains(stemmed))
-            flags.add(EdgePageWordFlags.UrlPath);
+            flags.add(WordFlags.UrlPath);
 
         if (domainKeywords.contains(stemmed))
-            flags.add(EdgePageWordFlags.UrlDomain);
+            flags.add(WordFlags.UrlDomain);
 
         int positions = positionMask.getOrDefault(stemmed, 0);
 
         return new WordMetadata(tfidf, positions, flags).encode();
     }
 
-    public EnumSet<EdgePageWordFlags> wordFlagsTemplate() {
+    public EnumSet<WordFlags> wordFlagsTemplate() {
         return wordFlagsTemplate;
     }
 

@@ -6,7 +6,7 @@ import nu.marginalia.loading.loader.SqlLoadDomains;
 import nu.marginalia.loading.loader.SqlLoadProcessedDomain;
 import nu.marginalia.converting.instruction.instructions.DomainLink;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.crawl.EdgeDomainIndexingState;
+import nu.marginalia.model.crawl.DomainIndexingState;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -48,7 +48,7 @@ class SqlLoadProcessedDomainTest {
     @Test
     public void loadProcessedDomain() {
         var loader = new SqlLoadProcessedDomain(dataSource, new SqlLoadDomains(dataSource));
-        loader.load(loaderData, new EdgeDomain("www.marginalia.nu"), EdgeDomainIndexingState.BLOCKED, "127.0.0.1");
+        loader.load(loaderData, new EdgeDomain("www.marginalia.nu"), DomainIndexingState.BLOCKED, "127.0.0.1");
     }
     @Test
     public void loadDomainAlias() {

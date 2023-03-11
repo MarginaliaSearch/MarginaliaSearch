@@ -13,8 +13,8 @@ java {
 }
 
 dependencies {
-    implementation project(':code:libraries:misc')
 
+    implementation project(':code:libraries:next-prime')
     implementation libs.lombok
     annotationProcessor libs.lombok
     implementation libs.bundles.slf4j

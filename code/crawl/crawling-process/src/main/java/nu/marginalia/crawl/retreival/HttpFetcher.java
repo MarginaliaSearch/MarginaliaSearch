@@ -9,7 +9,7 @@ import lombok.SneakyThrows;
 import lombok.ToString;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawlerDocumentStatus;
-import nu.marginalia.model.crawl.EdgeContentType;
+import nu.marginalia.crawling.model.ContentType;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.bigstring.BigString;
@@ -257,11 +257,11 @@ public class HttpFetcher {
         byte[] data = byteStream.readNBytes(maxFetchSize);
 
         var contentType = ContentTypeParser.parse(contentTypeHeader, data);
-        if (!contentTypeLogic.isAllowableContentType(contentType.contentType)) {
+        if (!contentTypeLogic.isAllowableContentType(contentType.contentType())) {
             return createErrorResponse(url, rsp, CrawlerDocumentStatus.BAD_CONTENT_TYPE, "");
         }
 
-        if ("Shift_JIS".equalsIgnoreCase(contentType.charset)) {
+        if ("Shift_JIS".equalsIgnoreCase(contentType.charset())) {
             return createErrorResponse(url, rsp, CrawlerDocumentStatus.BAD_CHARSET, "");
         }
 
@@ -280,10 +280,10 @@ public class HttpFetcher {
                 .build();
     }
 
-    private String getStringData(byte[] data, EdgeContentType contentType) {
+    private String getStringData(byte[] data, ContentType contentType) {
         Charset charset;
         try {
-            charset = Charset.forName(contentType.charset);
+            charset = Charset.forName(contentType.charset());
         }
         catch (IllegalCharsetNameException ex) {
             charset = StandardCharsets.UTF_8;

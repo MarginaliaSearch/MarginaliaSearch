@@ -1,7 +1,7 @@
 package nu.marginalia.model.idx;
 
-import nu.marginalia.model.crawl.EdgePageWordFlags;
-import nu.marginalia.util.BrailleBlockPunchCards;
+
+import nu.marginalia.bbpc.BrailleBlockPunchCards;
 
 import java.util.EnumSet;
 import java.util.Set;
@@ -39,12 +39,12 @@ public record WordMetadata(int tfIdf,
 
     public WordMetadata(int tfIdf,
                         int positions,
-                        Set<EdgePageWordFlags> flags)
+                        Set<WordFlags> flags)
     {
         this(tfIdf, positions, encodeFlags(flags));
     }
 
-    private static byte encodeFlags(Set<EdgePageWordFlags> flags) {
+    private static byte encodeFlags(Set<WordFlags> flags) {
         byte ret = 0;
         for (var flag : flags) { ret |= flag.asBit(); }
         return ret;
@@ -64,7 +64,7 @@ public record WordMetadata(int tfIdf,
         return (meta >>> TF_IDF_SHIFT) & TF_IDF_MASK;
     }
 
-    public boolean hasFlag(EdgePageWordFlags flag) {
+    public boolean hasFlag(WordFlags flag) {
         return (flags & flag.asBit()) != 0;
     }
 
@@ -98,7 +98,7 @@ public record WordMetadata(int tfIdf,
     }
 
 
-    public EnumSet<EdgePageWordFlags> flagSet() {
-        return EdgePageWordFlags.decode(flags);
+    public EnumSet<WordFlags> flagSet() {
+        return WordFlags.decode(flags);
     }
 }

@@ -3,7 +3,6 @@ package nu.marginalia.converting.processor.keywords;
 import lombok.SneakyThrows;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.language.WordPatterns;
-import nu.marginalia.language.model.KeywordMetadata;
 import nu.marginalia.language.model.WordRep;
 import nu.marginalia.language.model.WordSpan;
 import nu.marginalia.language.sentence.SentenceExtractor;
@@ -12,10 +11,7 @@ import nu.marginalia.language.keywords.KeywordExtractor;
 import nu.marginalia.language.model.WordSeparator;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.model.crawl.EdgePageWordFlags;
-import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.test.util.TestLanguageModels;
-import org.apache.commons.lang3.tuple.Pair;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -27,7 +23,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Pattern;
-import java.util.stream.IntStream;
 
 @Tag("slow")
 class SentenceExtractorTest {

@@ -2,10 +2,14 @@ package nu.marginalia.converting.processor.logic;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.adblock.AdblockSimulator;
+import nu.marginalia.adblock.GoogleAnwersSpamDetector;
 import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.model.crawl.HtmlFeature;
-import nu.marginalia.converting.processor.logic.topic.*;
+import nu.marginalia.topic.RecipeDetector;
+import nu.marginalia.topic.TextileCraftDetector;
+import nu.marginalia.topic.WoodworkingDetector;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;

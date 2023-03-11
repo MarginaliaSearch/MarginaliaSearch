@@ -14,7 +14,5 @@ bad support for. It's designed to be able to easily replaced when *Java's Foreig
 * [big-string](big-string/) offers seamless string compression
 * [random-write-funnel](random-write-funnel/) is a tool for reducing write amplification when constructing 
 large files out of order.
-
-## The rest
-
-* [misc](misc/) is just random bits and bobs that didn't fit anywhere.
+* [next-prime](next-prime/) naive brute force prime sieve.
+* [braille-block-punch-cards](braille-block-punch-cards/) renders bit masks into human-readable dot matrices using the braille block.

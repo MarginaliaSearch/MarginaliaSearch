@@ -4,7 +4,7 @@ import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.language.LanguageFilter;
 import nu.marginalia.language.model.DocumentLanguageData;
-import nu.marginalia.model.crawl.EdgeHtmlStandard;
+import nu.marginalia.crawling.common.model.HtmlStandard;
 import nu.marginalia.converting.model.DocumentKeywordsBuilder;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.converting.model.DisqualifiedException;
@@ -56,7 +56,7 @@ public abstract class AbstractDocumentProcessorPlugin {
             return this;
         }
 
-        public MetaTagsBuilder addFormat(EdgeHtmlStandard standard) {
+        public MetaTagsBuilder addFormat(HtmlStandard standard) {
             tagWords.add("format:"+standard.toString().toLowerCase());
             return this;
         }

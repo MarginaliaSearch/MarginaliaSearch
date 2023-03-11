@@ -7,7 +7,7 @@ import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.model.crawl.EdgeDomainIndexingState;
+import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.id.EdgeId;
 import nu.marginalia.model.id.EdgeIdCollection;
 import nu.marginalia.search.model.PageScoreAdjustment;
@@ -82,7 +82,7 @@ public class DbUrlDetailsQuery {
                             rsp.getString(8), // format
                             rsp.getInt(9), // features
                             rsp.getString(10), // ip
-                            EdgeDomainIndexingState.valueOf(rsp.getString(11)), // domainState
+                            DomainIndexingState.valueOf(rsp.getString(11)), // domainState
                             rsp.getLong(12), // dataHash
                             PageScoreAdjustment.zero(), // urlQualityAdjustment
                             Integer.MAX_VALUE, // rankingId

@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.crawling.model.CrawlerDocumentStatus;
-import nu.marginalia.model.crawl.EdgeUrlState;
+import nu.marginalia.model.crawl.UrlIndexingState;
 import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.processor.plugin.AbstractDocumentProcessorPlugin;
@@ -45,12 +45,12 @@ public class DocumentProcessor {
             processDocument(crawledDocument, crawledDomain, ret);
         }
         catch (DisqualifiedException ex) {
-            ret.state = EdgeUrlState.DISQUALIFIED;
+            ret.state = UrlIndexingState.DISQUALIFIED;
             ret.stateReason = ex.reason.toString();
             logger.debug("Disqualified {}: {}", ret.url, ex.reason);
         }
         catch (Exception ex) {
-            ret.state = EdgeUrlState.DISQUALIFIED;
+            ret.state = UrlIndexingState.DISQUALIFIED;
             ret.stateReason = DisqualifiedException.DisqualificationReason.PROCESSING_EXCEPTION.toString();
             logger.info("Failed to convert " + crawledDocument.url, ex);
             ex.printStackTrace();
@@ -125,11 +125,11 @@ public class DocumentProcessor {
         return false;
     }
 
-    private EdgeUrlState crawlerStatusToUrlState(String crawlerStatus, int httpStatus) {
+    private UrlIndexingState crawlerStatusToUrlState(String crawlerStatus, int httpStatus) {
         return switch (CrawlerDocumentStatus.valueOf(crawlerStatus)) {
-            case OK -> httpStatus < 300 ? EdgeUrlState.OK : EdgeUrlState.DEAD;
-            case REDIRECT -> EdgeUrlState.REDIRECT;
-            default -> EdgeUrlState.DEAD;
+            case OK -> httpStatus < 300 ? UrlIndexingState.OK : UrlIndexingState.DEAD;
+            case REDIRECT -> UrlIndexingState.REDIRECT;
+            default -> UrlIndexingState.DEAD;
         };
     }
 

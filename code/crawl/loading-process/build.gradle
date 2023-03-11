@@ -28,7 +28,6 @@ dependencies {
     implementation project(':code:index:lexicon')
     implementation project(':code:index:index-journal')
     implementation project(':code:libraries:language-processing')
-    implementation project(':code:libraries:misc')
 
     testImplementation project(':code:services-core:search-service')
 

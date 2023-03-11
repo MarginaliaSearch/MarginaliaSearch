@@ -2,7 +2,7 @@ package nu.marginalia.crawl;
 
 import nu.marginalia.crawling.model.CrawlingSpecification;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.dbcommon.EdgeDomainBlacklistImpl;
+import nu.marginalia.model.dbcommon.DomainBlacklistImpl;
 import nu.marginalia.service.module.DatabaseModule;
 
 import java.io.IOException;
@@ -37,7 +37,7 @@ public class CrawlJobExtractorMain {
 
     private static Stream<CrawlingSpecification> streamSpecs(String[] targetDomains) {
         var ds = new DatabaseModule().provideConnection();
-        var domainExtractor = new CrawlJobDomainExtractor(new EdgeDomainBlacklistImpl(ds), ds);
+        var domainExtractor = new CrawlJobDomainExtractor(new DomainBlacklistImpl(ds), ds);
 
         if (targetDomains.length > 0) {
             return Arrays.stream(targetDomains).map(EdgeDomain::new).map(domainExtractor::extractDomain);

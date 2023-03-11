@@ -1,7 +1,7 @@
 package nu.marginalia.converting.instruction.instructions;
 
-import nu.marginalia.model.crawl.EdgeHtmlStandard;
-import nu.marginalia.model.crawl.EdgeUrlState;
+import nu.marginalia.crawling.common.model.HtmlStandard;
+import nu.marginalia.model.crawl.UrlIndexingState;
 import nu.marginalia.converting.instruction.Instruction;
 import nu.marginalia.converting.instruction.InstructionTag;
 import nu.marginalia.converting.instruction.Interpreter;
@@ -10,11 +10,11 @@ import org.jetbrains.annotations.Nullable;
 
 
 public record LoadProcessedDocument(EdgeUrl url,
-                                    EdgeUrlState state,
+                                    UrlIndexingState state,
                                     String title,
                                     String description,
                                     int htmlFeatures,
-                                    EdgeHtmlStandard standard,
+                                    HtmlStandard standard,
                                     int length,
                                     long hash,
                                     double quality,

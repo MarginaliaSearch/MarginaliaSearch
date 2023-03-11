@@ -2,7 +2,7 @@ package nu.marginalia.ranking.data;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import nu.marginalia.model.crawl.EdgeDomainIndexingState;
+import nu.marginalia.model.crawl.DomainIndexingState;
 
 @Data
 @AllArgsConstructor
@@ -10,7 +10,7 @@ public class RankingDomainData {
     public final int id;
     public final String name;
     private int alias;
-    public EdgeDomainIndexingState state;
+    public DomainIndexingState state;
     public final int knownUrls;
 
     public int resolveAlias() {
@@ -23,10 +23,10 @@ public class RankingDomainData {
     }
 
     public boolean isSpecial() {
-        return EdgeDomainIndexingState.SPECIAL == state;
+        return DomainIndexingState.SPECIAL == state;
     }
 
     public boolean isSocialMedia() {
-        return EdgeDomainIndexingState.SOCIAL_MEDIA == state;
+        return DomainIndexingState.SOCIAL_MEDIA == state;
     }
 }

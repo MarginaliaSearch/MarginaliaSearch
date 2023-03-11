@@ -6,7 +6,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.browse.model.BrowseResult;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.model.dbcommon.EdgeDomainBlacklist;
+import nu.marginalia.model.dbcommon.DomainBlacklist;
 import nu.marginalia.model.id.EdgeId;
 import nu.marginalia.model.id.EdgeIdCollection;
 import org.slf4j.Logger;
@@ -26,7 +26,7 @@ public class DbBrowseDomainsSimilarOldAlgo {
         this.dataSource = dataSource;
     }
 
-    public List<BrowseResult> getDomainNeighborsAdjacent(EdgeId<EdgeDomain> domainId, EdgeDomainBlacklist blacklist, int count) {
+    public List<BrowseResult> getDomainNeighborsAdjacent(EdgeId<EdgeDomain> domainId, DomainBlacklist blacklist, int count) {
         final Set<BrowseResult> domains = new HashSet<>(count*3);
 
         final String q = """
@@ -131,7 +131,7 @@ public class DbBrowseDomainsSimilarOldAlgo {
         return new ArrayList<>(domains);
     }
 
-    public List<BrowseResult> getRandomDomains(int count, EdgeDomainBlacklist blacklist, int set) {
+    public List<BrowseResult> getRandomDomains(int count, DomainBlacklist blacklist, int set) {
 
         final String q = """
                 SELECT DOMAIN_ID, DOMAIN_NAME

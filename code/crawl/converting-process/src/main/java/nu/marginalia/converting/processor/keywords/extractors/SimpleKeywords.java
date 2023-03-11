@@ -7,7 +7,7 @@ import nu.marginalia.language.keywords.KeywordExtractor;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.KeywordMetadata;
 import nu.marginalia.language.model.WordRep;
-import nu.marginalia.model.crawl.EdgePageWordFlags;
+import nu.marginalia.model.idx.WordFlags;
 
 import java.util.EnumSet;
 
@@ -22,7 +22,7 @@ public class SimpleKeywords {
                                KeywordMetadata metadata,
                                DocumentLanguageData documentLanguageData) {
 
-        EnumSet<EdgePageWordFlags> flagsTemplate = EnumSet.noneOf(EdgePageWordFlags.class);
+        EnumSet<WordFlags> flagsTemplate = EnumSet.noneOf(WordFlags.class);
 
         for (var sent : documentLanguageData.sentences) {
 

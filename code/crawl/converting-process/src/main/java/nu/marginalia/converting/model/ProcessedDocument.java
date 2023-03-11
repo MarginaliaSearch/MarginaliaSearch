@@ -1,8 +1,8 @@
 package nu.marginalia.converting.model;
 
 import lombok.ToString;
-import nu.marginalia.model.crawl.EdgePageDocumentFlags;
-import nu.marginalia.model.crawl.EdgeUrlState;
+import nu.marginalia.model.idx.DocumentFlags;
+import nu.marginalia.model.crawl.UrlIndexingState;
 import nu.marginalia.model.EdgeUrl;
 
 import java.util.OptionalDouble;
@@ -14,11 +14,11 @@ public class ProcessedDocument {
     public ProcessedDocumentDetails details;
     public DocumentKeywordsBuilder words;
 
-    public EdgeUrlState state;
+    public UrlIndexingState state;
     public String stateReason;
 
     public boolean isOk() {
-        return EdgeUrlState.OK == state;
+        return UrlIndexingState.OK == state;
     }
 
     public boolean isProcessedFully() {
@@ -28,7 +28,7 @@ public class ProcessedDocument {
         if (details == null)
             return false;
 
-        return !details.metadata.hasFlag(EdgePageDocumentFlags.Simple);
+        return !details.metadata.hasFlag(DocumentFlags.Simple);
     }
 
     public OptionalDouble quality() {

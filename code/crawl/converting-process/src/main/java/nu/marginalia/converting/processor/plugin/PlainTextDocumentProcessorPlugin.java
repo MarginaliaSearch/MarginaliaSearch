@@ -4,11 +4,10 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
-import nu.marginalia.language.model.KeywordMetadata;
 import nu.marginalia.converting.processor.keywords.DocumentKeywordExtractor;
 import nu.marginalia.language.sentence.SentenceExtractor;
-import nu.marginalia.model.crawl.EdgeHtmlStandard;
-import nu.marginalia.model.crawl.EdgePageDocumentFlags;
+import nu.marginalia.crawling.common.model.HtmlStandard;
+import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.converting.model.DocumentKeywordsBuilder;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.crawl.PubDate;
@@ -16,7 +15,7 @@ import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.ProcessedDocumentDetails;
 import nu.marginalia.converting.processor.logic.PlainTextLogic;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.util.LineUtils;
+import nu.marginalia.converting.util.LineUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.URISyntaxException;
@@ -78,7 +77,7 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
         List<String> firstFewLines = LineUtils.firstNLines(documentBody, 40);
 
         ret.length = documentBody.length();
-        ret.standard = EdgeHtmlStandard.PLAIN;
+        ret.standard = HtmlStandard.PLAIN;
         ret.title = StringUtils.truncate(plainTextLogic.getTitle(url, firstFewLines), maxTitleLength);
 
         ret.quality = -1;
@@ -89,7 +88,7 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
 
         final PubDate pubDate = new PubDate(LocalDate.ofYearDay(1993, 1));
 
-        ret.metadata = new DocumentMetadata(url.depth(), pubDate.yearByte(), 0, (int) -ret.quality, EnumSet.of(EdgePageDocumentFlags.PlainText));
+        ret.metadata = new DocumentMetadata(url.depth(), pubDate.yearByte(), 0, (int) -ret.quality, EnumSet.of(DocumentFlags.PlainText));
 
         DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, url);
 

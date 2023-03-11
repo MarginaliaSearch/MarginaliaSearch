@@ -3,7 +3,7 @@ package nu.marginalia.ranking.tool;
 import lombok.SneakyThrows;
 import nu.marginalia.ranking.accumulator.RankingResultListAccumulator;
 import nu.marginalia.ranking.data.RankingDomainFetcher;
-import nu.marginalia.model.dbcommon.EdgeDomainBlacklistImpl;
+import nu.marginalia.model.dbcommon.DomainBlacklistImpl;
 import nu.marginalia.ranking.StandardPageRank;
 import nu.marginalia.ranking.data.RankingDomainFetcherForSimilarityData;
 import nu.marginalia.service.module.DatabaseModule;
@@ -35,11 +35,11 @@ public class PrintDomainRanksTool {
 
         RankingDomainFetcher domains;
         if (Boolean.getBoolean("use-link-data")) {
-            domains = new RankingDomainFetcher(ds, new EdgeDomainBlacklistImpl(ds));
+            domains = new RankingDomainFetcher(ds, new DomainBlacklistImpl(ds));
             domains.retainNames();
         }
         else {
-            domains = new RankingDomainFetcherForSimilarityData(ds, new EdgeDomainBlacklistImpl(ds));
+            domains = new RankingDomainFetcherForSimilarityData(ds, new DomainBlacklistImpl(ds));
             domains.retainNames();
         }
 

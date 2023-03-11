@@ -18,6 +18,8 @@ dependencies {
     implementation project(':code:common:service-client')
     implementation project(':code:libraries:language-processing')
 
+    implementation project(':code:crawl:common')
+
     implementation libs.lombok
     annotationProcessor libs.lombok
     implementation libs.bundles.slf4j

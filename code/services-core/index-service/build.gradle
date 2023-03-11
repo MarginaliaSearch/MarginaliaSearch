@@ -30,7 +30,6 @@ dependencies {
 
     implementation project(':code:libraries:array')
     implementation project(':code:libraries:btree')
-    implementation project(':code:libraries:misc')
 
     implementation project(':code:index:index-journal')
     implementation project(':code:index:index-query')

@@ -1,6 +1,6 @@
 package nu.marginalia.dict;
 
-import nu.marginalia.util.PrimeUtil;
+import nu.marginalia.util.NextPrimeUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
@@ -33,7 +33,7 @@ public class OffHeapDictionaryHashMap implements DictionaryMap {
         buffers = new IntBuffer[bufferCount];
 
         // Actually use a prime size for Donald Knuth reasons
-        hashTableSize = PrimeUtil.nextPrime(sizeMemory, -1);
+        hashTableSize = NextPrimeUtil.nextPrime(sizeMemory, -1);
 
         intsPerBuffer = 1 + (int)(sizeMemory/ bufferCount);
         bufferSizeBytes = intSize*intsPerBuffer;

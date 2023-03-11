@@ -1,6 +1,6 @@
 package nu.marginalia.converting.instruction.instructions;
 
-import nu.marginalia.model.crawl.EdgeUrlState;
+import nu.marginalia.model.crawl.UrlIndexingState;
 import nu.marginalia.converting.instruction.Instruction;
 import nu.marginalia.converting.instruction.InstructionTag;
 import nu.marginalia.converting.instruction.Interpreter;
@@ -8,7 +8,7 @@ import nu.marginalia.model.EdgeUrl;
 
 
 public record LoadProcessedDocumentWithError(EdgeUrl url,
-                                             EdgeUrlState state,
+                                             UrlIndexingState state,
                                              String reason) implements Instruction
 {
     @Override

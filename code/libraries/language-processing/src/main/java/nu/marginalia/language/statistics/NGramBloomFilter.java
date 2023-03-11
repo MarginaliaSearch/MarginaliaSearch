@@ -5,7 +5,6 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.inject.Inject;
 import nu.marginalia.LanguageModels;
-import nu.marginalia.util.DenseBitMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

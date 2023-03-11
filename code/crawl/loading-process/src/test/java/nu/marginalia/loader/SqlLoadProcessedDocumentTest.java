@@ -9,8 +9,8 @@ import nu.marginalia.loading.loader.SqlLoadProcessedDocument;
 import nu.marginalia.loading.loader.SqlLoadUrls;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.model.crawl.EdgeHtmlStandard;
-import nu.marginalia.model.crawl.EdgeUrlState;
+import nu.marginalia.crawling.common.model.HtmlStandard;
+import nu.marginalia.model.crawl.UrlIndexingState;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.id.EdgeIdArray;
 import org.junit.jupiter.api.*;
@@ -69,11 +69,11 @@ class SqlLoadProcessedDocumentTest {
 
         loader.load(loaderData, List.of(new LoadProcessedDocument(
                 url,
-                EdgeUrlState.OK,
+                UrlIndexingState.OK,
                 "TITLE",
                 "DESCR",
                 HtmlFeature.encode(Set.of(HtmlFeature.AFFILIATE_LINK)),
-                EdgeHtmlStandard.HTML5,
+                HtmlStandard.HTML5,
                 100,
                 12345,
                 -3.14,

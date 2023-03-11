@@ -12,7 +12,6 @@ java {
 dependencies {
     implementation project(':code:common:service-client')
     implementation project(':code:common:service-discovery')
-    implementation project(':code:libraries:misc')
 
     implementation libs.lombok
     annotationProcessor libs.lombok

@@ -4,7 +4,7 @@ import nu.marginalia.browse.DbBrowseDomainsRandom;
 import nu.marginalia.browse.DbBrowseDomainsSimilarCosine;
 import nu.marginalia.browse.model.BrowseResult;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.dbcommon.EdgeDomainBlacklist;
+import nu.marginalia.model.dbcommon.DomainBlacklist;
 import nu.marginalia.model.id.EdgeId;
 
 import java.util.LinkedList;
@@ -22,14 +22,14 @@ public class DatingSessionObject {
         return current;
     }
 
-    public BrowseResult next(DbBrowseDomainsRandom random, EdgeDomainBlacklist blacklist) {
+    public BrowseResult next(DbBrowseDomainsRandom random, DomainBlacklist blacklist) {
         if (queue.isEmpty()) {
             random.getRandomDomains(25, blacklist, 0).forEach(queue::addLast);
         }
         return queue.pollFirst();
     }
 
-    public BrowseResult nextSimilar(EdgeId<EdgeDomain> id, DbBrowseDomainsSimilarCosine adjacent, EdgeDomainBlacklist blacklist) {
+    public BrowseResult nextSimilar(EdgeId<EdgeDomain> id, DbBrowseDomainsSimilarCosine adjacent, DomainBlacklist blacklist) {
         adjacent.getDomainNeighborsAdjacentCosine(id, blacklist, 25).forEach(queue::addFirst);
 
         while (queue.size() > MAX_QUEUE_SIZE) {

@@ -3,7 +3,7 @@ package nu.marginalia.converting.model;
 import it.unimi.dsi.fastutil.objects.Object2LongLinkedOpenHashMap;
 import lombok.Getter;
 import lombok.ToString;
-import nu.marginalia.model.crawl.EdgePageWordFlags;
+import nu.marginalia.model.idx.WordFlags;
 
 import java.util.*;
 
@@ -54,14 +54,14 @@ public class DocumentKeywordsBuilder {
         words.putIfAbsent(word, 0);
     }
 
-    public void setFlagOnMetadataForWords(EdgePageWordFlags flag, Set<String> flagWords) {
+    public void setFlagOnMetadataForWords(WordFlags flag, Set<String> flagWords) {
         flagWords.forEach(word ->
             words.mergeLong(word, flag.asBit(), (a, b) -> a|b)
         );
     }
 
     public void addAllSyntheticTerms(Collection<String> newWords) {
-        long meta = EdgePageWordFlags.Synthetic.asBit();
+        long meta = WordFlags.Synthetic.asBit();
 
         newWords.forEach(word -> {
             words.putIfAbsent(word, meta);

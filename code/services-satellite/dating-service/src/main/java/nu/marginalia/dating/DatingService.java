@@ -6,7 +6,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.browse.DbBrowseDomainsRandom;
 import nu.marginalia.browse.DbBrowseDomainsSimilarCosine;
 import nu.marginalia.browse.model.BrowseResult;
-import nu.marginalia.model.dbcommon.EdgeDomainBlacklist;
+import nu.marginalia.model.dbcommon.DomainBlacklist;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.screenshot.ScreenshotService;
@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class DatingService extends Service {
-    private final EdgeDomainBlacklist blacklist;
+    private final DomainBlacklist blacklist;
     private final DbBrowseDomainsSimilarCosine browseSimilarCosine;
     private final DbBrowseDomainsRandom browseRandom;
     private final MustacheRenderer<BrowseResult> datingRenderer;
@@ -38,7 +38,7 @@ public class DatingService extends Service {
                          RendererFactory rendererFactory,
                          Initialization initialization,
                          MetricsServer metricsServer,
-                         EdgeDomainBlacklist blacklist,
+                         DomainBlacklist blacklist,
                          DbBrowseDomainsSimilarCosine browseSimilarCosine,
                          DbBrowseDomainsRandom browseRandom,
                          ScreenshotService screenshotService) {

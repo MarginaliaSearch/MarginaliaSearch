@@ -1,12 +1,12 @@
 package nu.marginalia.converting.instruction.instructions;
 
-import nu.marginalia.model.crawl.EdgeDomainIndexingState;
+import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.converting.instruction.Instruction;
 import nu.marginalia.converting.instruction.InstructionTag;
 import nu.marginalia.converting.instruction.Interpreter;
 import nu.marginalia.model.EdgeDomain;
 
-public record LoadProcessedDomain(EdgeDomain domain, EdgeDomainIndexingState state, String ip) implements Instruction {
+public record LoadProcessedDomain(EdgeDomain domain, DomainIndexingState state, String ip) implements Instruction {
 
     @Override
     public void apply(Interpreter interpreter) {

@@ -1,7 +1,7 @@
 package nu.marginalia.converting.processor;
 
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import nu.marginalia.model.crawl.EdgePageWordFlags;
+import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.model.EdgeUrl;
@@ -24,7 +24,7 @@ public class SiteWords {
         Map<EdgeUrl, Set<String>> linkedKeywords = getAdjacentWords(internalLinkGraph);
 
         for (var doc : processedDomain.documents) {
-            applyKeywordsToDoc(doc, EdgePageWordFlags.SiteAdjacent, linkedKeywords.get(doc.url));
+            applyKeywordsToDoc(doc, WordFlags.SiteAdjacent, linkedKeywords.get(doc.url));
         }
 
     }
@@ -33,17 +33,17 @@ public class SiteWords {
         Set<String> commonSiteWords = new HashSet<>(10);
 
         commonSiteWords.addAll(commonKeywordExtractor.getCommonSiteWords(processedDomain,
-                EdgePageWordFlags.Subjects));
+                WordFlags.Subjects));
 
         commonSiteWords.addAll(commonKeywordExtractor.getCommonSiteWords(processedDomain,
-                EdgePageWordFlags.Title));
+                WordFlags.Title));
 
         if (commonSiteWords.isEmpty()) {
             return;
         }
 
         for (var doc : processedDomain.documents) {
-            applyKeywordsToDoc(doc, EdgePageWordFlags.Site, commonSiteWords);
+            applyKeywordsToDoc(doc, WordFlags.Site, commonSiteWords);
         }
     }
 
@@ -74,7 +74,7 @@ public class SiteWords {
         return linkedKeywords;
     }
 
-    private void applyKeywordsToDoc(ProcessedDocument doc, EdgePageWordFlags flag, Set<String> words) {
+    private void applyKeywordsToDoc(ProcessedDocument doc, WordFlags flag, Set<String> words) {
         if (doc.words != null && words != null) {
             doc.words.setFlagOnMetadataForWords(flag, words);
         }

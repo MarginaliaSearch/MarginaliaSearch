@@ -1,6 +1,5 @@
 package nu.marginalia.model.idx;
 
-import nu.marginalia.model.crawl.EdgePageDocumentFlags;
 import nu.marginalia.model.crawl.PubDate;
 
 import java.util.EnumSet;
@@ -44,7 +43,7 @@ public record DocumentMetadata(int rank,
     public DocumentMetadata() {
         this(defaultValue());
     }
-    public DocumentMetadata(int topology, int year, int sets, int quality, EnumSet<EdgePageDocumentFlags> flags) {
+    public DocumentMetadata(int topology, int year, int sets, int quality, EnumSet<DocumentFlags> flags) {
         this(0, 0, topology, year, sets, quality, encodeFlags(flags));
     }
 
@@ -58,13 +57,13 @@ public record DocumentMetadata(int rank,
         return new DocumentMetadata(rank, encSize, topology, year, sets, quality, flags);
     }
 
-    private static byte encodeFlags(Set<EdgePageDocumentFlags> flags) {
+    private static byte encodeFlags(Set<DocumentFlags> flags) {
         byte ret = 0;
         for (var flag : flags) { ret |= flag.asBit(); }
         return ret;
     }
 
-    public boolean hasFlag(EdgePageDocumentFlags flag) {
+    public boolean hasFlag(DocumentFlags flag) {
         return (flags & flag.asBit()) != 0;
     }
 

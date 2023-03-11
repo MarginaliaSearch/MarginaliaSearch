@@ -1,7 +1,7 @@
 package nu.marginalia.crawl.retreival.logic;
 
 import crawlercommons.mimetypes.MimeTypeDetector;
-import nu.marginalia.model.crawl.EdgeContentType;
+import nu.marginalia.crawling.model.ContentType;
 import org.jsoup.Jsoup;
 
 import java.util.Arrays;
@@ -11,25 +11,25 @@ public class ContentTypeParser {
 
     static final MimeTypeDetector mimeTypeDetector = new MimeTypeDetector();
 
-    public static EdgeContentType parse(String contentType, byte[] data) {
+    public static ContentType parse(String contentType, byte[] data) {
         return getContentTypeFromContentTypeString(contentType)
                 .or(() -> getContentTypeStringFromTag(data))
                 .orElseGet(() -> {
                     Optional<String> charset = getCharsetFromTag(data);
-                    return new EdgeContentType(
+                    return new ContentType(
                             Optional.ofNullable(contentType)
                                     .or(() -> Optional.ofNullable(mimeTypeDetector.detect(data)))
                                     .orElseGet(() -> ContentTypeParser.shittyMimeSniffer(data)), charset.orElse("ISO_8859_1"));
                 });
     }
 
-    private static Optional<EdgeContentType> getContentTypeFromContentTypeString(String contentType) {
+    private static Optional<ContentType> getContentTypeFromContentTypeString(String contentType) {
         if (contentType != null && contentType.contains(";")) {
             var parts = contentType.split(";");
             var content = parts[0].trim();
             var extra = parts[1].trim();
             if (extra.startsWith("charset=")) {
-                return Optional.of(new EdgeContentType(content, extra.substring("charset=".length())));
+                return Optional.of(new ContentType(content, extra.substring("charset=".length())));
             }
         }
         return Optional.empty();
@@ -53,7 +53,7 @@ public class ContentTypeParser {
 
     }
 
-    private static Optional<EdgeContentType> getContentTypeStringFromTag(byte[] data) {
+    private static Optional<ContentType> getContentTypeStringFromTag(byte[] data) {
         String header = new String(Arrays.copyOf(data, Math.min(1024, data.length)));
         var doc = Jsoup.parse(header);
         for (var metaTag : doc.getElementsByTag("meta")) {

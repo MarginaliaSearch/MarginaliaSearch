@@ -1,6 +1,6 @@
 package nu.marginalia.model;
 
-import nu.marginalia.model.crawl.EdgePageWordFlags;
+import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.idx.WordMetadata;
 import org.junit.jupiter.api.Test;
 
@@ -12,16 +12,16 @@ class WordMetadataTest {
 
     @Test
     public void codecTest() {
-        verifyCodec("Vanilla case", new WordMetadata(32, 0x7f0f0000,  EnumSet.allOf(EdgePageWordFlags.class)));
-        verifyCodec("Position high", new WordMetadata(32, 0xff0f0000,  EnumSet.allOf(EdgePageWordFlags.class)));
-        verifyCodec("No flags", new WordMetadata(32, 0xff0f0000, EnumSet.noneOf(EdgePageWordFlags.class)));
-        System.out.println(new WordMetadata(32, 0x7f0f0005, EnumSet.allOf(EdgePageWordFlags.class)));
-        System.out.println(new WordMetadata(32, 0xff0f0013,  EnumSet.noneOf(EdgePageWordFlags.class)));
+        verifyCodec("Vanilla case", new WordMetadata(32, 0x7f0f0000,  EnumSet.allOf(WordFlags.class)));
+        verifyCodec("Position high", new WordMetadata(32, 0xff0f0000,  EnumSet.allOf(WordFlags.class)));
+        verifyCodec("No flags", new WordMetadata(32, 0xff0f0000, EnumSet.noneOf(WordFlags.class)));
+        System.out.println(new WordMetadata(32, 0x7f0f0005, EnumSet.allOf(WordFlags.class)));
+        System.out.println(new WordMetadata(32, 0xff0f0013,  EnumSet.noneOf(WordFlags.class)));
     }
 
     @Test
     public void testClampTfIdfLow() {
-        var original = new WordMetadata(0x8000FFFF, 0, EnumSet.noneOf(EdgePageWordFlags.class));
+        var original = new WordMetadata(0x8000FFFF, 0, EnumSet.noneOf(WordFlags.class));
         var encoded = new WordMetadata(original.encode());
 
         assertEquals(original.positions(), encoded.positions());
@@ -30,7 +30,7 @@ class WordMetadataTest {
 
     @Test
     public void testClampTfIdfHigh() {
-        var original = new WordMetadata(0x7000FFFF, 0, EnumSet.noneOf(EdgePageWordFlags.class));
+        var original = new WordMetadata(0x7000FFFF, 0, EnumSet.noneOf(WordFlags.class));
         var encoded = new WordMetadata(original.encode());
 
         assertEquals(original.positions(), encoded.positions());

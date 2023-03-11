@@ -14,7 +14,6 @@ java {
 dependencies {
     implementation project(':code:common:service-discovery')
     implementation project(':code:common:service-client')
-    implementation project(':code:libraries:misc')
 }
 
 test {

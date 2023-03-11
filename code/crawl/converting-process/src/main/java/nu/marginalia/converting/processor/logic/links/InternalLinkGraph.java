@@ -1,6 +1,6 @@
 package nu.marginalia.converting.processor.logic.links;
 
-import nu.marginalia.model.crawl.EdgePageWordFlags;
+import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.model.EdgeUrl;
 
@@ -22,7 +22,7 @@ public class InternalLinkGraph {
         internalLinkGraph.put(doc.url, new HashSet<>(doc.details.linksInternal));
         knownUrls.addAll(doc.details.linksInternal);
 
-        List<String> topKeywords = doc.words.getWordsWithAnyFlag(EdgePageWordFlags.TfIdfHigh.asBit() | EdgePageWordFlags.Subjects.asBit());
+        List<String> topKeywords = doc.words.getWordsWithAnyFlag(WordFlags.TfIdfHigh.asBit() | WordFlags.Subjects.asBit());
 
         topKeywordsByUrl.put(doc.url, new HashSet<>(topKeywords));
         candidateKeywordsByUrl.put(doc.url, new HashSet<>(topKeywords));

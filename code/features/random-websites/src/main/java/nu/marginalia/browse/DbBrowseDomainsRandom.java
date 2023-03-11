@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.browse.model.BrowseResult;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.dbcommon.EdgeDomainBlacklist;
+import nu.marginalia.model.dbcommon.DomainBlacklist;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +23,7 @@ public class DbBrowseDomainsRandom {
         this.dataSource = dataSource;
     }
 
-    public List<BrowseResult> getRandomDomains(int count, EdgeDomainBlacklist blacklist, int set) {
+    public List<BrowseResult> getRandomDomains(int count, DomainBlacklist blacklist, int set) {
 
         final String q = """
                 SELECT DOMAIN_ID, DOMAIN_NAME

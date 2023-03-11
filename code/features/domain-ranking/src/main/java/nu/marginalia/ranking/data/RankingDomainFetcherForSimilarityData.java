@@ -3,7 +3,7 @@ package nu.marginalia.ranking.data;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.model.dbcommon.EdgeDomainBlacklistImpl;
+import nu.marginalia.model.dbcommon.DomainBlacklistImpl;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
@@ -14,7 +14,7 @@ public class RankingDomainFetcherForSimilarityData extends RankingDomainFetcher 
     final boolean hasData;
 
     @Inject
-    public RankingDomainFetcherForSimilarityData(HikariDataSource dataSource, EdgeDomainBlacklistImpl blacklist) {
+    public RankingDomainFetcherForSimilarityData(HikariDataSource dataSource, DomainBlacklistImpl blacklist) {
         super(dataSource, blacklist);
 
         hasData = isDomainNeighborTablePopulated(dataSource);

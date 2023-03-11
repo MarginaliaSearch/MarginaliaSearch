@@ -11,7 +11,6 @@ import java.util.regex.Pattern;
 
 public class QueryParams {
 
-    private static final Pattern paramSplitterPattern = Pattern.compile("&");
 
     @Nullable
     public static String queryParamsSanitizer(String path, @Nullable String queryParams) {

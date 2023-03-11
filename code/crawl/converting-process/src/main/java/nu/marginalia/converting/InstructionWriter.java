@@ -2,7 +2,7 @@ package nu.marginalia.converting;
 
 import com.github.luben.zstd.ZstdOutputStream;
 import com.google.gson.Gson;
-import nu.marginalia.model.crawl.EdgeDomainIndexingState;
+import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.converting.instruction.Instruction;
 import nu.marginalia.converting.instruction.Interpreter;
@@ -106,7 +106,7 @@ public class InstructionWriter {
         public void loadDomainLink(DomainLink[] links) {}
 
         @Override
-        public void loadProcessedDomain(EdgeDomain domain, EdgeDomainIndexingState state, String ip) {
+        public void loadProcessedDomain(EdgeDomain domain, DomainIndexingState state, String ip) {
             this.domainName = domain.toString();
         }
 

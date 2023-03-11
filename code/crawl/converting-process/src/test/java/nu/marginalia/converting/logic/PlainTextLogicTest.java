@@ -1,7 +1,7 @@
 package nu.marginalia.converting.logic;
 
 import nu.marginalia.converting.processor.logic.PlainTextLogic;
-import nu.marginalia.util.LineUtils;
+import nu.marginalia.converting.util.LineUtils;
 import nu.marginalia.model.EdgeUrl;
 import org.junit.jupiter.api.Test;
 

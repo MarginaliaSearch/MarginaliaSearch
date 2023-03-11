@@ -1,8 +1,8 @@
 package nu.marginalia.index.client.model.results;
 
-import nu.marginalia.model.crawl.EdgePageWordFlags;
+import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.idx.WordMetadata;
-import nu.marginalia.model.crawl.EdgePageDocumentFlags;
+import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
 
 import java.util.Objects;
@@ -26,7 +26,7 @@ public final class SearchResultKeywordScore {
         this.hasPriorityTerms = hasPriorityTerms;
     }
 
-    private boolean hasTermFlag(EdgePageWordFlags flag) {
+    private boolean hasTermFlag(WordFlags flag) {
         return WordMetadata.hasFlags(encodedWordMetadata, flag.asBit());
     }
 
@@ -37,7 +37,7 @@ public final class SearchResultKeywordScore {
 
         sum += DocumentMetadata.decodeTopology(encodedDocMetadata);
 
-        if (DocumentMetadata.hasFlags(encodedDocMetadata, EdgePageDocumentFlags.Simple.asBit())) {
+        if (DocumentMetadata.hasFlags(encodedDocMetadata, DocumentFlags.Simple.asBit())) {
             sum += 20;
         }
 
@@ -53,28 +53,28 @@ public final class SearchResultKeywordScore {
     public double termValue() {
         double sum = 0;
 
-        if (hasTermFlag(EdgePageWordFlags.Title)) {
+        if (hasTermFlag(WordFlags.Title)) {
             sum -= 15;
         }
 
-        if (hasTermFlag(EdgePageWordFlags.Site)) {
+        if (hasTermFlag(WordFlags.Site)) {
             sum -= 10;
-        } else if (hasTermFlag(EdgePageWordFlags.SiteAdjacent)) {
+        } else if (hasTermFlag(WordFlags.SiteAdjacent)) {
             sum -= 5;
         }
 
-        if (hasTermFlag(EdgePageWordFlags.Subjects)) {
+        if (hasTermFlag(WordFlags.Subjects)) {
             sum -= 10;
         }
-        if (hasTermFlag(EdgePageWordFlags.NamesWords)) {
+        if (hasTermFlag(WordFlags.NamesWords)) {
             sum -= 1;
         }
 
-        if (hasTermFlag(EdgePageWordFlags.UrlDomain)) {
+        if (hasTermFlag(WordFlags.UrlDomain)) {
             sum -= 5;
         }
 
-        if (hasTermFlag(EdgePageWordFlags.UrlPath)) {
+        if (hasTermFlag(WordFlags.UrlPath)) {
             sum -= 5;
         }
 
@@ -95,12 +95,12 @@ public final class SearchResultKeywordScore {
     }
 
     public boolean isKeywordSpecial() {
-        return keyword.contains(":") || hasTermFlag(EdgePageWordFlags.Synthetic);
+        return keyword.contains(":") || hasTermFlag(WordFlags.Synthetic);
     }
 
     public boolean isKeywordRegular() {
         return !keyword.contains(":")
-                && !hasTermFlag(EdgePageWordFlags.Synthetic);
+                && !hasTermFlag(WordFlags.Synthetic);
     }
 
     public long encodedWordMetadata() {

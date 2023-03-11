@@ -2,7 +2,7 @@ package nu.marginalia.loading.loader;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.model.crawl.EdgeDomainIndexingState;
+import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.converting.instruction.instructions.DomainLink;
 import nu.marginalia.model.EdgeDomain;
 import org.slf4j.Logger;
@@ -42,7 +42,7 @@ public class SqlLoadProcessedDomain {
         }
     }
 
-    public void load(LoaderData data, EdgeDomain domain, EdgeDomainIndexingState state, String ip) {
+    public void load(LoaderData data, EdgeDomain domain, DomainIndexingState state, String ip) {
         data.setTargetDomain(domain);
 
         loadDomains.load(data, domain);

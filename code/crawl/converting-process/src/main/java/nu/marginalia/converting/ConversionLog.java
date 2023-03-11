@@ -1,7 +1,7 @@
 package nu.marginalia.converting;
 
 import com.github.luben.zstd.ZstdOutputStream;
-import nu.marginalia.model.crawl.EdgeDomainIndexingState;
+import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.converting.instruction.Interpreter;
 import nu.marginalia.converting.model.DocumentKeywords;
@@ -49,7 +49,7 @@ public class ConversionLog implements AutoCloseable, Interpreter {
     public void loadDomainLink(DomainLink[] links) {}
 
     @Override
-    public void loadProcessedDomain(EdgeDomain domain, EdgeDomainIndexingState state, String ip) {}
+    public void loadProcessedDomain(EdgeDomain domain, DomainIndexingState state, String ip) {}
 
     @Override
     public void loadProcessedDocument(LoadProcessedDocument loadProcessedDocument) {}

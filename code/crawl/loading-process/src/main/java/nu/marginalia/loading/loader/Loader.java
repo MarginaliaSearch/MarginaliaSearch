@@ -2,7 +2,7 @@ package nu.marginalia.loading.loader;
 
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.model.crawl.EdgeDomainIndexingState;
+import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.converting.instruction.Interpreter;
 import nu.marginalia.converting.model.DocumentKeywords;
@@ -76,7 +76,7 @@ public class Loader implements Interpreter {
     }
 
     @Override
-    public void loadProcessedDomain(EdgeDomain domain, EdgeDomainIndexingState state, String ip) {
+    public void loadProcessedDomain(EdgeDomain domain, DomainIndexingState state, String ip) {
         sqlLoadProcessedDomain.load(data, domain, state, ip);
     }
 
