@@ -2,7 +2,7 @@ package nu.marginalia.index.results;
 
 import gnu.trove.map.TLongIntMap;
 import gnu.trove.map.hash.TLongIntHashMap;
-import nu.marginalia.index.client.model.results.EdgeSearchResultItem;
+import nu.marginalia.index.client.model.results.SearchResultItem;
 
 public class IndexResultDomainDeduplicator {
     final TLongIntMap resultsByRankingId = new TLongIntHashMap(2048, 0.5f, -1, 0);
@@ -21,7 +21,7 @@ public class IndexResultDomainDeduplicator {
         return resultsByRankingId.adjustOrPutValue(ranking, 1, 1) <= limitByDomain;
     }
 
-    public boolean test(EdgeSearchResultItem item) {
+    public boolean test(SearchResultItem item) {
         final long key = item.deduplicationKey();
         if (key == 0)
             return true;
@@ -29,7 +29,7 @@ public class IndexResultDomainDeduplicator {
         return resultsByRankingId.adjustOrPutValue(key, 1, 1) <= limitByDomain;
     }
 
-    public int getCount(EdgeSearchResultItem item) {
+    public int getCount(SearchResultItem item) {
         final long key = item.deduplicationKey();
         if (key == 0)
             return 1;

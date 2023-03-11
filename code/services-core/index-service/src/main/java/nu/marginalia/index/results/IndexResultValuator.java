@@ -9,9 +9,9 @@ import nu.marginalia.index.svc.SearchTermsService;
 import nu.marginalia.model.crawl.EdgePageWordFlags;
 import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.index.query.limit.QueryStrategy;
-import nu.marginalia.index.client.model.results.EdgeSearchResultItem;
-import nu.marginalia.index.client.model.results.EdgeSearchResultKeywordScore;
-import nu.marginalia.index.client.model.query.EdgeSearchSubquery;
+import nu.marginalia.index.client.model.results.SearchResultItem;
+import nu.marginalia.index.client.model.results.SearchResultKeywordScore;
+import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.index.query.IndexQueryParams;
 
 import java.util.List;
@@ -31,7 +31,7 @@ public class IndexResultValuator {
     public IndexResultValuator(SearchTermsService searchTermsSvc,
                                IndexMetadataService metadataService,
                                TLongList results,
-                               List<EdgeSearchSubquery> subqueries,
+                               List<SearchSubquery> subqueries,
                                IndexQueryParams queryParams) {
         this.searchTermVariants = subqueries.stream().map(sq -> sq.searchTermsInclude).distinct().toList();
         this.queryParams = queryParams;
@@ -71,9 +71,9 @@ public class IndexResultValuator {
 
     }
 
-    public EdgeSearchResultItem evaluateResult(long id) {
+    public SearchResultItem evaluateResult(long id) {
 
-        EdgeSearchResultItem searchResult = new EdgeSearchResultItem(id);
+        SearchResultItem searchResult = new SearchResultItem(id);
         final long urlIdInt = searchResult.getUrlIdInt();
 
         searchResult.setDomainId(metadataService.getDomainId(urlIdInt));
@@ -99,7 +99,7 @@ public class IndexResultValuator {
         return searchResult;
     }
 
-    private double evaluateSubquery(EdgeSearchResultItem searchResult,
+    private double evaluateSubquery(SearchResultItem searchResult,
                                     long docMetadata,
                                     int querySetId,
                                     List<String> termList)
@@ -114,7 +114,7 @@ public class IndexResultValuator {
 
             long metadata = termMetadata.getTermMetadata(termId, searchResult.getUrlIdInt());
 
-            EdgeSearchResultKeywordScore score = new EdgeSearchResultKeywordScore(
+            SearchResultKeywordScore score = new SearchResultKeywordScore(
                     querySetId,
                     searchTerm,
                     metadata,

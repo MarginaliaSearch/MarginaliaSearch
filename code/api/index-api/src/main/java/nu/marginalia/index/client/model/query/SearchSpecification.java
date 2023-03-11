@@ -8,9 +8,12 @@ import nu.marginalia.index.query.limit.SpecificationLimit;
 import java.util.List;
 
 @ToString @Getter @Builder @With @AllArgsConstructor
-public class EdgeSearchSpecification {
-    public List<EdgeSearchSubquery> subqueries;
+public class SearchSpecification {
+    public List<SearchSubquery> subqueries;
+
+    /** If present and not empty, limit the search to these domain IDs */
     public List<Integer> domains;
+
     public SearchSetIdentifier searchSetIdentifier;
 
     public final String humanQuery;
@@ -21,6 +24,7 @@ public class EdgeSearchSpecification {
     public final SpecificationLimit rank;
 
     public final QueryLimits queryLimits;
+
     public final QueryStrategy queryStrategy;
 
 }

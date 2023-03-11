@@ -1,7 +1,7 @@
 package nu.marginalia.search.model;
 
 import lombok.*;
-import nu.marginalia.index.client.model.results.EdgeSearchResultItem;
+import nu.marginalia.index.client.model.results.SearchResultItem;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.EdgeDomainIndexingState;
 import nu.marginalia.model.crawl.HtmlFeature;
@@ -36,7 +36,7 @@ public class UrlDetails {
     public int resultsFromSameDomain;
 
     public String positions;
-    public EdgeSearchResultItem resultItem;
+    public SearchResultItem resultItem;
 
     public boolean hasMoreResults() {
         return resultsFromSameDomain > 1;

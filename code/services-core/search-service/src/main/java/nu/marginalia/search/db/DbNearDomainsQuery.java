@@ -1,4 +1,4 @@
-package nu.marginalia.search.query;
+package nu.marginalia.search.db;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
@@ -9,12 +9,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class NearQueryProcessor {
+public class DbNearDomainsQuery {
 
     private final HikariDataSource dataSource;
 
     @Inject
-    public NearQueryProcessor(HikariDataSource dataSource) {
+    public DbNearDomainsQuery(HikariDataSource dataSource) {
         this.dataSource = dataSource;
     }
 

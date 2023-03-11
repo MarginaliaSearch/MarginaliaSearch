@@ -3,7 +3,7 @@ package nu.marginalia.search.query;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.index.query.limit.SpecificationLimitType;
 import nu.marginalia.language.statistics.EnglishDictionary;
-import nu.marginalia.index.client.model.query.EdgeSearchSpecification;
+import nu.marginalia.index.client.model.query.SearchSpecification;
 import nu.marginalia.language.statistics.NGramBloomFilter;
 import nu.marginalia.language.statistics.TermFrequencyDict;
 import nu.marginalia.search.command.SearchJsParameter;
@@ -37,7 +37,7 @@ public class QueryFactoryTest {
         );
     }
 
-    public EdgeSearchSpecification parseAndGetSpecs(String query) {
+    public SearchSpecification parseAndGetSpecs(String query) {
         return queryFactory.createQuery(
                 new UserSearchParameters(query, SearchProfile.CORPO, SearchJsParameter.DEFAULT)
         ).specs;

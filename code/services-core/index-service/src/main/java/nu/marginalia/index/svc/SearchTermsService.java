@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import nu.marginalia.dict.OffHeapDictionaryHashMap;
-import nu.marginalia.index.client.model.query.EdgeSearchSubquery;
+import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.index.index.SearchIndexSearchTerms;
 import nu.marginalia.lexicon.KeywordLexiconReadOnlyView;
 import org.slf4j.Logger;
@@ -23,7 +23,7 @@ public class SearchTermsService {
         this.lexicon = lexicon;
     }
 
-    public SearchIndexSearchTerms getSearchTerms(EdgeSearchSubquery request) {
+    public SearchIndexSearchTerms getSearchTerms(SearchSubquery request) {
         final IntList excludes = new IntArrayList();
         final IntList includes = new IntArrayList();
         final IntList priority = new IntArrayList();

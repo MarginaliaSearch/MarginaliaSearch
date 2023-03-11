@@ -3,8 +3,8 @@ package nu.marginalia.search.query;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.LanguageModels;
-import nu.marginalia.index.client.model.query.EdgeSearchSpecification;
-import nu.marginalia.index.client.model.query.EdgeSearchSubquery;
+import nu.marginalia.index.client.model.query.SearchSpecification;
+import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
@@ -16,6 +16,7 @@ import nu.marginalia.query_parser.QueryPermutation;
 import nu.marginalia.query_parser.QueryVariants;
 import nu.marginalia.query_parser.token.Token;
 import nu.marginalia.query_parser.token.TokenType;
+import nu.marginalia.search.db.DbNearDomainsQuery;
 import nu.marginalia.search.model.SearchProfile;
 import nu.marginalia.search.query.model.SearchQuery;
 import nu.marginalia.search.query.model.UserSearchParameters;
@@ -34,7 +35,7 @@ public class QueryFactory {
     private final EnglishDictionary englishDictionary;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final SearchResultValuator searchResultValuator;
-    private final NearQueryProcessor nearQueryProcessor;
+    private final DbNearDomainsQuery dbNearDomainsQuery;
 
     private static final int RETAIN_QUERY_VARIANT_COUNT = 5;
     private final ThreadLocal<QueryVariants> queryVariants;
@@ -48,11 +49,11 @@ public class QueryFactory {
                         EnglishDictionary englishDictionary,
                         NGramBloomFilter nGramBloomFilter,
                         SearchResultValuator searchResultValuator,
-                        NearQueryProcessor nearQueryProcessor) {
+                        DbNearDomainsQuery dbNearDomainsQuery) {
 
         this.englishDictionary = englishDictionary;
         this.searchResultValuator = searchResultValuator;
-        this.nearQueryProcessor = nearQueryProcessor;
+        this.dbNearDomainsQuery = dbNearDomainsQuery;
 
         this.queryVariants = ThreadLocal.withInitial(() -> new QueryVariants(lm ,dict, nGramBloomFilter, englishDictionary));
     }
@@ -67,13 +68,13 @@ public class QueryFactory {
 
     public SearchQuery createQuery(UserSearchParameters params) {
         final var processedQuery =  createQuery(getQueryPermutation(), params);
-        final List<EdgeSearchSubquery> subqueries = processedQuery.specs.subqueries;
+        final List<SearchSubquery> subqueries = processedQuery.specs.subqueries;
 
         for (var sq : subqueries) {
             sq.setValue(searchResultValuator.preEvaluate(sq));
         }
 
-        subqueries.sort(Comparator.comparing(EdgeSearchSubquery::getValue));
+        subqueries.sort(Comparator.comparing(SearchSubquery::getValue));
         trimArray(subqueries, RETAIN_QUERY_VARIANT_COUNT);
 
         return processedQuery;
@@ -84,16 +85,16 @@ public class QueryFactory {
                                                int limitTotal,
                                                String... termsInclude)
     {
-        List<EdgeSearchSubquery> sqs = new ArrayList<>();
+        List<SearchSubquery> sqs = new ArrayList<>();
 
-        sqs.add(new EdgeSearchSubquery(
+        sqs.add(new SearchSubquery(
                 Arrays.asList(termsInclude),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList()
         ));
 
-        var specs = EdgeSearchSpecification.builder()
+        var specs = SearchSpecification.builder()
                 .subqueries(sqs)
                 .domains(Collections.emptyList())
                 .searchSetIdentifier(profile.searchSetIdentifier)
@@ -170,7 +171,7 @@ public class QueryFactory {
         }
 
         var queryPermutations = queryPermutation.permuteQueriesNew(basicQuery);
-        List<EdgeSearchSubquery> subqueries = new ArrayList<>();
+        List<SearchSubquery> subqueries = new ArrayList<>();
 
         String near = profile.getNearDomain();
 
@@ -219,7 +220,7 @@ public class QueryFactory {
                 searchTermsAdvice.clear();
             }
 
-            EdgeSearchSubquery subquery = new EdgeSearchSubquery(searchTermsInclude, searchTermsExclude, searchTermsAdvice, searchTermsPriority);
+            SearchSubquery subquery = new SearchSubquery(searchTermsInclude, searchTermsExclude, searchTermsAdvice, searchTermsPriority);
 
             params.profile().addTacitTerms(subquery);
             params.jsSetting().addTacitTerms(subquery);
@@ -231,7 +232,7 @@ public class QueryFactory {
 
         if (near != null) {
             if (domain == null) {
-                domains = nearQueryProcessor.getRelatedDomains(near, problems::add);
+                domains = dbNearDomainsQuery.getRelatedDomains(near, problems::add);
             }
         }
 
@@ -242,7 +243,7 @@ public class QueryFactory {
             domainLimit = 2;
         }
 
-        EdgeSearchSpecification.EdgeSearchSpecificationBuilder specsBuilder = EdgeSearchSpecification.builder()
+        var specsBuilder = SearchSpecification.builder()
                 .subqueries(subqueries)
                 .queryLimits(new QueryLimits(domainLimit, 100, 250, 4096))
                 .humanQuery(query)
@@ -254,7 +255,7 @@ public class QueryFactory {
                 .queryStrategy(queryStrategy)
                 .searchSetIdentifier(profile.searchSetIdentifier);
 
-        EdgeSearchSpecification specs = specsBuilder.build();
+        SearchSpecification specs = specsBuilder.build();
 
         return new SearchQuery(specs, searchTermsHuman, domain);
     }

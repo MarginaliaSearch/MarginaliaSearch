@@ -9,10 +9,10 @@ import gnu.trove.set.hash.TLongHashSet;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import io.prometheus.client.Histogram;
-import nu.marginalia.index.client.model.results.EdgeSearchResultItem;
-import nu.marginalia.index.client.model.results.EdgeSearchResultSet;
-import nu.marginalia.index.client.model.query.EdgeSearchSpecification;
-import nu.marginalia.index.client.model.query.EdgeSearchSubquery;
+import nu.marginalia.index.client.model.results.SearchResultItem;
+import nu.marginalia.index.client.model.results.SearchResultSet;
+import nu.marginalia.index.client.model.query.SearchSpecification;
+import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.array.buffer.LongQueryBuffer;
 import nu.marginalia.index.index.SearchIndex;
 import nu.marginalia.index.index.SearchIndexSearchTerms;
@@ -73,13 +73,13 @@ public class IndexQueryService {
 
     public Object search(Request request, Response response) {
         String json = request.body();
-        EdgeSearchSpecification specsSet = gson.fromJson(json, EdgeSearchSpecification.class);
+        SearchSpecification specsSet = gson.fromJson(json, SearchSpecification.class);
 
         try {
             return wmsa_edge_index_query_time.time(() -> {
                 var params = new SearchParameters(specsSet, getSearchSet(specsSet));
 
-                List<EdgeSearchResultItem> results = executeSearch(params);
+                List<SearchResultItem> results = executeSearch(params);
                 logger.info(queryMarker, "Index Result Count: {}", results.size());
 
                 wmsa_edge_index_query_cost.set(params.getDataCost());
@@ -87,7 +87,7 @@ public class IndexQueryService {
                     wmsa_edge_index_query_timeouts.inc();
                 }
 
-                return new EdgeSearchResultSet(results);
+                return new SearchResultSet(results);
             });
         }
         catch (HaltException ex) {
@@ -103,11 +103,11 @@ public class IndexQueryService {
     }
 
     // exists for test access
-    EdgeSearchResultSet justQuery(EdgeSearchSpecification specsSet) {
-        return new EdgeSearchResultSet(executeSearch(new SearchParameters(specsSet, getSearchSet(specsSet))));
+    SearchResultSet justQuery(SearchSpecification specsSet) {
+        return new SearchResultSet(executeSearch(new SearchParameters(specsSet, getSearchSet(specsSet))));
     }
 
-    private SearchSet getSearchSet(EdgeSearchSpecification specsSet) {
+    private SearchSet getSearchSet(SearchSpecification specsSet) {
         if (specsSet.domains != null && !specsSet.domains.isEmpty()) {
             return new SmallSearchSet(specsSet.domains);
         }
@@ -115,7 +115,7 @@ public class IndexQueryService {
         return searchSetsService.getSearchSetByName(specsSet.searchSetIdentifier);
     }
 
-    private List<EdgeSearchResultItem> executeSearch(SearchParameters params) {
+    private List<SearchResultItem> executeSearch(SearchParameters params) {
         var resultIds = evaluateSubqueries(params);
 
         var resultItems = calculateResultScores(params, resultIds);
@@ -176,7 +176,7 @@ public class IndexQueryService {
         return results;
     }
 
-    private ArrayList<EdgeSearchResultItem> calculateResultScores(SearchParameters params, TLongList results) {
+    private ArrayList<SearchResultItem> calculateResultScores(SearchParameters params, TLongList results) {
 
         final var evaluator = new IndexResultValuator(
                 searchTermsSvc,
@@ -185,7 +185,7 @@ public class IndexQueryService {
                 params.subqueries,
                 params.queryParams);
 
-        ArrayList<EdgeSearchResultItem> items = new ArrayList<>(results.size());
+        ArrayList<SearchResultItem> items = new ArrayList<>(results.size());
 
         // Sorting the result ids results in better paging characteristics
         results.sort();
@@ -206,15 +206,15 @@ public class IndexQueryService {
         return items;
     }
 
-    private List<EdgeSearchResultItem> selectBestResults(SearchParameters params, List<EdgeSearchResultItem> results) {
+    private List<SearchResultItem> selectBestResults(SearchParameters params, List<SearchResultItem> results) {
 
         var domainCountFilter = new IndexResultDomainDeduplicator(params.limitByDomain);
 
-        results.sort(comparingDouble(EdgeSearchResultItem::getScore)
-                .thenComparingInt(EdgeSearchResultItem::getRanking)
-                .thenComparingInt(EdgeSearchResultItem::getUrlIdInt));
+        results.sort(comparingDouble(SearchResultItem::getScore)
+                .thenComparingInt(SearchResultItem::getRanking)
+                .thenComparingInt(SearchResultItem::getUrlIdInt));
 
-        List<EdgeSearchResultItem> resultsList = new ArrayList<>(results.size());
+        List<SearchResultItem> resultsList = new ArrayList<>(results.size());
 
         for (var item : results) {
             if (domainCountFilter.test(item)) {
@@ -245,7 +245,7 @@ class SearchParameters {
       before evaluating them for the best result. */
     final int fetchSize;
     final IndexSearchBudget budget;
-    final List<EdgeSearchSubquery> subqueries;
+    final List<SearchSubquery> subqueries;
     final IndexQueryParams queryParams;
 
     final int limitByDomain;
@@ -261,7 +261,7 @@ class SearchParameters {
      */
     final TLongHashSet consideredUrlIds;
 
-    public SearchParameters(EdgeSearchSpecification specsSet, SearchSet searchSet) {
+    public SearchParameters(SearchSpecification specsSet, SearchSet searchSet) {
         var limits = specsSet.queryLimits;
 
         this.fetchSize = limits.fetchSize();

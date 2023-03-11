@@ -2,7 +2,7 @@ package nu.marginalia.search.model;
 
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.model.crawl.HtmlFeature;
-import nu.marginalia.index.client.model.query.EdgeSearchSubquery;
+import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.index.client.model.query.SearchSetIdentifier;
 
 import java.util.Objects;
@@ -45,7 +45,7 @@ public enum SearchProfile {
         return YOLO;
     }
 
-    public void addTacitTerms(EdgeSearchSubquery subquery) {
+    public void addTacitTerms(SearchSubquery subquery) {
         if (this == ACADEMIA) {
             subquery.searchTermsPriority.add("tld:edu");
         }

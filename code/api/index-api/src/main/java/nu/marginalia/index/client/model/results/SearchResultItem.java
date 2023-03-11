@@ -8,15 +8,19 @@ import nu.marginalia.model.id.EdgeId;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Represents a document matching a search query */
 @AllArgsConstructor @Getter
-public class EdgeSearchResultItem {
+public class SearchResultItem {
+    /** Encoded ID that contains both the URL id and its ranking */
     public final long combinedId;
 
-    public final List<EdgeSearchResultKeywordScore> scores;
+    /** How did the subqueries match against the document ? */
+    public final List<SearchResultKeywordScore> scores;
 
+    /** How many other potential results existed in the same domain */
     public int resultsFromDomain;
 
-    public EdgeSearchResultItem(long val) {
+    public SearchResultItem(long val) {
         this.combinedId = val;
         this.scores = new ArrayList<>(16);
     }
@@ -62,7 +66,7 @@ public class EdgeSearchResultItem {
             return false;
         if (other == this)
             return true;
-        if (other instanceof EdgeSearchResultItem o) {
+        if (other instanceof SearchResultItem o) {
             return o.getUrlIdInt()  == getUrlIdInt();
         }
         return false;

@@ -7,9 +7,9 @@ import io.reactivex.rxjava3.core.Observable;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.client.AbstractDynamicClient;
 import nu.marginalia.client.Context;
-import nu.marginalia.index.client.model.query.EdgeSearchSpecification;
-import nu.marginalia.index.client.model.results.EdgeSearchResultItem;
-import nu.marginalia.index.client.model.results.EdgeSearchResultSet;
+import nu.marginalia.index.client.model.query.SearchSpecification;
+import nu.marginalia.index.client.model.results.SearchResultItem;
+import nu.marginalia.index.client.model.results.SearchResultSet;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.service.descriptor.ServiceDescriptors;
 import nu.marginalia.service.id.ServiceId;
@@ -30,9 +30,9 @@ public class IndexClient extends AbstractDynamicClient {
     }
 
     @CheckReturnValue
-    public List<EdgeSearchResultItem> query(Context ctx, EdgeSearchSpecification specs) {
+    public List<SearchResultItem> query(Context ctx, SearchSpecification specs) {
         return wmsa_search_index_api_time.time(
-                () -> this.postGet(ctx, "/search/", specs, EdgeSearchResultSet.class).blockingFirst().getResults()
+                () -> this.postGet(ctx, "/search/", specs, SearchResultSet.class).blockingFirst().getResults()
         );
     }
 

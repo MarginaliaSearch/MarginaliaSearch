@@ -8,7 +8,7 @@ import nu.marginalia.search.db.DbUrlDetailsQuery;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.EdgeDomainIndexingState;
 import nu.marginalia.model.id.EdgeIdList;
-import nu.marginalia.index.client.model.results.EdgeSearchResultItem;
+import nu.marginalia.index.client.model.results.SearchResultItem;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.valuation.SearchResultValuator;
 import nu.marginalia.util.BrailleBlockPunchCards;
@@ -29,11 +29,11 @@ public class SearchResultDecorator {
         this.valuator = valuator;
     }
 
-    public List<UrlDetails> getAllUrlDetails(List<EdgeSearchResultItem> resultItems) {
+    public List<UrlDetails> getAllUrlDetails(List<SearchResultItem> resultItems) {
         TIntObjectHashMap<UrlDetails> detailsById = new TIntObjectHashMap<>(resultItems.size());
 
         EdgeIdList<EdgeUrl> idList = resultItems.stream()
-                                                .mapToInt(EdgeSearchResultItem::getUrlIdInt)
+                                                .mapToInt(SearchResultItem::getUrlIdInt)
                                                 .collect(EdgeIdList::new, EdgeIdList::add, EdgeIdList::addAll);
 
         List<UrlDetails> ret = dbUrlDetailsQuery.getUrlDetailsMulti(idList);
@@ -72,14 +72,14 @@ public class SearchResultDecorator {
         return retList;
     }
 
-    private String getPositionsString(EdgeSearchResultItem resultItem) {
+    private String getPositionsString(SearchResultItem resultItem) {
         Int2IntArrayMap positionsPerSet = new Int2IntArrayMap(8);
 
         for (var score : resultItem.scores) {
-            if (!score.isRegular()) {
+            if (!score.isKeywordRegular()) {
                 continue;
             }
-            positionsPerSet.merge(score.set(), score.positions(), this::and);
+            positionsPerSet.merge(score.subquery(), score.positions(), this::and);
         }
 
         int bits = positionsPerSet.values().intStream().reduce(this::or).orElse(0);
@@ -95,7 +95,7 @@ public class SearchResultDecorator {
         return a | b;
     }
 
-    private double calculateTermScore(EdgeSearchResultItem resultItem, UrlDetails details) {
+    private double calculateTermScore(SearchResultItem resultItem, UrlDetails details) {
 
         final double statePenalty = (details.domainState == EdgeDomainIndexingState.SPECIAL) ? 1.25 : 0;
         final double value =  valuator.evaluateTerms(resultItem.scores, details.words, details.title.length());

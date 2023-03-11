@@ -3,7 +3,7 @@ package nu.marginalia.search.svc;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
-import nu.marginalia.index.client.model.results.EdgeSearchResultKeywordScore;
+import nu.marginalia.index.client.model.results.SearchResultKeywordScore;
 import nu.marginalia.search.client.model.ApiSearchResultQueryDetails;
 import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.search.SearchOperator;
@@ -62,7 +62,7 @@ public class SearchApiQueryService {
     ApiSearchResult convert(UrlDetails url) {
         List<List<ApiSearchResultQueryDetails>> details = new ArrayList<>();
         if (url.resultItem != null) {
-            var bySet = url.resultItem.scores.stream().collect(Collectors.groupingBy(EdgeSearchResultKeywordScore::set));
+            var bySet = url.resultItem.scores.stream().collect(Collectors.groupingBy(SearchResultKeywordScore::subquery));
 
             outer:
             for (var entries : bySet.values()) {
@@ -73,7 +73,7 @@ public class SearchApiQueryService {
                         continue outer;
 
                     Set<String> flags = metadata.flagSet().stream().map(Object::toString).collect(Collectors.toSet());
-                    lst.add(new ApiSearchResultQueryDetails(entry.keyword(), metadata.tfIdf(), Integer.bitCount(metadata.positions()), flags));
+                    lst.add(new ApiSearchResultQueryDetails(entry.keyword, metadata.tfIdf(), Integer.bitCount(metadata.positions()), flags));
                 }
                 details.add(lst);
             }

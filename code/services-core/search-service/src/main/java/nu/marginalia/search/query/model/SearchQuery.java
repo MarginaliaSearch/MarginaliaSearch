@@ -1,19 +1,19 @@
 package nu.marginalia.search.query.model;
 
 import lombok.AllArgsConstructor;
-import nu.marginalia.index.client.model.query.EdgeSearchSpecification;
+import nu.marginalia.index.client.model.query.SearchSpecification;
 
 import java.util.*;
 
 @AllArgsConstructor
 public class SearchQuery {
-    public final EdgeSearchSpecification specs;
+    public final SearchSpecification specs;
 
     public final Set<String> problems = new TreeSet<>();
     public final List<String> searchTermsHuman;
     public String domain;
 
-    public SearchQuery(EdgeSearchSpecification justSpecs) {
+    public SearchQuery(SearchSpecification justSpecs) {
         searchTermsHuman = new ArrayList<>();
         specs = justSpecs;
     }

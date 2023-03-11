@@ -7,8 +7,8 @@ import lombok.ToString;
 import java.util.List;
 
 @AllArgsConstructor @Getter @ToString
-public class EdgeSearchResultSet {
-    public List<EdgeSearchResultItem> results;
+public class SearchResultSet {
+    public List<SearchResultItem> results;
 
     public int size() {
         return results.size();

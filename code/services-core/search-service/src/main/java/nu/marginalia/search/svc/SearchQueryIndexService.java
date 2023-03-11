@@ -3,8 +3,8 @@ package nu.marginalia.search.svc;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.index.client.IndexClient;
-import nu.marginalia.index.client.model.results.EdgeSearchResultItem;
-import nu.marginalia.index.client.model.query.EdgeSearchSpecification;
+import nu.marginalia.index.client.model.results.SearchResultItem;
+import nu.marginalia.index.client.model.query.SearchSpecification;
 import nu.marginalia.search.model.PageScoreAdjustment;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.results.SearchResultDecorator;
@@ -37,7 +37,7 @@ public class SearchQueryIndexService {
     }
 
     public List<UrlDetails> executeQuery(Context ctx, SearchQuery processedQuery) {
-        final List<EdgeSearchResultItem> results = indexClient.query(ctx, processedQuery.specs);
+        final List<SearchResultItem> results = indexClient.query(ctx, processedQuery.specs);
 
         List<UrlDetails> urlDetails = resultDecorator.getAllUrlDetails(results);
 
@@ -70,7 +70,7 @@ public class SearchQueryIndexService {
 
     private final Pattern titleSplitPattern = Pattern.compile("[:!|./]|(\\s-|-\\s)|\\s{2,}");
 
-    private PageScoreAdjustment adjustScoreBasedOnQuery(UrlDetails p, EdgeSearchSpecification specs) {
+    private PageScoreAdjustment adjustScoreBasedOnQuery(UrlDetails p, SearchSpecification specs) {
         String titleLC = p.title == null ? "" : p.title.toLowerCase();
         String descLC = p.description == null ? "" : p.description.toLowerCase();
         String urlLC = p.url == null ? "" : p.url.path.toLowerCase();

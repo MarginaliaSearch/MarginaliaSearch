@@ -2,10 +2,10 @@ package nu.marginalia.index.svc;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
-import nu.marginalia.index.client.model.query.EdgeSearchSpecification;
-import nu.marginalia.index.client.model.query.EdgeSearchSubquery;
+import nu.marginalia.index.client.model.query.SearchSpecification;
+import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.index.client.model.query.SearchSetIdentifier;
-import nu.marginalia.index.client.model.results.EdgeSearchResultItem;
+import nu.marginalia.index.client.model.results.SearchResultItem;
 import nu.marginalia.index.index.SearchIndex;
 import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
@@ -79,7 +79,7 @@ public class IndexQueryServiceIntegrationTest {
         searchIndex.switchIndex();
 
         var rsp = queryService.justQuery(
-                EdgeSearchSpecification.builder()
+                SearchSpecification.builder()
                         .queryLimits(new QueryLimits(10, 10, Integer.MAX_VALUE, 4000))
                         .queryStrategy(QueryStrategy.SENTENCE)
                         .year(SpecificationLimit.none())
@@ -88,7 +88,7 @@ public class IndexQueryServiceIntegrationTest {
                         .rank(SpecificationLimit.none())
                         .domains(new ArrayList<>())
                         .searchSetIdentifier(SearchSetIdentifier.NONE)
-                        .subqueries(List.of(new EdgeSearchSubquery(
+                        .subqueries(List.of(new SearchSubquery(
                                 List.of("3", "5", "2"), List.of("4"), Collections.emptyList(), Collections.emptyList()
                         ))).build());
 
@@ -96,7 +96,7 @@ public class IndexQueryServiceIntegrationTest {
                 new int[] { 30, 90, 150, 210, 270, 330, 390, 450, 510 },
                 rsp.results
                         .stream()
-                        .mapToInt(EdgeSearchResultItem::getUrlIdInt)
+                        .mapToInt(SearchResultItem::getUrlIdInt)
                         .toArray());
     }
 
@@ -111,7 +111,7 @@ public class IndexQueryServiceIntegrationTest {
         searchIndex.switchIndex();
 
         var rsp = queryService.justQuery(
-                EdgeSearchSpecification.builder()
+                SearchSpecification.builder()
                         .queryLimits(new QueryLimits(10, 10, Integer.MAX_VALUE, 4000))
                         .year(SpecificationLimit.none())
                         .quality(SpecificationLimit.none())
@@ -119,12 +119,12 @@ public class IndexQueryServiceIntegrationTest {
                         .rank(SpecificationLimit.none())
                         .queryStrategy(QueryStrategy.SENTENCE)
                         .domains(List.of(2))
-                        .subqueries(List.of(new EdgeSearchSubquery(
+                        .subqueries(List.of(new SearchSubquery(
                                 List.of("3", "5", "2"), List.of("4"), Collections.emptyList(), Collections.emptyList()
                         ))).build());
         Assertions.assertArrayEquals(
                 new int[] { 210, 270 },
-                rsp.results.stream().mapToInt(EdgeSearchResultItem::getUrlIdInt).toArray());
+                rsp.results.stream().mapToInt(SearchResultItem::getUrlIdInt).toArray());
     }
 
     @Test
@@ -136,7 +136,7 @@ public class IndexQueryServiceIntegrationTest {
         searchIndex.switchIndex();
 
         var rsp = queryService.justQuery(
-                EdgeSearchSpecification.builder()
+                SearchSpecification.builder()
                         .queryLimits(new QueryLimits(10, 10, Integer.MAX_VALUE, 4000))
                         .quality(SpecificationLimit.none())
                         .year(SpecificationLimit.equals(1998))
@@ -144,14 +144,14 @@ public class IndexQueryServiceIntegrationTest {
                         .rank(SpecificationLimit.none())
                         .queryStrategy(QueryStrategy.SENTENCE)
                         .searchSetIdentifier(SearchSetIdentifier.NONE)
-                        .subqueries(List.of(new EdgeSearchSubquery(
+                        .subqueries(List.of(new SearchSubquery(
                                 List.of("4"), Collections.emptyList(), Collections.emptyList(), Collections.emptyList()
                         ))
                         ).build());
 
         Assertions.assertArrayEquals(
                 new int[] { 12, 72, 132, 192, 252, 312, 372, 432, 492, 32 },
-                rsp.results.stream().mapToInt(EdgeSearchResultItem::getUrlIdInt).toArray());
+                rsp.results.stream().mapToInt(SearchResultItem::getUrlIdInt).toArray());
     }
 
 

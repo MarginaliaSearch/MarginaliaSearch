@@ -5,8 +5,8 @@ import com.google.inject.Singleton;
 import nu.marginalia.language.statistics.TermFrequencyDict;
 import nu.marginalia.model.crawl.EdgePageWordFlags;
 import nu.marginalia.model.idx.WordMetadata;
-import nu.marginalia.index.client.model.results.EdgeSearchResultKeywordScore;
-import nu.marginalia.index.client.model.query.EdgeSearchSubquery;
+import nu.marginalia.index.client.model.results.SearchResultKeywordScore;
+import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.language.WordPatterns;
 import org.jetbrains.annotations.NotNull;
 
@@ -35,7 +35,7 @@ public class SearchResultValuator {
     }
 
 
-    public double preEvaluate(EdgeSearchSubquery sq) {
+    public double preEvaluate(SearchSubquery sq) {
         final String[] terms = sq.searchTermsInclude.stream().filter(f -> !f.contains(":")).toArray(String[]::new);
 
         double termSum = 0.;
@@ -56,8 +56,8 @@ public class SearchResultValuator {
         return termSum / factorSum;
     }
 
-    public double evaluateTerms(List<EdgeSearchResultKeywordScore> rawScores, int length, int titleLength) {
-        int sets = 1 + rawScores.stream().mapToInt(EdgeSearchResultKeywordScore::set).max().orElse(0);
+    public double evaluateTerms(List<SearchResultKeywordScore> rawScores, int length, int titleLength) {
+        int sets = 1 + rawScores.stream().mapToInt(SearchResultKeywordScore::subquery).max().orElse(0);
 
         double bestScore = 10;
         double bestAllTermsFactor = 1.;
@@ -88,10 +88,10 @@ public class SearchResultValuator {
         return bestScore * (0.1 + 0.9 * bestAllTermsFactor) * priorityTermBonus;
     }
 
-    private boolean hasPriorityTerm(List<EdgeSearchResultKeywordScore> rawScores) {
+    private boolean hasPriorityTerm(List<SearchResultKeywordScore> rawScores) {
         return rawScores.stream()
                 .findAny()
-                .map(EdgeSearchResultKeywordScore::hasPriorityTerms)
+                .map(SearchResultKeywordScore::hasPriorityTerms)
                 .orElse(false);
     }
 
@@ -260,11 +260,11 @@ public class SearchResultValuator {
         return f;
     }
 
-    private double[] getTermWeights(EdgeSearchResultKeywordScore[] scores) {
+    private double[] getTermWeights(SearchResultKeywordScore[] scores) {
         double[] weights = new double[scores.length];
 
         for (int i = 0; i < scores.length; i++) {
-            String[] parts = separator.split(scores[i].keyword());
+            String[] parts = separator.split(scores[i].keyword);
             double sumScore = 0.;
 
             int count = 0;
@@ -305,8 +305,8 @@ public class SearchResultValuator {
         return weights;
     }
 
-    private SearchResultsKeywordSet createKeywordSet(List<EdgeSearchResultKeywordScore> rawScores, int thisSet) {
-        EdgeSearchResultKeywordScore[] scores = rawScores.stream().filter(w -> w.set() == thisSet && !w.keyword().contains(":")).toArray(EdgeSearchResultKeywordScore[]::new);
+    private SearchResultsKeywordSet createKeywordSet(List<SearchResultKeywordScore> rawScores, int thisSet) {
+        SearchResultKeywordScore[] scores = rawScores.stream().filter(w -> w.subquery() == thisSet && !w.keyword.contains(":")).toArray(SearchResultKeywordScore[]::new);
         if (scores.length == 0) {
             return null;
         }
@@ -322,8 +322,8 @@ public class SearchResultValuator {
     }
 
 
-    private record SearchResultsKeyword(EdgeSearchResultKeywordScore score, WordMetadata wordMetadata, double weight) {
-        public SearchResultsKeyword(EdgeSearchResultKeywordScore score,  double weight) {
+    private record SearchResultsKeyword(SearchResultKeywordScore score, WordMetadata wordMetadata, double weight) {
+        public SearchResultsKeyword(SearchResultKeywordScore score, double weight) {
             this(score, new WordMetadata(score.encodedWordMetadata()), weight);
         }
 
