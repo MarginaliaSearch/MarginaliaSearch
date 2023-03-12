@@ -19,7 +19,6 @@ application {
 tasks.distZip.enabled = false
 
 dependencies {
-    implementation project(':third-party')
     implementation project(':code:common:model')
     implementation project(':code:features:screenshots')
     implementation project(':code:common:service')

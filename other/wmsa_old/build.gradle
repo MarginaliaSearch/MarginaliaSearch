@@ -30,7 +30,6 @@ java {
     }
 }
 dependencies {
-    implementation project(':third-party')
     implementation project(':code:common:service')
     implementation project(':code:common:service-discovery')
     implementation project(':code:common:service-client')

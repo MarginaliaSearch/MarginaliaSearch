@@ -9,7 +9,7 @@ java {
 }
 
 dependencies {
-    implementation project(':third-party')
+    implementation project(':third-party:uppend')
 
     implementation libs.lombok
     annotationProcessor libs.lombok

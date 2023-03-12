@@ -14,7 +14,6 @@ dependencies {
     implementation project(':code:libraries:array')
     implementation project(':code:common:model')
     implementation project(':code:index:lexicon')
-    implementation project(':third-party')
 
     implementation libs.lombok
     annotationProcessor libs.lombok

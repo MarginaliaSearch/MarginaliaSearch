@@ -22,7 +22,6 @@ tasks.distZip.enabled = false
 apply from: "$rootProject.projectDir/docker-service.gradle"
 
 dependencies {
-    implementation project(':third-party')
     implementation project(':code:common:model')
     implementation project(':code:common:service')
     implementation project(':code:common:config')

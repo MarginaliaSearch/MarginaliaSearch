@@ -6,14 +6,11 @@ or lack an artifact, or to override some default that is inappropriate for the t
 ## Sources and Licenses
 
 ### Modified
-* [RDRPosTagger](https://github.com/datquocnguyen/RDRPOSTagger) - GPL3
-* [PorterStemmer](https://github.com/caarmen/porter-stemmer) - LGPL3
-* [Uppend](https://github.com/upserve/uppend) - MIT
-* [OpenZIM](https://github.com/openzim/libzim) - GPL-2.0
-* [XZ for Java](https://tukaani.org/xz/) - Public Domain
-* [SymSpell](https://github.com/wolfgarbe/symspell) - LGPL-3.0
+* [RDRPosTagger](rdrpostagger/) - GPL3
+* [PorterStemmer](porterstemmer/) - LGPL3
+* [Uppend](uppend/) - MIT
+* [OpenZIM](openzim/) - GPL-2.0
+* [SymSpell](symspell/) - LGPL-3.0
 
 ### Monkey Patched
-* [GSON](https://github.com/google/gson) - Apache-2.0
-* OpenJDK - GPL-2.0 (packaged under jdkoverride)
-* Stanford OpenNLP - Apache-2.0
+* [Stanford OpenNLP](monkey-patch-opennlp/) - Apache-2.0

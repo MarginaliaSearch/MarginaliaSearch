@@ -18,7 +18,8 @@ dependencies {
     implementation project(':code:index:index-journal')
     implementation project(':code:index:lexicon')
     implementation project(':code:common:model')
-    implementation project(':third-party')
+
+    implementation project(':third-party:uppend')
 
     implementation libs.lombok
     annotationProcessor libs.lombok

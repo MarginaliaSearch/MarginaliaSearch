@@ -52,7 +52,14 @@ include 'code:crawl:loading-process'
 include 'code:crawl:common'
 include 'code:crawl:experimental'
 
-include 'third-party'
+include 'third-party:porterstemmer'
+include 'third-party:xz'
+include 'third-party:symspell'
+include 'third-party:rdrpostagger'
+include 'third-party:uppend'
+include 'third-party:openzim'
+include 'third-party:monkey-patch-opennlp'
+
 include 'other:memex'
 include 'other:wmsa_old'
 

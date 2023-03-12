@@ -2,13 +2,13 @@ package nu.marginalia.crawling.io;
 
 import com.github.luben.zstd.ZstdInputStream;
 import com.google.gson.Gson;
-import jdkoverride.LargeLineBufferedReader;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.model.gson.GsonFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -29,7 +29,7 @@ public class CrawledDomainReader {
     public CrawledDomain read(Path path) throws IOException {
         DomainDataAssembler domainData = new DomainDataAssembler();
 
-        try (var br = new LargeLineBufferedReader(new InputStreamReader(new ZstdInputStream(new FileInputStream(path.toFile()))))) {
+        try (var br = new BufferedReader(new InputStreamReader(new ZstdInputStream(new FileInputStream(path.toFile()))))) {
             String line;
             while ((line = br.readLine()) != null) {
                 if (line.startsWith("//")) {

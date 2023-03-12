@@ -59,7 +59,6 @@ jmhJar {
     zip64 true
 }
 dependencies {
-    implementation project(':third-party')
     implementation project(':code:common:service')
     implementation project(':code:common:config')
     implementation project(':code:common:service-discovery')

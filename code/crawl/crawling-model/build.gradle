@@ -13,7 +13,6 @@ java {
 }
 
 dependencies {
-    implementation project(':third-party')
     implementation project(':code:common:model')
     implementation project(':code:libraries:big-string')
     implementation project(':code:api:index-api')
