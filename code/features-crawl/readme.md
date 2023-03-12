@@ -8,3 +8,6 @@ that benefit from the clarity of being kept separate from the rest of the crawli
 * [pubdate](pubdate/) - Determines when a document was published
 * [topic-detection](topic-detection/) - Tries to identify the topic of a website
 
+* [crawl-blocklist](crawl-blocklist/) - IP and URL blocklists
+* [work-log](work-log/) - Work journal for resuming long processes
+* [link-parser](link-parser/) - Code for parsing and normalizing links

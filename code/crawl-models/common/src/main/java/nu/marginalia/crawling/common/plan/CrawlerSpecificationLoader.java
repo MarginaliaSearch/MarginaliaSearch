@@ -3,11 +3,8 @@ package nu.marginalia.crawling.common.plan;
 import com.github.luben.zstd.ZstdInputStream;
 import com.google.gson.Gson;
 import com.google.gson.JsonStreamParser;
-import com.google.gson.stream.JsonReader;
-import nu.marginalia.crawling.common.AbortMonitor;
 import nu.marginalia.crawling.model.CrawlingSpecification;
 import nu.marginalia.model.gson.GsonFactory;
-import org.apache.logging.log4j.util.Strings;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;

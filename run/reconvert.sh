@@ -44,8 +44,8 @@ pushd $(dirname $0)
 ## Upgrade the tools
 
 rm -rf install/loader-process install/converter-process
-tar xf ../code/crawl/loading-process/build/distributions/loader-process.tar -C install/
-tar xf ../code/crawl/converting-process/build/distributions/converter-process.tar -C install/
+tar xf ../code/crawl-processes/loading-process/build/distributions/loader-process.tar -C install/
+tar xf ../code/crawl-processes/converting-process/build/distributions/converter-process.tar -C install/
 
 ## Download the sample if necessary
 

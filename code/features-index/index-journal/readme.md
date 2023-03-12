@@ -2,7 +2,7 @@
 
 The index journal contains a list of entries with keywords and keyword metadata per document. 
 
-This journal is written by [crawl/loading-process](../../crawl/loading-process) and read 
+This journal is written by [crawl-processes/loading-process](../../crawl-processes/loading-process) and read 
 when constructing the [forward](../index-forward) and [reverse](../index-reverse) 
 indices. 
 

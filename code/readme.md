@@ -16,6 +16,16 @@ You'll find a short description in each module of what it does and how it relate
 * * [explorer](services-satellite/explorer-service)  - [https://explore2.marginalia.nu/](https://explore2.marginalia.nu/)
 * an [internal API](api/)
 
+### Processes
+
+Processes are batch jobs that deal with data retrieval, processing and loading.
+
+* [crawl-processes](crawl-processes/)
+* * [crawl-job-extractor](crawl-processes/crawl-job-extractor-process)
+* * [crawling-process](crawl-processes/crawling-process)
+* * [converting-process](crawl-processes/converting-process)
+* * [loading-process](crawl-processes/loading-process)
+
 ### Features
 
 Features are relatively stand-alone components that serve some part of the domain. They aren't domain-independent,
@@ -24,15 +34,6 @@ but isolated.
 * [features-search](features-search)
 * [features-crawl](features-crawl)
 * [features-index](features-index)
-
-
-### Processes
-
-* [crawl processes](crawl/)
-* * [crawl-job-extractor](crawl/crawl-job-extractor-process)
-* * [crawling-process](crawl/crawling-process)
-* * [converting-process](crawl/converting-process)
-* * [loading-process](crawl/loading-process)
 
 ### Libraries and primitives
 

@@ -13,9 +13,9 @@ public class CrawlPlanLoader {
         yaml = new Yaml();
     }
 
-    public EdgeCrawlPlan load(Path yamlFile) throws IOException {
+    public CrawlPlan load(Path yamlFile) throws IOException {
         try (var reader = new FileReader(yamlFile.toFile())) {
-            return yaml.loadAs(reader, EdgeCrawlPlan.class);
+            return yaml.loadAs(reader, CrawlPlan.class);
         }
         catch (IOException ex) {
             throw new IOException("Failed to load crawl plan " + yamlFile, ex);
