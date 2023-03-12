@@ -79,7 +79,7 @@ services:
       - "127.0.0.1:3306:3306/tcp"
     volumes:
       - db:/var/lib/mysql
-      - "./common/model/src/main/resources/sql/edge-crawler-cache.sql:/docker-entrypoint-initdb.d/init.sql"
+      - "./code/common/model/src/main/resources/sql/edge-crawler-cache.sql:/docker-entrypoint-initdb.d/init.sql"
     networks:
       - wmsa
   nginx-gw:
