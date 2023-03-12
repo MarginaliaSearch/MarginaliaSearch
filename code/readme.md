@@ -16,12 +16,29 @@ You'll find a short description in each module of what it does and how it relate
 * * [explorer](services-satellite/explorer-service)  - [https://explore2.marginalia.nu/](https://explore2.marginalia.nu/)
 * an [internal API](api/)
 
+### Features
+
+Features are relatively stand-alone components that serve some part of the domain. They aren't domain-independent,
+but isolated. 
+
+* [features-search](features-search)
+* [features-crawl](features-crawl)
+* [features-index](features-index)
+
+
+### Processes
+
+* [crawl processes](crawl/)
+* * [crawl-job-extractor](crawl/crawl-job-extractor-process)
+* * [crawling-process](crawl/crawling-process)
+* * [converting-process](crawl/converting-process)
+* * [loading-process](crawl/loading-process)
+
 ### Libraries and primitives
+
+Libraries are stand-alone code that is independent of the domain logic.  
+
 * [common](common/) elements for creating a service, a client etc.
-* [index primitives](index/)
-* [crawling and analysis](crawl/)
 * [libraries](libraries/) containing non-search specific code.
 * * [array](libraries/array/) - large memory mapped area library 
 * * [btree](libraries/btree/) - static btree library
-* + more
-* [features](features/) containing code that is specific to search but shared among services.

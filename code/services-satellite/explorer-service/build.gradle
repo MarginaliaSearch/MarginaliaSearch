@@ -27,7 +27,7 @@ dependencies {
     implementation project(':code:common:service-client')
     implementation project(':code:common:renderer')
 
-    implementation project(':code:features:random-websites')
+    implementation project(':code:features-search:random-websites')
 
 
     implementation libs.lombok

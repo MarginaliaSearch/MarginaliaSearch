@@ -20,7 +20,7 @@ tasks.distZip.enabled = false
 
 dependencies {
     implementation project(':code:common:model')
-    implementation project(':code:features:screenshots')
+    implementation project(':code:features-search:screenshots')
     implementation project(':code:common:service')
 
     implementation libs.lombok

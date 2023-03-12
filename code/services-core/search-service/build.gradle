@@ -24,7 +24,7 @@ dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:service')
     implementation project(':code:common:config')
-    implementation project(':code:index:index-query')
+    implementation project(':code:features-index:index-query')
 
     implementation project(':code:libraries:easy-lsh')
     implementation project(':code:libraries:language-processing')
@@ -37,9 +37,9 @@ dependencies {
     implementation project(':code:common:service-client')
     implementation project(':code:common:renderer')
 
-    implementation project(':code:features:screenshots')
-    implementation project(':code:features:random-websites')
-    implementation project(':code:features:query-parser')
+    implementation project(':code:features-search:screenshots')
+    implementation project(':code:features-search:random-websites')
+    implementation project(':code:features-search:query-parser')
 
 
     implementation libs.lombok

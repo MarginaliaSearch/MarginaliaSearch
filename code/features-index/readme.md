@@ -11,7 +11,14 @@ about each word, such as its position.
 * [index-reverse](index-reverse/) is the `word->document` index.
 
 These indices rely heavily on the [libraries/btree](../libraries/btree) and [libraries/array](../libraries/array) components.
+
+## Algorithms
+
+* [domain-ranking](domain-ranking/) contains ranking algorithms.
+
 # Libraries
+
 * [index-query](index-query/) contains structures for evaluating search queries.
 * [index-journal](index-journal/) contains tools for writing and reading index data.
 * [lexicon](lexicon/) contains a mapping between words' string representation and an unique integer identifier.
+

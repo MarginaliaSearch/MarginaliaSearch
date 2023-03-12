@@ -6,5 +6,5 @@ Externally the service is available at [https://explore2.marginalia.nu/](https:/
 
 # See Also
 
-* [features/screenshots](../../features/screenshots)
-* [features/random-websites](../../features/random-websites)
+* [features-search/screenshots](../../features-search/screenshots)
+* [features-search/random-websites](../../features-search/random-websites)

@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id "io.freefair.lombok" version "5.3.3.3"
+
     id 'jvm-test-suite'
 }
 
@@ -9,26 +10,22 @@ java {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
-
 dependencies {
-    implementation project(':code:libraries:array')
-    implementation project(':code:libraries:btree')
-    implementation project(':code:features:domain-ranking')
-    implementation project(':code:index:index-query')
-    implementation project(':code:index:index-journal')
-    implementation project(':code:index:lexicon')
     implementation project(':code:common:model')
+    implementation project(':code:api:index-api')
+    implementation project(':code:common:service-discovery')
+    implementation project(':code:common:service-client')
+    implementation project(':code:libraries:language-processing')
 
-    implementation project(':third-party:uppend')
+    implementation project(':code:crawl-models:common')
 
     implementation libs.lombok
     annotationProcessor libs.lombok
     implementation libs.bundles.slf4j
 
-    implementation libs.prometheus
-    implementation libs.roaringbitmap
-    implementation libs.fastutil
+    implementation libs.notnull
     implementation libs.trove
+    implementation libs.fastutil
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit

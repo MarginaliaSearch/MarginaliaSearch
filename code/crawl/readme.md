@@ -8,13 +8,13 @@ based on the content in the database.
 ## 2. Crawl Process
 
 The [crawling-process](crawling-process/) fetches website contents and saves them
-as compressed JSON models described in [crawling-model](crawling-model/).
+as compressed JSON models described in [crawling-model](../crawl-models/crawling-model/).
 
 ## 3. Converting Process
 
 The [converting-process](converting-process/) reads crawl data from the crawling step and 
 processes them, extracting keywords and metadata and saves them as compressed JSON models 
-described in [converting-model](converting-model/).
+described in [converting-model](../crawl-models/converting-model/).
 
 ## 4. Loading Process
 

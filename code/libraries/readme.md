@@ -1,6 +1,11 @@
 # Libraries
 
-These are libraries that are not strongly coupled to the search engine. 
+These are libraries that are not strongly coupled to the search engine's business logic.
+These libraries may not depend on features, services, processes, models, etc. 
+
+**NOTE:** These libraries are co-licensed under [the MIT license](LICENSE.txt).
+
+## Libraries
 
 * The [array](array/) library is for memory mapping large memory-areas, which Java has
 bad support for. It's designed to be able to easily replaced when *Java's Foreign Function And Memory API* is released.

@@ -30,7 +30,7 @@ dependencies {
     implementation project(':code:common:service-discovery')
     implementation project(':code:common:service-client')
 
-    implementation project(':code:features:screenshots')
+    implementation project(':code:features-search:screenshots')
     implementation project(':code:libraries:language-processing')
 
 

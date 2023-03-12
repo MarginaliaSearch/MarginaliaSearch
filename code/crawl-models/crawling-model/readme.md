@@ -1,7 +1,7 @@
 # Crawling Models
 
-Contains models shared by the [crawling-process](../crawling-process/) and
-[converting-process](../converting-process/).
+Contains models shared by the [crawling-process](../../crawl/crawling-process/) and
+[converting-process](../../crawl/converting-process/).
 
 ## Central Classes
 

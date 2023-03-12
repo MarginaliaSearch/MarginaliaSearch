@@ -20,11 +20,13 @@ dependencies {
     implementation project(':code:common:service-discovery')
     implementation project(':code:common:service-client')
     implementation project(':code:libraries:language-processing')
-    implementation project(':code:crawl:common')
-    implementation project(':code:crawl:crawling-model')
+
+    implementation project(':code:crawl-models:common')
+    implementation project(':code:crawl-models:crawling-model')
+
     implementation project(':code:crawl:converting-process')
-    implementation project(':code:features:adblock')
-    implementation project(':code:features:topic-detection')
+    implementation project(':code:features-crawl:adblock')
+    implementation project(':code:features-crawl:topic-detection')
 
     implementation libs.lombok
     annotationProcessor libs.lombok

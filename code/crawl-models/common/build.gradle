@@ -2,8 +2,6 @@ plugins {
     id 'java'
     id "io.freefair.lombok" version "5.3.3.3"
 
-    id "de.undercouch.download" version "5.1.0"
-
     id 'jvm-test-suite'
 }
 
@@ -15,23 +13,34 @@ java {
 
 dependencies {
     implementation project(':code:common:model')
-    implementation project(':code:crawl:common')
+    implementation project(':code:common:config')
+    implementation project(':code:libraries:guarded-regex')
+    implementation project(':code:crawl-models:crawling-model')
 
+    implementation libs.notnull
     implementation libs.lombok
     annotationProcessor libs.lombok
 
+    implementation libs.bundles.gson
+    implementation libs.rxjava
     implementation libs.bundles.slf4j
+    testImplementation libs.bundles.slf4j.test
+
+    implementation libs.guava
     implementation libs.guice
-    implementation libs.notnull
-    implementation libs.gson
+
+    implementation libs.snakeyaml
     implementation libs.jsoup
+    implementation libs.zstd
+
+    implementation libs.commons.net
+
+    implementation libs.opencsv
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
-    testImplementation project(':code:common:config')
 }
-
 
 test {
     useJUnitPlatform()

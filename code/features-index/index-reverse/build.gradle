@@ -10,22 +10,22 @@ java {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
-dependencies {
-    implementation project(':code:common:model')
-    implementation project(':code:api:index-api')
-    implementation project(':code:common:service-discovery')
-    implementation project(':code:common:service-client')
-    implementation project(':code:libraries:language-processing')
 
-    implementation project(':code:crawl:common')
+dependencies {
+    implementation project(':code:libraries:array')
+    implementation project(':code:libraries:btree')
+    implementation project(':code:libraries:random-write-funnel')
+    implementation project(':code:features-index:domain-ranking')
+    implementation project(':code:features-index:index-query')
+    implementation project(':code:features-index:index-journal')
+    implementation project(':code:features-index:lexicon')
+    implementation project(':code:common:model')
 
     implementation libs.lombok
     annotationProcessor libs.lombok
     implementation libs.bundles.slf4j
 
-    implementation libs.notnull
-    implementation libs.trove
-    implementation libs.fastutil
+    implementation libs.prometheus
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
