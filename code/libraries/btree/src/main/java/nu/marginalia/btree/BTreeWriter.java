@@ -17,18 +17,6 @@ public class BTreeWriter {
         this.ctx = ctx;
     }
 
-    private static long indexSize(BTreeContext ctx, int numWords, int numLayers) {
-        if (numLayers == 0) {
-            return 0; // Special treatment for small tables
-        }
-
-        long size = 0;
-        for (int layer = 0; layer < numLayers; layer++) {
-            size += ctx.indexLayerSize(numWords, layer);
-        }
-        return size;
-    }
-
     /** Construct a BTree with numEntries entries at offset in the associated map
      *
      * @return The size of the written data
@@ -75,19 +63,32 @@ public class BTreeWriter {
         }
     }
 
-    public static BTreeHeader makeHeader(BTreeContext ctx, long offset, int numEntries) {
+    public static BTreeHeader makeHeader(BTreeContext ctx, long baseOffset, int numEntries) {
         final int numLayers = ctx.numIndexLayers(numEntries);
 
-        final int padding = getHeaderPadding(ctx, offset, numLayers);
-
-        final long indexOffset = offset + BTreeHeader.BTreeHeaderSizeLongs + padding;
-        final long dataOffset = indexOffset + indexSize(ctx, numEntries, numLayers);
+        final long indexOffset = baseOffset
+                + BTreeHeader.BTreeHeaderSizeLongs
+                + headerPaddingSize(ctx, baseOffset, numLayers);
+        final long dataOffset = indexOffset
+                + indexSize(ctx, numEntries, numLayers);
 
         return new BTreeHeader(numLayers, numEntries, indexOffset, dataOffset);
     }
 
+    private static long indexSize(BTreeContext ctx, int numWords, int numLayers) {
+        if (numLayers == 0) {
+            return 0; // Special treatment for small tables
+        }
 
-    private static int getHeaderPadding(BTreeContext ctx, long offset, int numLayers) {
+        long size = 0;
+        for (int layer = 0; layer < numLayers; layer++) {
+            size += ctx.indexLayerSize(numWords, layer);
+        }
+
+        return size;
+    }
+
+    private static int headerPaddingSize(BTreeContext ctx, long baeOffset, int numLayers) {
         final int padding;
         if (numLayers == 0) {
             padding = 0;
@@ -97,7 +98,7 @@ public class BTreeWriter {
              * a sorted list, there needs to be padding between the header and the index
              * in order to get aligned blocks
              */
-            padding = (int) (ctx.pageSize() - ((offset + BTreeHeader.BTreeHeaderSizeLongs) % ctx.pageSize()));
+            padding = (int) (ctx.pageSize() - ((baeOffset + BTreeHeader.BTreeHeaderSizeLongs) % ctx.pageSize()));
         }
         return padding;
     }
