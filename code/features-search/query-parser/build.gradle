@@ -25,6 +25,7 @@ dependencies {
     implementation libs.bundles.nlp
 
     implementation libs.bundles.handlebars
+    implementation libs.trove
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
