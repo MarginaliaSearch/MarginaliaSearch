@@ -20,11 +20,11 @@ You'll find a short description in each module of what it does and how it relate
 
 Processes are batch jobs that deal with data retrieval, processing and loading.
 
-* [crawl-processes](crawl-processes/)
-* * [crawl-job-extractor](crawl-processes/crawl-job-extractor-process)
-* * [crawling-process](crawl-processes/crawling-process)
-* * [converting-process](crawl-processes/converting-process)
-* * [loading-process](crawl-processes/loading-process)
+* [processes](processes/)
+* * [crawl-job-extractor](processes/crawl-job-extractor-process)
+* * [crawling-process](processes/crawling-process)
+* * [converting-process](processes/converting-process)
+* * [loading-process](processes/loading-process)
 
 ### Features
 
@@ -33,6 +33,7 @@ but isolated.
 
 * [features-search](features-search)
 * [features-crawl](features-crawl)
+* [features-convert](features-convert)
 * [features-index](features-index)
 
 ### Libraries and primitives

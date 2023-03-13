@@ -11,7 +11,7 @@ public class CompressedBigString implements BigString {
     private final int length;
     private final byte[] encoded;
 
-    private static final LZ4Factory lz4Factory = LZ4Factory.fastestInstance();;
+    private static final LZ4Factory lz4Factory = LZ4Factory.fastestInstance();
     private static final LZ4Compressor compressor = lz4Factory.fastCompressor();
     private static final LZ4FastDecompressor decompressor = lz4Factory.fastDecompressor();
 

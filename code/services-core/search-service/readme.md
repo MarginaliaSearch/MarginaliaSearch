@@ -16,3 +16,7 @@ upon it, dealing with special operations like `browse:` or `site:`.
 
 * [SearchQueryIndexService](src/main/java/nu/marginalia/search/svc/SearchQueryIndexService.java) passes a parsed search query to the index service, and
 then decorates the search results so that they can be rendered.
+
+## See Also
+
+* [features-search](../../features-search/)

@@ -37,16 +37,6 @@ public  class WordSpan implements Comparable<WordSpan>{
 
     }
 
-    public boolean hasSimilarWords(DocumentSentence s, WordSpan other) {
-        for (int i = start; i < end; i++) {
-            for (int j = other.start; j < other.end; j++) {
-                if (s.stemmedWords[i].equals(s.stemmedWords[j]))
-                    return true;
-            }
-        }
-        return false;
-    }
-
     public String toString() {
         return String.format("WordSpan[%s,%s]", start, end);
     }

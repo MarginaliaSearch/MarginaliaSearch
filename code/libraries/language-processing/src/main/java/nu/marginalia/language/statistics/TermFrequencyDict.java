@@ -173,17 +173,7 @@ public class TermFrequencyDict {
         return wordRates.get(longHash(s.getBytes()));
     }
 
-    public static String getStemmedString(String s) {
-        String[] strings = separator.split(s);
-        if (s.length() > 1) {
-            return Arrays.stream(strings).map(ps::stemWord).collect(Collectors.joining("_"));
-        }
-        else {
-            return s;
-        }
-
-    }
-
+    // If this ever changes, we need to re-generate the term frequency dictionary
     public static long longHash(byte[]... bytesSets) {
         if (bytesSets == null || bytesSets.length == 0)
             return 0;

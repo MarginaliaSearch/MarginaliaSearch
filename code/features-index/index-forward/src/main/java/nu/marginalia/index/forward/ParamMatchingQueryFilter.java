@@ -16,70 +16,72 @@ public class ParamMatchingQueryFilter implements QueryFilterStepIf {
 
     @Override
     public boolean test(long docId) {
-        var post = forwardIndexReader.docPost(docId & 0xFFFF_FFFFL);
+        int urlId = (int) (docId & 0xFFFF_FFFFL);
+        int domainId = forwardIndexReader.getDomainId(urlId);
+        long meta = forwardIndexReader.getDocMeta(urlId);
 
-        if (!validateDomain(post)) {
+        if (!validateDomain(domainId)) {
             return false;
         }
 
-        if (!validateQuality(post)) {
+        if (!validateQuality(meta)) {
             return false;
         }
 
-        if (!validateYear(post)) {
+        if (!validateYear(meta)) {
             return false;
         }
 
-        if (!validateSize(post)) {
+        if (!validateSize(meta)) {
             return false;
         }
 
-        if (!validateRank(post)) {
+        if (!validateRank(meta)) {
             return false;
         }
 
         return true;
     }
 
-    private boolean validateDomain(ForwardIndexReader.DocPost post) {
-        return params.searchSet().contains(post.domainId());
+    private boolean validateDomain(int domainId) {
+        return params.searchSet().contains(domainId);
     }
 
-    private boolean validateQuality(ForwardIndexReader.DocPost post) {
+    private boolean validateQuality(long meta) {
         final var limit = params.qualityLimit();
 
         if (limit.type() == SpecificationLimitType.NONE) {
             return true;
         }
 
-        final int quality = DocumentMetadata.decodeQuality(post.meta());
+        final int quality = DocumentMetadata.decodeQuality(meta);
 
         return limit.test(quality);
     }
 
-    private boolean validateYear(ForwardIndexReader.DocPost post) {
+    private boolean validateYear(long meta) {
         if (params.year().type() == SpecificationLimitType.NONE)
             return true;
 
-        int postVal = DocumentMetadata.decodeYear(post.meta());
+        int postVal = DocumentMetadata.decodeYear(meta);
 
         return params.year().test(postVal);
     }
 
-    private boolean validateSize(ForwardIndexReader.DocPost post) {
+    private boolean validateSize(long meta) {
         if (params.size().type() == SpecificationLimitType.NONE)
             return true;
 
-        int postVal = DocumentMetadata.decodeSize(post.meta());
+        int postVal = DocumentMetadata.decodeSize(meta);
 
         return params.size().test(postVal);
     }
 
-    private boolean validateRank(ForwardIndexReader.DocPost post) {
+    private boolean validateRank(long meta) {
         if (params.rank().type() == SpecificationLimitType.NONE)
             return true;
 
-        int postVal = DocumentMetadata.decodeRank(post.meta());
+        int postVal = DocumentMetadata.decodeRank(meta);
 
         return params.rank().test(postVal);
     }

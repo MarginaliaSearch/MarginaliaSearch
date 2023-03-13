@@ -1,0 +1,66 @@
+plugins {
+    id 'java'
+    id "io.freefair.lombok" version "5.3.3.3"
+    id 'application'
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
+application {
+    mainClass = 'nu.marginalia.crawl.CrawlerMain'
+    applicationName = 'crawler-process'
+}
+
+tasks.distZip.enabled = false
+
+dependencies {
+    implementation project(':code:common:model')
+    implementation project(':code:common:config')
+    implementation project(':code:common:service')
+    implementation project(':code:libraries:big-string')
+    implementation project(':code:api:index-api')
+    implementation project(':code:common:service-discovery')
+    implementation project(':code:common:service-client')
+    implementation project(':code:libraries:language-processing')
+    implementation project(':code:process-models:crawling-model')
+    implementation project(':code:process-models:converting-model')
+
+    implementation project(':code:features-crawl:crawl-blocklist')
+    implementation project(':code:features-crawl:link-parser')
+    implementation project(':code:features-crawl:work-log')
+    implementation project(':code:features-crawl:crawl-plan')
+
+    implementation libs.lombok
+    annotationProcessor libs.lombok
+    implementation libs.bundles.slf4j
+
+    implementation libs.notnull
+    implementation libs.guice
+    implementation libs.gson
+    implementation libs.zstd
+    implementation libs.crawlercommons
+    implementation libs.okhttp3
+    implementation libs.jsoup
+    implementation libs.opencsv
+    implementation libs.rxjava
+    implementation libs.bundles.mariadb
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+}
+
+test {
+    useJUnitPlatform()
+}
+
+task fastTests(type: Test) {
+    useJUnitPlatform {
+        excludeTags "slow"
+    }
+}

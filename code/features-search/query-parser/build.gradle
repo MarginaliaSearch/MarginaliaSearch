@@ -13,6 +13,7 @@ java {
 }
 dependencies {
     implementation project(':code:libraries:language-processing')
+    implementation project(':code:features-convert:keyword-extraction')
     implementation project(':code:common:config')
     implementation project(':code:common:model')
 
