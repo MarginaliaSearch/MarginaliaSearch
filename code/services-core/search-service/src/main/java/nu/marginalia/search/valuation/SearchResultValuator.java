@@ -2,7 +2,7 @@ package nu.marginalia.search.valuation;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.language.statistics.TermFrequencyDict;
+import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.index.client.model.results.SearchResultKeywordScore;

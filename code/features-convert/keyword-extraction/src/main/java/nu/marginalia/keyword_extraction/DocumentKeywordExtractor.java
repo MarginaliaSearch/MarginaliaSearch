@@ -6,7 +6,7 @@ import nu.marginalia.language.WordPatterns;
 import nu.marginalia.language.encoding.AsciiFlattener;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.WordRep;
-import nu.marginalia.language.statistics.TermFrequencyDict;
+import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.model.EdgeUrl;
 
 import javax.inject.Inject;

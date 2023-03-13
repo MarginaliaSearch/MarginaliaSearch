@@ -3,7 +3,7 @@ package nu.marginalia.keyword_extraction.extractors;
 import com.google.common.collect.Sets;
 import nu.marginalia.keyword_extraction.KeywordExtractor;
 import nu.marginalia.language.sentence.SentenceExtractor;
-import nu.marginalia.language.statistics.TermFrequencyDict;
+import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.test.util.TestLanguageModels;
 import org.junit.jupiter.api.Test;
 

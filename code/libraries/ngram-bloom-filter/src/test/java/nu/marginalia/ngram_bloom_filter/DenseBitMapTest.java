@@ -1,4 +1,4 @@
-package nu.marginalia.language.statistics;
+package nu.marginalia.ngram_bloom_filter;
 
 import org.junit.jupiter.api.Test;
 

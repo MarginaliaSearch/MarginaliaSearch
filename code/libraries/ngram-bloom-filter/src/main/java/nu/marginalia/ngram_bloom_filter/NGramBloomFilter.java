@@ -1,4 +1,4 @@
-package nu.marginalia.language.statistics;
+package nu.marginalia.ngram_bloom_filter;
 
 import ca.rmen.porterstemmer.PorterStemmer;
 import com.google.common.hash.HashFunction;
@@ -46,29 +46,9 @@ public class NGramBloomFilter {
         return bitMap.get(bit);
     }
 
-//    public static void main(String... args) throws IOException {
-//        var filter = convertFromDictionaryFile(new File(args[0]));
-//        filter.bitMap.writeToFile(Path.of(args[1]));
-//    }
-
     public static NGramBloomFilter load(Path file) throws IOException {
         return new NGramBloomFilter(DenseBitMap.loadFromFile(file));
     }
-
-//    public static NGramBloomFilter convertFromDictionaryFile(File file) throws IOException {
-//        DenseBitMap bitMap = new DenseBitMap(1024*1024*1024L);
-//        AtomicInteger popCount = new AtomicInteger();
-//        try (var f = new KeywordLexiconJournalFile(file)) {
-//            f.loadFile(data -> {
-//                long bit = bitForWord(new String(data), bitMap.cardinality);
-//                if (!bitMap.set(bit))
-//                    popCount.incrementAndGet();
-//            });
-//        }
-//
-//        System.out.println("popcount = " + popCount.get());
-//        return new NGramBloomFilter(bitMap);
-//    }
 
     private static final Pattern underscore = Pattern.compile("_");
 

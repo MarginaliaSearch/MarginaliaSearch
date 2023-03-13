@@ -6,7 +6,7 @@ import nu.marginalia.language.WordPatterns;
 import nu.marginalia.language.model.WordRep;
 import nu.marginalia.language.model.WordSpan;
 import nu.marginalia.language.sentence.SentenceExtractor;
-import nu.marginalia.language.statistics.TermFrequencyDict;
+import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.language.model.WordSeparator;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.model.EdgeUrl;

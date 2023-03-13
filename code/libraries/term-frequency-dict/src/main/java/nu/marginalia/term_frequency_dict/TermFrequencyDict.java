@@ -1,60 +1,51 @@
-package nu.marginalia.language.statistics;
+package nu.marginalia.term_frequency_dict;
 
 import ca.rmen.porterstemmer.PorterStemmer;
 import gnu.trove.map.hash.TLongIntHashMap;
 import nu.marginalia.LanguageModels;
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Singleton
 public class TermFrequencyDict {
-
     private final TLongIntHashMap wordRates = new TLongIntHashMap(1_000_000, 0.5f, 0, 0);
-
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private static final Pattern separator = Pattern.compile("[_ ]+");
     private static final PorterStemmer ps = new PorterStemmer();
 
     private static final long DOC_COUNT_KEY = ~0L;
-    private static long fileSize(Path p) throws IOException {
-        return Files.size(p);
-    }
 
     @Inject
-    public TermFrequencyDict(@Nullable LanguageModels models) {
-        if (models == null) {
-            return;
-        }
+    public TermFrequencyDict(@NotNull LanguageModels models) {
+        this(models.termFrequencies);
+    }
 
-        if (models.termFrequencies != null) {
+    public TermFrequencyDict(Path file) {
+        try (var frequencyData = new DataInputStream(new BufferedInputStream(new FileInputStream(file.toFile())))) {
+            wordRates.ensureCapacity((int)(Files.size(file)/16));
 
-            try (var frequencyData = new DataInputStream(new BufferedInputStream(new FileInputStream(models.termFrequencies.toFile())))) {
-
-                wordRates.ensureCapacity((int)(fileSize(models.termFrequencies)/16));
-
-                for (;;) {
-                    wordRates.put(frequencyData.readLong(), (int) frequencyData.readLong());
-                }
-            } catch (EOFException eof) {
-                // ok
-            } catch (IOException e) {
-                logger.error("IO Exception reading " + models.termFrequencies, e);
+            for (;;) {
+                wordRates.put(frequencyData.readLong(), (int) frequencyData.readLong());
             }
+        } catch (EOFException eof) {
+            // ok
+        } catch (IOException e) {
+            logger.error("IO Exception reading " + file, e);
         }
 
         logger.info("Read {} N-grams frequencies", wordRates.size());
     }
 
+    public TermFrequencyDict(TLongIntHashMap data) {
+        wordRates.putAll(data);
+    }
 
     public int docCount() {
         int cnt = wordRates.get(DOC_COUNT_KEY);
@@ -65,6 +56,7 @@ public class TermFrequencyDict {
         return cnt;
     }
 
+//      WIP refactoring, this needs a new home:
 //
 //    public static void main(String... args) throws IOException, InterruptedException {
 //        if (args.length != 2) {
@@ -151,8 +143,8 @@ public class TermFrequencyDict {
 //    }
 
     public static long getStringHash(String s) {
-        String[] strings = separator.split(s);
-        if (s.length() > 1) {
+        if (s.indexOf(' ') >= 0 || s.indexOf('_') >= 0) {
+            String[] strings = StringUtils.split(s, " _");
             byte[][] parts = new byte[strings.length][];
             for (int i = 0; i < parts.length; i++) {
                 parts[i] = ps.stemWord(strings[i]).getBytes();
@@ -163,6 +155,7 @@ public class TermFrequencyDict {
             return longHash(s.getBytes());
         }
     }
+
     public long getTermFreqHash(long hash) {
         return wordRates.get(hash);
     }

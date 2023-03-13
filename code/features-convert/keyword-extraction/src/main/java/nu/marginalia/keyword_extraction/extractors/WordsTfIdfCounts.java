@@ -8,7 +8,7 @@ import nu.marginalia.language.model.DocumentSentence;
 import nu.marginalia.language.model.WordRep;
 import nu.marginalia.keyword_extraction.KeywordExtractor;
 import nu.marginalia.language.model.WordSpan;
-import nu.marginalia.language.statistics.TermFrequencyDict;
+import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;

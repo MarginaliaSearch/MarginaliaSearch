@@ -2,8 +2,8 @@ package nu.marginalia.query_parser;
 
 import nu.marginalia.LanguageModels;
 import nu.marginalia.language.statistics.EnglishDictionary;
-import nu.marginalia.language.statistics.NGramBloomFilter;
-import nu.marginalia.language.statistics.TermFrequencyDict;
+import nu.marginalia.ngram_bloom_filter.NGramBloomFilter;
+import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.query_parser.token.TokenType;
 import nu.marginalia.util.TestLanguageModels;
 import org.junit.jupiter.api.BeforeAll;

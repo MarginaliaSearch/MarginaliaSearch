@@ -1,7 +1,7 @@
 package nu.marginalia.search.valuation;
 
 import nu.marginalia.index.client.model.results.SearchResultKeywordScore;
-import nu.marginalia.language.statistics.TermFrequencyDict;
+import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.crawl.PubDate;

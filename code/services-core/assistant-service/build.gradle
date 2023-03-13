@@ -31,8 +31,9 @@ dependencies {
     implementation project(':code:common:service-client')
 
     implementation project(':code:features-search:screenshots')
-    implementation project(':code:libraries:language-processing')
 
+    implementation project(':code:libraries:language-processing')
+    implementation project(':code:libraries:term-frequency-dict')
 
     implementation libs.lombok
     annotationProcessor libs.lombok

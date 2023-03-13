@@ -52,7 +52,6 @@ public class ForwardIndexReader {
 
     private static TLongIntHashMap loadIds(Path idsFile) throws IOException {
         var idsArray = LongArray.mmapRead(idsFile);
-        idsArray.advice(NativeIO.Advice.Sequential);
 
         var ids = new TLongIntHashMap((int) idsArray.size(), 0.5f, -1, -1);
 
@@ -85,20 +84,9 @@ public class ForwardIndexReader {
         return Math.max(0, (int) data.get(ENTRY_SIZE * offset + DOMAIN_OFFSET));
     }
 
-    public DocPost docPost(long docId) {
-        long offset = idxForDoc(docId);
-        if (offset < 0) throw new IllegalStateException("Forward index is not loaded");
-
-        final long meta = data.get(ENTRY_SIZE * offset + METADATA_OFFSET);
-        final int domain = Math.max(0, (int) data.get(ENTRY_SIZE * offset + DOMAIN_OFFSET));
-
-        return new DocPost(meta, domain);
-    }
-
     private int idxForDoc(long docId) {
         return idToOffset.get(docId);
     }
 
 
-    public record DocPost(long meta, int domainId) {}
 }

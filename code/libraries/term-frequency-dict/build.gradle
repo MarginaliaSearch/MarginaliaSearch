@@ -2,44 +2,51 @@ plugins {
     id 'java'
     id "io.freefair.lombok" version "5.3.3.3"
 
+    id "me.champeau.jmh" version "0.6.6"
+    id "de.undercouch.download" version "5.1.0"
+
     id 'jvm-test-suite'
 }
-
 
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
+
 dependencies {
-    implementation project(':code:libraries:language-processing')
-    implementation project(':code:libraries:ngram-bloom-filter')
-    implementation project(':code:libraries:term-frequency-dict')
-    implementation project(':code:features-convert:keyword-extraction')
-    implementation project(':code:common:config')
+    implementation project(':third-party:rdrpostagger')
+    implementation project(':third-party:porterstemmer')
+    implementation project(':third-party:monkey-patch-opennlp')
     implementation project(':code:common:model')
+    implementation project(':code:common:config')
+    implementation project(':code:libraries:easy-lsh')
 
     implementation libs.lombok
     annotationProcessor libs.lombok
     implementation libs.bundles.slf4j
-    implementation libs.bundles.nlp
+    implementation libs.notnull
 
-    implementation libs.bundles.handlebars
+    implementation libs.guice
+    implementation libs.jsoup
+    implementation libs.trove
+    implementation libs.fastutil
+
+    implementation libs.bundles.nlp
+    implementation libs.commons.lang3
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
 }
 
+
 test {
-    maxHeapSize = "8G"
     useJUnitPlatform()
 }
 
 task fastTests(type: Test) {
-    maxHeapSize = "8G"
     useJUnitPlatform {
         excludeTags "slow"
     }
 }
-

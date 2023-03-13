@@ -17,6 +17,8 @@ include 'code:libraries:random-write-funnel'
 include 'code:libraries:next-prime'
 include 'code:libraries:braille-block-punch-cards'
 include 'code:libraries:language-processing'
+include 'code:libraries:ngram-bloom-filter'
+include 'code:libraries:term-frequency-dict'
 
 include 'code:features-search:screenshots'
 include 'code:features-search:random-websites'

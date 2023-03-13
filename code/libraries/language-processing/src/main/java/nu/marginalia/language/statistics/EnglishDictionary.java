@@ -1,6 +1,7 @@
 package nu.marginalia.language.statistics;
 
 import com.google.inject.Inject;
+import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
