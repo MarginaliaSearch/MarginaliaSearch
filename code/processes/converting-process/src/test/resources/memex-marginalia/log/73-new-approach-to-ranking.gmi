@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - A new approach to domain ranking [ 2023-02-06 ]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/73-new-approach-to-ranking.gmi" class="path file"><img src="/ico/file.png" title="file"> 73-new-approach-to-ranking.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">A new approach to domain ranking [ 2023-02-06 ]</h1>
+<br>
+This is a very brief post announcing a fascinating discovery.<br>
+<br>
+It appears to be possible to use the cosine similarity approach powering explore2.marginalia.nu as a substitute for the link graph in an eigenvector-based ranking algorithm (i.e. PageRank).<br>
+<br>
+The original PageRank algorithm can be conceptualized as a simulation of where a random visitor would end up if they randomly clicked links on websites. With this model in mind, the modification replaces the link-clicking with using explore2 for navigation.<br>
+<br>
+The performance of PageRank has been deteriorating for decades and it's to a point where it barely is applicable for domain ranking anymore in part due to changes in how websites link to each other, but also a battery of well documented techniques for manipulating the algorithm in order to gain an unfair advantage. You may get decent results at the very top especially with personalized pagerank, but you don't have to scroll particularly far down in the ranking to find spam earning a conspicuously high ranking using a vanilla pagerank approach. <br>
+<br>
+This new approach seems remarkably resistant to existing pagerank manipulation techniques. Given a preference-vector, it stays "on topic" remarkably well. <br>
+<br>
+<dl class="link"><dt><a class="external" href="https://www.marginalia.nu/domains/">https://www.marginalia.nu/domains/</a></dt><dd>Explore Sample Data</dd></dl>
+<br>
+<h2 id="1.1">See Also</h2>
+<br>
+<a class="internal" href="/log/69-creepy-website-similarity.gmi">/log/69-creepy-website-similarity.gmi</a><br>
+<a class="internal" href="/log/20-dot-com-link-farms.gmi">/log/20-dot-com-link-farms.gmi</a><br>
+<a class="internal" href="/log/04-link-farms.gmi">/log/04-link-farms.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>73-new-approach-to-ranking.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/73-new-approach-to-ranking.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/73-new-approach-to-ranking.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/73-new-approach-to-ranking.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 A new approach to domain ranking [ 2023-02-06 ]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 See Also</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/log/74-marginalia-2-years.gmi">/log/74-marginalia-2-years.gmi</a></dt>
+<dd>Marginalia Search: 2 years, big news [ 2023-02-26 ] - Recap </dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

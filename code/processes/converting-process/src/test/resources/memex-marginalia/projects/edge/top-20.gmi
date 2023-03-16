@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Top 20</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/projects" class="path dir"><img src="/ico/dir.png" title="dir"> projects</a>
+
+    <a href="/projects/edge" class="path dir"><img src="/ico/dir.png" title="dir"> edge</a>
+
+    <a href="/projects/edge/top-20.gmi" class="path file"><img src="/ico/file.png" title="file"> top-20.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Top 20</h1>
+<br>
+<h2 id="1.1">By Incoming Links</h2>
+<br>
+A listing of domains by how many incoming links they have. To be specific, this is unique links by domain-to-domain basis. This is relatively consistent with most top-100 website lists. <br>
+<br>
+<pre>
++------------------------+-------+
+| URL_PART               | QTY   |
++------------------------+-------+
+| www.facebook.com       | 65327 |
+| www.youtube.com        | 47293 |
+| twitter.com            | 43001 |
+| en.wikipedia.org       | 31964 |
+| github.com             | 15737 |
+| www.instagram.com      | 14924 |
+| web.archive.org        |  6782 |
+| validator.w3.org       |  5914 |
+| www.apple.com          |  4743 |
+| news.bbc.co.uk         |  4636 |
+| www.gnu.org            |  4619 |
+| www.washingtonpost.com |  4271 |
+| goo.gl                 |  4151 |
+| www.w3.org             |  4065 |
+| www.nps.gov            |  3468 |
+| www.latimes.com        |  2701 |
+| www.ebay.com           |  2312 |
+| books.google.com       |  2265 |
+| www.cafepress.com      |  2257 |
+| www.nasa.gov           |  2113 |
++------------------------+-------+</pre>
+<h2 id="1.2">Quality weighted</h2>
+<br>
+This is weighted in a similar way the search results are ranked by the search engine.<br>
+<br>
+ (quality-weighted incoming links) x (domain quality)<br>
+<br>
+<pre>
++----------------------------+--------------------+
+| URL_PART                   | QTY                |
++----------------------------+--------------------+
+| www.gnu.org                | 215.24882000031243 |
+| xroads.virginia.edu        |  99.51551719790447 |
+| www.levity.com             |  79.67583195394936 |
+| www.fourmilab.ch           |  71.41567713044103 |
+| www.leaderu.com            |  67.63774488714816 |
+| www.chiark.greenend.org.uk |  60.27637178044755 |
+| www.rahul.net              | 58.653324671708994 |
+| files.usgwarchives.net     |   58.5809118191951 |
+| www.hartford-hwp.com       |  57.09051984936602 |
+| math.ucr.edu               |  56.33765697298831 |
+| www.marxists.org           |  54.67132159924675 |
+| cryptome.org               |   53.6266881708856 |
+| www.cygwin.com             | 53.083698286914895 |
+| www.openbsd.org            |  52.07737991403203 |
+| raw.githubusercontent.com  | 51.960594446688795 |
+| www.lysator.liu.se         |  51.45728090178886 |
+| www.whale.to               |  49.17518840241005 |
+| history.hanover.edu        |  48.34961964370164 |
+| www.panix.com              |  43.55703754455768 |
+| users.rcn.com              | 43.536098258182015 |
++----------------------------+--------------------+</pre>
+<br>
+<h2 id="1.3">Topic</h2>
+<br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>top-20.gmi</h1>
+    <a class="download" href="/api/raw?url=/projects/edge/top-20.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/projects/edge/top-20.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/projects/edge/top-20.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/projects/edge/top-20.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Top 20</a>
+    
+        <a href="#1.1" class="heading-2">1.1 By Incoming Links</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Quality weighted</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Topic</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

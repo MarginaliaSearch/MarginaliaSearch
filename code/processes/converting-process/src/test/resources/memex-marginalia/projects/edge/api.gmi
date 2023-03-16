@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - API</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/projects" class="path dir"><img src="/ico/dir.png" title="dir"> projects</a>
+
+    <a href="/projects/edge" class="path dir"><img src="/ico/dir.png" title="dir"> edge</a>
+
+    <a href="/projects/edge/api.gmi" class="path file"><img src="/ico/file.png" title="file"> api.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">API</h1>
+An API for the search engine is available through api.marginalia.nu. <br>
+<br>
+The API is simple enough to be self-explanatory. Examples:<br>
+<br>
+<pre>
+https://api.marginalia.nu/public/
+https://api.marginalia.nu/public/search/json+api
+https://api.marginalia.nu/public/search/json+api?index=0
+https://api.marginalia.nu/public/search/json+api?index=0&count=10</pre>
+<br>
+The 'index' parameter selects the search index, corresponding to the drop down next to the search field in the main GUI. <br>
+<br>
+<h2 id="1.1">Common Key</h2>
+For experimentation, the key "public" is available, as used in the examples on this page. This key has a shared rate limit across all consumers. When this rate limit is hit a HTTP status 503 is returned. <br>
+<br>
+<h2 id="1.2">Key and license</h2>
+<br>
+Please send an email to kontakt@marginalia.nu if you want your own key with a separate rate limit. The search engine has seen quite a lot of problems with bot abuse, making this registration step a sad necessity. <br>
+<br>
+No guarantees can be made about uptime or availability.<br>
+<br>
+By default the data is provided under the CC-BY-NC-SA 4.0 license. Other licensing and terms are negotiable.<br>
+<br>
+<dl class="link"><dt><a class="external" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">https://creativecommons.org/licenses/by-nc-sa/4.0/</a></dt><dd>CC-BY-NC-SA 4.0</dd></dl>
+<br>
+<h2 id="1.3">Sample code in python 3</h2>
+<pre>
+import requests
+
+url = "https://api.marginalia.nu/{key}/search/{query}";
+
+rsp = requests.get(url.format(key='public', query="linear b"));
+
+if rsp.ok:
+  data = rsp.json()
+  print ("Query: ", data['query'])
+  print ("License: ", data['license'])
+  print ("")
+  for result in data['results']:
+      print (result['url'])
+      print ("\t" + result['title'])
+      print ("\t" + result['description'])
+      print ("")
+else:
+    print ("Bad Status " + str(rsp.status_code))</pre>
+<br>
+<h2 id="1.4">Something missing?</h2>
+<br>
+Please let me know if there are features you would like added to the API.<br>
+<br>
+<h2 id="1.5">See also</h2>
+<br>
+<dl class="link"><dt><a class="external" href="https://downloads.marginalia.nu/">https://downloads.marginalia.nu/</a></dt><dd>Data sets from the search engine</dd></dl>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>api.gmi</h1>
+    <a class="download" href="/api/raw?url=/projects/edge/api.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/projects/edge/api.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/projects/edge/api.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/projects/edge/api.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 API</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Common Key</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Key and license</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Sample code in python 3</a>
+    
+        <a href="#1.4" class="heading-2">1.4 Something missing?</a>
+    
+        <a href="#1.5" class="heading-2">1.5 See also</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

@@ -5,7 +5,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.WmsaHome;
-import nu.marginalia.crawl_plan.CrawlPlan;
+import plan.CrawlPlan;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.service.SearchServiceDescriptors;
 import nu.marginalia.service.descriptor.ServiceDescriptors;

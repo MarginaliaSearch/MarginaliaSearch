@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Installing Debian Bullseye on HP Spectre x360 (dual boot)</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/debian-laptop-install-log.gmi" class="path file"><img src="/ico/file.png" title="file"> debian-laptop-install-log.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Installing Debian Bullseye on HP Spectre x360 (dual boot)</h1>
+<br>
+The computer in question is a model 15-df0002no bought in 2020.<br>
+<br>
+This is an install log of sorts, mostly for myself but others may have use of it as well. <br>
+<br>
+Disclaimer: This is not a beginner's guide. I've used Linux for over 20 years and can solve most issues that installing a linux distribution throws my way. <br>
+<br>
+If you don't know your way around BIOS, disk partitioning, linux driver loading, or grub; then misguided attempts at follow these notes as instructions may well brick your laptop, and I probably won't be able to help you unfuck it. <br>
+<br>
+<h2 id="1.1">Preparation</h2>
+<br>
+<ul>
+<li>Disabled bitlocker in Windows 10.</li></ul>
+<br>
+<ul>
+<li>Disabled secure boot in BIOS. If you haven't disabled bitlocker, it will prompt you for a decrypt key.</li></ul>
+<br>
+<ul>
+<li>Reduced windows 10 partition from within windows since the installer didn't seem to have tools for that. I want to dual boot, and this seems to have worked smoothly.</li></ul>
+<br>
+<br>
+<br>
+The default netinst image doesn't ship firmware that is compatible with the wifi (there is only wifi). Use the nonfree image to get iwlwifi  <br>
+<a class="external" href="http://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/">http://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/</a><br>
+<br>
+I had a problem where the installer refused to authenticate on wifi, overall detection seems a bit spotty even with the nonfree image. I eventually got it working. I changed to the terminal and modprobed iwlwifi as it was detecting network device. I'm not sure if that fixed it, but it worked after. This problem seems limited to the installer as far as I can tell. Beyond installing, it's been rock solid.<br>
+<br>
+Touchpad didn't work in the graphical installer, but worked after the system was installed.<br>
+<br>
+Install went smoothly beyond that.<br>
+<br>
+<h1 id="2">Results</h1>
+<br>
+<ul>
+<li>The touch pad and touch screen works well, better than Windows, at least the way I use it. Less frustrating accidental cursor movements with the typing detection!</li></ul>
+<br>
+<ul>
+<li>Audio works out of the box.</li></ul>
+<br>
+<ul>
+<li>Webcam works out of the box.</li></ul>
+<br>
+<ul>
+<li>Graphics were a bit weird initially, had a few system freezes, but installing nvidia drivers seems to have fixed it.</li></ul>
+<br>
+<ul>
+<li>Suspend to RAM seems to work.</li></ul>
+<br>
+<ul>
+<li>Suspend to Disk doesn't seem to work.</li></ul>
+<br>
+<ul>
+<li>Setting global scale to 200-250% in KDE 5 and upping a few fonts seems to fix virtually all HiDPI-issues, except for SDDM and the console framebuffer. You may also want to resize the start bar size, but that is personal preference.</li></ul>
+<br>
+<ul>
+<li>SDDM DPI problems fix:</li></ul>
+<br>
+ Put in /etc/sddm.conf.d/kde_settings.conf <br>
+<pre>
+[X11]
+ServerArguments=-dpi 240
+EnableHiDPI=true</pre>
+<br>
+I haven't tested the SD card reader or the fingerprint reader. <br>
+<br>
+<h2 id="2.1">Problems that could be problems for others but aren't for me</h2>
+<br>
+<ul>
+<li>The DPI of the console is absurdly tiny</li></ul>
+<br>
+I haven't really attempted to fix this, for all I know it could be easily remedied.<br>
+<br>
+<h1 id="3">Conclusions</h1>
+<br>
+Overall it works beyond my wildest expectations. I expected jank, mis-scaled fonts, a barely working touchpad, graphics that didn't work. I got none of that. I got a well-performing Linux laptop. <br>
+<br>
+It works better with Debian Bullseye than it ever did with Windows 10. Well worth it.<br>
+<br>
+<h2 id="3.1">Update several months later</h2>
+<br>
+Yes, it's still amazing.<br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>debian-laptop-install-log.gmi</h1>
+    <a class="download" href="/api/raw?url=/debian-laptop-install-log.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/debian-laptop-install-log.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/debian-laptop-install-log.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/debian-laptop-install-log.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Installing Debian Bullseye on HP Spectre x360 (dual boot)</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Preparation</a>
+    
+        <a href="#2" class="heading-1">2 Results</a>
+    
+        <a href="#2.1" class="heading-2">2.1 Problems that could be problems for others but aren&#x27;t for me</a>
+    
+        <a href="#3" class="heading-1">3 Conclusions</a>
+    
+        <a href="#3.1" class="heading-2">3.1 Update several months later</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

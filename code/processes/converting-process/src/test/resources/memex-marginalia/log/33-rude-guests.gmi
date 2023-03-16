@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - The Parable of A Rude Guest  [2021-10-28]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/33-rude-guests.gmi" class="path file"><img src="/ico/file.png" title="file"> 33-rude-guests.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">The Parable of A Rude Guest  [2021-10-28]</h1>
+<br>
+You are invited to a dinner party. After talking for a while food is served on the table. You pounce. "Haha, suckers!", you think, and load all the food on your plate and leave nothing but scraps for the hosts. You feel victorious. Serves them right for inviting you into their home. You wolf down the food with ravenous appetite while they look on.<br>
+<br>
+That was tasty, but now you got a piece of meat stuck between your teeth so you go to the bathroom and borrow some floss and use one the hosts' toothbrushes. You also use the toilet but don't flush because you don't think you are going to use it again. <br>
+<br>
+You walk around in your underwear because the jeans you were wearing became uncomfortably tight after you stuffed yourself with food intended for four people. <br>
+<br>
+You notice the hosts have a painting you don't like, so you take it down and put up a poster for a band instead. Not because you like the band, but they pay you a small sum of money for every home you put up one of their posters in, and you gotta make a living somehow. You sit down on their coach, still in your underwear, and light a cigar. The hosts cough and signal that you should put it out, but you don't let that get in the way of celebrating a victorious dinner.<br>
+<br>
+That's no way to behave as a guest. Taking more than what is appropriate and exploiting a family that opened their home in friendship may not be overtly illegal, but it certainly is rude and inconsiderate. The behavior would have been fine if we did it in our own homes, but we weren't at home, we were guests.<br>
+<br>
+While this story is exaggerated and a bit preposterous, it is also very close to how many websites seem to operate. <br>
+<br>
+Users open their browser to a website, not more text than this page has, and the website promptly downloads 25 Mb worth of junk, connects to hundreds of servers to share information about the user. <br>
+<br>
+The reader is constantly disturbed by popovers that prompt them to subscribe to newsletters and ads keep appearing in the text, which animate and blink and make the text move around so that it becomes much harder to read the text. The article may also misrepresent itself to make it look like it look like it has answers it in fact does not provide, intentionally wasting the time lent to the website by the reader.<br>
+<br>
+The website consumes greedily whatever resources are available, both in terms of computation and user attention, to serve ends that at best are orthogonal to the needs of the user, and often outright act against the users' benefit. Again, none of this is overtly illegal, but it is rude and inconsiderate.<br>
+<br>
+For some reason we tend to view the website as the host, and the visitor as the guest, but in practice it is the other way around the way modern websites push most of the computation to the clients. <br>
+<br>
+Like guests to a dinner party, we as website owners should respect our hosts, the users, by not gorging ourselves on resources and overstepping the boundaries of our hosts, and especially not viewing the users as suckers for foolishly allowing us to borrow their computers and time. We aren't entitled to using their resources, we've been invited to borrow them, and that's a trust we shouldn't abuse.<br>
+<br>
+<h2 id="1.1">Topics</h2>
+<br>
+<a class="internal" href="/topic/web-design.gmi">/topic/web-design.gmi</a><br>
+<br>
+<br>
+<h2 id="1.2">Discussion</h2>
+<br>
+<a class="external" href="https://maya.land/responses/2022/02/23/website-visitors-are-still-the-visitors.html">https://maya.land/responses/2022/02/23/website-visitors-are-still-the-visitors.html</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>33-rude-guests.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/33-rude-guests.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/33-rude-guests.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/33-rude-guests.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/33-rude-guests.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 The Parable of A Rude Guest  [2021-10-28]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Topics</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Discussion</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

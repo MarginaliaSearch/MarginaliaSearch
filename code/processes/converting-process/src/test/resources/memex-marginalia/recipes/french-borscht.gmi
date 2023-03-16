@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - French Borscht [2021-07-05]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/recipes" class="path dir"><img src="/ico/dir.png" title="dir"> recipes</a>
+
+    <a href="/recipes/french-borscht.gmi" class="path file"><img src="/ico/file.png" title="file"> french-borscht.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">French Borscht [2021-07-05]</h1>
+<br>
+I realize this may offend frenchmen and eastern europeans alike. That's fine, because it turned out alright. There can be peace.<br>
+<br>
+Note that this is more of a sketch than an actual recipe. You will need to make flavor adjustments.<br>
+<br>
+Simplicity: Intermediate<br>
+Meal: Dinner<br>
+Cooking time: 2+ hours<br>
+Health: It healthy for the soul<br>
+Servings: 6-8<br>
+<br>
+Make sure you have 1 small pot, 1 large pot, and a frying pan available.<br>
+<br>
+<h2 id="1.1">Ingredients</h2>
+<br>
+<h3 id="1.1.1">Mirepoix</h3>
+<ul>
+<li>1 large onion (chopped)</li>
+<li>2 stalks of celery (chopped)</li>
+<li>2 carrots (chopped)</li>
+<li>1-2 tbsp tomato puree</li></ul>
+<br>
+<h3 id="1.1.2">Stew base</h3>
+<ul>
+<li>1 glass of red wine, cooking wine is fine</li>
+<li>2 vegetable bouillon cubes</li>
+<li>Water (1L / 4 cups)</li>
+<li>1 bay leaf</li>
+<li>Fresh thyme (or dried, whatever)</li></ul>
+<br>
+<h3 id="1.1.3">Mushrooms</h3>
+<br>
+<ul>
+<li>Button mushrooms (sliced)</li></ul>
+<br>
+<h3 id="1.1.4">Root Vegetables</h3>
+<ul>
+<li>6 red beats cut into smaller pieces, or sliced</li>
+<li>1 parsnip, sliced</li>
+<li>1 parsley root, sliced (can also just use another parsnip)</li></ul>
+<br>
+<h3 id="1.1.5">Meat</h3>
+<ul>
+<li>Meat appropriate for a stew (400g, cut into mouth-pieces)</li>
+<li>Bacon, cubed (about 200g)</li></ul>
+<br>
+<h3 id="1.1.6">Finisher</h3>
+<br>
+<ul>
+<li>Creme fraiche</li>
+<li>Balsamic vinegar</li>
+<li>Salt</li></ul>
+<br>
+<h2 id="1.2">Instructions</h2>
+<br>
+<ul>
+<li>Pre-boil the beats in a separate pot</li></ul>
+<br>
+<ul>
+<li>Gently brown the mirepoix vegetables in a stock pot</li>
+<li>Add tomato puree and stir around</li>
+<li>When you start getting a brown residue at the bottom of the pot, add the stew base</li>
+<li>Bring to a slow boil</li></ul>
+<br>
+<ul>
+<li>Add root vegetables</li>
+<li>Sear the mushrooms at high heat to get rid of the liquid in them, then add to the stew</li>
+<li>Brown the meat in a skillet, salt and pepper, then add to the stew</li></ul>
+<br>
+<ul>
+<li>Let cook for as long as you have patience, but at least 60-90 minutes</li>
+<li>Top off with some more water if necessary</li>
+<li>It's done when the beats start getting soft and the meat is falling apart</li></ul>
+<br>
+<ul>
+<li>Add some creme fraiche</li></ul>
+<br>
+<ul>
+<li>Give it a taste, if it tastes overly sweet, add some balsamic vinegar</li>
+<li>If it tastes off or bland, add salt</li></ul>
+<br>
+<h2 id="1.3">Topics</h2>
+<br>
+<a class="internal" href="/topic/cooking.gmi">/topic/cooking.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>french-borscht.gmi</h1>
+    <a class="download" href="/api/raw?url=/recipes/french-borscht.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/recipes/french-borscht.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/recipes/french-borscht.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/recipes/french-borscht.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 French Borscht [2021-07-05]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Ingredients</a>
+    
+        <a href="#1.1.1" class="heading-3">1.1.1 Mirepoix</a>
+    
+        <a href="#1.1.2" class="heading-3">1.1.2 Stew base</a>
+    
+        <a href="#1.1.3" class="heading-3">1.1.3 Mushrooms</a>
+    
+        <a href="#1.1.4" class="heading-3">1.1.4 Root Vegetables</a>
+    
+        <a href="#1.1.5" class="heading-3">1.1.5 Meat</a>
+    
+        <a href="#1.1.6" class="heading-3">1.1.6 Finisher</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Instructions</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Topics</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

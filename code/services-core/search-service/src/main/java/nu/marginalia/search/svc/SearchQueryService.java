@@ -61,7 +61,7 @@ public class SearchQueryService {
         }
         catch (Exception ex) {
             logger.error("Error", ex);
-            errorPageService.serveError(ctx, response);
+            errorPageService.serveError(ctx, request, response);
         }
 
         return "";

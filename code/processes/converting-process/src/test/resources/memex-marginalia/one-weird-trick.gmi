@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - One Weird Trick</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/one-weird-trick.gmi" class="path file"><img src="/ico/file.png" title="file"> one-weird-trick.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">One Weird Trick</h1>
+<br>
+<h2 id="1.1">Gordon Ramsay hates him for this...</h2>
+<br>
+If you want to peel a clove of garlic quickly, put it on a cutting board and firmly press the side of a broad knife against it, until it buckles a bit. Then the skin almost falls off with no frustration or mess. <br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>one-weird-trick.gmi</h1>
+    <a class="download" href="/api/raw?url=/one-weird-trick.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/one-weird-trick.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/one-weird-trick.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/one-weird-trick.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 One Weird Trick</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Gordon Ramsay hates him for this...</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

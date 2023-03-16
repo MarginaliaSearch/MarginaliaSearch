@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - FAQ</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/projects" class="path dir"><img src="/ico/dir.png" title="dir"> projects</a>
+
+    <a href="/projects/edge" class="path dir"><img src="/ico/dir.png" title="dir"> edge</a>
+
+    <a href="/projects/edge/faq.gmi" class="path file"><img src="/ico/file.png" title="file"> faq.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">FAQ</h1>
+<br>
+<h2 id="1.1">What is this search engine's name?</h2>
+<br>
+Let's call it Marginalia Search as that's what most people seem to do.<br>
+<br>
+There is some confusion, perhaps self-inflicted problem as I'm not really into branding and logos, and to make matters worse I've used a lot of different internal names, including Astrolabe and Edge Crawler. But most people seem to favor "marginalia search". Let's just not worry too much about what the "real" name is and use what gets the idea across.<br>
+<br>
+<h2 id="1.2">I'm working on something cool, may I have some data, or API access?</h2>
+<br>
+Send me an email and we can talk about it, I'm more than happy to share, but for logistical reasons I can't just put everything on an FTP for ad-hoc access. The Works is hundreds of gigabytes of data, and much of it is in nonstandard binary formats I've designed myself to save space. <br>
+<br>
+<h2 id="1.3">Why do you only support English?</h2>
+<br>
+I'm currently focusing on English web content. In part this is because I need to limit the scope of the search engine. I have limited hardware and limited development time. <br>
+<br>
+I'm just one person, and I speak Swedish fluently, English passably, and understand enough Latin to tell my quids from my quods, but the breadth of my linguistic capability ends there. <br>
+<br>
+As such, I couldn't possibly ensure good quality search results in hundreds of languages I don't understand. Half-assed internationalization is, in my personal opinion, a far bigger insult than no internationalization. <br>
+<br>
+<h2 id="1.4">What is the hardware and software stack? </h2>
+<br>
+The software is custom built in Java. I use MariaDB for some ancillary metadata. <br>
+<br>
+The hardware is a single consumer-grade computer, a Ryzen 3900X with 128 Gb of RAM (without ECC). I snatched one of the few remaining Optane 900Ps and it's backing the database.<br>
+<br>
+<h2 id="1.5">How big is the index?</h2>
+<br>
+It depends when you ask, but the record is 50,000,000 documents, with room to spare for probably 50-100% more. In terms of disk size, we're talking hundreds of gigabytes.<br>
+<br>
+Index size isn't a particularly good metric. It's good for marketing, but in practice an index with a million documents that are all of high quality is better than an index with a billion documents where only a fraction of them are interesting. Sorting the chaff from the wheat is a much harder problem than just building a huge pile of both.<br>
+<br>
+<h2 id="1.6">Where is the data coming from? </h2>
+<br>
+I crawl myself. It seems to peak out at 100 documents per second.<br>
+<br>
+<h2 id="1.7">Is this going to replace Google?</h2>
+<br>
+No, and it's not trying to. It's trying to complement Google, by being good at what they are bad at. What the world needs is additional search options, not a new top dog.<br>
+<br>
+<h2 id="1.8">Is this open source?</h2>
+<br>
+<dl class="link"><dt><a class="external" href="https://git.marginalia.nu/">https://git.marginalia.nu/</a></dt><dd>It is</dd></dl>
+<br>
+<h2 id="1.9">What do I do if I a query pops up anything really tasteless or illegal?</h2>
+<br>
+Send me an email and I'll see if I can't block the domain.<br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>faq.gmi</h1>
+    <a class="download" href="/api/raw?url=/projects/edge/faq.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/projects/edge/faq.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/projects/edge/faq.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 FAQ</a>
+    
+        <a href="#1.1" class="heading-2">1.1 What is this search engine&#x27;s name?</a>
+    
+        <a href="#1.2" class="heading-2">1.2 I&#x27;m working on something cool, may I have some data, or API access?</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Why do you only support English?</a>
+    
+        <a href="#1.4" class="heading-2">1.4 What is the hardware and software stack? </a>
+    
+        <a href="#1.5" class="heading-2">1.5 How big is the index?</a>
+    
+        <a href="#1.6" class="heading-2">1.6 Where is the data coming from? </a>
+    
+        <a href="#1.7" class="heading-2">1.7 Is this going to replace Google?</a>
+    
+        <a href="#1.8" class="heading-2">1.8 Is this open source?</a>
+    
+        <a href="#1.9" class="heading-2">1.9 What do I do if I a query pops up anything really tasteless or illegal?</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/projects/edge/about.gmi">/projects/edge/about.gmi</a></dt>
+<dd>About search.marginalia.nu</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

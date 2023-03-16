@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - High Readability Encyclopedia</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/projects" class="path dir"><img src="/ico/dir.png" title="dir"> projects</a>
+
+    <a href="/projects/encyclopedia" class="path dir"><img src="/ico/dir.png" title="dir"> encyclopedia</a>
+
+    <a href="/projects/encyclopedia/index.gmi" class="path file"><img src="/ico/file.png" title="file"> index.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">High Readability Encyclopedia</h1>
+<br>
+<a class="external" href="https://encyclopedia.marginalia.nu/">https://encyclopedia.marginalia.nu/</a><br>
+<br>
+This is an encyclopedia based on Wikipedia's database, that strips away most links and almost all visual clutter to provide a more book-like reading experience with fewer distractions.<br>
+<br>
+This is primarily a helpful utility for a search engine focusing on similarly text-oriented websites.<br>
+<br>
+You are welcome to use it for general article reading as well. This may be useful if you are on a low bandwidth connection, since the download size is typically reduced from megabytes to dozens of kilobytes.<br>
+<br>
+What's taken away is all the design elements that your brain would have to filter out to read the text of the article. It seems as though overburdening this mental process causes the reader to start scanning the text instead of reading it, which is experienced as an inability to pay focus.<br>
+<br>
+The cleaning process is not perfect and will occasionally produce strange results, but significant problems should be relatively rare. <br>
+<br>
+<h2 id="1.1">Limitations</h2>
+<br>
+This is a "stale" copy of wikipedia, based on an archived copy from January 2021. On the other hand, we used to abide printed encyclopedias that didn't update at all.<br>
+<br>
+Be aware that the cleaning strips away a lot of information, including most references, footnotes, quality warnings, and so forth. Refer to the original wikipedia article for that information. <br>
+<br>
+<h2 id="1.2">Legal</h2>
+<br>
+The original Wikipedia text is available under the the Creative Commons Attribution-ShareAlike 3.0 license, and so is the wikipedia text forwarded to you through this service.<br>
+<br>
+<h2 id="1.3">Further Reading</h2>
+<br>
+<dl class="link"><dt><a class="external" href="https://onlinelibrary.wiley.com/doi/pdf/10.1111/jcal.12243">https://onlinelibrary.wiley.com/doi/pdf/10.1111/jcal.12243</a></dt><dd>Blom et al. 2017 - Comprehension and navigation of networked hypertexts</dd></dl>
+<br>
+<a class="internal" href="/log/03-writing-for-reading.gmi">/log/03-writing-for-reading.gmi</a><br>
+<a class="internal" href="/log/00-linkpocalypse.gmi">/log/00-linkpocalypse.gmi</a><br>
+<a class="internal" href="/log/13-static-html.gmi">/log/13-static-html.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>index.gmi</h1>
+    <a class="download" href="/api/raw?url=/projects/encyclopedia/index.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/projects/encyclopedia/index.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/projects/encyclopedia/index.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 High Readability Encyclopedia</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Limitations</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Legal</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Further Reading</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/projects/wmsa.gmi">/projects/wmsa.gmi</a></dt>
+<dd>WMSA - Notable parts</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

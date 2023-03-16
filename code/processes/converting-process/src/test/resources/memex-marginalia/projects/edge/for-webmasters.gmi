@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - For Webmasters</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/projects" class="path dir"><img src="/ico/dir.png" title="dir"> projects</a>
+
+    <a href="/projects/edge" class="path dir"><img src="/ico/dir.png" title="dir"> edge</a>
+
+    <a href="/projects/edge/for-webmasters.gmi" class="path file"><img src="/ico/file.png" title="file"> for-webmasters.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">For Webmasters</h1>
+<br>
+This search engine is a small non-profit operation, and I don't want it to be cause any inconvenience. <br>
+<br>
+If it is indeed being a nuisance, please let me know! Send an email to &lt;kontakt@marginalia.nu&gt; and I'll do my best to fix it as soon as possible. <br>
+<br>
+Telling me lets me fix whatever problem there is much faster, and if you are experiencing problems, then so are probably others as well. <br>
+<br>
+<h2 id="1.1">Crawler Fingerprint</h2>
+<br>
+<pre>
+User-Agent: search.marginalia.nu
+IP address: 81.170.128.21</pre>
+<h2 id="1.2">robots.txt</h2>
+<br>
+The search engine respects robots.txt, and looks for the user-agent "search.marginalia.nu" in specific, as well as general directives. Note that changes to robots.txt may not take effect immediately. <br>
+<br>
+You can also send me an email if something is indexed that you want me to remove. <br>
+<br>
+<h2 id="1.3">Why isn't my page indexed?</h2>
+<br>
+Odds are it just hasn't been discovered yet. The search engine has a pretty small index, and makes no pretenses of being complete.<br>
+<br>
+There could be several other reasons, some domain names are rejected because they look too much like domain names that are used by link farms. This mostly means .xyz and .icu. If you are hosted in Russia, China, Hong Kong, or Taiwan, you are also not going to get crawled. I feel bad for the innocent websites this affects, but the sad fact is that easily 90% of the link farms are hosted in these countries, and on these TLDs.<br>
+<br>
+For similar reasons, if you are hosted on a large VPS provider, especially Alibaba, or Psychz; you are not going to get crawled. Google Cloud is the only VPS provider, so far, that seems to effectively crack down on link farms. So that's the safest bet.<br>
+<br>
+The crawler sometimes gets captchad by CDNs like Fastly and CloudFlare, so it may or may not index them depending on whether the bot is being throttled.<br>
+<br>
+Searching for "site:www.yourdomain.tld" will provide you with an analysis. If the search engine is aware of the domain, there should be a button for slating it for crawling.  <br>
+<br>
+If you get nothing, then odds are the search engine has no knowledge about the domain yet. Get in contact if you want me to have a look at what's happening.<br>
+<br>
+<h2 id="1.4">A Call To Action</h2>
+<br>
+Please link to other websites you like! Keep a bookmark list, a blog roll, whatever. You don't have to try to trap your visitor by only linking to your own stuff. <br>
+<br>
+Links make the Internet more interesting and fun to explore for humans, gives it a community feeling, and it both helps my search engine discover websites and helps it understand which websites are interesting. <br>
+<br>
+<dl class="link"><dt><a class="internal" href="/log/19-website-discoverability-crisis.gmi">/log/19-website-discoverability-crisis.gmi</a></dt><dd>A longer write-up</dd></dl>
+<br>
+<dl class="link"><dt><a class="internal" href="/links/bookmarks.gmi">/links/bookmarks.gmi</a></dt><dd>My bookmarks</dd></dl>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>for-webmasters.gmi</h1>
+    <a class="download" href="/api/raw?url=/projects/edge/for-webmasters.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/projects/edge/for-webmasters.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/projects/edge/for-webmasters.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 For Webmasters</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Crawler Fingerprint</a>
+    
+        <a href="#1.2" class="heading-2">1.2 robots.txt</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Why isn&#x27;t my page indexed?</a>
+    
+        <a href="#1.4" class="heading-2">1.4 A Call To Action</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/projects/edge/about.gmi">/projects/edge/about.gmi</a></dt>
+<dd>About search.marginalia.nu</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

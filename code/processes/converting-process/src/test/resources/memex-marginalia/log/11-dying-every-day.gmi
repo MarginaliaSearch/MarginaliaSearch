@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Dying, Every Day (Re: Last times) [2021-08-04]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/11-dying-every-day.gmi" class="path file"><img src="/ico/file.png" title="file"> 11-dying-every-day.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Dying, Every Day (Re: Last times) [2021-08-04]</h1>
+<br>
+Dece's post "last times" made me associate to one of my favorite thoughts from Roman philosopher Seneca, who was counting his days having fallen out of favor with Emperor Nero. <br>
+<br>
+In the first of his moral epistles to Lucilius, he asks:<br>
+<br>
+<blockquote>
+       Quem mihi dabis [...] qui intellegat se cotidie mori?</blockquote>
+<br>
+<blockquote>
+       Who can you show me [...] that understands he is dying every day?</blockquote>
+<br>
+It's a fascinating and useful reversal of perspective. Our final day is not the day our life is suddenly taken away from us, but the last of our allotted days. Every preceding day has already been marked by our dying. Every day is a day that will never return, every moment is sand irreversibly flowing through the hour glass. <br>
+<br>
+We are like wax candles that live only through perishing. What we should fear is not the day we run out of wax and the flame goes out, but that we squandered that flame, that we weren't bringing enough light and warmth into the world.<br>
+<br>
+How some people have dealt with these last two years' pandemic is a pretty good indicator that we, as a whole, should meditate more on the fate we're headed for. We all inevitably die, but making a fool out of ourselves doing so is less inevitable.<br>
+<br>
+The theme of contemplating death has been a recurring sentiment in western thought until fairly recently, and I think it's a shame it has gone away because it actually is a quite useful topic of meditation that lets us come to terms with our mortality. <br>
+<br>
+Public clockworks were often inscribed with reminders like "ultima forsan"--perhaps the last [hour]. The words "carpe diem" have survived, but what has been largely lost is that they carry the same grim urgency that tomorrow may not come, so you'd better not squander the present.<br>
+<br>
+In Horace's poem, "Carpe diem" is preceded by the words "even as we talk, envious time is running out", and followed by a call not to put trust in tomorrow.<br>
+<br>
+<a class="external" href="https://proxy.vulpes.one/gemini/dece.space/notes/20210803-last-times.gmi">gemini://dece.space/notes/20210803-last-times.gmi</a><br>
+<br>
+<h1 id="2">Topic</h1>
+<br>
+<a class="internal" href="/topic/moral-philosophy.gmi">/topic/moral-philosophy.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>11-dying-every-day.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/11-dying-every-day.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/11-dying-every-day.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/11-dying-every-day.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/11-dying-every-day.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Dying, Every Day (Re: Last times) [2021-08-04]</a>
+    
+        <a href="#2" class="heading-1">2 Topic</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

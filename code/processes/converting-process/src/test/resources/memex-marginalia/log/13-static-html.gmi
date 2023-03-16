@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Rendered static HTML [2021-08-13]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/13-static-html.gmi" class="path file"><img src="/ico/file.png" title="file"> 13-static-html.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Rendered static HTML [2021-08-13]</h1>
+<br>
+The technological choices we make determine the rules we have to abide by. <br>
+<br>
+If every page load incurs hundreds of database calls on the server, and 30 seconds of javascripting on the front-end, then obviously you need to reduce the number of page loads to a minimum. They are frustrating for the user and expensive for the server. This makes the front-end even more slow and stateful, and so the urgency for reducing page loads increases even further.<br>
+<br>
+So what if we don't do any of that? What if we just serve static HTML instead? For the server it's such a lightweight even a raspberry pi can hold the fort at moderate traffic, and on the front-end it's just as fast. <br>
+<br>
+Of course, rendering HTML isn't free. Depending on how much data we're talking about, it can take time. But it's time you spend once, or at least infrequently. Not only is the result faster, it's better for the environment. We can host more stuff on less server, and the clients don't need to use nearly as much wattage presenting it. As long as your data is fetched more often than it is altered, it's an improvement. <br>
+<br>
+The sacrifice is of course all those small alterations, modifying content is what becomes expensive, everything else is virtually free. This means you can't afford to change the content based on the visitor's history. Everyone gets the same page. In this paradigm, you need hardware in proportion to the rate your content is mutated, not the amount of content, or really even the number of users. This since you can cache the content extremely cheaply using ETags. <br>
+<br>
+What I want to show is the profound downstream effects of making a different design decision. A piece of counterfactual web-design history. <br>
+<br>
+<h2 id="1.1">Case 1: Reddit</h2>
+<br>
+I have experimented with this approach for a while, and among my first attempts was a front-end for reddit. It's a relatively kind use case, where I use their APIs to fetch the few subreddits I frequent, and render the threads and comments and keep the results in memory, backed by a disk-based long-term storage for fault tolerance. I also wrap their submission API, posts to which triggers an immediate re-rendering of the affected thread or subreddit, giving the illusion that it's always fresh when it's in practice usually a maybe 10 minutes behind the real deal. <br>
+<br>
+It's overall pretty fast and light. "Real" reddit has approximately an 8 Mb payload. My front-end has payload usually sits around 1-2 Kb. It pulls some stylesheets and a font or two, still rarely going above 50 Kb. <br>
+<br>
+Of course my design is also a lot more stripped down, aiming for a degree of functionality somewhere between your average mailing list and a pre-2000s internet forum. What I originally wanted to explore was how the reddit experience would change if you removed votes, direct messages and most images, and made it a pure text-based discussion board. The result has a very different feel to it, when you must judge each comment for itself, without the ability to see how other people have judged it.<br>
+<br>
+<h2 id="1.2">Case 2: Wikipedia</h2>
+<br>
+Why not go for broke, right? I've harped about the questionable design choices of wikipedia before, and while they do let you inject CSS (if you log in), page loads are still incredibly slow and it's bringing me a lot of frustration. <br>
+<br>
+They do license their page content under CC-BY-SA, so why not use that license to impose my flavor of design improvements and produce a version of wikipedia designed with the singular purpose of making it as easy to read as possible, purging it of inline links and footnotes, images and most tables. <br>
+<br>
+Wikipedia doesn't want you to scrape their live site because it's apparently very expensive to render. <br>
+<br>
+How delightfully apropos! I guess that is what's up with the slow page loads. <br>
+<br>
+A way around that is that they do offer data dumps for download in various formats. So I grabbed a ZIM archive--that's an archive format for rendered wikipedia readers that's relatively standardized--and found an abandoned library for reading such files, tinkered with it a bit because it was apparently written in the time of Hildegard of Bingen and so read the file data a single byte at a time. The library was as a result about 100 times slower than it needed to be. <br>
+<br>
+After that I wrote a program that extracts every HTML page, subjects them to a pretty severe DOM-massage that removes most inline links and stuffs them at the end of the page. Then I write them as gzip-compressed HTML to disk. The output is for the most part pristine HTML. You don't even need a browser to read it. Netcat is plenty. <br>
+<br>
+Formulas were a bit tricky, and the best solution I could find was rendering them into PNG and inserting them directly into the HTML. As long as nobody tells Donald Knuth, I think I may get away with this cruel affront to typesetting mathematics ;-)<br>
+<br>
+Rendering takes about 24 hours and produces some 14 million files, 60 Gb in total. I have no doubt it could be done faster, but a day's worth of cooking really isn't even that bad since these dumps come out about once every six or so months.<br>
+<br>
+<h3 id="1.2.1">Thoughts</h3>
+<br>
+Two things become apparent after using the scrubbed encyclopedia for a while.<br>
+<br>
+The first is that it really is a lot easier to read once you remove all the points of distraction. I start reading it like a book. I've gotten stuck reading articles in a way I rarely do in Wikipedia. I've learned quite a lot too. This has been my hypothesis since before I embarked on this project, that inline hyperlinks and images do more to disrupt readability than to enhance it.<br>
+<br>
+The second observation is more surprising: I find it far more apparent when I don't fully grasp a topic. It is as though hyperlinks makes us think that information is available to us, and because of that, we estimate that we essentially already understand the topic, beacuse we could find out later. <br>
+<br>
+This is of course not sound logic at all, but I think that is what happens when we see an underlined word we aren't quite sure what it is. So we keep reading as though we did know, and never go back to click the link, because if you click every link, you won't get past the first sentence in any article.<br>
+<br>
+The experience when reading the scrubbed encyclopedia is one of needing to take notes of things to look up later, one of barely understanding the text even in areas I'm quite well versed, even pages I've previously read in Wikipedia.<br>
+<br>
+I wonder if this effect is part of why there are so many experts these days. Covid breaks out, and everyone is suddenly an immunologist. IPCC report drops and everyone is suddenly a climate scientist. If there's a war, everyone is a general; if someone wants to lose weight, everyone is an expert on that too (even if they've never tried themselves). Nevermind the fact that it takes a decade of studies to even get a PhD, nobody seems to need any of that.<br>
+<br>
+<h2 id="1.3">Links</h2>
+<br>
+<dl class="link"><dt><a class="internal" href="/log/00-linkpocalypse.gmi">/log/00-linkpocalypse.gmi</a></dt><dd>On The Linkpocalypse</dd></dl>
+<dl class="link"><dt><a class="internal" href="/log/03-writing-for-reading.gmi">/log/03-writing-for-reading.gmi</a></dt><dd>Writing For Reading</dd></dl>
+<br>
+<a class="external" href="https://reddit.marginalia.nu/">https://reddit.marginalia.nu/</a><br>
+<a class="external" href="https://encyclopedia.marginalia.nu/">https://encyclopedia.marginalia.nu/</a><br>
+<a class="external" href="https://encyclopedia.marginalia.nu/wiki/Hildegard_Of_Bingen">https://encyclopedia.marginalia.nu/wiki/Hildegard_Of_Bingen</a><br>
+<br>
+<a class="external" href="https://dumps.wikimedia.org/">https://dumps.wikimedia.org/</a><br>
+<br>
+<h2 id="1.4">Topics</h2>
+<br>
+<a class="internal" href="/topic/web-design.gmi">/topic/web-design.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>13-static-html.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/13-static-html.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/13-static-html.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/13-static-html.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Rendered static HTML [2021-08-13]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Case 1: Reddit</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Case 2: Wikipedia</a>
+    
+        <a href="#1.2.1" class="heading-3">1.2.1 Thoughts</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Links</a>
+    
+        <a href="#1.4" class="heading-2">1.4 Topics</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/projects/encyclopedia">/projects/encyclopedia</a></dt>
+<dd>High Readability Encyclopedia - Further Reading</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

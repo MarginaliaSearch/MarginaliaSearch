@@ -1,6 +1,6 @@
 package nu.marginalia.loading.loader;
 
-import nu.marginalia.keyword_extraction.model.DocumentKeywords;
+import nu.marginalia.keyword.model.DocumentKeywords;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
@@ -21,6 +21,8 @@ public class Loader implements Interpreter {
     private final SqlLoadDomainLinks sqlLoadDomainLinks;
     private final SqlLoadProcessedDomain sqlLoadProcessedDomain;
     private final SqlLoadProcessedDocument sqlLoadProcessedDocument;
+    private final SqlLoadDomainMetadata sqlLoadDomainMetadata;
+
     private final IndexLoadKeywords indexLoadKeywords;
 
     private static final Logger logger = LoggerFactory.getLogger(Loader.class);
@@ -39,6 +41,7 @@ public class Loader implements Interpreter {
                   SqlLoadDomainLinks sqlLoadDomainLinks,
                   SqlLoadProcessedDomain sqlLoadProcessedDomain,
                   SqlLoadProcessedDocument sqlLoadProcessedDocument,
+                  SqlLoadDomainMetadata sqlLoadDomainMetadata,
                   IndexLoadKeywords indexLoadKeywords)
     {
         data = new LoaderData(sizeHint);
@@ -48,6 +51,7 @@ public class Loader implements Interpreter {
         this.sqlLoadDomainLinks = sqlLoadDomainLinks;
         this.sqlLoadProcessedDomain = sqlLoadProcessedDomain;
         this.sqlLoadProcessedDocument = sqlLoadProcessedDocument;
+        this.sqlLoadDomainMetadata = sqlLoadDomainMetadata;
         this.indexLoadKeywords = indexLoadKeywords;
 
         processedDocumentList = new ArrayList<>(sizeHint);
@@ -126,6 +130,11 @@ public class Loader implements Interpreter {
     @Override
     public void loadDomainRedirect(DomainLink link) {
         sqlLoadProcessedDomain.loadAlias(data, link);
+    }
+
+    @Override
+    public void loadDomainMetadata(EdgeDomain domain, int knownUrls, int goodUrls, int visitedUrls) {
+        sqlLoadDomainMetadata.load(data, domain, knownUrls, goodUrls, visitedUrls);
     }
 
     public void finish() {

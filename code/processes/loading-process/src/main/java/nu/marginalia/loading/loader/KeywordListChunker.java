@@ -1,7 +1,7 @@
 package nu.marginalia.loading.loader;
 
 
-import nu.marginalia.keyword_extraction.model.DocumentKeywords;
+import nu.marginalia.keyword.model.DocumentKeywords;
 
 import java.util.ArrayList;
 import java.util.Collections;

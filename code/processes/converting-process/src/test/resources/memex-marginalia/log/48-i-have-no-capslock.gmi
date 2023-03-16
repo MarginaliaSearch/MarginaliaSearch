@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - I have no capslock and I must scream [ 2022-02-21 ]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/48-i-have-no-capslock.gmi" class="path file"><img src="/ico/file.png" title="file"> 48-i-have-no-capslock.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">I have no capslock and I must scream [ 2022-02-21 ]</h1>
+<br>
+In a near future, a team of desktop computer designers are looking at the latest telemetry and updating the schematics of the hardware-as-a-service self-assembling nanohardware.<br>
+<br>
+Steve: "Hmm, they don't seem to be using the power button very often."<br>
+<br>
+Bob: "Compared to the other buttons, it's only used 0.1% of the time"<br>
+<br>
+Steve: "Remove it?"<br>
+<br>
+Bob: "Remove it!"<br>
+<br>
+Computers now instantly boot up when plugged into the wall, and run until the plug is pulled. No more start-up time, the cases are aesthetically cleaner, and manufacturing cost is down at least a fraction of a dollar. <br>
+<br>
+Confident with this success, they turn their attention to the keyboard.<br>
+<br>
+Steve: "Have you noticed that most letters the users type are lower case? Only in rare instances are they in upper case!"<br>
+<br>
+Bob: "Hmm, but sometimes it may be useful to write in upper case too."<br>
+<br>
+Steve: "Let's compromise and put the shift and capslock keys in a little hatch on the back of the keyboard for a test group, maybe that's enough for the power users. That will clean up the keyboard design for everyone else..."<br>
+<br>
+Bob: "Done! And deployed!"<br>
+<br>
+this is just great, who is going to bother turning their keyboard over just to write an upper case letter?<br>
+<br>
+steve: "now the usage has dropped to 0.000001% in the test group! see, nobody needs those keys!"<br>
+<br>
+bob: "wow! you were right, let's push a patch immediately to remove them for everyone!"<br>
+<br>
+steve: "now i'm looking at the punctuation, they're also a lot more rare than the letters"<br>
+<br>
+bob: "put them in the hatch on the back?"<br>
+<br>
+steve: "sure"<br>
+<br>
+alright i guess this is how it is now xxxx we'll adapt<br>
+<br>
+steve xxx you know im looking at these letter distributions and most letters seem to be in the group xxx etaoinshrdlu xxx <br>
+<br>
+bob xxx youre right xxx who knew two thirds of the alphabet was redundant xxx imagine how clean the keyboard would be with less than twenty keys<br>
+<br>
+steve xxx i wanna xxx lets just do it<br>
+<br>
+bob xxx the design is going to be so minimalist and clean after this xxx not even jobs thought this far outside the box<br>
+<br>
+<br>
+i ant euen estress hou hrustratin this data driuen desin nonsense is use isnt usefulness interoetatin data is really dittioult<br>
+<br>
+steue  aaa  it ould e oleaner to ust aue one ei thou<br>
+ooo  aaa  iea it ould aaa e have one this ar hu not all the uai<br>
+<br>
+<br>
+aa aa aaa aaaaaa aaaaaa aa aaaaaaa aaaaaaaa<br>
+aaaaaaaaaaa aaaaa aaaaaa aaaaaaaaa aaaaaaaa<br>
+aaaaa aaa aa aaa aaa aaaaaa aaaaaaaaaaa<br>
+aaaaaaaa aaaaa aaaaaa aaaaaaaaaaa aaaaaa aaaa<br>
+aaa aa aaaaaaaa aaaaaaa aaaaaaaaaa aaaaa<br>
+<br>
+<h2 id="1.1">aaaaaa</h2>
+<br>
+<dl class="link"><dt><a class="external" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1687635">https://bugzilla.mozilla.org/show_bug.cgi?id=1687635</a></dt><dd>aaaaa aaa</dd></dl>
+<br>
+<dl class="link"><dt><a class="external" href="https://www.youtube.com/watch?v=yKxM4ToLLR8">https://www.youtube.com/watch?v=yKxM4ToLLR8</a></dt><dd>aaaaa</dd></dl>
+<br>
+<h2 id="1.2"></h2>
+<br>
+<pre>
+       a
+     a    a
+  a     a
+       a
+       a
+       a
+  a    a
+        a
+          a</pre>
+<br>
+<h1 id="2">Discussion</h1>
+<br>
+This post seems to have resonated with people. There's a discussion here, among other places:<br>
+<br>
+<a class="external" href="https://news.ycombinator.com/item?id=30421399">https://news.ycombinator.com/item?id=30421399</a><br>
+<br>
+<h1 id="3">Topics</h1>
+<br>
+<a class="internal" href="/topic/satire.gmi">/topic/satire.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>48-i-have-no-capslock.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/48-i-have-no-capslock.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/48-i-have-no-capslock.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/48-i-have-no-capslock.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 I have no capslock and I must scream [ 2022-02-21 ]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 aaaaaa</a>
+    
+        <a href="#1.2" class="heading-2">1.2 </a>
+    
+        <a href="#2" class="heading-1">2 Discussion</a>
+    
+        <a href="#3" class="heading-1">3 Topics</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/log/62-marginaliacoin.gmi">/log/62-marginaliacoin.gmi</a></dt>
+<dd>Marginaliacoin, and hidden forums [ 2022-08-18 ]</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

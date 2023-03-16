@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Enter the Circle of Blame [2021-08-15]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/14-enter-the-circle-of-blame.gmi" class="path file"><img src="/ico/file.png" title="file"> 14-enter-the-circle-of-blame.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Enter the Circle of Blame [2021-08-15]</h1>
+<br>
+So that IPCC report, huh. It's provoked interesting behavior in people. I'll skip over the minority that deny the findings, many people seem to agree that the report isn't great news. Then they stop to look around and start pointing fingers.<br>
+<br>
+In summary:<br>
+<br>
+<ul>
+<li>The producers blame the consumers for making the wrong purchases.</li>
+<li>The consumers blame the producers for producing the wrong things.</li>
+<li>The voters blame the politicians for incorrect policies.</li>
+<li>The politicians blame the voters for expressing the wrong wants.</li>
+<li>The right blames the market for not adapting fast enough.</li>
+<li>The left blames capitalism for being shortsighted.</li>
+<li>The dogs blame the cats and the cats blame the mice.</li></ul>
+<br>
+We can run around this endless circle of blame until it's 2121, and we still won't have gotten any closer to finding a solution. What we're looking for is some witch to burn, someone to be really mad at for causing us grief; but what we need is to change our behavior. Don't forget: The producers are people. The consumers are people. The voters are people. The politicians are people. The rich, the poor, the right, the left, the market, capitalism; it's all people. <br>
+<br>
+It's all people. Making decisions. With consequences.<br>
+<br>
+But in our heads, what it's all down to is: It's someone else's fault. It's always someone else's fault. It becomes a discussion of who is to blame, who to judge, rather than what we ourselves can do. <br>
+<br>
+Guilt, in the legal sense, must be on some party. This feels like doing something, but it's a great mirage. In the grand scheme of things, blaming someone else, dragging them to the stake to be burned, it does nothing, it does less than nothing: It wastes time. The problems they caused still remain and we are no closer to solving them.<br>
+<br>
+That does not hold true for our ability to affect change. Sometimes, if we want the world to change, we can't wait for the people who are to blame to fix the problem. Odds are they never will based on the fact that they are the same people who willfully neglected the problem into existence in the first place.<br>
+<br>
+Almost every single one of us ten billion people are, to some degree, to blame for this mess. Who is more to blame is utterly irrelevant to fixing the problem. Here's a plot twist: All the people pointing fingers and assigning blame are perfectly correct. Why yes, there are other people who are sinners too. But so are we. <br>
+<br>
+We can't control other people's actions, but we can control our own; so that's where it must start. If we think the world should be in such-and-such way, it is our obligation to act in a way that is aligned with that. <br>
+<br>
+The question that remains is this: How long will you wait until you start acting the way you, yourself, think you should act? How long will you wait until you start taking responsibility for your actions?<br>
+<br>
+Just sitting on our hands and blaming other people for not fixing our  problems doesn't align with anything other agenda than making us sanctimonious hypocrites. It may feel good, but it doesn't do good.<br>
+<br>
+Almost every single one of us need to make changes if we want to course correct. And no single person can fix it alone. I can't fix it alone. You can't fix it alone. Elon Musk can't fix it alone, Xi Jinping can't fix it alone. Everyone needs to look to themselves and what they can do, regardless of what other people are doing. We simply cannot compel other people to think like we do, as the only thing we do have absolute control over are our own everyday decisions. <br>
+<br>
+But nevermind all that, let's get back to pointing fingers and doing nothing instead. Maybe if we get really angry about some group that thinks differently, that'll surely get us somewhere!<br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>14-enter-the-circle-of-blame.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/14-enter-the-circle-of-blame.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/14-enter-the-circle-of-blame.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/14-enter-the-circle-of-blame.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/14-enter-the-circle-of-blame.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Enter the Circle of Blame [2021-08-15]</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

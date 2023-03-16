@@ -8,6 +8,7 @@ public class LoaderFactory {
     private final SqlLoadDomainLinks sqlLoadDomainLinks;
     private final SqlLoadProcessedDomain sqlLoadProcessedDomain;
     private final SqlLoadProcessedDocument sqlLoadProcessedDocument;
+    private final SqlLoadDomainMetadata sqlLoadDomainMetadata;
     private final IndexLoadKeywords indexLoadKeywords;
 
     @Inject
@@ -16,6 +17,7 @@ public class LoaderFactory {
                          SqlLoadDomainLinks sqlLoadDomainLinks,
                          SqlLoadProcessedDomain sqlLoadProcessedDomain,
                          SqlLoadProcessedDocument sqlLoadProcessedDocument,
+                         SqlLoadDomainMetadata sqlLoadDomainMetadata,
                          IndexLoadKeywords indexLoadKeywords) {
 
         this.sqlLoadUrls = sqlLoadUrls;
@@ -23,10 +25,11 @@ public class LoaderFactory {
         this.sqlLoadDomainLinks = sqlLoadDomainLinks;
         this.sqlLoadProcessedDomain = sqlLoadProcessedDomain;
         this.sqlLoadProcessedDocument = sqlLoadProcessedDocument;
+        this.sqlLoadDomainMetadata = sqlLoadDomainMetadata;
         this.indexLoadKeywords = indexLoadKeywords;
     }
 
     public Loader create(int sizeHint) {
-        return new Loader(sizeHint, sqlLoadUrls, sqlLoadDomains, sqlLoadDomainLinks, sqlLoadProcessedDomain, sqlLoadProcessedDocument, indexLoadKeywords);
+        return new Loader(sizeHint, sqlLoadUrls, sqlLoadDomains, sqlLoadDomainLinks, sqlLoadProcessedDomain, sqlLoadProcessedDocument, sqlLoadDomainMetadata, indexLoadKeywords);
     }
 }

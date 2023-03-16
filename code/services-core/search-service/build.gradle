@@ -42,6 +42,7 @@ dependencies {
     implementation project(':code:features-search:screenshots')
     implementation project(':code:features-search:random-websites')
     implementation project(':code:features-search:query-parser')
+    implementation project(':code:features-search:result-ranking')
 
 
     implementation libs.lombok

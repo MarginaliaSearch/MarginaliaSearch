@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Dark [2022-01-02]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/42-dark.gmi" class="path file"><img src="/ico/file.png" title="file"> 42-dark.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Dark [2022-01-02]</h1>
+<br>
+As is often the case these dark winter seasons, I've fallen into a bit of a funk. Inspiration it seems is as rare as sunlight, and sunlight is scarce indeed in the winters of the north.<br>
+<br>
+I do know what is missing, novelty. I've fallen into consuming "content". Infinite scroll is the torture rack of the spirit. What is necessary doing new things and seeing new inspiring sights, exposing myself to new inspiring thoughts.<br>
+<br>
+Given a lack of options, I perused the section of my bookshelf that contains books I have not yet read, and after some vacillation decided on Herodotus' Histories. <br>
+<br>
+What a treat! I've only read a few dozen pages and already it has provided many strange anecdotes, from Gyges' unlikely usurpation of the Lydian throne to the Persian King Cyrus II's surrogate mother named "bitch". This is exactly the medicine.<br>
+<br>
+I keep coming back to this conclusion, that if I do not mind what I consume, and fall into consuming what is uninspiring and boring, then I too find myself having uninspiring and boring thoughts; and an uninspired and boring life.<br>
+<br>
+<h2 id="1.1">See Also</h2>
+<br>
+<a class="internal" href="/log/05-minds-field.gmi">/log/05-minds-field.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>42-dark.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/42-dark.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/42-dark.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/42-dark.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Dark [2022-01-02]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 See Also</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/log/67-best-ideas-afk.gmi">/log/67-best-ideas-afk.gmi</a></dt>
+<dd>The best ideas come AFK [ 2022-11-07 ] - See Also</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

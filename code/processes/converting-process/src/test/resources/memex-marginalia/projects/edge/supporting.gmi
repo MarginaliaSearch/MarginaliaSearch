@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Support This Project</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/projects" class="path dir"><img src="/ico/dir.png" title="dir"> projects</a>
+
+    <a href="/projects/edge" class="path dir"><img src="/ico/dir.png" title="dir"> edge</a>
+
+    <a href="/projects/edge/supporting.gmi" class="path file"><img src="/ico/file.png" title="file"> supporting.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Support This Project</h1>
+<br>
+I'm just one guy building all of this on my own. I'd like to expand the search engine and make it more useful. I'm paying most of the work out of my own pocket but that only goes so far.<br>
+<br>
+To this end I have a few donation links. Every last bit helps and even a modest contribution is greatly appreciated.<br>
+<br>
+<a class="external" href="https://www.patreon.com/marginalia_nu">https://www.patreon.com/marginalia_nu</a><br>
+<br>
+<a class="external" href="https://www.buymeacoffee.com/marginalia.nu">https://www.buymeacoffee.com/marginalia.nu</a><br>
+<br>
+You can also just send me an email at kontakt@marginalia.nu and we can discuss other alternatives. <br>
+<br>
+<h2 id="1.1">Other</h2>
+<br>
+The cheapest way you can support the search engine is by using it, and talking about it, and telling me when things go wrong. Feedback is invaluable, even if it's just "this-and-that query gives bad results", as I often use exactly such bad queries to figure out how to improve the results. I also just like getting emails. Lots of people have reached out and it's very inspiring.<br>
+<br>
+<h2 id="1.2">Topics</h2>
+<br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>supporting.gmi</h1>
+    <a class="download" href="/api/raw?url=/projects/edge/supporting.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/projects/edge/supporting.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/projects/edge/supporting.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Support This Project</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Other</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Topics</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/log/56-uncertain-future.gmi">/log/56-uncertain-future.gmi</a></dt>
+<dd>Uncertain Future For Marginalia Search [ 2022-04-28 ] - See Also</dd>
+
+<dt><a href="/projects/edge/about.gmi">/projects/edge/about.gmi</a></dt>
+<dd>About search.marginalia.nu - Support the Project</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

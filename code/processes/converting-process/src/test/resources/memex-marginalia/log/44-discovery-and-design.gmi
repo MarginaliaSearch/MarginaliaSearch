@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Discovery and Design Considerations [ 2022-01-18 ]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/44-discovery-and-design.gmi" class="path file"><img src="/ico/file.png" title="file"> 44-discovery-and-design.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Discovery and Design Considerations [ 2022-01-18 ]</h1>
+<br>
+It's been a productive several weeks. I've got the feature pulling updates from RSS working, as mentioned earlier. <br>
+<br>
+I've spent the last weeks designing the search engine's web design, and did the MEMEX too for good measure. <br>
+<br>
+It needed to be done as the blog theme that previously made the foundation for the design off had several problems, including loading a bunch of unnecessary fonts, and not using the screen space of desktop browsers well at all. <br>
+<br>
+Contrary to what one might think, I don't hate colors or non-brutalist design, I just dislike how its often abused to the detriment of the visitor.<br>
+<br>
+An important consideration is having a clean interface that doesn't unnecessarily drag attention away from what the visitor is attemping to focus on. It's been previously mentioned the disastrously noisy web design of Wikipedia. The search engine has gotten a bit noisier than it was before, but hopefully it's not gotten too noisy. <br>
+<br>
+Furthermore, I've overhauled the random exploration mode. <br>
+<br>
+Discovery is one of the main missions of this project, and it's been a vision for quite some time to offer some alternative means of literally browsing the internet, perusing its domains like you would flipping through a magazine. <br>
+<br>
+On the one hand, you can get a random selection from about 10,000 domains in the personal website sphere, but it's also possible to manually direct the search and show sites adjacent to a particular domain, using a combination of straight link-information and Personalized PageRank.<br>
+<br>
+The mechanics of extracting random interesting links have been around for a while, but the design was more than a little bit rough. <br>
+<br>
+An idea came to my mind that perhaps it would work better with some visual element to offer a taste of the flavor of the websites. It's easy enough to slap together a script that does that: Take one headless chromium, sprinkle a pinch of python, couple of weeks later you have one low-res screenshot per domain across half a million or so domains. (It's still running, by the way)<br>
+<br>
+<a class="external" href="https://search.marginalia.nu/explore/random">https://search.marginalia.nu/explore/random</a><br>
+<br>
+You can either just refresh the "random"-page to get new domains, or click the "Similar Domains"-links to get results adjacent to that particular domain. It's pretty entertaining.<br>
+<br>
+The problem is just how to get visitors to discover this feature, since I specifically don't want distrating elements that draw attention to themselves. This is doubly tricky because of the strict no-cookie policy of search.marginalia.nu. Many sites would probably have something like a one-time dismissable window, or effect, or animation. That is simply not doable here. <br>
+<br>
+The single remaining option is to improve the signal to noise ratio that the links don't vanish in the noise.<br>
+<br>
+<h2 id="1.1">See Also</h2>
+<br>
+<a class="internal" href="/log/00-linkpocalypse.gmi">/log/00-linkpocalypse.gmi</a><br>
+<a class="internal" href="/log/03-writing-for-reading.gmi">/log/03-writing-for-reading.gmi</a><br>
+<a class="internal" href="/log/27-getting-with-the-times.gmi">/log/27-getting-with-the-times.gmi</a><br>
+<br>
+<h2 id="1.2">Topic</h2>
+<br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>44-discovery-and-design.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/44-discovery-and-design.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/44-discovery-and-design.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/44-discovery-and-design.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/44-discovery-and-design.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Discovery and Design Considerations [ 2022-01-18 ]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 See Also</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Topic</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

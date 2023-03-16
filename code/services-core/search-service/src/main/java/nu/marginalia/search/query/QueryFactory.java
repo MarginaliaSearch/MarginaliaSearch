@@ -21,7 +21,6 @@ import nu.marginalia.search.model.SearchProfile;
 import nu.marginalia.search.query.model.SearchQuery;
 import nu.marginalia.search.query.model.UserSearchParameters;
 import nu.marginalia.language.WordPatterns;
-import nu.marginalia.search.valuation.SearchResultValuator;
 import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,9 +31,7 @@ import java.util.*;
 @Singleton
 public class QueryFactory {
 
-    private final EnglishDictionary englishDictionary;
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final SearchResultValuator searchResultValuator;
     private final DbNearDomainsQuery dbNearDomainsQuery;
 
     private static final int RETAIN_QUERY_VARIANT_COUNT = 5;
@@ -48,11 +45,7 @@ public class QueryFactory {
                         TermFrequencyDict dict,
                         EnglishDictionary englishDictionary,
                         NGramBloomFilter nGramBloomFilter,
-                        SearchResultValuator searchResultValuator,
                         DbNearDomainsQuery dbNearDomainsQuery) {
-
-        this.englishDictionary = englishDictionary;
-        this.searchResultValuator = searchResultValuator;
         this.dbNearDomainsQuery = dbNearDomainsQuery;
 
         this.queryVariants = ThreadLocal.withInitial(() -> new QueryVariants(lm ,dict, nGramBloomFilter, englishDictionary));
@@ -70,11 +63,9 @@ public class QueryFactory {
         final var processedQuery =  createQuery(getQueryPermutation(), params);
         final List<SearchSubquery> subqueries = processedQuery.specs.subqueries;
 
-        for (var sq : subqueries) {
-            sq.setValue(searchResultValuator.preEvaluate(sq));
-        }
+        // There used to be a piece of logic here that would try to figure out which one of these subqueries were the "best",
+        // it's gone for the moment, but it would be neat if it resurrected somehow
 
-        subqueries.sort(Comparator.comparing(SearchSubquery::getValue));
         trimArray(subqueries, RETAIN_QUERY_VARIANT_COUNT);
 
         return processedQuery;
@@ -238,7 +229,7 @@ public class QueryFactory {
 
         int domainLimit;
         if (domain != null) {
-            domainLimit = 100;
+            domainLimit = 1000;
         } else {
             domainLimit = 2;
         }
@@ -314,9 +305,6 @@ public class QueryFactory {
         }
         if (!word.contains("_") && word.length() >= WordPatterns.MAX_WORD_LENGTH) {
             problems.add("Search term \"" + term.displayStr + "\" too long");
-        }
-        if (!word.contains("_") && !WordPatterns.wordPattern.matcher(word.replaceAll("[_:]","")).matches()) {
-            problems.add("The term \"" + term.displayStr + "\" contains characters that are not currently supported");
         }
     }
 

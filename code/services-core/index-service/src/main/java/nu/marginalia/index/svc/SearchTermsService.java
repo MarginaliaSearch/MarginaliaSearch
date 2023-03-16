@@ -11,6 +11,9 @@ import nu.marginalia.lexicon.KeywordLexiconReadOnlyView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.OptionalInt;
 
 @Singleton
@@ -36,6 +39,7 @@ public class SearchTermsService {
             }
             includes.add(word.getAsInt());
         }
+
 
         for (var advice : request.searchTermsAdvice) {
             var word = lookUpWord(advice);
@@ -63,5 +67,17 @@ public class SearchTermsService {
             return OptionalInt.empty();
         }
         return OptionalInt.of(ret);
+    }
+
+    public Map<String, Integer> getAllIncludeTerms(List<SearchSubquery> subqueries) {
+        Map<String, Integer> ret = new HashMap<>();
+
+        for (var subquery : subqueries) {
+            for (var include : subquery.searchTermsInclude) {
+                ret.computeIfAbsent(include, term -> lookUpWord(term).orElse(-1));
+            }
+        }
+
+        return ret;
     }
 }

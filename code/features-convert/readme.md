@@ -9,3 +9,4 @@
 * [adblock](adblock/) - Simulates Adblock
 * [pubdate](pubdate/) - Determines when a document was published
 * [topic-detection](topic-detection/) - Tries to identify the topic of a website
+* [summary-extraction](summary-extraction/) 

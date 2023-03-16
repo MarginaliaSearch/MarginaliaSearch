@@ -19,7 +19,10 @@ application {
 tasks.distZip.enabled = false
 
 dependencies {
+    implementation project(':code:common:process')
+
     implementation project(':third-party:porterstemmer')
+    implementation project(':third-party:count-min-sketch')
     implementation project(':code:api:index-api')
 
     implementation project(':code:common:model')
@@ -40,10 +43,13 @@ dependencies {
     implementation project(':code:features-convert:topic-detection')
     implementation project(':code:features-convert:pubdate')
     implementation project(':code:features-convert:keyword-extraction')
+    implementation project(':code:features-convert:summary-extraction')
+
     implementation project(':code:features-crawl:crawl-blocklist')
     implementation project(':code:features-crawl:link-parser')
-    implementation project(':code:features-crawl:work-log')
-    implementation project(':code:features-crawl:crawl-plan')
+
+    testImplementation project(':code:libraries:term-frequency-dict')
+
     implementation libs.lombok
     annotationProcessor libs.lombok
     implementation libs.bundles.slf4j
@@ -53,7 +59,8 @@ dependencies {
     implementation libs.jsoup
 
     implementation libs.guice
-    implementation libs.gson
+    implementation libs.guava
+    implementation libs.bundles.gson
 
     implementation libs.zstd
 

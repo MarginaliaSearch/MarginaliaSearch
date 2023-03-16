@@ -2,8 +2,8 @@ package nu.marginalia.experimental;
 
 import nu.marginalia.adblock.AdblockSimulator;
 import nu.marginalia.converting.processor.DocumentProcessor;
-import nu.marginalia.crawl_plan.CrawlPlanLoader;
-import nu.marginalia.crawl_plan.CrawlPlan;
+import plan.CrawlPlanLoader;
+import plan.CrawlPlan;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
 import org.jsoup.Jsoup;

@@ -28,7 +28,8 @@ dependencies {
     implementation libs.guice
     implementation libs.rxjava
     implementation libs.protobuf
-    implementation libs.gson
+    implementation libs.bundles.gson
+    implementation libs.fastutil
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit

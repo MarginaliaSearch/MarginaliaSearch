@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Marginalia Search: 2 years, big news [ 2023-02-26 ]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/74-marginalia-2-years.gmi" class="path file"><img src="/ico/file.png" title="file"> 74-marginalia-2-years.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Marginalia Search: 2 years, big news [ 2023-02-26 ]</h1>
+<br>
+No time like the project's two year anniversary to drop this particular bomb...<br>
+<br>
+Marginalia's gotten an NLNet grant. This means I'll be able to work full time on this project at least a year. <br>
+<br>
+<a class="external" href="https://nlnet.nl/project/Marginalia/">https://nlnet.nl/project/Marginalia/</a><br>
+<br>
+This grant is essentially the best-case scenario for funding this project. It'll be able to remain independent, open-source, and non-profit. <br>
+<br>
+I won't start in earnest for a few months as I've got loose ends to tie up before I can devote that sort of time.  More details to come, but I'll say as much as the first step is a tidying up of the sources and a move off my self-hosted git instance to an external git host yet to be decided. <br>
+<br>
+<h2 id="1.1">Recap </h2>
+<br>
+It's been a heck of a year for Marginalia. Some highlights.<br>
+<br>
+The UX has been streamlined quite a bit. Forms for flagging problematic websites and submitting websites to be crawled.<br>
+<br>
+Overall the search result presentation is cleaner. The old search result page used a lot of weird emoji icons to convey information, I was never quite happy with that. <br>
+<br>
+<dl class="link"><dt><a class="external" href="https://www.marginalia.nu/junk/pips.webp">https://www.marginalia.nu/junk/pips.webp</a></dt><dd>The Old Design</dd></dl>
+<dl class="link"><dt><a class="external" href="https://www.marginalia.nu/junk/new.webp">https://www.marginalia.nu/junk/new.webp</a></dt><dd>The New Design</dd></dl>
+<br>
+The crawler was significantly redesigned.<br>
+<br>
+<a class="internal" href="/log/63-marginalia-crawler.gmi">/log/63-marginalia-crawler.gmi</a><br>
+<br>
+The index has been almost completely rewritten to be both faster and more space-efficient. I feel a bit bad I still haven't written about this. The re-design allowed the search engine to hit that sweet 100M document milestone a few months ago.<br>
+<br>
+I've had big success experimenting with website similarity metrics, and very recently I combined this method with PageRank. The result is good beyond expectations. The new algorithms are live on the search engine and working so well. <br>
+<br>
+<dl class="link"><dt><a class="external" href="https://explore2.marginalia.nu/">https://explore2.marginalia.nu/</a></dt><dd>Explore Website Similarities</dd></dl>
+<dl class="link"><dt><a class="internal" href="/log/73-new-approach-to-ranking.gmi">/log/73-new-approach-to-ranking.gmi</a></dt><dd>Very rough outline of "marginaliarank"</dd></dl>
+<br>
+There's been improvements in ad-detection, text-summarization, topic filtering, DOM-pruning, sharp sticks...<br>
+<br>
+With the grant there will definitely be a "Marginalia Search: 3 years"-post. I got most of the above done while juggling a lot of other life-stuff alongside Marginalia Search, as a solo dev. It'll be very interesting to see what sort of ground I'll be able to cover while working on this full time!<br>
+<br>
+<h2 id="1.2">Topics</h2>
+<br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+<a class="internal" href="/topic/nlnet.gmi">/topic/nlnet.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>74-marginalia-2-years.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/74-marginalia-2-years.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/74-marginalia-2-years.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/74-marginalia-2-years.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/74-marginalia-2-years.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Marginalia Search: 2 years, big news [ 2023-02-26 ]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Recap </a>
+    
+        <a href="#1.2" class="heading-2">1.2 Topics</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

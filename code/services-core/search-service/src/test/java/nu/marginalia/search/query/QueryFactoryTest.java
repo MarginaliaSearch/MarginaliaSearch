@@ -9,7 +9,6 @@ import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.search.command.SearchJsParameter;
 import nu.marginalia.search.model.SearchProfile;
 import nu.marginalia.search.query.model.UserSearchParameters;
-import nu.marginalia.search.valuation.SearchResultValuator;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -32,7 +31,6 @@ public class QueryFactoryTest {
                 tfd,
                 new EnglishDictionary(tfd),
                 new NGramBloomFilter(lm),
-                new SearchResultValuator(tfd),
                 null
         );
     }

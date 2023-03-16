@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Bye, Bye, Gmail [2021-08-04]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/12-bye-bye-gmail.gmi" class="path file"><img src="/ico/file.png" title="file"> 12-bye-bye-gmail.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Bye, Bye, Gmail [2021-08-04]</h1>
+<br>
+I finally got around to moving @marginalia.nu off gmail. I've been planning to do so for a while, and vascillated between self-hosting and using a provider. I ended up going for the latter. Even though I do like to self-host my stuff as much as possible, email servers seem like a lot of work. And I got a VPS account included in the price, which is nice. Means I can use it to do some off-site backups without having to use dropbox or similar.<br>
+<br>
+Maybe this is a strange sentiment around these parts, but privacy is the smallest beef I have with google. I don't particularly care if they can read my emails or learn of my surfing habits. <br>
+<br>
+What I do care about is the fact that gmail is a terrible email provider that seems outright hostile to its users. <br>
+<br>
+When it launched fifteen years ago, it was fantastic. It was streets ahead of the competitors. It filtered out so much spam, it was clean and sleek and had features, it was the suprelative free email provider. Inbox had even more features that made it even cleaner and sleeker.  <br>
+<br>
+The inbox space you got was absolutely humongous too. This was at the time you would have to constantly delete the tail of the inbox to keep it below 100 Mb or whatever. Gmail gave you gigabytes of data at launch, and that number just kept growing. It was a pretty decent publicity stunt.<br>
+<br>
+To jog your memory, here's a screenshot of gmail around launch.<br>
+<br>
+<dl class="link"><dt><a class="internal" href="/pics/gmail-2004.png">/pics/gmail-2004.png</a></dt><dd>/pics/gmail-2004.png [17.3Kb 2 bit]</dd></dl>
+<br>
+Then over the years, something happened. Looking squarely at my gmail inbox, almost all I see is spam. Sales, promotions, offers; left, right, center. Inexplicably it's being let through the spam filter. Some of it has even been placed there by google as "promoted" items. That is, I'm getting spam emails that weren't even sent to me. <br>
+<br>
+This just isn't what I signed up to. Looking back I can see that it's been going on for a while, but I've just gotten so used to the state I didn't really think about how absurd it is. <br>
+<br>
+So I'm saying goodbye to gmail as my primary email provider, and good riddance. <br>
+<br>
+<h2 id="1.1">Topics </h2>
+<br>
+<a class="internal" href="/topic/platforms.gmi">/topic/platforms.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>12-bye-bye-gmail.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/12-bye-bye-gmail.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/12-bye-bye-gmail.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/12-bye-bye-gmail.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/12-bye-bye-gmail.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Bye, Bye, Gmail [2021-08-04]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Topics </a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

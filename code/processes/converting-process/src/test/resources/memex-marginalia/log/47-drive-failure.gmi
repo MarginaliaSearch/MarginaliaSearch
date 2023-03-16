@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Drive Failure [ 2022-02-19 ]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/47-drive-failure.gmi" class="path file"><img src="/ico/file.png" title="file"> 47-drive-failure.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Drive Failure [ 2022-02-19 ]</h1>
+<br>
+Not what I had intended to do this Saturday, but a hard drive failed on the server this morning, or at least so it seemed. MariaDB server went down, dmesg was full of error messages for the nvme drive it's running off. That's a pretty important drive. <br>
+<br>
+The drive itself may actually be okay, the working hypothesis is either the drive itself or the bus overheated and reset. After a reboot the system seems fine.<br>
+<br>
+That particular drive, an Optane NVMe stick, has worked impressively well for quite a while. It cost an arm and a leg and has some fairly impressive performance, so I would be sad if it failed.<br>
+<br>
+Fortunately there doesn't appear to to be actual data loss. fsck is fine, mysqlcheck is fine. Even if there was data loss, there is a good system of weekly backups of critical data on a different hard drive that should prevent serous data loss from individual drives failing. <br>
+<br>
+Even if there turns out to be some sort of quiet creeping corruption that only unravels after festering for weeks, the worst that will happen is that the server resets back to the state of last week and that's really that.<br>
+<br>
+In the mean time, the system is up and running again. We'll have to see if this was a one-off event or if one or more components requires replacement.<br>
+<br>
+I've been putting off an upgrade of this system. The motherboard I'm using also doesn't appear to be entirely stable which is more than a bit uncomfortable. The chassis is too small and runs hot, and I have a few SSDs that are getting pretty worn. Time is fast approaching when I have to upgrade this system. <br>
+<br>
+I'm very happy I have generous Patreons to soften the blow. Hardware is not cheap.<br>
+<br>
+<h2 id="1.1">dmesg</h2>
+<br>
+If anyone is curious what the error looked like, I'm appending it below.<br>
+<br>
+<pre>
+[17160266.929320] nvme nvme0: controller is down; will reset: CSTS=0xffffffff, PCI_STATUS=0xffff
+[17160266.985525] print_req_error: I/O error, dev nvme0n1, sector 195060096
+[17160267.013350] nvme nvme0: Removing after probe failure status: -19
+[17160267.041306] print_req_error: I/O error, dev nvme0n1, sector 153936816
+[17160267.041466] EXT4-fs warning (device nvme0n1p1): ext4_end_bio:323: I/O error 10 writing to inode 15 (offset 0 size 0 starting block 19242118)</pre>
+<br>
+<br>
+<h2 id="1.2">Topic</h2>
+<br>
+<a class="internal" href="/topic/server.gmi">/topic/server.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>47-drive-failure.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/47-drive-failure.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/47-drive-failure.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/47-drive-failure.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/47-drive-failure.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Drive Failure [ 2022-02-19 ]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 dmesg</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Topic</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

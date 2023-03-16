@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - A Jaunt Through Keyword Extraction [ 2021-11-11 ]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/37-keyword-extraction.gmi" class="path file"><img src="/ico/file.png" title="file"> 37-keyword-extraction.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">A Jaunt Through Keyword Extraction [ 2021-11-11 ]</h1>
+<br>
+Search results are only as good as the search engine's ability to figure out what a page is about. Sure a keyword may appear in a page, but is it the topic of the page, or just some off-hand mention? <br>
+<br>
+I didn't really know anything about data mining or keyword extraction starting out, so I've had to learn on the fly. I'm just going to briefly list some of my first naive attempts at keyword extraction, just to give a context.<br>
+<br>
+<ul>
+<li>Extract every keyword.</li></ul>
+<br>
+<ul>
+<li>Extract recurring N-grams.</li></ul>
+<br>
+<ul>
+<li>Extract the most frequent N-grams, and N-grams are Capitalized Like Names or occur in titles.</li></ul>
+<br>
+<ul>
+<li>Use a dictionary extracted from Wikipedia data to extract names-of-things.</li></ul>
+<br>
+These approaches are ignorant of grammar, and really kind of blunt. As good as the keywords they find are, they also hoover up a lot of grammatical nonsense and give a decent number of false positives. Since they lack any contect, they can't tell whether "care" is a noun or a verb, for example.<br>
+<br>
+Better results seem to require a better understanding of grammar. I tried Apache's OpenNLP, and the results were fantastic. It was able to break down sentences, identify words, tag them with grammatical function. Great. Except also extremely slow. Too slow to be of practical use.<br>
+<br>
+Thankfully I found an alternative in Dat Quoc Nguyen's RDRPOSTagger. Much faster, and still much more accurate than anything I had used before. In practice I usually prefer dumb solutions to fancy machine learning. The former is almost always faster and usually more than good enough.<br>
+<br>
+Armed with a part-of-speech tagger, and most of the same regular expressions used before to break down sentences and words, allowed some successful experimentation with standard keyword extraction algorithms such as TF-IDF and TextRank. <br>
+<br>
+TF-IDF is a measure of how often a term appears in a document in relationship to how often it occurs in all documents.<br>
+<br>
+TextRank is basically just PageRank applied to text. You create a graph of adjacent words and calculate the eigenvector. It's fast, works well, and shares PageRank's ability to be biased toward a certain sections of the graph. This means it can be used to extract additional useful sets of keywords, such as "keywords related to the words in the topic".<br>
+<br>
+How often a keyword occurs in these various approaches to keyword extraction can be further used to create tiered sets of keywords. If every algorithm agrees a keyword is relevant, hits for such a keyword is prioritized over keywords that only one of the algorithms considers important.<br>
+<br>
+There is a considerable amount of tweaking and adjusting and intuition involved in getting these things just right, and I've been fussing over them for several weeks and could probably have kept doing that for several more, but eventually decided that it has to be good enough. The improvements are already so large that they ought to provide a significant boost to the relevance of the search results.<br>
+<br>
+I'm almost ready to kick off the upgrade for the November upgrade. Over all it's looking really promising.<br>
+<br>
+<h2 id="1.1">Topic</h2>
+<br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+<br>
+<h2 id="1.2">See Also</h2>
+<br>
+<a class="internal" href="/log/31-ngram-needles.gmi">/log/31-ngram-needles.gmi</a><br>
+<a class="internal" href="/log/26-personalized-pagerank.gmi">/log/26-personalized-pagerank.gmi</a><br>
+<a class="internal" href="/log/21-new-solutions-old-problems.gmi">/log/21-new-solutions-old-problems.gmi</a><br>
+<br>
+<a class="external" href="https://github.com/datquocnguyen/RDRPOSTagger">https://github.com/datquocnguyen/RDRPOSTagger</a><br>
+<dl class="link"><dt><a class="external" href="http://ilpubs.stanford.edu:8090/422/1/1999-66.pdf">http://ilpubs.stanford.edu:8090/422/1/1999-66.pdf</a></dt><dd>The Page Rank Citation Algorithm: Bringing Order To The Web</dd></dl>
+<dl class="link"><dt><a class="external" href="https://web.eecs.umich.edu/~mihalcea/papers/mihalcea.emnlp04.pdf">https://web.eecs.umich.edu/~mihalcea/papers/mihalcea.emnlp04.pdf</a></dt><dd>Text Rank: Bringing Order into Text</dd></dl>
+<a class="external" href="https://encyclopedia.marginalia.nu/wiki/TF-IDF">https://encyclopedia.marginalia.nu/wiki/TF-IDF</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>37-keyword-extraction.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/37-keyword-extraction.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/37-keyword-extraction.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/37-keyword-extraction.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 A Jaunt Through Keyword Extraction [ 2021-11-11 ]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Topic</a>
+    
+        <a href="#1.2" class="heading-2">1.2 See Also</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/projects/edge/changelog.gmi">/projects/edge/changelog.gmi</a></dt>
+<dd>Change Log - 2021 November Update</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

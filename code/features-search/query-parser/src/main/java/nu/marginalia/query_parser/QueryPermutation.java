@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Stream.concat;
@@ -18,6 +20,13 @@ public class QueryPermutation {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final QueryVariants queryVariants;
 
+    public static final Pattern wordPattern = Pattern.compile("[#]?[_@.a-zA-Z0-9'+\\-\\u00C0-\\u00D6\\u00D8-\\u00f6\\u00f8-\\u00ff]+[#]?");
+    public static final Pattern wordAppendixPattern = Pattern.compile("[.]?[0-9a-zA-Z\\u00C0-\\u00D6\\u00D8-\\u00f6\\u00f8-\\u00ff]{1,3}[0-9]?");
+
+    public static final Predicate<String> wordQualitiesPredicate = wordPattern.asMatchPredicate();
+
+    public static final Predicate<String> wordAppendixPredicate = wordAppendixPattern.asMatchPredicate();
+    public static final Predicate<String> wordPredicateEither = wordQualitiesPredicate.or(wordAppendixPredicate);
 
     public QueryPermutation(QueryVariants queryVariants) {
         this.queryVariants = queryVariants;
@@ -31,12 +40,12 @@ public class QueryPermutation {
             var token = items.get(i);
 
             if (start < 0) {
-                if (token.type == TokenType.LITERAL_TERM && WordPatterns.wordQualitiesPredicate.test(token.str)) {
+                if (token.type == TokenType.LITERAL_TERM && wordQualitiesPredicate.test(token.str)) {
                     start = i;
                 }
             }
             else {
-                if (token.type != TokenType.LITERAL_TERM || !WordPatterns.wordPredicateEither.test(token.str)) {
+                if (token.type != TokenType.LITERAL_TERM || !wordPredicateEither.test(token.str)) {
                     end = i;
                     break;
                 }
@@ -68,12 +77,12 @@ public class QueryPermutation {
             var token = items.get(i);
 
             if (start < 0) {
-                if (token.type == TokenType.LITERAL_TERM && WordPatterns.wordQualitiesPredicate.test(token.str)) {
+                if (token.type == TokenType.LITERAL_TERM && wordQualitiesPredicate.test(token.str)) {
                     start = i;
                 }
             }
             else {
-                if (token.type != TokenType.LITERAL_TERM || !WordPatterns.wordPredicateEither.test(token.str)) {
+                if (token.type != TokenType.LITERAL_TERM || !wordPredicateEither.test(token.str)) {
                     end = i;
                     break;
                 }

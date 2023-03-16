@@ -12,6 +12,9 @@ public enum InstructionTag {
     PROC_DOCUMENT(LoadProcessedDocument.class),
     PROC_DOCUMENT_ERR(LoadProcessedDocumentWithError.class),
     PROC_DOMAIN(LoadProcessedDomain.class),
+
+    DOMAIN_METADATA(LoadDomainMetadata.class),
+
     RSS(LoadRssFeed.class);
 
     public final Class<? extends Instruction> clazz;

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - marginalia.nu goes open source [ 2022-05-27 ] </title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/58-marginalia-open-source.gmi" class="path file"><img src="/ico/file.png" title="file"> 58-marginalia-open-source.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">marginalia.nu goes open source [ 2022-05-27 ] </h1>
+<br>
+After a bit of soul searching with regards to the future of the website, I've decided to open source the code for marginalia.nu, all of its services, including the search engine, encyclopedia, memex, etc.<br>
+<br>
+A motivating factor is the search engine has sort of grown to a scale where it's becoming increasingly difficult to productively work on as a personal solo project. It needs more structure. What's kept me from open sourcing it so far has also been the need for more structure. The needs of the marginalia project, and the needs of an open source project have effectively aligned. <br>
+<br>
+So fuck it. Let's make Marginalia Search an open source search engine.<br>
+<br>
+I don't know how much traction this will get in terms of contributions, but as search is like a fractal of fun and interesting problems to be tackled it's almost a bit cruel to keep it all to myself. <br>
+<br>
+There's some effort in documenting the project and cleaning up the build process needed before this can get going in earnest, but that will be an ongoing task for quite some while. This work was needed regardless, and if nothing else this serves as a good vehicle for introducing some process into the development of this project and getting around to slaying some of those ancient dragons (this is necessary at this point regardless).<br>
+<br>
+<h2 id="1.1">Sources and Hosting</h2>
+<br>
+I feel GitHub has taken an incredibly toxic turn with its emphasis on social features, and in general dislike the notion of renting space on the Internet, therefore I'm hosting the sources on a gitea instance.<br>
+<br>
+<a class="external" href="https://git.marginalia.nu/marginalia/marginalia.nu">https://git.marginalia.nu/marginalia/marginalia.nu</a><br>
+<br>
+As of right now the code is very as-is. There is still some work to get it to a point where it's even possible to run on another machine.<br>
+<br>
+I'm currently looking for hosting for a large term frequency data file that is necessary for several of the search engine's core functions. I really don't have the bandwidth to serve it myself. It's only a couple of hundred megabytes so it'll probably be solvable somehow. <br>
+<br>
+<h1 id="2">Q&A</h1>
+<br>
+<h2 id="2.1">What if the SEO people learn all the secrets?</h2>
+<br>
+They're probably going to figure them out anyway. If Google teaches us anything, it's that attempting to hide what you are doing from the SEO industry flat out doesn't work. <br>
+<br>
+What shields Marginalia from SEO spam isn't security through obscurity, but that it places demands on websites that are mutually contradictory to Google's demands. As long as Marginalia Search is smaller than Google, Marginalia is safe.<br>
+<br>
+<h2 id="2.2">I don't like Java</h2>
+<br>
+I know a lot of people break out in eczema when exposed to this language. Rest assured it's not enterprisey Java, and between the JVM's ability to interoperate with other languages (including Python and Scheme), and the fact that the entire system is based around web services, there's *probably* something that can be done to accommodate for other languages-of-choice.<br>
+<br>
+<h2 id="2.3">What is the license?</h2>
+<br>
+It's AGPLv3. <br>
+<br>
+<h2 id="2.4">I have strong negative opinions on something about the project</h2>
+<br>
+If you feel the need to complain about how something doesn't align with your personal philosophical convictions and fails to satisfy your criteria for ideological purity, please write a really long and angry essay about this topic, and send it to &lt;kontakt@marginalia.nu&gt;. <br>
+<br>
+Don't forget to press caps lock as you begin typing to save your pinky fingers, I wouldn't want to be responsible for nasty RSI.<br>
+<br>
+<h1 id="3">Topics</h1>
+<br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>58-marginalia-open-source.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/58-marginalia-open-source.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/58-marginalia-open-source.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/58-marginalia-open-source.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/58-marginalia-open-source.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 marginalia.nu goes open source [ 2022-05-27 ] </a>
+    
+        <a href="#1.1" class="heading-2">1.1 Sources and Hosting</a>
+    
+        <a href="#2" class="heading-1">2 Q&amp;A</a>
+    
+        <a href="#2.1" class="heading-2">2.1 What if the SEO people learn all the secrets?</a>
+    
+        <a href="#2.2" class="heading-2">2.2 I don&#x27;t like Java</a>
+    
+        <a href="#2.3" class="heading-2">2.3 What is the license?</a>
+    
+        <a href="#2.4" class="heading-2">2.4 I have strong negative opinions on something about the project</a>
+    
+        <a href="#3" class="heading-1">3 Topics</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

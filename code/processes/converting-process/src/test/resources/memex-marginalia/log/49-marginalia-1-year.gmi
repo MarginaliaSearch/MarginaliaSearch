@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Marginalia Search: 1 year [ 2022-02-25 ]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/49-marginalia-1-year.gmi" class="path file"><img src="/ico/file.png" title="file"> 49-marginalia-1-year.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Marginalia Search: 1 year [ 2022-02-25 ]</h1>
+<br>
+I've caught some bug and don't have the energy to write more than a brief note.<br>
+<br>
+I want to commemorate the fact that work on the Marginalia search engine started one year ago. The first commit was on February 26th 2021, and contained a sketch for a website crawler and some data models. <br>
+<br>
+In many ways, the paint is barely dry, yet it feels like this project has been around for a long while. <br>
+<br>
+One year ago:<br>
+<br>
+<ul>
+<li>There was no search.marginalia.nu.</li>
+<li>There was no encyclopedia.marginalia.nu</li>
+<li>There was no memex.marginalia.nu</li></ul>
+<br>
+I built all this on my own, from scratch, just following a crazy idea to its logical conclusion. <br>
+<br>
+I think that's pretty neat, but what I'm the most proud of is that it has actually had an impact. It's let people discover new things and rediscover old, it's made people think and re-evaluate the state of the Internet. I even know a few who have created websites inspired by what they've found using my little search engine.<br>
+<br>
+It's just been a success beyond my wildest imagination. <br>
+<br>
+<h2 id="1.1">Topic</h2>
+<br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>49-marginalia-1-year.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/49-marginalia-1-year.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/49-marginalia-1-year.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/49-marginalia-1-year.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/49-marginalia-1-year.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Marginalia Search: 1 year [ 2022-02-25 ]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Topic</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

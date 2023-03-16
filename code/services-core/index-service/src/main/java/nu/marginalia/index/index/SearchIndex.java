@@ -20,6 +20,10 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.LongPredicate;
 
+/** This class delegates SearchIndexReader and deals with the stateful nature of the index,
+ * i.e. it may be possible to reconstruct the index and load a new set of data.
+ *
+ */
 @Singleton
 public class SearchIndex {
 
@@ -131,11 +135,6 @@ public class SearchIndex {
         );
     }
 
-
-    public IndexQuery getDomainQuery(int wordId, IndexResultDomainDeduplicator localFilter) {
-        throw new UnsupportedOperationException(""); // TBI
-    }
-
     /** Replaces the values of ids with their associated metadata, or 0L if absent */
     public long[] getTermMetadata(int termId, long[] docs) {
         return indexReader.getMetadata(termId, docs);
@@ -147,5 +146,13 @@ public class SearchIndex {
 
     public int getDomainId(long docId) {
         return indexReader.getDomainId(docId);
+    }
+
+    public int getTotalDocCount() {
+        return indexReader.totalDocCount();
+    }
+
+    public int getTermFrequency(int id) {
+        return (int) indexReader.numHits(id);
     }
 }

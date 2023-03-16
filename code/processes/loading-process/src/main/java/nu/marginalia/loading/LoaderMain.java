@@ -5,9 +5,9 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
-import nu.marginalia.work_log.WorkLog;
-import nu.marginalia.crawl_plan.CrawlPlanLoader;
-import nu.marginalia.crawl_plan.CrawlPlan;
+import nu.marginalia.process.log.WorkLog;
+import plan.CrawlPlanLoader;
+import plan.CrawlPlan;
 import nu.marginalia.loading.loader.IndexLoadKeywords;
 import nu.marginalia.loading.loader.Loader;
 import nu.marginalia.loading.loader.LoaderFactory;
@@ -79,6 +79,7 @@ public class LoaderMain {
             stmt.execute("TRUNCATE TABLE EC_PAGE_DATA");
             stmt.execute("TRUNCATE TABLE EC_URL");
             stmt.execute("TRUNCATE TABLE EC_DOMAIN_LINK");
+            stmt.execute("TRUNCATE TABLE DOMAIN_METADATA");
             stmt.execute("SET FOREIGN_KEY_CHECKS = 1");
         }
         catch (SQLException ex) {

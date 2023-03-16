@@ -1,11 +1,8 @@
 package nu.marginalia.index.results;
 
 import gnu.trove.list.TLongList;
-import gnu.trove.map.hash.TObjectIntHashMap;
 import gnu.trove.set.hash.TLongHashSet;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
-import nu.marginalia.index.svc.SearchTermsService;
+import nu.marginalia.index.client.model.results.SearchResultPreliminaryScore;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.index.query.limit.QueryStrategy;
@@ -15,63 +12,38 @@ import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.index.query.IndexQueryParams;
 
 import java.util.List;
-import java.util.OptionalInt;
 
 public class IndexResultValuator {
     private final IndexMetadataService metadataService;
     private final List<List<String>> searchTermVariants;
     private final IndexQueryParams queryParams;
-    private final int[] termIdsAll;
-
     private final TLongHashSet resultsWithPriorityTerms;
 
-    private final TObjectIntHashMap<String> termToId = new TObjectIntHashMap<>(10, 0.75f, -1);
-    private final TermMetadata termMetadata;
+    private final IndexMetadataService.TermMetadata termMetadata;
+    private final IndexMetadataService.QuerySearchTerms searchTerms;
 
-    public IndexResultValuator(SearchTermsService searchTermsSvc,
-                               IndexMetadataService metadataService,
+    public IndexResultValuator(IndexMetadataService metadataService,
                                TLongList results,
                                List<SearchSubquery> subqueries,
-                               IndexQueryParams queryParams) {
+                               IndexQueryParams queryParams
+                               ) {
+
+        final long[] resultsArray = results.toArray();
+
         this.searchTermVariants = subqueries.stream().map(sq -> sq.searchTermsInclude).distinct().toList();
         this.queryParams = queryParams;
         this.metadataService = metadataService;
 
-        IntArrayList termIdsList = new IntArrayList();
+        this.searchTerms = metadataService.getSearchTerms(subqueries);
+        this.termMetadata = metadataService.getTermMetadata(results.toArray(), searchTerms.termIdsAll);
 
-        searchTermVariants.stream().flatMap(List::stream).distinct().forEach(term -> {
-            searchTermsSvc.lookUpWord(term).ifPresent(id -> {
-                termIdsList.add(id);
-                termToId.put(term, id);
-            });
-        });
-
-        final long[] resultsArray = results.toArray();
-
-        termIdsAll = termIdsList.toArray(new int[0]);
-        termMetadata = new TermMetadata(resultsArray, termIdsAll);
-
-        int[] priorityTermIds =
-                subqueries.stream()
-                        .flatMap(sq -> sq.searchTermsPriority.stream())
-                        .distinct()
-                        .map(searchTermsSvc::lookUpWord)
-                        .filter(OptionalInt::isPresent)
-                        .mapToInt(OptionalInt::getAsInt)
-                        .toArray();
-
-        resultsWithPriorityTerms = new TLongHashSet(results.size());
-        for (int priorityTerm : priorityTermIds) {
-            long[] metadata = metadataService.getTermMetadata(priorityTerm, resultsArray);
-            for (int i = 0; i < metadata.length; i++) {
-                if (metadata[i] != 0) resultsWithPriorityTerms.add(resultsArray[i]);
-            }
-        }
-
-
+        resultsWithPriorityTerms = metadataService.getResultsWithPriorityTerms(subqueries, resultsArray);
     }
 
-    public SearchResultItem evaluateResult(long id) {
+    private final int flagsFilterMask =
+            WordFlags.Title.asBit() | WordFlags.NamesWords.asBit() | WordFlags.Subjects.asBit() | WordFlags.TfIdfHigh.asBit();
+
+    public SearchResultItem calculatePreliminaryScore(long id) {
 
         SearchResultItem searchResult = new SearchResultItem(id);
         final long urlIdInt = searchResult.getUrlIdInt();
@@ -80,160 +52,113 @@ public class IndexResultValuator {
 
         long docMetadata = metadataService.getDocumentMetadata(urlIdInt);
 
-        double bestScore = 1000;
+        int maxPosCount = 0;
+        int maxBitMask = 0;
+        int maxFlagsCount = 0;
+        boolean hasSingleTermMatch = false;
+
         for (int querySetId = 0; querySetId < searchTermVariants.size(); querySetId++) {
-            bestScore = Math.min(bestScore,
-                    evaluateSubquery(searchResult,
-                            docMetadata,
-                            querySetId,
-                            searchTermVariants.get(querySetId))
-            );
+
+            var termList = searchTermVariants.get(querySetId);
+
+            SearchResultKeywordScore[] termScoresForSet = new SearchResultKeywordScore[termList.size()];
+
+            for (int termIdx = 0; termIdx < termList.size(); termIdx++) {
+                String searchTerm = termList.get(termIdx);
+
+                long metadata = termMetadata.getTermMetadata(
+                        searchTerms.get(searchTerm),
+                        searchResult.getUrlIdInt()
+                );
+
+                var score = new SearchResultKeywordScore(
+                        querySetId,
+                        searchTerm,
+                        metadata,
+                        docMetadata,
+                        resultsWithPriorityTerms.contains(searchResult.combinedId)
+                );
+
+                searchResult.keywordScores.add(score);
+
+                termScoresForSet[termIdx] = score;
+            }
+
+            if (!meetsQueryStrategyRequirements(termScoresForSet, queryParams.queryStrategy())) {
+                continue;
+            }
+
+            int minFlagsCount = 8;
+            int minPosCount = 1000;
+            int cominedBitMask = ~0;
+
+            for (var termScore : termScoresForSet) {
+                final int positionCount = Integer.bitCount(termScore.positions());
+                final int flagCount = Long.bitCount(termScore.encodedWordMetadata() & flagsFilterMask);
+
+                minPosCount = Math.min(minPosCount, positionCount);
+                minFlagsCount = Math.min(minFlagsCount, flagCount);
+                cominedBitMask &= termScore.positions();
+            }
+
+            final int combinedBitmaskBitCount = Integer.bitCount(cominedBitMask);
+
+            // Calculate the highest value (overall) of the lowest value (per set) of these search result importance measures
+            maxBitMask = Math.max(maxBitMask, combinedBitmaskBitCount);
+            maxPosCount = Math.max(maxPosCount, minPosCount);
+            maxFlagsCount = Math.max(maxFlagsCount, minFlagsCount);
+
+            hasSingleTermMatch |= (termScoresForSet.length == 1 && minPosCount != 0);
         }
 
-        if (resultsWithPriorityTerms.contains(id)) {
-            bestScore -= 50;
-        }
+        final boolean hasPriorityTerm = resultsWithPriorityTerms.contains(id);
 
-        searchResult.setScore(bestScore);
+        searchResult.setScore(new SearchResultPreliminaryScore(
+                hasSingleTermMatch,
+                hasPriorityTerm,
+                maxFlagsCount,
+                Math.min(4, maxPosCount),
+                Math.min(4, maxBitMask)
+        ));
 
         return searchResult;
     }
 
-    private double evaluateSubquery(SearchResultItem searchResult,
-                                    long docMetadata,
-                                    int querySetId,
-                                    List<String> termList)
-    {
-        double setScore = 0;
-        int setSize = 0;
+    private boolean meetsQueryStrategyRequirements(SearchResultKeywordScore[] termSet, QueryStrategy queryStrategy) {
+        if (queryStrategy == QueryStrategy.AUTO ||
+                queryStrategy == QueryStrategy.SENTENCE ||
+                queryStrategy == QueryStrategy.TOPIC) {
+            return true;
+        }
 
-        for (int termIdx = 0; termIdx < termList.size(); termIdx++) {
-            String searchTerm = termList.get(termIdx);
-
-            final int termId = termToId.get(searchTerm);
-
-            long metadata = termMetadata.getTermMetadata(termId, searchResult.getUrlIdInt());
-
-            SearchResultKeywordScore score = new SearchResultKeywordScore(
-                    querySetId,
-                    searchTerm,
-                    metadata,
-                    docMetadata,
-                    resultsWithPriorityTerms.contains(searchResult.combinedId)
-            );
-
-            searchResult.scores.add(score);
-
-            setScore += score.termValue();
-
-            if (!filterRequired(metadata, queryParams.queryStrategy())) {
-                return 1000;
+        for (var keyword : termSet) {
+            if (!meetsQueryStrategyRequirements(keyword, queryParams.queryStrategy())) {
+                return false;
             }
-
-            if (termIdx == 0) {
-                setScore += score.documentValue();
-            }
-
-            setSize++;
-        }
-
-        setScore += calculateTermCoherencePenalty(searchResult.getUrlIdInt(), termToId, termList);
-
-        return setScore/setSize;
-    }
-
-    private boolean filterRequired(long metadata, QueryStrategy queryStrategy) {
-        if (queryStrategy == QueryStrategy.REQUIRE_FIELD_SITE) {
-            return WordFlags.Site.isPresent(metadata);
-        }
-        else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_SUBJECT) {
-            return WordFlags.Subjects.isPresent(metadata);
-        }
-        else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_TITLE) {
-            return WordFlags.Title.isPresent(metadata);
-        }
-        else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_URL) {
-            return WordFlags.UrlPath.isPresent(metadata);
-        }
-        else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_DOMAIN) {
-            return WordFlags.UrlDomain.isPresent(metadata);
         }
         return true;
     }
 
-    private double calculateTermCoherencePenalty(int urlId, TObjectIntHashMap<String> termToId, List<String> termList) {
-        long maskDirectGenerous = ~0;
-        long maskDirectRaw = ~0;
-        long maskAdjacent = ~0;
-
-        final int flagBitMask = WordFlags.Title.asBit()
-                              | WordFlags.Subjects.asBit()
-                              | WordFlags.Synthetic.asBit();
-
-        int termCount = 0;
-        double tfIdfSum = 1.;
-
-        for (String term : termList) {
-            var meta = termMetadata.getTermMetadata(termToId.get(term), urlId);
-            long positions;
-
-            if (meta == 0) {
-                return 1000;
-            }
-
-            positions = WordMetadata.decodePositions(meta);
-
-            maskDirectRaw &= positions;
-
-            if (positions != 0 && !WordMetadata.hasAnyFlags(meta, flagBitMask)) {
-                maskAdjacent &= (positions | (positions << 1) | (positions >>> 1));
-                maskDirectGenerous &= positions;
-            }
-
-            termCount++;
-            tfIdfSum += WordMetadata.decodeTfidf(meta);
+    private boolean meetsQueryStrategyRequirements(SearchResultKeywordScore termScore, QueryStrategy queryStrategy) {
+        if (queryStrategy == QueryStrategy.REQUIRE_FIELD_SITE) {
+            return WordMetadata.hasFlags(termScore.encodedWordMetadata(), WordFlags.Site.asBit());
+        }
+        else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_SUBJECT) {
+            return WordMetadata.hasFlags(termScore.encodedWordMetadata(), WordFlags.Subjects.asBit());
+        }
+        else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_TITLE) {
+            return WordMetadata.hasFlags(termScore.encodedWordMetadata(), WordFlags.Title.asBit());
+        }
+        else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_URL) {
+            return WordMetadata.hasFlags(termScore.encodedWordMetadata(), WordFlags.UrlPath.asBit());
+        }
+        else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_DOMAIN) {
+            return WordMetadata.hasFlags(termScore.encodedWordMetadata(), WordFlags.UrlDomain.asBit());
         }
 
-        double avgTfIdf = termCount / tfIdfSum;
-
-        if (maskAdjacent == 0) {
-            return Math.min(5, Math.max(-2, 40 - 0.5 * avgTfIdf));
-        }
-
-        if (maskDirectGenerous == 0) {
-            return Math.min(5, Math.max(-1, 20 - 0.3 *  avgTfIdf));
-        }
-
-        if (maskDirectRaw == 0) {
-            return Math.min(5, Math.max(-1, 15 - 0.2 *  avgTfIdf));
-        }
-
-        return Long.numberOfTrailingZeros(maskDirectGenerous)/5. - Long.bitCount(maskDirectGenerous);
+        return true;
     }
 
 
-    class TermMetadata {
-        private final Long2LongOpenHashMap termdocToMeta;
-
-        public TermMetadata(long[] docIdsAll, int[] termIdsList) {
-            termdocToMeta = new Long2LongOpenHashMap(docIdsAll.length * termIdsAll.length, 0.5f);
-
-            for (int term : termIdsList) {
-                var metadata = metadataService.getTermMetadata(term, docIdsAll);
-                for (int i = 0; i < docIdsAll.length; i++) {
-                    termdocToMeta.put(termdocKey(term, docIdsAll[i]), metadata[i]);
-                }
-            }
-
-        }
-
-        public long getTermMetadata(int termId, long docId) {
-            return termdocToMeta.getOrDefault(termdocKey(termId, docId), 0);
-        }
-    }
-
-    private long termdocKey(int termId, long docId) {
-        return (docId << 32) | termId;
-    }
 
 }

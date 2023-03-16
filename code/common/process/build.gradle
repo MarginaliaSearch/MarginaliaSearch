@@ -1,0 +1,32 @@
+plugins {
+    id 'java'
+    id "io.freefair.lombok" version "5.3.3.3"
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
+dependencies {
+    implementation libs.notnull
+    implementation libs.lombok
+    annotationProcessor libs.lombok
+
+    implementation libs.bundles.slf4j
+    testImplementation libs.bundles.slf4j.test
+
+    implementation libs.guava
+    implementation libs.guice
+    implementation libs.commons.lang3
+
+    implementation libs.snakeyaml
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+}
+
+

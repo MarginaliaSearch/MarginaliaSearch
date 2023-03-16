@@ -2,7 +2,7 @@ package nu.marginalia.crawl;
 
 import com.github.luben.zstd.ZstdOutputStream;
 import com.google.gson.Gson;
-import nu.marginalia.crawling.model.CrawlingSpecification;
+import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.model.gson.GsonFactory;
 
 import java.io.*;

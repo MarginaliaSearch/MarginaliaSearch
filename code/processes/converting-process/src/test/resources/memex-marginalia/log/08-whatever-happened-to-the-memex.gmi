@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Whatever happened to the Memex? [2021-07-28]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/08-whatever-happened-to-the-memex.gmi" class="path file"><img src="/ico/file.png" title="file"> 08-whatever-happened-to-the-memex.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Whatever happened to the Memex? [2021-07-28]</h1>
+<br>
+I stumbled upon the Memex, which is a spiritual predecessor to hypertext technology. It was supposed to be a sort of personal data store that allows the user to link and annotate various documents in order to produce a sort of external memory, a private knowledge bank that associates ideas in a similar way a human brain does. The operator could also save and share associative trails through the information.<br>
+<br>
+I found it fascinating because it seems so extremely doable with today's technology, yet at the same time extremely foreign to how we use technology today, i.e. as a social tool, a mechanism for self-promotion.<br>
+<br>
+There are elements of wiki in the Memex, but the big difference is that the Memex is a personal database, rather than one big shared "world-brain" like wikipedia could be described as; the latter is problematic as it shuts down independent thought rather than augmenting it. Truth becomes something to look up, rather than investigate.<br>
+<br>
+Andy Matuschak seems to have discovered a similar idea with his "evergreen notes"-concept, but seems to emphasize the habitual note-writing over the technological aspect. He derives his ideas from an interesting 17th century index card technique called "zettelkasten" that also has similarities to hypertext.<br>
+<br>
+There may be a benefit to having relatively immutable entries in a knowledge database, such as with the Memex (which was supposed to use microfilm), or boxes full of index cards. Having editable pages, like in a wiki, may lead to endless fiddling with largely inconsequential details.<br>
+<br>
+I do think that it's very easy to fall into the trap of worrying so much about your organizational tools and habits that you don't actually use them for much of anything useful other than writing about your organizational tools and habits; and some of the people involved with zettelkasten seems to have fallen into that trap head first.<br>
+<br>
+The rabbit hole further took me to a recording of "The Mother of All Demos", a 1968 live-demo of hypertext technology and various computer-human-interaction experiments. The demo is 90 minutes long from multiple locales. That is impressive to say the least. I found some of the presentational and navigational capabilities fascinating, like a strange hybrid between a wiki and vim.<br>
+<br>
+In closing I think we aren't using leveraging hypertext nearly as much as we could. Almost everything is using *HyperText* MarkupLanguage, but almost nothing makes use of the rather astounding associative capabilities of hypertext.<br>
+<br>
+<h2 id="1.1">A "memex trail" to follow</h2>
+<br>
+<dl class="link"><dt><a class="external" href="https://search.marginalia.nu/wiki/Memex">https://search.marginalia.nu/wiki/Memex</a></dt><dd>Memex [wikipedia via marginalia]</dd></dl>
+<dl class="link"><dt><a class="external" href="https://www.youtube.com/watch?v=yJDv-zdhzMY">https://www.youtube.com/watch?v=yJDv-zdhzMY</a></dt><dd>The Mother of All Demos (1968) [youtube]</dd></dl>
+<dl class="link"><dt><a class="external" href="https://search.marginalia.nu/wiki/Zettelkasten">https://search.marginalia.nu/wiki/Zettelkasten</a></dt><dd>Zettelkasten [wikipedia via marginalia]</dd></dl>
+<a class="external" href="https://notes.andymatuschak.org/About_these_notes">https://notes.andymatuschak.org/About_these_notes</a><br>
+<dl class="link"><dt><a class="external" href="https://search.marginalia.nu/wiki/Commonplace_book">https://search.marginalia.nu/wiki/Commonplace_book</a></dt><dd>Commonplace Book [wikipedia via marginalia]</dd></dl>
+<br>
+<h2 id="1.2">Replies</h2>
+<br>
+<dl class="link"><dt><a class="external" href="https://proxy.vulpes.one/gemini/gemini.susa.net/custodians_of_knowledge.gmi">gemini://gemini.susa.net/custodians_of_knowledge.gmi</a></dt><dd>Custodians of Knowledge</dd></dl>
+<br>
+<h2 id="1.3">Topics</h2>
+<br>
+<a class="internal" href="/topic/web-design.gmi">/topic/web-design.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>08-whatever-happened-to-the-memex.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/08-whatever-happened-to-the-memex.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/08-whatever-happened-to-the-memex.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/08-whatever-happened-to-the-memex.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/08-whatever-happened-to-the-memex.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Whatever happened to the Memex? [2021-07-28]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 A &quot;memex trail&quot; to follow</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Replies</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Topics</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

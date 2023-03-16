@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 import nu.marginalia.index.client.IndexClient;
 import nu.marginalia.index.client.model.results.SearchResultItem;
 import nu.marginalia.index.client.model.query.SearchSpecification;
+import nu.marginalia.index.client.model.results.SearchResultSet;
 import nu.marginalia.search.model.PageScoreAdjustment;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.results.SearchResultDecorator;
@@ -37,7 +38,7 @@ public class SearchQueryIndexService {
     }
 
     public List<UrlDetails> executeQuery(Context ctx, SearchQuery processedQuery) {
-        final List<SearchResultItem> results = indexClient.query(ctx, processedQuery.specs);
+        final SearchResultSet results = indexClient.query(ctx, processedQuery.specs);
 
         List<UrlDetails> urlDetails = resultDecorator.getAllUrlDetails(results);
 

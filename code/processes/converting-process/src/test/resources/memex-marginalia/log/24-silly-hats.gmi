@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Thoughts on Silly Hats [2021-09-27]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/24-silly-hats.gmi" class="path file"><img src="/ico/file.png" title="file"> 24-silly-hats.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Thoughts on Silly Hats [2021-09-27]</h1>
+<br>
+If you look back in history to the turn of the 20th century, you will find a lot of people wearing hats. Women wore some arguably pretty funny over the top hats. A while earlier, over the men were arguably funny top hats. This isn't the first time men and women wore funny clothes. The aristocrats in 1680s France looked pretty silly too. <br>
+<br>
+The reason we do this, wear silly hats, is because it is fashionable. Compliance with the some perceived fashion trend is one way we compete with fellow human beings, a measuring stick we use to evaluate our standing within society. Oh, you merely wear a modest and peculiar hat? Well mine is bigger and sillier still, therefore I am better! <br>
+<br>
+Eventually everyone collectively realizes things have gotten out of hand, and things die down for a few decades until a new form of hat starts to emerge.<br>
+<br>
+It isn't just in fashion we do this. Any norm can be a hat. Teenagers often seek out really obscure music or movies for the sake of having something that the other kids don't have, it creates identity, even if it's "the guy that listens to micronesian corecore music from the '70s". Another harmless example is imposing limitations and strictures on what we eat. <br>
+<br>
+It absolutely happens in software too. There are definitely people who perceive themselves as gods among men for using the most insanely obscure compile-everything-by-hand Linux distribution, or only using software that adheres to some super strict set of license requirements. <br>
+<br>
+Before you break out the pitchforks, I'm not saying that any of this is pointless. In fact, eschewing norms can be another example of a silly hat; and a society without values, or with values we do not subscribe to, is not something that is conducive to happiness (c.f. Durkheim's Anomie). That is, we need these measuring sticks to impose some semblance of structure on our social surroundings, and that structure isn't inherently a prison, but something we crave. We are animals that feel good wearing silly hats, and naked without them. There really is no getting away from the silly hats.<br>
+<br>
+The hats have a dark side, too.<br>
+<br>
+Some participants of hustle culture makes a silly hat of their poor life balance, working 160 hours a week and barely stopping to sleep. Some people make a silly hat out of their physique, starving themselves to stay impressively thin, or living in a gym to stay impressively wide.<br>
+<br>
+Intolerance is a hat many compete in growing to silly proportions. When they perceive that some intolerance is approved of they grow theirs even more intolerant.<br>
+<br>
+The opposite can also be a silly hat, turning the other cheek even in the face of the most grievous insult. <br>
+<br>
+On that note, according to Eusebius of Caesarea, Christian ascetic Origen of Alexandria supposedly took his pious chastity so far that he castrated himself. It's questionable whether this actually happened. It more than likely was a smear campaign levied against Origen, but the fact that this was an accusations someone thought sounded credible does say a lot on its own about the self-destructive power of silly hats.<br>
+<br>
+While there appears no way of getting rid of hat-wearing without causing far bigger problems than the hats ever were, I think it's good to be aware when we are engaged in this practice as it is a force that can drive us to do silly things indeed. Maybe we should be better at deflating the hats before they grow silly beyond all proportion. <br>
+<br>
+<h2 id="1.1">Illustrations</h2>
+<br>
+<dl class="link"><dt><a class="internal" href="/pics/silly-hat.png">/pics/silly-hat.png</a></dt><dd>A silly turn-of-the-century hat</dd></dl>
+<dl class="link"><dt><a class="internal" href="/pics/origen-self-castration.png">/pics/origen-self-castration.png</a></dt><dd>A medieval rendering of Origen castrating himself</dd></dl>
+<br>
+<h2 id="1.2">Further Reading</h2>
+<br>
+<a class="external" href="https://encyclopedia.marginalia.nu/wiki/Anomie">https://encyclopedia.marginalia.nu/wiki/Anomie</a><br>
+<br>
+<h2 id="1.3">Replies</h2>
+<br>
+<a class="external" href="https://matthewgraybosch.com/blog/re-thoughts-on-silly-hats.html">https://matthewgraybosch.com/blog/re-thoughts-on-silly-hats.html</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>24-silly-hats.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/24-silly-hats.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/24-silly-hats.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/24-silly-hats.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/24-silly-hats.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Thoughts on Silly Hats [2021-09-27]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Illustrations</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Further Reading</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Replies</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

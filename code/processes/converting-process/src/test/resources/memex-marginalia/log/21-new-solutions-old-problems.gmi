@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - New Solutions Creating Old Problems [2021-09-14]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/21-new-solutions-old-problems.gmi" class="path file"><img src="/ico/file.png" title="file"> 21-new-solutions-old-problems.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">New Solutions Creating Old Problems [2021-09-14]</h1>
+<br>
+I've spent some time the last week optimizing how the search engine identifies appropriate search results, putting far more consideration into where and how the search terms appear in the page when determining the order they are presented. <br>
+<br>
+Search-result relevance is a pretty difficult problem, but I do think the changes has brought the search engine in a very good direction.<br>
+<br>
+A bit simplified, I'm building tiered indices, ranging from<br>
+<br>
+<ul>
+<li>Words in the title and first H1-tag</li>
+<li>Words in the title, all H*-tags, and &lt;B&gt;-tags,  keyword meta-tags.</li>
+<li>Capitalized Words in text</li>
+<li>Words in text</li></ul>
+<br>
+The indices are queried in the order listed above, so that (hopefully) most relevant results are extracted before mere off-hand mentions.<br>
+<br>
+Another change is that queries are broken down into several possible N-grams, which are searched in decreasing order of length. I did this to a very basic degree before, but this is much more exhaustive.<br>
+<br>
+Determining that a term doesn't exist in the index is an incredibly fast O(1) process, so performing many queries for N-grams that don't exist isn't a problem, even if this results in a large number of queries for a single search.<br>
+<br>
+Example: If you type "Starcraft 2 Legacy of the Void" into the search bar, the search server will perform these queries:<br>
+<br>
+<pre>
+starcraft_2_legacy_of|the_void 
+starcraft_2|legacy_of_the_void 
+starcraft_2_legacy|of_the_void 
+starcraft_2_legacy|of_the|void 
+starcraft_2|legacy_of_the|void 
+starcraft_2|legacy|of_the_void 
+starcraft_2|legacy_of|the_void 
+starcraft_2|legacy|of_the|void </pre>
+<br>
+The search code only constructs (up to) 4-grams, and caps them to at most 16 to prevent denial-of-service searches that generate astronomical numbers of queries in the backend. <br>
+<br>
+There is no "starcraft|2|legacy|of|the|void" because "2", "of", and "the" are stop words; that is words that are not indexed in isolation and can be trivially discarded from consideration. <br>
+<br>
+I think I've made good progress, since a lot of the problems I'm starting to encounter aren't teething problems, but the sort of problems "real" search engines struggle with. That's actually pretty exciting!<br>
+<br>
+<h2 id="1.1">Keyword Stuffing and Search Engine Manipulation</h2>
+<br>
+Keyword stuffing is really an old problem, and why many search engines for example disregard keyword-tags. It really is what it sounds like. I ended up looking at the tag only when it is sufficiently short. This seems a workable compromise for now. <br>
+<br>
+I also had some problems with extremely SEO-savvy sites showing up in the top results. Like, your mobile apps and stuff, but that turned out to be the result of a bug in the order the indices were prioritized, so now they are back in the bottom of the page.<br>
+<br>
+<h2 id="1.2">Very Esoteric Queries</h2>
+<br>
+If you search for "Scamander", you'll get an idea of what I mean. <br>
+<br>
+It's a river in Turkey, known today as Karamenderes. In the Iliad, Achilles who is known for his mood swings, gets so goddamn angry he picks a fight with the river Scamander, known as Xanthos by the gods (yeah, I don't get it either). More recently, Newt Scamander is also some J.K. Rowling character.  <br>
+<br>
+There just aren't any good results for Scamander. If you scroll down quite a bit you may find a passage in Cratylus by Plato where Socrates is appealing to the wisdom of the Iliad to make a point about names and their relationship to what they represent, but that's the absolute highlight of the search results. <br>
+<br>
+You get better results if you qualify the search as "scamander iliad", or "newt scamander", but this is a tricky one. It hopefully will improve as I index further. <br>
+<br>
+To be fair, there really aren't any good results on google either. Just storefronts shilling Harry Potter merchandise, but that's to be expected.<br>
+<br>
+<h2 id="1.3">Political Extremism, and Other Distasteful Content</h2>
+<br>
+There has always been some amount of results where the author is frothing at the mouth over cultural marxists or the jews or Trump or various culture wars nonsense, but that's just the nature of the Internet in the 2020s. For a while it felt like I was getting too many of these results, even in queries it really shouldn't show up, but it seems to have settled down a bit. <br>
+<br>
+In general, I do not believe it is my job to police other peoples' ideas, no matter how much I disagree with them. Thought-policing is far greater evil than disagreeable ideas.<br>
+<br>
+At the same time I don't want my search engine to become the go-to search engine for extremists. That's not a good look. But I'll cross that bridge when I come to it.<br>
+<br>
+So far I'm doing nothing as long as they aren't doing bait-and-switch tactics that cause them to show up in innocent queries. If I find something especially distasteful I might just blacklist the site.<br>
+<br>
+I've employed a similar tactic toward porn, escort sites, and the like. If I find them while searching for something innocent, I'm blacklisting them; but I'm not going out of my way to make sure they don't exist anywhere in the index, as even if I wanted to, that's just not feasible. There is a lot of smut on the Internet.<br>
+<br>
+<h2 id="1.4">Search Engine</h2>
+<br>
+<a class="external" href="https://search.marginalia.nu/">https://search.marginalia.nu/</a><br>
+<br>
+<h2 id="1.5">See Also</h2>
+<br>
+<a class="external" href="https://encyclopedia.marginalia.nu/wiki/N-gram">https://encyclopedia.marginalia.nu/wiki/N-gram</a><br>
+<a class="external" href="https://encyclopedia.marginalia.nu/wiki/Stop_word">https://encyclopedia.marginalia.nu/wiki/Stop_word</a><br>
+<br>
+<h2 id="1.6">Topic</h2>
+<br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>21-new-solutions-old-problems.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/21-new-solutions-old-problems.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/21-new-solutions-old-problems.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/21-new-solutions-old-problems.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 New Solutions Creating Old Problems [2021-09-14]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Keyword Stuffing and Search Engine Manipulation</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Very Esoteric Queries</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Political Extremism, and Other Distasteful Content</a>
+    
+        <a href="#1.4" class="heading-2">1.4 Search Engine</a>
+    
+        <a href="#1.5" class="heading-2">1.5 See Also</a>
+    
+        <a href="#1.6" class="heading-2">1.6 Topic</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/log/31-ngram-needles.gmi">/log/31-ngram-needles.gmi</a></dt>
+<dd>Shaking N-gram needles from large haystacks [2021-10-22] - See Also</dd>
+
+<dt><a href="/log/37-keyword-extraction.gmi">/log/37-keyword-extraction.gmi</a></dt>
+<dd>A Jaunt Through Keyword Extraction [ 2021-11-11 ] - See Also</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

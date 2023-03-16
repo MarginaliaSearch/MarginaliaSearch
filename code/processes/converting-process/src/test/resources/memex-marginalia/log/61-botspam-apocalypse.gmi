@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Botspam Apocalypse [ 2022-08-03 ]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/61-botspam-apocalypse.gmi" class="path file"><img src="/ico/file.png" title="file"> 61-botspam-apocalypse.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Botspam Apocalypse [ 2022-08-03 ]</h1>
+<br>
+Bots are absolutely crippling the Internet ecosystem. <br>
+<br>
+The "future" in the film Terminator 2 is set in the 2020s. If you apply its predictions to the running of a website, it's honestly very accurate.<br>
+<br>
+Modern bot traffic is virtually indistinguishable from human traffic, and can pummel any self-hosted service into the ground, flood any form with comment spam, and is a chronic headache for almost any small scale web service operator. <br>
+<br>
+They're a major part in killing off web forums, and a significant wet blanket on any sort of fun internet creativity or experimentation. <br>
+<br>
+The only ones that can survive the robot apocalypse is large web services. Your reddits, and facebooks, and twitters, and SaaS-comment fields, and discords. They have the economies of scale to develop viable countermeasures, to hire teams of people to work on the problem full time and maybe at least keep up with the ever evolving bots. <br>
+<br>
+The rest are forced to build web services with no interactivity, or seek shelter behind something like Cloudflare, which discriminates against specific browser configurations and uses IP reputation to selectively filter traffic. <br>
+<br>
+If Marginalia Search didn't use Cloudflare, it couldn't serve traffic. There has been upwards of 15 queries per second from bots. There is just no way to deal with that sort of traffic, barely even to reject it. The search engine is hosted on residential broadband, it's hosted on a souped up PC. <br>
+<br>
+I can't afford to operate a datacenter to cater to traffic that isn't even human. This spam traffic is all from botnets with IPs all over the world. Tens, maybe hundreds of thousands of IPs, each with a relatively modest query rates, so rate limiting does all of bupkis.<br>
+<br>
+The only option is to route all search traffic through this sketchy third party service. It sucks in a wider sense because it makes the Internet worse, it drives further centralization of any sort of service that offers communication or interactivity, it turns us all into renters rather than owners of our presence on the web. That is the exact opposite of what we need. <br>
+<br>
+The other option would be to require a log-in from the users, which besides from being inconvenient, I don't want to know who is using the search engine, but if I don't know who is using the search engine, I can't know who is abusing the search engine. <br>
+<br>
+Cloudflare is the *lesser* evil in this case. It's not fair, but it at least allows the service to stay open and serve traffic in a way that at least doesn't inconvenience all human visitors all the time.<br>
+<br>
+The API gateway is another stab at this, you get to choose from either a public API with a common rate limit, or revealing your identity with an API key (and sacrificing anonymity).<br>
+<br>
+The other alternatives all suck to the extent of my knowledge, they're either prohibitively convoluted, or web3 cryptocurrency micro-transaction nonsense that while sure it would work, also monetizes every single interaction in a way that is more dystopian than the actual skull-crushing robot apocalypse.<br>
+<br>
+If anyone could go ahead and find a solution to this mess, that would be great, because it's absolutely suffocating the internet, and it's painful to think about all the wonderful little projects that get cancelled or abandoned when faced with the reality of having to deal with such an egregiously hostile digital ecosystem.<br>
+<br>
+<h2 id="1.1">See Also</h2>
+<br>
+<a class="internal" href="/log/29-botnet-ddos.gmi">/log/29-botnet-ddos.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>61-botspam-apocalypse.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/61-botspam-apocalypse.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/61-botspam-apocalypse.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/61-botspam-apocalypse.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Botspam Apocalypse [ 2022-08-03 ]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 See Also</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/log/62-marginaliacoin.gmi">/log/62-marginaliacoin.gmi</a></dt>
+<dd>Marginaliacoin, and hidden forums [ 2022-08-18 ] - See Also</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

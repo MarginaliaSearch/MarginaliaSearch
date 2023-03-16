@@ -2,7 +2,7 @@ package nu.marginalia.loading.loader;
 
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
-import nu.marginalia.keyword_extraction.model.DocumentKeywords;
+import nu.marginalia.keyword.model.DocumentKeywords;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.id.EdgeId;

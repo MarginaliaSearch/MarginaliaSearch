@@ -1,7 +1,7 @@
 package nu.marginalia.converting.model;
 
 import lombok.ToString;
-import nu.marginalia.keyword_extraction.model.DocumentKeywordsBuilder;
+import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.crawl.UrlIndexingState;
 import nu.marginalia.model.EdgeUrl;

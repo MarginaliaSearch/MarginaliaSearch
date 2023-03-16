@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Floyd-Steinberg dithering</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/pics" class="path dir"><img src="/ico/dir.png" title="dir"> pics</a>
+
+    <a href="/pics/raster-test" class="path dir"><img src="/ico/dir.png" title="dir"> raster-test</a>
+
+    <a href="/pics/raster-test/index.gmi" class="path file"><img src="/ico/file.png" title="file"> index.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Floyd-Steinberg dithering</h1>
+<br>
+These are some files from experimenting with dithering.<br>
+<br>
+The purpose is both compresion as well as creating a stylistic alignment with the lo-fi color scheme that constitutes marginalia.nu's visual appearance.<br>
+<br>
+The latter is accomplished through using the colors that appear in the website as a palette for the dithering algorithm. The palette is only 10 colors, which fits with ample room to spare in a 4 bit palette.<br>
+<br>
+The low resolution and somewhat unique appearance is also something that makes the images appear out-of-place anywhere else; a deterrent against freebooting.<br>
+<br>
+Note: Some of the sample files have a bug where white is transparent. I don't really understand what causes it, but it seems the second color in the palette is always made transparent. I've been able to work around it by adding a second white color. Some files (volvo.png and socrates.png) have been re-uploaded with the fixed algorithm. <br>
+<br>
+<a class="external" href="https://encyclopedia.marginalia.nu/wiki/Floyd-Steinberg_Dithering">https://encyclopedia.marginalia.nu/wiki/Floyd-Steinberg_Dithering</a><br>
+<a class="external" href="https://encyclopedia.marginalia.nu/wiki/Color_difference">https://encyclopedia.marginalia.nu/wiki/Color_difference</a><br>
+<br>
+<a class="internal" href="/projects/memex.gmi">/projects/memex.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>index.gmi</h1>
+    <a class="download" href="/api/raw?url=/pics/raster-test/index.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/pics/raster-test/index.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/pics/raster-test/index.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/pics/raster-test/index.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Floyd-Steinberg dithering</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

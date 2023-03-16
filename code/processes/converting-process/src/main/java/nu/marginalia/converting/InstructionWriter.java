@@ -6,7 +6,7 @@ import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.converting.instruction.Instruction;
 import nu.marginalia.converting.instruction.Interpreter;
-import nu.marginalia.keyword_extraction.model.DocumentKeywords;
+import nu.marginalia.keyword.model.DocumentKeywords;
 import nu.marginalia.converting.instruction.instructions.DomainLink;
 import nu.marginalia.converting.instruction.instructions.LoadProcessedDocument;
 import nu.marginalia.converting.instruction.instructions.LoadProcessedDocumentWithError;
@@ -112,12 +112,11 @@ public class InstructionWriter {
 
         @Override
         public void loadProcessedDocument(LoadProcessedDocument loadProcessedDocument) {
-            ok++;
+
         }
 
         @Override
         public void loadProcessedDocumentWithError(LoadProcessedDocumentWithError loadProcessedDocumentWithError) {
-            error++;
         }
 
         @Override
@@ -126,5 +125,11 @@ public class InstructionWriter {
 
         @Override
         public void loadDomainRedirect(DomainLink link) {}
+
+        @Override
+        public void loadDomainMetadata(EdgeDomain domain, int knownUrls, int goodUrls, int visitedUrls) {
+            ok += goodUrls;
+            error += visitedUrls - goodUrls;
+        }
     }
 }

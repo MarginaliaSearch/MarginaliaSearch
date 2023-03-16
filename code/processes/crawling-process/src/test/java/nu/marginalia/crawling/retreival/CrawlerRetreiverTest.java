@@ -3,7 +3,7 @@ package nu.marginalia.crawling.retreival;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.HttpFetcher;
 import nu.marginalia.crawling.model.CrawledDocument;
-import nu.marginalia.crawling.model.CrawlingSpecification;
+import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.crawling.model.SerializableCrawlData;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;

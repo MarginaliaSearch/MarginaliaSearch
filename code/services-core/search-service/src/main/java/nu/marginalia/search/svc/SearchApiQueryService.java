@@ -62,7 +62,7 @@ public class SearchApiQueryService {
     ApiSearchResult convert(UrlDetails url) {
         List<List<ApiSearchResultQueryDetails>> details = new ArrayList<>();
         if (url.resultItem != null) {
-            var bySet = url.resultItem.scores.stream().collect(Collectors.groupingBy(SearchResultKeywordScore::subquery));
+            var bySet = url.resultItem.keywordScores.stream().collect(Collectors.groupingBy(SearchResultKeywordScore::subquery));
 
             outer:
             for (var entries : bySet.values()) {

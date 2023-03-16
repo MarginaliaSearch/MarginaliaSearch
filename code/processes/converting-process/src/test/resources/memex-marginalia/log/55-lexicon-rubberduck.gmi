@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Lexicon Architectural Rubberducking [ 2022-04-11 ]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/55-lexicon-rubberduck.gmi" class="path file"><img src="/ico/file.png" title="file"> 55-lexicon-rubberduck.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Lexicon Architectural Rubberducking [ 2022-04-11 ]</h1>
+<br>
+I'm going to think out loud for a moment about a problem I'm considering. <br>
+<br>
+RAM is a precious resource on any server. Look at VPS servers, and you'll be hard pressed to find one with much more than 32 Gb. Look at leasing a dedicated server, and it's the RAM that really drives up the price. My server has 128 Gb, and it it's so full it needs to unbutton its pants to sit down comfortably. Anything I can offload to disk is great.<br>
+<br>
+A significant amount of the memory usage is in the lexicon. The lexicon is a mapping between search terms, words (sometimes N-grams) to a unique numeric ID, as these IDs are a lot more space-efficient than indexing words as strings. <br>
+<br>
+The contract for the lexicon is that every time you enter a specific string, you get the same number back. This number is unique to the string.<br>
+<br>
+At the moment of writing, the lexicon has about 620,000,000 entries. <br>
+<br>
+These strings are of average length 6-7 bytes, so the smallest it's ever going to get is about 4-5 Gb. The strings are already compressed.<br>
+<br>
+What I'm using is:<br>
+<br>
+<pre>
+  8 Gb off-heap for a hash table 
++ 6 Gb on-heap for metadata
++ 5 Gb off-heap for the string data itself
+-------
+= about 20 Gb</pre>
+<br>
+Assigning unique IDs to arbitrary length strings isn't entirely a trivial problem when the number of IDs creeps toward the billions, but this memory consumption is still unreasonable.<br>
+<br>
+Maybe a DBMS can fix this? URLs mapping on MariaDB, 200k URLs, is just ridiculously large ~40Gb. MariaDB probably can't solve this with the hardware I have available. Maybe some other database?<br>
+<br>
+<h2 id="1.1">What if we just use hashes as identifiers?</h2>
+<br>
+Can we find a hash of such a size that we can accept hash collisions as so unlikely it won't matter?<br>
+<br>
+The Birthday Paradox becomes a significant problem when the number of items N is such that the number of distinct hash values M &lt; N^2.<br>
+<br>
+<pre>
+M   = 18446744073709551616 = 2^64 
+N^2 = 384400000000000000   = (620,000,000)^2</pre>
+<br>
+It *could* work with a 64 bit hash, but a 128 bit hash would feel a lot less sketchy. It would also use a lot more space. Caveat: I would need a very good hash function for this math to work out. Murmur3?<br>
+<br>
+<h2 id="1.2">Hold my beer...</h2>
+<br>
+What if we create a hash table on disk, the key is the hash from above, we size it to 2^32 entries, this should allow for a lexicon of ~2^31 entries with good retrieval performance. <br>
+<br>
+Disk size would be 16 or 32 Gb depending on 64 or 128 bit hashes. We can use the cell number the final hash is put into as an ID.<br>
+<br>
+This is just crazy enough to work, but it would depend on having extremely solid random write IOPS on the disk, or enough RAM to do the construction entirely in memory. Maybe journal the writes and then reconstruct the hash table only after a crash. This *may* be acceptable, but makes a ton of RAM and/or enterprise SSDs mandatory for running this software.<br>
+<br>
+An additional drawback is that this mapping can't ever grow beyond 2 billion entries. This may be acceptable, might be able to scooch it up by multiples of 2 by by partitioning on some bit that isn't part of the table hash. The drawback is that this configuration can't be changed without reconstructing the entire index.<br>
+<br>
+The real upside is that this may make it possible to remove the requirement for 7 bit ASCII keywords. <br>
+<br>
+Need to sleep on this.<br>
+<br>
+<h2 id="1.3">Topics</h2>
+<br>
+<a class="internal" href="/topic/programming.gmi">/topic/programming.gmi</a><br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+<br>
+<h2 id="1.4">See Also</h2>
+<br>
+<a class="internal" href="/log/06-optimization.gmi">/log/06-optimization.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>55-lexicon-rubberduck.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/55-lexicon-rubberduck.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/55-lexicon-rubberduck.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/55-lexicon-rubberduck.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/55-lexicon-rubberduck.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Lexicon Architectural Rubberducking [ 2022-04-11 ]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 What if we just use hashes as identifiers?</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Hold my beer...</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Topics</a>
+    
+        <a href="#1.4" class="heading-2">1.4 See Also</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

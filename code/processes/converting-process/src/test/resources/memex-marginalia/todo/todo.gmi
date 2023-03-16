@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Todo</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/todo" class="path dir"><img src="/ico/dir.png" title="dir"> todo</a>
+
+    <a href="/todo/todo.gmi" class="path file"><img src="/ico/file.png" title="file"> todo.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<!-- pragma: TASKS -->
+<h1 id="1">Todo</h1>
+<br>
+<a class="task-pointer" name="t1"></a><div class="task todo" id="1">- finish MEMEX CSS</div>
+<br>
+<a class="task-pointer" name="t2"></a><div class="task todo" id="2">- add ability to tune term priority</div>
+<br>
+<br>
+<a class="task-pointer" name="t3"></a><div class="task todo" id="3">- move browse feature out of search service</div>
+<a class="task-pointer" name="t3.1"></a><div class="task done" id="3.1">-- separate screenshots module (/)</div>
+<br>
+<a class="task-pointer" name="t4"></a><div class="task unknown" id="4">- random feature in API (?)</div>
+<br>
+<a class="task-pointer" name="t5"></a><div class="task todo" id="5">- regenerate Encyclopedia with new dump</div>
+<a class="task-pointer" name="t5.1"></a><div class="task todo" id="5.1">-- update stylesheet</div>
+<a class="task-pointer" name="t5.2"></a><div class="task unknown" id="5.2">-- update document database (?)</div>
+<br>
+<a class="task-pointer" name="t6"></a><div class="task todo" id="6">- different subdomains (operation Voight-Kampff)</div>
+<a class="task-pointer" name="t6.1"></a><div class="task todo" id="6.1">-- global rate limit HTTPS, secure with no MITM</div>
+<a class="task-pointer" name="t6.2"></a><div class="task todo" id="6.2">-- global rate limit HTTP for legacy systems</div>
+<a class="task-pointer" name="t6.3"></a><div class="task todo" id="6.3">-- backup access via Cloudflare for rate-limit breaching events</div>
+<br>
+<a class="task-pointer" name="t7"></a><div class="task todo" id="7">- create a form for submitting domains</div>
+<a class="task-pointer" name="t8"></a><div class="task todo" id="8">- special/annotations.gmi</div>
+<pre class="literal">
+  Add ability to add remarks to files, esp.
+  pictures. </pre>
+<a class="task-pointer" name="t9"></a><div class="task todo" id="9">- CSV support for MEMEX</div>
+<a class="task-pointer" name="t9.1"></a><div class="task todo" id="9.1">-- Overhaul file types in general</div>
+<br>
+<a class="task-pointer" name="t10"></a><div class="task todo" id="10">- Merge MEMEX with rest of marginalia infrastructure</div>
+<a class="task-pointer" name="t10.1"></a><div class="task done" id="10.1">-- Gemini (/)</div>
+<a class="task-pointer" name="t10.2"></a><div class="task todo" id="10.2">-- Website</div>
+<a class="task-pointer" name="t10.2.1"></a><div class="task done" id="10.2.1">--- Copy over pages from website (/)</div>
+<a class="task-pointer" name="t10.2.2"></a><div class="task skip" id="10.2.2">--- Redirect website traffic to memex (x)</div>
+<a class="task-pointer" name="t10.3"></a><div class="task unknown" id="10.3">-- Encyclopedia (?)</div>
+ter<br>
+<br>
+<h2 id="1.1">Backlog </h2>
+<br>
+<a class="task-pointer" name="t11"></a><div class="task todo" id="11">- Break apart index service</div>
+<a class="task-pointer" name="t11.1"></a><div class="task todo" id="11.1">-- Index Writer</div>
+<a class="task-pointer" name="t11.2"></a><div class="task todo" id="11.2">-- Dictionary Service</div>
+<a class="task-pointer" name="t11.3"></a><div class="task todo" id="11.3">-- Index Reader</div>
+<a class="task-pointer" name="t11.4"></a><div class="task todo" id="11.4">-- Index Conver</div>
+<br>
+<a class="task-pointer" name="t12"></a><div class="task unknown" id="12">- Persistent task links (what's a good scheme?) (?)</div>
+<br>
+<a class="task-pointer" name="t13"></a><div class="task todo" id="13">- New motherboard for server :-/</div>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>todo.gmi</h1>
+    <a class="download" href="/api/raw?url=/todo/todo.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/todo/todo.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/todo/todo.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/todo/todo.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Todo</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Backlog </a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

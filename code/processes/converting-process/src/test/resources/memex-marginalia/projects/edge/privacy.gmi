@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Privacy Considerations [2021-10-21]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/projects" class="path dir"><img src="/ico/dir.png" title="dir"> projects</a>
+
+    <a href="/projects/edge" class="path dir"><img src="/ico/dir.png" title="dir"> edge</a>
+
+    <a href="/projects/edge/privacy.gmi" class="path file"><img src="/ico/file.png" title="file"> privacy.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Privacy Considerations [2021-10-21]</h1>
+<br>
+This privacy policy is in effect on search.marginalia.nu.<br>
+<br>
+<pre>
+Javascript:             Minimal
+Cookies:                No
+Local Storage:          No
+Tracking Pixels:        No
+Social Media Buttons:   No
+Third Party Requests:   No
+CDN                     Yes (sadly)
+Access Logs:            Yes
+Log Retention:          Up to 24h</pre>
+<br>
+No information about which links are clicked is gathered, and it is not possible to historically correlate IP address to search terms, and anonymized internal identifiers are designed not to be stable over time. <br>
+<br>
+Overall I try to respect privacy as much as possible while still allowing for things like rate-limiting and bug fixing. There is no tracking and unnecessary logging of IP addresses is reduced to a bare minimum. <br>
+<br>
+Due to a prolonged and aggressive botnet attack I've had to put the server behind a CDN, which means I cannot guarantee perfect anonymity as I do not have insight into what the CDN provider is doing.<br>
+<br>
+Also, with sufficient time and a large IT forensics budget, someone could probably work out who you are and what you have searched for. I have however taken measures to make that as time consuming and expensive as possible, while at the same retaining some ability to diagnose problems with the set up and infrastructure.<br>
+<br>
+Nginx access logging &gt;is&lt; enabled, but old logs are not archived, but rather shredded and purged every 24 hours.<br>
+<br>
+Internal server logs are retained for a longer time period, but IP addresses are anonymized into a 32 bit hash with a random 96 bit salt that rotates on irregular intervals between 5 and 15 minutes.  This is necessary for rate limiting. <br>
+<br>
+Don't hesitate to reach out if you have questions or concerns.<br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>privacy.gmi</h1>
+    <a class="download" href="/api/raw?url=/projects/edge/privacy.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/projects/edge/privacy.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/projects/edge/privacy.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Privacy Considerations [2021-10-21]</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/projects/edge/about.gmi">/projects/edge/about.gmi</a></dt>
+<dd>About search.marginalia.nu</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

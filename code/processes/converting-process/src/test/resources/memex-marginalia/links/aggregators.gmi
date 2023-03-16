@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Aggregators</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/links" class="path dir"><img src="/ico/dir.png" title="dir"> links</a>
+
+    <a href="/links/aggregators.gmi" class="path file"><img src="/ico/file.png" title="file"> aggregators.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Aggregators</h1>
+<br>
+These are the aggregators that marginalia.nu/log appears on<br>
+<br>
+<a class="external" href="https://proxy.vulpes.one/gemini/warmedal.se/~antenna/">gemini://warmedal.se/~antenna/</a><br>
+<a class="external" href="https://nightfall.city/main-street/">https://nightfall.city/main-street/</a><br>
+<a class="external" href="https://proxy.vulpes.one/gemini/nightfall.city/main-street/">gemini://nightfall.city/main-street/</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>aggregators.gmi</h1>
+    <a class="download" href="/api/raw?url=/links/aggregators.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/links/aggregators.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/links/aggregators.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Aggregators</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/log">/log</a></dt>
+<dd>Gemlog</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

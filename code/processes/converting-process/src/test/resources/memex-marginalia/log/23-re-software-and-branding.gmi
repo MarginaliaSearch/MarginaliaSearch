@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Re: Software and Branding [2021-09-21]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/23-re-software-and-branding.gmi" class="path file"><img src="/ico/file.png" title="file"> 23-re-software-and-branding.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Re: Software and Branding [2021-09-21]</h1>
+<br>
+<a class="external" href="https://proxy.vulpes.one/gemini/friends.riverside.camp/~clarity/journal/branding.gmi">gemini://friends.riverside.camp/~clarity/journal/branding.gmi</a><br>
+<a class="external" href="https://proxy.vulpes.one/gemini/idiomdrottning.org/re-branding">gemini://idiomdrottning.org/re-branding</a><br>
+<br>
+Some interesting thoughts going around on the topic of branding in software and websites. I've had thoughts like these too, and designed a lot of my website purposefully un-branded. I have no logos, no banners, barely navigational links. I figured I would just see what happens if you subvert this paradigm of web design, since it is stuff you typically just "scroll past" to get to what you care about like you skip the beginning of every youtube video. Since the point has never been to create a brand, I figured I would elevate the message so far above everything else that there simply is nothing else.<br>
+<br>
+In light of how it's turning out, I'm starting to re-evaluate this decision a bit. I see people get really confused when they visit my web pages. All the pages have the same nicotine color, the same visual style, and there is no logo to really distinguish them, and to the extent I sign my work it's hidden in some corner as I believe the message is always more important than the messenger. <br>
+<br>
+As annoying as it is to have branding, I'm beginning to get the sense that navigation hinges upon visual landmarks and distinct features, on the established language of expectations and signs. And removing all these landmarks creates a disorienting whiteout. <br>
+<br>
+The bigger my website is getting, the more confusing it is becoming to navigate. I think I need to think about how this all should connect together. Right now almost none of it does.<br>
+<br>
+I have these pieces, but going from one to the other isn't easy at all, it hinges upon either exploring my defunct blog (in Swedish), or going deep into the projects directory of the memex.<br>
+<br>
+It's been in the back of my mind for a while now, I need to figure out a way to tie these things all together:<br>
+<br>
+<a class="external" href="https://memex.marginalia.nu/">https://memex.marginalia.nu/</a><br>
+<a class="external" href="https://encyclopedia.marginalia.nu/">https://encyclopedia.marginalia.nu/</a><br>
+<a class="external" href="https://search.marginalia.nu/">https://search.marginalia.nu/</a><br>
+<a class="external" href="https://reddit.marginalia.nu/">https://reddit.marginalia.nu/</a><br>
+<a class="external" href="https://www.marginalia.nu/podcast/new.html">https://www.marginalia.nu/podcast/new.html</a><br>
+<br>
+<h2 id="1.1">Topics</h2>
+<br>
+<a class="internal" href="/topic/web-design.gmi">/topic/web-design.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>23-re-software-and-branding.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/23-re-software-and-branding.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/23-re-software-and-branding.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/23-re-software-and-branding.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/23-re-software-and-branding.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Re: Software and Branding [2021-09-21]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Topics</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

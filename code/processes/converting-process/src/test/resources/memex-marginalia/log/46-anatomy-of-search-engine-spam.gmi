@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - The Anatomy of Search Engine Spam [2022-02-07]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/46-anatomy-of-search-engine-spam.gmi" class="path file"><img src="/ico/file.png" title="file"> 46-anatomy-of-search-engine-spam.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">The Anatomy of Search Engine Spam [2022-02-07]</h1>
+<br>
+Black hat SEO is endlessly fascinating phenomenon to study. This post is about some tactics they use to make their sites rank higher. <br>
+<br>
+The goal of blackhat SEO is to boost the search engine ranking of a page nobody particularly wants to see, usually ePharma, escort services, online casinos, shitcoins, hotel bookings; the bermuda pentagon of shady websites.<br>
+<br>
+The theory behind most modern search engines is that if you get links from a high ranking domain, then your domain gets a higher ranking as well, which increases the traffic. The reality is a little more complicated than that, but this is a sufficient mental model to understand the basic how-to.<br>
+<br>
+<h2 id="1.1">Comment Spam</h2>
+<br>
+Creating a bot that spams links in forums, guestbooks, comment fields, wikis is a really old-fashioned method. These links were never intended for humans to click on, but for search engines to register.<br>
+<br>
+In practice, since the rel=nofollow became standard practice, this is not particularly effective anymore as the attribute tells search engines to disregard the link. Some comment spam lingers as a mechanism for controlling botnets, sharing some of the cryptic eeriness of the numbers stations of the cold war.<br>
+<br>
+Source control systems, mailing lists, issue trackers, pull request systems, and so forth are also targets for spam, some of which do not to this date append rel=nofollow to their links to this date.<br>
+<br>
+<h2 id="1.2">Dead Links</h2>
+<br>
+An often overlooked side of link rot is that when a site dies, links often linger to the domain. This allows a spammer to simply register that domain, and immediately have search engine clout.<br>
+<br>
+This seems like a fairly low-level problem, probably won't be fixed without changes to DNS or the way HTML addresses resources.<br>
+<br>
+<h2 id="1.3">Hacked Websites</h2>
+<br>
+This is another way of piggybacking on a domain's ranking. <br>
+<br>
+Especially in older websites you can find strange hidden links. They may be hidden from rendering (style="display: none"), or they may be hidden from the human editor (perhaps 400 blank spaces to the right of a line of text). This seems to be manual work. <br>
+<br>
+<h2 id="1.4">Link Farms, Link Rings</h2>
+<br>
+There are websites full of almost nothing but links to similar websites. Not intended for humans, but for search engines. The pages appear dynamically generated with wildcard subdomains, almost invariably on cheap clounds and with cheap tlds. <br>
+<br>
+Alone this isn't very useful, but combined with some of the other techniques, appears to act as a sort of lens, magnifying the ranking of a target domain.<br>
+<br>
+<dl class="link"><dt><a class="internal" href="/log/04-link-farms.gmi">/log/04-link-farms.gmi</a></dt><dd>Further Reading</dd></dl>
+<br>
+<h2 id="1.5">Wordpress</h2>
+<br>
+Among newer websites, there are a lot of hacked wordpress instances, anyone with a web server will see probes for wordpress vulnerabilities several times per hour. What happens when they succeed is often not immediately noticeable, but often hundreds or thousands of pages are added, hidden, full of link spam, taking the same rough shape of the link farms mentioned previously.<br>
+<br>
+<dl class="link"><dt><a class="internal" href="/log/20-dot-com-link-farms.gmi">/log/20-dot-com-link-farms.gmi</a></dt><dd>Further Reading</dd></dl>
+<br>
+<h2 id="1.6">Questionable Sponsorships</h2>
+<br>
+Online casinos almost seem to have marketing as their primary expense, and have been observed sponsoring open source projects in exchange for a link to their domains.<br>
+<br>
+It may of course be hard to reject money, especially when in need, but at the same time, but maybe this practice should be stigmatized more than it is. <br>
+<br>
+<h2 id="1.7">In Closing</h2>
+<br>
+There are no doubt other techniques being used as well, but these appear to be the most common. It's an uphill battle, but knowing is a big part in combating this problem. <br>
+<br>
+Beyond all else, "rel=nofollow" should be mandatory for all links submitted by users, if nothing else because you become a far less appealing target for spammers.<br>
+<br>
+<h2 id="1.8">Topic</h2>
+<br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>46-anatomy-of-search-engine-spam.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/46-anatomy-of-search-engine-spam.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/46-anatomy-of-search-engine-spam.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/46-anatomy-of-search-engine-spam.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/46-anatomy-of-search-engine-spam.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 The Anatomy of Search Engine Spam [2022-02-07]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Comment Spam</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Dead Links</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Hacked Websites</a>
+    
+        <a href="#1.4" class="heading-2">1.4 Link Farms, Link Rings</a>
+    
+        <a href="#1.5" class="heading-2">1.5 Wordpress</a>
+    
+        <a href="#1.6" class="heading-2">1.6 Questionable Sponsorships</a>
+    
+        <a href="#1.7" class="heading-2">1.7 In Closing</a>
+    
+        <a href="#1.8" class="heading-2">1.8 Topic</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

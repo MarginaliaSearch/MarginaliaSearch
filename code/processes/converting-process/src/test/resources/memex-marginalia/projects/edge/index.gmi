@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Edge</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/projects" class="path dir"><img src="/ico/dir.png" title="dir"> projects</a>
+
+    <a href="/projects/edge" class="path dir"><img src="/ico/dir.png" title="dir"> edge</a>
+
+    <a href="/projects/edge/index.gmi" class="path file"><img src="/ico/file.png" title="file"> index.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Edge</h1>
+<br>
+Edge (or rather, Edge Crawler) is one of the internal names of a small independent internet search engine hosted on search.marginalia.nu. The search engine seeks out old, and old-looking websites with lots of text. <br>
+<br>
+The search engine also goes by the name of Astrolabe.<br>
+<br>
+It's a significant part of WMSA, and has subcomponents that do the usual helpful tasks, such as unit conversion, calculations, spell checking, encyclopedia suggestions.<br>
+<br>
+<dl class="link"><dt><a class="external" href="https://search.marginalia.nu/">https://search.marginalia.nu/</a></dt><dd>The Search Engine</dd></dl>
+<dl class="link"><dt><a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a></dt><dd>Related log entries</dd></dl>
+<br>
+<br>
+<a class="internal" href="/projects/wmsa.gmi">/projects/wmsa.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>index.gmi</h1>
+    <a class="download" href="/api/raw?url=/projects/edge/index.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/projects/edge/index.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/projects/edge/index.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Edge</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/projects/edge/about.gmi">/projects/edge/about.gmi</a></dt>
+<dd>About search.marginalia.nu - Links</dd>
+
+<dt><a href="/projects/edge/design-notes.gmi">/projects/edge/design-notes.gmi</a></dt>
+<dd>Notes on Designing a Search Engine - Links</dd>
+
+<dt><a href="/projects/wmsa.gmi">/projects/wmsa.gmi</a></dt>
+<dd>WMSA - Notable parts</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

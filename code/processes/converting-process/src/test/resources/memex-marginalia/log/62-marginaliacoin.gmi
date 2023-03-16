@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Marginaliacoin, and hidden forums [ 2022-08-18 ]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/62-marginaliacoin.gmi" class="path file"><img src="/ico/file.png" title="file"> 62-marginaliacoin.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Marginaliacoin, and hidden forums [ 2022-08-18 ]</h1>
+<br>
+I discovered someone has made a cryptocurrency called "Memex Marginalia Inu". It appears to have been created February 23, which is around when the entry "I Have No Capslock And I Must Scream" went absurdly viral to the point where Elon Musk tweeted a link to it. <br>
+<br>
+<dl class="link"><dt><a class="internal" href="/log/48-i-have-no-capslock.gmi">/log/48-i-have-no-capslock.gmi</a></dt><dd>I Have No Capslock...</dd></dl>
+<br>
+Mr Musk's twitter orbit is exceptionally strange. The tweet was followed by a deluge of bizarre activity, strange emails with calls about stonk canine lunar expeditions, and apparently also a cryptocurrency land-grab of sorts. I can't claim to understand why, but many of the emails got after the tweet were on the theme "what does this mean?", almost as though Elon's tweet was some sort of prophetic omen. <br>
+<br>
+Needless to say, I do not endorse this. As I will chant like a gregorian monk everytime I encounter anything related to cryptocurrencies: Crypto Is A Ponzi Scheme. <br>
+<br>
+<pre class="literal">
+   ***</pre>
+<br>
+The forums are hiding. At least, that's how it appears. I've started a new batch of website-crawling, and made some changes to bring more forums into the search engine. <br>
+<br>
+I like forums and wish to help them get more visibility, what few are still alive. In some sense it will also serve as a sort of inventory. <br>
+<br>
+Although I discovered many forums, even though they run traditional forum software (like phpBB or vBulletin), appear to masquerade as static HTML or wordpress sites in the URL path, using rewrite rules. Very curious.<br>
+<br>
+It could be to help with Google's search ranking, or maybe it's to hide from bot spam. <br>
+<br>
+It looks like it will take maybe 14 days to complete the crawl. Operating a search engine on a small network budget is something that requires patience.<br>
+<br>
+<h2 id="1.1">Topic</h2>
+<br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+<br>
+<h2 id="1.2">See Also</h2>
+<br>
+<a class="internal" href="/log/61-botspam-apocalypse.gmi">/log/61-botspam-apocalypse.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>62-marginaliacoin.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/62-marginaliacoin.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/62-marginaliacoin.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/62-marginaliacoin.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/62-marginaliacoin.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Marginaliacoin, and hidden forums [ 2022-08-18 ]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Topic</a>
+    
+        <a href="#1.2" class="heading-2">1.2 See Also</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

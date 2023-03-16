@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Notes on Designing a Search Engine</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/projects" class="path dir"><img src="/ico/dir.png" title="dir"> projects</a>
+
+    <a href="/projects/edge" class="path dir"><img src="/ico/dir.png" title="dir"> edge</a>
+
+    <a href="/projects/edge/design-notes.gmi" class="path file"><img src="/ico/file.png" title="file"> design-notes.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Notes on Designing a Search Engine</h1>
+<br>
+<h2 id="1.1">robots.txt</h2>
+<br>
+People put lists of very specific URLs they do not want you to look at in robots.txt, and I don't specifically mean secret admin log-in pages (even though that happens too), but like embarrassing stuff, dirt, the awkward august 2003 issue of campus magazine when the dean awarded Kony philanthropist of the year. It keeps the search engines out, but human beings can read these files too.<br>
+<br>
+Speaking of robots.txt, there is no standard. Adherence is best-effort by every search engine, and the amount of weird directives you'll find is staggering. Oh, and ASCII art too, little messages. Its cute, but not something you should do if crawler adherence actually matters. <br>
+<br>
+<h2 id="1.2">Standards</h2>
+<br>
+The HTML standard is not a standard. A major american university uses &lt;title&gt;-tags for its navigational links. It's a technological marvel how coherently web browsers deal with the completely incoherent web they browse. <br>
+<br>
+<h2 id="1.3">Quality measure</h2>
+<br>
+The search engine evaluates the "quality" of a web page with a formula that, a bit simplified looks like<br>
+<br>
+<pre>
+       length_text     -script_tags
+  Q =  -----------  x e
+       length_markup</pre>
+<br>
+As a consequence, the closer to plain text a website is, the higher it'll score. The more markup it has in relation to its text, the lower it will score. Each script tag is punished. One script tag will still give the page a relatively high score, given all else is premium quality; but once you start having multiple script tags, you'll very quickly find yourself at the bottom of the search results.<br>
+<br>
+Modern web sites have a lot of script tags. The web page of Rolling Stone Magazine has over a hundred script tags in its HTML code. Its quality rating is of the order 10-51%. <br>
+<br>
+<a class="internal" href="/log/10-astrolabe-2-sampling-bias.gmi">/log/10-astrolabe-2-sampling-bias.gmi</a><br>
+<br>
+<h2 id="1.4">Link Farms</h2>
+<br>
+Smut and link farms seems to go hand-in-hand, to the extent have at times filtered out the first to get at the other. <br>
+<br>
+<a class="internal" href="/log/04-link-farms.gmi">/log/04-link-farms.gmi</a><br>
+<br>
+<h2 id="1.5">Trade-offs</h2>
+<br>
+There is a constant trade-off between usefulness, and efficiency. That is a necessity when running a search engine, typically reserved for a datacenter, on consumer hardware. Do you need to be able to search for slpk-ya-fxc-sg-wh, the serial number of a Yamaha subwoofer? If it comes at the cost of polluting the index with such highly unique entities? At the cost of speed, and size? What about Day[9], is the conventions of occasional digital handles enough to justify increasing the search term dictionary by 20%? <br>
+<br>
+<h2 id="1.6">Standard searches</h2>
+<br>
+It's hard to quantify qualitative aspects, but I have some standard tasks I use to evaluate the virtues of the the search engine works.<br>
+<br>
+<ul>
+<li>I want to be able to find an interesting ariticle on Protagoras</li>
+<li>Searching for PuTTY ssh should yield a download link relatively easily</li></ul>
+<br>
+While the goal of the search engine is to give an interesting degree of inaccuracy, it can't be too inaccurate either, to the point of being useless or just returning basically random links. These are challenges of promoting sufficiently relevant results. R.P. Feynman is an interesting man, but that doesn't make his cursory mention of silly putty an interesting result. Likewise, people seem to love to attribute man is the measure of all things to Protagoras, but relatively few articles are actually relevant to the man himself. <br>
+<br>
+<h2 id="1.7">Description extraction</h2>
+<br>
+The most effective way of extracting a meaningful snippet of text from a web site seems to be to simply look for a piece of text that has a relatively low proportion of markdown. 50% seems a decent enough cut-off.<br>
+<br>
+I've tried various approaches, and this relatively simple approach seems to work by far the best. The problem, in general, is identifying what is navigation and what is content. It's better having no summary than having summaries that look like <br>
+<br>
+<blockquote>
+  Home Blog About RSS feed Follow me on instagram | | | | | (C) 2010 Brown Horse Industries CC-BY-SA 3.0</blockquote>
+<br>
+This is the actual code I use<br>
+<br>
+<pre>
+private Optional&lt;String&gt; extractSummaryRaw(Document parsed) {
+  StringBuilder content = new StringBuilder();
+
+  parsed.getElementsByTag("p").forEach(
+        elem -&gt; {
+          if (elem.text().length() &gt; elem.html().length()/2) {
+            content.append(elem.text());
+          }
+      }
+  );
+
+  if (content.length() &gt; 10) {
+    return Optional.of(content.toString());
+  }
+  return Optional.empty();
+}</pre>
+<br>
+<h2 id="1.8">Links</h2>
+<br>
+<a class="internal" href="/projects/edge/index.gmi">/projects/edge/index.gmi</a><br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>design-notes.gmi</h1>
+    <a class="download" href="/api/raw?url=/projects/edge/design-notes.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/projects/edge/design-notes.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/projects/edge/design-notes.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/projects/edge/design-notes.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Notes on Designing a Search Engine</a>
+    
+        <a href="#1.1" class="heading-2">1.1 robots.txt</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Standards</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Quality measure</a>
+    
+        <a href="#1.4" class="heading-2">1.4 Link Farms</a>
+    
+        <a href="#1.5" class="heading-2">1.5 Trade-offs</a>
+    
+        <a href="#1.6" class="heading-2">1.6 Standard searches</a>
+    
+        <a href="#1.7" class="heading-2">1.7 Description extraction</a>
+    
+        <a href="#1.8" class="heading-2">1.8 Links</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

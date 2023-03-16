@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - The Mind&#x27;s A Field [2021-07-18]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/05-minds-field.gmi" class="path file"><img src="/ico/file.png" title="file"> 05-minds-field.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">The Mind's A Field [2021-07-18]</h1>
+<br>
+I find if I do not regularly plant interesting thoughts in my mind, it will rarely grow them spontaneously. I need to read interesting books, or have interesting conversations; if I do not, I'll look back at my ideas and find I haven't really had any in a very long time. Thoughts will grow whether I take care to plant them or not, but what grows if I have been careless is weeds.<br>
+<br>
+I find if I do not regularly harvest interesting thoughts from my mind, they will occupy the same space forever and completely displace new ideas. I need to file them away in writing somewhere to be able to let them go.<br>
+<br>
+I find if I do not ever rotate the type of thoughts I attempt to grow, if I never change ambitions, never try new activities but always stick to the same old groove, my mind will eventually grow barren and malnourished and stricken with the debilitating notion that I already know what there is to know.<br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>05-minds-field.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/05-minds-field.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/05-minds-field.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/05-minds-field.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 The Mind&#x27;s A Field [2021-07-18]</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/log/42-dark.gmi">/log/42-dark.gmi</a></dt>
+<dd>Dark [2022-01-02] - See Also</dd>
+
+<dt><a href="/log/67-best-ideas-afk.gmi">/log/67-best-ideas-afk.gmi</a></dt>
+<dd>The best ideas come AFK [ 2022-11-07 ] - See Also</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

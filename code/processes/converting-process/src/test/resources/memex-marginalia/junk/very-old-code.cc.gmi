@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Very old code</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/junk" class="path dir"><img src="/ico/dir.png" title="dir"> junk</a>
+
+    <a href="/junk/very-old-code.cc.gmi" class="path file"><img src="/ico/file.png" title="file"> very-old-code.cc.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Very old code</h1>
+<br>
+A sample of very old code I once wrote, with no thought of ever coming back to maintain it. Then I came back 10+ years later and got it running with a lot of effort.<br>
+<br>
+The result (even if the compression doesn't do it justice):<br>
+<br>
+<a class="external" href="https://archive.org/details/NebulabrotFractalTumblinginFourDimensions">https://archive.org/details/NebulabrotFractalTumblinginFourDimensions</a><br>
+<br>
+<pre>
+#include &lt;stdlib.h&gt;
+#include &lt;math.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;unistd.h&gt;
+#include "SDL.h"
+
+#define WIDTH 1920
+#define HEIGHT 1080
+#define LENGTH 50000
+#define LIMG   50
+#define LIMB   1
+#define SUBSTEP 0.125
+
+#include &lt;vector&gt;
+#include &lt;utility&gt;
+#include &lt;iostream&gt;
+#include &lt;fstream&gt;
+
+using namespace std;
+
+double mapr[WIDTH][HEIGHT];
+double mapg[WIDTH][HEIGHT];
+double mapb[WIDTH][HEIGHT];
+
+double theta;
+int Z = 0;
+int W = 0;
+const double SQRT2 = M_SQRT2*2.0;
+double angle[6] = { 0, 0, 0, 0, 0, 0, } ;
+vector&lt;pair&lt;double,double&gt;&gt; coords;
+vector&lt;pair&lt;double,double&gt;&gt; origins;
+vector&lt;int&gt; lens;
+int li;
+
+void mapbrot(double x, double y, double z, double w) {
+	double cx = x + z, cy = y + w;
+	double cx2 = cx*cx, cy2 = cy*cy;
+	int iter = 0;
+	double cx0 = cx;
+	double cy0 = cy;
+
+	vector&lt;pair&lt;double,double&gt;&gt; orbit;
+
+//	orbit.push_back(make_pair(cy,cx));
+	while(cx2+cy2 &lt; 4) {
+		if(iter++ &gt; LENGTH) return;
+
+		cy = 2*cx*cy + y;
+		cx = cx2 - cy2 + x;
+		cx2 = cx*cx;
+		cy2 = cy*cy;
+
+		orbit.push_back(make_pair(cy,cx));
+
+		if(cx == cx0 && cy == cy0) return;
+	}
+	coords.insert(end(coords), begin(orbit), end(orbit));
+	origins.push_back({x+z,y+w});
+	lens.push_back(iter);
+}
+
+void render() {
+
+	double ca0 = cos(angle[0]);
+	double ca1 = cos(angle[1]);
+	double ca2 = cos(angle[2]);
+	double ca3 = cos(angle[3]);
+	double ca4 = cos(angle[4]);
+	double ca5 = cos(angle[5]);
+
+	double sa0 = sin(angle[0]);
+	double sa1 = sin(angle[1]);
+	double sa2 = sin(angle[2]);
+	double sa3 = sin(angle[3]);
+	double sa4 = sin(angle[4]);
+	double sa5 = sin(angle[5]);
+
+	long iter = 0;
+	for (int i = 0; i &lt; lens.size(); i++) {
+		double x = origins[i].first;
+		double y = origins[i].second;
+
+
+		int li = lens[i];
+		for (int j = 0; j &lt; li; j++,iter++) {
+
+			double xp = coords[iter].first * ca0 - coords[iter].second * sa0;
+			double yp = coords[iter].first * sa0 + coords[iter].second * ca0;
+			double zp = x * ca1 - y * sa1;
+			double wp = x * sa1 + y * ca1;
+
+			double cxp = xp * ca2 - zp * sa2;
+			double czp = xp * sa2 + zp * ca2;
+			double cyp = yp * ca3 - wp * sa3;
+			double cwp = yp * sa3 + wp * ca3;
+
+			xp = cxp * ca4 - cwp * sa4;
+			wp = cxp * sa4 + cwp * ca4;
+			yp = cyp * ca5 - czp * sa5;
+			zp = cyp * sa5 + czp * ca5;
+
+			int xc = (WIDTH - HEIGHT) / 2 + (1.5*yp+2.5)*HEIGHT/4.0;
+			int yc = (1.5*xp+2)*HEIGHT/4.0;
+
+			if(xc&gt;=0 && yc&gt;=0 && xc &lt; WIDTH && yc &lt; HEIGHT) {
+
+				mapr[xc][yc]+=j/(double) li;
+				mapg[xc][yc]+=1 - j/(double) li;
+			//mapg[xc][yc]++;
+				mapb[xc][yc]++;
+//`				mapb[xc][yc]+=1.0 - j/(double) li;
+			}
+
+			xp = -coords[iter].first * ca0 - coords[iter].second * sa0;
+			yp = -coords[iter].first * sa0 + coords[iter].second * ca0;
+			zp = x*ca1 + y * sa1;
+			wp = x*sa1 - y * ca1;
+
+			cxp = xp * ca2 - zp * sa2;
+			czp = xp * sa2 + zp * ca2;
+			cyp = yp * ca3 - wp * sa3;
+			cwp = yp * sa3 + wp * ca3;
+
+			xp = cxp * ca4 - cwp * sa4;
+			wp = cxp * sa4 + cwp * ca4;
+			yp = cyp * ca5 - czp * sa5;
+			zp = cyp * sa5 + czp * ca5;
+
+			xc = (WIDTH - HEIGHT)/2 + (1.5*yp+2.5)*HEIGHT/4.0;
+			yc = (1.5*xp+2)*HEIGHT/4.0;
+
+			if(xc&gt;=0 && yc&gt;=0 && xc &lt; WIDTH && yc &lt; HEIGHT) {
+				mapr[xc][yc]+=j/(double) li;
+				mapg[xc][yc]+=1 - j/(double) li;
+//				mapg[xc][yc]++;
+				mapb[xc][yc]++;
+			}
+		}
+	}
+}
+
+double min(double a, double b) {
+  if (a &lt; b) {
+    return a;
+  }
+  else {
+    return b;
+  }
+}
+
+SDL_Surface* s = NULL;
+int mval[3] = { 0, 0, 0 };
+void paint() {
+	int x, y;
+	if (mval[0] == 0) {
+		for(x = 0; x &lt; WIDTH; x++) {
+			for(y = 0; y &lt; HEIGHT; y++) {
+				if(mapr[x][y] &gt; mval[0]) mval[0] = mapr[x][y];
+				if(mapg[x][y] &gt; mval[1]) mval[1] = mapg[x][y];
+				if(mapb[x][y] &gt; mval[2]) mval[2] = mapb[x][y];
+			}
+		}
+	}
+
+
+	for(x = 0; x &lt; WIDTH; x++) {
+		for(y = 0; y &lt; HEIGHT; y++) {
+
+			SDL_Rect r;
+			r.x = x;
+			r.y = y;
+			r.w = 1;
+			r.h = 1;
+			int R = 255.0 * min(1.0, mapr[x][y] / (double)mval[0]);
+			int G = 255.0 * min(1.0, mapg[x][y] / (double)mval[1]);
+			int B = 255.0 * min(1.0, mapb[x][y] / (double)mval[2]);
+			SDL_FillRect(s, &r, SDL_MapRGB(s-&gt;format, R, G, B));
+			mapr[x][y] = mapg[x][y] = mapb[x][y] = 0;
+		}
+	}
+	SDL_Flip(s);
+
+};
+
+void mbrotsweep() {
+	int X, Y;
+	for(X = 0; X &lt; WIDTH; X++) {
+		for(Y = 0; Y &lt; HEIGHT; Y++) {
+			mapr[X][Y] = 0;
+			mapg[X][Y] = 0;
+			mapb[X][Y] = 0;
+		}
+	}
+
+	render();
+	paint();
+
+}
+
+void save() {
+	static int i = 0;
+	char filename[16];
+	sprintf(filename, "out%.4d.bmp.tmp", i);
+	SDL_WM_SetCaption(filename, NULL);
+	SDL_SaveBMP(s, filename);
+	char filename2[16];
+	sprintf(filename2, "out%.4d.bmp", i++);
+	rename(filename, filename2);
+
+}
+
+
+void exportFile() {
+	ofstream of("out.dat", ios::out | ios::binary | ios::trunc);
+	printf("%d\n", lens.size());
+	int sz = lens.size();
+	of.write(reinterpret_cast&lt;char *&gt;(&sz), sizeof(sz));
+//	of &lt;&lt; lens.size();
+	for (int i : lens) {
+		of.write(reinterpret_cast&lt;char *&gt;(&i), sizeof(i));
+	}
+
+	printf("%d\n", origins.size());
+	sz = origins.size();
+	of.write(reinterpret_cast&lt;char *&gt;(&sz), sizeof(sz));
+	for (pair&lt;double,double&gt; p : origins) {
+		of.write(reinterpret_cast&lt;char *&gt;(&p.first), sizeof(p.first));
+		of.write(reinterpret_cast&lt;char *&gt;(&p.second), sizeof(p.second));
+	}
+	printf("%d\n", coords.size());
+	sz = coords.size();
+	of.write(reinterpret_cast&lt;char *&gt;(&sz), sizeof(sz));
+	for (pair&lt;double,double&gt; p : coords) {
+		of.write(reinterpret_cast&lt;char *&gt;(&p.first), sizeof(p.first));
+		of.write(reinterpret_cast&lt;char *&gt;(&p.second), sizeof(p.second));
+	}
+
+}
+void importFile() {
+	ifstream ifs("out.dat", ios::in | ios::binary);
+	int i; double x; double y;
+	ifs.read(reinterpret_cast&lt;char *&gt;(&i), sizeof(i));
+	printf("%d\n", i);
+	fflush(NULL);
+	lens.reserve(i);
+	for (int j = 0; j &lt; i; j++) {
+		int k;
+		ifs.read(reinterpret_cast&lt;char *&gt;(&k), sizeof(k));
+		lens.push_back(k);
+	}
+	ifs.read(reinterpret_cast&lt;char *&gt;(&i), sizeof(i));
+	printf("%d\n", i);
+	fflush(NULL);
+	origins.reserve(i);
+	for (int j = 0; j &lt; i; j++) {
+		ifs.read(reinterpret_cast&lt;char *&gt;(&x), sizeof(x));
+		ifs.read(reinterpret_cast&lt;char *&gt;(&y), sizeof(y));
+		origins.push_back({x,y});
+	}
+	ifs.read(reinterpret_cast&lt;char *&gt;(&i), sizeof(i));
+	printf("%d\n", i);
+	fflush(NULL);
+	coords.reserve(i);
+	for (int j = 0; j &lt; i; j++) {
+		ifs.read(reinterpret_cast&lt;char *&gt;(&x), sizeof(x));
+		ifs.read(reinterpret_cast&lt;char *&gt;(&y), sizeof(y));
+		coords.push_back({x,y});
+	}
+
+}
+
+int main(int argc, char* argv[]) {
+	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
+	s = SDL_SetVideoMode(WIDTH, HEIGHT, 16, SDL_SWSURFACE);
+
+	double x, y;
+
+
+
+/*	for(x = 0; x &lt; WIDTH; x+=SUBSTEP) {
+		printf("%2.2f%% - %d - %2.2f Mb \n", (100.0*x)/WIDTH, coords.size(), 8 * coords.size() / 1024 / 1024.);
+		for(y = 0; y &lt; (HEIGHT)/2; y+=SUBSTEP) {
+			mapbrot((double)4*(x-WIDTH/2) / (double) WIDTH, (double)4*(y-HEIGHT/2) / (double) HEIGHT, 0, 0);
+		}
+	}*/
+//	exportFile();
+	importFile();
+
+	const double step = M_PI / 40000.0;
+	double t = M_PI/3.0;
+	for(t = 0; t &lt; 2*M_PI; t+=step) {
+		angle[2]=M_PI+M_PI*cos(t);
+		angle[3]=M_PI+M_PI*cos(2*t);
+		angle[4]=M_PI+M_PI*cos(3*t);
+		angle[5]=M_PI+M_PI*cos(5*t);
+		mbrotsweep();
+		save();
+	}
+
+	/*
+	for(angle[2] = 0; angle[2] &lt; 2*M_PI; angle[2]+=step) {
+		frame(angle);
+		save();
+	}
+	angle[2] = 0;
+	for(angle[3] = 0; angle[3] &lt; 2*M_PI; angle[3]+=step) {
+		frame(angle);
+		save();
+	}
+	angle[3] = 0;
+	for(angle[4] = 0; angle[4] &lt; 2*M_PI; angle[4]+=step) {
+		frame(angle);
+		save();
+	}
+	angle[4] = 0;
+	for(angle[5] = 0; angle[5] &lt; 2*M_PI; angle[5]+=step) {
+		frame(angle);
+		save();
+	}
+	angle[5] = 0;
+
+	for(angle[2] = 0; angle[2] &lt; M_PI/2; angle[2]+=step) {
+		frame(angle);
+		save();
+	}
+	angle[2] = M_PI/2;
+	for(angle[3] = 0; angle[3] &lt; M_PI; angle[3]+=step) {
+		frame(angle);
+		save();
+	}
+	angle[3] = M_PI;
+	for(angle[5] = 0; angle[5] &lt; M_PI; angle[5]+=step) {
+		frame(angle);
+		save();
+	}
+	angle[5] = M_PI;
+	for(angle[2] = M_PI/2; angle[2] &lt; M_PI; angle[2]+=step) {
+		frame(angle);
+		save();
+	}
+	angle[2] = M_PI;
+	for(angle[3] = M_PI; angle[3] &lt; 2*M_PI; angle[3]+=step) {
+		frame(angle);
+		save();
+	}
+	angle[3] = M_PI*2;
+	for(angle[5] = M_PI; angle[5] &lt; M_PI*2; angle[5]+=step) {
+		frame(angle);
+		save();
+	}*/
+	printf("\nALL DONE\n");
+
+	for(;;) SDL_Flip(s);
+}</pre>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>very-old-code.cc.gmi</h1>
+    <a class="download" href="/api/raw?url=/junk/very-old-code.cc.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/junk/very-old-code.cc.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/junk/very-old-code.cc.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/junk/very-old-code.cc.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Very old code</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

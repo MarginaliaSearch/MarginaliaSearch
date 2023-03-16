@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Marginalia&#x27;s Index Reaches 100,000,000 Documents [ 2022-10-21 ]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/64-hundred-million.gmi" class="path file"><img src="/ico/file.png" title="file"> 64-hundred-million.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Marginalia's Index Reaches 100,000,000 Documents [ 2022-10-21 ]</h1>
+<br>
+A very brief note to announce reaching a long term goal and major milestone for marginalia search. <br>
+<br>
+The search engine now indexes 106,857,244 documents! <br>
+<br>
+The previous record was a bit south of seventy million. A hundred million has been a pie-in-the-sky goal for a very long time. It's seemed borderline impossible to index a that many documents on a PC. Turns out it's not. It's more than possible. <br>
+<br>
+Twice this may even be technically doable, but is way past the pain point of sheer logistics. It's already a real headache to deal with this much data. <br>
+<br>
+<ul>
+<li>The crawl takes two weeks.</li>
+<li>Processing the crawl data to extract keywords and features takes several days.</li>
+<li>Loading the processed data into the database takes another day.</li>
+<li>Constructing the index takes another day.</li></ul>
+<br>
+A hundred million probably more than good enough.<br>
+<br>
+Focus should instead be on improving the quality of what is indexed, on making it better, faster, more relevant. Sadly it's not as easy to find vanity goals like hitting 100,000,000 in that area.<br>
+<br>
+<h2 id="1.1">Topics</h2>
+<br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>64-hundred-million.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/64-hundred-million.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/64-hundred-million.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/64-hundred-million.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/64-hundred-million.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Marginalia&#x27;s Index Reaches 100,000,000 Documents [ 2022-10-21 ]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Topics</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

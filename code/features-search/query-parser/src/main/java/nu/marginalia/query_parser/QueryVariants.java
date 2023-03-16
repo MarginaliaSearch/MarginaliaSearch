@@ -5,7 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import nu.marginalia.LanguageModels;
-import nu.marginalia.keyword_extraction.KeywordExtractor;
+import nu.marginalia.keyword.KeywordExtractor;
 import nu.marginalia.language.statistics.EnglishDictionary;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.ngram_bloom_filter.NGramBloomFilter;

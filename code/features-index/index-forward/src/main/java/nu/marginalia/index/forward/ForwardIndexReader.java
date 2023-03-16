@@ -89,4 +89,7 @@ public class ForwardIndexReader {
     }
 
 
+    public int totalDocCount() {
+        return idToOffset.size();
+    }
 }

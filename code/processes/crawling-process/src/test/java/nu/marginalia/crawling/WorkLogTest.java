@@ -1,6 +1,6 @@
 package nu.marginalia.crawling;
 
-import nu.marginalia.work_log.WorkLog;
+import nu.marginalia.process.log.WorkLog;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

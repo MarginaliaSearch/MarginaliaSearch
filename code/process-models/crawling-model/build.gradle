@@ -14,6 +14,7 @@ java {
 
 dependencies {
     implementation project(':code:common:model')
+    implementation project(':code:common:process')
     implementation project(':code:libraries:big-string')
     implementation project(':code:api:index-api')
     implementation project(':code:common:service-discovery')
@@ -27,6 +28,7 @@ dependencies {
     implementation libs.notnull
 
     implementation libs.gson
+    implementation libs.snakeyaml
     implementation libs.zstd
 
     testImplementation libs.bundles.slf4j.test

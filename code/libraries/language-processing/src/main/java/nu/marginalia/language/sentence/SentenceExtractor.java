@@ -4,7 +4,6 @@ import com.github.datquocnguyen.RDRPOSTagger;
 import gnu.trove.map.hash.TObjectIntHashMap;
 import lombok.SneakyThrows;
 import nu.marginalia.LanguageModels;
-import nu.marginalia.language.encoding.HtmlTagCleaner;
 import nu.marginalia.util.StringPool;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.DocumentSentence;
@@ -33,7 +32,7 @@ public class SentenceExtractor {
     private final PorterStemmer porterStemmer = new PorterStemmer();
     private static final Logger logger = LoggerFactory.getLogger(SentenceExtractor.class);
 
-    private static final HtmlTagCleaner tagCleaner = new HtmlTagCleaner();
+    private static final SentenceExtractorHtmlTagCleaner tagCleaner = new SentenceExtractorHtmlTagCleaner();
 
     private final ThreadLocal<StringPool> stringPool = ThreadLocal.withInitial(() -> StringPool.create(10_000));
 
@@ -58,10 +57,13 @@ public class SentenceExtractor {
     }
 
     public DocumentLanguageData extractSentences(Document doc) {
-        final String text = asText(doc);
+        var clone = doc.clone();
+        tagCleaner.clean(clone);
+
+        final String text = asText(clone);
         final DocumentSentence[] textSentences = extractSentencesFromString(text);
 
-        String title = getTitle(doc, textSentences);
+        String title = getTitle(clone, textSentences);
 
         TObjectIntHashMap<String> counts = calculateWordCounts(textSentences);
         var titleSentences = extractSentencesFromString(title.toLowerCase());
@@ -72,8 +74,8 @@ public class SentenceExtractor {
         final DocumentSentence[] textSentences = extractSentencesFromString(text);
 
         TObjectIntHashMap<String> counts = calculateWordCounts(textSentences);
-
-        return new DocumentLanguageData(textSentences, extractSentencesFromString(title.toLowerCase()), counts);
+        var titleSentences = extractSentencesFromString(title.toLowerCase());
+        return new DocumentLanguageData(textSentences, titleSentences, counts);
     }
 
     private String getTitle(Document doc, DocumentSentence[] textSentences) {
@@ -230,9 +232,6 @@ public class SentenceExtractor {
     }
 
     public String asText(Document dc) {
-
-        tagCleaner.clean(dc);
-
         String text = dc.getElementsByTag("body").text();
 
         return text.substring(0, (int) (text.length()*0.95));

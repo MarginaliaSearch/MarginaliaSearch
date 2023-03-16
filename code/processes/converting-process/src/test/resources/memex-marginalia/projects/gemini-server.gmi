@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Gemini Server</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/projects" class="path dir"><img src="/ico/dir.png" title="dir"> projects</a>
+
+    <a href="/projects/gemini-server.gmi" class="path file"><img src="/ico/file.png" title="file"> gemini-server.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Gemini Server</h1>
+<br>
+Note! This document is out of date! The separate gemini-server software I had running has been absorbed into WMSA. <br>
+<br>
+<h2 id="1.1">Software</h2>
+The server is extremely bespoke software. It seemed easy enough to implement the protocol.<br>
+<br>
+<dl class="link"><dt><a class="internal" href="/code/">/code/</a></dt><dd>View or Download the sources</dd></dl>
+<br>
+<h3 id="1.1.1">Changes</h3>
+<ul>
+<li>2021-08-21 - Added auto-banning of some port sniffers that clog up the logs with HTTP requests and whatnot</li>
+<li>2021-08-04 - Added a telnet ingress @ marginalia.nu:9999</li>
+<li>2021-07-26 - Added automatic local backlinks</li>
+<li>2021-07-09 - Added automatic navigational footers to static gmi files</li>
+<li>2021-07-09 - Fixed TLS compatibility issues with Amfora and possibly other implementations</li></ul>
+<a class="external" href="https://lists.orbitalfox.eu/archives/gemini/2021/006379.html">https://lists.orbitalfox.eu/archives/gemini/2021/006379.html</a><br>
+<a class="external" href="https://lists.orbitalfox.eu/archives/gemini/2021/006382.html">https://lists.orbitalfox.eu/archives/gemini/2021/006382.html</a><br>
+<ul>
+<li>2021-07-06 - Added a proxy for my search engine</li>
+<li>2021-07-05 - Sanity-check tests against marginalia.nu server</li>
+<li>2021-07-05 - Changed the server to run on docker</li>
+<li>2021-07-05 - Guestbook plugin auto-disables if it can't find its database file</li>
+<li>2021-07-05 - Removed non-standard .gem file-endings and added a rewrite plugin that redirects any old URLs that still point there</li>
+<li>2021-07-04 - Fixed some minor security issues</li>
+<li>2021-07-04 - Added rolling logs</li></ul>
+<br>
+<h2 id="1.2">Hardware</h2>
+I put the machine together mostly for a search engine, Because I didn't want an actual rack making noise and heat in my living room, the server is made out of consumer hardware:<br>
+<br>
+<ul>
+<li>Ryzen 9 3900X</li>
+<li>128 Gb RAM</li>
+<li>4x4 Gb IronWolf ZFS</li>
+<li>A bunch of SSDs index lookups</li></ul>
+<br>
+<h2 id="1.3">Topics</h2>
+<a class="internal" href="/topic/programming.gmi">/topic/programming.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>gemini-server.gmi</h1>
+    <a class="download" href="/api/raw?url=/projects/gemini-server.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/projects/gemini-server.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/projects/gemini-server.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/projects/gemini-server.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Gemini Server</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Software</a>
+    
+        <a href="#1.1.1" class="heading-3">1.1.1 Changes</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Hardware</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Topics</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

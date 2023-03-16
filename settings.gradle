@@ -23,16 +23,16 @@ include 'code:libraries:term-frequency-dict'
 include 'code:features-search:screenshots'
 include 'code:features-search:random-websites'
 include 'code:features-search:query-parser'
+include 'code:features-search:result-ranking'
 
 include 'code:features-convert:adblock'
 include 'code:features-convert:pubdate'
+include 'code:features-convert:summary-extraction'
 include 'code:features-convert:keyword-extraction'
 include 'code:features-convert:topic-detection'
 
 include 'code:features-crawl:crawl-blocklist'
 include 'code:features-crawl:link-parser'
-include 'code:features-crawl:work-log'
-include 'code:features-crawl:crawl-plan'
 
 include 'code:features-index:lexicon'
 include 'code:features-index:index-journal'
@@ -51,6 +51,7 @@ include 'code:common:service'
 include 'code:common:config'
 include 'code:common:model'
 include 'code:common:renderer'
+include 'code:common:process'
 
 include 'code:processes:crawl-job-extractor-process'
 
@@ -68,6 +69,7 @@ include 'third-party:symspell'
 include 'third-party:rdrpostagger'
 include 'third-party:uppend'
 include 'third-party:openzim'
+include 'third-party:count-min-sketch'
 include 'third-party:monkey-patch-opennlp'
 
 include 'other:memex'
@@ -124,6 +126,8 @@ dependencyResolutionManagement {
 
             library('trove', 'net.sf.trove4j', 'trove4j').version('3.0.3')
             library('fastutil', 'it.unimi.dsi', 'fastutil').version('8.5.8')
+
+            library('hll', 'net.agkn', 'hll').version('1.6.0')
 
             library('okhttp3','com.squareup.okhttp3','okhttp').version('4.10.0')
 

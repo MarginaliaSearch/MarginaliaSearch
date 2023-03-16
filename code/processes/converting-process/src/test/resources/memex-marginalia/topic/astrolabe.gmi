@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Topic: Astrolabe</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/topic" class="path dir"><img src="/ico/dir.png" title="dir"> topic</a>
+
+    <a href="/topic/astrolabe.gmi" class="path file"><img src="/ico/file.png" title="file"> astrolabe.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Topic: Astrolabe</h1>
+<br>
+<!-- pragma: TOPIC -->
+
+
+
+
+<dl>
+<dt><a href="/commons/search-failure-modes.gmi">/commons/search-failure-modes.gmi</a></dt>
+<dd>Failure Modes in Search - Topics</dd>
+
+<dt><a href="/links/fragments-old-web.gmi">/links/fragments-old-web.gmi</a></dt>
+<dd>Fragments of the  Old Web - Topic</dd>
+
+<dt><a href="/log/01-astrolabe.gmi">/log/01-astrolabe.gmi</a></dt>
+<dd>The Astrolabe Part I: Lenscraft [2021-07-07] - Topics</dd>
+
+<dt><a href="/log/04-link-farms.gmi">/log/04-link-farms.gmi</a></dt>
+<dd>On Link Farms [2021-07-14] - Topics</dd>
+
+<dt><a href="/log/06-optimization.gmi">/log/06-optimization.gmi</a></dt>
+<dd>Index Optimizations [2021-07-23] - Topics</dd>
+
+<dt><a href="/log/10-astrolabe-2-sampling-bias.gmi">/log/10-astrolabe-2-sampling-bias.gmi</a></dt>
+<dd>The Astrolabe Part II: The Magic Power of Sampling Bias [2021-08-03] - Topic</dd>
+
+<dt><a href="/log/18-soaring-high.gmi">/log/18-soaring-high.gmi</a></dt>
+<dd>Soaring High [2021-09-02] - Topics</dd>
+
+<dt><a href="/log/19-website-discoverability-crisis.gmi">/log/19-website-discoverability-crisis.gmi</a></dt>
+<dd>The Small Website Discoverability Crisis [2021-09-08] - Topic</dd>
+
+<dt><a href="/log/20-dot-com-link-farms.gmi">/log/20-dot-com-link-farms.gmi</a></dt>
+<dd>The Curious Case of the Dot-Com Link Farms [2021-09-09] - Topics </dd>
+
+<dt><a href="/log/21-new-solutions-old-problems.gmi">/log/21-new-solutions-old-problems.gmi</a></dt>
+<dd>New Solutions Creating Old Problems [2021-09-14] - Topic</dd>
+
+<dt><a href="/log/22-against-the-flood.gmi">/log/22-against-the-flood.gmi</a></dt>
+<dd>Against the Flood [2021-09-19] - Topic</dd>
+
+<dt><a href="/log/25-october-update.gmi">/log/25-october-update.gmi</a></dt>
+<dd>Astrolabe - The October Update [2021-10-01] - Topics</dd>
+
+<dt><a href="/log/26-personalized-pagerank.gmi">/log/26-personalized-pagerank.gmi</a></dt>
+<dd>Experimenting with Personalized PageRank [2021-10-02] - Topic</dd>
+
+<dt><a href="/log/27-getting-with-the-times.gmi">/log/27-getting-with-the-times.gmi</a></dt>
+<dd>Getting with the times [2021-10-06] - Topics</dd>
+
+<dt><a href="/log/28-web-browsing.gmi">/log/28-web-browsing.gmi</a></dt>
+<dd>Web Browsing [2021-10-09] - Topic</dd>
+
+<dt><a href="/log/29-botnet-ddos.gmi">/log/29-botnet-ddos.gmi</a></dt>
+<dd>The Mystery of the Ceaseless Botnet DDoS [2021-10-10] - Topics</dd>
+
+<dt><a href="/log/31-ngram-needles.gmi">/log/31-ngram-needles.gmi</a></dt>
+<dd>Shaking N-gram needles from large haystacks [2021-10-22] - Topics</dd>
+
+<dt><a href="/log/37-keyword-extraction.gmi">/log/37-keyword-extraction.gmi</a></dt>
+<dd>A Jaunt Through Keyword Extraction [ 2021-11-11 ] - Topic</dd>
+
+<dt><a href="/log/38-old-and-new.gmi">/log/38-old-and-new.gmi</a></dt>
+<dd>Old and New [ 2021-11-12 ] - Topic</dd>
+
+<dt><a href="/log/41-search-result-relevance.gmi">/log/41-search-result-relevance.gmi</a></dt>
+<dd>Search Result Relevance [2021-12-10] - Topics</dd>
+
+<dt><a href="/log/44-discovery-and-design.gmi">/log/44-discovery-and-design.gmi</a></dt>
+<dd>Discovery and Design Considerations [ 2022-01-18 ] - Topic</dd>
+
+<dt><a href="/log/45-unfuck-internet-discoverability.gmi">/log/45-unfuck-internet-discoverability.gmi</a></dt>
+<dd>Can we unfuck internet discoverability? [ 2022-02-04 ] - Topic</dd>
+
+<dt><a href="/log/46-anatomy-of-search-engine-spam.gmi">/log/46-anatomy-of-search-engine-spam.gmi</a></dt>
+<dd>The Anatomy of Search Engine Spam [2022-02-07] - Topic</dd>
+
+<dt><a href="/log/49-marginalia-1-year.gmi">/log/49-marginalia-1-year.gmi</a></dt>
+<dd>Marginalia Search: 1 year [ 2022-02-25 ] - Topic</dd>
+
+<dt><a href="/log/52-growing-pains.gmi">/log/52-growing-pains.gmi</a></dt>
+<dd>Growing Pains [ 2022-03-23 ] - Topic</dd>
+
+<dt><a href="/log/54-bargain-bin-btree.gmi">/log/54-bargain-bin-btree.gmi</a></dt>
+<dd>The Bargain Bin B-Tree [ 2022-04-07 ] - Topics</dd>
+
+<dt><a href="/log/55-lexicon-rubberduck.gmi">/log/55-lexicon-rubberduck.gmi</a></dt>
+<dd>Lexicon Architectural Rubberducking [ 2022-04-11 ] - Topics</dd>
+
+<dt><a href="/log/56-uncertain-future.gmi">/log/56-uncertain-future.gmi</a></dt>
+<dd>Uncertain Future For Marginalia Search [ 2022-04-28 ] - Topics</dd>
+
+<dt><a href="/log/58-marginalia-open-source.gmi">/log/58-marginalia-open-source.gmi</a></dt>
+<dd>marginalia.nu goes open source [ 2022-05-27 ]  - Topics</dd>
+
+<dt><a href="/log/59-anchor-text.gmi">/log/59-anchor-text.gmi</a></dt>
+<dd>Fun with Anchor Text Keywords [ 2022-06-23 ] - Topics</dd>
+
+<dt><a href="/log/62-marginaliacoin.gmi">/log/62-marginaliacoin.gmi</a></dt>
+<dd>Marginaliacoin, and hidden forums [ 2022-08-18 ] - Topic</dd>
+
+<dt><a href="/log/63-marginalia-crawler.gmi">/log/63-marginalia-crawler.gmi</a></dt>
+<dd>The Evolution of Marginalia&#x27;s crawling [ 2022-08-23 ] - Topic</dd>
+
+<dt><a href="/log/64-hundred-million.gmi">/log/64-hundred-million.gmi</a></dt>
+<dd>Marginalia&#x27;s Index Reaches 100,000,000 Documents [ 2022-10-21 ] - Topics</dd>
+
+<dt><a href="/log/66-carbon-dating.gmi">/log/66-carbon-dating.gmi</a></dt>
+<dd>Carbon Dating HTML [ 2022-10-27 ] - Topics</dd>
+
+<dt><a href="/log/69-creepy-website-similarity.gmi">/log/69-creepy-website-similarity.gmi</a></dt>
+<dd>Creepy Website Similarity [ 2022-12-26 ] - Topic</dd>
+
+<dt><a href="/log/70-faster-index-joins.gmi">/log/70-faster-index-joins.gmi</a></dt>
+<dd>Faster Index Joins [ 2023-01-03 ] - Topic</dd>
+
+<dt><a href="/log/74-marginalia-2-years.gmi">/log/74-marginalia-2-years.gmi</a></dt>
+<dd>Marginalia Search: 2 years, big news [ 2023-02-26 ] - Topics</dd>
+
+<dt><a href="/projects/edge">/projects/edge</a></dt>
+<dd>Edge</dd>
+
+<dt><a href="/projects/edge/about.gmi">/projects/edge/about.gmi</a></dt>
+<dd>About search.marginalia.nu - Links</dd>
+
+<dt><a href="/projects/edge/design-notes.gmi">/projects/edge/design-notes.gmi</a></dt>
+<dd>Notes on Designing a Search Engine - Links</dd>
+
+<dt><a href="/projects/edge/supporting.gmi">/projects/edge/supporting.gmi</a></dt>
+<dd>Support This Project - Topics</dd>
+
+<dt><a href="/projects/edge/top-20.gmi">/projects/edge/top-20.gmi</a></dt>
+<dd>Top 20 - Topic</dd>
+</dl>
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>astrolabe.gmi</h1>
+    <a class="download" href="/api/raw?url=/topic/astrolabe.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/topic/astrolabe.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/topic/astrolabe.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Topic: Astrolabe</a>
+    
+    </div>
+</section>
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

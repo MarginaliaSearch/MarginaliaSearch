@@ -19,6 +19,8 @@ application {
 tasks.distZip.enabled = false
 
 dependencies {
+    implementation project(':code:common:process')
+
     implementation project(':code:common:model')
     implementation project(':code:common:config')
     implementation project(':code:common:service')
@@ -32,8 +34,6 @@ dependencies {
 
     implementation project(':code:features-crawl:crawl-blocklist')
     implementation project(':code:features-crawl:link-parser')
-    implementation project(':code:features-crawl:work-log')
-    implementation project(':code:features-crawl:crawl-plan')
 
     implementation libs.lombok
     annotationProcessor libs.lombok

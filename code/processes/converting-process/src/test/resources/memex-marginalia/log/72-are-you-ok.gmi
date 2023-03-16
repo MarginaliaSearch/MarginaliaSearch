@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Are you ok? [ 2023-01-27 ]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/72-are-you-ok.gmi" class="path file"><img src="/ico/file.png" title="file"> 72-are-you-ok.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Are you ok? [ 2023-01-27 ]</h1>
+<br>
+I don't know if I'm just imagining it, but has the Internet gone progressively more crazy the last decade or so?<br>
+<br>
+It's like everyone is so damn angry all the time. If they aren't angry they're bitter and resentful. And when they aren't angry or bitter, they're so depressed they're barely able to crawl out of bed. And if they aren't angry, bitter, or depressed, they have crippling anxiety. Every other week there's some public blow-out where some person or another just loses their shit.<br>
+<br>
+This is the new normal, but it isn't normal. <br>
+<br>
+I think we should talk about this and try and figure out what's going on.<br>
+<br>
+Obviously it's been a stressful couple of years for most people. Divisive characters have been prolific in politics, there's the war, a sense of hopelessness about global warming, the recession which has been looming on the horizon for a while, and on top of that the social isolation during Covid wasn't doing anyone's mental well-being a service.<br>
+<br>
+That's all recent things. There were arguably signs even before the 2020s.<br>
+<br>
+It's noteworthy how the discussion climate appears to have deteriorated with every election cycle since the early 2010s. It gets especially bad during the actual election season, and then relaxes a bit, but it never goes back to where it was, there are always permanent scars and divisions.  This has been the case with every political system I have insight into.  This doesn't seem to be sustainable. If we keep going like this we're literally gonna tear ourselves apart.<br>
+<br>
+The social media angle is also worth mentioning. <br>
+<br>
+During the pandemic, for many the only window to the world was social media as well as online news that's largely come to mostly report on what they see in social media.<br>
+<br>
+As anyone who has actually gone outside to touch grass will attest, what you see in social media is typically so exaggerated and distorted that it may as well be entirely fictional. <br>
+<br>
+Go outside and it's more or less the same as it has always been. What you see with your eyes and what you see with your phone is shockingly difficult to reconcile. <br>
+<br>
+Not that there aren't bad things happening in the world, that's the way it has always been, but your phone will have you believe that they are more frequent and much closer than they actually are.<br>
+<br>
+I can only speculate. I don't know what's going on. Maybe I'm just imagining things. Maybe I'm the one that's gone crazy.<br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>72-are-you-ok.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/72-are-you-ok.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/72-are-you-ok.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/72-are-you-ok.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/72-are-you-ok.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Are you ok? [ 2023-01-27 ]</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

@@ -1,0 +1,46 @@
+plugins {
+    id 'java'
+    id "io.freefair.lombok" version "5.3.3.3"
+
+    id "de.undercouch.download" version "5.1.0"
+
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
+dependencies {
+    implementation project(':code:common:model')
+    implementation project(':code:common:service')
+    implementation project(':code:api:index-api')
+
+    implementation libs.lombok
+    annotationProcessor libs.lombok
+
+    implementation libs.bundles.slf4j
+    implementation libs.guice
+    implementation libs.notnull
+    implementation libs.trove
+    implementation libs.fastutil
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+    testImplementation project(':code:libraries:term-frequency-dict')
+    testImplementation project(':code:libraries:braille-block-punch-cards')
+}
+
+
+test {
+    useJUnitPlatform()
+}
+
+task fastTests(type: Test) {
+    useJUnitPlatform {
+        excludeTags "slow"
+    }
+}

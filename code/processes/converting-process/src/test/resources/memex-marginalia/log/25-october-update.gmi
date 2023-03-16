@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Astrolabe - The October Update [2021-10-01]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/25-october-update.gmi" class="path file"><img src="/ico/file.png" title="file"> 25-october-update.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Astrolabe - The October Update [2021-10-01]</h1>
+<br>
+<a class="external" href="https://search.marginalia.nu">https://search.marginalia.nu</a><br>
+<br>
+The October Update is live. It introduced drastically improved topic identification and an actual ranking algorithm; and the result is interesting to say the least. What's striking is how much it's beginning to feel like a search engine. When it fails to find stuff, you can kinda see how.<br>
+<br>
+I've played with it for a while now and it does seem to produce relevant results for a lot of topics. A trade down in whimsical results but a big step up if you are looking for something specific, at least within the domain of topics where there are results to find.<br>
+<br>
+What really cool is how non-commercial a lot of the results are. If you search for say "mechanical keyboards", at the time of writing, 9 out of the 10 first entries are personal blogs. The Google result is... uh... yeah, a good example of why I started this project.<br>
+<br>
+<h2 id="1.1">Ranking Algorithm Overview</h2>
+<br>
+The ranking algorithm is a weighted link-count, that counts distinct links on a domain-by-domain basis given that they come from sites that have been indexed sufficiently thoroughly. <br>
+<br>
+It really does seem to produce pretty decent results. Here are the current top 15 domains.<br>
+<br>
+<pre>
++-------------------------------+---------+
+| URL_PART                      | QUALITY |
++-------------------------------+---------+
+| www.fourmilab.ch              | 92.8000 |
+| www.debian.org                | 91.8000 |
+| digital.library.upenn.edu     | 77.7000 |
+| www.panix.com                 | 77.1000 |
+| www.ibiblio.org               | 75.7000 |
+| users.erols.com               | 73.6000 |
+| www.openssh.com               | 70.5000 |
+| xroads.virginia.edu           | 66.7000 |
+| www.openbsd.org               | 65.4000 |
+| www.levity.com                | 63.4000 |
+| www.catb.org                  | 61.7000 |
+| www.webspawner.com            | 59.9000 |
+| www-personal.umich.edu        | 59.0000 |
+| onlinebooks.library.upenn.edu | 55.7000 |
+| www.postfix.org               | 49.1000 |
++-------------------------------+---------+</pre>
+<br>
+<h2 id="1.2">Walls of Text</h2>
+<br>
+A strange thing that's happened is that it seems to really strongly prefer long form wall-of-text style pages, especially with very little formatting. I'd like to tweak this a bit, it's looking a bit too 1996 and this isn't supposed to be a "live" Wayback machine.<br>
+<br>
+Part of this may be because the search engine premieres results where keywords that appear the most frequently in a page, especially when they overlap with the title. It does trip up a lot of keyword stuffing-style SEO, since if you put all keywords in a page, then nothing sticks out. However, in shorter pages, topical words may not appear sufficiently often.<br>
+<br>
+I've implemented optional filtering based on HTML standards, and I think with some adjustments I might be able to just add a "modern HTML" filter that picks up on stuff that looks like it's written after y2k based on the choice of tags and such. Unfortunately just going by DTD doesn't seem to work very well, as it appears many have "upgraded" their HTML3 stuff to HTML5 by changing the DTD at the top of the page and keeping the page mostly the same. I'm gonna have to be cleverer than that, but it feels reasonably doable.<br>
+<br>
+<h2 id="1.3">Red October?</h2>
+<br>
+I received some justified complaints that there were a bit too much right wing extremism in the search results in the August index. I haven't removed anything, but I've tweaked relevance of some domains and it does seem to have made a significant difference.<br>
+<br>
+I did the same for some very angry baptists who kept cropping up telling video game fans they were going to burn in hell in eternity if they didn't repent and stop worshiping false idols. <br>
+<br>
+My main approach to this is to go after the stuff that is visible. If you go out of your way to look for extremist stuff, then you are probably going to find it. However if this type of vitriol shows up in other searches it is a problem.<br>
+<br>
+The commies seem less likely to crop up in regular search results, so I haven't gone after them quite as hard. This may give the current state of the search engine a somewhat left-wing feel. One could argue it does compensate for the far-right feel of the September index.<br>
+<br>
+Ultimately I really don't care about politics.  I think loud political people are exhausting.  Maybe you care about politics, that's entirely fine; I probably care about some things you don't want to hear about as well.  I just don't want hateful tirades showing up in any search results, whether they are left, right, religious, atheist, pro-this, anti-that.  These angry people feel so strongly about their convictions they think they are entitled to impose on everyone whether they want to listen or not.  It's really the last part I disagree with.<br>
+<br>
+<h2 id="1.4">Link Highlights</h2>
+<br>
+To wrap things up, I wanted to highlight a few cool links I've found these last few days. Topically they are all over the map. Just see if you find something you enjoy.<br>
+<br>
+<a class="external" href="http://papillon.iocane-powder.net/">http://papillon.iocane-powder.net/</a><br>
+<a class="external" href="https://meatfighter.com/castlevania3-password/">https://meatfighter.com/castlevania3-password/</a><br>
+<a class="external" href="http://www.sydlexia.com/top100snes.htm">http://www.sydlexia.com/top100snes.htm</a><br>
+<a class="external" href="https://www.tim-mann.org/trs80/doc/Guide.txt">https://www.tim-mann.org/trs80/doc/Guide.txt</a><br>
+<a class="external" href="https://schmud.de/">https://schmud.de/</a><br>
+<br>
+<h2 id="1.5">Topics</h2>
+<br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>25-october-update.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/25-october-update.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/25-october-update.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/25-october-update.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/25-october-update.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Astrolabe - The October Update [2021-10-01]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Ranking Algorithm Overview</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Walls of Text</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Red October?</a>
+    
+        <a href="#1.4" class="heading-2">1.4 Link Highlights</a>
+    
+        <a href="#1.5" class="heading-2">1.5 Topics</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

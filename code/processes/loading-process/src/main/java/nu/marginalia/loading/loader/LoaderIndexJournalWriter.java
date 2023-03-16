@@ -8,7 +8,7 @@ import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
 import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
-import nu.marginalia.keyword_extraction.model.DocumentKeywords;
+import nu.marginalia.keyword.model.DocumentKeywords;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
 import nu.marginalia.model.idx.DocumentMetadata;

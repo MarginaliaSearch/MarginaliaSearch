@@ -157,8 +157,13 @@ ul.semantic-results a {
   margin-right: -1ch;
   margin-left: 1ch;
 }
+
 .big .card {
   min-width: 40ch;
+}
+
+.card.problems {
+  max-width: 40ch;
 }
 
 .card .info {
@@ -167,6 +172,11 @@ ul.semantic-results a {
   padding-right: 1ch;
   line-height: 1.6;
 }
+
+.card.problems .info {
+  margin-top: 1ch;
+}
+
 .card {
   flex-basis: 20ch;
   border: 2px #ccc;

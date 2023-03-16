@@ -1,0 +1,51 @@
+plugins {
+    id 'java'
+    id "io.freefair.lombok" version "5.3.3.3"
+    id 'application'
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
+application {
+    mainClass = 'nu.marginalia.converting.ConverterMain'
+    applicationName = 'converter-process'
+}
+
+tasks.distZip.enabled = false
+
+dependencies {
+    implementation libs.lombok
+    annotationProcessor libs.lombok
+    implementation libs.bundles.slf4j
+
+    implementation libs.notnull
+
+    implementation libs.jsoup
+
+    implementation libs.guice
+    implementation libs.guava
+    implementation libs.bundles.gson
+    implementation libs.trove
+    implementation libs.fastutil
+    implementation libs.commons.lang3
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+}
+
+test {
+    maxHeapSize = "8G"
+    useJUnitPlatform()
+}
+
+task fastTests(type: Test) {
+    useJUnitPlatform {
+        excludeTags "slow"
+    }
+}

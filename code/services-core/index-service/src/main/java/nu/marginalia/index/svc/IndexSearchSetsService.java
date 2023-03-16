@@ -7,7 +7,6 @@ import nu.marginalia.index.IndexServicesFactory;
 import nu.marginalia.index.searchset.SearchSet;
 import nu.marginalia.ranking.ReversePageRank;
 import nu.marginalia.ranking.StandardPageRank;
-import nu.marginalia.ranking.accumulator.RankingResultBitSetAccumulator;
 import nu.marginalia.ranking.accumulator.RankingResultHashMapAccumulator;
 import nu.marginalia.ranking.accumulator.RankingResultHashSetAccumulator;
 import nu.marginalia.ranking.data.RankingDomainFetcher;
@@ -17,6 +16,7 @@ import nu.marginalia.index.svc.searchset.SearchSetAny;
 import nu.marginalia.index.config.RankingSettings;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.index.client.model.query.SearchSetIdentifier;
+import nu.marginalia.index.db.DbUpdateRanks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +26,7 @@ import java.io.IOException;
 public class IndexSearchSetsService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final RankingDomainFetcher rankingDomains;
+    private final DbUpdateRanks dbUpdateRanks;
     private final RankingDomainFetcher similarityDomains;
     private final RankingSettings rankingSettings;
 
@@ -43,9 +44,11 @@ public class IndexSearchSetsService {
     public IndexSearchSetsService(RankingDomainFetcher rankingDomains,
                                   RankingDomainFetcherForSimilarityData similarityDomains,
                                   RankingSettings rankingSettings,
-                                  IndexServicesFactory servicesFactory) throws IOException {
+                                  IndexServicesFactory servicesFactory,
+                                  DbUpdateRanks dbUpdateRanks) throws IOException {
 
         this.rankingDomains = rankingDomains;
+        this.dbUpdateRanks = dbUpdateRanks;
 
         if (similarityDomains.hasData()) {
             this.similarityDomains = similarityDomains;
@@ -95,6 +98,10 @@ public class IndexSearchSetsService {
         synchronized (this) {
             domainRankings = new DomainRankings(ranks);
         }
+
+        // The EC_DOMAIN table has a field that reflects the rank, this needs to be set for search result ordering to
+        // make sense
+        dbUpdateRanks.execute(ranks);
     }
 
     @SneakyThrows

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="preload" as="font" href="https://www.marginalia.nu/fonts/Inconsolata-Medium.ttf" />
+    <link rel="preload" as="font" href="https://www.marginalia.nu/fonts/Roboto-Medium.ttf" />
+    <title>MEMEX - </title>
+    <link rel="stylesheet" href="https://www.marginalia.nu/style.css" />
+    <link rel="stylesheet" href="https://memex.marginalia.nu/style.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body class="double" lang="en">
+<header>
+    <nav>
+    
+        <a href="/" class="path root">marginalia</a>
+    
+        <a href="/log" class="path dir">log</a>
+    
+        <a href="/log/todo.gmi" class="path file">todo.gmi</a>
+    
+    </nav>
+</header>
+<article>
+<section id="memex-node">
+<h1>/log/todo.gmi is gone</h1>
+<p>
+
+
+</p>
+</section>
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/special/tombstone.gmi">/special/tombstone.gmi</a></dt>
+<dd>Tombstone - Removed links</dd>
+</dl>
+</section>
+
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

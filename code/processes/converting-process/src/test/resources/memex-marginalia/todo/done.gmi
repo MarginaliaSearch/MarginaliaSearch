@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Done</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/todo" class="path dir"><img src="/ico/dir.png" title="dir"> todo</a>
+
+    <a href="/todo/done.gmi" class="path file"><img src="/ico/file.png" title="file"> done.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<!-- pragma: TASKS -->
+<h1 id="1">Done</h1>
+<br>
+<h2 id="1.1">Done 2022-01-30</h2>
+<a class="task-pointer" name="t1"></a><div class="task done" id="1">- generate better default thumbnail on the fly (/)</div>
+<br>
+<br>
+<h2 id="1.2">Done 2022-01-19</h2>
+<a class="task-pointer" name="t2"></a><div class="task done" id="2">- public API gateway (/)</div>
+<br>
+<h2 id="1.3">Done 2022-01-16</h2>
+<a class="task-pointer" name="t3"></a><div class="task done" id="3">- overhaul CSS of MEMEX (/)</div>
+<br>
+<br>
+<h2 id="1.4">Done 2022-01-15</h2>
+<a class="task-pointer" name="t4"></a><div class="task done" id="4">- Improved random (/)</div>
+<pre class="literal">
+      INSERT INTO EC_RANDOM_DOMAINS 
+            SELECT DISTINCT(EC_DOMAIN.ID) FROM EC_DOMAIN_NEIGHBORS A
+            INNER JOIN EC_DOMAIN_NEIGHBORS B ON B.NEIGHBOR_ID=A.DOMAIN_ID
+            INNER JOIN EC_DOMAIN_NEIGHBORS C ON C.NEIGHBOR_ID=B.DOMAIN_ID
+            INNER JOIN EC_DOMAIN ON A.DOMAIN_ID=EC_DOMAIN.ID
+            WHERE C.DOMAIN_ID IN (SELECT ID FROM EC_DOMAIN WHERE URL_PART IN (secret-sauce))
+            AND EC_DOMAIN.STATE&gt;=0;</pre>
+<br>
+<h2 id="1.5">Done 2022-01-14</h2>
+<a class="task-pointer" name="t5"></a><div class="task done" id="5">- Dark Mode (/)</div>
+<a class="task-pointer" name="t6"></a><div class="task done" id="6">- Screengrabs by domain (/)</div>
+<a class="task-pointer" name="t7"></a><div class="task done" id="7">- Revise exploration mode (/)</div>
+<a class="task-pointer" name="t8"></a><div class="task done" id="8">- Improve keyboard navigation (/)</div>
+<br>
+<h2 id="1.6">Done 2022-01-12</h2>
+<a class="task-pointer" name="t9"></a><div class="task done" id="9">- Search redesign (/)</div>
+<a class="task-pointer" name="t10"></a><div class="task done" id="10">- Fixed dictionary corruption bug (/)</div>
+<br>
+<h2 id="1.7">Done 2022-01-04</h2>
+<a class="task-pointer" name="t11"></a><div class="task done" id="11">- Improve site:-query QOL (/)</div>
+<a class="task-pointer" name="t12"></a><div class="task done" id="12">- Fix byte folder bug (/)</div>
+<br>
+<a class="task-pointer" name="t13"></a><div class="task done" id="13">- refactor EC_URL (/)</div>
+<pre class="literal">
+  ALTER TABLE EC_URL MODIFY COLUMN PROTO ENUM('http', 'https', 'gemini') NOT NULL;</pre>
+<a class="task-pointer" name="t13.1"></a><div class="task done" id="13.1">-- put visit-metadata in separate table (/)</div>
+<br>
+<br>
+<h2 id="1.8">Done 2021-12-03</h2>
+<br>
+<a class="task-pointer" name="t14"></a><div class="task done" id="14">- fix bug in language detection (/)</div>
+<a class="task-pointer" name="t14.1"></a><div class="task done" id="14.1">-- re-fetching some pages (/)</div>
+<br>
+<h2 id="1.9">Done 2021-12-02</h2>
+<br>
+<a class="task-pointer" name="t15"></a><div class="task done" id="15">- new approach for query rewriting (/)</div>
+<br>
+<h2 id="1.10">Done 2021-11-14</h2>
+<br>
+<a class="task-pointer" name="t16"></a><div class="task done" id="16">- make site:-queries return a dummy entry when no site information is available (/)</div>
+<br>
+<h2 id="1.11">Done 2021-11-11</h2>
+<br>
+<a class="task-pointer" name="t17"></a><div class="task done" id="17">- hybridized ordering of domains on reindex, F(previous rank, previous quality). (/)</div>
+<br>
+<a class="task-pointer" name="t18"></a><div class="task done" id="18">- mark documents with audio, video, object tags (/)</div>
+<br>
+<h2 id="1.12">Done 2021-11-10</h2>
+<br>
+<a class="task-pointer" name="t19"></a><div class="task done" id="19">- car service <2021-11-18> (/)</div>
+<br>
+<br>
+<h2 id="1.13">Done 2021-10-30</h2>
+<a class="task-pointer" name="t20"></a><div class="task done" id="20">- Add auto redirects for guesswork rss/atom/feed-requests to /log/feed.xml (/)</div>
+<br>
+<br>
+<h2 id="1.14">Done 2021-10-29</h2>
+<br>
+<a class="task-pointer" name="t21"></a><div class="task done" id="21">- investigate extracting more keywords (/)</div>
+<a class="task-pointer" name="t21.1"></a><div class="task done" id="21.1">-- textrank (/)</div>
+<a class="task-pointer" name="t21.2"></a><div class="task skip" id="21.2">-- tf-idf (x)</div>
+<a class="task-pointer" name="t21.3"></a><div class="task done" id="21.3">-- sideload additional keywords for most popular sites (/)</div>
+<br>
+<h2 id="1.15">Done 2021-10-12</h2>
+<br>
+<a class="task-pointer" name="t22"></a><div class="task done" id="22">- refactor index converter (/)</div>
+<a class="task-pointer" name="t23"></a><div class="task done" id="23">- clean up code garbage (/)</div>
+<br>
+<h2 id="1.16">Done 2021-10-05</h2>
+<a class="task-pointer" name="t24"></a><div class="task done" id="24">- trial more vanilla PageRank approach as a tertiary algorithm (/)</div>
+<br>
+<a class="task-pointer" name="t25"></a><div class="task done" id="25">- fix a search result priortization bugs for mixed rankings (/)</div>
+<br>
+<a class="task-pointer" name="t26"></a><div class="task skip" id="26">- fix search interface for firefox on android (x)</div>
+<pre class="literal">
+    It is reportedly broken</pre>
+<a class="task-pointer" name="t26.1"></a><div class="task skip" id="26.1">-- figure out how to replicate this problem (x)</div>
+<br>
+<a class="task-pointer" name="t27"></a><div class="task done" id="27">- fix potential DoS where certain search queries with a large number of common but mutually exclusive terms would take forever to process. (/)</div>
+<pre class="literal">
+    test query: generic stores underground unusual</pre>
+<br>
+<h2 id="1.17">Done 2021-10-03</h2>
+<br>
+<a class="task-pointer" name="t28"></a><div class="task done" id="28">- prioritize n-gram matches over word matches (/)</div>
+<a class="task-pointer" name="t29"></a><div class="task done" id="29">- show informative error page when the index server reboots (/)</div>
+<br>
+<h2 id="1.18">Done 2021-10-02</h2>
+<br>
+<a class="task-pointer" name="t30"></a><div class="task done" id="30">- Personalized Page Rank (/)</div>
+<a class="task-pointer" name="t31"></a><div class="task done" id="31">- Duelling Algorithms (/)</div>
+<br>
+<h2 id="1.19">Done 2021-10-30</h2>
+<br>
+<a class="task-pointer" name="t32"></a><div class="task done" id="32">- Launch October Update (/)</div>
+<br>
+<h2 id="1.20">Done 2021-09-26</h2>
+<a class="task-pointer" name="t33"></a><div class="task done" id="33">- fix broken search use-cases (/)</div>
+<a class="task-pointer" name="t33.1"></a><div class="task done" id="33.1">-- c language (/)</div>
+<a class="task-pointer" name="t33.2"></a><div class="task done" id="33.2">-- 67 chevy (/)</div>
+<a class="task-pointer" name="t33.3"></a><div class="task done" id="33.3">-- 68000 (/)</div>
+<a class="task-pointer" name="t33.4"></a><div class="task done" id="33.4">-- c# (/)</div>
+<a class="task-pointer" name="t33.5"></a><div class="task done" id="33.5">-- @twitterhandle (/)</div>
+<a class="task-pointer" name="t33.6"></a><div class="task done" id="33.6">-- #hashtag (/)</div>
+<br>
+<a class="task-pointer" name="t34"></a><div class="task done" id="34">- trial tar based archiving to save the poor ext4 fs (/)</div>
+<br>
+<a class="task-pointer" name="t35"></a><div class="task done" id="35">- use words to tag document format etc (/)</div>
+<br>
+<a class="task-pointer" name="t36"></a><div class="task done" id="36">- dynamic re-bucketing based on something like (/)  </div>
+<pre class="literal">
+    SELECT DEST.URL_PART,EXP(DEST.QUALITY)*SUM(EXP(SOURCE.QUALITY)) AS Q from EC_DOMAIN DEST INNER JOIN EC_DOMAIN_LINK ON DEST.ID=DEST_DOMAIN_ID INNER JOIN EC_DOMAIN SOURCE ON SOURCE.ID=SOURCE_DOMAIN_ID WHERE DEST.INDEXED&gt;0 GROUP BY DEST_DOMAIN_ID</pre>
+<br>
+<br>
+<h2 id="1.21">Done 2021-09-19</h2>
+<br>
+<a class="task-pointer" name="t37"></a><div class="task done" id="37">- Fix several indexing bugs that hid relevant search results (/)</div>
+<br>
+<h2 id="1.22">Done 2021-09-17</h2>
+<br>
+<a class="task-pointer" name="t38"></a><div class="task done" id="38">- Added search profiles (/)</div>
+<br>
+<h2 id="1.23">Done 2021-09-16</h2>
+<br>
+<a class="task-pointer" name="t39"></a><div class="task done" id="39">- Rephrased an error message that some people took to mean they weren't speaking a proper language (/)</div>
+<br>
+<h2 id="1.24">Done 2021-09-15</h2>
+<br>
+<a class="task-pointer" name="t40"></a><div class="task done" id="40">- Using in-site domain link-names to add search terms (/)</div>
+<a class="task-pointer" name="t41"></a><div class="task done" id="41">- Fixed buggy default content-type (/)</div>
+<a class="task-pointer" name="t42"></a><div class="task done" id="42">- Even more aggressive unicode language dectection (/)</div>
+<br>
+<h2 id="1.25">Done 2021-09-11</h2>
+<a class="task-pointer" name="t43"></a><div class="task done" id="43">- Status flag for domains (/)</div>
+<pre class="literal">
+    Indexed, Active, Blocked</pre>
+<a class="task-pointer" name="t44"></a><div class="task done" id="44">- Improve topic detection (/)</div>
+<br>
+<h2 id="1.26">Done 2021-09-09</h2>
+<br>
+<a class="task-pointer" name="t45"></a><div class="task done" id="45">- Tuned search results to demote very short results (/)</div>
+<br>
+<h2 id="1.27">Done 2021-09-08</h2>
+<br>
+<a class="task-pointer" name="t46"></a><div class="task done" id="46">- Encyclopedia tries harder to find the right article if the case match isn't exact (/)</div>
+<br>
+<h2 id="1.28">Done 2021-09-06</h2>
+<br>
+<a class="task-pointer" name="t47"></a><div class="task done" id="47">- Breaking changes for next Index-rebuild (/)</div>
+<a class="task-pointer" name="t47.1"></a><div class="task done" id="47.1">-- Change writer bucket scaling to 1/4 (/)</div>
+<a class="task-pointer" name="t47.2"></a><div class="task done" id="47.2">-- Move protocol and port from EdgeDomain to EdgeURL (/)</div>
+<a class="task-pointer" name="t47.3"></a><div class="task done" id="47.3">-- Change database schemas to reflect (/)</div>
+<a class="task-pointer" name="t47.4"></a><div class="task done" id="47.4">-- ISO-8859-1/UTF-8 charset sniffer (/)</div>
+<a class="task-pointer" name="t47.5"></a><div class="task done" id="47.5">-- Fixed a bug that would occasionally cause the crawler to re-index the same working set multiple times (/)</div>
+<br>
+<br>
+<br>
+<h2 id="1.29">Done 2021-09-02</h2>
+<br>
+<a class="task-pointer" name="t48"></a><div class="task done" id="48">- improve edge-director throughput (/)</div>
+<a class="task-pointer" name="t49"></a><div class="task done" id="49">- give edge-director state for semi-blocking tasks (/)</div>
+<br>
+<h2 id="1.30">Done 2021-08-31</h2>
+<br>
+<a class="task-pointer" name="t50"></a><div class="task done" id="50">- optimize URL index size (/)</div>
+<br>
+<h2 id="1.31">Done 2021-08-28</h2>
+<br>
+<a class="task-pointer" name="t51"></a><div class="task done" id="51">- clean up gemini navigation (/)</div>
+<a class="task-pointer" name="t52"></a><div class="task done" id="52">- Atom feed for HTTPS and Gemini (/)</div>
+<br>
+<br>
+<h2 id="1.32">Done 2021-08-27</h2>
+<a class="task-pointer" name="t53"></a><div class="task done" id="53">- Feed gemini server with rendered gmi-content (/)</div>
+<a class="task-pointer" name="t53.1"></a><div class="task done" id="53.1">-- Output the content (/)</div>
+<a class="task-pointer" name="t53.2"></a><div class="task done" id="53.2">-- Generate feeds (/)</div>
+<a class="task-pointer" name="t53.3"></a><div class="task skip" id="53.3">-- Make the gemini server read it (x)</div>
+<a class="task-pointer" name="t53.4"></a><div class="task done" id="53.4">-- Switch over (/)</div>
+<br>
+<br>
+<h2 id="1.33">Done 2021-08-26</h2>
+<a class="task-pointer" name="t54"></a><div class="task done" id="54">- Absorb gemini server into WMSA (/)</div>
+<br>
+<h2 id="1.34">Done 2021-08-25</h2>
+<a class="task-pointer" name="t55"></a><div class="task done" id="55">- wildcard domain for marginalia.nu  (/)</div>
+<a class="task-pointer" name="t55.1"></a><div class="task done" id="55.1">-- move memex to memex-subdomain (/)</div>
+<br>
+<a class="task-pointer" name="t56"></a><div class="task done" id="56">- feeds on FEED pragma (/)</div>
+<br>
+<h2 id="1.35">Done 2021-08-24</h2>
+<a class="task-pointer" name="t57"></a><div class="task done" id="57">- Top nav bar overhaul (/)</div>
+<br>
+<h2 id="1.36">Done 2021-08-23</h2>
+<a class="task-pointer" name="t58"></a><div class="task done" id="58">- add marker for which files are todo files (/)</div>
+<pre class="literal">
+    Added %%%/pragmas for toggling behavior</pre>
+<a class="task-pointer" name="t58.1"></a><div class="task done" id="58.1">-- Added template helpers for consuming pragmas (/)</div>
+<a class="task-pointer" name="t58.2"></a><div class="task done" id="58.2">-- Used to improve topic pages (/)</div>
+<br>
+<a class="task-pointer" name="t59"></a><div class="task done" id="59">- Fixes for git (/)</div>
+<br>
+<h2 id="1.37">Done 2021-08-22</h2>
+<a class="task-pointer" name="t60"></a><div class="task done" id="60">- File manager (/)</div>
+<a class="task-pointer" name="t60.1"></a><div class="task done" id="60.1">-- Delete (/)</div>
+<a class="task-pointer" name="t60.2"></a><div class="task skip" id="60.2">-- Delete Empty Dir (x)</div>
+<a class="task-pointer" name="t60.3"></a><div class="task done" id="60.3">-- Move/Rename (/)</div>
+<a class="task-pointer" name="t60.3.1"></a><div class="task done" id="60.3.1">--- System for tombstones/redirects (/)</div>
+<br>
+<a class="task-pointer" name="t61"></a><div class="task done" id="61">- Edit for / does not work (/)</div>
+<pre class="literal">
+    Needed better support for non-normalized URLs, e.g. //index.gmi</pre>
+<br>
+<a class="task-pointer" name="t62"></a><div class="task done" id="62">- Backlinks for index (/)</div>
+<br>
+<br>
+<h2 id="1.38">Done 2021-08-21</h2>
+<a class="task-pointer" name="t63"></a><div class="task done" id="63">- Git Integration (/)</div>
+<a class="task-pointer" name="t63.1"></a><div class="task done" id="63.1">-- Use commit hooks to trigger pull (/)</div>
+<a class="external" href="https://git-scm.com/book/uz/v2/Appendix-B%3A-Embedding-Git-in-your-Applications-JGit">https://git-scm.com/book/uz/v2/Appendix-B%3A-Embedding-Git-in-your-Applications-JGit</a><br>
+<br>
+<a class="task-pointer" name="t64"></a><div class="task done" id="64">- Recursive directory watch (/)</div>
+<br>
+<a class="task-pointer" name="t65"></a><div class="task done" id="65">- Two column layout (/)</div>
+<br>
+<h2 id="1.39">Done 2021-08-20</h2>
+<a class="task-pointer" name="t66"></a><div class="task done" id="66">- Overhaul MEMEX navigation (/)</div>
+<a class="task-pointer" name="t66.1"></a><div class="task done" id="66.1">-- Navigation bar (/)</div>
+<a class="task-pointer" name="t66.2"></a><div class="task skip" id="66.2">-- Generate site map (x)</div>
+<a class="task-pointer" name="t66.3"></a><div class="task done" id="66.3">-- Editing (/)</div>
+<a class="task-pointer" name="t66.3.1"></a><div class="task done" id="66.3.1">--- Add update-root link  (/)</div>
+<br>
+<a class="task-pointer" name="t67"></a><div class="task done" id="67">- Tombstones aren't generated properly on-delete (/)</div>
+<pre class="literal">
+  The tombstone db wasn't properly
+  reloaded after being updated.</pre>
+<br>
+<a class="task-pointer" name="t68"></a><div class="task done" id="68">- Just write static files to disk instead of using an intermediary backend server. (/)</div>
+<a class="task-pointer" name="t68.1"></a><div class="task done" id="68.1">-- Use alias directive to set different root for memex path. (/)</div>
+<a class="task-pointer" name="t68.2"></a><div class="task done" id="68.2">-- Content-type is finnicky (/) </div>
+<pre class="literal">
+  I want to serve html-wrapped .gmi and .html 
+       location ~* \.(gmi|png)$ {
+            types {
+                text/html gmi;
+                text/html png;
+            }
+        }</pre>
+<br>
+<br>
+<h2 id="1.40">Done 2021-08-19</h2>
+<a class="task-pointer" name="t69"></a><div class="task done" id="69">- Move away from statically generated HTML forms in memex (/)</div>
+ <br>
+<a class="task-pointer" name="t70"></a><div class="task done" id="70">- Fix stability of podcast scraper (/)</div>
+<br>
+<a class="task-pointer" name="t71"></a><div class="task done" id="71">- Get crawling up again (/)</div>
+<a class="task-pointer" name="t71.1"></a><div class="task done" id="71.1">-- Monitoring (/)</div>
+<a class="task-pointer" name="t71.1.1"></a><div class="task done" id="71.1.1">--- Extraction (/)</div>
+<a class="task-pointer" name="t71.1.2"></a><div class="task done" id="71.1.2">--- Status page (/)</div>
+<a class="task-pointer" name="t71.2"></a><div class="task done" id="71.2">-- Scraper config (/)</div>
+<a class="task-pointer" name="t71.3"></a><div class="task unknown" id="71.3">-- DNS cache (?)</div>
+<a class="task-pointer" name="t71.4"></a><div class="task done" id="71.4">-- IP Block CDNs (/)</div>
+<a class="task-pointer" name="t71.4.1"></a><div class="task done" id="71.4.1">--- Parse CIDR (/)</div>
+<pre class="literal">
+    Apache Commons.Net SubnetUtil seems to
+    do the job, although it can't deal 
+    with IPV6 :-/</pre>
+<a class="task-pointer" name="t71.4.2"></a><div class="task done" id="71.4.2">--- CloudFlare (/)</div>
+<pre class="literal">
+    173.245.48.0/20
+    103.21.244.0/22
+    103.22.200.0/22
+    103.31.4.0/22
+    141.101.64.0/18
+    108.162.192.0/18
+    190.93.240.0/20
+    188.114.96.0/20
+    197.234.240.0/22
+    198.41.128.0/17
+    162.158.0.0/15
+    172.64.0.0/13
+    131.0.72.0/22
+    104.16.0.0/13
+    104.24.0.0/14
+    2400:cb00::/32
+    2606:4700::/32
+    2803:f800::/32
+    2405:b500::/32
+    2405:8100::/32
+    2a06:98c0::/29
+    2c0f:f248::/32</pre>
+<a class="task-pointer" name="t71.4.3"></a><div class="task done" id="71.4.3">--- Fastly (/)</div>
+<pre class="literal">
+    23.235.32.0/20
+    43.249.72.0/22
+    103.244.50.0/24
+    103.245.222.0/23
+    103.245.224.0/24
+    104.156.80.0/20
+    146.75.0.0/17
+    151.101.0.0/16
+    157.52.64.0/18
+    167.82.0.0/17
+    167.82.128.0/20
+    167.82.160.0/20
+    167.82.224.0/20
+    172.111.64.0/18
+    185.31.16.0/22
+    199.27.72.0/21
+    199.232.0.0/16</pre>
+<br>
+<a class="task-pointer" name="t72"></a><div class="task done" id="72">- Refactor task management (/)</div>
+<a class="task-pointer" name="t72.1"></a><div class="task done" id="72.1">-- Fix prepend (/)</div>
+<a class="task-pointer" name="t72.2"></a><div class="task done" id="72.2">-- Add tests (/)</div>
+<br>
+<a class="task-pointer" name="t73"></a><div class="task done" id="73">- Refactor Floyd-Steinberg ditherer (/)</div>
+<br>
+<a class="task-pointer" name="t74"></a><div class="task done" id="74">- Todo move-to-done function puts header last in #Done (/)</div>
+<br>
+<h2 id="1.41">Done 2021-08-16</h2>
+<a class="task-pointer" name="t75"></a><div class="task done" id="75">- Pictures-in-HTML (/)</div>
+<a class="task-pointer" name="t75.1"></a><div class="task done" id="75.1">-- Implement compression via Floyd-Steinberg dithering (/)</div>
+<a class="external" href="https://encyclopedia.marginalia.nu/wiki/Floyd%E2%80%93Steinberg_dithering">https://encyclopedia.marginalia.nu/wiki/Floyd%E2%80%93Steinberg_dithering</a><br>
+<a class="external" href="http://image4j.sourceforge.net/javadoc/index.html?net/sf/image4j/util/ConvertUtil.html">http://image4j.sourceforge.net/javadoc/index.html?net/sf/image4j/util/ConvertUtil.html</a><br>
+<a class="task-pointer" name="t75.1.1"></a><div class="task done" id="75.1.1">--- Ensure 4 bit (/)</div>
+<a class="task-pointer" name="t75.1.2"></a><div class="task done" id="75.1.2">--- On upload (/)</div>
+<a class="task-pointer" name="t75.1.3"></a><div class="task skip" id="75.1.3">--- Convert existing stuff on-read (x)</div>
+<a class="task-pointer" name="t75.2"></a><div class="task done" id="75.2">-- Render image views (/)</div>
+<a class="task-pointer" name="t75.2.1"></a><div class="task done" id="75.2.1">--- Add to index (/)</div>
+<a class="task-pointer" name="t75.3"></a><div class="task done" id="75.3">-- Upload form (/)</div>
+<br>
+<h2 id="1.42">Done 2021-08-15</h2>
+<a class="task-pointer" name="t76"></a><div class="task done" id="76">- CSS fixes for mobile (/)</div>
+<a class="task-pointer" name="t76.1"></a><div class="task done" id="76.1">-- text align for tasks (/)</div>
+<a class="task-pointer" name="t76.2"></a><div class="task done" id="76.2">-- indent overflowed tasks (/)</div>
+<br>
+<a class="task-pointer" name="t77"></a><div class="task done" id="77">- Fix CME (/)</div>
+<pre class="literal">
+    java.util.ConcurrentModificationException: null
+        at java.util.HashMap.forEach(HashMap.java:1428) ~[?:?]
+        at nu.marginalia.wmsa.memex.MemexData.forEach(MemexData.java:51) ~[WMSA-1628951793.jar:?]
+        at nu.marginalia.wmsa.memex.Memex.reRender(Memex.java:49) ~[WMSA-1628951793.jar:?]
+        at io.reactivex.rxjava3.core.Scheduler$PeriodicDirectTask.run(Scheduler.java:566) [WMSA-1628951793.jar:?]
+        at io.reactivex.rxjava3.core.Scheduler$Worker$PeriodicTask.run(Scheduler.java:513) [WMSA-1628951793.jar:?]
+        at io.reactivex.rxjava3.internal.schedulers.ScheduledRunnable.run(ScheduledRunnable.java:65) [WMSA-1628951793.jar:?]
+        at io.reactivex.rxjava3.internal.schedulers.ScheduledRunnable.call(ScheduledRunnable.java:56) [WMSA-1628951793.jar:?]
+        at java.util.concurrent.FutureTask.run(FutureTask.java:264) [?:?]
+        at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:304) [?:?]
+        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1130) [?:?]
+        at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:630) [?:?]
+        at java.lang.Thread.run(Thread.java:832) [?:?]
+    ERROR 2021-08-14 16:36:39,467 RxCachedThreadScheduler-2 MemexMain           : Uncaught exception
+    java.util.ConcurrentModificationException: null
+        at java.util.HashMap.forEach(HashMap.java:1428) ~[?:?]
+        at nu.marginalia.wmsa.memex.MemexData.forEach(MemexData.java:51) ~[WMSA-1628951793.jar:?]
+        at nu.marginalia.wmsa.memex.Memex.reRender(Memex.java:49) ~[WMSA-1628951793.jar:?]
+        at io.reactivex.rxjava3.core.Scheduler$PeriodicDirectTask.run(Scheduler.java:566) ~[WMSA-1628951793.jar:?]
+        at io.reactivex.rxjava3.core.Scheduler$Worker$PeriodicTask.run(Scheduler.java:513) ~[WMSA-1628951793.jar:?]
+        at io.reactivex.rxjava3.internal.schedulers.ScheduledRunnable.run(ScheduledRunnable.java:65) [WMSA-1628951793.jar:?]
+        at io.reactivex.rxjava3.internal.schedulers.ScheduledRunnable.call(ScheduledRunnable.java:56) [WMSA-1628951793.jar:?]
+        at java.util.concurrent.FutureTask.run(FutureTask.java:264) [?:?]
+        at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:304) [?:?]
+        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1130) [?:?]
+        at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:630) [?:?]
+        at java.lang.Thread.run(Thread.java:832) [?:?]</pre>
+<br>
+<h2 id="1.43">Done 2021-08-14</h2>
+<a class="task-pointer" name="t78"></a><div class="task done" id="78">- Automatic TODO task categorization (/)</div>
+<a class="task-pointer" name="t79"></a><div class="task done" id="79">- Login API on separate service (/)</div>
+<a class="task-pointer" name="t79.1"></a><div class="task done" id="79.1">-- Set up service (/)</div>
+<a class="task-pointer" name="t79.2"></a><div class="task done" id="79.2">-- Route requests (/)</div>
+<br>
+<a class="task-pointer" name="t80"></a><div class="task done" id="80">- Fix header auto-location (/)</div>
+<br>
+<a class="task-pointer" name="t81"></a><div class="task done" id="81">- Display top tasks in index (/)</div>
+<br>
+<h2 id="1.44">Done 2021-08-10</h2>
+<br>
+<a class="task-pointer" name="t81.1"></a><div class="task done" id="81.1">-- + in URLs? (/)</div>
+<pre class="literal">
+  proxy_pass with / forces nginx to parse the url (why?)
+  Bad:
+        proxy_pass http://127.0.0.1:5025/public/wiki/
+  Good:
+        rewrite ^ $request_uri
+        rewrite ^/(.*) /public/$1 break;
+        return 400;
+        proxy_pass http://127.0.0.1:5025$uri;</pre>
+<br>
+<a class="task-pointer" name="t82"></a><div class="task done" id="82">- Encyclopedia (/)</div>
+<a class="task-pointer" name="t82.1"></a><div class="task done" id="82.1">-- Search API (/)</div>
+<a class="task-pointer" name="t82.2"></a><div class="task done" id="82.2">-- code tags (/)</div>
+<br>
+<br>
+<h2 id="1.45">Done 2021-08-06</h2>
+<br>
+<a class="task-pointer" name="t83"></a><div class="task done" id="83">- Memex (/)</div>
+<a class="task-pointer" name="t83.1"></a><div class="task done" id="83.1">-- GemtextParser (/)</div>
+<a class="task-pointer" name="t83.2"></a><div class="task done" id="83.2">-- Service skeleton (/)</div>
+<a class="task-pointer" name="t83.3"></a><div class="task done" id="83.3">-- Link extraction (/)</div>
+<a class="task-pointer" name="t83.4"></a><div class="task done" id="83.4">-- Rendering (/)</div>
+<a class="task-pointer" name="t83.4.1"></a><div class="task done" id="83.4.1">--- Stylesheet (/)</div>
+<a class="task-pointer" name="t83.5"></a><div class="task skip" id="83.5">-- Metadata (-)</div>
+<a class="task-pointer" name="t83.6"></a><div class="task done" id="83.6">-- Uppdateringar (/)</div>
+<a class="task-pointer" name="t83.6.1"></a><div class="task done" id="83.6.1">--- API (/)</div>
+<a class="task-pointer" name="t83.6.2"></a><div class="task done" id="83.6.2">--- Formulär (/)</div>
+<br>
+<h2 id="1.46">Done 2021-08-04</h2>
+<br>
+<a class="task-pointer" name="t84"></a><div class="task done" id="84">- Service Lockdown (/)</div>
+<a class="task-pointer" name="t84.1"></a><div class="task done" id="84.1">-- X-Public header in code (/)</div>
+<br>
+<a class="task-pointer" name="t84.2"></a><div class="task done" id="84.2">-- Move endpoints (/)</div>
+<a class="task-pointer" name="t84.2.1"></a><div class="task done" id="84.2.1">--- Resource Store (/)</div>
+<a class="task-pointer" name="t84.2.2"></a><div class="task done" id="84.2.2">--- Search (/)</div>
+<a class="task-pointer" name="t84.2.3"></a><div class="task done" id="84.2.3">--- Assistant (/)</div>
+<br>
+<a class="task-pointer" name="t84.3"></a><div class="task done" id="84.3">-- Update clients (/)</div>
+<a class="task-pointer" name="t84.3.1"></a><div class="task done" id="84.3.1">--- Resource Store (/)</div>
+<a class="task-pointer" name="t84.3.2"></a><div class="task done" id="84.3.2">--- Search Service (/)</div>
+<a class="task-pointer" name="t84.3.3"></a><div class="task skip" id="84.3.3">--- Assistant (-)</div>
+<br>
+<a class="task-pointer" name="t84.4"></a><div class="task done" id="84.4">-- Update nginx (/)</div>
+<a class="task-pointer" name="t84.5"></a><div class="task done" id="84.5">-- Update links on website (/)</div>
+<br>
+<a class="task-pointer" name="t85"></a><div class="task done" id="85">- Tune wiki archive fs (/)</div>
+<pre class="literal">
+    sudo tune2fs -O ^dir_index /dev/nvme0n1p2
+    </pre>
+<a class="task-pointer" name="t86"></a><div class="task done" id="86">- marginalia.nu:9999 "BBS" (/)</div>
+<br>
+<h2 id="1.47">Done 2021-08-03</h2>
+<br>
+<a class="task-pointer" name="t87"></a><div class="task done" id="87">- encyclopedia.marginalia.nu (/)</div>
+<br>
+<a class="task-pointer" name="t88"></a><div class="task done" id="88">- Verify automatic backup of git (/)</div>
+<br>
+<a class="task-pointer" name="t89"></a><div class="task done" id="89">- Reddit frontend (/)</div>
+<a class="task-pointer" name="t89.1"></a><div class="task done" id="89.1">-- Scraper: (/)</div>
+<a class="task-pointer" name="t89.2"></a><div class="task done" id="89.2">-- API: Marginalia 2: (/)</div>
+<br>
+<a class="task-pointer" name="t90"></a><div class="task done" id="90">- Wiki (/)</div>
+<a class="task-pointer" name="t90.1"></a><div class="task done" id="90.1">-- on Optane (/)</div>
+<a class="task-pointer" name="t90.2"></a><div class="task done" id="90.2">-- fix Hildegard of Bingen (/)</div>
+<br>
+<a class="task-pointer" name="t91"></a><div class="task done" id="91">- Block bots on nginx (/)</div>
+<pre class="literal">
+    https://kb.linuxlove.xyz/nginx-badbotblocker.html</pre>
+<br>
+<h2 id="1.48">Done 2021-08-02</h2>
+<br>
+<a class="task-pointer" name="t92"></a><div class="task done" id="92">- Install Optane (/)</div>
+<a class="task-pointer" name="t92.1"></a><div class="task done" id="92.1">-- Migrate MariaDB (/)</div>
+<br>
+<a class="task-pointer" name="t93"></a><div class="task done" id="93">- Wiki (/)</div>
+<a class="task-pointer" name="t93.1"></a><div class="task done" id="93.1">-- redirects (/)</div>
+<a class="task-pointer" name="t93.2"></a><div class="task done" id="93.2">-- top notices (/)</div>
+<br>
+<a class="task-pointer" name="t94"></a><div class="task done" id="94">- Bucket4J rate limiting (/)</div>
+<br>
+<a class="task-pointer" name="t95"></a><div class="task done" id="95">- Service Monitoring (/)</div>
+<br>
+<h2 id="1.49">Done 2021-08-01</h2>
+<br>
+<a class="task-pointer" name="t96"></a><div class="task done" id="96">- Update Cert (/)</div>
+<a class="task-pointer" name="t97"></a><div class="task done" id="97">- Backups for git (/)</div>
+<br>
+<h2 id="1.50">Done 2021-07-30</h2>
+<br>
+<a class="task-pointer" name="t98"></a><div class="task done" id="98">- Load Wikidata from ZIM (/)</div>
+<a class="task-pointer" name="t99"></a><div class="task done" id="99">- Migrate Server to Debian Buster (/)</div>
+<br>
+<h2 id="1.51">Done 2021-07-28</h2>
+<br>
+<a class="task-pointer" name="t100"></a><div class="task done" id="100">- Update description generation algorithm (/)</div>
+<a class="task-pointer" name="t100.1"></a><div class="task done" id="100.1">-- Recalculate descriptions (...) (/)</div>
+<br>
+<a class="task-pointer" name="t101"></a><div class="task done" id="101">- Wiki data (/)</div>
+<a class="task-pointer" name="t101.1"></a><div class="task done" id="101.1">-- Load data (/)</div>
+<a class="task-pointer" name="t101.2"></a><div class="task done" id="101.2">-- Wrap wikipedia (/)</div>
+<a class="task-pointer" name="t101.3"></a><div class="task skip" id="101.3">-- ZIM? (-)</div>
+<a class="task-pointer" name="t101.4"></a><div class="task done" id="101.4">-- Wikipedia Cleaner (/)</div>
+<br>
+<h2 id="1.52">Done 2021-07-27</h2>
+<br>
+<a class="task-pointer" name="t102"></a><div class="task done" id="102">- Spell checker service? (/)</div>
+<a class="external" href="https://github.com/wolfgarbe/SymSpell">https://github.com/wolfgarbe/SymSpell</a><br>
+<br>
+<a class="task-pointer" name="t103"></a><div class="task done" id="103">- Calculations (/)</div>
+<a class="task-pointer" name="t103.1"></a><div class="task done" id="103.1">-- Detection (/)</div>
+<a class="task-pointer" name="t103.2"></a><div class="task done" id="103.2">-- Parser (/)</div>
+<a class="task-pointer" name="t103.3"></a><div class="task done" id="103.3">-- Unit conversion (/)</div>
+<a class="task-pointer" name="t103.3.1"></a><div class="task done" id="103.3.1">--- Temperature (/)</div>
+<a class="task-pointer" name="t103.3.2"></a><div class="task done" id="103.3.2">--- Distance (/)</div>
+<a class="task-pointer" name="t103.3.3"></a><div class="task done" id="103.3.3">--- Weight (/)</div>
+<a class="task-pointer" name="t103.3.4"></a><div class="task done" id="103.3.4">--- Area (/)</div>
+<a class="task-pointer" name="t103.3.5"></a><div class="task done" id="103.3.5">--- Volume (/)</div>
+<br>
+<h2 id="1.53">Done 2021-07-26</h2>
+<br>
+<a class="task-pointer" name="t104"></a><div class="task done" id="104">- Save websites to disk? (/)</div>
+<a class="task-pointer" name="t104.1"></a><div class="task done" id="104.1">-- GZipped (/)</div>
+<a class="task-pointer" name="t104.2"></a><div class="task unknown" id="104.2">-- XFS (?)</div>
+<br>
+<a class="task-pointer" name="t105"></a><div class="task done" id="105">- Local backlinks in GMI (/)</div>
+<a class="task-pointer" name="t105.1"></a><div class="task done" id="105.1">-- Parse GMI for links and titles (/)</div>
+<a class="task-pointer" name="t105.2"></a><div class="task done" id="105.2">-- Create tags system (/)</div>
+<br>
+<a class="task-pointer" name="t106"></a><div class="task done" id="106">- Use prime sizing for HashMap! (/)</div>
+<a class="task-pointer" name="t106.1"></a><div class="task done" id="106.1">-- How to find primes (/)</div>
+<br>
+<a class="task-pointer" name="t107"></a><div class="task done" id="107">- Arbitarary size HashMap (/)</div>
+<br>
+<h2 id="1.54">Done 2021-07-25</h2>
+<br>
+<a class="task-pointer" name="t108"></a><div class="task done" id="108">- Syntax for orgmode + GMI in kate (/)</div>
+<pre class="literal">
+  Use /usr/share/kde4/apps/katepart/syntax/markdown.xml </pre>
+<br>
+<h2 id="1.55">Done 2021-07-23</h2>
+<br>
+<a class="task-pointer" name="t109"></a><div class="task done" id="109">- Dictionary analysis in scraping (/)</div>
+<pre class="literal">
+   It seems viable to estimate 
+   the lanaguage of a document 
+   based on the overlap with a
+   N-most-common-words dictionary. 
+   Threshold 0.05 ok?</pre>
+<a class="task-pointer" name="t109.1"></a><div class="task done" id="109.1">-- English (/)</div>
+<a class="task-pointer" name="t109.2"></a><div class="task done" id="109.2">-- Swedish (/)</div>
+<a class="task-pointer" name="t109.3"></a><div class="task done" id="109.3">-- Latin (/)</div>
+<br>
+<a class="task-pointer" name="t110"></a><div class="task done" id="110">- Clean up tests (/)</div>
+<br>
+<h2 id="1.56">Done 2021-07-22</h2>
+<br>
+GZip Compression stats: <br>
+<pre class="literal">
+   63% old
+   21% new</pre>
+<br>
+<a class="task-pointer" name="t111"></a><div class="task done" id="111">- Hash map (/)</div>
+<a class="task-pointer" name="t111.1"></a><div class="task done" id="111.1">-- Contiguous memory bins (/)</div>
+<br>
+<a class="task-pointer" name="t112"></a><div class="task done" id="112">- Key Folding (/)</div>
+<a class="task-pointer" name="t112.1"></a><div class="task done" id="112.1">-- For strings (/)</div>
+<a class="task-pointer" name="t112.2"></a><div class="task done" id="112.2">-- For integers (/)</div>
+<a class="task-pointer" name="t112.3"></a><div class="task skip" id="112.3">-- For dates (x)</div>
+<br>
+<a class="task-pointer" name="t113"></a><div class="task done" id="113">- Debian Desktop (/)</div>
+<a class="task-pointer" name="t113.1"></a><div class="task done" id="113.1">-- Docker (/)</div>
+<a class="task-pointer" name="t113.2"></a><div class="task done" id="113.2">-- Java 14 (/)</div>
+<a class="task-pointer" name="t113.3"></a><div class="task done" id="113.3">-- IntelliJ (/)</div>
+<a class="task-pointer" name="t113.4"></a><div class="task done" id="113.4">-- Code (/)</div>
+<a class="task-pointer" name="t113.5"></a><div class="task done" id="113.5">-- Gradle (/)</div>
+<a class="task-pointer" name="t113.6"></a><div class="task done" id="113.6">-- OrgMode (/)</div>
+<br>
+<h2 id="1.57">Done 2021-07-21</h2>
+<br>
+<a class="task-pointer" name="t114"></a><div class="task done" id="114">- Bugfix: Domain Resolution (/)</div>
+<br>
+<h2 id="1.58">Done 2021-07-20</h2>
+<br>
+<a class="task-pointer" name="t115"></a><div class="task done" id="115">- Index Changes (/)</div>
+<a class="task-pointer" name="t115.1"></a><div class="task done" id="115.1">-- Remove Junk Logging (/)</div>
+<a class="task-pointer" name="t115.2"></a><div class="task done" id="115.2">-- Split Query (/)</div>
+<a class="task-pointer" name="t115.3"></a><div class="task done" id="115.3">-- Implement in Frontend (/)</div>
+<br>
+<br>
+<a class="task-pointer" name="t116"></a><div class="task done" id="116">- Dictionary Service (/)</div>
+<a class="task-pointer" name="t116.1"></a><div class="task done" id="116.1">-- Add Index To Table (/)</div>
+<a class="task-pointer" name="t116.2"></a><div class="task done" id="116.2">-- Populate test db (/)</div>
+<a class="task-pointer" name="t116.3"></a><div class="task done" id="116.3">-- Build tests (/)</div>
+<a class="task-pointer" name="t116.4"></a><div class="task done" id="116.4">-- Integrate into frontend (/)</div>
+<br>
+<br>
+<a class="task-pointer" name="t117"></a><div class="task done" id="117">- Site Information (/)</div>
+<a class="task-pointer" name="t117.1"></a><div class="task done" id="117.1">-- Fetch (/)</div>
+<a class="task-pointer" name="t117.2"></a><div class="task done" id="117.2">-- 404 (/)</div>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>done.gmi</h1>
+    <a class="download" href="/api/raw?url=/todo/done.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/todo/done.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/todo/done.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/todo/done.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Done</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Done 2022-01-30</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Done 2022-01-19</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Done 2022-01-16</a>
+    
+        <a href="#1.4" class="heading-2">1.4 Done 2022-01-15</a>
+    
+        <a href="#1.5" class="heading-2">1.5 Done 2022-01-14</a>
+    
+        <a href="#1.6" class="heading-2">1.6 Done 2022-01-12</a>
+    
+        <a href="#1.7" class="heading-2">1.7 Done 2022-01-04</a>
+    
+        <a href="#1.8" class="heading-2">1.8 Done 2021-12-03</a>
+    
+        <a href="#1.9" class="heading-2">1.9 Done 2021-12-02</a>
+    
+        <a href="#1.10" class="heading-2">1.10 Done 2021-11-14</a>
+    
+        <a href="#1.11" class="heading-2">1.11 Done 2021-11-11</a>
+    
+        <a href="#1.12" class="heading-2">1.12 Done 2021-11-10</a>
+    
+        <a href="#1.13" class="heading-2">1.13 Done 2021-10-30</a>
+    
+        <a href="#1.14" class="heading-2">1.14 Done 2021-10-29</a>
+    
+        <a href="#1.15" class="heading-2">1.15 Done 2021-10-12</a>
+    
+        <a href="#1.16" class="heading-2">1.16 Done 2021-10-05</a>
+    
+        <a href="#1.17" class="heading-2">1.17 Done 2021-10-03</a>
+    
+        <a href="#1.18" class="heading-2">1.18 Done 2021-10-02</a>
+    
+        <a href="#1.19" class="heading-2">1.19 Done 2021-10-30</a>
+    
+        <a href="#1.20" class="heading-2">1.20 Done 2021-09-26</a>
+    
+        <a href="#1.21" class="heading-2">1.21 Done 2021-09-19</a>
+    
+        <a href="#1.22" class="heading-2">1.22 Done 2021-09-17</a>
+    
+        <a href="#1.23" class="heading-2">1.23 Done 2021-09-16</a>
+    
+        <a href="#1.24" class="heading-2">1.24 Done 2021-09-15</a>
+    
+        <a href="#1.25" class="heading-2">1.25 Done 2021-09-11</a>
+    
+        <a href="#1.26" class="heading-2">1.26 Done 2021-09-09</a>
+    
+        <a href="#1.27" class="heading-2">1.27 Done 2021-09-08</a>
+    
+        <a href="#1.28" class="heading-2">1.28 Done 2021-09-06</a>
+    
+        <a href="#1.29" class="heading-2">1.29 Done 2021-09-02</a>
+    
+        <a href="#1.30" class="heading-2">1.30 Done 2021-08-31</a>
+    
+        <a href="#1.31" class="heading-2">1.31 Done 2021-08-28</a>
+    
+        <a href="#1.32" class="heading-2">1.32 Done 2021-08-27</a>
+    
+        <a href="#1.33" class="heading-2">1.33 Done 2021-08-26</a>
+    
+        <a href="#1.34" class="heading-2">1.34 Done 2021-08-25</a>
+    
+        <a href="#1.35" class="heading-2">1.35 Done 2021-08-24</a>
+    
+        <a href="#1.36" class="heading-2">1.36 Done 2021-08-23</a>
+    
+        <a href="#1.37" class="heading-2">1.37 Done 2021-08-22</a>
+    
+        <a href="#1.38" class="heading-2">1.38 Done 2021-08-21</a>
+    
+        <a href="#1.39" class="heading-2">1.39 Done 2021-08-20</a>
+    
+        <a href="#1.40" class="heading-2">1.40 Done 2021-08-19</a>
+    
+        <a href="#1.41" class="heading-2">1.41 Done 2021-08-16</a>
+    
+        <a href="#1.42" class="heading-2">1.42 Done 2021-08-15</a>
+    
+        <a href="#1.43" class="heading-2">1.43 Done 2021-08-14</a>
+    
+        <a href="#1.44" class="heading-2">1.44 Done 2021-08-10</a>
+    
+        <a href="#1.45" class="heading-2">1.45 Done 2021-08-06</a>
+    
+        <a href="#1.46" class="heading-2">1.46 Done 2021-08-04</a>
+    
+        <a href="#1.47" class="heading-2">1.47 Done 2021-08-03</a>
+    
+        <a href="#1.48" class="heading-2">1.48 Done 2021-08-02</a>
+    
+        <a href="#1.49" class="heading-2">1.49 Done 2021-08-01</a>
+    
+        <a href="#1.50" class="heading-2">1.50 Done 2021-07-30</a>
+    
+        <a href="#1.51" class="heading-2">1.51 Done 2021-07-28</a>
+    
+        <a href="#1.52" class="heading-2">1.52 Done 2021-07-27</a>
+    
+        <a href="#1.53" class="heading-2">1.53 Done 2021-07-26</a>
+    
+        <a href="#1.54" class="heading-2">1.54 Done 2021-07-25</a>
+    
+        <a href="#1.55" class="heading-2">1.55 Done 2021-07-23</a>
+    
+        <a href="#1.56" class="heading-2">1.56 Done 2021-07-22</a>
+    
+        <a href="#1.57" class="heading-2">1.57 Done 2021-07-21</a>
+    
+        <a href="#1.58" class="heading-2">1.58 Done 2021-07-20</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Redirects</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/special" class="path dir"><img src="/ico/dir.png" title="dir"> special</a>
+
+    <a href="/special/redirect.gmi" class="path file"><img src="/ico/file.png" title="file"> redirect.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Redirects</h1>
+<br>
+This file contains redirect URLs<br>
+<br>
+<h1 id="2">URLs</h1>
+<br>
+<dl class="link"><dt><a class="internal" href="/pics/raster-test/wudget.png">/pics/raster-test/wudget.png</a></dt><dd>/pics/raster-test/widget.png</dd></dl>
+<dl class="link"><dt><a class="internal" href="/server.gmi">/server.gmi</a></dt><dd>/junk/server.gmi</dd></dl>
+<dl class="link"><dt><a class="internal" href="/junk/server.gmi">/junk/server.gmi</a></dt><dd>/projects/gemini-server.gmi</dd></dl>
+<dl class="link"><dt><a class="internal" href="/topics.gmi">/topics.gmi</a></dt><dd>/writing-topics.gmi</dd></dl>
+<dl class="link"><dt><a class="internal" href="/links/linkpocalypse.gmi">/links/linkpocalypse.gmi</a></dt><dd>/log/00-linkpocalypse.gmi</dd></dl>
+<dl class="link"><dt><a class="internal" href="/links/accept_post.png">/links/accept_post.png</a></dt><dd>/pics/links/accept_post.png</dd></dl>
+<dl class="link"><dt><a class="internal" href="/links/accept_post.png">/links/accept_post.png</a></dt><dd>/pics/links/accept_post.png</dd></dl>
+<dl class="link"><dt><a class="internal" href="/links/encarta.png">/links/encarta.png</a></dt><dd>/pics/links/encarta.png</dd></dl>
+<dl class="link"><dt><a class="internal" href="/links/git-rebase.png">/links/git-rebase.png</a></dt><dd>/pics/links/git-rebase.png</dd></dl>
+<dl class="link"><dt><a class="internal" href="/links/wikipedia.png">/links/wikipedia.png</a></dt><dd>/pics/links/wikipedia.png</dd></dl>
+<dl class="link"><dt><a class="internal" href="/links/wikipedia_no_links.png">/links/wikipedia_no_links.png</a></dt><dd>/pics/links/wikipedia_no_links.png</dd></dl>
+<dl class="link"><dt><a class="internal" href="/pics/raster-test/test.png">/pics/raster-test/test.png</a></dt><dd>/pics/raster-test/screenshot-of-text.png</dd></dl>
+<dl class="link"><dt><a class="internal" href="/debian-laptop.gmi">/debian-laptop.gmi</a></dt><dd>/debian-laptop-install-log.gmi</dd></dl>
+<dl class="link"><dt><a class="internal" href="/fragments-old-web.gmi">/fragments-old-web.gmi</a></dt><dd>/links/fragments-old-web.gmi</dd></dl>
+<dl class="link"><dt><a class="internal" href="/log/soaring-high.gmi">/log/soaring-high.gmi</a></dt><dd>/log/18-soaring-high.gmi</dd></dl>
+<dl class="link"><dt><a class="internal" href="/log/bargain-bin-btree.gmi">/log/bargain-bin-btree.gmi</a></dt><dd>/log/54-bargain-bin-btree.gmi</dd></dl>
+<dl class="link"><dt><a class="internal" href="/log/72-new-approach-to-ranking.gmi">/log/72-new-approach-to-ranking.gmi</a></dt><dd>/log/73-new-approach-to-ranking.gmi</dd></dl>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>redirect.gmi</h1>
+    <a class="download" href="/api/raw?url=/special/redirect.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/special/redirect.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/special/redirect.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Redirects</a>
+    
+        <a href="#2" class="heading-1">2 URLs</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/log/71-memex-design.gmi">/log/71-memex-design.gmi</a></dt>
+<dd>Memex Design [ 2023-01-13 ] - 2. Hypertext</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

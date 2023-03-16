@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Tombstone</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/special" class="path dir"><img src="/ico/dir.png" title="dir"> special</a>
+
+    <a href="/special/tombstone.gmi" class="path file"><img src="/ico/file.png" title="file"> tombstone.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Tombstone</h1>
+<br>
+This special file contains information about removed resources.<br>
+<br>
+<h1 id="2">Removed links</h1>
+<dl class="link"><dt><a class="internal" href="/worklog.gmi">/worklog.gmi</a></dt><dd>Old and unused file.</dd></dl>
+<dl class="link"><dt><a class="internal" href="/todo.gmi">/todo.gmi</a></dt><dd>Empty file</dd></dl>
+<dl class="link"><dt><a class="internal" href="/search-about.gmi">/search-about.gmi</a></dt><dd>Confusingly gemini-specific</dd></dl>
+<dl class="link"><dt><a class="internal" href="/05-test.gmi">/05-test.gmi</a></dt><dd>Cursed testing file</dd></dl>
+<dl class="link"><dt><a class="internal" href="/feed.gmi">/feed.gmi</a></dt><dd>This feed is highly gemini-specific</dd></dl>
+<dl class="link"><dt><a class="internal" href="/log/13-test.gmi">/log/13-test.gmi</a></dt><dd>This was just a test file!!</dd></dl>
+<dl class="link"><dt><a class="internal" href="/guestbook/index.gmi">/guestbook/index.gmi</a></dt><dd>Gemini-server specific</dd></dl>
+<dl class="link"><dt><a class="internal" href="/guestbook/header.gmi">/guestbook/header.gmi</a></dt><dd>Gemini-server specific</dd></dl>
+<dl class="link"><dt><a class="internal" href="/guestbook/footer.gmi">/guestbook/footer.gmi</a></dt><dd>Gemini-server specific</dd></dl>
+<dl class="link"><dt><a class="internal" href="/log/The">/log/The</a></dt><dd>Bargain Bin B-Tree	oops</dd></dl>
+<a class="internal" href="/junk/DedupTest.gmi">/junk/DedupTest.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>tombstone.gmi</h1>
+    <a class="download" href="/api/raw?url=/special/tombstone.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/special/tombstone.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/special/tombstone.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Tombstone</a>
+    
+        <a href="#2" class="heading-1">2 Removed links</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/log/71-memex-design.gmi">/log/71-memex-design.gmi</a></dt>
+<dd>Memex Design [ 2023-01-13 ] - 2. Hypertext</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Unintuitive Optimization [2021-10-13]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/30-unintuitive-optimization.gmi" class="path file"><img src="/ico/file.png" title="file"> 30-unintuitive-optimization.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Unintuitive Optimization [2021-10-13]</h1>
+<br>
+Optimization is arguably a lot about intuition. You have a hunch, and see if it sticks. Sure you can use profilers and instrumentation, but they are more like hunch generators than anything else. <br>
+<br>
+This one wasn't as intuitive, at least not to me, but it makes sense when you think about it.<br>
+<br>
+I have an 8 Gb file of dense binary data. This data consists of 4 Kb chunks and is an unsorted list containing first an URL identifier with metadata and then a list of word identifiers. This is a sort of journal that the indexer produces during crawling. Its main benefit is that this can be done quickly with very high fault tolerance. Since it's only ever added to, if anything does go wrong you can just truncate the bad part at the end and keep going.<br>
+<br>
+I construct a reverse index out of this journal. The code reads this file sequentially multiple times to create pairs of files, partitioned first by search algorithm and then by which part of the document the word was found.<br>
+<br>
+Roughly<br>
+<br>
+<pre>
+For each partition [0...6]
+  For each each sub-index [0..6]:
+    Figure out how many URLs there are
+    Create a list of URLs
+    Write an index for the URL file</pre>
+<br>
+This takes hours. This does several slow things, including unordered writing and sorting of multiple gigabytes binary of data, but the main bottle neck seems to be just reading this huge file 105 times (it's reading from a mechanical NAS drive) so you can't just throw more threads at this and hope it goes away.<br>
+<br>
+I had the hunch I should try to pre-partition the file, see if maybe I could get it to fit in the filesystem cache.<br>
+<br>
+This part feels a bit unintuitive to me. The problem, usually, is that you are doing disk stuff in the first place, so the solution, usually, is to reduce the amount of disk stuff. Here I'm adding to it instead.<br>
+<br>
+New algorithm:<br>
+<br>
+<pre>
+For each partition [1...6]
+  Write chunks pertaining to partition to a new file
+
+For each partition [1...6]
+  For each each sub-index [1..6]:
+    Figure out how many URLs there are
+    Create a list of URLs
+    Write an index for the URL file</pre>
+<br>
+As the partitions do overlap, it means writing approximately 13 Gb to a slow mechanical drive, but it also means the conversion doesn't need to re-read the same irrelevant data dozens of times. The prepartitioned files are much smaller and will indeed fit snugly in the filesystem cache. <br>
+<br>
+This does reduce the amount of stuff to read by quite a lot, if you crunch the numbers it goes from 1.2Tb to 267 Gb (assuming 21 passes per partition). <br>
+<br>
+<pre>
+884M    0/preconverted.dat
+1.6G    1/preconverted.dat
+91M     2/preconverted.dat
+928M    3/preconverted.dat
+192M    4/preconverted.dat
+1.2G    5/preconverted.dat
+7.8G    6/preconverted.dat</pre>
+<br>
+The last of the files is bigger because the last partition accepts the 90% of the domains no algorithm thinks is particularly worthwhile. Sturgeon's Law is extremely applicable to the field.<br>
+<br>
+Running through the last partition takes a long as running through partitions 0-5. Conversion time was slashed from hours to just over 40 minutes. <br>
+<br>
+A success!<br>
+<br>
+<h2 id="1.1">Topics</h2>
+<br>
+<a class="internal" href="/topic/programming.gmi">/topic/programming.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>30-unintuitive-optimization.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/30-unintuitive-optimization.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/30-unintuitive-optimization.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/30-unintuitive-optimization.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/30-unintuitive-optimization.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Unintuitive Optimization [2021-10-13]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Topics</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Web Browsing [2021-10-09]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/28-web-browsing.gmi" class="path file"><img src="/ico/file.png" title="file"> 28-web-browsing.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Web Browsing [2021-10-09]</h1>
+<br>
+An idea I've had for a long time with regards to navigating the web is to find a way to browse it. <br>
+<br>
+"Browse" a difficult word to use, because it has a newer connotation of just using a web browser, I mean it in the old pre-Internet sense, browse like when you flip through a magazine, or peruse an antiques shop, not really looking for anything in particular just sort of seeing if anything catches your eye. <br>
+<br>
+Stumbleupon used to do this pretty well, although completely randomly. I wanted something with more direction. <br>
+<br>
+In a previous attempt, I had an idea that you could use outgoing links to accomplish effect, but the result just wasn't particularly impressive. With the discovery (and subsequent bastardization of) the PPR algorithm, I gave it another shot. <br>
+<br>
+I calculated a modified personalized pagerank for every domain in my search engine and stored it away in a database. This is about a million domains, but I excluded the periphery of the graph so in practice it was more like 150k domains that needed getting a ranking. It's easy to run this in parallel so it only took about two hours, that's manageable.<br>
+<br>
+The presentation is super sketchy and not nearly finished, but the effect is so cool I wanted to share it. <br>
+<br>
+A sample of origin points:<br>
+<br>
+<dl class="link"><dt><a class="external" href="https://search.marginalia.nu/search?query=browse%3Awww.wild-seven.org&profile=yolo&js=default">https://search.marginalia.nu/search?query=browse%3Awww.wild-seven.org&profile=yolo&js=default</a></dt><dd>Beautiful Fansites</dd></dl>
+<br>
+<dl class="link"><dt><a class="external" href="https://search.marginalia.nu/search?query=browse:bikobatanari.art&profile=yolo&js=false">https://search.marginalia.nu/search?query=browse:bikobatanari.art&profile=yolo&js=false</a></dt><dd>Personal Websites</dd></dl>
+<br>
+<dl class="link"><dt><a class="external" href="https://search.marginalia.nu/search?query=browse%3Atilde.team&profile=yolo&js=default">https://search.marginalia.nu/search?query=browse%3Atilde.team&profile=yolo&js=default</a></dt><dd>Tildeverse</dd></dl>
+<br>
+<dl class="link"><dt><a class="external" href="https://search.marginalia.nu/search?query=browse:9p.io&profile=yolo&js=default">https://search.marginalia.nu/search?query=browse:9p.io&profile=yolo&js=default</a></dt><dd>Plan 9</dd></dl>
+<br>
+<h2 id="1.1">Topic</h2>
+<br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>28-web-browsing.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/28-web-browsing.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/28-web-browsing.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/28-web-browsing.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/28-web-browsing.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Web Browsing [2021-10-09]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Topic</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

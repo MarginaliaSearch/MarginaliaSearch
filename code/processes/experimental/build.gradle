@@ -12,6 +12,8 @@ java {
 }
 
 dependencies {
+    implementation project(':code:common:process')
+
     implementation project(':code:common:model')
     implementation project(':code:common:config')
     implementation project(':code:common:service')
@@ -26,7 +28,6 @@ dependencies {
     implementation project(':code:processes:converting-process')
     implementation project(':code:features-convert:adblock')
     implementation project(':code:features-convert:topic-detection')
-    implementation project(':code:features-crawl:crawl-plan')
 
     implementation libs.lombok
     annotationProcessor libs.lombok

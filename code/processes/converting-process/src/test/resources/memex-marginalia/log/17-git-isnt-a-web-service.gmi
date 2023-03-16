@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Git Isn&#x27;t A Web Service [2021-08-28]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/17-git-isnt-a-web-service.gmi" class="path file"><img src="/ico/file.png" title="file"> 17-git-isnt-a-web-service.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Git Isn't A Web Service [2021-08-28]</h1>
+<br>
+This an expansion on a comment I left on Lettuce's gemlog post, "Personal Experiences and Opinions on Version Control Software". <br>
+<br>
+I've seen similar questions posed several times recently, in essence people searching for a good git provider. <br>
+<br>
+The thing is you don't need a git provider. Git is a shell command, and you can host a server yourself with almost no extra work. You can even host it off a system you don't have administrative access to. <br>
+<br>
+It's a shame git has become synonymous with this large web-application overgrowth for so many these days. It is and remains a fairly complete shell command, and github and its clones are third party extras that have latched themselves onto the ecosystem and seem to be doing their best sucking the life out of it through gamification and other morally questionable startup practices.<br>
+<br>
+Remember sourceforce, once the paragon of everything open source, remember when they were bought up and subsequently caught with their fingers in the cookie jar bundling malware with the software on their site? The lesson we should have learned wasn't "lets move everything from one huge platform to another huge platform"; but rather the lesson was that we so desperately need to learn was that we should host or projects ourselves if we want to retain any sense of control over them. <br>
+<br>
+<h2 id="1.1">Set-up </h2>
+<br>
+Self-hosting git is extremely easy to set up. You need a raspberry pi or any computer with ssh access and git. <br>
+<br>
+I linked to the official documentation below, but the really quick way to get started is to do this on the server: <br>
+<br>
+<pre>
+$ mkdir my-project
+$ cd my-project
+$ git init --bare</pre>
+<br>
+And then you do this on the client from your existing git project: <br>
+<br>
+<pre>
+$ git remote add origin git-user@server:my-project</pre>
+<br>
+If you want to move from one existing remote to your new server, you use 'set-url' instead of 'add'. <br>
+<br>
+That's it! Now you have an off-site backup for your code.<br>
+<br>
+If you want a web interface for sharing your code more publicly, something like gitweb is a good alternative to gitlab and similar, it's much more lightweight (and a bit barebones), but also very easy to set up. Please refer to the git book links below for instructions. <br>
+<br>
+<h2 id="1.2">Links</h2>
+<br>
+<a class="external" href="https://proxy.vulpes.one/gemini/gemini.ctrl-c.club/~lettuce/git-services.gmi">gemini://gemini.ctrl-c.club/~lettuce/git-services.gmi</a><br>
+<br>
+<dl class="link"><dt><a class="external" href="https://git-scm.com/book/en/v2/Git-on-the-Server-Getting-Git-on-a-Server">https://git-scm.com/book/en/v2/Git-on-the-Server-Getting-Git-on-a-Server</a></dt><dd>Git Book: Getting Git On A Server</dd></dl>
+<dl class="link"><dt><a class="external" href="https://git-scm.com/book/en/v2/Git-on-the-Server-GitWeb">https://git-scm.com/book/en/v2/Git-on-the-Server-GitWeb</a></dt><dd>Git Book: GitWeb</dd></dl>
+<br>
+<h2 id="1.3">Topic</h2>
+<br>
+<a class="internal" href="/topic/platforms.gmi">/topic/platforms.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>17-git-isnt-a-web-service.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/17-git-isnt-a-web-service.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/17-git-isnt-a-web-service.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/17-git-isnt-a-web-service.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/17-git-isnt-a-web-service.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Git Isn&#x27;t A Web Service [2021-08-28]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Set-up </a>
+    
+        <a href="#1.2" class="heading-2">1.2 Links</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Topic</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

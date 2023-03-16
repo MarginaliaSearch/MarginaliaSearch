@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Stages of Being [2021-08-23]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/15-stages-of-being.gmi" class="path file"><img src="/ico/file.png" title="file"> 15-stages-of-being.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Stages of Being [2021-08-23]</h1>
+<br>
+@sdfgeoff asked an interesting question on station just a while ago<br>
+<br>
+<blockquote>
+         How much of your lives do you spend living (or watching) someone elses?</blockquote>
+<br>
+It reminded me of an interesting tool kit for understanding being. <br>
+<br>
+The neoplatonists describe a hierarchy of being. This is sometimes attributed to Renaissance enfant terrible Pico della Mirandola's oration of the dignity of man, but it's given the most cursory mention. I've attached the quote at the bottom of the post. Plato's Republic is probably a better source, even if it doesn't draw up the hierarcy quite in this fashion.<br>
+<br>
+<h2 id="1.1">Existence</h2>
+<br>
+At the lowest rung is existence. Examples of things that merely exist are rocks, water, the sky. These existences can change, but can not enact change.<br>
+<br>
+<h2 id="1.2">Growing</h2>
+<br>
+At the next rung is growing. Examples of things that exist and grow are trees, grass, mushrooms, algae, germs. These existences can enact change, but only in a simple and mindless fashion.<br>
+<br>
+<h2 id="1.3">Sensing</h2>
+<br>
+At the next rung is sensing and reacting. Examples of things that exist, grow and sense/react are most animals. They are slavishly compelled to seek food and sex and to avoid harm. This is a nature of being that is reactive. It's a nature of behaving that is easily replicated with a computer.<br>
+<br>
+<h2 id="1.4">Thinking</h2>
+<br>
+At the final rung is thinking. Examples of things that exist, grow, react and think are human beings. We are capable of overriding our instincts, and change our judgements and wants. We are capable of choosing to endure almost any hardship if we opt to. We are capable of reshaping the world to suit or our will, or reshaping our will to suit the world. This is a nature of being that is active. Thinking existence means we can engage in a dialogue with the universe, rather than go down a series of if-then-else statements based on what nature throws our way.<br>
+<br>
+It's an anthropocentric point of view, but it's out of an anthropocentric treatise on the potential of human beings to step beyond their base animal nature and actually do great things, a potential that Mirandola posits exists in all humans. <br>
+<br>
+The key point is that all things in the hierarchy have all the natures of the rungs below them as well. This is what justifies putting them in that order.<br>
+<br>
+Human beings are not just capable of having an active human nature but can also regress to a reactive animal nature as well, we can become vain and vicious, helpless slaves to the carrot and stick that is pleasure and pain; or even a vegetative life that is only marked by mindless consumption. But both those human existences are a waste of human potential compared to the life where thinking is allowed to pilot the ship.<br>
+<br>
+<blockquote>
+         [N]ever think, my friend, that you are free while your belly rules you and the part below the belly, since you will then have masters who can either furnish you the means of pleasure or deprive you of them [...]</blockquote>
+<br>
+- Emperor Julian, Oration VI<br>
+<br>
+I do not think we need to live as ascetics who renounce every pleasure and choose every hardship, but I do suggest that maybe the spiritual practice of periods of fasting and abstinence may not be entirely about following arbitrary religious mandates: Bouts of denial does help exercise those muscles of willpower and resolve that seem so severely atrophied in many these times. After all, hunger makes the metaphorical food, when it comes, all the tastier. At least for the man who can endure the wait.<br>
+<br>
+<h1 id="2">Links</h1>
+<br>
+<a class="external" href="https://proxy.vulpes.one/gemini/station.martinrue.com/sdfgeoff/80736a6a7b88497ea98a50784d9d8e77">gemini://station.martinrue.com/sdfgeoff/80736a6a7b88497ea98a50784d9d8e77</a><br>
+<dl class="link"><dt><a class="external" href="https://encyclopedia.marginalia.nu/wiki/Oration_on_the_Dignity_of_Man">https://encyclopedia.marginalia.nu/wiki/Oration_on_the_Dignity_of_Man</a></dt><dd>Oration on the Dignity of Man</dd></dl>
+<dl class="link"><dt><a class="external" href="https://en.wikisource.org/wiki/To_the_uneducated_Cynics">https://en.wikisource.org/wiki/To_the_uneducated_Cynics</a></dt><dd>Julian, Oration VI</dd></dl>
+<br>
+<h1 id="3">Pico's quote</h1>
+<br>
+<blockquote>
+         But upon man, at the moment of his creation, God bestowed seeds pregnant with all possibilities, the germs of every form of life. Whichever of these a man shall cultivate, the same will mature and bear fruit in him. If vegetative, he will become a plant; if sensual, he will become brutish; if rational, he will reveal himself a heavenly being; if intellectual, he will be an angel and the son of God. </blockquote>
+<br>
+- Pico della Mirandola, Oration on the Dignity of Man<br>
+<br>
+<br>
+<h2 id="3.1">Topic</h2>
+<br>
+<a class="internal" href="/topic/moral-philosophy.gmi">/topic/moral-philosophy.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>15-stages-of-being.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/15-stages-of-being.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/15-stages-of-being.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/15-stages-of-being.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/15-stages-of-being.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Stages of Being [2021-08-23]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Existence</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Growing</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Sensing</a>
+    
+        <a href="#1.4" class="heading-2">1.4 Thinking</a>
+    
+        <a href="#2" class="heading-1">2 Links</a>
+    
+        <a href="#3" class="heading-1">3 Pico&#x27;s quote</a>
+    
+        <a href="#3.1" class="heading-2">3.1 Topic</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

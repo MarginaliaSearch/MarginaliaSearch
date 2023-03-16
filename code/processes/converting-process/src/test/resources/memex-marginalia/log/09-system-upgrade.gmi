@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - The System Upgrade [2021-07-30]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/09-system-upgrade.gmi" class="path file"><img src="/ico/file.png" title="file"> 09-system-upgrade.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">The System Upgrade [2021-07-30]</h1>
+<br>
+Early this winter, when I set up the server that would eventually become marginalia.nu, I did so in order to try out some technology I thought looked cool (proxmox, zfs), and stuff I was exposed to at work and didn't really see the point of so as to see if we could get on better terms with if I had more control (kubernetes).<br>
+<br>
+I based the system on ProxMox, a Linux based virtualization server, which ran a series of virtual machines and containers.<br>
+<br>
+<pre>
+ProxMox
+┠─ git (ubuntu-server)
+┠─ mariadb container
+┠─┒ kubernetes (ubuntu-server)
+┃ ┠─┒ WMSA (my software)
+┃ ┃ ┠─┒ search engine
+┃ ┃ ┃ ┠ crawler x 2
+┃ ┃ ┃ ┠ crawler orchestrator
+┃ ┃ ┃ ┠ index server
+┃ ┃ ┃ ┠ assistant server
+┃ ┃ ┃ ┠ archive server
+┃ ┃ ┃ ┖ search backend
+┃ ┃ ┠ rendered page cache
+┃ ┃ ┠ static page renderer
+┃ ┃ ┠ reddit front-end
+┃ ┃ ┠ podcast RSS aggregator
+┃ ┃ ┖ SMHI API front-end (swedish weather forecasts)
+┃ ┠ elastisearch
+┃ ┠ fluentd
+┃ ┠ prometheus
+┃ ┠ kibana
+┃ ┠ grafana
+┃ ┠ letsencrypt automation
+┃ ┠ nginx server 
+┃ ┠ docker repository
+┃ ┖ nginx ingress
+┖─ Gemini (ubuntu-server)</pre>
+<br>
+This set-up grew increasingly untenable. Not only was it very difficult to get an overview of what was actually happening, all of these choices have small costs associated with them, of RAM, of space, of CPU; and taken together, I ended up only being able to productively use about half of the ram on my server for what I wanted to. <br>
+<br>
+The Linux OOM killer kept reaping the search engine index process with 50 out of 128 Gb available memory that was just lost in the layers of abstractions somewhere.<br>
+<br>
+I also have some really neat hardware coming soon; an Optane 900P, which I'm very excited to see what I can do with. It promises low-latency random I/O, which is exactly what I want. This also mandated a rethinking of how this all works in order to make good use of.<br>
+<br>
+Someone famously declared<br>
+<br>
+<blockquote>
+ “Let's use Kubernetes!” <br>
+ Now you have 8 problems</blockquote>
+<br>
+I do think this is largely a correct analysis. There may be a scale which you'll see more benefits from kubernetes than drawbacks, but that scale is enormous. For smaller operations like mine, certainly anywhere you can count the servers on a few hands, I do think there's a Thoureauian conclusion to draw here: The complexity of working with a solution like kubernetes can only be handled using a tool like kubernetes. In the small domain, such automation creates *more* work, not less. This abstraction is a complication, rather than a simplification, if the concrete isn't already very complicated.<br>
+<br>
+You have logs across dozens of containers, so you can't grep them anymore, so you need elasticsearch and fluentd. But raw elasticsearch is a headache, so you need kibana too. Oh hey, now it's gotten even more complicated. Can't even see when stuff goes down. Better set up monitoring that alerts you. Let's see, prometheus is good. But the GUI is nasty, better get grafana too. <br>
+<br>
+This is how the snowball rolls. Adding things makes the set-up more complicated, which mandates adding even more things to deal with the complexity, which makes them more complicated, which...<br>
+<br>
+<aside>Prometheus is honestly pretty good, I may install that again; but I think I'll build my own "grafana" with gnuplot</aside>
+<br>
+I'm going to be very blunt and say I don't like kubernetes. Things keep changing and breaking, and when you look for a solution, what you find doesn't work because some variable has changed name again, or a repository has been renamed.<br>
+<br>
+The ecosystem seems very immature. When it works it's not bad, but when it breaks (and boy does it ever break), you're in for a very unpleasant time. I get a sort of Vincent Adultman-vibe from the entire ecosystem. Everyone talks about what is suitable for production, but everything keeps inexplicably breaking, nothing is ever easy to fix; and the solution is always some inexplicable snippet on stackoverflow you're just supposed to blindly run without really understanding.<br>
+<br>
+I also get the feeling dealing with kubernetes that YAML is the new XML. The problem with XML wasn't really the formatting, that's just an inconvenience. The problem was the megabytes worth of configuration in enterprise software. The YAML keeps growing to meet the needs of the growing YAML.<br>
+<br>
+It's not all bad though. I do actually like the idea of microservices. If you do them properly and unix-like while at the same time don't get *too* in love with them so that you can't see how bigger services can be good sometimes too. They're a big reason of why my stuff actually works. I can redeploy parts of the system while others are running. That's amazing because my index server has a boot-up time of up to an hour. <br>
+<br>
+<h2 id="1.1">The new set-up</h2>
+<br>
+Migration took about 12 hours, and that included changes to the software and setting up git hooks for easy deployment. I got rid of proxmox and zfs and went with Debian Buster and ext4 instead. I kicked out kubernetes and half of that ecosystem, and I'm not using any containerization at all.<br>
+<br>
+It's as simple as that. I have one memory in one kernel, one system to keep up to date and patched. I can actually tell you most of what is running on it and what it's doing.<br>
+<br>
+This is it:<br>
+<br>
+<pre>
+Debian
+┠─ mariadb
+┠─┒ WMSA (my software)
+┃ ┠─┒ search engine
+┃ ┃ ┠ crawler x 2
+┃ ┃ ┠ crawler orchestrator
+┃ ┃ ┠ index server
+┃ ┃ ┠ assistant server
+┃ ┃ ┠ archive server
+┃ ┃ ┖ search backend
+┃ ┠ rendered page cache
+┃ ┠ static page renderer
+┃ ┠ reddit front-end
+┃ ┠ podcast RSS aggregator
+┃ ┖ SMHI API front-end (swedish weather forecasts)
+┠─ nginx
+┠─ git is just a /home directory
+┖─ gemini server</pre>
+<br>
+<h2 id="1.2">Topics </h2>
+<br>
+<a class="internal" href="/topic/server.gmi">/topic/server.gmi</a><br>
+<br>
+<h2 id="1.3">External Links</h2>
+<br>
+<dl class="link"><dt><a class="external" href="https://monadnock.net/thoreau/economy.html">https://monadnock.net/thoreau/economy.html</a></dt><dd>Henry David Thoureau - Walden, Economy</dd></dl>
+<br>
+<dl class="link"><dt><a class="external" href="https://adamdrake.com/command-line-tools-can-be-235x-faster-than-your-hadoop-cluster.html">https://adamdrake.com/command-line-tools-can-be-235x-faster-than-your-hadoop-cluster.html</a></dt><dd>Adam Drake - Command-line Tools can be 235x Faster than your Hadoop Cluster</dd></dl>
+<br>
+<dl class="link"><dt><a class="external" href="https://pythonspeed.com/articles/dont-need-kubernetes/">https://pythonspeed.com/articles/dont-need-kubernetes/</a></dt><dd>Itamar Turner-Trauring - “Let’s use Kubernetes!” Now you have 8 problems</dd></dl>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>09-system-upgrade.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/09-system-upgrade.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/09-system-upgrade.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/09-system-upgrade.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/09-system-upgrade.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 The System Upgrade [2021-07-30]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 The new set-up</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Topics </a>
+    
+        <a href="#1.3" class="heading-2">1.3 External Links</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

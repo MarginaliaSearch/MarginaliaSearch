@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Re: To unit test or not to unit test, that is the question [ 2021-07-08 ]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/02-re-tests.gmi" class="path file"><img src="/ico/file.png" title="file"> 02-re-tests.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Re: To unit test or not to unit test, that is the question [ 2021-07-08 ]</h1>
+<a class="external" href="https://proxy.vulpes.one/gemini/gemini.conman.org/boston/2021/07/07.1">gemini://gemini.conman.org/boston/2021/07/07.1</a><br>
+<br>
+I felt the need to add some thoughts tangentially related to this post by Sean Conner.<br>
+<br>
+<h2 id="1.1">Why do we hold unit tests in such high regard?</h2>
+<br>
+Enterprise software development (Agile with a TM at the end), and to an increasing degree open source software development has really accepted the Unit Test as personal lord and savior deep within their souls. If it doesn't have coverage, it's bad. If it has coverage, it's good.<br>
+<br>
+<aside>This is an aside, every single company I've worked for the last 12 years has officially said they were doing "Test Driven Development". To this date, I've *never* seen anyone do this. I'm not even sure it exists outside of textbooks and classroom settings. I've seen more compelling evidence of the Loch Ness-monster than TDD. Please let me know if you have any shaky and blurry camcorder footage of this development practice, I'd love to see it ;-</aside>
+<br>
+Anyway, it's an appealing notion that quality can be quantified, but it very rarely is the case. Attempts at quantifying quality usually tends to shift what we mean by quality to no longer be particularly useful. The quantitative and the qualitative realms are in their essence orthogonal, you really can't compute how well a program fits its purpose and if you try, what you are computing is something else.<br>
+<br>
+Let's be systematic:<br>
+<br>
+<h3 id="1.1.1">Are unit tests sufficient for quality in code?</h3>
+<br>
+Since we find low quality code with unit tests all the time, this proposition simply cannot be true.<br>
+<br>
+<h3 id="1.1.2">Are unit tests necessary for quality in code?</h3>
+<br>
+There are other paradigms for code quality, and many examples of code that has never been unit tested yet has high quality. Almost anything written in assembly, for example. There are also other QA paradigms. In-code assertions are great and extremely underutilized today, they make all your testing better.<br>
+<br>
+So for the question of necessity -- no.<br>
+<br>
+<h3 id="1.1.3">Are unit tests useful for code quality?</h3>
+<br>
+This part is entirely subjective. In my experience, they can absolutely be helpful, and I do write a lot of tests for some code, but they can also be useless, even an obstacle to quality; so I don't test all code for the sake of testing it. Tests don't have intrinsic value, but should have a purpose. If you don't know what purpose a test has, you shouldn't write it. That purpose can be to get at some hard to reach code for manual debugging, to exhaust edge cases in a tricky algorithm, to prevent regression during refactoring, any number of things. However if the only purpose of the test is to increase coverage, then it is a harmful test. It adds maintenance cost, it comes at a cognitive penalty, and it took time that could be spent doing something actually useful. As much as testing forces you to break the code apart, breaking the code apart too much just leaves it fragmented and unnecessarily complicated.<br>
+<br>
+In the end, tests are a tool. A bit like mouse traps. If you've covered the entire floor in mouse traps and they've yet to catch a single mouse, then that's just making life harder on yourself. If you put some where you suspect mice, and they sometimes catch a mouse, that's great value for a small investment. <br>
+<br>
+Prudence is a greatly undervalued virtue in software development. I think true-sounding principles are some of the deadliest things in this business, they completely shut down any sort of evaluative or critical thinking we might otherwise employ. A lot of IT-people claim to be skeptics, but they only seem to employ that skepticism toward things they don't believe, which is a place where it has little use. Principles can seem so true, promise so much, and oftentimes they do, but they also make us completely blind to the fact that sometimes they're superstitions that simply don't hold water.<br>
+<br>
+<ul>
+<li>Test coverage is great, except when it isn't. </li>
+<li>Segregating data and I/O is great, except when it isn't. </li>
+<li>Breaking apart code into smaller pieces is great, except when it isn't. </li>
+<li>Elaborate commit messages are great, except when they aren't. </li>
+<li>Mocking is bad, except when it's not.</li>
+<li>All test should have a purpose, except when they shouldn't.</li>
+<li>The principle of not trusting principles is great, except when it isn't.</li></ul>
+<br>
+It's not from a lack of having been there. I've had ample sips of the kool-aid too. Ten years ago I'd read some book by Uncle Bob and it seemed very true, and he did have great points at times. Except when they weren't.<br>
+<br>
+I do think we should at least occasionally approach these sacred doctrines with a degree of flippant irreverence. At least in personal projects where failure is a learning opportunity. It's really the only way to test if and when they are true.<br>
+<br>
+But, que sçay-je?<br>
+<br>
+<h2 id="1.2">Topics</h2>
+<br>
+<a class="internal" href="/topic/programming.gmi">/topic/programming.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>02-re-tests.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/02-re-tests.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/02-re-tests.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/02-re-tests.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/02-re-tests.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Re: To unit test or not to unit test, that is the question [ 2021-07-08 ]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Why do we hold unit tests in such high regard?</a>
+    
+        <a href="#1.1.1" class="heading-3">1.1.1 Are unit tests sufficient for quality in code?</a>
+    
+        <a href="#1.1.2" class="heading-3">1.1.2 Are unit tests necessary for quality in code?</a>
+    
+        <a href="#1.1.3" class="heading-3">1.1.3 Are unit tests useful for code quality?</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Topics</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

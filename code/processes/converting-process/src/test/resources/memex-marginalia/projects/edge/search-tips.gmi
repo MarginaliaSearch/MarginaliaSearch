@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Search Tips</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/projects" class="path dir"><img src="/ico/dir.png" title="dir"> projects</a>
+
+    <a href="/projects/edge" class="path dir"><img src="/ico/dir.png" title="dir"> edge</a>
+
+    <a href="/projects/edge/search-tips.gmi" class="path file"><img src="/ico/file.png" title="file"> search-tips.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Search Tips</h1>
+<br>
+The search engine isn't very good at answering search queries posed as questions. For the best search results, try to imagine the title of the page you are looking for, and search for that. It takes some experimentation to find the right keywords. <br>
+<br>
+Word-order sometimes matters, and so do the exact words chosen, so sometimes reordering the words or using a synonym can give different results.<br>
+<br>
+The best approach is usually starting from one word, and then adding additional terms as to refine the search, rather than starting from a complicated query and trying to simplify it.<br>
+<br>
+Usually you will land at queries that may look like these:<br>
+<br>
+<ul>
+<li>twin peaks</li>
+<li>commander keen</li>
+<li>putty ssh</li>
+<li>silly putty</li>
+<li>doctor who tom baker</li>
+<li>x-files squeeze</li>
+<li>eugene tooms x-files</li>
+<li>scamander iliad</li>
+<li>newt scamander</li>
+<li>the master roger delgado</li>
+<li>plato's stepchildren</li>
+<li>excalibur hubbard</li>
+<li>excalibur arthur -hubbard</li>
+<li>site:monadnock.net plato symposium</li></ul>
+<br>
+<h2 id="1.1">Search Profiles</h2>
+<br>
+You can also try to use a different search profile to shape the results. <br>
+<br>
+The "Experimental" profile will enable the latest beta features, and typically return a very wide range of results. <br>
+<br>
+The "Popular" option will prefer academic websites.<br>
+<br>
+The "Blog"-profile will gravitate toward the indieweb and blogosphere.<br>
+<br>
+<h2 id="1.2">Topics</h2>
+<br>
+Since the search engine specializes in older(-looking) webpages, it's typically fairly difficult to find information on current events and bleeding edge technology, especially in web design. <br>
+<br>
+A wealth of information seems available on historical people, television and video games that are a few decades old, and past events, recipes and hobbies. There are also a decent number of personal web pages and blogs, even if this is not an exhaustive directory of the blogosphere by any means. <br>
+<br>
+<h2 id="1.3">Discover More Sites</h2>
+<br>
+Use the "Explore"-links to fetch websites that are adjacent to a domain. The "Random Websites"-link up at the top will return a wide array of indieweb-adjacent links.<br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>search-tips.gmi</h1>
+    <a class="download" href="/api/raw?url=/projects/edge/search-tips.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/projects/edge/search-tips.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/projects/edge/search-tips.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/projects/edge/search-tips.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Search Tips</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Search Profiles</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Topics</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Discover More Sites</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

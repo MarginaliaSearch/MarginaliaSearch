@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Search Result Relevance [2021-12-10]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/41-search-result-relevance.gmi" class="path file"><img src="/ico/file.png" title="file"> 41-search-result-relevance.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Search Result Relevance [2021-12-10]</h1>
+<br>
+This entry is about a few problems the search engine has been struggling with lately, and how I've been attempting to remedy them.<br>
+<br>
+Before the article starts, I wanted to share an amusing new thing in the world of Internet spam. <br>
+<br>
+For a while, people have been adding things like "reddit" to the end of their Google queries to get less blog spam.  Well, guess what? The blog spammers are adding "reddit" to the end of their titles now. <br>
+<br>
+<a class="internal" href="/pics/reddit-spam.png">/pics/reddit-spam.png</a><br>
+<br>
+One of the great joys of this project is watching the spammers' strategies evolve in real time.<br>
+<br>
+<h2 id="1.1">Few Results</h2>
+<br>
+A persistent problem I've had is simply not getting a lot of results. A part of this is because the index is small, sure, but it still seems like there should be more. Oftentimes there *are* more, if you alter the query a little bit, but that's really hard to see. <br>
+<br>
+I've had some code generating alternate queries for a while (like pluralizing/depluralizing words), but it's been almost comically dumb and only added additional terms in a few rare cases. A big constraint is budgetary, I simply can't try every possible permutation.<br>
+<br>
+A new approach is to use part-of-speech information to limit which variants are tested, as well as using a term frequency dictionary to filter out alternatives that probably don't exist anywhere in the index. <br>
+<br>
+To give you an idea of what it's generating, this is the n-grams it will search for if you enter "The Man of Tomorrow". <br>
+<br>
+the_man_of_tomorrow<br>
+man_of_tomorrow<br>
+the_man, tomorrow<br>
+the_man, tomorrows<br>
+man, tomorrow<br>
+man, tomorrows<br>
+<br>
+I'm choosing this not only because it illustrates the re-writing logic, but also because it's a bit of a pathological case that shows some bad rewrites. Some of these are clearly more relevant than others. "man, tomorrows" is pretty useless. The queries are evaluated in the listed order, so in most cases it doesn't matter too much.<br>
+<br>
+It will also try some additional rewrites, such as concatenating terms under certain circumstances, and breaking them apart in others.<br>
+<br>
+"TRS80" will produce "trs80" and "trs_80", and conversely "TRS-80" will also yield a "trs80"-term.<br>
+<br>
+"Raspberry Pi 2" will produce<br>
+<br>
+raspberry_pi_2<br>
+raspberrypi, 2<br>
+raspberry, pi_2<br>
+raspberry_pi, 2<br>
+raspberry, pi, 2<br>
+<br>
+<h2 id="1.2">Query Refinement</h2>
+<br>
+The next big problem has been that the search engine has been spectacularly good for narrow topics. If your search term was one topic, and that topic was broadly within the range of things covered by the index, oh boy did it occasionally produce some stellar results. <br>
+<br>
+If you however tried to refine the results by adding more search terms, the results often drastically got worse. <br>
+<br>
+For example: If you searched for "graph algorithms", you found a beautiful page on graph algorithms, including Strongly Connected Components. If you searched for "graph algorithms SCC", that page ranked very low, and instead most of what floated to the top was junk. That's pretty weird. It took a while to figure out what was going wrong.<br>
+<br>
+While the search engine has gotten reasonably good at figuring out which search terms are relevant to a document, it was bad at figuring out which search terms are relevant to a query. This is fine if there is only one term, but for multiple terms, things fall apart. It would, in short, use the relevance of the least relevant term (with regard to the document) to rate the relevance of the search result.<br>
+<br>
+If we consider a query like "C++ tutorial", ignoring N-grams, we can see that these terms are not equal. Ideally we'd like all terms to be highly relevant, but in the case that they aren't, it's much better to show results that are highly relevant to "C++" but only briefly mentions "tutorial", than terms that are highly relevant to "tutorial", but only briefly mention "C++".<br>
+<br>
+A way of using this is to consider the term frequency of the search term across all documents. Terms that occur often are probably less informative than terms that are rarer. <br>
+<br>
+Ideally you would use something like Okapi BM25, but the information that ranking function requires is not something that is readily available the way the search index is currently implemented, so I've had to, using what I have available, cook up something that behaves in a similar way; a average weighted on in inverse document frequency.<br>
+<br>
+Both these changes are pretty rough, and still need some more polish, but I do think they are steps in a good direction. At the time of writing, these features are incubating, and only fully enabled for the 'Experimental' index. When I'm happy with how it works, I will apply it to the other indices.<br>
+<br>
+<h2 id="1.3">See Also</h2>
+<br>
+<a class="external" href="https://encyclopedia.marginalia.nu/wiki/TF-IDF">https://encyclopedia.marginalia.nu/wiki/TF-IDF</a><br>
+<a class="external" href="https://encyclopedia.marginalia.nu/wiki/Okapi_BM25">https://encyclopedia.marginalia.nu/wiki/Okapi_BM25</a><br>
+<br>
+<h2 id="1.4">Topics</h2>
+<br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>41-search-result-relevance.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/41-search-result-relevance.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/41-search-result-relevance.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/41-search-result-relevance.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Search Result Relevance [2021-12-10]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Few Results</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Query Refinement</a>
+    
+        <a href="#1.3" class="heading-2">1.3 See Also</a>
+    
+        <a href="#1.4" class="heading-2">1.4 Topics</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/projects/edge/changelog.gmi">/projects/edge/changelog.gmi</a></dt>
+<dd>Change Log - 2021 December Changes</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Marginalia Search - {{title}}</title>
+
+    <link rel="stylesheet" href="/style-new.css" />
+    <link rel="search" type="application/opensearchdescription+xml" href="/opensearch.xml" title="Marginalia">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+</head>
+
+<body>
+
+{{>search/parts/search-header}}
+
+<article>
+{{>search/parts/search-form}}
+
+<div class="cards big">
+    <div class="card problems">
+        <h2> {{ title }} </h2>
+        <div class="info"> {{{message}}} </div>
+    </div>
+</div>
+</article>
+
+{{>search/parts/search-footer}}
+</body>

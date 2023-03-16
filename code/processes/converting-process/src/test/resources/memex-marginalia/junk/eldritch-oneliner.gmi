@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Eldritch Oneliner</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/junk" class="path dir"><img src="/ico/dir.png" title="dir"> junk</a>
+
+    <a href="/junk/eldritch-oneliner.gmi" class="path file"><img src="/ico/file.png" title="file"> eldritch-oneliner.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Eldritch Oneliner</h1>
+<br>
+I needed to insert a dictionary into a SQL database.<br>
+<br>
+<pre>
+(echo -n "INSERT INTO REF_DICTIONARY (TYPE, WORD, DEFINITION) VALUES"; (jq &lt; kaikki.org-dictionary-English.json 'select( .pos=="noun" or .pos=="verb" or .pos=="name" or .pos=="adj" ) | {pos: .pos, word: .word, meaning: .senses[].glosses[]} | select( .meaning | length&lt;128 ) | [.pos, .word, .meaning] | @csv' -r | sed 's/\(.*\)/(\1),/g;' | tr -d "\n")) | sed 's/,$/;/' &gt; dict.sql</pre>
+<br>
+For loading wikipedia titles<br>
+<br>
+<pre>
+(echo "INSERT IGNORE INTO REF_WIKI_TITLE(NAME) VALUES";(grep -e "^[a-zA-Z0-9_']\+$" enwiki-20210701-all-titles-in-ns0 | sed 's/\(.*\)/("\1"),/g') | tr -d \\n) | sed 's/,$/;/' &gt; wiki.sql</pre>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>eldritch-oneliner.gmi</h1>
+    <a class="download" href="/api/raw?url=/junk/eldritch-oneliner.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/junk/eldritch-oneliner.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/junk/eldritch-oneliner.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/junk/eldritch-oneliner.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Eldritch Oneliner</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

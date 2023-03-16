@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Topics to write about</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/writing-topics.gmi" class="path file"><img src="/ico/file.png" title="file"> writing-topics.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Topics to write about</h1>
+<br>
+<ul>
+<li>How supposedly secure practices like containerization and ubiquitous encryption makes software harder to inspect and in turn makes us more susceptible to unreliable software by forcing us into a degree of blind trust that is not necessary with supposedly less secure procedures.</li>
+<li>Memex writeup</li>
+<li>Memex image processing writeup</li>
+<li>It's a bit strange, using a hypertext format as an application platform to build a hypertext system upon. </li></ul>
+<a class="external" href="https://encyclopedia.marginalia.nu/wiki/Inner-Platform_Effect">https://encyclopedia.marginalia.nu/wiki/Inner-Platform_Effect</a><br>
+<ul>
+<li>The ethics of borrowing computer resources to present a web page</li></ul>
+<a class="external" href="https://encyclopedia.marginalia.nu/wiki/Parkinson's_law">https://encyclopedia.marginalia.nu/wiki/Parkinson's_law</a><br>
+<ul>
+<li>The inevitability of progress; contrast, the inevitability of decline</li></ul>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>writing-topics.gmi</h1>
+    <a class="download" href="/api/raw?url=/writing-topics.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/writing-topics.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/writing-topics.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/writing-topics.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Topics to write about</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

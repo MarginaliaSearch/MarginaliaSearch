@@ -2,16 +2,18 @@ package nu.marginalia.converting.processor.plugin;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import nu.marginalia.converting.processor.MetaRobotsTag;
+import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
 import nu.marginalia.converting.processor.logic.links.LinkProcessor;
-import nu.marginalia.converting.processor.logic.summary.SummaryExtractor;
+import nu.marginalia.summary.SummaryExtractor;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
-import nu.marginalia.keyword_extraction.DocumentKeywordExtractor;
+import nu.marginalia.keyword.DocumentKeywordExtractor;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.converting.model.HtmlStandard;
 import nu.marginalia.model.idx.DocumentFlags;
-import nu.marginalia.keyword_extraction.model.DocumentKeywordsBuilder;
+import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.converting.processor.logic.*;
@@ -47,6 +49,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     private final SummaryExtractor summaryExtractor;
     private final PubDateSniffer pubDateSniffer;
 
+    private final MetaRobotsTag metaRobotsTag;
     private static final DocumentValuator documentValuator = new DocumentValuator();
 
     private static final LinkParser linkParser = new LinkParser();
@@ -60,7 +63,8 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
                                        TitleExtractor titleExtractor,
                                        DocumentKeywordExtractor keywordExtractor,
                                        SummaryExtractor summaryExtractor,
-                                       PubDateSniffer pubDateSniffer) {
+                                       PubDateSniffer pubDateSniffer,
+                                       MetaRobotsTag metaRobotsTag) {
         this.minDocumentLength = minDocumentLength;
         this.minDocumentQuality = minDocumentQuality;
         this.sentenceExtractor = sentenceExtractor;
@@ -70,6 +74,8 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         this.keywordExtractor = keywordExtractor;
         this.summaryExtractor = summaryExtractor;
         this.pubDateSniffer = pubDateSniffer;
+        this.metaRobotsTag = metaRobotsTag;
+
     }
 
     @Override
@@ -89,7 +95,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         Document doc = Jsoup.parse(documentBody);
 
-        if (doc.select("meta[name=robots]").attr("content").contains("noindex")) {
+        if (!metaRobotsTag.allowIndexingByMetaTag(doc)) {
             throw new DisqualifiedException(DisqualificationReason.FORBIDDEN);
         }
 

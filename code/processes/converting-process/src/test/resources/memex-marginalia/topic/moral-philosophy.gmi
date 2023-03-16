@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Topic: Moral Philosophy</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/topic" class="path dir"><img src="/ico/dir.png" title="dir"> topic</a>
+
+    <a href="/topic/moral-philosophy.gmi" class="path file"><img src="/ico/file.png" title="file"> moral-philosophy.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Topic: Moral Philosophy</h1>
+<br>
+<blockquote>
+    If we labor to achieve something good, the labor fades but the good deed remains. If we derive pleasure from doing a bad deed, the pleasure fades, but the bad deed remains. </blockquote>
+<br>
+- Musonius Rufus, possibly apocryphal<br>
+<br>
+<!-- pragma: TOPIC -->
+
+
+
+
+<dl>
+<dt><a href="/commons/self-interest.gmi">/commons/self-interest.gmi</a></dt>
+<dd>On acting in self-interest - Topic</dd>
+
+<dt><a href="/log/11-dying-every-day.gmi">/log/11-dying-every-day.gmi</a></dt>
+<dd>Dying, Every Day (Re: Last times) [2021-08-04] - Topic</dd>
+
+<dt><a href="/log/15-stages-of-being.gmi">/log/15-stages-of-being.gmi</a></dt>
+<dd>Stages of Being [2021-08-23] - Topic</dd>
+
+<dt><a href="/log/16-cursed-motivation.gmi">/log/16-cursed-motivation.gmi</a></dt>
+<dd>Cursed Motivation [2021-08-27] - Topic</dd>
+
+<dt><a href="/log/34-internet-arguments.gmi">/log/34-internet-arguments.gmi</a></dt>
+<dd>A Polemic Against Internet Arguments [2021-11-02] - Topics</dd>
+
+<dt><a href="/log/60-prescriptive-descriptions.gmi">/log/60-prescriptive-descriptions.gmi</a></dt>
+<dd>On Prescriptive Descriptions [ 2022-07-14 ] - Topic</dd>
+</dl>
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>moral-philosophy.gmi</h1>
+    <a class="download" href="/api/raw?url=/topic/moral-philosophy.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/topic/moral-philosophy.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/topic/moral-philosophy.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Topic: Moral Philosophy</a>
+    
+    </div>
+</section>
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

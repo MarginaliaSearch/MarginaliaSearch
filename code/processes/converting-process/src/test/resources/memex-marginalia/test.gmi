@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="preload" as="font" href="https://www.marginalia.nu/fonts/Inconsolata-Medium.ttf" />
+    <link rel="preload" as="font" href="https://www.marginalia.nu/fonts/Roboto-Medium.ttf" />
+    <title>MEMEX - /test.gmi</title>
+    <link rel="stylesheet" href="https://www.marginalia.nu/style.css" />
+    <link rel="stylesheet" href="https://www.marginalia.nu/memex/style.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+<header>
+    <nav>
+        <a href="/memex/">Listing</a>
+
+    </nav>
+    <nav class="page">
+    <details>
+        <summary>test.gmi</summary>
+        <a href="#backlinks">Backlinks</a>
+        <a href="/memex/api/update?url=/test.gmi" class="verb">Edit</a>
+        <a href="/memex/api/delete?type=gmi&url=/test.gmi" class="verb">Delete</a>
+        <br/>
+        <div class="toc">
+        
+        </div>
+    </details>
+    </nav>
+</header>
+<article>
+<section id="memex-node">
+
+</section>
+
+</article>
+<footer>
+  This hypertext engine is a work-in-progress.
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

@@ -2,11 +2,11 @@ package nu.marginalia.crawl;
 
 import nu.marginalia.UserAgent;
 import nu.marginalia.WmsaHome;
-import nu.marginalia.work_log.WorkLog;
-import nu.marginalia.crawl_plan.CrawlPlanLoader;
-import nu.marginalia.crawl_plan.CrawlPlan;
+import nu.marginalia.process.log.WorkLog;
+import plan.CrawlPlanLoader;
+import plan.CrawlPlan;
 import nu.marginalia.crawling.io.CrawledDomainWriter;
-import nu.marginalia.crawling.model.CrawlingSpecification;
+import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.HttpFetcher;
 import okhttp3.ConnectionPool;

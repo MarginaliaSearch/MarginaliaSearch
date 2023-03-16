@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Local Backlinks [2021-07-26]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/07-local-backlinks.gmi" class="path file"><img src="/ico/file.png" title="file"> 07-local-backlinks.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Local Backlinks [2021-07-26]</h1>
+<br>
+Maintaining links is difficult. My gemini server doesn't have a lot of pages, but already maintaining links between relevant pages is growing more tedious by the page. It's going to become untenable soon.<br>
+<br>
+In part inspired by Antenna, I had the idea of extracting local backlinks, and automatically appending them to the pages that are linked. That way all local links are effectively bidirectional. If new a new post links to an old post, the old post automatically links to the new post. Old pages will thus over time accumulate more links to new pages without manual maintenance.<br>
+<br>
+Extracting this information was a relatively easy scripting job, the output ends up in two easily parsable text files, one with links and one with page titles.<br>
+<br>
+These can then be read by the server and used to create the links dynamically, as well as used to lint existing links and highlight dead ones. This does require a modicum of discipline when writing the gemini markup, as it expects all local links to start with the pattern "=&gt; /", but that is also something that can be checked automatically.<br>
+<br>
+I've written before about the over-linking problem on Wikipedia, that is something I'm careful about not recreating here as the backlinks would further amplify the problem.<br>
+<br>
+An unexpected emergent feature is that automatic back-linking allows for the creation of topical ad-hoc indicies. Merely creating an empty file and referring to it in pages will populate it with links to those pages. Is this useful? I don't know yet, but I will experiment and see if it brings any value. I do think it may help reduce the urge to recreate such topical indices within the posts themselves, and thus to mitigate the risk for over-linking.<br>
+<br>
+<h2 id="1.1">The Code</h2>
+<br>
+<dl class="link"><dt><a class="internal" href="/code/generate-metadata.sh">/code/generate-metadata.sh</a></dt><dd>Link data extraction script (just some slapdash bash)</dd></dl>
+<dl class="link"><dt><a class="internal" href="/code/src/main/java/nu/marginalia/gemini/plugins/StaticPagePlugin.java">/code/src/main/java/nu/marginalia/gemini/plugins/StaticPagePlugin.java</a></dt><dd>Server plugin</dd></dl>
+<a class="internal" href="/links.txt">/links.txt</a><br>
+<a class="internal" href="/titles.txt">/titles.txt</a><br>
+<br>
+<h2 id="1.2">Referenced Pages</h2>
+<br>
+<dl class="link"><dt><a class="internal" href="/log/00-linkpocalypse.gmi">/log/00-linkpocalypse.gmi</a></dt><dd>On The Linkpocalypse</dd></dl>
+<br>
+<h2 id="1.3">Referenced Websites</h2>
+<br>
+<dl class="link"><dt><a class="external" href="https://proxy.vulpes.one/gemini/warmedal.se/~antenna/">gemini://warmedal.se/~antenna/</a></dt><dd>Antenna</dd></dl>
+<br>
+<h2 id="1.4">Topics</h2>
+<br>
+<a class="internal" href="/topic/web-design.gmi">/topic/web-design.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>07-local-backlinks.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/07-local-backlinks.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/07-local-backlinks.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/07-local-backlinks.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/07-local-backlinks.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Local Backlinks [2021-07-26]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 The Code</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Referenced Pages</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Referenced Websites</a>
+    
+        <a href="#1.4" class="heading-2">1.4 Topics</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

@@ -30,9 +30,9 @@ public class IndexClient extends AbstractDynamicClient {
     }
 
     @CheckReturnValue
-    public List<SearchResultItem> query(Context ctx, SearchSpecification specs) {
+    public SearchResultSet query(Context ctx, SearchSpecification specs) {
         return wmsa_search_index_api_time.time(
-                () -> this.postGet(ctx, "/search/", specs, SearchResultSet.class).blockingFirst().getResults()
+                () -> this.postGet(ctx, "/search/", specs, SearchResultSet.class).blockingFirst()
         );
     }
 

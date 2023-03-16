@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Topic: Web Design</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/topic" class="path dir"><img src="/ico/dir.png" title="dir"> topic</a>
+
+    <a href="/topic/web-design.gmi" class="path file"><img src="/ico/file.png" title="file"> web-design.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Topic: Web Design</h1>
+<!-- pragma: TOPIC -->
+
+
+
+
+<dl>
+<dt><a href="/links/fragments-old-web.gmi">/links/fragments-old-web.gmi</a></dt>
+<dd>Fragments of the  Old Web - Topic</dd>
+
+<dt><a href="/log/00-linkpocalypse.gmi">/log/00-linkpocalypse.gmi</a></dt>
+<dd>Thoughts on the linkpocalypse [2021-06-30] - Topics</dd>
+
+<dt><a href="/log/03-writing-for-reading.gmi">/log/03-writing-for-reading.gmi</a></dt>
+<dd>Writing for Reading [2021-07-12] - Topics</dd>
+
+<dt><a href="/log/07-local-backlinks.gmi">/log/07-local-backlinks.gmi</a></dt>
+<dd>Local Backlinks [2021-07-26] - Topics</dd>
+
+<dt><a href="/log/08-whatever-happened-to-the-memex.gmi">/log/08-whatever-happened-to-the-memex.gmi</a></dt>
+<dd>Whatever happened to the Memex? [2021-07-28] - Topics</dd>
+
+<dt><a href="/log/13-static-html.gmi">/log/13-static-html.gmi</a></dt>
+<dd>Rendered static HTML [2021-08-13] - Topics</dd>
+
+<dt><a href="/log/19-website-discoverability-crisis.gmi">/log/19-website-discoverability-crisis.gmi</a></dt>
+<dd>The Small Website Discoverability Crisis [2021-09-08] - Topic</dd>
+
+<dt><a href="/log/23-re-software-and-branding.gmi">/log/23-re-software-and-branding.gmi</a></dt>
+<dd>Re: Software and Branding [2021-09-21] - Topics</dd>
+
+<dt><a href="/log/32-bot-apologetics.gmi">/log/32-bot-apologetics.gmi</a></dt>
+<dd>Bot Apologetics [2021-10-25] - Topics</dd>
+
+<dt><a href="/log/33-rude-guests.gmi">/log/33-rude-guests.gmi</a></dt>
+<dd>The Parable of A Rude Guest  [2021-10-28] - Topics</dd>
+
+<dt><a href="/log/71-memex-design.gmi">/log/71-memex-design.gmi</a></dt>
+<dd>Memex Design [ 2023-01-13 ] - 2.1 Backlinks are cool</dd>
+</dl>
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>web-design.gmi</h1>
+    <a class="download" href="/api/raw?url=/topic/web-design.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/topic/web-design.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/topic/web-design.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Topic: Web Design</a>
+    
+    </div>
+</section>
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

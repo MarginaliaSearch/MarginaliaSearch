@@ -19,10 +19,11 @@ application {
 tasks.distZip.enabled = false
 
 dependencies {
+    implementation project(':code:common:process')
+
     implementation project(':code:common:model')
     implementation project(':code:common:service')
     implementation project(':code:process-models:crawling-model')
-    implementation project(':code:features-crawl:crawl-plan')
 
     implementation libs.lombok
     annotationProcessor libs.lombok

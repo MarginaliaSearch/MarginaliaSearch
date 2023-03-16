@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - The Curious Case of the Dot-Com Link Farms [2021-09-09]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/20-dot-com-link-farms.gmi" class="path file"><img src="/ico/file.png" title="file"> 20-dot-com-link-farms.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">The Curious Case of the Dot-Com Link Farms [2021-09-09]</h1>
+<br>
+I spent some time today weeding out yet more link-farms from my search engine's index. <br>
+<br>
+Typically what I would do is just block the subnet assigned to the VPS provider they're on, and that does seem to work rather well. The cloud providers that don't police what they host is almost always home to quite a lot of this stuff, so I don't particularly mind scorching some earth in the name of a clean index. <br>
+<br>
+Today's link farms turned out to be more of a three-pipe problem. They had a pretty predictable address pattern, so it wasn't incredibly difficult to round them all up. Below are two examples out of a million or so URLs I flagged. <br>
+<br>
+I'm redacting the full addresses. If you click on them, at best you end up at an online casino or a porn site, but there's a pretty decent chance you'll be exposed to malware. <br>
+<br>
+<pre>
+http://█████-███████████████.com/radiorules/wp-content/plugins/book/bacterial-activation-of-type-i-interferons-2014/
+http://███████████.com/pdf/download-a-companion-to-renaissance-drama-blackwell-companions-to-literature-and-culture.html</pre>
+<br>
+It's strange because a large portion of them had .com domains, some had .org and a few even .edu. That's unusual, because these top level domains are expensive and inaccessible. We're also talking about about 20,000 domains. <br>
+<br>
+My initial response was something like "wow, this operation has deep pockets! That's a quarter of a million dollars per year in registration fees alone." Actually, a bit too deep, the more I thought about the economics of it all, the less it added up. <br>
+<br>
+One curious aspect is that they didn't quite seem to link very closely to each other. Most link farms do, but the most reliable way of finding these links was to go on URL pattern alone.<br>
+<br>
+Visiting the domain's index page without the full URL usually presented a reasonably innocent-looking website, a few of them were personal sites, some were businesses. Sometimes with signs of poor maintenance, but it seemed to be something someone at some point put actual work into building; not just some low-effort copy-paste facade put up to fool the VPS provider.<br>
+<br>
+That's another clue. Often times link farms will try to look innocent, but I think that's only part of what's going on here.<br>
+<br>
+It slowly dawned upon me<br>
+<br>
+<h2 id="1.1">It's all compromised WordPress deployments!</h2>
+<br>
+Yeah, what if these web sites aren't merely fronts, but actual websites made by people and not scripts? Maybe the reason they can afford a quarter of a million dollars in registration fees is because they aren't paying any of it? What if what I'm looking at is in fact 20,000 hacked WordPress deployments?<br>
+<br>
+If you have a web server (or really any TCP port open to the internet), you've probably seen the constant probing. You know, the stuff...<br>
+<br>
+<pre>
+2021-09-08T05:54:22+02:00 "GET //site/wp-includes/wlwmanifest.xml HTTP/1.1"
+2021-09-08T05:54:23+02:00 "GET //cms/wp-includes/wlwmanifest.xml HTTP/1.1"
+2021-09-08T05:54:24+02:00 "GET //sito/wp-includes/wlwmanifest.xml HTTP/1.1"
+2021-09-08T09:53:28+02:00 "GET /wp-login.php HTTP/1.1"
+2021-09-08T09:53:29+02:00 "GET /wp-login.php HTTP/1.1"
+2021-09-08T09:53:30+02:00 "GET /wp-login.php HTTP/1.1"
+2021-09-08T10:00:03+02:00 "GET /wp-content/plugins/wp-file-manager/readme.txt HTTP/1.1"
+2021-09-08T14:32:41+02:00 "GET /wp/ HTTP/1.1"
+2021-09-08T23:52:56+02:00 "GET /wp-content/plugins/wp-file-manager/readme.txt HTTP/1.1"
+2021-09-08T23:52:59+02:00 "GET /wp-content/plugins/wp-file-manager/readme.txt HTTP/1.1"</pre>
+<br>
+I think this is what they do to you if you actually do happen to run an older WordPress installation. <br>
+<br>
+<h2 id="1.2">Related Links</h2>
+<br>
+<a class="external" href="https://search.marginalia.nu/">https://search.marginalia.nu/</a><br>
+<a class="internal" href="/log/04-link-farms.gmi">/log/04-link-farms.gmi</a><br>
+<br>
+<h2 id="1.3">Topics </h2>
+<br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>20-dot-com-link-farms.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/20-dot-com-link-farms.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/20-dot-com-link-farms.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/20-dot-com-link-farms.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 The Curious Case of the Dot-Com Link Farms [2021-09-09]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 It&#x27;s all compromised WordPress deployments!</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Related Links</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Topics </a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/log/46-anatomy-of-search-engine-spam.gmi">/log/46-anatomy-of-search-engine-spam.gmi</a></dt>
+<dd>The Anatomy of Search Engine Spam [2022-02-07] - Wordpress</dd>
+
+<dt><a href="/log/73-new-approach-to-ranking.gmi">/log/73-new-approach-to-ranking.gmi</a></dt>
+<dd>A new approach to domain ranking [ 2023-02-06 ] - See Also</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

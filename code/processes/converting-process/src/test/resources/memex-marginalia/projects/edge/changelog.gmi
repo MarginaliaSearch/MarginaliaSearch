@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Change Log</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/projects" class="path dir"><img src="/ico/dir.png" title="dir"> projects</a>
+
+    <a href="/projects/edge" class="path dir"><img src="/ico/dir.png" title="dir"> edge</a>
+
+    <a href="/projects/edge/changelog.gmi" class="path file"><img src="/ico/file.png" title="file"> changelog.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Change Log</h1>
+<br>
+Detailed changelog available here:<br>
+<br>
+<a class="external" href="https://git.marginalia.nu/marginalia/marginalia.nu/graph?branch=refs%2Fheads%2Frelease">https://git.marginalia.nu/marginalia/marginalia.nu/graph?branch=refs%2Fheads%2Frelease</a><br>
+<br>
+<br>
+<h2 id="1.1">2022 August:</h2>
+<br>
+<ul>
+<li>Recipe filter</li></ul>
+<br>
+<ul>
+<li>Ad detection</li></ul>
+<br>
+<ul>
+<li>Query time optimization</li></ul>
+<br>
+<h2 id="1.2">2022 June-July:</h2>
+<br>
+<ul>
+<li>Overhaul of the crawler and database model, index and database reconstructed.</li></ul>
+<br>
+<h2 id="1.3">2022 May Changes</h2>
+<br>
+<ul>
+<li>Project goes Open Source</li></ul>
+<a class="external" href="https://git.marginalia.nu/marginalia/marginalia.nu">https://git.marginalia.nu/marginalia/marginalia.nu</a><br>
+<br>
+<ul>
+<li>Added support for a few !bangs, currently !g and !ddg</li></ul>
+<br>
+<h2 id="1.4">2022 April Changes</h2>
+<br>
+<ul>
+<li>Added type-ahead suggestions for desktop.</li></ul>
+<br>
+<ul>
+<li>New index backend based on a B-tree variant.</li></ul>
+<br>
+<ul>
+<li>Reworked the crawler to be more compatible with the WARC format.</li></ul>
+<br>
+<h2 id="1.5">2022 March Changes</h2>
+<br>
+<ul>
+<li>Side-loaded all of StackExchange and StackOverflow.</li></ul>
+<br>
+<ul>
+<li>Improved the blogocentric algorithm to prioritize smaller sites more effectively.</li></ul>
+<br>
+<ul>
+<li>Removed some mastodon instances from random mode as they aren't very interesting to visit, you just get a log-in screen. </li></ul>
+<br>
+<ul>
+<li>Optimized exploration mode as it was getting quite sluggish.</li></ul>
+<br>
+<ul>
+<li>Added a drilldown link on the search results for narrowing the search to the same domain.</li></ul>
+<br>
+<ul>
+<li>Tuned down the amount of Mastodon instances that crop up in Random Exploration mode. I like the idea of these sites, but there are so many of them and they only show you a sign-up screen when you visit them.</li></ul>
+<br>
+<h2 id="1.6">2022 February Changes</h2>
+<br>
+<ul>
+<li>Slightly relaxed the hard limit on how much javascript is allowed on a page, since better heuristics have been found, and this limit does throw out a lot of babies with the bathwater.</li></ul>
+<br>
+Work has been almost at a standstill due to some health issues. I hope to get more productive again soon.<br>
+<br>
+<h2 id="1.7">2022 January Changes</h2>
+<br>
+<ul>
+<li>Fixed a minor bug that broke among others, the site:-search</li></ul>
+<br>
+<ul>
+<li>Overhaul of the web design for the search engine.</li></ul>
+<br>
+<ul>
+<li>Random-feature has gotten site screenshots to offer a "flavor" of the site. Site-info is much improved as well.</li></ul>
+<br>
+<ul>
+<li>API access</li></ul>
+<a class="external" href="https://api.marginalia.nu/">https://api.marginalia.nu/</a><br>
+<br>
+<h2 id="1.8">2021 December Changes</h2>
+<br>
+<ul>
+<li>Crawling is smarter and uses the ranking algorithm for prioritizing the order of the results. </li></ul>
+<br>
+<ul>
+<li>Search results are better sorted in terms of how important the search terms are in relation to the query.</li></ul>
+<br>
+<ul>
+<li>The query parser is a lot smarter and generates better alternative search terms to supplement the main query (pluralization, concatenation), guided by a term frequency dictionary. </li></ul>
+<br>
+<ul>
+<li>Additional keywords are extracted for each document. This will add more junk results at the bottom of the page, but hopefully more good matches too.</li></ul>
+<br>
+<ul>
+<li>The maximum query length has been restricted.</li></ul>
+<br>
+<dl class="link"><dt><a class="internal" href="/log/41-search-result-relevance.gmi">/log/41-search-result-relevance.gmi</a></dt><dd>Additional Technical Details</dd></dl>
+<br>
+<h2 id="1.9">2021 November Update</h2>
+<br>
+<ul>
+<li>Further refinements to keyword extraction. The technically minded can read a few words about that here:</li></ul>
+<a class="internal" href="/log/37-keyword-extraction.gmi">/log/37-keyword-extraction.gmi</a><br>
+<br>
+<ul>
+<li>Improved crawling logic to offer more leniency toward sites that have high ranking. This improves the chance of pushing through local minima and discovering additional quality content on those sites.</li></ul>
+<br>
+<ul>
+<li>Mended some fences with a few of the websites that blocked my crawler when it young and unruly, and removed a few sites from the blocklist that didn't belong there. More quality websites in the index!</li></ul>
+<br>
+<ul>
+<li>As an experiment, tagged websites that contain links to amazon, attempt to place cookies on the crawler, contain links to known trackers, contain audio/video tags, and contain javascript. </li></ul>
+<br>
+It's not perfect, it will miss some trackers as well as mistake some honest amazon links for affiliate links.<br>
+<br>
+These special keywords are available:<br>
+<br>
+<pre class="literal">
+    js:true
+    js:false
+    special:cookies
+    special:affiliate
+    special:media
+    special:tracking</pre>
+<br>
+You can of course also exclude them<br>
+<br>
+<pre class="literal">
+    "keyboard -special:tracking -special:affiliate".</pre>
+<br>
+<ul>
+<li>Added outgoing links as search terms. Up to 25 per page. Great for ego-searching. </li></ul>
+<br>
+Example:<br>
+<pre class="literal">
+    "links:archive.org" </pre>
+will list pages that link to archive.org. This is only available on the highest level of domain, you can't for example search for "search.marginalia.nu", only "marginalia.nu".<br>
+<br>
+<h2 id="1.10">Exploration Mode (Experimental)</h2>
+<br>
+If you press the little "🔀" icon next to a search result, you will be brought to a list of domains that might be similar. From there you can keep pressing "🔀" again to explore the web.<br>
+<br>
+This is perhaps best used for navigating the blogosphere, neocities, and similar digital communities. <br>
+<br>
+This is an experimental feature and the user interface is really rough, but it's a lot of fun so that's why I've made it accessible to the public.<br>
+<br>
+<dl class="link"><dt><a class="external" href="https://search.marginalia.nu/search?query=browse:bikobatanari.art&profile=yolo&js=false">https://search.marginalia.nu/search?query=browse:bikobatanari.art&profile=yolo&js=false</a></dt><dd>I particularly enjoyed this rabbit hole.</dd></dl>
+<br>
+<h2 id="1.11">2021 October Revamp</h2>
+<br>
+<ul>
+<li>Introduced a ranking algorithm that takes into consideration both the average quality of the domain, and the number of links to the domain (and their quality). This should mean fewer garbage results and less SEO spam.</li></ul>
+<br>
+<ul>
+<li>Added ANOTHER ranking algorithm along with the first one, a modified PageRank that aggressively biases toward personal websites.</li></ul>
+<br>
+<ul>
+<li>Drastically improved keyword extraction and topic identification quite a bit. </li></ul>
+<br>
+<ul>
+<li>Support for many new types of keywords, including: C#, .308, 5.56mm, comp.lang.c, #hashtag, 90210.</li></ul>
+<br>
+<ul>
+<li>Added the ability to filter on page properties like javascript and declared HTML standard (based on DTD first and guesswork as a fallback).</li></ul>
+<br>
+<h3 id="1.11.1">Known Problems</h3>
+<br>
+<ul>
+<li>The minus keyword doesn't work super reliably.</li></ul>
+<br>
+<ul>
+<li>Keyword extraction may be a bit too conservative. </li></ul>
+<br>
+<h2 id="1.12">2021 September Bugfixes and Tweaks</h2>
+<br>
+<ul>
+<li>Reformulated some error messages that words can only exist within a Latin-1 encoding. Also added some automatic suggestions when there are few results, with a link to a tips page.</li></ul>
+<br>
+<ul>
+<li>Fixed a bug where the indexes weren't queried in the right order, and good results would in some circumstances be overwritten with worse results.</li></ul>
+<br>
+<ul>
+<li>Fixed a bug where the same domain could appear too many times in the results.</li></ul>
+<br>
+<ul>
+<li>Search profiles have been added, and the default is a more narrow configuration that's intended to reduce the noise of completely irrelevant search results. I'm not sure if this is necessary with the bug fixes above.</li></ul>
+<br>
+<ul>
+<li>Added support for curly quotes, as some operating systems apparently use those.</li></ul>
+<br>
+<h2 id="1.13">2021 September Maintenance</h2>
+<br>
+<ul>
+<li>A full index rebuild. This is mainly to allow for a change in internal modelling that will fix some jankiness.</li>
+<li>It also allows for an improvement in index bucketing. This will hopefully improve the quality of the results.</li>
+<li>Topic extraction has been improved, among the changes, the crawler will use word-capitalization to pick up likely topics of a page. </li></ul>
+<br>
+Further changes: <br>
+<br>
+<ul>
+<li>Unsupported foreign languages are detected and filtered out more aggressively than before. For now the search engine targets: English, Latin and Swedish. Additional languages may come in the future, but I will probably need to recruit help, as I have no way of ensuring the quality of results I can't read.</li>
+<li>Even more aggressive link farm detection.</li>
+<li>Charset encoding defaults to ISO8859-1 in the absence of UTF-8 being requested. This prevents a lot of garbled descriptions.</li></ul>
+<br>
+<h2 id="1.14">2021 August - Quality of Life updates</h2>
+<br>
+A lot of small features have been added to improve the usefulness of the search engine in finding information.<br>
+<br>
+<ul>
+<li>Support for define:-queries that retreive data from wiktionary.</li>
+<li>Mathematical expression evaluations and unit conversions (a bit janky still).</li>
+<li>Spell checking for search terms that return no results. If "Farenheit" gives no results, you will be provided with the suggestion to try "Fahrenheit".</li>
+<li>The search engine will provide links to (hopefully) useful wikipedia entries.</li></ul>
+<br>
+<br>
+<h2 id="1.15">2021 July Index Rebuild</h2>
+<br>
+ The index has been reconstructed (actually several times) to allow for new and exciting dimensions of search. Follows is a summary of some of the bigger feature-changes.<br>
+<br>
+<ul>
+<li>Search results are presented in an order that is likely more useful. Results that contain search terms will be boosted, and the number of links to the results will affect the order of presentation, but is not part of the indexing and crawling considerations, so the same set of results will be presented as previously -- this is not, and never will be a popularity contest.</li>
+<li>Support for a wider dictionary of search terms, including words that include numbers, and sequences of up to four words. The search engine will automatically try pairs of words when searching, but additional words will be considered if they are placed within quotes.</li>
+<li>Resilience improvements! The index can recover from mild data corruption in a highly best-effort fashion, and the index will recover much faster if it needs to restart, from 30-60 minutes down to 5 minutes.</li>
+<li>Blacklisting of link- and content-farms is implemented even more aggressively than in previous versions. There are some areas where an especially heavy hand needed to be employed, including pages pertaining to cryptocurrencies and alarm-systems.</li>
+<li>Mobile support has been improved, the contents of the page will no longer overflow.</li>
+<li>Terminal based browser support has been improved as well.</li></ul>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>changelog.gmi</h1>
+    <a class="download" href="/api/raw?url=/projects/edge/changelog.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/projects/edge/changelog.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/projects/edge/changelog.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/projects/edge/changelog.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Change Log</a>
+    
+        <a href="#1.1" class="heading-2">1.1 2022 August:</a>
+    
+        <a href="#1.2" class="heading-2">1.2 2022 June-July:</a>
+    
+        <a href="#1.3" class="heading-2">1.3 2022 May Changes</a>
+    
+        <a href="#1.4" class="heading-2">1.4 2022 April Changes</a>
+    
+        <a href="#1.5" class="heading-2">1.5 2022 March Changes</a>
+    
+        <a href="#1.6" class="heading-2">1.6 2022 February Changes</a>
+    
+        <a href="#1.7" class="heading-2">1.7 2022 January Changes</a>
+    
+        <a href="#1.8" class="heading-2">1.8 2021 December Changes</a>
+    
+        <a href="#1.9" class="heading-2">1.9 2021 November Update</a>
+    
+        <a href="#1.10" class="heading-2">1.10 Exploration Mode (Experimental)</a>
+    
+        <a href="#1.11" class="heading-2">1.11 2021 October Revamp</a>
+    
+        <a href="#1.11.1" class="heading-3">1.11.1 Known Problems</a>
+    
+        <a href="#1.12" class="heading-2">1.12 2021 September Bugfixes and Tweaks</a>
+    
+        <a href="#1.13" class="heading-2">1.13 2021 September Maintenance</a>
+    
+        <a href="#1.14" class="heading-2">1.14 2021 August - Quality of Life updates</a>
+    
+        <a href="#1.15" class="heading-2">1.15 2021 July Index Rebuild</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - A brief hypothesis about &quot;normies&quot; [2021-11-13]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/39-normie-hypothesis.gmi" class="path file"><img src="/ico/file.png" title="file"> 39-normie-hypothesis.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">A brief hypothesis about "normies" [2021-11-13]</h1>
+<br>
+The phenomenon of "normies" is an interesting one. The term itself is a bit problematic and not one I'd typically use, but as a phenomenon they are still worth investigating.<br>
+<br>
+Their perhaps biggest distinguishing feature is that they don't get "it", whatever it is. It's tempting to think that these are an especially mindless type of person with no personality and little in terms of thought going on.<br>
+<br>
+I have a theory that normies may not actually exist. That is, you can't actually show me a person that is a normie. They are a mirage.<br>
+<br>
+Rather, the appearance of normies may be a symptom of a forum, a social medium, group, seeing a large influx of outsiders, so large and fast that they can't integrate in the culture of the group.<br>
+<br>
+A group can assimilate a small steady influx of outsiders, they will quickly learn the established injokes, values, and cultural paradigms; but if the influx becomes too big, then the newcomers will mostly be interacting with other newcomers, and transmission of the group's culture will be slow and distorted.<br>
+<br>
+Because a majority of the people they see are fellow newcomers, this creates an emergent "stranger culture" that is a vague imitation of the original culture of the group, but much more impersonal and reserved. If this is a one-time thing, the culture may stabilize, but if new members keep joining at a fast rate, "normies" appear. <br>
+<br>
+A normie is an outsider that thinks they are an insider, made possible because everyone they meet is an outsider too.<br>
+<br>
+Normies are a property of the dynamics of the social medium, not of its members. Any forum that sufficiently aggressively promotes growth will ultimately struggle with this.<br>
+<br>
+Close communities turn into anonymous bustling city streets. <br>
+<br>
+A community needs an element of stability, there are social authorities, known dynamics, collective values. In a rapidly growing social medium, you very much can't step into the same river twice; a river that washes away any complex social dynamics and relationships. You are always talking to new people, strangers, normies. <br>
+<br>
+Additionally you get a sort of dead sea effect, where those that create a real sense of community go elsewhere to look for that community, because it can't be found in a place where everyone is always a stranger. Eventually what you are left with is a transitory hub, nobody sticks around because there is nothing to stick around for.<br>
+<br>
+Isolationism is perhaps not a measured response to this, but growth for the sake of growth is undeniably extremely harmful for any community.<br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>39-normie-hypothesis.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/39-normie-hypothesis.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/39-normie-hypothesis.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/39-normie-hypothesis.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/39-normie-hypothesis.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 A brief hypothesis about &quot;normies&quot; [2021-11-13]</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

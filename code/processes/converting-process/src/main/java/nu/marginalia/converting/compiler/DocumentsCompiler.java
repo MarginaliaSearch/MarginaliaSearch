@@ -29,9 +29,6 @@ public class DocumentsCompiler {
         if (details != null) {
             ret.add(new LoadProcessedDocument(doc.url, doc.state, details.title, details.description, HtmlFeature.encode(details.features), details.standard.name(), details.length, details.hashCode, details.quality, details.pubYear));
         }
-        else {
-            ret.add(new LoadProcessedDocumentWithError(doc.url, doc.state, doc.stateReason));
-        }
     }
 
     private void compileWords(List<Instruction> ret, ProcessedDocument doc) {

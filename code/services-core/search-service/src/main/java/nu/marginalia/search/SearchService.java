@@ -25,7 +25,7 @@ import java.nio.charset.StandardCharsets;
 public class SearchService extends Service {
 
     private final WebsiteUrl websiteUrl;
-    private StaticResources staticResources;
+    private final StaticResources staticResources;
 
     private static final Logger logger = LoggerFactory.getLogger(SearchService.class);
 
@@ -71,7 +71,7 @@ public class SearchService extends Service {
 
         Spark.exception(Exception.class, (e,p,q) -> {
             logger.error("Error during processing", e);
-            errorPageService.serveError(Context.fromRequest(p), q);
+            errorPageService.serveError(Context.fromRequest(p), p, q);
         });
 
         Spark.awaitInitialization();

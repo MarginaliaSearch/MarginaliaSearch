@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Code</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/code" class="path dir"><img src="/ico/dir.png" title="dir"> code</a>
+
+    <a href="/code/index.gmi" class="path file"><img src="/ico/file.png" title="file"> index.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Code</h1>
+<br>
+No code in this directory, but there is a git repo with the source for the memex, encyclopedia, search engine and so forth below.<br>
+<br>
+<a class="external" href="https://git.marginalia.nu/">https://git.marginalia.nu/</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>index.gmi</h1>
+    <a class="download" href="/api/raw?url=/code/index.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/code/index.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/code/index.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/code/index.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Code</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

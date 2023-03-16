@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - The Astrolabe Part II: The Magic Power of Sampling Bias [2021-08-03]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/10-astrolabe-2-sampling-bias.gmi" class="path file"><img src="/ico/file.png" title="file"> 10-astrolabe-2-sampling-bias.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">The Astrolabe Part II: The Magic Power of Sampling Bias [2021-08-03]</h1>
+<br>
+As I have mentioned earlier, perhaps the biggest enemy of PageRank is the hegemony of PageRank-style algorithms. Once an algorithm like that becomes not only dominant, but known, it also creates a market for leveraging its design particulars.<br>
+<br>
+Homogenous ecosystems are almost universally bad. It doesn't really matter if it's every computer running Windows XP, or every farmer planting genetically identical barley, what you get is extreme susceptibility to exploitation.<br>
+<br>
+It's why we have link farms, it's why there's an SEO industry, and it's in part why the internet has gotten so bad since those that cater to the algorithm are shaped by it, and those who don't are invisible.<br>
+<br>
+<h2 id="1.1">Quality Assessment</h2>
+<br>
+To get search results that are interesting again, a some different method needs to be devised.<br>
+<br>
+If the problem is that everyone is trying to cheat the popularity contest, maybe we can cut the gordian knot by looking at something other than popularity.<br>
+<br>
+Maybe we can infer that websites that specifically don't try to win the popularity contest have some intrinsic value. Maybe we can cook up a measurement that looks for indicators of SEO, and punishes that.<br>
+<br>
+This in mind, I created a score based on mark-up. Simplified it calculates a score that roughly gauges how "plain" a webpage is.<br>
+<br>
+<pre>
+       length_text     -script_tags
+  Q =  -----------  x e
+       length_markup</pre>
+<br>
+There are other factors too, specific words also reduce the score, mostly pertaining to porn, bitcoin and warez, as those are problem areas that yield very few legitimate results and a lot of spam.<br>
+<br>
+For the rest of the post when I use the word quality, I will refer to this score. "Low quality" is not a judgement, but a number.<br>
+<br>
+Note that for each script tag, quality is reduced by 63%.<br>
+<br>
+<ul>
+<li>1 script tag and quality can be no more than 37%</li>
+<li>2 script tags and quality can be no more than 13%</li>
+<li>3 script tags and quality can be no more than 5%</li></ul>
+<br>
+... and so forth. Script tags are the biggest factor in a web page's quality assessment.<br>
+<br>
+There are drawbacks to this, not every use of javascript is exploitative. Sometimes it brings usefulness, but those web sites will be de-prioritized.<br>
+<br>
+<h2 id="1.2">Indexing</h2>
+<br>
+This score drives the crawling priority of each website the crawler discovers. It flavors the quality of the outgoing links too, so that to best effort, websites are crawled in a decreasing order of quality.<br>
+<br>
+Naturally the assumption doesn't hold that a website looks like the websites that link to it, but I think the reverse assumption is better. Low quality websites rarely link to high quality websites.<br>
+<br>
+The search engine will only index one or two pages low quality pages it encounters and then probably never look back.<br>
+<br>
+Indexed websites are then sorted in eleven different buckets based on their quality (actually its negated logarithm, from 0 through -10). These buckets allow the index to be queried in order of decreasing quality, as the index has no other awareness of the pages' quality.<br>
+<br>
+Given that there are very real constraints on how big the index can get, maybe 20-30 million URLs, the main priority in crawling is finding the most salient pages and aggressively rejecting everything else. One million high quality URLs is better than a billion low quality URLs.<br>
+<br>
+While in general I am a friend of Voltaire and advocate tolerance well beyond what most people would consider reasonable, in this case I promote extreme prejudice. Ruthless concessions need to be made to ensure quality. If it raises the quality of the index, nothing is off limits.<br>
+<br>
+I talked about that a bit in the post on link farms I made earlier.<br>
+<br>
+<h2 id="1.3">Relevant Search Results</h2>
+<br>
+When it's time to query the index, during searching, the index buckets are queried in decreasing order of quality. The results are then sorted in order of how many incoming links the domain has weighted by the page's quality.<br>
+<br>
+Superficially this is an outdated and broken way of building a search engine since link farms and other trash results will almost by definition produce high numbers of incoming links, but what makes it work is the shewed sample created by the crawling process. It is possible to find results from the full gamut of quality, but low quality results are just rarer.<br>
+<br>
+It's not that the search results are picked in order of how many links they have, it's the results that have already been picked that are prioritized in that order in order to present the best ones first.<br>
+<br>
+I implemented this last point relatively recently, and the result has been pretty remarkable. As long as you are within an area where there actually is pages to find, the search engine not only finds them, but often shows relevant results at the top. I'm really happy with how well it's working now.<br>
+<br>
+Then there's the problem areas, where you can't find anything relevant. I mentioned porn and bitcoin earlier, but also travel, security systems, locksmithing, SEO; these topics do not produce good results. They seem absolutely inundated with spam. I've blacklisted the spam domains, but it's been like peeling layers off an onion. The more I removed the less there remained, until eventually there was nothing at the core.<br>
+<br>
+It remains a niche search engine. I do use it as my default search engine on my phone mostly because I believe in eating your own dogfood, but it's still challenging. I keep bouncing between it and the big search engines. If I can't find it on mine, I try theirs. If I can't find it there, I try mine some more. It's a coin toss sometimes.<br>
+<br>
+<dl class="link"><dt><a class="internal" href="/log/04-link-farms.gmi">/log/04-link-farms.gmi</a></dt><dd>On Link Farms</dd></dl>
+<dl class="link"><dt><a class="internal" href="/log/01-astrolabe.gmi">/log/01-astrolabe.gmi</a></dt><dd>The Astrolabe Part I</dd></dl>
+<br>
+<a class="external" href="https://search.marginalia.nu/">https://search.marginalia.nu/</a><br>
+<br>
+<h2 id="1.4">Topic</h2>
+<br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>10-astrolabe-2-sampling-bias.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/10-astrolabe-2-sampling-bias.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/10-astrolabe-2-sampling-bias.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/10-astrolabe-2-sampling-bias.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 The Astrolabe Part II: The Magic Power of Sampling Bias [2021-08-03]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Quality Assessment</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Indexing</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Relevant Search Results</a>
+    
+        <a href="#1.4" class="heading-2">1.4 Topic</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/projects/edge/design-notes.gmi">/projects/edge/design-notes.gmi</a></dt>
+<dd>Notes on Designing a Search Engine - Quality measure</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

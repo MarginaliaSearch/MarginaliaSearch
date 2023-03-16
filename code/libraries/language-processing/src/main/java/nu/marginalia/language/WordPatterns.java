@@ -11,25 +11,19 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+/** Regular expression patterns for deciding which words are eligible to be keywords.
+ * <p/>
+ * This is in dire need of oversight. Here be towering dragons with names,
+ * a skull next to their HP bar, and their own Mick Gordon soundtrack just
+ * for the battle.
+ *
+ */
 public class WordPatterns {
     public static final int MIN_WORD_LENGTH = 1;
     public static final int MAX_WORD_LENGTH = 64;
 
     public static final String WORD_TOKEN_JOINER = "_";
-    public static final Pattern wordPattern = Pattern.compile("[#]?[_@.a-zA-Z0-9'+\\-\\u00C0-\\u00D6\\u00D8-\\u00f6\\u00f8-\\u00ff]+[#]?");
-    public static final Pattern wordAppendixPattern = Pattern.compile("[.]?[0-9a-zA-Z\\u00C0-\\u00D6\\u00D8-\\u00f6\\u00f8-\\u00ff]{1,3}[0-9]?");
-    public static final Pattern wordBreakPattern = Pattern.compile("([^_#@.a-zA-Z'+\\-0-9\\u00C0-\\u00D6\\u00D8-\\u00f6\\u00f8-\\u00ff]+)|[|]|(\\.(\\s+|$))");
-    public static final Pattern characterNoisePattern = Pattern.compile("^[/+\\-]+$");
 
-    public static final Pattern singleWordAdditionalPattern =
-            Pattern.compile("[\\da-zA-Z]{1,15}([.\\-_/:][\\da-zA-Z]{1,10}){0,4}");
-
-    public static final Predicate<String> singleWordQualitiesPredicate = singleWordAdditionalPattern.asMatchPredicate();
-    public static final Predicate<String> wordQualitiesPredicate = wordPattern.asMatchPredicate();
-
-    public static final Predicate<String> wordAppendixPredicate = wordAppendixPattern.asMatchPredicate();
-    public static final Predicate<String> wordPredicateEither = wordQualitiesPredicate.or(wordAppendixPredicate);
-    public static final Predicate<String> characterNoisePredicate = characterNoisePattern.asMatchPredicate();
 
     public static final Set<String> topWords;
     static {

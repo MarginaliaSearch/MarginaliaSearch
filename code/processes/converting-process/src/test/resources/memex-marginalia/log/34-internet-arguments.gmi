@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - A Polemic Against Internet Arguments [2021-11-02]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/34-internet-arguments.gmi" class="path file"><img src="/ico/file.png" title="file"> 34-internet-arguments.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">A Polemic Against Internet Arguments [2021-11-02]</h1>
+<br>
+I want you to consider for a moment all the human lifetime wasted in ideological stalemates on the Internet, all that energy, all that anger and frustration. Imagine if you take even a fraction of that time, and put it to creating something constructive instead, learning skills, doing anything meaningful. <br>
+<br>
+It boggles the mind, doesn't it? It must amount to entire human lifetimes every week. <br>
+<br>
+Ideology, or in a wider sense, ethics, is all about what should be done. How we should live.  These aren't statements about the world, but opinions about what the world should look like.  They aren't true or false, and any argument against them always boils down to "I disagree!".  Arguing about ethical systems is some of the least constructive things a human can do.  It is more pointless than masturbation, which at least feels good for a moment.<br>
+<br>
+I'll even argue these stalemates can be discarded as fruitless based on the fact that they exist.  If there truly was a clear cut answer as to which ethical system was superior, we wouldn't stuck in endless disagreement.  It feels like you can make headway, but it's a Chinese finger trap:  The harder you try the more stuck you get.  The only way to get out is to accept that other people, in fact, do not agree.<br>
+<br>
+Instead, some get really angry that other people don't share their views, and spend hours every day frothing at the mouth over this. They send emails, they boycott, they rage themselves to sleep every night that the universe dares permit these insolent other-thinkers to continue existing in the same universe.<br>
+<br>
+This is terribly myopic and self-centered.  The assumption is that these other people insist on believing the wrong thing in spite of the clear evidence to the contrary.  You can see it, so clearly they must be able to, yet they willfully ignore the truth.  <br>
+<br>
+What if they just have different perspective than you have?  The question you should be asking is what they are seeing, as kind rational and intelligent beings, that makes them come to such radically different conclusions to yours. I'm not saying this is in any means easy, it requires  distance that few seem to possess.<br>
+<br>
+-<br>
+<br>
+Meanwhile some of those other people are doing something productive with their time. It's constructive human action that shapes the world. Arguing about ethics doesn't. It never has, not in other ways than letting resentment fester in those hearts that allowed it to enter.<br>
+<br>
+Take the time spent arguing about nonsense like the philosophical purity of software licensees, and put it to building software that has a license you agree with instead.<br>
+<br>
+Take the time spent infuriated at Covid policy, and spend it on living your life instead.  Regardless of your position, if you are concerned about loss of life, it's a deep irony how frivolously you and everyone debating this over the last two years have been letting your own precious life time run out in the sand.<br>
+<br>
+Instead of attempting to tear down what others have built, or sabotaging them because they don't agree with you on some ideological point, instead build something yourself instead that embodies your ideas of good. Or just flourish as a human being.  The only way humans end up pathetic is through self-sabotage, all of us have far more potential than we dare to imagine.  Even if you spend your entire life learning and creating, you will still never be done, even on your death bed there will be more things you want to do and understand.<br>
+<br>
+Show the world sort of great things your system of values will lead to.  That is much more convincing than theories.  That is why people like Socrates or Jesus are role models to this day.  Neither of them spent their days complaining on the Internet about how shitty everything was.<br>
+<br>
+If you are frustrated and think the world is blind to what is good, don't spend all day trying to convince others with words or theoretical justifications: Show them, embody your values.<br>
+<br>
+Once you've become that saintly paragon of good, when you are truly beyond reproach, then your you can convincingly tell others how to live, then your words will carry weight.<br>
+<br>
+<h2 id="1.1">Topics</h2>
+<br>
+<a class="internal" href="/topic/moral-philosophy.gmi">/topic/moral-philosophy.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>34-internet-arguments.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/34-internet-arguments.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/34-internet-arguments.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/34-internet-arguments.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/34-internet-arguments.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 A Polemic Against Internet Arguments [2021-11-02]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Topics</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

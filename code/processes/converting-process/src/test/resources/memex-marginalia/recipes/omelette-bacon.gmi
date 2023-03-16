@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Bacon Omelette [2021-07-04]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/recipes" class="path dir"><img src="/ico/dir.png" title="dir"> recipes</a>
+
+    <a href="/recipes/omelette-bacon.gmi" class="path file"><img src="/ico/file.png" title="file"> omelette-bacon.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Bacon Omelette [2021-07-04]</h1>
+<br>
+Simplicity: Easy<br>
+Meal: Breakfast<br>
+Health: It healthy for the soul<br>
+Servings: 4, or 2 if you are hungry<br>
+<br>
+<h2 id="1.1">Ingredients</h2>
+<br>
+<ul>
+<li>7-8 strips of bacon</li>
+<li>6 eggs</li>
+<li>Cream</li>
+<li>Chives</li>
+<li>Cheese (grated or to grate)</li>
+<li>Black pepper</li></ul>
+<br>
+<h2 id="1.2">Instructions</h2>
+<br>
+<ul>
+<li>Cook bacon in a large skillet until crispy</li>
+<li>Take out bacon and leave to dry a bit on a paper towel</li>
+<li>Turn off the heat and *leave the bacon grease in skillet!*</li></ul>
+<br>
+<ul>
+<li>Crack the eggs in a bowl</li>
+<li>Add a splash of cream to the eggs</li>
+<li>Add some black pepper</li>
+<li>Chop the bacon into smaller bits</li>
+<li>Put the bacon in the batter</li>
+<li>Whisk</li></ul>
+<br>
+<ul>
+<li>Pour the batter into the skillet</li>
+<li>Grate some cheese on top of it</li>
+<li>Set it on low-medium heat, add a lid if you've got one that fits</li>
+<li>Wait until it sets</li>
+<li>Let it cool for a bit!</li>
+<li>Cut a generous amount of chives sprinkle on top of it</li></ul>
+<br>
+If you are too impatient to let the omelette cool, putting chives on a piping hot omelette will cook them and then they lose all flavor.<br>
+<br>
+<ul>
+<li>Fold the omelette on top of itself and cut into portion sizes</li>
+<li>Eat it while it's hot!</li></ul>
+<br>
+<h2 id="1.3">Topics</h2>
+<br>
+<a class="internal" href="/topic/cooking.gmi">/topic/cooking.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>omelette-bacon.gmi</h1>
+    <a class="download" href="/api/raw?url=/recipes/omelette-bacon.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/recipes/omelette-bacon.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/recipes/omelette-bacon.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/recipes/omelette-bacon.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Bacon Omelette [2021-07-04]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Ingredients</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Instructions</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Topics</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

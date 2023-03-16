@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Can we unfuck internet discoverability? [ 2022-02-04 ]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/45-unfuck-internet-discoverability.gmi" class="path file"><img src="/ico/file.png" title="file"> 45-unfuck-internet-discoverability.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Can we unfuck internet discoverability? [ 2022-02-04 ]</h1>
+<br>
+I've been thinking a lot about how difficult it has become to discover quality content on the Internet, not because it isn't there, but because the signal to noise ratio is really bad, and most venues of discovery don't seem to be able to handle it. <br>
+<br>
+Recommendation algorithms seem to work almost too well, to the point where it's all kind of just showing you things you already like, rarely anything new that you might like. It's an absolute tragedy both for small websites and for their potential audience.<br>
+<br>
+Certainly discovery on the Internet could be made better.<br>
+<br>
+I've tried discussing this problem in various avenues, but mostly what you get is long tirades about how bad google or reddit is. Let's not even dwell on what other people are doing that isn't working, instead let's build something that does work. If I walk into a library and ask for a 20 good books to read, then I will get 20 books and most of them will be good. Why couldn't that be a thing with websites as well?<br>
+<br>
+It's why I built my search engine, and it's what I've tried to mitigate with exploration mode. Neither are perfect, but both seem close. Dealing with the search engine database I have, and doing various experiments, I think it should be possible to build something genuinely useful in this space. I'm not at all sure how but I think there are entirely new things that could be tried. <br>
+<br>
+If you too want to work on this, please let me know. Maybe we can collaborate somehow. I'm trying to gather some like-minded people. I'm sitting on a lot of data from my search engine, and have at least some hardware to spare.<br>
+<br>
+For inspiration, I'm making available a fun and useful dataset, a link database. It's available under CC-BY-SA-NC 4.0. To keep it manageable, it's on a first domain level, making it 13 million entries. You can download it below. This is real production data. Build something cool, make graphviz diagrams, whatever. Have fun!<br>
+<br>
+<a class="external" href="https://downloads.marginalia.nu/">https://downloads.marginalia.nu/</a><br>
+<br>
+<h2 id="1.1">See Also</h2>
+<br>
+<a class="internal" href="/log/19-website-discoverability-crisis.gmi">/log/19-website-discoverability-crisis.gmi</a><br>
+<br>
+<h2 id="1.2">Topic</h2>
+<br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>45-unfuck-internet-discoverability.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/45-unfuck-internet-discoverability.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/45-unfuck-internet-discoverability.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/45-unfuck-internet-discoverability.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/45-unfuck-internet-discoverability.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Can we unfuck internet discoverability? [ 2022-02-04 ]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 See Also</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Topic</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

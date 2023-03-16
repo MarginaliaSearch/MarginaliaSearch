@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Keeping Gemini Difficult [ 2021-11-04 ]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/35-keeping-gemini-difficult.gmi" class="path file"><img src="/ico/file.png" title="file"> 35-keeping-gemini-difficult.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Keeping Gemini Difficult [ 2021-11-04 ]</h1>
+<br>
+This is a response to the post "Making Gemini Easy" over on ~tomasino, and the title is a bit tongue-in-cheek haha-but-no-really. <br>
+<br>
+<a class="external" href="https://proxy.vulpes.one/gemini/tilde.team/~tomasino/journal/20211103-making-gemini-easy.gmi">gemini://tilde.team/~tomasino/journal/20211103-making-gemini-easy.gmi</a><br>
+<br>
+I think the idea that we need to shield the users from how technology works is a terrible, terrible mistake. It disempowers the users, and concentrates power in the hands of a technological elite, and that divide is only going to grow.<br>
+<br>
+We already have an alarming number of people working with computers, and some may even be programmers, that simply do not understand how computers work. Their only concept of a computer is the user interface on the screen. The rest is unintelligible wizardry. Nobody has told them, it's been deemed too complicated, nothing for them to worry their little heads about.<br>
+<br>
+If you treat people like children, they act like children, they think like children, they for all intents and purposes become trapped in perpetual childhood. Helpless and dependent, forever. What we need to do is treat people as dignified human beings capable of learning and understanding and overcoming challenges, if we do, they become capable, they learn and rise to the occasion, they are empowered and become independent; in short, they're allowed to enter adulthood. <br>
+<br>
+We need to teach the users of technology how to make a fire on their own, even though they may get burnt, and even though it requires more than installing an app on the store.<br>
+<br>
+In that regards, I think one of best aspects of Gemini is that it actually has a bar to entry. If you want to do more than just reading, you need to invest some time into understanding what you are contributing to. It's not incredibly difficult, but it does demand a modicum of technological understanding. <br>
+<br>
+That obstacle is a ultimately good thing. As much as it excludes those who are unwilling to invest in overcoming it, also it elevates those who do.<br>
+<br>
+<h1 id="2">Topics</h1>
+<br>
+<a class="internal" href="/topic/platforms.gmi">/topic/platforms.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>35-keeping-gemini-difficult.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/35-keeping-gemini-difficult.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/35-keeping-gemini-difficult.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/35-keeping-gemini-difficult.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/35-keeping-gemini-difficult.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Keeping Gemini Difficult [ 2021-11-04 ]</a>
+    
+        <a href="#2" class="heading-1">2 Topics</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

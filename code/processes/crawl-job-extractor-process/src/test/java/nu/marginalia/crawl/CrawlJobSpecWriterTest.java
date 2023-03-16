@@ -1,7 +1,7 @@
 package nu.marginalia.crawl;
 
-import nu.marginalia.crawl_plan.CrawlerSpecificationLoader;
-import nu.marginalia.crawling.model.CrawlingSpecification;
+import nu.marginalia.crawling.model.spec.CrawlerSpecificationLoader;
+import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

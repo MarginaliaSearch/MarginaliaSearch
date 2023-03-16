@@ -5,7 +5,7 @@ import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.language.LanguageFilter;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.converting.model.HtmlStandard;
-import nu.marginalia.keyword_extraction.model.DocumentKeywordsBuilder;
+import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.ProcessedDocumentDetails;

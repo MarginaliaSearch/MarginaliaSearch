@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Bookmarks</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/links" class="path dir"><img src="/ico/dir.png" title="dir"> links</a>
+
+    <a href="/links/bookmarks.gmi" class="path file"><img src="/ico/file.png" title="file"> bookmarks.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Bookmarks</h1>
+<br>
+<h2 id="1.1">Tech</h2>
+<br>
+<a class="external" href="https://datagubbe.se/">https://datagubbe.se/</a><br>
+<a class="external" href="http://ebb.org/bkuhn/">http://ebb.org/bkuhn/</a><br>
+<a class="external" href="http://advsys.net/ken/default.htm">http://advsys.net/ken/default.htm</a><br>
+<a class="external" href="https://dataswamp.org/~solene/">https://dataswamp.org/~solene/</a><br>
+<a class="external" href="http://boston.conman.org/">http://boston.conman.org/</a><br>
+<a class="external" href="https://sylvaindurand.org/">https://sylvaindurand.org/</a><br>
+<a class="external" href="https://www.geoffchappell.com/">https://www.geoffchappell.com/</a><br>
+<a class="external" href="https://nullprogram.com/">https://nullprogram.com/</a><br>
+<a class="external" href="https://www.atarimagazines.com/">https://www.atarimagazines.com/</a><br>
+<a class="external" href="https://www.righto.com/">https://www.righto.com/</a><br>
+<br>
+<h2 id="1.2">Humanities</h2>
+<br>
+<a class="external" href="https://stpeter.im/">https://stpeter.im/</a><br>
+<a class="external" href="https://www.romeartlover.it/">https://www.romeartlover.it/</a><br>
+<a class="external" href="https://www.sfpoetry.com/index.html">https://www.sfpoetry.com/index.html</a><br>
+<a class="external" href="http://art-bin.com/aaehome.html">http://art-bin.com/aaehome.html</a><br>
+<a class="external" href="https://www.monadnock.net/">https://www.monadnock.net/</a><br>
+<a class="external" href="http://www.gutenberg.org/">http://www.gutenberg.org/</a><br>
+<br>
+<h2 id="1.3">Misc</h2>
+<br>
+<a class="external" href="http://www.marksmart.net/">http://www.marksmart.net/</a><br>
+<a class="external" href="http://ajroach42.com/">http://ajroach42.com/</a><br>
+<a class="external" href="https://wiki.xxiivv.com/site/home.html">https://wiki.xxiivv.com/site/home.html</a><br>
+<a class="external" href="https://schmud.de/">https://schmud.de/</a><br>
+<a class="external" href="https://windows95tips.com/">https://windows95tips.com/</a><br>
+<br>
+<h2 id="1.4">Interesting</h2>
+<br>
+<a class="external" href="http://voynich.nu/">http://voynich.nu/</a><br>
+<a class="external" href="https://stonepages.com/">https://stonepages.com/</a><br>
+<a class="external" href="http://www.kancoll.org/books/perry/">http://www.kancoll.org/books/perry/</a><br>
+<a class="external" href="http://spacekate.com/">http://spacekate.com/</a><br>
+<br>
+<h2 id="1.5">Hacks</h2>
+<br>
+<a class="external" href="http://www.ex-parrot.com/pete/upside-down-ternet.html">http://www.ex-parrot.com/pete/upside-down-ternet.html</a><br>
+<br>
+<h2 id="1.6">Web Design</h2>
+<br>
+<a class="external" href="https://felix.plesoianu.ro/">https://felix.plesoianu.ro/</a><br>
+<a class="external" href="https://neustadt.fr/">https://neustadt.fr/</a><br>
+<a class="external" href="https://ind.ie/ethical-design/">https://ind.ie/ethical-design/</a><br>
+<a class="external" href="https://nownownow.com/">https://nownownow.com/</a><br>
+<a class="external" href="https://neocities.org/">https://neocities.org/</a><br>
+<br>
+<h2 id="1.7">Games</h2>
+<br>
+<a class="external" href="http://www.gameboomers.com/">http://www.gameboomers.com/</a><br>
+<a class="external" href="http://www.whipassgaming.com/">http://www.whipassgaming.com/</a><br>
+<a class="external" href="http://www.homeoftheunderdogs.net/">http://www.homeoftheunderdogs.net/</a><br>
+<br>
+<a class="external" href="https://meatfighter.com/">https://meatfighter.com/</a><br>
+<br>
+<h2 id="1.8">Art</h2>
+<br>
+<a class="external" href="http://godxiliary.com/">http://godxiliary.com/</a><br>
+<a class="external" href="http://sod.jodi.org/index.html">http://sod.jodi.org/index.html</a><br>
+<a class="external" href="https://www.floppyswop.co.uk">https://www.floppyswop.co.uk</a><br>
+<a class="external" href="https://www.dedware.com/">https://www.dedware.com/</a><br>
+<a class="external" href="http://www.lileks.com/">http://www.lileks.com/</a><br>
+<a class="external" href="https://dannarchy.com/">https://dannarchy.com/</a><br>
+<br>
+<h2 id="1.9">Other bookmark-lists</h2>
+<br>
+<a class="external" href="https://datagubbe.se/links/">https://datagubbe.se/links/</a><br>
+<a class="external" href="https://mineralexistence.com/bookmarks.html">https://mineralexistence.com/bookmarks.html</a><br>
+<a class="external" href="https://wiki.xxiivv.com/site/bookmarks.html">https://wiki.xxiivv.com/site/bookmarks.html</a><br>
+<a class="external" href="https://hd-dn.com/bookmarks/">https://hd-dn.com/bookmarks/</a><br>
+<a class="external" href="https://flamedfury.com/links/">https://flamedfury.com/links/</a><br>
+<br>
+<a class="internal" href="/links/">/links/</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>bookmarks.gmi</h1>
+    <a class="download" href="/api/raw?url=/links/bookmarks.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/links/bookmarks.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/links/bookmarks.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Bookmarks</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Tech</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Humanities</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Misc</a>
+    
+        <a href="#1.4" class="heading-2">1.4 Interesting</a>
+    
+        <a href="#1.5" class="heading-2">1.5 Hacks</a>
+    
+        <a href="#1.6" class="heading-2">1.6 Web Design</a>
+    
+        <a href="#1.7" class="heading-2">1.7 Games</a>
+    
+        <a href="#1.8" class="heading-2">1.8 Art</a>
+    
+        <a href="#1.9" class="heading-2">1.9 Other bookmark-lists</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/log/19-website-discoverability-crisis.gmi">/log/19-website-discoverability-crisis.gmi</a></dt>
+<dd>The Small Website Discoverability Crisis [2021-09-08] - Topic</dd>
+
+<dt><a href="/projects/edge/for-webmasters.gmi">/projects/edge/for-webmasters.gmi</a></dt>
+<dd>For Webmasters - A Call To Action</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Uncertain Future For Marginalia Search [ 2022-04-28 ]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/56-uncertain-future.gmi" class="path file"><img src="/ico/file.png" title="file"> 56-uncertain-future.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Uncertain Future For Marginalia Search [ 2022-04-28 ]</h1>
+<br>
+I found myself effectively without a job on short notice. <br>
+<br>
+I'm not at all worried about finding another one, I have savings, and I have experience, and I have demonstrable skill. What I am concerned about is finding a source of income that's compatible with putting some time on my personal projects. <br>
+<br>
+Last bunch of years, I've been working 32 hour weeks, which is a pretty sweet deal especially combined with the zero hour commute you get working from home during the pandemic. Not every employer is fine with that, and while I do have options, I'm in a worse bargaining position than I have been before. <br>
+<br>
+In the short term I'm going to take a few months' hiatus and work full time on the search engine. I have a lot of ideas that I haven't had the time to thoroughly explore that will hopefully produce decent improvements to some of the areas that are most lacking.<br>
+<br>
+Perhaps the biggest thing is looking over the design a bit in terms of affordances, coming from something like Google, it can be difficult to find the sort of queries that produce interesting and worthwhile results. I think this can give a bad first impression. <br>
+<br>
+Another thing that needs fixing is the summary text for each search result. It's bad more often than it is good as things stand right now, and often makes good search results look like bad hits. <br>
+<br>
+Finally, I'm working on changing the crawler model to be more aligned with WARCs, the format used by internet archive and various other crawlers such as commons crawl. This is half-done already, but hopefully should make the data more portable and open for collaborating with other crawling efforts.<br>
+<br>
+Ideally I would love to be able to work on this for a longer time, but search engines just aren't all that profitable, less still with my general lack of business sense. I'm incredibly grateful that I have patreon supporters and so on, but right now they just about pay the cost of running the hardware. But who knows, maybe I'll build something so impressive in the next months as to open up some alternatives. <br>
+<br>
+Not a likely turn of events, but still. <br>
+<br>
+Reaching for the stars may not let us grasp them, we do all the same stand taller through the effort. <br>
+<br>
+<h2 id="1.1">Topics</h2>
+<br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+<br>
+<h2 id="1.2">See Also</h2>
+<br>
+<dl class="link"><dt><a class="internal" href="/projects/edge/supporting.gmi">/projects/edge/supporting.gmi</a></dt><dd>Support This Project</dd></dl>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>56-uncertain-future.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/56-uncertain-future.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/56-uncertain-future.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/56-uncertain-future.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/56-uncertain-future.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Uncertain Future For Marginalia Search [ 2022-04-28 ]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Topics</a>
+    
+        <a href="#1.2" class="heading-2">1.2 See Also</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

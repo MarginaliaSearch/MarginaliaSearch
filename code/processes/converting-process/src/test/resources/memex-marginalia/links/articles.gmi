@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Articles</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/links" class="path dir"><img src="/ico/dir.png" title="dir"> links</a>
+
+    <a href="/links/articles.gmi" class="path file"><img src="/ico/file.png" title="file"> articles.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Articles</h1>
+<br>
+Links to articles I found interesting.<br>
+<br>
+<a class="external" href="https://encyclopedia.marginalia.nu/wiki/Peregrinus_Proteus">https://encyclopedia.marginalia.nu/wiki/Peregrinus_Proteus</a><br>
+<br>
+<a class="external" href="https://icyphox.sh/blog/2019-09-17/">https://icyphox.sh/blog/2019-09-17/</a><br>
+<br>
+<a class="external" href="https://www.thebehavioralscientist.com/articles/the-death-of-behavioral-economics">https://www.thebehavioralscientist.com/articles/the-death-of-behavioral-economics</a><br>
+<br>
+<a class="external" href="https://worthdoingbadly.com/nn-adversarial/">https://worthdoingbadly.com/nn-adversarial/</a><br>
+<br>
+<a class="external" href="https://nullprogram.com/blog/2019/03/22/">https://nullprogram.com/blog/2019/03/22/</a><br>
+<br>
+<a class="external" href="http://www.winestockwebdesign.com/Essays/Eternal_Mainframe.html">http://www.winestockwebdesign.com/Essays/Eternal_Mainframe.html</a><br>
+<br>
+<a class="external" href="http://nausicaa.net/miyazaki/interviews/miyazaki_kurosawa_p1.html">http://nausicaa.net/miyazaki/interviews/miyazaki_kurosawa_p1.html</a><br>
+<br>
+<a class="external" href="https://www.mywvhome.com/sixties/turbine.html">https://www.mywvhome.com/sixties/turbine.html</a><br>
+<br>
+<a class="external" href="https://interfacecritique.net/book/olia-lialina-from-my-to-me/">https://interfacecritique.net/book/olia-lialina-from-my-to-me/</a><br>
+<br>
+<a class="external" href="https://adamdrake.com/command-line-tools-can-be-235x-faster-than-your-hadoop-cluster.html">https://adamdrake.com/command-line-tools-can-be-235x-faster-than-your-hadoop-cluster.html</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>articles.gmi</h1>
+    <a class="download" href="/api/raw?url=/links/articles.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/links/articles.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/links/articles.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/links/articles.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Articles</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

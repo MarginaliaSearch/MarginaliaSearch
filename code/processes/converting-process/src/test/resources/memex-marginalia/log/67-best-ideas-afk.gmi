@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - The best ideas come AFK [ 2022-11-07 ]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/67-best-ideas-afk.gmi" class="path file"><img src="/ico/file.png" title="file"> 67-best-ideas-afk.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">The best ideas come AFK [ 2022-11-07 ]</h1>
+<br>
+I get my best ideas when I'm not working.<br>
+<br>
+This seems paradoxical, but past a point, the more I work on a project the slower it seems to go. I'll find changes to do, but lose any sort of vision. <br>
+<br>
+If I'm not programming at all, I rarely get good ideas as well. <br>
+<br>
+There appears to be some magic stoichiometric mixture where I work on a project for a while, then force myself to take a break somewhere far away from any keyword for a day or two, the ideas start to roll in at a pace where I can barely keep up to write them down. <br>
+<br>
+It seems important that the break from work is a bit boring. Sometimes it takes a day or two to kick in. Too much entertainment appears to ruin the process. <br>
+<br>
+When it works I'm a hazard in traffic and I'll struggle to keep up with a conversation, because my mind is so preoccupied with algorithms and designs I barely notice my surroundings. <br>
+<br>
+[ I'm open to the fact this may also just be some weird brain damage from coding since I was 7... Is it normal to be able to move your visual focus -- eyes stationary -- like a mouse cursor, like even draw selection boxes and vividly imagine context menus ? ]<br>
+<br>
+In many cases I'll come back and implement half a dozen new features in a few hours. Typing the code is never the hard part, it was just a matter of finding the clarity, of realizing it could be done. <br>
+<br>
+The brain appears to do a lot of background work like this. <br>
+<br>
+It is as though you can load it with a problem by working on it actively for a while, but if you overfeed it with information by working too long, it just stalls. It needs a period of no new active inputs to actually arrive at useful results, so you get the aha in the shower, or while taking a walk.<br>
+<br>
+Given this is is how the mind appears to work, it would be interesting to know how to best spawn a "background task" like this on command or via some procedure, how to best curate the inputs to produce the most beneficial outputs. <br>
+<br>
+<h2 id="1.1">See Also</h2>
+<br>
+<a class="internal" href="/log/05-minds-field.gmi">/log/05-minds-field.gmi</a><br>
+<a class="internal" href="/log/42-dark.gmi">/log/42-dark.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>67-best-ideas-afk.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/67-best-ideas-afk.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/67-best-ideas-afk.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/67-best-ideas-afk.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/67-best-ideas-afk.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 The best ideas come AFK [ 2022-11-07 ]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 See Also</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

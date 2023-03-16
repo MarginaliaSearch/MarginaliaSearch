@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Writing for Reading [2021-07-12]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/03-writing-for-reading.gmi" class="path file"><img src="/ico/file.png" title="file"> 03-writing-for-reading.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Writing for Reading [2021-07-12]</h1>
+<br>
+I'm struck by how easy it is to read things on Gemini. Not just skimming, but actual reading, like you would a book. Not everything written is great, but it's usually worth reading all the same. Venturing out into the land of contemporary HTML is different, and it's not a subtle difference.<br>
+<br>
+I've written before about the plague of inline links on Wikipedia, and this is largely a continuation of that discourse looking at other design elements.<br>
+<br>
+It's an increasingly established truth that our attention span is somehow being dwindled, and to combat this there seems to exist a sort of unfortunate arms race to draw the reader's attention to what is being written, accompanied with calls to write simpler texts with short sentences and catchphrases that can be absorbed even at the briefest of glances. Colors, too. And images, doesn't matter how irrelevant. They gotta be there or people won't look!<br>
+<br>
+Maybe in part this is a cause of the problem it's trying to solve. If you call attention to everything, you call attention to nothing; all while cluttering up the presentation with colors and doodads that actively impair reading specifically because they constantly attract the attention of the reader away from reading. It's like having a conversation in a crowded and noisy bar: Of course you need to shout short sentences, that is no place for nuanced rhetoric.<br>
+<br>
+It's well known in the expressive crafts that the bigger your movements are, the smaller your capacity for nuance becomes. It seems all but forgotten that you can emphasise things in text without any use of colors or fonts. You can use abrupt sentences. You can use exclamation points! OR USE CAPS TOO!<br>
+<br>
+You can isolate a key point to really give them that extra punch.<br>
+<br>
+Most important of all: If you exercise restraint with these techniques, and reserve the attention grabbers to the parts where it really is merited, they they have a much bigger impact than if you use everything everywhere.<br>
+<br>
+The fact that you often have ads or other distracting elements surrounding or indeed within the lines of text doesn't help either, often specifically designed to draw the reader's attention away from reading. What I wanted to show is that the ads aren't the only problem even if they may be at the other end of the rope in this pointless tug-of-war for the reader's attention.<br>
+<br>
+<dl class="link"><dt><a class="internal" href="/pics/links/git-rebase.png">/pics/links/git-rebase.png</a></dt><dd>Here is a screenshot form the documentation for git-rebase</dd></dl>
+<br>
+The heading I don't have a problem with even though it's a different color, but I count eight different points of emphasis in those two paragraphs. Undoubtedly well-meaning, but it's hard to do anything but skim text such as that. It's especially unfortunate since rebase is one of those concepts that people really seem to struggle with when learning git.<br>
+<br>
+The subject matter itself is hard to read too, even in the plainest of man page renderings, no amount of typography can help remedy git's leaky abstractions (or lack of abstractions).<br>
+<br>
+<dl class="link"><dt><a class="internal" href="/pics/links/accept_post.png">/pics/links/accept_post.png</a></dt><dd>This is a screenshot from MDN's documentation for Accept-Post</dd></dl>
+<br>
+Again it has more points of emphasis than it has lines, and most of the things it emphasises would have been emphasised even without changes in color or font. Words like Accept-Post and HTTP do already stick out, because they are capitalized differently. The effect, when reading the text is skimming. The reader's eyes are probably going to bounce between Accept-Post, HTTP, media types, Accept-Post, POST, POST, 415 Unsupported Media Type and finally Accept-Post; with zero comprehension of what those paragraphs actually conveyed.<br>
+<br>
+Even though these examples are from technical writing, you see similar problems across most genres. In the cases the text itself is relatively free from calls to attention, it's often surrounded in colorful design elements suggesting where to go next.<br>
+<br>
+Our ability to focus probably hasn't changed, what's happened is a stylistic metamorphosis of what we are trying to read.<br>
+<br>
+<h2 id="1.1">Referenced Texts</h2>
+<br>
+<dl class="link"><dt><a class="internal" href="/log/00-linkpocalypse.gmi">/log/00-linkpocalypse.gmi</a></dt><dd>On The Linkpocalypse</dd></dl>
+<br>
+<h2 id="1.2">Referenced Webpages</h2>
+<br>
+<a class="external" href="https://git-scm.com/docs/git-rebase">https://git-scm.com/docs/git-rebase</a><br>
+<a class="external" href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Post">https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Post</a><br>
+<br>
+<h2 id="1.3">Topics</h2>
+<br>
+<a class="internal" href="/topic/web-design.gmi">/topic/web-design.gmi</a><br>
+<br>
+<h2 id="1.4">Acknowledgements</h2>
+<br>
+Thanks idiomdrottning for pointing out the superfluity of some of my own internal references in a previous version of this text (sparse as they were).<br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>03-writing-for-reading.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/03-writing-for-reading.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/03-writing-for-reading.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/03-writing-for-reading.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Writing for Reading [2021-07-12]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Referenced Texts</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Referenced Webpages</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Topics</a>
+    
+        <a href="#1.4" class="heading-2">1.4 Acknowledgements</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/log/13-static-html.gmi">/log/13-static-html.gmi</a></dt>
+<dd>Rendered static HTML [2021-08-13] - Links</dd>
+
+<dt><a href="/log/44-discovery-and-design.gmi">/log/44-discovery-and-design.gmi</a></dt>
+<dd>Discovery and Design Considerations [ 2022-01-18 ] - See Also</dd>
+
+<dt><a href="/projects/encyclopedia">/projects/encyclopedia</a></dt>
+<dd>High Readability Encyclopedia - Further Reading</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

@@ -12,15 +12,6 @@ public class IndexResultDomainDeduplicator {
         this.limitByDomain = limitByDomain;
     }
 
-    public boolean test(long value) {
-        int ranking = (int) (value >>> 32);
-        if (ranking == Integer.MAX_VALUE) {
-            return true;
-        }
-
-        return resultsByRankingId.adjustOrPutValue(ranking, 1, 1) <= limitByDomain;
-    }
-
     public boolean test(SearchResultItem item) {
         final long key = item.deduplicationKey();
         if (key == 0)

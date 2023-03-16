@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Topic: Server</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/topic" class="path dir"><img src="/ico/dir.png" title="dir"> topic</a>
+
+    <a href="/topic/server.gmi" class="path file"><img src="/ico/file.png" title="file"> server.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Topic: Server</h1>
+<!-- pragma: TOPIC -->
+
+
+
+
+<dl>
+<dt><a href="/log/09-system-upgrade.gmi">/log/09-system-upgrade.gmi</a></dt>
+<dd>The System Upgrade [2021-07-30] - Topics </dd>
+
+<dt><a href="/log/47-drive-failure.gmi">/log/47-drive-failure.gmi</a></dt>
+<dd>Drive Failure [ 2022-02-19 ] - Topic</dd>
+</dl>
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>server.gmi</h1>
+    <a class="download" href="/api/raw?url=/topic/server.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/topic/server.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/topic/server.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Topic: Server</a>
+    
+    </div>
+</section>
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

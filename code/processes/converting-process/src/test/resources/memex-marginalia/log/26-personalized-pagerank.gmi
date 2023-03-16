@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Experimenting with Personalized PageRank [2021-10-02]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/26-personalized-pagerank.gmi" class="path file"><img src="/ico/file.png" title="file"> 26-personalized-pagerank.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Experimenting with Personalized PageRank [2021-10-02]</h1>
+<br>
+The last few days I've felt like my first attempt at a ranking algorithm for the search engine was pretty good, like it was producing some pretty interesting results. It felt close to what I wanted to accomplish.<br>
+<br>
+The first ranking algorithm was a simple link-counting algorithm that did some weighting to promote pages that look in a certain fashion. It did seem to keep the page quality up, but also seemed to as a strange side-effect promote very "1996"-looking websites. This isn't quite what I wanted to accomplish, I wanted to promote new sites as well as long as they were rich in content.<br>
+<br>
+This morning I was reading through the original paper on PageRank, an algorithm I had mostly discounted as I thought it would be too prone to manipulation, mostly based on Google's poor performance. I had done some trials earlier and the results weren't particularly impressive. Junk seemed to float to the top and what I wanted at the top was in the middle somewhere.<br>
+<br>
+Then I noticed toward the end the authors mention something called "Personalized PageRank"; a modification of the algorithm that skews the results toward a certain subset of the graph.<br>
+<br>
+The authors claim<br>
+<br>
+<blockquote>
+     These types of personalized PageRanks are virtually immune to manipulation by commercial interests. For a page to get a high PageRank, it must convince an important page, or a large number of non-important pages to link to it.</blockquote>
+<br>
+Huh. My interest was piqued.<br>
+<br>
+The base algorithm models a visitor randomly clicking links and bases the ranking of the distribution of where the visitor is most likely to end up.<br>
+<br>
+The modification of the algorithm in simplicity introduces a set of pages that a hypothetical visitor spontanenously goes back to when they get bored with the current domain. The base algorithm instead has the visitor leaving to a random page. In the base algorithm this helps escape from loops, but in the modified algorithm it also introduces a bias nodes pages adjacent to that set. <br>
+<br>
+I implemented the algorithm. PageRank is a very simple algorithm so this wasn't more than a few hours. I used my own memex.marginalia.nu as the set of pages the bored visitor goes to, as it has a lot of links to pages I like. The algorithm ran for a few seconds and then converged into something beautiful: A list of small personal websites.<br>
+<br>
+No, wait. This doesn't cut it.<br>
+<br>
+<h2 id="1.1">Jesus. H. Christ. On. An. Actual. Penny. Farthing. What. I. Don't. Even. HUH?!</h2>
+<br>
+The top 1000 results were almost ALL personal websites, like of the sort that was actually interesting! It's... it's the small web! It's the living breathing blogosphere! It's *everything* I wanted to make available and discoverable! I did some testing on a smaller index, and it actually kinda worked. I pushed it into production, and it works. It's amazing!<br>
+<br>
+What's great is that even though I didn't plan for this, my search index design allows me to actually roll with *both* algorithms at the same time; I can even mix the results. So I put a drop down where you can choose which ranking algorithm you want. I could probably add in a third algorithm as well!<br>
+<br>
+It's very exciting. There is probably more stuff I can tweak but it seems to produce very good results.<br>
+<br>
+<h2 id="1.2">Read More</h2>
+<br>
+<dl class="link"><dt><a class="external" href="http://ilpubs.stanford.edu:8090/422/1/1999-66.pdf">http://ilpubs.stanford.edu:8090/422/1/1999-66.pdf</a></dt><dd>The Page Rank Citation Algorithm: Bringing Order To The Web</dd></dl>
+<br>
+<h1 id="2">Appendix - A Lot Of Domains</h1>
+<br>
+This is going to be a lot of domains, a top-25 ranking based on which domain the PageRank biases towards. I'm not hyperlinking them, but sample a few with copy&paste. They are mostly pretty interesting. <br>
+<br>
+<h2 id="2.1">memex.marginalia.nu</h2>
+<br>
+The current seed<br>
+<br>
+search.marginalia.nu<br>
+twtxt.xyz<br>
+wiki.xxiivv.com<br>
+www.loper-os.org<br>
+lee-phillips.org<br>
+memex.marginalia.nu<br>
+www.lord-enki.net<br>
+jim.rees.org<br>
+www.ranprieur.com<br>
+ranprieur.com<br>
+john-edwin-tobey.org<br>
+tilde.town<br>
+www.ii.com<br>
+equinox.eulerroom.com<br>
+cyborgtrees.com<br>
+lobste.rs<br>
+www.teddydd.me<br>
+collapseos.org<br>
+0xff.nu<br>
+antoine.studio<br>
+parkimminent.com<br>
+jitterbug.cc<br>
+www.awalvie.me<br>
+www.lambdacreate.com<br>
+desert.glass<br>
+mineralexistence.com<br>
+milofultz.com<br>
+ameyama.com<br>
+nchrs.xyz<br>
+ftrv.se<br>
+www.wileywiggins.com<br>
+www.leonrische.me<br>
+forum.camendesign.com<br>
+nilfm.cc<br>
+terra.finzdani.net<br>
+kokorobot.ca<br>
+www.tinybrain.fans<br>
+void.cc<br>
+akkartik.name<br>
+100r.co<br>
+sentiers.media<br>
+llllllll.co<br>
+www.paritybit.ca<br>
+sr.ht<br>
+eli.li<br>
+usesthis.com<br>
+marktarver.com<br>
+mvdstandard.net<br>
+blmayer.dev<br>
+dulap.xyz<br>
+<br>
+<h2 id="2.2">stpeter.im</h2>
+<br>
+Let's try someone who is more into the humanities.<br>
+<br>
+monadnock.net<br>
+coccinella.im<br>
+www.coccinella.im<br>
+kingsmountain.com<br>
+metajack.im<br>
+anglosphere.com<br>
+www.kingsmountain.com<br>
+test.ralphm.net<br>
+ralphm.net<br>
+badd10de.dev<br>
+xmpp.org<br>
+memex.marginalia.nu<br>
+copyfree.org<br>
+etwof.com<br>
+chrismatthewsciabarra.com<br>
+www.chrismatthewsciabarra.com<br>
+www.igniterealtime.org<br>
+www.xmcl.org<br>
+www.jxplorer.org<br>
+search.marginalia.nu<br>
+www.bitlbee.org<br>
+perfidy.org<br>
+www.gracion.com<br>
+stpeter.im<br>
+www.ircap.es<br>
+www.ircap.net<br>
+www.ircap.com<br>
+dismail.de<br>
+wiki.mcabber.com<br>
+www.knowtraffic.com<br>
+www.rage.net<br>
+fsci.in<br>
+trypticon.org<br>
+www.riseofthewest.net<br>
+www.riseofthewest.com<br>
+fsci.org.in<br>
+www.planethofmann.com<br>
+www.badpopcorn.com<br>
+muquit.com<br>
+www.muquit.com<br>
+git.disroot.org<br>
+www.hackint.org<br>
+www.skills-1st.co.uk<br>
+glyph.twistedmatrix.com<br>
+www.thenewoil.xyz<br>
+leechcraft.org<br>
+anarchobook.club<br>
+ripple.ryanfugger.com<br>
+swisslinux.org<br>
+mikaela.info<br>
+<br>
+<h2 id="2.3">lobste.rs</h2>
+<br>
+These results are pretty similar to the MEMEX bunch, but with a bigger slant toward the technical I feel. Most of these people have a github link on their page. <br>
+<br>
+siskam.link<br>
+brandonanzaldi.com<br>
+neros.dev<br>
+matthil.de<br>
+www.gibney.org<br>
+www.possiblerust.com<br>
+kevinmahoney.co.uk<br>
+werat.dev<br>
+coq.io<br>
+64k.space<br>
+tomasino.org<br>
+axelsvensson.com<br>
+call-with-current-continuation.org<br>
+secretchronicles.org<br>
+adripofjavascript.com<br>
+alexwennerberg.com<br>
+nogweii.net<br>
+evaryont.me<br>
+reykfloeter.com<br>
+www.chrisdeluca.me<br>
+hauleth.dev<br>
+mkws.sh<br>
+danilafe.com<br>
+knezevic.ch<br>
+mort.coffee<br>
+writepermission.com<br>
+danso.ca<br>
+chown.me<br>
+syuneci.am<br>
+feed.junglecoder.com<br>
+magit.vc<br>
+antranigv.am<br>
+nathan.run<br>
+barnacl.es<br>
+soap.coffee<br>
+www.craigstuntz.com<br>
+pzel.name<br>
+eloydegen.com<br>
+robertodip.com<br>
+vincentp.me<br>
+vfoley.xyz<br>
+www.uraimo.com<br>
+creativegood.com<br>
+stratus3d.com<br>
+shitpost.plover.com<br>
+forums.foundationdb.org<br>
+hristos.co<br>
+hristos.lol<br>
+julienblanchard.com<br>
+euandre.org<br>
+<br>
+<h2 id="2.4">www.xfree86.org</h2>
+<br>
+Next up is an older site, and the results seem to reflect the change in seed quite well. Not all of them are old, but the *feel* is definitely not the same as the previous ones.<br>
+<br>
+x-tt.osdn.jp<br>
+www.tjansen.de<br>
+www.blueeyedos.com<br>
+asic-linux.com.mx<br>
+checkinstall.izto.org<br>
+hobbes.nmsu.edu<br>
+www.stevengould.org<br>
+greenfly.org<br>
+www.parts-unknown.com<br>
+www.afterstep.org<br>
+lagarcavilla.org<br>
+brltty.app<br>
+aput.net<br>
+openmap-java.org<br>
+www.splode.com<br>
+links.twibright.com<br>
+www.dolbeau.name<br>
+www.dbsoft.org<br>
+dbsoft.org<br>
+www.sanpei.org<br>
+www.dubbele.com<br>
+www.sgtwilko.f9.co.uk<br>
+www.anti-particle.com<br>
+www.climatemodeling.org<br>
+www.sealiesoftware.com<br>
+sealiesoftware.com<br>
+openbsdsupport.org<br>
+www.momonga-linux.org<br>
+www.varlena.com<br>
+www.semislug.mi.org<br>
+www.dcc-jpl.com<br>
+www.tfug.org<br>
+www.usermode.org<br>
+www.mewburn.net<br>
+www.herdsoft.com<br>
+xfree86.org<br>
+www.xfree86.org<br>
+www.tinmith.net<br>
+tfug.org<br>
+james.hamsterrepublic.com<br>
+www.dummzeuch.de<br>
+arcgraph.de<br>
+www.fluxbox.org<br>
+www.treblig.org<br>
+josephpetitti.com<br>
+www.lugo.de<br>
+fluxbox.org<br>
+petitti.org<br>
+shawnhargreaves.com<br>
+ml.42.org<br>
+<br>
+<h2 id="2.5">xroads.virginia.edu</h2>
+<br>
+Old academic website related to American history.<br>
+<br>
+www.sherwoodforest.org<br>
+www.expo98.msu.edu<br>
+www.trevanian.com<br>
+www.lachaisefoundation.org<br>
+www.toysrbob.com<br>
+darianworden.com<br>
+twain.lib.virginia.edu<br>
+dubsarhouse.com<br>
+www.carterfamilyfold.org<br>
+essays.quotidiana.org<br>
+va400.org<br>
+webpage.pace.edu<br>
+www.wyomingtalesandtrails.com<br>
+wyomingtalesandtrails.com<br>
+bbll.com<br>
+graybrechin.net<br>
+genealogy.ztlcox.com<br>
+www.bbll.com<br>
+www.graybrechin.net<br>
+www.thomasgenweb.com<br>
+thomasgenweb.com<br>
+www.granburydepot.org<br>
+www.northbankfred.com<br>
+www.melville.org<br>
+www.stratalum.org<br>
+mtmen.org<br>
+www.mtmen.org<br>
+onter.net<br>
+www.tommymarkham.com<br>
+www.robert-e-howard.org<br>
+www.straw.com<br>
+www.foucault.de<br>
+www.antonart.com<br>
+www.footguard.org<br>
+www.taiwanfirstnations.org<br>
+jmisc.net<br>
+www.jmisc.net<br>
+www.thegospelarmy.com<br>
+jimlong.com<br>
+pixbygeorge.info<br>
+www.boskydellnatives.com<br>
+www.imagesjournal.com<br>
+www.onter.net<br>
+silentsaregolden.com<br>
+imagesjournal.com<br>
+www.frozentrail.org<br>
+www.pocahontas.morenus.org<br>
+vinnieream.com<br>
+www.historyinreview.org<br>
+www.sandg-anime-reviews.net<br>
+<br>
+<h2 id="2.6">www.subgenius.com</h2>
+<br>
+www.quiveringbrain.com<br>
+revbeergoggles.com<br>
+www.seesharppress.com<br>
+www.vishalpatel.com<br>
+www.revbeergoggles.com<br>
+seesharppress.com<br>
+www.digital-church.com<br>
+lycanon.org<br>
+www.lycanon.org<br>
+all-electric.com<br>
+www.wd8das.net<br>
+fictionliberationfront.net<br>
+www.fictionliberationfront.net<br>
+www.radicalartistfoundation.de<br>
+cca.org<br>
+cyberpsychos.netonecom.net<br>
+www.stylexohio.com<br>
+StylexOhio.com<br>
+www.theleader.org<br>
+theleader.org<br>
+www.annexed.net<br>
+principiadiscordia.com<br>
+www.evil.com<br>
+www.the-philosophers-stone.com<br>
+the-philosophers-stone.com<br>
+www.hackersdictionary.com<br>
+kernsholler.net<br>
+www.kernsholler.net<br>
+www.booze-bibbing-order-of-bacchus.com<br>
+www.westley.org<br>
+www.bigmeathammer.com<br>
+www.littlefyodor.com<br>
+www.isotopecomics.com<br>
+sacred-texts.com<br>
+www.tarsierjungle.net<br>
+www.monkeyfilter.com<br>
+www.slackware.com<br>
+www.nick-andrew.net<br>
+www.eidos.org<br>
+www.templeofdin.co.uk<br>
+saintstupid.com<br>
+www.saintstupid.com<br>
+www.rapidpacket.com<br>
+www.mishkan.com<br>
+www.consortiumofgenius.com<br>
+www.xenu-directory.net<br>
+www.cuke-annex.com<br>
+www.nihilists.net<br>
+nihilists.net<br>
+madmartian.com<br>
+<br>
+<br>
+<h2 id="2.7">Topic</h2>
+<br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>26-personalized-pagerank.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/26-personalized-pagerank.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/26-personalized-pagerank.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/26-personalized-pagerank.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Experimenting with Personalized PageRank [2021-10-02]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Jesus. H. Christ. On. An. Actual. Penny. Farthing. What. I. Don&#x27;t. Even. HUH?!</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Read More</a>
+    
+        <a href="#2" class="heading-1">2 Appendix - A Lot Of Domains</a>
+    
+        <a href="#2.1" class="heading-2">2.1 memex.marginalia.nu</a>
+    
+        <a href="#2.2" class="heading-2">2.2 stpeter.im</a>
+    
+        <a href="#2.3" class="heading-2">2.3 lobste.rs</a>
+    
+        <a href="#2.4" class="heading-2">2.4 www.xfree86.org</a>
+    
+        <a href="#2.5" class="heading-2">2.5 xroads.virginia.edu</a>
+    
+        <a href="#2.6" class="heading-2">2.6 www.subgenius.com</a>
+    
+        <a href="#2.7" class="heading-2">2.7 Topic</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/log/37-keyword-extraction.gmi">/log/37-keyword-extraction.gmi</a></dt>
+<dd>A Jaunt Through Keyword Extraction [ 2021-11-11 ] - See Also</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

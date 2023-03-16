@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - On acting in self-interest</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/commons" class="path dir"><img src="/ico/dir.png" title="dir"> commons</a>
+
+    <a href="/commons/self-interest.gmi" class="path file"><img src="/ico/file.png" title="file"> self-interest.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">On acting in self-interest</h1>
+<br>
+I write texts for myself. If someone finds what I write worthwhile, that is great, but that is not why I write.<br>
+<br>
+For the longest time, I didn't even tell anyone I had written something. I just published it on the internet and gave nobody a link. Because readers aren't the point, and I didn't want them to become a factor.<br>
+<br>
+I build software for myself, unless someone pays me to build it for them. If someone finds use in my software, that is great, but that is not why I build it. I buid it so that I can benefit from it and draw enjoyment from the process.<br>
+<br>
+I act for myself. If someone finds benefit in my actions, that is great, but that is not the ultimate purpose of my actions.<br>
+<br>
+Sometimes we forget, or pretend this is not the case, or get confused and think that neglecting our own benefit will somehow make us happy, even though it should be clear that if we don't tend to ourselves, others neither can or will make up for that neglect.<br>
+<br>
+In the end, every living being does what they imagine will bring them happiness. This may absolutely include helping others, but that is a means to an end. Helping others is just another way of reshaping the world to be more in line with our ideas of how we think it ought to be.<br>
+<br>
+This truth is ugly for those who cannot see that they too are dignified, that they too are entitled to flourishing.<br>
+<br>
+<h2 id="1.1">Topic</h2>
+<br>
+<a class="internal" href="/topic/moral-philosophy.gmi">/topic/moral-philosophy.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>self-interest.gmi</h1>
+    <a class="download" href="/api/raw?url=/commons/self-interest.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/commons/self-interest.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/commons/self-interest.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/commons/self-interest.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 On acting in self-interest</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Topic</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

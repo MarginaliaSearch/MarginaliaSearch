@@ -1,6 +1,6 @@
 package nu.marginalia.converting.instruction;
 
-import nu.marginalia.keyword_extraction.model.DocumentKeywords;
+import nu.marginalia.keyword.model.DocumentKeywords;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
@@ -22,4 +22,6 @@ public interface Interpreter {
     void loadKeywords(EdgeUrl url, DocumentMetadata metadata, DocumentKeywords words);
 
     void loadDomainRedirect(DomainLink link);
+
+    void loadDomainMetadata(EdgeDomain domain, int knownUrls, int goodUrls, int visitedUrls);
 }

@@ -1,0 +1,105 @@
+package nu.marginalia.converting;
+
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import nu.marginalia.bigstring.BigString;
+import nu.marginalia.converting.processor.DomainProcessor;
+import nu.marginalia.crawling.model.CrawledDocument;
+import nu.marginalia.crawling.model.CrawledDomain;
+import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.model.crawl.DomainIndexingState;
+import nu.marginalia.model.crawl.UrlIndexingState;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.time.LocalTime;
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ConvertingIntegrationTest {
+
+
+    DomainProcessor domainProcessor;
+
+    @BeforeEach
+    public void setUp() {
+        Injector injector = Guice.createInjector(
+                new ConvertingIntegrationTestModule()
+        );
+
+        domainProcessor = injector.getInstance(DomainProcessor.class);
+    }
+
+    @Test
+    public void testEmptyDomain() {
+        var docs = new ArrayList<CrawledDocument>();
+
+        var ret = domainProcessor.process(
+                new CrawledDomain("123", "memex.marginalia.nu", null, "OK", "-", "127.0.0.1",
+                        docs, Collections.emptyList()));
+
+        assertEquals(ret.state, DomainIndexingState.ACTIVE);
+        assertEquals(ret.domain, new EdgeDomain("memex.marginalia.nu"));
+        assertTrue(ret.documents.isEmpty());
+    }
+
+    @Test
+    public void testMemexMarginaliaNu() throws IOException {
+        var ret = domainProcessor.process(readMarginaliaWorkingSet());
+        assertEquals(ret.state, DomainIndexingState.ACTIVE);
+        assertEquals(ret.domain, new EdgeDomain("memex.marginalia.nu"));
+
+        assertFalse(ret.documents.isEmpty());
+
+        Map<UrlIndexingState, Integer> resultsByStatusCount = new HashMap<>();
+
+        ret.documents.forEach(doc -> {
+            resultsByStatusCount.merge(doc.state, 1, Integer::sum);
+        });
+        assertTrue(resultsByStatusCount.get(UrlIndexingState.OK) > 5);
+    }
+
+    private CrawledDomain readMarginaliaWorkingSet() throws IOException {
+        String index = readClassPathFile("memex-marginalia/index");
+        String[] files = index.split("\n");
+
+        var docs = new ArrayList<CrawledDocument>();
+
+        for (String file : files) {
+            Path p = Path.of("memex-marginalia/").resolve(file);
+
+            var doc = new CrawledDocument("1",
+                    "https://memex.marginalia.nu/" + file,
+                    "text/html",
+                    LocalTime.now().toString(),
+                    200,
+                    "OK",
+                    "",
+                    "",
+                    BigString.encode(readClassPathFile(p.toString())),
+                    Double.toString(Math.random()),
+                    "https://memex.marginalia.nu/" + file,
+                    null
+                    );
+            docs.add(doc);
+        }
+
+        return new CrawledDomain(
+                "1",
+                "memex.marginalia.nu",
+                null,
+                "OK",
+                "",
+                "127.0.0.1",
+                docs, Collections.emptyList());
+    }
+
+    private String readClassPathFile(String s) throws IOException {
+        return new String(Objects.requireNonNull(ClassLoader.getSystemResourceAsStream(s)).readAllBytes());
+    }
+
+}

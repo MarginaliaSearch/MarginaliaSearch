@@ -86,4 +86,7 @@ public class SearchIndexReader {
         return forwardIndexReader.getDomainId(docId);
     }
 
+    public int totalDocCount() {
+        return forwardIndexReader.totalDocCount();
+    }
 }

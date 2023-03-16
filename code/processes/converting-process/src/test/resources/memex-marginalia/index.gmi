@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - marginalia.nu</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/index.gmi" class="path file"><img src="/ico/file.png" title="file"> index.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">marginalia.nu</h1>
+<br>
+Welcome to my personal information store and experimental hypertext system! <br>
+<br>
+<h2 id="1.1">Quick navigation </h2>
+<br>
+<dl class="link"><dt><a class="internal" href="/log">/log</a></dt><dd>Gemlog</dd></dl>
+<dl class="link"><dt><a class="internal" href="/todo">/todo</a></dt><dd>Tasks and Todo</dd></dl>
+<dl class="link"><dt><a class="internal" href="/projects">/projects</a></dt><dd>Project Notes</dd></dl>
+<dl class="link"><dt><a class="internal" href="/links">/links</a></dt><dd>Bookmarks</dd></dl>
+<br>
+This page is available on both HTTPS and Gemini<br>
+<br>
+<a class="external" href="https://memex.marginalia.nu/">https://memex.marginalia.nu/</a><br>
+<a class="external" href="https://proxy.vulpes.one/gemini/marginalia.nu/">gemini://marginalia.nu/</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>index.gmi</h1>
+    <a class="download" href="/api/raw?url=/index.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/index.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/index.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/index.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 marginalia.nu</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Quick navigation </a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - </title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/72-new-approach-to-ranking.gmi" class="path file"><img src="/ico/file.png" title="file"> 72-new-approach-to-ranking.gmi</a>
+
+</nav>
+<article>
+<section id="memex-node">
+<h1>/log/72-new-approach-to-ranking.gmi is gone</h1>
+<p>
+
+See <a href="/log/73-new-approach-to-ranking.gmi">/log/73-new-approach-to-ranking.gmi</a>
+</p>
+</section>
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/special/redirect.gmi">/special/redirect.gmi</a></dt>
+<dd>Redirects - URLs</dd>
+</dl>
+</section>
+
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Getting with the times [2021-10-06]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/27-getting-with-the-times.gmi" class="path file"><img src="/ico/file.png" title="file"> 27-getting-with-the-times.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Getting with the times [2021-10-06]</h1>
+<br>
+Since my search engine has expanded its scope to include blogs as well as primordial text documents, I've done some thinking about how to keep up with newer websites that actually grow and see updates. <br>
+<br>
+Otherwise, as the crawl goes on, it tends to find fewer and fewer interesting web pages, and as the interesting pages are inevitably crawled to exhaustion, accumulate an ever growing amount of junk. <br>
+<br>
+Re-visiting each page and looking for new links in previously visited pages is probably off the table, that's something I can maybe do once a month.<br>
+<br>
+Thinking about this for more than a few minutes, the obvious answer is syndication. Most blogs publish either RSS or Atom feeds. They are designed to let you know when there has been an update, and pretty trivial to parse especially if you are just looking for links.<br>
+<br>
+Extracting a bunch of RSS feeds from previously downloaded web pages was an easy enough affair, took about an hour to chew through some gigabyte of compressed HTML and insert the result into a database table. <br>
+<br>
+It struck me that this would be incredibly vulnerable to search engine manipulation if I just crawled every link I found in the RSS feeds in fair and democratic order. Someone content mill could just spew out thousands of articles per day full of links.<br>
+<br>
+There does seem to be some easy ways of limiting the potential damage:<br>
+<br>
+<ul>
+<li>Only consider documents from the same domain.</li>
+<li>Reduce the number of documents per visit to a low number (currently 6).</li>
+<li>Don't count these document towards the link database. </li></ul>
+<br>
+Since the goal is to add new documents without allowing websites to use the mechanism for manipulating the search rankings, this seems like a good set-up.<br>
+<br>
+The next problem is a problem of priority. I identified 290,000 RSS feeds, and I don't want to visit them all as 90% of what I would get is crap. Sturgeon's Law seems to apply to the Internet as much as anywhere. <br>
+<br>
+If only there was some sort of ranking algorithm for websites... yeah. Of course! Limiting the RSS spider to the top 15,000 domains according to BlogRank cuts out *most* of the crap, while isolating exactly the sort of websites that I would like to keep refreshed.<br>
+<br>
+It should take approximately a day to run through the RSS feeds. That also seems a reasonable poll rate. <br>
+<br>
+It's an experiment. We'll see how it turns out. If it works out, maybe it will be able to read about the Facebook outage in a few days...<br>
+<br>
+<h2 id="1.1">Topics</h2>
+<br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>27-getting-with-the-times.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/27-getting-with-the-times.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/27-getting-with-the-times.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/27-getting-with-the-times.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Getting with the times [2021-10-06]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Topics</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/log/44-discovery-and-design.gmi">/log/44-discovery-and-design.gmi</a></dt>
+<dd>Discovery and Design Considerations [ 2022-01-18 ] - See Also</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

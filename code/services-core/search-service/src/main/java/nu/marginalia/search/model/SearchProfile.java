@@ -54,13 +54,13 @@ public enum SearchProfile {
             subquery.searchTermsPriority.add("js:false");
         }
         if (this == PLAIN_TEXT) {
-            subquery.searchTermsInclude.add("format:plain");
+            subquery.searchTermsAdvice.add("format:plain");
         }
         if (this == FOOD) {
-            subquery.searchTermsInclude.add(HtmlFeature.CATEGORY_FOOD.getKeyword());
+            subquery.searchTermsAdvice.add(HtmlFeature.CATEGORY_FOOD.getKeyword());
         }
         if (this == CRAFTS) {
-            subquery.searchTermsInclude.add(HtmlFeature.CATEGORY_CRAFTS.getKeyword());
+            subquery.searchTermsAdvice.add(HtmlFeature.CATEGORY_CRAFTS.getKeyword());
         }
     }
 

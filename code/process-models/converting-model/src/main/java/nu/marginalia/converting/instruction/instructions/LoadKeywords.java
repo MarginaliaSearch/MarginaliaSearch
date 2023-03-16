@@ -1,6 +1,6 @@
 package nu.marginalia.converting.instruction.instructions;
 
-import nu.marginalia.keyword_extraction.model.DocumentKeywords;
+import nu.marginalia.keyword.model.DocumentKeywords;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.converting.instruction.Instruction;
 import nu.marginalia.converting.instruction.InstructionTag;

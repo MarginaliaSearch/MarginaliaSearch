@@ -1,5 +1,6 @@
 package nu.marginalia.language.sentence;
 
+import com.google.common.base.CharMatcher;
 import gnu.trove.list.array.TIntArrayList;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,6 +8,7 @@ import nu.marginalia.language.model.WordSeparator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import static nu.marginalia.language.WordPatterns.*;
 
@@ -19,6 +21,9 @@ public class SentenceSegmentSplitter {
         String[] words;
         int[] separators;
     }
+
+    private static final CharMatcher noiseCharacterMatcher = CharMatcher.anyOf("/*-");
+    private static final Pattern wordBreakPattern = Pattern.compile("([^_#@.a-zA-Z'+\\-0-9\\u00C0-\\u00D6\\u00D8-\\u00f6\\u00f8-\\u00ff]+)|[|]|(\\.(\\s+|$))");
 
     public static SeparatedSentence splitSegment(String segment) {
         var matcher = wordBreakPattern.matcher(segment);
@@ -44,7 +49,7 @@ public class SentenceSegmentSplitter {
         String[] parts = words.toArray(String[]::new);
         int length = 0;
         for (int i = 0; i < parts.length; i++) {
-            if (parts[i].isBlank() || parts[i].length() >= MAX_WORD_LENGTH || characterNoisePredicate.test(parts[i])) {
+            if (parts[i].isBlank() || parts[i].length() >= MAX_WORD_LENGTH || noiseCharacterMatcher.matchesAllOf(parts[i])) {
                 parts[i] = null;
             }
             else {

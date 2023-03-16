@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Fun with Anchor Text Keywords [ 2022-06-23 ]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/59-anchor-text.gmi" class="path file"><img src="/ico/file.png" title="file"> 59-anchor-text.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Fun with Anchor Text Keywords [ 2022-06-23 ]</h1>
+<br>
+Anchor texts are a very useful source of keywords for a search engine, and in an older version of the search engine, it used the text of such hyperlinks as a supplemental source for keywords, but due to a few redesigns, this feature has fallen off. <br>
+<br>
+Last few days has been spent working on trying to re-implement it in a new and more powerful fashion. This has largely been enabled by a crawler re-design from a few months ago, which offers the crawled data in a lot more useful fashion and allows a lot more flexible post-processing.<br>
+<br>
+It is easy enough to grab hyperlinks within the same domain that is being crawled and process them on the spot and assign the keywords to each document. <br>
+<br>
+Unfortunately these are often not very useful. <br>
+<br>
+Not only are the keywords often non-descriptive, 'read more'-type stuff, there's an additional benefit to external links, as they are other people describing websites. That tends to be more align well with the sort of keywords people enter into a search engine. When we use a search engine, we're not infrequently describing the document we're looking for. <br>
+<br>
+"python manual"<br>
+"cheap car parts"<br>
+"job interview tips"<br>
+<br>
+This is why the best links are other websites' links, but they are also the hardest links to deal with. <br>
+<br>
+There are practical problems, as the keywords are not located near the document they refer to, but rather scattered over other documents. Before being loaded, they must be deduplicated and grouped by the document they refer to. <br>
+<br>
+The grouping is necessary because it saves a lot of work for the index construction to be able to say "here is a document, and these are its keywords: [...]", rather than loading them one by one.<br>
+<br>
+Grouping can be done by pre-sorting into a few dozens or hundreds different output files, making the file sizes manageable for fine-grained in-memory sorting and loading later.<br>
+<br>
+Of this the deduplication is harder problem due to the sheer volume of data. To show why keyword deduplication is tricky, let's break out the napkin math!<br>
+<br>
+<ul>
+<li>If we have 100,000,000 documents</li>
+<li>Each document has on average 4 unique keywords</li>
+<li>Each keyword is on average 9 bytes</li>
+<li>Each URL is on average 51 bytes</li>
+<li>Then all (document,keyword) requires at least 4x60x100,000,000 bytes</li>
+<li>That's roughly 24 Gb</li>
+<li>That's without considering any sort of language overhead! </li></ul>
+<br>
+Oof :-(<br>
+<br>
+This has the potential to be a real memory hog, maybe you could get away with it but it seems super sketchy. You could of course keep it on disk, but then it would be impossibly slow and a real nasty IOPS hog. <br>
+<br>
+There are enough weeks long processing jobs in this search engine, and it really doesn't need more of them.<br>
+<br>
+Thinking about this for a while, the solution that sprang to mind was pretty simple. <br>
+<br>
+A big old bloom filter. <br>
+<br>
+Make it 2 Gb or so, which means a bit set with a cardinality of 16 billion. Hash collisions would be expected as the birthday paradox limit where there is a 50% chance of a single hash collision is sqrt(16 billion)=126k. That's arguably within what is acceptable as at the expected 4 keywords per document, the filter is only populated to a degree of 0.00025%, which also becomes its worst case false rejection rate assuming a perfect hash function.<br>
+<br>
+Call it an optimist's hash set. Sometimes good enough is good enough, and the solution is nice and constant in both time and space. <br>
+<br>
+<h2 id="1.1">Results</h2>
+<br>
+Having run some trials extracting keywords for links to documents currently indexed by the search engine, the results are promising. <br>
+<br>
+The code is extremely fast, almost surprisingly so, it runs through even a large body of documents such as StackOverflow in about an hour.<br>
+<br>
+The raw output from the experiment can be downloaded here:<br>
+<br>
+<dl class="link"><dt><a class="external" href="https://downloads.marginalia.nu/links/links-crawl.tsv">https://downloads.marginalia.nu/links/links-crawl.tsv</a></dt><dd>External Links, Crawled Data [2.8Mb]</dd></dl>
+<dl class="link"><dt><a class="external" href="https://downloads.marginalia.nu/links/links-internal.tsv">https://downloads.marginalia.nu/links/links-internal.tsv</a></dt><dd>Internal Links, Crawled Data [48 Mb]</dd></dl>
+<dl class="link"><dt><a class="external" href="https://downloads.marginalia.nu/links/links-so.tsv">https://downloads.marginalia.nu/links/links-so.tsv</a></dt><dd>Exteral Links, Stackoverflow [12 Mb]</dd></dl>
+<br>
+Below are keywords sorted by frequency, which will tend to raise the least informative keywords to the top. It illustrates how there is a significant lexicon of junk keywords that needs to be excluded, demonstratives like 'here' and 'this', navigation elements and so forth. <br>
+<br>
+<h3 id="1.1.1">External Links, Crawled Data Subset 10k domains</h3>
+<br>
+<pre>
+    408 website
+    399 page
+    350 link
+    201 race
+    200 web</pre>
+<br>
+Note: The sample is skewed by a racing website that basically has the anchor text 'race' for a lot of links.<br>
+<br>
+<h3 id="1.1.2">Internal Links, Crawled Data Subset 10k domains</h3>
+<br>
+<pre>
+  17385 content
+  17276 skip
+  14664 next
+  10986 previous
+   7549 read</pre>
+<br>
+<h3 id="1.1.3">External Links, StackOverflow</h3>
+<br>
+StackOverflow seems to provide high value keywords overall, even its junk words are frequently informative.<br>
+<br>
+<pre>
+   4701 documentation
+   3061 docs
+   2680 link
+   2418 page
+   2418 here
+   1885 article
+   1813 tutorial
+   1539 example
+   1207 guide
+   1174 official
+   1079 doc</pre>
+<br>
+Wikipedia seems less useful, because a lot of its links just mirror the title of the website they link to, which means they don't provide any additional information. <br>
+<br>
+It would be interesting to look at Reddit comments as well. While it is basically the internet capital of astroturfing, given that the links are filtered by all the criteria needed for inclusion in the search database, it may still be a good source.<br>
+<br>
+In general, the limited scope of the search engine and the existing filtering is probably something that has a decent chance of limiting the impact of spam links. <br>
+<br>
+<h2 id="1.2">Closing thoughts</h2>
+<br>
+This is far from finished, but it's a very promising lead. <br>
+<br>
+There will be a major upgrade of the search engine coming in about a month or so, mostly necessitated by running out of disk space on the database hard drive, and there is no way of moving forward with this without essentially rebuilding the database. I have ample backups so it's not as scary as it sounds, worse comes to worst it'll go back to being a stale copy of itself. It's honestly a welcome opportunity to fix old design mistakes to make the code more workable. This feature is slated to be included in that upgrade.<br>
+<br>
+<h2 id="1.3">Topics</h2>
+<br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+<br>
+<h2 id="1.4">See Also</h2>
+<br>
+<dl class="link"><dt><a class="external" href="https://encyclopedia.marginalia.nu/wiki/Bloom_Filter">https://encyclopedia.marginalia.nu/wiki/Bloom_Filter</a></dt><dd>Bloom Filter</dd></dl>
+<dl class="link"><dt><a class="external" href="https://encyclopedia.marginalia.nu/wiki/Birthday_paradox">https://encyclopedia.marginalia.nu/wiki/Birthday_paradox</a></dt><dd>Birthday Paradox</dd></dl>
+<br>
+<dl class="link"><dt><a class="external" href="https://archive.org/download/stackexchange">https://archive.org/download/stackexchange</a></dt><dd>Stackoverflow Data</dd></dl>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>59-anchor-text.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/59-anchor-text.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/59-anchor-text.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/59-anchor-text.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/59-anchor-text.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Fun with Anchor Text Keywords [ 2022-06-23 ]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Results</a>
+    
+        <a href="#1.1.1" class="heading-3">1.1.1 External Links, Crawled Data Subset 10k domains</a>
+    
+        <a href="#1.1.2" class="heading-3">1.1.2 Internal Links, Crawled Data Subset 10k domains</a>
+    
+        <a href="#1.1.3" class="heading-3">1.1.3 External Links, StackOverflow</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Closing thoughts</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Topics</a>
+    
+        <a href="#1.4" class="heading-2">1.4 See Also</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

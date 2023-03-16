@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - The Small Website Discoverability Crisis [2021-09-08]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/19-website-discoverability-crisis.gmi" class="path file"><img src="/ico/file.png" title="file"> 19-website-discoverability-crisis.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">The Small Website Discoverability Crisis [2021-09-08]</h1>
+<br>
+There are a lot of small websites on the Internet: Interesting websites, beautiful websites, unique websites. <br>
+<br>
+Unfortunately they are incredibly hard to find. You cannot find them on Google or Reddit, and while you can stumble onto them with my search engine, it is not in a very directed fashion. <br>
+<br>
+It is an unfortunate state of affairs. Even if you do not particularly care for becoming the next big thing, it's still discouraging to put work into a website and get next to no traffic beyond the usual bots.   <br>
+<br>
+You get a dead-sea effect. Traffic is evaporating, and small websites are dying, which brings even fewer visitors. Rinse and repeat.<br>
+<br>
+Blogs limp along through RSS and Atom, but relying on feeds shapes everything you write into a blog entry. It's stifling, homogenizing. The blogosphere, what remains of it, is incredibly samey.<br>
+<br>
+I feel there ought to be a solution to this, a better way of doing things that can help, and perhaps the Internet as a whole is an irredeemable mess that will never mend, but maybe we can (somehow) make it easier for those who are actually looking to find what they seek. <br>
+<br>
+Maybe there are lessons that can be drawn from what works on Gemini, and what doesn't work on HTTP, that can synthesize into a sketch for a solution.<br>
+<br>
+Gemini seems to be discovering automatic link feeds (e.g. Antenna), and on gemini-scale it works pretty well. But I'm just going to state that automatic link feeds do not seem to work on HTTP any more. You end up with a flood of astroturfing, vapid click-bait and blogspam (i.e. reddit). Stemming the flood demands a ton of moderation and still results in dismal results.<br>
+<br>
+As a whole, I think centralized and algorithmic approaches are extremely exposed to manipulation when applied on the internet. <br>
+<br>
+Web rings are cute, but I think they are a bit too random to help. Likewise, curated link directories were a thing back when the Internet was in its infancy, but the task of maintaining such a directory is a full time job. <br>
+<br>
+You could go for some sort of web-of-trust model to only allow trusted submitters access to an automatic link feed, but that practice is excluding and creates yet more walled gardens, which impairs the very discoverability I'm trying to help. <br>
+<br>
+Instead, perhaps there is a much simpler solution.<br>
+<br>
+<h2 id="1.1">Simple federated bookmarking</h2>
+<br>
+A proposal, dear reader: Create a list of bookmarks linking to websites you find interesting, and publish it for the world to see. You decide what constitutes "interesting".<br>
+<br>
+The model is as recursive as it is simple. There is nothing preventing a list of bookmarks from linking to another list of bookmarks. <br>
+<br>
+The creation of a bookmark list is a surprisingly fun project, it has some of the appeal of scrapbooking; and the end-result is also appealing to browse through. <br>
+<br>
+It's a bit strange, almost nobody seems to be doing this. Looking through a sample of personal websites, very few of them has links to other personal websites. A hyperlink isn't a marriage proposal. It is enough to find some redeeming quality in a website to link to it. It costs nothing, and helps bring traffic to pages that you yourself think deserve it.<br>
+<br>
+If we actually want these small websites to flourish as a healthy community, we need to promote each other much more than we do. It is advertisement, yes, but in earnest. I like it when other people link to my stuff. What sort of hypocrite would I then be if I only ever linked to my own websites? <br>
+<br>
+Leading by example, I set up my own list of bookmarks:<br>
+<br>
+<a class="external" href="https://memex.marginalia.nu/links/bookmarks.gmi">https://memex.marginalia.nu/links/bookmarks.gmi</a><br>
+<br>
+<h2 id="1.2">Replies and Comments</h2>
+<br>
+<a class="external" href="https://proxy.vulpes.one/gemini/station.martinrue.com/kevinsan/a25c7f2fd24b487483244c938f2217e7">gemini://station.martinrue.com/kevinsan/a25c7f2fd24b487483244c938f2217e7</a><br>
+<a class="external" href="https://proxy.vulpes.one/gemini/szczezuja.flounder.online/gemlog/2021-09-08-Planned-undiscoverability-of-small-sites.gmi">gemini://szczezuja.flounder.online/gemlog/2021-09-08-Planned-undiscoverability-of-small-sites.gmi</a><br>
+<br>
+<h2 id="1.3">Topic</h2>
+<br>
+<a class="internal" href="/topic/web-design.gmi">/topic/web-design.gmi</a><br>
+<a class="internal" href="/topic/platforms.gmi">/topic/platforms.gmi</a><br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+<a class="internal" href="/links/bookmarks.gmi">/links/bookmarks.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>19-website-discoverability-crisis.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/19-website-discoverability-crisis.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/19-website-discoverability-crisis.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/19-website-discoverability-crisis.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 The Small Website Discoverability Crisis [2021-09-08]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Simple federated bookmarking</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Replies and Comments</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Topic</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/links">/links</a></dt>
+<dd>Links</dd>
+
+<dt><a href="/log/45-unfuck-internet-discoverability.gmi">/log/45-unfuck-internet-discoverability.gmi</a></dt>
+<dd>Can we unfuck internet discoverability? [ 2022-02-04 ] - See Also</dd>
+
+<dt><a href="/projects/edge/for-webmasters.gmi">/projects/edge/for-webmasters.gmi</a></dt>
+<dd>For Webmasters - A Call To Action</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

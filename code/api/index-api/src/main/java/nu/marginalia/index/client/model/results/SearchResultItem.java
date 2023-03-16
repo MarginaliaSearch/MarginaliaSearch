@@ -15,14 +15,14 @@ public class SearchResultItem {
     public final long combinedId;
 
     /** How did the subqueries match against the document ? */
-    public final List<SearchResultKeywordScore> scores;
+    public final List<SearchResultKeywordScore> keywordScores;
 
     /** How many other potential results existed in the same domain */
     public int resultsFromDomain;
 
     public SearchResultItem(long val) {
         this.combinedId = val;
-        this.scores = new ArrayList<>(16);
+        this.keywordScores = new ArrayList<>(16);
     }
 
     public EdgeId<EdgeUrl> getUrlId() {
@@ -37,11 +37,11 @@ public class SearchResultItem {
     }
 
     /* Used for evaluation */
-    private transient double scoreValue = 1;
-    public void setScore(double score) {
+    private transient SearchResultPreliminaryScore scoreValue = null;
+    public void setScore(SearchResultPreliminaryScore score) {
         scoreValue = score;
     }
-    public double getScore() {
+    public SearchResultPreliminaryScore getScore() {
         return scoreValue;
     }
 

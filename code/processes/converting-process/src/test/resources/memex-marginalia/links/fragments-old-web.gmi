@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Fragments of the  Old Web</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/links" class="path dir"><img src="/ico/dir.png" title="dir"> links</a>
+
+    <a href="/links/fragments-old-web.gmi" class="path file"><img src="/ico/file.png" title="file"> fragments-old-web.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Fragments of the  Old Web</h1>
+<br>
+The following is a list of curiosities I've found while crawling the internet looking for websites. A sort of greatest hits from my search engine.<br>
+<br>
+There is no real system or theme to the links, other than the fact that they have made me go "huh, that's neat" while visiting them.<br>
+<br>
+Most of these are effectively impossible to find on Google, since they don't use HTTPS, and aren't optimized for mobile, and aren't plastered in ads and tracking scripts.<br>
+<br>
+I feel that's a shame, because they are pretty cool and deserve visitors.<br>
+<br>
+<h2 id="1.1">Links</h2>
+<br>
+<a class="external" href="http://www.deater.net/metrocat/metrocat.html">http://www.deater.net/metrocat/metrocat.html</a><br>
+<a class="external" href="https://www.sfpoetry.com/index.html">https://www.sfpoetry.com/index.html</a><br>
+<a class="external" href="https://loveblender.com/">https://loveblender.com/</a><br>
+<a class="external" href="http://www.ranum.com/security/computer_security/editorials/dumb/feynman.html">http://www.ranum.com/security/computer_security/editorials/dumb/feynman.html</a><br>
+<a class="external" href="http://www.silverscreentest.com/koala/eucalyptus/february05.htm">http://www.silverscreentest.com/koala/eucalyptus/february05.htm</a><br>
+<a class="external" href="http://www.dreamart.us/Dante.htm">http://www.dreamart.us/Dante.htm</a><br>
+<a class="external" href="http://www.harveyhouses.net/">http://www.harveyhouses.net/</a><br>
+<a class="external" href="http://www.oceanstar.com/">http://www.oceanstar.com/</a><br>
+<a class="external" href="http://www.marksmart.net/randommusic/IMS/IMSText.php">http://www.marksmart.net/randommusic/IMS/IMSText.php</a><br>
+<a class="external" href="http://hyperreal.org/~mpesce/">http://hyperreal.org/~mpesce/</a><br>
+<a class="external" href="http://voynich.nu/">http://voynich.nu/</a><br>
+<a class="external" href="https://medicolegal.tripod.com/pillsburypacts.htm">https://medicolegal.tripod.com/pillsburypacts.htm</a><br>
+<a class="external" href="http://rsc03.net/Swimming.html">http://rsc03.net/Swimming.html</a><br>
+<a class="external" href="http://bubblegun.com/">http://bubblegun.com/</a><br>
+<a class="external" href="https://benbest.com/">https://benbest.com/</a><br>
+<a class="external" href="http://www.arcadiasystems.org/">http://www.arcadiasystems.org/</a><br>
+<a class="external" href="https://www.harekrsna.com/">https://www.harekrsna.com/</a><br>
+<a class="external" href="http://classicallibrary.org">http://classicallibrary.org</a><br>
+<a class="external" href="https://templeofmathematics.com/Temple_of_Seshat.html">https://templeofmathematics.com/Temple_of_Seshat.html</a><br>
+<a class="external" href="http://policepoems.com/">http://policepoems.com/</a><br>
+<a class="external" href="http://theboojum.com/Tales/Dumptruk/dumptruk.htm">http://theboojum.com/Tales/Dumptruk/dumptruk.htm</a><br>
+<a class="external" href="http://www.redhotred.com/">http://www.redhotred.com/</a><br>
+<a class="external" href="http://www.smbmovie.com/">http://www.smbmovie.com/</a><br>
+<br>
+<h2 id="1.2">More</h2>
+<br>
+<dl class="link"><dt><a class="internal" href="/log/01-astrolabe.gmi">/log/01-astrolabe.gmi</a></dt><dd>Write-up on the search engine</dd></dl>
+<dl class="link"><dt><a class="external" href="https://proxy.vulpes.one/gemini/marginalia.nu/search?astrolabe">gemini://marginalia.nu/search?astrolabe</a></dt><dd>Do a search [gemini]</dd></dl>
+<dl class="link"><dt><a class="external" href="https://search.marginalia.nu">https://search.marginalia.nu</a></dt><dd>Do a search [https]</dd></dl>
+<br>
+<h2 id="1.3">Topic</h2>
+<br>
+<a class="internal" href="/topic/web-design.gmi">/topic/web-design.gmi</a><br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>fragments-old-web.gmi</h1>
+    <a class="download" href="/api/raw?url=/links/fragments-old-web.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/links/fragments-old-web.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/links/fragments-old-web.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/links/fragments-old-web.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Fragments of the  Old Web</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Links</a>
+    
+        <a href="#1.2" class="heading-2">1.2 More</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Topic</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

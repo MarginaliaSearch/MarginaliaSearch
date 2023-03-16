@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Bot Apologetics [2021-10-25]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/32-bot-apologetics.gmi" class="path file"><img src="/ico/file.png" title="file"> 32-bot-apologetics.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Bot Apologetics [2021-10-25]</h1>
+<br>
+There has been a bit of discussion over on Gemini recently regarding poorly behaved bots. I feel I need to add some perspective from the other side; as a bot operator (even though I don't operate Gemini bots).<br>
+<br>
+Writing a web spider is pretty easy on paper. You have your standards, and you can test against your own servers to make sure it behaves before you let it loose.<br>
+<br>
+You probably don't want to pound the server into silicon dust, so you add a crawl delay and parallelize the crawling, and now you have code that's a lot harder to comprehend. This is likely the cause of some weird bot behavior, including mishandling of redirect loops or repeated visits to the same address. Multi-threaded orchestration based on a rapidly mutating data set is difficult to get right (the working set of the spider by necessity changes as it goes). You can iron a lot of this out locally, but some problems won't crop up until you really push the limits with real-world scenarios.<br>
+<br>
+Next, the practical reality of web servers is that standards are more like vague recommendations, and no local testing can prepare your bot for encountering real data, which is at best malformed and sometimes straight up adversarial. <br>
+<br>
+The only way to exhaustively test a bot is to let it run and see if it seems to do what it does.<br>
+<br>
+The Internet, whether over HTTP or Gemini, is a fractal of unexpected corner cases. In Gemini this is compounded by the fact that a lot of people have written their own servers, in HTTP servers are (usually) somewhat compliant but oh boy is HTML a dumpster fire. <br>
+<br>
+It's a bit difficult to figure out what you are getting from the server. You can get Content-type as a server header or a HTML header. You can also get charset as a meta tag. HTML is served dozens upon dozens of DTDs.<br>
+<br>
+This one is fun:<br>
+<pre>
+&lt;!DOCTYPE HTML PUBLIC "-//SoftQuad//DTD HoTMetaL PRO 4.0::19971010::extensions to HTML 4.0//EN"&gt;</pre>
+<br>
+Server error handling sometimes causes some problems for a spider:<br>
+<br>
+<ul>
+<li>You fetch a URL, http://www.example.com/foo</li>
+<li>The page you get in return is a file-not-found error page, but it's served with an OK status code. The error page contains the relative URL bar/</li>
+<li>You index http://www.example.com/foo/bar and get the same error page</li>
+<li>You index http://www.example.com/foo/bar/bar and get the same error page</li>
+<li>You index http://www.example.com/foo/bar/bar/bar and get the same error page</li></ul>
+<br>
+&c<br>
+<br>
+This class of errors shouldn't happen according to the standards, but it crops up relatively often.  It's part of a wider problem with assuming that the Internet is a bunch of static files, when it in practice is often dynamically generated at-visit. This also means you can't just do a simple hash of the pages you've visited to detect a loop like this, since they may include a generation timestamp or some other minor difference.<br>
+<br>
+The wider problem of degenerate URLs is a constant obstacle, and normalization that repairs every case is probably impossible, even a passing solution involves a decent amount of mind-reading and guesswork.<br>
+<br>
+Example: Is "page" in "http://example.com/page" a poorly normalized path ("page/"), or a file with no ending? Both are valid interpretations.<br>
+<br>
+Then there's robots.txt. In this file, you will find things like:<br>
+<br>
+<ul>
+<li>Every character encoding known to man</li>
+<li>ASCII art</li>
+<li>Emojis</li>
+<li>PHP errors</li>
+<li>MySQL errors</li>
+<li>HTML code</li>
+<li>DIY directives</li>
+<li>Infinite crawl-delays (eff. days/page)</li>
+<li>Robots also get directives from HTML tags, sometimes conflicting with robots.txt.</li></ul>
+<br>
+This was just a short sampler of the types of stuff a bot needs to deal with. <br>
+<br>
+What I wanted to say is that writing a bot is a lot harder than one would think. It's unfair to assume malice or incompetence when a bot misbehaves: Probably only way you will ever get a reasonably well behaving web spider is to build a somewhat poorly behaving one and go from there.<br>
+<br>
+<h2 id="1.1">Topics</h2>
+<br>
+<a class="internal" href="/topic/web-design.gmi">/topic/web-design.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>32-bot-apologetics.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/32-bot-apologetics.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/32-bot-apologetics.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/32-bot-apologetics.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/32-bot-apologetics.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Bot Apologetics [2021-10-25]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Topics</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - A meditation on correctness in software [ 2022-03-14 ]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/50-meditation-on-software-correctness.gmi" class="path file"><img src="/ico/file.png" title="file"> 50-meditation-on-software-correctness.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">A meditation on correctness in software [ 2022-03-14 ]</h1>
+<br>
+Let's define a simple mathematical function, the function will perform integer factoring. It will take an integer, and return two integers, the product of which is the first integer. <br>
+<br>
+<pre class="literal">
+  F(int32 n) = (int32 A, int32 B) </pre>
+<br>
+so that <br>
+<pre class="literal">
+  
+  A*B = n</pre>
+<br>
+This is fairly straight forward, mathematical, objective. Let's examine some answers an implementation might give.<br>
+<br>
+<pre class="literal">
+  F 50 = (5, 10) on ARM
+  F 50 = (10, 5) on Intel</pre>
+<br>
+This seems like a bug, so let's add the requirement that A &lt;= B for deterministic results.<br>
+<pre class="literal">
+  </pre>
+Depending on language what comes next may or may not be defined behavior, but let's use a programming language where signed integers overflow, then we might get this result:<br>
+<pre class="literal">
+  
+  F 2 = (-2, 2147483647)</pre>
+<br>
+Now, as everyone no doubt will recognize, 2147483647 is a Mersenne prime (2^31 - 1), and the answer satisfies every requirement posed so far. This again *seems* like a bug, we clearly meant to say A and B must be positive.<br>
+<br>
+New scenario! F(60):<br>
+<pre class="literal">
+  
+  F 60 = (2, 30) on most days
+  F 60 = (1, 60) on the programmer's birthday
+  F 60 = (5, 12) during monsoon season
+  F 60 = (6, 10) when venus is in retorgrade
+  </pre>
+Yet again, this seems wrong, we don't expect a mathematical function to depend on the calendar. Perhaps we meant that A must be the lowest prime factor.<br>
+<br>
+Let's consider F(7)<br>
+<br>
+<pre class="literal">
+  F 7 ?= (1, 7) -- no, 1 isn't a prime
+  F 7 ?= (7, 1) -- no, 7 is greater than 1
+  F 7 = error!
+  </pre>
+These requirements are impossible to satisfy when n = 7. What we meant to say was that A must be a prime factor, or 1 if n is prime.<br>
+<br>
+That actually still leaves F(1):<br>
+<br>
+<pre class="literal">
+  F 1 ?= (1,1) -- no, A=1 isn't a prime, and B isn't a prime so A isn't permitted to be 1.</pre>
+<br>
+So now A must be a prime factor, or 1 if n is a prime or 1.<br>
+<br>
+Let's leave those particular weeds and consider F(-4)<br>
+<br>
+<pre class="literal">
+  F -4 ?= (-2, 2) -- no, -2 isn't a prime
+  F -4 ?= (-4, 1) -- no, -4 isn't a prime
+  F -4 ?= (1, -4) -- no, A &gt; B
+  F -4 ?= (2, 2147483646) -- yes!(?!?)</pre>
+<br>
+The last entry satisfies every requirement (again in signed integer arithmetic); 2 is a prime and a factor or -4, the smallest, 2 is less than 2147483646, 2 is positive. ... yet it feels like a bug. Let's just do like Alexander and bring a sword to this knot and require that n &gt; 0, this also gets rid of the degenerate zero case. <br>
+<br>
+Some reader may object and say this is because of signed integers, but believe me, floating point isn't better, fixed point has gotchas as well. This post isn't really about integers, it's about our relationship to requirements. <br>
+<br>
+While the requirements may seem simple, the function may strictly speaking open a socket to some SaaS-service that performs prime factoring. From the requirements it's impossible to tell. It would be unexpected for a factoring function to run out of file descriptors or not work during a network outage, but given the requirements provided so far, it might; and we might call that a bug too.<br>
+<br>
+This is how software development goes, on all levels, low level programming, high level programming, front-end programming, back-end programming.<br>
+<br>
+What I want to argue is that this is something that happens a lot: Bugs, more often than not, aren't a breaches of requirements, but rather the code surprising us in some fashion, upon which we quickly invent some new implicit requirements the code is breaking that we would not have been able to tell you before the discovery of the bug.<br>
+<br>
+Software correctness is indeed praised by many, but in many cases it's not entirely clear what it even means for software to be correct. In reality, it often boils down to some hand-wavy principle of least surprise, where a staggering amount of software requirements are entirely made up on the fly in response to the behavior of the code. <br>
+<br>
+You may violently disagree with the inflammatory accusation that comes next, but if this is the case, is there any other word for software that repeatedly surprises its users through frequent design changes than this?: Buggy.<br>
+<br>
+<h2 id="1.1">Topics</h2>
+<br>
+<a class="internal" href="/topic/programming.gmi">/topic/programming.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>50-meditation-on-software-correctness.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/50-meditation-on-software-correctness.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/50-meditation-on-software-correctness.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/50-meditation-on-software-correctness.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/50-meditation-on-software-correctness.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 A meditation on correctness in software [ 2022-03-14 ]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Topics</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

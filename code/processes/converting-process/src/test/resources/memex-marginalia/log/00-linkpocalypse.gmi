@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Thoughts on the linkpocalypse [2021-06-30]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/00-linkpocalypse.gmi" class="path file"><img src="/ico/file.png" title="file"> 00-linkpocalypse.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Thoughts on the linkpocalypse [2021-06-30]</h1>
+<br>
+For a long while, I have been puzzled by the strangest problem: My attention span is really bad when I use a computer. I'm an avid reader of esoteric books. I have (recently) read the notoriously dry Confessions of Saint Augustine in print, it was a slog for certain, but it really doesn't compare with the struggles I have when it comes to bringing myself to reading even a few paragraphs of text on a screen. It surely can't be the screen itself, can it? That doesn't seem plausible.<br>
+<br>
+What's more puzzling still is I don't remember this always being the case. I've read longer texts on a screen before. So what is going on? Has the presentation changed somehow?<br>
+<br>
+That's easy enough to check<br>
+<br>
+<dl class="link"><dt><a class="internal" href="/pics/links/encarta.png">/pics/links/encarta.png</a></dt><dd>Encarta '96</dd></dl>
+<dl class="link"><dt><a class="internal" href="/pics/links/wikipedia.png">/pics/links/wikipedia.png</a></dt><dd>Wikipedia 2021</dd></dl>
+<br>
+The thing that perhaps sticks out the most is the sheer number of hyperlinks. The modern wikipedia article has nearly 30 of them within the first paragraphs of text, and it's further surrounded by a cloud of links to the margins.<br>
+<br>
+When reading the text, we must make a decision when arriving at each link what to make of it. Should we click it? No, continue. Should we click it? No, continue. We don't make these decisions consciously for the most part, but we still need to make them. We are further pummeled by links to the sides that clamor for our attention.<br>
+<br>
+Encarta also has a few links in the text in some articles, but they are very muted, and don't pop out the way the modern wikipedia version does.<br>
+<br>
+Let's see what happens if we mute the links in wikipedia<br>
+<br>
+<dl class="link"><dt><a class="internal" href="/pics/links/wikipedia_no_links.png">/pics/links/wikipedia_no_links.png</a></dt><dd>The text of Wikipedia 2021, with Encarta '96 aesthetics</dd></dl>
+<br>
+Isn't that immediately a lot better? There doesn't appear to be any thought or purpose behind the hyperlinks in the wikipedia article. It's convenient to be able to go from any article to almost any other article no matter how weakly related, for sure, but that if that interconnectedness comes at the expense of readability, someone should be asking themselves whether it's worth the cost.<br>
+<br>
+Encarta assumes you will be curious and look things up if you read something that piques your interest. That is a pretty good system. It allows for a lot more purposeful agency from the user.<br>
+<br>
+<h1 id="2">Topics</h1>
+<br>
+<a class="internal" href="/topic/web-design.gmi">/topic/web-design.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>00-linkpocalypse.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/00-linkpocalypse.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/00-linkpocalypse.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/00-linkpocalypse.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Thoughts on the linkpocalypse [2021-06-30]</a>
+    
+        <a href="#2" class="heading-1">2 Topics</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/log/03-writing-for-reading.gmi">/log/03-writing-for-reading.gmi</a></dt>
+<dd>Writing for Reading [2021-07-12] - Referenced Texts</dd>
+
+<dt><a href="/log/07-local-backlinks.gmi">/log/07-local-backlinks.gmi</a></dt>
+<dd>Local Backlinks [2021-07-26] - Referenced Pages</dd>
+
+<dt><a href="/log/13-static-html.gmi">/log/13-static-html.gmi</a></dt>
+<dd>Rendered static HTML [2021-08-13] - Links</dd>
+
+<dt><a href="/log/44-discovery-and-design.gmi">/log/44-discovery-and-design.gmi</a></dt>
+<dd>Discovery and Design Considerations [ 2022-01-18 ] - See Also</dd>
+
+<dt><a href="/pics/links">/pics/links</a></dt>
+<dd>Links</dd>
+
+<dt><a href="/projects/encyclopedia">/projects/encyclopedia</a></dt>
+<dd>High Readability Encyclopedia - Further Reading</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

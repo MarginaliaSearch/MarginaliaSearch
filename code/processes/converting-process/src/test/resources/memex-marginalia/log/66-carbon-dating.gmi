@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Carbon Dating HTML [ 2022-10-27 ]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/66-carbon-dating.gmi" class="path file"><img src="/ico/file.png" title="file"> 66-carbon-dating.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Carbon Dating HTML [ 2022-10-27 ]</h1>
+<br>
+One of the more common feature requests I've gotten for Marginalia Search is the ability to search by date. I've been a bit reluctant because this has the smell of a a surprisingly hard problem. Or rather, a surprisingly large number of easy problems.<br>
+<br>
+The initial hurdle we'll encounter is that among structured data, pubDate in available in RDFa, OpenGraph, JSON+LD, and Microdata.<br>
+<br>
+A few examples:<br>
+<pre>
+&lt;meta property="datePublished" content="2022-08-24" /&gt;
+&lt;meta itemprop="datePublished" content="2022-08-24" /&gt;
+&lt;meta property="article:published_time" content="2022-08-24T14:39:14Z" /&gt;
+&lt;script type="application/ld+json"&gt;
+{"datePublished":"2022-08-24T14:39:14Z"}
+&lt;/script&gt;</pre>
+<br>
+So far not so that bad. This is at least a case where the web site tells you that here is the pub-date, the exact format of the date may vary, but this is solvable. <br>
+<br>
+HTML5 also introduces a &lt;time&gt; tag, which is sometimes useful. <br>
+<br>
+<pre>
+&lt;time pubdate="pubdate" datetime="2022-08-24T14:39:14" /&gt;
+&lt;time itemprop="datePublished" datetime="2022-08-24T14:39:14"&gt;August 24 2022&lt;/time&gt;
+&lt;time datetime="2022-08-24T14:39:14"&gt;August 24 2022&lt;/time&gt;</pre>
+<br>
+The last one may or may not be the timestamp we're looking for, but maybe it is in the right ballpark anyway. <br>
+<br>
+Thus we've taken a first step into the realm of dubious heuristics. Sometimes the URL path contains the year a document was created, typically on the form<br>
+<br>
+<pre>
+https://www.example.com/2022/04/why-im-so-great/</pre>
+<br>
+Of course /four digits/ may just be some numbers as well. It's not possible to be quite sure, but usually it's right. We can clamp the year to [1989,current year+1] and reduce the false positives.<br>
+<br>
+The HTTP header 'last-modified:' (or Last-Modified) may also provide a hint. It may also be the last time the file was copied on disk. Or complete nonsense. It's also probably a RFC-1123 date.<br>
+<br>
+Alright, this will provide a date for about a quarter of the websites. More than likely, none of these things work. Well to really grasp at straws, we can look for bylines and similar in the DOM using common class names. <br>
+<br>
+It's not really computationally feasible to look at *all* the elements, but these classes usually contain publish or change-dates:<br>
+<br>
+<pre>
+.entry-meta
+.byline
+.author
+.submitted
+.footer-info-lastmod</pre>
+<br>
+We can also look for text nodes with strings like "Copyright", "Published", "(c)", and so forth. <br>
+<br>
+Although copyright notices aren't great. You often see stuff like "(c) Bob Smith 1997-2017". How to narrow it down? Well we can just split the difference and say 2007, and we would probably be closer to the truth than if we went with the 1997 or 2017, but we can actually guess better than that. <br>
+<br>
+By looking at the HTML standard, we can coarsely make a guess about roughly which decade a website belongs from. New HTML3 is very rare in 2022, HTML5 is impossible in 1995. HTML4 and XHTML is typically indicative of 1999-2014.<br>
+<br>
+So from "(c) Bob Smith 1997-2017", and HTML3 we can take the average of 1997 and 2017, which is 2007, and make an educated guess from the HTML standard, say 1997, average those and arrive at 2002 and then clamp it to 1997-2017 and arrive at an educated guess that the website content from 2002. <br>
+<br>
+In all honestly, I have no good argument why this should work, in fact, averaging averages is rarely a good idea, but in this case it does give very plausible estimates. In general, this is heuristic is mostly necessary when dealing with older web pages, which often don't strictly have a well defined publishing date. <br>
+<br>
+Finally, in keeping with the 30 year old Internet tradition, my own website flagrantly disregards the part of the HTML5 standard that says &lt;articles&gt; must have a &lt;time pubdate&gt;...  but is correctly dated using Last-Modified.<br>
+<br>
+<h2 id="1.1">Topics</h2>
+<br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>66-carbon-dating.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/66-carbon-dating.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/66-carbon-dating.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/66-carbon-dating.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/66-carbon-dating.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Carbon Dating HTML [ 2022-10-27 ]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Topics</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

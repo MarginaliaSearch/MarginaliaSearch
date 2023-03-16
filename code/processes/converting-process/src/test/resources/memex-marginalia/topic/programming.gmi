@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Topic: Programming</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/topic" class="path dir"><img src="/ico/dir.png" title="dir"> topic</a>
+
+    <a href="/topic/programming.gmi" class="path file"><img src="/ico/file.png" title="file"> programming.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Topic: Programming</h1>
+<!-- pragma: TOPIC -->
+
+
+
+
+<dl>
+<dt><a href="/log/02-re-tests.gmi">/log/02-re-tests.gmi</a></dt>
+<dd>Re: To unit test or not to unit test, that is the question [ 2021-07-08 ] - Topics</dd>
+
+<dt><a href="/log/06-optimization.gmi">/log/06-optimization.gmi</a></dt>
+<dd>Index Optimizations [2021-07-23] - Topics</dd>
+
+<dt><a href="/log/30-unintuitive-optimization.gmi">/log/30-unintuitive-optimization.gmi</a></dt>
+<dd>Unintuitive Optimization [2021-10-13] - Topics</dd>
+
+<dt><a href="/log/36-localized-programming-languages.gmi">/log/36-localized-programming-languages.gmi</a></dt>
+<dd>Localized Programming Languages  [ 2021-11-05 ] - Topics</dd>
+
+<dt><a href="/log/50-meditation-on-software-correctness.gmi">/log/50-meditation-on-software-correctness.gmi</a></dt>
+<dd>A meditation on correctness in software [ 2022-03-14 ] - Topics</dd>
+
+<dt><a href="/log/51-the-file-startup.gmi">/log/51-the-file-startup.gmi</a></dt>
+<dd>The Static File Startup [ 2022-03-18 ] - Topics</dd>
+
+<dt><a href="/log/53-better-hard-drive-metaphor.gmi">/log/53-better-hard-drive-metaphor.gmi</a></dt>
+<dd>Is There A Better Hard Drive Metaphor? [ 2022-04-03 ] - Topics</dd>
+
+<dt><a href="/log/55-lexicon-rubberduck.gmi">/log/55-lexicon-rubberduck.gmi</a></dt>
+<dd>Lexicon Architectural Rubberducking [ 2022-04-11 ] - Topics</dd>
+
+<dt><a href="/log/57-dont-know-how-to-build-software.gmi">/log/57-dont-know-how-to-build-software.gmi</a></dt>
+<dd>I don&#x27;t know how to build software [ 2022-05-06 ] - Topic</dd>
+
+<dt><a href="/log/68-wizards-vs-sorcerers.gmi">/log/68-wizards-vs-sorcerers.gmi</a></dt>
+<dd>On Wizards and Sorcerers [ 2022-12-23 ] - Topic</dd>
+
+<dt><a href="/log/69-creepy-website-similarity.gmi">/log/69-creepy-website-similarity.gmi</a></dt>
+<dd>Creepy Website Similarity [ 2022-12-26 ] - Topic</dd>
+
+<dt><a href="/log/70-faster-index-joins.gmi">/log/70-faster-index-joins.gmi</a></dt>
+<dd>Faster Index Joins [ 2023-01-03 ] - Topic</dd>
+
+<dt><a href="/projects/gemini-server.gmi">/projects/gemini-server.gmi</a></dt>
+<dd>Gemini Server - Topics</dd>
+</dl>
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>programming.gmi</h1>
+    <a class="download" href="/api/raw?url=/topic/programming.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/topic/programming.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/topic/programming.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Topic: Programming</a>
+    
+    </div>
+</section>
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

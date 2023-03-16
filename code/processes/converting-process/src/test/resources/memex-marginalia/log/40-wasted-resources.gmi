@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Wasted Resources [2021-12-04]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/40-wasted-resources.gmi" class="path file"><img src="/ico/file.png" title="file"> 40-wasted-resources.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Wasted Resources [2021-12-04]</h1>
+<br>
+At a previous job, we had a new and fancy office. The light switches were state of the art. There was an on button, and a separate off button. When you pressed the on button, the lights would fade on. When you pressed the off button, they would fade off. In the cloud somewhere was two functions that presumably looked a bit like this:<br>
+<br>
+<pre>
+fun turnOnLamp() {
+  while (!bright()) increaseBrightness();
+}
+fun turnOffLamp() {
+  while (!dark()) decreaseBrightness();
+}</pre>
+<br>
+I have deduced this from the fact that if you pressed both buttons at the same time, the lights would flicker on and off until someone was contacted to restart something. It is a marvellous time to be alive when you need to reboot your light switches because of a race condition. Modern computers are so fast that we often don't even recognize when we are doing things inefficiently. We can end messages half way around the world to turn on the lights and it seems like it's just a wire between the switch and the lamp.<br>
+<br>
+In my code there was a performance snag recently with a piece of logic that used Java streams quite liberally. I had written it that way beacuse this logic was pretty hairy and streams can be a lot more expressive, and I tend to prioritize that in the first version of the code and go and optimize later when necessary.<br>
+<br>
+The code iterated over an array and looked for spans that matched a combination of criteria. Imagine a couple of dozen constructions of this general shape:<br>
+<br>
+<pre>
+  return IntStream.range(1, words.size())
+           .filter(i -&gt; predA(sentence, i))
+           .filter(i -&gt; predB(sentence, i-1))
+           .filter(i -&gt; predC(sentence, i-2))
+           .map(i -&gt; new Span(i-2, i+1))
+           .toArray(Span[]::new);</pre>
+<br>
+I replaced it with code of the form<br>
+<br>
+<pre>
+  ArrayList&lt;Span&gt; ret = new ArrayList&lt;&gt;();
+  
+  for (int i = 2; i &lt; words.size(); i++) {
+    if (predA(sentence, i) && predB(sentence,i-1) && predC(sentence,i-2)) {
+      ret.add(new Span(i-2, i+1));
+    }
+  }
+  
+  return ret.toArray(Span[]::new);</pre>
+<br>
+The code was about an order of magnitude faster as a result. I do feel a bit uneasy about this. If it wasn't for the fact that I work with humongous datasets, I wouldn't have noticed there was a difference. Both are fast on a modern CPU. Yet, a lot of the code we write simply isn't as fast as it could be, and while speed may not be the biggest deal, it's consuming resources, both system resources and energy.<br>
+<br>
+I do think Parkinson's law is applicable. The inefficiency of the code grows to meet the performance of the hardware. This is probably why user interfaces today hardly seem faster than they did 25 years ago. Back then they were slow because they read data off a floppy disk, today they are slow because they are executing 40 megabytes of javascript and sending data across the entire world to render a button. <br>
+<br>
+I've always felt that targeting slow hardware makes your code better on all systems. If it performs well on a raspberry pi, it performs well everywhere under any circumstances. <br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>40-wasted-resources.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/40-wasted-resources.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/40-wasted-resources.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/40-wasted-resources.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/40-wasted-resources.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Wasted Resources [2021-12-04]</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

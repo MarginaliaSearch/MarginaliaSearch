@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - WMSA</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/projects" class="path dir"><img src="/ico/dir.png" title="dir"> projects</a>
+
+    <a href="/projects/wmsa.gmi" class="path file"><img src="/ico/file.png" title="file"> wmsa.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">WMSA</h1>
+<br>
+WMSA, and I wish I remember why it's called that, is the software backing marginalia.nu. It's a Java-based application, based on microservices, that does a lot of different things. It has grown organically over a long period of time. It's bespoke software that serves this website and its many functions, and only this website. <br>
+<br>
+<h2 id="1.1">Name</h2>
+<br>
+I'm great at naming things, but less stellar at remembering why I named them such. <br>
+<br>
+<ul>
+<li>Weird Micro-Service Architecture? </li>
+<li>World's Most Spectacular Application? </li></ul>
+<br>
+It's really anyone's guess right now.<br>
+<br>
+<h2 id="1.2">Status</h2>
+<br>
+<dl class="link"><dt><a class="external" href="https://www.marginalia.nu/status/">https://www.marginalia.nu/status/</a></dt><dd>Service up/down</dd></dl>
+<dl class="link"><dt><a class="external" href="https://www.marginalia.nu/stats/">https://www.marginalia.nu/stats/</a></dt><dd>Monitoring graphs</dd></dl>
+<br>
+<h1 id="2">Notable parts</h1>
+<br>
+<dl class="link"><dt><a class="external" href="https://reddit.marginalia.nu/">https://reddit.marginalia.nu/</a></dt><dd>A reddit mirror</dd></dl>
+<br>
+<dl class="link"><dt><a class="external" href="https://encyclopedia.marginalia.nu/">https://encyclopedia.marginalia.nu/</a></dt><dd>A wikipedia mirror</dd></dl>
+<a class="internal" href="/projects/encyclopedia/index.gmi">/projects/encyclopedia/index.gmi</a><br>
+<br>
+<dl class="link"><dt><a class="internal" href="/projects/memex.gmi">/projects/memex.gmi</a></dt><dd>The memex hypertext engine</dd></dl>
+<br>
+<dl class="link"><dt><a class="external" href="https://search.marginalia.nu/">https://search.marginalia.nu/</a></dt><dd>A search engine</dd></dl>
+<a class="internal" href="/projects/edge/index.gmi">/projects/edge/index.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>wmsa.gmi</h1>
+    <a class="download" href="/api/raw?url=/projects/wmsa.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/projects/wmsa.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/projects/wmsa.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 WMSA</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Name</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Status</a>
+    
+        <a href="#2" class="heading-1">2 Notable parts</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/projects/edge">/projects/edge</a></dt>
+<dd>Edge</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

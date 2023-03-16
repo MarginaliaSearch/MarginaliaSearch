@@ -5,14 +5,14 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
-import gnu.trove.set.hash.TLongHashSet;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import io.prometheus.client.Histogram;
+import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.index.client.model.results.SearchResultItem;
+import nu.marginalia.index.client.model.results.SearchResultRankingContext;
 import nu.marginalia.index.client.model.results.SearchResultSet;
 import nu.marginalia.index.client.model.query.SearchSpecification;
-import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.array.buffer.LongQueryBuffer;
 import nu.marginalia.index.index.SearchIndex;
 import nu.marginalia.index.index.SearchIndexSearchTerms;
@@ -21,8 +21,6 @@ import nu.marginalia.index.searchset.SearchSet;
 import nu.marginalia.index.results.IndexResultValuator;
 import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.results.IndexResultDomainDeduplicator;
-import nu.marginalia.index.query.IndexQueryParams;
-import nu.marginalia.index.query.IndexSearchBudget;
 import nu.marginalia.index.svc.searchset.SmallSearchSet;
 import nu.marginalia.model.gson.GsonFactory;
 import org.slf4j.Logger;
@@ -34,10 +32,7 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static java.util.Comparator.comparingDouble;
+import java.util.*;
 
 @Singleton
 public class IndexQueryService {
@@ -45,7 +40,6 @@ public class IndexQueryService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final Marker queryMarker = MarkerFactory.getMarker("QUERY");
-
 
     private static final Counter wmsa_edge_index_query_timeouts = Counter.build().name("wmsa_edge_index_query_timeouts").help("-").register();
     private static final Gauge wmsa_edge_index_query_cost = Gauge.build().name("wmsa_edge_index_query_cost").help("-").register();
@@ -79,7 +73,8 @@ public class IndexQueryService {
             return wmsa_edge_index_query_time.time(() -> {
                 var params = new SearchParameters(specsSet, getSearchSet(specsSet));
 
-                List<SearchResultItem> results = executeSearch(params);
+                SearchResultSet results = executeSearch(params);
+
                 logger.info(queryMarker, "Index Result Count: {}", results.size());
 
                 wmsa_edge_index_query_cost.set(params.getDataCost());
@@ -87,7 +82,7 @@ public class IndexQueryService {
                     wmsa_edge_index_query_timeouts.inc();
                 }
 
-                return new SearchResultSet(results);
+                return results;
             });
         }
         catch (HaltException ex) {
@@ -104,7 +99,7 @@ public class IndexQueryService {
 
     // exists for test access
     SearchResultSet justQuery(SearchSpecification specsSet) {
-        return new SearchResultSet(executeSearch(new SearchParameters(specsSet, getSearchSet(specsSet))));
+        return executeSearch(new SearchParameters(specsSet, getSearchSet(specsSet)));
     }
 
     private SearchSet getSearchSet(SearchSpecification specsSet) {
@@ -115,12 +110,28 @@ public class IndexQueryService {
         return searchSetsService.getSearchSetByName(specsSet.searchSetIdentifier);
     }
 
-    private List<SearchResultItem> executeSearch(SearchParameters params) {
+    private SearchResultSet executeSearch(SearchParameters params) {
         var resultIds = evaluateSubqueries(params);
 
         var resultItems = calculateResultScores(params, resultIds);
 
-        return selectBestResults(params, resultItems);
+        var bestResults = selectBestResults(params, resultItems);
+
+        return new SearchResultSet(bestResults, createRankingContext(params.subqueries));
+    }
+
+    /* This information is routed back up the search service in order to calculate BM-25
+     * accurately  */
+    private SearchResultRankingContext createRankingContext(List<SearchSubquery> subqueries) {
+        final Map<String, Integer> termToId = searchTermsSvc.getAllIncludeTerms(subqueries);
+
+        int totalDocCount = index.getTotalDocCount();
+
+        final Map<String, Integer> termFrequencies = new HashMap<>(termToId);
+
+        termToId.forEach((key, id) -> termFrequencies.put(key, index.getTermFrequency(id)));
+
+        return new SearchResultRankingContext(totalDocCount, termFrequencies);
     }
 
     private TLongList evaluateSubqueries(SearchParameters params) {
@@ -129,8 +140,6 @@ public class IndexQueryService {
         logger.info(queryMarker, "{}", params.queryParams);
         for (var sq : params.subqueries) {
             final SearchIndexSearchTerms searchTerms = searchTermsSvc.getSearchTerms(sq);
-
-
 
             if (searchTerms.isEmpty()) {
                 continue;
@@ -176,31 +185,29 @@ public class IndexQueryService {
         return results;
     }
 
-    private ArrayList<SearchResultItem> calculateResultScores(SearchParameters params, TLongList results) {
+    private ArrayList<SearchResultItem> calculateResultScores(SearchParameters params, TLongList resultIds) {
 
-        final var evaluator = new IndexResultValuator(
-                searchTermsSvc,
-                metadataService,
-                results,
-                params.subqueries,
-                params.queryParams);
+        final var evaluator = new IndexResultValuator(metadataService, resultIds, params.subqueries, params.queryParams);
 
-        ArrayList<SearchResultItem> items = new ArrayList<>(results.size());
+        ArrayList<SearchResultItem> items = new ArrayList<>(resultIds.size());
 
-        // Sorting the result ids results in better paging characteristics
-        results.sort();
+        // Note, this is a pre-sorting the result IDs. This is a performance optimization, as it will cluster
+        // disk access to adjacent parts of the forward index when fetching metadata
+        //
+        // This is *not* where the actual search results are sorted
+        resultIds.sort();
 
-        results.forEach(id -> {
-            var item = evaluator.evaluateResult(id);
+        resultIds.forEach(id -> {
+            var item = evaluator.calculatePreliminaryScore(id);
 
-            if (item.getScore() < 100) {
+            if (!item.getScore().isEmpty()) {
                 items.add(item);
             }
 
             return true;
         });
 
-        logger.info(queryMarker, "After filtering: {} -> {}", results.size(), items.size());
+        logger.info(queryMarker, "After filtering: {} -> {}", resultIds.size(), items.size());
 
 
         return items;
@@ -210,7 +217,7 @@ public class IndexQueryService {
 
         var domainCountFilter = new IndexResultDomainDeduplicator(params.limitByDomain);
 
-        results.sort(comparingDouble(SearchResultItem::getScore)
+        results.sort(Comparator.comparing(SearchResultItem::getScore).reversed()
                 .thenComparingInt(SearchResultItem::getRanking)
                 .thenComparingInt(SearchResultItem::getUrlIdInt));
 
@@ -236,61 +243,6 @@ public class IndexQueryService {
         }
 
         return resultsList;
-    }
-
-}
-
-class SearchParameters {
-    /** This is how many results matching the keywords we'll try to get
-      before evaluating them for the best result. */
-    final int fetchSize;
-    final IndexSearchBudget budget;
-    final List<SearchSubquery> subqueries;
-    final IndexQueryParams queryParams;
-
-    final int limitByDomain;
-    final int limitTotal;
-
-    // mutable:
-
-    /** An estimate of how much data has been read */
-    long dataCost = 0;
-
-    /** A set of id:s considered during each subquery,
-     * for deduplication
-     */
-    final TLongHashSet consideredUrlIds;
-
-    public SearchParameters(SearchSpecification specsSet, SearchSet searchSet) {
-        var limits = specsSet.queryLimits;
-
-        this.fetchSize = limits.fetchSize();
-        this.budget = new IndexSearchBudget(limits.timeoutMs());
-        this.subqueries = specsSet.subqueries;
-        this.limitByDomain = limits.resultsByDomain();
-        this.limitTotal = limits.resultsTotal();
-
-        this.consideredUrlIds = new TLongHashSet(fetchSize * 4);
-
-        queryParams = new IndexQueryParams(
-                specsSet.quality,
-                specsSet.year,
-                specsSet.size,
-                specsSet.rank,
-                searchSet,
-                specsSet.queryStrategy);
-    }
-
-    IndexQuery createIndexQuery(SearchIndex index, SearchIndexSearchTerms terms) {
-        return index.createQuery(terms, queryParams, consideredUrlIds::add);
-    }
-
-    boolean hasTimeLeft() {
-        return budget.hasTimeLeft();
-    }
-
-    long getDataCost() {
-        return dataCost;
     }
 
 }

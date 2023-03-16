@@ -5,13 +5,16 @@ import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 import nu.marginalia.bbpc.BrailleBlockPunchCards;
+import nu.marginalia.index.client.model.results.SearchResultRankingContext;
+import nu.marginalia.index.client.model.results.SearchResultSet;
+import nu.marginalia.ranking.ResultValuator;
 import nu.marginalia.search.db.DbUrlDetailsQuery;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.id.EdgeIdList;
 import nu.marginalia.index.client.model.results.SearchResultItem;
 import nu.marginalia.search.model.UrlDetails;
-import nu.marginalia.search.valuation.SearchResultValuator;
+import nu.marginalia.search.query.model.SearchQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,19 +23,20 @@ import java.util.List;
 
 public class SearchResultDecorator {
     private final DbUrlDetailsQuery dbUrlDetailsQuery;
-    private final SearchResultValuator valuator;
+    private final ResultValuator valuator;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
-    public SearchResultDecorator(DbUrlDetailsQuery dbUrlDetailsQuery, SearchResultValuator valuator) {
+    public SearchResultDecorator(DbUrlDetailsQuery dbUrlDetailsQuery,
+                                 ResultValuator valuator) {
         this.dbUrlDetailsQuery = dbUrlDetailsQuery;
         this.valuator = valuator;
     }
 
-    public List<UrlDetails> getAllUrlDetails(List<SearchResultItem> resultItems) {
-        TIntObjectHashMap<UrlDetails> detailsById = new TIntObjectHashMap<>(resultItems.size());
+    public List<UrlDetails> getAllUrlDetails(SearchResultSet resultSet) {
+        TIntObjectHashMap<UrlDetails> detailsById = new TIntObjectHashMap<>(resultSet.size());
 
-        EdgeIdList<EdgeUrl> idList = resultItems.stream()
+        EdgeIdList<EdgeUrl> idList = resultSet.results.stream()
                                                 .mapToInt(SearchResultItem::getUrlIdInt)
                                                 .collect(EdgeIdList::new, EdgeIdList::add, EdgeIdList::addAll);
 
@@ -42,10 +46,10 @@ public class SearchResultDecorator {
             detailsById.put(val.id, val);
         }
 
-        List<UrlDetails> retList = new ArrayList<>(resultItems.size());
+        List<UrlDetails> retList = new ArrayList<>(resultSet.size());
 
         TIntArrayList missedIds = new TIntArrayList();
-        for (var resultItem : resultItems) {
+        for (var resultItem : resultSet.results) {
 
             var rankingId = resultItem.getRanking();
             var uid = resultItem.getUrlId().id();
@@ -59,7 +63,7 @@ public class SearchResultDecorator {
             details.rankingId = rankingId;
 
             details.resultsFromSameDomain = resultItem.resultsFromDomain;
-            details.termScore = calculateTermScore(resultItem, details);
+            details.termScore = calculateTermScore(resultItem, details, resultSet.rankingContext);
             details.positions = getPositionsString(resultItem);
             details.resultItem = resultItem;
 
@@ -75,7 +79,7 @@ public class SearchResultDecorator {
     private String getPositionsString(SearchResultItem resultItem) {
         Int2IntArrayMap positionsPerSet = new Int2IntArrayMap(8);
 
-        for (var score : resultItem.scores) {
+        for (var score : resultItem.keywordScores) {
             if (!score.isKeywordRegular()) {
                 continue;
             }
@@ -95,10 +99,14 @@ public class SearchResultDecorator {
         return a | b;
     }
 
-    private double calculateTermScore(SearchResultItem resultItem, UrlDetails details) {
+    private double calculateTermScore(SearchResultItem resultItem, UrlDetails details, SearchResultRankingContext rankingContext) {
 
         final double statePenalty = (details.domainState == DomainIndexingState.SPECIAL) ? 1.25 : 0;
-        final double value =  valuator.evaluateTerms(resultItem.scores, details.words, details.title.length());
+
+        final double value = valuator.calculateSearchResultValue(resultItem.keywordScores,
+                details.words,
+                details.title.length(),
+                rankingContext);
 
         return value + statePenalty;
     }

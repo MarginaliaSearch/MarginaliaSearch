@@ -1,6 +1,6 @@
 package nu.marginalia.crawl;
 
-import nu.marginalia.crawling.model.CrawlingSpecification;
+import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.dbcommon.DomainBlacklistImpl;
 import nu.marginalia.service.module.DatabaseModule;

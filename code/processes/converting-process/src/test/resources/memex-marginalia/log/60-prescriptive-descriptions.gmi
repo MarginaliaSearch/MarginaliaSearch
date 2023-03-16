@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - On Prescriptive Descriptions [ 2022-07-14 ]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/60-prescriptive-descriptions.gmi" class="path file"><img src="/ico/file.png" title="file"> 60-prescriptive-descriptions.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">On Prescriptive Descriptions [ 2022-07-14 ]</h1>
+<br>
+I'd like to discuss a mental somersault that I've found has caused me a lot of grief in the past, which is prescriptive descriptions. Let's break this down a bit:<br>
+<br>
+<ul>
+<li>A descriptive statement is a statement about how something is.</li>
+<li>A prescriptive statement is a statement about how something must be, a rule or a law. </li></ul>
+<br>
+If I stay up a bit late, do most of my work in the evenings, wake up tired and just sort of putter about until noon, I might describe myself as a night person because of this. <br>
+<br>
+I might not realize that if I cut down on the coffee, get more physical activity, and get to bed a bit earlier, I (the same person) might fly out of bed in the morning and do most of my work before noon, and then get sort of tired and not do much work later that evening. That's what a morning-person does.<br>
+<br>
+Now, let me ask you a question: Am I a night person because I stay up late, or do I stay up late because I am a night person?<br>
+<br>
+I will argue the nature of descriptive statements is that they describe how things are (or have been). Having reason to describe something is the effect of the appearance of things, not their cause. Describing a tomato as red is caused by the appearance of the tomato being red, it does not cause the tomato to be red. Being a violinist does not cause a person to play the violin, playing the violin in causes them to earn the description of a violinist.<br>
+<br>
+Likewise, being a night-person never caused me to stay up late, staying up late caused me to earn the description of night-person.<br>
+<br>
+It's common, and I've certainly fallen for this trap as well in the past, to flip this around and look at descriptions of yourself as immutable laws of nature. <br>
+<br>
+Granted, things have a tendency toward momentum, what has been in the past often tends to continue into the future, but generalizing this into some iron law of nature essentially lends us to the absurd conclusion that nothing can ever <br>
+change, doubly absurd when we're applying this to the context of decision-making: Whatever I have done before, I must always do again?!<br>
+<br>
+I am lazy, I am shy, I am clumsy, I am stupid, I can't learn new things, I dislike new experiences, I'm not into that thing I haven't ever tried. You hear this stuff all the time, often presented as reasons not to try or do things. These types of descriptions can be a significant obstacle to enjoying life. They're self-imposed shackles.<br>
+<br>
+Even on the flip side, if I say I am strong, I am productive, I am a paragon of virtue, I never lie, I never fail, I can do anything; these types of descriptions can pave the way to burn-out, a source of self-loathing or regret, an obstacle to accepting yourself and seeking much needed help. <br>
+<br>
+The conclusion isn't to change how you describe yourself, but to understand the nature of descriptions as describing the past, rather than proscribing the future; and look to understand things are they are, rather than how they appear to be based on past experiences. <br>
+<br>
+<br>
+<br>
+Also, before someone inevitably crawls out of the woodwork to tell me how they really are a night-person: Like, sure. <br>
+<br>
+<h2 id="1.1">Topic</h2>
+<br>
+<a class="internal" href="/topic/moral-philosophy.gmi">/topic/moral-philosophy.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>60-prescriptive-descriptions.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/60-prescriptive-descriptions.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/60-prescriptive-descriptions.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/60-prescriptive-descriptions.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/log/60-prescriptive-descriptions.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 On Prescriptive Descriptions [ 2022-07-14 ]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Topic</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

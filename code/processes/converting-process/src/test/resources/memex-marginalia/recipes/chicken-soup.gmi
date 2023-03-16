@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Chicken Soup [2021-08-28]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/recipes" class="path dir"><img src="/ico/dir.png" title="dir"> recipes</a>
+
+    <a href="/recipes/chicken-soup.gmi" class="path file"><img src="/ico/file.png" title="file"> chicken-soup.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Chicken Soup [2021-08-28]</h1>
+<br>
+Medium difficulty<br>
+6-8 servings<br>
+30 min prep + 2 hours cooking time<br>
+<br>
+Requires 1 large pot, and one skillet that can handle high heat (=cast iron or carbon steel; no teflon or ceramics, or you will ruin it and your health!)<br>
+<br>
+<h2 id="1.1">Ingredients</h2>
+<br>
+<ul>
+<li>1 large carrot + 1 additional carrot for later</li>
+<li>2 onions</li>
+<li>2-3 stalks of celery</li>
+<li>1 leek</li></ul>
+<br>
+<ul>
+<li>a dozen or more button mushrooms</li></ul>
+<br>
+<ul>
+<li>800 grams of boneless chicken </li></ul>
+<br>
+<ul>
+<li>chicken stock for 1.5L liquid</li>
+<li>1L water</li>
+<li>250 white cooking wine</li>
+<li>a splash of cream</li></ul>
+<br>
+<ul>
+<li>bay leaves</li>
+<li>fresh thyme</li>
+<li>salt</li>
+<li>pepper</li></ul>
+<br>
+<ul>
+<li>potatoes</li></ul>
+<br>
+<h2 id="1.2">Instructions</h2>
+<br>
+<ul>
+<li>Slice the vegetables and put in a large pot with a small amount of some cooking grease</li>
+<li>Put the pot on medium heat and gently brown the vegetables. You should see a gentle column of steam rising from the vegetables (and smell something delicious)</li>
+<li>Quart the mushrooms and put in a skillet, sear on high heat to get rid of the water in them</li>
+<li>Put the mushrooms with the vegetables</li></ul>
+<br>
+<ul>
+<li>Cut and the chicken into mouth-sized pieces and quickly brown at medium-high heat, salt and pepper as you go</li>
+<li>Put the chicken with the vegetables</li></ul>
+<br>
+<ul>
+<li>Add wine, water, chicken stock to the pot</li>
+<li>Add a few bay leaves</li>
+<li>Make a bouquet garni with the thyme and a carrot (i.e. tie the thyme to a carrot with some cooking twine) -- or just toss it in there if you haven't got the twine or patience.</li>
+<li>Bring to a simmer and let it simmer for as long as you have patience, at least 30 minutes but ideally 2+ hours.</li></ul>
+<br>
+<ul>
+<li>20 minutes before serving, peel and cut potatoes and add to the soup. </li>
+<li>Add a splash of cream</li>
+<li>Taste and add more salt if necessary</li>
+<li>Fish out the bouquet</li>
+<li>Serve</li></ul>
+<br>
+Tastes even better the next day!<br>
+<br>
+<h2 id="1.3">Illustrations</h2>
+<br>
+<dl class="link"><dt><a class="internal" href="/pics/chicken-soup-mushrooms.png">/pics/chicken-soup-mushrooms.png</a></dt><dd>Mushrooms</dd></dl>
+<dl class="link"><dt><a class="internal" href="/pics/chicken-soup-bouquet.png">/pics/chicken-soup-bouquet.png</a></dt><dd>Bouquet Garni</dd></dl>
+<br>
+<h1 id="2">Topic</h1>
+<br>
+<a class="internal" href="/topic/cooking.gmi">/topic/cooking.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>chicken-soup.gmi</h1>
+    <a class="download" href="/api/raw?url=/recipes/chicken-soup.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/recipes/chicken-soup.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/recipes/chicken-soup.gmi" class="verb">Rename</a>
+    <a rel="nofollow" href="/api/delete?type=gmi&url=/recipes/chicken-soup.gmi" class="verb">Delete</a>
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Chicken Soup [2021-08-28]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Ingredients</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Instructions</a>
+    
+        <a href="#1.3" class="heading-2">1.3 Illustrations</a>
+    
+        <a href="#2" class="heading-1">2 Topic</a>
+    
+    </div>
+</section>
+
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

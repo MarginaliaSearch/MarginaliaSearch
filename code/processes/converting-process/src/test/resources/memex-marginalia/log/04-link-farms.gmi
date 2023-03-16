@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - On Link Farms [2021-07-14]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/04-link-farms.gmi" class="path file"><img src="/ico/file.png" title="file"> 04-link-farms.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">On Link Farms [2021-07-14]</h1>
+<br>
+I'm in the midst of rebuilding the index of my search engine to allow for better search results, and I've yet again found need to revisit how I handle link farms. It's an ongoing arms race between search engines and link farmers to adjust (and circumvent) the detection algorithms. Detection and mitigation of link farms is something I've found I need to modify very frequently, as they are constantly evolving to look more like real websites.<br>
+<br>
+In the mean time, I'll share an autopsy of how link farms operate, and some ways I've approached them. It's a strange and shady business that doesn't get talked about a lot. The advertisement industry is shady. The SEO industry is shadier still. This is the shady part of the SEO industry. It's shady cubed, some real cloak-and-dagger stuff.<br>
+<br>
+The point of a link farm is to manipulate the algorithms used by search engines, typically Google, which several degrees simplified rates a website by how much traffic it gets. Link farms can also serve as vectors for scams and malware, since they allow the construction of unpredictable URLs across different domains that point to similar content, that's hard to detect for spam filters and antivirus software.<br>
+<br>
+Their modus operandi seems to be as follows:<br>
+<br>
+<ul>
+<li>They register one or several domains somewhere, it's usually .xyz because they are cheap</li>
+<li>They buy some cheap cloud computing someplace, very often Alibaba</li>
+<li>They point wildcard records for *.their-domains.xyz to their cloud ingress</li>
+<li>They upload a website that responds to every URL with a bunch of links to random subdomains with random URLs. Occasionally they will be freebooting content off social media like reddit, or from articles or blog posts to make their content look less machine generated, but surprisingly often they'll straight up be lists of keywords and links.</li>
+<li>They buy expiring domain names and put links to the link farm, and also spam them in forums and free wordpress, blogspot, etc.-blogs.</li></ul>
+<br>
+The fact that they are often using the cheapest domain names should indicate that they register a lot of domains. Often they are shilling hotels or travel-related products, there's also a strange cluster that's squatting in domains that once belonged to pages about blues music; and there's finally a large operation that seem to target the east-asian online shopping market.<br>
+<br>
+The age of man will have expired before you're done indexing just one of these effectively endless tangles of domains and hyperlinks so simply powering through is not really an option.<br>
+<br>
+I do have some flagging of domains with large numbers of subdomains, but that's a pretty expensive operation that is only possible to run every 10 minutes, and by the time they're detectable, they've already polluted the index quite a bit. Think links across 10 domains x 500 subdomains x 10000 known URLs; for one link farming operation. So far I've identified nearly ten thousand domains, and I do not think this is exhaustive. This is a last resort measure to catch the ones that get through.<br>
+<br>
+It's much better to weed out the rotten eggs before they enter the machinery, and I've found the far most effective solution to this to apply scorched earth tactics, and indiscriminately exclude entire swathes of addresses from crawling. My index is never going to be a complete one anyway, no search engine does that, so I'll ruthlessly take any measure that increases the quality.<br>
+<br>
+I'm restricting the crawling of subdomains in the new generic TLDs and some ccTLDs. As mentioned earlier, .xyz is especially rife with these sites. I think it's a combination of cheap domain names and weak oversight; I've read that they have been a major source of email spam as well. An unfortunate side effect is that this cuts off a lot of domain hacks. "cr.yp.to" is one site I for example currently will not index despite it having otherwise interesting content.<br>
+<br>
+I'm also IP-blocking sites that don't use the www-subdomain, when they are hosted in Hong Kong, China, Taiwan, India, Russia, Ukraine, or South Africa. It's not the least fair as there are legitimate websites of interests hosted in these countries and domains, but again it's very effective.<br>
+<br>
+Repeatedly I'm met with the disheartening conclusion that we just can't have nice things.<br>
+<br>
+<h2 id="1.1">Appendix: Number of identified link farm domains by TLD</h2>
+<br>
+<pre>
+xyz    2622 gTLD
+com    1776 gTLD
+tw     535  ccTLD Taiwan
+online 511  gTLD
+top    265  gTLD
+pw     249  ccTLD Palau
+icu    204  gTLD
+net    167  gTLD
+asia   117  gTLD
+site   72   gTLD</pre>
+<br>
+I would present a breakdown by country, but that would entail making nearly ten thousand DNS queries in rapid succession, and that's just an unnecessary waste of resources.<br>
+<br>
+<h2 id="1.2">Topics</h2>
+<br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>04-link-farms.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/04-link-farms.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/04-link-farms.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/04-link-farms.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 On Link Farms [2021-07-14]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Appendix: Number of identified link farm domains by TLD</a>
+    
+        <a href="#1.2" class="heading-2">1.2 Topics</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/log/10-astrolabe-2-sampling-bias.gmi">/log/10-astrolabe-2-sampling-bias.gmi</a></dt>
+<dd>The Astrolabe Part II: The Magic Power of Sampling Bias [2021-08-03] - Relevant Search Results</dd>
+
+<dt><a href="/log/20-dot-com-link-farms.gmi">/log/20-dot-com-link-farms.gmi</a></dt>
+<dd>The Curious Case of the Dot-Com Link Farms [2021-09-09] - Related Links</dd>
+
+<dt><a href="/log/46-anatomy-of-search-engine-spam.gmi">/log/46-anatomy-of-search-engine-spam.gmi</a></dt>
+<dd>The Anatomy of Search Engine Spam [2022-02-07] - Link Farms, Link Rings</dd>
+
+<dt><a href="/log/73-new-approach-to-ranking.gmi">/log/73-new-approach-to-ranking.gmi</a></dt>
+<dd>A new approach to domain ranking [ 2023-02-06 ] - See Also</dd>
+
+<dt><a href="/projects/edge/design-notes.gmi">/projects/edge/design-notes.gmi</a></dt>
+<dd>Notes on Designing a Search Engine - Link Farms</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

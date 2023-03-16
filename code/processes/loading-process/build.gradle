@@ -18,6 +18,8 @@ application {
 tasks.distZip.enabled = false
 
 dependencies {
+    implementation project(':code:common:process')
+
     implementation project(':code:api:index-api')
     implementation project(':code:common:model')
     implementation project(':code:common:config')
@@ -26,7 +28,6 @@ dependencies {
     implementation project(':code:common:service-client')
     implementation project(':code:features-index:lexicon')
     implementation project(':code:features-index:index-journal')
-    implementation project(':code:features-crawl:work-log')
     implementation project(':code:libraries:language-processing')
 
     testImplementation project(':code:services-core:search-service')
@@ -35,7 +36,6 @@ dependencies {
     implementation project(':code:process-models:converting-model')
 
     implementation project(':code:features-convert:keyword-extraction')
-    implementation project(':code:features-crawl:crawl-plan')
 
 
     implementation libs.lombok

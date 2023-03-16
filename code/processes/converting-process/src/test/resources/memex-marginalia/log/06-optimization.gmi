@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Index Optimizations [2021-07-23]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/06-optimization.gmi" class="path file"><img src="/ico/file.png" title="file"> 06-optimization.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Index Optimizations [2021-07-23]</h1>
+<br>
+<blockquote>
+   Don't chase small optimizations</blockquote>
+<br>
+Said some smart person at some particular time, probably. If not, he ought to have; if worse comes to worst, I'm declaring it now. The cost of 2% here and 0.5% there is high, and the benefits are (by definition) low.<br>
+<br>
+I have been optimizing Astrolabe, my search engine. The different kind of Search Engine Optimization. I've spent a lot of time recently doing soft optimization, improving the quality and relevance of search results, to great results. I'll write about that later.<br>
+<br>
+This post is all about about war stories.<br>
+<br>
+The search index simply grew beyond what the code could deal with. The characteristic behavior of dealing with very large amounts of data is that whatever you're doing works well, until you hit a brick wall, where it suddenly doesn't work at all. This has happened at a few times already.<br>
+<br>
+<h1 id="2">Problem #1 - Wildly random writes</h1>
+<br>
+Part of my the search engine reads a list of URLs and words. I'm presenting a scheme of the file here so that you can get a grasp for the layout. Imagine letters are URLs and and numbers are words here. In reality it's all integers but we can pretend it's not.<br>
+<br>
+<pre>
+(A) 1 5 7 8 (B) 3 2 (C) 1 5 7 (E) 2 8 9 etc...</pre>
+<br>
+This is converted into two files that make up an implicit look-up table, and a sorted list of URLs grouped by which words they contain. I'll attempt to illustrate the layout.<br>
+<br>
+First the two files, horizontally and side-by-side. Presented vertically is the value the lookup table will arrive at for each index (1-indexed).<br>
+<br>
+<pre>
+  0 0     2   3   4 4   5 5     7     9    WORDS (position in URLs)
+  | | A C | B | B | | C | | A C | A E | E  URLS
+0 + |     |   |   | |   | |     |     |
+1 --+     |   |   | |   | |     |     |
+2 --------+   |   | |   | |     |     |
+3 ------------+   | |   | |     |     |
+4 ----------------+ |   | |     |     |
+5 ------------------+   | |     |     |
+6 ----------------------+ |     |     |
+7 ------------------------+     |     |
+8 ------------------------------+     |
+9 ------------------------------------+</pre>
+<br>
+So to find URLs that contain word '7', you would look at the range in the urls file starting at words[7] and ending at words[8]; in this case, that's indices 5 and 7; the so words are A and C.<br>
+<br>
+It's confusing, but what matters is this: The input file is typically of the order of a few gigabytes, and the output files can be in the tens of gigabytes. To rearrange the data in this fashion requires a lot of random writes, the order of the input file doesn't correlate with the order of the output file, and it's too much data to buffer in memory.<br>
+<br>
+The destination is a consumer grade SSD. These SSDs do not deal well with tiny random writes at all. It's just too slow.<br>
+<br>
+The first order solution I was using was to mmap the file and let the operating system sort out the write order, which worked until it suddenly didn't. Conversion of a large index, a process that repeats this process 20 times, usually took around an hour. That is below the pain threshold. This is run once or twice a day while actively crawling the web, and not having much of an impact on the operations of the search engine, so that's tolerable.<br>
+<br>
+Then out of the blue, it stopped taking an hour, the conversion time increased to over 24 hours.<br>
+<br>
+What had happened is that the file had gotten too big to entirely keep in memory, and consequently the random writing pattern incurred extreme thrashing, with ceaseless page faults.<br>
+<br>
+The file in the example would write in this order:<br>
+<br>
+<pre>
+A_________
+A____A____
+A____A_A__
+A_B__A_A__
+A_BB_A_A__
+ACBB_A_A__
+ACBBCA_A__
+ACBBCACA__
+ACBBCACAE_
+ACBBCACAEE</pre>
+<br>
+The solution was to first write &gt;writing instructions&lt; in a series of files on disk, that is arranging them in buckets based on their destination address in the final file. This effectively increases the amount of data to be written by 150%, but that's fine as long as it's fast. (Nobody look too carefully at the SMART values  for the SSD I'm using exclusively as a working space for these index files)<br>
+<br>
+The instructions, schematically, look like this:<br>
+<br>
+File 1: A@0 B@2 B@3 C@1<br>
+File 2: A@5 C@4 C@6<br>
+File 3: A@7 E@8 E@9<br>
+<br>
+These can be evaluated on a by-file basis to organize the writes to eliminate thrashing, and so the writing speed is back to being comparable with the original solution.<br>
+<br>
+The instructions above would evaluate like this<br>
+<br>
+<pre>
+A_________ - File 1 -
+A_B_______
+A_BB______
+ACBB______
+ACBB_A____ - File 2 -
+ACBBCA____
+ACBBCAC___
+ACBBCACA__ - File 3 -
+ACBBCACAE_
+ACBBCACAEE</pre>
+<br>
+<br>
+<h1 id="3">Problem #2 - A Very Large Dictionary</h1>
+<br>
+A few days later I ran into a problem with keeping the search term dictionary in memory. The dictionary is a one-way mapping between a string (a word), to a unique integer id. These IDs are the "words" from the previous section.<br>
+<br>
+The index crashed when the dictionary was approximately 380 million terms. This needs to be very fast, and there aren't a lot of canned solutions that deal with the particular scenario. I've been using GNU Trove's custom hash tables. From experimentation, the B+-trees popular in SQL databases don't deal gracefully with this type of usage. The disk size of the dictionary was 6 Gb, but the memory footprint was closer to 24 Gb and the dreaded OOM-killer kept killing my process.<br>
+<br>
+<h2 id="3.1">Java is wasteful</h2>
+<br>
+The thing when you have of order a billion items is that evey byte translates to a gigabyte of memory. Normally a few bytes here and there really doesn't matter, but in this domain, you need to be extremely frugal.<br>
+<br>
+First I needed to work around the fact that Java has a 16 byte object header associated with every object. The solution was to allocate off-heap memory (an extremely unpleasant interface that allows some interface to basic malloc()-memory) rather than 380 million byte[]-instances. I also ended up implementing my own hash table and memory allocator specifically for this  scheme.<br>
+<br>
+This shaves 4 or so Gb off the memory footprint. Down to 20 Gb for 6 Gb of data. Better, but still not good.<br>
+<br>
+<aside>Yes, I really should re-implement this part of the search engine in a more suitable language like C++, I probably will some day, but not today.</aside>
+<br>
+<h2 id="3.2">Text is redundant</h2>
+<br>
+The dictionary entries themselves are single-byte encoded strings, sometimes joined by underscores to represent sequences of words. The heading of this section would produce the terms "text", "is", "redundant", "text_is", "is_redundant", "text_is_redundant". That's a lot of redundancy.<br>
+<br>
+<pre>
+0  text
+1  is
+2  redundant
+3  text_is
+4  is_redundant
+5  text_is_redundant</pre>
+<br>
+As an observation based on what the data looks like, there are more joined words than regular words. One would indeed expect there to be more permutations of the items of a set than items in the set for sets that are larger than two items. This would imply two avenues of improvement:<br>
+<br>
+<h3 id="3.2.1">Reduce the number of single words</h3>
+<br>
+Not much to do here, I implemented better language identification based on dictionary overlap with 1000-most-common-words lists for the target languages. The search engine targets English, Swedish and Latin; the languages I can understand. This is in part to reduce the dictionary to a feasible size, and in part because I can't quality control search results I can't read.<br>
+<br>
+Languages that join words without hyphens are especially problematic. Looking at you, Germany; I found the first instance of "programmierungsmodelle" after over 300 million dictionary entries.<br>
+<br>
+<h3 id="3.2.2">Optimize how joined words are stored</h3>
+<br>
+Perhaps a way forward is using the fact that the dictionary already is a mapping from string to integer, to compress the data. For some function F, the data can be stored as<br>
+<br>
+<pre>
+0 "text"
+1 "is"
+2 "redundant"
+3 F(0,1)
+4 F(1,2)
+5 F(3,4)</pre>
+<br>
+As long as the output of F is in a separate binary namespace from regular strings, that's fine. To this end, integers need to be prefixed by a marker byte, luckily there's 32 available items at the bottom of the ASCII table I used that are guaranteed to never appear in the dictionary entries. Integers are 4 bytes each though, and the marker byte is another, so this would only be helpful for strings that are in excess of 9 bytes.<br>
+<br>
+But! These integers are often smaller than a full integer, you can represent all the integers in the example with &lt;= 3 bits. You could store the entire pair in a single byte if you really try, like so:<br>
+<br>
+F(0,1) = Marker+(0000001)<br>
+F(1,2) = Marker+(0000110)<br>
+F(3,4) = Marker+(0011100)<br>
+<br>
+The 32 available marker bytes can then encode how many bits from the right the break between numbers are. This is extremely fiddly programming and I freely admit it took several hours to iron out all the corner cases.<br>
+<br>
+I got it right in the end, mostly thanks to a comprehensive battery of unit tests, and suddenly the size of the dictionary binary data was almost halved.<br>
+<br>
+Likewise, I devised a few schemes for representing integers in the smallest necessary binary format, helpful as there are a lot of random integers floating around on the internet. There are a few more schemes you could implement, but then you are chasing small percentages and that's not worth it.<br>
+<br>
+Actually evaluating these compressed byte schemes would be pretty slow, but luckily there's no need for that. The bytes are used exclusively as keys for the dictionary. All they need to be is a unique representation of the input that is cheap to calculate.<br>
+<br>
+In all, this reduced the memory footprint of the dictionary by 8Gb, from in excess of 24Gb to 16Gb; and the entries seem to be encoded at an average of 6 bytes per entry, down from 15. If anyone thought it would be "good enough" to just calculate a hash wide enough to ensure there's probably no collisions, then it would almost certainly be more expensive. Even an 10 byte hash would feel pretty sketchy for a billion+ items (10^-7 collision rate).<br>
+<br>
+This was helpful, but the precious cherry on top is realizing the applicability of Zipf's law. Preparing the dictionary with a list of dictionary items in order of most common occurrence gives a compression ratio of 60-70%, since the bit-length of the index effectively becomes inversely related to the probability of finding the word! The most common words become the least amount of bits!<br>
+<br>
+GZip compresses the old data by 63% (that's the ballpark my own compression arrived at!), and the new one by 21%. That's not at all bad given how cheap it is.<br>
+<br>
+--<br>
+<br>
+About half of this is live and running on the search engine right now, the rest will probably go live next week.<br>
+<br>
+<h2 id="3.3">Links and further reading</h2>
+<br>
+<dl class="link"><dt><a class="external" href="https://web.archive.org/web/20021018011011/http://planetmath.org/encyclopedia/ZipfsLaw.html">https://web.archive.org/web/20021018011011/http://planetmath.org/encyclopedia/ZipfsLaw.html</a></dt><dd>Zipf's Law</dd></dl>
+<br>
+<dl class="link"><dt><a class="internal" href="/log/01-astrolabe.gmi">/log/01-astrolabe.gmi</a></dt><dd>Astrolabe Part 1</dd></dl>
+<dl class="link"><dt><a class="external" href="https://search.marginalia.nu/">https://search.marginalia.nu/</a></dt><dd>Try the Search Engine</dd></dl>
+<h2 id="3.4">Topics</h2>
+<br>
+<a class="internal" href="/topic/programming.gmi">/topic/programming.gmi</a><br>
+<a class="internal" href="/topic/astrolabe.gmi">/topic/astrolabe.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>06-optimization.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/06-optimization.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/06-optimization.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/06-optimization.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Index Optimizations [2021-07-23]</a>
+    
+        <a href="#2" class="heading-1">2 Problem #1 - Wildly random writes</a>
+    
+        <a href="#3" class="heading-1">3 Problem #2 - A Very Large Dictionary</a>
+    
+        <a href="#3.1" class="heading-2">3.1 Java is wasteful</a>
+    
+        <a href="#3.2" class="heading-2">3.2 Text is redundant</a>
+    
+        <a href="#3.2.1" class="heading-3">3.2.1 Reduce the number of single words</a>
+    
+        <a href="#3.2.2" class="heading-3">3.2.2 Optimize how joined words are stored</a>
+    
+        <a href="#3.3" class="heading-2">3.3 Links and further reading</a>
+    
+        <a href="#3.4" class="heading-2">3.4 Topics</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/log/52-growing-pains.gmi">/log/52-growing-pains.gmi</a></dt>
+<dd>Growing Pains [ 2022-03-23 ] - See Also</dd>
+
+<dt><a href="/log/55-lexicon-rubberduck.gmi">/log/55-lexicon-rubberduck.gmi</a></dt>
+<dd>Lexicon Architectural Rubberducking [ 2022-04-11 ] - See Also</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

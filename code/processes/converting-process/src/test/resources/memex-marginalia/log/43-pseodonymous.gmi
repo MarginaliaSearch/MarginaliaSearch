@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MEMEX - Pseudonymous [2022-01-15]</title>
+    <link rel="stylesheet" href="/style-new.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+</head>
+<body class="double" lang="en">
+
+<header>
+    <nav>
+        <a href="http://www.marginalia.nu/">Marginalia</a>
+        <a href="http://search.marginalia.nu/">Search Engine</a>
+        <a href="http://encyclopedia.marginalia.nu/">Encyclopedia</a>
+    </nav>
+</header>
+<nav class="topbar">
+  <h1>Memex</h1>
+
+    <a href="/" class="path root"><img src="/ico/root.png" title="root"> marginalia</a>
+
+    <a href="/log" class="path dir"><img src="/ico/dir.png" title="dir"> log</a>
+
+    <a href="/log/43-pseodonymous.gmi" class="path file"><img src="/ico/file.png" title="file"> 43-pseodonymous.gmi</a>
+
+</nav>
+
+<article>
+<section id="memex-node">
+<h1 id="1">Pseudonymous [2022-01-15]</h1>
+<br>
+A person might think I'm illusive, writing and working under a pseudonym. It's not that I'm hiding, if you send me an email, I'll respond to you with an email address containing a decent chunk of my real name. It's not out of shame I wear clothes.<br>
+<br>
+Besides bringing utility, marginalia.nu is an experiment, a bit of an art project, a place to challenge conventions and see what is and isn't necessary.<br>
+<br>
+There is risk for a conflict of interest if your website is both your resumé and where you put your creative works and thoughts. Those are from different spheres and perhaps can't mix too much without detriment to the authenticity of the latter.<br>
+<br>
+Further, I think that there is far too much emphasis on identity. There is value in being a bit of a blank canvas. I like reading historical authors specifically because there is so much ambiguity in who they were, what they looked like, how they were like. This lets their words speak for themselves. <br>
+<br>
+In the end, I write and work under a pseudonym for the same reason none of the pages on this website have logos, why I don't gather statistics and analytics, why I've built all this software myself:<br>
+<br>
+To see what happens.<br>
+<br>
+This is not science, I don't run A/B tests on unsuspecting users like the sociopaths in big tech. My visitors aren't lab rats to be studied. I'm the rat, and this marginalia.nu is my maze; you're the one in with the clipboard and white coat.<br>
+<br>
+Maybe some of this is taking away too much, maybe it isn't. We'll never know if nobody tests the waters.<br>
+<br>
+<h2 id="1.1">Replies</h2>
+<br>
+<a class="external" href="https://proxy.vulpes.one/gemini/szczezuja.space/gemlog/2022-01-16-Re-pseudonymous.gmi">gemini://szczezuja.space/gemlog/2022-01-16-Re-pseudonymous.gmi</a><br>
+<a class="external" href="https://proxy.vulpes.one/gemini/capsule.usebox.net/gemlog/20220118-re-pseudonymous.gmi">gemini://capsule.usebox.net/gemlog/20220118-re-pseudonymous.gmi</a><br>
+<a class="external" href="https://proxy.vulpes.one/gemini/lyk.so/gemlog/009-why-a-pseudonym.gmi">gemini://lyk.so/gemlog/009-why-a-pseudonym.gmi</a><br>
+
+
+
+</section>
+<div id="sidebar">
+<section class="tools">
+    <h1>43-pseodonymous.gmi</h1>
+    <a class="download" href="/api/raw?url=/log/43-pseodonymous.gmi">Raw</a><br>
+    <a rel="nofollow" href="/api/update?url=/log/43-pseodonymous.gmi" class="verb">Edit</a>
+    <a rel="nofollow" href="/api/rename?type=gmi&url=/log/43-pseodonymous.gmi" class="verb">Rename</a>
+    
+    <br/>
+    <div class="toc">
+    
+        <a href="#1" class="heading-1">1 Pseudonymous [2022-01-15]</a>
+    
+        <a href="#1.1" class="heading-2">1.1 Replies</a>
+    
+    </div>
+</section>
+
+
+<section id="memex-backlinks">
+<h1 id="backlinks"> Backlinks </h1>
+<dl>
+<dt><a href="/log/71-memex-design.gmi">/log/71-memex-design.gmi</a></dt>
+<dd>Memex Design [ 2023-01-13 ] - See Also</dd>
+</dl>
+</section>
+
+
+</div>
+</article>
+<footer>
+  Reach me at <a class="fancy-teknisk" href="mailto:kontakt@marginalia.nu">kontakt@marginalia.nu</a>.
+  <br />
+</footer>
+</body>

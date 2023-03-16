@@ -3,6 +3,7 @@ package nu.marginalia.crawl.retreival;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import lombok.SneakyThrows;
+import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.crawling.model.*;
 import nu.marginalia.ip_blocklist.GeoIpBlocklist;
