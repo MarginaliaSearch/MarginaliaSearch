@@ -103,6 +103,7 @@ public class IndexQueryService {
     }
 
     private SearchSet getSearchSet(SearchSpecification specsSet) {
+
         if (specsSet.domains != null && !specsSet.domains.isEmpty()) {
             return new SmallSearchSet(specsSet.domains);
         }
@@ -111,10 +112,9 @@ public class IndexQueryService {
     }
 
     private SearchResultSet executeSearch(SearchParameters params) {
+
         var resultIds = evaluateSubqueries(params);
-
         var resultItems = calculateResultScores(params, resultIds);
-
         var bestResults = selectBestResults(params, resultItems);
 
         return new SearchResultSet(bestResults, createRankingContext(params.subqueries));
@@ -123,15 +123,12 @@ public class IndexQueryService {
     /* This information is routed back up the search service in order to calculate BM-25
      * accurately  */
     private SearchResultRankingContext createRankingContext(List<SearchSubquery> subqueries) {
-        final Map<String, Integer> termToId = searchTermsSvc.getAllIncludeTerms(subqueries);
-
-        int totalDocCount = index.getTotalDocCount();
-
-        final Map<String, Integer> termFrequencies = new HashMap<>(termToId);
+        final var termToId = searchTermsSvc.getAllIncludeTerms(subqueries);
+        final var termFrequencies = new HashMap<>(termToId);
 
         termToId.forEach((key, id) -> termFrequencies.put(key, index.getTermFrequency(id)));
 
-        return new SearchResultRankingContext(totalDocCount, termFrequencies);
+        return new SearchResultRankingContext(index.getTotalDocCount(), termFrequencies);
     }
 
     private TLongList evaluateSubqueries(SearchParameters params) {
