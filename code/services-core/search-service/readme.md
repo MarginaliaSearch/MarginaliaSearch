@@ -6,7 +6,7 @@ you're most directly interacting with when visiting
 
 ## Central classes
 
-* [SearchService](src/main/java/nu/marginalia/search/SearchService.java) receives REST requests and delegates to the 
+* [SearchService](src/main/java/nu/marginalia/search/SearchService.java) receives requests and delegates to the 
 appropriate services.
 
 * [CommandEvaluator](src/main/java/nu/marginalia/search/command/CommandEvaluator.java) interprets a user query and acts
