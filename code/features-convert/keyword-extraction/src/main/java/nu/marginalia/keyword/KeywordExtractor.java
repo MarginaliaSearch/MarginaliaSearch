@@ -220,7 +220,7 @@ public class KeywordExtractor {
         }
         String word = sentence.constructWordFromSpan(w);
 
-        if (word.isBlank() || !WordPatterns.filter(word)) return false;
+        if (word.isBlank() || !WordPatterns.isNotJunkWord(word)) return false;
         if (sentence.posTags[w.start].equals("CC")) return false;
         if (sentence.posTags[w.end-1].equals("IN")) return false;
         if (sentence.posTags[w.end-1].equals("DT")) return false;

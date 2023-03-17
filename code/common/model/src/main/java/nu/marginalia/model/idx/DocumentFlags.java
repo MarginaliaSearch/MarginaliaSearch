@@ -3,9 +3,7 @@ package nu.marginalia.model.idx;
 import java.util.EnumSet;
 
 public enum DocumentFlags {
-    /** Simple processing was done, this document should be de-prioritized as a search result */
-    Simple,
-
+    UnusedBit1,
     PlainText,
     UnusedBit2,
     UnusedBit3,

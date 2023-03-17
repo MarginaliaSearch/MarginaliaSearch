@@ -2,7 +2,7 @@ package nu.marginalia.converting.processor.plugin;
 
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
-import nu.marginalia.language.LanguageFilter;
+import nu.marginalia.converting.language.LanguageFilter;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.converting.model.HtmlStandard;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;

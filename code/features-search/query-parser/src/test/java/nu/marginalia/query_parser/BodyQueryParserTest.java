@@ -1,8 +1,8 @@
 package nu.marginalia.query_parser;
 
 import nu.marginalia.LanguageModels;
-import nu.marginalia.language.statistics.EnglishDictionary;
-import nu.marginalia.ngram_bloom_filter.NGramBloomFilter;
+import nu.marginalia.language.EnglishDictionary;
+import nu.marginalia.ngrams.NGramBloomFilter;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.query_parser.token.TokenType;
 import nu.marginalia.util.TestLanguageModels;

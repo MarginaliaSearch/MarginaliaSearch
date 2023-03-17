@@ -12,11 +12,6 @@ public class IndexJournalEntryBuilder {
         this.documentMeta = documentMeta;
     }
 
-    public IndexJournalEntryBuilder capacity(int size) {
-        items.ensureCapacity(size);
-        return this;
-    }
-
     public IndexJournalEntryBuilder add(long wordId, long metadata) {
 
         items.add(wordId);

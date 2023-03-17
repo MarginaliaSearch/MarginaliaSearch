@@ -29,7 +29,7 @@ public class ProcessedDocument {
         if (details == null)
             return false;
 
-        return !details.metadata.hasFlag(DocumentFlags.Simple);
+        return true;
     }
 
     public OptionalDouble quality() {

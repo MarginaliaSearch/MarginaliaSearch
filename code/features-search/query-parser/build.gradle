@@ -13,11 +13,12 @@ java {
 }
 dependencies {
     implementation project(':code:libraries:language-processing')
-    implementation project(':code:libraries:ngram-bloom-filter')
     implementation project(':code:libraries:term-frequency-dict')
     implementation project(':code:features-convert:keyword-extraction')
     implementation project(':code:common:config')
     implementation project(':code:common:model')
+
+    implementation project(':third-party:porterstemmer')
 
     implementation libs.lombok
     annotationProcessor libs.lombok
@@ -26,6 +27,7 @@ dependencies {
 
     implementation libs.bundles.handlebars
     implementation libs.trove
+    implementation libs.guice
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit

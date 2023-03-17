@@ -1,10 +1,7 @@
 plugins {
     id 'java'
     id "io.freefair.lombok" version "5.3.3.3"
-
-    id "me.champeau.jmh" version "0.6.6"
-    id "de.undercouch.download" version "5.1.0"
-
+    id 'application'
     id 'jvm-test-suite'
 }
 
@@ -14,33 +11,33 @@ java {
     }
 }
 
+application {
+    mainClass = 'nu.marginalia.crawl.CrawlJobExtractorMain'
+    applicationName = 'crawl-job-extractor-process'
+}
+
+tasks.distZip.enabled = false
+
 dependencies {
-    implementation project(':third-party:rdrpostagger')
-    implementation project(':third-party:porterstemmer')
-    implementation project(':third-party:monkey-patch-opennlp')
+    implementation project(':code:common:process')
+
     implementation project(':code:common:model')
-    implementation project(':code:common:config')
-    implementation project(':code:libraries:easy-lsh')
-    implementation project(':code:libraries:array')
+    implementation project(':code:common:service')
+    implementation project(':code:process-models:crawling-model')
 
     implementation libs.lombok
     annotationProcessor libs.lombok
     implementation libs.bundles.slf4j
-    implementation libs.notnull
 
+    implementation libs.bundles.mariadb
     implementation libs.guice
-    implementation libs.jsoup
-    implementation libs.trove
-    implementation libs.fastutil
-
-    implementation libs.bundles.nlp
-    implementation libs.commons.lang3
+    implementation libs.bundles.gson
+    implementation libs.zstd
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
 }
-
 
 test {
     useJUnitPlatform()

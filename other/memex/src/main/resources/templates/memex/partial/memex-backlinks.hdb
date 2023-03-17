@@ -1,9 +1,0 @@
-{{#if backlinks}}
-<section id="memex-backlinks">
-<h1 id="backlinks"> Backlinks </h1>
-<dl>{{#each backlinks}}
-<dt><a href="{{urlRoot}}{{url}}">{{url}}</a></dt>
-<dd>{{description}}</dd>
-{{/each}}</dl>
-</section>
-{{/if}}

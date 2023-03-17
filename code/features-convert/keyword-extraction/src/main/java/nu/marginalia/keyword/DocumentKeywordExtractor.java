@@ -67,7 +67,7 @@ public class DocumentKeywordExtractor {
 
             String flatWord = AsciiFlattener.flattenUnicode(word.word);
 
-            if (WordPatterns.hasWordQualities(flatWord)) {
+            if (!flatWord.isBlank()) {
                 wordsBuilder.add(flatWord, metadata.getMetadataForWord(word.stemmed));
             }
         }

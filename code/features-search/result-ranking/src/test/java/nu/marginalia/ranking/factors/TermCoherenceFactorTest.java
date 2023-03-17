@@ -41,7 +41,7 @@ class TermCoherenceFactorTest {
         assertEquals(0, termCoherenceFactor.calculate(allPositionsSet));
     }
 
-    @Test
+    @Test @SuppressWarnings("unchecked")
     public void testLowPosMatches() {
         var allPositionsSet = createSet(
                 List.of(0, 1, 2, 3), List.of(0, 1, 2, 3)
@@ -53,7 +53,7 @@ class TermCoherenceFactorTest {
         assertEquals(1.0, termCoherenceFactor.bitPositionFactor(mask), 0.01);
     }
 
-    @Test
+    @Test @SuppressWarnings("unchecked")
     public void testHiPosMatches() {
         var allPositionsSet = createSet(
                 List.of(28, 29, 30, 31), List.of(28, 29, 30, 31)

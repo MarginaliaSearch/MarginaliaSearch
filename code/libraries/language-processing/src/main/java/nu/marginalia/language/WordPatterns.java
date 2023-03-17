@@ -8,8 +8,6 @@ import java.io.InputStreamReader;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 
 /** Regular expression patterns for deciding which words are eligible to be keywords.
  * <p/>
@@ -44,25 +42,17 @@ public class WordPatterns {
         }
     }
 
-    private static boolean hasMoreThanTwo(String s, char c, int max) {
-        int idx = 0;
-        for (int i = 0; i <= max; i++) {
-            idx = s.indexOf(c, idx+1);
-            if (idx < 0 || idx >= s.length() - 1)
-                return false;
-        }
-        return true;
-    }
 
-
-    public static boolean filter(String word) {
+    /** Run checks on the word and exclude terms with too many special characters
+     */
+    public static boolean isNotJunkWord(String word) {
         if (word.isBlank()) {
             return false;
         }
-        if (hasMoreThanTwo(word, '-', 4)) {
+        if (hasMoreThanN(word, '-', 4)) {
             return false;
         }
-        if (hasMoreThanTwo(word, '+', 2)) {
+        if (hasMoreThanN(word, '+', 2)) {
             return false;
         }
         if (word.startsWith("-")
@@ -83,29 +73,13 @@ public class WordPatterns {
         return true;
     }
 
-    public static boolean hasWordQualities(String s) {
-        if (s.isBlank())
-            return false;
-
-        int start = 0;
-        int end = s.length();
-        if (s.charAt(0) == '#') start++;
-        if (end > 1 && s.charAt(end-1) == '#') end--;
-
-        for (int i = start; i < end; i++) {
-            char c = s.charAt(i);
-            if (("_@.'+-".indexOf(c) < 0)
-                && !(c >= 'a' && c <= 'z')
-                && !(c >= 'A' && c <= 'Z')
-                && !(c >= '0' && c <= '9')
-                && !(c >= '\u00C0' && c <= '\u00D6')
-                && !(c >= '\u00D8' && c <= '\u00f6')
-                && !(c >= '\u00f8' && c <= '\u00ff'))
-            {
-                        return false;
-            }
+    private static boolean hasMoreThanN(String s, char c, int max) {
+        int idx = 0;
+        for (int i = 0; i <= max; i++) {
+            idx = s.indexOf(c, idx+1);
+            if (idx < 0 || idx >= s.length() - 1)
+                return false;
         }
-
         return true;
     }
 
@@ -113,10 +87,8 @@ public class WordPatterns {
         if (s.length() < MIN_WORD_LENGTH) {
             return true;
         }
-        if (!hasWordQualities(s)) {
-            return true;
-        }
-        if (!filter(s)) {
+
+        if (!isNotJunkWord(s)) {
             return true;
         }
 

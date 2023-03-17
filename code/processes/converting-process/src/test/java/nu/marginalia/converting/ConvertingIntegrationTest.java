@@ -4,6 +4,7 @@ package nu.marginalia.converting;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import nu.marginalia.bigstring.BigString;
+import nu.marginalia.converting.model.HtmlStandard;
 import nu.marginalia.converting.processor.DomainProcessor;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
@@ -22,8 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ConvertingIntegrationTest {
 
-
-    DomainProcessor domainProcessor;
+    private DomainProcessor domainProcessor;
 
     @BeforeEach
     public void setUp() {
@@ -60,7 +60,22 @@ public class ConvertingIntegrationTest {
         ret.documents.forEach(doc -> {
             resultsByStatusCount.merge(doc.state, 1, Integer::sum);
         });
-        assertTrue(resultsByStatusCount.get(UrlIndexingState.OK) > 5);
+
+        assertTrue(resultsByStatusCount.get(UrlIndexingState.OK) > 25);
+
+        for (var doc : ret.documents) {
+
+            if (!doc.isProcessedFully()) {
+                continue;
+            }
+
+            var details = doc.details;
+
+            assertTrue(details.title.length() > 4);
+            assertTrue(details.description.length() > 4);
+            assertEquals(HtmlStandard.HTML5, details.standard);
+
+        }
     }
 
     private CrawledDomain readMarginaliaWorkingSet() throws IOException {

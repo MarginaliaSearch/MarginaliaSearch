@@ -2,9 +2,9 @@ package nu.marginalia.search.query;
 
 import nu.marginalia.WmsaHome;
 import nu.marginalia.index.query.limit.SpecificationLimitType;
-import nu.marginalia.language.statistics.EnglishDictionary;
+import nu.marginalia.language.EnglishDictionary;
 import nu.marginalia.index.client.model.query.SearchSpecification;
-import nu.marginalia.ngram_bloom_filter.NGramBloomFilter;
+import nu.marginalia.ngrams.NGramBloomFilter;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.search.command.SearchJsParameter;
 import nu.marginalia.search.model.SearchProfile;

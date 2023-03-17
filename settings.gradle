@@ -17,7 +17,6 @@ include 'code:libraries:random-write-funnel'
 include 'code:libraries:next-prime'
 include 'code:libraries:braille-block-punch-cards'
 include 'code:libraries:language-processing'
-include 'code:libraries:ngram-bloom-filter'
 include 'code:libraries:term-frequency-dict'
 
 include 'code:features-search:screenshots'
@@ -53,8 +52,6 @@ include 'code:common:model'
 include 'code:common:renderer'
 include 'code:common:process'
 
-include 'code:processes:crawl-job-extractor-process'
-
 include 'code:processes:converting-process'
 include 'code:processes:crawling-process'
 include 'code:processes:loading-process'
@@ -62,6 +59,9 @@ include 'code:processes:experimental'
 
 include 'code:process-models:converting-model'
 include 'code:process-models:crawling-model'
+
+include 'code:tools:term-frequency-extractor'
+include 'code:tools:crawl-job-extractor'
 
 include 'third-party:porterstemmer'
 include 'third-party:xz'
@@ -71,9 +71,6 @@ include 'third-party:uppend'
 include 'third-party:openzim'
 include 'third-party:count-min-sketch'
 include 'third-party:monkey-patch-opennlp'
-
-include 'other:memex'
-include 'other:wmsa_old'
 
 include 'tools:screenshot'
 

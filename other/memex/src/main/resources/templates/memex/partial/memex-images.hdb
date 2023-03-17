@@ -1,6 +1,0 @@
-<section class="listing" id="images">
-{{#if images}}<h1>Images</h1>{{/if}}
-{{#each images}}
-  <a class="img" href="{{urlRoot}}{{path}}">{{path.filename}}</a><br />
-{{/each}}
-</section>

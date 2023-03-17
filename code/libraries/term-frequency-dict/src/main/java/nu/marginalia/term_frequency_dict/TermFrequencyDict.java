@@ -1,8 +1,10 @@
 package nu.marginalia.term_frequency_dict;
 
 import ca.rmen.porterstemmer.PorterStemmer;
-import gnu.trove.map.hash.TLongIntHashMap;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import lombok.SneakyThrows;
 import nu.marginalia.LanguageModels;
+import nu.marginalia.array.LongArray;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -14,39 +16,45 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+/** Dictionary with term frequency information for (stemmed) words.
+ *
+ */
 @Singleton
 public class TermFrequencyDict {
-    private final TLongIntHashMap wordRates = new TLongIntHashMap(1_000_000, 0.5f, 0, 0);
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Long2IntOpenHashMap wordRates;
+    private static final Logger logger = LoggerFactory.getLogger(TermFrequencyDict.class);
     private static final PorterStemmer ps = new PorterStemmer();
 
-    private static final long DOC_COUNT_KEY = ~0L;
+    public static final long DOC_COUNT_KEY = ~0L;
 
     @Inject
     public TermFrequencyDict(@NotNull LanguageModels models) {
         this(models.termFrequencies);
     }
 
+    @SneakyThrows
     public TermFrequencyDict(Path file) {
-        try (var frequencyData = new DataInputStream(new BufferedInputStream(new FileInputStream(file.toFile())))) {
-            wordRates.ensureCapacity((int)(Files.size(file)/16));
 
-            for (;;) {
-                wordRates.put(frequencyData.readLong(), (int) frequencyData.readLong());
-            }
-        } catch (EOFException eof) {
-            // ok
-        } catch (IOException e) {
-            logger.error("IO Exception reading " + file, e);
-        }
-
+        wordRates = load(file);
         logger.info("Read {} N-grams frequencies", wordRates.size());
     }
 
-    public TermFrequencyDict(TLongIntHashMap data) {
-        wordRates.putAll(data);
+    private static Long2IntOpenHashMap load(Path file) throws IOException {
+        LongArray array = LongArray.mmapRead(file);
+
+        int size = (int) Files.size(file)/16;
+        var ret = new Long2IntOpenHashMap(size, 0.5f);
+
+        ret.defaultReturnValue(0);
+
+        for (int i = 0; i < size; i++) {
+            ret.put(array.get(2*i), (int) array.get(2*i + 1));
+        }
+
+        return ret;
     }
 
+    /** Total number of documents in the corpus */
     public int docCount() {
         int cnt = wordRates.get(DOC_COUNT_KEY);
 
@@ -56,91 +64,20 @@ public class TermFrequencyDict {
         return cnt;
     }
 
-//      WIP refactoring, this needs a new home:
-//
-//    public static void main(String... args) throws IOException, InterruptedException {
-//        if (args.length != 2) {
-//            System.err.println("Expected arguments: plan.yaml out-file");
-//        }
-//        String outFile = args[1];
-//
-//        var plan = new CrawlPlanLoader().load(Path.of(args[0]));
-//
-//        ThreadLocal<SentenceExtractor> se = ThreadLocal.withInitial(() -> new SentenceExtractor(WmsaHome.getLanguageModels()));
-//        LanguageFilter lf = new LanguageFilter();
-//
-//        TLongIntHashMap counts = new TLongIntHashMap(100_000_000, 0.7f, -1, -1);
-//
-//        ForkJoinPool fjp = new ForkJoinPool(24);
-//        AtomicInteger docCount = new AtomicInteger();
-//
-//        for (var domain : plan.domainsIterable()) { // leaks file descriptor, is fine
-//
-//            if (domain.doc == null)
-//                continue;
-//
-//            fjp.execute(() -> {
-//
-//                TLongHashSet words = new TLongHashSet(10_000);
-//
-//                for (var doc : domain.doc) {
-//
-//                    if (doc.documentBody == null)
-//                        continue;
-//                    docCount.incrementAndGet();
-//
-//                    Document parsed = Jsoup.parse(doc.documentBody.decode());
-//                    parsed.body().filter(new DomPruningFilter(0.5));
-//
-//                    DocumentLanguageData dld = se.get().extractSentences(parsed);
-//
-//                    if (lf.dictionaryAgreement(dld) < 0.1) {
-//                        return;
-//                    }
-//
-//                    for (var sent : dld.sentences) {
-//                        for (var word : sent) {
-//                            words.add(longHash(word.stemmed().getBytes(StandardCharsets.UTF_8)));
-//                        }
-//                    }
-//
-//                    synchronized (counts) {
-//                        words.forEach(w -> {
-//                            counts.adjustOrPutValue(w,  1, 1);
-//                            return true;
-//                        });
-//                    }
-//
-//                    words.clear();
-//                }
-//
-//                System.out.println(domain.domain + "\t" + counts.size());
-//            });
-//
-//
-//        }
-//
-//        fjp.shutdown();
-//        fjp.awaitTermination(10, TimeUnit.DAYS);
-//
-//        try (var dos = new DataOutputStream(Files.newOutputStream(Path.of(outFile)))) {
-//            synchronized (counts) {
-//                counts.put(DOC_COUNT_KEY, docCount.get());
-//
-//                counts.forEachEntry((hash, cnt) -> {
-//                    try {
-//                        dos.writeLong(hash);
-//                        dos.writeLong(cnt);
-//                    } catch (IOException e) {
-//                        throw new RuntimeException(e);
-//                    }
-//                    return true;
-//                });
-//            }
-//        }
-//
-//        System.out.println(docCount.get());
-//    }
+    /** Get the term frequency for the string s */
+    public long getTermFreq(String s) {
+        return wordRates.get(getStringHash(s));
+    }
+
+    /** Get the term frequency for the already stemmed string s */
+    public long getTermFreqStemmed(String s) {
+        return wordRates.get(longHash(s.getBytes()));
+    }
+
+    /** Get the term frequency for the already stemmed and already hashed value 'hash' */
+    public long getTermFreqHash(long hash) {
+        return wordRates.get(hash);
+    }
 
     public static long getStringHash(String s) {
         if (s.indexOf(' ') >= 0 || s.indexOf('_') >= 0) {
@@ -156,17 +93,11 @@ public class TermFrequencyDict {
         }
     }
 
-    public long getTermFreqHash(long hash) {
-        return wordRates.get(hash);
-    }
-    public long getTermFreq(String s) {
-        return wordRates.get(getStringHash(s));
-    }
-    public long getTermFreqStemmed(String s) {
-        return wordRates.get(longHash(s.getBytes()));
-    }
-
-    // If this ever changes, we need to re-generate the term frequency dictionary
+    /** The hashing function used by TermFrequencyHash
+     * <p>
+     * If this function changes its behavior in any way,
+     * it is necessary to re-generate the dictionary.
+     */
     public static long longHash(byte[]... bytesSets) {
         if (bytesSets == null || bytesSets.length == 0)
             return 0;

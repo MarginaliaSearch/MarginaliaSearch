@@ -21,10 +21,14 @@ You'll find a short description in each module of what it does and how it relate
 Processes are batch jobs that deal with data retrieval, processing and loading.
 
 * [processes](processes/)
-* * [crawl-job-extractor](processes/crawl-job-extractor-process)
 * * [crawling-process](processes/crawling-process)
 * * [converting-process](processes/converting-process)
 * * [loading-process](processes/loading-process)
+
+#### Tools
+
+* * [crawl-job-extractor](tools/crawl-job-extractor)
+* * [term-frequency-extractor](tools/term-frequency-extractor)
 
 ### Features
 
