@@ -7,7 +7,7 @@ It must solve two problems:
 
 1.  Identify which part of the document that contains "the text".
 The crux is that the document may be anywhere from 1993 to the present, with era-appropriate 
-formatting. Headings may be &lt;center&gt;ed  &lt;font&gt;-tags, or semantic HTML5. 
+formatting. It may be formatted with &lt;center&gt;ed  &lt;font&gt;-tags, or semantic HTML5. 
 
 2. Identify which part of "the text" best describes the document. 
 
