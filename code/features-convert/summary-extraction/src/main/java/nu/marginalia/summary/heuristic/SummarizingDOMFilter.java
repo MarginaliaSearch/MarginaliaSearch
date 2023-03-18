@@ -12,6 +12,10 @@ import java.util.*;
 import static org.jsoup.internal.StringUtil.isActuallyWhitespace;
 import static org.jsoup.internal.StringUtil.isInvisibleChar;
 
+/** Traverses the DOM, identifies and branches that have a large ratio of text to tags
+ * as this is most likely the text of an article.
+ */
+
 public class SummarizingDOMFilter implements NodeFilter {
 
     public Map<Node, NodeStatistics> statistics = new HashMap<>(10000);
@@ -243,8 +247,5 @@ public class SummarizingDOMFilter implements NodeFilter {
             return String.format("NodeStatistics[%s %d p %d %d]", tagName(), pos, tagLength, textLength);
         }
 
-        public double sortValue() {
-            return -textToTagRatio() * Math.log(1 + textLength) / Math.log(1+pos);
-        }
     }
 }
