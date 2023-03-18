@@ -1,7 +1,6 @@
 package nu.marginalia.summary;
 
-import nu.marginalia.summary.SummaryExtractionFilter;
-import nu.marginalia.summary.SummaryExtractor;
+import nu.marginalia.summary.heuristic.*;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,7 +17,12 @@ class SummaryExtractorTest {
     SummaryExtractor summaryExtractor;
     @BeforeEach
     public void setUp() {
-        summaryExtractor = new SummaryExtractor(255);
+        summaryExtractor = new SummaryExtractor(255,
+                new DomFilterHeuristic(255),
+                new TagDensityHeuristic(255),
+                new OpenGraphDescriptionHeuristic(),
+                new MetaDescriptionHeuristic(),
+                new FallbackHeuristic());
     }
 
     @Test
