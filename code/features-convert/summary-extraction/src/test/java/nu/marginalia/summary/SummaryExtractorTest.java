@@ -29,7 +29,7 @@ class SummaryExtractorTest {
     public void testSummaryFilter() throws IOException {
         String html = readClassPathFile("html/monadnock.html");
         var doc = Jsoup.parse(html);
-        var filter = new SummaryExtractionFilter();
+        var filter = new SummarizingDOMFilter();
         doc.filter(filter);
 
         filter.statistics.entrySet().stream().sorted(Comparator.comparing(e -> -e.getValue().textLength()))

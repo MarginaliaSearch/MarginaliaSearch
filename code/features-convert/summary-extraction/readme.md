@@ -13,5 +13,4 @@ order of a 100,000,000 documents with a time budget of a couple of hours.
 ## Central Classes
 
 * [SummaryExtractor](src/main/java/nu/marginalia/summary/SummaryExtractor.java)
-* [SummaryExtractionFilter](src/main/java/nu/marginalia/summary/SummaryExtractionFilter.java) - DOM pruning algo. 
-  Doesn't always work, but when it works it's pretty good.
+

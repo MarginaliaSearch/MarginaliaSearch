@@ -2,7 +2,6 @@ package nu.marginalia.summary.heuristic;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import nu.marginalia.summary.SummaryExtractionFilter;
 import org.jsoup.nodes.Document;
 
 public class DomFilterHeuristic implements SummaryHeuristic {
@@ -17,7 +16,7 @@ public class DomFilterHeuristic implements SummaryHeuristic {
     public String summarize(Document doc) {
         doc = doc.clone();
 
-        var filter = new SummaryExtractionFilter();
+        var filter = new SummarizingDOMFilter();
 
         doc.filter(filter);
 

@@ -1,4 +1,4 @@
-package nu.marginalia.summary;
+package nu.marginalia.summary.heuristic;
 
 import com.google.common.base.Strings;
 import org.apache.commons.lang3.StringUtils;
@@ -12,7 +12,7 @@ import java.util.*;
 import static org.jsoup.internal.StringUtil.isActuallyWhitespace;
 import static org.jsoup.internal.StringUtil.isInvisibleChar;
 
-public class SummaryExtractionFilter implements NodeFilter {
+public class SummarizingDOMFilter implements NodeFilter {
 
     public Map<Node, NodeStatistics> statistics = new HashMap<>(10000);
     public Map<Node, Integer> pos = new HashMap<>(10000);
