@@ -1,0 +1,22 @@
+    <section class="card">
+        <h2>About</h2>
+        <div class="info">
+            <p>This is an independent DIY search engine that focuses on non-commercial content, and attempts to
+                show you sites you perhaps weren't aware of in favor of the sort of sites you probably already knew
+                existed. </p>
+            <p>
+                The software for this search engine is all custom-built, and all crawling and indexing is
+                done in-house. The project is open source. Feel free to poke about in the <a
+                    href="https://git.marginalia.nu/marginalia/marginalia.nu">source code</a> or contribute
+                to the development!
+            </p>
+            <p>
+                The entire search engine is hosted off a single PC in Sweden, albeit with pretty solid specs.
+            </p>
+            <p>Consider <a href="https://memex.marginalia.nu/projects/edge/supporting.gmi">supporting the
+                project</a>!</p>
+        </div>
+        <div class="utils">
+            <a href="https://memex.marginalia.nu/projects/edge/about.gmi">Read More</a>
+        </div>
+    </section>

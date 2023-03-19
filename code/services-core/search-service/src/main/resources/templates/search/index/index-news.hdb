@@ -1,0 +1,14 @@
+
+{{#if news}}
+    <section class="card rightbox">
+        <h2>Publicity, Discussion and Events</h2>
+        <div class="info">
+            <dl>
+            {{#each news}}
+                <dt><a href="{{link}}" rel="nofollow">{{title}}</a></dt>
+                <dd>{{date}}</dd>
+            {{/each}}
+            </dl>
+        </div>
+    </section>
+{{/if}}

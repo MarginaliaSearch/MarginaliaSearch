@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Marginalia Search</title>
+
+    <link rel="stylesheet" href="/style-new.css" />
+    <link rel="search" type="application/opensearchdescription+xml" href="/opensearch.xml" title="Marginalia">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta property="og:description" content="search.marginalia.nu is a small independent do-it-yourself search engine for surprising but content-rich websites that never ask you to accept cookies or subscribe to newsletters. The goal is to bring you the sort of grass fed, free range HTML your grandma used to write. " />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:site_name" content="search.marginalia.nu" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://search.marginalia.nu/" />
+</head>
+
+<body>
+
+<!-- Hi there, fellow human being :-) -->
+
+{{>search/parts/search-header}}
+
+<article>
+{{>search/parts/search-form}}
+
+{{>search/index/index-news}}
+    <div class="cards big">
+{{>search/index/index-about}}
+{{>search/index/index-tips}}
+{{>search/index/index-updates}}
+    </div>
+
+</article>
+
+{{>search/parts/search-footer}}
+</body>
