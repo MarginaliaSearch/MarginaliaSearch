@@ -1,10 +1,11 @@
-package nu.marginalia.search.command;
+package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
+import nu.marginalia.search.svc.SearchQueryCountService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -16,24 +17,33 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Renders the front page (index) */
 @Singleton
-public class IndexCommand {
+public class SearchFrontPageService {
 
     private final MustacheRenderer<IndexModel> template;
     private final HikariDataSource dataSource;
+    private final SearchQueryCountService searchVisitorCount;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
-    public IndexCommand(RendererFactory rendererFactory, HikariDataSource dataSource) throws IOException {
+    public SearchFrontPageService(RendererFactory rendererFactory,
+                                  HikariDataSource dataSource,
+                                  SearchQueryCountService searchVisitorCount
+                        ) throws IOException {
         this.template = rendererFactory.renderer("search/index/index");
         this.dataSource = dataSource;
+        this.searchVisitorCount = searchVisitorCount;
     }
 
     public String render(Request request, Response response) {
         response.header("Cache-control", "public,max-age=3600");
 
-        return template.render(new IndexModel(getNewsItems()));
+        return template.render(new IndexModel(
+                getNewsItems(),
+                searchVisitorCount.getQueriesPerMinute()
+        ));
     }
 
 
@@ -58,6 +68,6 @@ public class IndexCommand {
         return items;
     }
 
-    private record IndexModel(List<NewsItem> news) { }
+    private record IndexModel(List<NewsItem> news, int searchPerMinute) { }
     private record NewsItem(String title, String url, LocalDate date) {}
 }

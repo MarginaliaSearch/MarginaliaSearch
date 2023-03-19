@@ -7,7 +7,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.client.Context;
 import nu.marginalia.model.gson.GsonFactory;
-import nu.marginalia.search.command.IndexCommand;
+import nu.marginalia.search.svc.SearchFrontPageService;
 import nu.marginalia.search.svc.*;
 import nu.marginalia.service.server.Initialization;
 import nu.marginalia.service.server.MetricsServer;
@@ -37,7 +37,7 @@ public class SearchService extends Service {
                          MetricsServer metricsServer,
                          WebsiteUrl websiteUrl,
                          StaticResources staticResources,
-                         IndexCommand indexCommand,
+                         SearchFrontPageService frontPageService,
                          SearchErrorPageService errorPageService,
                          SearchAddToCrawlQueueService addToCrawlQueueService,
                          SearchFlagSiteService flagSiteService,
@@ -58,7 +58,7 @@ public class SearchService extends Service {
         Spark.get("/api/search", apiQueryService::apiSearch, gson::toJson);
         Spark.get("/public/search", searchQueryService::pathSearch);
         Spark.get("/public/site-search/:site/*", this::siteSearchRedir);
-        Spark.get("/public/", indexCommand::render);
+        Spark.get("/public/", frontPageService::render);
         Spark.get("/public/:resource", this::serveStatic);
 
         Spark.post("/public/site/suggest/", addToCrawlQueueService::suggestCrawling);

@@ -13,6 +13,9 @@
             <p>
                 The entire search engine is hosted off a single PC in Sweden, albeit with pretty solid specs.
             </p>
+            <p>
+                The search engine is currently serving about <tt>{{searchPerMinute}}</tt> queries/minute.
+            </p>
             <p>Consider <a href="https://memex.marginalia.nu/projects/edge/supporting.gmi">supporting the
                 project</a>!</p>
         </div>

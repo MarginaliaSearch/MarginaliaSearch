@@ -3,7 +3,6 @@ package nu.marginalia.search.svc;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.index.client.IndexClient;
-import nu.marginalia.index.client.model.results.SearchResultItem;
 import nu.marginalia.index.client.model.query.SearchSpecification;
 import nu.marginalia.index.client.model.results.SearchResultSet;
 import nu.marginalia.search.model.PageScoreAdjustment;
@@ -12,24 +11,24 @@ import nu.marginalia.search.results.SearchResultDecorator;
 import nu.marginalia.search.results.UrlDeduplicator;
 import nu.marginalia.client.Context;
 import nu.marginalia.search.query.model.SearchQuery;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.regex.Pattern;
 
 @Singleton
 public class SearchQueryIndexService {
-    private final Logger logger = LoggerFactory.getLogger(getClass());
-
     private final SearchResultDecorator resultDecorator;
     private final Comparator<UrlDetails> resultListComparator;
     private final IndexClient indexClient;
+    private final SearchQueryCountService searchVisitorCount;
 
     @Inject
-    public SearchQueryIndexService(SearchResultDecorator resultDecorator, IndexClient indexClient) {
+    public SearchQueryIndexService(SearchResultDecorator resultDecorator,
+                                   IndexClient indexClient,
+                                   SearchQueryCountService searchVisitorCount) {
         this.resultDecorator = resultDecorator;
         this.indexClient = indexClient;
+        this.searchVisitorCount = searchVisitorCount;
 
         Comparator<UrlDetails> c = Comparator.comparing(ud -> Math.round(10*(ud.getTermScore() - ud.rankingIdAdjustment())));
         resultListComparator = c
@@ -39,6 +38,8 @@ public class SearchQueryIndexService {
 
     public List<UrlDetails> executeQuery(Context ctx, SearchQuery processedQuery) {
         final SearchResultSet results = indexClient.query(ctx, processedQuery.specs);
+
+        searchVisitorCount.registerQuery();
 
         List<UrlDetails> urlDetails = resultDecorator.getAllUrlDetails(results);
 
