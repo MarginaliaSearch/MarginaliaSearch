@@ -1,6 +1,8 @@
 # BTree
 
-This package contains a small library for creating and reading a static b-tree.
+This package contains a small library for creating and reading a static b-tree in as implicit pointer-less datastructure.
+Both binary indices (i.e. sets) are supported, as well as arbitrary multiple-of-keysize key-value mappings where the data is 
+interlaced with the keys in the leaf nodes. This is a fairly low-level datastructure. 
 
 The b-trees are specified through a [BTreeContext](src/main/java/nu/marginalia/btree/model/BTreeContext.java)
 which contains information about the data and index layout.
@@ -13,7 +15,7 @@ read with a [BTreeReader](src/main/java/nu/marginalia/btree/BTreeReader.java).
 ```java
 BTreeContext ctx = new BTreeContext(
         4,  // num layers max
-        1,  // entry size
+        1,  // entry size, 1 = the leaf node has just just the key
         BTreeBlockSize.BS_4096); // page size
 
 // Allocate a memory area to work in, see the array library for how to do this with files
@@ -38,3 +40,7 @@ long btreeSize = writer.write(offsetInFile, items.length, slice -> {
 BTreeReader reader = new BTreeReader(array, ctx, offsetInFile);
 reader.findEntry(items[0]);
 ```
+
+## Useful Resources
+
+Youtube: [Abdul Bari, 10.2 B Trees and B+ Trees. How they are useful in Databases](https://www.youtube.com/watch?v=aZjYr87r1b8). This isn't exactly the design implemented in this library, but very well presented and a good refresher.
