@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id("org.jetbrains.gradle.plugin.idea-ext") version "1.0"
 }
 
 group 'marginalia'
@@ -11,6 +12,20 @@ compileTestJava.options.encoding = "UTF-8"
 task dist(type: Copy) {
     from subprojects.collect { it.tasks.withType(Tar) }
     into "$buildDir/dist"
+}
+
+idea {
+    module {
+        excludeDirs.add(file("$projectDir/run/model"))
+        excludeDirs.add(file("$projectDir/run/samples"))
+        excludeDirs.add(file("$projectDir/run/db"))
+        excludeDirs.add(file("$projectDir/run/logs"))
+        excludeDirs.add(file("$projectDir/run/install"))
+        excludeDirs.add(file("$projectDir/run/data"))
+        excludeDirs.add(file("$projectDir/run/conf"))
+        excludeDirs.add(file("$projectDir/run/vol"))
+        excludeDirs.add(file("$projectDir/run/test-data"))
+    }
 }
 
 java {
