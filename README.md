@@ -7,9 +7,11 @@ It's an experimental workshop as much as it is a public service, the overarching
 elevate the more human, non-commercial sides of the Internet. A side-goal is to do this without
 requiring datacenters and expensive enterprise hardware, to run this operation on affordable hardware.
 
-## Set up instructions
+## Set up
 
-Follow instructions in [run](run/).
+Follow the set-up instructions in [📁 run/](run/)!
+
+This is also necessary for the tests to run. Save yourself time and frustration and start here. 
 
 ## Contributing
 
