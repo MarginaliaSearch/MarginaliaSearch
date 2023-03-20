@@ -13,3 +13,5 @@
 
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Note that packages under [third-party/](third-party/) have different licenses, and the code in [code/libraries/](code/libraries/) is dual-licensed under MIT. 
