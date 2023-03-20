@@ -6,9 +6,9 @@ These are components that offer functionality for the [index-service](../service
 
 There are two indexes with accompanying tools for constructing them.
 
-* [index-forward](index-forward/) is the `document->word` index containing metadata 
-about each word, such as its position. 
-* [index-reverse](index-reverse/) is the `word->document` index.
+* [index-reverse](index-reverse/) is code for `word->document` indexes. There are two such indexes, one containing only document-word pairs that are flagged as important, e.g. the word appears in the title or has a high TF-IDF. This allows good results to be discovered quickly without having to sift through ten thousand bad ones first. 
+
+* [index-forward](index-forward/) is the `document->word` index containing metadata about each word, such as its position. It is used after identifying candidate search results via the reverse index to fetch metadata and rank the results. 
 
 These indices rely heavily on the [libraries/btree](../libraries/btree) and [libraries/array](../libraries/array) components.
 
