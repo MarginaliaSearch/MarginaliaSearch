@@ -1,9 +1,8 @@
-package nu.marginalia.index.reverse;
+package nu.marginalia.index.full;
 
-import nu.marginalia.index.reverse.query.ReverseIndexEntrySourceBehavior;
-import nu.marginalia.index.reverse.query.ReverseIndexEntrySource;
-import nu.marginalia.index.reverse.query.ReverseIndexRejectFilter;
-import nu.marginalia.index.reverse.query.ReverseIndexRetainFilter;
+import nu.marginalia.index.query.ReverseIndexEntrySourceBehavior;
+import nu.marginalia.index.query.ReverseIndexRejectFilter;
+import nu.marginalia.index.query.ReverseIndexRetainFilter;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.btree.BTreeReader;
 import nu.marginalia.index.query.EmptyEntrySource;
@@ -19,13 +18,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 
-public class ReverseIndexReader {
+public class ReverseIndexFullReader {
     private final LongArray words;
     private final LongArray documents;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public ReverseIndexReader(Path words, Path documents) throws IOException {
+    public ReverseIndexFullReader(Path words, Path documents) throws IOException {
         if (!Files.exists(words) || !Files.exists(documents)) {
             this.words = null;
             this.documents = null;
@@ -64,7 +63,7 @@ public class ReverseIndexReader {
 
         if (offset < 0) return new EmptyEntrySource();
 
-        return new ReverseIndexEntrySource(createReaderNew(offset), behavior);
+        return new ReverseIndexFullEntrySource(createReaderNew(offset), ReverseIndexFullParameters.ENTRY_SIZE, behavior);
     }
 
     public QueryFilterStepIf also(int wordId) {
@@ -100,7 +99,7 @@ public class ReverseIndexReader {
     }
 
     private BTreeReader createReaderNew(long offset) {
-        return new BTreeReader(documents, ReverseIndexParameters.bTreeContext, offset);
+        return new BTreeReader(documents, ReverseIndexFullParameters.bTreeContext, offset);
     }
 
     public long[] getTermMeta(int wordId, long[] docIds) {

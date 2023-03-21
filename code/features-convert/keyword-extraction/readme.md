@@ -7,6 +7,7 @@ functions based on [POS tags](https://www.ling.upenn.edu/courses/Fall_2003/ling0
 ## Central Classes
 
 * [DocumentKeywordExtractor](src/main/java/nu/marginalia/keyword/DocumentKeywordExtractor.java)
+* [KeywordMetadata](src/main/java/nu/marginalia/keyword/KeywordMetadata.java)
 
 ## See Also
 

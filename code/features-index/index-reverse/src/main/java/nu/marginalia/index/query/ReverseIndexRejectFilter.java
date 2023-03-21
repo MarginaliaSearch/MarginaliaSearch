@@ -1,19 +1,19 @@
-package nu.marginalia.index.reverse.query;
+package nu.marginalia.index.query;
 
 import nu.marginalia.array.buffer.LongQueryBuffer;
 import nu.marginalia.btree.BTreeReader;
 import nu.marginalia.index.query.filter.QueryFilterStepIf;
 
-public record ReverseIndexRetainFilter(BTreeReader range) implements QueryFilterStepIf {
+public record ReverseIndexRejectFilter(BTreeReader range) implements QueryFilterStepIf {
 
     @Override
     public void apply(LongQueryBuffer buffer) {
-        range.retainEntries(buffer);
+        range.rejectEntries(buffer);
         buffer.finalizeFiltering();
     }
 
     public boolean test(long id) {
-        return range.findEntry(id) >= 0;
+        return range.findEntry(id) < 0;
     }
 
     @Override
@@ -23,6 +23,6 @@ public record ReverseIndexRetainFilter(BTreeReader range) implements QueryFilter
 
     @Override
     public String describe() {
-        return "ReverseIndexRetainFilter";
+        return "ReverseIndexRejectFilter[]";
     }
 }

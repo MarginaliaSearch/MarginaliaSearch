@@ -5,12 +5,14 @@ import nu.marginalia.array.buffer.LongQueryBuffer;
 import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
 import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile;
-import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
-import nu.marginalia.index.reverse.query.ReverseIndexEntrySourceBehavior;
-import nu.marginalia.ranking.DomainRankings;
+import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
+import nu.marginalia.index.priority.ReverseIndexPriorityReader;
+import nu.marginalia.index.priority.ReverseIndexPriorityConverter;
+import nu.marginalia.index.priority.ReverseIndexPriorityParameters;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
+import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.test.TestUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,7 +27,7 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
-class ReverseIndexConverterTest2 {
+class ReverseIndexPriorityConverterTest2 {
 
     KeywordLexicon keywordLexicon;
     IndexJournalWriter writer;
@@ -114,13 +116,13 @@ class ReverseIndexConverterTest2 {
 
         Path tmpDir = Path.of("/tmp");
 
-        new ReverseIndexConverter(tmpDir, new IndexJournalReaderSingleCompressedFile(indexFile), new DomainRankings(), wordsFile, docsFile).convert();
+        new ReverseIndexPriorityConverter(tmpDir, new IndexJournalReaderSingleCompressedFile(indexFile), new DomainRankings(), wordsFile, docsFile).convert();
 
-        var reverseReader = new ReverseIndexReader(wordsFile, docsFile);
+        var reverseReader = new ReverseIndexPriorityReader(wordsFile, docsFile);
 
         for (int i = workSetStart; i < workSetSize; i++) {
 
-            var es = reverseReader.documents(i, ReverseIndexEntrySourceBehavior.DO_PREFER);
+            var es = reverseReader.priorityDocuments(i);
             LongQueryBuffer lqb = new LongQueryBuffer(100);
             while (es.hasMore()) {
                 lqb.reset();
@@ -139,13 +141,13 @@ class ReverseIndexConverterTest2 {
 
         Path tmpDir = Path.of("/tmp");
 
-        new ReverseIndexConverter(tmpDir, new IndexJournalReaderSingleCompressedFile(indexFile, null, ReverseIndexPriorityParameters::filterPriorityRecord), new DomainRankings(), wordsFile, docsFile).convert();
+        new ReverseIndexPriorityConverter(tmpDir, new IndexJournalReaderSingleCompressedFile(indexFile, null, ReverseIndexPriorityParameters::filterPriorityRecord), new DomainRankings(), wordsFile, docsFile).convert();
 
-        var reverseReader = new ReverseIndexReader(wordsFile, docsFile);
+        var reverseReader = new ReverseIndexPriorityReader(wordsFile, docsFile);
 
         for (int i = workSetStart; i < workSetSize; i++) {
 
-            var es = reverseReader.documents(i, ReverseIndexEntrySourceBehavior.DO_PREFER);
+            var es = reverseReader.priorityDocuments(i);
             LongQueryBuffer lqb = new LongQueryBuffer(100);
             while (es.hasMore()) {
                 lqb.reset();

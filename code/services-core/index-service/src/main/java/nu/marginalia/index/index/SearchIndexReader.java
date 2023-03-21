@@ -1,6 +1,5 @@
 package nu.marginalia.index.index;
 
-import lombok.SneakyThrows;
 import nu.marginalia.index.forward.ForwardIndexReader;
 import nu.marginalia.index.forward.ParamMatchingQueryFilter;
 import nu.marginalia.index.query.EntrySource;
@@ -8,9 +7,9 @@ import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.query.IndexQueryBuilder;
 import nu.marginalia.index.query.IndexQueryParams;
 import nu.marginalia.index.query.filter.QueryFilterStepIf;
-import nu.marginalia.index.reverse.ReverseIndexPrioReader;
-import nu.marginalia.index.reverse.ReverseIndexReader;
-import nu.marginalia.index.reverse.query.ReverseIndexEntrySourceBehavior;
+import nu.marginalia.index.priority.ReverseIndexPriorityReader;
+import nu.marginalia.index.full.ReverseIndexFullReader;
+import nu.marginalia.index.query.ReverseIndexEntrySourceBehavior;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,33 +20,33 @@ public class SearchIndexReader {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final ForwardIndexReader forwardIndexReader;
-    private final ReverseIndexReader reverseIndexReader;
-    private final ReverseIndexPrioReader reverseIndexPrioReader;
+    private final ReverseIndexFullReader reverseIndexFullReader;
+    private final ReverseIndexPriorityReader reverseIndexPriorityReader;
 
     public SearchIndexReader(ForwardIndexReader forwardIndexReader,
-                             ReverseIndexReader reverseIndexReader,
-                             ReverseIndexPrioReader reverseIndexPrioReader) {
+                             ReverseIndexFullReader reverseIndexFullReader,
+                             ReverseIndexPriorityReader reverseIndexPriorityReader) {
         this.forwardIndexReader = forwardIndexReader;
-        this.reverseIndexReader = reverseIndexReader;
-        this.reverseIndexPrioReader = reverseIndexPrioReader;
+        this.reverseIndexFullReader = reverseIndexFullReader;
+        this.reverseIndexPriorityReader = reverseIndexPriorityReader;
     }
 
     public IndexQueryBuilder findWordAsSentence(int[] wordIdsByFrequency) {
         List<EntrySource> entrySources = new ArrayList<>(1);
 
-        entrySources.add(reverseIndexReader.documents(wordIdsByFrequency[0], ReverseIndexEntrySourceBehavior.DO_PREFER));
+        entrySources.add(reverseIndexFullReader.documents(wordIdsByFrequency[0], ReverseIndexEntrySourceBehavior.DO_PREFER));
 
-        return new SearchIndexQueryBuilder(reverseIndexReader, new IndexQuery(entrySources));
+        return new SearchIndexQueryBuilder(reverseIndexFullReader, new IndexQuery(entrySources));
     }
 
     public IndexQueryBuilder findWordAsTopic(int[] wordIdsByFrequency) {
         List<EntrySource> entrySources = new ArrayList<>(wordIdsByFrequency.length);
 
         for (int wordId : wordIdsByFrequency) {
-            entrySources.add(reverseIndexPrioReader.priorityDocuments(wordId));
+            entrySources.add(reverseIndexPriorityReader.priorityDocuments(wordId));
         }
 
-        return new SearchIndexQueryBuilder(reverseIndexReader, new IndexQuery(entrySources));
+        return new SearchIndexQueryBuilder(reverseIndexFullReader, new IndexQuery(entrySources));
     }
 
     public IndexQueryBuilder findWordTopicDynamicMode(int[] wordIdsByFrequency) {
@@ -58,12 +57,12 @@ public class SearchIndexReader {
         List<EntrySource> entrySources = new ArrayList<>(wordIdsByFrequency.length + 1);
 
         for (int wordId : wordIdsByFrequency) {
-            entrySources.add(reverseIndexPrioReader.priorityDocuments(wordId));
+            entrySources.add(reverseIndexPriorityReader.priorityDocuments(wordId));
         }
 
-        entrySources.add(reverseIndexReader.documents(wordIdsByFrequency[0], ReverseIndexEntrySourceBehavior.DO_NOT_PREFER));
+        entrySources.add(reverseIndexFullReader.documents(wordIdsByFrequency[0], ReverseIndexEntrySourceBehavior.DO_NOT_PREFER));
 
-        return new SearchIndexQueryBuilder(reverseIndexReader, new IndexQuery(entrySources));
+        return new SearchIndexQueryBuilder(reverseIndexFullReader, new IndexQuery(entrySources));
     }
 
     QueryFilterStepIf filterForParams(IndexQueryParams params) {
@@ -71,11 +70,11 @@ public class SearchIndexReader {
     }
 
     public long numHits(int word) {
-        return reverseIndexReader.numDocuments(word);
+        return reverseIndexFullReader.numDocuments(word);
     }
 
     public long[] getMetadata(int wordId, long[] docIds) {
-        return reverseIndexReader.getTermMeta(wordId, docIds);
+        return reverseIndexFullReader.getTermMeta(wordId, docIds);
     }
 
     public long getDocumentMetadata(long docId) {

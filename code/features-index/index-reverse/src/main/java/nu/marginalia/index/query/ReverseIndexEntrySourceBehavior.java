@@ -1,4 +1,4 @@
-package nu.marginalia.index.reverse.query;
+package nu.marginalia.index.query;
 
 public enum ReverseIndexEntrySourceBehavior {
     /** Eagerly read from this entry source */

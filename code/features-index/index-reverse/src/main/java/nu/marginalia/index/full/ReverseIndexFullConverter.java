@@ -1,6 +1,9 @@
-package nu.marginalia.index.reverse;
+package nu.marginalia.index.full;
 
 import lombok.SneakyThrows;
+import nu.marginalia.index.construction.CountToOffsetTransformer;
+import nu.marginalia.index.construction.ReverseIndexBTreeTransformer;
+import nu.marginalia.index.construction.IndexSizeEstimator;
 import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.model.IndexJournalStatistics;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
@@ -9,10 +12,6 @@ import nu.marginalia.rwf.RandomWriteFunnel;
 import nu.marginalia.array.IntArray;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.algo.SortingContext;
-import nu.marginalia.array.functional.LongBinaryIOOperation;
-import nu.marginalia.array.functional.LongIOTransformer;
-import nu.marginalia.array.functional.LongTransformer;
-import nu.marginalia.btree.BTreeWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +21,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-public class ReverseIndexConverter {
+import static nu.marginalia.index.full.ReverseIndexFullParameters.bTreeContext;
+
+public class ReverseIndexFullConverter {
     private static final int RWF_BIN_SIZE = 10_000_000;
 
     private final Path tmpFileDir;
@@ -35,11 +36,11 @@ public class ReverseIndexConverter {
     private final Path outputFileDocs;
     private final SortingContext sortingContext;
 
-    public ReverseIndexConverter(Path tmpFileDir,
-                                 IndexJournalReader journalReader,
-                                 DomainRankings domainRankings,
-                                 Path outputFileWords,
-                                 Path outputFileDocs) {
+    public ReverseIndexFullConverter(Path tmpFileDir,
+                                     IndexJournalReader journalReader,
+                                     DomainRankings domainRankings,
+                                     Path outputFileWords,
+                                     Path outputFileDocs) {
         this.tmpFileDir = tmpFileDir;
         this.journalReader = journalReader;
         this.domainRankings = domainRankings;
@@ -70,7 +71,7 @@ public class ReverseIndexConverter {
 
             logger.info("Gathering Offsets");
             journalReader.forEachWordId(wordsOffsets::increment);
-            wordsOffsets.transformEach(0, wordsFileSize, new CountToOffsetTransformer());
+            wordsOffsets.transformEach(0, wordsFileSize, new CountToOffsetTransformer(ReverseIndexFullParameters.ENTRY_SIZE));
 
             // Construct an intermediate representation of the reverse documents index
             try (FileChannel intermediateDocChannel =
@@ -95,7 +96,7 @@ public class ReverseIndexConverter {
                 {
                     LongArray intermediateDocs = LongArray.mmapForModifying(intermediateUrlsFile);
                     wordsOffsets.foldIO(0, 0, wordsFileSize, (s, e) -> {
-                        intermediateDocs.sortLargeSpanN(sortingContext, ReverseIndexParameters.ENTRY_SIZE, s, e);
+                        intermediateDocs.sortLargeSpanN(sortingContext, ReverseIndexFullParameters.ENTRY_SIZE, s, e);
                         return e;
                     });
                     intermediateDocs.force();
@@ -104,14 +105,17 @@ public class ReverseIndexConverter {
 
                 logger.info("Sizing");
 
-                SizeEstimator sizeEstimator = new SizeEstimator();
-                wordsOffsets.foldIO(0, 0, wordsOffsets.size(), sizeEstimator);
+                IndexSizeEstimator sizeEstimator = new IndexSizeEstimator(
+                        ReverseIndexFullParameters.bTreeContext,
+                        ReverseIndexFullParameters.ENTRY_SIZE);
+
+                wordsOffsets.fold(0, 0, wordsOffsets.size(), sizeEstimator);
 
                 logger.info("Finalizing Docs File");
 
                 LongArray finalDocs = LongArray.mmapForWriting(outputFileDocs, sizeEstimator.size);
                 // Construct the proper reverse index
-                wordsOffsets.transformEachIO(0, wordsOffsets.size(), new CreateReverseIndexBTreeTransformer(finalDocs, intermediateDocChannel));
+                wordsOffsets.transformEachIO(0, wordsOffsets.size(), new ReverseIndexBTreeTransformer(finalDocs, ReverseIndexFullParameters.ENTRY_SIZE, bTreeContext, intermediateDocChannel));
                 wordsOffsets.write(outputFileWords);
 
                 // Attempt to clean up before forcing (important disk space preservation)
@@ -130,64 +134,9 @@ public class ReverseIndexConverter {
         }
     }
 
-    private static class SizeEstimator implements LongBinaryIOOperation {
-        public long size = 0;
-        @Override
-        public long apply(long start, long end) {
-            if (end == start) return end;
-
-            size += ReverseIndexParameters.bTreeContext.calculateSize((int) (end - start) / ReverseIndexParameters.ENTRY_SIZE);
-
-            return end;
-        }
-    }
-
     private void deleteOldFiles() throws IOException {
         Files.deleteIfExists(outputFileWords);
         Files.deleteIfExists(outputFileDocs);
-    }
-
-    private static class CountToOffsetTransformer implements LongTransformer {
-        long offset = 0;
-
-        @Override
-        public long transform(long pos, long count) {
-            return (offset += ReverseIndexParameters.ENTRY_SIZE * count);
-        }
-    }
-
-    private static class CreateReverseIndexBTreeTransformer implements LongIOTransformer {
-        private final BTreeWriter writer;
-        private final FileChannel intermediateChannel;
-
-        long start = 0;
-        long writeOffset = 0;
-
-        public CreateReverseIndexBTreeTransformer(LongArray urlsFileMap, FileChannel intermediateChannel) {
-            this.writer = new BTreeWriter(urlsFileMap, ReverseIndexParameters.bTreeContext);
-            this.intermediateChannel = intermediateChannel;
-        }
-
-        @Override
-        public long transform(long pos, long end) throws IOException {
-
-            assert (end - start) % ReverseIndexParameters.ENTRY_SIZE == 0;
-
-            final int size = (int)(end - start) / ReverseIndexParameters.ENTRY_SIZE;
-
-            if (size == 0) {
-                return -1;
-            }
-
-            final long offsetForBlock = writeOffset;
-
-            writeOffset += writer.write(writeOffset, size,
-                    mapRegion -> mapRegion.transferFrom(intermediateChannel, start, 0, end - start)
-            );
-
-            start = end;
-            return offsetForBlock;
-        }
     }
 
     private class IntermediateIndexConstructor implements IndexJournalReader.LongObjectConsumer<IndexJournalEntryData.Record>, AutoCloseable {

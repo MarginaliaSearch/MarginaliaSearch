@@ -8,10 +8,11 @@ import nu.marginalia.index.forward.ForwardIndexReader;
 import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
-import nu.marginalia.index.reverse.ReverseIndexConverter;
-import nu.marginalia.index.reverse.ReverseIndexPrioReader;
-import nu.marginalia.index.reverse.ReverseIndexPriorityParameters;
-import nu.marginalia.index.reverse.ReverseIndexReader;
+import nu.marginalia.index.priority.ReverseIndexPriorityConverter;
+import nu.marginalia.index.full.ReverseIndexFullConverter;
+import nu.marginalia.index.priority.ReverseIndexPriorityReader;
+import nu.marginalia.index.priority.ReverseIndexPriorityParameters;
+import nu.marginalia.index.full.ReverseIndexFullReader;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.index.index.SearchIndexReader;
@@ -110,7 +111,7 @@ public class IndexServicesFactory {
         logger.info("Converting full reverse index {}", source);
 
         var journalReader = new IndexJournalReaderSingleCompressedFile(source);
-        var converter = new ReverseIndexConverter(tmpFileDir,
+        var converter = new ReverseIndexFullConverter(tmpFileDir,
                 journalReader,
                 domainRankings,
                 revIndexWords.get(NEXT_PART).toPath(),
@@ -127,9 +128,10 @@ public class IndexServicesFactory {
 
         logger.info("Converting priority reverse index {}", source);
 
-        var journalReader = new IndexJournalReaderSingleCompressedFile(source, null, ReverseIndexPriorityParameters::filterPriorityRecord);
+        var journalReader = new IndexJournalReaderSingleCompressedFile(source, null,
+                ReverseIndexPriorityParameters::filterPriorityRecord);
 
-        var converter = new ReverseIndexConverter(tmpFileDir,
+        var converter = new ReverseIndexPriorityConverter(tmpFileDir,
                 journalReader,
                 domainRankings,
                 revPrioIndexWords.get(NEXT_PART).toPath(),
@@ -164,17 +166,16 @@ public class IndexServicesFactory {
             throw new RuntimeException(e);
         }
 
-        System.runFinalization();
         System.gc();
     }
 
-    public ReverseIndexReader getReverseIndexReader() throws IOException {
-        return new ReverseIndexReader(
+    public ReverseIndexFullReader getReverseIndexReader() throws IOException {
+        return new ReverseIndexFullReader(
                 revIndexWords.get(LIVE_PART).toPath(),
                 revIndexDoc.get(LIVE_PART).toPath());
     }
-    public ReverseIndexPrioReader getReverseIndexPrioReader() throws IOException {
-        return new ReverseIndexPrioReader(
+    public ReverseIndexPriorityReader getReverseIndexPrioReader() throws IOException {
+        return new ReverseIndexPriorityReader(
                 revPrioIndexWords.get(LIVE_PART).toPath(),
                 revPrioIndexDoc.get(LIVE_PART).toPath());
     }

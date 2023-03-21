@@ -2,11 +2,13 @@ package nu.marginalia.index.reverse;
 
 import lombok.SneakyThrows;
 import nu.marginalia.array.buffer.LongQueryBuffer;
+import nu.marginalia.index.full.ReverseIndexFullConverter;
+import nu.marginalia.index.full.ReverseIndexFullReader;
 import nu.marginalia.index.journal.model.IndexJournalEntry;
 import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile;
 import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
-import nu.marginalia.index.reverse.query.ReverseIndexEntrySourceBehavior;
+import nu.marginalia.index.query.ReverseIndexEntrySourceBehavior;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
@@ -25,7 +27,7 @@ import java.util.stream.LongStream;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
-class ReverseIndexConverterTest {
+class ReverseIndexFullConverterTest {
     KeywordLexicon keywordLexicon;
 
     Path indexFile;
@@ -82,10 +84,10 @@ class ReverseIndexConverterTest {
         var docsFile = dataDir.resolve("docs.dat");
         var journalReader = new IndexJournalReaderSingleCompressedFile(indexFile);
 
-        new ReverseIndexConverter(tmpDir, journalReader, new DomainRankings(), wordsFile, docsFile)
+        new ReverseIndexFullConverter(tmpDir, journalReader, new DomainRankings(), wordsFile, docsFile)
                 .convert();
 
-        var reverseIndexReader = new ReverseIndexReader(wordsFile, docsFile);
+        var reverseIndexReader = new ReverseIndexFullReader(wordsFile, docsFile);
 
         System.out.println(reverseIndexReader.numDocuments(keywordLexicon.getReadOnly("1")));
         System.out.println(reverseIndexReader.numDocuments(keywordLexicon.getReadOnly("2")));

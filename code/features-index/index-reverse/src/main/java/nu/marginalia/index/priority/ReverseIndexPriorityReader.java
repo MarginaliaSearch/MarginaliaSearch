@@ -1,7 +1,6 @@
-package nu.marginalia.index.reverse;
+package nu.marginalia.index.priority;
 
-import nu.marginalia.index.reverse.query.ReverseIndexEntrySourceBehavior;
-import nu.marginalia.index.reverse.query.ReverseIndexEntrySource;
+import nu.marginalia.index.query.ReverseIndexEntrySourceBehavior;
 import nu.marginalia.index.query.EntrySource;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.btree.BTreeReader;
@@ -13,13 +12,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class ReverseIndexPrioReader {
+public class ReverseIndexPriorityReader {
     private final LongArray words;
     private final LongArray documents;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public ReverseIndexPrioReader(Path words, Path documents) throws IOException {
+    public ReverseIndexPriorityReader(Path words, Path documents) throws IOException {
         if (!Files.exists(words) || !Files.exists(documents)) {
             this.words = null;
             this.documents = null;
@@ -44,10 +43,10 @@ public class ReverseIndexPrioReader {
 
         if (offset < 0) return new EmptyEntrySource();
 
-        return new ReverseIndexEntrySource(createReaderNew(offset), ReverseIndexEntrySourceBehavior.DO_PREFER);
+        return new ReverseIndexPriorityEntrySource(createReaderNew(offset), ReverseIndexEntrySourceBehavior.DO_PREFER);
     }
 
     private BTreeReader createReaderNew(long offset) {
-        return new BTreeReader(documents, ReverseIndexParameters.bTreeContext, offset);
+        return new BTreeReader(documents, ReverseIndexPriorityParameters.bTreeContext, offset);
     }
 }
