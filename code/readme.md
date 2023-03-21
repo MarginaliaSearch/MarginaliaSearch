@@ -5,6 +5,10 @@ You'll find a short description in each module of what it does and how it relate
 
 ## Overview
 
+A map of the most important components and how they relate can be found below. 
+
+![image](../doc/conceptual-overview.svg)
+
 ### Services
 * [core services](services-core/) "macroservices", stateful, memory hungry doing heavy lifting.
 * * [search](services-core/search-service)
