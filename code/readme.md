@@ -1,7 +1,10 @@
 # Code
 
 This is a pretty large and diverse project with many moving parts. 
+
 You'll find a short description in each module of what it does and how it relates to other modules.
+The modules each have names like "library" or "process" or "feature".  These have specific meanings. 
+See [doc/module-taxonomy.md](../doc/module-taxonomy.md).
 
 ## Overview
 
