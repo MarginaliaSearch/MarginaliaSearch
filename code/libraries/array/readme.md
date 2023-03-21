@@ -1,14 +1,13 @@
 # Array Library
 
 The array library offers easy allocation of large [memory mapped files](https://en.wikipedia.org/wiki/Memory-mapped_file) 
-with less performance overhead than the traditional `buffers[i].get(j)`-style constructions
+with much less performance overhead than the traditional `buffers[pos/size].get(pos%size)`-style constructions
 java often leads to given its suffocating 2 Gb ByteBuffer size limitation. 
 
 It accomplishes this by delegating block oerations down to the appropriate page. If the operation
 crosses a page boundary, it is not delegated and a bit slower.
 
-It's a very C++-style library that does unidiomatic things with interface default 
-functions to get diamond inheritance.
+The library is written in a fairly unidiomatic way to accomplish diamond inheritance. 
 
 ## Quick demo:
 ```java
