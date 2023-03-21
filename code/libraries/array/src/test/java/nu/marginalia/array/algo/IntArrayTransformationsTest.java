@@ -52,6 +52,13 @@ class IntArrayTransformationsTest {
         assertEquals(3*(5+6+7+8+9), shifted.foldIO(0, 5, 10, Integer::sum));
     }
 
+    @Test
+    void fold() {
+        assertEquals(3*(5+6+7+8+9), basic.fold(0, 5, 10, Integer::sum));
+        assertEquals(3*(5+6+7+8+9), paged.fold(0, 5, 10, Integer::sum));
+        assertEquals(3*(5+6+7+8+9), shifted.fold(0, 5, 10, Integer::sum));
+    }
+
     private void transformTester(IntArray array) {
         array.transformEach(5, 15, (i, o) -> (int) (i - o));
         for (int i = 0; i < 5; i++) {

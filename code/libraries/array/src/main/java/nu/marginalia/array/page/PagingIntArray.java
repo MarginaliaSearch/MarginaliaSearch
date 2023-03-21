@@ -5,10 +5,8 @@ import nu.marginalia.array.IntArray;
 import nu.marginalia.array.algo.SortingContext;
 import nu.marginalia.array.buffer.IntQueryBuffer;
 import nu.marginalia.array.delegate.ReferenceImplIntArrayDelegate;
-import nu.marginalia.array.functional.IntBinaryIOOperation;
-import nu.marginalia.array.functional.IntIOTransformer;
-import nu.marginalia.array.functional.IntTransformer;
-import nu.marginalia.array.functional.LongIntConsumer;
+import nu.marginalia.array.functional.*;
+import nu.marginalia.array.functor.IntFolder;
 import nu.marginalia.array.functor.IntIOFolder;
 import nu.marginalia.array.scheme.ArrayPartitioningScheme;
 
@@ -196,6 +194,15 @@ public class PagingIntArray extends AbstractPagingArray<IntArrayPage, IntBuffer>
         var folder = new IntIOFolder(zero, operator);
 
         delegateToEachPageIO(start, end, folder);
+
+        return folder.acc;
+    }
+
+    @Override
+    public int fold(int zero, long start, long end,  IntBinaryOperation operator) {
+        var folder = new IntFolder(zero, operator);
+
+        delegateToEachPage(start, end, folder);
 
         return folder.acc;
     }

@@ -16,12 +16,10 @@ import java.nio.file.StandardOpenOption;
 
 public class LongArrayPage implements PartitionPage, LongArray {
 
-    final ArrayTrace trace = ArrayTrace.get(this);
-
     final LongBuffer longBuffer;
     final ByteBuffer byteBuffer;
 
-    private LongArrayPage(ByteBuffer byteBuffer) {
+    LongArrayPage(ByteBuffer byteBuffer) {
         this.byteBuffer = byteBuffer;
         this.longBuffer = byteBuffer.asLongBuffer();
     }
@@ -50,8 +48,6 @@ public class LongArrayPage implements PartitionPage, LongArray {
     @Override
     public long get(long at) {
         try {
-            trace.touch(at);
-
             return longBuffer.get((int) at);
         }
         catch (IndexOutOfBoundsException ex) {
@@ -61,15 +57,11 @@ public class LongArrayPage implements PartitionPage, LongArray {
 
     @Override
     public void get(long start, long end, long[] buffer) {
-        trace.touch(start, end);
-
         longBuffer.get((int) start, buffer, 0, (int) (end - start));
     }
 
     @Override
     public void set(long at, long val) {
-        trace.touch(at);
-
         longBuffer.put((int) at, val);
     }
 
@@ -108,8 +100,6 @@ public class LongArrayPage implements PartitionPage, LongArray {
 
     @Override
     public void transferFrom(FileChannel source, long sourceStart, long arrayStart, long arrayEnd) throws IOException {
-
-        trace.touch(arrayStart, arrayEnd);
 
         int index = (int) (arrayStart * WORD_SIZE);
         int length = (int) ((arrayEnd - arrayStart) * WORD_SIZE);

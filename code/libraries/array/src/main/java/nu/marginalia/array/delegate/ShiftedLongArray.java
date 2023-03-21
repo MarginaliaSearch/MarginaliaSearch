@@ -5,10 +5,7 @@ import nu.marginalia.array.LongArray;
 import nu.marginalia.array.algo.LongArraySearch;
 import nu.marginalia.array.algo.SortingContext;
 import nu.marginalia.array.buffer.LongQueryBuffer;
-import nu.marginalia.array.functional.LongBinaryIOOperation;
-import nu.marginalia.array.functional.LongIOTransformer;
-import nu.marginalia.array.functional.LongLongConsumer;
-import nu.marginalia.array.functional.LongTransformer;
+import nu.marginalia.array.functional.*;
 
 import java.io.IOException;
 import java.nio.LongBuffer;
@@ -112,6 +109,16 @@ public class ShiftedLongArray implements LongArray {
     public boolean isSorted(long start, long end) {
         return delegate.isSorted(shift + start, shift + end);
     }
+
+    public void quickSort(long start, long end) {
+        delegate.quickSort(shift + start, shift + end);
+    }
+
+    public void quickSortN(int sz, long start, long end) {
+        delegate.quickSortN(sz, shift + start, shift + end);
+    }
+
+
 
     public boolean isSortedN(int sz, long start, long end) {
         return delegate.isSortedN(sz, shift + start, shift + end);
@@ -249,6 +256,11 @@ public class ShiftedLongArray implements LongArray {
     @Override
     public long foldIO(long zero, long start, long end, LongBinaryIOOperation operator) throws IOException {
         return delegate.foldIO(zero, start + shift, end+shift, operator);
+    }
+
+    @Override
+    public long fold(long zero, long start, long end, LongBinaryOperation operator) {
+        return delegate.fold(zero, start + shift, end+shift, operator);
     }
 
     @Override

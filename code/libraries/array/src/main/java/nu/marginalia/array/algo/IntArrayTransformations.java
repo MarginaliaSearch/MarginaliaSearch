@@ -1,9 +1,6 @@
 package nu.marginalia.array.algo;
 
-import nu.marginalia.array.functional.IntBinaryIOOperation;
-import nu.marginalia.array.functional.IntIOTransformer;
-import nu.marginalia.array.functional.IntTransformer;
-import nu.marginalia.array.functional.LongIntConsumer;
+import nu.marginalia.array.functional.*;
 
 import java.io.IOException;
 
@@ -28,6 +25,16 @@ public interface IntArrayTransformations extends IntArrayBase {
     }
 
     default int foldIO(int zero, long start, long end, IntBinaryIOOperation operator) throws IOException {
+        int accumulator = zero;
+
+        for (long i = start; i < end; i++) {
+            accumulator = operator.apply(accumulator, get(i));
+        }
+
+        return accumulator;
+    }
+
+    default int fold(int zero, long start, long end, IntBinaryOperation operator) {
         int accumulator = zero;
 
         for (long i = start; i < end; i++) {

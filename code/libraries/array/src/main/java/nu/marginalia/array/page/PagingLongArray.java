@@ -22,7 +22,7 @@ import java.nio.file.StandardOpenOption;
 public class PagingLongArray extends AbstractPagingArray<LongArrayPage, LongBuffer> implements LongArray {
     private final ReferenceImplLongArrayDelegate defaults;
 
-    private PagingLongArray(ArrayPartitioningScheme partitioningScheme, LongArrayPage[] pages, long size) {
+    PagingLongArray(ArrayPartitioningScheme partitioningScheme, LongArrayPage[] pages, long size) {
         super(partitioningScheme, pages, size);
         defaults = new ReferenceImplLongArrayDelegate(this);
     }
@@ -459,6 +459,29 @@ public class PagingLongArray extends AbstractPagingArray<LongArrayPage, LongBuff
         }
     }
 
+    public boolean isSorted(long start, long end) {
+        if (partitioningScheme.isSamePage(start, end)) {
+            int sOff = partitioningScheme.getOffset(start);
+            int eOff = partitioningScheme.getEndOffset(start, end);
+
+            return pages[partitioningScheme.getPage(start)].isSorted(sOff, eOff);
+        }
+        else {
+            return defaults.isSorted(start, end);
+        }
+    }
+
+    public boolean isSortedN(int sz, long start, long end) {
+        if (partitioningScheme.isSamePage(start, end)) {
+            int sOff = partitioningScheme.getOffset(start);
+            int eOff = partitioningScheme.getEndOffset(start, end);
+
+            return pages[partitioningScheme.getPage(start)].isSortedN(sz, sOff, eOff);
+        }
+        else {
+            return defaults.isSortedN(sz, start, end);
+        }
+    }
     public void sortLargeSpan(SortingContext ctx, long start, long end) throws IOException {
         if (partitioningScheme.isSamePage(start, end)) {
             int sOff = partitioningScheme.getOffset(start);

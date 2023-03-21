@@ -4,10 +4,7 @@ import com.upserve.uppend.blobs.NativeIO;
 import nu.marginalia.array.IntArray;
 import nu.marginalia.array.algo.SortingContext;
 import nu.marginalia.array.buffer.IntQueryBuffer;
-import nu.marginalia.array.functional.IntBinaryIOOperation;
-import nu.marginalia.array.functional.IntIOTransformer;
-import nu.marginalia.array.functional.IntTransformer;
-import nu.marginalia.array.functional.LongIntConsumer;
+import nu.marginalia.array.functional.*;
 
 import java.io.IOException;
 import java.nio.IntBuffer;
@@ -191,6 +188,11 @@ public class ShiftedIntArray implements IntArray {
     @Override
     public int foldIO(int zero, long start, long end, IntBinaryIOOperation operator) throws IOException {
         return delegate.foldIO(zero, start + shift, end+shift, operator);
+    }
+
+    @Override
+    public int fold(int zero, long start, long end, IntBinaryOperation operator){
+        return delegate.fold(zero, start + shift, end+shift, operator);
     }
 
     @Override

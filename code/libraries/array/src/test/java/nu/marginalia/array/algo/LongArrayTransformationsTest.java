@@ -46,6 +46,13 @@ class LongArrayTransformationsTest {
     }
 
     @Test
+    void fold() {
+        assertEquals(3*(5+6+7+8+9), basic.fold(0, 5, 10, Long::sum));
+        assertEquals(3*(5+6+7+8+9), paged.fold(0, 5, 10, Long::sum));
+        assertEquals(3*(5+6+7+8+9), shifted.fold(0, 5, 10, Long::sum));
+    }
+
+    @Test
     void foldIO() throws IOException {
         assertEquals(3*(5+6+7+8+9), basic.foldIO(0, 5, 10, Long::sum));
         assertEquals(3*(5+6+7+8+9), paged.foldIO(0, 5, 10, Long::sum));
