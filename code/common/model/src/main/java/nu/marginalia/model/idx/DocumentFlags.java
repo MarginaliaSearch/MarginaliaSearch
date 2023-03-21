@@ -3,10 +3,10 @@ package nu.marginalia.model.idx;
 import java.util.EnumSet;
 
 public enum DocumentFlags {
-    UnusedBit1,
+    Javascript,
     PlainText,
-    UnusedBit2,
-    UnusedBit3,
+    Ads,
+    Tracking,
     UnusedBit4,
     UnusedBit5,
     UnusedBit6,

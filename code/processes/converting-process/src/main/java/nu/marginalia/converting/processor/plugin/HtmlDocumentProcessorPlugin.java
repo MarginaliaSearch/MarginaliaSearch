@@ -5,6 +5,7 @@ import com.google.inject.name.Named;
 import nu.marginalia.converting.processor.MetaRobotsTag;
 import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
 import nu.marginalia.converting.processor.logic.links.LinkProcessor;
+import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.summary.SummaryExtractor;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.crawling.model.CrawledDocument;
@@ -125,7 +126,9 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         ret.hashCode = dld.localitySensitiveHashCode();
 
         PubDate pubDate = pubDateSniffer.getPubDate(crawledDocument.headers, url, doc, ret.standard, true);
-        ret.metadata = new DocumentMetadata(url.depth(), pubDate.yearByte(), 0, (int) -ret.quality, EnumSet.noneOf(DocumentFlags.class));
+        EnumSet<DocumentFlags> documentFlags = htmlFeatures2DocumentFlags(ret.features);
+
+        ret.metadata = new DocumentMetadata(url.depth(), pubDate.yearByte(), 0, (int) -ret.quality, documentFlags);
 
         DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, url);
 
@@ -146,6 +149,22 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         }
 
         return new DetailsWithWords(ret, words);
+    }
+
+    private EnumSet<DocumentFlags> htmlFeatures2DocumentFlags(Set<HtmlFeature> features) {
+        EnumSet<DocumentFlags> flags = EnumSet.noneOf(DocumentFlags.class);
+
+        if (features.contains(HtmlFeature.ADVERTISEMENT)) {
+            flags.add(DocumentFlags.Ads);
+        }
+        if (features.contains(HtmlFeature.JS)) {
+            flags.add(DocumentFlags.Javascript);
+        }
+        if (features.contains(HtmlFeature.TRACKING)) {
+            flags.add(DocumentFlags.Tracking);
+        }
+
+        return flags;
     }
 
     private Document prune(Document doc) {
