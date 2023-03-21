@@ -14,6 +14,11 @@ Contains domain ranking algorithms.
 * [RankingDomainFetcher](src/main/java/nu/marginalia/ranking/data/RankingDomainFetcher.java) fetches link data. 
 * [RankingDomainFetcherForSimilarityData](src/main/java/nu/marginalia/ranking/data/RankingDomainFetcherForSimilarityData.java) fetches website similarity data.
 
+
+## See Also
+
+* [features-search/result-ranking](../../features-search/result-ranking) - Ranks search results
+
 ## Useful Resources
 
 * [The PageRank Citation Ranking: Bringing Order to the Web](http://ilpubs.stanford.edu:8090/422/1/1999-66.pdf)
