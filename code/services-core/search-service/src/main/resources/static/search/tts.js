@@ -72,7 +72,7 @@ if(!window.matchMedia("(pointer: coarse)").matches) {
                     document.getElementsByClassName('input')[0].appendChild(suggestions);
                 }
 
-                req.open("GET", "https://api.marginalia.nu/suggest/?partial="+encodeURIComponent(query.value));
+                req.open("GET", "/suggest/?partial="+encodeURIComponent(query.value));
                 req.send();
             }, 250);
         }

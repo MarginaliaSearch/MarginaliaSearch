@@ -137,6 +137,10 @@ public class Suggestions {
     public Stream<String> getSuggestionsForKeyword(int count, String prefix) {
         var start = suggestionsTrie.select(prefix);
 
+        if (start == null) {
+            return Stream.empty();
+        }
+
         if (!start.getKey().startsWith(prefix)) {
             return Stream.empty();
         }

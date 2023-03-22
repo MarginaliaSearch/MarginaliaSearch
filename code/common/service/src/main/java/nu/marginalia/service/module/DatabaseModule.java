@@ -14,6 +14,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -90,6 +91,9 @@ public class DatabaseModule extends AbstractModule {
 
             config.setMaximumPoolSize(100);
             config.setMinimumIdle(10);
+
+            config.setMaxLifetime(Duration.ofMinutes(9).toMillis());
+
             return new HikariDataSource(config);
         }
         finally {

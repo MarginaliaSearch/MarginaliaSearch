@@ -15,6 +15,8 @@ import nu.marginalia.service.server.RateLimiter;
 import nu.marginalia.service.server.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 import spark.Request;
 import spark.Response;
 import spark.Spark;
@@ -29,6 +31,9 @@ public class ApiService extends Service {
     private final HikariDataSource dataSource;
     private final ConcurrentHashMap<String, ApiLicense> licenseCache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<ApiLicense, RateLimiter> rateLimiters = new ConcurrentHashMap<>();
+
+    // Marker for filtering out sensitive content from the persistent logs
+    private final Marker queryMarker = MarkerFactory.getMarker("QUERY");
 
     @Inject
     public ApiService(@Named("service-host") String ip,
@@ -78,7 +83,7 @@ public class ApiService extends Service {
         int count = Integer.parseInt(request.queryParamOrDefault("count", "20"));
         int index = Integer.parseInt(request.queryParamOrDefault("index", "3"));
 
-        logger.info("{} Search {}", license.key, args[0]);
+        logger.info(queryMarker, "{} Search {}", license.key, args[0]);
 
         return searchClient.query(Context.fromRequest(request), args[0], count, index)
                 .blockingFirst().withLicense(license.getLicense());

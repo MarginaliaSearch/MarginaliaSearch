@@ -26,6 +26,12 @@ download_model model/tfreq-new-algo3.bin https://downloads.marginalia.nu/model/t
 download_model data/IP2LOCATION-LITE-DB1.CSV.ZIP https://download.ip2location.com/lite/IP2LOCATION-LITE-DB1.CSV.ZIP
 unzip -qn -d data data/IP2LOCATION-LITE-DB1.CSV.ZIP
 
+download_model data/adblock.txt https://downloads.marginalia.nu/data/adblock.txt
+if [ ! -f data/suggestions.txt ]; then
+  download_model data/suggestions.txt.gz https://downloads.marginalia.nu/data/suggestions.txt.gz
+  gunzip data/suggestions.txt.gz
+fi
+
 if [ ! -d conf ]; then
   cp -r template/conf .
 fi
