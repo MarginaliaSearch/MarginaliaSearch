@@ -2,14 +2,7 @@ package nu.marginalia.language;
 
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-
-/** Regular expression patterns for deciding which words are eligible to be keywords.
+/** Logic for deciding which words are eligible to be keywords.
  * <p/>
  * This is in dire need of oversight. Here be towering dragons with names,
  * a skull next to their HP bar, and their own Mick Gordon soundtrack just
@@ -21,27 +14,8 @@ public class WordPatterns {
     public static final int MAX_WORD_LENGTH = 64;
 
     public static final String WORD_TOKEN_JOINER = "_";
-
-
-    public static final Set<String> topWords;
-    static {
-        topWords = new HashSet<>(200, 0.25f);
-        try (var resource = Objects.requireNonNull(ClassLoader.getSystemResourceAsStream("dictionary/en-stopwords"),
-                "Could not load word frequency table");
-             var br = new BufferedReader(new InputStreamReader(resource))
-        ) {
-            while (true) {
-                String s = br.readLine();
-                if (s == null) {
-                    break;
-                }
-                topWords.add(s);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
+    private static final WordDictionary stopWords =
+            WordDictionary.fromClasspathResource("dictionary/en-stopwords");
 
     /** Run checks on the word and exclude terms with too many special characters
      */
@@ -100,15 +74,12 @@ public class WordPatterns {
             sLc = s.toLowerCase();
         }
 
-        if (isTopWord(sLc)) {
+        if (stopWords.contains(sLc)) {
             return true;
         }
 
         return false;
     }
 
-    public static boolean isTopWord(String strLowerCase) {
-        return topWords.contains(strLowerCase);
-    }
 
 }
