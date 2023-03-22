@@ -4,6 +4,11 @@ This service handles search traffic and is the service
 you're most directly interacting with when visiting
 [search.marginalia.nu](https://search.marginalia.nu). 
 
+It interprets a "human" query and translates it into a
+request that gets passed into to the index service, which finds
+related documents, which this service then ranks and returns
+to the user.
+
 ## Central classes
 
 * [SearchService](src/main/java/nu/marginalia/search/SearchService.java) receives requests and delegates to the 
