@@ -2,9 +2,12 @@
 
 The reverse index contains a mapping from word to document id. 
 
-There are two tiers of this index, one priority index which only indexes terms that are flagged with priority flags<sup>1</sup>,
-and a full index that indexes all terms. The full index also provides access to term-level metadata, while the priority
-index is a binary index.
+There are two tiers of this index.
+
+* A priority index which only indexes terms that are flagged with priority flags<sup>1</sup>.
+* A full index that indexes all terms. 
+
+The full index also provides access to term-level metadata, while the priority index is a binary index that only offers information about which documents has a specific word.
 
 [1] See WordFlags in [common/model](../../common/model/) and
 KeywordMetadata in [features-convert/keyword-extraction](../../features-convert/keyword-extraction).
