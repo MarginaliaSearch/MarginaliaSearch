@@ -9,6 +9,9 @@ request that gets passed into to the index service, which finds
 related documents, which this service then ranks and returns
 to the user.
 
+
+![image](../../../doc/search-service-map.svg)
+
 ## Central classes
 
 * [SearchService](src/main/java/nu/marginalia/search/SearchService.java) receives requests and delegates to the 
