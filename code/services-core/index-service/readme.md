@@ -2,6 +2,8 @@
 
 The index service knows which document contains which keywords. 
 
+![image](../../../doc/index-service-map.svg)
+
 ## Central Classes
 
 * [IndexService](src/main/java/nu/marginalia/index/IndexService.java) is the REST entry point that the internal API talks to.
