@@ -10,7 +10,7 @@ related documents, which this service then ranks and returns
 to the user.
 
 
-![image](../../../doc/search-service-map.svg)
+![image](../../../doc/diagram/search-service-map.svg)
 
 ## Central classes
 

@@ -2,7 +2,7 @@
 
 The index service knows which document contains which keywords. 
 
-![image](../../../doc/index-service-map.svg)
+![image](../../../doc/diagram/index-service-map.svg)
 
 ## Central Classes
 

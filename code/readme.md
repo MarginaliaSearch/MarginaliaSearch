@@ -10,7 +10,7 @@ See [doc/module-taxonomy.md](../doc/module-taxonomy.md).
 
 A map of the most important components and how they relate can be found below. 
 
-![image](../doc/conceptual-overview.svg)
+![image](../doc/diagram/conceptual-overview.svg)
 
 ### Services
 * [core services](services-core/) "macroservices", stateful, memory hungry doing heavy lifting.
