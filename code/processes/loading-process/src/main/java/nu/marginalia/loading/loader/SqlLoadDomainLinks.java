@@ -75,6 +75,9 @@ public class SqlLoadDomainLinks {
         }
         catch (SQLException ex) {
             logger.warn("SQL error inserting domain links", ex);
+
+            if (getClass().desiredAssertionStatus())
+                throw new RuntimeException(ex);
         }
 
     }

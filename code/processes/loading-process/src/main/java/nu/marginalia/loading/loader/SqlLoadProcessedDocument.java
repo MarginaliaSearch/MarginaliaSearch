@@ -120,6 +120,9 @@ public class SqlLoadProcessedDocument {
 
         } catch (SQLException ex) {
             logger.warn("SQL error inserting document", ex);
+
+            if (getClass().desiredAssertionStatus())
+                throw new RuntimeException(ex);
         }
     }
 
@@ -169,6 +172,9 @@ public class SqlLoadProcessedDocument {
             conn.setAutoCommit(true);
         } catch (SQLException ex) {
             logger.warn("SQL error inserting failed document", ex);
+
+            if (getClass().desiredAssertionStatus())
+                throw new RuntimeException(ex);
         }
 
     }

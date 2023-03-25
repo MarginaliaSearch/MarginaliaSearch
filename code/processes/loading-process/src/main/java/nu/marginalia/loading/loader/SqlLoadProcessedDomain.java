@@ -62,6 +62,9 @@ public class SqlLoadProcessedDomain {
         }
         catch (SQLException ex) {
             logger.warn("SQL error initializing domain", ex);
+
+            if (getClass().desiredAssertionStatus())
+                throw new RuntimeException(ex);
         }
 
     }
@@ -84,6 +87,9 @@ public class SqlLoadProcessedDomain {
         }
         catch (SQLException ex) {
             logger.warn("SQL error inserting domain alias", ex);
+
+            if (getClass().desiredAssertionStatus())
+                throw new RuntimeException(ex);
         }
     }
 }

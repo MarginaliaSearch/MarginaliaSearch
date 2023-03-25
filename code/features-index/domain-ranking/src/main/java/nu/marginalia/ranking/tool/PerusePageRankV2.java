@@ -13,7 +13,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.ranking.RankingAlgorithm;
 import nu.marginalia.ranking.data.RankingDomainData;
 import nu.marginalia.ranking.data.RankingDomainFetcher;
-import nu.marginalia.model.dbcommon.DomainBlacklistImpl;
+import nu.marginalia.db.DomainBlacklistImpl;
 import nu.marginalia.service.module.DatabaseModule;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;

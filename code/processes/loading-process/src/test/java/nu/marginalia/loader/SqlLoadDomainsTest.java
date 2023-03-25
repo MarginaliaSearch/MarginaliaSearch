@@ -19,7 +19,7 @@ class SqlLoadDomainsTest {
             .withDatabaseName("WMSA_prod")
             .withUsername("wmsa")
             .withPassword("wmsa")
-            .withInitScript("sql/edge-crawler-cache.sql")
+            .withInitScript("sql/current/00-base.sql")
             .withNetworkAliases("mariadb");
 
     @Test

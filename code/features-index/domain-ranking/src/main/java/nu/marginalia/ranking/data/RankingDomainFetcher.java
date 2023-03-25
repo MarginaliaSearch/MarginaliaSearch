@@ -3,7 +3,7 @@ package nu.marginalia.ranking.data;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.model.dbcommon.DomainBlacklistImpl;
+import nu.marginalia.db.DomainBlacklistImpl;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

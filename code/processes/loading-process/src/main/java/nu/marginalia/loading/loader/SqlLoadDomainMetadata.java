@@ -33,6 +33,9 @@ public class SqlLoadDomainMetadata {
             stmt.executeUpdate();
         } catch (SQLException ex) {
             logger.warn("SQL error inserting domains", ex);
+
+            if (getClass().desiredAssertionStatus())
+                throw new RuntimeException(ex);
         }
     }
 }

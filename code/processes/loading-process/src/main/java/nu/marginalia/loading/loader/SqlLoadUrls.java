@@ -104,6 +104,9 @@ public class SqlLoadUrls {
         }
         catch (SQLException ex) {
             logger.warn("SQL error inserting URLs", ex);
+
+            if (getClass().desiredAssertionStatus())
+                throw new RuntimeException(ex);
         }
     }
 

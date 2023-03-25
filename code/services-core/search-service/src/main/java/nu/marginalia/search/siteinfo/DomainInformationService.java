@@ -4,7 +4,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.crawl.DomainIndexingState;
-import nu.marginalia.model.dbcommon.DbDomainQueries;
+import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.model.id.EdgeId;
 import nu.marginalia.search.model.DomainInformation;
 import org.slf4j.Logger;

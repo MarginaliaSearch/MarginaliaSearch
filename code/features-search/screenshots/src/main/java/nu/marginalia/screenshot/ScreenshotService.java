@@ -5,14 +5,13 @@ import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.dbcommon.DbDomainQueries;
+import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.model.id.EdgeId;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
-import spark.Spark;
 
 import java.sql.SQLException;
 

@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.browse.model.BrowseResult;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.dbcommon.DomainBlacklist;
+import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.model.id.EdgeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
