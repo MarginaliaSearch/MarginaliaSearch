@@ -52,13 +52,17 @@ public class SearchFrontPageService {
 
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                SELECT TITLE, LINK, LIST_DATE FROM SEARCH_NEWS_FEED
+                SELECT TITLE, LINK, SOURCE, LIST_DATE FROM SEARCH_NEWS_FEED ORDER BY LIST_DATE DESC
                 """)) {
 
             var rep = stmt.executeQuery();
 
             while (rep.next()) {
-                items.add(new NewsItem(rep.getString(1), rep.getString(2), rep.getDate(3).toLocalDate()));
+                items.add(new NewsItem(
+                        rep.getString(1),
+                        rep.getString(2),
+                        rep.getString(3),
+                        rep.getDate(4).toLocalDate()));
             }
         }
         catch (SQLException ex) {
@@ -69,5 +73,5 @@ public class SearchFrontPageService {
     }
 
     private record IndexModel(List<NewsItem> news, int searchPerMinute) { }
-    private record NewsItem(String title, String url, LocalDate date) {}
+    private record NewsItem(String title, String url, String source, LocalDate date) {}
 }

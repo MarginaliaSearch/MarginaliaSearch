@@ -7,7 +7,7 @@ INSERT IGNORE INTO SEARCH_NEWS_FEED(TITLE, LINK, SOURCE, LIST_DATE) VALUES (
 );
 
 INSERT IGNORE INTO SEARCH_NEWS_FEED(TITLE, LINK, SOURCE, LIST_DATE) VALUES (
-'A Search Engine Designed To Surprise You'
+'A Search Engine Designed To Surprise You',
 'https://onezero.medium.com/a-search-engine-designed-to-surprise-you-b81944ed5c06',
 'Clive Thompson OneZero',
 '2021-09-16'

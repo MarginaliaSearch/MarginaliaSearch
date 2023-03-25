@@ -6,7 +6,7 @@
             <dl>
             {{#each news}}
                 <dt><a href="{{link}}" rel="nofollow">{{title}}</a></dt>
-                <dd>{{date}}</dd>
+                <dd>{{source}} {{date}}</dd>
             {{/each}}
             </dl>
         </div>
