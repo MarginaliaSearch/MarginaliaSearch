@@ -1,11 +1,11 @@
 # Documentation
 
 A lot of the architectural description is sprinkled into the code repository closer to the code. 
-Start in [../code/](../code/) and poke around.
+Start in [📁 ../code/](../code/) and poke around.
 
 ## Set-up
 
-* [../run/](../run/) - Set-up instructions
+* [📁 ../run/](../run/) - Set-up instructions
 
 ## Documents
 
