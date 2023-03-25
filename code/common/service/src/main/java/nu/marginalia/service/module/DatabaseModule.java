@@ -21,9 +21,9 @@ import java.util.Properties;
 public class DatabaseModule extends AbstractModule {
     private static final Logger logger = LoggerFactory.getLogger(DatabaseModule.class);
 
-    private static final String DB_USER_KEY="db.user";
-    private static final String DB_PASS_KEY ="db.pass";
-    private static final String DB_CONN_KEY ="db.conn";
+    private static final String DB_USER_KEY = "db.user";
+    private static final String DB_PASS_KEY = "db.pass";
+    private static final String DB_CONN_KEY = "db.conn";
 
     private final Properties dbProperties;
 
