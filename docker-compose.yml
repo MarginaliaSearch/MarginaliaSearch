@@ -5,6 +5,7 @@ x-svc: &service
     - vol:/vol
     - conf:/wmsa/conf:ro
     - model:/wmsa/model
+    - data:/wmsa/data
     - logs:/var/log/wmsa
   networks:
     - wmsa
@@ -126,3 +127,9 @@ volumes:
       type: none
       o: bind
       device: run/conf
+  data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: run/data

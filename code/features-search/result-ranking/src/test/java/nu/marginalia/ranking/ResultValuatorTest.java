@@ -63,7 +63,7 @@ class ResultValuatorTest {
     @Test
     void evaluateTerms() {
 
-        when(dict.getTermFreq("bob")).thenReturn(10L);
+        when(dict.getTermFreq("bob")).thenReturn(10);
         SearchResultRankingContext context = new SearchResultRankingContext(100000,
                 Map.of("bob", 10));
 

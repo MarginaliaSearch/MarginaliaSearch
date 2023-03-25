@@ -65,17 +65,17 @@ public class TermFrequencyDict {
     }
 
     /** Get the term frequency for the string s */
-    public long getTermFreq(String s) {
+    public int getTermFreq(String s) {
         return wordRates.get(getStringHash(s));
     }
 
     /** Get the term frequency for the already stemmed string s */
-    public long getTermFreqStemmed(String s) {
+    public int getTermFreqStemmed(String s) {
         return wordRates.get(longHash(s.getBytes()));
     }
 
     /** Get the term frequency for the already stemmed and already hashed value 'hash' */
-    public long getTermFreqHash(long hash) {
+    public int getTermFreqHash(long hash) {
         return wordRates.get(hash);
     }
 
