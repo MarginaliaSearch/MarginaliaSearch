@@ -5,7 +5,7 @@ import com.google.common.hash.Hashing;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.dbcommon.DomainBlacklistImpl;
+import nu.marginalia.db.DomainBlacklistImpl;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

@@ -1,4 +1,4 @@
-package nu.marginalia.model.dbcommon;
+package nu.marginalia.db;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

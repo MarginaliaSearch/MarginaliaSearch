@@ -1,7 +1,7 @@
 package nu.marginalia.search.command.commands;
 
 import com.google.inject.Inject;
-import nu.marginalia.model.dbcommon.DbDomainQueries;
+import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.command.SearchCommandInterface;
 import nu.marginalia.search.command.SearchParameters;

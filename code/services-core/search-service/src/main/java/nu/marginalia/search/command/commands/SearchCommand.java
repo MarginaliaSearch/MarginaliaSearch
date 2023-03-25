@@ -2,7 +2,7 @@ package nu.marginalia.search.command.commands;
 
 import com.google.inject.Inject;
 import nu.marginalia.client.Context;
-import nu.marginalia.model.dbcommon.DomainBlacklist;
+import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.search.SearchOperator;
 import nu.marginalia.search.command.SearchCommandInterface;
 import nu.marginalia.search.command.SearchParameters;

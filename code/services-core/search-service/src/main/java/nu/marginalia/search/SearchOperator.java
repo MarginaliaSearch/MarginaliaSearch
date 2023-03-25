@@ -6,7 +6,7 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import nu.marginalia.assistant.client.AssistantClient;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.dbcommon.DbDomainQueries;
+import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.client.Context;
 import nu.marginalia.search.model.DecoratedSearchResults;

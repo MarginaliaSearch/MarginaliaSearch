@@ -3,7 +3,7 @@ package nu.marginalia.ranking.tool;
 import lombok.SneakyThrows;
 import nu.marginalia.ranking.accumulator.RankingResultListAccumulator;
 import nu.marginalia.ranking.data.RankingDomainFetcher;
-import nu.marginalia.model.dbcommon.DomainBlacklistImpl;
+import nu.marginalia.db.DomainBlacklistImpl;
 import nu.marginalia.ranking.StandardPageRank;
 import nu.marginalia.ranking.data.RankingDomainFetcherForSimilarityData;
 import nu.marginalia.service.module.DatabaseModule;

@@ -3,7 +3,7 @@ package nu.marginalia.search.svc;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.WebsiteUrl;
-import nu.marginalia.model.dbcommon.DbDomainQueries;
+import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.model.id.EdgeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

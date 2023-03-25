@@ -6,7 +6,7 @@ import nu.marginalia.ranking.StandardPageRank;
 import nu.marginalia.ranking.accumulator.RankingResultListAccumulator;
 import nu.marginalia.ranking.data.RankingDomainFetcherForSimilarityData;
 
-import nu.marginalia.model.dbcommon.DomainBlacklistImpl;
+import nu.marginalia.db.DomainBlacklistImpl;
 import nu.marginalia.service.module.DatabaseModule;
 import org.mariadb.jdbc.Driver;
 import org.slf4j.Logger;

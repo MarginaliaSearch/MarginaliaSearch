@@ -6,7 +6,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.browse.DbBrowseDomainsRandom;
 import nu.marginalia.browse.DbBrowseDomainsSimilarCosine;
 import nu.marginalia.browse.model.BrowseResult;
-import nu.marginalia.model.dbcommon.DomainBlacklist;
+import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.screenshot.ScreenshotService;

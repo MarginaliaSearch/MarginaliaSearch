@@ -57,6 +57,8 @@ public class SqlLoadDomains {
         }
         catch (SQLException ex) {
             logger.warn("SQL error inserting domain", ex);
+            if (getClass().desiredAssertionStatus())
+                throw new RuntimeException(ex);
         }
 
 
