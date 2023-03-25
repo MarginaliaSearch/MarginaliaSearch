@@ -47,8 +47,7 @@ public class WmsaHome {
         // Developers probably have a "run/" somewhere upstream from cwd.
         //
 
-        return Stream.iterate(Paths.get("").toAbsolutePath(), Path::getParent)
-                .takeWhile(Files::exists)
+        return Stream.iterate(Paths.get("").toAbsolutePath(), f -> f != null && Files.exists(f), Path::getParent)
                 .filter(p -> Files.exists(p.resolve("run/env")))
                 .filter(p -> Files.exists(p.resolve("run/setup.sh")))
                 .map(p -> p.resolve("run"))
