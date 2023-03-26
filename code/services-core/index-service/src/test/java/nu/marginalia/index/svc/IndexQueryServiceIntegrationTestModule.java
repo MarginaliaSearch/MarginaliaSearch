@@ -45,7 +45,6 @@ public class IndexQueryServiceIntegrationTestModule extends AbstractModule {
     @Override
     protected void configure() {
 
-        System.setProperty("small-ram", "true");
         try {
             var servicesFactory = new IndexServicesFactory(Path.of("/tmp"),
                     slowDir, fastDir

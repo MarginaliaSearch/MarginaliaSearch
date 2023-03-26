@@ -18,7 +18,6 @@ CONVERTER_PROCESS_OPTS="
 
 LOADER_PROCESS_OPTS="
 -ea
--Dsmall-ram=TRUE
 -Dlocal-index-path=vol/iw
 "
 
