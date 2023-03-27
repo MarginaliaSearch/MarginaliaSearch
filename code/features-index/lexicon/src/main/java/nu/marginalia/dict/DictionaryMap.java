@@ -4,12 +4,7 @@ public interface DictionaryMap {
     int NO_VALUE = Integer.MIN_VALUE;
 
     static DictionaryMap create() {
-        if (!Boolean.getBoolean("large-ram")) {
-            return new OnHeapDictionaryMap();
-        }
-        else {
-            return new OffHeapDictionaryHashMap(1L << 31);
-        }
+        return new OnHeapDictionaryMap();
     }
 
     int size();

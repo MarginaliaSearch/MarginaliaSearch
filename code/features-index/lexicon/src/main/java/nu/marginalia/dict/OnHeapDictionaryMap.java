@@ -3,7 +3,8 @@ package nu.marginalia.dict;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 
 public class OnHeapDictionaryMap implements DictionaryMap {
-    private final Long2IntOpenHashMap entries = new Long2IntOpenHashMap(100_000, 0.75f);
+    private static final int DEFAULT_SIZE = Integer.getInteger("lexiconSizeHint", 100_000);
+    private final Long2IntOpenHashMap entries = new Long2IntOpenHashMap(DEFAULT_SIZE, 0.75f);
 
     @Override
     public int size() {
