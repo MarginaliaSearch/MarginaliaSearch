@@ -1,4 +1,4 @@
-# marginalia.nu
+# Marginalia Search
 
 This is the source code for [Marginalia Search](https://search.marginalia.nu). 
 
