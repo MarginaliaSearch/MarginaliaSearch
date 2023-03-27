@@ -5,8 +5,8 @@
         <div class="info">
             <dl>
             {{#each news}}
-                <dt><a href="{{link}}" rel="nofollow">{{title}}</a></dt>
-                <dd>{{source}} {{date}}</dd>
+                <dt><a href="{{url}}" rel="nofollow">{{title}}</a></dt>
+                <dd>{{date}} {{source}} </dd>
             {{/each}}
             </dl>
         </div>
