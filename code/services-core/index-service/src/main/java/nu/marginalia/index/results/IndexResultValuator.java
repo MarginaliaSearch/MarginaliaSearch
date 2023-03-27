@@ -56,6 +56,7 @@ public class IndexResultValuator {
         int maxBitMask = 0;
         int maxFlagsCount = 0;
         boolean hasSingleTermMatch = false;
+        boolean anyAllSynthetic = false;
 
         for (int querySetId = 0; querySetId < searchTermVariants.size(); querySetId++) {
 
@@ -63,6 +64,7 @@ public class IndexResultValuator {
 
             SearchResultKeywordScore[] termScoresForSet = new SearchResultKeywordScore[termList.size()];
 
+            boolean synthetic = true;
             for (int termIdx = 0; termIdx < termList.size(); termIdx++) {
                 String searchTerm = termList.get(termIdx);
 
@@ -78,6 +80,8 @@ public class IndexResultValuator {
                         docMetadata,
                         resultsWithPriorityTerms.contains(searchResult.combinedId)
                 );
+
+                synthetic &= WordFlags.Synthetic.isPresent(metadata);
 
                 searchResult.keywordScores.add(score);
 
@@ -108,6 +112,8 @@ public class IndexResultValuator {
             maxPosCount = Math.max(maxPosCount, minPosCount);
             maxFlagsCount = Math.max(maxFlagsCount, minFlagsCount);
 
+            anyAllSynthetic |= synthetic;
+
             hasSingleTermMatch |= (termScoresForSet.length == 1 && minPosCount != 0);
         }
 
@@ -118,7 +124,8 @@ public class IndexResultValuator {
                 hasPriorityTerm,
                 maxFlagsCount,
                 Math.min(4, maxPosCount),
-                Math.min(4, maxBitMask)
+                Math.min(4, maxBitMask),
+                anyAllSynthetic
         ));
 
         return searchResult;

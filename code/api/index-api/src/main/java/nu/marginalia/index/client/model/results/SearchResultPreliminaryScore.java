@@ -9,7 +9,8 @@ public record SearchResultPreliminaryScore(boolean hasSingleTermMatch,
                                            boolean hasPriorityTerm,
                                            int minNumberOfFlagsSet,
                                            int minNumberOfPositions,
-                                           int overlappingPositions)
+                                           int overlappingPositions,
+                                           boolean anyAllSynthetic)
         implements Comparable<SearchResultPreliminaryScore>
 {
     @Override
@@ -37,6 +38,7 @@ public record SearchResultPreliminaryScore(boolean hasSingleTermMatch,
     public boolean isEmpty() {
         return minNumberOfFlagsSet == 0
             && minNumberOfPositions == 0
-            && overlappingPositions == 0;
+            && overlappingPositions == 0
+            && !anyAllSynthetic;
     }
 }
