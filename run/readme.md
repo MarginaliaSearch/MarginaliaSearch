@@ -51,3 +51,28 @@ indexes. Wait for the line 'Auto-conversion finished!'
 
 When all is done, it should be possible to visit
 [http://localhost:8080](http://localhost:8080) and try a few searches!
+
+
+## Other Crawl Data
+
+By default, `reconvert.sh` will load the medium dataset. This is appropriate for a demo,
+but other datasets also exist.
+
+| Set | Description                                                                |
+|-----|----------------------------------------------------------------------------|
+| s   | 1000 domains, suitable for low-end machines                                |
+| m   | 2000 domains                                                               |
+| l   | 5000 domains                                                               |
+| xl  | 50,000 domains, basically pre-prod.<br><b>Warning</b>: 5h+ processing time |
+
+To switch datasets, run e.g. 
+
+```shell
+$ docker-compose up -d mariadb
+$ ./run/reconvert.sh l
+```
+
+## Experiment Runner
+
+The script `experiment.sh` is a launcher for the experiment runner, which is useful when 
+evaluating new algorithms in processing crawl data. 
