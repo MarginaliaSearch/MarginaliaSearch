@@ -7,8 +7,8 @@ public enum DocumentFlags {
     PlainText,
     Ads,
     Tracking,
-    UnusedBit4,
-    UnusedBit5,
+    ShortDocument,
+    LongDocument,
     UnusedBit6,
     UnusedBit7,
     ;

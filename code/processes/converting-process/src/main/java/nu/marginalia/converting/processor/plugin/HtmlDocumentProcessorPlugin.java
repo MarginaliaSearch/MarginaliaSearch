@@ -5,6 +5,7 @@ import com.google.inject.name.Named;
 import nu.marginalia.converting.processor.MetaRobotsTag;
 import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
 import nu.marginalia.converting.processor.logic.links.LinkProcessor;
+import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.summary.SummaryExtractor;
 import nu.marginalia.link_parser.LinkParser;
@@ -16,7 +17,6 @@ import nu.marginalia.converting.model.HtmlStandard;
 import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.model.idx.DocumentMetadata;
-import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.converting.processor.logic.*;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.gregex.GuardedRegex;
@@ -40,7 +40,6 @@ import static nu.marginalia.converting.model.DisqualifiedException.*;
 
 public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin {
 
-    private final int minDocumentLength;
     private final double minDocumentQuality;
 
     private final SentenceExtractor sentenceExtractor;
@@ -50,6 +49,8 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     private final SummaryExtractor summaryExtractor;
     private final PubDateSniffer pubDateSniffer;
 
+    private final DocumentLengthLogic documentLengthLogic;
+
     private final MetaRobotsTag metaRobotsTag;
     private static final DocumentValuator documentValuator = new DocumentValuator();
 
@@ -57,16 +58,17 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     private static final FeedExtractor feedExtractor = new FeedExtractor(linkParser);
 
     @Inject
-    public HtmlDocumentProcessorPlugin(@Named("min-document-length") Integer minDocumentLength,
-                                       @Named("min-document-quality") Double minDocumentQuality,
-                                       SentenceExtractor sentenceExtractor,
-                                       FeatureExtractor featureExtractor,
-                                       TitleExtractor titleExtractor,
-                                       DocumentKeywordExtractor keywordExtractor,
-                                       SummaryExtractor summaryExtractor,
-                                       PubDateSniffer pubDateSniffer,
-                                       MetaRobotsTag metaRobotsTag) {
-        this.minDocumentLength = minDocumentLength;
+    public HtmlDocumentProcessorPlugin(
+            @Named("min-document-quality") Double minDocumentQuality,
+            SentenceExtractor sentenceExtractor,
+            FeatureExtractor featureExtractor,
+            TitleExtractor titleExtractor,
+            DocumentKeywordExtractor keywordExtractor,
+            SummaryExtractor summaryExtractor,
+            PubDateSniffer pubDateSniffer,
+            DocumentLengthLogic documentLengthLogic,
+            MetaRobotsTag metaRobotsTag) {
+        this.documentLengthLogic = documentLengthLogic;
         this.minDocumentQuality = minDocumentQuality;
         this.sentenceExtractor = sentenceExtractor;
         this.featureExtractor = featureExtractor;
@@ -102,9 +104,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         final EdgeUrl url = new EdgeUrl(crawledDocument.url);
 
-        Document prunedDoc = prune(doc);
-
-        var dld = sentenceExtractor.extractSentences(prunedDoc);
+        DocumentLanguageData dld = sentenceExtractor.extractSentences(prune(doc));
 
         checkDocumentLanguage(dld);
 
@@ -113,11 +113,12 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         ret.length = getLength(doc);
         ret.standard = getHtmlStandard(doc);
         ret.title = titleExtractor.getTitleAbbreviated(doc, dld, crawledDocument.url);
-        ret.quality = documentValuator.getQuality(crawledDocument, ret.standard, doc, dld);
+        ret.quality = documentValuator.getQuality(crawledDocument, ret.standard, doc);
 
         // don't move this up! it uses title and quality
         // and is run before the heavy computations below
-        if (isDisqualified(url, dld, ret)) {
+        documentLengthLogic.validateLength(dld);
+        if (isDisqualified(url, ret)) {
             throw new DisqualifiedException(DisqualificationReason.QUALITY);
         }
 
@@ -127,6 +128,8 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         PubDate pubDate = pubDateSniffer.getPubDate(crawledDocument.headers, url, doc, ret.standard, true);
         EnumSet<DocumentFlags> documentFlags = htmlFeatures2DocumentFlags(ret.features);
+
+        documentLengthLogic.setLengthFlags(ret.length, documentFlags);
 
         ret.metadata = new DocumentMetadata(url.depth(), pubDate.yearByte(), 0, (int) -ret.quality, documentFlags);
 
@@ -138,7 +141,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
                 .addUrl(url)
                 .addFeatures(ret.features)
                 .addFormat(ret.standard)
-                .build(words);
+                .build();
 
         words.addAllSyntheticTerms(tagWords);
 
@@ -179,13 +182,11 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
     private static final GuardedRegex mastodonFeedRegex = GuardedRegexFactory.startsWith("/@", "^/@[^/]+/?$");
 
-    private boolean isDisqualified(EdgeUrl url, DocumentLanguageData dld, ProcessedDocumentDetails ret) {
+    private boolean isDisqualified(EdgeUrl url, ProcessedDocumentDetails ret) {
         if (ret.quality < minDocumentQuality) {
             return true;
         }
-        if (dld.totalNumWords() < minDocumentLength) {
-            return true;
-        }
+
         // These pages shouldn't be publicly accessible
         if ("phpinfo()".equals(ret.title)) {
             return true;

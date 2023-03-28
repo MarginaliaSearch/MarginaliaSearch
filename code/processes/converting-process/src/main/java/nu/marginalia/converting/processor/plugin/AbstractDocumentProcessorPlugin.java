@@ -32,7 +32,7 @@ public abstract class AbstractDocumentProcessorPlugin {
     protected static class MetaTagsBuilder {
         private final Set<String> tagWords = new HashSet<>();
 
-        public Set<String> build(DocumentKeywordsBuilder dest) {
+        public Set<String> build() {
             return tagWords;
         }
 

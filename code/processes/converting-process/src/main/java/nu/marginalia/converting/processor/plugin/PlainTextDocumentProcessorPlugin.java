@@ -2,6 +2,7 @@ package nu.marginalia.converting.processor.plugin;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import nu.marginalia.converting.processor.logic.DocumentLengthLogic;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
@@ -28,20 +29,21 @@ import java.util.List;
 
 public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin {
 
-    private final int minDocumentLength;
     private final int maxTitleLength;
     private final SentenceExtractor sentenceExtractor;
     private final DocumentKeywordExtractor keywordExtractor;
     private final PlainTextLogic plainTextLogic = new PlainTextLogic();
+    private final DocumentLengthLogic documentLengthLogic;
 
 
     @Inject
-    public PlainTextDocumentProcessorPlugin(@Named("min-document-length") Integer minDocumentLength,
-                                            @Named("max-title-length") Integer maxTitleLength,
+    public PlainTextDocumentProcessorPlugin(@Named("max-title-length") Integer maxTitleLength,
                                             SentenceExtractor sentenceExtractor,
-                                            DocumentKeywordExtractor keywordExtractor)
+                                            DocumentKeywordExtractor keywordExtractor,
+                                            DocumentLengthLogic documentLengthLogic
+                                            )
     {
-        this.minDocumentLength = minDocumentLength;
+        this.documentLengthLogic = documentLengthLogic;
         this.maxTitleLength = maxTitleLength;
         this.sentenceExtractor = sentenceExtractor;
         this.keywordExtractor = keywordExtractor;
@@ -68,15 +70,14 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
 
         checkDocumentLanguage(dld);
 
-        if (dld.totalNumWords() < minDocumentLength) {
-            throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.LENGTH);
-        }
+        documentLengthLogic.validateLength(dld);
 
         var ret = new ProcessedDocumentDetails();
 
         List<String> firstFewLines = LineUtils.firstNLines(documentBody, 40);
 
         ret.length = documentBody.length();
+
         ret.standard = HtmlStandard.PLAIN;
         ret.title = StringUtils.truncate(plainTextLogic.getTitle(url, firstFewLines), maxTitleLength);
 
@@ -88,7 +89,11 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
 
         final PubDate pubDate = new PubDate(LocalDate.ofYearDay(1993, 1));
 
-        ret.metadata = new DocumentMetadata(url.depth(), pubDate.yearByte(), 0, (int) -ret.quality, EnumSet.of(DocumentFlags.PlainText));
+        EnumSet<DocumentFlags> documentFlags = EnumSet.of(DocumentFlags.PlainText);
+
+        documentLengthLogic.setLengthFlags(ret.length, documentFlags);
+
+        ret.metadata = new DocumentMetadata(url.depth(), pubDate.yearByte(), 0, (int) -ret.quality, documentFlags);
 
         DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, url);
 
@@ -98,7 +103,7 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
                 .addUrl(url)
                 .addFeatures(ret.features)
                 .addFormat(ret.standard)
-                .build(words);
+                .build();
 
         words.addAllSyntheticTerms(tagWords);
 

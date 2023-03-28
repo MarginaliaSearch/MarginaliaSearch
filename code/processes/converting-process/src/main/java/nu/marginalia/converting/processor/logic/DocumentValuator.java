@@ -11,19 +11,7 @@ import java.util.Set;
 
 public class DocumentValuator {
 
-    private static final Set<String> filthTable = Set.of(
-            "xxx", "sex", "anal", "sexy",
-            "bdsm", "fetish", "porn", "camgirls", "dildo",
-            "gangbang", "buttplug", "orgasm", "vibrator",
-            "cameltoe", "download", "iso", "botox", "torrent",
-            "jackpot", "vegas", "casino", "coinbase", "poloniex",
-            "myetherwallet", "ethereum", "binance", "bitcoin",
-            "litecoin", "seo", "serp"
-
-    );
-
-    public double getQuality(CrawledDocument crawledDocument, HtmlStandard htmlStandard, Document parsedDocument, DocumentLanguageData dld) throws DisqualifiedException {
-        double smutCoefficient = dld.streamLowerCase().filter(filthTable::contains).count();
+    public double getQuality(CrawledDocument crawledDocument, HtmlStandard htmlStandard, Document parsedDocument) throws DisqualifiedException {
         double scriptPenalty = getScriptPenalty(parsedDocument);
 
         int textBodyLength = parsedDocument.text().length();
@@ -35,8 +23,7 @@ public class DocumentValuator {
 
         return Math.log(textBodyLength / (double) (1+rawLength))*htmlStandard.scale
                 + htmlStandard.offset
-                - scriptPenalty
-                - smutCoefficient;
+                - scriptPenalty;
     }
 
 

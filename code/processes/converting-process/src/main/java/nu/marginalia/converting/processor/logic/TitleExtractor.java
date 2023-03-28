@@ -13,7 +13,6 @@ public class TitleExtractor {
     @Inject
     public TitleExtractor(@Named("max-title-length") Integer maxTitleLength) {
         this.maxTitleLength = maxTitleLength;
-
     }
 
     public String getTitleAbbreviated(Document doc, DocumentLanguageData dld, String url) {
