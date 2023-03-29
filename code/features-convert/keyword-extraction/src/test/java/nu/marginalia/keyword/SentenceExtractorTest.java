@@ -70,8 +70,6 @@ class SentenceExtractorTest {
 
         System.out.println("Running");
 
-        var dict = new TermFrequencyDict(lm);
-
         SentenceExtractor se = new SentenceExtractor(lm);
         KeywordExtractor keywordExtractor = new KeywordExtractor();
 

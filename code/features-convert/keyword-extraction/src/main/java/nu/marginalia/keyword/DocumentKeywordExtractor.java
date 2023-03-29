@@ -2,8 +2,6 @@ package nu.marginalia.keyword;
 
 import nu.marginalia.keyword.extractors.*;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
-import nu.marginalia.language.WordPatterns;
-import nu.marginalia.language.encoding.AsciiFlattener;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.WordRep;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
@@ -63,12 +61,12 @@ public class DocumentKeywordExtractor {
                                    KeywordMetadata metadata,
                                    WordReps words) {
 
-        for (var word : words.getReps()) {
+        for (var rep : words.getReps()) {
 
-            String flatWord = AsciiFlattener.flattenUnicode(word.word);
+            var word = rep.word;
 
-            if (!flatWord.isBlank()) {
-                wordsBuilder.add(flatWord, metadata.getMetadataForWord(word.stemmed));
+            if (!word.isBlank()) {
+                wordsBuilder.add(word, metadata.getMetadataForWord(rep.stemmed));
             }
         }
     }
@@ -89,7 +87,7 @@ public class DocumentKeywordExtractor {
                     continue;
                 }
 
-                String w = AsciiFlattener.flattenUnicode(word.wordLowerCase());
+                String w = word.wordLowerCase();
                 if (matchesWordPattern(w)) {
                     wordsBuilder.add(w, metadata.getMetadataForWord(word.stemmed()));
                 }
@@ -97,9 +95,8 @@ public class DocumentKeywordExtractor {
 
             for (var names : keywordExtractor.getProperNames(sent)) {
                 var rep = new WordRep(sent, names);
-                String w = AsciiFlattener.flattenUnicode(rep.word);
 
-                wordsBuilder.add(w, metadata.getMetadataForWord(rep.stemmed));
+                wordsBuilder.add(rep.word, metadata.getMetadataForWord(rep.stemmed));
             }
         }
     }
