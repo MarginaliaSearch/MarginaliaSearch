@@ -69,6 +69,10 @@ public class IndexQueryService {
         String json = request.body();
         SearchSpecification specsSet = gson.fromJson(json, SearchSpecification.class);
 
+        if (!index.isAvailable()) {
+            Spark.halt(503, "Index is not loaded");
+        }
+
         try {
             return wmsa_edge_index_query_time.time(() -> {
                 var params = new SearchParameters(specsSet, getSearchSet(specsSet));
@@ -135,35 +139,38 @@ public class IndexQueryService {
         final TLongList results = new TLongArrayList(params.fetchSize);
 
         logger.info(queryMarker, "{}", params.queryParams);
-        for (var sq : params.subqueries) {
-            final SearchIndexSearchTerms searchTerms = searchTermsSvc.getSearchTerms(sq);
+
+        outer:
+        // These queries are various term combinations
+        for (var subquery : params.subqueries) {
+            final SearchIndexSearchTerms searchTerms = searchTermsSvc.getSearchTerms(subquery);
 
             if (searchTerms.isEmpty()) {
                 continue;
             }
 
-            var resultsForSq = executeSubquery(searchTerms, params);
+            // These queries are different indices for one subquery
+            List<IndexQuery> queries = params.createIndexQueries(index, searchTerms);
+            for (var query : queries) {
+                var resultsForSq = executeQuery(query, params);
+                logger.info(queryMarker, "{} from {}", resultsForSq.size(), subquery);
+                results.addAll(resultsForSq);
 
-            logger.info(queryMarker, "{} from {}", resultsForSq.size(), sq);
-
-            results.addAll(resultsForSq);
-
-            if (!params.hasTimeLeft()) {
-                logger.info("Query timed out {}, ({}), -{}",
-                        sq.searchTermsInclude, sq.searchTermsAdvice, sq.searchTermsExclude);
-                break;
+                if (!params.hasTimeLeft()) {
+                    logger.info("Query timed out {}, ({}), -{}",
+                            subquery.searchTermsInclude, subquery.searchTermsAdvice, subquery.searchTermsExclude);
+                    break outer;
+                }
             }
         }
 
         return results;
     }
 
-    private TLongArrayList executeSubquery(SearchIndexSearchTerms terms, SearchParameters params)
+    private TLongArrayList executeQuery(IndexQuery query, SearchParameters params)
     {
         final TLongArrayList results = new TLongArrayList(params.fetchSize);
         final LongQueryBuffer buffer = new LongQueryBuffer(params.fetchSize);
-
-        IndexQuery query = params.createIndexQuery(index, terms);
 
         while (query.hasMore()
                 && results.size() < params.fetchSize

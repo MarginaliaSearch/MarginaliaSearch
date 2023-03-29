@@ -58,8 +58,8 @@ public class SearchParameters {
                 specsSet.queryStrategy);
     }
 
-    IndexQuery createIndexQuery(SearchIndex index, SearchIndexSearchTerms terms) {
-        return index.createQuery(terms, queryParams, consideredUrlIds::add);
+    List<IndexQuery> createIndexQueries(SearchIndex index, SearchIndexSearchTerms terms) {
+        return index.createQueries(terms, queryParams, consideredUrlIds::add);
     }
 
     boolean hasTimeLeft() {

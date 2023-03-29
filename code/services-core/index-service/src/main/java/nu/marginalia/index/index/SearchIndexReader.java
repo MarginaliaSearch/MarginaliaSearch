@@ -13,12 +13,12 @@ import nu.marginalia.index.query.ReverseIndexEntrySourceBehavior;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class SearchIndexReader {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
+
     private final ForwardIndexReader forwardIndexReader;
     private final ReverseIndexFullReader reverseIndexFullReader;
     private final ReverseIndexPriorityReader reverseIndexPriorityReader;
@@ -31,38 +31,14 @@ public class SearchIndexReader {
         this.reverseIndexPriorityReader = reverseIndexPriorityReader;
     }
 
-    public IndexQueryBuilder findWordAsSentence(int[] wordIdsByFrequency) {
-        List<EntrySource> entrySources = new ArrayList<>(1);
-
-        entrySources.add(reverseIndexFullReader.documents(wordIdsByFrequency[0], ReverseIndexEntrySourceBehavior.DO_PREFER));
-
-        return new SearchIndexQueryBuilder(reverseIndexFullReader, new IndexQuery(entrySources));
+    public IndexQueryBuilder findPriorityWord(int wordId) {
+        return new SearchIndexQueryBuilder(reverseIndexFullReader, reverseIndexPriorityReader, new IndexQuery(
+                List.of(reverseIndexPriorityReader.priorityDocuments(wordId))));
     }
 
-    public IndexQueryBuilder findWordAsTopic(int[] wordIdsByFrequency) {
-        List<EntrySource> entrySources = new ArrayList<>(wordIdsByFrequency.length);
-
-        for (int wordId : wordIdsByFrequency) {
-            entrySources.add(reverseIndexPriorityReader.priorityDocuments(wordId));
-        }
-
-        return new SearchIndexQueryBuilder(reverseIndexFullReader, new IndexQuery(entrySources));
-    }
-
-    public IndexQueryBuilder findWordTopicDynamicMode(int[] wordIdsByFrequency) {
-        if (wordIdsByFrequency.length > 3) {
-            return findWordAsSentence(wordIdsByFrequency);
-        }
-
-        List<EntrySource> entrySources = new ArrayList<>(wordIdsByFrequency.length + 1);
-
-        for (int wordId : wordIdsByFrequency) {
-            entrySources.add(reverseIndexPriorityReader.priorityDocuments(wordId));
-        }
-
-        entrySources.add(reverseIndexFullReader.documents(wordIdsByFrequency[0], ReverseIndexEntrySourceBehavior.DO_NOT_PREFER));
-
-        return new SearchIndexQueryBuilder(reverseIndexFullReader, new IndexQuery(entrySources));
+    public IndexQueryBuilder findFullWord(int wordId, ReverseIndexEntrySourceBehavior behavior) {
+        return new SearchIndexQueryBuilder(reverseIndexFullReader, reverseIndexPriorityReader, new IndexQuery(
+                List.of(reverseIndexFullReader.documents(wordId, behavior))));
     }
 
     QueryFilterStepIf filterForParams(IndexQueryParams params) {
