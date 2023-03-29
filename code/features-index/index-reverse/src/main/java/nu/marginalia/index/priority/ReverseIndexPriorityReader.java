@@ -5,6 +5,9 @@ import nu.marginalia.index.query.EntrySource;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.btree.BTreeReader;
 import nu.marginalia.index.query.EmptyEntrySource;
+import nu.marginalia.index.query.ReverseIndexRetainFilter;
+import nu.marginalia.index.query.filter.QueryFilterNoPass;
+import nu.marginalia.index.query.filter.QueryFilterStepIf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,4 +52,15 @@ public class ReverseIndexPriorityReader {
     private BTreeReader createReaderNew(long offset) {
         return new BTreeReader(documents, ReverseIndexPriorityParameters.bTreeContext, offset);
     }
+
+    public QueryFilterStepIf also(int wordId) {
+        if (wordId < 0) return new QueryFilterNoPass();
+
+        long offset = words.get(wordId);
+
+        if (offset < 0) return new QueryFilterNoPass();
+
+        return new ReverseIndexRetainFilter(createReaderNew(offset));
+    }
+
 }

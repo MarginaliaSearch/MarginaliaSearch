@@ -5,8 +5,8 @@ import com.google.inject.Singleton;
 import nu.marginalia.index.IndexServicesFactory;
 import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.query.IndexQueryBuilder;
-import nu.marginalia.index.results.IndexResultDomainDeduplicator;
 import nu.marginalia.index.query.IndexQueryParams;
+import nu.marginalia.index.query.ReverseIndexEntrySourceBehavior;
 import nu.marginalia.index.query.filter.QueryFilterStepFromPredicate;
 import nu.marginalia.index.svc.IndexSearchSetsService;
 import org.jetbrains.annotations.NotNull;
@@ -14,7 +14,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -90,42 +93,63 @@ public class SearchIndex {
         return indexReader != null;
     }
 
-    public IndexQuery createQuery(SearchIndexSearchTerms terms, IndexQueryParams params, LongPredicate includePred) {
 
-        if (null == indexReader) {
+    public List<IndexQuery> createQueries(SearchIndexSearchTerms terms, IndexQueryParams params, LongPredicate includePred) {
+
+        if (!isAvailable()) {
             logger.warn("Index reader not ready");
-            return new IndexQuery(Collections.emptyList());
+            return Collections.emptyList();
         }
 
         final int[] orderedIncludes = terms.sortedDistinctIncludes(this::compareKeywords);
 
-        IndexQueryBuilder query =
-            switch(params.queryStrategy()) {
-                case SENTENCE               -> indexReader.findWordAsSentence(orderedIncludes);
-                case TOPIC, REQUIRE_FIELD_SITE, REQUIRE_FIELD_TITLE, REQUIRE_FIELD_SUBJECT, REQUIRE_FIELD_DOMAIN, REQUIRE_FIELD_URL
-                                            -> indexReader.findWordAsTopic(orderedIncludes);
-                case AUTO                   -> indexReader.findWordTopicDynamicMode(orderedIncludes);
-            };
+        List<IndexQueryBuilder> queryHeads = new ArrayList<>(10);
+        List<IndexQuery> queries = new ArrayList<>(10);
 
-        if (query == null) {
-            return new IndexQuery(Collections.emptyList());
+        // To ensure that good results are processed first, create query heads for the priority index that filter for terms
+        // that contain pairs of two search terms
+        if (orderedIncludes.length > 1) {
+            for (int i = 0; i + 1 < orderedIncludes.length; i++) {
+                var remainingWords = Arrays.copyOfRange(orderedIncludes, i+1, orderedIncludes.length);
+                var entrySource = indexReader
+                        .findPriorityWord(orderedIncludes[i])
+                        .alsoPrioAnyOf(remainingWords);
+                queryHeads.add(entrySource);
+            }
         }
 
-        query = query.addInclusionFilter(new QueryFilterStepFromPredicate(includePred));
-
-        for (int i = 0; i < orderedIncludes.length; i++) {
-            query = query.also(orderedIncludes[i]);
+        // Next consider entries that appear only once in the priority index
+        for (var wordId : orderedIncludes) {
+            queryHeads.add(indexReader.findPriorityWord(wordId));
         }
 
-        for (int term : terms.excludes()) {
-            query = query.not(term);
+        // Finally consider terms in the full index
+        queryHeads.add(indexReader.findFullWord(orderedIncludes[0], ReverseIndexEntrySourceBehavior.DO_PREFER));
+
+        for (var query : queryHeads) {
+            if (query == null) {
+                return Collections.emptyList();
+            }
+
+
+            for (int orderedInclude : orderedIncludes) {
+                query = query.alsoFull(orderedInclude);
+            }
+
+            for (int term : terms.excludes()) {
+                query = query.notFull(term);
+            }
+
+            // This filtering step needs to happen only on terms that have passed all term-based filtering steps,
+            // it's essentially a memoization of the params filtering job which is relatively expensive
+            query = query.addInclusionFilter(new QueryFilterStepFromPredicate(includePred));
+
+            // Run these last, as they'll worst-case cause as many page faults as there are
+            // items in the buffer
+            queries.add(query.addInclusionFilter(indexReader.filterForParams(params)).build());
         }
 
-        // Run these last, as they'll worst-case cause as many page faults as there are
-        // items in the buffer
-        return query
-                .addInclusionFilter(indexReader.filterForParams(params))
-                .build();
+        return queries;
     }
 
     private int compareKeywords(int a, int b) {

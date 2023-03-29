@@ -34,7 +34,7 @@ public class SearchTermsService {
         for (var include : request.searchTermsInclude) {
             var word = lookUpWord(include);
             if (word.isEmpty()) {
-                logger.info("Unknown search term: " + include);
+                logger.debug("Unknown search term: " + include);
                 return new SearchIndexSearchTerms();
             }
             includes.add(word.getAsInt());
@@ -44,7 +44,7 @@ public class SearchTermsService {
         for (var advice : request.searchTermsAdvice) {
             var word = lookUpWord(advice);
             if (word.isEmpty()) {
-                logger.info("Unknown search term: " + advice);
+                logger.debug("Unknown search term: " + advice);
                 return new SearchIndexSearchTerms();
             }
             includes.add(word.getAsInt());
