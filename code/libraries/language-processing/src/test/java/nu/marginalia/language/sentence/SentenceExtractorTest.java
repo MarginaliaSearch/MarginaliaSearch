@@ -15,6 +15,13 @@ class SentenceExtractorTest {
     }
 
     @Test
+    void testParen() {
+        var dld = sentenceExtractor.extractSentence("I am (very) tall");
+
+        System.out.println(dld);
+    }
+
+    @Test
     void testPolishArtist() {
         var dld = sentenceExtractor.extractSentence("Uklański");
 

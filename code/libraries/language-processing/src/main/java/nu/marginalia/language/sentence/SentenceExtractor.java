@@ -33,6 +33,7 @@ public class SentenceExtractor {
     private static final Logger logger = LoggerFactory.getLogger(SentenceExtractor.class);
 
     private static final SentenceExtractorHtmlTagCleaner tagCleaner = new SentenceExtractorHtmlTagCleaner();
+    private static final SentencePreCleaner sentencePrecleaner = new SentencePreCleaner();
 
     private final ThreadLocal<StringPool> stringPool = ThreadLocal.withInitial(() -> StringPool.create(10_000));
 
@@ -135,7 +136,7 @@ public class SentenceExtractor {
             sentences = StringUtils.split(textNormalizedSpaces, '.');
         }
 
-        sentences = preCleanSentences(sentences);
+        sentences = sentencePrecleaner.clean(sentences);
 
         final String[][] tokens = new String[sentences.length][];
         final int[][] separators = new int[sentences.length][];
@@ -194,27 +195,6 @@ public class SentenceExtractor {
             ret[i] = new DocumentSentence(fullString, tokens[i], separators[i], tokensLc[i], posTags[i], stemmedWords[i]);
         }
         return ret;
-    }
-
-    private static final Pattern splitPattern = Pattern.compile("( -|- |\\|)");
-
-    private String[] preCleanSentences(String[] sentences) {
-
-        if (sentences.length > 250) {
-            sentences = Arrays.copyOf(sentences, 250);
-        }
-
-        List<String> sentenceList = new ArrayList<>();
-        for (var s : sentences) {
-            if (s.isBlank()) continue;
-            if (s.contains("-") || s.contains("|")) {
-                sentenceList.addAll(Arrays.asList(splitPattern.split(s)));
-            }
-            else {
-                sentenceList.add(s);
-            }
-        }
-        return sentenceList.toArray(String[]::new);
     }
 
     private String[] stemSentence(String[] strings) {

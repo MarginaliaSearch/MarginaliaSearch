@@ -126,7 +126,17 @@ public class DocumentSentence implements Iterable<DocumentSentence.SentencePos>{
 
     @Override
     public String toString() {
-        return IntStream.range(0, length()).mapToObj(i -> String.format("%s[%s]", words[i], posTags[i])).collect(Collectors.joining(" "));
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < words.length; i++) {
+            sb.append(words[i]).append('[').append(posTags[i]).append(']');
+            if (separators[i] == WordSeparator.COMMA) {
+                sb.append(',');
+            }
+            else {
+                sb.append(' ');
+            }
+        }
+        return sb.toString();
     }
 
     @NotNull

@@ -58,29 +58,31 @@ public class SentenceSegmentSplitter {
             wordStart = matcher.end();
         }
 
+        List<String> ret = new ArrayList<>(words.size());
+        TIntArrayList seps = new TIntArrayList(words.size());
+
         String[] parts = words.toArray(String[]::new);
-        int length = 0;
         for (int i = 0; i < parts.length; i++) {
-            if (parts[i].isBlank() || parts[i].length() >= MAX_WORD_LENGTH || noiseCharacterMatcher.matchesAllOf(parts[i])) {
-                parts[i] = null;
-            }
-            else {
-                length++;
-            }
+            if (parts[i].isBlank())
+                continue;
+            if (parts[i].length() >= MAX_WORD_LENGTH)
+                continue;
+            if (noiseCharacterMatcher.matchesAllOf(parts[i]))
+                continue;
+
+            ret.add(parts[i]);
+            seps.add(separators.getQuick(i));
         }
 
-        String[] ret = new String[length];
-        int[] seps = new int[length];
-        for (int i = 0, j=0; i < parts.length; i++) {
-            if (parts[i] != null) {
-                seps[j] = separators.getQuick(i);
-                ret[j++] = parts[i];
-            }
-        }
+        for (int i = 0; i < ret.size(); i++) {
+            String part  = ret.get(i);
 
-        for (int i = 0; i < ret.length; i++) {
-            if (ret[i].startsWith("'") && ret[i].length() > 1) { ret[i] = ret[i].substring(1); }
-            if (ret[i].endsWith("'") && ret[i].length() > 1) { ret[i] = ret[i].substring(0, ret[i].length()-1); }
+            if (part.startsWith("'") && part.length() > 1) {
+                ret.set(i, part.substring(1));
+            }
+            if (part.endsWith("'") && part.length() > 1) {
+                ret.set(i, part.substring(0, part.length()-1));
+            }
         }
 
         return new SeparatedSentence(
