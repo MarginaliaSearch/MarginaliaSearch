@@ -31,7 +31,7 @@ public class CrawlPlan {
     private static String rootDirRewrite = System.getProperty("crawl.rootDirRewrite");
 
     public Path getJobSpec() {
-        return Path.of(jobSpec);
+        return Path.of(rewrite(jobSpec));
     }
 
     @AllArgsConstructor @NoArgsConstructor @ToString
@@ -53,7 +53,7 @@ public class CrawlPlan {
         }
         String[] parts = rootDirRewrite.split(":");
 
-        return dir.replace(parts[0], parts[1]);
+        return dir.replaceFirst(parts[0], parts[1]);
     }
 
     public Path getCrawledFilePath(String fileName) {
