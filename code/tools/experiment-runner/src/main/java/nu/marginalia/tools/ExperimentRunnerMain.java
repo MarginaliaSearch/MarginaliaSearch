@@ -2,12 +2,14 @@ package nu.marginalia.tools;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import nu.marginalia.converting.ConverterModule;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.tools.experiments.*;
 import plan.CrawlPlanLoader;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 
 public class ExperimentRunnerMain {
@@ -16,7 +18,8 @@ public class ExperimentRunnerMain {
             "test", TestExperiment.class,
             "adblock", AdblockExperiment.class,
             "topic", TopicExperiment.class,
-            "statistics", SentenceStatisticsExperiment.class
+            "sentence-statistics", SentenceStatisticsExperiment.class,
+            "site-statistics", SiteStatisticsExperiment.class
     );
 
     public static void main(String... args) throws IOException {
@@ -30,19 +33,26 @@ public class ExperimentRunnerMain {
             return;
         }
 
+        var plan = new CrawlPlanLoader().load(Path.of(args[0]));
+
         Injector injector = Guice.createInjector(
-                new DatabaseModule()
+                new DatabaseModule(),
+                new ConverterModule(plan)
         );
 
         Experiment experiment = injector.getInstance(experiments.get(args[1]));
 
-        var plan = new CrawlPlanLoader().load(Path.of(args[0]));
 
-        for (var domain : plan.domainsIterable()) { // leaks file descriptor, is fine
-            if (!experiment.process(domain)) {
-                break;
-            }
-        }
+        Map<String, String> idToDomain = new HashMap<>();
+        plan.forEachCrawlingSpecification(spec -> {
+            idToDomain.put(spec.id, spec.domain);
+        });
+
+        plan.forEachCrawledDomain(
+                id -> experiment.isInterested(idToDomain.get(id)),
+                experiment::process
+        );
+
         experiment.onFinish();
 
     }

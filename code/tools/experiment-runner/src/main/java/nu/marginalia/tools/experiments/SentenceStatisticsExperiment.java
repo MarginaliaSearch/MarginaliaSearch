@@ -58,7 +58,7 @@ public class SentenceStatisticsExperiment implements Experiment {
             }
 
             double avgLength = dld.totalNumWords() / (double) numSentences;
-            if (avgLength < 50) {
+            if (avgLength < 5 && dld.totalNumWords() > 250) {
                 writer.printf("%s\t%d\t%f\n", doc.url, dld.totalNumWords(), avgLength);
             }
         }

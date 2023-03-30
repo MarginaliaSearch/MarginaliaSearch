@@ -14,4 +14,8 @@ public interface Experiment {
      *
      */
     void onFinish();
+
+    default boolean isInterested(String domainName) {
+        return true;
+    }
 }
