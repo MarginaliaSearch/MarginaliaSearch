@@ -120,6 +120,7 @@ public class IndexResultValuator {
         final boolean hasPriorityTerm = resultsWithPriorityTerms.contains(id);
 
         searchResult.setScore(new SearchResultPreliminaryScore(
+                docMetadata,
                 hasSingleTermMatch,
                 hasPriorityTerm,
                 maxFlagsCount,

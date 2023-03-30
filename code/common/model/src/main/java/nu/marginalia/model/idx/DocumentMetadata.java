@@ -8,21 +8,24 @@ import java.util.Set;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-public record DocumentMetadata(int rank,
-                               int encSize,
+public record DocumentMetadata(int avgSentLength,
+                               int rank,
+                               int encDomainSize,
                                int topology,
                                int year,
                                int sets,
                                int quality,
                                byte flags) {
 
+    public static final long ASL_MASK = 0x03L;
+    public static final int ASL_SHIFT = 56;
 
     public static final long RANK_MASK = 0xFFL;
     public static final int RANK_SHIFT = 48;
 
-    public static final long ENCSIZE_MASK = 0xFFL;
-    public static final int ENCSIZE_SHIFT = 40;
-    public static final int ENCSIZE_MULTIPLIER = 50;
+    public static final long ENC_DOMAIN_SIZE_MASK = 0xFFL;
+    public static final int ENC_DOMAIN_SIZE_SHIFT = 40;
+    public static final int ENC_DOMAIN_SIZE_MULTIPLIER = 5;
 
     public static final long TOPOLOGY_MASK = 0xFFL;
 
@@ -43,18 +46,15 @@ public record DocumentMetadata(int rank,
     public DocumentMetadata() {
         this(defaultValue());
     }
-    public DocumentMetadata(int topology, int year, int sets, int quality, EnumSet<DocumentFlags> flags) {
-        this(0, 0, topology, year, sets, quality, encodeFlags(flags));
+
+    public DocumentMetadata(int avgSentLength, int year, int sets, int quality, EnumSet<DocumentFlags> flags) {
+        this(avgSentLength, 0, 0, 0, year, sets, quality, encodeFlags(flags));
     }
 
-    public DocumentMetadata withSize(int size) {
-        if (size <= 0) {
-            return this;
-        }
+    public DocumentMetadata withSize(int size, int topology) {
+        final int encSize = (int) Math.min(ENC_DOMAIN_SIZE_MASK, Math.max(1, size / ENC_DOMAIN_SIZE_MULTIPLIER));
 
-        final int encSize = (int) Math.min(ENCSIZE_MASK, Math.max(1, size / ENCSIZE_MULTIPLIER));
-
-        return new DocumentMetadata(rank, encSize, topology, year, sets, quality, flags);
+        return new DocumentMetadata(avgSentLength, rank, encSize, topology, year, sets, quality, flags);
     }
 
     private static byte encodeFlags(Set<DocumentFlags> flags) {
@@ -68,8 +68,10 @@ public record DocumentMetadata(int rank,
     }
 
     public DocumentMetadata(long value) {
-        this(   (int) ((value >>> RANK_SHIFT) & RANK_MASK),
-                (int) ((value >>> ENCSIZE_SHIFT) & ENCSIZE_MASK),
+        this(
+                (int) ((value >>> ASL_SHIFT) & ASL_MASK),
+                (int) ((value >>> RANK_SHIFT) & RANK_MASK),
+                (int) ((value >>> ENC_DOMAIN_SIZE_SHIFT) & ENC_DOMAIN_SIZE_MASK),
                 (int) ((value >>> TOPOLOGY_SHIFT) & TOPOLOGY_MASK),
                 (int) ((value >>> YEAR_SHIFT) & YEAR_MASK),
                 (int) ((value >>> SETS_SHIFT) & SETS_MASK),
@@ -89,33 +91,38 @@ public record DocumentMetadata(int rank,
         ret |= min(SETS_MASK, max(0, sets)) << SETS_SHIFT;
         ret |= min(YEAR_MASK, max(0, year)) << YEAR_SHIFT;
         ret |= min(TOPOLOGY_MASK, max(0, topology)) << TOPOLOGY_SHIFT;
-        ret |= min(ENCSIZE_MASK, max(0, encSize)) << ENCSIZE_SHIFT;
+        ret |= min(ENC_DOMAIN_SIZE_MASK, max(0, encDomainSize)) << ENC_DOMAIN_SIZE_SHIFT;
         ret |= min(RANK_MASK, max(0, rank)) << RANK_SHIFT;
-
+        ret |= min(ASL_MASK, max(0, avgSentLength)) << ASL_SHIFT;
         return ret;
     }
 
     public boolean isEmpty() {
-        return encSize == 0 && topology == 0 && sets == 0 && quality == 0 && year == 0 && flags == 0 && rank == 0;
+        return avgSentLength == 0 && encDomainSize == 0 && topology == 0 && sets == 0 && quality == 0 && year == 0 && flags == 0 && rank == 0;
     }
 
     public static int decodeQuality(long encoded) {
         return (int) ((encoded >>> QUALITY_SHIFT) & QUALITY_MASK);
     }
 
-    public static long decodeTopology(long encoded) {
+    public static int decodeTopology(long encoded) {
         return (int) ((encoded >>> TOPOLOGY_SHIFT) & TOPOLOGY_MASK);
     }
+
+    public static int decodeAvgSentenceLength(long encoded) {
+        return (int) ((encoded >>> ASL_SHIFT) & ASL_MASK);
+    }
+
     public static int decodeYear(long encoded) {
         return PubDate.fromYearByte((int) ((encoded >>> YEAR_SHIFT) & YEAR_MASK));
     }
 
     public int size() {
-        return ENCSIZE_MULTIPLIER * encSize;
+        return ENC_DOMAIN_SIZE_MULTIPLIER * encDomainSize;
     }
 
     public static int decodeSize(long encoded) {
-        return ENCSIZE_MULTIPLIER * (int) ((encoded >>> ENCSIZE_SHIFT) & ENCSIZE_MASK);
+        return ENC_DOMAIN_SIZE_MULTIPLIER * (int) ((encoded >>> ENC_DOMAIN_SIZE_SHIFT) & ENC_DOMAIN_SIZE_MASK);
     }
 
     public static int decodeRank(long encoded) {

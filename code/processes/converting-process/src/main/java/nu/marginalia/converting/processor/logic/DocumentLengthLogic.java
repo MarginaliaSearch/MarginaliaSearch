@@ -20,11 +20,15 @@ public class DocumentLengthLogic {
         this.minDocumentLength = minDocumentLength;
     }
 
-    public void setLengthFlags(int lengthTextInChars, EnumSet<DocumentFlags> flags) {
-        if (lengthTextInChars < shortDocumentLength)
-            flags.add(DocumentFlags.ShortDocument);
-        else if (lengthTextInChars > longDocumentLength)
-            flags.add(DocumentFlags.LongDocument);
+    public int getEncodedAverageLength(DocumentLanguageData dld) {
+        int totalWords = dld.totalNumWords();
+        int numSentences = dld.sentences.length;
+
+        if (totalWords == 0 || numSentences == 0) {
+            return 0;
+        }
+
+        return (int) Math.round((totalWords / (double) numSentences) / 4.);
     }
 
     public void validateLength(DocumentLanguageData dld) throws DisqualifiedException {

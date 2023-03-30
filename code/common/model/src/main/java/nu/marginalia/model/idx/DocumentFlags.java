@@ -7,10 +7,10 @@ public enum DocumentFlags {
     PlainText,
     Ads,
     Tracking,
-    ShortDocument,
-    LongDocument,
-    UnusedBit6,
-    UnusedBit7,
+    Unused5,
+    Unused6,
+    Unused7,
+    Unused8,
     ;
 
     public int asBit() {

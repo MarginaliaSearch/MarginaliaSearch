@@ -57,26 +57,9 @@ public class ResultValuator {
 
         var meta = docMeta(scores);
 
-        double docFactor = meta.map(this::getDocFactor).orElse(1.);
         double lenFactor = Math.max(1.0, 2500. / (1.0 + length));
 
-        return bestBm25Factor * (0.4 + 0.6 * allTermsFactor) * priorityTermBonus * docFactor * lenFactor;
-    }
-
-    private double getDocFactor(DocumentMetadata docMeta) {
-
-        int topology = docMeta.topology();
-        if (topology <= 1)
-            return 0.8;
-        if (topology == 2)
-            return 0.9;
-        if (topology == 3)
-            return 0.95;
-        if (topology == 4)
-            return 0.98;
-
-        return 1.;
-
+        return bestBm25Factor * (0.4 + 0.6 * allTermsFactor) * priorityTermBonus * lenFactor;
     }
 
     private Optional<DocumentMetadata> docMeta(List<SearchResultKeywordScore> rawScores) {

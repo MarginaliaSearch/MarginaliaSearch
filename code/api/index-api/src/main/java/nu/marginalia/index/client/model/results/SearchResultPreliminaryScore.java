@@ -1,5 +1,6 @@
 package nu.marginalia.index.client.model.results;
 
+import nu.marginalia.model.idx.DocumentMetadata;
 import org.jetbrains.annotations.NotNull;
 
 import static java.lang.Boolean.compare;
@@ -10,12 +11,34 @@ public record SearchResultPreliminaryScore(boolean hasSingleTermMatch,
                                            int minNumberOfFlagsSet,
                                            int minNumberOfPositions,
                                            int overlappingPositions,
-                                           boolean anyAllSynthetic)
+                                           boolean anyAllSynthetic,
+                                           int avgSentenceLength,
+                                           int topology
+                                           )
         implements Comparable<SearchResultPreliminaryScore>
 {
+
+    public SearchResultPreliminaryScore(long documentMetadata,
+                                        boolean hasSingleTermMatch,
+                                        boolean hasPriorityTerm,
+                                        int minNumberOfFlagsSet,
+                                        int minNumberOfPositions,
+                                        int overlappingPositions,
+                                        boolean anyAllSynthetic
+                                        )
+    {
+        this(hasSingleTermMatch, hasPriorityTerm, minNumberOfFlagsSet, minNumberOfPositions, overlappingPositions, anyAllSynthetic,
+                DocumentMetadata.decodeAvgSentenceLength(documentMetadata),
+                DocumentMetadata.decodeTopology(documentMetadata)
+                );
+    }
+
     @Override
     public int compareTo(@NotNull SearchResultPreliminaryScore other) {
         int diff;
+
+        diff = -compare(avgSentenceLength, other.avgSentenceLength);
+        if (diff != 0) return diff;
 
         diff = compare(hasSingleTermMatch, other.hasSingleTermMatch);
         if (diff != 0) return diff;
@@ -29,12 +52,12 @@ public record SearchResultPreliminaryScore(boolean hasSingleTermMatch,
         diff = compare(overlappingPositions, other.overlappingPositions);
         if (diff != 0) return diff;
 
-        return compare(minNumberOfPositions, other.minNumberOfPositions);
+        diff = compare(minNumberOfPositions, other.minNumberOfPositions);
+        if (diff != 0) return diff;
+
+        return -compare(topology, other.topology);
     }
 
-    public boolean isGreat() {
-        return hasSingleTermMatch || (minNumberOfFlagsSet >= 1 && overlappingPositions >= 1);
-    }
     public boolean isEmpty() {
         return minNumberOfFlagsSet == 0
             && minNumberOfPositions == 0

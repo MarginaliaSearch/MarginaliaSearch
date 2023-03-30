@@ -129,9 +129,9 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         PubDate pubDate = pubDateSniffer.getPubDate(crawledDocument.headers, url, doc, ret.standard, true);
         EnumSet<DocumentFlags> documentFlags = htmlFeatures2DocumentFlags(ret.features);
 
-        documentLengthLogic.setLengthFlags(ret.length, documentFlags);
-
-        ret.metadata = new DocumentMetadata(url.depth(), pubDate.yearByte(), 0, (int) -ret.quality, documentFlags);
+        ret.metadata = new DocumentMetadata(
+                documentLengthLogic.getEncodedAverageLength(dld),
+                url.depth(), pubDate.yearByte(), (int) -ret.quality, documentFlags);
 
         DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, url);
 
@@ -183,6 +183,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     private static final GuardedRegex mastodonFeedRegex = GuardedRegexFactory.startsWith("/@", "^/@[^/]+/?$");
 
     private boolean isDisqualified(EdgeUrl url, ProcessedDocumentDetails ret) {
+
         if (ret.quality < minDocumentQuality) {
             return true;
         }
