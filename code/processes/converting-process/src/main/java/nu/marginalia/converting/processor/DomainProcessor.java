@@ -2,6 +2,7 @@ package nu.marginalia.converting.processor;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
+import nu.marginalia.converting.processor.logic.links.LinkGraph;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.crawling.model.CrawlerDocumentStatus;
@@ -10,7 +11,7 @@ import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.converting.processor.logic.links.InternalLinkGraph;
+import nu.marginalia.converting.processor.logic.links.TopKeywords;
 import nu.marginalia.converting.processor.logic.LshDocumentDeduplicator;
 
 import java.util.*;
@@ -56,18 +57,7 @@ public class DomainProcessor {
 
             documentDeduplicator.deduplicate(ret.documents);
 
-            InternalLinkGraph internalLinkGraph = new InternalLinkGraph();
-
-            ret.documents.forEach(internalLinkGraph::accept);
-            ret.documents.forEach(doc -> {
-                if (doc.details != null && doc.details.metadata != null) {
-                    doc.details.metadata = doc.details.metadata.withSize(internalLinkGraph.numKnownUrls());
-                }
-            });
-
-            siteWords.flagCommonSiteWords(ret);
-            siteWords.flagAdjacentWords(internalLinkGraph, ret);
-
+            calculateStatistics(ret);
         }
         else {
             ret.documents = Collections.emptyList();
@@ -76,6 +66,29 @@ public class DomainProcessor {
         ret.state = getState(crawledDomain.crawlerStatus);
 
         return ret;
+    }
+
+    private void calculateStatistics(ProcessedDomain ret) {
+        LinkGraph linkGraph = new LinkGraph();
+        TopKeywords topKeywords = new TopKeywords();
+
+        ret.documents.forEach(topKeywords::accept);
+        ret.documents.forEach(linkGraph::add);
+
+        var invertedLinkGraph = linkGraph.invert();
+
+        ret.documents.forEach(doc -> {
+            if (doc.details != null && doc.details.metadata != null) {
+
+                int size = linkGraph.size();
+                int topology = invertedLinkGraph.numLinks(doc.url);
+
+                doc.details.metadata = doc.details.metadata.withSize(size, topology);
+            }
+        });
+
+        siteWords.flagCommonSiteWords(ret);
+        siteWords.flagAdjacentWords(topKeywords, invertedLinkGraph, ret);
     }
 
 

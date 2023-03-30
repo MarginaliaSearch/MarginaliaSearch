@@ -1,14 +1,14 @@
 package nu.marginalia.converting.model;
 
+import lombok.Getter;
 import lombok.ToString;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
-import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.crawl.UrlIndexingState;
 import nu.marginalia.model.EdgeUrl;
 
 import java.util.OptionalDouble;
 
-@ToString
+@ToString @Getter
 public class ProcessedDocument {
     public EdgeUrl url;
 
