@@ -39,7 +39,7 @@ public class KeywordPositionBitmask {
                 positionMask.merge(sent.constructStemmedWordFromSpan(span), posBit, this::bitwiseOr);
             }
 
-            linePos.next();
+            linePos.next(sent.length());
         }
     }
 
@@ -52,33 +52,49 @@ public class KeywordPositionBitmask {
     }
 
     private static class LinePosition {
+        private int lineLengthCtr = 0;
         private int line = 0;
-        private int pos = 1;
+        private int bitMaskPos = 1;
 
         public int pos() {
-            return pos;
+            return bitMaskPos;
         }
 
-        public void next() {
-            if (pos < 4) pos ++;
-            else if (pos < 8) {
-                if (++line >= 2) {
-                    pos++;
+        public void next(int sentenceLength) {
+            if (bitMaskPos < 4) bitMaskPos++;
+            else if (bitMaskPos < 8) {
+                if (advanceLine(sentenceLength)>= 2) {
+                    bitMaskPos++;
                     line = 0;
                 }
             }
-            else if (pos < 24) {
-                if (++line >= 4) {
-                    pos++;
+            else if (bitMaskPos < 24) {
+                if (advanceLine(sentenceLength) >= 4) {
+                    bitMaskPos++;
                     line = 0;
                 }
             }
-            else if (pos < 64) {
-                if (++line > 8) {
-                    pos++;
+            else if (bitMaskPos < 64) {
+                if (advanceLine(sentenceLength) > 8) {
+                    bitMaskPos++;
                     line = 0;
                 }
             }
+        }
+
+        private int advanceLine(int sentenceLength) {
+            if (sentenceLength > 10) {
+                lineLengthCtr = 0;
+                return ++line;
+            }
+
+            lineLengthCtr += sentenceLength;
+            if (lineLengthCtr > 15) {
+                lineLengthCtr = 0;
+                return ++line;
+            }
+
+            return line;
         }
     }
 }
