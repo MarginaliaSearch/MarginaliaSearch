@@ -9,9 +9,10 @@ requiring datacenters and expensive enterprise hardware, to run this operation o
 
 ## Set up
 
-Follow the set-up instructions in [📁 run/](run/)!
+Start by running [⚙️ run/setup.sh](run/setup.sh). This will download supplementary model data that is necessary to run the code. 
+These are also necessary to run the tests. 
 
-This is also necessary for the tests to run. Save yourself time and frustration and start here. 
+To set up a local test environment, follow the instructions in [📄 run/readme.md](run/readme.md)!
 
 ## Project Structure
 
