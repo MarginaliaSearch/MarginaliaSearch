@@ -63,7 +63,7 @@ public class ReverseIndexFullReader {
 
         if (offset < 0) return new EmptyEntrySource();
 
-        return new ReverseIndexFullEntrySource(createReaderNew(offset), ReverseIndexFullParameters.ENTRY_SIZE, behavior);
+        return new ReverseIndexFullEntrySource(createReaderNew(offset), ReverseIndexFullParameters.ENTRY_SIZE, behavior, wordId);
     }
 
     public QueryFilterStepIf also(int wordId) {
@@ -73,7 +73,7 @@ public class ReverseIndexFullReader {
 
         if (offset < 0) return new QueryFilterNoPass();
 
-        return new ReverseIndexRetainFilter(createReaderNew(offset));
+        return new ReverseIndexRetainFilter(createReaderNew(offset), "full", wordId);
     }
 
     public QueryFilterStepIf not(int wordId) {

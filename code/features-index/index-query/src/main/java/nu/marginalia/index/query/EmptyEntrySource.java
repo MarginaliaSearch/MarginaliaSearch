@@ -16,4 +16,10 @@ public class EmptyEntrySource implements EntrySource {
     public boolean hasMore() {
         return false;
     }
+
+
+    @Override
+    public String indexName() {
+        return "Empty";
+    }
 }

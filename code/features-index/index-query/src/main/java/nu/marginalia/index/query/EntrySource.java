@@ -7,4 +7,6 @@ public interface EntrySource {
     void read(LongQueryBuffer buffer);
 
     boolean hasMore();
+
+    String indexName();
 }

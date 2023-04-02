@@ -14,10 +14,12 @@ public class ReverseIndexPriorityEntrySource implements EntrySource {
     int endOffset;
 
     private final ReverseIndexEntrySourceBehavior behavior;
+    private final int wordId;
 
-    public ReverseIndexPriorityEntrySource(BTreeReader reader, ReverseIndexEntrySourceBehavior behavior) {
+    public ReverseIndexPriorityEntrySource(BTreeReader reader, ReverseIndexEntrySourceBehavior behavior, int wordId) {
         this.reader = reader;
         this.behavior = behavior;
+        this.wordId = wordId;
 
         pos = 0;
         endOffset = pos + reader.numEntries();
@@ -49,4 +51,8 @@ public class ReverseIndexPriorityEntrySource implements EntrySource {
         return pos < endOffset;
     }
 
+    @Override
+    public String indexName() {
+        return "Priority:" + wordId;
+    }
 }

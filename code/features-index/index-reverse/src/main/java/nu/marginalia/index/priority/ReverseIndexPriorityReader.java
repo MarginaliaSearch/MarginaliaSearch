@@ -46,7 +46,7 @@ public class ReverseIndexPriorityReader {
 
         if (offset < 0) return new EmptyEntrySource();
 
-        return new ReverseIndexPriorityEntrySource(createReaderNew(offset), ReverseIndexEntrySourceBehavior.DO_PREFER);
+        return new ReverseIndexPriorityEntrySource(createReaderNew(offset), ReverseIndexEntrySourceBehavior.DO_PREFER, wordId);
     }
 
     private BTreeReader createReaderNew(long offset) {
@@ -60,7 +60,7 @@ public class ReverseIndexPriorityReader {
 
         if (offset < 0) return new QueryFilterNoPass();
 
-        return new ReverseIndexRetainFilter(createReaderNew(offset));
+        return new ReverseIndexRetainFilter(createReaderNew(offset), "priority", wordId);
     }
 
 }

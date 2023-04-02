@@ -5,6 +5,7 @@ import nu.marginalia.array.buffer.LongQueryBuffer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class IndexQuery {
     private final List<EntrySource> sources;
@@ -66,14 +67,10 @@ public class IndexQuery {
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Sources:\n");
-        for (var source : sources) {
-            sb.append(source).append('\n');
-        }
-        sb.append("Includes:\n");
-        for (var include : inclusionFilter) {
-            sb.append("\t").append(include.describe()).append("\n");
-        }
+
+        sb.append(sources.stream().map(EntrySource::indexName).collect(Collectors.joining(", ", "[", "]")));
+        sb.append(" -> ");
+        sb.append(inclusionFilter.stream().map(QueryFilterStepIf::describe).collect(Collectors.joining(", ", "[", "]")));
 
         return sb.toString();
     }

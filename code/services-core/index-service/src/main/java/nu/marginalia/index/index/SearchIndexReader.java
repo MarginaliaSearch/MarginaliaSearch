@@ -33,12 +33,12 @@ public class SearchIndexReader {
 
     public IndexQueryBuilder findPriorityWord(int wordId) {
         return new SearchIndexQueryBuilder(reverseIndexFullReader, reverseIndexPriorityReader, new IndexQuery(
-                List.of(reverseIndexPriorityReader.priorityDocuments(wordId))));
+                List.of(reverseIndexPriorityReader.priorityDocuments(wordId))), wordId);
     }
 
     public IndexQueryBuilder findFullWord(int wordId, ReverseIndexEntrySourceBehavior behavior) {
         return new SearchIndexQueryBuilder(reverseIndexFullReader, reverseIndexPriorityReader, new IndexQuery(
-                List.of(reverseIndexFullReader.documents(wordId, behavior))));
+                List.of(reverseIndexFullReader.documents(wordId, behavior))), wordId);
     }
 
     QueryFilterStepIf filterForParams(IndexQueryParams params) {

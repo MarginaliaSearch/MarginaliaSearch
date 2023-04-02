@@ -14,14 +14,17 @@ public class ReverseIndexFullEntrySource implements EntrySource {
     int endOffset;
 
     final int entrySize;
+    private final int wordId;
     private final ReverseIndexEntrySourceBehavior behavior;
 
     public ReverseIndexFullEntrySource(BTreeReader reader,
                                        int entrySize,
-                                       ReverseIndexEntrySourceBehavior behavior) {
+                                       ReverseIndexEntrySourceBehavior behavior,
+                                       int wordId) {
         this.reader = reader;
         this.behavior = behavior;
         this.entrySize = entrySize;
+        this.wordId = wordId;
 
         pos = 0;
         endOffset = pos + entrySize * reader.numEntries();
@@ -65,4 +68,9 @@ public class ReverseIndexFullEntrySource implements EntrySource {
         return pos < endOffset;
     }
 
+
+    @Override
+    public String indexName() {
+        return "Priority:" + wordId;
+    }
 }

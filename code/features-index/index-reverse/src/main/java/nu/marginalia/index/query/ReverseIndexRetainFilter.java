@@ -4,7 +4,7 @@ import nu.marginalia.array.buffer.LongQueryBuffer;
 import nu.marginalia.btree.BTreeReader;
 import nu.marginalia.index.query.filter.QueryFilterStepIf;
 
-public record ReverseIndexRetainFilter(BTreeReader range) implements QueryFilterStepIf {
+public record ReverseIndexRetainFilter(BTreeReader range, String name, int wordId) implements QueryFilterStepIf {
 
     @Override
     public void apply(LongQueryBuffer buffer) {
@@ -23,6 +23,6 @@ public record ReverseIndexRetainFilter(BTreeReader range) implements QueryFilter
 
     @Override
     public String describe() {
-        return "ReverseIndexRetainFilter";
+        return "Retain:" + name + "/" + wordId;
     }
 }
