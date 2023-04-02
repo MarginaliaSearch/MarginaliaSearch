@@ -1,5 +1,6 @@
 package nu.marginalia.index.index;
 
+import gnu.trove.set.hash.TIntHashSet;
 import nu.marginalia.index.priority.ReverseIndexPriorityReader;
 import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.query.IndexQueryBuilder;
@@ -14,18 +15,39 @@ public class SearchIndexQueryBuilder implements IndexQueryBuilder  {
     private final ReverseIndexFullReader reverseIndexFullReader;
     private final ReverseIndexPriorityReader reverseIndexPrioReader;
 
+    /* Keep track of already added include terms to avoid redundant checks.
+     *
+     * Warning: This may cause unexpected behavior if for example attempting to
+     * first check one index and then another for the same term. At the moment, that
+     * makes no sense, but in the future, that might be a thing one might want to do.
+     * */
+    private final TIntHashSet alreadyConsideredTerms = new TIntHashSet();
+
     SearchIndexQueryBuilder(ReverseIndexFullReader reverseIndexFullReader,
                             ReverseIndexPriorityReader reverseIndexPrioReader,
-                            IndexQuery query)
+                            IndexQuery query, int... sourceTerms)
     {
         this.query = query;
         this.reverseIndexFullReader = reverseIndexFullReader;
         this.reverseIndexPrioReader = reverseIndexPrioReader;
+
+        alreadyConsideredTerms.addAll(sourceTerms);
     }
 
     public IndexQueryBuilder alsoFull(int termId) {
 
-        query.addInclusionFilter(reverseIndexFullReader.also(termId));
+        if (alreadyConsideredTerms.add(termId)) {
+            query.addInclusionFilter(reverseIndexFullReader.also(termId));
+        }
+
+        return this;
+    }
+
+    public IndexQueryBuilder alsoPrio(int termId) {
+
+        if (alreadyConsideredTerms.add(termId)) {
+            query.addInclusionFilter(reverseIndexPrioReader.also(termId));
+        }
 
         return this;
     }
@@ -38,12 +60,17 @@ public class SearchIndexQueryBuilder implements IndexQueryBuilder  {
             step = QueryFilterStepIf.noPass();
         }
         else if (termIds.length == 1) {
-            step = reverseIndexPrioReader.also(termIds[0]);
+            return alsoPrio(termIds[0]);
         }
         else {
             var steps = IntStream.of(termIds)
+                    .filter(alreadyConsideredTerms::add)
                     .mapToObj(reverseIndexPrioReader::also)
                     .collect(Collectors.toList());
+
+            if (steps.isEmpty())
+                return this;
+
             step = QueryFilterStepIf.anyOf(steps);
         }
 
