@@ -149,22 +149,52 @@ public class IndexQueryService {
                 continue;
             }
 
+            logSearchTerms(subquery, searchTerms);
+
+            int subqueryCount = 0;
+
             // These queries are different indices for one subquery
             List<IndexQuery> queries = params.createIndexQueries(index, searchTerms);
             for (var query : queries) {
                 var resultsForSq = executeQuery(query, params);
-                logger.info(queryMarker, "{} from {}", resultsForSq.size(), subquery);
+                logger.info(queryMarker, "{} from {}", resultsForSq.size(), query);
                 results.addAll(resultsForSq);
+
+                subqueryCount += resultsForSq.size();
 
                 if (!params.hasTimeLeft()) {
                     logger.info("Query timed out {}, ({}), -{}",
                             subquery.searchTermsInclude, subquery.searchTermsAdvice, subquery.searchTermsExclude);
                     break outer;
                 }
+
+                if (subqueryCount >= 100)
+                    break;
             }
         }
 
         return results;
+    }
+
+    private void logSearchTerms(SearchSubquery subquery, SearchIndexSearchTerms searchTerms) {
+
+        if (!logger.isInfoEnabled(queryMarker)) {
+            return;
+        }
+
+        var includes = subquery.searchTermsInclude;
+        var excludes = subquery.searchTermsExclude;
+        var priority = subquery.searchTermsPriority;
+
+        for (int i = 0; i < subquery.searchTermsInclude.size(); i++) {
+            logger.info(queryMarker, "{} -> {} I", includes.get(i), searchTerms.includes().getInt(i));
+        }
+        for (int i = 0; i < subquery.searchTermsExclude.size(); i++) {
+            logger.info(queryMarker, "{} -> {} E", excludes.get(i), searchTerms.excludes().getInt(i));
+        }
+        for (int i = 0; i < subquery.searchTermsPriority.size(); i++) {
+            logger.info(queryMarker, "{} -> {} p", priority.get(i), searchTerms.priority().getInt(i));
+        }
     }
 
     private TLongArrayList executeQuery(IndexQuery query, SearchParameters params)

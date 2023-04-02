@@ -124,13 +124,12 @@ public class SearchIndex {
         }
 
         // Finally consider terms in the full index
-        queryHeads.add(indexReader.findFullWord(orderedIncludes[0], ReverseIndexEntrySourceBehavior.DO_PREFER));
+        queryHeads.add(indexReader.findFullWord(orderedIncludes[0], ReverseIndexEntrySourceBehavior.DO_NOT_PREFER));
 
         for (var query : queryHeads) {
             if (query == null) {
                 return Collections.emptyList();
             }
-
 
             for (int orderedInclude : orderedIncludes) {
                 query = query.alsoFull(orderedInclude);
