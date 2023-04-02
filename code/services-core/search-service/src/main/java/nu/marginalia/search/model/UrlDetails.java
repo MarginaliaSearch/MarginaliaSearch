@@ -42,21 +42,6 @@ public class UrlDetails {
         return resultsFromSameDomain > 1;
     }
 
-    public long rankingIdAdjustment() {
-        int penalty = 0;
-
-        if (words < 500) {
-            penalty -= 1;
-        }
-        if (urlQuality < -10) {
-            penalty -= 1;
-        }
-        if (isSpecialDomain()) {
-            penalty -= 1;
-        }
-        return penalty; //(int)(Math.log(1+rankingId) / Math.log(100))-1-penalty;
-    }
-
     public String getFormat() {
         if (null == format) {
             return "?";

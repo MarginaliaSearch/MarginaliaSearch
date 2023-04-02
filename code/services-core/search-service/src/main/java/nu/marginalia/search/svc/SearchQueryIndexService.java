@@ -30,10 +30,10 @@ public class SearchQueryIndexService {
         this.indexClient = indexClient;
         this.searchVisitorCount = searchVisitorCount;
 
-        Comparator<UrlDetails> c = Comparator.comparing(ud -> Math.round(10*(ud.getTermScore() - ud.rankingIdAdjustment())));
-        resultListComparator = c
+        resultListComparator = Comparator.comparing(UrlDetails::getTermScore)
                 .thenComparing(UrlDetails::getRanking)
                 .thenComparing(UrlDetails::getId);
+
     }
 
     public List<UrlDetails> executeQuery(Context ctx, SearchQuery processedQuery) {
@@ -42,10 +42,6 @@ public class SearchQueryIndexService {
         searchVisitorCount.registerQuery();
 
         List<UrlDetails> urlDetails = resultDecorator.getAllUrlDetails(results);
-
-        urlDetails.replaceAll(details ->
-                details.withUrlQualityAdjustment(adjustScoreBasedOnQuery(details, processedQuery.specs))
-        );
 
         urlDetails.sort(resultListComparator);
 
@@ -70,57 +66,6 @@ public class SearchQueryIndexService {
         return retList;
     }
 
-    private final Pattern titleSplitPattern = Pattern.compile("[:!|./]|(\\s-|-\\s)|\\s{2,}");
 
-    private PageScoreAdjustment adjustScoreBasedOnQuery(UrlDetails p, SearchSpecification specs) {
-        String titleLC = p.title == null ? "" : p.title.toLowerCase();
-        String descLC = p.description == null ? "" : p.description.toLowerCase();
-        String urlLC = p.url == null ? "" : p.url.path.toLowerCase();
-        String domainLC = p.url == null ? "" : p.url.domain.toString().toLowerCase();
-
-        String[] searchTermsLC = specs.subqueries.get(0).searchTermsInclude.stream()
-                .map(String::toLowerCase)
-                .flatMap(s -> Arrays.stream(s.split("_")))
-                .toArray(String[]::new);
-        int termCount = searchTermsLC.length;
-
-        double titleHitsAdj = 0.;
-        final String[] titleParts = titleSplitPattern.split(titleLC);
-        for (String titlePart : titleParts) {
-            double hits = 0;
-            for (String term : searchTermsLC) {
-                if (titlePart.contains(term)) {
-                    hits += term.length();
-                }
-            }
-            titleHitsAdj += hits / Math.max(1, titlePart.length());
-        }
-
-        double titleFullHit = 0.;
-        if (termCount > 1 && titleLC.contains(specs.humanQuery.replaceAll("\"", "").toLowerCase())) {
-            titleFullHit = termCount;
-        }
-        long descHits = Arrays.stream(searchTermsLC).filter(descLC::contains).count();
-        long urlHits = Arrays.stream(searchTermsLC).filter(urlLC::contains).count();
-        long domainHits = Arrays.stream(searchTermsLC).filter(domainLC::contains).count();
-
-        double descHitsAdj = 0.;
-        for (String word : descLC.split("\\W+")) {
-            descHitsAdj += Arrays.stream(searchTermsLC)
-                    .filter(term -> term.length() > word.length())
-                    .filter(term -> term.contains(word))
-                    .mapToDouble(term -> word.length() / (double) term.length())
-                    .sum();
-        }
-
-        return PageScoreAdjustment.builder()
-                .descAdj(Math.min(termCount, descHits) / (10. * termCount))
-                .descHitsAdj(descHitsAdj / 10.)
-                .domainAdj(2 * Math.min(termCount, domainHits) / (double) termCount)
-                .urlAdj(Math.min(termCount, urlHits) / (10. * termCount))
-                .titleAdj(5 * titleHitsAdj / (Math.max(1, titleParts.length) * Math.log(titleLC.length() + 2)))
-                .titleFullHit(titleFullHit)
-                .build();
-    }
 
 }
