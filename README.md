@@ -13,9 +13,19 @@ Follow the set-up instructions in [📁 run/](run/)!
 
 This is also necessary for the tests to run. Save yourself time and frustration and start here. 
 
-## Contributing
+## Project Structure
 
-[CONTRIBUTING.md](CONTRIBUTING.md)
+[📁 code/](code/) - The Source Code. See [📄 code/readme.md](code/readme.md) for a further breakdown of the structure and architecture.
+
+[📁 run/](run/) - Scripts and files used to run the search engine locally
+
+[📁 third-party/](third-party/) - Third party code
+
+[📁 doc/](doc/) - Supplementary documentation
+
+[📄 CONTRIBUTING.md](CONTRIBUTING.md) - How to contribute
+
+[📄 LICENSE.md](LICENSE.md) - License terms
 
 ## Supporting
 
@@ -24,3 +34,8 @@ Consider [supporting this project](https://memex.marginalia.nu/projects/edge/sup
 ## Contact
 
 You can email <kontakt@marginalia.nu> with any questions or feedback.
+
+## License
+
+The bulk of the project is available with AGPL 3.0, with exceptions. Some parts are co-licensed under MIT, 
+third party code may have different licenses. See the appropriate readme.md / license.md.
