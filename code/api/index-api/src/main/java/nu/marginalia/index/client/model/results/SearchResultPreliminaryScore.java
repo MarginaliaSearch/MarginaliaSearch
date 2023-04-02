@@ -37,7 +37,7 @@ public record SearchResultPreliminaryScore(boolean hasSingleTermMatch,
     public int compareTo(@NotNull SearchResultPreliminaryScore other) {
         int diff;
 
-        diff = -compare(avgSentenceLength, other.avgSentenceLength);
+        diff = -compare(avgSentenceLength >= 2, other.avgSentenceLength >= 2);
         if (diff != 0) return diff;
 
         diff = compare(hasSingleTermMatch, other.hasSingleTermMatch);

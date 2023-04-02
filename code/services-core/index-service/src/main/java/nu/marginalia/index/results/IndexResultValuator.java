@@ -41,7 +41,7 @@ public class IndexResultValuator {
     }
 
     private final int flagsFilterMask =
-            WordFlags.Title.asBit() | WordFlags.NamesWords.asBit() | WordFlags.Subjects.asBit() | WordFlags.TfIdfHigh.asBit();
+            WordFlags.Title.asBit() | WordFlags.TfIdfHigh.asBit() | WordFlags.UrlDomain.asBit() | WordFlags.UrlPath.asBit();
 
     public SearchResultItem calculatePreliminaryScore(long id) {
 
