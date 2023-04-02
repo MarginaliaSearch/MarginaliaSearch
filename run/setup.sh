@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# This script will perform a first-time setup of the run/ directory, as well as 
+# download third party language models and other files that aren't suitable for
+# git
+
 set -e
 
 function download_model {
