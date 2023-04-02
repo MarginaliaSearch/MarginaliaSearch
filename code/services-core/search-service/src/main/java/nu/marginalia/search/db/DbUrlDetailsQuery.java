@@ -89,7 +89,8 @@ public class DbUrlDetailsQuery {
                             Double.MAX_VALUE, // termScore
                             1, // resultsFromSameDomain
                             "", // positions
-                            null // result item
+                            null, // result item
+                            null // keyword scores
                             );
                     if (val.urlQuality <= QUALITY_LOWER_BOUND_CUTOFF
                     && Strings.isNullOrEmpty(val.description)

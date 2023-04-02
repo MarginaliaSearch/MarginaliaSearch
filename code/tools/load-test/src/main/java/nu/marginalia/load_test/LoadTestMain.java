@@ -37,7 +37,9 @@ public class LoadTestMain {
 
 
             long startTime = System.currentTimeMillis();
-            var rsp = client.send(req, HttpResponse.BodyHandlers.ofString());
+
+            client.send(req, HttpResponse.BodyHandlers.ofString());
+
             long stopTime = System.currentTimeMillis();
 
             times.add(stopTime - startTime);
@@ -45,7 +47,6 @@ public class LoadTestMain {
                 System.out.println(times.stream().mapToLong(Long::longValue).average().orElse(-1));
                 times.clear();
             }
-//            System.out.println(stopTime - startTime);
         }
     }
 

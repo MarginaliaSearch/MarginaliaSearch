@@ -1,5 +1,6 @@
 package nu.marginalia.model.idx;
 
+import nu.marginalia.bbpc.BrailleBlockPunchCards;
 import nu.marginalia.model.crawl.PubDate;
 
 import java.util.EnumSet;
@@ -16,6 +17,20 @@ public record DocumentMetadata(int avgSentLength,
                                int sets,
                                int quality,
                                byte flags) {
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder(getClass().getSimpleName());
+        sb.append('[')
+                .append("avgSentL=").append(avgSentLength).append(", ")
+                .append("rank=").append(rank).append(", ")
+                .append("domainSize=").append(ENC_DOMAIN_SIZE_MULTIPLIER * encDomainSize).append(", ")
+                .append("topology=").append(topology).append(", ")
+                .append("year=").append(PubDate.fromYearByte(year)).append(", ")
+                .append("sets=").append(sets).append(", ")
+                .append("quality=").append(quality).append(", ")
+                .append("flags=").append(flagSet()).append("]");
+        return sb.toString();
+    }
 
     public static final long ASL_MASK = 0x03L;
     public static final int ASL_SHIFT = 56;
@@ -131,6 +146,10 @@ public record DocumentMetadata(int avgSentLength,
 
     public static long encodeRank(long encoded, int rank) {
         return encoded | min(RANK_MASK, max(0, rank)) << RANK_SHIFT;
+    }
+
+    public EnumSet<DocumentFlags> flagSet() {
+        return DocumentFlags.decode(flags);
     }
 
 }

@@ -64,6 +64,9 @@ public class SearchResultDecorator {
 
             details.resultsFromSameDomain = resultItem.resultsFromDomain;
             details.termScore = calculateTermScore(resultItem, details, resultSet.rankingContext);
+            if (getClass().desiredAssertionStatus()) {
+                details.keywordScores = resultItem.keywordScores;
+            }
             details.positions = getPositionsString(resultItem);
             details.resultItem = resultItem;
 

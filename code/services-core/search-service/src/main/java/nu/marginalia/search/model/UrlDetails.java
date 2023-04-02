@@ -2,11 +2,13 @@ package nu.marginalia.search.model;
 
 import lombok.*;
 import nu.marginalia.index.client.model.results.SearchResultItem;
+import nu.marginalia.index.client.model.results.SearchResultKeywordScore;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.crawl.HtmlFeature;
 
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
 
@@ -37,6 +39,7 @@ public class UrlDetails {
 
     public String positions;
     public SearchResultItem resultItem;
+    public List<SearchResultKeywordScore> keywordScores;
 
     public boolean hasMoreResults() {
         return resultsFromSameDomain > 1;

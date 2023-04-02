@@ -1,7 +1,19 @@
 package nu.marginalia.keyword;
 
+import nu.marginalia.WmsaHome;
+import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
+import nu.marginalia.language.sentence.SentenceExtractor;
+import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.model.idx.WordMetadata;
+import nu.marginalia.term_frequency_dict.TermFrequencyDict;
+import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.charset.Charset;
+import java.util.Objects;
 
 class DocumentKeywordExtractorTest {
 
@@ -20,5 +32,28 @@ class DocumentKeywordExtractorTest {
         Assertions.assertTrue(extractor.matchesWordPattern("c++"));
         Assertions.assertTrue(extractor.matchesWordPattern("m*a*s*h"));
         Assertions.assertFalse(extractor.matchesWordPattern("Stulpnagelstrasse"));
+    }
+
+    @Test
+    public void testKeyboards() throws IOException, URISyntaxException {
+        var resource = Objects.requireNonNull(ClassLoader.getSystemResourceAsStream("test-data/keyboards.html"),
+                "Could not load word frequency table");
+        String html = new String(resource.readAllBytes(), Charset.defaultCharset());
+        var doc = Jsoup.parse(html);
+        doc.filter(new DomPruningFilter(0.5));
+
+        DocumentKeywordExtractor extractor = new DocumentKeywordExtractor(new TermFrequencyDict(WmsaHome.getLanguageModels()));
+        SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
+
+        var keywords = extractor.extractKeywords(se.extractSentences(doc), new EdgeUrl("https://pmortensen.eu/world2/2021/12/24/rapoo-mechanical-keyboards-gotchas-and-setup/"));
+        System.out.println(keywords.getMetaForWord("mechanical"));
+        System.out.println(keywords.getMetaForWord("keyboard"));
+        System.out.println(keywords.getMetaForWord("keyboards"));
+
+        System.out.println(new WordMetadata(8894889328781L));
+        System.out.println(new WordMetadata(4294967297L));
+        System.out.println(new WordMetadata(566820053975498886L));
+        // -
+        System.out.println(new WordMetadata(1198298103937L));
     }
 }

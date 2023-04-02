@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.objects.Object2LongLinkedOpenHashMap;
 import lombok.Getter;
 import lombok.ToString;
 import nu.marginalia.model.idx.WordFlags;
+import nu.marginalia.model.idx.WordMetadata;
 
 import java.util.*;
 
@@ -85,4 +86,16 @@ public class DocumentKeywordsBuilder {
         return words.size();
     }
 
+    public WordMetadata getMetaForWord(String word) {
+        return new WordMetadata(words.getLong(word));
+    }
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("[ ");
+        words.forEach((word, meta) -> {
+            sb.append(word).append("->").append(new WordMetadata(meta)).append(' ');
+        });
+        return sb.append(']').toString();
+
+    }
 }
