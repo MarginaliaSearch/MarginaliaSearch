@@ -63,7 +63,7 @@ public class KeywordPositionBitmask {
                 return bitMaskPos;
             }
             else {
-                return unmodulatedPortion + ((bitMaskPos-unmodulatedPortion) % (32 - unmodulatedPortion));
+                return unmodulatedPortion + ((bitMaskPos-unmodulatedPortion) % (positionWidth - unmodulatedPortion));
             }
         }
 

@@ -14,10 +14,11 @@ class WordMetadataTest {
     public void codecTest() {
         verifyCodec("Vanilla case", new WordMetadata(32, 0x7f0f0000L,  EnumSet.allOf(WordFlags.class)));
         verifyCodec("Position 32bit", new WordMetadata(32, 0xff0f0000L,  EnumSet.allOf(WordFlags.class)));
-        verifyCodec("Position all", new WordMetadata(32, 0xffffff0f0000L,  EnumSet.allOf(WordFlags.class)));
+        verifyCodec("Position all", new WordMetadata(32, 0xffff_ff0f_0000L,  EnumSet.allOf(WordFlags.class)));
         verifyCodec("No flags", new WordMetadata(32, 0xff0f0000L, EnumSet.noneOf(WordFlags.class)));
         System.out.println(new WordMetadata(32, 0x7f0f0005L, EnumSet.allOf(WordFlags.class)));
         System.out.println(new WordMetadata(32, 0xff0f0013L,  EnumSet.noneOf(WordFlags.class)));
+        System.out.println(new WordMetadata(32, 0xf000ff0f0013L,  EnumSet.allOf(WordFlags.class)));
     }
 
     @Test
