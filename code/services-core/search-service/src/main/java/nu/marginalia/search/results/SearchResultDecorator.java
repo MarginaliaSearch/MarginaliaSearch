@@ -91,7 +91,7 @@ public class SearchResultDecorator {
 
         long bits = positionsPerSet.values().longStream().reduce(this::or).orElse(0);
 
-        return BrailleBlockPunchCards.printBits(bits, 48);
+        return BrailleBlockPunchCards.printBits(bits, 56);
 
     }
 

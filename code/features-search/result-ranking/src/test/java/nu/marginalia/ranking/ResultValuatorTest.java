@@ -41,20 +41,20 @@ class ResultValuatorTest {
     }
     List<SearchResultKeywordScore> titleOnlyLowCountSet = List.of(
             new SearchResultKeywordScore(0, "bob",
-                    wordMetadata(32, Set.of(1), EnumSet.of(WordFlags.Title)),
+                    wordMetadata(Set.of(1), EnumSet.of(WordFlags.Title)),
                     docMetadata(0, 2010, 0, 5, EnumSet.noneOf(DocumentFlags.class)),
                     false)
     );
     List<SearchResultKeywordScore> highCountNoTitleSet = List.of(
             new SearchResultKeywordScore(0, "bob",
-                    wordMetadata(129, Set.of(1,3,4,6,7,9,10,11,12,14,15,16), EnumSet.of(WordFlags.TfIdfHigh)),
+                    wordMetadata(Set.of(1,3,4,6,7,9,10,11,12,14,15,16), EnumSet.of(WordFlags.TfIdfHigh)),
                     docMetadata(0, 2010, 0, 5, EnumSet.noneOf(DocumentFlags.class)),
                     false)
     );
 
     List<SearchResultKeywordScore> highCountSubjectSet = List.of(
             new SearchResultKeywordScore(0, "bob",
-                    wordMetadata(129, Set.of(1,3,4,6,7,9,10,11,12,14,15,16), EnumSet.of(WordFlags.TfIdfHigh, WordFlags.Subjects)),
+                    wordMetadata(Set.of(1,3,4,6,7,9,10,11,12,14,15,16), EnumSet.of(WordFlags.TfIdfHigh, WordFlags.Subjects)),
                     docMetadata(0, 2010, 0, 5, EnumSet.noneOf(DocumentFlags.class)),
                     false)
     );
@@ -82,13 +82,13 @@ class ResultValuatorTest {
         return new DocumentMetadata(topology, PubDate.toYearByte(year), sets, quality, flags).encode();
     }
 
-    private long wordMetadata(int tfIdf, Set<Integer> positions, Set<WordFlags> wordFlags) {
+    private long wordMetadata(Set<Integer> positions, Set<WordFlags> wordFlags) {
         long posBits = positions.stream()
-                .mapToLong(i -> ((1L << i) & 0xFFFF_FFFF_FFFFL))
+                .mapToLong(i -> ((1L << i) & 0xFF_FFFF_FFFF_FFFFL))
                 .reduce((a,b) -> a|b)
                 .orElse(0L);
 
-        return new WordMetadata(tfIdf, posBits, wordFlags).encode();
+        return new WordMetadata(posBits, wordFlags).encode();
     }
 
 }

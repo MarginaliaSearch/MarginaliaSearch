@@ -73,7 +73,7 @@ public class SearchApiQueryService {
                         continue outer;
 
                     Set<String> flags = metadata.flagSet().stream().map(Object::toString).collect(Collectors.toSet());
-                    lst.add(new ApiSearchResultQueryDetails(entry.keyword, metadata.tfIdf(), Long.bitCount(metadata.positions()), flags));
+                    lst.add(new ApiSearchResultQueryDetails(entry.keyword, Long.bitCount(metadata.positions()), flags));
                 }
                 details.add(lst);
             }

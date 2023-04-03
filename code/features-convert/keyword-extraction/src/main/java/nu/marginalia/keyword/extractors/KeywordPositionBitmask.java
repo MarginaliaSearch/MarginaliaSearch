@@ -8,7 +8,7 @@ import nu.marginalia.language.model.DocumentLanguageData;
 /** Generates a position bitmask for each word in a document */
 public class KeywordPositionBitmask {
     private final Object2LongOpenHashMap<String> positionMask = new Object2LongOpenHashMap<>(10_000, 0.7f);
-    private final static int positionWidth = 48;
+    private final static int positionWidth = 56;
     private final static long positionBitmask = (1L << positionWidth) - 1;
     private static final int unmodulatedPortion = 16;
 
@@ -63,7 +63,7 @@ public class KeywordPositionBitmask {
                 return bitMaskPos;
             }
             else {
-                return unmodulatedPortion + ((bitMaskPos-unmodulatedPortion) % (positionWidth - unmodulatedPortion));
+                return unmodulatedPortion + ((bitMaskPos - unmodulatedPortion) % (positionWidth - unmodulatedPortion));
             }
         }
 

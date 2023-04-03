@@ -9,7 +9,6 @@ import java.util.Set;
 public class ApiSearchResultQueryDetails {
 
     String keyword;
-    int tfIdf;
     int count;
 
     Set<String> flagsUnstableAPI;

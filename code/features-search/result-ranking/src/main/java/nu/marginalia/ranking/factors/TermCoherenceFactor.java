@@ -16,17 +16,17 @@ public class TermCoherenceFactor {
     double bitsSetFactor(long mask) {
         final int bitsSetInMask = Long.bitCount(mask);
 
-        return Math.pow(bitsSetInMask/48., 0.25);
+        return Math.pow(bitsSetInMask/56., 0.25);
     }
 
     double bitPositionFactor(long mask) {
-        int start = Math.min(48, Long.numberOfTrailingZeros(mask));
+        int start = Math.min(56, Long.numberOfTrailingZeros(mask));
 
-        return 1 - start/48.;
+        return 1 - start/56.;
     }
 
     long combinedMask(ResultKeywordSet keywordSet) {
-        long mask = 0xFFFF_FFFF_FFFFL;
+        long mask = 0xFF_FFFF_FFFF_FFFFL;
 
         for (var keyword : keywordSet) {
             long positions = keyword.positions();

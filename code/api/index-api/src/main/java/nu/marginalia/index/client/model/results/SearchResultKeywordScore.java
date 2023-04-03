@@ -34,9 +34,6 @@ public final class SearchResultKeywordScore {
         return Long.bitCount(positions());
     }
 
-    public int tfIdf() {
-        return (int) WordMetadata.decodeTfidf(encodedWordMetadata);
-    }
     public int subquery() {
         return subquery;
     }

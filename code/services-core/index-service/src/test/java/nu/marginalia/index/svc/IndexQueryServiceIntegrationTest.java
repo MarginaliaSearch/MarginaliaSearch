@@ -169,7 +169,7 @@ public class IndexQueryServiceIntegrationTest {
         long[] data = new long[factors.length*2];
         for (int i = 0; i < factors.length; i++) {
             data[2*i] = keywordLexicon.getOrInsert(Integer.toString(factors[i]));
-            data[2*i + 1] = new WordMetadata(i, i, EnumSet.of(WordFlags.Title)).encode();
+            data[2*i + 1] = new WordMetadata(i, EnumSet.of(WordFlags.Title)).encode();
         }
 
         indexJournalWriter.put(header, new IndexJournalEntryData(data));
@@ -182,7 +182,7 @@ public class IndexQueryServiceIntegrationTest {
         long[] data = new long[factors.length*2];
         for (int i = 0; i < factors.length; i++) {
             data[2*i] = keywordLexicon.getOrInsert(Integer.toString(factors[i]));
-            data[2*i + 1] = new WordMetadata(i % 20, i, EnumSet.of(WordFlags.Title)).encode();
+            data[2*i + 1] = new WordMetadata(i, EnumSet.of(WordFlags.Title)).encode();
         }
 
         indexJournalWriter.put(header, new IndexJournalEntryData(data));

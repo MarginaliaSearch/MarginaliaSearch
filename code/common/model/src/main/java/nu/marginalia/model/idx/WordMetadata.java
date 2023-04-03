@@ -9,20 +9,15 @@ import java.util.Set;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-public record WordMetadata(int tfIdf,
-                           long positions,
+public record WordMetadata(long positions,
                            byte flags) {
 
     // Bottom 16 bits are used for flags
 
     public static final long FLAGS_MASK = 0xFFL;
 
-    public static final long TF_IDF_MASK = 0xFFL;
-    public static final int TF_IDF_SCALE = 2;
-    public static final int TF_IDF_SHIFT = 8;
-
-    public static final int POSITIONS_SHIFT = 16;
-    public static final long POSITIONS_MASK = 0xFFFF_FFFF_FFFFL;
+    public static final int POSITIONS_SHIFT = 8;
+    public static final long POSITIONS_MASK = 0xFF_FFFF_FFFF_FFFFL;
 
 
 
@@ -32,17 +27,15 @@ public record WordMetadata(int tfIdf,
 
     public WordMetadata(long value) {
         this(
-                TF_IDF_SCALE * (int)((value >>> TF_IDF_SHIFT) & TF_IDF_MASK),
                 ((value >>> POSITIONS_SHIFT) & POSITIONS_MASK),
                 (byte) (value & FLAGS_MASK)
         );
     }
 
-    public WordMetadata(int tfIdf,
-                        long positions,
+    public WordMetadata(long positions,
                         Set<WordFlags> flags)
     {
-        this(tfIdf, positions, encodeFlags(flags));
+        this(positions, encodeFlags(flags));
     }
 
     private static byte encodeFlags(Set<WordFlags> flags) {
@@ -61,21 +54,12 @@ public record WordMetadata(int tfIdf,
         return (meta >>> POSITIONS_SHIFT) & POSITIONS_MASK;
     }
 
-    public static double decodeTfidf(long meta) {
-        return TF_IDF_SCALE * ((meta >>> TF_IDF_SHIFT) & TF_IDF_MASK);
-    }
-
     public boolean hasFlag(WordFlags flag) {
         return (flags & flag.asBit()) != 0;
     }
 
     public String toString() {
-        StringBuilder sb = new StringBuilder(getClass().getSimpleName());
-        sb.append('[')
-                .append("tfidf=").append(tfIdf).append(", ")
-                .append("positions=[").append(BrailleBlockPunchCards.printBits(positions, 48)).append('/').append(positions).append(']');
-        sb.append(", flags=").append(flagSet()).append(']');
-        return sb.toString();
+        return "[positions=%s; %s]".formatted(BrailleBlockPunchCards.printBits(positions, 56), flagSet());
     }
 
     /* Encoded in a 64 bit long
@@ -84,14 +68,13 @@ public record WordMetadata(int tfIdf,
         long ret = 0;
 
         ret |= Byte.toUnsignedLong(flags);
-        ret |= min(TF_IDF_MASK, max(0, tfIdf / TF_IDF_SCALE)) << TF_IDF_SHIFT;
         ret |= (positions & POSITIONS_MASK) << POSITIONS_SHIFT;
 
         return ret;
     }
 
     public boolean isEmpty() {
-        return positions == 0 && flags == 0 && tfIdf == 0;
+        return positions == 0 && flags == 0;
     }
 
     public static long emptyValue() {
@@ -103,7 +86,4 @@ public record WordMetadata(int tfIdf,
         return WordFlags.decode(flags);
     }
 
-    public int positionCount() {
-        return Long.bitCount(positions);
-    }
 }

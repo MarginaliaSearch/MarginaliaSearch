@@ -94,7 +94,7 @@ public class IndexResultValuator {
 
             int minFlagsCount = 8;
             int minPosCount = 1000;
-            long cominedBitMask = 0xFFFF_FFFF_FFFFL;
+            long cominedBitMask = 0xFF_FFFF_FFFF_FFFFL;
 
             for (var termScore : termScoresForSet) {
                 final int positionCount = Long.bitCount(termScore.positions());

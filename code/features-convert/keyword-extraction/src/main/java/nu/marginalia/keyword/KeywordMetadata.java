@@ -58,7 +58,7 @@ class KeywordMetadata {
 
         long positions = bitmask.get(stemmed);
 
-        return new WordMetadata(tfidf, positions, flags).encode();
+        return new WordMetadata(positions, flags).encode();
     }
 
 }

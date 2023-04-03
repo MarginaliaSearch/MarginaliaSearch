@@ -16,7 +16,7 @@ class TermCoherenceFactorTest {
     @Test
     public void testAllBitsSet() {
         var allPositionsSet = createSet(
-                0xFFFF_FFFF_FFFFL, 0xFFFF_FFFF_FFFFL
+                0xFF_FFFF_FFFF_FFFFL, 0xFF_FFFF_FFFF_FFFFL
         );
 
         long mask = termCoherenceFactor.combinedMask(allPositionsSet);
@@ -56,12 +56,12 @@ class TermCoherenceFactorTest {
     @Test @SuppressWarnings("unchecked")
     public void testHiPosMatches() {
         var positions = createSet(
-                List.of(44, 45, 46, 47), List.of(44, 45, 46, 47)
+                List.of(55, 54, 53, 52), List.of(55, 54, 53, 52)
         );
 
         long mask = termCoherenceFactor.combinedMask(positions);
         printMask(mask);
-        assertEquals(0.083, termCoherenceFactor.bitPositionFactor(mask), 0.01);
+        assertEquals(0.071, termCoherenceFactor.bitPositionFactor(mask), 0.01);
     }
 
     @Test
@@ -92,7 +92,7 @@ class TermCoherenceFactorTest {
 
         for (int i = 0; i < positionMasks.length; i++) {
             keywords[i] = new SearchResultKeywordScore(0, "",
-                    new WordMetadata(0, positionMasks[i], (byte) 0).encode(), 0, false);
+                    new WordMetadata(positionMasks[i], (byte) 0).encode(), 0, false);
         }
 
         return new ResultKeywordSet(keywords);

@@ -8,7 +8,7 @@ import nu.marginalia.model.idx.WordMetadata;
 
 import java.util.*;
 
-@ToString @Getter
+@Getter
 public class DocumentKeywordsBuilder {
     public final Object2LongLinkedOpenHashMap<String> words;
 
