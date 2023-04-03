@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2LongArrayMap;
 import nu.marginalia.bbpc.BrailleBlockPunchCards;
 import nu.marginalia.index.client.model.results.SearchResultRankingContext;
 import nu.marginalia.index.client.model.results.SearchResultSet;
@@ -14,7 +15,6 @@ import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.id.EdgeIdList;
 import nu.marginalia.index.client.model.results.SearchResultItem;
 import nu.marginalia.search.model.UrlDetails;
-import nu.marginalia.search.query.model.SearchQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,7 +80,7 @@ public class SearchResultDecorator {
     }
 
     private String getPositionsString(SearchResultItem resultItem) {
-        Int2IntArrayMap positionsPerSet = new Int2IntArrayMap(8);
+        Int2LongArrayMap positionsPerSet = new Int2LongArrayMap(8);
 
         for (var score : resultItem.keywordScores) {
             if (!score.isKeywordRegular()) {
@@ -89,16 +89,16 @@ public class SearchResultDecorator {
             positionsPerSet.merge(score.subquery(), score.positions(), this::and);
         }
 
-        int bits = positionsPerSet.values().intStream().reduce(this::or).orElse(0);
+        long bits = positionsPerSet.values().longStream().reduce(this::or).orElse(0);
 
-        return BrailleBlockPunchCards.printBits(bits, 32);
+        return BrailleBlockPunchCards.printBits(bits, 48);
 
     }
 
-    private int and(int a, int b) {
+    private long and(long a, long b) {
         return a & b;
     }
-    private int or(int a, int b) {
+    private long or(long a, long b) {
         return a | b;
     }
 

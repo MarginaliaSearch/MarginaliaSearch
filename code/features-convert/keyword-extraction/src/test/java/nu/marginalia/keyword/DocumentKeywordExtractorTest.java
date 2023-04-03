@@ -55,5 +55,6 @@ class DocumentKeywordExtractorTest {
         System.out.println(new WordMetadata(566820053975498886L));
         // -
         System.out.println(new WordMetadata(1198298103937L));
+        System.out.println(new WordMetadata(1103808168065L));
     }
 }

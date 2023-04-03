@@ -83,10 +83,10 @@ class ResultValuatorTest {
     }
 
     private long wordMetadata(int tfIdf, Set<Integer> positions, Set<WordFlags> wordFlags) {
-        int posBits = positions.stream()
-                .mapToInt(i -> (int)((1L << i) & 0xFFFF_FFFFL))
+        long posBits = positions.stream()
+                .mapToLong(i -> (int)((1L << i) & 0xFFFF_FFFF_FFFFL))
                 .reduce((a,b) -> a|b)
-                .orElse(0);
+                .orElse(0L);
 
         return new WordMetadata(tfIdf, posBits, wordFlags).encode();
     }

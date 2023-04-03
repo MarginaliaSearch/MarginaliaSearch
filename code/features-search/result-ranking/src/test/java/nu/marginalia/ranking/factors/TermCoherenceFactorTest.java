@@ -16,10 +16,10 @@ class TermCoherenceFactorTest {
     @Test
     public void testAllBitsSet() {
         var allPositionsSet = createSet(
-                ~0, ~0
+                0xFFFF_FFFF_FFFFL, 0xFFFF_FFFF_FFFFL
         );
 
-        int mask = termCoherenceFactor.combinedMask(allPositionsSet);
+        long mask = termCoherenceFactor.combinedMask(allPositionsSet);
 
         assertEquals(1.0, termCoherenceFactor.bitPositionFactor(mask), 0.01);
         assertEquals(1.0, termCoherenceFactor.bitsSetFactor(mask), 0.01);
@@ -33,7 +33,7 @@ class TermCoherenceFactorTest {
                 0, 0
         );
 
-        int mask = termCoherenceFactor.combinedMask(allPositionsSet);
+        long mask = termCoherenceFactor.combinedMask(allPositionsSet);
 
         assertEquals(0, termCoherenceFactor.bitPositionFactor(mask), 0.01);
         assertEquals(0, termCoherenceFactor.bitsSetFactor(mask), 0.01);
@@ -43,11 +43,11 @@ class TermCoherenceFactorTest {
 
     @Test @SuppressWarnings("unchecked")
     public void testLowPosMatches() {
-        var allPositionsSet = createSet(
+        var positions = createSet(
                 List.of(0, 1, 2, 3), List.of(0, 1, 2, 3)
         );
 
-        int mask = termCoherenceFactor.combinedMask(allPositionsSet);
+        long mask = termCoherenceFactor.combinedMask(positions);
         printMask(mask);
 
         assertEquals(1.0, termCoherenceFactor.bitPositionFactor(mask), 0.01);
@@ -55,39 +55,39 @@ class TermCoherenceFactorTest {
 
     @Test @SuppressWarnings("unchecked")
     public void testHiPosMatches() {
-        var allPositionsSet = createSet(
-                List.of(28, 29, 30, 31), List.of(28, 29, 30, 31)
+        var positions = createSet(
+                List.of(44, 45, 46, 47), List.of(44, 45, 46, 47)
         );
 
-        int mask = termCoherenceFactor.combinedMask(allPositionsSet);
+        long mask = termCoherenceFactor.combinedMask(positions);
         printMask(mask);
-        assertEquals(0.125, termCoherenceFactor.bitPositionFactor(mask), 0.01);
+        assertEquals(0.083, termCoherenceFactor.bitPositionFactor(mask), 0.01);
     }
 
     @Test
     public void testBitMatchScaling() {
-        for (int i = 1; i < 32; i++) {
-            System.out.println(i + ":" + termCoherenceFactor.bitsSetFactor((1 << i) - 1));
+        for (int i = 1; i < 48; i++) {
+            System.out.println(i + ":" + termCoherenceFactor.bitsSetFactor((1L << i) - 1));
         }
     }
 
-    void printMask(int mask) {
-        System.out.println(BrailleBlockPunchCards.printBits(mask, 32));
+    void printMask(long mask) {
+        System.out.println(BrailleBlockPunchCards.printBits(mask, 48));
     }
 
     ResultKeywordSet createSet(List<Integer>... maskPositions) {
-        int[] positions = new int[maskPositions.length];
+        long[] positions = new long[maskPositions.length];
 
         for (int i = 0; i < maskPositions.length; i++) {
-            for (int pos : maskPositions[i]) {
-                positions[i] |= (1<<pos);
+            for (long pos : maskPositions[i]) {
+                positions[i] |= (1L<<pos);
             }
         }
 
         return createSet(positions);
     }
 
-    ResultKeywordSet createSet(int... positionMasks) {
+    ResultKeywordSet createSet(long... positionMasks) {
         var keywords = new SearchResultKeywordScore[positionMasks.length];
 
         for (int i = 0; i < positionMasks.length; i++) {

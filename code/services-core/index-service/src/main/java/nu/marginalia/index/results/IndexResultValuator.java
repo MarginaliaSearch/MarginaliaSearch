@@ -94,10 +94,10 @@ public class IndexResultValuator {
 
             int minFlagsCount = 8;
             int minPosCount = 1000;
-            int cominedBitMask = ~0;
+            long cominedBitMask = 0xFFFF_FFFF_FFFFL;
 
             for (var termScore : termScoresForSet) {
-                final int positionCount = Integer.bitCount(termScore.positions());
+                final int positionCount = Long.bitCount(termScore.positions());
                 final int flagCount = Long.bitCount(termScore.encodedWordMetadata() & flagsFilterMask);
 
                 minPosCount = Math.min(minPosCount, positionCount);
@@ -105,7 +105,7 @@ public class IndexResultValuator {
                 cominedBitMask &= termScore.positions();
             }
 
-            final int combinedBitmaskBitCount = Integer.bitCount(cominedBitMask);
+            final int combinedBitmaskBitCount = Long.bitCount(cominedBitMask);
 
             // Calculate the highest value (overall) of the lowest value (per set) of these search result importance measures
             maxBitMask = Math.max(maxBitMask, combinedBitmaskBitCount);

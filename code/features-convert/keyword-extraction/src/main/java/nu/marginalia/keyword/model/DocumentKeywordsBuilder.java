@@ -37,8 +37,8 @@ public class DocumentKeywordsBuilder {
         return new DocumentKeywords(wordArray, meta);
     }
 
-    public DocumentKeywordsBuilder(int cacpacity) {
-        words  = new Object2LongLinkedOpenHashMap<>(cacpacity);
+    public DocumentKeywordsBuilder(int capacity) {
+        words  = new Object2LongLinkedOpenHashMap<>(capacity);
     }
 
     public void add(String word, long meta) {
@@ -92,9 +92,7 @@ public class DocumentKeywordsBuilder {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("[ ");
-        words.forEach((word, meta) -> {
-            sb.append(word).append("->").append(new WordMetadata(meta)).append(' ');
-        });
+        words.forEach((word, meta) -> sb.append(word).append("->").append(new WordMetadata(meta)).append(' '));
         return sb.append(']').toString();
 
     }

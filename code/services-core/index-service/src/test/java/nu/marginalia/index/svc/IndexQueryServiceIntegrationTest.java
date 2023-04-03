@@ -164,7 +164,7 @@ public class IndexQueryServiceIntegrationTest {
 
         long fullId = id | ((long) (32 - (id % 32)) << 32);
 
-        var header = new IndexJournalEntryHeader(factors.length, fullId, new DocumentMetadata(0, 0, 0, id % 5, id, id % 20, (byte) 0).encode());
+        var header = new IndexJournalEntryHeader(factors.length, fullId, new DocumentMetadata(0, 0, 0, 0, id % 5, id, id % 20, (byte) 0).encode());
 
         long[] data = new long[factors.length*2];
         for (int i = 0; i < factors.length; i++) {

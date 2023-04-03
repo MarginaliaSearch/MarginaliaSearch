@@ -8,25 +8,25 @@ import nu.marginalia.ranking.ResultKeywordSet;
 public class TermCoherenceFactor {
 
     public double calculate(ResultKeywordSet keywordSet) {
-        int mask = combinedMask(keywordSet);
+        long mask = combinedMask(keywordSet);
 
         return bitsSetFactor(mask) * (0.8 + 0.2 * bitPositionFactor(mask));
     }
 
-    double bitsSetFactor(int mask) {
-        final int bitsSetInMask = Integer.bitCount(mask);
+    double bitsSetFactor(long mask) {
+        final int bitsSetInMask = Long.bitCount(mask);
 
-        return Math.pow(bitsSetInMask/32.0, 0.25);
+        return Math.pow(bitsSetInMask/48., 0.25);
     }
 
-    double bitPositionFactor(int mask) {
-        int start = Integer.numberOfTrailingZeros(mask);
+    double bitPositionFactor(long mask) {
+        int start = Math.min(48, Long.numberOfTrailingZeros(mask));
 
-        return 1 - (start)/32.0;
+        return 1 - start/48.;
     }
 
-    int combinedMask(ResultKeywordSet keywordSet) {
-        int mask = ~0;
+    long combinedMask(ResultKeywordSet keywordSet) {
+        long mask = 0xFFFF_FFFF_FFFFL;
 
         for (var keyword : keywordSet) {
             long positions = keyword.positions();
