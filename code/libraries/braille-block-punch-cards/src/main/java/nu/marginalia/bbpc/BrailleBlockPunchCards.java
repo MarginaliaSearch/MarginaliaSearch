@@ -18,7 +18,7 @@ public class BrailleBlockPunchCards {
      * 8 "bits", but for historical reasons, they're addressed in a bit
      * of an awkward way. Braille used to be a 2x6 grid, but it was extended
      * to 2x8.
-     *
+
      * It's addressed as follows
      *
      * 0 3

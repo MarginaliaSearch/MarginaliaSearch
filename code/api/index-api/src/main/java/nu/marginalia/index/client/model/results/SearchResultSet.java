@@ -9,7 +9,7 @@ import java.util.List;
 @AllArgsConstructor @Getter @ToString
 public class SearchResultSet {
     public List<SearchResultItem> results;
-    public SearchResultRankingContext rankingContext;
+    public ResultRankingContext rankingContext;
     public int size() {
         return results.size();
     }

@@ -1,67 +1,42 @@
 package nu.marginalia.index.client.model.results;
 
-import nu.marginalia.model.idx.DocumentMetadata;
 import org.jetbrains.annotations.NotNull;
 
 import static java.lang.Boolean.compare;
-import static java.lang.Integer.compare;
+import static java.lang.Double.compare;
 
-public record SearchResultPreliminaryScore(boolean hasSingleTermMatch,
-                                           boolean hasPriorityTerm,
-                                           int minNumberOfFlagsSet,
-                                           int minNumberOfPositions,
-                                           int overlappingPositions,
-                                           boolean anyAllSynthetic,
-                                           int avgSentenceLength,
-                                           int topology
-                                           )
+public record SearchResultPreliminaryScore(
+        boolean anyAllSynthetic,
+        int minNumberOfFlagsSet,
+        int minPositionsSet,
+        boolean hasPriorityTerm,
+        double searchRankingScore)
         implements Comparable<SearchResultPreliminaryScore>
 {
 
-    public SearchResultPreliminaryScore(long documentMetadata,
-                                        boolean hasSingleTermMatch,
-                                        boolean hasPriorityTerm,
-                                        int minNumberOfFlagsSet,
-                                        int minNumberOfPositions,
-                                        int overlappingPositions,
-                                        boolean anyAllSynthetic
-                                        )
-    {
-        this(hasSingleTermMatch, hasPriorityTerm, minNumberOfFlagsSet, minNumberOfPositions, overlappingPositions, anyAllSynthetic,
-                DocumentMetadata.decodeAvgSentenceLength(documentMetadata),
-                DocumentMetadata.decodeTopology(documentMetadata)
-                );
-    }
+    final static int PREFER_HIGH = 1;
+    final static int PREFER_LOW = -1;
 
     @Override
     public int compareTo(@NotNull SearchResultPreliminaryScore other) {
         int diff;
 
-        diff = -compare(avgSentenceLength >= 2, other.avgSentenceLength >= 2);
+        diff = PREFER_HIGH * compare(hasPriorityTerm, other.hasPriorityTerm);
         if (diff != 0) return diff;
 
-        diff = compare(hasSingleTermMatch, other.hasSingleTermMatch);
-        if (diff != 0) return diff;
-
-        diff = compare(minNumberOfFlagsSet, other.minNumberOfFlagsSet);
-        if (diff != 0) return diff;
-
-        diff = compare(hasPriorityTerm, other.hasPriorityTerm);
-        if (diff != 0) return diff;
-
-        diff = compare(overlappingPositions, other.overlappingPositions);
-        if (diff != 0) return diff;
-
-        diff = compare(minNumberOfPositions, other.minNumberOfPositions);
-        if (diff != 0) return diff;
-
-        return -compare(topology, other.topology);
+        return PREFER_LOW * compare(searchRankingScore, other.searchRankingScore);
     }
 
     public boolean isEmpty() {
-        return minNumberOfFlagsSet == 0
-            && minNumberOfPositions == 0
-            && overlappingPositions == 0
-            && !anyAllSynthetic;
+        if (minNumberOfFlagsSet > 0)
+            return false;
+
+        if (anyAllSynthetic)
+            return false;
+
+        if (minPositionsSet > 0)
+            return false;
+
+        return true;
     }
 }

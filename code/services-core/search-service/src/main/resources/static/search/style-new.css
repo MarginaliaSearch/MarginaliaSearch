@@ -1,14 +1,8 @@
 /* If you need to borrow something from below, that's fine */
-.extra a {
-  background: #ccc linear-gradient(45deg, rgba(255,220,220,1) 0%, rgba(219,255,196,1) 50%, rgba(212,216,255,1) 100%);
-  color: #000;
-  padding: 0.5ch;
-  border-radius: 0.5ch;
-  text-decoration: none;
-  border: 3px outset #000;
-  word-break: none;
-  white-space: nowrap;
-  float: right;
+
+nav a.extra {
+  background: #ccc linear-gradient(45deg, rgba(255,100,100,1) 0%, rgba(100,255,100,1) 50%, rgba(100,100,255,1) 100%);
+  color: black;
 }
 
 .extra a:active {
@@ -50,7 +44,6 @@ header nav a {
   text-decoration: none;
   color: #000;
 
-  margin-right: 1ch;
   padding: .5ch;
   display: inline-block;
 }
@@ -495,7 +488,7 @@ a.underline {
     flex-direction: column;
   }
   header nav a {
-    padding: 1ch !important;
+    padding: 0.75ch !important;
   }
 
   .card {
@@ -520,12 +513,12 @@ a.underline {
 
 /* https://www.youtube.com/watch?v=v0nmHymgM7Y */
 @media (prefers-color-scheme: dark) {
-  .extra a {
-    background: #000 linear-gradient(45deg, rgba(135,93,93,1) 0%, rgba(106,135,87,1) 50%, rgba(76,83,118,1) 100%);
-    font-weight: bold;
-    color: #fff;
-    border: 3px outset #000;
+
+  nav a.extra {
+    background: #ccc linear-gradient(45deg, rgba(100,0,0,1) 0%, rgba(0,100,0,1) 50%, rgba(0,0,100,1) 100%);
+    color: white;
   }
+
   .positions {
     box-shadow: 0px 0px 2px #222;
     background-color: #222;

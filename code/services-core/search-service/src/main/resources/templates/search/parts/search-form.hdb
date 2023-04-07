@@ -30,8 +30,5 @@
                 <option {{#eq js "yes-js"}}selected{{/eq}} value="yes-js">Require JS</option>
             </select>
         </div>
-        <div class="extra">
-            <a href="/explore/random">Random Websites</a>
-        </div>
     </section>
 </form>

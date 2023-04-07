@@ -22,4 +22,8 @@ public record SearchIndexSearchTerms(IntList includes, IntList excludes, IntList
         list.sort(comparator);
         return list.toIntArray();
     }
+
+    public int size() {
+        return includes.size() + excludes.size() + priority.size();
+    }
 }

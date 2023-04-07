@@ -48,6 +48,9 @@ public class SearchIndexReader {
     public long numHits(int word) {
         return reverseIndexFullReader.numDocuments(word);
     }
+    public long numHitsPrio(int word) {
+        return reverseIndexPriorityReader.numDocuments(word);
+    }
 
     public long[] getMetadata(int wordId, long[] docIds) {
         return reverseIndexFullReader.getTermMeta(wordId, docIds);

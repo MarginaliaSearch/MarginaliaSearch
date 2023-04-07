@@ -1,6 +1,7 @@
 package nu.marginalia.index.client.model.query;
 
 import lombok.*;
+import nu.marginalia.index.client.model.results.ResultRankingParameters;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
@@ -27,4 +28,5 @@ public class SearchSpecification {
 
     public final QueryStrategy queryStrategy;
 
+    public final ResultRankingParameters rankingParams;
 }

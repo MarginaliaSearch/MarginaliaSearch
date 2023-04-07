@@ -1,24 +1,25 @@
 package nu.marginalia.ranking;
 
 import nu.marginalia.index.client.model.results.SearchResultKeywordScore;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-import java.util.Iterator;
+import java.util.List;
 
-public record ResultKeywordSet(SearchResultKeywordScore[] keywords) implements Iterable<SearchResultKeywordScore> {
-    @NotNull
-    @Override
-    public Iterator<SearchResultKeywordScore> iterator() {
-        return Arrays.stream(keywords).iterator();
-    }
+public record ResultKeywordSet(List<SearchResultKeywordScore> keywords) {
 
     public int length() {
-        return keywords.length;
+        return keywords.size();
     }
-
+    public boolean isEmpty() { return length() == 0; }
+    public boolean hasNgram() {
+        for (var word : keywords) {
+            if (word.keyword.contains("_")) {
+                return true;
+            }
+        }
+        return false;
+    }
     @Override
     public String toString() {
-        return "%s[%s]".formatted(getClass().getSimpleName(), Arrays.toString(keywords));
+        return "%s[%s]".formatted(getClass().getSimpleName(), keywords);
     }
 }

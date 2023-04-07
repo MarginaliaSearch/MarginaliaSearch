@@ -8,6 +8,7 @@ import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.index.index.SearchIndex;
 import nu.marginalia.index.svc.SearchTermsService;
+import nu.marginalia.ranking.ResultValuator;
 
 import java.util.List;
 import java.util.OptionalInt;
@@ -16,10 +17,15 @@ public class IndexMetadataService {
     private final SearchIndex index;
     private final SearchTermsService searchTermsService;
 
+    private final ResultValuator searchResultValuator;
+
     @Inject
-    public IndexMetadataService(SearchIndex index, SearchTermsService searchTermsService) {
+    public IndexMetadataService(SearchIndex index,
+                                SearchTermsService searchTermsService,
+                                ResultValuator searchResultValuator) {
         this.index = index;
         this.searchTermsService = searchTermsService;
+        this.searchResultValuator = searchResultValuator;
     }
 
     public long getDocumentMetadata(long urlId) {
@@ -93,6 +99,10 @@ public class IndexMetadataService {
         return ret;
 
 
+    }
+
+    public ResultValuator getSearchResultValuator() {
+        return searchResultValuator;
     }
 
     public static class TermMetadata {

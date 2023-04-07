@@ -55,5 +55,21 @@ class DocumentKeywordExtractorTest {
         System.out.println(new WordMetadata(566820053975498886L));
         // -
         System.out.println(new WordMetadata(1198298103937L));
+        System.out.println(new WordMetadata(1103808168065L));
+    }
+
+    @Test
+    public void testSpam() throws IOException, URISyntaxException {
+        var resource = Objects.requireNonNull(ClassLoader.getSystemResourceAsStream("test-data/spam.html"),
+                "Could not load word frequency table");
+        String html = new String(resource.readAllBytes(), Charset.defaultCharset());
+        var doc = Jsoup.parse(html);
+        doc.filter(new DomPruningFilter(0.5));
+
+        DocumentKeywordExtractor extractor = new DocumentKeywordExtractor(new TermFrequencyDict(WmsaHome.getLanguageModels()));
+        SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
+
+        var keywords = extractor.extractKeywords(se.extractSentences(doc), new EdgeUrl("https://math.byu.edu/wiki/index.php/All_You_Need_To_Know_About_Earning_Money_Online"));
+        System.out.println(keywords.getMetaForWord("knitting"));
     }
 }

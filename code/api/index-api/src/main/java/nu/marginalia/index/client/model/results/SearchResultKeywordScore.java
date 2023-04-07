@@ -31,16 +31,13 @@ public final class SearchResultKeywordScore {
     }
 
     public int positionCount() {
-        return Integer.bitCount(positions());
+        return Long.bitCount(positions());
     }
 
-    public int tfIdf() {
-        return (int) WordMetadata.decodeTfidf(encodedWordMetadata);
-    }
     public int subquery() {
         return subquery;
     }
-    public int positions() {
+    public long positions() {
         return WordMetadata.decodePositions(encodedWordMetadata);
     }
 

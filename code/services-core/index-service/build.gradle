@@ -35,7 +35,9 @@ dependencies {
     implementation project(':code:features-index:index-forward')
     implementation project(':code:features-index:index-reverse')
     implementation project(':code:features-index:lexicon')
+
     implementation project(':code:features-index:domain-ranking')
+    implementation project(':code:features-search:result-ranking')
 
 
     implementation libs.lombok

@@ -56,9 +56,9 @@ class KeywordMetadata {
         if (urlKeywords.containsDomain(stemmed))
             flags.add(WordFlags.UrlDomain);
 
-        int positions = bitmask.get(stemmed);
+        long positions = bitmask.get(stemmed);
 
-        return new WordMetadata(tfidf, positions, flags).encode();
+        return new WordMetadata(positions, flags).encode();
     }
 
 }

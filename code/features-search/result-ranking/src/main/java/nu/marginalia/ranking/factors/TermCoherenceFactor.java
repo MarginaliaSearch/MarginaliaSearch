@@ -2,33 +2,26 @@ package nu.marginalia.ranking.factors;
 
 import nu.marginalia.ranking.ResultKeywordSet;
 
-/** Rewards documents where terms appear frequently within the same sentences,
- * and where this overlap is early in the document
+/** Rewards documents where terms appear frequently within the same sentences
  */
 public class TermCoherenceFactor {
 
     public double calculate(ResultKeywordSet keywordSet) {
-        int mask = combinedMask(keywordSet);
+        long mask = combinedMask(keywordSet);
 
-        return bitsSetFactor(mask) * (0.8 + 0.2 * bitPositionFactor(mask));
+        return bitsSetFactor(mask);
     }
 
-    double bitsSetFactor(int mask) {
-        final int bitsSetInMask = Integer.bitCount(mask);
+    double bitsSetFactor(long mask) {
+        final int bitsSetInMask = Long.bitCount(mask);
 
-        return Math.pow(bitsSetInMask/32.0, 0.25);
+        return Math.pow(bitsSetInMask/56., 0.25);
     }
 
-    double bitPositionFactor(int mask) {
-        int start = Integer.numberOfTrailingZeros(mask);
+    long combinedMask(ResultKeywordSet keywordSet) {
+        long mask = 0xFF_FFFF_FFFF_FFFFL;
 
-        return 1 - (start)/32.0;
-    }
-
-    int combinedMask(ResultKeywordSet keywordSet) {
-        int mask = ~0;
-
-        for (var keyword : keywordSet) {
+        for (var keyword : keywordSet.keywords()) {
             long positions = keyword.positions();
 
             mask &= positions;

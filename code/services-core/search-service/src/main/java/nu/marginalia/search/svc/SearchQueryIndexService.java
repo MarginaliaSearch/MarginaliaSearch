@@ -11,6 +11,10 @@ import nu.marginalia.search.results.SearchResultDecorator;
 import nu.marginalia.search.results.UrlDeduplicator;
 import nu.marginalia.client.Context;
 import nu.marginalia.search.query.model.SearchQuery;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -21,6 +25,8 @@ public class SearchQueryIndexService {
     private final Comparator<UrlDetails> resultListComparator;
     private final IndexClient indexClient;
     private final SearchQueryCountService searchVisitorCount;
+    private final Marker queryMarker = MarkerFactory.getMarker("QUERY");
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
     public SearchQueryIndexService(SearchResultDecorator resultDecorator,
@@ -54,6 +60,7 @@ public class SearchQueryIndexService {
         UrlDeduplicator deduplicator = new UrlDeduplicator(limits.resultsByDomain());
         List<UrlDetails> retList = new ArrayList<>(limits.resultsTotal());
 
+        int dedupCount = 0;
         for (var item : decoratedResults) {
             if (retList.size() >= limits.resultsTotal())
                 break;
@@ -61,6 +68,13 @@ public class SearchQueryIndexService {
             if (!deduplicator.shouldRemove(item)) {
                 retList.add(item);
             }
+            else {
+                dedupCount ++;
+            }
+        }
+
+        if (dedupCount > 0) {
+            logger.info(queryMarker, "Deduplicator ate {} results", dedupCount);
         }
 
         return retList;

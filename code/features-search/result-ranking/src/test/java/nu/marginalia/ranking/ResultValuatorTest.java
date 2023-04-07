@@ -1,6 +1,7 @@
 package nu.marginalia.ranking;
 
-import nu.marginalia.index.client.model.results.SearchResultRankingContext;
+import nu.marginalia.index.client.model.results.ResultRankingContext;
+import nu.marginalia.index.client.model.results.ResultRankingParameters;
 import nu.marginalia.index.client.model.results.SearchResultKeywordScore;
 import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.WordFlags;
@@ -13,10 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.mockito.Mockito.when;
 
@@ -32,29 +30,28 @@ class ResultValuatorTest {
         when(dict.docCount()).thenReturn(100_000);
 
         valuator = new ResultValuator(
-                new TermFlagsFactor(),
                 new Bm25Factor(),
                 new TermCoherenceFactor(),
-                new PriorityTermFactor()
+                new PriorityTermBonus()
         );
 
     }
     List<SearchResultKeywordScore> titleOnlyLowCountSet = List.of(
             new SearchResultKeywordScore(0, "bob",
-                    wordMetadata(32, Set.of(1), EnumSet.of(WordFlags.Title)),
+                    wordMetadata(Set.of(1), EnumSet.of(WordFlags.Title)),
                     docMetadata(0, 2010, 0, 5, EnumSet.noneOf(DocumentFlags.class)),
                     false)
     );
     List<SearchResultKeywordScore> highCountNoTitleSet = List.of(
             new SearchResultKeywordScore(0, "bob",
-                    wordMetadata(129, Set.of(1,3,4,6,7,9,10,11,12,14,15,16), EnumSet.of(WordFlags.TfIdfHigh)),
+                    wordMetadata(Set.of(1,3,4,6,7,9,10,11,12,14,15,16), EnumSet.of(WordFlags.TfIdfHigh)),
                     docMetadata(0, 2010, 0, 5, EnumSet.noneOf(DocumentFlags.class)),
                     false)
     );
 
     List<SearchResultKeywordScore> highCountSubjectSet = List.of(
             new SearchResultKeywordScore(0, "bob",
-                    wordMetadata(129, Set.of(1,3,4,6,7,9,10,11,12,14,15,16), EnumSet.of(WordFlags.TfIdfHigh, WordFlags.Subjects)),
+                    wordMetadata(Set.of(1,3,4,6,7,9,10,11,12,14,15,16), EnumSet.of(WordFlags.TfIdfHigh, WordFlags.Subjects)),
                     docMetadata(0, 2010, 0, 5, EnumSet.noneOf(DocumentFlags.class)),
                     false)
     );
@@ -64,13 +61,14 @@ class ResultValuatorTest {
     void evaluateTerms() {
 
         when(dict.getTermFreq("bob")).thenReturn(10);
-        SearchResultRankingContext context = new SearchResultRankingContext(100000,
-                Map.of("bob", 10));
+        ResultRankingContext context = new ResultRankingContext(100000,
+                ResultRankingParameters.sensibleDefaults(),
+                Map.of("bob", 10), Collections.emptyMap());
 
-        double titleOnlyLowCount = valuator.calculateSearchResultValue(titleOnlyLowCountSet, 10_000, 32, context);
-        double titleLongOnlyLowCount = valuator.calculateSearchResultValue(titleOnlyLowCountSet, 10_000, 72, context);
-        double highCountNoTitle = valuator.calculateSearchResultValue(highCountNoTitleSet, 10_000, 32, context);
-        double highCountSubject = valuator.calculateSearchResultValue(highCountSubjectSet, 10_000, 32, context);
+        double titleOnlyLowCount = valuator.calculateSearchResultValue(titleOnlyLowCountSet, 10_000, context);
+        double titleLongOnlyLowCount = valuator.calculateSearchResultValue(titleOnlyLowCountSet, 10_000, context);
+        double highCountNoTitle = valuator.calculateSearchResultValue(highCountNoTitleSet, 10_000, context);
+        double highCountSubject = valuator.calculateSearchResultValue(highCountSubjectSet, 10_000, context);
 
         System.out.println(titleOnlyLowCount);
         System.out.println(titleLongOnlyLowCount);
@@ -82,13 +80,13 @@ class ResultValuatorTest {
         return new DocumentMetadata(topology, PubDate.toYearByte(year), sets, quality, flags).encode();
     }
 
-    private long wordMetadata(int tfIdf, Set<Integer> positions, Set<WordFlags> wordFlags) {
-        int posBits = positions.stream()
-                .mapToInt(i -> (int)((1L << i) & 0xFFFF_FFFFL))
+    private long wordMetadata(Set<Integer> positions, Set<WordFlags> wordFlags) {
+        long posBits = positions.stream()
+                .mapToLong(i -> ((1L << i) & 0xFF_FFFF_FFFF_FFFFL))
                 .reduce((a,b) -> a|b)
-                .orElse(0);
+                .orElse(0L);
 
-        return new WordMetadata(tfIdf, posBits, wordFlags).encode();
+        return new WordMetadata(posBits, wordFlags).encode();
     }
 
 }
