@@ -2,16 +2,16 @@ package nu.marginalia.ranking.factors;
 
 import nu.marginalia.index.client.model.results.Bm25Parameters;
 import nu.marginalia.index.client.model.results.ResultRankingContext;
+import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.ranking.ResultKeywordSet;
 
-/** This is an estimation of <a href="https://en.wikipedia.org/wiki/Okapi_BM25">BM-25</a>,
- * since document count can't be accurately accessed at this point.
- *
- * @see Bm25Parameters
- */
 public class Bm25Factor {
     private static final int AVG_LENGTH = 5000;
 
+    /** This is an estimation of <a href="https://en.wikipedia.org/wiki/Okapi_BM25">BM-25</a>.
+     *
+     * @see Bm25Parameters
+     */
     public double calculateBm25(Bm25Parameters bm25Parameters, ResultKeywordSet keywordSet, int length, ResultRankingContext ctx) {
         final int docCount = ctx.termFreqDocCount();
 
@@ -31,13 +31,22 @@ public class Bm25Factor {
         return sum;
     }
 
+    /** Bm25 calculation, except instead of counting positions in the document,
+     *  the number of relevance signals for the term is counted instead.
+     */
     public double calculateBm25Prio(Bm25Parameters bm25Parameters, ResultKeywordSet keywordSet, ResultRankingContext ctx) {
         final int docCount = ctx.termFreqDocCount();
 
         double sum = 0.;
 
+        long mask = WordFlags.Site.asBit()
+                | WordFlags.SiteAdjacent.asBit()
+                | WordFlags.UrlPath.asBit()
+                | WordFlags.UrlDomain.asBit()
+                | WordFlags.Subjects.asBit();
+
         for (var keyword : keywordSet.keywords()) {
-            double count = keyword.positionCount();
+            double count = Long.bitCount(keyword.encodedWordMetadata() & mask);
 
             int freq = ctx.priorityFrequency(keyword.keyword);
 
