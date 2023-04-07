@@ -4,8 +4,10 @@ import nu.marginalia.index.client.model.results.Bm25Parameters;
 import nu.marginalia.index.client.model.results.ResultRankingContext;
 import nu.marginalia.ranking.ResultKeywordSet;
 
-/** This is a fairly coarse estimation of <a href="https://en.wikipedia.org/wiki/Okapi_BM25">BM-25</a>,
- * since document count can't be accurately accessed at this point
+/** This is an estimation of <a href="https://en.wikipedia.org/wiki/Okapi_BM25">BM-25</a>,
+ * since document count can't be accurately accessed at this point.
+ *
+ * @see Bm25Parameters
  */
 public class Bm25Factor {
     private static final int AVG_LENGTH = 5000;
