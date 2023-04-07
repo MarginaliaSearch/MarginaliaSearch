@@ -67,13 +67,6 @@ public class WordsTfIdfCounts implements WordReps {
         for (var sent : dld.sentences) {
             var keywords = keywordExtractor.getKeywordsFromSentence(sent);
             for (var span : keywords) {
-
-                if (span.size() == 1
-                        && WordPatterns.isStopWord(sent.words[span.start]))
-                {
-                    continue;
-                }
-
                 counts.addTo(spanToStemmed(sent, span), 1);
             }
         }

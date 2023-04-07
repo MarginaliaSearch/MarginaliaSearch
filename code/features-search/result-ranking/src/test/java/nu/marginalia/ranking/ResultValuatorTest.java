@@ -1,6 +1,7 @@
 package nu.marginalia.ranking;
 
-import nu.marginalia.index.client.model.results.SearchResultRankingContext;
+import nu.marginalia.index.client.model.results.ResultRankingContext;
+import nu.marginalia.index.client.model.results.ResultRankingParameters;
 import nu.marginalia.index.client.model.results.SearchResultKeywordScore;
 import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.WordFlags;
@@ -13,10 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.mockito.Mockito.when;
 
@@ -32,10 +30,9 @@ class ResultValuatorTest {
         when(dict.docCount()).thenReturn(100_000);
 
         valuator = new ResultValuator(
-                new TermFlagsFactor(),
                 new Bm25Factor(),
                 new TermCoherenceFactor(),
-                new PriorityTermFactor()
+                new PriorityTermBonus()
         );
 
     }
@@ -64,13 +61,14 @@ class ResultValuatorTest {
     void evaluateTerms() {
 
         when(dict.getTermFreq("bob")).thenReturn(10);
-        SearchResultRankingContext context = new SearchResultRankingContext(100000,
-                Map.of("bob", 10));
+        ResultRankingContext context = new ResultRankingContext(100000,
+                ResultRankingParameters.sensibleDefaults(),
+                Map.of("bob", 10), Collections.emptyMap());
 
-        double titleOnlyLowCount = valuator.calculateSearchResultValue(titleOnlyLowCountSet, 10_000, 32, context);
-        double titleLongOnlyLowCount = valuator.calculateSearchResultValue(titleOnlyLowCountSet, 10_000, 72, context);
-        double highCountNoTitle = valuator.calculateSearchResultValue(highCountNoTitleSet, 10_000, 32, context);
-        double highCountSubject = valuator.calculateSearchResultValue(highCountSubjectSet, 10_000, 32, context);
+        double titleOnlyLowCount = valuator.calculateSearchResultValue(titleOnlyLowCountSet, 10_000, context);
+        double titleLongOnlyLowCount = valuator.calculateSearchResultValue(titleOnlyLowCountSet, 10_000, context);
+        double highCountNoTitle = valuator.calculateSearchResultValue(highCountNoTitleSet, 10_000, context);
+        double highCountSubject = valuator.calculateSearchResultValue(highCountSubjectSet, 10_000, context);
 
         System.out.println(titleOnlyLowCount);
         System.out.println(titleLongOnlyLowCount);

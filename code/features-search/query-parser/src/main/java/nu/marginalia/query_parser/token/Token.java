@@ -29,4 +29,22 @@ public class Token {
         return s.replaceAll("<", "&lt;")
                 .replaceAll(">", "&gt;");
     }
+
+    public void visit(TokenVisitor visitor) {
+        switch (type) {
+            case QUOT_TERM: visitor.onQuotTerm(this); break;
+            case EXCLUDE_TERM: visitor.onExcludeTerm(this); break;
+            case PRIORTY_TERM: visitor.onPriorityTerm(this); break;
+            case ADVICE_TERM: visitor.onAdviceTerm(this); break;
+            case NEAR_TERM: visitor.onNearTerm(this); break;
+            case LITERAL_TERM: visitor.onLiteralTerm(this); break;
+
+            case YEAR_TERM: visitor.onYearTerm(this); break;
+            case RANK_TERM: visitor.onRankTerm(this); break;
+            case SIZE_TERM: visitor.onSizeTerm(this); break;
+            case QS_TERM: visitor.onQsTerm(this); break;
+
+            case QUALITY_TERM: visitor.onQualityTerm(this); break;
+        }
+    }
 }

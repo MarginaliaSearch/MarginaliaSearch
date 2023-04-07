@@ -9,8 +9,9 @@ import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import io.prometheus.client.Histogram;
 import nu.marginalia.index.client.model.query.SearchSubquery;
+import nu.marginalia.index.client.model.results.ResultRankingParameters;
 import nu.marginalia.index.client.model.results.SearchResultItem;
-import nu.marginalia.index.client.model.results.SearchResultRankingContext;
+import nu.marginalia.index.client.model.results.ResultRankingContext;
 import nu.marginalia.index.client.model.results.SearchResultSet;
 import nu.marginalia.index.client.model.query.SearchSpecification;
 import nu.marginalia.array.buffer.LongQueryBuffer;
@@ -33,6 +34,7 @@ import spark.Response;
 import spark.Spark;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Singleton
 public class IndexQueryService {
@@ -117,28 +119,38 @@ public class IndexQueryService {
 
     private SearchResultSet executeSearch(SearchParameters params) {
 
+        var rankingContext = createRankingContext(params.rankingParams, params.subqueries);
+
+        logger.info(queryMarker, "{}", params.queryParams);
+
         var resultIds = evaluateSubqueries(params);
-        var resultItems = calculateResultScores(params, resultIds);
+        var resultItems = calculateResultScores(params, rankingContext, resultIds);
+
+        logger.info(queryMarker, "After filtering: {} -> {}", resultIds.size(), resultItems.size());
+
         var bestResults = selectBestResults(params, resultItems);
 
-        return new SearchResultSet(bestResults, createRankingContext(params.subqueries));
+        return new SearchResultSet(bestResults, rankingContext);
     }
 
-    /* This information is routed back up the search service in order to calculate BM-25
-     * accurately  */
-    private SearchResultRankingContext createRankingContext(List<SearchSubquery> subqueries) {
+    /* This is used in result ranking, and is also routed back up the search service in order to recalculate BM-25
+     * accurately */
+    private ResultRankingContext createRankingContext(ResultRankingParameters rankingParams, List<SearchSubquery> subqueries) {
         final var termToId = searchTermsSvc.getAllIncludeTerms(subqueries);
         final var termFrequencies = new HashMap<>(termToId);
+        final var prioFrequencies = new HashMap<>(termToId);
 
         termToId.forEach((key, id) -> termFrequencies.put(key, index.getTermFrequency(id)));
+        termToId.forEach((key, id) -> prioFrequencies.put(key, index.getTermFrequencyPrio(id)));
 
-        return new SearchResultRankingContext(index.getTotalDocCount(), termFrequencies);
+        return new ResultRankingContext(index.getTotalDocCount(),
+                rankingParams,
+                termFrequencies,
+                prioFrequencies);
     }
 
     private TLongList evaluateSubqueries(SearchParameters params) {
         final TLongList results = new TLongArrayList(params.fetchSize);
-
-        logger.info(queryMarker, "{}", params.queryParams);
 
         outer:
         // These queries are various term combinations
@@ -151,29 +163,29 @@ public class IndexQueryService {
 
             logSearchTerms(subquery, searchTerms);
 
-            int subqueryCount = 0;
-
             // These queries are different indices for one subquery
             List<IndexQuery> queries = params.createIndexQueries(index, searchTerms);
             for (var query : queries) {
-                var resultsForSq = executeQuery(query, params);
+                var resultsForSq = executeQuery(query, params, fetchSizeMultiplier(params, searchTerms));
                 logger.info(queryMarker, "{} from {}", resultsForSq.size(), query);
                 results.addAll(resultsForSq);
-
-                subqueryCount += resultsForSq.size();
 
                 if (!params.hasTimeLeft()) {
                     logger.info("Query timed out {}, ({}), -{}",
                             subquery.searchTermsInclude, subquery.searchTermsAdvice, subquery.searchTermsExclude);
                     break outer;
                 }
-
-                if (subqueryCount >= 100)
-                    break;
             }
         }
 
         return results;
+    }
+
+    private int fetchSizeMultiplier(SearchParameters params, SearchIndexSearchTerms terms) {
+        if (terms.size() == 1) {
+            return 4;
+        }
+        return 1;
     }
 
     private void logSearchTerms(SearchSubquery subquery, SearchIndexSearchTerms searchTerms) {
@@ -193,23 +205,25 @@ public class IndexQueryService {
             logger.info(queryMarker, "{} -> {} E", excludes.get(i), searchTerms.excludes().getInt(i));
         }
         for (int i = 0; i < subquery.searchTermsPriority.size(); i++) {
-            logger.info(queryMarker, "{} -> {} p", priority.get(i), searchTerms.priority().getInt(i));
+            logger.info(queryMarker, "{} -> {} P", priority.get(i), searchTerms.priority().getInt(i));
         }
     }
 
-    private TLongArrayList executeQuery(IndexQuery query, SearchParameters params)
+    private TLongArrayList executeQuery(IndexQuery query, SearchParameters params, int fetchSizeMultiplier)
     {
-        final TLongArrayList results = new TLongArrayList(params.fetchSize);
-        final LongQueryBuffer buffer = new LongQueryBuffer(params.fetchSize);
+        final int fetchSize = params.fetchSize * fetchSizeMultiplier;
+
+        final TLongArrayList results = new TLongArrayList(fetchSize);
+        final LongQueryBuffer buffer = new LongQueryBuffer(fetchSize);
 
         while (query.hasMore()
-                && results.size() < params.fetchSize
+                && results.size() < fetchSize
                 && params.budget.hasTimeLeft())
         {
             buffer.reset();
             query.getMoreResults(buffer);
 
-            for (int i = 0; i < buffer.size() && results.size() < params.fetchSize; i++) {
+            for (int i = 0; i < buffer.size() && results.size() < fetchSize; i++) {
                 results.add(buffer.data[i]);
             }
         }
@@ -219,32 +233,22 @@ public class IndexQueryService {
         return results;
     }
 
-    private ArrayList<SearchResultItem> calculateResultScores(SearchParameters params, TLongList resultIds) {
+    private List<SearchResultItem> calculateResultScores(SearchParameters params, ResultRankingContext rankingContext, TLongList resultIds) {
 
-        final var evaluator = new IndexResultValuator(metadataService, resultIds, params.subqueries, params.queryParams);
+        final var evaluator = new IndexResultValuator(metadataService,
+                resultIds,
+                rankingContext,
+                params.subqueries,
+                params.queryParams);
 
-        ArrayList<SearchResultItem> items = new ArrayList<>(resultIds.size());
-
-        // Note, this is a pre-sorting the result IDs. This is a performance optimization, as it will cluster
-        // disk access to adjacent parts of the forward index when fetching metadata
-        //
-        // This is *not* where the actual search results are sorted
+        // Sort the ids for more favorable access patterns on disk
         resultIds.sort();
 
-        resultIds.forEach(id -> {
-            var item = evaluator.calculatePreliminaryScore(id);
-
-            if (!item.getScore().isEmpty()) {
-                items.add(item);
-            }
-
-            return true;
-        });
-
-        logger.info(queryMarker, "After filtering: {} -> {}", resultIds.size(), items.size());
-
-
-        return items;
+        return Arrays.stream(resultIds.toArray())
+                .parallel()
+                .mapToObj(evaluator::calculatePreliminaryScore)
+                .filter(score -> !score.getScore().isEmpty())
+                .collect(Collectors.toList());
     }
 
     private List<SearchResultItem> selectBestResults(SearchParameters params, List<SearchResultItem> results) {

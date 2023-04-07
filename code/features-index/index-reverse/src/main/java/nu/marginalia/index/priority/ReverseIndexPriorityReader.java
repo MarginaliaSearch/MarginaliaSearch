@@ -63,4 +63,16 @@ public class ReverseIndexPriorityReader {
         return new ReverseIndexRetainFilter(createReaderNew(offset), "priority", wordId);
     }
 
+    public int numDocuments(int wordId) {
+        if (wordId < 0)
+            return 0;
+
+        long offset = words.get(wordId);
+
+        if (offset < 0)
+            return 0;
+
+        return createReaderNew(offset).numEntries();
+    }
+
 }

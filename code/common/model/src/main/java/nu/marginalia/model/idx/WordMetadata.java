@@ -6,9 +6,6 @@ import nu.marginalia.bbpc.BrailleBlockPunchCards;
 import java.util.EnumSet;
 import java.util.Set;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
 public record WordMetadata(long positions,
                            byte flags) {
 

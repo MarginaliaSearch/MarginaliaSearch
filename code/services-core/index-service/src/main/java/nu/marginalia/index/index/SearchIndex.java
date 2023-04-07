@@ -123,8 +123,11 @@ public class SearchIndex {
             queryHeads.add(indexReader.findPriorityWord(wordId));
         }
 
-        // Finally consider terms in the full index
-        queryHeads.add(indexReader.findFullWord(orderedIncludes[0], ReverseIndexEntrySourceBehavior.DO_NOT_PREFER));
+        // Finally consider terms in the full index, but only do this for sufficiently long queries
+        // as short queries tend to be too underspecified to produce anything other than CPU warmth
+        if (orderedIncludes.length > 3) {
+            queryHeads.add(indexReader.findFullWord(orderedIncludes[0], ReverseIndexEntrySourceBehavior.DO_NOT_PREFER));
+        }
 
         for (var query : queryHeads) {
             if (query == null) {
@@ -177,5 +180,8 @@ public class SearchIndex {
 
     public int getTermFrequency(int id) {
         return (int) indexReader.numHits(id);
+    }
+    public int getTermFrequencyPrio(int id) {
+        return (int) indexReader.numHitsPrio(id);
     }
 }

@@ -3,6 +3,7 @@ package nu.marginalia.index.results;
 import gnu.trove.list.TLongList;
 import gnu.trove.set.hash.TLongHashSet;
 import nu.marginalia.index.client.model.results.SearchResultPreliminaryScore;
+import nu.marginalia.index.client.model.results.ResultRankingContext;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.index.query.limit.QueryStrategy;
@@ -10,6 +11,7 @@ import nu.marginalia.index.client.model.results.SearchResultItem;
 import nu.marginalia.index.client.model.results.SearchResultKeywordScore;
 import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.index.query.IndexQueryParams;
+import nu.marginalia.ranking.ResultValuator;
 
 import java.util.List;
 
@@ -22,11 +24,17 @@ public class IndexResultValuator {
     private final IndexMetadataService.TermMetadata termMetadata;
     private final IndexMetadataService.QuerySearchTerms searchTerms;
 
+    private final ResultRankingContext rankingContext;
+    private final ResultValuator searchResultValuator;
+
     public IndexResultValuator(IndexMetadataService metadataService,
                                TLongList results,
+                               ResultRankingContext rankingContext,
                                List<SearchSubquery> subqueries,
                                IndexQueryParams queryParams
                                ) {
+        this.rankingContext = rankingContext;
+        this.searchResultValuator = metadataService.getSearchResultValuator();
 
         final long[] resultsArray = results.toArray();
 
@@ -40,8 +48,8 @@ public class IndexResultValuator {
         resultsWithPriorityTerms = metadataService.getResultsWithPriorityTerms(subqueries, resultsArray);
     }
 
-    private final int flagsFilterMask =
-            WordFlags.Title.asBit() | WordFlags.TfIdfHigh.asBit() | WordFlags.UrlDomain.asBit() | WordFlags.UrlPath.asBit();
+    private final long flagsFilterMask =
+            WordFlags.Title.asBit() | WordFlags.Subjects.asBit() | WordFlags.UrlDomain.asBit() | WordFlags.UrlPath.asBit();
 
     public SearchResultItem calculatePreliminaryScore(long id) {
 
@@ -52,11 +60,9 @@ public class IndexResultValuator {
 
         long docMetadata = metadataService.getDocumentMetadata(urlIdInt);
 
-        int maxPosCount = 0;
-        int maxBitMask = 0;
         int maxFlagsCount = 0;
-        boolean hasSingleTermMatch = false;
         boolean anyAllSynthetic = false;
+        int maxPositionsSet = 0;
 
         for (int querySetId = 0; querySetId < searchTermVariants.size(); querySetId++) {
 
@@ -65,6 +71,7 @@ public class IndexResultValuator {
             SearchResultKeywordScore[] termScoresForSet = new SearchResultKeywordScore[termList.size()];
 
             boolean synthetic = true;
+
             for (int termIdx = 0; termIdx < termList.size(); termIdx++) {
                 String searchTerm = termList.get(termIdx);
 
@@ -93,40 +100,29 @@ public class IndexResultValuator {
             }
 
             int minFlagsCount = 8;
-            int minPosCount = 1000;
-            long cominedBitMask = 0xFF_FFFF_FFFF_FFFFL;
+            int minPositionsSet = 4;
 
             for (var termScore : termScoresForSet) {
-                final int positionCount = Long.bitCount(termScore.positions());
                 final int flagCount = Long.bitCount(termScore.encodedWordMetadata() & flagsFilterMask);
-
-                minPosCount = Math.min(minPosCount, positionCount);
                 minFlagsCount = Math.min(minFlagsCount, flagCount);
-                cominedBitMask &= termScore.positions();
+                minPositionsSet = Math.min(minPositionsSet, termScore.positionCount());
             }
 
-            final int combinedBitmaskBitCount = Long.bitCount(cominedBitMask);
-
-            // Calculate the highest value (overall) of the lowest value (per set) of these search result importance measures
-            maxBitMask = Math.max(maxBitMask, combinedBitmaskBitCount);
-            maxPosCount = Math.max(maxPosCount, minPosCount);
             maxFlagsCount = Math.max(maxFlagsCount, minFlagsCount);
-
+            maxPositionsSet = Math.max(maxPositionsSet, minPositionsSet);
             anyAllSynthetic |= synthetic;
-
-            hasSingleTermMatch |= (termScoresForSet.length == 1 && minPosCount != 0);
         }
 
         final boolean hasPriorityTerm = resultsWithPriorityTerms.contains(id);
 
+        double score = searchResultValuator.calculateSearchResultValue(searchResult.keywordScores, 5000, rankingContext);
+
         searchResult.setScore(new SearchResultPreliminaryScore(
-                docMetadata,
-                hasSingleTermMatch,
-                hasPriorityTerm,
+                anyAllSynthetic,
                 maxFlagsCount,
-                Math.min(4, maxPosCount),
-                Math.min(4, maxBitMask),
-                anyAllSynthetic
+                maxPositionsSet,
+                hasPriorityTerm,
+                score
         ));
 
         return searchResult;

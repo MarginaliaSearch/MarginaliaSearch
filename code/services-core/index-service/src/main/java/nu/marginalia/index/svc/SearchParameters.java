@@ -3,6 +3,7 @@ package nu.marginalia.index.svc;
 import gnu.trove.set.hash.TLongHashSet;
 import nu.marginalia.index.client.model.query.SearchSpecification;
 import nu.marginalia.index.client.model.query.SearchSubquery;
+import nu.marginalia.index.client.model.results.ResultRankingParameters;
 import nu.marginalia.index.index.SearchIndex;
 import nu.marginalia.index.index.SearchIndexSearchTerms;
 import nu.marginalia.index.query.IndexQuery;
@@ -21,6 +22,7 @@ public class SearchParameters {
     final IndexSearchBudget budget;
     final List<SearchSubquery> subqueries;
     final IndexQueryParams queryParams;
+    final ResultRankingParameters rankingParams;
 
     final int limitByDomain;
     final int limitTotal;
@@ -56,6 +58,8 @@ public class SearchParameters {
                 specsSet.rank,
                 searchSet,
                 specsSet.queryStrategy);
+
+        rankingParams = specsSet.rankingParams;
     }
 
     List<IndexQuery> createIndexQueries(SearchIndex index, SearchIndexSearchTerms terms) {

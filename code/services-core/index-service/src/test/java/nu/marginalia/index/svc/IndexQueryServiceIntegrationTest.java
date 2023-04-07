@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import nu.marginalia.index.client.model.query.SearchSpecification;
 import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.index.client.model.query.SearchSetIdentifier;
+import nu.marginalia.index.client.model.results.ResultRankingParameters;
 import nu.marginalia.index.client.model.results.SearchResultItem;
 import nu.marginalia.index.index.SearchIndex;
 import nu.marginalia.index.journal.model.IndexJournalEntryData;
@@ -86,6 +87,7 @@ public class IndexQueryServiceIntegrationTest {
                         .quality(SpecificationLimit.none())
                         .size(SpecificationLimit.none())
                         .rank(SpecificationLimit.none())
+                        .rankingParams(ResultRankingParameters.sensibleDefaults())
                         .domains(new ArrayList<>())
                         .searchSetIdentifier(SearchSetIdentifier.NONE)
                         .subqueries(List.of(new SearchSubquery(
@@ -117,6 +119,7 @@ public class IndexQueryServiceIntegrationTest {
                         .quality(SpecificationLimit.none())
                         .size(SpecificationLimit.none())
                         .rank(SpecificationLimit.none())
+                        .rankingParams(ResultRankingParameters.sensibleDefaults())
                         .queryStrategy(QueryStrategy.SENTENCE)
                         .domains(List.of(2))
                         .subqueries(List.of(new SearchSubquery(
@@ -144,6 +147,7 @@ public class IndexQueryServiceIntegrationTest {
                         .rank(SpecificationLimit.none())
                         .queryStrategy(QueryStrategy.SENTENCE)
                         .searchSetIdentifier(SearchSetIdentifier.NONE)
+                        .rankingParams(ResultRankingParameters.sensibleDefaults())
                         .subqueries(List.of(new SearchSubquery(
                                 List.of("4"), Collections.emptyList(), Collections.emptyList(), Collections.emptyList()
                         ))

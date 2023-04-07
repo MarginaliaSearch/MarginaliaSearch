@@ -6,6 +6,7 @@ import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.ranking.ResultKeywordSet;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,7 +22,6 @@ class TermCoherenceFactorTest {
 
         long mask = termCoherenceFactor.combinedMask(allPositionsSet);
 
-        assertEquals(1.0, termCoherenceFactor.bitPositionFactor(mask), 0.01);
         assertEquals(1.0, termCoherenceFactor.bitsSetFactor(mask), 0.01);
 
         assertEquals(1.0, termCoherenceFactor.calculate(allPositionsSet));
@@ -35,7 +35,6 @@ class TermCoherenceFactorTest {
 
         long mask = termCoherenceFactor.combinedMask(allPositionsSet);
 
-        assertEquals(0, termCoherenceFactor.bitPositionFactor(mask), 0.01);
         assertEquals(0, termCoherenceFactor.bitsSetFactor(mask), 0.01);
 
         assertEquals(0, termCoherenceFactor.calculate(allPositionsSet));
@@ -50,7 +49,6 @@ class TermCoherenceFactorTest {
         long mask = termCoherenceFactor.combinedMask(positions);
         printMask(mask);
 
-        assertEquals(1.0, termCoherenceFactor.bitPositionFactor(mask), 0.01);
     }
 
     @Test @SuppressWarnings("unchecked")
@@ -61,7 +59,6 @@ class TermCoherenceFactorTest {
 
         long mask = termCoherenceFactor.combinedMask(positions);
         printMask(mask);
-        assertEquals(0.071, termCoherenceFactor.bitPositionFactor(mask), 0.01);
     }
 
     @Test
@@ -88,11 +85,11 @@ class TermCoherenceFactorTest {
     }
 
     ResultKeywordSet createSet(long... positionMasks) {
-        var keywords = new SearchResultKeywordScore[positionMasks.length];
+        List<SearchResultKeywordScore> keywords = new ArrayList<>();
 
         for (int i = 0; i < positionMasks.length; i++) {
-            keywords[i] = new SearchResultKeywordScore(0, "",
-                    new WordMetadata(positionMasks[i], (byte) 0).encode(), 0, false);
+            keywords.add(new SearchResultKeywordScore(0, "",
+                    new WordMetadata(positionMasks[i], (byte) 0).encode(), 0, false));
         }
 
         return new ResultKeywordSet(keywords);

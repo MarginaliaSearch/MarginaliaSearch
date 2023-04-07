@@ -3,10 +3,9 @@ package nu.marginalia.search.results;
 import com.google.inject.Inject;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2LongArrayMap;
 import nu.marginalia.bbpc.BrailleBlockPunchCards;
-import nu.marginalia.index.client.model.results.SearchResultRankingContext;
+import nu.marginalia.index.client.model.results.ResultRankingContext;
 import nu.marginalia.index.client.model.results.SearchResultSet;
 import nu.marginalia.ranking.ResultValuator;
 import nu.marginalia.search.db.DbUrlDetailsQuery;
@@ -102,13 +101,12 @@ public class SearchResultDecorator {
         return a | b;
     }
 
-    private double calculateTermScore(SearchResultItem resultItem, UrlDetails details, SearchResultRankingContext rankingContext) {
+    private double calculateTermScore(SearchResultItem resultItem, UrlDetails details, ResultRankingContext rankingContext) {
 
         final double statePenalty = (details.domainState == DomainIndexingState.SPECIAL) ? 1.25 : 0;
 
         final double value = valuator.calculateSearchResultValue(resultItem.keywordScores,
                 details.words,
-                details.title.length(),
                 rankingContext);
 
         return value + statePenalty;

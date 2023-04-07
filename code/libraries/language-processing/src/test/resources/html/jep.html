@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OpenJDK Project JEPs</title>
+    <link rel="stylesheet" type="text/css" href="../style_jepmap.css" title="css">
+</head>
+<body>
+<style>
+    .topmenu {
+        clear: none;
+    }
+
+    .menuitem {
+        padding-right: 16px;
+        float: left;
+        clear: none;
+    }
+
+    .menubutton_jep, .menubutton_explore, .menubutton_jit, .menubutton_book {
+        font-size: 14px;
+        font-weight: bold;
+        padding: 8px;
+    }
+
+    .menubutton_jep {
+        background-color: lightsteelblue;
+    }
+
+    .menubutton_explore {
+        background-color: mediumspringgreen;
+    }
+
+    .menubutton_jit {
+        background-color: darkorange;
+    }
+
+    .menubutton_book {
+        background-color: gold;
+    }
+
+    .clear {
+        float: none;
+        clear: both;
+    }
+
+    .topintro {
+        font-size: 16px;
+        padding: 4px 2px;
+        margin-bottom: 8px;
+        text-align: center;
+        border: solid 1px black;
+        background-color: #22ff22;
+    }
+</style>
+<div class="topintro">I make tools for understanding the Java Virtual Machine. Please support my work by <a
+        href="https://github.com/sponsors/chriswhocodes">sponsoring me on GitHub.</a> Thank you!
+</div>
+<div class="topmenu">
+    <div class="menuitem"><a href="https://chriswhocodes.com/fulljep.html">
+        <button class="menubutton_jep" title="Full-Text search for JEPs">FullJEP</button>
+    </a></div>
+    <div class="menuitem"><a href="https://chriswhocodes.com/jepmap.html">
+        <button class="menubutton_jep" title="A parser for discovering the relationships between OpenJDK Projects and their JEPs.">
+            JEPMap
+        </button>
+    </a></div>
+    <div class="menuitem"><a href="https://chriswhocodes.com/jepsearch.html">
+        <button class="menubutton_jep" title="Sort, search and filter JEPs">JEPSearch</button>
+    </a></div>
+    <div class="menuitem"><a href="https://chriswhocodes.com/hsdis/">
+        <button class="menubutton_jit" title="HotSpot Disassembly Plugin (hsdis)">hsdis</button>
+    </a></div>
+    <div class="menuitem"><a href="https://github.com/AdoptOpenJDK/jitwatch">
+        <button class="menubutton_jit"
+                title="Log analyser / visualiser for Java HotSpot JIT compiler. Inspect inlining decisions, hot methods, bytecode, and assembly.">
+            JITWatch
+        </button>
+    </a></div>
+    <div class="menuitem"><a href="https://jacoline.dev/inspect">
+        <button class="menubutton_explore" title="An interactive Java command line inspector.">JaCoLine</button>
+    </a></div>
+    <div class="menuitem"><a href="https://chriswhocodes.com/vm-options-explorer.html">
+        <button class="menubutton_explore" title="The complete list of JVM command line options for each JDK.">VM Options Explorer
+        </button>
+    </a></div>
+    <div class="menuitem"><a href="https://chriswhocodes.com/vm-intrinsics-explorer.html">
+        <button class="menubutton_explore" title="Inspect VM intrinsics for each JDK">VM Intrinsics Explorer</button>
+    </a></div>
+    <div class="menuitem"><a href="https://chriswhocodes.com/gc-explorer.html">
+        <button class="menubutton_explore" title="Explorer GC options for each JDK">GC Explorer</button>
+    </a></div>
+    <div class="menuitem"><a href="https://optimizingjava.com">
+        <button class="menubutton_book" title="Learn how the JVM really works and how to optimise your code and runtime settings">
+            Optimizing Java
+        </button>
+    </a></div>
+</div>
+<div class="clear"></div>
+<script data-host="https://microanalytics.io" data-dnt="false" src="https://microanalytics.io/js/script.js" id="ZwSg9rf6GA" async defer></script>
+
+<h1>OpenJDK Project JEPs (JDK Enhancement Proposals)</h1>
+
+<div class="intro">
+    <div>Built using <a href="https://github.com/chriswhocodes/JEPMap">JEPMap</a> by <a
+            href="https://twitter.com/chriswhocodes">@chriswhocodes</a>.
+        Last updated: 2023-04-04
+    </div>
+</div>
+<div class="algo">The algorithm for generating this page is:
+    <ol>
+        <li>Parse the JEP pages at <a href="https://openjdk.java.net/jeps/">https://openjdk.java.net/jeps</a></li>
+        <li>For each Project listed at <a href="https://openjdk.java.net/projects/">https://openjdk.java.net/projects/</a>
+            <ol>
+                <li>Parse the project page and wiki page looking for JEP URLs</li>
+                <li>Check if the JEP page discussion mailing list name matches a Project</li>
+                <li>Check if the JEP page text links to a Project</li>
+                <li>Map JEP 'Release' tag back to a JDK (technically a JDK is not a Project but I think it's useful to list the
+                    JEPs
+                    targeted to a JDK)
+                </li>
+                <li>Remove mappings found in the <a
+                        href="https://github.com/chriswhocodes/JEPMap/blob/main/src/main/resources/badmappings.properties">banlist</a>
+                </li>
+            </ol>
+        </li>
+    </ol>
+    <div class="warn">Autogeneration can produce false positives! Please report issues at <a
+            href="https://github.com/chriswhocodes/JEPMap/issues">https://github.com/chriswhocodes/JEPMap/issues</a></div>
+</div>
+<div class="jump_container">
+
+    <div class="jump"><a href="#amber">Amber</a></div>
+    <div class="jump"><a href="#code-tools">Code Tools</a></div>
+    <div class="jump"><a href="#graal">Graal</a></div>
+    <div class="jump"><a href="#graphics-rasterizer">Graphics Rasterizer</a></div>
+    <div class="jump"><a href="#jdk7">JDK7</a></div>
+    <div class="jump"><a href="#jdk8">JDK8</a></div>
+    <div class="jump"><a href="#jdk9">JDK9</a></div>
+    <div class="jump"><a href="#jdk/10">JDK10</a></div>
+    <div class="jump"><a href="#jdk/11">JDK11</a></div>
+    <div class="jump"><a href="#jdk/12">JDK12</a></div>
+    <div class="jump"><a href="#jdk/13">JDK13</a></div>
+    <div class="jump"><a href="#jdk/14">JDK14</a></div>
+    <div class="jump"><a href="#jdk/15">JDK15</a></div>
+    <div class="jump"><a href="#jdk/16">JDK16</a></div>
+    <div class="jump"><a href="#jdk/17">JDK17</a></div>
+    <div class="jump"><a href="#jdk/18">JDK18</a></div>
+    <div class="jump"><a href="#jdk/19">JDK19</a></div>
+    <div class="jump"><a href="#jdk/20">JDK20</a></div>
+    <div class="jump"><a href="#jigsaw">Jigsaw</a></div>
+    <div class="jump"><a href="#kulla">Kulla</a></div>
+    <div class="jump"><a href="#lambda">Lambda</a></div>
+    <div class="jump"><a href="#lanai">Lanai</a></div>
+    <div class="jump"><a href="#locale-enhancement">Locale Enhancement</a></div>
+    <div class="jump"><a href="#loom">Loom</a></div>
+    <div class="jump"><a href="#jmm">Memory Model Update</a></div>
+    <div class="jump"><a href="#mlvm">Multi-Language VM</a></div>
+    <div class="jump"><a href="#nashorn">Nashorn</a></div>
+    <div class="jump"><a href="#nio">New I/O</a></div>
+    <div class="jump"><a href="#openjfx">OpenJFX</a></div>
+    <div class="jump"><a href="#panama">Panama</a></div>
+    <div class="jump"><a href="#aarch32-port">Port: AArch32</a></div>
+    <div class="jump"><a href="#aarch64-port">Port: AArch64</a></div>
+    <div class="jump"><a href="#ppc-aix-port">Port: PowerPC/AIX</a></div>
+    <div class="jump"><a href="#riscv-port">Port: RISC-V</a></div>
+    <div class="jump"><a href="#s390x-port">Port: s390x</a></div>
+    <div class="jump"><a href="#portola">Portola</a></div>
+    <div class="jump"><a href="#shenandoah">Shenandoah</a></div>
+    <div class="jump"><a href="#skara">Skara</a></div>
+    <div class="jump"><a href="#tiered-attrib">Tiered Attribution</a></div>
+    <div class="jump"><a href="#type-annotations">Type Annotations</a></div>
+    <div class="jump"><a href="#valhalla">Valhalla</a></div>
+    <div class="jump"><a href="#verona">Verona</a></div>
+    <div class="jump"><a href="#zgc">ZGC</a></div>
+    <div class="clear"></div>
+</div>
+<div class="project" id="amber">
+    <h2><a href="https://openjdk.java.net/projects/amber">Amber</a></h2>
+    <div class="description">The goal of Project Amber is to explore and incubate smaller, productivity-oriented Java language features that have been accepted as candidate JEPs in the OpenJDK JEP Process. This Project is sponsored by the Compiler Group.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/286">JEP 286:  Local-Variable Type Inference</a><div class="jepstatus">[Release: 10] [Status: Closed / Delivered] [Updated: 2022/09/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/301">JEP 301:  Enhanced Enums</a><div class="jepstatus">[Status: Closed / Withdrawn] [Updated: 2020/09/29]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/302">JEP 302:  Lambda Leftovers</a><div class="jepstatus">[Status: Candidate] [Updated: 2017/04/11]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/305">JEP 305:  Pattern Matching for instanceof (Preview)</a><div class="jepstatus">[Release: 14] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/309">JEP 309:  Dynamic Class-File Constants</a><div class="jepstatus">[Release: 11] [Status: Closed / Delivered] [Updated: 2018/09/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/323">JEP 323:  Local-Variable Syntax for Lambda Parameters</a><div class="jepstatus">[Release: 11] [Status: Closed / Delivered] [Updated: 2018/08/23]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/325">JEP 325:  Switch Expressions (Preview)</a><div class="jepstatus">[Release: 12] [Status: Closed / Delivered] [Updated: 2022/03/11]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/326">JEP 326:  Raw String Literals (Preview)</a><div class="jepstatus">[Status: Closed / Withdrawn] [Updated: 2020/05/01]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/334">JEP 334:  JVM Constants API</a><div class="jepstatus">[Release: 12] [Status: Closed / Delivered] [Updated: 2022/08/02]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/348">JEP 348:  Compiler Intrinsics for Java SE APIs</a><div class="jepstatus">[Status: Candidate] [Updated: 2023/02/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/354">JEP 354:  Switch Expressions (Second Preview)</a><div class="jepstatus">[Release: 13] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/355">JEP 355:  Text Blocks (Preview)</a><div class="jepstatus">[Release: 13] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/359">JEP 359:  Records (Preview)</a><div class="jepstatus">[Release: 14] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/360">JEP 360:  Sealed Classes (Preview)</a><div class="jepstatus">[Release: 15] [Status: Closed / Delivered] [Updated: 2022/03/11]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/361">JEP 361:  Switch Expressions</a><div class="jepstatus">[Release: 14] [Status: Closed / Delivered] [Updated: 2022/03/11]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/368">JEP 368:  Text Blocks (Second Preview)</a><div class="jepstatus">[Release: 14] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/375">JEP 375:  Pattern Matching for instanceof (Second Preview)</a><div class="jepstatus">[Release: 15] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/378">JEP 378:  Text Blocks</a><div class="jepstatus">[Release: 15] [Status: Closed / Delivered] [Updated: 2020/07/30]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/384">JEP 384:  Records (Second Preview)</a><div class="jepstatus">[Release: 15] [Status: Closed / Delivered] [Updated: 2022/03/11]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/394">JEP 394:  Pattern Matching for instanceof</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2022/06/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/395">JEP 395:  Records</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2022/02/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/397">JEP 397:  Sealed Classes (Second Preview)</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2022/03/11]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/405">JEP 405:  Record Patterns (Preview)</a><div class="jepstatus">[Release: 19] [Status: Closed / Delivered] [Updated: 2022/10/06]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/406">JEP 406:  Pattern Matching for switch (Preview)</a><div class="jepstatus">[Release: 17] [Status: Closed / Delivered] [Updated: 2022/06/01]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/409">JEP 409:  Sealed Classes</a><div class="jepstatus">[Release: 17] [Status: Closed / Delivered] [Updated: 2022/03/19]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/420">JEP 420:  Pattern Matching for switch (Second Preview)</a><div class="jepstatus">[Release: 18] [Status: Closed / Delivered] [Updated: 2022/03/22]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/427">JEP 427:  Pattern Matching for switch (Third Preview)</a><div class="jepstatus">[Release: 19] [Status: Closed / Delivered] [Updated: 2022/10/06]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/430">JEP 430:  String Templates (Preview)</a><div class="jepstatus">[Release: 21] [Status: Proposed to Target] [Updated: 2023/03/31]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/432">JEP 432:  Record Patterns (Second Preview)</a><div class="jepstatus">[Release: 20] [Status: Closed / Delivered] [Updated: 2023/03/02]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/433">JEP 433:  Pattern Matching for switch (Fourth Preview)</a><div class="jepstatus">[Release: 20] [Status: Closed / Delivered] [Updated: 2023/03/21]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/440">JEP 440:  Record Patterns</a><div class="jepstatus">[Status: Candidate] [Updated: 2023/03/17]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/441">JEP 441:  Pattern Matching for switch</a><div class="jepstatus">[Status: Candidate] [Updated: 2023/03/17]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/443">JEP 443:  Unnamed Patterns and Variables (Preview)</a><div class="jepstatus">[Status: Candidate] [Updated: 2023/03/21]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/8209434">JEP 8209434: JEP draft: Concise Method Bodies</a><div class="jepstatus">[Status: Draft] [Updated: 2019/03/25]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/8288476">JEP 8288476: JEP draft: Primitive types in patterns, instanceof, and switch</a><div class="jepstatus">[Status: Submitted] [Updated: 2023/03/21]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/8300786">JEP 8300786: JEP draft: Statements before super()</a><div class="jepstatus">[Status: Submitted] [Updated: 2023/03/21]</div></div>
+    </div>
+</div>
+<div class="project" id="code-tools">
+    <h2><a href="https://openjdk.java.net/projects/code-tools">Code Tools</a></h2>
+    <div class="description">The goal of this Project is to provide tools of use to developers who work on the OpenJDK code base. Such tools currently include test tools and Mercurial extensions; it is envisaged that additional tools will be added over time, after discussion on the Project's main mailing list and subject to the Project Lead's approval.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/193">JEP 193:  Variable Handles</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/08/17]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/8249196">JEP 8249196: JEP draft: Low-level Object layout introspection methods</a><div class="jepstatus">[Status: Draft] [Updated: 2023/01/05]</div></div>
+    </div>
+</div>
+<div class="project" id="graal">
+    <h2><a href="https://openjdk.java.net/projects/graal">Graal</a></h2>
+    <div class="description">The Graal OpenJDK project grew out of the Maxine VM project. In the context of the Maxine VM, Graal demonstrated that a compiler written in Java (with all its software engineering advantages) could generate highly optimized code without compromising on compile times.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/243">JEP 243:  Java-Level JVM Compiler Interface</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2019/09/16]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/295">JEP 295:  Ahead-of-Time Compilation</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2018/10/05]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/317">JEP 317:  Experimental Java-Based JIT Compiler</a><div class="jepstatus">[Release: 10] [Status: Closed / Delivered] [Updated: 2018/03/28]</div></div>
+    </div>
+</div>
+<div class="project" id="graphics-rasterizer">
+    <h2><a href="https://openjdk.java.net/projects/graphics-rasterizer">Graphics Rasterizer</a></h2>
+    <div class="description">Due to encumbrances in the 2D source code (see the 2D Graphics page for more), some of the implementation of the Java 2D API requires open source replacements.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/265">JEP 265:  Marlin Graphics Renderer</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/02/27]</div></div>
+    </div>
+</div>
+<div class="project" id="jdk7">
+    <h2><a href="https://openjdk.java.net/projects/jdk7">JDK7</a></h2>
+    <div class="description">The primary goal of this Project was to produce an open-source implementation of the seventh edition of the Java SE Platform, as defined by JSR 336 in the Java Community Process.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/167">JEP 167:  Event-Based JVM Tracing</a><div class="jepstatus">[Release: 7u40] [Status: Closed / Delivered] [Updated: 2019/08/15]</div></div>
+    </div>
+</div>
+<div class="project" id="jdk8">
+    <h2><a href="https://openjdk.java.net/projects/jdk8">JDK8</a></h2>
+    <div class="description">The goal of this Project was to produce an open-source reference implementation of the Java SE 8 Platform Specification defined by JSR 337 in the Java Community Process.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/101">JEP 101:  Generalized Target-Type Inference</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2015/02/26]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/103">JEP 103:  Parallel Array Sorting</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2017/08/13]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/104">JEP 104:  Type Annotations</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2020/06/01]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/105">JEP 105:  DocTree API</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2015/02/13]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/106">JEP 106:  Add Javadoc to javax.tools</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2015/02/13]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/107">JEP 107:  Bulk Data Operations for Collections</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2014/07/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/109">JEP 109:  Enhance Core Libraries with Lambda</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2015/02/13]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/112">JEP 112:  Charset Implementation Improvements</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2015/01/22]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/113">JEP 113:  MS-SFU Kerberos 5 Extensions</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2015/02/12]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/114">JEP 114:  TLS Server Name Indication (SNI) Extension</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2017/06/14]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/115">JEP 115:  AEAD CipherSuites</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2017/08/11]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/117">JEP 117:  Remove the Annotation-Processing Tool (apt)</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2014/11/03]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/118">JEP 118:  Access to Parameter Names at Runtime</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2015/02/13]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/119">JEP 119:  javax.lang.model Implementation Backed by Core Reflection</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2015/02/13]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/120">JEP 120:  Repeating Annotations</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2015/02/13]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/121">JEP 121:  Stronger Algorithms for Password-Based Encryption</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2017/06/02]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/122">JEP 122:  Remove the Permanent Generation</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2014/08/06]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/123">JEP 123:  Configurable Secure Random-Number Generation</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2017/08/11]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/124">JEP 124:  Enhance the Certificate Revocation-Checking API</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2014/07/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/126">JEP 126:  Lambda Expressions & Virtual Extension Methods</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2015/01/09]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/127">JEP 127:  Improve Locale Data Packaging and Adopt Unicode CLDR Data</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2016/04/04]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/128">JEP 128:  Unicode BCP 47 Locale Matching</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2017/10/23]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/129">JEP 129:  NSA Suite B Cryptographic Algorithms</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2017/06/14]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/130">JEP 130:  SHA-224 Message Digests</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2017/06/15]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/131">JEP 131:  PKCS#11 Crypto Provider for 64-bit Windows</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2017/06/14]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/133">JEP 133:  Unicode 6.2</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2019/05/13]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/135">JEP 135:  Base64 Encoding & Decoding</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2017/06/14]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/136">JEP 136:  Enhanced Verification Errors</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2017/06/14]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/138">JEP 138:  Autoconf-Based Build System</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2015/05/11]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/139">JEP 139:  Enhance javac to Improve Build Speed</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2015/02/13]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/140">JEP 140:  Limited doPrivileged</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2014/07/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/142">JEP 142:  Reduce Cache Contention on Specified Fields</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2017/06/15]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/147">JEP 147:  Reduce Class Metadata Footprint</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2014/08/08]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/148">JEP 148:  Small VM</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2017/06/14]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/149">JEP 149:  Reduce Core-Library Memory Usage</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2016/02/18]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/150">JEP 150:  Date & Time API</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2015/01/22]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/153">JEP 153:  Launch JavaFX Applications</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2015/05/01]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/155">JEP 155:  Concurrency Updates</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2017/08/13]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/156">JEP 156:  G1 GC: Reduce need for full GCs</a><div class="jepstatus">[Release: 8u40] [Status: Closed / Delivered] [Updated: 2015/02/26]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/160">JEP 160:  Lambda-Form Representation for Method Handles</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2017/10/17]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/161">JEP 161:  Compact Profiles</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2023/01/26]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/162">JEP 162:  Prepare for Modularization</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2017/06/14]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/164">JEP 164:  Leverage CPU Instructions for AES Cryptography</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2017/06/15]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/166">JEP 166:  Overhaul JKS-JCEKS-PKCS12 Keystores</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2022/06/14]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/168">JEP 168:  Network Discovery of Manageable Java Processes</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2016/06/07]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/170">JEP 170:  JDBC 4.2</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2016/11/01]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/171">JEP 171:  Fence Intrinsics</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2017/06/14]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/172">JEP 172:  DocLint</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2016/06/07]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/173">JEP 173:  Retire Some Rarely-Used GC Combinations</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2018/06/19]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/174">JEP 174:  Nashorn JavaScript Engine</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2015/02/13]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/175">JEP 175:  PowerPC/AIX Port</a><div class="jepstatus">[Release: 8u20] [Status: Closed / Delivered] [Updated: 2017/08/17]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/176">JEP 176:  Mechanical Checking of Caller-Sensitive Methods</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2017/10/17]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/177">JEP 177:  Optimize java.text.DecimalFormat.format</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2014/11/03]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/178">JEP 178:  Statically-Linked JNI Libraries</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2016/06/07]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/179">JEP 179:  Document JDK API Support and Stability</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2014/11/03]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/180">JEP 180:  Handle Frequent HashMap Collisions with Balanced Trees</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2017/06/14]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/184">JEP 184:  HTTP URL Permissions</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2017/06/14]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/185">JEP 185:  Restrict Fetching of External XML Resources</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2017/06/14]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/192">JEP 192:  String Deduplication in G1</a><div class="jepstatus">[Release: 8u20] [Status: Closed / Delivered] [Updated: 2017/06/07]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/195">JEP 195:  Scalable Native Memory Tracking</a><div class="jepstatus">[Release: 8u40] [Status: Closed / Delivered] [Updated: 2015/02/27]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/196">JEP 196:  Nashorn Optimistic Typing</a><div class="jepstatus">[Release: 8u40] [Status: Closed / Delivered] [Updated: 2014/12/05]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/202">JEP 202:  Nashorn Class Filter</a><div class="jepstatus">[Release: 8u40] [Status: Closed / Delivered] [Updated: 2017/05/17]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/203">JEP 203:  Nashorn: Lexically-Scoped Variable & Constant Declarations</a><div class="jepstatus">[Release: 8u40] [Status: Closed / Delivered] [Updated: 2017/05/17]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/204">JEP 204:  JavaFX Accessibility</a><div class="jepstatus">[Release: 8u40] [Status: Closed / Delivered] [Updated: 2016/06/07]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/205">JEP 205:  New Controls for JavaFX</a><div class="jepstatus">[Release: 8u40] [Status: Closed / Delivered] [Updated: 2015/03/03]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/206">JEP 206:  Modernize the JavaFX Media Stack on Mac OS X</a><div class="jepstatus">[Release: 8u40] [Status: Closed / Delivered] [Updated: 2015/02/26]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/207">JEP 207:  Leverage CPU Instructions to Improve SHA Performance on SPARC</a><div class="jepstatus">[Release: 8u40] [Status: Closed / Delivered] [Updated: 2014/10/06]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/208">JEP 208:  Java Packager Improvements</a><div class="jepstatus">[Release: 8u40] [Status: Closed / Delivered] [Updated: 2015/02/26]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/209">JEP 209:  JavaFX Scene Builder Update</a><div class="jepstatus">[Release: 8u40] [Status: Closed / Delivered] [Updated: 2014/10/01]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/210">JEP 210:  LambdaForm Reduction and Caching</a><div class="jepstatus">[Release: 8u40] [Status: Closed / Delivered] [Updated: 2015/02/27]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/239">JEP 239:  Update JavaFX/WebView to Newer Version of WebKit</a><div class="jepstatus">[Release: 8u60] [Status: Closed / Delivered] [Updated: 2016/08/24]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/242">JEP 242:  JVM Trace Events for Failed Allocations</a><div class="jepstatus">[Release: 8u60] [Status: Closed / Delivered] [Updated: 2015/06/25]</div></div>
+    </div>
+</div>
+<div class="project" id="jdk9">
+    <h2><a href="https://openjdk.java.net/projects/jdk9">JDK9</a></h2>
+    <div class="description">The goal of this Project was to produce an open-source reference implementation of the Java SE 9 Platform as defined by JSR 379 in the Java Community Process.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/102">JEP 102:  Process API Updates</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/03/09]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/110">JEP 110:  HTTP/2 Client (Incubator)</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2022/05/31]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/143">JEP 143:  Improve Contended Locking</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/03/06]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/158">JEP 158:  Unified JVM Logging</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2022/10/05]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/165">JEP 165:  Compiler Control</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2020/03/24]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/193">JEP 193:  Variable Handles</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/08/17]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/197">JEP 197:  Segmented Code Cache</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/04/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/199">JEP 199:  Smart Java Compilation, Phase Two</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2016/07/12]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/200">JEP 200:  The Modular JDK</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/09/21]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/201">JEP 201:  Modular Source Code</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2020/12/07]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/211">JEP 211:  Elide Deprecation Warnings on Import Statements</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2021/03/20]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/212">JEP 212:  Resolve Lint and Doclint Warnings</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2021/03/02]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/213">JEP 213:  Milling Project Coin</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/03/09]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/214">JEP 214:  Remove GC Combinations Deprecated in JDK 8</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/01/25]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/215">JEP 215:  Tiered Attribution for javac</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2016/07/12]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/216">JEP 216:  Process Import Statements Correctly</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2016/07/12]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/217">JEP 217:  Annotations Pipeline 2.0</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2016/07/12]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/219">JEP 219:  Datagram Transport Layer Security (DTLS)</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2021/07/15]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/220">JEP 220:  Modular Run-Time Images</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/09/22]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/221">JEP 221:  New Doclet API</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/222">JEP 222:  jshell: The Java Shell (Read-Eval-Print Loop)</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/06/09]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/223">JEP 223:  New Version-String Scheme</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2021/10/03]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/224">JEP 224:  HTML5 Javadoc</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2018/04/13]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/225">JEP 225:  Javadoc Search</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/06/05]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/226">JEP 226:  UTF-8 Property Resource Bundles</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2022/01/14]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/227">JEP 227:  Unicode 7.0</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2016/12/09]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/228">JEP 228:  Add More Diagnostic Commands</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/03/07]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/229">JEP 229:  Create PKCS12 Keystores by Default</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2018/01/11]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/231">JEP 231:  Remove Launch-Time JRE Version Selection</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/03/09]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/232">JEP 232:  Improve Secure Application Performance</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/03/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/233">JEP 233:  Generate Run-Time Compiler Tests Automatically</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/04/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/235">JEP 235:  Test Class-File Attributes Generated by javac</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2016/10/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/236">JEP 236:  Parser API for Nashorn</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/05/17]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/237">JEP 237:  Linux/AArch64 Port</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/03/08]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/238">JEP 238:  Multi-Release JAR Files</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/06/22]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/240">JEP 240:  Remove the JVM TI hprof Agent</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2016/06/07]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/241">JEP 241:  Remove the jhat Tool</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2016/09/06]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/243">JEP 243:  Java-Level JVM Compiler Interface</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2019/09/16]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/244">JEP 244:  TLS Application-Layer Protocol Negotiation Extension</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2022/08/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/245">JEP 245:  Validate JVM Command-Line Flag Arguments</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2018/04/23]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/246">JEP 246:  Leverage CPU Instructions for GHASH and RSA</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/03/06]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/247">JEP 247:  Compile for Older Platform Versions</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2020/12/21]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/248">JEP 248:  Make G1 the Default Garbage Collector</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/09/12]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/249">JEP 249:  OCSP Stapling for TLS</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2020/07/03]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/250">JEP 250:  Store Interned Strings in CDS Archives</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2022/10/03]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/251">JEP 251:  Multi-Resolution Images</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/06/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/252">JEP 252:  Use CLDR Locale Data by Default</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/10/23]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/253">JEP 253:  Prepare JavaFX UI Controls & CSS APIs for Modularization</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/03/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/254">JEP 254:  Compact Strings</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2022/04/11]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/255">JEP 255:  Merge Selected Xerces 2.11.0 Updates into JAXP</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/05/26]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/256">JEP 256:  BeanInfo Annotations</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/02/23]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/257">JEP 257:  Update JavaFX/Media to Newer Version of GStreamer</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2022/11/21]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/258">JEP 258:  HarfBuzz Font-Layout Engine</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2019/10/25]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/259">JEP 259:  Stack-Walking API</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/07/18]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/260">JEP 260:  Encapsulate Most Internal APIs</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/09/25]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/261">JEP 261:  Module System</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/09/22]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/262">JEP 262:  TIFF Image I/O</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/02/23]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/263">JEP 263:  HiDPI Graphics on Windows and Linux</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/02/23]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/264">JEP 264:  Platform Logging API and Service</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/07/24]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/265">JEP 265:  Marlin Graphics Renderer</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/02/27]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/266">JEP 266:  More Concurrency Updates</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/04/24]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/267">JEP 267:  Unicode 8.0</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2019/05/13]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/268">JEP 268:  XML Catalogs</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2019/04/08]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/269">JEP 269:  Convenience Factory Methods for Collections</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/06/26]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/270">JEP 270:  Reserved Stack Areas for Critical Sections</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2023/01/24]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/271">JEP 271:  Unified GC Logging</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/06/02]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/272">JEP 272:  Platform-Specific Desktop Features</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/06/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/273">JEP 273:  DRBG-Based SecureRandom Implementations</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2019/11/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/274">JEP 274:  Enhanced Method Handles</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/05/17]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/275">JEP 275:  Modular Java Application Packaging</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/04/27]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/276">JEP 276:  Dynamic Linking of Language-Defined Object Models</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/05/17]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/277">JEP 277:  Enhanced Deprecation</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/12/08]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/278">JEP 278:  Additional Tests for Humongous Objects in G1</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/04/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/279">JEP 279:  Improve Test-Failure Troubleshooting</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2023/03/14]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/280">JEP 280:  Indify String Concatenation</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2022/04/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/281">JEP 281:  HotSpot C++ Unit-Test Framework</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/04/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/282">JEP 282:  jlink: The Java Linker</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/05/19]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/283">JEP 283:  Enable GTK 3 on Linux</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2018/10/12]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/284">JEP 284:  New HotSpot Build System</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/01/20]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/285">JEP 285:  Spin-Wait Hints</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2023/01/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/287">JEP 287:  SHA-3 Hash Algorithms</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/03/06]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/288">JEP 288:  Disable SHA-1 Certificates</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/11/20]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/289">JEP 289:  Deprecate the Applet API</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2020/11/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/290">JEP 290:  Filter Incoming Serialization Data</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2022/08/15]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/291">JEP 291:  Deprecate the Concurrent Mark Sweep (CMS) Garbage Collector</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2020/04/06]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/292">JEP 292:  Implement Selected ECMAScript 6 Features in Nashorn</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/03/09]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/294">JEP 294:  Linux/s390x Port</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2019/08/13]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/295">JEP 295:  Ahead-of-Time Compilation</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2018/10/05]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/296">JEP 296:  Consolidate the JDK Forest into a Single Repository</a><div class="jepstatus">[Release: 10] [Status: Closed / Delivered] [Updated: 2019/11/07]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/297">JEP 297:  Unified arm32/arm64 Port</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2022/08/11]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/298">JEP 298:  Remove Demos and Samples</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/05/08]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/299">JEP 299:  Reorganize Documentation</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/07/20]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/8068562">JEP 8068562: JEP draft: javadoc tags to distinguish API, implementation, specification, and notes</a><div class="jepstatus">[Status: Draft] [Updated: 2021/03/26]</div></div>
+    </div>
+</div>
+<div class="project" id="jdk/10">
+    <h2><a href="https://openjdk.java.net/projects/jdk/10">JDK10</a></h2>
+    <div class="description">JDK 10 is the open-source reference implementation of the Java SE 10 Platform as defined by JSR 383 in the Java Community Process.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/286">JEP 286:  Local-Variable Type Inference</a><div class="jepstatus">[Release: 10] [Status: Closed / Delivered] [Updated: 2022/09/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/296">JEP 296:  Consolidate the JDK Forest into a Single Repository</a><div class="jepstatus">[Release: 10] [Status: Closed / Delivered] [Updated: 2019/11/07]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/304">JEP 304:  Garbage Collector Interface</a><div class="jepstatus">[Release: 10] [Status: Closed / Delivered] [Updated: 2018/04/09]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/307">JEP 307:  Parallel Full GC for G1</a><div class="jepstatus">[Release: 10] [Status: Closed / Delivered] [Updated: 2018/03/29]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/310">JEP 310:  Application Class-Data Sharing</a><div class="jepstatus">[Release: 10] [Status: Closed / Delivered] [Updated: 2022/10/03]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/312">JEP 312:  Thread-Local Handshakes</a><div class="jepstatus">[Release: 10] [Status: Closed / Delivered] [Updated: 2019/08/21]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/313">JEP 313:  Remove the Native-Header Generation Tool (javah)</a><div class="jepstatus">[Release: 10] [Status: Closed / Delivered] [Updated: 2018/01/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/314">JEP 314:  Additional Unicode Language-Tag Extensions</a><div class="jepstatus">[Release: 10] [Status: Closed / Delivered] [Updated: 2018/03/06]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/316">JEP 316:  Heap Allocation on Alternative Memory Devices</a><div class="jepstatus">[Release: 10] [Status: Closed / Delivered] [Updated: 2020/10/02]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/317">JEP 317:  Experimental Java-Based JIT Compiler</a><div class="jepstatus">[Release: 10] [Status: Closed / Delivered] [Updated: 2018/03/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/319">JEP 319:  Root Certificates</a><div class="jepstatus">[Release: 10] [Status: Closed / Delivered] [Updated: 2018/08/14]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/322">JEP 322:  Time-Based Release Versioning</a><div class="jepstatus">[Release: 10] [Status: Closed / Delivered] [Updated: 2021/01/06]</div></div>
+    </div>
+</div>
+<div class="project" id="jdk/11">
+    <h2><a href="https://openjdk.java.net/projects/jdk/11">JDK11</a></h2>
+    <div class="description">JDK 11 is the open-source reference implementation of version 11 of the Java SE Platform as specified by by JSR 384 in the Java Community Process.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/181">JEP 181:  Nest-Based Access Control</a><div class="jepstatus">[Release: 11] [Status: Closed / Delivered] [Updated: 2021/04/24]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/309">JEP 309:  Dynamic Class-File Constants</a><div class="jepstatus">[Release: 11] [Status: Closed / Delivered] [Updated: 2018/09/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/315">JEP 315:  Improve Aarch64 Intrinsics</a><div class="jepstatus">[Release: 11] [Status: Closed / Delivered] [Updated: 2018/09/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/318">JEP 318:  Epsilon: A No-Op Garbage Collector (Experimental)</a><div class="jepstatus">[Release: 11] [Status: Closed / Delivered] [Updated: 2018/09/24]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/320">JEP 320:  Remove the Java EE and CORBA Modules</a><div class="jepstatus">[Release: 11] [Status: Closed / Delivered] [Updated: 2019/05/23]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/321">JEP 321:  HTTP Client</a><div class="jepstatus">[Release: 11] [Status: Closed / Delivered] [Updated: 2023/03/15]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/323">JEP 323:  Local-Variable Syntax for Lambda Parameters</a><div class="jepstatus">[Release: 11] [Status: Closed / Delivered] [Updated: 2018/08/23]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/324">JEP 324:  Key Agreement with Curve25519 and Curve448</a><div class="jepstatus">[Release: 11] [Status: Closed / Delivered] [Updated: 2018/09/13]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/327">JEP 327:  Unicode 10</a><div class="jepstatus">[Release: 11] [Status: Closed / Delivered] [Updated: 2018/08/07]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/328">JEP 328:  Flight Recorder</a><div class="jepstatus">[Release: 11] [Status: Closed / Delivered] [Updated: 2018/09/09]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/329">JEP 329:  ChaCha20 and Poly1305 Cryptographic Algorithms</a><div class="jepstatus">[Release: 11] [Status: Closed / Delivered] [Updated: 2018/09/13]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/330">JEP 330:  Launch Single-File Source-Code Programs</a><div class="jepstatus">[Release: 11] [Status: Closed / Delivered] [Updated: 2023/03/17]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/331">JEP 331:  Low-Overhead Heap Profiling</a><div class="jepstatus">[Release: 11] [Status: Closed / Delivered] [Updated: 2018/09/05]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/332">JEP 332:  Transport Layer Security (TLS) 1.3</a><div class="jepstatus">[Release: 11] [Status: Closed / Delivered] [Updated: 2018/09/17]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/333">JEP 333:  ZGC: A Scalable Low-Latency Garbage Collector (Experimental)</a><div class="jepstatus">[Release: 11] [Status: Closed / Delivered] [Updated: 2020/03/13]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/335">JEP 335:  Deprecate the Nashorn JavaScript Engine</a><div class="jepstatus">[Release: 11] [Status: Closed / Delivered] [Updated: 2020/04/06]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/336">JEP 336:  Deprecate the Pack200 Tools and API</a><div class="jepstatus">[Release: 11] [Status: Closed / Delivered] [Updated: 2020/02/22]</div></div>
+    </div>
+</div>
+<div class="project" id="jdk/12">
+    <h2><a href="https://openjdk.java.net/projects/jdk/12">JDK12</a></h2>
+    <div class="description">JDK 12 is the open-source reference implementation of version 12 of the Java SE Platform as specified by by JSR 386 in the Java Community Process.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/189">JEP 189:  Shenandoah: A Low-Pause-Time Garbage Collector (Experimental)</a><div class="jepstatus">[Release: 12] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/230">JEP 230:  Microbenchmark Suite</a><div class="jepstatus">[Release: 12] [Status: Closed / Delivered] [Updated: 2019/02/27]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/325">JEP 325:  Switch Expressions (Preview)</a><div class="jepstatus">[Release: 12] [Status: Closed / Delivered] [Updated: 2022/03/11]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/334">JEP 334:  JVM Constants API</a><div class="jepstatus">[Release: 12] [Status: Closed / Delivered] [Updated: 2022/08/02]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/340">JEP 340:  One AArch64 Port, Not Two</a><div class="jepstatus">[Release: 12] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/341">JEP 341:  Default CDS Archives</a><div class="jepstatus">[Release: 12] [Status: Closed / Delivered] [Updated: 2019/02/21]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/344">JEP 344:  Abortable Mixed Collections for G1</a><div class="jepstatus">[Release: 12] [Status: Closed / Delivered] [Updated: 2019/07/15]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/346">JEP 346:  Promptly Return Unused Committed Memory from G1</a><div class="jepstatus">[Release: 12] [Status: Closed / Delivered] [Updated: 2019/01/23]</div></div>
+    </div>
+</div>
+<div class="project" id="jdk/13">
+    <h2><a href="https://openjdk.java.net/projects/jdk/13">JDK13</a></h2>
+    <div class="description">JDK 13 is the open-source reference implementation of version 13 of the Java SE Platform as specified by by JSR 388 in the Java Community Process.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/350">JEP 350:  Dynamic CDS Archives</a><div class="jepstatus">[Release: 13] [Status: Closed / Delivered] [Updated: 2021/10/14]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/351">JEP 351:  ZGC: Uncommit Unused Memory (Experimental)</a><div class="jepstatus">[Release: 13] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/353">JEP 353:  Reimplement the Legacy Socket API</a><div class="jepstatus">[Release: 13] [Status: Closed / Delivered] [Updated: 2020/09/14]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/354">JEP 354:  Switch Expressions (Second Preview)</a><div class="jepstatus">[Release: 13] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/355">JEP 355:  Text Blocks (Preview)</a><div class="jepstatus">[Release: 13] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+    </div>
+</div>
+<div class="project" id="jdk/14">
+    <h2><a href="https://openjdk.java.net/projects/jdk/14">JDK14</a></h2>
+    <div class="description">JDK 14 is the open-source reference implementation of version 14 of the Java SE Platform as specified by by JSR 389 in the Java Community Process.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/305">JEP 305:  Pattern Matching for instanceof (Preview)</a><div class="jepstatus">[Release: 14] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/343">JEP 343:  Packaging Tool (Incubator)</a><div class="jepstatus">[Release: 14] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/345">JEP 345:  NUMA-Aware Memory Allocation for G1</a><div class="jepstatus">[Release: 14] [Status: Closed / Delivered] [Updated: 2020/02/27]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/349">JEP 349:  JFR Event Streaming</a><div class="jepstatus">[Release: 14] [Status: Closed / Delivered] [Updated: 2020/02/25]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/352">JEP 352:  Non-Volatile Mapped Byte Buffers</a><div class="jepstatus">[Release: 14] [Status: Closed / Delivered] [Updated: 2022/08/16]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/358">JEP 358:  Helpful NullPointerExceptions</a><div class="jepstatus">[Release: 14] [Status: Closed / Delivered] [Updated: 2021/12/22]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/359">JEP 359:  Records (Preview)</a><div class="jepstatus">[Release: 14] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/361">JEP 361:  Switch Expressions</a><div class="jepstatus">[Release: 14] [Status: Closed / Delivered] [Updated: 2022/03/11]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/362">JEP 362:  Deprecate the Solaris and SPARC Ports</a><div class="jepstatus">[Release: 14] [Status: Closed / Delivered] [Updated: 2021/08/27]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/363">JEP 363:  Remove the Concurrent Mark Sweep (CMS) Garbage Collector</a><div class="jepstatus">[Release: 14] [Status: Closed / Delivered] [Updated: 2020/06/18]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/364">JEP 364:  ZGC on macOS (Experimental)</a><div class="jepstatus">[Release: 14] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/365">JEP 365:  ZGC on Windows (Experimental)</a><div class="jepstatus">[Release: 14] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/366">JEP 366:  Deprecate the ParallelScavenge + SerialOld GC Combination</a><div class="jepstatus">[Release: 14] [Status: Closed / Delivered] [Updated: 2020/02/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/367">JEP 367:  Remove the Pack200 Tools and API</a><div class="jepstatus">[Release: 14] [Status: Closed / Delivered] [Updated: 2020/02/22]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/368">JEP 368:  Text Blocks (Second Preview)</a><div class="jepstatus">[Release: 14] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/370">JEP 370:  Foreign-Memory Access API (Incubator)</a><div class="jepstatus">[Release: 14] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+    </div>
+</div>
+<div class="project" id="jdk/15">
+    <h2><a href="https://openjdk.java.net/projects/jdk/15">JDK15</a></h2>
+    <div class="description">JDK 15 is the open-source reference implementation of version 15 of the Java SE Platform, as specified by by JSR 390 in the Java Community Process.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/339">JEP 339:  Edwards-Curve Digital Signature Algorithm (EdDSA)</a><div class="jepstatus">[Release: 15] [Status: Closed / Delivered] [Updated: 2020/10/13]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/360">JEP 360:  Sealed Classes (Preview)</a><div class="jepstatus">[Release: 15] [Status: Closed / Delivered] [Updated: 2022/03/11]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/371">JEP 371:  Hidden Classes</a><div class="jepstatus">[Release: 15] [Status: Closed / Delivered] [Updated: 2020/10/07]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/372">JEP 372:  Remove the Nashorn JavaScript Engine</a><div class="jepstatus">[Release: 15] [Status: Closed / Delivered] [Updated: 2020/12/15]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/373">JEP 373:  Reimplement the Legacy DatagramSocket API</a><div class="jepstatus">[Release: 15] [Status: Closed / Delivered] [Updated: 2023/03/04]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/374">JEP 374:  Deprecate and Disable Biased Locking</a><div class="jepstatus">[Release: 15] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/375">JEP 375:  Pattern Matching for instanceof (Second Preview)</a><div class="jepstatus">[Release: 15] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/377">JEP 377:  ZGC: A Scalable Low-Latency Garbage Collector (Production)</a><div class="jepstatus">[Release: 15] [Status: Closed / Delivered] [Updated: 2023/03/06]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/378">JEP 378:  Text Blocks</a><div class="jepstatus">[Release: 15] [Status: Closed / Delivered] [Updated: 2020/07/30]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/379">JEP 379:  Shenandoah: A Low-Pause-Time Garbage Collector (Production)</a><div class="jepstatus">[Release: 15] [Status: Closed / Delivered] [Updated: 2021/11/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/381">JEP 381:  Remove the Solaris and SPARC Ports</a><div class="jepstatus">[Release: 15] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/383">JEP 383:  Foreign-Memory Access API (Second Incubator)</a><div class="jepstatus">[Release: 15] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/384">JEP 384:  Records (Second Preview)</a><div class="jepstatus">[Release: 15] [Status: Closed / Delivered] [Updated: 2022/03/11]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/385">JEP 385:  Deprecate RMI Activation for Removal</a><div class="jepstatus">[Release: 15] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+    </div>
+</div>
+<div class="project" id="jdk/16">
+    <h2><a href="https://openjdk.java.net/projects/jdk/16">JDK16</a></h2>
+    <div class="description">JDK 16 is the open-source reference implementation of version 16 of the Java SE Platform, as specified by by JSR 390 in the Java Community Process.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/338">JEP 338:  Vector API (Incubator)</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/347">JEP 347:  Enable C++14 Language Features</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2021/09/25]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/357">JEP 357:  Migrate from Mercurial to Git</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2021/01/27]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/376">JEP 376:  ZGC: Concurrent Thread-Stack Processing</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2021/03/07]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/380">JEP 380:  Unix-Domain Socket Channels</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2021/06/29]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/386">JEP 386:  Alpine Linux Port</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/387">JEP 387:  Elastic Metaspace</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2023/02/14]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/388">JEP 388:  Windows/AArch64 Port</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/389">JEP 389:  Foreign Linker API (Incubator)</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2022/03/02]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/390">JEP 390:  Warnings for Value-Based Classes</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2021/08/30]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/392">JEP 392:  Packaging Tool</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2021/02/19]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/393">JEP 393:  Foreign-Memory Access API (Third Incubator)</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2022/03/02]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/394">JEP 394:  Pattern Matching for instanceof</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2022/06/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/395">JEP 395:  Records</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2022/02/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/396">JEP 396:  Strongly Encapsulate JDK Internals by Default</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/397">JEP 397:  Sealed Classes (Second Preview)</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2022/03/11]</div></div>
+    </div>
+</div>
+<div class="project" id="jdk/17">
+    <h2><a href="https://openjdk.java.net/projects/jdk/17">JDK17</a></h2>
+    <div class="description">JDK 17 is the open-source reference implementation of version 17 of the Java SE Platform, as specified by by JSR 390 in the Java Community Process.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/306">JEP 306:  Restore Always-Strict Floating-Point Semantics</a><div class="jepstatus">[Release: 17] [Status: Closed / Delivered] [Updated: 2021/08/02]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/356">JEP 356:  Enhanced Pseudo-Random Number Generators</a><div class="jepstatus">[Release: 17] [Status: Closed / Delivered] [Updated: 2023/02/01]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/382">JEP 382:  New macOS Rendering Pipeline</a><div class="jepstatus">[Release: 17] [Status: Closed / Delivered] [Updated: 2022/04/05]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/391">JEP 391:  macOS/AArch64 Port</a><div class="jepstatus">[Release: 17] [Status: Closed / Delivered] [Updated: 2022/11/23]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/398">JEP 398:  Deprecate the Applet API for Removal</a><div class="jepstatus">[Release: 17] [Status: Closed / Delivered] [Updated: 2021/08/09]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/403">JEP 403:  Strongly Encapsulate JDK Internals</a><div class="jepstatus">[Release: 17] [Status: Closed / Delivered] [Updated: 2021/09/08]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/406">JEP 406:  Pattern Matching for switch (Preview)</a><div class="jepstatus">[Release: 17] [Status: Closed / Delivered] [Updated: 2022/06/01]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/407">JEP 407:  Remove RMI Activation</a><div class="jepstatus">[Release: 17] [Status: Closed / Delivered] [Updated: 2021/07/07]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/409">JEP 409:  Sealed Classes</a><div class="jepstatus">[Release: 17] [Status: Closed / Delivered] [Updated: 2022/03/19]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/410">JEP 410:  Remove the Experimental AOT and JIT Compiler</a><div class="jepstatus">[Release: 17] [Status: Closed / Delivered] [Updated: 2021/08/05]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/411">JEP 411:  Deprecate the Security Manager for Removal</a><div class="jepstatus">[Release: 17] [Status: Closed / Delivered] [Updated: 2022/07/26]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/412">JEP 412:  Foreign Function & Memory API (Incubator)</a><div class="jepstatus">[Release: 17] [Status: Closed / Delivered] [Updated: 2022/03/02]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/414">JEP 414:  Vector API (Second Incubator)</a><div class="jepstatus">[Release: 17] [Status: Closed / Delivered] [Updated: 2023/02/27]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/415">JEP 415:  Context-Specific Deserialization Filters</a><div class="jepstatus">[Release: 17] [Status: Closed / Delivered] [Updated: 2022/04/08]</div></div>
+    </div>
+</div>
+<div class="project" id="jdk/18">
+    <h2><a href="https://openjdk.java.net/projects/jdk/18">JDK18</a></h2>
+    <div class="description">JDK 18 is the open-source reference implementation of version 18 of the Java SE Platform, as specified by by JSR 393 in the Java Community Process.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/400">JEP 400:  UTF-8 by Default</a><div class="jepstatus">[Release: 18] [Status: Closed / Delivered] [Updated: 2022/10/19]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/408">JEP 408:  Simple Web Server</a><div class="jepstatus">[Release: 18] [Status: Closed / Delivered] [Updated: 2022/03/07]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/413">JEP 413:  Code Snippets in Java API Documentation</a><div class="jepstatus">[Release: 18] [Status: Closed / Delivered] [Updated: 2022/02/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/416">JEP 416:  Reimplement Core Reflection with Method Handles</a><div class="jepstatus">[Release: 18] [Status: Closed / Delivered] [Updated: 2022/02/09]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/417">JEP 417:  Vector API (Third Incubator)</a><div class="jepstatus">[Release: 18] [Status: Closed / Delivered] [Updated: 2023/02/27]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/418">JEP 418:  Internet-Address Resolution SPI</a><div class="jepstatus">[Release: 18] [Status: Closed / Delivered] [Updated: 2022/09/09]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/419">JEP 419:  Foreign Function & Memory API (Second Incubator)</a><div class="jepstatus">[Release: 18] [Status: Closed / Delivered] [Updated: 2022/03/02]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/420">JEP 420:  Pattern Matching for switch (Second Preview)</a><div class="jepstatus">[Release: 18] [Status: Closed / Delivered] [Updated: 2022/03/22]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/421">JEP 421:  Deprecate Finalization for Removal</a><div class="jepstatus">[Release: 18] [Status: Closed / Delivered] [Updated: 2022/09/02]</div></div>
+    </div>
+</div>
+<div class="project" id="jdk/19">
+    <h2><a href="https://openjdk.java.net/projects/jdk/19">JDK19</a></h2>
+    <div class="description">JDK 19 is the open-source reference implementation of version 19 of the Java SE Platform, as specified by by JSR 394 in the Java Community Process.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/405">JEP 405:  Record Patterns (Preview)</a><div class="jepstatus">[Release: 19] [Status: Closed / Delivered] [Updated: 2022/10/06]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/422">JEP 422:  Linux/RISC-V Port</a><div class="jepstatus">[Release: 19] [Status: Closed / Delivered] [Updated: 2022/09/08]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/424">JEP 424:  Foreign Function & Memory API (Preview)</a><div class="jepstatus">[Release: 19] [Status: Closed / Delivered] [Updated: 2022/12/14]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/425">JEP 425:  Virtual Threads (Preview)</a><div class="jepstatus">[Release: 19] [Status: Closed / Delivered] [Updated: 2023/01/18]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/426">JEP 426:  Vector API (Fourth Incubator)</a><div class="jepstatus">[Release: 19] [Status: Closed / Delivered] [Updated: 2023/03/01]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/427">JEP 427:  Pattern Matching for switch (Third Preview)</a><div class="jepstatus">[Release: 19] [Status: Closed / Delivered] [Updated: 2022/10/06]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/428">JEP 428:  Structured Concurrency (Incubator)</a><div class="jepstatus">[Release: 19] [Status: Closed / Delivered] [Updated: 2022/08/10]</div></div>
+    </div>
+</div>
+<div class="project" id="jdk/20">
+    <h2><a href="https://openjdk.java.net/projects/jdk/20">JDK20</a></h2>
+    <div class="description">This release is the Reference Implementation of version 20 of the Java SE Platform, as specified by JSR 395 in the Java Community Process.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/429">JEP 429:  Scoped Values (Incubator)</a><div class="jepstatus">[Release: 20] [Status: Closed / Delivered] [Updated: 2023/02/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/432">JEP 432:  Record Patterns (Second Preview)</a><div class="jepstatus">[Release: 20] [Status: Closed / Delivered] [Updated: 2023/03/02]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/433">JEP 433:  Pattern Matching for switch (Fourth Preview)</a><div class="jepstatus">[Release: 20] [Status: Closed / Delivered] [Updated: 2023/03/21]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/434">JEP 434:  Foreign Function & Memory API (Second Preview)</a><div class="jepstatus">[Release: 20] [Status: Closed / Delivered] [Updated: 2023/03/25]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/436">JEP 436:  Virtual Threads (Second Preview)</a><div class="jepstatus">[Release: 20] [Status: Closed / Delivered] [Updated: 2023/03/02]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/437">JEP 437:  Structured Concurrency (Second Incubator)</a><div class="jepstatus">[Release: 20] [Status: Closed / Delivered] [Updated: 2023/03/02]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/438">JEP 438:  Vector API (Fifth Incubator)</a><div class="jepstatus">[Release: 20] [Status: Closed / Delivered] [Updated: 2023/03/13]</div></div>
+    </div>
+</div>
+<div class="project" id="jigsaw">
+    <h2><a href="https://openjdk.java.net/projects/jigsaw">Jigsaw</a></h2>
+    <div class="description">The primary goals of this Project were to:<ul><li> Make it easier for developers to construct and maintain libraries and large applications; </li>
+        <li> Improve the security and maintainability of Java&nbsp;SE Platform Implementations in general, and the JDK in particular; </li>
+        <li> Enable improved application performance; and </li>
+        <li> Enable the Java SE Platform, and the JDK, to scale down for use in small computing devices and dense cloud deployments. </li></ul></div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/161">JEP 161:  Compact Profiles</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2023/01/26]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/162">JEP 162:  Prepare for Modularization</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2017/06/14]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/200">JEP 200:  The Modular JDK</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/09/21]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/201">JEP 201:  Modular Source Code</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2020/12/07]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/220">JEP 220:  Modular Run-Time Images</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/09/22]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/238">JEP 238:  Multi-Release JAR Files</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/06/22]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/253">JEP 253:  Prepare JavaFX UI Controls & CSS APIs for Modularization</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/03/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/260">JEP 260:  Encapsulate Most Internal APIs</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/09/25]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/261">JEP 261:  Module System</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/09/22]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/275">JEP 275:  Modular Java Application Packaging</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/04/27]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/282">JEP 282:  jlink: The Java Linker</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/05/19]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/293">JEP 293:  Guidelines for JDK Command-Line Tool Options</a><div class="jepstatus">[Status: Candidate] [Updated: 2016/07/11]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/396">JEP 396:  Strongly Encapsulate JDK Internals by Default</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/403">JEP 403:  Strongly Encapsulate JDK Internals</a><div class="jepstatus">[Release: 17] [Status: Closed / Delivered] [Updated: 2021/09/08]</div></div>
+    </div>
+</div>
+<div class="project" id="kulla">
+    <h2><a href="https://openjdk.java.net/projects/kulla">Kulla</a></h2>
+    <div class="description">The goal of this Project is to investigate the creation of a Read Evaluate Print Loop (REPL) tool for the Java programming language as described in the corresponding JEP.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/222">JEP 222:  jshell: The Java Shell (Read-Eval-Print Loop)</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/06/09]</div></div>
+    </div>
+</div>
+<div class="project" id="lambda">
+    <h2><a href="https://openjdk.java.net/projects/lambda">Lambda</a></h2>
+    <div class="description">JSR 335 (Lambda Expressions for the Java Programming Language) supports programming in a multicore environment by adding closures and related features to the Java language. The JSR has reached its Final Release; these changes to the platform are part of the umbrella JSR 337 and have been integrated into Java SE 8 (modifying the language, JVM, and library specifications).</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/101">JEP 101:  Generalized Target-Type Inference</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2015/02/26]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/107">JEP 107:  Bulk Data Operations for Collections</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2014/07/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/126">JEP 126:  Lambda Expressions & Virtual Extension Methods</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2015/01/09]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/186">JEP 186:  Collection Literals</a><div class="jepstatus">[Status: Closed / Withdrawn] [Updated: 2022/06/28]</div></div>
+    </div>
+</div>
+<div class="project" id="lanai">
+    <h2><a href="https://openjdk.java.net/projects/lanai">Lanai</a></h2>
+    <div class="description">The goal of this Project is to implement a new graphics rendering pipeline for macOS.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/382">JEP 382:  New macOS Rendering Pipeline</a><div class="jepstatus">[Release: 17] [Status: Closed / Delivered] [Updated: 2022/04/05]</div></div>
+    </div>
+</div>
+<div class="project" id="locale-enhancement">
+    <h2><a href="https://openjdk.java.net/projects/locale-enhancement">Locale Enhancement</a></h2>
+    <div class="description">The goal of this Project is to enhance the java.util.Locale class in order to bring the Java platform into conformance with IETF BCP47 and UTR35(CLDR/LDML). A detailed proposal may be found here.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/314">JEP 314:  Additional Unicode Language-Tag Extensions</a><div class="jepstatus">[Release: 10] [Status: Closed / Delivered] [Updated: 2018/03/06]</div></div>
+    </div>
+</div>
+<div class="project" id="loom">
+    <h2><a href="https://openjdk.java.net/projects/loom">Loom</a></h2>
+    <div class="description">PLEASE NOTE! Go to the Wiki for additional and up-to-date information. (<a href="https://wiki.openjdk.java.net/display/loom">https://wiki.openjdk.java.net/display/loom</a>)</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/353">JEP 353:  Reimplement the Legacy Socket API</a><div class="jepstatus">[Release: 13] [Status: Closed / Delivered] [Updated: 2020/09/14]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/373">JEP 373:  Reimplement the Legacy DatagramSocket API</a><div class="jepstatus">[Release: 15] [Status: Closed / Delivered] [Updated: 2023/03/04]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/416">JEP 416:  Reimplement Core Reflection with Method Handles</a><div class="jepstatus">[Release: 18] [Status: Closed / Delivered] [Updated: 2022/02/09]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/425">JEP 425:  Virtual Threads (Preview)</a><div class="jepstatus">[Release: 19] [Status: Closed / Delivered] [Updated: 2023/01/18]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/428">JEP 428:  Structured Concurrency (Incubator)</a><div class="jepstatus">[Release: 19] [Status: Closed / Delivered] [Updated: 2022/08/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/429">JEP 429:  Scoped Values (Incubator)</a><div class="jepstatus">[Release: 20] [Status: Closed / Delivered] [Updated: 2023/02/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/436">JEP 436:  Virtual Threads (Second Preview)</a><div class="jepstatus">[Release: 20] [Status: Closed / Delivered] [Updated: 2023/03/02]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/437">JEP 437:  Structured Concurrency (Second Incubator)</a><div class="jepstatus">[Release: 20] [Status: Closed / Delivered] [Updated: 2023/03/02]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/444">JEP 444:  Virtual Threads</a><div class="jepstatus">[Release: 21] [Status: Proposed to Target] [Updated: 2023/03/31]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/8304357">JEP 8304357: JEP draft: Scoped Values (Preview)</a><div class="jepstatus">[Status: Submitted] [Updated: 2023/03/30]</div></div>
+    </div>
+</div>
+<div class="project" id="jmm">
+    <h2><a href="https://openjdk.java.net/projects/jmm">Memory Model Update</a></h2>
+    <div class="description">The goal of this Project is to update the Java Memory Model, as described in JEP 188.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/188">JEP 188:  Java Memory Model Update</a><div class="jepstatus">[Status: Draft] [Updated: 2016/06/07]</div></div>
+    </div>
+</div>
+<div class="project" id="mlvm">
+    <h2><a href="https://openjdk.java.net/projects/mlvm">Multi-Language VM</a></h2>
+    <div class="description">We are extending the JVM with first-class architectural support for languages other than Java, especially dynamic languages. This project will prototype a number of extensions to the JVM, so that it can run non-Java languages efficiently, with a performance level comparable to that of Java itself.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/160">JEP 160:  Lambda-Form Representation for Method Handles</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2017/10/17]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/169">JEP 169:  Larval State for Value Objects</a><div class="jepstatus">[Status: Draft] [Updated: 2021/12/09]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/274">JEP 274:  Enhanced Method Handles</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/05/17]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/8158765">JEP 8158765: JEP draft: Isolated Methods</a><div class="jepstatus">[Status: Draft] [Updated: 2018/04/16]</div></div>
+    </div>
+</div>
+<div class="project" id="nashorn">
+    <h2><a href="https://openjdk.java.net/projects/nashorn">Nashorn</a></h2>
+    <div class="description">Nashorn's goal is to implement a lightweight high-performance JavaScript runtime in Java with a native JVM. This Project intends to enable Java developers embedding of JavaScript in Java applications via JSR-223 and to develop free standing JavaScript applications using the jrunscript command-line tool.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/174">JEP 174:  Nashorn JavaScript Engine</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2015/02/13]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/194">JEP 194:  Nashorn Code Persistence</a><div class="jepstatus">[Status: Closed / Withdrawn] [Updated: 2015/01/06]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/196">JEP 196:  Nashorn Optimistic Typing</a><div class="jepstatus">[Release: 8u40] [Status: Closed / Delivered] [Updated: 2014/12/05]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/202">JEP 202:  Nashorn Class Filter</a><div class="jepstatus">[Release: 8u40] [Status: Closed / Delivered] [Updated: 2017/05/17]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/203">JEP 203:  Nashorn: Lexically-Scoped Variable & Constant Declarations</a><div class="jepstatus">[Release: 8u40] [Status: Closed / Delivered] [Updated: 2017/05/17]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/236">JEP 236:  Parser API for Nashorn</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/05/17]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/292">JEP 292:  Implement Selected ECMAScript 6 Features in Nashorn</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/03/09]</div></div>
+    </div>
+</div>
+<div class="project" id="nio">
+    <h2><a href="https://openjdk.java.net/projects/nio">New I/O</a></h2>
+    <div class="description">This Project's mission is to produce the implementation of the (New) New I/O APIs being defined by JSR 203 as well as related work in the JDK.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/337">JEP 337:  RDMA Network Sockets</a><div class="jepstatus">[Status: Candidate] [Updated: 2020/02/12]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/380">JEP 380:  Unix-Domain Socket Channels</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2021/06/29]</div></div>
+    </div>
+</div>
+<div class="project" id="openjfx">
+    <h2><a href="https://openjdk.java.net/projects/openjfx">OpenJFX</a></h2>
+    <div class="description">OpenJFX is the open source home of JavaFX development. The goal of OpenJFX is to build the next-generation Java client toolkit.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/204">JEP 204:  JavaFX Accessibility</a><div class="jepstatus">[Release: 8u40] [Status: Closed / Delivered] [Updated: 2016/06/07]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/205">JEP 205:  New Controls for JavaFX</a><div class="jepstatus">[Release: 8u40] [Status: Closed / Delivered] [Updated: 2015/03/03]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/206">JEP 206:  Modernize the JavaFX Media Stack on Mac OS X</a><div class="jepstatus">[Release: 8u40] [Status: Closed / Delivered] [Updated: 2015/02/26]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/208">JEP 208:  Java Packager Improvements</a><div class="jepstatus">[Release: 8u40] [Status: Closed / Delivered] [Updated: 2015/02/26]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/209">JEP 209:  JavaFX Scene Builder Update</a><div class="jepstatus">[Release: 8u40] [Status: Closed / Delivered] [Updated: 2014/10/01]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/239">JEP 239:  Update JavaFX/WebView to Newer Version of WebKit</a><div class="jepstatus">[Release: 8u60] [Status: Closed / Delivered] [Updated: 2016/08/24]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/253">JEP 253:  Prepare JavaFX UI Controls & CSS APIs for Modularization</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/03/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/257">JEP 257:  Update JavaFX/Media to Newer Version of GStreamer</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2022/11/21]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/275">JEP 275:  Modular Java Application Packaging</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/04/27]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/283">JEP 283:  Enable GTK 3 on Linux</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2018/10/12]</div></div>
+    </div>
+</div>
+<div class="project" id="panama">
+    <h2><a href="https://openjdk.java.net/projects/panama">Panama</a></h2>
+    <div class="description">We are improving and enriching the connections between the Java virtual machine and well-defined but “foreign” (non-Java) APIs, including many interfaces commonly used by C programmers.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/338">JEP 338:  Vector API (Incubator)</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/370">JEP 370:  Foreign-Memory Access API (Incubator)</a><div class="jepstatus">[Release: 14] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/380">JEP 380:  Unix-Domain Socket Channels</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2021/06/29]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/383">JEP 383:  Foreign-Memory Access API (Second Incubator)</a><div class="jepstatus">[Release: 15] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/389">JEP 389:  Foreign Linker API (Incubator)</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2022/03/02]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/393">JEP 393:  Foreign-Memory Access API (Third Incubator)</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2022/03/02]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/412">JEP 412:  Foreign Function & Memory API (Incubator)</a><div class="jepstatus">[Release: 17] [Status: Closed / Delivered] [Updated: 2022/03/02]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/414">JEP 414:  Vector API (Second Incubator)</a><div class="jepstatus">[Release: 17] [Status: Closed / Delivered] [Updated: 2023/02/27]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/417">JEP 417:  Vector API (Third Incubator)</a><div class="jepstatus">[Release: 18] [Status: Closed / Delivered] [Updated: 2023/02/27]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/419">JEP 419:  Foreign Function & Memory API (Second Incubator)</a><div class="jepstatus">[Release: 18] [Status: Closed / Delivered] [Updated: 2022/03/02]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/424">JEP 424:  Foreign Function & Memory API (Preview)</a><div class="jepstatus">[Release: 19] [Status: Closed / Delivered] [Updated: 2022/12/14]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/426">JEP 426:  Vector API (Fourth Incubator)</a><div class="jepstatus">[Release: 19] [Status: Closed / Delivered] [Updated: 2023/03/01]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/434">JEP 434:  Foreign Function & Memory API (Second Preview)</a><div class="jepstatus">[Release: 20] [Status: Closed / Delivered] [Updated: 2023/03/25]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/438">JEP 438:  Vector API (Fifth Incubator)</a><div class="jepstatus">[Release: 20] [Status: Closed / Delivered] [Updated: 2023/03/13]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/442">JEP 442:  Foreign Function & Memory API (Third Preview)</a><div class="jepstatus">[Status: Proposed to Target] [Updated: 2023/04/03]</div></div>
+    </div>
+</div>
+<div class="project" id="aarch32-port">
+    <h2><a href="https://openjdk.java.net/projects/aarch32-port">Port: AArch32</a></h2>
+    <div class="description">The goal of this Project is to provide a full featured port of OpenJDK on the Linux/AArch32 platoform. AArch32 is the 32-bit sub-architecture within the ARMv8 architecture. The port will be fully compatible with ARMv7 and may support ARMv6 depending on community interest.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/297">JEP 297:  Unified arm32/arm64 Port</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2022/08/11]</div></div>
+    </div>
+</div>
+<div class="project" id="aarch64-port">
+    <h2><a href="https://openjdk.java.net/projects/aarch64-port">Port: AArch64</a></h2>
+    <div class="description">The goal of this Project is to provide a full-featured and certified version of OpenJDK on the Linux/AArch64 platform which can be integrated into JDK 8. AArch64 is the 64-bit mode of ARMv8; it is a completely new architecture, and is not compatible with the 32-bit ARM instruction set. It is hoped that this project will eventually be able to support operating systems other than GNU/Linux, and welcomes contributors with the necessary expertise.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/237">JEP 237:  Linux/AArch64 Port</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2017/03/08]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/388">JEP 388:  Windows/AArch64 Port</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/391">JEP 391:  macOS/AArch64 Port</a><div class="jepstatus">[Release: 17] [Status: Closed / Delivered] [Updated: 2022/11/23]</div></div>
+    </div>
+</div>
+<div class="project" id="ppc-aix-port">
+    <h2><a href="https://openjdk.java.net/projects/ppc-aix-port">Port: PowerPC/AIX</a></h2>
+    <div class="description">The goal of this project is to provide a full-featured and certifiable version of OpenJDK on the Linux/PowerPC and AIX/PowerPC platforms which can be ultimately integrated into the main OpenJDK development branches.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/175">JEP 175:  PowerPC/AIX Port</a><div class="jepstatus">[Release: 8u20] [Status: Closed / Delivered] [Updated: 2017/08/17]</div></div>
+    </div>
+</div>
+<div class="project" id="riscv-port">
+    <h2><a href="https://openjdk.java.net/projects/riscv-port">Port: RISC-V</a></h2>
+    <div class="description">The goal of this Project is to deliver a full-featured port of OpenJDK on the Linux/RISC-V platform which may be integrated into the main OpenJDK development branch.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/422">JEP 422:  Linux/RISC-V Port</a><div class="jepstatus">[Release: 19] [Status: Closed / Delivered] [Updated: 2022/09/08]</div></div>
+    </div>
+</div>
+<div class="project" id="s390x-port">
+    <h2><a href="https://openjdk.java.net/projects/s390x-port">Port: s390x</a></h2>
+    <div class="description">The goal of this Project is to integrate SAP's full-featured and certifiable Linux/s390x port of the OpenJDK into the main OpenJDK development branch.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/294">JEP 294:  Linux/s390x Port</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2019/08/13]</div></div>
+    </div>
+</div>
+<div class="project" id="portola">
+    <h2><a href="https://openjdk.java.net/projects/portola">Portola</a></h2>
+    <div class="description">The goal of this Project is to provide a port of the JDK to the Alpine Linux distribution, and in particular the musl C library.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/386">JEP 386:  Alpine Linux Port</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+    </div>
+</div>
+<div class="project" id="shenandoah">
+    <h2><a href="https://openjdk.java.net/projects/shenandoah">Shenandoah</a></h2>
+    <div class="description">Shenandoah is an ultra-low pause time garbage collector that reduces GC pause times by performing more garbage collection work concurrently with the running Java program. CMS and G1 both perform concurrent marking of live objects. Shenandoah adds concurrent compaction.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/189">JEP 189:  Shenandoah: A Low-Pause-Time Garbage Collector (Experimental)</a><div class="jepstatus">[Release: 12] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/404">JEP 404:  Generational Shenandoah</a><div class="jepstatus">[Status: Candidate] [Updated: 2023/01/18]</div></div>
+    </div>
+</div>
+<div class="project" id="skara">
+    <h2><a href="https://openjdk.java.net/projects/skara">Skara</a></h2>
+    <div class="description">The goal of this Project is to investigate alternative SCM and code review options for the JDK source code, including options based upon Git rather than Mercurial, and including options hosted by third parties.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/357">JEP 357:  Migrate from Mercurial to Git</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2021/01/27]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/369">JEP 369:  Migrate to GitHub</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2021/01/15]</div></div>
+    </div>
+</div>
+<div class="project" id="tiered-attrib">
+    <h2><a href="https://openjdk.java.net/projects/tiered-attrib">Tiered Attribution</a></h2>
+    <div class="description">The goal of this Project is to investigate an alternate architecture for the javac type-checking subsystem which is free from speculative attribution. Additional details may be found in JEP 215: Tiered Attribution for javac.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/215">JEP 215:  Tiered Attribution for javac</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2016/07/12]</div></div>
+    </div>
+</div>
+<div class="project" id="type-annotations">
+    <h2><a href="https://openjdk.java.net/projects/type-annotations">Type Annotations</a></h2>
+    <div class="description">The goals of the Type Annotations Project were:<ul><li> Bugs in how <tt>javac</tt> handles type annotations are tracked in <a href="https://bugs.openjdk.org/issues/?jql=project%20%3D%2010100%20AND%20component%20%3D%2010308%20AND%20cf[10008]%20%3D%20212"> tools/javac</a>. </li>
+        <li> Bugs in how Core Reflection exposes type annotations are tracked in <a href="https://bugs.openjdk.org/issues/?jql=project%20%3D%2010100%20AND%20component%20%3D%2010300%20AND%20cf[10008]%20%3D%20668"> core-libs/java.lang:reflect</a>. </li>
+        <li> Bugs in how Annotation Processing exposes type annotations are tracked in <a href="https://bugs.openjdk.org/issues/?jql=project%20%3D%2010100%20AND%20component%20%3D%2010300%20AND%20cf[10008]%20%3D%20233"> core-libs/javax.lang.model</a>. </li></ul></div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/104">JEP 104:  Type Annotations</a><div class="jepstatus">[Release: 8] [Status: Closed / Delivered] [Updated: 2020/06/01]</div></div>
+    </div>
+</div>
+<div class="project" id="valhalla">
+    <h2><a href="https://openjdk.java.net/projects/valhalla">Valhalla</a></h2>
+    <div class="description">Project Valhalla is augmenting the Java object model with value objects and user-defined primitives, combining the abstractions of object-oriented programming with the performance characteristics of simple primitives. These features will be complemented with changes to Java’s generics to preserve performance gains through generic APIs.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/181">JEP 181:  Nest-Based Access Control</a><div class="jepstatus">[Release: 11] [Status: Closed / Delivered] [Updated: 2021/04/24]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/218">JEP 218:  Generics over Primitive Types</a><div class="jepstatus">[Status: Candidate] [Updated: 2017/10/17]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/303">JEP 303:  Intrinsics for the LDC and INVOKEDYNAMIC Instructions</a><div class="jepstatus">[Status: Candidate] [Updated: 2018/09/11]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/309">JEP 309:  Dynamic Class-File Constants</a><div class="jepstatus">[Release: 11] [Status: Closed / Delivered] [Updated: 2018/09/10]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/334">JEP 334:  JVM Constants API</a><div class="jepstatus">[Release: 12] [Status: Closed / Delivered] [Updated: 2022/08/02]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/338">JEP 338:  Vector API (Incubator)</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/371">JEP 371:  Hidden Classes</a><div class="jepstatus">[Release: 15] [Status: Closed / Delivered] [Updated: 2020/10/07]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/390">JEP 390:  Warnings for Value-Based Classes</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2021/08/30]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/401">JEP 401:  Implicitly-Initialized Value Object Storage (Preview)</a><div class="jepstatus">[Status: Draft] [Updated: 2023/03/29]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/402">JEP 402:  Enhanced Primitive Boxing (Preview)</a><div class="jepstatus">[Status: Draft] [Updated: 2023/03/21]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/414">JEP 414:  Vector API (Second Incubator)</a><div class="jepstatus">[Release: 17] [Status: Closed / Delivered] [Updated: 2023/02/27]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/416">JEP 416:  Reimplement Core Reflection with Method Handles</a><div class="jepstatus">[Release: 18] [Status: Closed / Delivered] [Updated: 2022/02/09]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/417">JEP 417:  Vector API (Third Incubator)</a><div class="jepstatus">[Release: 18] [Status: Closed / Delivered] [Updated: 2023/02/27]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/426">JEP 426:  Vector API (Fourth Incubator)</a><div class="jepstatus">[Release: 19] [Status: Closed / Delivered] [Updated: 2023/03/01]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/8261529">JEP 8261529: JEP draft: Universal Generics (Preview)</a><div class="jepstatus">[Status: Draft] [Updated: 2023/03/23]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/8267650">JEP 8267650: JEP draft: Better-defined JVM class file validation</a><div class="jepstatus">[Status: Draft] [Updated: 2022/09/08]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/8277163">JEP 8277163: JEP draft: Value Objects (Preview)</a><div class="jepstatus">[Status: Submitted] [Updated: 2023/03/21]</div></div>
+    </div>
+</div>
+<div class="project" id="verona">
+    <h2><a href="https://openjdk.java.net/projects/verona">Verona</a></h2>
+    <div class="description">The goal of this Project was to implement the new JDK version string as described in JEP-223. The new version-string scheme was designed to easily distinguish major, minor, and security-update releases.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/223">JEP 223:  New Version-String Scheme</a><div class="jepstatus">[Release: 9] [Status: Closed / Delivered] [Updated: 2021/10/03]</div></div>
+    </div>
+</div>
+<div class="project" id="zgc">
+    <h2><a href="https://openjdk.java.net/projects/zgc">ZGC</a></h2>
+    <div class="description">ZGC is a scalable low-latency garbage collector capable of handling heaps ranging from 8MB to 16TB in size, with sub-millisecond max pause times.</div>
+    <h3>JEPs</h3>
+    <div class="jeps">
+        <div class="jep"><a href="https://openjdk.java.net/jeps/333">JEP 333:  ZGC: A Scalable Low-Latency Garbage Collector (Experimental)</a><div class="jepstatus">[Release: 11] [Status: Closed / Delivered] [Updated: 2020/03/13]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/351">JEP 351:  ZGC: Uncommit Unused Memory (Experimental)</a><div class="jepstatus">[Release: 13] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/364">JEP 364:  ZGC on macOS (Experimental)</a><div class="jepstatus">[Release: 14] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/365">JEP 365:  ZGC on Windows (Experimental)</a><div class="jepstatus">[Release: 14] [Status: Closed / Delivered] [Updated: 2021/08/28]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/376">JEP 376:  ZGC: Concurrent Thread-Stack Processing</a><div class="jepstatus">[Release: 16] [Status: Closed / Delivered] [Updated: 2021/03/07]</div></div>
+        <div class="jep"><a href="https://openjdk.java.net/jeps/377">JEP 377:  ZGC: A Scalable Low-Latency Garbage Collector (Production)</a><div class="jepstatus">[Release: 15] [Status: Closed / Delivered] [Updated: 2023/03/06]</div></div>
+    </div>
+</div>
+
+</body>
+</html>

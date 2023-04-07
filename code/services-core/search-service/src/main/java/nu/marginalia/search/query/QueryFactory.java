@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.index.client.model.query.SearchSpecification;
 import nu.marginalia.index.client.model.query.SearchSubquery;
+import nu.marginalia.index.client.model.results.ResultRankingParameters;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
@@ -89,11 +90,12 @@ public class QueryFactory {
                 .subqueries(sqs)
                 .domains(Collections.emptyList())
                 .searchSetIdentifier(profile.searchSetIdentifier)
-                .queryLimits(new QueryLimits(limitPerDomain, limitTotal, 150, 2048))
+                .queryLimits(new QueryLimits(limitPerDomain, limitTotal, 250, 8192))
                 .humanQuery("")
                 .year(SpecificationLimit.none())
                 .size(SpecificationLimit.none())
                 .rank(SpecificationLimit.none())
+                .rankingParams(ResultRankingParameters.sensibleDefaults())
                 .quality(SpecificationLimit.none())
                 .queryStrategy(QueryStrategy.AUTO)
                 .build();
@@ -119,9 +121,10 @@ public class QueryFactory {
 
         List<String> searchTermsHuman = new ArrayList<>();
         List<String> problems = new ArrayList<>();
-        String domain = null;
 
-        QueryStrategy queryStrategy = QueryStrategy.AUTO;
+
+        String near = null,
+               domain = null;
 
         var basicQuery = queryParser.parse(query);
 
@@ -130,10 +133,8 @@ public class QueryFactory {
             basicQuery.clear();
         }
 
-        SpecificationLimit qualityLimit = profile.getQualityLimit();
-        SpecificationLimit year = profile.getYearLimit();
-        SpecificationLimit size = profile.getSizeLimit();
-        SpecificationLimit rank = SpecificationLimit.none();
+
+        QueryLimitsAccumulator qualityLimits = new QueryLimitsAccumulator(profile);
 
         for (Token t : basicQuery) {
             if (t.type == TokenType.QUOT_TERM || t.type == TokenType.LITERAL_TERM) {
@@ -144,74 +145,20 @@ public class QueryFactory {
                 searchTermsHuman.addAll(toHumanSearchTerms(t));
                 analyzeSearchTerm(problems, t);
             }
-            if (t.type == TokenType.QUALITY_TERM) {
-                qualityLimit = parseSpecificationLimit(t.str);
-            }
-            if (t.type == TokenType.YEAR_TERM) {
-                year = parseSpecificationLimit(t.str);
-            }
-            if (t.type == TokenType.SIZE_TERM) {
-                size = parseSpecificationLimit(t.str);
-            }
-            if (t.type == TokenType.RANK_TERM) {
-                rank = parseSpecificationLimit(t.str);
-            }
-            if (t.type == TokenType.QS_TERM) {
-                queryStrategy = parseQueryStrategy(t.str);
-            }
+
+            t.visit(qualityLimits);
         }
 
         var queryPermutations = queryPermutation.permuteQueriesNew(basicQuery);
         List<SearchSubquery> subqueries = new ArrayList<>();
 
-        String near = profile.getNearDomain();
-
-
         for (var parts : queryPermutations) {
-            List<String> searchTermsExclude = new ArrayList<>();
-            List<String> searchTermsInclude = new ArrayList<>();
-            List<String> searchTermsAdvice = new ArrayList<>();
-            List<String> searchTermsPriority = new ArrayList<>();
+            QuerySearchTermsAccumulator termsAccumulator = new QuerySearchTermsAccumulator(profile, parts);
 
-            for (Token t : parts) {
-                switch (t.type) {
-                    case EXCLUDE_TERM:
-                        searchTermsExclude.add(t.str);
-                        break;
-                    case ADVICE_TERM:
-                        searchTermsAdvice.add(t.str);
-                        if (t.str.toLowerCase().startsWith("site:")) {
-                            domain = t.str.substring("site:".length());
-                        }
-                        break;
-                    case PRIORTY_TERM:
-                        searchTermsPriority.add(t.str);
-                        break;
-                    case LITERAL_TERM: // fallthrough;
-                    case QUOT_TERM:
-                        searchTermsInclude.add(t.str);
-                        break;
-                    case QUALITY_TERM:
-                    case YEAR_TERM:
-                    case SIZE_TERM:
-                    case RANK_TERM:
-                    case QS_TERM:
-                        break; //
-                    case NEAR_TERM:
-                        near = t.str;
-                        break;
+            SearchSubquery subquery = termsAccumulator.createSubquery();
 
-                    default:
-                        logger.warn("Unexpected token type {}", t);
-                }
-            }
-
-            if (searchTermsInclude.isEmpty() && !searchTermsAdvice.isEmpty()) {
-                searchTermsInclude.addAll(searchTermsAdvice);
-                searchTermsAdvice.clear();
-            }
-
-            SearchSubquery subquery = new SearchSubquery(searchTermsInclude, searchTermsExclude, searchTermsAdvice, searchTermsPriority);
+            near = termsAccumulator.near;
+            domain = termsAccumulator.domain;
 
             params.profile().addTacitTerms(subquery);
             params.jsSetting().addTacitTerms(subquery);
@@ -238,12 +185,13 @@ public class QueryFactory {
                 .subqueries(subqueries)
                 .queryLimits(new QueryLimits(domainLimit, 100, 250, 4096))
                 .humanQuery(query)
-                .quality(qualityLimit)
-                .year(year)
-                .size(size)
-                .rank(rank)
+                .quality(qualityLimits.qualityLimit)
+                .year(qualityLimits.year)
+                .size(qualityLimits.size)
+                .rank(qualityLimits.rank)
                 .domains(domains)
-                .queryStrategy(queryStrategy)
+                .rankingParams(ResultRankingParameters.sensibleDefaults())
+                .queryStrategy(qualityLimits.queryStrategy)
                 .searchSetIdentifier(profile.searchSetIdentifier);
 
         SearchSpecification specs = specsBuilder.build();
@@ -251,36 +199,8 @@ public class QueryFactory {
         return new SearchQuery(specs, searchTermsHuman, domain);
     }
 
-    private SpecificationLimit parseSpecificationLimit(String str) {
-        int startChar = str.charAt(0);
 
-        int val = Integer.parseInt(str.substring(1));
-        if (startChar == '=') {
-            return SpecificationLimit.equals(val);
-        }
-        else if (startChar == '<') {
-            return SpecificationLimit.lessThan(val);
-        }
-        else if (startChar == '>') {
-            return SpecificationLimit.greaterThan(val);
-        }
-        else {
-            return SpecificationLimit.none();
-        }
-    }
 
-    private QueryStrategy parseQueryStrategy(String str) {
-        return switch (str.toUpperCase()) {
-            case "RF_TITLE" -> QueryStrategy.REQUIRE_FIELD_TITLE;
-            case "RF_SUBJECT" -> QueryStrategy.REQUIRE_FIELD_SUBJECT;
-            case "RF_SITE" -> QueryStrategy.REQUIRE_FIELD_SITE;
-            case "RF_URL" -> QueryStrategy.REQUIRE_FIELD_URL;
-            case "RF_DOMAIN" -> QueryStrategy.REQUIRE_FIELD_DOMAIN;
-            case "SENTENCE" -> QueryStrategy.SENTENCE;
-            case "TOPIC" -> QueryStrategy.TOPIC;
-            default -> QueryStrategy.AUTO;
-        };
-    }
 
     private String normalizeDomainName(String str) {
         return str.toLowerCase();
