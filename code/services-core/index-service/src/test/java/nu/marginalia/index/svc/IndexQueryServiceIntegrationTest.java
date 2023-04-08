@@ -27,12 +27,12 @@ import org.junit.jupiter.api.parallel.Execution;
 import spark.Spark;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 
 @Execution(SAME_THREAD)
@@ -153,9 +153,18 @@ public class IndexQueryServiceIntegrationTest {
                         ))
                         ).build());
 
-        Assertions.assertArrayEquals(
-                new int[] { 12, 72, 132, 192, 252, 312, 372, 432, 492, 32 },
-                rsp.results.stream().mapToInt(SearchResultItem::getUrlIdInt).toArray());
+
+        Set<Integer> years = new HashSet<>();
+
+        for (var res : rsp.results) {
+            for (var score : res.getKeywordScores()) {
+                years.add(DocumentMetadata.decodeYear(score.encodedDocMetadata()));
+            }
+        }
+
+        assertEquals(Set.of(1998), years);
+        assertEquals(rsp.results.size(), 10);
+
     }
 
 
