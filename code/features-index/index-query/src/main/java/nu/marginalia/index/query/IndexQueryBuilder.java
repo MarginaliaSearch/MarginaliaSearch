@@ -12,9 +12,9 @@ public interface IndexQueryBuilder {
     IndexQueryBuilder alsoFull(int termId);
 
     /**
-     * Filters documents that also contain <i>any of the provided termIds</i>, within the priority index.
+     * Filters documents that also contain the termId, within the priority index.
      */
-    IndexQueryBuilder alsoPrioAnyOf(int... termIds);
+    IndexQueryBuilder alsoPrio(int termIds);
 
     /** Excludes documents that contain termId, within the full index
      */

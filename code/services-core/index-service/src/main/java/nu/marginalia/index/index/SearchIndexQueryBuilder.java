@@ -52,33 +52,6 @@ public class SearchIndexQueryBuilder implements IndexQueryBuilder  {
         return this;
     }
 
-    public IndexQueryBuilder alsoPrioAnyOf(int... termIds) {
-
-        QueryFilterStepIf step;
-
-        if (termIds.length == 0) {
-            step = QueryFilterStepIf.noPass();
-        }
-        else if (termIds.length == 1) {
-            return alsoPrio(termIds[0]);
-        }
-        else {
-            var steps = IntStream.of(termIds)
-                    .filter(alreadyConsideredTerms::add)
-                    .mapToObj(reverseIndexPrioReader::also)
-                    .collect(Collectors.toList());
-
-            if (steps.isEmpty())
-                return this;
-
-            step = QueryFilterStepIf.anyOf(steps);
-        }
-
-        query.addInclusionFilter(step);
-
-        return this;
-    }
-
     public IndexQueryBuilder notFull(int termId) {
 
         query.addInclusionFilter(reverseIndexFullReader.not(termId));
