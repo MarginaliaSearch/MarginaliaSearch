@@ -68,6 +68,6 @@ public class SearchIndexQueryBuilder implements IndexQueryBuilder  {
 
     public IndexQuery build() {
         return query;
-        }
+    }
 
 }

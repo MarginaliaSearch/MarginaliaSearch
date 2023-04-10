@@ -1,6 +1,5 @@
 package nu.marginalia.index.priority;
 
-import nu.marginalia.index.query.ReverseIndexEntrySourceBehavior;
 import nu.marginalia.index.query.EntrySource;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.btree.BTreeReader;
@@ -46,7 +45,7 @@ public class ReverseIndexPriorityReader {
 
         if (offset < 0) return new EmptyEntrySource();
 
-        return new ReverseIndexPriorityEntrySource(createReaderNew(offset), ReverseIndexEntrySourceBehavior.DO_PREFER, wordId);
+        return new ReverseIndexPriorityEntrySource(createReaderNew(offset), wordId);
     }
 
     private BTreeReader createReaderNew(long offset) {

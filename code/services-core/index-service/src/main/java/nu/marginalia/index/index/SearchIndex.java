@@ -3,10 +3,7 @@ package nu.marginalia.index.index;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.index.IndexServicesFactory;
-import nu.marginalia.index.query.IndexQuery;
-import nu.marginalia.index.query.IndexQueryBuilder;
-import nu.marginalia.index.query.IndexQueryParams;
-import nu.marginalia.index.query.ReverseIndexEntrySourceBehavior;
+import nu.marginalia.index.query.*;
 import nu.marginalia.index.query.filter.QueryFilterStepFromPredicate;
 import nu.marginalia.index.svc.IndexSearchSetsService;
 import org.jetbrains.annotations.NotNull;
@@ -15,7 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
@@ -102,32 +98,39 @@ public class SearchIndex {
         }
 
         final int[] orderedIncludes = terms.sortedDistinctIncludes(this::compareKeywords);
+        final int[] orderedIncludesPrio = terms.sortedDistinctIncludes(this::compareKeywordsPrio);
 
         List<IndexQueryBuilder> queryHeads = new ArrayList<>(10);
         List<IndexQuery> queries = new ArrayList<>(10);
 
+        // Fetch more results than specified for short queries, as the query itself is cheap and the
+        // priority index may contain a considerable amount of less interesting results
+        final int fetchSizeMultiplier;
+        if (orderedIncludes.length == 1) fetchSizeMultiplier = 4;
+        else fetchSizeMultiplier = 1;
+
         // To ensure that good results are processed first, create query heads for the priority index that filter for terms
         // that contain pairs of two search terms
-        if (orderedIncludes.length > 1) {
-            for (int i = 0; i + 1 < orderedIncludes.length; i++) {
-                for (int j = i + 1; j < orderedIncludes.length; j++) {
+        if (orderedIncludesPrio.length > 1) {
+            for (int i = 0; i + 1 < orderedIncludesPrio.length; i++) {
+                for (int j = i + 1; j < orderedIncludesPrio.length; j++) {
                     var entrySource = indexReader
-                            .findPriorityWord(orderedIncludes[i])
-                            .alsoPrio(orderedIncludes[j]);
+                            .findPriorityWord(IndexQueryPriority.BEST, orderedIncludesPrio[i], fetchSizeMultiplier)
+                            .alsoPrio(orderedIncludesPrio[j]);
                     queryHeads.add(entrySource);
                 }
             }
         }
 
         // Next consider entries that appear only once in the priority index
-        for (var wordId : orderedIncludes) {
-            queryHeads.add(indexReader.findPriorityWord(wordId));
+        for (var wordId : orderedIncludesPrio) {
+            queryHeads.add(indexReader.findPriorityWord(IndexQueryPriority.GOOD, wordId, fetchSizeMultiplier));
         }
 
         // Finally consider terms in the full index, but only do this for sufficiently long queries
         // as short queries tend to be too underspecified to produce anything other than CPU warmth
-        if (orderedIncludes.length > 3) {
-            queryHeads.add(indexReader.findFullWord(orderedIncludes[0], ReverseIndexEntrySourceBehavior.DO_NOT_PREFER));
+        if (orderedIncludes.length >= 3) {
+            queryHeads.add(indexReader.findFullWord(IndexQueryPriority.FALLBACK, orderedIncludes[0], fetchSizeMultiplier));
         }
 
         for (var query : queryHeads) {
@@ -162,6 +165,12 @@ public class SearchIndex {
         );
     }
 
+    private int compareKeywordsPrio(int a, int b) {
+        return Long.compare(
+                indexReader.numHitsPrio(a),
+                indexReader.numHitsPrio(b)
+        );
+    }
     /** Replaces the values of ids with their associated metadata, or 0L if absent */
     public long[] getTermMetadata(int termId, long[] docs) {
         return indexReader.getMetadata(termId, docs);

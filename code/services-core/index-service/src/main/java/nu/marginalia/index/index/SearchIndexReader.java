@@ -2,14 +2,10 @@ package nu.marginalia.index.index;
 
 import nu.marginalia.index.forward.ForwardIndexReader;
 import nu.marginalia.index.forward.ParamMatchingQueryFilter;
-import nu.marginalia.index.query.EntrySource;
-import nu.marginalia.index.query.IndexQuery;
-import nu.marginalia.index.query.IndexQueryBuilder;
-import nu.marginalia.index.query.IndexQueryParams;
+import nu.marginalia.index.query.*;
 import nu.marginalia.index.query.filter.QueryFilterStepIf;
 import nu.marginalia.index.priority.ReverseIndexPriorityReader;
 import nu.marginalia.index.full.ReverseIndexFullReader;
-import nu.marginalia.index.query.ReverseIndexEntrySourceBehavior;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,17 +27,21 @@ public class SearchIndexReader {
         this.reverseIndexPriorityReader = reverseIndexPriorityReader;
     }
 
-    public IndexQueryBuilder findPriorityWord(int wordId) {
-        return new SearchIndexQueryBuilder(reverseIndexFullReader, reverseIndexPriorityReader, new IndexQuery(
-                List.of(reverseIndexPriorityReader.priorityDocuments(wordId))), wordId);
+    public IndexQueryBuilder findPriorityWord(IndexQueryPriority priority, int wordId, int fetchSizeMultiplier) {
+        var sources = List.of(reverseIndexPriorityReader.priorityDocuments(wordId));
+
+        return new SearchIndexQueryBuilder(reverseIndexFullReader, reverseIndexPriorityReader,
+                new IndexQuery(sources, priority, fetchSizeMultiplier), wordId);
     }
 
-    public IndexQueryBuilder findFullWord(int wordId, ReverseIndexEntrySourceBehavior behavior) {
-        return new SearchIndexQueryBuilder(reverseIndexFullReader, reverseIndexPriorityReader, new IndexQuery(
-                List.of(reverseIndexFullReader.documents(wordId, behavior))), wordId);
+    public IndexQueryBuilder findFullWord(IndexQueryPriority priority, int wordId, int fetchSizeMultiplier) {
+        var sources = List.of(reverseIndexFullReader.documents(wordId));
+
+        return new SearchIndexQueryBuilder(reverseIndexFullReader, reverseIndexPriorityReader,
+                new IndexQuery(sources, priority, fetchSizeMultiplier), wordId);
     }
 
-    QueryFilterStepIf filterForParams(IndexQueryParams params) {
+    public QueryFilterStepIf filterForParams(IndexQueryParams params) {
         return new ParamMatchingQueryFilter(params, forwardIndexReader);
     }
 

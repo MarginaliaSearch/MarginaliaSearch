@@ -10,7 +10,6 @@ import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile
 import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.index.priority.ReverseIndexPriorityParameters;
-import nu.marginalia.index.query.ReverseIndexEntrySourceBehavior;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
@@ -123,7 +122,7 @@ class ReverseIndexFullConverterTest2 {
 
         for (int i = workSetStart; i < workSetSize; i++) {
 
-            var es = reverseReader.documents(i, ReverseIndexEntrySourceBehavior.DO_PREFER);
+            var es = reverseReader.documents(i);
             LongQueryBuffer lqb = new LongQueryBuffer(100);
             while (es.hasMore()) {
                 lqb.reset();
@@ -148,7 +147,7 @@ class ReverseIndexFullConverterTest2 {
 
         for (int i = workSetStart; i < workSetSize; i++) {
 
-            var es = reverseReader.documents(i, ReverseIndexEntrySourceBehavior.DO_PREFER);
+            var es = reverseReader.documents(i);
             LongQueryBuffer lqb = new LongQueryBuffer(100);
             while (es.hasMore()) {
                 lqb.reset();

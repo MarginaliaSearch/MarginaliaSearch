@@ -3,7 +3,6 @@ package nu.marginalia.index.priority;
 import nu.marginalia.array.buffer.LongQueryBuffer;
 import nu.marginalia.btree.BTreeReader;
 import nu.marginalia.index.query.EntrySource;
-import nu.marginalia.index.query.ReverseIndexEntrySourceBehavior;
 
 import static java.lang.Math.min;
 
@@ -13,12 +12,10 @@ public class ReverseIndexPriorityEntrySource implements EntrySource {
     int pos;
     int endOffset;
 
-    private final ReverseIndexEntrySourceBehavior behavior;
     private final int wordId;
 
-    public ReverseIndexPriorityEntrySource(BTreeReader reader, ReverseIndexEntrySourceBehavior behavior, int wordId) {
+    public ReverseIndexPriorityEntrySource(BTreeReader reader, int wordId) {
         this.reader = reader;
-        this.behavior = behavior;
         this.wordId = wordId;
 
         pos = 0;
@@ -32,13 +29,6 @@ public class ReverseIndexPriorityEntrySource implements EntrySource {
 
     @Override
     public void read(LongQueryBuffer buffer) {
-        if (behavior == ReverseIndexEntrySourceBehavior.DO_NOT_PREFER
-                && buffer.hasRetainedData())
-        {
-            pos = endOffset;
-            return;
-        }
-
         buffer.end = min(buffer.end, endOffset - pos);
         reader.readData(buffer.data, buffer.end, pos);
         pos += buffer.end;

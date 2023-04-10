@@ -17,6 +17,7 @@ import nu.marginalia.index.client.model.query.SearchSpecification;
 import nu.marginalia.array.buffer.LongQueryBuffer;
 import nu.marginalia.index.index.SearchIndex;
 import nu.marginalia.index.index.SearchIndexSearchTerms;
+import nu.marginalia.index.query.IndexQueryPriority;
 import nu.marginalia.index.results.IndexMetadataService;
 import nu.marginalia.index.searchset.SearchSet;
 import nu.marginalia.index.results.IndexResultValuator;
@@ -24,6 +25,7 @@ import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.results.IndexResultDomainDeduplicator;
 import nu.marginalia.index.svc.searchset.SmallSearchSet;
 import nu.marginalia.model.gson.GsonFactory;
+import nu.marginalia.util.QueryParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -152,13 +154,22 @@ public class IndexQueryService {
     private TLongList evaluateSubqueries(SearchParameters params) {
         final TLongList results = new TLongArrayList(params.fetchSize);
 
-        outer:
         // These queries are various term combinations
         for (var subquery : params.subqueries) {
 
+            if (!params.hasTimeLeft()) {
+                logger.info("Query timed out {}, ({}), -{}",
+                        subquery.searchTermsInclude, subquery.searchTermsAdvice, subquery.searchTermsExclude);
+                break;
+            }
+
+            logger.info(queryMarker, "{}", subquery);
+
             final SearchIndexSearchTerms searchTerms = searchTermsSvc.getSearchTerms(subquery);
 
+
             if (searchTerms.isEmpty()) {
+                logger.info(queryMarker, "empty");
                 continue;
             }
 
@@ -167,26 +178,35 @@ public class IndexQueryService {
             // These queries are different indices for one subquery
             List<IndexQuery> queries = params.createIndexQueries(index, searchTerms);
             for (var query : queries) {
-                var resultsForSq = executeQuery(query, params, fetchSizeMultiplier(params, searchTerms));
+
+                if (!params.hasTimeLeft()) {
+                    break;
+                }
+
+                if (omitQuery(params, query, results.size())) {
+                    logger.info(queryMarker, "Omitting {}", query);
+                    continue;
+                }
+
+                var resultsForSq = executeQuery(query, params);
                 logger.info(queryMarker, "{} from {}", resultsForSq.size(), query);
                 results.addAll(resultsForSq);
 
-                if (!params.hasTimeLeft()) {
-                    logger.info("Query timed out {}, ({}), -{}",
-                            subquery.searchTermsInclude, subquery.searchTermsAdvice, subquery.searchTermsExclude);
-                    break outer;
-                }
+
             }
         }
 
         return results;
     }
 
-    private int fetchSizeMultiplier(SearchParameters params, SearchIndexSearchTerms terms) {
-        if (terms.size() == 1) {
-            return 4;
-        }
-        return 1;
+    private boolean omitQuery(SearchParameters params, IndexQuery query, int resultCount) {
+        var priority = query.queryPriority;
+
+        return switch (priority) {
+            case BEST -> false;
+            case GOOD -> resultCount > params.fetchSize / 4;
+            case FALLBACK -> resultCount != 0;
+        };
     }
 
     private void logSearchTerms(SearchSubquery subquery, SearchIndexSearchTerms searchTerms) {
@@ -214,9 +234,9 @@ public class IndexQueryService {
         }
     }
 
-    private TLongArrayList executeQuery(IndexQuery query, SearchParameters params, int fetchSizeMultiplier)
+    private TLongArrayList executeQuery(IndexQuery query, SearchParameters params)
     {
-        final int fetchSize = params.fetchSize * fetchSizeMultiplier;
+        final int fetchSize = params.fetchSize * query.fetchSizeMultiplier;
 
         final TLongArrayList results = new TLongArrayList(fetchSize);
         final LongQueryBuffer buffer = new LongQueryBuffer(fetchSize);

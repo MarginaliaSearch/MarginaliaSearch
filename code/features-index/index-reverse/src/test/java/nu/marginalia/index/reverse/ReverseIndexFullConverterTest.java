@@ -8,7 +8,6 @@ import nu.marginalia.index.journal.model.IndexJournalEntry;
 import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile;
 import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
-import nu.marginalia.index.query.ReverseIndexEntrySourceBehavior;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
@@ -101,22 +100,22 @@ class ReverseIndexFullConverterTest {
         System.out.println(reverseIndexReader.isWordInDoc(keywordLexicon.getReadOnly("2"), 3));
 
         var buffer = new LongQueryBuffer(32);
-        reverseIndexReader.documents(keywordLexicon.getReadOnly("1"), ReverseIndexEntrySourceBehavior.DO_PREFER).read(buffer);
+        reverseIndexReader.documents(keywordLexicon.getReadOnly("1")).read(buffer);
         assertArrayEquals(LongStream.range(1, 17).map(v -> v | (255L << 32)).toArray(), buffer.copyData());
         System.out.println(buffer);
 
         buffer.reset();
-        reverseIndexReader.documents(keywordLexicon.getReadOnly("2"), ReverseIndexEntrySourceBehavior.DO_PREFER).read(buffer);
+        reverseIndexReader.documents(keywordLexicon.getReadOnly("2")).read(buffer);
         assertArrayEquals(LongStream.range(1, 17).map(v -> v*2).map(v -> v | (255L << 32)).toArray(), buffer.copyData());
         System.out.println(buffer);
 
         buffer.reset();
-        reverseIndexReader.documents(keywordLexicon.getReadOnly("3"), ReverseIndexEntrySourceBehavior.DO_PREFER).read(buffer);
+        reverseIndexReader.documents(keywordLexicon.getReadOnly("3")).read(buffer);
         assertArrayEquals(LongStream.range(1, 17).map(v -> v*3).map(v -> v | (255L << 32)).toArray(), buffer.copyData());
         System.out.println(buffer);
 
         buffer.reset();
-        var es = reverseIndexReader.documents(keywordLexicon.getReadOnly("7"), ReverseIndexEntrySourceBehavior.DO_PREFER);
+        var es = reverseIndexReader.documents(keywordLexicon.getReadOnly("7"));
         do {
             buffer.reset();
             es.read(buffer);

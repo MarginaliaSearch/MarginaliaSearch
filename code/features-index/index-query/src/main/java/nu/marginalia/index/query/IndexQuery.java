@@ -10,9 +10,14 @@ import java.util.stream.Collectors;
 public class IndexQuery {
     private final List<EntrySource> sources;
     private final List<QueryFilterStepIf> inclusionFilter = new ArrayList<>(10);
+    public final IndexQueryPriority queryPriority;
 
-    public IndexQuery(List<EntrySource> sources) {
+    public final int fetchSizeMultiplier;
+
+    public IndexQuery(List<EntrySource> sources, IndexQueryPriority priority, int fetchSizeMultiplier) {
         this.sources = sources;
+        this.queryPriority = priority;
+        this.fetchSizeMultiplier = fetchSizeMultiplier;
     }
 
     public void addInclusionFilter(QueryFilterStepIf filter) {

@@ -1,6 +1,5 @@
 package nu.marginalia.index.full;
 
-import nu.marginalia.index.query.ReverseIndexEntrySourceBehavior;
 import nu.marginalia.index.query.ReverseIndexRejectFilter;
 import nu.marginalia.index.query.ReverseIndexRetainFilter;
 import nu.marginalia.array.LongArray;
@@ -51,7 +50,7 @@ public class ReverseIndexFullReader {
         return createReaderNew(offset).findEntry(documentId) >= 0;
     }
 
-    public EntrySource documents(int wordId, ReverseIndexEntrySourceBehavior behavior) {
+    public EntrySource documents(int wordId) {
         if (null == words) {
             logger.warn("Reverse index is not ready, dropping query");
             return new EmptyEntrySource();
@@ -63,7 +62,7 @@ public class ReverseIndexFullReader {
 
         if (offset < 0) return new EmptyEntrySource();
 
-        return new ReverseIndexFullEntrySource(createReaderNew(offset), ReverseIndexFullParameters.ENTRY_SIZE, behavior, wordId);
+        return new ReverseIndexFullEntrySource(createReaderNew(offset), ReverseIndexFullParameters.ENTRY_SIZE, wordId);
     }
 
     public QueryFilterStepIf also(int wordId) {
