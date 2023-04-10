@@ -14,10 +14,8 @@ import nu.marginalia.index.client.model.results.SearchResultItem;
 import nu.marginalia.index.client.model.results.ResultRankingContext;
 import nu.marginalia.index.client.model.results.SearchResultSet;
 import nu.marginalia.index.client.model.query.SearchSpecification;
-import nu.marginalia.array.buffer.LongQueryBuffer;
 import nu.marginalia.index.index.SearchIndex;
 import nu.marginalia.index.index.SearchIndexSearchTerms;
-import nu.marginalia.index.query.IndexQueryPriority;
 import nu.marginalia.index.results.IndexMetadataService;
 import nu.marginalia.index.searchset.SearchSet;
 import nu.marginalia.index.results.IndexResultValuator;
@@ -25,7 +23,6 @@ import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.results.IndexResultDomainDeduplicator;
 import nu.marginalia.index.svc.searchset.SmallSearchSet;
 import nu.marginalia.model.gson.GsonFactory;
-import nu.marginalia.util.QueryParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -49,6 +46,7 @@ public class IndexQueryService {
     private static final Gauge wmsa_edge_index_query_cost = Gauge.build().name("wmsa_edge_index_query_cost").help("-").register();
     private static final Histogram wmsa_edge_index_query_time = Histogram.build().name("wmsa_edge_index_query_time").linearBuckets(25/1000., 25/1000., 15).help("-").register();
 
+    private final IndexQueryExecutor queryExecutor;
     private final Gson gson = GsonFactory.get();
 
     private final SearchIndex index;
@@ -59,10 +57,12 @@ public class IndexQueryService {
 
 
     @Inject
-    public IndexQueryService(SearchIndex index,
+    public IndexQueryService(IndexQueryExecutor queryExecutor,
+                             SearchIndex index,
                              IndexSearchSetsService searchSetsService,
                              IndexMetadataService metadataService,
                              SearchTermsService searchTerms) {
+        this.queryExecutor = queryExecutor;
         this.index = index;
         this.searchSetsService = searchSetsService;
         this.metadataService = metadataService;
@@ -152,7 +152,7 @@ public class IndexQueryService {
     }
 
     private TLongList evaluateSubqueries(SearchParameters params) {
-        final TLongList results = new TLongArrayList(params.fetchSize);
+        final TLongArrayList results = new TLongArrayList(params.fetchSize);
 
         // These queries are various term combinations
         for (var subquery : params.subqueries) {
@@ -188,11 +188,8 @@ public class IndexQueryService {
                     continue;
                 }
 
-                var resultsForSq = executeQuery(query, params);
-                logger.info(queryMarker, "{} from {}", resultsForSq.size(), query);
-                results.addAll(resultsForSq);
-
-
+                int cnt = queryExecutor.executeQuery(query, results, params);
+                logger.info(queryMarker, "{} from {}", cnt, query);
             }
         }
 
@@ -232,30 +229,6 @@ public class IndexQueryService {
         for (int i = 0; i < priority.size(); i++) {
             logger.info(queryMarker, "{} -> {} P", priority.get(i), searchTerms.priority().getInt(i));
         }
-    }
-
-    private TLongArrayList executeQuery(IndexQuery query, SearchParameters params)
-    {
-        final int fetchSize = params.fetchSize * query.fetchSizeMultiplier;
-
-        final TLongArrayList results = new TLongArrayList(fetchSize);
-        final LongQueryBuffer buffer = new LongQueryBuffer(fetchSize);
-
-        while (query.hasMore()
-                && results.size() < fetchSize
-                && params.budget.hasTimeLeft())
-        {
-            buffer.reset();
-            query.getMoreResults(buffer);
-
-            for (int i = 0; i < buffer.size() && results.size() < fetchSize; i++) {
-                results.add(buffer.data[i]);
-            }
-        }
-
-        params.dataCost += query.dataCost();
-
-        return results;
     }
 
     private List<SearchResultItem> calculateResultScores(SearchParameters params, ResultRankingContext rankingContext, TLongList resultIds) {

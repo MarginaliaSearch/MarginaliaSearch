@@ -49,7 +49,7 @@ public class SearchParameters {
         this.limitByDomain = limits.resultsByDomain();
         this.limitTotal = limits.resultsTotal();
 
-        this.consideredUrlIds = new TLongHashSet(fetchSize * 4);
+        this.consideredUrlIds = CachedObjects.getConsideredUrlsMap();
 
         queryParams = new IndexQueryParams(
                 specsSet.quality,
@@ -61,6 +61,7 @@ public class SearchParameters {
 
         rankingParams = specsSet.rankingParams;
     }
+
 
     List<IndexQuery> createIndexQueries(SearchIndex index, SearchIndexSearchTerms terms) {
         return index.createQueries(terms, queryParams, consideredUrlIds::add);
@@ -74,4 +75,12 @@ public class SearchParameters {
         return dataCost;
     }
 
+    private static class CachedObjects {
+        private static final ThreadLocal<TLongHashSet> consideredCache = ThreadLocal.withInitial(() -> new TLongHashSet(4096));
+        private static TLongHashSet getConsideredUrlsMap() {
+            var ret = consideredCache.get();
+            ret.clear();
+            return ret;
+        }
+    }
 }
