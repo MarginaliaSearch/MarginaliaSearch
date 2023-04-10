@@ -8,8 +8,10 @@ import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.index.index.SearchIndex;
 import nu.marginalia.index.svc.SearchTermsService;
+import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.ranking.ResultValuator;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalInt;
 
@@ -74,7 +76,27 @@ public class IndexMetadataService {
             }
         }
 
-        return new QuerySearchTerms(termToId, termIdsList.toIntArray());
+
+        return new QuerySearchTerms(termToId,
+                termIdsList.toIntArray(),
+                getTermCoherences(searchTermVariants));
+    }
+
+
+    private TermCoherences getTermCoherences(List<SearchSubquery> searchTermVariants) {
+        List<int[]> coherences = new ArrayList<>();
+
+        for (var subquery : searchTermVariants) {
+            for (var coh : subquery.searchTermCoherences) {
+                int[] ids = coh.stream().map(searchTermsService::lookUpWord).filter(OptionalInt::isPresent).mapToInt(OptionalInt::getAsInt).toArray();
+                coherences.add(ids);
+            }
+
+            // It's assumed each subquery has identical coherences
+            break;
+        }
+
+        return new TermCoherences(coherences);
     }
 
     public TLongHashSet getResultsWithPriorityTerms(List<SearchSubquery> subqueries, long[] resultsArray) {
@@ -116,21 +138,40 @@ public class IndexMetadataService {
             return termdocToMeta.getOrDefault(termdocKey(termId, docId), 0);
         }
 
+        public boolean testCoherence(long docId, TermCoherences coherences) {
+
+            for (var coherenceSet : coherences.words()) {
+                long overlap = 0xFF_FFFF_FFFF_FFFFL;
+                for (var word : coherenceSet) {
+                    overlap &= WordMetadata.decodePositions(getTermMetadata(word, docId));
+                }
+                if (overlap == 0L) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 
     public static class QuerySearchTerms {
         private final TObjectIntHashMap<String> termToId;
         public final int[] termIdsAll;
 
-        public QuerySearchTerms(TObjectIntHashMap<String> termToId, int[] termIdsAll) {
+        public final TermCoherences coherences;
+
+        public QuerySearchTerms(TObjectIntHashMap<String> termToId, int[] termIdsAll, TermCoherences coherences) {
             this.termToId = termToId;
             this.termIdsAll = termIdsAll;
+            this.coherences = coherences;
         }
 
         public int get(String searchTerm) {
             return termToId.get(searchTerm);
         }
     }
+
+    public record TermCoherences(List<int[]> words) {}
 
     private static long termdocKey(int termId, long docId) {
         return (docId << 32) | termId;

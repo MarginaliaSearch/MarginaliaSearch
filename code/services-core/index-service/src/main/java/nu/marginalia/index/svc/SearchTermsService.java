@@ -11,10 +11,7 @@ import nu.marginalia.lexicon.KeywordLexiconReadOnlyView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.OptionalInt;
+import java.util.*;
 
 @Singleton
 public class SearchTermsService {
@@ -30,34 +27,49 @@ public class SearchTermsService {
         final IntList excludes = new IntArrayList();
         final IntList includes = new IntArrayList();
         final IntList priority = new IntArrayList();
+        final List<IntList> coherences = new ArrayList<>();
 
-        for (var include : request.searchTermsInclude) {
-            var word = lookUpWord(include);
-            if (word.isEmpty()) {
-                logger.debug("Unknown search term: " + include);
+        if (!addEachTerm(includes, request.searchTermsInclude)) {
+            return new SearchIndexSearchTerms();
+        }
+
+        //                  This looks like a bug, but it's not
+        //                    v---                ----v
+        if (!addEachTerm(includes, request.searchTermsAdvice)) {
+            return new SearchIndexSearchTerms();
+        }
+
+        for (var coherence : request.searchTermCoherences) {
+            IntList parts = new IntArrayList(coherence.size());
+
+            if (!addEachTerm(parts, coherence)) {
                 return new SearchIndexSearchTerms();
             }
-            includes.add(word.getAsInt());
+
+            coherences.add(parts);
         }
 
+        // we don't care if we can't find these:
+        addEachTerm(excludes, request.searchTermsExclude);
+        addEachTerm(priority, request.searchTermsPriority);
 
-        for (var advice : request.searchTermsAdvice) {
-            var word = lookUpWord(advice);
-            if (word.isEmpty()) {
-                logger.debug("Unknown search term: " + advice);
-                return new SearchIndexSearchTerms();
+        return new SearchIndexSearchTerms(includes, excludes, priority, coherences);
+    }
+
+    private boolean addEachTerm(IntList ret, List<String> words) {
+        boolean success = true;
+
+        for (var exclude : words) {
+            var word = lookUpWord(exclude);
+
+            if (word.isPresent()) {
+                lookUpWord(exclude).ifPresent(ret::add);
             }
-            includes.add(word.getAsInt());
+            else {
+                success = false;
+            }
         }
-
-        for (var exclude : request.searchTermsExclude) {
-            lookUpWord(exclude).ifPresent(excludes::add);
-        }
-        for (var exclude : request.searchTermsPriority) {
-            lookUpWord(exclude).ifPresent(priority::add);
-        }
-
-        return new SearchIndexSearchTerms(includes, excludes, priority);
+        return success;
     }
 
 

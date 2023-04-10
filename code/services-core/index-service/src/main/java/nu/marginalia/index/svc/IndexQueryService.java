@@ -155,6 +155,7 @@ public class IndexQueryService {
         outer:
         // These queries are various term combinations
         for (var subquery : params.subqueries) {
+
             final SearchIndexSearchTerms searchTerms = searchTermsSvc.getSearchTerms(subquery);
 
             if (searchTerms.isEmpty()) {
@@ -195,16 +196,20 @@ public class IndexQueryService {
         }
 
         var includes = subquery.searchTermsInclude;
+        var advice = subquery.searchTermsAdvice;
         var excludes = subquery.searchTermsExclude;
         var priority = subquery.searchTermsPriority;
 
-        for (int i = 0; i < subquery.searchTermsInclude.size(); i++) {
+        for (int i = 0; i < includes.size(); i++) {
             logger.info(queryMarker, "{} -> {} I", includes.get(i), searchTerms.includes().getInt(i));
         }
-        for (int i = 0; i < subquery.searchTermsExclude.size(); i++) {
+        for (int i = 0; i < advice.size(); i++) {
+            logger.info(queryMarker, "{} -> {} A", advice.get(i), searchTerms.includes().getInt(includes.size() + i));
+        }
+        for (int i = 0; i < excludes.size(); i++) {
             logger.info(queryMarker, "{} -> {} E", excludes.get(i), searchTerms.excludes().getInt(i));
         }
-        for (int i = 0; i < subquery.searchTermsPriority.size(); i++) {
+        for (int i = 0; i < priority.size(); i++) {
             logger.info(queryMarker, "{} -> {} P", priority.get(i), searchTerms.priority().getInt(i));
         }
     }
@@ -247,7 +252,7 @@ public class IndexQueryService {
         return Arrays.stream(resultIds.toArray())
                 .parallel()
                 .mapToObj(evaluator::calculatePreliminaryScore)
-                .filter(score -> !score.getScore().isEmpty())
+                .filter(score -> !score.getScore().isDisqualified())
                 .collect(Collectors.toList());
     }
 

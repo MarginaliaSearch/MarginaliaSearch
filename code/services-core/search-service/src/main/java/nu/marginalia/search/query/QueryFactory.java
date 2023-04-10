@@ -83,8 +83,8 @@ public class QueryFactory {
                 Arrays.asList(termsInclude),
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Collections.emptyList()
-        ));
+                Collections.emptyList(),
+                Collections.emptyList()));
 
         var specs = SearchSpecification.builder()
                 .subqueries(sqs)

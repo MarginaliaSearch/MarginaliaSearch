@@ -117,10 +117,15 @@ public class IndexResultValuator {
 
         double score = searchResultValuator.calculateSearchResultValue(searchResult.keywordScores, 5000, rankingContext);
 
+        boolean disqualified = false;
+
+        if (!termMetadata.testCoherence(urlIdInt, searchTerms.coherences))
+            disqualified = true;
+        else if (maxFlagsCount == 0 && !anyAllSynthetic && maxPositionsSet == 0)
+            disqualified = true;
+
         searchResult.setScore(new SearchResultPreliminaryScore(
-                anyAllSynthetic,
-                maxFlagsCount,
-                maxPositionsSet,
+                disqualified,
                 hasPriorityTerm,
                 score
         ));
@@ -140,6 +145,7 @@ public class IndexResultValuator {
                 return false;
             }
         }
+
         return true;
     }
 

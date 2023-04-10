@@ -9,17 +9,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/** @see SearchSubquery */
 public class QuerySearchTermsAccumulator implements TokenVisitor {
     public List<String> searchTermsExclude = new ArrayList<>();
     public List<String> searchTermsInclude = new ArrayList<>();
     public List<String> searchTermsAdvice = new ArrayList<>();
     public List<String> searchTermsPriority = new ArrayList<>();
+    public List<List<String>> searchTermCoherences = new ArrayList<>();
 
     public String near;
     public String domain;
 
     public SearchSubquery createSubquery() {
-        return new SearchSubquery(searchTermsInclude, searchTermsExclude, searchTermsAdvice, searchTermsPriority);
+        return new SearchSubquery(searchTermsInclude, searchTermsExclude, searchTermsAdvice, searchTermsPriority, searchTermCoherences);
     }
 
     public QuerySearchTermsAccumulator(SearchProfile profile, List<Token> parts) {
@@ -45,11 +47,19 @@ public class QuerySearchTermsAccumulator implements TokenVisitor {
     public void onQuotTerm(Token token) {
         String[] parts = token.str.split("_");
         if (parts.length > 1) {
+            // Prefer that the actual n-gram is present
             searchTermsAdvice.add(token.str);
+
+            // Require that the terms appear in the same sentence
+            searchTermCoherences.add(Arrays.asList(parts));
+
+            // Require that each term exists in the document
+            // (needed for ranking)
             searchTermsInclude.addAll(Arrays.asList(parts));
         }
         else {
             searchTermsInclude.add(token.str);
+
         }
     }
 

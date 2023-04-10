@@ -28,11 +28,9 @@ import spark.Spark;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 
 @Execution(SAME_THREAD)
@@ -91,8 +89,8 @@ public class IndexQueryServiceIntegrationTest {
                         .domains(new ArrayList<>())
                         .searchSetIdentifier(SearchSetIdentifier.NONE)
                         .subqueries(List.of(new SearchSubquery(
-                                List.of("3", "5", "2"), List.of("4"), Collections.emptyList(), Collections.emptyList()
-                        ))).build());
+                                List.of("3", "5", "2"), List.of("4"), Collections.emptyList(), Collections.emptyList(),
+                                Collections.emptyList()))).build());
 
         Assertions.assertArrayEquals(
                 new int[] { 30, 90, 150, 210, 270, 330, 390, 450, 510 },
@@ -123,8 +121,8 @@ public class IndexQueryServiceIntegrationTest {
                         .queryStrategy(QueryStrategy.SENTENCE)
                         .domains(List.of(2))
                         .subqueries(List.of(new SearchSubquery(
-                                List.of("3", "5", "2"), List.of("4"), Collections.emptyList(), Collections.emptyList()
-                        ))).build());
+                                List.of("3", "5", "2"), List.of("4"), Collections.emptyList(), Collections.emptyList(),
+                                Collections.emptyList()))).build());
         Assertions.assertArrayEquals(
                 new int[] { 210, 270 },
                 rsp.results.stream().mapToInt(SearchResultItem::getUrlIdInt).toArray());
@@ -149,8 +147,8 @@ public class IndexQueryServiceIntegrationTest {
                         .searchSetIdentifier(SearchSetIdentifier.NONE)
                         .rankingParams(ResultRankingParameters.sensibleDefaults())
                         .subqueries(List.of(new SearchSubquery(
-                                List.of("4"), Collections.emptyList(), Collections.emptyList(), Collections.emptyList()
-                        ))
+                                List.of("4"), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(),
+                                Collections.emptyList()))
                         ).build());
 
 
@@ -166,8 +164,6 @@ public class IndexQueryServiceIntegrationTest {
         assertEquals(rsp.results.size(), 10);
 
     }
-
-
 
     public void loadData(int id) {
         int[] factors = IntStream

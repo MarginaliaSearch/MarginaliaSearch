@@ -6,9 +6,7 @@ import static java.lang.Boolean.compare;
 import static java.lang.Double.compare;
 
 public record SearchResultPreliminaryScore(
-        boolean anyAllSynthetic,
-        int minNumberOfFlagsSet,
-        int minPositionsSet,
+        boolean disqualified,
         boolean hasPriorityTerm,
         double searchRankingScore)
         implements Comparable<SearchResultPreliminaryScore>
@@ -27,16 +25,7 @@ public record SearchResultPreliminaryScore(
         return PREFER_LOW * compare(searchRankingScore, other.searchRankingScore);
     }
 
-    public boolean isEmpty() {
-        if (minNumberOfFlagsSet > 0)
-            return false;
-
-        if (anyAllSynthetic)
-            return false;
-
-        if (minPositionsSet > 0)
-            return false;
-
-        return true;
+    public boolean isDisqualified() {
+        return disqualified;
     }
 }

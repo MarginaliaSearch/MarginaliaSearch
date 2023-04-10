@@ -110,11 +110,12 @@ public class SearchIndex {
         // that contain pairs of two search terms
         if (orderedIncludes.length > 1) {
             for (int i = 0; i + 1 < orderedIncludes.length; i++) {
-                var remainingWords = Arrays.copyOfRange(orderedIncludes, i+1, orderedIncludes.length);
-                var entrySource = indexReader
-                        .findPriorityWord(orderedIncludes[i])
-                        .alsoPrioAnyOf(remainingWords);
-                queryHeads.add(entrySource);
+                for (int j = i + 1; j < orderedIncludes.length; j++) {
+                    var entrySource = indexReader
+                            .findPriorityWord(orderedIncludes[i])
+                            .alsoPrio(orderedIncludes[j]);
+                    queryHeads.add(entrySource);
+                }
             }
         }
 

@@ -5,9 +5,18 @@ import it.unimi.dsi.fastutil.ints.IntComparator;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 
-public record SearchIndexSearchTerms(IntList includes, IntList excludes, IntList priority) {
+import java.util.Collections;
+import java.util.List;
+
+public record SearchIndexSearchTerms(
+        IntList includes,
+        IntList excludes,
+        IntList priority,
+        List<IntList> coherences
+        )
+{
     public SearchIndexSearchTerms() {
-        this(IntList.of(), IntList.of(), IntList.of());
+        this(IntList.of(), IntList.of(), IntList.of(), Collections.emptyList());
     }
 
     public boolean isEmpty() {
