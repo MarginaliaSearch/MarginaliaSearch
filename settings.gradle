@@ -63,6 +63,8 @@ include 'code:process-models:crawling-model'
 include 'code:tools:term-frequency-extractor'
 include 'code:tools:crawl-job-extractor'
 include 'code:tools:experiment-runner'
+include 'code:tools:website-adjacencies-calculator'
+include 'code:tools:screenshot-capture-tool'
 include 'code:tools:load-test'
 
 include 'third-party:porterstemmer'
@@ -74,7 +76,6 @@ include 'third-party:openzim'
 include 'third-party:count-min-sketch'
 include 'third-party:monkey-patch-opennlp'
 
-include 'tools:screenshot'
 
 dependencyResolutionManagement {
 
@@ -163,8 +164,8 @@ dependencyResolutionManagement {
             library('junit.jupiter.engine','org.junit.jupiter','junit-jupiter-engine').version('')
             library('mockito','org.mockito','mockito-junit-jupiter').version('4.5.1')
 
-            library('selenium.chrome','org.seleniumhq.selenium','selenium-chrome-driver').version('4.5.3')
-            library('selenium.java','org.seleniumhq.selenium','selenium-java').version('4.5.3')
+            library('selenium.chrome','org.seleniumhq.selenium','selenium-chrome-driver').version('4.8.2')
+            library('selenium.java','org.seleniumhq.selenium','selenium-java').version('4.8.2')
 
             library('handlebars','com.github.jknack','handlebars').version('4.3.1')
             library('handlebars.markdown','com.github.jknack','handlebars-markdown').version('4.2.1')

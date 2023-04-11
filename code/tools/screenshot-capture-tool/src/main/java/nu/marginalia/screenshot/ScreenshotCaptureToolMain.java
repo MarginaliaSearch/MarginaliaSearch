@@ -50,9 +50,8 @@ public class ScreenshotCaptureToolMain {
 
     @NotNull
     private static ChromeDriver initChromeDriver() {
-        System.setProperty("webdriver.chrome.driver", "/chromedriver");
+        System.setProperty("webdriver.chrome.driver", "./chromedriver");
         ChromeOptions options = new ChromeOptions();
-        options.setBinary("/usr/bin/chromium-browser");
 
         options.setPageLoadStrategy(PageLoadStrategy.NORMAL);
         options.setPageLoadTimeout(Duration.ofSeconds(30));
@@ -66,7 +65,8 @@ public class ScreenshotCaptureToolMain {
                 "high-dpi-support=0.5",
                 "disable-gpu",
                 "disable-dev-shm-usage",
-                "disable-software-rasterizer");
+                "disable-software-rasterizer"
+                );
 
         return new ChromeDriver(options);
     }

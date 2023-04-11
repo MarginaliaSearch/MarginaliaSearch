@@ -29,7 +29,7 @@ public class LoadTestMain {
 
         for (int i = 0; i < 10000; i++) {
             String uri = "http://127.0.0.1:8080/search?query=%s&profile=corpo".formatted(
-                    Strings.join(pickNCommonWords(4), '+')
+                    Strings.join(pickNCommonWords(3), '+')
             );
 
             HttpRequest req = HttpRequest.newBuilder(new URI(uri))

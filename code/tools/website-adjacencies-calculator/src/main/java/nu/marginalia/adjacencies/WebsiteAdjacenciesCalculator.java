@@ -1,4 +1,4 @@
-package nu.marginalia.browse.experimental;
+package nu.marginalia.adjacencies;
 
 import com.zaxxer.hikari.HikariDataSource;
 import gnu.trove.map.hash.TIntIntHashMap;
@@ -18,9 +18,9 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import static nu.marginalia.browse.experimental.AndCardIntSet.*;
+import static nu.marginalia.adjacencies.AndCardIntSet.*;
 
-public class EdgeDomainLinkConsineSimilarityMain {
+public class WebsiteAdjacenciesCalculator {
     ArrayList<Integer> idsList = new ArrayList<>(100_000);
     ArrayList<AndCardIntSet> itemsList = new ArrayList<>(100_000);
     TIntObjectHashMap<AndCardIntSet> dToSMap = new TIntObjectHashMap<>(100_000);
@@ -31,7 +31,7 @@ public class EdgeDomainLinkConsineSimilarityMain {
 
     private HikariDataSource dataSource;
 
-    public EdgeDomainLinkConsineSimilarityMain(HikariDataSource dataSource) throws SQLException {
+    public WebsiteAdjacenciesCalculator(HikariDataSource dataSource) throws SQLException {
         this.dataSource = dataSource;
 
         Map<Integer, RoaringBitmap> tmpMap = new HashMap<>(100_000);
@@ -140,14 +140,23 @@ public class EdgeDomainLinkConsineSimilarityMain {
 
     public void insertThreadRun() {
         try (var conn = dataSource.getConnection();
+             var s = conn.createStatement();
              var stmt = conn.prepareStatement(
                      """
-                     INSERT INTO EC_DOMAIN_NEIGHBORS_2
+                     INSERT INTO EC_DOMAIN_NEIGHBORS_TMP
                      (DOMAIN_ID, NEIGHBOR_ID, RELATEDNESS)
                      VALUES (?, ?, ?)
-                     ON DUPLICATE KEY UPDATE RELATEDNESS = GREATEST(EC_DOMAIN_NEIGHBORS_2.RELATEDNESS, VALUES(RELATEDNESS))
+                     ON DUPLICATE KEY UPDATE RELATEDNESS = GREATEST(EC_DOMAIN_NEIGHBORS_TMP.RELATEDNESS, VALUES(RELATEDNESS))
                      """)
         ) {
+
+            s.execute("""
+                    DROP TABLE IF EXISTS EC_DOMAIN_NEIGHBORS_TMP
+                    """);
+            s.execute("""
+                    CREATE TABLE EC_DOMAIN_NEIGHBORS_TMP LIKE EC_DOMAIN_NEIGHBORS_2
+                    """);
+
             while (running || !similaritiesLinkedBlockingDeque.isEmpty()) {
                 var item = similaritiesLinkedBlockingDeque.pollFirst(60, TimeUnit.SECONDS);
                 if (item == null) continue;
@@ -160,6 +169,14 @@ public class EdgeDomainLinkConsineSimilarityMain {
                 }
                 stmt.executeBatch();
             }
+
+            s.execute("""
+                    DROP TABLE IF EXISTS EC_DOMAIN_NEIGHBORS_2
+                    """);
+            s.execute("""
+                    RENAME TABLE EC_DOMAIN_NEIGHBORS_TMP TO EC_DOMAIN_NEIGHBORS_2
+                    """);
+
         } catch (SQLException | InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -285,7 +302,7 @@ public class EdgeDomainLinkConsineSimilarityMain {
     public static void main(String[] args) throws SQLException {
         DatabaseModule dm = new DatabaseModule();
 
-        var main = new EdgeDomainLinkConsineSimilarityMain(dm.provideConnection());
+        var main = new WebsiteAdjacenciesCalculator(dm.provideConnection());
         if (args.length == 0) {
             main.loadAll();
         }

@@ -1,4 +1,4 @@
-package nu.marginalia.browse.experimental;
+package nu.marginalia.adjacencies;
 
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
