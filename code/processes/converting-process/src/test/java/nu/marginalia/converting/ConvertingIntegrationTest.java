@@ -5,11 +5,13 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import nu.marginalia.bigstring.BigString;
 import nu.marginalia.converting.model.HtmlStandard;
+import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.processor.DomainProcessor;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.crawl.DomainIndexingState;
+import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.crawl.UrlIndexingState;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,6 +47,19 @@ public class ConvertingIntegrationTest {
         assertEquals(ret.state, DomainIndexingState.ACTIVE);
         assertEquals(ret.domain, new EdgeDomain("memex.marginalia.nu"));
         assertTrue(ret.documents.isEmpty());
+    }
+
+    @Test
+    public void testMemexMarginaliaNuDateInternalConsistency() throws IOException {
+        var ret = domainProcessor.process(readMarginaliaWorkingSet());
+        ret.documents.stream().filter(ProcessedDocument::isProcessedFully).forEach(doc -> {
+            int year = PubDate.fromYearByte(doc.details.metadata.year());
+            Integer yearMeta = doc.details.pubYear;
+            if (yearMeta != null) {
+                assertEquals(year, (int) yearMeta, doc.url.toString());
+            }
+
+        });
     }
 
     @Test

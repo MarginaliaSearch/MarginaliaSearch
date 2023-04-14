@@ -39,20 +39,20 @@ class ResultValuatorTest {
     List<SearchResultKeywordScore> titleOnlyLowCountSet = List.of(
             new SearchResultKeywordScore(0, "bob",
                     wordMetadata(Set.of(1), EnumSet.of(WordFlags.Title)),
-                    docMetadata(0, 2010, 0, 5, EnumSet.noneOf(DocumentFlags.class)),
+                    docMetadata(0, 2010, 5, EnumSet.noneOf(DocumentFlags.class)),
                     false)
     );
     List<SearchResultKeywordScore> highCountNoTitleSet = List.of(
             new SearchResultKeywordScore(0, "bob",
                     wordMetadata(Set.of(1,3,4,6,7,9,10,11,12,14,15,16), EnumSet.of(WordFlags.TfIdfHigh)),
-                    docMetadata(0, 2010, 0, 5, EnumSet.noneOf(DocumentFlags.class)),
+                    docMetadata(0, 2010,  5, EnumSet.noneOf(DocumentFlags.class)),
                     false)
     );
 
     List<SearchResultKeywordScore> highCountSubjectSet = List.of(
             new SearchResultKeywordScore(0, "bob",
                     wordMetadata(Set.of(1,3,4,6,7,9,10,11,12,14,15,16), EnumSet.of(WordFlags.TfIdfHigh, WordFlags.Subjects)),
-                    docMetadata(0, 2010, 0, 5, EnumSet.noneOf(DocumentFlags.class)),
+                    docMetadata(0, 2010, 5, EnumSet.noneOf(DocumentFlags.class)),
                     false)
     );
 
@@ -76,8 +76,8 @@ class ResultValuatorTest {
         System.out.println(highCountSubject);
     }
 
-    private long docMetadata(int topology, int year, int sets, int quality, EnumSet<DocumentFlags> flags) {
-        return new DocumentMetadata(topology, PubDate.toYearByte(year), sets, quality, flags).encode();
+    private long docMetadata(int topology, int year, int quality, EnumSet<DocumentFlags> flags) {
+        return new DocumentMetadata(topology, PubDate.toYearByte(year), quality, flags).encode();
     }
 
     private long wordMetadata(Set<Integer> positions, Set<WordFlags> wordFlags) {

@@ -1,6 +1,7 @@
 package nu.marginalia.model;
 
 
+import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
 import org.junit.jupiter.api.Test;
@@ -73,7 +74,7 @@ class DocumentMetadataTest {
 
     @Test
     public void encRank() {
-        var meta = new DocumentMetadata(0, 5, 22, 8, EnumSet.noneOf(DocumentFlags.class))
+        var meta = new DocumentMetadata(0, 22, 8, EnumSet.noneOf(DocumentFlags.class))
                 .withSize(0xffffffff, 5).encode();
         var enc2 = DocumentMetadata.encodeRank(meta, 83);
 
@@ -81,4 +82,24 @@ class DocumentMetadataTest {
         assertEquals(5, DocumentMetadata.decodeTopology(enc2));
     }
 
+    @Test
+    public void testYear() {
+        for (int year = 1996; year < 2023; year++) {
+            var meta = new DocumentMetadata(~0, new PubDate(null, year).yearByte(), ~0, EnumSet.allOf(DocumentFlags.class))
+                    .withSize(~0, ~0);
+
+            var encoded = DocumentMetadata.encodeRank(meta.encode(), 0);
+
+            assertEquals(year, DocumentMetadata.decodeYear(encoded));
+        }
+
+        for (int year = 1996; year < 2023; year++) {
+            var meta = new DocumentMetadata(0, new PubDate(null, year).yearByte(), 0, EnumSet.noneOf(DocumentFlags.class))
+                    .withSize(0, 0);
+
+            var encoded = DocumentMetadata.encodeRank(meta.encode(), 0);
+
+            assertEquals(year, DocumentMetadata.decodeYear(encoded));
+        }
+    }
 }

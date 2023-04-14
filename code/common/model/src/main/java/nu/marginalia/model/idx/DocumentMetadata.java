@@ -62,8 +62,8 @@ public record DocumentMetadata(int avgSentLength,
         this(defaultValue());
     }
 
-    public DocumentMetadata(int avgSentLength, int year, int sets, int quality, EnumSet<DocumentFlags> flags) {
-        this(avgSentLength, 0, 0, 0, year, sets, quality, encodeFlags(flags));
+    public DocumentMetadata(int avgSentLength, int year, int quality, EnumSet<DocumentFlags> flags) {
+        this(avgSentLength, 0, 0, 0, year, 0, quality, encodeFlags(flags));
     }
 
     public DocumentMetadata withSize(int size, int topology) {

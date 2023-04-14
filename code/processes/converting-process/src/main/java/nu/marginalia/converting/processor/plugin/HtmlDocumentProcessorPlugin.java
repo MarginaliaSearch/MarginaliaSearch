@@ -28,6 +28,8 @@ import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.pubdate.PubDateSniffer;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URISyntaxException;
 import java.nio.file.Path;
@@ -40,6 +42,7 @@ import static nu.marginalia.converting.model.DisqualifiedException.*;
 
 public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin {
 
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     private final double minDocumentQuality;
 
     private final SentenceExtractor sentenceExtractor;
@@ -131,7 +134,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         ret.metadata = new DocumentMetadata(
                 documentLengthLogic.getEncodedAverageLength(dld),
-                url.depth(), pubDate.yearByte(), (int) -ret.quality, documentFlags);
+                pubDate.yearByte(), (int) -ret.quality, documentFlags);
 
         DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, url);
 

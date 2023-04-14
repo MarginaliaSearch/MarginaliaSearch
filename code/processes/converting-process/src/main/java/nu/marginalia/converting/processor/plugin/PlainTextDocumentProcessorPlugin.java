@@ -92,7 +92,7 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
         EnumSet<DocumentFlags> documentFlags = EnumSet.of(DocumentFlags.PlainText);
 
         ret.metadata = new DocumentMetadata(documentLengthLogic.getEncodedAverageLength(dld),
-                url.depth(), pubDate.yearByte(), (int) -ret.quality, documentFlags);
+                pubDate.yearByte(), (int) -ret.quality, documentFlags);
 
         DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, url);
 
