@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.converting.instruction.instructions.DomainLink;
 import nu.marginalia.model.EdgeDomain;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +30,7 @@ public class SqlLoadProcessedDomain {
                             IN ST ENUM('ACTIVE', 'EXHAUSTED', 'SPECIAL', 'SOCIAL_MEDIA', 'BLOCKED', 'REDIR', 'ERROR', 'UNKNOWN'),
                             IN IDX INT,
                             IN DID INT,
-                            IN IP VARCHAR(32))
+                            IN IP VARCHAR(48))
                         BEGIN
                             UPDATE EC_DOMAIN SET INDEX_DATE=NOW(), STATE=ST, DOMAIN_ALIAS=NULL, INDEXED=GREATEST(INDEXED,IDX), IP=IP WHERE ID=DID;
                             DELETE FROM EC_DOMAIN_LINK WHERE SOURCE_DOMAIN_ID=DID;
@@ -53,7 +54,7 @@ public class SqlLoadProcessedDomain {
             initCall.setString(1, state.name());
             initCall.setInt(2, 1 + data.sizeHint / 100);
             initCall.setInt(3, data.getDomainId(domain));
-            initCall.setString(4, ip);
+            initCall.setString(4, StringUtils.truncate(ip, 48));
             int rc = initCall.executeUpdate();
             conn.commit();
             if (rc < 1) {

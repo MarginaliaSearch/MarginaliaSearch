@@ -15,6 +15,9 @@ import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 @Tag("slow")
 @Testcontainers
 class SqlLoadProcessedDomainTest {
@@ -50,6 +53,16 @@ class SqlLoadProcessedDomainTest {
         var loader = new SqlLoadProcessedDomain(dataSource, new SqlLoadDomains(dataSource));
         loader.load(loaderData, new EdgeDomain("www.marginalia.nu"), DomainIndexingState.BLOCKED, "127.0.0.1");
     }
+
+    @Test
+    public void loadProcessedDomaiWithExtremelyLongIP() {
+        var loader = new SqlLoadProcessedDomain(dataSource, new SqlLoadDomains(dataSource));
+
+        String ip = Stream.generate(() -> "127.").limit(1024).collect(Collectors.joining());
+
+        loader.load(loaderData, new EdgeDomain("www.marginalia.nu"), DomainIndexingState.BLOCKED, ip);
+    }
+
     @Test
     public void loadDomainAlias() {
         var loader = new SqlLoadProcessedDomain(dataSource, new SqlLoadDomains(dataSource));
