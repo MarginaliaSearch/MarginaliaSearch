@@ -129,9 +129,7 @@ public class SearchIndex {
 
         // Finally consider terms in the full index, but only do this for sufficiently long queries
         // as short queries tend to be too underspecified to produce anything other than CPU warmth
-        if (orderedIncludes.length >= 2) {
-            queryHeads.add(indexReader.findFullWord(IndexQueryPriority.FALLBACK, orderedIncludes[0], fetchSizeMultiplier));
-        }
+        queryHeads.add(indexReader.findFullWord(IndexQueryPriority.FALLBACK, orderedIncludes[0], fetchSizeMultiplier));
 
         for (var query : queryHeads) {
             if (query == null) {
