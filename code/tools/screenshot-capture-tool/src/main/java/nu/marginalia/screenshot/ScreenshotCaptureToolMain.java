@@ -6,7 +6,9 @@ import nu.marginalia.service.module.DatabaseModule;
 import org.jetbrains.annotations.NotNull;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.PageLoadStrategy;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeDriverService;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +23,10 @@ import java.sql.SQLException;
 import java.time.Duration;
 import java.util.*;
 
+import org.openqa.selenium.support.ui.ExpectedCondition;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.JavascriptExecutor;
+
 public class ScreenshotCaptureToolMain {
 
     private static final Logger logger = LoggerFactory.getLogger(ScreenshotCaptureToolMain.class);
@@ -28,6 +34,8 @@ public class ScreenshotCaptureToolMain {
     public static void main(String[] args) {
         DatabaseModule databaseModule = new DatabaseModule();
         var ds = databaseModule.provideConnection();
+
+        System.setProperty(ChromeDriverService.CHROME_DRIVER_SILENT_OUTPUT_PROPERTY, "true");
 
         ChromeDriver driver = initChromeDriver();
         List<EdgeDomain> crawlQueue = fetchCrawlQueue(ds, 100);
@@ -53,7 +61,7 @@ public class ScreenshotCaptureToolMain {
         System.setProperty("webdriver.chrome.driver", "./chromedriver");
         ChromeOptions options = new ChromeOptions();
 
-        options.setPageLoadStrategy(PageLoadStrategy.NORMAL);
+        options.setPageLoadStrategy(PageLoadStrategy.NONE);
         options.setPageLoadTimeout(Duration.ofSeconds(30));
 
         options.addArguments(
@@ -63,9 +71,11 @@ public class ScreenshotCaptureToolMain {
                 "window-size=1024,768",
                 "force-device-scale-factor=0.5",
                 "high-dpi-support=0.5",
+                "dns-prefetch-disable",
                 "disable-gpu",
                 "disable-dev-shm-usage",
-                "disable-software-rasterizer"
+                "disable-software-rasterizer",
+                "disable-extensions"
                 );
 
         return new ChromeDriver(options);
@@ -104,9 +114,27 @@ public class ScreenshotCaptureToolMain {
         try {
             driver.get(domain.toRootUrl().toString());
 
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+
+            try {
+                wait.until((ExpectedCondition<Boolean>) wd -> {
+                    if (wd instanceof JavascriptExecutor jse) {
+                        return "complete".equals(jse.executeScript("return document.readyState"));
+                    }
+                    return true;
+                });
+            }
+            catch (TimeoutException ex) {
+                logger.info("Wait timed out, forcing window.stop()");
+                driver.executeScript("window.stop()");
+            }
+
+
+
             final byte[] bytes = driver.getScreenshotAs(OutputType.BYTES);
 
             final var img = ImageIO.read(new ByteArrayInputStream(bytes));
+
 
             Path destPath = Files.createTempFile("website-screenshot-", ".webp");
             ImageIO.write(img, "webp", destPath.toFile());
