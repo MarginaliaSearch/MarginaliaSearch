@@ -117,7 +117,7 @@ public class ScreenshotService {
                        style="font-size:32px;fill:#000000;font-family:monospace;"
                        x="320" y="240" dominant-baseline="middle" text-anchor="middle">%s</text>
                   </g>
-                </svg>\n
+                </svg>
                 """.formatted(name);
     }
 }
