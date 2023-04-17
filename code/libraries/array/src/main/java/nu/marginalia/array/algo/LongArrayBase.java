@@ -10,6 +10,12 @@ public interface LongArrayBase extends BulkTransferArray<LongBuffer> {
 
     void set(long pos, long value);
 
+    default void set(long pos, long... value) {
+        for (int i = 0; i < value.length; i++) {
+            set(pos+i, value[i]);
+        }
+    }
+
     long size();
 
     default void fill(long start, long end, long val) {

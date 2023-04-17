@@ -20,6 +20,7 @@ dependencies {
     implementation libs.commons.lang3
     implementation libs.fastutil
     implementation libs.lz4
+    implementation libs.guava
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit

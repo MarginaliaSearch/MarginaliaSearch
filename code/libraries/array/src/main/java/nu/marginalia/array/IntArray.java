@@ -55,6 +55,9 @@ public interface IntArray extends IntArrayBase, IntArrayTransformations, IntArra
         return new ShiftedIntArray(start, end, this);
     }
 
+    /** Translate the range into the equivalent range in the underlying array if they are in the same page */
+    ArrayRangeReference<IntArray> directRangeIfPossible(long start, long end);
+
     void force();
 
 

@@ -1,6 +1,7 @@
 package nu.marginalia.array.delegate;
 
 import com.upserve.uppend.blobs.NativeIO;
+import nu.marginalia.array.ArrayRangeReference;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.algo.LongArraySearch;
 import nu.marginalia.array.algo.SortingContext;
@@ -118,6 +119,9 @@ public class ShiftedLongArray implements LongArray {
         delegate.quickSortN(sz, shift + start, shift + end);
     }
 
+    public ArrayRangeReference<LongArray> directRangeIfPossible(long start, long end) {
+        return delegate.directRangeIfPossible(shift + start, shift + end);
+    }
 
 
     public boolean isSortedN(int sz, long start, long end) {

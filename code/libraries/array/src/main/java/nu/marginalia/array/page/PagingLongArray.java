@@ -1,6 +1,7 @@
 package nu.marginalia.array.page;
 
 import com.upserve.uppend.blobs.NativeIO;
+import nu.marginalia.array.ArrayRangeReference;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.algo.SortingContext;
 import nu.marginalia.array.buffer.LongQueryBuffer;
@@ -505,6 +506,26 @@ public class PagingLongArray extends AbstractPagingArray<LongArrayPage, LongBuff
         }
     }
 
+    public ArrayPartitioningScheme getPartitioningScheme() {
+        return partitioningScheme;
+    }
+
+    public LongArrayPage getPage(int forOffset) {
+        return pages[partitioningScheme.getPage(forOffset)];
+    }
+
+    public ArrayRangeReference<LongArray> directRangeIfPossible(long start, long end) {
+        if (partitioningScheme.isSamePage(start, end)) {
+            return new ArrayRangeReference<>(
+                    pages[partitioningScheme.getPage(start)],
+                    partitioningScheme.getOffset(start),
+                    partitioningScheme.getEndOffset(start, end));
+        }
+        else {
+            return new ArrayRangeReference<>(this, start, end);
+        }
+    }
+
     public long getSize() {
         if (size < 0) {
             throw new UnsupportedOperationException();
@@ -550,5 +571,4 @@ public class PagingLongArray extends AbstractPagingArray<LongArrayPage, LongBuff
             sourceStart+=(endPos - pos);
         }
     }
-
 }

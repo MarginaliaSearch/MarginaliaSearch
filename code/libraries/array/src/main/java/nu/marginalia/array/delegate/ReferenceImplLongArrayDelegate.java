@@ -1,6 +1,7 @@
 package nu.marginalia.array.delegate;
 
 import com.upserve.uppend.blobs.NativeIO;
+import nu.marginalia.array.ArrayRangeReference;
 import nu.marginalia.array.LongArray;
 
 import java.io.IOException;
@@ -38,6 +39,11 @@ public class ReferenceImplLongArrayDelegate implements LongArray {
     @Override
     public void transferFrom(FileChannel source, long sourceStart, long arrayStart, long arrayEnd) throws IOException {
         delegate.transferFrom(source, sourceStart, arrayStart, arrayEnd);
+    }
+
+    @Override
+    public ArrayRangeReference<LongArray> directRangeIfPossible(long start, long end) {
+        return delegate.directRangeIfPossible(start, end);
     }
 
     @Override

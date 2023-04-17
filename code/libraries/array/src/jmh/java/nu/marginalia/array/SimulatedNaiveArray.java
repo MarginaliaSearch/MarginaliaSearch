@@ -20,6 +20,12 @@ public class SimulatedNaiveArray implements LongArray {
             buffers[i] = LongBuffer.allocate(bufferSize);
         }
     }
+
+    @Override
+    public ArrayRangeReference<LongArray> directRangeIfPossible(long start, long end) {
+        return null;
+    }
+
     @Override
     public void force() {}
 

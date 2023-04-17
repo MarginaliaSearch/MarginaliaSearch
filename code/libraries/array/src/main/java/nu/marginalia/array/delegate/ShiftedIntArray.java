@@ -1,6 +1,7 @@
 package nu.marginalia.array.delegate;
 
 import com.upserve.uppend.blobs.NativeIO;
+import nu.marginalia.array.ArrayRangeReference;
 import nu.marginalia.array.IntArray;
 import nu.marginalia.array.algo.SortingContext;
 import nu.marginalia.array.buffer.IntQueryBuffer;
@@ -87,6 +88,10 @@ public class ShiftedIntArray implements IntArray {
     @Override
     public ShiftedIntArray range(long start, long end) {
         return new ShiftedIntArray(shift + start,  shift+end, delegate);
+    }
+
+    public ArrayRangeReference<IntArray> directRangeIfPossible(long start, long end) {
+        return delegate.directRangeIfPossible(shift + start, shift + end);
     }
 
     public int[] toArray() {
