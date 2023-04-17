@@ -16,12 +16,18 @@ import org.slf4j.LoggerFactory;
 import javax.imageio.ImageIO;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -38,17 +44,34 @@ public class ScreenshotCaptureToolMain {
         System.setProperty(ChromeDriverService.CHROME_DRIVER_SILENT_OUTPUT_PROPERTY, "true");
 
         ChromeDriver driver = initChromeDriver();
-        List<EdgeDomain> crawlQueue = fetchCrawlQueue(ds, 100);
+        List<EdgeDomain> crawlQueue = fetchCrawlQueue(ds, 1000);
+
+        HttpClient httpClient = HttpClient.newHttpClient();
 
         try (Connection conn = ds.getConnection()) {
-            for (var domain : crawlQueue) {
+
+
+            logger.info("Probing domains");
+            var ret = crawlQueue.parallelStream().collect(Collectors.partitioningBy(domain -> probeUrl(httpClient, domain)));
+
+            var badDomains = ret.getOrDefault(Boolean.FALSE, Collections.emptyList());
+            var goodDomains = ret.getOrDefault(Boolean.TRUE, Collections.emptyList());
+
+            logger.info("Result: {} good domains, {} bad domains", goodDomains.size(), badDomains.size());
+
+            badDomains.forEach(domain -> flagDomainAsFetched(conn, domain));
+
+            for (var domain : goodDomains) {
                 logger.info("Fetching {}", domain);
 
-                fetchDomain(driver, domain)
-                        .ifPresentOrElse(
-                                (path) -> uploadScreenshot(conn, domain, path),
-                                () -> flagDomainAsFetched(conn, domain));
+                var filePath = fetchDomain(driver, domain);
+                if (filePath != null) {
+                    uploadScreenshot(conn, domain, filePath);
+                } else {
+                    flagDomainAsFetched(conn, domain);
+                }
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
@@ -110,7 +133,24 @@ public class ScreenshotCaptureToolMain {
         flagDomainAsFetched(conn, domain);
     }
 
-    private static Optional<Path> fetchDomain(ChromeDriver driver, EdgeDomain domain) {
+    private static boolean probeUrl(HttpClient httpClient, EdgeDomain domain) {
+        try {
+            var request = HttpRequest.newBuilder()
+                    .uri(new URI(domain.toRootUrl().toString()))
+                    .timeout(Duration.ofSeconds(5))
+                    .method("HEAD", HttpRequest.BodyPublishers.noBody())
+                    .header("user-agent", "search.marginialia.nu")
+                    .build();
+
+            var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            return response.statusCode() < 400;
+        } catch (Exception ex) {
+            return false;
+        }
+
+    }
+    private static Path fetchDomain(ChromeDriver driver, EdgeDomain domain) {
         try {
             driver.get(domain.toRootUrl().toString());
 
@@ -140,16 +180,16 @@ public class ScreenshotCaptureToolMain {
             ImageIO.write(img, "webp", destPath.toFile());
 
             // If the screenshot is very small by size, it's very likely not particularly interesting to look at
-            if (Files.size(destPath) < 2500) {
+            if (Files.size(destPath) < 3500) {
                 Files.delete(destPath);
-                return Optional.empty();
+                return null;
             }
 
-            return Optional.of(destPath);
+            return destPath;
         }
         catch (Exception ex) {
             ex.printStackTrace();
-            return Optional.empty();
+            return null;
         }
     }
 
