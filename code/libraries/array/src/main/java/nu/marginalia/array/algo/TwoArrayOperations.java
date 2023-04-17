@@ -6,10 +6,8 @@ import java.util.function.LongBinaryOperator;
 
 
 /** Functions for operating on pairs of arrays.
- *
  */
 public class TwoArrayOperations {
-
 
     /**
      * Merge two sorted arrays into a third array, removing duplicates.
@@ -34,6 +32,12 @@ public class TwoArrayOperations {
 
     /**
      * Merge two sorted arrays into a third array, removing duplicates.
+     * <p>
+     * The operation is performed with a step size of 2. For each pair of values,
+     * only the first is considered to signify a key. The second value is retained along
+     * with the first.  In the case of a duplicate, the value associated with array 'a'
+     * is retained, the other is discarded.
+     *
      */
     public static void mergeArrays2(LongArray out, LongArray a, LongArray b,
                                     long outStart, long outEnd,
@@ -101,6 +105,64 @@ public class TwoArrayOperations {
             }
         }
 
+    }
+
+    private static long mergeArraysDirect(LongArray out,
+                                          LongArray a, LongArray b,
+                                          long outStart,
+                                          long aStart, long aEnd,
+                                          long bStart, long bEnd) {
+        long aPos = aStart;
+        long bPos = bStart;
+        long outPos = outStart;
+
+        long lastValue = 0;
+
+        while (aPos < aEnd && bPos < bEnd) {
+            final long aVal = a.get(aPos);
+            final long bVal = b.get(bPos);
+            final long setVal;
+
+            if (aVal < bVal) {
+                setVal = aVal;
+                aPos++;
+            } else if (bVal < aVal) {
+                setVal = bVal;
+                bPos++;
+            } else {
+                setVal = aVal;
+                aPos++;
+                bPos++;
+            }
+
+            if (outPos == outStart || setVal != lastValue) {
+                out.set(outPos++, setVal);
+            }
+
+            lastValue = setVal;
+        }
+
+        while (aPos < aEnd) {
+            long val = a.get(aPos++);
+
+            if (val != lastValue || outPos == outStart) {
+                out.set(outPos++, val);
+            }
+
+            lastValue = val;
+        }
+
+        while (bPos < bEnd) {
+            long val = b.get(bPos++);
+
+            if (val != lastValue || outPos == outStart) {
+                out.set(outPos++, val);
+            }
+
+            lastValue = val;
+        }
+
+        return outPos - outStart;
     }
 
     /**
@@ -172,64 +234,6 @@ public class TwoArrayOperations {
         }
     }
 
-    private static long mergeArraysDirect(LongArray out,
-                                          LongArray a, LongArray b,
-                                          long outStart,
-                                          long aStart, long aEnd,
-                                          long bStart, long bEnd) {
-        long aPos = aStart;
-        long bPos = bStart;
-        long outPos = outStart;
-
-        long lastValue = 0;
-
-        while (aPos < aEnd && bPos < bEnd) {
-            final long aVal = a.get(aPos);
-            final long bVal = b.get(bPos);
-            final long setVal;
-
-            if (aVal < bVal) {
-                setVal = aVal;
-                aPos++;
-            } else if (bVal < aVal) {
-                setVal = bVal;
-                bPos++;
-            } else {
-                setVal = aVal;
-                aPos++;
-                bPos++;
-            }
-
-            if (outPos == outStart || setVal != lastValue) {
-                out.set(outPos++, setVal);
-            }
-
-            lastValue = setVal;
-        }
-
-        while (aPos < aEnd) {
-            long val = a.get(aPos++);
-
-            if (val != lastValue || outPos == outStart) {
-                out.set(outPos++, val);
-            }
-
-            lastValue = val;
-        }
-
-        while (bPos < bEnd) {
-            long val = b.get(bPos++);
-
-            if (val != lastValue || outPos == outStart) {
-                out.set(outPos++, val);
-            }
-
-            lastValue = val;
-        }
-
-        return outPos - outStart;
-    }
-
 
 
     /**
@@ -257,7 +261,7 @@ public class TwoArrayOperations {
     }
 
     /**
-     * Count the number of distinct elements in two sorted arrays.
+     * Count the number of distinct elements in two sorted arrays with step size 2. Only consider the first element of each pair.
      */
     public static long countDistinctElementsN(int stepSize, LongArray a, LongArray b, long aStart, long aEnd, long bStart, long bEnd) {
         // Ensure that the arrays are sorted
