@@ -41,6 +41,30 @@ public interface LongArraySort extends LongArrayBase {
         return pos;
     }
 
+    /** For the given range of sorted values, retain only the first occurrence of each value. */
+    default long keepUniqueN(int sz, long start, long end) {
+        if (start == end)
+            return start;
+
+        assert (end - start) % sz == 0;
+
+        long val = get(start);
+        long pos = start + sz;
+        for (long i = start + sz; i < end; i++) {
+            long next = get(i);
+            if (next != val) {
+                set(pos, next);
+                for (int j = 1; j < sz; j++) {
+                    set(pos + j, get(i + j));
+                }
+                pos+=sz;
+            }
+            val = next;
+        }
+
+        return pos;
+    }
+
     default void sortLargeSpan(SortingContext ctx, long start, long end) throws IOException {
         long size = end - start;
 
