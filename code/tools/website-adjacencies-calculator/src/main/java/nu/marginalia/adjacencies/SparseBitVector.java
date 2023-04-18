@@ -7,34 +7,38 @@ import gnu.trove.set.hash.TIntHashSet;
 import org.roaringbitmap.RoaringBitmap;
 
 
-public class AndCardIntSet  {
+/** This is a special implementation of a sparse bit vector for consine similarity calculations
+ * <br>
+ * It makes assumptions about the nature of the data that are not generally valid.
+ */
+public class SparseBitVector {
     final TIntArrayList backingList;
     long hash;
 
-    public AndCardIntSet() {
+    public SparseBitVector() {
         backingList = new TIntArrayList(16);
         backingList.sort();
     }
 
-    public static AndCardIntSet of(int... list) {
+    public static SparseBitVector of(int... list) {
         var set = new TIntHashSet(list);
         TIntArrayList lst = new TIntArrayList(set);
         lst.sort();
 
-        return new AndCardIntSet(lst);
+        return new SparseBitVector(lst);
     }
 
-    public static AndCardIntSet of(RoaringBitmap bmap) {
+    public static SparseBitVector of(RoaringBitmap bmap) {
 
         TIntArrayList lst = new TIntArrayList(bmap.getCardinality());
 
         lst.addAll(bmap.toArray());
 
-        return new AndCardIntSet(lst);
+        return new SparseBitVector(lst);
     }
 
 
-    private AndCardIntSet(TIntArrayList list) {
+    private SparseBitVector(TIntArrayList list) {
         backingList = list;
         hash = 0;
 
@@ -77,16 +81,26 @@ public class AndCardIntSet  {
         return backingList.size();
     }
 
-    public static int andCardinality(AndCardIntSet a, AndCardIntSet b) {
+    public static int andCardinality(SparseBitVector a, SparseBitVector b) {
 
         if (!testHash(a,b)) {
             return 0;
         }
 
+        int aCard = a.getCardinality();
+        int bCard = b.getCardinality();
+
+        if (aCard / bCard > 2) {
+            return andBigSmall(a, b);
+        }
+        else if (bCard / aCard > 2) {
+            return andBigSmall(b, a);
+        }
+
         return andLinear(a,b);
     }
 
-    private static int andLinearSmall(AndCardIntSet a, AndCardIntSet b) {
+    private static int andLinearSmall(SparseBitVector a, SparseBitVector b) {
         int sum = 0;
         for (int i = 0; i < a.getCardinality(); i++) {
             for (int j = 0; j < b.getCardinality(); j++) {
@@ -97,7 +111,7 @@ public class AndCardIntSet  {
         return sum;
     }
 
-    private static int andLinear(AndCardIntSet a, AndCardIntSet b) {
+    private static int andLinear(SparseBitVector a, SparseBitVector b) {
 
         int i = 0, j = 0;
         int card = 0;
@@ -118,7 +132,7 @@ public class AndCardIntSet  {
 
     }
 
-    private static boolean testHash(AndCardIntSet a, AndCardIntSet b) {
+    private static boolean testHash(SparseBitVector a, SparseBitVector b) {
         return (a.hash & b.hash) != 0;
     }
 
@@ -126,7 +140,7 @@ public class AndCardIntSet  {
         return getCardinality() >= val;
     }
 
-    public static AndCardIntSet and(AndCardIntSet a, AndCardIntSet b) {
+    public static SparseBitVector and(SparseBitVector a, SparseBitVector b) {
         int i = 0;
         int j = 0;
 
@@ -143,17 +157,29 @@ public class AndCardIntSet  {
             }
         }
 
-        return new AndCardIntSet(andVals);
+        return new SparseBitVector(andVals);
     }
 
-    public static double weightedProduct(float[] weights, AndCardIntSet a, AndCardIntSet b) {
+    public static double weightedProduct(float[] weights, SparseBitVector a, SparseBitVector b) {
         int i = 0;
         int j = 0;
 
         double sum = 0;
+        int aCard = a.getCardinality();
+        int bCard = b.getCardinality();
 
-        if (a.getCardinality() + b.getCardinality() < 10) {
+        if (aCard == 0 || bCard == 0) return 0.;
+
+
+        if (aCard + bCard < 10) {
             return weightedProductSmall(weights, a, b);
+        }
+
+        if (aCard / bCard > 2) {
+            return weightedProductBigSmall(weights, a, b);
+        }
+        else if (bCard / aCard > 2) {
+            return weightedProductBigSmall(weights, b, a);
         }
 
         do {
@@ -165,13 +191,14 @@ public class AndCardIntSet  {
                 i++;
                 j++;
             }
+
         } while (i < a.getCardinality() && j < b.getCardinality());
 
         return sum;
     }
 
 
-    private static double weightedProductSmall(float[] weights, AndCardIntSet a, AndCardIntSet b) {
+    private static double weightedProductSmall(float[] weights, SparseBitVector a, SparseBitVector b) {
         double sum = 0;
 
         for (int i = 0; i < a.getCardinality(); i++) {
@@ -185,6 +212,41 @@ public class AndCardIntSet  {
 
         return sum;
     }
+
+    private static int andBigSmall(SparseBitVector aBig, SparseBitVector bSmall) {
+        int cnt = 0;
+
+        final var smallList = bSmall.backingList;
+        final var bigList = aBig.backingList;
+
+        for (int i = 0; i < smallList.size(); i++) {
+            int v = smallList.getQuick(i);
+
+            if (bigList.binarySearch(v) >= 0) {
+                cnt++;
+            }
+        }
+
+        return cnt;
+    }
+
+    private static double weightedProductBigSmall(float[] weights, SparseBitVector aBig, SparseBitVector bSmall) {
+        double sum = 0;
+
+        final var smallList = bSmall.backingList;
+        final var bigList = aBig.backingList;
+
+        for (int i = 0; i < smallList.size(); i++) {
+            int v = smallList.getQuick(i);
+
+            if (bigList.binarySearch(v) >= 0) {
+                sum+=weights[v];
+            }
+        }
+
+        return sum;
+    }
+
     public double mulAndSum(float[] weights) {
         double sum = 0;
         for (int i = 0; i < backingList.size(); i++) {
