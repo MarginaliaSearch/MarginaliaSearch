@@ -3,6 +3,8 @@ package nu.marginalia.pubdate.heuristic;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.annotations.SerializedName;
+import lombok.ToString;
 import nu.marginalia.converting.model.HtmlStandard;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.pubdate.PubDateHeuristic;
@@ -11,6 +13,9 @@ import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.pubdate.PubDateEffortLevel;
 import org.jsoup.nodes.Document;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public class PubDateHeuristicJSONLD implements PubDateHeuristic {
@@ -29,17 +34,16 @@ public class PubDateHeuristicJSONLD implements PubDateHeuristic {
         return Optional.empty();
     }
 
-
-    private static class JsonModel {
-        String datePublished;
-    }
-    private static Gson gson = new GsonBuilder().create();
+    private static final Gson gson = new GsonBuilder().create();
 
     public Optional<String> parseLdJson(String content) {
         try {
             var model = gson.fromJson(content, JsonModel.class);
-            return Optional.ofNullable(model)
-                    .map(m -> m.datePublished);
+            if (model == null)
+                return Optional.empty();
+
+            return Optional.ofNullable(model.getDatePublished());
+
         }
         catch (JsonSyntaxException ex) {
             return Optional.empty();
@@ -47,3 +51,41 @@ public class PubDateHeuristicJSONLD implements PubDateHeuristic {
     }
 
 }
+
+class JsonModel {
+    public String getDatePublished() {
+        if (datePublished != null)
+            return datePublished;
+
+        for (var item : Objects.requireNonNullElse(graph,
+                Collections.<JsonModelGraphItem>emptyList()))
+        {
+            if (!item.isRelevant())
+                continue;
+
+            if (item.datePublished != null)
+                return item.datePublished;
+        }
+
+        return datePublished;
+    }
+
+    String datePublished;
+
+    @SerializedName("@graph")
+    List<JsonModelGraphItem> graph;
+}
+
+@ToString
+class JsonModelGraphItem {
+    @SerializedName("@type")
+    public String type;
+
+    public String datePublished;
+
+    public boolean isRelevant() {
+        return "NewsArticle".equalsIgnoreCase(type)
+                || "Article".equalsIgnoreCase(type);
+    }
+}
+

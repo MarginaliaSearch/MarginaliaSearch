@@ -180,6 +180,20 @@ class PubDateSnifferTest {
     }
 
     @Test
+    public void testLDWithGraph() throws URISyntaxException {
+        var ret = dateSniffer.getPubDate("",
+                new EdgeUrl("https://www.example.com/"),
+                Jsoup.parse("""
+                        <!doctype html>
+                        <html>
+                        <script type="application/ld+json" class="aioseop-schema">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://socialnomics.net/#organization","url":"https://socialnomics.net/","name":"Socialnomics","sameAs":[]},{"@type":"WebSite","@id":"https://socialnomics.net/#website","url":"https://socialnomics.net/","name":"Socialnomics","publisher":{"@id":"https://socialnomics.net/#organization"}},{"@type":"WebPage","@id":"https://socialnomics.net/2016/12/27/3-reasons-why-you-should-adopt-java-based-technology-for-your-business/#webpage","url":"https://socialnomics.net/2016/12/27/3-reasons-why-you-should-adopt-java-based-technology-for-your-business/","inLanguage":"en-US","name":"3 Reasons Why You Should Adopt Java-based Technology For Your Business","isPartOf":{"@id":"https://socialnomics.net/#website"},"breadcrumb":{"@id":"https://socialnomics.net/2016/12/27/3-reasons-why-you-should-adopt-java-based-technology-for-your-business/#breadcrumblist"},"datePublished":"2016-12-27T21:01:36-06:00","dateModified":"2016-12-22T21:02:32-06:00"},{"@type":"Article","@id":"https://socialnomics.net/2016/12/27/3-reasons-why-you-should-adopt-java-based-technology-for-your-business/#article","isPartOf":{"@id":"https://socialnomics.net/2016/12/27/3-reasons-why-you-should-adopt-java-based-technology-for-your-business/#webpage"},"author":{"@id":"https://socialnomics.net/author/rahis-saifi/#author"},"headline":"3 Reasons Why You Should Adopt Java-based Technology For Your Business","datePublished":"2016-12-27T21:01:36-06:00","dateModified":"2016-12-22T21:02:32-06:00","commentCount":0,"mainEntityOfPage":{"@id":"https://socialnomics.net/2016/12/27/3-reasons-why-you-should-adopt-java-based-technology-for-your-business/#webpage"},"publisher":{"@id":"https://socialnomics.net/#organization"},"articleSection":"Business, business, java, Java Developers, programming languages"},{"@type":"Person","@id":"https://socialnomics.net/author/rahis-saifi/#author","name":"Rahis Saifi","sameAs":["https://www.facebook.com/RahisSaifiOfficial","https://www.twitter.com/57rahis"],"image":{"@type":"ImageObject","@id":"https://socialnomics.net/#personlogo","url":"https://secure.gravatar.com/avatar/e67f630f0b8bc87e59e111d5e955961d?s=96&d=mm&r=g","width":96,"height":96,"caption":"Rahis Saifi"}},{"@type":"BreadcrumbList","@id":"https://socialnomics.net/2016/12/27/3-reasons-why-you-should-adopt-java-based-technology-for-your-business/#breadcrumblist","itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"WebPage","@id":"https://socialnomics.net/","url":"https://socialnomics.net/","name":"Socialnomics Blog"}},{"@type":"ListItem","position":2,"item":{"@type":"WebPage","@id":"https://socialnomics.net/2016/12/27/3-reasons-why-you-should-adopt-java-based-technology-for-your-business/","url":"https://socialnomics.net/2016/12/27/3-reasons-why-you-should-adopt-java-based-technology-for-your-business/","name":"3 Reasons Why You Should Adopt Java-based Technology For Your Business"}}]}]}</script>
+                        """), HtmlStandard.UNKNOWN, true);
+
+        assertFalse(ret.isEmpty());
+        assertEquals("2016-12-27", ret.dateIso8601());
+    }
+
+    @Test
     public void testPath() throws URISyntaxException {
         var ret = dateSniffer.getPubDate("",
                 new EdgeUrl("https://www.example.com/articles/2022/04/how-to-detect-dates"),

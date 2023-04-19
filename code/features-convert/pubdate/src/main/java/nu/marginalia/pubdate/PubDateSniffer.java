@@ -14,12 +14,13 @@ public class PubDateSniffer {
     private final List<PubDateHeuristic> heuristics = new ArrayList<>();
 
     public PubDateSniffer() {
-        heuristics.add(new PubDateHeuristicHtml5ItempropDateTag());
-        heuristics.add(new PubDateHeuristicHtml5ArticleDateTag());
         heuristics.add(new PubDateHeuristicJSONLD());
         heuristics.add(new PubDateHeuristicMicrodata());
         heuristics.add(new PubDateHeuristicOpenGraph());
         heuristics.add(new PubDateHeuristicRDFaTag());
+
+        heuristics.add(new PubDateHeuristicHtml5ItempropDateTag());
+        heuristics.add(new PubDateHeuristicHtml5ArticleDateTag());
 
         // The more questionable heuristics should be kept below this line
         heuristics.add(new PubDateHeuristicUrlPatternPass1());
