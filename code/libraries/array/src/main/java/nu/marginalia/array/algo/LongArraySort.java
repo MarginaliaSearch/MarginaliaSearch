@@ -27,6 +27,8 @@ public interface LongArraySort extends LongArrayBase {
         if (start == end)
             return start;
 
+        assert isSorted(start, end);
+
         long val = get(start);
         long pos = start + 1;
         for (long i = start + 1; i < end; i++) {
@@ -46,11 +48,12 @@ public interface LongArraySort extends LongArrayBase {
         if (start == end)
             return start;
 
+        assert isSortedN(sz, start, end);
         assert (end - start) % sz == 0;
 
         long val = get(start);
         long pos = start + sz;
-        for (long i = start + sz; i < end; i++) {
+        for (long i = start + sz; i < end; i+=sz) {
             long next = get(i);
             if (next != val) {
                 set(pos, next);
