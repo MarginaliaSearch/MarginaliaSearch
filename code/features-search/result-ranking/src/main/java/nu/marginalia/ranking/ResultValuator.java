@@ -1,7 +1,9 @@
 package nu.marginalia.ranking;
 
 import nu.marginalia.index.client.model.results.ResultRankingContext;
+import nu.marginalia.index.client.model.results.ResultRankingParameters;
 import nu.marginalia.index.client.model.results.SearchResultKeywordScore;
+import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.ranking.factors.*;
 
@@ -52,21 +54,30 @@ public class ResultValuator {
         int asl = DocumentMetadata.decodeAvgSentenceLength(documentMetadata);
         int quality = DocumentMetadata.decodeQuality(documentMetadata);
         int topology = DocumentMetadata.decodeTopology(documentMetadata);
+        int year = DocumentMetadata.decodeYear(documentMetadata);
 
         double averageSentenceLengthPenalty = (asl >= rankingParams.shortSentenceThreshold ? 0 : -rankingParams.shortSentencePenalty);
 
-        double qualityPenalty = -quality * rankingParams.qualityPenalty;
-        double rankingBonus = (255. - rank) * rankingParams.domainRankBonus;
-        double topologyBonus = Math.log(1 + topology);
-        double documentLengthPenalty = length > rankingParams.shortDocumentThreshold ? 0 : -rankingParams.shortDocumentPenalty;
+        final double qualityPenalty = -quality * rankingParams.qualityPenalty;
+        final double rankingBonus = (255. - rank) * rankingParams.domainRankBonus;
+        final double topologyBonus = Math.log(1 + topology);
+        final double documentLengthPenalty = length > rankingParams.shortDocumentThreshold ? 0 : -rankingParams.shortDocumentPenalty;
+        final double temporalBias;
 
-
+        if (rankingParams.temporalBias == ResultRankingParameters.TemporalBias.RECENT) {
+            temporalBias = - Math.abs(year - PubDate.MAX_YEAR) * rankingParams.temporalBiasWeight;
+        } else if (rankingParams.temporalBias == ResultRankingParameters.TemporalBias.OLD) {
+            temporalBias = - Math.abs(year - PubDate.MIN_YEAR) * rankingParams.temporalBiasWeight;
+        } else {
+            temporalBias = 0;
+        }
 
         double overallPart = averageSentenceLengthPenalty
                            + documentLengthPenalty
                            + qualityPenalty
                            + rankingBonus
                            + topologyBonus
+                           + temporalBias
                            + priorityTermBonus.calculate(scores);
 
         for (int set = 0; set <= sets; set++) {

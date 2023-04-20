@@ -33,6 +33,9 @@ public class ResultRankingParameters {
     public double bm25PrioWeight;
     public double tcfWeight;
 
+    public TemporalBias temporalBias;
+    public double temporalBiasWeight;
+
     public static ResultRankingParameters sensibleDefaults() {
         return builder()
                 .fullParams(new Bm25Parameters(1.2, 0.5))
@@ -46,6 +49,12 @@ public class ResultRankingParameters {
                 .bm25FullWeight(1.)
                 .bm25PrioWeight(1.)
                 .tcfWeight(2.)
+                .temporalBias(TemporalBias.NONE)
+                .temporalBiasWeight(1. / (10.))
                 .build();
     }
+
+    public enum TemporalBias {
+        RECENT, OLD, NONE
+    };
 }
