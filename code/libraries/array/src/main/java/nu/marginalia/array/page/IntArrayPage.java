@@ -1,6 +1,7 @@
 package nu.marginalia.array.page;
 
 import com.upserve.uppend.blobs.NativeIO;
+import nu.marginalia.array.ArrayRangeReference;
 import nu.marginalia.array.IntArray;
 
 import java.io.IOException;
@@ -84,6 +85,11 @@ public class IntArrayPage implements PartitionPage, IntArray {
         try (var channel = (FileChannel) Files.newByteChannel(filename, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
             write(channel);
         }
+    }
+
+    @Override
+    public ArrayRangeReference<IntArray> directRangeIfPossible(long start, long end) {
+        return new ArrayRangeReference<>(this, start, end);
     }
 
     @Override

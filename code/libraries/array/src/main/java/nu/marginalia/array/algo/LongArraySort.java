@@ -1,7 +1,6 @@
 package nu.marginalia.array.algo;
 
 import java.io.IOException;
-import java.nio.LongBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,6 +20,52 @@ public interface LongArraySort extends LongArrayBase {
         }
 
         return true;
+    }
+
+    /** For the given range of sorted values, retain only the first occurrence of each value. */
+    default long keepUnique(long start, long end) {
+        if (start == end)
+            return start;
+
+        assert isSorted(start, end);
+
+        long val = get(start);
+        long pos = start + 1;
+        for (long i = start + 1; i < end; i++) {
+            long next = get(i);
+            if (next != val) {
+                set(pos, next);
+                pos++;
+            }
+            val = next;
+        }
+
+        return pos;
+    }
+
+    /** For the given range of sorted values, retain only the first occurrence of each value. */
+    default long keepUniqueN(int sz, long start, long end) {
+        if (start == end)
+            return start;
+
+        assert isSortedN(sz, start, end);
+        assert (end - start) % sz == 0;
+
+        long val = get(start);
+        long pos = start + sz;
+        for (long i = start + sz; i < end; i+=sz) {
+            long next = get(i);
+            if (next != val) {
+                set(pos, next);
+                for (int j = 1; j < sz; j++) {
+                    set(pos + j, get(i + j));
+                }
+                pos+=sz;
+            }
+            val = next;
+        }
+
+        return pos;
     }
 
     default void sortLargeSpan(SortingContext ctx, long start, long end) throws IOException {
@@ -67,47 +112,11 @@ public interface LongArraySort extends LongArrayBase {
 
 
     default void insertionSort(long start, long end) {
-        assert end - start < Integer.MAX_VALUE;
-
-        int n = (int) (end - start);
-
-        if (n <= 1) {
-            return;
-        }
-
-        for (int i = 1; i < n; i++) {
-            long key = get(start + i);
-
-            int j = i - 1;
-            while (j >= 0 && get(start + j) > key) {
-                swap( start + j, start + (long)(j+1));
-                j--;
-            }
-            set(start + j+1, key);
-        }
+        SortAlgoInsertionSort._insertionSort(this, start, end);
     }
 
     default void insertionSortN(int sz, long start, long end) {
-        assert end - start < Integer.MAX_VALUE;
-
-        int span = (int) (end - start);
-
-        assert (span % sz) == 0;
-
-        if (span <= sz) {
-            return;
-        }
-
-        for (int i = 1; i < span / sz; i++) {
-            long key = get(start + (long) i * sz);
-
-            int j = i - 1;
-            while (j >= 0 && get(start + (long)sz*j) > key) {
-                swapn(sz, start + (long)sz*j, start + (long)sz*(j+1));
-                j--;
-            }
-            set(start + (long) (j+1) * sz, key);
-        }
+        SortAlgoInsertionSort._insertionSortN(this, sz, start, end);
     }
 
 
@@ -116,7 +125,7 @@ public interface LongArraySort extends LongArrayBase {
             insertionSort(start, end);
         }
         else {
-            _quickSortLH(start, end - 1);
+            SortAlgoQuickSort._quickSortLH(this, start, end - 1);
         }
     }
 
@@ -126,108 +135,7 @@ public interface LongArraySort extends LongArrayBase {
         if (end == start)
             return;
 
-        _quickSortLHN(wordSize, start, end - wordSize);
-    }
-
-    default void _quickSortLHN(int wordSize, long low, long highInclusive) {
-        if (low < 0 || highInclusive < 0 || low >= highInclusive)
-            return;
-
-        if (highInclusive - low < 32L*wordSize) {
-            insertionSortN(wordSize, low, highInclusive + wordSize);
-            return;
-        }
-
-        long p = _quickSortPartitionN(wordSize, low, highInclusive);
-
-        _quickSortLHN(wordSize, low, p);
-        _quickSortLHN(wordSize, p + wordSize, highInclusive);
-    }
-
-
-    default void _quickSortLH(long low, long highInclusive) {
-
-        if (low < 0 || highInclusive < 0 || low >= highInclusive)
-            return;
-
-        if (highInclusive - low < 32) {
-            insertionSort(low, highInclusive + 1);
-            return;
-        }
-
-        long p = _quickSortPartition(low, highInclusive);
-
-        _quickSortLH(low, p);
-        _quickSortLH(p + 1, highInclusive);
-    }
-
-
-    default long _quickSortPartition(long low, long high) {
-
-        long pivotPoint = ((low + high) / (2L));
-        long pivot = get(pivotPoint);
-
-        long i = low - 1;
-        long j = high + 1;
-
-        for (;;) {
-            do {
-                i+=1;
-            } while (get(i) < pivot);
-
-            do {
-                j-=1;
-            }
-            while (get(j) > pivot);
-
-            if (i >= j) return j;
-            else swap(i, j);
-        }
-    }
-
-    default long _quickSortPartitionN(int wordSize, long low, long high) {
-
-        long pivotPoint = ((low + high) / (2L*wordSize)) * wordSize;
-        long pivot = get(pivotPoint);
-
-        long i = low - wordSize;
-        long j = high + wordSize;
-
-        for (;;) {
-            do {
-                i+=wordSize;
-            }
-            while (get(i) < pivot);
-
-            do {
-                j-=wordSize;
-            }
-            while (get(j) > pivot);
-
-            if (i >= j) return j;
-            else swapn(wordSize, i, j);
-        }
-    }
-
-    default void _mergeSortN(int wordSize, long start, int length, LongBuffer workBuffer) throws IOException {
-        int width = Math.min(Integer.highestOneBit(length), Integer.highestOneBit(workBuffer.capacity()));
-
-        // Do in-memory sorting up until internalSortLimit first
-        for (int i = 0; i < length; i += width) {
-            quickSortN(wordSize, start + i, start + i + Math.min(width, length-i));
-        }
-
-        // Then finish with merge sort
-        for (; width < length; width*=2) {
-
-            for (int i = 0; i < length; i += 2*width) {
-                _mergeN(wordSize, start, i, Math.min(i+width, length), Math.min(i+2*width, length), workBuffer);
-            }
-
-            workBuffer.clear();
-            set(start, start + length, workBuffer, 0);
-        }
-
+        SortAlgoQuickSort._quickSortLHN(this, wordSize, start, end - wordSize);
     }
 
     default void mergeSortN(int wordSize, long start, long end, Path tmpDir) throws IOException {
@@ -238,7 +146,7 @@ public interface LongArraySort extends LongArrayBase {
         try (var channel = (FileChannel) Files.newByteChannel(tmpFile, StandardOpenOption.WRITE, StandardOpenOption.READ)) {
             var workBuffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, 8L * length).asLongBuffer();
 
-            _mergeSortN(wordSize, start, length, workBuffer);
+            SortAlgoMergeSort._mergeSortN(this, wordSize, start, length, workBuffer);
         }
         finally {
             Files.delete(tmpFile);
@@ -253,7 +161,7 @@ public interface LongArraySort extends LongArrayBase {
         try (var channel = (FileChannel) Files.newByteChannel(tmpFile, StandardOpenOption.WRITE, StandardOpenOption.READ)) {
             var workBuffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, 8L * length).asLongBuffer();
 
-            _mergeSort(start, length, workBuffer);
+            SortAlgoMergeSort._mergeSort(this, start, length, workBuffer);
         }
         finally {
             Files.delete(tmpFile);
@@ -261,65 +169,4 @@ public interface LongArraySort extends LongArrayBase {
 
     }
 
-    default void _mergeSort(long start, int length, LongBuffer workBuffer) {
-        int width = Math.min(Integer.highestOneBit(length), 1 << 16);
-
-        // Do in-memory sorting up until internalSortLimit first
-        for (int i = 0; i < length; i += width) {
-            quickSort(start + i, start + i + Math.min(width, length-i));
-        }
-
-        // Then finish with merge sort
-        for (width = 1; width < length; width*=2) {
-
-            for (int i = 0; i < length; i += 2*width) {
-                _merge(start, i, Math.min(i+width, length), Math.min(i+2*width, length), workBuffer);
-            }
-
-            workBuffer.clear();
-            set(start, start + length, workBuffer, 0);
-        }
-
-    }
-
-
-    default void _mergeN(int wordSize, long offset, int left, int right, int end, LongBuffer workBuffer) {
-        long idxL = left;
-        long idxR = right;
-
-        for (int putPos = left; putPos < end; putPos+= wordSize) {
-
-            if (idxL < right && (idxR >= end || get(offset+idxL) < get(offset+idxR))) {
-                workBuffer.put(putPos, get(offset+idxL));
-                for (int s = 1; s < wordSize; s++) {
-                    workBuffer.put(putPos + s, get(offset + idxL + s));
-                }
-                idxL+= wordSize;
-            }
-            else {
-                workBuffer.put(putPos, get(offset+idxR));
-                for (int s = 1; s < wordSize; s++) {
-                    workBuffer.put(putPos + s, get(offset + idxR + s));
-                }
-                idxR+= wordSize;
-            }
-        }
-    }
-
-
-    default void _merge(long offset, int left, int right, int end, LongBuffer workBuffer) {
-        long idxL = left;
-        long idxR = right;
-
-        for (int putPos = left; putPos < end; putPos++) {
-            if (idxL < right && (idxR >= end || get(offset+idxL) < get(offset+idxR))) {
-                workBuffer.put(putPos, get(offset+idxL));
-                idxL++;
-            }
-            else {
-                workBuffer.put(putPos, get(offset+idxR));
-                idxR++;
-            }
-        }
-    }
 }

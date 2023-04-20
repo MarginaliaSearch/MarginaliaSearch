@@ -29,6 +29,13 @@ public class BTreeReader {
 
     }
 
+    LongArray data() {
+        return data;
+    }
+    LongArray index() {
+        return index;
+    }
+
     public static BTreeHeader readHeader(LongArray file, long fileOffset) {
         return new BTreeHeader(file, fileOffset);
     }
@@ -213,6 +220,7 @@ public class BTreeReader {
             layer --;
             boundary = index.get(searchStart + nextLayerOffset);
             offset = ctx.pageSize() * (offset + nextLayerOffset);
+
 
             return true;
         }

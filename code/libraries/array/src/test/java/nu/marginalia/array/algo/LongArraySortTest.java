@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Random;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -43,6 +43,7 @@ class LongArraySortTest {
         paged.transformEach(0, size, (i, old) -> values[(int) i]);
         shifted.transformEach(0, size, (i, old) -> values[(int) i]);
     }
+
 
     interface SortOperation {
         void sort(LongArray array, long start, long end) throws IOException;
@@ -78,7 +79,7 @@ class LongArraySortTest {
         ArrayUtils.shuffle(values);
 
         long sentinelA = 0xFEEDBEEFL;
-        long sentinelB = 0xB000B000;
+        long sentinelB = 0xB000B000L;
 
         int start = 6;
         for (int end = start + 1; end < values.length - 1; end+=97) {
@@ -152,6 +153,12 @@ class LongArraySortTest {
     @Test
     void quickSortN() {
         basic.quickSortN(2, 0, size);
+
+        if (!basic.isSortedN(2, 0, size)) {
+            for (int i = 0; i < size; i+=2) {
+                System.out.println(basic.get(i));
+            }
+        }
         assertTrue(basic.isSortedN(2, 0, size));
 
         paged.quickSortN(2, 0, size);
@@ -183,5 +190,78 @@ class LongArraySortTest {
 
         shifted.mergeSort(0, size, Path.of("/tmp"));
         assertTrue(shifted.isSorted(0, size));
+    }
+
+
+    @Test
+    void keepUniqueFuzz() {
+        var array = LongArray.allocate(1000);
+        var random = new Random();
+        array.transformEach(0, 1000, (i, val) -> random.nextInt(0, 2000));
+        array.quickSort(0, 1000);
+        Set<Long> expectedValues = new HashSet<>();
+        array.forEach(0, 1000, (i, v) -> expectedValues.add(v));
+
+        var endUniqueRange = array.keepUnique(0, 1000);
+        Set<Long> actualValues = new HashSet<>();
+        array.forEach(0, endUniqueRange, (i, v) -> actualValues.add(v));
+
+        assertEquals(expectedValues, actualValues);
+        assertTrue(array.isSorted(0, endUniqueRange));
+    }
+
+    @Test
+    void keepUniqueEmpty() {
+        // Test empty case
+        var array = LongArray.allocate(10);
+        assertEquals(0, array.keepUnique(0, 0));
+    }
+
+    @Test
+    void keepUniqueEmptyBoundaryDuplicationCase() {
+        // Test empty case
+        var array = LongArray.allocate(10);
+
+        array.set(0, 1);
+        array.set(1, 1);
+        array.set(2, 2);
+        array.set(3, 2);
+
+        assertEquals(2, array.keepUnique(0, 4));
+        assertEquals(1, array.get(0));
+        assertEquals(2, array.get(1));
+    }
+
+    @Test
+    void keepUniqueN() {
+        var array = LongArray.allocate(2000);
+        var random = new Random();
+
+        final Map<Long, Integer> expected = new HashMap<>();
+        final Map<Long, Integer> actual = new HashMap<>();
+
+        for (int i = 0; i < 2000; i+=2) {
+            long key = random.nextInt(0, 2000);
+
+            array.set(i, key);
+            array.set(i + 1 , i);
+        }
+
+        // The data needs to be sorted
+        array.quickSortN(2, 0, 2000);
+
+        // Grab only the first value for each key
+        for (int i = 0; i < 2000; i+=2) {
+            expected.putIfAbsent(array.get(i), (int) array.get(i + 1));
+        }
+
+        long end = array.keepUniqueN(2, 0, 2000);
+
+        // Don't do putIfAbsent here
+        for (int i = 0; i < end; i+=2) {
+            actual.put(array.get(i), (int) array.get(i + 1));
+        }
+
+        assertEquals(expected, actual);
     }
 }

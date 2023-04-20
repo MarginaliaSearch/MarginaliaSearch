@@ -9,6 +9,11 @@ public interface IntArrayBase extends BulkTransferArray<IntBuffer> {
     int get(long pos);
 
     void set(long pos, int value);
+    default void set(long pos, int... value) {
+        for (int i = 0; i < value.length; i++) {
+            set(pos+i, value[i]);
+        }
+    }
 
     long size();
 

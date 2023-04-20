@@ -1,8 +1,8 @@
 package nu.marginalia.array.page;
 
 import com.upserve.uppend.blobs.NativeIO;
+import nu.marginalia.array.ArrayRangeReference;
 import nu.marginalia.array.LongArray;
-import nu.marginalia.array.trace.ArrayTrace;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -96,6 +96,9 @@ public class LongArrayPage implements PartitionPage, LongArray {
         if (byteBuffer instanceof MappedByteBuffer mb) {
             mb.force();
         }
+    }
+    public ArrayRangeReference<LongArray> directRangeIfPossible(long start, long end) {
+        return new ArrayRangeReference<>(this, start, end);
     }
 
     @Override
