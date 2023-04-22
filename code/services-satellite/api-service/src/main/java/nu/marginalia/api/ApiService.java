@@ -56,7 +56,10 @@ public class ApiService extends Service {
             rsp.redirect("https://memex.marginalia.nu/projects/edge/api.gmi");
             return "";
         });
+
+        Spark.get("/public/api/:key", (rq, rsp) -> licenseService.getLicense(rq), gson::toJson);
         Spark.get("/public/api/:key/", (rq, rsp) -> licenseService.getLicense(rq), gson::toJson);
+
         Spark.get("/public/api/:key/search/*", this::search, gson::toJson);
     }
 
