@@ -111,7 +111,7 @@ public class RecipeDetector {
         termValues.put(ps.stemWord("cucumbers"), 0.025);
         termValues.put(ps.stemWord("eggplants"), 0.025);
         termValues.put(ps.stemWord("broccoli"), 0.025);
-        termValues.put(ps.stemWord("kale"), 0.05);
+        termValues.put(ps.stemWord("kale"), 0.025);
 
         termValues.put(ps.stemWord("jalapeno"), 0.025);
         termValues.put(ps.stemWord("habanero"), 0.025);
