@@ -46,7 +46,7 @@ services:
     image: "marginalia.nu/api-service"
     container_name: "api-service"
     ports:
-      - "127.0.0.1:5004:5025"
+      - "127.0.0.1:5004:5004"
       - "127.0.0.1:4004:5000"
       - "127.0.0.1:7004:4000"
     depends_on:
