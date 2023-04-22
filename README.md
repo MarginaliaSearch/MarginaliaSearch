@@ -14,6 +14,14 @@ These are also necessary to run the tests.
 
 To set up a local test environment, follow the instructions in [📄 run/readme.md](run/readme.md)!
 
+## Hardware Requirements
+
+A production-like environment requires at least 128 Gb of RAM and ideally 2 Tb+ of enterprise 
+grade SSD storage, as well as some additional terabytes of slower harddrives for storing crawl
+data. It can be made to run on smaller hardware by limiting size of the index. 
+
+A local developer's deployment is possible with much smaller hardware (and index size). 
+
 ## Project Structure
 
 [📁 code/](code/) - The Source Code. See [📄 code/readme.md](code/readme.md) for a further breakdown of the structure and architecture.
