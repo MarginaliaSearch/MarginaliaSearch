@@ -24,4 +24,10 @@ public class RateLimiterService {
         return RateLimiter.custom(license.rate);
     }
 
+    public void clear() {
+        rateLimiters.clear();
+    }
+    public int size() {
+        return rateLimiters.size();
+    }
 }

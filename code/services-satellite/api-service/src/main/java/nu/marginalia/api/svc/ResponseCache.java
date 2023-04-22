@@ -39,4 +39,8 @@ public class ResponseCache {
     private String getCacheKey(ApiLicense license, String queryString, String queryParams) {
         return license.getKey() + ":" +  queryString + ":" + queryParams;
     }
+
+    public void cleanUp() {
+        cache.cleanUp();
+    }
 }

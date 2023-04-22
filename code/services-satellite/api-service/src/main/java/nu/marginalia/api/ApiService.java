@@ -57,8 +57,8 @@ public class ApiService extends Service {
             return "";
         });
 
-        Spark.get("/public/api/:key", (rq, rsp) -> licenseService.getLicense(rq), gson::toJson);
-        Spark.get("/public/api/:key/", (rq, rsp) -> licenseService.getLicense(rq), gson::toJson);
+        Spark.get("/public/api/:key", (rq, rsp) -> licenseService.getLicense(rq.params("key")), gson::toJson);
+        Spark.get("/public/api/:key/", (rq, rsp) -> licenseService.getLicense(rq.params("key")), gson::toJson);
 
         Spark.get("/public/api/:key/search/*", this::search, gson::toJson);
     }
@@ -70,7 +70,7 @@ public class ApiService extends Service {
             Spark.halt(400, "Bad request");
         }
 
-        var license = licenseService.getLicense(request);
+        var license = licenseService.getLicense(request.params("key"));
 
         var cachedResponse = responseCache.getResults(license, args[0], request.queryString());
         if (cachedResponse.isPresent()) {

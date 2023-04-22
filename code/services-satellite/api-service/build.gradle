@@ -22,6 +22,7 @@ tasks.distZip.enabled = false
 apply from: "$rootProject.projectDir/docker-service.gradle"
 
 dependencies {
+    implementation project(':code:common:db')
     implementation project(':code:common:model')
     implementation project(':code:common:service')
     implementation project(':code:common:config')
@@ -48,6 +49,9 @@ dependencies {
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
+    testImplementation platform('org.testcontainers:testcontainers-bom:1.17.4')
+    testImplementation 'org.testcontainers:mariadb:1.17.4'
+    testImplementation 'org.testcontainers:junit-jupiter:1.17.4'
 }
 
 test {

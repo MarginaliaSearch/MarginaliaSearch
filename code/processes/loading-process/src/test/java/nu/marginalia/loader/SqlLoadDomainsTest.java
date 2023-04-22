@@ -25,7 +25,7 @@ class SqlLoadDomainsTest {
     @Test
     public void loadDomain() {
 
-        try (var dataSource = DbTestUtil.getConnection(mariaDBContainer.getJdbcUrl());) {
+        try (var dataSource = DbTestUtil.getConnection(mariaDBContainer.getJdbcUrl())) {
             var loadDomains = new SqlLoadDomains(dataSource);
             var loaderData = new LoaderData(10);
 

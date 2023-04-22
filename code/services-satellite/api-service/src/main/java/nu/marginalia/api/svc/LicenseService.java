@@ -27,9 +27,7 @@ public class LicenseService {
     }
 
     @NotNull
-    public ApiLicense getLicense(Request request) {
-        final String key = request.params("key");
-
+    public ApiLicense getLicense(String key) {
         if (Strings.isNullOrEmpty(key)) {
             Spark.halt(400, "Bad key");
         }
