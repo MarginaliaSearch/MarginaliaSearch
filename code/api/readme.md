@@ -6,3 +6,5 @@ are necessary for speaking to them. They each implement the abstract client clas
 
 All that is necessary is to `@Inject` them into the constructor and then 
 requests can be sent. 
+
+**Note:** If you are looking for the public API, it's handled by the api service in [services-satellite/api-service](../services-satellite/api-service).
