@@ -40,7 +40,7 @@ public class SqlLoadUrls {
             int cnt = 0; int batchOffset = 0;
             for (var url : urls) {
                 if (url.path.length() >= 255) {
-                    logger.warn("Skipping bad URL {}", url);
+                    logger.debug("Skipping bad URL {}", url);
                     continue;
                 }
                 affectedDomains.add(url.domain);
