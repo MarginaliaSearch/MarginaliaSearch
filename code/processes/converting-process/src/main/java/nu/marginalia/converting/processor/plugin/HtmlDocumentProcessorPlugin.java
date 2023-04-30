@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import nu.marginalia.converting.processor.MetaRobotsTag;
 import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
+import nu.marginalia.converting.processor.logic.links.FileLinks;
 import nu.marginalia.converting.processor.logic.links.LinkProcessor;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.model.crawl.HtmlFeature;
@@ -243,54 +244,20 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
                     .ifPresent(lp::acceptFeed);
         }
 
-        createFileLinkKeywords(words, lp, domain);
-        createLinkKeywords(words, lp);
+        words.addAllSyntheticTerms(FileLinks.createFileLinkKeywords(lp, domain));
+        words.addAllSyntheticTerms(FileLinks.createFileEndingKeywords(doc));
+        words.addAllSyntheticTerms(createLinkKeywords(lp));
     }
 
-    // If a document links to a file on the same server, and that file has
-    // a salient file ending, then add the filename as a keyword so that it can
-    // be found
-    private void createFileLinkKeywords(DocumentKeywordsBuilder words, LinkProcessor lp, EdgeDomain domain) {
-        Set<String> fileKeywords = new HashSet<>(100);
-        for (var link : lp.getNonIndexableUrls()) {
-
-            if (!domain.hasSameTopDomain(link.domain)) {
-                continue;
-            }
-
-            synthesizeFilenameKeyword(fileKeywords, link);
-
-        }
-
-        words.addAllSyntheticTerms(fileKeywords);
-    }
-
-    private void synthesizeFilenameKeyword(Set<String> fileKeywords, EdgeUrl link) {
-
-        Path pFilename = Path.of(link.path.toLowerCase()).getFileName();
-
-        if (pFilename == null) return;
-
-        String filename = pFilename.toString();
-        if (filename.length() > 32
-                || filename.endsWith(".xml")
-                || filename.endsWith(".jpg")
-                || filename.endsWith(".png")
-                || filename.endsWith(".pdf")
-                || filename.endsWith(".gif"))
-            return;
-
-        fileKeywords.add(filename.replace(' ', '_'));
-    }
-
-    private void createLinkKeywords(DocumentKeywordsBuilder words, LinkProcessor lp) {
+    private Set<String> createLinkKeywords(LinkProcessor lp) {
         final Set<String> linkTerms = new HashSet<>();
 
         for (var fd : lp.getForeignDomains()) {
             linkTerms.add("links:"+fd.toString().toLowerCase());
             linkTerms.add("links:"+fd.getDomain().toLowerCase());
         }
-        words.addAllSyntheticTerms(linkTerms);
+
+        return linkTerms;
     }
 
     private HtmlStandard getHtmlStandard(Document doc) {
