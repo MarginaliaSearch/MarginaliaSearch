@@ -95,6 +95,25 @@ public class QueryFactoryTest {
         assertEquals(2000, size.value());
     }
 
+    @Test
+    public void testQuotedStopwords() {
+        {
+            // the is a stopword, so it should generate an ngram search term
+            var specs = parseAndGetSpecs("\"the shining\"");
+            assertEquals(List.of("the_shining"), specs.subqueries.iterator().next().searchTermsInclude);
+            assertEquals(List.of(), specs.subqueries.iterator().next().searchTermsAdvice);
+            assertEquals(List.of(), specs.subqueries.iterator().next().searchTermCoherences);
+        }
+
+        {
+            // tde isn't a stopword, so we should get the normal behavior
+            var specs = parseAndGetSpecs("\"tde shining\"");
+            assertEquals(List.of("tde", "shining"), specs.subqueries.iterator().next().searchTermsInclude);
+            assertEquals(List.of("tde_shining"), specs.subqueries.iterator().next().searchTermsAdvice);
+            assertEquals(List.of(List.of("tde", "shining")), specs.subqueries.iterator().next().searchTermCoherences);
+        }
+    }
+
 
     @Test
     public void testParseQualityEq() {

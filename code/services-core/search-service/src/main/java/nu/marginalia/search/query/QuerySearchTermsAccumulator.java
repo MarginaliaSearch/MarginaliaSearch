@@ -1,6 +1,7 @@
 package nu.marginalia.search.query;
 
 import nu.marginalia.index.client.model.query.SearchSubquery;
+import nu.marginalia.language.WordPatterns;
 import nu.marginalia.query_parser.token.Token;
 import nu.marginalia.query_parser.token.TokenVisitor;
 import nu.marginalia.search.model.SearchProfile;
@@ -46,7 +47,15 @@ public class QuerySearchTermsAccumulator implements TokenVisitor {
     @Override
     public void onQuotTerm(Token token) {
         String[] parts = token.str.split("_");
-        if (parts.length > 1) {
+
+        // HACK (2023-05-02 vlofgren)
+        //
+        // Checking for stop words here is a bit of a stop-gap to fix the issue of stop words being
+        // required in the query (which is a problem because they are not indexed). How to do this
+        // in a clean way is a bit of an open problem that may not get resolved until query-parsing is
+        // improved.
+
+        if (parts.length > 1 && !anyPartIsStopWord(parts)) {
             // Prefer that the actual n-gram is present
             searchTermsAdvice.add(token.str);
 
@@ -61,6 +70,15 @@ public class QuerySearchTermsAccumulator implements TokenVisitor {
             searchTermsInclude.add(token.str);
 
         }
+    }
+
+    private boolean anyPartIsStopWord(String[] parts) {
+        for (String part : parts) {
+            if (WordPatterns.isStopWord(part)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
