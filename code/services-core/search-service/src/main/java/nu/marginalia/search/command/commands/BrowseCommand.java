@@ -23,6 +23,8 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+import static java.util.Collections.shuffle;
+
 public class BrowseCommand implements SearchCommandInterface {
     private final DbBrowseDomainsRandom randomDomains;
     private final DbBrowseDomainsSimilarCosine similarDomains;
@@ -110,7 +112,8 @@ public class BrowseCommand implements SearchCommandInterface {
             neighbors.removeIf(browseResultCleaner.shouldRemoveResultPredicate());
         }
 
-        neighbors.sort(Comparator.comparing(BrowseResult::relatedness).reversed());
+        // shuffle the items for a less repetitive experience
+        shuffle(neighbors);
 
         return new BrowseResultSet(neighbors);
     }
