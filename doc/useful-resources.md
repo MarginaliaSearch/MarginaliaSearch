@@ -14,3 +14,10 @@ still very enlightening.
 ## Older Resources
 
 [Information Retreival](https://www.dcs.gla.ac.uk/Keith/Preface.html), Rijsbergen (1979)
+
+## Interesting papers
+
+[Are You Sure You Want to Use MMAP in Your
+Database Management System?](http://www.cidrdb.org/cidr2022/papers/p13-crotty.pdf)
+
+https://research.cs.wisc.edu/wind/Publications/fast20-wiser.pdf
