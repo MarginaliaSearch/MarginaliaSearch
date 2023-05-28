@@ -174,6 +174,6 @@ public class IndexMetadataService {
     public record TermCoherences(List<int[]> words) {}
 
     private static long termdocKey(int termId, long docId) {
-        return (docId << 32) | termId;
+        return (docId << 32) | Integer.toUnsignedLong(termId);
     }
 }
