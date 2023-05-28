@@ -163,7 +163,24 @@ public class PagingIntArray extends AbstractPagingArray<IntArrayPage, IntBuffer>
 
     @Override
     public void forEach(long start, long end, LongIntConsumer consumer) {
-        delegateToEachPage(start, end, (page, s, e) -> page.forEach(s, e, consumer));
+        assert end >= start;
+
+        int page = partitioningScheme.getPage(start);
+
+        long endPos;
+
+        for (long pos = start; pos < end; pos = endPos) {
+            endPos = partitioningScheme.getPageEnd(pos, end);
+
+            int sOff = partitioningScheme.getOffset(pos);
+            int eOff = partitioningScheme.getEndOffset(start, endPos);
+
+            var p = pages[page++];
+
+            for (long i = sOff; i < eOff; i++) {
+                consumer.accept(i + (pos - sOff), p.get(i));
+            }
+        }
     }
 
     @Override
@@ -182,12 +199,46 @@ public class PagingIntArray extends AbstractPagingArray<IntArrayPage, IntBuffer>
 
     @Override
     public void transformEach(long start, long end, IntTransformer transformer) {
-        delegateToEachPage(start, end, (page, s, e) -> page.transformEach(s, e, transformer));
+        assert end >= start;
+
+        int page = partitioningScheme.getPage(start);
+
+        long endPos;
+
+        for (long pos = start; pos < end; pos = endPos) {
+            endPos = partitioningScheme.getPageEnd(pos, end);
+
+            int sOff = partitioningScheme.getOffset(pos);
+            int eOff = partitioningScheme.getEndOffset(start, endPos);
+
+            var p = pages[page++];
+
+            for (long i = sOff; i < eOff; i++) {
+                p.set(i, transformer.transform(i + (pos - sOff), p.get(i)));
+            }
+        }
     }
 
     @Override
     public void transformEachIO(long start, long end, IntIOTransformer transformer) throws IOException {
-        delegateToEachPageIO(start, end, (page, s, e) -> page.transformEachIO(s, e, transformer));
+        assert end >= start;
+
+        int page = partitioningScheme.getPage(start);
+
+        long endPos;
+
+        for (long pos = start; pos < end; pos = endPos) {
+            endPos = partitioningScheme.getPageEnd(pos, end);
+
+            int sOff = partitioningScheme.getOffset(pos);
+            int eOff = partitioningScheme.getEndOffset(start, endPos);
+
+            var p = pages[page++];
+
+            for (long i = sOff; i < eOff; i++) {
+                p.set(i, transformer.transform(i + (pos - sOff), p.get(i)));
+            }
+        }
     }
 
     @Override

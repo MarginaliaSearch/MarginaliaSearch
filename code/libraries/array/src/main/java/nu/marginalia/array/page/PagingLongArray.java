@@ -100,7 +100,7 @@ public class PagingLongArray extends AbstractPagingArray<LongArrayPage, LongBuff
         int offset = partitioningScheme.getOffset(pos);
 
         try {
-            return pages[page].get(partitioningScheme.getOffset(pos));
+            return pages[page].get(offset);
         }
         catch (IndexOutOfBoundsException ex) {
             throw new IndexOutOfBoundsException("Index out of bounds for " + pos + " => (" + page + ":" + offset + ")");
@@ -156,8 +156,25 @@ public class PagingLongArray extends AbstractPagingArray<LongArrayPage, LongBuff
     }
 
     @Override
-    public void forEach(long start, long end, LongLongConsumer transformer) {
-        delegateToEachPage(start, end, (page, s, e) -> page.forEach(s, e, transformer));
+    public void forEach(long start, long end, LongLongConsumer consumer) {
+        assert end >= start;
+
+        int page = partitioningScheme.getPage(start);
+
+        long endPos;
+
+        for (long pos = start; pos < end; pos = endPos) {
+            endPos = partitioningScheme.getPageEnd(pos, end);
+
+            int sOff = partitioningScheme.getOffset(pos);
+            int eOff = partitioningScheme.getEndOffset(start, endPos);
+
+            var p = pages[page++];
+
+            for (long i = sOff; i < eOff; i++) {
+                consumer.accept(i + (pos - sOff), p.get(i));
+            }
+        }
     }
 
     @Override
@@ -176,12 +193,46 @@ public class PagingLongArray extends AbstractPagingArray<LongArrayPage, LongBuff
 
     @Override
     public void transformEach(long start, long end, LongTransformer transformer) {
-        delegateToEachPage(start, end, (page, s, e) -> page.transformEach(s, e, transformer));
+        assert end >= start;
+
+        int page = partitioningScheme.getPage(start);
+
+        long endPos;
+
+        for (long pos = start; pos < end; pos = endPos) {
+            endPos = partitioningScheme.getPageEnd(pos, end);
+
+            int sOff = partitioningScheme.getOffset(pos);
+            int eOff = partitioningScheme.getEndOffset(start, endPos);
+
+            var p = pages[page++];
+
+            for (long i = sOff; i < eOff; i++) {
+                p.set(i, transformer.transform(i + (pos - sOff), p.get(i)));
+            }
+        }
     }
 
     @Override
     public void transformEachIO(long start, long end, LongIOTransformer transformer) throws IOException {
-        delegateToEachPageIO(start, end, (page, s, e) -> page.transformEachIO(s, e, transformer));
+        assert end >= start;
+
+        int page = partitioningScheme.getPage(start);
+
+        long endPos;
+
+        for (long pos = start; pos < end; pos = endPos) {
+            endPos = partitioningScheme.getPageEnd(pos, end);
+
+            int sOff = partitioningScheme.getOffset(pos);
+            int eOff = partitioningScheme.getEndOffset(start, endPos);
+
+            var p = pages[page++];
+
+            for (long i = sOff; i < eOff; i++) {
+                p.set(i, transformer.transform(i + (pos - sOff), p.get(i)));
+            }
+        }
     }
 
     @Override

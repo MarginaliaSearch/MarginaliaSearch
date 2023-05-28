@@ -27,9 +27,7 @@ class LongArraySortNTest {
     LongArray paged;
     LongArray shifted;
 
-    Long2ObjectOpenHashMap<LongOpenHashSet> basicPairs;
-    Long2ObjectOpenHashMap<LongOpenHashSet> pagedPairs;
-    Long2ObjectOpenHashMap<LongOpenHashSet> shiftedPairs;
+    Long2ObjectOpenHashMap<LongOpenHashSet> dataAsPairs;
 
     final int size = 1026;
 
@@ -48,13 +46,11 @@ class LongArraySortNTest {
             values[i] = -values[i];
         }
 
-        basic.transformEach(0, size, (i, old) -> values[(int) i]);
-        paged.transformEach(0, size, (i, old) -> values[(int) i]);
-        shifted.transformEach(0, size, (i, old) -> values[(int) i]);
+        basic.set(0, values);
+        paged.set(0, values);
+        shifted.set(0, values);
 
-        basicPairs = asPairs(basic);
-        pagedPairs = asPairs(paged);
-        shiftedPairs = asPairs(shifted);
+        dataAsPairs = asPairs(basic);
     }
 
 
@@ -144,9 +140,9 @@ class LongArraySortNTest {
         shifted.insertionSortN(2, 0, size);
         assertTrue(shifted.isSortedN(2, 0, size));
 
-        compare(basic, basicPairs);
-        compare(paged, pagedPairs);
-        compare(shifted, shiftedPairs);
+        compare(basic, dataAsPairs);
+        compare(paged, dataAsPairs);
+        compare(shifted, dataAsPairs);
     }
 
     @Test
@@ -160,9 +156,9 @@ class LongArraySortNTest {
         shifted.quickSortN(2, 0, size);
         assertTrue(shifted.isSortedN(2, 0, size));
 
-        compare(basic, basicPairs);
-        compare(paged, pagedPairs);
-        compare(shifted, shiftedPairs);
+        compare(basic, dataAsPairs);
+        compare(paged, dataAsPairs);
+        compare(shifted, dataAsPairs);
     }
 
     @Test
@@ -177,9 +173,9 @@ class LongArraySortNTest {
         shifted.mergeSortN(2, 0, size, Path.of("/tmp"));
         assertTrue(shifted.isSortedN(2, 0, size));
 
-        compare(basic, basicPairs);
-        compare(paged, pagedPairs);
-        compare(shifted, shiftedPairs);
+        compare(basic, dataAsPairs);
+        compare(paged, dataAsPairs);
+        compare(shifted, dataAsPairs);
     }
 
     private Long2ObjectOpenHashMap<LongOpenHashSet> asPairs(LongArray array) {
