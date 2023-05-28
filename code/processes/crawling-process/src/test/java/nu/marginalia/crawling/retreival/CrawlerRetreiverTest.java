@@ -21,7 +21,7 @@ class CrawlerRetreiverTest {
         // Tests the case when there are no URLs provided in the crawl set and the
         // crawler needs to guess the protocol
 
-        var specs = new CrawlingSpecification("1", 5, "memex.marginalia.nu", new ArrayList<>());
+        var specs = new CrawlingSpecification("1", 5, "www.marginalia.nu", new ArrayList<>());
 
         HttpFetcher fetcher = new HttpFetcher("test.marginalia.nu");
 
