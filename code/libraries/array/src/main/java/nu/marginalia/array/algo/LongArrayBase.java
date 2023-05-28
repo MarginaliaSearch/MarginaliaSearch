@@ -70,6 +70,9 @@ public interface LongArrayBase extends BulkTransferArray<LongBuffer> {
             buffer[(int) i] = get(start + i);
         }
     }
+    default void get(long start, long[] buffer) {
+        get(start, start + buffer.length, buffer);
+    }
 
     void write(Path file) throws IOException;
 

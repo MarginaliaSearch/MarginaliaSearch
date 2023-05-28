@@ -48,27 +48,10 @@ public interface IntArraySort extends IntArrayBase {
         return true;
     }
 
-
-
     default void insertionSort(long start, long end) {
         assert end - start < Integer.MAX_VALUE;
 
-        int n = (int) (end - start);
-
-        if (n <= 1) {
-            return;
-        }
-
-        for (int i = 1; i < n; i++) {
-            int key = get(start + i);
-
-            int j = i - 1;
-            while (j >= 0 && get(start + j) > key) {
-                swap( start + j, start + (long)(j+1));
-                j--;
-            }
-            set(start + j+1, key);
-        }
+        SortAlgoInsertionSort._insertionSort(this, start, end);
     }
 
     default void quickSort(long start, long end) {
