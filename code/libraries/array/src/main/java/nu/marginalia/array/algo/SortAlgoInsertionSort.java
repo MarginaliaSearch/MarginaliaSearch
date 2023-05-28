@@ -17,11 +17,12 @@ class SortAlgoInsertionSort {
         for (int i = 1; i < span / sz; i++) {
             long key = array.get(start + (long) i * sz);
 
-            int j;
-            for (j = i - 1; j >= 0 && array.get(start + (long) j * sz) > key; j--) {
-                array.swap(start + (long) j * sz, start + (long) (j + 1) * sz);
+            long j;
+            for (j = i - 1; j >= 0 && array.get(start + j* sz) > key; j--) {
+                array.swapn(sz, start + j *sz, start + (j + 1)*sz);
             }
-            array.set(start + (long) (j + 1) * sz, key);
+
+            array.set(start + (j + 1) * sz, key);
         }
     }
 

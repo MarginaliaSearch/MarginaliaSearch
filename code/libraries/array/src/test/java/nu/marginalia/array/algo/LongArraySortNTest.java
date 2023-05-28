@@ -1,12 +1,13 @@
 package nu.marginalia.array.algo;
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.page.LongArrayPage;
 import nu.marginalia.array.page.PagingLongArray;
 import nu.marginalia.array.scheme.PowerOf2PartitioningScheme;
 import nu.marginalia.util.test.TestUtil;
 import org.apache.commons.lang3.ArrayUtils;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -20,11 +21,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("slow")
-class LongArraySortTest {
+class LongArraySortNTest {
 
     LongArray basic;
     LongArray paged;
     LongArray shifted;
+
+    Long2ObjectOpenHashMap<LongOpenHashSet> basicPairs;
+    Long2ObjectOpenHashMap<LongOpenHashSet> pagedPairs;
+    Long2ObjectOpenHashMap<LongOpenHashSet> shiftedPairs;
+
     final int size = 1026;
 
     @BeforeEach
@@ -38,10 +44,17 @@ class LongArraySortTest {
         for (int i = 0; i < size; i++) {
             values[i] = random.nextInt(0, 1000);
         }
+        for (int i = 1; i < size; i+=2) {
+            values[i] = -values[i];
+        }
 
         basic.transformEach(0, size, (i, old) -> values[(int) i]);
         paged.transformEach(0, size, (i, old) -> values[(int) i]);
         shifted.transformEach(0, size, (i, old) -> values[(int) i]);
+
+        basicPairs = asPairs(basic);
+        pagedPairs = asPairs(paged);
+        shiftedPairs = asPairs(shifted);
     }
 
 
@@ -114,111 +127,74 @@ class LongArraySortTest {
 
     }
 
-    @Test
-    void insertionSort() {
-        basic.insertionSort(0, size);
-        assertTrue(basic.isSorted(0, 128));
+    private void compare(LongArray sorted, Long2ObjectOpenHashMap<LongOpenHashSet> expectedPairs) {
+        var actual = asPairs(sorted);
 
-        paged.insertionSort(0, size);
-        assertTrue(paged.isSorted(0, 128));
-
-        shifted.insertionSort(0, size);
-        assertTrue(shifted.isSorted(0, 128));
+        assertEquals(expectedPairs, actual);
     }
 
     @Test
-    void quickSort() {
-        basic.quickSort(0, size);
-        assertTrue(basic.isSorted(0, size));
+    void insertionSortN() {
+        basic.insertionSortN(2, 0, size);
+        assertTrue(basic.isSortedN(2, 0, size));
 
-        paged.quickSort(0, size);
-        assertTrue(paged.isSorted(0, size));
+        paged.insertionSortN(2, 0, size);
+        assertTrue(paged.isSortedN(2, 0, size));
 
-        shifted.quickSort(0, size);
-        assertTrue(shifted.isSorted(0, size));
+        shifted.insertionSortN(2, 0, size);
+        assertTrue(shifted.isSortedN(2, 0, size));
+
+        compare(basic, basicPairs);
+        compare(paged, pagedPairs);
+        compare(shifted, shiftedPairs);
     }
 
     @Test
-    void mergeSort() throws IOException {
-        basic.mergeSort(0, size, Path.of("/tmp"));
-        assertTrue(basic.isSorted(0, size));
+    void quickSortN() {
+        basic.quickSortN(2, 0, size);
+        assertTrue(basic.isSortedN(2, 0, size));
 
-        paged.mergeSort(0, size, Path.of("/tmp"));
-        assertTrue(paged.isSorted(0, size));
+        paged.quickSortN(2, 0, size);
+        assertTrue(paged.isSortedN(2, 0, size));
 
-        shifted.mergeSort(0, size, Path.of("/tmp"));
-        assertTrue(shifted.isSorted(0, size));
+        shifted.quickSortN(2, 0, size);
+        assertTrue(shifted.isSortedN(2, 0, size));
+
+        compare(basic, basicPairs);
+        compare(paged, pagedPairs);
+        compare(shifted, shiftedPairs);
     }
 
     @Test
-    void keepUniqueFuzz() {
-        var array = LongArray.allocate(1000);
-        var random = new Random();
-        array.transformEach(0, 1000, (i, val) -> random.nextInt(0, 2000));
-        array.quickSort(0, 1000);
-        Set<Long> expectedValues = new HashSet<>();
-        array.forEach(0, 1000, (i, v) -> expectedValues.add(v));
+    void mergeSortN() throws IOException {
 
-        var endUniqueRange = array.keepUnique(0, 1000);
-        Set<Long> actualValues = new HashSet<>();
-        array.forEach(0, endUniqueRange, (i, v) -> actualValues.add(v));
+        basic.mergeSortN(2, 0, size, Path.of("/tmp"));
+        assertTrue(basic.isSortedN(2, 0, size));
 
-        assertEquals(expectedValues, actualValues);
-        assertTrue(array.isSorted(0, endUniqueRange));
+        paged.mergeSortN(2, 0, size, Path.of("/tmp"));
+        assertTrue(paged.isSortedN(2, 0, size));
+
+        shifted.mergeSortN(2, 0, size, Path.of("/tmp"));
+        assertTrue(shifted.isSortedN(2, 0, size));
+
+        compare(basic, basicPairs);
+        compare(paged, pagedPairs);
+        compare(shifted, shiftedPairs);
     }
 
-    @Test
-    void keepUniqueEmpty() {
-        // Test empty case
-        var array = LongArray.allocate(10);
-        assertEquals(0, array.keepUnique(0, 0));
-    }
-
-    @Test
-    void keepUniqueEmptyBoundaryDuplicationCase() {
-        // Test empty case
-        var array = LongArray.allocate(10);
-
-        array.set(0, 1);
-        array.set(1, 1);
-        array.set(2, 2);
-        array.set(3, 2);
-
-        assertEquals(2, array.keepUnique(0, 4));
-        assertEquals(1, array.get(0));
-        assertEquals(2, array.get(1));
-    }
-
-    @Test
-    void keepUniqueN() {
-        var array = LongArray.allocate(2000);
-        var random = new Random();
-
-        final Map<Long, Integer> expected = new HashMap<>();
-        final Map<Long, Integer> actual = new HashMap<>();
-
-        for (int i = 0; i < 2000; i+=2) {
-            long key = random.nextInt(0, 2000);
-
-            array.set(i, key);
-            array.set(i + 1 , i);
+    private Long2ObjectOpenHashMap<LongOpenHashSet> asPairs(LongArray array) {
+        Long2ObjectOpenHashMap<LongOpenHashSet> map = new Long2ObjectOpenHashMap<>();
+        for (long i = 0; i < array.size(); i+=2) {
+            long key = array.get(i);
+            long val = array.get(i+1);
+            if (null == map.get(key)) {
+                var set = new LongOpenHashSet();
+                map.put(key, set);
+            }
+            map.get(key).add(val);
         }
-
-        // The data needs to be sorted
-        array.quickSortN(2, 0, 2000);
-
-        // Grab only the first value for each key
-        for (int i = 0; i < 2000; i+=2) {
-            expected.putIfAbsent(array.get(i), (int) array.get(i + 1));
-        }
-
-        long end = array.keepUniqueN(2, 0, 2000);
-
-        // Don't do putIfAbsent here
-        for (int i = 0; i < end; i+=2) {
-            actual.put(array.get(i), (int) array.get(i + 1));
-        }
-
-        assertEquals(expected, actual);
+        return map;
     }
+
+
 }

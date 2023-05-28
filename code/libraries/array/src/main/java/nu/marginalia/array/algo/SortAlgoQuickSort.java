@@ -79,7 +79,7 @@ class SortAlgoQuickSort {
 
     static long _quickSortPartition(LongArraySort array, long low, long high) {
 
-        long pivotPoint = ((low + high) / (2L));
+        long pivotPoint = low + ((high - low) / 2L);
         long pivot = array.get(pivotPoint);
 
         long i = low - 1;
@@ -102,8 +102,14 @@ class SortAlgoQuickSort {
 
     static long _quickSortPartitionN(LongArraySort array, int wordSize, long low, long high) {
 
-        long pivotPoint = ((low + high) / (2L*wordSize)) * wordSize;
+        long delta = (high - low) / (2L);
+        long pivotPoint = low + (delta / wordSize) * wordSize;
+
         long pivot = array.get(pivotPoint);
+
+        assert (pivotPoint - low) >= 0;
+        assert (pivotPoint - low) % wordSize == 0;
+
 
         long i = low - wordSize;
         long j = high + wordSize;
