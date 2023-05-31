@@ -22,6 +22,8 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Pattern;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 @Tag("slow")
 class SentenceExtractorTest {
     SentenceExtractor newSe;
@@ -121,6 +123,12 @@ class SentenceExtractorTest {
         seprateExtractor("Cookies");
         seprateExtractor("");
 
+    }
+
+    @Test
+    public void testACDC() {
+        var ret = newSe.extractSentence("AC/DC is a rock band.");
+        assertEquals("AC/DC", ret.words[0]);
     }
 
     final Pattern p = Pattern.compile("([, ]+)");

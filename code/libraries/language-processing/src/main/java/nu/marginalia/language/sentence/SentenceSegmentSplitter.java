@@ -23,7 +23,7 @@ public class SentenceSegmentSplitter {
     }
 
     private static final CharMatcher noiseCharacterMatcher = CharMatcher.anyOf("/*-");
-    private static final Pattern wordBreakPattern = Pattern.compile("([^_#@.a-zA-Z'+\\-0-9\\u00C0-\\u00D6\\u00D8-\\u00f6\\u00f8-\\u00ff]+)|[|]|(\\.(\\s+|$))");
+    private static final Pattern wordBreakPattern = Pattern.compile("([^/_#@.a-zA-Z'+\\-0-9\\u00C0-\\u00D6\\u00D8-\\u00f6\\u00f8-\\u00ff]+)|[|]|(\\.(\\s+|$))");
 
     public static SeparatedSentence splitSegment(String segment) {
         String flatSegment = AsciiFlattener.flattenUnicode(segment);
