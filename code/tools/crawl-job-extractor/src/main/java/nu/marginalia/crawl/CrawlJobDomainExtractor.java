@@ -16,7 +16,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 public class CrawlJobDomainExtractor {
-    private static final int MIN_VISIT_COUNT = 1000;
+    private static final int MIN_VISIT_COUNT = 200;
     private static final int MAX_VISIT_COUNT = 100000;
 
     private static final String specificDomainSql =
@@ -198,10 +198,19 @@ public class CrawlJobDomainExtractor {
     }
 
     private int calculateCrawlDepthFromVisitedCount(int count) {
-        count = count + 1000 + count / 4;
-
-        if (count < MIN_VISIT_COUNT) {
+        if (count < MIN_VISIT_COUNT / 2) {
+            /* If we aren't getting very many good documents
+              out of this webpage on previous attempts, we
+              won't dig very deeply this time.  This saves time
+              and resources for both the crawler and the server,
+              and also prevents deep crawls on foreign websites we aren't
+              interested in crawling at this point. */
             count = MIN_VISIT_COUNT;
+        }
+        else {
+            /* If we got many results previously, we'll
+               dig deeper with each successive crawl. */
+            count = count + 1000 + count / 4;
         }
 
         if (count > MAX_VISIT_COUNT) {
