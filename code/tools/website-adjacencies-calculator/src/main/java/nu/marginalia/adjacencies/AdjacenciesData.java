@@ -82,10 +82,10 @@ public class AdjacenciesData {
     }
 
     private boolean isEligible(RoaringBitmap value) {
-        return true;
-//        int cardinality = value.getCardinality();
+//        return true;
+        int cardinality = value.getCardinality();
 
-//        return cardinality < 10000;
+        return cardinality < 10000;
     }
 
 

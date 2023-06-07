@@ -148,7 +148,7 @@ public class WebsiteAdjacenciesCalculator {
     private void findAdjacentDtoS(int domainId, Consumer<DomainSimilarities> andThen) {
         var vector = adjacenciesData.getVector(domainId);
 
-        if (vector == null || !vector.cardinalityExceeds(5)) {
+        if (vector == null || !vector.cardinalityExceeds(10)) {
             return;
         }
 
@@ -168,18 +168,12 @@ public class WebsiteAdjacenciesCalculator {
             if (otherVec.getCardinality() < cardMin)
                 return true;
 
-//            if (vector.getCardinality() > 100) {
-//                if (otherVec.getCardinality() < cardMin)
-//                    return true;
-//
-//                // cheap non-weighted check
-//                if (cosineSimilarity(vector, otherVec) < 0.1)
-//                    return true;
-//            }
-
-            var similarity = cosineSimilarity(vector, otherVec);
+            double similarity = cosineSimilarity(vector, otherVec);
             if (similarity > 0.1) {
-                similarities.add(new DomainSimilarity(id, similarity));
+                var recalculated = expensiveCosineSimilarity(vector, otherVec);
+                if (recalculated > 0.1) {
+                    similarities.add(new DomainSimilarity(id, recalculated));
+                }
             }
 
             return true;
