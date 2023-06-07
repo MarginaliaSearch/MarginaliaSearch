@@ -29,7 +29,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 public class CrawlerRetreiver {
-    private static final long DEFAULT_CRAWL_DELAY_MIN_MS = Long.getLong("defaultCrawlDelay", 500);
+    private static final long DEFAULT_CRAWL_DELAY_MIN_MS = Long.getLong("defaultCrawlDelay", 1000);
     private static final long DEFAULT_CRAWL_DELAY_MAX_MS = Long.getLong("defaultCrawlDelaySlow", 2500);
 
     private static final int MAX_ERRORS = 10;
