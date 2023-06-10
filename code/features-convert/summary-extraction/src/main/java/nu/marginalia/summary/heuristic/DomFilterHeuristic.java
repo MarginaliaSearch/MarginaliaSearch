@@ -4,6 +4,8 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import org.jsoup.nodes.Document;
 
+import java.util.Collection;
+
 public class DomFilterHeuristic implements SummaryHeuristic {
     private final int maxSummaryLength;
 
@@ -13,13 +15,15 @@ public class DomFilterHeuristic implements SummaryHeuristic {
     }
 
     @Override
-    public String summarize(Document doc) {
+    public String summarize(Document doc, Collection<String> importantWords) {
         doc = doc.clone();
 
         var filter = new SummarizingDOMFilter();
 
         doc.filter(filter);
 
-        return filter.getSummary(maxSummaryLength+32);
+        return filter.getSummary(
+                maxSummaryLength+32,
+                    importantWords);
     }
 }

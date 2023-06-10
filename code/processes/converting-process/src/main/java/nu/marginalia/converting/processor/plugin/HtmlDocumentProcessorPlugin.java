@@ -33,10 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import static nu.marginalia.converting.model.DisqualifiedException.*;
 
@@ -127,7 +124,6 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         }
 
         ret.features = featureExtractor.getFeatures(crawledDomain, doc, dld);
-        ret.description = getDescription(doc);
         ret.hashCode = dld.localitySensitiveHashCode();
 
         PubDate pubDate = pubDateSniffer.getPubDate(crawledDocument.headers, url, doc, ret.standard, true);
@@ -138,6 +134,10 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
                 pubDate.yearByte(), (int) -ret.quality, documentFlags);
 
         DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, url);
+
+        ret.description = getDescription(doc,
+                new ArrayList<>(words.importantWords)
+        );
 
         var tagWords = new MetaTagsBuilder()
                 .addDomainCrawlData(crawledDomain)
@@ -269,8 +269,12 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         return htmlStandard;
     }
 
-    private String getDescription(Document doc) {
-        return summaryExtractor.extractSummary(doc);
+    private String getDescription(Document doc,
+                                  Collection<String> importantWords)
+    {
+        importantWords.removeIf(w -> w.contains("_"));
+
+        return summaryExtractor.extractSummary(doc, importantWords);
     }
 
     private int getLength(Document doc) {

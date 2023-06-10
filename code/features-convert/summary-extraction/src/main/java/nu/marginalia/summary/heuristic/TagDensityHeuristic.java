@@ -5,6 +5,8 @@ import com.google.inject.name.Named;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
+import java.util.Collection;
+
 public class TagDensityHeuristic implements SummaryHeuristic {
     private final int maxSummaryLength;
 
@@ -14,7 +16,7 @@ public class TagDensityHeuristic implements SummaryHeuristic {
     }
 
     @Override
-    public String summarize(Document doc) {
+    public String summarize(Document doc, Collection<String> importantWords) {
         doc = doc.clone();
 
         StringBuilder content = new StringBuilder();

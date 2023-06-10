@@ -3,10 +3,12 @@ package nu.marginalia.summary.heuristic;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
+import java.util.Collection;
+
 public class FallbackHeuristic implements SummaryHeuristic {
 
     @Override
-    public String summarize(Document doc) {
+    public String summarize(Document doc, Collection<String> importantWords) {
         doc = doc.clone();
 
         int bodyTextLength = doc.body().text().length();

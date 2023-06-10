@@ -6,4 +6,8 @@ import java.util.Collection;
 
 public interface WordReps {
     Collection<WordRep> getReps();
+
+    default Collection<String> words() {
+        return getReps().stream().map(rep -> rep.word).toList();
+    }
 }
