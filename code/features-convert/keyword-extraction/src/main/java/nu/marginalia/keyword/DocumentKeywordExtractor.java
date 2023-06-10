@@ -51,6 +51,9 @@ public class DocumentKeywordExtractor {
         createWordsFromSet(wordsBuilder, keywordMetadata, subjectLikeKeywords);
         createWordsFromSet(wordsBuilder, keywordMetadata, nameLikeKeywords);
 
+        wordsBuilder.addImportantWords(subjectLikeKeywords.words());
+        wordsBuilder.addImportantWords(nameLikeKeywords.words());
+
         wordsBuilder.addAllSyntheticTerms(artifactKeywords.getWords());
 
         return wordsBuilder;

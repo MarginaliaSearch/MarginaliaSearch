@@ -12,6 +12,9 @@ import java.util.*;
 public class DocumentKeywordsBuilder {
     public final Object2LongLinkedOpenHashMap<String> words;
 
+    /** These ware keywords that had signals of high relevance */
+    public final Set<String> importantWords = new HashSet<>();
+
     // |------64 letters is this long-------------------------------|
     // granted, some of these words are word n-grams, but 64 ought to
     // be plenty. The lexicon writer has another limit that's higher.
@@ -46,6 +49,10 @@ public class DocumentKeywordsBuilder {
             return;
 
         words.put(word, meta);
+    }
+
+    public void addImportantWords(Collection<String> words) {
+        importantWords.addAll(words);
     }
 
     public void addJustNoMeta(String word) {

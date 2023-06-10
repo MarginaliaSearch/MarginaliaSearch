@@ -29,6 +29,12 @@ dependencies {
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
+
+    testImplementation project(':code:features-convert:keyword-extraction')
+    testImplementation project(':code:libraries:language-processing')
+    testImplementation project(':code:libraries:term-frequency-dict')
+    testImplementation project(':code:common:config')
+    testImplementation project(':code:common:model')
 }
 
 test {

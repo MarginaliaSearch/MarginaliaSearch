@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Document;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -34,11 +35,11 @@ public class SummaryExtractor {
         heuristics.add(fallbackHeuristic);
     }
 
-    public String extractSummary(Document parsed) {
+    public String extractSummary(Document parsed, Collection<String> importantWords) {
         parsed.select("header,nav,#header,#nav,#navigation,.header,.nav,.navigation,ul,li").remove();
 
         for (var heuristic : heuristics) {
-            String maybe = heuristic.summarize(parsed);
+            String maybe = heuristic.summarize(parsed, importantWords);
             if (!maybe.isBlank()) {
                 String cleaned = truncatedCharacters.matcher(maybe).replaceAll(" ");
                 return StringUtils.abbreviate(cleaned, "", maxSummaryLength);

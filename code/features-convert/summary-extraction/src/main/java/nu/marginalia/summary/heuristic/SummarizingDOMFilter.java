@@ -54,7 +54,7 @@ public class SummarizingDOMFilter implements NodeFilter {
         return false;
     }
 
-    public String getSummary(int maxLength) {
+    public String getSummary(int maxLength, Collection<String> importantWords) {
         List<NodeStatistics> ret = new ArrayList<>(statistics.size());
         for (var stats : statistics.values()) {
             if (stats.textToTagRatio() < 0.85) continue;
@@ -64,15 +64,56 @@ public class SummarizingDOMFilter implements NodeFilter {
 
             ret.add(stats);
         }
+
         ret.sort(Comparator.comparing(e -> -e.textLength()));
         if (ret.size() > 32) ret.subList(32, ret.size()).clear();
+
         ret.sort(Comparator.comparing(NodeStatistics::pos));
-        if (ret.size() > 3) ret.subList(3, ret.size()).clear();
+        if (ret.size() > 16) ret.subList(16, ret.size()).clear();
+
+        sortByWordRelevance(ret, importantWords);
+        if (ret.size() > 8) ret.subList(8, ret.size()).clear();
+
         ret.sort(Comparator.comparing(NodeStatistics::isBody));
         if (ret.size() >= 1) {
             return StringUtils.abbreviate(ret.get(0).text(), "", maxLength);
         }
         return "";
+    }
+
+    private List<NodeStatistics> sortByWordRelevance(List<NodeStatistics> in,
+                                                  Collection<String> words) {
+
+        if (words.isEmpty())
+            return in;
+
+        Map<NodeStatistics, Integer> ret = new HashMap<>(in.size());
+        int cntTotal = 0;
+
+        // This is a relatively small list at this point
+        // so this function isn't as bad as it looks
+
+        for (var stats : in) {
+            var lcText = stats.text().toLowerCase();
+
+            int cnt = 0;
+            for (var word : words) {
+                if (lcText.contains(word)) {
+                    cnt++;
+                    cntTotal++;
+                }
+            }
+
+            ret.put(stats, -cnt);
+        }
+
+        // Skip the sorting if we didn't match any words
+        if (cntTotal == 0) {
+            return in;
+        }
+
+        in.sort(Comparator.comparing(ret::get));
+        return in;
     }
 
     private NodeStatistics aggregateStatistics(Element e) {
