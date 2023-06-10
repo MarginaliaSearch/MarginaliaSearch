@@ -135,9 +135,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, url);
 
-        ret.description = getDescription(doc,
-                new ArrayList<>(words.importantWords)
-        );
+        ret.description = getDescription(doc, words.importantWords);
 
         var tagWords = new MetaTagsBuilder()
                 .addDomainCrawlData(crawledDomain)
@@ -270,11 +268,20 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     }
 
     private String getDescription(Document doc,
-                                  Collection<String> importantWords)
+                                  Set<String> importantWords)
     {
-        importantWords.removeIf(w -> w.contains("_"));
+        List<String> cleanedWords = new ArrayList<>(importantWords.size());
 
-        return summaryExtractor.extractSummary(doc, importantWords);
+        for (var word : importantWords) {
+            // summary extraction is not interested in n-grams
+            if (word.contains("_")) {
+                continue;
+            }
+
+            cleanedWords.add(word);
+        }
+
+        return summaryExtractor.extractSummary(doc, cleanedWords);
     }
 
     private int getLength(Document doc) {
