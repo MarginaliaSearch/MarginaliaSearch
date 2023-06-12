@@ -45,7 +45,7 @@ public class PubDateHeuristicJSONLD implements PubDateHeuristic {
             return Optional.ofNullable(model.getDatePublished());
 
         }
-        catch (JsonSyntaxException ex) {
+        catch (JsonSyntaxException|NumberFormatException|NullPointerException ex) {
             return Optional.empty();
         }
     }
@@ -60,7 +60,7 @@ class JsonModel {
         for (var item : Objects.requireNonNullElse(graph,
                 Collections.<JsonModelGraphItem>emptyList()))
         {
-            if (!item.isRelevant())
+            if (null == item || !item.isRelevant())
                 continue;
 
             if (item.datePublished != null)
