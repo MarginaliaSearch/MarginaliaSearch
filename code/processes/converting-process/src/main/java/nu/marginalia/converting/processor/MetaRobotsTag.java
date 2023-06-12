@@ -9,7 +9,7 @@ public class MetaRobotsTag {
     private final String searchEngineName = "marginalia-search";
 
     public boolean allowIndexingByMetaTag(Document doc) {
-        var robotsContent = doc.select("meta[name=robots]").attr("content");
+        var robotsContent = doc.getElementsByTag("meta").select("meta[name=robots]").attr("content");
 
         if (isForbidden(robotsContent)) {
             var marginaliaTag = doc.select( "meta[name=" + searchEngineName + "]").attr("content");

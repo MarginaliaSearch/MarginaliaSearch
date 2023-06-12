@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import nu.marginalia.converting.processor.MetaRobotsTag;
 import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
+import nu.marginalia.converting.processor.logic.dom.MeasureLengthVisitor;
 import nu.marginalia.converting.processor.logic.links.FileLinks;
 import nu.marginalia.converting.processor.logic.links.LinkProcessor;
 import nu.marginalia.language.model.DocumentLanguageData;
@@ -111,10 +112,14 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         var ret = new ProcessedDocumentDetails();
 
-        ret.length = getLength(doc);
-        ret.standard = getHtmlStandard(doc);
+        final int length = getLength(doc);
+        final HtmlStandard standard = getHtmlStandard(doc);
+        final double quality = documentValuator.getQuality(crawledDocument, standard, doc, length);
+
+        ret.length = length;
+        ret.standard = standard;
         ret.title = titleExtractor.getTitleAbbreviated(doc, dld, crawledDocument.url);
-        ret.quality = documentValuator.getQuality(crawledDocument, ret.standard, doc);
+        ret.quality = quality;
 
         // don't move this up! it uses title and quality
         // and is run before the heavy computations below
@@ -123,15 +128,16 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
             throw new DisqualifiedException(DisqualificationReason.QUALITY);
         }
 
-        ret.features = featureExtractor.getFeatures(crawledDomain, doc, dld);
+        final Set<HtmlFeature> features = featureExtractor.getFeatures(crawledDomain, doc, dld);
+        ret.features = features;
         ret.hashCode = dld.localitySensitiveHashCode();
 
-        PubDate pubDate = pubDateSniffer.getPubDate(crawledDocument.headers, url, doc, ret.standard, true);
-        EnumSet<DocumentFlags> documentFlags = htmlFeatures2DocumentFlags(ret.features);
+        PubDate pubDate = pubDateSniffer.getPubDate(crawledDocument.headers, url, doc, standard, true);
+        EnumSet<DocumentFlags> documentFlags = htmlFeatures2DocumentFlags(features);
 
         ret.metadata = new DocumentMetadata(
                 documentLengthLogic.getEncodedAverageLength(dld),
-                pubDate.yearByte(), (int) -ret.quality, documentFlags);
+                pubDate.yearByte(), (int) -quality, documentFlags);
 
         DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, url);
 
@@ -141,8 +147,8 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
                 .addDomainCrawlData(crawledDomain)
                 .addPubDate(pubDate)
                 .addUrl(url)
-                .addFeatures(ret.features)
-                .addFormat(ret.standard)
+                .addFeatures(features)
+                .addFormat(standard)
                 .build();
 
         words.addAllSyntheticTerms(tagWords);
@@ -285,6 +291,9 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     }
 
     private int getLength(Document doc) {
-        return doc.text().length();
+        var mlv = new MeasureLengthVisitor();
+        doc.traverse(mlv);
+        return mlv.length;
     }
+
 }
