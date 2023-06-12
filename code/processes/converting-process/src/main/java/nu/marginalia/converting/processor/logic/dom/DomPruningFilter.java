@@ -6,6 +6,7 @@ import org.jsoup.nodes.TextNode;
 import org.jsoup.select.NodeFilter;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /** Prune the DOM and remove noisy branches with a lot of tags and not a lot of text.
@@ -34,7 +35,7 @@ public class DomPruningFilter implements NodeFilter {
         final NodeData dataForNode;
 
         if (node instanceof TextNode tn) {
-            dataForNode = new NodeData(depth, tn.text().length(), 0);
+            dataForNode = new NodeData(depth, MeasureLengthVisitor.lengthOfElement(tn), 0);
         }
         else if (isSignal(node)) {
             dataForNode = new NodeData(depth,  0,0);
@@ -61,23 +62,66 @@ public class DomPruningFilter implements NodeFilter {
                 && dataForNode.treeSize > 3)
             return FilterResult.REMOVE;
 
+        if (node instanceof Element el) {
+            if (shouldAlwaysPurge(el)) {
+                return FilterResult.REMOVE;
+            }
+        }
+
         return FilterResult.CONTINUE;
     }
 
     public boolean isSignal(Node node) {
 
         if (node instanceof Element e) {
-            if ("a".equalsIgnoreCase(e.tagName()))
-                return false;
-            if ("nav".equalsIgnoreCase(e.tagName()))
-                return false;
-            if ("footer".equalsIgnoreCase(e.tagName()))
-                return false;
-            if ("header".equalsIgnoreCase(e.tagName()))
+
+            String tagName = e.tagName();
+
+            if ("a".equalsIgnoreCase(tagName))
                 return false;
         }
 
         return true;
+    }
+
+    final List<String> badClassNames = List.of("cookie-banner", "cookie", "cookie-notice", "cookie-policy",
+                                               "nav", "navigation", "footer", "header", "menu", "toolbar", "tooltip",
+                                                "alert", "alertdialog", "banner", "onetrust-consent-sdk");
+    final List<String> badAriaRoles = List.of("alert", "alertdialog", "navigation", "banner", "dialog", "menu", "toolbar", "tooltip");
+
+
+    private boolean shouldAlwaysPurge(Element el) {
+
+        String tagName = el.tagName();
+
+        if ("nav".equalsIgnoreCase(tagName))
+            return true;
+        if ("footer".equalsIgnoreCase(tagName))
+            return true;
+        if ("header".equalsIgnoreCase(tagName))
+            return true;
+
+        var classNames = el.classNames();
+
+        for (var clazz : classNames) {
+            for (var bad : badClassNames) {
+                if (clazz.equalsIgnoreCase(bad))
+                    return true;
+            }
+        }
+
+        var role = el.attr("role");
+
+        for (var bad : badAriaRoles) {
+            if (bad.equalsIgnoreCase(role))
+                return true;
+        }
+
+        var ariaHidden = el.attr("aria-hidden");
+        if ("true".equalsIgnoreCase(ariaHidden))
+            return true;
+
+        return false;
     }
 }
 
