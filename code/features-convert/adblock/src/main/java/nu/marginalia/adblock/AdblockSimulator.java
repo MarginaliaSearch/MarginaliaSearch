@@ -44,11 +44,14 @@ public class AdblockSimulator {
     }
 
     public boolean hasAds(Document document) {
+        return false;
+        /* Disabled for now, it doesn't work very well and it's very slow.
+
         RuleVisitor ruleVisitor = new RuleVisitor();
 
         document.filter(ruleVisitor);
 
-        return ruleVisitor.sawAds;
+        return ruleVisitor.sawAds; */
     }
 
     private void addRule(String s) {
