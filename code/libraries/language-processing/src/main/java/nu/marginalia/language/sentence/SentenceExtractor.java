@@ -4,7 +4,6 @@ import com.github.datquocnguyen.RDRPOSTagger;
 import gnu.trove.map.hash.TObjectIntHashMap;
 import lombok.SneakyThrows;
 import nu.marginalia.LanguageModels;
-import nu.marginalia.util.StringPool;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.DocumentSentence;
 import opennlp.tools.sentdetect.SentenceDetectorME;
@@ -22,12 +21,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
-import java.util.regex.Pattern;
 
 public class SentenceExtractor {
 
     private SentenceDetectorME sentenceDetector;
-    private final RDRPOSTagger rdrposTagger;
+    private static RDRPOSTagger rdrposTagger;
 
     private final PorterStemmer porterStemmer = new PorterStemmer();
     private static final Logger logger = LoggerFactory.getLogger(SentenceExtractor.class);
@@ -35,8 +33,10 @@ public class SentenceExtractor {
     private static final SentenceExtractorHtmlTagCleaner tagCleaner = new SentenceExtractorHtmlTagCleaner();
     private static final SentencePreCleaner sentencePrecleaner = new SentencePreCleaner();
 
-    private final ThreadLocal<StringPool> stringPool = ThreadLocal.withInitial(() -> StringPool.create(10_000));
-
+    /* Truncate sentences longer than this.  This is mostly a defense measure against malformed data
+     * that might otherwise use an undue amount of processing power. 250 words is about 10X longer than
+     * this comment. */
+    private static final int MAX_SENTENCE_LENGTH = 250;
 
     @SneakyThrows @Inject
     public SentenceExtractor(LanguageModels models) {
@@ -49,12 +49,15 @@ public class SentenceExtractor {
             logger.error("Could not initialize sentence detector", ex);
         }
 
-        try {
-            rdrposTagger = new RDRPOSTagger(models.posDict, models.posRules);
+        synchronized (RDRPOSTagger.class) {
+            try {
+                rdrposTagger = new RDRPOSTagger(models.posDict, models.posRules);
+            }
+            catch (Exception ex) {
+                throw new IllegalStateException(ex);
+            }
         }
-        catch (Exception ex) {
-            throw new IllegalStateException(ex);
-        }
+
     }
 
     public DocumentLanguageData extractSentences(Document doc) {
@@ -149,10 +152,12 @@ public class SentenceExtractor {
             var wordsAndSeps = SentenceSegmentSplitter.splitSegment(sentences[i]);
             tokens[i] = wordsAndSeps.words;
             separators[i] = wordsAndSeps.separators;
-            if (tokens[i].length > 250) {
-                tokens[i] = Arrays.copyOf(tokens[i], 250);
-                separators[i] = Arrays.copyOf(separators[i], 250);
+
+            if (tokens[i].length > MAX_SENTENCE_LENGTH) {
+                tokens[i] = Arrays.copyOf(tokens[i], MAX_SENTENCE_LENGTH);
+                separators[i] = Arrays.copyOf(separators[i], MAX_SENTENCE_LENGTH);
             }
+
             for (int j = 0; j < tokens[i].length; j++) {
                 while (tokens[i][j].endsWith(".")) {
                     tokens[i][j] = StringUtils.removeEnd(tokens[i][j], ".");
@@ -160,25 +165,16 @@ public class SentenceExtractor {
             }
         }
 
-        var sPool = stringPool.get();
-
-        for (int i = 0; i < tokens.length; i++) {
-            tokens[i] = sPool.internalize(tokens[i]);
-        }
-
         for (int i = 0; i < tokens.length; i++) {
             posTags[i] = rdrposTagger.tagsForEnSentence(tokens[i]);
-            // don't need to internalize this
         }
 
         for (int i = 0; i < tokens.length; i++) {
             tokensLc[i] = SentenceExtractorStringUtils.toLowerCaseStripPossessive(tokens[i]);
-            tokensLc[i] = sPool.internalize(tokensLc[i]);
         }
 
         for (int i = 0; i < tokens.length; i++) {
             stemmedWords[i] = stemSentence(tokensLc[i]);
-            stemmedWords[i] = sPool.internalize(stemmedWords[i]);
         }
 
         DocumentSentence[] ret = new DocumentSentence[sentences.length];
