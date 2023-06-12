@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 public class SummaryExtractor {
     private final int maxSummaryLength;
 
-    private final Pattern truncatedCharacters = Pattern.compile("[\\-.,!?' ]{3,}");
+    private final Pattern truncatedCharacters = Pattern.compile("[^a-zA-Z0-9]{3,}");
 
     private final List<SummaryHeuristic> heuristics = new ArrayList<>();
 
