@@ -8,6 +8,8 @@ import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.model.EdgeUrl;
 
 import javax.inject.Inject;
+import java.util.*;
+import java.util.stream.Stream;
 
 public class DocumentKeywordExtractor {
 
@@ -51,14 +53,32 @@ public class DocumentKeywordExtractor {
         createWordsFromSet(wordsBuilder, keywordMetadata, subjectLikeKeywords);
         createWordsFromSet(wordsBuilder, keywordMetadata, nameLikeKeywords);
 
-        wordsBuilder.addImportantWords(subjectLikeKeywords.words());
-        wordsBuilder.addImportantWords(nameLikeKeywords.words());
+        var importantWords = getImportantWords(tfIdfCounts, nameLikeKeywords, subjectLikeKeywords, wordsBuilder);
+        wordsBuilder.addImportantWords(importantWords);
 
         wordsBuilder.addAllSyntheticTerms(artifactKeywords.getWords());
 
         return wordsBuilder;
     }
 
+    private static Collection<String> getImportantWords(WordsTfIdfCounts tfIdfCounts, NameLikeKeywords nameLikeKeywords, SubjectLikeKeywords subjectLikeKeywords, DocumentKeywordsBuilder wordsBuilder) {
+        return Stream.of(tfIdfCounts, nameLikeKeywords, subjectLikeKeywords)
+                .flatMap(k -> k.getReps().stream())
+                .filter(w -> {
+                    if (w.word.length() < 3)
+                        return false;
+                    if (w.word.contains("_"))
+                        return false;
+                    return true;
+                })
+                .sorted(tfIdfCounts.reversed())
+                .limit(16)
+                .filter(w -> tfIdfCounts.termFrequencyDictValue(w) > 100)
+                .sorted(Comparator.comparing(w -> tfIdfCounts.termFrequencyDictValue(w)))
+                .limit(6)
+                .map(w -> w.word)
+                .toList();
+    }
 
     private void createWordsFromSet(DocumentKeywordsBuilder wordsBuilder,
                                    KeywordMetadata metadata,
