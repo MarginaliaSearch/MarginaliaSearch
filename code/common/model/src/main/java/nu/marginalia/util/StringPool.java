@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Objects;
 
 public class StringPool {
 
@@ -29,10 +30,7 @@ public class StringPool {
         final String ret = words.putIfAbsent(str, str);
         ages.put(ret, idx++);
 
-        if (null == ret)
-            return str;
-
-        return ret;
+        return Objects.requireNonNullElse(ret, str);
     }
 
     public String[] internalize(String[] str) {
