@@ -8,7 +8,9 @@ import org.jsoup.nodes.TextNode;
 import org.jsoup.select.NodeFilter;
 
 import java.util.*;
+import java.util.function.Function;
 
+import static nu.marginalia.summary.heuristic.HeuristicTextUtil.countOccurrencesOfAnyWord;
 import static org.jsoup.internal.StringUtil.isActuallyWhitespace;
 import static org.jsoup.internal.StringUtil.isInvisibleChar;
 
@@ -57,9 +59,9 @@ public class SummarizingDOMFilter implements NodeFilter {
     public String getSummary(int maxLength, Collection<String> importantWords) {
         List<NodeStatistics> ret = new ArrayList<>(statistics.size());
         for (var stats : statistics.values()) {
-            if (stats.textToTagRatio() < 0.85) continue;
+            if (stats.textToTagRatio() < 0.75) continue;
             if (!stats.isElement() || !stats.isAppropriateTagType()) continue;
-            if (stats.textLength() < 128) continue;
+            if (stats.textLength() < 64) continue;
             if (stats.isLink()) continue;
 
             ret.add(stats);
@@ -81,38 +83,40 @@ public class SummarizingDOMFilter implements NodeFilter {
         return "";
     }
 
-    private List<NodeStatistics> sortByWordRelevance(List<NodeStatistics> in,
-                                                  Collection<String> words) {
 
-        if (words.isEmpty())
+    // Words we don't want to appear in the summary
+    private static List<String> badWords = List.of("copyright", "rights", "reserved", "post",
+            "posted", "author", "published", "publish", "cookie", "cookies", "©", "terms", "conditions");
+
+    private List<NodeStatistics> sortByWordRelevance(List<NodeStatistics> in,
+                                                  Collection<String> importantWords) {
+
+        if (importantWords.isEmpty())
             return in;
 
         Map<NodeStatistics, Integer> ret = new HashMap<>(in.size());
-        int cntTotal = 0;
 
         // This is a relatively small list at this point
         // so this function isn't as bad as it looks
 
         for (var stats : in) {
-            var lcText = stats.text().toLowerCase();
+            // text() is expensive, we don't mind sifting through superfluous whitespace
+            int cnt = stats.score(tn ->
+                    countOccurrencesOfAnyWord(tn.getWholeText(), importantWords)
+                        - countOccurrencesOfAnyWord(tn.getWholeText(), badWords));
 
-            int cnt = 0;
-            for (var word : words) {
-                if (lcText.contains(word)) {
-                    cnt++;
-                    cntTotal++;
-                }
+            if (cnt > 0) {
+                ret.put(stats, -cnt);
             }
-
-            ret.put(stats, -cnt);
         }
 
-        // Skip the sorting if we didn't match any words
-        if (cntTotal == 0) {
+        // Skip the sorting if we didn't match any importantWords
+        if (ret.isEmpty()) {
             return in;
         }
 
-        in.sort(Comparator.comparing(ret::get));
+        in.sort(Comparator.comparing(w -> ret.getOrDefault(w, 0)));
+
         return in;
     }
 
@@ -215,6 +219,27 @@ public class SummarizingDOMFilter implements NodeFilter {
                 return tn.text();
             }
             return "";
+        }
+        public String wholeText() {
+            if (node instanceof Element e) {
+                return e.wholeText();
+            }
+            else if (node instanceof TextNode tn) {
+                return tn.getWholeText();
+            }
+            return "";
+        }
+
+        public int score(Function<TextNode, Integer> fn) {
+            int[] score = new int[1];
+
+            node.traverse((node, depth) -> {
+                if (node instanceof TextNode tn) {
+                    score[0] += fn.apply(tn);
+                }
+            });
+
+            return score[0];
         }
 
         public boolean isElement() {
