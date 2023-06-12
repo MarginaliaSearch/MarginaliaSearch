@@ -15,11 +15,6 @@ public class PlainBigString implements BigString {
     }
 
     @Override
-    public byte[] getBytes() {
-        return value.getBytes(StandardCharsets.UTF_8);
-    }
-
-    @Override
     public int length() {
         return value.length();
     }
