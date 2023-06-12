@@ -40,26 +40,12 @@ public class Node
 		this.fatherNode = node;
 	}
 
-	public int countNodes()
-	{
-		int count = 1;
-		if (exceptNode != null) {
-			count += exceptNode.countNodes();
-		}
-		if (ifnotNode != null) {
-			count += ifnotNode.countNodes();
-		}
-		return count;
-	}
-
 	public boolean satisfy(FWObject object)
 	{
 		for (int i = 0; i < 13; i++) {
 			String key = condition.context[i];
-			if (key != null) {
-				if (!key.equals(object.context[i])) {
-					return false;
-				}
+			if (key != null && !key.equals(object.context[i])) { // this is not equivalent to Objects.equals(a,b)
+				return false;
 			}
 		}
 		return true;
