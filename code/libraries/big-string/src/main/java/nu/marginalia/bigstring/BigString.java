@@ -11,7 +11,5 @@ public interface BigString {
     }
     String decode();
 
-    byte[] getBytes();
-
     int length();
 }

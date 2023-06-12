@@ -330,7 +330,7 @@ public class HttpFetcher {
 
     private SimpleRobotRules parseRobotsTxt(CrawledDocument doc) {
         return robotsParser.parseContent(doc.url,
-                doc.documentBody.getBytes(),
+                doc.documentBody.decode().getBytes(),
                 doc.contentType,
                 userAgent);
     }
