@@ -13,6 +13,9 @@ import java.util.Arrays;
 public class FWObject
 {
 	public String[] context;
+
+	int[] objectCtxI = new int[13];
+
 	private final static String[] contextPrototype;
 	static {
 		contextPrototype = new String[13];

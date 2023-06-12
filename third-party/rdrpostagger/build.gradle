@@ -9,6 +9,7 @@ java {
 }
 
 dependencies {
+    implementation libs.trove
 }
 
 test {

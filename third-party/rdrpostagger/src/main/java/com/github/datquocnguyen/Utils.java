@@ -9,6 +9,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 /**
  * @author DatQuocNguyen
@@ -69,6 +71,7 @@ public class Utils
 		return true;
 	}
 
+	static Map<String, String> conditionInstancePool = new HashMap<>();
 	public static FWObject getCondition(String strCondition)
 	{
 		FWObject condition = new FWObject(false);
@@ -117,6 +120,16 @@ public class Utils
 			}
 			else if (key.equals("suffixL4")) {
 				condition.context[12] = value;
+			}
+		}
+
+		// pool the conditions to increase the chances the data is in cache
+		// when comparing later
+
+		for (var i = 0; i < condition.context.length; i++) {
+			if (condition.context[i] != null) {
+				condition.context[i] = conditionInstancePool
+						.computeIfAbsent(condition.context[i], Function.identity());
 			}
 		}
 
