@@ -8,7 +8,7 @@ public class AsciiFlattener {
             return s;
         }
 
-        StringBuilder sb = new StringBuilder(s.length());
+        StringBuilder sb = new StringBuilder(s.length() + 10);
 
         int numCp = s.codePointCount(0, s.length());
 
