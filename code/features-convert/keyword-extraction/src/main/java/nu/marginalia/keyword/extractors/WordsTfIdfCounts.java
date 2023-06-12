@@ -2,7 +2,6 @@ package nu.marginalia.keyword.extractors;
 
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import nu.marginalia.keyword.WordReps;
-import nu.marginalia.language.WordPatterns;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.model.DocumentSentence;
 import nu.marginalia.language.model.WordRep;
@@ -18,7 +17,7 @@ import static java.lang.Math.max;
 /** Extract counts and TF-IDF for the words in the document,
  * keep track of high-scoring words for flagging
  */
-public class WordsTfIdfCounts implements WordReps {
+public class WordsTfIdfCounts implements WordReps, Comparator<WordRep> {
     private final TermFrequencyDict dict;
     private final double docCount;
 
@@ -41,7 +40,7 @@ public class WordsTfIdfCounts implements WordReps {
             int value = getTermValue(key, cnt, maxVal);
 
             tfIdf.put(key, value);
-            if (cnt > 1 && value > 100) {
+            if (cnt > 2 && value > 100) {
                 highTfIdfInstances.add(key);
             }
         });
@@ -72,6 +71,10 @@ public class WordsTfIdfCounts implements WordReps {
         }
 
         return counts;
+    }
+
+    public long termFrequencyDictValue(WordRep rep) {
+        return dict.getTermFreqStemmed(rep.stemmed);
     }
 
     private String spanToStemmed(DocumentSentence sentence, WordSpan span) {
@@ -133,4 +136,8 @@ public class WordsTfIdfCounts implements WordReps {
         return (0.1 + 0.9*value/maxValue) * Math.log(freq/docCount);
     }
 
+    @Override
+    public int compare(WordRep o1, WordRep o2) {
+        return tfIdf.getOrDefault(o1, 0) - tfIdf.getOrDefault(o2, 0);
+    }
 }
