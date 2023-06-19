@@ -40,7 +40,7 @@ public class WordsTfIdfCounts implements WordReps, Comparator<WordRep> {
             int value = getTermValue(key, cnt, maxVal);
 
             tfIdf.put(key, value);
-            if (cnt > 2 && value > 100) {
+            if (cnt > 1 && value > 100) {
                 highTfIdfInstances.add(key);
             }
         });
