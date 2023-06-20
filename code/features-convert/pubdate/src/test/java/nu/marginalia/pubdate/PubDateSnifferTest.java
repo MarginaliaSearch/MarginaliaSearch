@@ -235,7 +235,7 @@ class PubDateSnifferTest {
 
         assertFalse(ret.isEmpty());
         assertNull(ret.dateIso8601());
-        assertEquals(2015, ret.year());
+        assertEquals(2012, ret.year());
     }
 
     @Test

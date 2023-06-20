@@ -266,7 +266,6 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
     private HtmlStandard getHtmlStandard(Document doc) {
         HtmlStandard htmlStandard = HtmlStandardExtractor.parseDocType(doc.documentType());
-
         if (HtmlStandard.UNKNOWN.equals(htmlStandard)) {
             return HtmlStandardExtractor.sniffHtmlStandard(doc);
         }

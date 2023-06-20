@@ -26,6 +26,17 @@ public class PubDateParser {
                 .filter(PubDateParser::validateDate);
     }
 
+    public static Optional<PubDate> attemptParseDate(String date, HtmlStandard standard) {
+        return Optional.ofNullable(date)
+                .filter(str -> str.length() >= 4 && str.length() < 32)
+                .flatMap(str ->
+                        parse8601(str)
+                                .or(() -> parse1123(str))
+                                .or(() -> dateFromHighestYearLookingSubstringWithGuess(str, standard))
+                )
+                .filter(PubDateParser::validateDate);
+    }
+
     public static OptionalInt parseYearString(String yearString) {
         try {
             return OptionalInt.of(Integer.parseInt(yearString));
@@ -70,7 +81,9 @@ public class PubDateParser {
     }
 
 
-    public static Optional<PubDate> dateFromHighestYearLookingSubstringWithGuess(String maybe, int guess) {
+    public static Optional<PubDate> dateFromHighestYearLookingSubstringWithGuess(String maybe, HtmlStandard standard) {
+        int guess = PubDateFromHtmlStandard.blindGuess(standard);
+
         var matcher = yearPattern.matcher(maybe);
 
         int min = PubDate.MAX_YEAR + 1;
@@ -126,7 +139,7 @@ public class PubDateParser {
         // Create some jitter to avoid having documents piling up in the same four years
         // as this would make searching in those years disproportionately useless
 
-        double guess = standard.yearGuess + ThreadLocalRandom.current().nextGaussian();
+        double guess = PubDateFromHtmlStandard.blindGuess(standard) + ThreadLocalRandom.current().nextGaussian();
 
         if (guess < PubDate.MIN_YEAR) {
             return PubDate.MIN_YEAR;

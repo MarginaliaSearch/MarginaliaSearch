@@ -3,6 +3,7 @@ package nu.marginalia.pubdate.heuristic;
 import nu.marginalia.converting.model.HtmlStandard;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.pubdate.PubDateEffortLevel;
+import nu.marginalia.pubdate.PubDateFromHtmlStandard;
 import nu.marginalia.pubdate.PubDateHeuristic;
 import nu.marginalia.pubdate.PubDateParser;
 import nu.marginalia.model.EdgeUrl;
@@ -42,7 +43,7 @@ public class PubDateHeuristicDOMParsingPass2 implements PubDateHeuristic {
         public FilterResult head(@NotNull Node node, int depth) {
             if (node instanceof TextNode tn) onTextNode(tn);
 
-            if (hasPubDate()) {
+            if (hasPubDate() && PubDateFromHtmlStandard.isGuessPlausible(htmlStandard, pubDate.year())) {
                 return FilterResult.STOP;
             }
             return FilterResult.CONTINUE;
@@ -78,7 +79,7 @@ public class PubDateHeuristicDOMParsingPass2 implements PubDateHeuristic {
             }
             else {
                 PubDateParser
-                        .dateFromHighestYearLookingSubstringWithGuess(text, htmlStandard.yearGuess)
+                        .dateFromHighestYearLookingSubstringWithGuess(text, htmlStandard)
                         .ifPresent(this::setPubDate);
             }
         }

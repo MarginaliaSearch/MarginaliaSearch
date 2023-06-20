@@ -74,6 +74,8 @@ public class PubDateHeuristicDOMParsingPass1 implements PubDateHeuristic {
                 return true;
             if (text.contains("opyright"))
                 return true;
+            if (text.contains("Posted on"))
+                return true;
             if (text.contains("&copy;"))
                 return true;
             if (text.contains("(c)"))
@@ -90,6 +92,8 @@ public class PubDateHeuristicDOMParsingPass1 implements PubDateHeuristic {
                     || classes.contains("byline")
                     || classes.contains("author")
                     || classes.contains("submitted")
+                    || classes.contains("date")
+                    || classes.contains("datey")
                     || el.id().contains("footer-info-lastmod"); // mediawiki
         }
 
@@ -137,7 +141,7 @@ public class PubDateHeuristicDOMParsingPass1 implements PubDateHeuristic {
             }
             else {
                 PubDateParser
-                        .dateFromHighestYearLookingSubstringWithGuess(text, htmlStandard.yearGuess)
+                        .attemptParseDate(text)
                         .ifPresent(this::setPubDate);
             }
         }

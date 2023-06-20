@@ -16,6 +16,7 @@ public class HtmlStandardExtractor {
         if (null == docType) {
             return HtmlStandard.UNKNOWN;
         }
+
         String publicId = docType.publicId();
         if (Strings.isNullOrEmpty(publicId))
             return HtmlStandard.HTML5;
