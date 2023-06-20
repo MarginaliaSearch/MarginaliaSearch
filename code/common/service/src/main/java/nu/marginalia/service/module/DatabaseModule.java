@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
+import nu.marginalia.service.ServiceHomeNotConfiguredException;
 import org.mariadb.jdbc.Driver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +61,7 @@ public class DatabaseModule extends AbstractModule {
 
         var ret = Path.of(retStr);
         if (!Files.isDirectory(ret)) {
-            throw new IllegalStateException("Could not find WMSA_HOME, either set environment variable or ensure /var/lib/wmsa exists");
+            throw new ServiceHomeNotConfiguredException("Could not find WMSA_HOME, either set environment variable or ensure /var/lib/wmsa exists");
         }
         return ret;
     }
