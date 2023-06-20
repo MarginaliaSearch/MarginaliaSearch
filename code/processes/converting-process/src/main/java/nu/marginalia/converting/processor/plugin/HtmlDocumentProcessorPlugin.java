@@ -54,6 +54,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     private final DocumentLengthLogic documentLengthLogic;
 
     private final MetaRobotsTag metaRobotsTag;
+    private final DocumentGeneratorExtractor documentGeneratorExtractor;
     private static final DocumentValuator documentValuator = new DocumentValuator();
 
     private static final LinkParser linkParser = new LinkParser();
@@ -69,7 +70,8 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
             SummaryExtractor summaryExtractor,
             PubDateSniffer pubDateSniffer,
             DocumentLengthLogic documentLengthLogic,
-            MetaRobotsTag metaRobotsTag) {
+            MetaRobotsTag metaRobotsTag,
+            DocumentGeneratorExtractor documentGeneratorExtractor) {
         this.documentLengthLogic = documentLengthLogic;
         this.minDocumentQuality = minDocumentQuality;
         this.sentenceExtractor = sentenceExtractor;
@@ -81,6 +83,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         this.pubDateSniffer = pubDateSniffer;
         this.metaRobotsTag = metaRobotsTag;
 
+        this.documentGeneratorExtractor = documentGeneratorExtractor;
     }
 
     @Override
@@ -143,12 +146,15 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         ret.description = getDescription(doc, words.importantWords);
 
+        List<String> generatorParts = documentGeneratorExtractor.generatorCleaned(doc);
+
         var tagWords = new MetaTagsBuilder()
                 .addDomainCrawlData(crawledDomain)
                 .addPubDate(pubDate)
                 .addUrl(url)
                 .addFeatures(features)
                 .addFormat(standard)
+                .addGenerator(generatorParts)
                 .build();
 
         words.addAllSyntheticTerms(tagWords);

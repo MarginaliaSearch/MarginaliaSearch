@@ -59,6 +59,15 @@ public abstract class AbstractDocumentProcessorPlugin {
             return this;
         }
 
+        public MetaTagsBuilder addGenerator(List<String> generators) {
+
+            for (var generator : generators) {
+                add("generator", generator);
+            }
+
+            return this;
+        }
+
         public MetaTagsBuilder addFormat(HtmlStandard standard) {
 
             add("format", standard);
