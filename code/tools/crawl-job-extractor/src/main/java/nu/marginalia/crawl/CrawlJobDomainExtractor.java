@@ -4,8 +4,8 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.crawling.model.spec.CrawlingSpecification;
+import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.db.DomainBlacklistImpl;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -68,11 +68,11 @@ public class CrawlJobDomainExtractor {
             """;
 
 
-    private final DomainBlacklistImpl blacklist;
+    private final DomainBlacklist blacklist;
     private final HikariDataSource dataSource;
     private static final HashFunction hasher = Hashing.murmur3_128(0);
 
-    public CrawlJobDomainExtractor(DomainBlacklistImpl blacklist, HikariDataSource dataSource) {
+    public CrawlJobDomainExtractor(DomainBlacklist blacklist, HikariDataSource dataSource) {
         this.blacklist = blacklist;
         this.dataSource = dataSource;
     }
@@ -107,7 +107,20 @@ public class CrawlJobDomainExtractor {
                 .map(this::createCrawlJobForDomain);
     }
 
-    public CrawlingSpecification extractDomain(EdgeDomain domain) {
+    public CrawlingSpecification extractNewDomain(EdgeDomain domain) {
+        CrawlingSpecification spec = new CrawlingSpecification();
+
+        spec.domain = domain.toString();
+        spec.id = createId(domain);
+        spec.urls = new ArrayList<>(1000);
+
+        spec.urls.add("https://"+domain+"/");
+        spec.crawlDepth = MIN_VISIT_COUNT;
+
+        return spec;
+    }
+
+    public CrawlingSpecification extractKnownDomain(EdgeDomain domain) {
         CrawlingSpecification spec = new CrawlingSpecification();
 
         spec.domain = domain.toString();
@@ -143,6 +156,7 @@ public class CrawlJobDomainExtractor {
 
         return spec;
     }
+
     private record DomainWithId(String domainName, int id) {
 
 
