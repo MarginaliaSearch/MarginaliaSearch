@@ -16,7 +16,7 @@ import nu.marginalia.topic.WoodworkingDetector;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
-public class TopicExperiment implements Experiment {
+public class TopicExperiment extends Experiment {
 
     RecipeDetector recipeDetector = new RecipeDetector();
     WoodworkingDetector woodworkingDetector = new WoodworkingDetector();

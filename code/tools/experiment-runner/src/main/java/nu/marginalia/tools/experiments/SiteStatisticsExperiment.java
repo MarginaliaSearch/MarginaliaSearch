@@ -18,7 +18,7 @@ import org.jsoup.Jsoup;
 
 import java.util.Comparator;
 
-public class SiteStatisticsExperiment implements Experiment {
+public class SiteStatisticsExperiment extends Experiment {
 
 
     private final DomainProcessor domainProcessor;

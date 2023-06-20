@@ -9,7 +9,7 @@ import nu.marginalia.tools.Experiment;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
-public class AdblockExperiment implements Experiment {
+public class AdblockExperiment extends Experiment {
 
     private final AdblockSimulator simulator;
 

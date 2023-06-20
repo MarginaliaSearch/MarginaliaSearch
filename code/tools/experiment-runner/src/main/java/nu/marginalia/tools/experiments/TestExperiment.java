@@ -3,7 +3,7 @@ package nu.marginalia.tools.experiments;
 import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.tools.Experiment;
 
-public class TestExperiment implements Experiment {
+public class TestExperiment extends Experiment {
     @Override
     public boolean process(CrawledDomain domain) {
         return true;

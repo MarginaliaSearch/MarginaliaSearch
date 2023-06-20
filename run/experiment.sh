@@ -4,7 +4,10 @@ set -e
 
 EXPERIMENT=$1
 SAMPLE_NAME=crawl-${2:-m}
+ARGS=${@:3}
 SAMPLE_DIR="samples/${SAMPLE_NAME}/"
+
+echo "args = $ARGS"
 
 ## Configuration
 
@@ -66,6 +69,6 @@ export PATH
 
 export JAVA_OPTS
 
-experiment-runner ${SAMPLE_DIR}/plan.yaml ${EXPERIMENT}
+experiment-runner ${SAMPLE_DIR}/plan.yaml ${EXPERIMENT} ${ARGS}
 
 popd

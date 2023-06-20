@@ -19,7 +19,7 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class SentenceStatisticsExperiment implements Experiment {
+public class SentenceStatisticsExperiment extends Experiment {
 
     SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
     Path filename;
