@@ -9,6 +9,8 @@ import java.util.List;
 /** Extract keywords for the document meta generator tag */
 public class DocumentGeneratorExtractor {
 
+    private final String defaultValue = "unset";
+
     public List<String> generatorCleaned(Document doc) {
 
         String generator = doc
@@ -19,11 +21,11 @@ public class DocumentGeneratorExtractor {
         generator = trim(generator);
 
         if (generator.isBlank())
-            return Collections.emptyList();
+            return List.of(defaultValue);
 
         String[] parts = StringUtils.split(generator, " ,:!");
         if (parts.length == 0)
-            return Collections.emptyList();
+            return List.of(defaultValue);
 
         int slashIdx = parts[0].indexOf('/');
         if (slashIdx >= 0) {
@@ -32,7 +34,7 @@ public class DocumentGeneratorExtractor {
         }
 
         if (parts.length > 3) {
-            return Collections.emptyList(); // if it's still very long after trim(), it's probably a custom hand written message
+            return List.of(defaultValue); // if it's still very long after trim(), it's probably a custom hand written message
         }
 
         switch (parts[0]) {
