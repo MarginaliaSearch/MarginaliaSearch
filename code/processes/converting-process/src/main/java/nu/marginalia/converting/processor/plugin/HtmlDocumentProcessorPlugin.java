@@ -2,6 +2,7 @@ package nu.marginalia.converting.processor.plugin;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import nu.marginalia.converting.model.GeneratorType;
 import nu.marginalia.converting.processor.MetaRobotsTag;
 import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
 import nu.marginalia.converting.processor.logic.dom.MeasureLengthVisitor;
@@ -136,7 +137,10 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         ret.hashCode = dld.localitySensitiveHashCode();
 
         PubDate pubDate = pubDateSniffer.getPubDate(crawledDocument.headers, url, doc, standard, true);
-        EnumSet<DocumentFlags> documentFlags = htmlFeatures2DocumentFlags(features);
+
+        final var generatorParts = documentGeneratorExtractor.generatorCleaned(doc);
+
+        EnumSet<DocumentFlags> documentFlags = documentFlags(features, generatorParts.type());
 
         ret.metadata = new DocumentMetadata(
                 documentLengthLogic.getEncodedAverageLength(dld),
@@ -146,7 +150,9 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         ret.description = getDescription(doc, words.importantWords);
 
-        List<String> generatorParts = documentGeneratorExtractor.generatorCleaned(doc);
+
+
+        ret.generator = generatorParts.type();
 
         var tagWords = new MetaTagsBuilder()
                 .addDomainCrawlData(crawledDomain)
@@ -154,7 +160,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
                 .addUrl(url)
                 .addFeatures(features)
                 .addFormat(standard)
-                .addGenerator(generatorParts)
+                .addGenerator(generatorParts.keywords())
                 .build();
 
         words.addAllSyntheticTerms(tagWords);
@@ -168,17 +174,19 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         return new DetailsWithWords(ret, words);
     }
 
-    private EnumSet<DocumentFlags> htmlFeatures2DocumentFlags(Set<HtmlFeature> features) {
+    private EnumSet<DocumentFlags> documentFlags(Set<HtmlFeature> features, GeneratorType type) {
         EnumSet<DocumentFlags> flags = EnumSet.noneOf(DocumentFlags.class);
 
-        if (features.contains(HtmlFeature.ADVERTISEMENT)) {
-            flags.add(DocumentFlags.Ads);
-        }
         if (features.contains(HtmlFeature.JS)) {
             flags.add(DocumentFlags.Javascript);
         }
-        if (features.contains(HtmlFeature.TRACKING)) {
-            flags.add(DocumentFlags.Tracking);
+
+        switch (type) {
+            case ECOMMERCE_AND_SPAM -> flags.add(DocumentFlags.GeneratorSpammy);
+            case DOCS_FORUM_WIKI -> flags.add(DocumentFlags.GeneratorForumWiki);
+            case ZOOMER_STATIC, MANUAL_NEW -> flags.add(DocumentFlags.GeneratorBlog);
+            case MANUAL_RETRO, BOOMER_STATIC -> flags.add(DocumentFlags.GeneratorVintage);
+            default -> {} // no flags
         }
 
         return flags;

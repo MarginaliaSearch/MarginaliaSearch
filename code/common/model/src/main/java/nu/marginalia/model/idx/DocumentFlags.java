@@ -5,10 +5,10 @@ import java.util.EnumSet;
 public enum DocumentFlags {
     Javascript,
     PlainText,
-    Ads,
-    Tracking,
-    Unused5,
-    Unused6,
+    GeneratorSpammy,
+    GeneratorVintage,
+    GeneratorBlog,
+    GeneratorForumWiki,
     Unused7,
     Unused8,
     ;

@@ -29,4 +29,5 @@ public class ProcessedDocumentDetails {
     public List<EdgeUrl> feedLinks;
 
     public DocumentMetadata metadata;
+    public GeneratorType generator;
 }
