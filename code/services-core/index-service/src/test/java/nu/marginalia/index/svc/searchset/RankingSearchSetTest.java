@@ -26,10 +26,10 @@ class RankingSearchSetTest {
         set.write();
 
         RankingSearchSet set2 = new RankingSearchSet(SearchSetIdentifier.ACADEMIA, p);
-        assertTrue(set2.contains(1));
-        assertTrue(set2.contains(5));
-        assertTrue(set2.contains(7));
-        assertTrue(set2.contains(9));
+        assertTrue(set2.contains(1, 0));
+        assertTrue(set2.contains(5, 0));
+        assertTrue(set2.contains(7, 0));
+        assertTrue(set2.contains(9, 0));
 
         Files.delete(p);
 

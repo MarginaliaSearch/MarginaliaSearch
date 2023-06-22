@@ -3,6 +3,8 @@ package nu.marginalia.index.svc.searchset;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import nu.marginalia.index.client.model.query.SearchSetIdentifier;
 import nu.marginalia.index.searchset.SearchSet;
+import nu.marginalia.model.idx.DocumentFlags;
+import nu.marginalia.model.idx.DocumentMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-/** A serializable bit map of domains
+/** A serializable bit map of domains corresponding to a method of ranking the domains
  *
  * @see SearchSetIdentifier
  *
@@ -61,10 +63,27 @@ public class RankingSearchSet implements SearchSet {
     }
 
     @Override
-    public boolean contains(int urlId) {
-        // Fallback on allow-all if no items are in set
+    public boolean contains(int urlId, long documentMetadata) {
+        // For ranked search sets, exclude excessively commercial sites
+        // TODO: Maybe this particular check should be moved up to the search service and be opt-in?
+        if (DocumentMetadata.hasFlags(documentMetadata, DocumentFlags.GeneratorSpammy.asBit())) {
+            return false;
+        }
 
-        return set.contains(urlId) || set.isEmpty();
+        // This is the main check
+        if (set.contains(urlId) || set.isEmpty()) {
+            return true;
+        }
+
+        // For the rest, let through some domains that are not in the set based on the generator tag
+        if (identifier == SearchSetIdentifier.SMALLWEB) {
+            return DocumentMetadata.hasFlags(documentMetadata, DocumentFlags.GeneratorBlog.asBit());
+        }
+        if (identifier == SearchSetIdentifier.RETRO) {
+            return DocumentMetadata.hasFlags(documentMetadata, DocumentFlags.GeneratorVintage.asBit());
+        }
+
+        return DocumentMetadata.hasFlags(documentMetadata, DocumentFlags.GeneratorForumWiki.asBit());
     }
 
     public void write() throws IOException {

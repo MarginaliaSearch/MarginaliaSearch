@@ -20,7 +20,7 @@ public class ParamMatchingQueryFilter implements QueryFilterStepIf {
         int domainId = forwardIndexReader.getDomainId(urlId);
         long meta = forwardIndexReader.getDocMeta(urlId);
 
-        if (!validateDomain(domainId)) {
+        if (!validateDomain(domainId, meta)) {
             return false;
         }
 
@@ -43,8 +43,8 @@ public class ParamMatchingQueryFilter implements QueryFilterStepIf {
         return true;
     }
 
-    private boolean validateDomain(int domainId) {
-        return params.searchSet().contains(domainId);
+    private boolean validateDomain(int domainId, long meta) {
+        return params.searchSet().contains(domainId, meta);
     }
 
     private boolean validateQuality(long meta) {

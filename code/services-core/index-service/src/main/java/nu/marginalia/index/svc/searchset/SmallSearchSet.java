@@ -6,6 +6,7 @@ import nu.marginalia.index.searchset.SearchSet;
 import java.util.Arrays;
 import java.util.Collection;
 
+/** A specialized search set for a small number of entries, for use when specifying the exact domains to query */
 public class SmallSearchSet implements SearchSet {
     public TIntHashSet entries;
 
@@ -14,7 +15,7 @@ public class SmallSearchSet implements SearchSet {
     }
 
     @Override
-    public boolean contains(int domainId) {
+    public boolean contains(int domainId, long meta) {
         return entries.contains(domainId);
     }
 
