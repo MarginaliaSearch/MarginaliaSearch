@@ -16,17 +16,39 @@ for weeks.
 ## Prerequisites
 
 You probably want to run a local bind resolver to speed up DNS lookups and reduce the amount of
-DNS traffic.
+DNS traffic. 
+
+These processes require a lot of disk space.  It's strongly recommended to use a dedicated disk,
+it doesn't need to be extremely fast, but it should be a few terabytes in size.  It should be mounted
+with `noatime` and partitioned with a large block size.  It may be a good idea to format the disk with 
+a block size of 4096 bytes.  This will reduce the amount of disk space used by the crawler.
 
 ## Setup
 
-To operate the crawler, you need two files.
+To operate the crawler, you need to set up a filesystem structure.
+
+You need 
+
+* a directory for crawl data 
+* a directory for processed data
+* a crawl specification file
+* a crawl plan file
+
+Assuming we want to keep our crawl and processed data in
+`/data`, then we would create the following directories:
+
+```bash
+$ mkdir /data/crawl
+$ mkdir /data/processed
+```
 
 ### Specifications
 
 A crawl specification file is a compressed JSON file with each domain name to crawl, as well as
 known URLs for each domain.  These are created with the [crawl-job-extractor](../tools/crawl-job-extractor/)
 tool.
+
+Let's put this in `/data/crawl.spec`
 
 ### Crawl Plan
 
@@ -37,14 +59,16 @@ This is an example from production. Note that the crawl specification mentioned 
 to by the `jobSpec` key.
 
 ```yaml
-jobSpec: "/var/lib/wmsa/archive/crawl-2023-06-07/2023-06-07.spec"
+jobSpec: "/data/crawl.spec"
 crawl:
-  dir: "/var/lib/wmsa/archive/crawl-2023-06-07/"
+  dir: "/data/crawl"
   logName: "crawler.log"
 process:
-  dir: "/var/lib/wmsa/archive/processed-2023-06-07/"
+  dir: "/data/processed"
   logName: "process.log"
 ```
+
+Let's put it in `/data/crawl-plan.yaml`
 
 ## Crawling
 
@@ -53,7 +77,7 @@ Run the crawler-process script with the crawl plan as an argument.
 In practice something like this:
 
 ```bash
-screen sudo -u searchengine WMSA_HOME=/path/to/install/dir ./crawler-process crawl-plan.yaml
+screen sudo -u searchengine WMSA_HOME=/path/to/install/dir ./crawler-process /data/crawl-plan.yaml
 ```
 
 This proces will run for a long time, up to a week.  It will journal its progress in `crawler.log`,
@@ -71,7 +95,7 @@ and extract keywords and metadata and save them as compressed JSON models.  It w
 directory structure in the process directory, and uses its own journal to keep track of progress.
 
 ```bash
-screen sudo -u searchengine WMSA_HOME=/path/to/install/dir ./converter-process crawl-plan.yaml
+screen sudo -u searchengine WMSA_HOME=/path/to/install/dir ./converter-process /data/crawl-plan.yaml
 ```
 
 **Note:** This process will use *a lot* of CPU.  Expect every available core to be at 100% for several days.
