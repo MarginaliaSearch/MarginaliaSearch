@@ -1,6 +1,5 @@
 package nu.marginalia.model.idx;
 
-import nu.marginalia.bbpc.BrailleBlockPunchCards;
 import nu.marginalia.model.crawl.PubDate;
 
 import java.util.EnumSet;
@@ -96,7 +95,7 @@ public record DocumentMetadata(int avgSentLength,
     }
 
     public static boolean hasFlags(long encoded, long metadataBitMask) {
-        return (encoded & metadataBitMask) == encoded;
+        return (encoded & metadataBitMask) == metadataBitMask;
     }
 
     public long encode() {
