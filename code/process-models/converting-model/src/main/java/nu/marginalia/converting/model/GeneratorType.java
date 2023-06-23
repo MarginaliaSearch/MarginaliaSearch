@@ -6,8 +6,9 @@ public enum GeneratorType {
     ZOOMER_STATIC,
     CMS,
     SAAS,
-    MANUAL_RETRO,
-    MANUAL_NEW,
-    DOCS_FORUM_WIKI,
+    MANUAL,
+    FORUM,
+    WIKI,
+    DOCS,
     ECOMMERCE_AND_SPAM
 }

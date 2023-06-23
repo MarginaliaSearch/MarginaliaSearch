@@ -182,10 +182,9 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         }
 
         switch (type) {
-            case ECOMMERCE_AND_SPAM -> flags.add(DocumentFlags.GeneratorSpammy);
-            case DOCS_FORUM_WIKI -> flags.add(DocumentFlags.GeneratorForumWiki);
-            case ZOOMER_STATIC, MANUAL_NEW -> flags.add(DocumentFlags.GeneratorBlog);
-            case MANUAL_RETRO, BOOMER_STATIC -> flags.add(DocumentFlags.GeneratorVintage);
+            case DOCS -> flags.add(DocumentFlags.GeneratorDocs);
+            case FORUM -> flags.add(DocumentFlags.GeneratorForum);
+            case WIKI -> flags.add(DocumentFlags.GeneratorWiki);
             default -> {} // no flags
         }
 

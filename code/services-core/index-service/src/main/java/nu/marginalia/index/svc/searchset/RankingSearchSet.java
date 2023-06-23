@@ -64,26 +64,13 @@ public class RankingSearchSet implements SearchSet {
 
     @Override
     public boolean contains(int urlId, long documentMetadata) {
-        // For ranked search sets, exclude excessively commercial sites
-        // TODO: Maybe this particular check should be moved up to the search service and be opt-in?
-        if (DocumentMetadata.hasFlags(documentMetadata, DocumentFlags.GeneratorSpammy.asBit())) {
-            return false;
-        }
 
         // This is the main check
         if (set.contains(urlId) || set.isEmpty()) {
             return true;
         }
-
-        // For the rest, let through some domains that are not in the set based on the generator tag
-        if (identifier == SearchSetIdentifier.SMALLWEB) {
-            return DocumentMetadata.hasFlags(documentMetadata, DocumentFlags.GeneratorBlog.asBit());
-        }
-        if (identifier == SearchSetIdentifier.RETRO) {
-            return DocumentMetadata.hasFlags(documentMetadata, DocumentFlags.GeneratorVintage.asBit());
-        }
-
-        return DocumentMetadata.hasFlags(documentMetadata, DocumentFlags.GeneratorForumWiki.asBit());
+        // TODO
+        return false;
     }
 
     public void write() throws IOException {
