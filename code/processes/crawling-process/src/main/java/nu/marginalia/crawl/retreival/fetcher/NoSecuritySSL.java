@@ -1,4 +1,4 @@
-package nu.marginalia.crawl.retreival;
+package nu.marginalia.crawl.retreival.fetcher;
 
 import lombok.SneakyThrows;
 
