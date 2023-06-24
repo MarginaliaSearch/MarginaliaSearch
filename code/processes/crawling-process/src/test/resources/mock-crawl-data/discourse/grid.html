@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Combined mode but grid - Development - Tiny Tiny RSS: Community</title>
+    <meta name="description" content="horrible, huh?
+@media screen and (min-width: 1400px) {
+		#headlines-frame {
+			display : grid;
+			grid-template-columns: repeat(2, 1fr);
+			grid-gap : 8px;
+
+			.cdm.expanded {
+				.footer {
+					border : 0;
+				}
+
+				b&amp;hellip;">
+    <meta name="generator" content="Discourse 3.1.0.beta4 - https://github.com/discourse/discourse version 7ff8e5580f9a900cde4be66377cf4f1dcd253a35">
+    <link rel="icon" type="image/png" href="https://community.tt-rss.org/uploads/default/optimized/1X/18a2e96275d1fffb21cce225d30a87be4544db60_2_32x32.png">
+    <link rel="apple-touch-icon" type="image/png" href="https://community.tt-rss.org/uploads/default/optimized/1X/18a2e96275d1fffb21cce225d30a87be4544db60_2_180x180.png">
+    <meta name="theme-color" media="all" content="#ffffff">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <link rel="canonical" href="https://community.tt-rss.org/t/combined-mode-but-grid/4489" />
+
+    <link rel="search" type="application/opensearchdescription+xml" href="https://community.tt-rss.org/opensearch.xml" title="Tiny Tiny RSS: Community Search">
+
+    <link href="/stylesheets/color_definitions_base__2_e1a3786e9787d3094d4ad821cf887d92d1d46700.css?__ws=community.tt-rss.org" media="all" rel="stylesheet" class="light-scheme"/>
+
+    <link href="/stylesheets/desktop_5d530b0376385f589f398785395c13114c8247b0.css?__ws=community.tt-rss.org" media="all" rel="stylesheet" data-target="desktop"  />
+
+
+
+    <link href="/stylesheets/discourse-details_5d530b0376385f589f398785395c13114c8247b0.css?__ws=community.tt-rss.org" media="all" rel="stylesheet" data-target="discourse-details"  />
+    <link href="/stylesheets/discourse-lazy-videos_5d530b0376385f589f398785395c13114c8247b0.css?__ws=community.tt-rss.org" media="all" rel="stylesheet" data-target="discourse-lazy-videos"  />
+    <link href="/stylesheets/discourse-local-dates_5d530b0376385f589f398785395c13114c8247b0.css?__ws=community.tt-rss.org" media="all" rel="stylesheet" data-target="discourse-local-dates"  />
+    <link href="/stylesheets/discourse-narrative-bot_5d530b0376385f589f398785395c13114c8247b0.css?__ws=community.tt-rss.org" media="all" rel="stylesheet" data-target="discourse-narrative-bot"  />
+    <link href="/stylesheets/discourse-presence_5d530b0376385f589f398785395c13114c8247b0.css?__ws=community.tt-rss.org" media="all" rel="stylesheet" data-target="discourse-presence"  />
+    <link href="/stylesheets/discourse-reactions_5d530b0376385f589f398785395c13114c8247b0.css?__ws=community.tt-rss.org" media="all" rel="stylesheet" data-target="discourse-reactions"  />
+    <link href="/stylesheets/discourse-solved_5d530b0376385f589f398785395c13114c8247b0.css?__ws=community.tt-rss.org" media="all" rel="stylesheet" data-target="discourse-solved"  />
+    <link href="/stylesheets/docker_manager_5d530b0376385f589f398785395c13114c8247b0.css?__ws=community.tt-rss.org" media="all" rel="stylesheet" data-target="docker_manager"  />
+    <link href="/stylesheets/poll_5d530b0376385f589f398785395c13114c8247b0.css?__ws=community.tt-rss.org" media="all" rel="stylesheet" data-target="poll"  />
+    <link href="/stylesheets/discourse-reactions_desktop_5d530b0376385f589f398785395c13114c8247b0.css?__ws=community.tt-rss.org" media="all" rel="stylesheet" data-target="discourse-reactions_desktop"  />
+    <link href="/stylesheets/poll_desktop_5d530b0376385f589f398785395c13114c8247b0.css?__ws=community.tt-rss.org" media="all" rel="stylesheet" data-target="poll_desktop"  />
+
+    <link href="/stylesheets/desktop_theme_7_fe50c691a9fb30bb61c18aa08d3b7a6cb61a0150.css?__ws=community.tt-rss.org" media="all" rel="stylesheet" data-target="desktop_theme" data-theme-id="7" data-theme-name="custom header links"/>
+    <link href="/stylesheets/desktop_theme_6_7ca213afc12b87349d5efdb08c76d0a62c01d53a.css?__ws=community.tt-rss.org" media="all" rel="stylesheet" data-target="desktop_theme" data-theme-id="6" data-theme-name="bears"/>
+    <link href="/stylesheets/desktop_theme_2_88a998cf58047c52104c0e1f454c9c1c16e18c70.css?__ws=community.tt-rss.org" media="all" rel="stylesheet" data-target="desktop_theme" data-theme-id="2" data-theme-name="ttrss"/>
+
+    <!-- <script type="text/discourse-plugin" version="0.2">
+    api.onPageChange((url, title) => {
+        if (_paq) {
+            _paq.push(["setCustomUrl", url]);
+            _paq.push(["setDocumentTitle", title]);
+            _paq.push(["trackPageView"]);
+
+            const currentUser = api.getCurrentUser();
+
+            if (currentUser && currentUser['username']) {
+                _paq.push(['setUserId', currentUser['username']]);
+            }
+        }
+    });
+</script> -->
+
+
+    <link rel="alternate nofollow" type="application/rss+xml" title="RSS feed of &#39;Combined mode but grid&#39;" href="https://community.tt-rss.org/t/combined-mode-but-grid/4489.rss" />
+    <meta property="og:site_name" content="Tiny Tiny RSS: Community" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:image" content="https://community.tt-rss.org/uploads/default/optimized/2X/d/d253dab1dab0906bf5361527e16cd069401ac1cc_2_1024x670.jpeg" />
+    <meta property="og:image" content="https://community.tt-rss.org/uploads/default/optimized/2X/d/d253dab1dab0906bf5361527e16cd069401ac1cc_2_1024x670.jpeg" />
+    <meta property="og:url" content="https://community.tt-rss.org/t/combined-mode-but-grid/4489" />
+    <meta name="twitter:url" content="https://community.tt-rss.org/t/combined-mode-but-grid/4489" />
+    <meta property="og:title" content="Combined mode but grid" />
+    <meta name="twitter:title" content="Combined mode but grid" />
+    <meta property="og:description" content="horrible, huh?  @media screen and (min-width: 1400px) { 		#headlines-frame { 			display : grid; 			grid-template-columns: repeat(2, 1fr); 			grid-gap : 8px;  			.cdm.expanded { 				.footer { 					border : 0; 				}  				border : 1px solid @border-default; 			} 		} 	} }" />
+    <meta name="twitter:description" content="horrible, huh?  @media screen and (min-width: 1400px) { 		#headlines-frame { 			display : grid; 			grid-template-columns: repeat(2, 1fr); 			grid-gap : 8px;  			.cdm.expanded { 				.footer { 					border : 0; 				}  				border : 1px solid @border-default; 			} 		} 	} }" />
+    <meta property="og:article:section" content="Tiny Tiny RSS" />
+    <meta property="og:article:section:color" content="25AAE2" />
+    <meta property="og:article:section" content="Development" />
+    <meta property="og:article:section:color" content="3AB54A" />
+    <meta property="article:published_time" content="2021-03-09T18:27:09+00:00" />
+    <meta property="og:ignore_canonical" content="true" />
+
+
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"QAPage","name":"Combined mode but grid","mainEntity":{"@type":"Question","name":"Combined mode but grid","text":"horrible, huh?\n\n@media screen and (min-width: 1400px) {\n\n#headlines-frame {\n\ndisplay : grid;\n\ngrid-template-columns: repeat(2, 1fr);\n\ngrid-gap : 8px;\n\n.cdm.expanded {\n\n.footer {\n\nborder : 0;\n\n}\n\nborder : 1px solid @border-default;\n\n}\n\n}\n\n}\n\n}\n\n<a class=\"lightbox\" href=\"https://discourse.tt-rss.org/uploads/default/original/2X/d/d253dab1dab0906bf5361527e16cd069401ac1cc.jpeg\" data-download-href=\"https://discourse.tt-rss.org/uploads/default/d253dab1dab0906bf5361527e16cd069401ac1cc\" title=\"image\">[image]<\/a>","upvoteCount":0,"answerCount":0,"dateCreated":"2021-03-09T18:27:09.054Z","author":{"@type":"Person","name":""}}}</script>
+</head>
+<body class="crawler ">
+
+<header>
+    <a href="/">
+        Tiny Tiny RSS: Community
+    </a>
+</header>
+
+<div id="main-outlet" class="wrap" role="main">
+    <div id="topic-title">
+        <h1>
+            <a href="/t/combined-mode-but-grid/4489">Combined mode but grid</a>
+        </h1>
+
+        <div class="topic-category" itemscope itemtype="http://schema.org/BreadcrumbList">
+          <span itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+            <a href="https://community.tt-rss.org/c/tiny-tiny-rss/8" class="badge-wrapper bullet" itemprop="item">
+              <span class='badge-category-bg' style='background-color: #25AAE2'></span>
+              <span class='badge-category clear-badge'>
+                <span class='category-name' itemprop='name'>Tiny Tiny RSS</span>
+              </span>
+            </a>
+            <meta itemprop="position" content="1" />
+          </span>
+            <span itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+            <a href="https://community.tt-rss.org/c/tiny-tiny-rss/development/6" class="badge-wrapper bullet" itemprop="item">
+              <span class='badge-category-bg' style='background-color: #3AB54A'></span>
+              <span class='badge-category clear-badge'>
+                <span class='category-name' itemprop='name'>Development</span>
+              </span>
+            </a>
+            <meta itemprop="position" content="2" />
+          </span>
+        </div>
+
+    </div>
+
+
+
+    <div itemscope itemtype='http://schema.org/DiscussionForumPosting'>
+        <meta itemprop='headline' content='Combined mode but grid'>
+        <meta itemprop='articleSection' content='Development'>
+        <meta itemprop='keywords' content=''>
+        <div itemprop='publisher' itemscope itemtype="http://schema.org/Organization">
+            <meta itemprop='name' content='Tiny Tiny RSS: Community'>
+        </div>
+
+        <div id='post_1'  class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" href='https://community.tt-rss.org/u/fox'><span itemprop='name'>fox</span></a>
+
+              </span>
+
+                <link itemprop="mainEntityOfPage" href="https://community.tt-rss.org/t/combined-mode-but-grid/4489">
+
+                <link itemprop="image" href="https://community.tt-rss.org/uploads/default/original/2X/d/d253dab1dab0906bf5361527e16cd069401ac1cc.jpeg">
+
+                <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2021-03-09T18:27:09Z' class='post-time'>
+                    March 9, 2021,  6:27pm
+                  </time>
+                  <meta itemprop='dateModified' content='2021-03-09T18:27:09Z'>
+              <span itemprop='position'>1</span>
+              </span>
+            </div>
+            <div class='post' itemprop='articleBody'>
+                <p>horrible, huh?</p>
+                <pre><code class="lang-css">@media screen and (min-width: 1400px) {
+		#headlines-frame {
+			display : grid;
+			grid-template-columns: repeat(2, 1fr);
+			grid-gap : 8px;
+
+			.cdm.expanded {
+				.footer {
+					border : 0;
+				}
+
+				border : 1px solid @border-default;
+			}
+		}
+	}
+}
+</code></pre>
+                <p><div class="lightbox-wrapper"><a class="lightbox" href="https://discourse.tt-rss.org/uploads/default/original/2X/d/d253dab1dab0906bf5361527e16cd069401ac1cc.jpeg" data-download-href="https://discourse.tt-rss.org/uploads/default/d253dab1dab0906bf5361527e16cd069401ac1cc" title="image"><img src="https://discourse.tt-rss.org/uploads/default/optimized/2X/d/d253dab1dab0906bf5361527e16cd069401ac1cc_2_690x451.jpeg" alt="image" data-base62-sha1="u0DVoAOiT7CgzBwmYIh7fWqFZz6" width="690" height="451" srcset="https://discourse.tt-rss.org/uploads/default/optimized/2X/d/d253dab1dab0906bf5361527e16cd069401ac1cc_2_690x451.jpeg, https://discourse.tt-rss.org/uploads/default/optimized/2X/d/d253dab1dab0906bf5361527e16cd069401ac1cc_2_1035x676.jpeg 1.5x, https://discourse.tt-rss.org/uploads/default/optimized/2X/d/d253dab1dab0906bf5361527e16cd069401ac1cc_2_1380x902.jpeg 2x" data-small-upload="https://discourse.tt-rss.org/uploads/default/optimized/2X/d/d253dab1dab0906bf5361527e16cd069401ac1cc_2_10x10.png"><div class="meta">
+                <svg class="fa d-icon d-icon-far-image svg-icon" aria-hidden="true"><use xlink:href="#far-image"></use></svg><span class="filename">image</span><span class="informations">1826×1195 425 KB</span><svg class="fa d-icon d-icon-discourse-expand svg-icon" aria-hidden="true"><use xlink:href="#discourse-expand"></use></svg>
+            </div></a></div></p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+                <span class='post-likes'></span>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/CommentAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+            </div>
+
+        </div>
+        <div id='post_2' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" href='https://community.tt-rss.org/u/sam302psu'><span itemprop='name'>sam302psu</span></a>
+
+              </span>
+
+                <link itemprop="mainEntityOfPage" href="https://community.tt-rss.org/t/combined-mode-but-grid/4489">
+
+
+                <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2021-03-09T18:52:37Z' class='post-time'>
+                    March 9, 2021,  6:52pm
+                  </time>
+                  <meta itemprop='dateModified' content='2021-03-09T18:52:37Z'>
+              <span itemprop='position'>2</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+                <p>I kind of like it. The concept at least.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+                <span class='post-likes'></span>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/CommentAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+            </div>
+
+        </div>
+        <div id='post_3' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" href='https://community.tt-rss.org/u/linoth'><span itemprop='name'>linoth</span></a>
+
+              </span>
+
+                <link itemprop="mainEntityOfPage" href="https://community.tt-rss.org/t/combined-mode-but-grid/4489">
+
+
+                <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2021-03-10T01:41:53Z' class='post-time'>
+                    March 10, 2021,  1:41am
+                  </time>
+                  <meta itemprop='dateModified' content='2021-03-10T01:41:53Z'>
+              <span itemprop='position'>3</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+                <p>You got me curious.</p>
+                <p>A little rough in its current form if you’re someone toggling collapsed mode.  Not sure exactly what caused it, but I wound up with the page getting wider a time or two while I tried it out.  I’m sure that it’s actually pretty desirable for image-heavy uses, such as your example of Reddit.  Would not have guessed that it could be pulled off with just some lines of CSS, but I don’t know web dev.</p>
+                <p>Neat.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+                <span class='post-likes'></span>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/CommentAction"/>
+                <meta itemprop="userInteractionCount" content="1" />
+            </div>
+
+        </div>
+        <div id='post_4' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" href='https://community.tt-rss.org/u/fox'><span itemprop='name'>fox</span></a>
+
+              </span>
+
+                <link itemprop="mainEntityOfPage" href="https://community.tt-rss.org/t/combined-mode-but-grid/4489">
+
+                <link itemprop="image" href="https://community.tt-rss.org/uploads/default/original/2X/a/a0dcebfc42b3940a0f4c55ae4640a7ee97e4da08.jpeg">
+
+                <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2021-03-10T05:03:00Z' class='post-time'>
+                    March 10, 2021,  5:03am
+                  </time>
+                  <meta itemprop='dateModified' content='2021-03-10T05:41:19Z'>
+              <span itemprop='position'>4</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+                <p>yeah this would obviously only work for expanded mode <img src="https://discourse.tt-rss.org/images/emoji/google_classic/slight_smile.png?v=9" title=":slight_smile:" class="emoji" alt=":slight_smile:"></p>
+                <p><div class="lightbox-wrapper"><a class="lightbox" href="https://discourse.tt-rss.org/uploads/default/original/2X/a/a0dcebfc42b3940a0f4c55ae4640a7ee97e4da08.jpeg" data-download-href="https://discourse.tt-rss.org/uploads/default/a0dcebfc42b3940a0f4c55ae4640a7ee97e4da08" title="image"><img src="https://discourse.tt-rss.org/uploads/default/optimized/2X/a/a0dcebfc42b3940a0f4c55ae4640a7ee97e4da08_2_690x448.jpeg" alt="image" data-base62-sha1="mX3IwjuahEZxyHk7fMxVA6XKJCw" width="690" height="448" srcset="https://discourse.tt-rss.org/uploads/default/optimized/2X/a/a0dcebfc42b3940a0f4c55ae4640a7ee97e4da08_2_690x448.jpeg, https://discourse.tt-rss.org/uploads/default/optimized/2X/a/a0dcebfc42b3940a0f4c55ae4640a7ee97e4da08_2_1035x672.jpeg 1.5x, https://discourse.tt-rss.org/uploads/default/optimized/2X/a/a0dcebfc42b3940a0f4c55ae4640a7ee97e4da08_2_1380x896.jpeg 2x" data-small-upload="https://discourse.tt-rss.org/uploads/default/optimized/2X/a/a0dcebfc42b3940a0f4c55ae4640a7ee97e4da08_2_10x10.png"><div class="meta">
+                <svg class="fa d-icon d-icon-far-image svg-icon" aria-hidden="true"><use xlink:href="#far-image"></use></svg><span class="filename">image</span><span class="informations">1951×1267 552 KB</span><svg class="fa d-icon d-icon-discourse-expand svg-icon" aria-hidden="true"><use xlink:href="#discourse-expand"></use></svg>
+            </div></a></div></p>
+                <p>a bit more polished looking, i think.</p>
+                <p>e: it’s an option now.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+                <span class='post-likes'></span>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/CommentAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+            </div>
+
+        </div>
+        <div id='post_5' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" href='https://community.tt-rss.org/u/fox'><span itemprop='name'>fox</span></a>
+
+              </span>
+
+                <link itemprop="mainEntityOfPage" href="https://community.tt-rss.org/t/combined-mode-but-grid/4489">
+
+                <link itemprop="image" href="https://community.tt-rss.org/uploads/default/original/2X/0/04be46f4f91f917188576fdeb34027184c5d8bbc.png">
+
+                <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2021-03-11T20:17:10Z' class='post-time'>
+                    March 11, 2021,  8:17pm
+                  </time>
+                  <meta itemprop='dateModified' content='2021-03-11T20:27:54Z'>
+              <span itemprop='position'>5</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+                <p>i made a really primitive plugin that fakes masonry layout for the grid:</p>
+                <p><div class="lightbox-wrapper"><a class="lightbox" href="https://discourse.tt-rss.org/uploads/default/original/2X/0/04be46f4f91f917188576fdeb34027184c5d8bbc.png" data-download-href="https://discourse.tt-rss.org/uploads/default/04be46f4f91f917188576fdeb34027184c5d8bbc" title="image"><img src="https://discourse.tt-rss.org/uploads/default/optimized/2X/0/04be46f4f91f917188576fdeb34027184c5d8bbc_2_690x431.png" alt="image" data-base62-sha1="FXzLpxEuFssaI6B3WUk8pRDS3O" width="690" height="431" srcset="https://discourse.tt-rss.org/uploads/default/optimized/2X/0/04be46f4f91f917188576fdeb34027184c5d8bbc_2_690x431.png, https://discourse.tt-rss.org/uploads/default/optimized/2X/0/04be46f4f91f917188576fdeb34027184c5d8bbc_2_1035x646.png 1.5x, https://discourse.tt-rss.org/uploads/default/optimized/2X/0/04be46f4f91f917188576fdeb34027184c5d8bbc_2_1380x862.png 2x" data-dominant-color="E1E1E2"><div class="meta">
+                <svg class="fa d-icon d-icon-far-image svg-icon" aria-hidden="true"><use href="#far-image"></use></svg><span class="filename">image</span><span class="informations">2033×1271 386 KB</span><svg class="fa d-icon d-icon-discourse-expand svg-icon" aria-hidden="true"><use href="#discourse-expand"></use></svg>
+            </div></a></div></p>
+                <p>its somewhat buggy and lacks any optimization whatsoever but cool nonetheless (when it works). enjoy.</p>
+                <p><a href="https://git.tt-rss.org/fox/ttrss-grid-masonry" class="onebox" target="_blank" rel="noopener">https://git.tt-rss.org/fox/ttrss-grid-masonry</a></p>
+                <p>e: this needs latest master, just in case.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+                <span class='post-likes'></span>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/CommentAction"/>
+                <meta itemprop="userInteractionCount" content="1" />
+            </div>
+
+        </div>
+        <div id='post_6' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" href='https://community.tt-rss.org/u/sam302psu'><span itemprop='name'>sam302psu</span></a>
+
+              </span>
+
+                <link itemprop="mainEntityOfPage" href="https://community.tt-rss.org/t/combined-mode-but-grid/4489">
+
+
+                <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2021-03-11T21:24:30Z' class='post-time'>
+                    March 11, 2021,  9:24pm
+                  </time>
+                  <meta itemprop='dateModified' content='2021-03-11T21:26:55Z'>
+              <span itemprop='position'>6</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+                <p>So I’ve been using this view and I like it but one small issue I can’t figure out how to fix is word wrapping in the frames.  Words keep getting split between lines and making things hard to read sometimes.  Is that something I can fix with the custom css?</p>
+                <p>edit: I should have mentioned I am running the dynamic docker setup and I restarted the containers a few hours ago.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+                <span class='post-likes'></span>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/CommentAction"/>
+                <meta itemprop="userInteractionCount" content="1" />
+            </div>
+
+        </div>
+        <div id='post_7' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" href='https://community.tt-rss.org/u/fox'><span itemprop='name'>fox</span></a>
+
+              </span>
+
+                <link itemprop="mainEntityOfPage" href="https://community.tt-rss.org/t/combined-mode-but-grid/4489">
+
+
+                <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2021-03-12T04:38:48Z' class='post-time'>
+                    March 12, 2021,  4:38am
+                  </time>
+                  <meta itemprop='dateModified' content='2021-03-12T04:38:48Z'>
+              <span itemprop='position'>7</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+                <p>i should probably go easier on word-breaking in there, limit to links only or something like that.</p>
+                <p><a href="https://git.tt-rss.org/fox/tt-rss/src/branch/master/themes/light/tt-rss.less#L749" class="onebox" target="_blank" rel="noopener">https://git.tt-rss.org/fox/tt-rss/src/branch/master/themes/light/tt-rss.less#L749</a></p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+                <span class='post-likes'></span>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/CommentAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+            </div>
+
+        </div>
+        <div id='post_8' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" href='https://community.tt-rss.org/u/levito'><span itemprop='name'>levito</span></a>
+
+              </span>
+
+                <link itemprop="mainEntityOfPage" href="https://community.tt-rss.org/t/combined-mode-but-grid/4489">
+
+
+                <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2021-03-12T09:07:30Z' class='post-time'>
+                    March 12, 2021,  9:07am
+                  </time>
+                  <meta itemprop='dateModified' content='2021-03-12T09:07:30Z'>
+              <span itemprop='position'>8</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+                <p>Hi <a class="mention" href="/u/fox">@fox</a>,awesome to see that rush of progress!</p>
+                <p>I’d suggest using <code>word-wrap: break-word;</code> instead of <code>word-break: break-all;</code>. This makes words only break if they are really wider than the container. Short words are not affected. So you might then also remove the restriction to links.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+                <span class='post-likes'></span>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/CommentAction"/>
+                <meta itemprop="userInteractionCount" content="1" />
+            </div>
+
+        </div>
+        <div id='post_9' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" href='https://community.tt-rss.org/u/fox'><span itemprop='name'>fox</span></a>
+
+              </span>
+
+                <link itemprop="mainEntityOfPage" href="https://community.tt-rss.org/t/combined-mode-but-grid/4489">
+
+                <link itemprop="image" href="https://community.tt-rss.org/uploads/default/original/2X/b/b9d8e8ecd722ea2f29e0fa101548482e9fe912fd.png">
+
+                <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2021-03-12T09:34:16Z' class='post-time'>
+                    March 12, 2021,  9:34am
+                  </time>
+                  <meta itemprop='dateModified' content='2021-03-12T09:34:16Z'>
+              <span itemprop='position'>9</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+                <p>yeah this could work for text, but for links specifically it can make things ugly (uglier?):</p>
+                <p><div class="lightbox-wrapper"><a class="lightbox" href="https://discourse.tt-rss.org/uploads/default/original/2X/b/b9d8e8ecd722ea2f29e0fa101548482e9fe912fd.png" data-download-href="https://discourse.tt-rss.org/uploads/default/b9d8e8ecd722ea2f29e0fa101548482e9fe912fd" title="image"><img src="https://discourse.tt-rss.org/uploads/default/optimized/2X/b/b9d8e8ecd722ea2f29e0fa101548482e9fe912fd_2_690x187.png" alt="image" data-base62-sha1="qw53FQsmq3Tnl5aap9yIPqLbSRT" width="690" height="187" srcset="https://discourse.tt-rss.org/uploads/default/optimized/2X/b/b9d8e8ecd722ea2f29e0fa101548482e9fe912fd_2_690x187.png, https://discourse.tt-rss.org/uploads/default/optimized/2X/b/b9d8e8ecd722ea2f29e0fa101548482e9fe912fd_2_1035x280.png 1.5x, https://discourse.tt-rss.org/uploads/default/optimized/2X/b/b9d8e8ecd722ea2f29e0fa101548482e9fe912fd_2_1380x374.png 2x" data-small-upload="https://discourse.tt-rss.org/uploads/default/optimized/2X/b/b9d8e8ecd722ea2f29e0fa101548482e9fe912fd_2_10x10.png"><div class="meta">
+                <svg class="fa d-icon d-icon-far-image svg-icon" aria-hidden="true"><use xlink:href="#far-image"></use></svg><span class="filename">image</span><span class="informations">1615×439 74.6 KB</span><svg class="fa d-icon d-icon-discourse-expand svg-icon" aria-hidden="true"><use xlink:href="#discourse-expand"></use></svg>
+            </div></a></div></p>
+                <p>which is why i went with break-all.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+                <span class='post-likes'></span>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/CommentAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+            </div>
+
+        </div>
+        <div id='post_10' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" href='https://community.tt-rss.org/u/levito'><span itemprop='name'>levito</span></a>
+
+              </span>
+
+                <link itemprop="mainEntityOfPage" href="https://community.tt-rss.org/t/combined-mode-but-grid/4489">
+
+                <link itemprop="image" href="https://community.tt-rss.org/uploads/default/original/2X/5/5d9654dc6e0e9cb1f655b3af565163a882300e84.png">
+
+                <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2021-03-12T09:43:23Z' class='post-time'>
+                    March 12, 2021,  9:43am
+                  </time>
+                  <meta itemprop='dateModified' content='2021-03-12T09:43:23Z'>
+              <span itemprop='position'>10</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+                <p>Thanks for the quick reply and your explanation – I get your point. The only problematic edge-case I see with this is links at the end of a line.</p>
+                <p><div class="lightbox-wrapper"><a class="lightbox" href="https://discourse.tt-rss.org/uploads/default/original/2X/5/5d9654dc6e0e9cb1f655b3af565163a882300e84.png" data-download-href="https://discourse.tt-rss.org/uploads/default/5d9654dc6e0e9cb1f655b3af565163a882300e84" title="Screenshot 2021-03-12 at 10.40.38"><img src="https://discourse.tt-rss.org/uploads/default/optimized/2X/5/5d9654dc6e0e9cb1f655b3af565163a882300e84_2_690x274.png" alt="Screenshot 2021-03-12 at 10.40.38" data-base62-sha1="dlUuhIyTaomOYut8VQNv9nyKtuY" width="690" height="274" srcset="https://discourse.tt-rss.org/uploads/default/optimized/2X/5/5d9654dc6e0e9cb1f655b3af565163a882300e84_2_690x274.png, https://discourse.tt-rss.org/uploads/default/optimized/2X/5/5d9654dc6e0e9cb1f655b3af565163a882300e84_2_1035x411.png 1.5x, https://discourse.tt-rss.org/uploads/default/original/2X/5/5d9654dc6e0e9cb1f655b3af565163a882300e84.png 2x" data-small-upload="https://discourse.tt-rss.org/uploads/default/optimized/2X/5/5d9654dc6e0e9cb1f655b3af565163a882300e84_2_10x10.png"><div class="meta">
+                <svg class="fa d-icon d-icon-far-image svg-icon" aria-hidden="true"><use xlink:href="#far-image"></use></svg><span class="filename">Screenshot 2021-03-12 at 10.40.38</span><span class="informations">1334×530 56.7 KB</span><svg class="fa d-icon d-icon-discourse-expand svg-icon" aria-hidden="true"><use xlink:href="#discourse-expand"></use></svg>
+            </div></a></div></p>
+                <p>But I think that’s okay.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+                <span class='post-likes'></span>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/CommentAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+            </div>
+
+        </div>
+        <div id='post_11' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" href='https://community.tt-rss.org/u/sam302psu'><span itemprop='name'>sam302psu</span></a>
+
+              </span>
+
+                <link itemprop="mainEntityOfPage" href="https://community.tt-rss.org/t/combined-mode-but-grid/4489">
+
+
+                <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2021-03-12T12:44:58Z' class='post-time'>
+                    March 12, 2021, 12:44pm
+                  </time>
+                  <meta itemprop='dateModified' content='2021-03-12T12:44:58Z'>
+              <span itemprop='position'>11</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+                <p>Thanks for the quick fix.  It’s much better. I’m really liking the grid layout with mark as read on scroll.  Thanks.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+                <span class='post-likes'></span>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/CommentAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+            </div>
+
+        </div>
+        <div id='post_12' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" href='https://community.tt-rss.org/u/OldBear'><span itemprop='name'>OldBear</span></a>
+
+              </span>
+
+                <link itemprop="mainEntityOfPage" href="https://community.tt-rss.org/t/combined-mode-but-grid/4489">
+
+
+                <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2021-03-15T16:33:52Z' class='post-time'>
+                    March 15, 2021,  4:33pm
+                  </time>
+                  <meta itemprop='dateModified' content='2021-03-15T16:33:52Z'>
+              <span itemprop='position'>12</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+                <p>I think it’s a nice layout to be set to feeds like Dilbert</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+                <span class='post-likes'></span>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/CommentAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+            </div>
+
+        </div>
+        <div id='post_13' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" href='https://community.tt-rss.org/u/toomyzoom'><span itemprop='name'>toomyzoom</span></a>
+
+              </span>
+
+                <link itemprop="mainEntityOfPage" href="https://community.tt-rss.org/t/combined-mode-but-grid/4489">
+
+
+                <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2021-03-20T19:32:21Z' class='post-time'>
+                    March 20, 2021,  7:32pm
+                  </time>
+                  <meta itemprop='dateModified' content='2021-03-20T19:32:21Z'>
+              <span itemprop='position'>13</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+                <p>Good, now add it to android app <img src="https://discourse.tt-rss.org/images/emoji/google_classic/grin.png?v=9" title=":grin:" class="emoji" alt=":grin:"></p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+                <span class='post-likes'></span>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/CommentAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+            </div>
+
+        </div>
+        <div id='post_14' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" href='https://community.tt-rss.org/u/linoth'><span itemprop='name'>linoth</span></a>
+
+              </span>
+
+                <link itemprop="mainEntityOfPage" href="https://community.tt-rss.org/t/combined-mode-but-grid/4489">
+
+
+                <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2021-03-20T21:18:36Z' class='post-time'>
+                    March 20, 2021,  9:18pm
+                  </time>
+                  <meta itemprop='dateModified' content='2021-03-20T21:18:36Z'>
+              <span itemprop='position'>14</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+                <p>Feel a bit guilty since I gave feedback and disappeared.</p>
+                <p>I have an image heavy feed I’m very far behind on, and your first post made me try out expanded instead of collapsed.  Sped things up immensely because apparently marking posts as read when you flip through them was CPU heavy on my server.</p>
+                <p>After that, columns just made things even faster for me.</p>
+                <p>I did run into an edge case that most people probably wouldn’t have even noticed, where a headline would be top-to-bottom in one column at 1080p, so I ham-fisted some CSS to set a max-height on titleWrap.</p>
+                <p>Thanks so much for this feature, fox.  Didn’t even know I needed it.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+                <span class='post-likes'></span>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/CommentAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+            </div>
+
+        </div>
+        <div id='post_15' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" href='https://community.tt-rss.org/u/sam302psu'><span itemprop='name'>sam302psu</span></a>
+
+              </span>
+
+                <link itemprop="mainEntityOfPage" href="https://community.tt-rss.org/t/combined-mode-but-grid/4489">
+
+
+                <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2022-08-22T16:29:33Z' class='post-time'>
+                    August 22, 2022,  4:29pm
+                  </time>
+                  <meta itemprop='dateModified' content='2022-08-22T16:29:33Z'>
+              <span itemprop='position'>15</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+                <p>Sorry to resurrect this old thread.  I’ve really grown to love grid mode but I noticed the article headlines sometimes break words on to separate lines. It seems to happen with all themes.  I don’t have the masonry plugin active either.</p>
+                <p>I’m using the stock docker setup.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+                <span class='post-likes'></span>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/CommentAction"/>
+                <meta itemprop="userInteractionCount" content="1" />
+            </div>
+
+        </div>
+        <div id='post_16' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" href='https://community.tt-rss.org/u/fox'><span itemprop='name'>fox</span></a>
+
+              </span>
+
+                <link itemprop="mainEntityOfPage" href="https://community.tt-rss.org/t/combined-mode-but-grid/4489">
+
+
+                <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2022-08-22T16:42:04Z' class='post-time'>
+                    August 22, 2022,  4:42pm
+                  </time>
+                  <meta itemprop='dateModified' content='2022-08-22T17:13:10Z'>
+              <span itemprop='position'>16</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+                <aside class="quote no-group" data-username="sam302psu" data-post="15" data-topic="4489">
+                    <div class="title">
+                        <div class="quote-controls"></div>
+                        <img loading="lazy" alt="" width="20" height="20" src="https://discourse.tt-rss.org/user_avatar/discourse.tt-rss.org/sam302psu/40/326_2.png" class="avatar"> sam302psu:</div>
+                    <blockquote>
+                        <p>article headlines sometimes break words on to separate lines</p>
+                    </blockquote>
+                </aside>
+                <p>yeah it’s a stock CSS thing, it’s either that or super long words breaking layout. i’m not fond of either behaviors. <img src="https://discourse.tt-rss.org/images/emoji/google_classic/frowning.png?v=12" title=":frowning:" class="emoji" alt=":frowning:" loading="lazy" width="20" height="20"></p>
+                <p>there are several rules like this in the .less files:</p>
+                <pre><code class="lang-css">word-break : break-all;
+</code></pre>
+                <p>ideas welcome, etc.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+                <span class='post-likes'></span>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/CommentAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+            </div>
+
+        </div>
+        <div id='post_17' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" href='https://community.tt-rss.org/u/sam302psu'><span itemprop='name'>sam302psu</span></a>
+
+              </span>
+
+                <link itemprop="mainEntityOfPage" href="https://community.tt-rss.org/t/combined-mode-but-grid/4489">
+
+
+                <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2022-08-22T17:31:29Z' class='post-time'>
+                    August 22, 2022,  5:31pm
+                  </time>
+                  <meta itemprop='dateModified' content='2022-08-22T17:31:29Z'>
+              <span itemprop='position'>17</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+                <p>Thanks for confirming. I will take the occassional headline issue over breaking the layout.  I’ll use this as a chance to learn something and if I come up with a fix I’ll let you know.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+                <span class='post-likes'></span>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/CommentAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+            </div>
+
+        </div>
+        <div id='post_18' itemprop='comment' itemscope itemtype='http://schema.org/Comment' class='topic-body crawler-post'>
+            <div class='crawler-post-meta'>
+              <span class="creator" itemprop="author" itemscope itemtype="http://schema.org/Person">
+                <a itemprop="url" href='https://community.tt-rss.org/u/ManuelW'><span itemprop='name'>ManuelW</span></a>
+
+              </span>
+
+                <link itemprop="mainEntityOfPage" href="https://community.tt-rss.org/t/combined-mode-but-grid/4489">
+
+
+                <span class="crawler-post-infos">
+                  <time itemprop='datePublished' datetime='2023-06-24T11:30:44Z' class='post-time'>
+                    June 24, 2023, 11:30am
+                  </time>
+                  <meta itemprop='dateModified' content='2023-06-24T11:30:44Z'>
+              <span itemprop='position'>18</span>
+              </span>
+            </div>
+            <div class='post' itemprop='text'>
+                <p>How do I activate this? I installed the Plugin and set the checkmark, but nothing happens.</p>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/LikeAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+                <span class='post-likes'></span>
+            </div>
+
+            <div itemprop="interactionStatistic" itemscope itemtype="http://schema.org/InteractionCounter">
+                <meta itemprop="interactionType" content="http://schema.org/CommentAction"/>
+                <meta itemprop="userInteractionCount" content="0" />
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+</div>
+<footer class="container wrap">
+    <nav class='crawler-nav'>
+        <ul>
+            <li itemscope itemtype='http://schema.org/SiteNavigationElement'>
+        <span itemprop='name'>
+          <a href='/' itemprop="url">Home </a>
+        </span>
+            </li>
+            <li itemscope itemtype='http://schema.org/SiteNavigationElement'>
+        <span itemprop='name'>
+          <a href='/categories' itemprop="url">Categories </a>
+        </span>
+            </li>
+            <li itemscope itemtype='http://schema.org/SiteNavigationElement'>
+        <span itemprop='name'>
+          <a href='/guidelines' itemprop="url">FAQ/Guidelines </a>
+        </span>
+            </li>
+            <li itemscope itemtype='http://schema.org/SiteNavigationElement'>
+        <span itemprop='name'>
+          <a href='/tos' itemprop="url">Terms of Service </a>
+        </span>
+            </li>
+            <li itemscope itemtype='http://schema.org/SiteNavigationElement'>
+        <span itemprop='name'>
+          <a href='/privacy' itemprop="url">Privacy Policy </a>
+        </span>
+            </li>
+        </ul>
+    </nav>
+    <p class='powered-by-link'>Powered by <a href="https://www.discourse.org">Discourse</a>, best viewed with JavaScript enabled</p>
+</footer>
+
+
+
+</body>
+
+</html>

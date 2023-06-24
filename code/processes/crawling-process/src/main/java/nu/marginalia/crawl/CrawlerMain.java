@@ -2,13 +2,14 @@ package nu.marginalia.crawl;
 
 import nu.marginalia.UserAgent;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
 import nu.marginalia.process.log.WorkLog;
 import plan.CrawlPlanLoader;
 import plan.CrawlPlan;
 import nu.marginalia.crawling.io.CrawledDomainWriter;
 import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
-import nu.marginalia.crawl.retreival.HttpFetcher;
+import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
 import okhttp3.ConnectionPool;
 import okhttp3.Dispatcher;
 import okhttp3.internal.Util;
@@ -102,8 +103,8 @@ public class CrawlerMain implements AutoCloseable {
         if (workLog.isJobFinished(specification.id))
             return;
 
+        HttpFetcher fetcher = new HttpFetcherImpl(userAgent.uaString(), dispatcher, connectionPool);
 
-        HttpFetcher fetcher = new HttpFetcher(userAgent.uaString(), dispatcher, connectionPool);
         try (CrawledDomainWriter writer = new CrawledDomainWriter(crawlDataDir, specification.domain, specification.id)) {
             var retreiver = new CrawlerRetreiver(fetcher, specification, writer::accept);
 

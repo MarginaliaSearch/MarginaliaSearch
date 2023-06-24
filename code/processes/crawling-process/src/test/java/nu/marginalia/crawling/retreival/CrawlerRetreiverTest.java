@@ -1,7 +1,8 @@
 package nu.marginalia.crawling.retreival;
 
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
-import nu.marginalia.crawl.retreival.HttpFetcher;
+import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
+import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.crawling.model.SerializableCrawlData;
@@ -23,7 +24,7 @@ class CrawlerRetreiverTest {
 
         var specs = new CrawlingSpecification("1", 5, "www.marginalia.nu", new ArrayList<>());
 
-        HttpFetcher fetcher = new HttpFetcher("test.marginalia.nu");
+        HttpFetcher fetcher = new HttpFetcherImpl("test.marginalia.nu");
 
 
         List<SerializableCrawlData> data = new ArrayList<>();

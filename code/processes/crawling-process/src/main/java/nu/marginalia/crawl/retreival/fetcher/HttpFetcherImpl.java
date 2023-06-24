@@ -1,12 +1,12 @@
-package nu.marginalia.crawl.retreival;
+package nu.marginalia.crawl.retreival.fetcher;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import crawlercommons.robots.SimpleRobotRules;
 import crawlercommons.robots.SimpleRobotRulesParser;
-import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.ToString;
+import nu.marginalia.crawl.retreival.Cookies;
+import nu.marginalia.crawl.retreival.RateLimitException;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawlerDocumentStatus;
 import nu.marginalia.crawling.model.ContentType;
@@ -35,7 +35,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
-public class HttpFetcher {
+public class HttpFetcherImpl implements HttpFetcher {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final String userAgent;
@@ -46,29 +46,15 @@ public class HttpFetcher {
 
     private final ContentTypeLogic contentTypeLogic = new ContentTypeLogic();
 
+    @Override
     public void setAllowAllContentTypes(boolean allowAllContentTypes) {
         contentTypeLogic.setAllowAllContentTypes(allowAllContentTypes);
     }
 
     private final OkHttpClient client;
 
-    public enum FetchResultState {
-        OK,
-        REDIRECT,
-        ERROR
-    }
-
-    @AllArgsConstructor @ToString
-    public static class FetchResult {
-        public final FetchResultState state;
-        public final EdgeDomain domain;
-
-        public boolean ok() {
-            return state == FetchResultState.OK;
-        }
-    }
-
     private static final FastTerminatingSocketFactory ftSocketFactory = new FastTerminatingSocketFactory();
+
     @SneakyThrows
     private OkHttpClient createClient(Dispatcher dispatcher, ConnectionPool pool) {
         var builder = new OkHttpClient.Builder();
@@ -90,25 +76,28 @@ public class HttpFetcher {
 
     }
 
+    @Override
     public List<String> getCookies() {
         return cookies.getCookies();
     }
 
+    @Override
     public void clearCookies() {
         cookies.clear();
     }
 
     @Inject
-    public HttpFetcher(@Named("user-agent") String userAgent, Dispatcher dispatcher, ConnectionPool connectionPool) {
+    public HttpFetcherImpl(@Named("user-agent") String userAgent, Dispatcher dispatcher, ConnectionPool connectionPool) {
         this.client = createClient(dispatcher, connectionPool);
         this.userAgent = userAgent;
     }
 
-    public HttpFetcher(@Named("user-agent") String userAgent) {
+    public HttpFetcherImpl(@Named("user-agent") String userAgent) {
         this.client = createClient(null, new ConnectionPool());
         this.userAgent = userAgent;
     }
 
+    @Override
     @SneakyThrows
     public FetchResult probeDomain(EdgeUrl url) {
         var head = new Request.Builder().head().addHeader("User-agent", userAgent)
@@ -126,6 +115,7 @@ public class HttpFetcher {
             }
             return new FetchResult(FetchResultState.OK, requestDomain);
         }
+
         catch (Exception ex) {
             if (url.proto.equalsIgnoreCase("http") && "/".equals(url.path)) {
                 return probeDomain(new EdgeUrl("https", url.domain, url.port, url.path, url.param));
@@ -151,6 +141,7 @@ public class HttpFetcher {
 
     }
 
+    @Override
     @SneakyThrows
     public CrawledDocument fetchContent(EdgeUrl url) throws RateLimitException {
 
@@ -312,6 +303,7 @@ public class HttpFetcher {
 
     }
 
+    @Override
     public SimpleRobotRules fetchRobotRules(EdgeDomain domain) {
         return fetchRobotsForProto("https", domain)
                 .or(() -> fetchRobotsForProto("http", domain))
