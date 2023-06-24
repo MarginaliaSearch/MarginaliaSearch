@@ -17,6 +17,11 @@
                     <option {{#eq profile "vintage"}}selected{{/eq}} value="vintage">Web 1.0</option>
                     <option {{#eq profile "plain-text"}}selected{{/eq}} value="plain-text">Text Files</option>
                 </optgroup>
+                <optgroup label="Category">
+                    <option {{#eq profile "wiki"}}selected{{/eq}} value="wiki">Wiki</option>
+                    <option {{#eq profile "forum"}}selected{{/eq}} value="forum">Forum</option>
+                    <option {{#eq profile "docs"}}selected{{/eq}} value="docs">Docs (experimental)</option>
+                </optgroup>
                 <optgroup label="Topics Search">
                     <option {{#eq profile "food"}}selected{{/eq}} value="food">Recipes &#127859;</option>
                     <option {{#eq profile "crafts"}}selected{{/eq}} value="crafts">Crafts &#129697;&#128296; (WIP; mostly textile-craft)</option>

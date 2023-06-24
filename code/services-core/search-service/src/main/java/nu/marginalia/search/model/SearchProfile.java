@@ -19,6 +19,9 @@ public enum SearchProfile {
     FOOD("food", SearchSetIdentifier.NONE),
     CRAFTS("crafts", SearchSetIdentifier.NONE),
     CLASSICS("classics", SearchSetIdentifier.NONE),
+    FORUM("forum", SearchSetIdentifier.NONE),
+    WIKI("wiki", SearchSetIdentifier.NONE),
+    DOCS("docs", SearchSetIdentifier.NONE),
     ;
 
 
@@ -55,6 +58,15 @@ public enum SearchProfile {
         }
         if (this == PLAIN_TEXT) {
             subquery.searchTermsAdvice.add("format:plain");
+        }
+        if (this == WIKI) {
+            subquery.searchTermsAdvice.add("generator:wiki");
+        }
+        if (this == FORUM) {
+            subquery.searchTermsAdvice.add("generator:forum");
+        }
+        if (this == DOCS) {
+            subquery.searchTermsAdvice.add("generator:docs");
         }
         if (this == FOOD) {
             subquery.searchTermsAdvice.add(HtmlFeature.CATEGORY_FOOD.getKeyword());
