@@ -4,10 +4,7 @@ import nu.marginalia.ip_blocklist.UrlBlocklist;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Predicate;
 
 public class DomainCrawlFrontier {
@@ -86,14 +83,19 @@ public class DomainCrawlFrontier {
         if (known.add(url.toString())) {
             queue.addLast(url);
         }
-
-
     }
 
+    public void addAllToQueue(Collection<EdgeUrl> urls) {
+        for (var u : urls) {
+            addToQueue(u);
+        }
+    }
 
     public boolean isSameDomain(EdgeUrl url) {
         return Objects.equals(thisDomain, url.domain);
     }
 
-
+    public int queueSize() {
+        return queue.size();
+    }
 }

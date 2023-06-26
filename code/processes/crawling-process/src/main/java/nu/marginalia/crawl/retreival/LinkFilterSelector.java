@@ -1,8 +1,7 @@
 package nu.marginalia.crawl.retreival;
 
-import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.model.EdgeUrl;
-import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import java.util.function.Predicate;
@@ -13,15 +12,8 @@ public class LinkFilterSelector {
        very beneficial to cherry-pick the URLs that we want to crawl to
        exclude e.g. user profiles, and other similar noise.
      */
-    public Predicate<EdgeUrl> selectFilter(CrawledDocument sample) {
+    public Predicate<EdgeUrl> selectFilter(Document doc) {
 
-        if (sample.httpStatus != 200) {
-            return LinkFilterSelector::defaultFilter;
-        }
-
-        // Sniff the software based on the sample document
-
-        var doc = Jsoup.parse(sample.documentBody.decode());
         var head = doc.getElementsByTag("head").first();
         if (null == head) {
             return url -> true;

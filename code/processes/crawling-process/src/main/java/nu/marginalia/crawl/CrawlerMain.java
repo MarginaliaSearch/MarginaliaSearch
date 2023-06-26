@@ -3,6 +3,7 @@ package nu.marginalia.crawl;
 import nu.marginalia.UserAgent;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
+import nu.marginalia.crawl.retreival.fetcher.SitemapRetriever;
 import nu.marginalia.process.log.WorkLog;
 import plan.CrawlPlanLoader;
 import plan.CrawlPlan;
@@ -44,6 +45,8 @@ public class CrawlerMain implements AutoCloseable {
         this.plan = plan;
         this.userAgent = WmsaHome.getUserAgent();
 
+        // Ensure that the user agent is set for Java's HTTP requests
+
         BlockingQueue<Runnable> queue = new LinkedBlockingQueue<>(poolQueueSize);
         pool = new ThreadPoolExecutor(poolSize/128, poolSize, 5, TimeUnit.MINUTES, queue); // maybe need to set -Xss for JVM to deal with this?
 
@@ -56,6 +59,9 @@ public class CrawlerMain implements AutoCloseable {
             System.err.println("Remove abort file first");
             return;
         }
+
+        // This must run *early*
+        System.setProperty("http.agent", WmsaHome.getUserAgent().uaString());
 
         if (args.length != 1) {
             System.err.println("Arguments: crawl-plan.yaml");

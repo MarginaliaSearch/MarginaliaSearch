@@ -24,14 +24,13 @@ import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
@@ -232,9 +231,7 @@ public class HttpFetcherImpl implements HttpFetcher {
         }
 
         var byteStream = body.byteStream();
-        if (null == byteStream) {
-            return createErrorResponse(url, rsp, CrawlerDocumentStatus.ERROR, "No body");
-        }
+
         if ("gzip".equals(rsp.header("Content-encoding"))) {
             byteStream = new GZIPInputStream(byteStream);
         }
