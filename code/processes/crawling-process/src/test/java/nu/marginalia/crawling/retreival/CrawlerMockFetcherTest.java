@@ -4,21 +4,23 @@ import crawlercommons.robots.SimpleRobotRules;
 import lombok.SneakyThrows;
 import nu.marginalia.bigstring.BigString;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
-import nu.marginalia.crawl.retreival.RateLimitException;
 import nu.marginalia.crawl.retreival.fetcher.FetchResult;
 import nu.marginalia.crawl.retreival.fetcher.FetchResultState;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
+import nu.marginalia.crawl.retreival.fetcher.SitemapRetriever;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawlerDocumentStatus;
 import nu.marginalia.crawling.model.SerializableCrawlData;
 import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
+import org.jsoup.Jsoup;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -32,6 +34,7 @@ public class CrawlerMockFetcherTest {
 
     Map<EdgeUrl, CrawledDocument> mockData = new HashMap<>();
     HttpFetcher fetcherMock = new MockFetcher();
+    SitemapRetriever sitemapRetriever = new SitemapRetriever();
 
     @AfterEach
     public void tearDown() {
@@ -74,6 +77,7 @@ public class CrawlerMockFetcherTest {
 
         registerUrlClasspathData(new EdgeUrl("https://startrek.website/"), "mock-crawl-data/lemmy/index.html");
         registerUrlClasspathData(new EdgeUrl("https://startrek.website/c/startrek"), "mock-crawl-data/lemmy/c_startrek.html");
+        registerUrlClasspathData(new EdgeUrl("https://startrek.website/post/108995"), "mock-crawl-data/lemmy/108995.html");
 
         new CrawlerRetreiver(fetcherMock, new CrawlingSpecification("1", 10, "startrek.website", new ArrayList<>()), out::add)
                 .withNoDelay()
