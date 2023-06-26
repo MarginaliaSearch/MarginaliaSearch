@@ -2,10 +2,10 @@ package nu.marginalia.crawl.retreival;
 
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
+import crawlercommons.robots.SimpleRobotRules;
 import lombok.SneakyThrows;
-import nu.marginalia.crawl.retreival.fetcher.FetchResult;
-import nu.marginalia.crawl.retreival.fetcher.FetchResultState;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
+import nu.marginalia.crawl.retreival.fetcher.SitemapRetriever;
 import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.crawling.model.*;
@@ -20,10 +20,8 @@ import org.slf4j.LoggerFactory;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -56,12 +54,15 @@ public class CrawlerRetreiver {
     private static final LinkFilterSelector linkFilterSelector = new LinkFilterSelector();
 
     private static final DomainProber domainProber = new DomainProber();
+    private final SitemapRetriever sitemapRetriever = new SitemapRetriever();
     private final DomainCrawlFrontier crawlFrontier;
 
 
     int errorCount = 0;
 
-    public CrawlerRetreiver(HttpFetcher fetcher, CrawlingSpecification specs, Consumer<SerializableCrawlData> writer) {
+    public CrawlerRetreiver(HttpFetcher fetcher,
+                            CrawlingSpecification specs,
+                            Consumer<SerializableCrawlData> writer) {
         this.fetcher = fetcher;
 
         id = specs.id;
@@ -138,13 +139,15 @@ public class CrawlerRetreiver {
         assert !crawlFrontier.isEmpty();
 
         var robotsRules = fetcher.fetchRobotRules(crawlFrontier.peek().domain);
+
+        downloadSitemaps(robotsRules);
+        sniffRootDocument();
+
         long crawlDelay = robotsRules.getCrawlDelay();
 
         CrawledDomain ret = new CrawledDomain(id, domain, null, CrawlerDomainStatus.OK.name(), null, ip, new ArrayList<>(), null);
 
         int fetchedCount = 0;
-
-        configureLinkFilter();
 
         while (!crawlFrontier.isEmpty()
             && !crawlFrontier.isCrawlDepthReached()
@@ -180,13 +183,88 @@ public class CrawlerRetreiver {
         return fetchedCount;
     }
 
-    private void configureLinkFilter() {
+
+    private void downloadSitemaps(SimpleRobotRules robotsRules) {
+        List<String> sitemaps = robotsRules.getSitemaps();
+        if (sitemaps.isEmpty()) {
+            sitemaps = List.of(
+                    "http://" + domain + "/sitemap.xml",
+                    "https://" + domain + "/sitemap.xml");
+        }
+
+        List<EdgeUrl> urls = new ArrayList<>(sitemaps.size());
+        for (var url : sitemaps) {
+            EdgeUrl.parse(url).ifPresent(urls::add);
+        }
+
+        downloadSitemaps(urls);
+    }
+
+    private void downloadSitemaps(List<EdgeUrl> urls) {
+
+        Set<String> checkedSitemaps = new HashSet<>();
+
+        for (var url : urls) {
+            // Let's not download sitemaps from other domains for now
+            if (!crawlFrontier.isSameDomain(url)) {
+                continue;
+            }
+
+            if (checkedSitemaps.contains(url.path))
+                continue;
+
+            var sitemap =  sitemapRetriever.fetchSitemap(url);
+            if (sitemap.isEmpty()) {
+                continue;
+            }
+
+            // ensure we don't try to download this sitemap again
+            // (don't move this up, as we may want to check the same
+            // path with different protocols until we find one that works)
+
+            checkedSitemaps.add(url.path);
+
+            crawlFrontier.addAllToQueue(sitemap);
+
+            sitemap.forEach(u -> System.out.println("u" + u));
+        }
+
+        logger.info("Queue is now {}", crawlFrontier.queueSize());
+    }
+
+    private void sniffRootDocument() {
         try {
             logger.info("Configuring link filter");
 
-            fetchUrl(crawlFrontier.peek())
-                    .map(linkFilterSelector::selectFilter)
-                    .ifPresent(crawlFrontier::setLinkFilter);
+            var url = crawlFrontier.peek();
+
+            var maybeSample = fetchUrl(url).filter(sample -> sample.httpStatus == 200);
+            if (maybeSample.isEmpty())
+                return;
+            var sample = maybeSample.get();
+
+            // Sniff the software based on the sample document
+            var doc = Jsoup.parse(sample.documentBody.decode());
+            crawlFrontier.setLinkFilter(linkFilterSelector.selectFilter(doc));
+
+            for (var link : doc.getElementsByTag("link")) {
+                String rel = link.attr("rel");
+                String type = link.attr("type");
+
+                if (!rel.equalsIgnoreCase("alternate"))
+                    continue;
+
+                if (!(type.equalsIgnoreCase("application/atom+xml")
+                   || type.equalsIgnoreCase("application/rss+xml")))
+                    continue;
+
+                String href = link.attr("href");
+
+                linkParser.parseLink(url, href)
+                        .filter(crawlFrontier::isSameDomain)
+                        .map(List::of)
+                        .ifPresent(this::downloadSitemaps);
+            }
         }
         catch (Exception ex) {
             logger.error("Error configuring link filter", ex);
@@ -291,6 +369,7 @@ public class CrawlerRetreiver {
         }
         for (var link : parsed.getElementsByTag("link")) {
             String rel = link.attr("rel");
+
             if (rel.equalsIgnoreCase("next") || rel.equalsIgnoreCase("prev")) {
                 linkParser.parseLink(baseUrl, link).ifPresent(crawlFrontier::addToQueue);
             }
@@ -324,7 +403,7 @@ public class CrawlerRetreiver {
             if (spentTime > sleepTime)
                 return;
 
-            Thread.sleep(min(sleepTime-spentTime, 5000));
+            Thread.sleep(min(sleepTime - spentTime, 5000));
         }
         else if (slowDown) {
             Thread.sleep( 1000);
@@ -341,7 +420,7 @@ public class CrawlerRetreiver {
             if (spentTime > sleepTime)
                 return;
 
-            Thread.sleep(sleepTime-spentTime);
+            Thread.sleep(sleepTime - spentTime);
         }
     }
 
@@ -361,27 +440,5 @@ public class CrawlerRetreiver {
                 .crawlerStatus(CrawlerDocumentStatus.ERROR.name())
                 .build();
     }
-    private CrawledDomain createErrorPostFromStatus(FetchResult ret) {
-        String ip = findIp(domain);
-
-        if (ret.state == FetchResultState.ERROR) {
-            return CrawledDomain.builder()
-                    .crawlerStatus(CrawlerDomainStatus.ERROR.name())
-                    .id(id).domain(domain)
-                    .ip(ip)
-                    .build();
-        }
-        if (ret.state == FetchResultState.REDIRECT) {
-            return CrawledDomain.builder()
-                    .crawlerStatus(CrawlerDomainStatus.REDIRECT.name())
-                    .id(id)
-                    .domain(domain)
-                    .redirectDomain(ret.domain.toString())
-                    .ip(ip)
-                    .build();
-        }
-        throw new AssertionError("Unexpected case");
-    }
-
 
 }

@@ -2,7 +2,6 @@ package nu.marginalia.crawl.retreival.fetcher;
 
 import com.google.inject.ImplementedBy;
 import crawlercommons.robots.SimpleRobotRules;
-import lombok.SneakyThrows;
 import nu.marginalia.crawl.retreival.RateLimitException;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.model.EdgeDomain;
