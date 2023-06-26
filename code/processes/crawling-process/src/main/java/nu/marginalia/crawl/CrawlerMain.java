@@ -63,6 +63,10 @@ public class CrawlerMain implements AutoCloseable {
         // This must run *early*
         System.setProperty("http.agent", WmsaHome.getUserAgent().uaString());
 
+        // If these aren't set properly, the JVM will hang forever on some requests
+        System.setProperty("sun.net.client.defaultConnectTimeout", "30000");
+        System.setProperty("sun.net.client.defaultReadTimeout", "30000");
+
         if (args.length != 1) {
             System.err.println("Arguments: crawl-plan.yaml");
             System.exit(0);
