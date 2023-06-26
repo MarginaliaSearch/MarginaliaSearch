@@ -4,13 +4,14 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import nu.marginalia.converting.model.GeneratorType;
 import nu.marginalia.converting.processor.MetaRobotsTag;
-import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
 import nu.marginalia.converting.processor.logic.dom.MeasureLengthVisitor;
 import nu.marginalia.converting.processor.logic.links.FileLinks;
 import nu.marginalia.converting.processor.logic.links.LinkProcessor;
+import nu.marginalia.converting.processor.plugin.specialization.DefaultSpecialization;
+import nu.marginalia.converting.processor.plugin.specialization.HtmlProcessorSpecialization;
+import nu.marginalia.converting.processor.plugin.specialization.LemmySpecialization;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.model.crawl.HtmlFeature;
-import nu.marginalia.summary.SummaryExtractor;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
@@ -49,7 +50,6 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     private final FeatureExtractor featureExtractor;
     private final TitleExtractor titleExtractor;
     private final DocumentKeywordExtractor keywordExtractor;
-    private final SummaryExtractor summaryExtractor;
     private final PubDateSniffer pubDateSniffer;
 
     private final DocumentLengthLogic documentLengthLogic;
@@ -61,6 +61,9 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     private static final LinkParser linkParser = new LinkParser();
     private static final FeedExtractor feedExtractor = new FeedExtractor(linkParser);
 
+    private final DefaultSpecialization defaultSpecialization;
+    private final LemmySpecialization lemmySpecialization;
+
     @Inject
     public HtmlDocumentProcessorPlugin(
             @Named("min-document-quality") Double minDocumentQuality,
@@ -68,11 +71,10 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
             FeatureExtractor featureExtractor,
             TitleExtractor titleExtractor,
             DocumentKeywordExtractor keywordExtractor,
-            SummaryExtractor summaryExtractor,
             PubDateSniffer pubDateSniffer,
             DocumentLengthLogic documentLengthLogic,
             MetaRobotsTag metaRobotsTag,
-            DocumentGeneratorExtractor documentGeneratorExtractor) {
+            DocumentGeneratorExtractor documentGeneratorExtractor, DefaultSpecialization defaultSpecialization, LemmySpecialization lemmySpecialization) {
         this.documentLengthLogic = documentLengthLogic;
         this.minDocumentQuality = minDocumentQuality;
         this.sentenceExtractor = sentenceExtractor;
@@ -80,11 +82,12 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         this.titleExtractor = titleExtractor;
         this.keywordExtractor = keywordExtractor;
-        this.summaryExtractor = summaryExtractor;
         this.pubDateSniffer = pubDateSniffer;
         this.metaRobotsTag = metaRobotsTag;
 
         this.documentGeneratorExtractor = documentGeneratorExtractor;
+        this.defaultSpecialization = defaultSpecialization;
+        this.lemmySpecialization = lemmySpecialization;
     }
 
     @Override
@@ -110,7 +113,15 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         final EdgeUrl url = new EdgeUrl(crawledDocument.url);
 
-        DocumentLanguageData dld = sentenceExtractor.extractSentences(prune(doc));
+        final var generatorParts = documentGeneratorExtractor.generatorCleaned(doc);
+
+        final var specialization = selectSpecialization(generatorParts);
+
+        if (!specialization.shouldIndex(url)) {
+            throw new DisqualifiedException(DisqualificationReason.IRRELEVANT);
+        }
+
+        DocumentLanguageData dld = sentenceExtractor.extractSentences(specialization.prune(doc));
 
         checkDocumentLanguage(dld);
 
@@ -127,7 +138,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         // don't move this up! it uses title and quality
         // and is run before the heavy computations below
-        documentLengthLogic.validateLength(dld);
+        documentLengthLogic.validateLength(dld, specialization.lengthModifier());
         if (isDisqualified(url, ret)) {
             throw new DisqualifiedException(DisqualificationReason.QUALITY);
         }
@@ -138,8 +149,6 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         PubDate pubDate = pubDateSniffer.getPubDate(crawledDocument.headers, url, doc, standard, true);
 
-        final var generatorParts = documentGeneratorExtractor.generatorCleaned(doc);
-
         EnumSet<DocumentFlags> documentFlags = documentFlags(features, generatorParts.type());
 
         ret.metadata = new DocumentMetadata(
@@ -148,10 +157,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, url);
 
-        ret.description = getDescription(doc, words.importantWords);
-
-
-
+        ret.description = specialization.getSummary(doc, words.importantWords);
         ret.generator = generatorParts.type();
 
         var tagWords = new MetaTagsBuilder()
@@ -174,6 +180,16 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         return new DetailsWithWords(ret, words);
     }
 
+    /** Depending on the generator tag, we may want to use specialized logic for pruning and summarizing the document */
+    private HtmlProcessorSpecialization selectSpecialization(DocumentGeneratorExtractor.DocumentGenerator generatorParts) {
+
+        if (generatorParts.keywords().contains("lemmy")) {
+          return lemmySpecialization;
+        }
+
+        return defaultSpecialization;
+    }
+
     private EnumSet<DocumentFlags> documentFlags(Set<HtmlFeature> features, GeneratorType type) {
         EnumSet<DocumentFlags> flags = EnumSet.noneOf(DocumentFlags.class);
 
@@ -190,16 +206,6 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         return flags;
     }
-
-    private Document prune(Document doc) {
-        final var prunedDoc = doc.clone();
-
-        prunedDoc.getElementsByTag("svg").remove();
-        prunedDoc.body().filter(new DomPruningFilter(0.5));
-
-        return prunedDoc;
-    }
-
 
     private static final GuardedRegex mastodonFeedRegex = GuardedRegexFactory.startsWith("/@", "^/@[^/]+/?$");
 
@@ -283,23 +289,6 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
             return HtmlStandardExtractor.sniffHtmlStandard(doc);
         }
         return htmlStandard;
-    }
-
-    private String getDescription(Document doc,
-                                  Set<String> importantWords)
-    {
-        List<String> cleanedWords = new ArrayList<>(importantWords.size());
-
-        for (var word : importantWords) {
-            // summary extraction is not interested in n-grams
-            if (word.contains("_")) {
-                continue;
-            }
-
-            cleanedWords.add(word);
-        }
-
-        return summaryExtractor.extractSummary(doc, cleanedWords);
     }
 
     private int getLength(Document doc) {

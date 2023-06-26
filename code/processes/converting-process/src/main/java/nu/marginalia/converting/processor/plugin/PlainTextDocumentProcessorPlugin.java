@@ -70,7 +70,7 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
 
         checkDocumentLanguage(dld);
 
-        documentLengthLogic.validateLength(dld);
+        documentLengthLogic.validateLength(dld, 1.0);
 
         var ret = new ProcessedDocumentDetails();
 

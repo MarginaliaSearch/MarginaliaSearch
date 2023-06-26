@@ -42,10 +42,13 @@ public class SummaryExtractor {
             String maybe = heuristic.summarize(parsed, importantWords);
             if (!maybe.isBlank()) {
                 String cleaned = truncatedCharacters.matcher(maybe).replaceAll(" ");
-                return StringUtils.abbreviate(cleaned, "", maxSummaryLength);
+                return abbreivateSummary(cleaned);
             }
         }
         return "";
     }
 
+    public String abbreivateSummary(String summary) {
+        return StringUtils.abbreviate(summary, "", maxSummaryLength);
+    }
 }

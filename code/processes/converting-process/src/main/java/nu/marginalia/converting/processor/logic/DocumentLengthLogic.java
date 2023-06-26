@@ -5,15 +5,11 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.language.model.DocumentLanguageData;
-import nu.marginalia.model.idx.DocumentFlags;
-
-import java.util.EnumSet;
 
 @Singleton
 public class DocumentLengthLogic {
     private final int minDocumentLength;
-    private final int shortDocumentLength = 2500;
-    private final int longDocumentLength = 7500;
+
 
     @Inject
     public DocumentLengthLogic(@Named("min-document-length") Integer minDocumentLength) {
@@ -31,8 +27,10 @@ public class DocumentLengthLogic {
         return (int) Math.round((totalWords / (double) numSentences) / 4.);
     }
 
-    public void validateLength(DocumentLanguageData dld) throws DisqualifiedException {
-        if (dld.totalNumWords() < minDocumentLength) {
+    public void validateLength(DocumentLanguageData dld,
+                               double modifier) throws DisqualifiedException
+    {
+        if (modifier * dld.totalNumWords() < minDocumentLength) {
             throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.LENGTH);
         }
     }
