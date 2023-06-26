@@ -5,8 +5,10 @@ import lombok.Getter;
 import lombok.Setter;
 import nu.marginalia.util.QueryParams;
 
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -115,6 +117,25 @@ public class EdgeUrl {
         }
     }
 
+    public EdgeUrl(URL URL) {
+        try {
+            String host = URL.getHost();
+
+            if (host == null) { // deal with a rare serialization error
+                host = "parse-error.invalid.example.com";
+            }
+
+            this.domain = new EdgeDomain(host);
+            this.path = URL.getPath().isEmpty() ? "/" : URL.getPath();
+            this.proto = URL.getProtocol().toLowerCase();
+            this.port = port(URL.getPort(), proto);
+            this.param = QueryParams.queryParamsSanitizer(this.path, URL.getQuery());
+        }
+        catch (Exception ex) {
+            System.err.println("Failed to parse " + URL);
+            throw ex;
+        }
+    }
 
     private static Integer port(Integer port, String protocol) {
         if (null == port || port < 1) {
@@ -194,5 +215,15 @@ public class EdgeUrl {
 
     public int hashCode() {
         return Objects.hash(domain, path, param);
+    }
+
+    public URL asURL() throws MalformedURLException {
+        int port = this.port != null ? this.port : switch(proto) {
+            case "http" -> 80;
+            case "https" -> 443;
+            default -> 0;
+        };
+
+        return new URL(this.proto, this.domain.toString(), port, this.path);
     }
 }
