@@ -14,13 +14,12 @@ import nu.marginalia.crawling.model.SerializableCrawlData;
 import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
-import org.jsoup.Jsoup;
+import nu.marginalia.test.CommonTestData;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -54,20 +53,16 @@ public class CrawlerMockFetcherTest {
 
     @SneakyThrows
     private void registerUrlClasspathData(EdgeUrl url, String path) {
-        try (var resourceStream = getClass().getClassLoader().getResourceAsStream(path)) {
-            if (resourceStream == null) throw new IllegalArgumentException("No such resource: " + path);
+        var data = BigString.encode(CommonTestData.loadTestData(path));
 
-            var data = BigString.encode(new String(resourceStream.readAllBytes(), StandardCharsets.UTF_8));
-
-            mockData.put(url, CrawledDocument.builder()
-                    .crawlId("1")
-                    .url(url.toString())
-                    .contentType("text/html")
-                    .httpStatus(200)
-                    .crawlerStatus(CrawlerDocumentStatus.OK.name())
-                    .documentBody(data)
-                    .build());
-        }
+        mockData.put(url, CrawledDocument.builder()
+                .crawlId("1")
+                .url(url.toString())
+                .contentType("text/html")
+                .httpStatus(200)
+                .crawlerStatus(CrawlerDocumentStatus.OK.name())
+                .documentBody(data)
+                .build());
 
     }
 

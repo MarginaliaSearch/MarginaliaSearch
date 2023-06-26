@@ -36,7 +36,8 @@ public class DisqualifiedException extends Exception {
         ROBOTS_TXT,
         ERROR,
         Timeout, // Don't you dare
-        BAD_CANONICAL
+        BAD_CANONICAL,
+        IRRELEVANT
         ;
 
         public static DisqualificationReason fromCrawlerStatus(CrawlerDocumentStatus crawlerStatus) {
