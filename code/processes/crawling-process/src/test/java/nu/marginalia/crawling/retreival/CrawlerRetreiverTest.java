@@ -8,10 +8,7 @@ import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.crawling.model.SerializableCrawlData;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +26,7 @@ class CrawlerRetreiverTest {
     }
 
     @SneakyThrows
+    @BeforeAll
     public static void setUpAll() {
         // this must be done to avoid java inserting its own user agent for the sitemap requests
         System.setProperty("http.agent", WmsaHome.getUserAgent().uaString());
