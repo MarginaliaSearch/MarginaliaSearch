@@ -4,10 +4,14 @@ This is the source code for [Marginalia Search](https://search.marginalia.nu).
 
 The aim of the project is to develop new and alternative discovery methods for the Internet. 
 It's an experimental workshop as much as it is a public service, the overarching goal is to
-elevate the more human, non-commercial sides of the Internet. 
+elevate the more human, non-commercial sides of the Internet.
 
-A side-goal is to do this without requiring datacenters and expensive enterprise hardware, 
-to run this operation on affordable hardware with minimal operational overhead.
+A side-goal is to do this without requiring datacenters and enterprise hardware budgets, 
+to be able to run this operation on affordable hardware with minimal operational overhead. 
+
+The long term plan is to refine the search engine so that it provide enough public value 
+that the project can be funded through grants, donations and commercial API licenses 
+(non-commercial share-alike is always free).
 
 ## Set up
 

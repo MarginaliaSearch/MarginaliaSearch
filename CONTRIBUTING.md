@@ -8,11 +8,10 @@ because it's as much a research project
 as it is a search engine.
 
 If you have an idea for a cool change,
-send an email to <kontakt@marginalia.nu> and
+email <kontakt@marginalia.nu> and
 we can discuss its feasibility.
 
 Search is essentially a fractal of interesting
 problems, so even if you don't have an idea,
 just a skillset (really any), odds are there's
 something interesting I could point you to.
-
