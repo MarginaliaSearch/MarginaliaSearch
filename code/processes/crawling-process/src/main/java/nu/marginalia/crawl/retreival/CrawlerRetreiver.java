@@ -225,8 +225,6 @@ public class CrawlerRetreiver {
             checkedSitemaps.add(url.path);
 
             crawlFrontier.addAllToQueue(sitemap);
-
-            sitemap.forEach(u -> System.out.println("u" + u));
         }
 
         logger.info("Queue is now {}", crawlFrontier.queueSize());
