@@ -43,11 +43,11 @@ public class DomainCrawlFrontier {
     public boolean isEmpty() {
         return queue.isEmpty();
     }
-    public boolean addKnown(EdgeUrl url) {
-        return known.contains(url.toString());
-    }
+
     public void addFirst(EdgeUrl url) {
-        queue.addFirst(url);
+        if (known.add(url.toString())) {
+            queue.addFirst(url);
+        }
     }
 
     public EdgeUrl takeNextUrl() {

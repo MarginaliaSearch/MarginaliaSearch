@@ -77,8 +77,8 @@ public class CrawlerRetreiver {
 
             // Ensure the index page is always crawled
             var root = fst.withPathAndParam("/", null);
-            if (crawlFrontier.addKnown(root))
-                crawlFrontier.addFirst(root);
+
+            crawlFrontier.addFirst(root);
         }
         else {
             // We know nothing about this domain, so we'll start with the index, trying both HTTP and HTTPS

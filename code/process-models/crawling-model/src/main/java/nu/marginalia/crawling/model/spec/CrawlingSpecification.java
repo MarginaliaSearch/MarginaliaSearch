@@ -1,11 +1,12 @@
 package nu.marginalia.crawling.model.spec;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-@AllArgsConstructor @NoArgsConstructor
+@AllArgsConstructor @NoArgsConstructor @Builder
 public class CrawlingSpecification {
     public String id;
 
