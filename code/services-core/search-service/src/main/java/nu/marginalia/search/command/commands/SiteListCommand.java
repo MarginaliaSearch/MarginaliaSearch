@@ -2,6 +2,7 @@ package nu.marginalia.search.command.commands;
 
 import com.google.inject.Inject;
 import nu.marginalia.db.DbDomainQueries;
+import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.command.SearchCommandInterface;
 import nu.marginalia.search.command.SearchParameters;
@@ -64,8 +65,15 @@ public class SiteListCommand implements SearchCommandInterface {
         if (null != domain) {
             var dumbQuery = queryFactory.createQuery(SearchProfile.CORPO, 100, 100, "site:"+domain);
             resultSet = searchQueryIndexService.executeQuery(ctx, dumbQuery);
-            domainId = domainQueries.getDomainId(domain).id();
-            screenshotPath = Path.of("/screenshot/" + domainId);
+            var maybeId = domainQueries.tryGetDomainId(domain);
+            if (maybeId.isPresent()) {
+                domainId = maybeId.get().id();
+                screenshotPath = Path.of("/screenshot/" + domainId);
+            }
+            else {
+                domainId = -1;
+                screenshotPath = Path.of("/screenshot/0");
+            }
         }
         else {
             resultSet = Collections.emptyList();
@@ -90,7 +98,10 @@ public class SiteListCommand implements SearchCommandInterface {
         String word = humanQuery.substring(definePrefix.length()).toLowerCase();
 
         logger.info("Fetching Site Info: {}", word);
-        var results = domainInformationService.domainInfo(word).orElseGet(DomainInformation::new);
+
+        var results = domainInformationService
+                .domainInfo(word)
+                .orElseGet(() -> unknownSite(word));
 
         logger.debug("Results = {}", results);
 
@@ -98,4 +109,11 @@ public class SiteListCommand implements SearchCommandInterface {
 
     }
 
+    private DomainInformation unknownSite(String url) {
+        return DomainInformation.builder()
+                .domain(new EdgeDomain(url))
+                .suggestForCrawling(true)
+                .unknownDomain(true)
+                .build();
+    }
 }

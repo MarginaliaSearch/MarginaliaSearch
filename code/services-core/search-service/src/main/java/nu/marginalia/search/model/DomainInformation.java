@@ -20,6 +20,7 @@ public class DomainInformation {
 
     boolean suggestForCrawling;
     boolean inCrawlQueue;
+    boolean unknownDomain;
 
     String state;
     List<EdgeDomain> linkingDomains;

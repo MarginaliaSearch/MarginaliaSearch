@@ -48,6 +48,33 @@ public class DbDomainQueries {
     }
 
     @SneakyThrows
+    public Optional<EdgeId<EdgeDomain>> tryGetDomainId(EdgeDomain domain) {
+
+        var maybe = Optional.ofNullable(domainIdCache.getIfPresent(domain));
+
+        if (maybe.isPresent())
+            return maybe;
+
+        try (var connection = dataSource.getConnection()) {
+
+            try (var stmt = connection.prepareStatement("SELECT ID FROM EC_DOMAIN WHERE DOMAIN_NAME=?")) {
+                stmt.setString(1, domain.toString());
+                var rsp = stmt.executeQuery();
+                if (rsp.next()) {
+                    var id = new EdgeId<EdgeDomain>(rsp.getInt(1));
+
+                    domainIdCache.put(domain, id);
+                    return Optional.of(id);
+                }
+            }
+            return Optional.empty();
+        }
+        catch (UncheckedExecutionException ex) {
+            return Optional.empty();
+        }
+    }
+
+    @SneakyThrows
     public Optional<EdgeDomain> getDomain(EdgeId<EdgeDomain> id) {
         try (var connection = dataSource.getConnection()) {
 
