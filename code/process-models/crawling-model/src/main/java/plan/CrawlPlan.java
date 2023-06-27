@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.function.Consumer;
@@ -111,6 +112,13 @@ public class CrawlPlan {
                     .filter(entry -> idReadPredicate.test(entry.id()))
                     .map(WorkLogEntry::path)
                     .map(this::getCrawledFilePath)
+                    .filter(path -> {
+                        if (!Files.exists(path)) {
+                            logger.warn("File not found: {}", path);
+                            return false;
+                        }
+                        return true;
+                    })
                     .map(reader::readRuntimeExcept)
                     .forEach(consumer);
         }
