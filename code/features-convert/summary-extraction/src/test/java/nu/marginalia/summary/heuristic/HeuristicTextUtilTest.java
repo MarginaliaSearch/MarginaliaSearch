@@ -26,14 +26,30 @@ class HeuristicTextUtilTest {
     }
 
     @Test
+    void containsWordInAnyCaseASCII() {
+        String sentence = "B A Baracus was an expert with the Abacus";
+
+        assertTrue(HeuristicTextUtil.containsWordInAnyCaseASCII(sentence, "b"));
+        assertTrue(HeuristicTextUtil.containsWordInAnyCaseASCII(sentence, "a"));
+        assertTrue(HeuristicTextUtil.containsWordInAnyCaseASCII(sentence, "baracus"));
+        assertTrue(HeuristicTextUtil.containsWordInAnyCaseASCII(sentence, "abacus"));
+        assertFalse(HeuristicTextUtil.containsWordInAnyCaseASCII(sentence, "cus"));
+    }
+    @Test
     void containsWordAllLowerCase() {
         String sentence = "b a baracus was an expert with the abacus";
 
-        assertTrue(HeuristicTextUtil.containsWordInAnyCase(sentence, "b"));
-        assertTrue(HeuristicTextUtil.containsWordInAnyCase(sentence, "a"));
-        assertTrue(HeuristicTextUtil.containsWordInAnyCase(sentence, "baracus"));
-        assertTrue(HeuristicTextUtil.containsWordInAnyCase(sentence, "abacus"));
-        assertFalse(HeuristicTextUtil.containsWordInAnyCase(sentence, "cus"));
+        assertTrue(HeuristicTextUtil.containsWordInAnyCaseASCII(sentence, "b"));
+        assertTrue(HeuristicTextUtil.containsWordInAnyCaseASCII(sentence, "a"));
+        assertTrue(HeuristicTextUtil.containsWordInAnyCaseASCII(sentence, "baracus"));
+        assertTrue(HeuristicTextUtil.containsWordInAnyCaseASCII(sentence, "abacus"));
+        assertFalse(HeuristicTextUtil.containsWordInAnyCaseASCII(sentence, "cus"));
+    }
+
+    @Test
+    public void testToLowerCaseASCII() {
+        assertEquals('a', HeuristicTextUtil.toLowerASCII('A'));
+        assertEquals('a', HeuristicTextUtil.toLowerASCII('a'));
     }
 
 }

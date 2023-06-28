@@ -82,6 +82,8 @@ public class DocumentProcessor {
 
         AbstractDocumentProcessorPlugin.DetailsWithWords detailsWithWords = plugin.createDetails(crawledDomain, crawledDocument);
 
+        crawledDocument.dispose();
+
         ret.details = detailsWithWords.details();
         ret.words = detailsWithWords.words();
     }

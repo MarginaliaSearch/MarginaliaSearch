@@ -32,4 +32,10 @@ public class CrawledDocument implements SerializableCrawlData {
     public String getSerialIdentifier() {
         return SERIAL_IDENTIFIER;
     }
+
+    /** Remove all large data from this object to save memory */
+    public void dispose() {
+        documentBody = null;
+        headers = null;
+    }
 }
