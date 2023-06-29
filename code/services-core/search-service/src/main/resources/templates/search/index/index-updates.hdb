@@ -1,12 +1,10 @@
     <section class="card">
         <h2>Updates</h2>
         <div class="info">
-            <p>☛ A recipe filter has been added to the algorithm selector.</p>
-            <p>☛ The <a href="https://search.marginalia.nu/explore/random">Random Mode</a> has been overhauled, and is
-            quite entertaining. I encourage you to give it a spin. </p>
-            <p>☛ A simple <a href="https://api.marginalia.nu/">public API</a> is now available.</p>
+            <p>☛ It is possible to search by website generator.</p>
+            <p>☛ New filters for forums and wikis are added.</p>
         </div>
         <div class="utils">
-            <a href="https://memex.marginalia.nu/projects/edge/changelog.gmi">Change Log</a>
+            <a href="https://www.marginalia.nu/release-notes/">Release Notes</a>
         </div>
     </section>

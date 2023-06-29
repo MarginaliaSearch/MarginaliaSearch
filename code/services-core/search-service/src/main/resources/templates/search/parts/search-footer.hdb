@@ -63,6 +63,14 @@
        <tr><td>format:xhtml</td><td>Filter documents using the XHTML standard</td></tr>
        <tr><td>format:html123</td><td>Filter documents using the HTML standards 1, 2, and 3. This is typically very old websites. </td></tr>
 
+       <tr><td>generator:wordpress</td><td>Filter documents with the specified generator, in this case wordpress</td></tr>
+
+       <tr><td>file:zip</td><td>Filter documents containing a link to a zip file (most file-endings work)</td></tr>
+       <tr><td>file:audio</td><td>Filter documents containing a link to an audio file</td></tr>
+       <tr><td>file:video</td><td>Filter documents containing a link to a video file</td></tr>
+       <tr><td>file:archive</td><td>Filter documents containing a link to a compressed archive</td></tr>
+       <tr><td>file:document</td><td>Filter documents containing a link to a document</td></tr>
+
        <tr><td>-special:media</td><td>Filter out documents with audio or video tags</td></tr>
        <tr><td>-special:scripts</td><td>Filter out documents with javascript</td></tr>
        <tr><td>-special:affiliate</td><td>Filter out documents with likely Amazon affiliate links</td></tr>
