@@ -22,10 +22,17 @@ public class IpBlockList {
     private final GeoIpBlocklist geoIpBlocklist;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final List<SubnetUtils.SubnetInfo> badSubnets = new ArrayList<>();
+    private final boolean blocklistDisabled = Boolean.getBoolean("no-ip-blocklist");
 
     @Inject
     public IpBlockList(GeoIpBlocklist geoIpBlocklist) {
         this.geoIpBlocklist = geoIpBlocklist;
+
+        if (blocklistDisabled) {
+            logger.warn("IP blocklist disabled");
+            // no point loading the list here
+            return;
+        }
 
         var resource = Objects.requireNonNull(
                 ClassLoader.getSystemResourceAsStream("ip-banned-cidr.txt"),
@@ -52,6 +59,9 @@ public class IpBlockList {
     final Predicate<String> numericPattern = Pattern.compile(".*\\d{4}.*").asMatchPredicate();
 
     public boolean isAllowed(EdgeDomain domain) {
+        if (blocklistDisabled)
+            return true;
+
         if (domain.domain.endsWith(".cn")) {
             logger.debug("Blocking {} on .cn-end", domain);
             return false;
@@ -64,12 +74,15 @@ public class IpBlockList {
         try {
             var hostAddress = InetAddressCache.getAddress(domain).getHostAddress();
             var subnet = badSubnets.stream().filter(sn -> sn.isInRange(hostAddress)).findFirst();
+
             if (subnet.isPresent()) {
                 logger.debug("Blocking {} on IP range: {}", domain, subnet.get());
                 return false;
             }
+
         } catch (Throwable t) {
-            return false;
+            // Host failed ot resolve, deal with crawling error upstream
+            // to avoid flagging this as a blocked domain
         }
 
         var geo = geoIpBlocklist.isAllowed(domain);

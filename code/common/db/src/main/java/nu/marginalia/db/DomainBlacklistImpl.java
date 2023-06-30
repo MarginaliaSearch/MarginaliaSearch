@@ -16,7 +16,7 @@ public class DomainBlacklistImpl implements DomainBlacklist {
     private volatile TIntHashSet spamDomainSet = new TIntHashSet();
     private final HikariDataSource dataSource;
     private final Logger logger = LoggerFactory.getLogger(getClass());
-
+    private final boolean blacklistDisabled = Boolean.getBoolean("no-domain-blacklist");
     @Inject
     public DomainBlacklistImpl(HikariDataSource dataSource) {
         this.dataSource = dataSource;
@@ -27,6 +27,7 @@ public class DomainBlacklistImpl implements DomainBlacklist {
     }
 
     private void updateSpamList() {
+
         try {
             int oldSetSize = spamDomainSet.size();
 
@@ -46,6 +47,10 @@ public class DomainBlacklistImpl implements DomainBlacklist {
     public TIntHashSet getSpamDomains() {
         final TIntHashSet result = new TIntHashSet(1_000_000);
 
+        if (blacklistDisabled) {
+            return result;
+        }
+
         try (var connection = dataSource.getConnection()) {
             try (var stmt = connection.prepareStatement("SELECT EC_DOMAIN.ID FROM EC_DOMAIN INNER JOIN EC_DOMAIN_BLACKLIST ON EC_DOMAIN_BLACKLIST.URL_DOMAIN = EC_DOMAIN.DOMAIN_TOP")) {
                 stmt.setFetchSize(1000);
@@ -61,6 +66,7 @@ public class DomainBlacklistImpl implements DomainBlacklist {
 
     @Override
     public boolean isBlacklisted(int domainId) {
+
         if (spamDomainSet.contains(domainId)) {
             return true;
         }
