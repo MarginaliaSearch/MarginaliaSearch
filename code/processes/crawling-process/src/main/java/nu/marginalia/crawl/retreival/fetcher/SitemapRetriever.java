@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Singleton;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
 
 @Singleton
@@ -26,6 +27,11 @@ public class SitemapRetriever {
         }
         catch (UnknownFormatException ex) {
             logger.debug("Unknown sitemap format: {}", sitemapUrl);
+            return Collections.emptyList();
+        }
+        catch (IOException io) {
+            logger.debug("Error fetching sitemap", io);
+
             return Collections.emptyList();
         }
         catch (Exception ex) {
