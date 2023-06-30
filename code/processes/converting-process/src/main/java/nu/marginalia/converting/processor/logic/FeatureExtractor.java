@@ -76,6 +76,19 @@ public class FeatureExtractor {
             }
         }
 
+        // 500 IQ web developers use <link> error or load handlers
+        // sneakily load JS without explicit script tags
+        for (var link : doc.head().getElementsByTag("link")) {
+            if (link.hasAttr("onerror")) {
+                features.add(HtmlFeature.JS);
+                break;
+            }
+            if (link.hasAttr("onload")) {
+                features.add(HtmlFeature.JS);
+                break;
+            }
+        }
+
         if (features.contains(HtmlFeature.JS) && adblockSimulator.hasAds(doc.clone())) {
             features.add(HtmlFeature.ADVERTISEMENT);
         }
@@ -117,8 +130,13 @@ public class FeatureExtractor {
     }
 
     private boolean hasTrackingScript(Element scriptTag) {
+        return hasTrackingScript(scriptTag.attr("src"));
+    }
+
+    private boolean hasTrackingScript(String scriptText) {
+
         for (var tracker : trackers) {
-            if (scriptTag.attr("src").contains(tracker)) {
+            if (scriptText.contains(tracker)) {
                 return true;
             }
         }

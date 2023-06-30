@@ -36,8 +36,15 @@ public class DocumentValuator {
         var scriptVisitor = new ScriptVisitor();
 
         parsed.getElementsByTag("script").traverse(scriptVisitor);
+        int value = scriptVisitor.score();
 
-        return scriptVisitor.score();
+        for (var links : parsed.head().getElementsByTag("link")) {
+            if (links.hasAttr("onerror") || links.hasAttr("onload")) {
+                value += 1;
+            }
+        }
+
+        return value;
     }
 
     private static class ScriptVisitor implements NodeVisitor {
@@ -56,7 +63,6 @@ public class DocumentValuator {
             }
             else if (node instanceof TextNode tn) {
                 visitScriptText(tn);
-
             }
         }
 
@@ -73,8 +79,7 @@ public class DocumentValuator {
             String srcAttr = el.attr("src");
             if (srcAttr.contains("wp-content") || srcAttr.contains("wp-includes") || srcAttr.contains("jquery")) {
                 penalty += 0.49;
-            }
-            else if (!Strings.isBlank(srcAttr)) {
+            } else if (!Strings.isBlank(srcAttr)) {
                 penalty += 1;
             }
         }
