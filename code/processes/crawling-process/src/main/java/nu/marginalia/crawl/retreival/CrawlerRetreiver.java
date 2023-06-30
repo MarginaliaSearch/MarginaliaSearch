@@ -227,12 +227,12 @@ public class CrawlerRetreiver {
             crawlFrontier.addAllToQueue(sitemap);
         }
 
-        logger.info("Queue is now {}", crawlFrontier.queueSize());
+        logger.debug("Queue is now {}", crawlFrontier.queueSize());
     }
 
     private void sniffRootDocument() {
         try {
-            logger.info("Configuring link filter");
+            logger.debug("Configuring link filter");
 
             var url = crawlFrontier.peek();
 
@@ -240,6 +240,9 @@ public class CrawlerRetreiver {
             if (maybeSample.isEmpty())
                 return;
             var sample = maybeSample.get();
+
+            if (sample.documentBody == null)
+                return;
 
             // Sniff the software based on the sample document
             var doc = Jsoup.parse(sample.documentBody.decode());
