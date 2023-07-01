@@ -96,6 +96,10 @@ public class DocumentGeneratorExtractor {
             return DocumentGenerator.of("xenforo");
         }
 
+        if (!doc.getElementsByClass("ipsApp").isEmpty()) {
+            return DocumentGenerator.of("invision");
+        }
+
         return DocumentGenerator.unset();
     }
 
@@ -172,7 +176,8 @@ public class DocumentGeneratorExtractor {
                      "notepad", "namo", "arachnophilia", "scite",
                      "alleycode", "htmlkit", "acehtml", "bluefish", "htmled", "cutehtml", "fileedit", "cocoa"
                      -> GeneratorType.MANUAL;
-                case "vbulletin", "phpbb", "mybb", "nodebb", "flarum", "tribe", "discourse", "lemmy", "xenforo"
+                case "vbulletin", "phpbb", "mybb", "nodebb", "flarum", "tribe",
+                     "discourse", "lemmy", "xenforo", "invision"
                      -> GeneratorType.FORUM;
                 case "mediawiki", "dokuwiki", "sharepoint"
                      -> GeneratorType.WIKI;
