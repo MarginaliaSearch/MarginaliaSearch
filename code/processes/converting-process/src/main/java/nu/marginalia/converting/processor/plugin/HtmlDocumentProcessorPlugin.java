@@ -7,9 +7,7 @@ import nu.marginalia.converting.processor.MetaRobotsTag;
 import nu.marginalia.converting.processor.logic.dom.MeasureLengthVisitor;
 import nu.marginalia.converting.processor.logic.links.FileLinks;
 import nu.marginalia.converting.processor.logic.links.LinkProcessor;
-import nu.marginalia.converting.processor.plugin.specialization.DefaultSpecialization;
-import nu.marginalia.converting.processor.plugin.specialization.HtmlProcessorSpecialization;
-import nu.marginalia.converting.processor.plugin.specialization.LemmySpecialization;
+import nu.marginalia.converting.processor.plugin.specialization.*;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.link_parser.LinkParser;
@@ -61,8 +59,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     private static final LinkParser linkParser = new LinkParser();
     private static final FeedExtractor feedExtractor = new FeedExtractor(linkParser);
 
-    private final DefaultSpecialization defaultSpecialization;
-    private final LemmySpecialization lemmySpecialization;
+    private final HtmlProcessorSpecializations htmlProcessorSpecializations;
 
     @Inject
     public HtmlDocumentProcessorPlugin(
@@ -74,7 +71,9 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
             PubDateSniffer pubDateSniffer,
             DocumentLengthLogic documentLengthLogic,
             MetaRobotsTag metaRobotsTag,
-            DocumentGeneratorExtractor documentGeneratorExtractor, DefaultSpecialization defaultSpecialization, LemmySpecialization lemmySpecialization) {
+            DocumentGeneratorExtractor documentGeneratorExtractor,
+            HtmlProcessorSpecializations specializations)
+    {
         this.documentLengthLogic = documentLengthLogic;
         this.minDocumentQuality = minDocumentQuality;
         this.sentenceExtractor = sentenceExtractor;
@@ -86,8 +85,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         this.metaRobotsTag = metaRobotsTag;
 
         this.documentGeneratorExtractor = documentGeneratorExtractor;
-        this.defaultSpecialization = defaultSpecialization;
-        this.lemmySpecialization = lemmySpecialization;
+        this.htmlProcessorSpecializations = specializations;
     }
 
     @Override
@@ -115,7 +113,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         final var generatorParts = documentGeneratorExtractor.generatorCleaned(doc);
 
-        final var specialization = selectSpecialization(generatorParts);
+        final var specialization = htmlProcessorSpecializations.select(generatorParts);
 
         if (!specialization.shouldIndex(url)) {
             throw new DisqualifiedException(DisqualificationReason.IRRELEVANT);
@@ -178,16 +176,6 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         }
 
         return new DetailsWithWords(ret, words);
-    }
-
-    /** Depending on the generator tag, we may want to use specialized logic for pruning and summarizing the document */
-    private HtmlProcessorSpecialization selectSpecialization(DocumentGeneratorExtractor.DocumentGenerator generatorParts) {
-
-        if (generatorParts.keywords().contains("lemmy")) {
-          return lemmySpecialization;
-        }
-
-        return defaultSpecialization;
     }
 
     private EnumSet<DocumentFlags> documentFlags(Set<HtmlFeature> features, GeneratorType type) {

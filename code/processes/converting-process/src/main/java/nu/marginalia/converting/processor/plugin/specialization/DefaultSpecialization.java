@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Set;
 
 @Singleton
-public class DefaultSpecialization implements HtmlProcessorSpecialization {
+public class DefaultSpecialization implements HtmlProcessorSpecializations.HtmlProcessorSpecializationIf {
 
     private final SummaryExtractor summaryExtractor;
 

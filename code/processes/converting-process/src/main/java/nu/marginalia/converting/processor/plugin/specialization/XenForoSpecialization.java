@@ -9,14 +9,13 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 
-/** This class is used to specify how to process a website running Lemmy */
 @Singleton
-public class LemmySpecialization implements HtmlProcessorSpecializations.HtmlProcessorSpecializationIf {
-    private static final Logger logger = LoggerFactory.getLogger(LemmySpecialization.class);
+public class XenForoSpecialization implements HtmlProcessorSpecializations.HtmlProcessorSpecializationIf {
+    private static final Logger logger = LoggerFactory.getLogger(XenForoSpecialization.class);
     private final SummaryExtractor summaryExtractor;
 
     @Inject
-    public LemmySpecialization(SummaryExtractor summaryExtractor) {
+    public XenForoSpecialization(SummaryExtractor summaryExtractor) {
         this.summaryExtractor = summaryExtractor;
     }
 
@@ -26,9 +25,24 @@ public class LemmySpecialization implements HtmlProcessorSpecializations.HtmlPro
 
         var newDoc = new Document(document.baseUri());
         var bodyTag = newDoc.appendElement("body");
+        var article = bodyTag.appendElement("article");
+        var firstTime = document.getElementsByTag("time").first();
 
-        for (var pTag : document.getElementsByTag("p")) {
-            bodyTag.appendChild(newDoc.createElement("p").text(pTag.text()));
+        if (firstTime != null) {
+            // Ensure we get the publish date
+            var timeTag = newDoc.createElement("time");
+
+            timeTag.attr("datetime", firstTime.attr("datetime"));
+            timeTag.attr("pubdate", "pubdate");
+            timeTag.text(firstTime.attr("datetime"));
+
+            article.appendChild(timeTag);
+        }
+
+        for (var post : document.getElementsByClass("message-inner")) {
+            String user = post.getElementsByClass("message-name").text();
+            String text = post.getElementsByClass("bbWrapper").text();
+            article.appendChild(newDoc.createElement("p").text(user + ": " + text));
         }
 
         return newDoc;
@@ -37,7 +51,7 @@ public class LemmySpecialization implements HtmlProcessorSpecializations.HtmlPro
     public String getSummary(Document document, Set<String> importantWords) {
         StringBuilder summary = new StringBuilder();
 
-        for (var pTag : document.getElementsByTag("p")) {
+        for (var pTag : document.getElementsByClass("bbWrapper")) {
             if (summary.length() > 512) {
                 break;
             }
@@ -54,13 +68,8 @@ public class LemmySpecialization implements HtmlProcessorSpecializations.HtmlPro
         return summaryExtractor.abbreivateSummary(summary.toString());
     }
 
-    /** Since we're stripping down the document to only contain the relevant comments,
-     * we need to add an artificial lenght modifier to the document to avoid filtering out
-     * documents that are of adequate length but fail to meet the minimum length requirement
-     * that assumes a certain amount of chaff.
-     */
     @Override
     public double lengthModifier() {
-        return 1.5;
+        return 1.25;
     }
 }
