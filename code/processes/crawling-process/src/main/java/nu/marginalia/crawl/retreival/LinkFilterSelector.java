@@ -22,9 +22,6 @@ public class LinkFilterSelector {
         if (isLemmy(head)) {
             return url -> url.path.startsWith("/post/") || url.path.startsWith("/c/");
         }
-        if (isMediawiki(head)) {
-            return url -> url.path.startsWith("/wiki/") && !url.path.contains(":");
-        }
         if (isDiscourse(head)) {
             return url -> url.path.startsWith("/t/") || url.path.contains("/latest");
         }
