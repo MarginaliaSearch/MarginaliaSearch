@@ -13,15 +13,19 @@ public class HtmlProcessorSpecializations {
     private final LemmySpecialization lemmySpecialization;
     private final XenForoSpecialization xenforoSpecialization;
     private final PhpBBSpecialization phpBBSpecialization;
+    private final JavadocSpecialization javadocSpecialization;
     private final DefaultSpecialization defaultSpecialization;
 
     @Inject
     public HtmlProcessorSpecializations(LemmySpecialization lemmySpecialization,
                                         XenForoSpecialization xenforoSpecialization,
-                                        PhpBBSpecialization phpBBSpecialization, DefaultSpecialization defaultSpecialization) {
+                                        PhpBBSpecialization phpBBSpecialization,
+                                        JavadocSpecialization javadocSpecialization,
+                                        DefaultSpecialization defaultSpecialization) {
         this.lemmySpecialization = lemmySpecialization;
         this.xenforoSpecialization = xenforoSpecialization;
         this.phpBBSpecialization = phpBBSpecialization;
+        this.javadocSpecialization = javadocSpecialization;
         this.defaultSpecialization = defaultSpecialization;
     }
 
@@ -36,6 +40,10 @@ public class HtmlProcessorSpecializations {
         if (generator.keywords().contains("phpbb")) {
             return xenforoSpecialization;
         }
+        if (generator.keywords().contains("javadoc")) {
+            return javadocSpecialization;
+        }
+
         return defaultSpecialization;
     }
 
