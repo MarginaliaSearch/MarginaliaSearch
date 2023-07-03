@@ -56,7 +56,12 @@ public class DocumentGeneratorExtractor {
                 return DocumentGenerator.of(parts[0]);
             case "adobe":
             case "microsoft":
-                return DocumentGenerator.of(parts[1]);
+                if (parts.length > 1) {
+                    return DocumentGenerator.of(parts[1]);
+                }
+                else {
+                    return DocumentGenerator.of(parts[0]);
+                }
         }
 
         if (parts.length > 1) {
