@@ -2,16 +2,14 @@ package nu.marginalia.index;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import nu.marginalia.index.index.SearchIndex;
 import nu.marginalia.index.svc.IndexOpsService;
 import nu.marginalia.index.svc.IndexQueryService;
 import nu.marginalia.index.svc.IndexSearchSetsService;
 import nu.marginalia.model.gson.GsonFactory;
-import nu.marginalia.service.server.Initialization;
-import nu.marginalia.service.server.MetricsServer;
-import nu.marginalia.service.server.Service;
+import nu.marginalia.service.control.ServiceEventLog;
+import nu.marginalia.service.server.*;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,28 +32,29 @@ public class IndexService extends Service {
 
     private final IndexServicesFactory servicesFactory;
     private final IndexSearchSetsService searchSetsService;
+    private final ServiceEventLog eventLog;
 
 
     @Inject
-    public IndexService(@Named("service-host") String ip,
-                        @Named("service-port") Integer port,
-                        Initialization init,
-                        MetricsServer metricsServer,
+    public IndexService(BaseServiceParams params,
                         IndexOpsService opsService,
                         IndexQueryService indexQueryService,
                         SearchIndex searchIndex,
                         IndexServicesFactory servicesFactory,
-                        IndexSearchSetsService searchSetsService)
+                        IndexSearchSetsService searchSetsService,
+                        ServiceEventLog eventLog)
     {
-        super(ip, port, init, metricsServer);
+        super(params);
+
         this.opsService = opsService;
         this.searchIndex = searchIndex;
         this.servicesFactory = servicesFactory;
         this.searchSetsService = searchSetsService;
+        this.eventLog = eventLog;
 
         final Gson gson = GsonFactory.get();
 
-        this.init = init;
+        this.init = params.initialization;
 
         Spark.post("/search/", indexQueryService::search, gson::toJson);
 
@@ -94,9 +93,11 @@ public class IndexService extends Service {
         }
 
         try {
+            eventLog.logEvent("INDEX-AUTO-CONVERT-BEGIN", "");
             logger.info("Auto-converting");
             searchSetsService.recalculateAll();
             searchIndex.switchIndex();
+            eventLog.logEvent("INDEX-AUTO-CONVERT-END", "");
             logger.info("Auto-conversion finished!");
         }
         catch (IOException ex) {

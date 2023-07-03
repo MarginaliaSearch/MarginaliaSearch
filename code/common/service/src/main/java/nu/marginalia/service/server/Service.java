@@ -1,6 +1,5 @@
 package nu.marginalia.service.server;
 
-import com.google.common.base.Strings;
 import io.prometheus.client.Counter;
 import nu.marginalia.client.Context;
 import nu.marginalia.client.exception.MessagingException;
@@ -35,22 +34,28 @@ public class Service {
             .labelNames("service")
             .register();
     private final String serviceName;
-
     private static volatile boolean initialized = false;
 
-    public Service(String ip, int port, Initialization initialization, MetricsServer metricsServer, Runnable configureStaticFiles) {
-        this.initialization = initialization;
+    public Service(BaseServiceParams params,
+                   Runnable configureStaticFiles
+                   ) {
+        this.initialization = params.initialization;
 
         serviceName = System.getProperty("service-name");
+
+        initialization.addCallback(params.heartbeat::start);
+        initialization.addCallback(() -> params.eventLog.logEvent("SVC-INIT", ""));
 
         if (!initialization.isReady() && ! initialized ) {
             initialized = true;
 
             Spark.threadPool(32, 4, 60_000);
-            Spark.ipAddress(ip);
-            Spark.port(port);
+            Spark.ipAddress(params.configuration.host());
+            Spark.port(params.configuration.port());
 
-            logger.info("{} Listening to {}:{}", getClass().getSimpleName(), ip == null ? "" : ip, port);
+            logger.info("{} Listening to {}:{}", getClass().getSimpleName(),
+                    params.configuration.host(),
+                    params.configuration.port());
 
             configureStaticFiles.run();
 
@@ -66,8 +71,8 @@ public class Service {
         }
     }
 
-    public Service(String ip, int port, Initialization initialization, MetricsServer metricsServer) {
-        this(ip, port, initialization, metricsServer, () -> {
+    public Service(BaseServiceParams params) {
+        this(params, () -> {
             // configureStaticFiles can't be an overridable method in Service because it may
             // need to depend on parameters to the constructor, and super-constructors
             // must run first

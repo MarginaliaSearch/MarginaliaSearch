@@ -71,6 +71,16 @@ services:
       - "127.0.0.1:7071:4000"
     depends_on:
       - mariadb
+  control-service:
+    <<: *service
+    image: "marginalia.nu/control-service"
+    container_name: "control-service"
+    ports:
+      - "127.0.0.1:5090:5090"
+      - "127.0.0.1:4090:5000"
+      - "127.0.0.1:7090:4000"
+    depends_on:
+      - mariadb
   mariadb:
     image: "mariadb/server:10.3"
     container_name: "mariadb"

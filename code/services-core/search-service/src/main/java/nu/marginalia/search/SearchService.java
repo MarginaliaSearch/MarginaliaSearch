@@ -2,17 +2,13 @@ package nu.marginalia.search;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import lombok.SneakyThrows;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.client.Context;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.search.svc.SearchFrontPageService;
 import nu.marginalia.search.svc.*;
-import nu.marginalia.service.server.Initialization;
-import nu.marginalia.service.server.MetricsServer;
-import nu.marginalia.service.server.Service;
-import nu.marginalia.service.server.StaticResources;
+import nu.marginalia.service.server.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -31,10 +27,7 @@ public class SearchService extends Service {
 
     @SneakyThrows
     @Inject
-    public SearchService(@Named("service-host") String ip,
-                         @Named("service-port") Integer port,
-                         Initialization initialization,
-                         MetricsServer metricsServer,
+    public SearchService(BaseServiceParams params,
                          WebsiteUrl websiteUrl,
                          StaticResources staticResources,
                          SearchFrontPageService frontPageService,
@@ -44,7 +37,7 @@ public class SearchService extends Service {
                          SearchQueryService searchQueryService,
                          SearchApiQueryService apiQueryService
                              ) {
-        super(ip, port, initialization, metricsServer);
+        super(params);
 
         this.websiteUrl = websiteUrl;
         this.staticResources = staticResources;

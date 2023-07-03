@@ -13,7 +13,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 public class AbortingScheduler {
-    private final String name;
     private final ThreadFactory threadFactory;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -22,7 +21,6 @@ public class AbortingScheduler {
     private ExecutorService executorService;
 
     public AbortingScheduler(String name) {
-        this.name = name;
         threadFactory = new ThreadFactoryBuilder()
                 .setNameFormat(name+"client--%d")
                 .setUncaughtExceptionHandler(this::handleException)

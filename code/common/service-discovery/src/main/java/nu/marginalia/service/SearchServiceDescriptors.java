@@ -13,5 +13,7 @@ public class SearchServiceDescriptors {
                           new ServiceDescriptor(ServiceId.Search, 5023),
                           new ServiceDescriptor(ServiceId.Assistant, 5025),
                           new ServiceDescriptor(ServiceId.Dating, 5070),
-                          new ServiceDescriptor(ServiceId.Explorer, 5071)));
+                          new ServiceDescriptor(ServiceId.Explorer, 5071),
+                          new ServiceDescriptor(ServiceId.Control, 5090)
+                  ));
 }

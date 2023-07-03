@@ -1,7 +1,6 @@
 package nu.marginalia.dating;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import lombok.SneakyThrows;
 import nu.marginalia.browse.DbBrowseDomainsRandom;
 import nu.marginalia.browse.DbBrowseDomainsSimilarCosine;
@@ -11,9 +10,7 @@ import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.screenshot.ScreenshotService;
 import nu.marginalia.model.id.EdgeId;
-import nu.marginalia.service.server.Initialization;
-import nu.marginalia.service.server.MetricsServer;
-import nu.marginalia.service.server.Service;
+import nu.marginalia.service.server.*;
 import org.jetbrains.annotations.NotNull;
 import spark.Request;
 import spark.Response;
@@ -33,17 +30,15 @@ public class DatingService extends Service {
     private final String SESSION_OBJECT_NAME = "so";
     @SneakyThrows
     @Inject
-    public DatingService(@Named("service-host") String ip,
-                         @Named("service-port") Integer port,
+    public DatingService(BaseServiceParams params,
                          RendererFactory rendererFactory,
-                         Initialization initialization,
-                         MetricsServer metricsServer,
                          DomainBlacklist blacklist,
                          DbBrowseDomainsSimilarCosine browseSimilarCosine,
                          DbBrowseDomainsRandom browseRandom,
-                         ScreenshotService screenshotService) {
+                         ScreenshotService screenshotService)
+    {
 
-        super(ip, port, initialization, metricsServer);
+        super(params);
 
         this.blacklist = blacklist;
 

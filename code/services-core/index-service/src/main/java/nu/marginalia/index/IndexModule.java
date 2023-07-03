@@ -8,6 +8,7 @@ import nu.marginalia.WmsaHome;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.KeywordLexiconReadOnlyView;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
+import nu.marginalia.service.control.ServiceEventLog;
 
 import java.nio.file.Path;
 
@@ -20,13 +21,20 @@ public class IndexModule extends AbstractModule {
 
     @Provides
     @SneakyThrows
-    private KeywordLexiconReadOnlyView createLexicon() {
-        return new KeywordLexiconReadOnlyView(
-                new KeywordLexicon(
-                    new KeywordLexiconJournal(WmsaHome.getDisk("index-write").resolve("dictionary.dat").toFile()
+    private KeywordLexiconReadOnlyView createLexicon(ServiceEventLog eventLog) {
+        try {
+            eventLog.logEvent("INDEX-LEXICON-LOAD-BEGIN", "");
+
+            return new KeywordLexiconReadOnlyView(
+                    new KeywordLexicon(
+                            new KeywordLexiconJournal(WmsaHome.getDisk("index-write").resolve("dictionary.dat").toFile()
+                            )
                     )
-                )
-        );
+            );
+        }
+        finally {
+            eventLog.logEvent("INDEX-LEXICON-LOAD-OK", "");
+        }
     }
 
     @Provides
