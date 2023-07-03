@@ -87,9 +87,18 @@ public class DocumentGeneratorExtractor {
             }
         }
 
-        for (var scriptTags : doc.head().select("script")) {
-            if (scriptTags.html().contains("window.lemmyConfig")) {
+        for (var tag : doc.head().getElementsByTag("script")) {
+            if (tag.html().contains("window.lemmyConfig")) {
                 return DocumentGenerator.of("lemmy");
+            }
+            if (tag.attr("src").contains("wp-content")) {
+                return DocumentGenerator.of("wordpress", "wordpress-sneaky");
+            }
+        }
+
+        for (var tag : doc.head().getElementsByTag("link")) {
+            if (tag.attr("href").contains("wp-content")) {
+                return DocumentGenerator.of("wordpress", "wordpress-sneaky");
             }
         }
 
