@@ -91,6 +91,9 @@ public class DocumentGeneratorExtractor {
             if (tag.html().contains("window.lemmyConfig")) {
                 return DocumentGenerator.of("lemmy");
             }
+            if (tag.html().contains("URL_DOMAIN = 'wikidot.com'")) {
+                return DocumentGenerator.of("wikidot");
+            }
             if (tag.attr("src").contains("wp-content")) {
                 return DocumentGenerator.of("wordpress", "wordpress-sneaky");
             }
@@ -193,7 +196,7 @@ public class DocumentGeneratorExtractor {
                 case "vbulletin", "phpbb", "mybb", "nodebb", "flarum", "tribe",
                      "discourse", "lemmy", "xenforo", "invision"
                      -> GeneratorType.FORUM;
-                case "mediawiki", "dokuwiki", "sharepoint"
+                case "mediawiki", "dokuwiki", "wikidot", "sharepoint"
                      -> GeneratorType.WIKI;
                 case "pandoc", "mkdocs", "doxygen", "javadoc"
                      -> GeneratorType.DOCS;
