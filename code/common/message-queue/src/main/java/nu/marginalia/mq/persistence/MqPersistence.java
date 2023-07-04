@@ -1,5 +1,6 @@
 package nu.marginalia.mq.persistence;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
@@ -164,7 +165,7 @@ public class MqPersistence {
 
         try (var conn = dataSource.getConnection();
              var queryStmt = conn.prepareStatement("""
-                     SELECT ID, RELATED_ID, FUNCTION, PAYLOAD, STATE FROM PROC_MESSAGE
+                     SELECT ID, RELATED_ID, FUNCTION, PAYLOAD, STATE, SENDER_INBOX FROM PROC_MESSAGE
                      WHERE OWNER_INSTANCE=? AND OWNER_TICK=?
                      """)
         ) {
@@ -182,8 +183,9 @@ public class MqPersistence {
                 String payload = rs.getString(4);
 
                 MqMessageState state = MqMessageState.valueOf(rs.getString(5));
+                boolean expectsResponse = rs.getBoolean(6);
 
-                var msg = new MqMessage(msgId, relatedId, function, payload, state);
+                var msg = new MqMessage(msgId, relatedId, function, payload, state, expectsResponse);
 
                 messages.add(msg);
             }
@@ -226,12 +228,46 @@ public class MqPersistence {
 
                 MqMessageState state = MqMessageState.valueOf(rs.getString(5));
 
-                var msg = new MqMessage(msgId, relatedId, function, payload, state);
+                var msg = new MqMessage(msgId, relatedId, function, payload, state, false);
 
                 messages.add(msg);
             }
 
             return messages;
         }
+    }
+
+    public List<MqMessage> lastNMessages(String inboxName, int lastN) throws SQLException {
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("""
+                     SELECT ID, RELATED_ID, FUNCTION, PAYLOAD, STATE, SENDER_INBOX FROM PROC_MESSAGE
+                     WHERE RECIPIENT_INBOX = ?
+                     ORDER BY ID DESC LIMIT ?
+                     """)) {
+
+            stmt.setString(1, inboxName);
+            stmt.setInt(2, lastN);
+            List<MqMessage> messages = new ArrayList<>(lastN);
+
+            var rs = stmt.executeQuery();
+            while (rs.next()) {
+                long msgId = rs.getLong(1);
+                long relatedId = rs.getLong(2);
+
+                String function = rs.getString(3);
+                String payload = rs.getString(4);
+
+                MqMessageState state = MqMessageState.valueOf(rs.getString(5));
+                boolean expectsResponse = rs.getBoolean(6);
+
+                var msg = new MqMessage(msgId, relatedId, function, payload, state, expectsResponse);
+
+                messages.add(msg);
+            }
+
+            Lists.reverse(messages);
+            return messages;
+        }
+
     }
 }

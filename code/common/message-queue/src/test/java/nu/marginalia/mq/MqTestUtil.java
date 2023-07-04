@@ -1,7 +1,6 @@
-package nu.marginalia.mq.outbox;
+package nu.marginalia.mq;
 
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.mq.MqMessageState;
 import org.junit.jupiter.api.Assertions;
 
 import java.sql.SQLException;

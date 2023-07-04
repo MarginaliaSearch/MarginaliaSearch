@@ -1,9 +1,9 @@
-package nu.marginalia.mq.outbox;
+package nu.marginalia.mq.persistence;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.mq.MqMessageState;
-import nu.marginalia.mq.persistence.MqPersistence;
+import nu.marginalia.mq.MqTestUtil;
 import org.junit.jupiter.api.*;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;

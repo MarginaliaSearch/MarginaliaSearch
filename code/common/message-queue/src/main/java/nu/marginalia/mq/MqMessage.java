@@ -5,6 +5,7 @@ public record MqMessage(
         long relatedId,
         String function,
         String payload,
-        MqMessageState state
+        MqMessageState state,
+        boolean expectsResponse
 ) {
 }

@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.MqMessageState;
+import nu.marginalia.mq.MqTestUtil;
 import nu.marginalia.mq.inbox.MqInboxResponse;
 import nu.marginalia.mq.inbox.MqInbox;
 import nu.marginalia.mq.inbox.MqSubscription;
@@ -154,9 +155,12 @@ public class MqOutboxTest {
             }
 
             @Override
-            public MqInboxResponse handle(MqMessage msg) {
+            public MqInboxResponse onRequest(MqMessage msg) {
                 return MqInboxResponse.ok(response);
             }
+
+            @Override
+            public void onNotification(MqMessage msg) { }
         };
     }
 
@@ -168,9 +172,12 @@ public class MqOutboxTest {
             }
 
             @Override
-            public MqInboxResponse handle(MqMessage msg) {
+            public MqInboxResponse onRequest(MqMessage msg) {
                 return MqInboxResponse.ok(msg.payload());
             }
+
+            @Override
+            public void onNotification(MqMessage msg) {}
         };
     }
 

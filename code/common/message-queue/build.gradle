@@ -19,6 +19,7 @@ dependencies {
 
     implementation libs.spark
     implementation libs.guice
+    implementation libs.gson
     implementation libs.rxjava
 
     implementation libs.bundles.prometheus

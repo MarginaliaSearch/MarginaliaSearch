@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public class MqInbox {
     private final Logger logger = LoggerFactory.getLogger(MqInbox.class);
@@ -26,7 +27,7 @@ public class MqInbox {
 
     private volatile boolean run = true;
 
-    private final int pollIntervalMs = Integer.getInteger("mq.inbox.poll-interval-ms", 1000);
+    private final int pollIntervalMs = Integer.getInteger("mq.inbox.poll-interval-ms", 100);
     private final List<MqSubscription> eventSubscribers = new ArrayList<>();
     private final LinkedBlockingQueue<MqMessage> queue = new LinkedBlockingQueue<>(32);
 
@@ -114,24 +115,49 @@ public class MqInbox {
 
     private void handleMessageWithSubscriber(MqSubscription subscriber, MqMessage msg) {
 
-        threadPool.execute(() -> {
-            try {
-                final var rsp = subscriber.handle(msg);
-
-                sendResponse(msg, rsp.state(), rsp.message());
-            } catch (Exception ex) {
-                logger.error("Message Queue subscriber threw exception", ex);
-                sendResponse(msg, MqMessageState.ERR);
-            }
-        });
+        if (msg.expectsResponse()) {
+            threadPool.execute(() -> respondToMessage(subscriber, msg));
+        }
+        else {
+            threadPool.execute(() -> acknowledgeNotification(subscriber, msg));
+        }
     }
 
-    private void sendResponse(MqMessage msg, MqMessageState mqMessageState) {
+    private void respondToMessage(MqSubscription subscriber, MqMessage msg) {
         try {
-            persistence.updateMessageState(msg.msgId(), mqMessageState);
+            final var rsp = subscriber.onRequest(msg);
+            sendResponse(msg, rsp.state(), rsp.message());
+        } catch (Exception ex) {
+            logger.error("Message Queue subscriber threw exception", ex);
+            sendResponse(msg, MqMessageState.ERR);
+        }
+    }
+
+    private void acknowledgeNotification(MqSubscription subscriber, MqMessage msg) {
+        try {
+            subscriber.onNotification(msg);
+            updateMessageState(msg, MqMessageState.OK);
+        } catch (Exception ex) {
+            logger.error("Message Queue subscriber threw exception", ex);
+            updateMessageState(msg, MqMessageState.ERR);
+        }
+    }
+
+    private void sendResponse(MqMessage msg, MqMessageState state) {
+        try {
+            persistence.updateMessageState(msg.msgId(), state);
         }
         catch (SQLException ex) {
             logger.error("Failed to update message state", ex);
+        }
+    }
+
+    private void updateMessageState(MqMessage msg, MqMessageState state) {
+        try {
+            persistence.updateMessageState(msg.msgId(), state);
+        }
+        catch (SQLException ex2) {
+            logger.error("Failed to update message state", ex2);
         }
     }
 
@@ -159,14 +185,25 @@ public class MqInbox {
     }
 
      private Collection<MqMessage> pollInbox(long tick) {
-         try {
-             return persistence.pollInbox(inboxName, instanceUUID, tick);
-         }
-         catch (SQLException ex) {
-             logger.error("Failed to poll inbox", ex);
-             return List.of();
-         }
-     }
+        try {
+            return persistence.pollInbox(inboxName, instanceUUID, tick);
+        }
+        catch (SQLException ex) {
+            logger.error("Failed to poll inbox", ex);
+            return List.of();
+        }
+    }
+
+     /** Retrieve the last N messages from the inbox. */
+    public List<MqMessage> replay(int lastN) {
+        try {
+            return persistence.lastNMessages(inboxName, lastN);
+        }
+        catch (SQLException ex) {
+            logger.error("Failed to replay inbox", ex);
+            return List.of();
+        }
+    }
 
 
     private class MqInboxShredder implements MqSubscription {
@@ -177,9 +214,14 @@ public class MqInbox {
         }
 
         @Override
-        public MqInboxResponse handle(MqMessage msg) {
+        public MqInboxResponse onRequest(MqMessage msg) {
             logger.warn("Unhandled message {}", msg.msgId());
             return MqInboxResponse.err();
+        }
+
+        @Override
+        public void onNotification(MqMessage msg) {
+            logger.warn("Unhandled message {}", msg.msgId());
         }
     }
 }

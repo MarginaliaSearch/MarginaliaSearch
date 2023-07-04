@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
-import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -21,7 +20,7 @@ public class MqOutbox {
     private final ConcurrentHashMap<Long, Long> pendingRequests = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Long, MqMessage> pendingResponses = new ConcurrentHashMap<>();
 
-    private final int pollIntervalMs = Integer.getInteger("mq.outbox.poll-interval-ms", 1000);
+    private final int pollIntervalMs = Integer.getInteger("mq.outbox.poll-interval-ms", 100);
     private final Thread pollThread;
 
     private volatile boolean run = true;
@@ -103,5 +102,8 @@ public class MqOutbox {
         }
     }
 
+    public long notify(String function, String payload) throws Exception {
+        return persistence.sendNewMessage(inboxName, null, function, payload, null);
+    }
 
 }

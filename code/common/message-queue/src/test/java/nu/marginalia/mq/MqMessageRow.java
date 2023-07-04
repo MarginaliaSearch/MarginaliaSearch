@@ -1,4 +1,4 @@
-package nu.marginalia.mq.outbox;
+package nu.marginalia.mq;
 
 import nu.marginalia.mq.MqMessageState;
 
