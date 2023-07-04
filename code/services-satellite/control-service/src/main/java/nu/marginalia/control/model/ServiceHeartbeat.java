@@ -7,5 +7,8 @@ public record ServiceHeartbeat(
         double lastSeenMillis,
         boolean alive
 ) {
+    public boolean isMissing() {
+        return lastSeenMillis > 10000;
+    }
 
 }

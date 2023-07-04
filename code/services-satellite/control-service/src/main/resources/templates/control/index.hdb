@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Control Service</title>
+    <viewport content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  {{> control/partials/nav}}
+  <section>
+      <h1>Overview</h1>
+  </section>
+</body>
+</html>
