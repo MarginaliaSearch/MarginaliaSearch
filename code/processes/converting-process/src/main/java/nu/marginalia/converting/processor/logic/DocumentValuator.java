@@ -19,14 +19,13 @@ public class DocumentValuator {
                              int textLength) throws DisqualifiedException {
         double scriptPenalty = getScriptPenalty(parsedDocument);
 
-        int textBodyLength = textLength;
         int rawLength = crawledDocument.documentBody.length();
 
-        if (textBodyLength == 0) {
+        if (textLength == 0) {
             throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.LENGTH);
         }
 
-        return Math.log(textBodyLength / (double) (1+rawLength))*htmlStandard.scale
+        return Math.log(textLength / (double) (1+rawLength))*htmlStandard.scale
                 + htmlStandard.offset
                 - scriptPenalty;
     }

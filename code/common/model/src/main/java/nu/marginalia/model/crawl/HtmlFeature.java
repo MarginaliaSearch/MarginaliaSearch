@@ -7,6 +7,9 @@ public enum HtmlFeature {
     JS("special:scripts"),
     AFFILIATE_LINK( "special:affiliate"),
     TRACKING("special:tracking"),
+    TRACKING2("special:tracking2"),
+
+    VIEWPORT("special:viewport"),
 
     COOKIES("special:cookies"),
     CATEGORY_FOOD("category:food"),
@@ -15,8 +18,40 @@ public enum HtmlFeature {
 
     GA_SPAM("special:gaspam"),
 
-    UNKNOWN("special:uncategorized")
-    ;
+    /** For fingerprinting and ranking */
+    OPENGRAPH("special:opengraph"),
+    OPENGRAPH_IMAGE("special:opengraph:image"),
+    TWITTERCARD("special:twittercard"),
+    TWITTERCARD_IMAGE("special:twittercard:image"),
+    FONTAWSESOME("special:fontawesome"),
+    GOOGLEFONTS("special:googlefonts"),
+    DNS_PREFETCH("special:dnsprefetch"),
+    PRELOAD("special:preload"),
+    PRECONNECT("special:preconnect"),
+    PINGBACK("special:pingback"),
+    FEED("special:feed"),
+    WEBMENTION("special:webmention"),
+    INDIEAUTH("special:indieauth"),
+    ME_TAG("special:metag"),
+    AMPHTML("special:amphtml"),
+    JSON_LD("special:jsonld"),
+    ORIGIN_TRIAL("special:origintrial"),
+    PROFILE_GMPG("special:profile-gpmg"),
+    QUANTCAST("special:quantcast"),
+    COOKIELAW("special:cookielaw"),
+    DIDOMI("special:didomi"),
+    PARDOT("special:pardot"),
+    ONESIGNAL("special:onesignal"),
+
+    ROBOTS_INDEX("robots:index"),
+    ROBOTS_FOLLOW("robots:follow"),
+    ROBOTS_NOODP("robots:noodp"),
+    ROBOTS_NOYDIR("robots:noydir"),
+    DOFOLLOW_LINK("special:dofollow"),
+    APPLE_TOUCH_ICON("special:appleicon"),
+
+    UNKNOWN("special:uncategorized");
+
 
     private final String keyword;
 

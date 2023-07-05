@@ -111,7 +111,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         final EdgeUrl url = new EdgeUrl(crawledDocument.url);
 
-        final var generatorParts = documentGeneratorExtractor.generatorCleaned(doc);
+        final var generatorParts = documentGeneratorExtractor.detectGenerator(doc, crawledDocument.headers);
 
         final var specialization = htmlProcessorSpecializations.select(generatorParts);
 
@@ -166,6 +166,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
                 .addFormat(standard)
                 .addGenerator(generatorParts.keywords())
                 .build();
+
 
         words.addAllSyntheticTerms(tagWords);
 
