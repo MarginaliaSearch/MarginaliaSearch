@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.mqsm.state.MachineState;
+import nu.marginalia.mqsm.state.ResumeBehavior;
 import nu.marginalia.mqsm.state.StateTransition;
 
 import java.util.function.Function;
@@ -18,7 +19,7 @@ public class StateFactory {
         this.gson = gson;
     }
 
-    public <T> MachineState create(String name, Class<T> param, Function<T, StateTransition> logic) {
+    public <T> MachineState create(String name, ResumeBehavior resumeBehavior, Class<T> param, Function<T, StateTransition> logic) {
         return new MachineState() {
             @Override
             public String name() {
@@ -31,13 +32,18 @@ public class StateFactory {
             }
 
             @Override
+            public ResumeBehavior resumeBehavior() {
+                return resumeBehavior;
+            }
+
+            @Override
             public boolean isFinal() {
                 return false;
             }
         };
     }
 
-    public MachineState create(String name, Supplier<StateTransition> logic) {
+    public MachineState create(String name, ResumeBehavior resumeBehavior, Supplier<StateTransition> logic) {
         return new MachineState() {
             @Override
             public String name() {
@@ -47,6 +53,11 @@ public class StateFactory {
             @Override
             public StateTransition next(String message) {
                 return logic.get();
+            }
+
+            @Override
+            public ResumeBehavior resumeBehavior() {
+                return resumeBehavior;
             }
 
             @Override

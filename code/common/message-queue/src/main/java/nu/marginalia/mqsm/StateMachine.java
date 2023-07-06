@@ -7,6 +7,7 @@ import nu.marginalia.mq.inbox.MqInboxResponse;
 import nu.marginalia.mq.inbox.MqSubscription;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.mq.persistence.MqPersistence;
+import nu.marginalia.mqsm.graph.StateGraph;
 import nu.marginalia.mqsm.state.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Executors;
 
 /** A state machine that can be used to implement a finite state machine
  * using a message queue as the persistence layer.  The state machine is
@@ -37,7 +39,7 @@ public class StateMachine {
     public StateMachine(MqPersistence persistence, String queueName, UUID instanceUUID) {
         this.queueName = queueName;
 
-        smInbox = new MqInbox(persistence, queueName, instanceUUID);
+        smInbox = new MqInbox(persistence, queueName, instanceUUID, Executors.newSingleThreadExecutor());
         smOutbox = new MqOutbox(persistence, queueName, instanceUUID);
 
         smInbox.subscribe(new StateEventSubscription());
@@ -61,6 +63,11 @@ public class StateMachine {
         for (var state : states) {
             allStates.put(state.name(), state);
         }
+    }
+
+    /** Register the state graph */
+    public void registerStates(StateGraph states) {
+        registerStates(states.asStateList());
     }
 
     /** Wait for the state machine to reach a final state.
@@ -94,29 +101,33 @@ public class StateMachine {
     /** Resume the state machine from the last known state. */
     public void resume() throws Exception {
 
-        if (state == null) {
-            var messages = smInbox.replay(1);
+        if (state != null) {
+            return;
+        }
 
-            if (messages.isEmpty()) {
-                init();
-            } else {
-                var firstMessage = messages.get(0);
+        var messages = smInbox.replay(1);
+        if (messages.isEmpty()) {
+            init();
+            return;
+        }
 
-                smInbox.start();
+        var firstMessage = messages.get(0);
+        var resumeState = allStates.get(firstMessage.function());
 
-                logger.info("Resuming state machine from {}({})/{}", firstMessage.function(), firstMessage.payload(), firstMessage.state());
+        smInbox.start();
+        logger.info("Resuming state machine from {}({})/{}", firstMessage.function(), firstMessage.payload(), firstMessage.state());
 
-                if (firstMessage.state() == MqMessageState.NEW) {
-                    // The message is not acknowledged, so starting the inbox will trigger a state transition
-                    //
-                    // We still need to set a state here so that the join() method works
+        if (firstMessage.state() == MqMessageState.NEW) {
+            // The message is not acknowledged, so starting the inbox will trigger a state transition
+            // We still need to set a state here so that the join() method works
 
-                    state = resumingState;
-                } else {
-                    // The message is already acknowledged, so we replay the last state
-                    onStateTransition(firstMessage.function(), firstMessage.payload());
-                }
-            }
+            state = resumingState;
+        } else if (resumeState.resumeBehavior().equals(ResumeBehavior.ERROR)) {
+            // The message is acknowledged, but the state does not support resuming
+            smOutbox.notify("ERROR", "Illegal resumption from ACK'ed state " + firstMessage.function());
+        } else {
+            // The message is already acknowledged, so we replay the last state
+            onStateTransition(firstMessage.function(), firstMessage.payload());
         }
     }
 

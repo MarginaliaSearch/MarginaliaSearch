@@ -38,7 +38,15 @@ public class MqInbox {
                    String inboxName,
                    UUID instanceUUID)
     {
-        this.threadPool = Executors.newCachedThreadPool();
+        this(persistence, inboxName, instanceUUID, Executors.newCachedThreadPool());
+    }
+
+    public MqInbox(MqPersistence persistence,
+                   String inboxName,
+                   UUID instanceUUID,
+                   ExecutorService executorService)
+    {
+        this.threadPool = executorService;
         this.persistence = persistence;
         this.inboxName = inboxName;
         this.instanceUUID = instanceUUID.toString();

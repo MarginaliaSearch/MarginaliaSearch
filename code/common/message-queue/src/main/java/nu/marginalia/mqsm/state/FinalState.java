@@ -10,5 +10,8 @@ public class FinalState implements MachineState {
     }
 
     @Override
+    public ResumeBehavior resumeBehavior() { return ResumeBehavior.RETRY; }
+
+    @Override
     public boolean isFinal() { return true; }
 }

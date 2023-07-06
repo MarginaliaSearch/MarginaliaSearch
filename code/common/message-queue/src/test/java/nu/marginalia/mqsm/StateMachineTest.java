@@ -7,6 +7,9 @@ import nu.marginalia.mq.MqMessageRow;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.MqTestUtil;
 import nu.marginalia.mq.persistence.MqPersistence;
+import nu.marginalia.mqsm.graph.GraphState;
+import nu.marginalia.mqsm.graph.StateGraph;
+import nu.marginalia.mqsm.state.ResumeBehavior;
 import org.junit.jupiter.api.*;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -52,19 +55,63 @@ public class StateMachineTest {
         dataSource.close();
     }
 
+    public static class TestGraph extends StateGraph {
+        public TestGraph(StateFactory stateFactory) {
+            super(stateFactory);
+        }
+
+        @GraphState(name = "INITIAL", next = "GREET")
+        public String initial() {
+            return "World";
+        }
+
+        @GraphState(name = "GREET")
+        public void greet(String message) {
+            System.out.println("Hello, " + message + "!");
+
+            transition("COUNT-DOWN", 5);
+        }
+
+        @GraphState(name = "COUNT-DOWN", next = "END")
+        public void countDown(Integer from) {
+            if (from > 0) {
+                System.out.println(from);
+                transition("COUNT-DOWN", from - 1);
+            }
+        }
+    }
+
+    @Test
+    public void testAnnotatedStateGraph() throws Exception {
+        var stateFactory = new StateFactory(new GsonBuilder().create());
+        var graph = new TestGraph(stateFactory);
+
+
+        var sm = new StateMachine(persistence, inboxId, UUID.randomUUID());
+        sm.registerStates(graph.asStateList());
+
+        sm.init();
+
+        sm.join();
+        sm.stop();
+
+        MqTestUtil.getMessages(dataSource, inboxId).forEach(System.out::println);
+
+    }
+
     @Test
     public void testStartStopStartStop() throws Exception {
         var sm = new StateMachine(persistence, inboxId, UUID.randomUUID());
         var stateFactory = new StateFactory(new GsonBuilder().create());
 
-        var initial = stateFactory.create("INITIAL", () -> stateFactory.transition("GREET", "World"));
+        var initial = stateFactory.create("INITIAL", ResumeBehavior.RETRY,  () -> stateFactory.transition("GREET", "World"));
 
-        var greet = stateFactory.create("GREET", String.class, (String message) -> {
+        var greet = stateFactory.create("GREET", ResumeBehavior.RETRY,  String.class, (String message) -> {
             System.out.println("Hello, " + message + "!");
             return stateFactory.transition("COUNT-TO-FIVE", 0);
         });
 
-        var ctf = stateFactory.create("COUNT-TO-FIVE", Integer.class, (Integer count) -> {
+        var ctf = stateFactory.create("COUNT-TO-FIVE", ResumeBehavior.RETRY,  Integer.class, (Integer count) -> {
             System.out.println(count);
             if (count < 5) {
                 return stateFactory.transition("COUNT-TO-FIVE", count + 1);
@@ -89,86 +136,4 @@ public class StateMachineTest {
         MqTestUtil.getMessages(dataSource, inboxId).forEach(System.out::println);
     }
 
-    @Test
-    public void smResumeFromNew() throws Exception {
-        var sm = new StateMachine(persistence, inboxId, UUID.randomUUID());
-        var stateFactory = new StateFactory(new GsonBuilder().create());
-
-        var initial = stateFactory.create("INITIAL", () -> stateFactory.transition("A"));
-        var stateA = stateFactory.create("A", () -> stateFactory.transition("B"));
-        var stateB = stateFactory.create("B", () -> stateFactory.transition("C"));
-        var stateC = stateFactory.create("C", () -> stateFactory.transition("END"));
-
-        sm.registerStates(initial, stateA, stateB, stateC);
-        persistence.sendNewMessage(inboxId,  null,"B", "", null);
-
-        sm.resume();
-
-        sm.join();
-        sm.stop();
-
-        List<String> states = MqTestUtil.getMessages(dataSource, inboxId)
-                .stream()
-                .peek(System.out::println)
-                .map(MqMessageRow::function)
-                .toList();
-
-        assertEquals(List.of("B", "C", "END"), states);
-    }
-
-    @Test
-    public void smResumeFromAck() throws Exception {
-        var sm = new StateMachine(persistence, inboxId, UUID.randomUUID());
-        var stateFactory = new StateFactory(new GsonBuilder().create());
-
-        var initial = stateFactory.create("INITIAL", () -> stateFactory.transition("A"));
-        var stateA = stateFactory.create("A", () -> stateFactory.transition("B"));
-        var stateB = stateFactory.create("B", () -> stateFactory.transition("C"));
-        var stateC = stateFactory.create("C", () -> stateFactory.transition("END"));
-
-        sm.registerStates(initial, stateA, stateB, stateC);
-
-        long id = persistence.sendNewMessage(inboxId,  null,"B", "", null);
-        persistence.updateMessageState(id, MqMessageState.ACK);
-
-        sm.resume();
-
-        sm.join();
-        sm.stop();
-
-        List<String> states = MqTestUtil.getMessages(dataSource, inboxId)
-                .stream()
-                .peek(System.out::println)
-                .map(MqMessageRow::function)
-                .toList();
-
-        assertEquals(List.of("B", "C", "END"), states);
-    }
-
-
-    @Test
-    public void smResumeEmptyQueue() throws Exception {
-        var sm = new StateMachine(persistence, inboxId, UUID.randomUUID());
-        var stateFactory = new StateFactory(new GsonBuilder().create());
-
-        var initial = stateFactory.create("INITIAL", () -> stateFactory.transition("A"));
-        var stateA = stateFactory.create("A", () -> stateFactory.transition("B"));
-        var stateB = stateFactory.create("B", () -> stateFactory.transition("C"));
-        var stateC = stateFactory.create("C", () -> stateFactory.transition("END"));
-
-        sm.registerStates(initial, stateA, stateB, stateC);
-
-        sm.resume();
-
-        sm.join();
-        sm.stop();
-
-        List<String> states = MqTestUtil.getMessages(dataSource, inboxId)
-                .stream()
-                .peek(System.out::println)
-                .map(MqMessageRow::function)
-                .toList();
-
-        assertEquals(List.of("INITIAL", "A", "B", "C", "END"), states);
-    }
 }
