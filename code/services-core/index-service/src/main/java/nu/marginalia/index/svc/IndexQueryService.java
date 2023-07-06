@@ -16,6 +16,7 @@ import nu.marginalia.index.client.model.results.SearchResultSet;
 import nu.marginalia.index.client.model.query.SearchSpecification;
 import nu.marginalia.index.index.SearchIndex;
 import nu.marginalia.index.index.SearchIndexSearchTerms;
+import nu.marginalia.index.query.IndexQueryPriority;
 import nu.marginalia.index.results.IndexMetadataService;
 import nu.marginalia.index.searchset.SearchSet;
 import nu.marginalia.index.results.IndexResultValuator;
@@ -40,6 +41,8 @@ public class IndexQueryService {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
+    // This marker is used to mark sensitive log messages that are related to queries
+    // so that they can be filtered out in the production logging configuration
     private final Marker queryMarker = MarkerFactory.getMarker("QUERY");
 
     private static final Counter wmsa_edge_index_query_timeouts = Counter.build().name("wmsa_edge_index_query_timeouts").help("-").register();
@@ -151,6 +154,11 @@ public class IndexQueryService {
                 prioFrequencies);
     }
 
+    /** Execute subqueries and return a list of document ids.  The index is queried for each subquery,
+     * at different priorty depths until timeout is reached or the results are all visited.
+     * <br>
+     * Then the results are combined.
+     * */
     private TLongList evaluateSubqueries(SearchParameters params) {
         final TLongArrayList results = new TLongArrayList(params.fetchSize);
 
@@ -167,7 +175,6 @@ public class IndexQueryService {
 
             final SearchIndexSearchTerms searchTerms = searchTermsSvc.getSearchTerms(subquery);
 
-
             if (searchTerms.isEmpty()) {
                 logger.info(queryMarker, "empty");
                 continue;
@@ -179,16 +186,16 @@ public class IndexQueryService {
             List<IndexQuery> queries = params.createIndexQueries(index, searchTerms);
             for (var query : queries) {
 
-                if (!params.hasTimeLeft()) {
+                if (!params.hasTimeLeft())
                     break;
-                }
 
-                if (omitQuery(params, query, results.size())) {
+                if (shouldOmitQuery(params, query, results.size())) {
                     logger.info(queryMarker, "Omitting {}", query);
                     continue;
                 }
 
                 int cnt = queryExecutor.executeQuery(query, results, params);
+
                 logger.info(queryMarker, "{} from {}", cnt, query);
             }
         }
@@ -196,7 +203,9 @@ public class IndexQueryService {
         return results;
     }
 
-    private boolean omitQuery(SearchParameters params, IndexQuery query, int resultCount) {
+    /** @see IndexQueryPriority */
+    private boolean shouldOmitQuery(SearchParameters params, IndexQuery query, int resultCount) {
+
         var priority = query.queryPriority;
 
         return switch (priority) {
@@ -207,6 +216,9 @@ public class IndexQueryService {
     }
 
     private void logSearchTerms(SearchSubquery subquery, SearchIndexSearchTerms searchTerms) {
+
+        // This logging should only be enabled in testing, as it is very verbose
+        // and contains sensitive information
 
         if (!logger.isInfoEnabled(queryMarker)) {
             return;
@@ -242,6 +254,7 @@ public class IndexQueryService {
         // Sort the ids for more favorable access patterns on disk
         resultIds.sort();
 
+        // Parallel stream to calculate scores is a minor performance boost
         return Arrays.stream(resultIds.toArray())
                 .parallel()
                 .mapToObj(evaluator::calculatePreliminaryScore)
