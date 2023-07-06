@@ -17,6 +17,7 @@ import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.test.CommonTestData;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -145,6 +146,11 @@ public class CrawlerMockFetcherTest {
         @Override
         public SimpleRobotRules fetchRobotRules(EdgeDomain domain) {
             return new SimpleRobotRules();
+        }
+
+        @Override
+        public SitemapRetriever createSitemapRetriever() {
+            return Mockito.mock(SitemapRetriever.class);
         }
     }
 }

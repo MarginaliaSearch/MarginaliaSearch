@@ -307,6 +307,11 @@ public class HttpFetcherImpl implements HttpFetcher {
                 .orElseGet(() -> new SimpleRobotRules(SimpleRobotRules.RobotRulesMode.ALLOW_ALL));
     }
 
+    @Override
+    public SitemapRetriever createSitemapRetriever() {
+        return new SitemapRetriever();
+    }
+
     private Optional<SimpleRobotRules> fetchRobotsForProto(String proto, EdgeDomain domain) {
         try {
             var url = new EdgeUrl(proto, domain, null, "/robots.txt", null);
