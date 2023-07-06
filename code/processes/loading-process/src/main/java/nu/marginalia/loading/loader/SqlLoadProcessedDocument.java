@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.converting.instruction.instructions.LoadProcessedDocument;
 import nu.marginalia.converting.instruction.instructions.LoadProcessedDocumentWithError;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,7 +79,7 @@ public class SqlLoadProcessedDocument {
                 stmt.setInt(1, urlId);
                 stmt.setString(2, doc.state().name());
                 stmt.setString(3, doc.title());
-                stmt.setString(4, doc.description());
+                stmt.setString(4, StringUtils.truncate(doc.description(), 255));
                 stmt.setInt(5, doc.length());
                 stmt.setInt(6, doc.htmlFeatures());
                 stmt.setString(7, doc.standard());
