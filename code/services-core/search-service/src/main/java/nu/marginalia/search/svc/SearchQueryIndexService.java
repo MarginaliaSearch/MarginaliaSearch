@@ -43,12 +43,14 @@ public class SearchQueryIndexService {
     }
 
     public List<UrlDetails> executeQuery(Context ctx, SearchQuery processedQuery) {
+        // Send the query
         final SearchResultSet results = indexClient.query(ctx, processedQuery.specs);
 
+        // Update the query count (this is what you see on the front page)
         searchVisitorCount.registerQuery();
 
+        // Decorate and sort the results
         List<UrlDetails> urlDetails = resultDecorator.getAllUrlDetails(results);
-
         urlDetails.sort(resultListComparator);
 
         return limitAndDeduplicateResults(processedQuery, urlDetails);
