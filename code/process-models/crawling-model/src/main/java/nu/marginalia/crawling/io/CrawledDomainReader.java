@@ -15,6 +15,7 @@ import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 
@@ -58,14 +59,13 @@ public class CrawledDomainReader {
         }
     }
 
-    public CrawledDomain readRuntimeExcept(Path path) {
+    public Optional<CrawledDomain> readOptionally(Path path) {
         try {
-            return read(path);
+            return Optional.of(read(path));
         }
         catch (Exception ex) {
             logger.warn("Failed to read domain", ex);
-
-            throw new RuntimeException(ex);
+            return Optional.empty();
         }
     }
 
