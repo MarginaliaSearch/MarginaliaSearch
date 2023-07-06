@@ -30,6 +30,13 @@ public class IndexOpsService {
         return opsLock.isLocked();
     }
 
+    public boolean repartition() {
+        return run(searchSetService::recalculateAll);
+    }
+    public boolean reindex() throws Exception {
+        return run(index::switchIndex).isPresent();
+    }
+
     public Object repartitionEndpoint(Request request, Response response) throws Exception {
 
         if (!run(searchSetService::recalculateAll)) {

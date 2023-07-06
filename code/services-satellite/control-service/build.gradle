@@ -31,6 +31,7 @@ dependencies {
     implementation project(':code:common:service-discovery')
     implementation project(':code:common:service-client')
     implementation project(':code:api:search-api')
+    implementation project(':code:api:index-api')
 
 
     implementation libs.lombok

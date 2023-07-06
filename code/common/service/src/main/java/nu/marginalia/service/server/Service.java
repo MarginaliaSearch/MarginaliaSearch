@@ -3,6 +3,9 @@ package nu.marginalia.service.server;
 import io.prometheus.client.Counter;
 import nu.marginalia.client.Context;
 import nu.marginalia.client.exception.MessagingException;
+import nu.marginalia.mq.inbox.MqInbox;
+import nu.marginalia.service.server.mq.MqRequest;
+import nu.marginalia.service.server.mq.ServiceMqSubscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -36,14 +39,25 @@ public class Service {
     private final String serviceName;
     private static volatile boolean initialized = false;
 
+    protected final MqInbox messageQueueInbox;
+
     public Service(BaseServiceParams params,
                    Runnable configureStaticFiles
                    ) {
         this.initialization = params.initialization;
+        var config = params.configuration;
+
+        String inboxName = config.serviceName() + ":" + config.node();
+        logger.info("Inbox name: {}", inboxName);
+        messageQueueInbox = new MqInbox(params.messageQueuePersistence,
+                inboxName,
+                config.instanceUuid());
+        messageQueueInbox.subscribe(new ServiceMqSubscription(this));
 
         serviceName = System.getProperty("service-name");
 
         initialization.addCallback(params.heartbeat::start);
+        initialization.addCallback(messageQueueInbox::start);
         initialization.addCallback(() -> params.eventLog.logEvent("SVC-INIT", ""));
 
         if (!initialization.isReady() && ! initialized ) {
@@ -79,6 +93,16 @@ public class Service {
             Spark.staticFiles.expireTime(3600);
             Spark.staticFiles.header("Cache-control", "public");
         });
+    }
+
+    @MqRequest(endpoint = "SVC-READY")
+    public boolean mqIsReady() {
+        return initialization.isReady();
+    }
+
+    @MqRequest(endpoint = "SVC-PING")
+    public String mqPing() {
+        return "pong";
     }
 
     private void filterPublicRequests(Request request, Response response) {

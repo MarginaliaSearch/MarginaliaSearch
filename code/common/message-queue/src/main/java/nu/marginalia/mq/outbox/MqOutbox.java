@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -27,11 +28,12 @@ public class MqOutbox {
 
     public MqOutbox(MqPersistence persistence,
                     String inboxName,
+                    String outboxName,
                     UUID instanceUUID) {
         this.persistence = persistence;
 
         this.inboxName = inboxName;
-        this.replyInboxName = "reply:" + inboxName;
+        this.replyInboxName = outboxName + "//" + inboxName;
         this.instanceUUID = instanceUUID.toString();
 
         pollThread = new Thread(this::poll, "mq-outbox-poll-thread:" + inboxName);
@@ -90,16 +92,38 @@ public class MqOutbox {
 
     }
 
+    /** Send a message and wait for a response. */
     public MqMessage send(String function, String payload) throws Exception {
+        final long id = sendAsync(function, payload);
+
+        return waitResponse(id);
+    }
+
+    /** Send a message asynchronously, without waiting for a response.
+     * <br>
+     * Use waitResponse(id) or pollResponse(id) to fetch the response.  */
+    public long sendAsync(String function, String payload) throws Exception {
         var id = persistence.sendNewMessage(inboxName, replyInboxName, function, payload, null);
+
         pendingRequests.put(id, id);
 
+        return id;
+    }
+
+    /** Blocks until a response arrives for the given message id. */
+    public MqMessage waitResponse(long id) throws Exception {
         synchronized (pendingResponses) {
             while (!pendingResponses.containsKey(id)) {
                 pendingResponses.wait(100);
             }
             return pendingResponses.remove(id);
         }
+    }
+
+    /** Polls for a response for the given message id. */
+    public Optional<MqMessage> pollResponse(long id)  {
+        // no need to sync here if we aren't going to wait()
+        return Optional.ofNullable(pendingResponses.remove(id));
     }
 
     public long notify(String function, String payload) throws Exception {

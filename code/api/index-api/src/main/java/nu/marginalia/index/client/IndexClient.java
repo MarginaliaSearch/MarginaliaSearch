@@ -8,25 +8,39 @@ import nu.marginalia.WmsaHome;
 import nu.marginalia.client.AbstractDynamicClient;
 import nu.marginalia.client.Context;
 import nu.marginalia.index.client.model.query.SearchSpecification;
-import nu.marginalia.index.client.model.results.SearchResultItem;
 import nu.marginalia.index.client.model.results.SearchResultSet;
 import nu.marginalia.model.gson.GsonFactory;
+import nu.marginalia.mq.outbox.MqOutbox;
+import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.service.descriptor.ServiceDescriptors;
 import nu.marginalia.service.id.ServiceId;
 
 import javax.annotation.CheckReturnValue;
-import java.util.List;
+import java.util.UUID;
 
 @Singleton
 public class IndexClient extends AbstractDynamicClient {
 
     private static final Summary wmsa_search_index_api_time = Summary.build().name("wmsa_search_index_api_time").help("-").register();
 
+    private final MqOutbox outbox;
+
     @Inject
-    public IndexClient(ServiceDescriptors descriptors) {
+    public IndexClient(ServiceDescriptors descriptors,
+                       MqPersistence persistence) {
         super(descriptors.forId(ServiceId.Index), WmsaHome.getHostsFile(), GsonFactory::get);
 
+        String inboxName = ServiceId.Index.name + ":" + "0";
+        String outboxName = System.getProperty("service-name", UUID.randomUUID().toString());
+
+        outbox = new MqOutbox(persistence, inboxName, outboxName, UUID.randomUUID());
+
         setTimeout(30);
+    }
+
+
+    public MqOutbox outbox() {
+        return outbox;
     }
 
     @CheckReturnValue

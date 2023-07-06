@@ -55,13 +55,13 @@ public class MqOutboxTest {
 
     @Test
     public void testOpenClose() throws InterruptedException {
-        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, UUID.randomUUID());
+        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, inboxId+"/reply", UUID.randomUUID());
         outbox.stop();
     }
 
     @Test
     public void testSend() throws Exception {
-        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, UUID.randomUUID());
+        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId,inboxId+"/reply", UUID.randomUUID());
         Executors.newSingleThreadExecutor().submit(() -> outbox.send("test", "Hello World"));
 
         TimeUnit.MILLISECONDS.sleep(100);
@@ -75,7 +75,7 @@ public class MqOutboxTest {
 
     @Test
     public void testSendAndRespond() throws Exception {
-        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, UUID.randomUUID());
+        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId,inboxId+"/reply", UUID.randomUUID());
 
         var inbox = new MqInbox(new MqPersistence(dataSource), inboxId, UUID.randomUUID());
         inbox.subscribe(justRespond("Alright then"));
@@ -96,7 +96,7 @@ public class MqOutboxTest {
 
     @Test
     public void testSendMultiple() throws Exception {
-        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, UUID.randomUUID());
+        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId,inboxId+"/reply", UUID.randomUUID());
 
         var inbox = new MqInbox(new MqPersistence(dataSource), inboxId, UUID.randomUUID());
         inbox.subscribe(echo());
@@ -130,7 +130,7 @@ public class MqOutboxTest {
 
     @Test
     public void testSendAndRespondWithErrorHandler() throws Exception {
-        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, UUID.randomUUID());
+        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId,inboxId+"/reply", UUID.randomUUID());
         var inbox = new MqInbox(new MqPersistence(dataSource), inboxId, UUID.randomUUID());
 
         inbox.start();

@@ -3,6 +3,7 @@ package nu.marginalia.index;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import nu.marginalia.index.client.IndexMqEndpoints;
 import nu.marginalia.index.index.SearchIndex;
 import nu.marginalia.index.svc.IndexOpsService;
 import nu.marginalia.index.svc.IndexQueryService;
@@ -10,6 +11,7 @@ import nu.marginalia.index.svc.IndexSearchSetsService;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.server.*;
+import nu.marginalia.service.server.mq.MqRequest;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,6 +73,27 @@ public class IndexService extends Service {
     }
 
     volatile boolean initialized = false;
+
+    @MqRequest(endpoint = IndexMqEndpoints.INDEX_REPARTITION)
+    public String repartition(String message) {
+        if (!opsService.repartition()) {
+            throw new IllegalStateException("Ops lock busy");
+        }
+        return "ok";
+    }
+
+    @MqRequest(endpoint = IndexMqEndpoints.INDEX_REINDEX)
+    public String reindex(String message) throws Exception {
+        if (!opsService.reindex()) {
+            throw new IllegalStateException("Ops lock busy");
+        }
+
+        return "ok";
+    }
+    @MqRequest(endpoint = IndexMqEndpoints.INDEX_IS_BLOCKED)
+    public String isBlocked(String message) throws Exception {
+        return Boolean.valueOf(opsService.isBusy()).toString();
+    }
 
     public void initialize() {
         if (!initialized) {

@@ -3,6 +3,7 @@ package nu.marginalia.control;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import nu.marginalia.client.ServiceMonitors;
+import nu.marginalia.control.process.ControlProcesses;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.renderer.MustacheRenderer;
@@ -33,7 +34,8 @@ public class ControlService extends Service {
                           HeartbeatService heartbeatService,
                           EventLogService eventLogService,
                           RendererFactory rendererFactory,
-                          MqPersistence messageQueuePersistence
+                          MqPersistence messageQueuePersistence,
+                          ControlProcesses controlProcesses
                       ) throws IOException {
 
         super(params);
@@ -52,6 +54,10 @@ public class ControlService extends Service {
                 Map.of("heartbeats", heartbeatService.getHeartbeats(),
                         "events", eventLogService.getLastEntries(100)
                         )));
+        Spark.get("/public/repartition", (req, rsp) -> {
+            controlProcesses.start("REPARTITION-REINDEX");
+            return "OK";
+        });
 
         monitors.subscribe(this::logMonitorStateChange);
 

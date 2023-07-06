@@ -44,7 +44,7 @@ public class StateMachine {
         this.queueName = queueName;
 
         smInbox = new MqInbox(persistence, queueName, instanceUUID, Executors.newSingleThreadExecutor());
-        smOutbox = new MqOutbox(persistence, queueName, instanceUUID);
+        smOutbox = new MqOutbox(persistence, queueName, queueName+"//out", instanceUUID);
 
         smInbox.subscribe(new StateEventSubscription());
 
@@ -143,6 +143,12 @@ public class StateMachine {
                     state == null ? "[null]" : state.name(),
                     nextState,
                     message);
+
+            if (!allStates.containsKey(nextState)) {
+                logger.error("Unknown state {}", nextState);
+                setErrorState();
+                return;
+            }
 
             synchronized (this) {
                 this.state = allStates.get(nextState);
