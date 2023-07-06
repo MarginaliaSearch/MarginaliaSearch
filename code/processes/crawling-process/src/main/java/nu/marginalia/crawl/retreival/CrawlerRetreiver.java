@@ -54,7 +54,7 @@ public class CrawlerRetreiver {
     private static final LinkFilterSelector linkFilterSelector = new LinkFilterSelector();
 
     private static final DomainProber domainProber = new DomainProber();
-    private final SitemapRetriever sitemapRetriever = new SitemapRetriever();
+    private final SitemapRetriever sitemapRetriever;
     private final DomainCrawlFrontier crawlFrontier;
 
 
@@ -71,6 +71,7 @@ public class CrawlerRetreiver {
         crawledDomainWriter = writer;
 
         this.crawlFrontier = new DomainCrawlFrontier(new EdgeDomain(domain), specs.urls, specs.crawlDepth);
+        sitemapRetriever = fetcher.createSitemapRetriever();
 
         var fst = crawlFrontier.peek();
         if (fst != null) {

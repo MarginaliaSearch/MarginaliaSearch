@@ -21,4 +21,6 @@ public interface HttpFetcher {
     CrawledDocument fetchContent(EdgeUrl url) throws RateLimitException;
 
     SimpleRobotRules fetchRobotRules(EdgeDomain domain);
+
+    SitemapRetriever createSitemapRetriever();
 }

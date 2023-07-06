@@ -10,7 +10,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 
-@Singleton
 public class SitemapRetriever {
     private final Logger logger = LoggerFactory.getLogger(SitemapRetriever.class);
     private final ThreadLocal<SiteMapParser> siteMapParserThreadLocal = ThreadLocal.withInitial(() -> new SiteMapParser(false));
