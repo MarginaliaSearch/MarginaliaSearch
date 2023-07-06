@@ -1,22 +1,20 @@
 package nu.marginalia.mqsm.graph;
 
-import nu.marginalia.mqsm.StateFactory;
 import nu.marginalia.mqsm.state.MachineState;
+import nu.marginalia.mqsm.StateFactory;
 import nu.marginalia.mqsm.state.StateTransition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
-public abstract class StateGraph {
+public abstract class AbstractStateGraph {
     private final StateFactory stateFactory;
-    private static final Logger logger = LoggerFactory.getLogger(StateGraph.class);
+    private static final Logger logger = LoggerFactory.getLogger(AbstractStateGraph.class);
 
-    public StateGraph(StateFactory stateFactory) {
+    public AbstractStateGraph(StateFactory stateFactory) {
         this.stateFactory = stateFactory;
     }
 
@@ -38,6 +36,19 @@ public abstract class StateGraph {
         throw new ControlFlowException("ERROR", ex.getClass().getSimpleName() + ":" + ex.getMessage());
     }
 
+    public Set<String> declaredStates() {
+        Set<String> ret = new HashSet<>();
+
+        for (var method : getClass().getMethods()) {
+            var gs = method.getAnnotation(GraphState.class);
+            if (gs != null) {
+                ret.add(gs.name());
+                ret.add(gs.next());
+            }
+        }
+
+        return ret;
+    }
     public List<MachineState> asStateList() {
         List<MachineState> ret = new ArrayList<>();
 

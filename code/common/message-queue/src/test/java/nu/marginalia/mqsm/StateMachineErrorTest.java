@@ -4,12 +4,11 @@ import com.google.gson.GsonBuilder;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.mq.MqMessageRow;
-import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.MqTestUtil;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.mqsm.graph.GraphState;
-import nu.marginalia.mqsm.graph.StateGraph;
-import nu.marginalia.mqsm.state.ResumeBehavior;
+import nu.marginalia.mqsm.graph.AbstractStateGraph;
+import nu.marginalia.mqsm.graph.ResumeBehavior;
 import org.junit.jupiter.api.*;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -55,7 +54,7 @@ public class StateMachineErrorTest {
         dataSource.close();
     }
 
-    public static class ErrorHurdles extends StateGraph {
+    public static class ErrorHurdles extends AbstractStateGraph {
 
         public ErrorHurdles(StateFactory stateFactory) {
             super(stateFactory);
@@ -71,17 +70,15 @@ public class StateMachineErrorTest {
         }
         @GraphState(name = "OK", next = "END")
         public void ok() {
-            
+
         }
 
     }
 
     @Test
     public void smResumeResumableFromNew() throws Exception {
-        var sm = new StateMachine(persistence, inboxId, UUID.randomUUID());
         var stateFactory = new StateFactory(new GsonBuilder().create());
-
-        sm.registerStates(new ErrorHurdles(stateFactory).asStateList());
+        var sm = new StateMachine(persistence, inboxId, UUID.randomUUID(), new ErrorHurdles(stateFactory));
 
         sm.init();
 

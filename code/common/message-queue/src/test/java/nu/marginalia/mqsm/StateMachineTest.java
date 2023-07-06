@@ -3,19 +3,15 @@ package nu.marginalia.mqsm;
 import com.google.gson.GsonBuilder;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.mq.MqMessageRow;
-import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.MqTestUtil;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.mqsm.graph.GraphState;
-import nu.marginalia.mqsm.graph.StateGraph;
-import nu.marginalia.mqsm.state.ResumeBehavior;
+import nu.marginalia.mqsm.graph.AbstractStateGraph;
 import org.junit.jupiter.api.*;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -55,7 +51,7 @@ public class StateMachineTest {
         dataSource.close();
     }
 
-    public static class TestGraph extends StateGraph {
+    public static class TestGraph extends AbstractStateGraph {
         public TestGraph(StateFactory stateFactory) {
             super(stateFactory);
         }
@@ -87,8 +83,8 @@ public class StateMachineTest {
         var graph = new TestGraph(stateFactory);
 
 
-        var sm = new StateMachine(persistence, inboxId, UUID.randomUUID());
-        sm.registerStates(graph.asStateList());
+        var sm = new StateMachine(persistence, inboxId, UUID.randomUUID(), graph);
+        sm.registerStates(graph);
 
         sm.init();
 
@@ -101,34 +97,17 @@ public class StateMachineTest {
 
     @Test
     public void testStartStopStartStop() throws Exception {
-        var sm = new StateMachine(persistence, inboxId, UUID.randomUUID());
         var stateFactory = new StateFactory(new GsonBuilder().create());
-
-        var initial = stateFactory.create("INITIAL", ResumeBehavior.RETRY,  () -> stateFactory.transition("GREET", "World"));
-
-        var greet = stateFactory.create("GREET", ResumeBehavior.RETRY,  String.class, (String message) -> {
-            System.out.println("Hello, " + message + "!");
-            return stateFactory.transition("COUNT-TO-FIVE", 0);
-        });
-
-        var ctf = stateFactory.create("COUNT-TO-FIVE", ResumeBehavior.RETRY,  Integer.class, (Integer count) -> {
-            System.out.println(count);
-            if (count < 5) {
-                return stateFactory.transition("COUNT-TO-FIVE", count + 1);
-            } else {
-                return stateFactory.transition("END");
-            }
-        });
-
-        sm.registerStates(initial, greet, ctf);
+        var sm = new StateMachine(persistence, inboxId, UUID.randomUUID(), new TestGraph(stateFactory));
 
         sm.init();
 
-        Thread.sleep(300);
+        Thread.sleep(150);
         sm.stop();
 
-        var sm2 = new StateMachine(persistence, inboxId, UUID.randomUUID());
-        sm2.registerStates(initial, greet, ctf);
+        System.out.println("-------------------- ");
+
+        var sm2 = new StateMachine(persistence, inboxId, UUID.randomUUID(), new TestGraph(stateFactory));
         sm2.resume();
         sm2.join();
         sm2.stop();

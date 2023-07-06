@@ -7,7 +7,8 @@ import nu.marginalia.mq.inbox.MqInboxResponse;
 import nu.marginalia.mq.inbox.MqSubscription;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.mq.persistence.MqPersistence;
-import nu.marginalia.mqsm.graph.StateGraph;
+import nu.marginalia.mqsm.graph.ResumeBehavior;
+import nu.marginalia.mqsm.graph.AbstractStateGraph;
 import nu.marginalia.mqsm.state.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,13 +31,16 @@ public class StateMachine {
     private final String queueName;
     private MachineState state;
 
-    private final MachineState errorState = new ErrorState();
-    private final MachineState finalState = new FinalState();
-    private final MachineState resumingState = new ResumingState();
+    private final MachineState errorState = new StateFactory.ErrorState();
+    private final MachineState finalState = new StateFactory.FinalState();
+    private final MachineState resumingState = new StateFactory.ResumingState();
 
     private final Map<String, MachineState> allStates = new HashMap<>();
 
-    public StateMachine(MqPersistence persistence, String queueName, UUID instanceUUID) {
+    public StateMachine(MqPersistence persistence,
+                        String queueName,
+                        UUID instanceUUID,
+                        AbstractStateGraph stateGraph) {
         this.queueName = queueName;
 
         smInbox = new MqInbox(persistence, queueName, instanceUUID, Executors.newSingleThreadExecutor());
@@ -45,28 +49,24 @@ public class StateMachine {
         smInbox.subscribe(new StateEventSubscription());
 
         registerStates(List.of(errorState, finalState, resumingState));
+        registerStates(stateGraph);
+
+        for (var declaredState : stateGraph.declaredStates()) {
+            if (!allStates.containsKey(declaredState)) {
+                throw new IllegalArgumentException("State " + declaredState + " is not defined in the state graph");
+            }
+        }
     }
 
     /** Register the state graph */
-    public void registerStates(MachineState... states) {
-        if (state != null) {
-            throw new IllegalStateException("Cannot register states after state machine has been initialized");
-        }
-
+    void registerStates(List<MachineState> states) {
         for (var state : states) {
             allStates.put(state.name(), state);
         }
     }
 
     /** Register the state graph */
-    public void registerStates(List<MachineState> states) {
-        for (var state : states) {
-            allStates.put(state.name(), state);
-        }
-    }
-
-    /** Register the state graph */
-    public void registerStates(StateGraph states) {
+    void registerStates(AbstractStateGraph states) {
         registerStates(states.asStateList());
     }
 

@@ -3,8 +3,8 @@ package nu.marginalia.mqsm;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.mqsm.graph.ResumeBehavior;
 import nu.marginalia.mqsm.state.MachineState;
-import nu.marginalia.mqsm.state.ResumeBehavior;
 import nu.marginalia.mqsm.state.StateTransition;
 
 import java.util.function.Function;
@@ -73,5 +73,53 @@ public class StateFactory {
 
     public StateTransition transition(String state, Object message) {
         return StateTransition.to(state, gson.toJson(message));
+    }
+
+    public static class ErrorState implements MachineState {
+        @Override
+        public String name() { return "ERROR"; }
+
+        @Override
+        public StateTransition next(String message) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public ResumeBehavior resumeBehavior() { return ResumeBehavior.RETRY; }
+
+        @Override
+        public boolean isFinal() { return true; }
+    }
+
+    public static class FinalState implements MachineState {
+        @Override
+        public String name() { return "END"; }
+
+        @Override
+        public StateTransition next(String message) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public ResumeBehavior resumeBehavior() { return ResumeBehavior.RETRY; }
+
+        @Override
+        public boolean isFinal() { return true; }
+    }
+
+    public static class ResumingState implements MachineState {
+        @Override
+        public String name() { return "RESUMING"; }
+
+        @Override
+        public StateTransition next(String message) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public ResumeBehavior resumeBehavior() { return ResumeBehavior.RETRY; }
+
+        @Override
+        public boolean isFinal() { return false; }
     }
 }
