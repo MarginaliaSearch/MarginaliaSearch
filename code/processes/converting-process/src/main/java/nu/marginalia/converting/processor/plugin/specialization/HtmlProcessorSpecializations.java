@@ -38,7 +38,7 @@ public class HtmlProcessorSpecializations {
             return xenforoSpecialization;
         }
         if (generator.keywords().contains("phpbb")) {
-            return xenforoSpecialization;
+            return phpBBSpecialization;
         }
         if (generator.keywords().contains("javadoc")) {
             return javadocSpecialization;
