@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+import java.util.Optional;
 
 @AllArgsConstructor @NoArgsConstructor @ToString
 public class CrawlPlan {
@@ -95,7 +96,9 @@ public class CrawlPlan {
             entryStream
                     .map(WorkLogEntry::path)
                     .map(this::getCrawledFilePath)
-                    .map(reader::readRuntimeExcept)
+                    .map(reader::readOptionally)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
                     .forEach(consumer);
         }
         catch (IOException ex) {
@@ -119,11 +122,13 @@ public class CrawlPlan {
                         }
                         return true;
                     })
-                    .map(reader::readRuntimeExcept)
+                    .map(reader::readOptionally)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
                     .forEach(consumer);
         }
         catch (IOException ex) {
-            logger.warn("Failed to read domains", ex);
+            logger.error("Failed to read domains", ex);
 
             throw new RuntimeException(ex);
         }
@@ -141,7 +146,9 @@ public class CrawlPlan {
             stream = WorkLog.streamLog(crawl.getLogFile())
                     .map(WorkLogEntry::path)
                     .map(CrawlPlan.this::getCrawledFilePath)
-                    .map(reader::readRuntimeExcept);
+                    .map(reader::readOptionally)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get);
         }
 
         @Override
