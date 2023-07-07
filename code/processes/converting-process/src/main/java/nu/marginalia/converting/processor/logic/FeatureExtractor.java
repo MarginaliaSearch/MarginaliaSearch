@@ -94,6 +94,15 @@ public class FeatureExtractor {
                 features.add(HtmlFeature.DOFOLLOW_LINK);
             }
         }
+
+        if (!doc.getElementsByTag("date").isEmpty()) {
+            features.add(HtmlFeature.DATE_TAG);
+        }
+        if (!doc.getElementsByTag("noscript").isEmpty()) {
+            features.add(HtmlFeature.NOSCRIPT_TAG);
+        }
+
+
         for (var link : doc.head().getElementsByTag("link")) {
 
             // 500 IQ web developers use <link> error or load handlers
@@ -104,7 +113,6 @@ public class FeatureExtractor {
                 features.add(HtmlFeature.JS);
 
             if (link.hasAttr("pingback")) {
-                features.add(HtmlFeature.TRACKING);
                 features.add(HtmlFeature.PINGBACK);
             }
 
@@ -121,6 +129,9 @@ public class FeatureExtractor {
 
             if (rel.equals("me"))
                 features.add(HtmlFeature.ME_TAG);
+
+            if (rel.equals("next"))
+                features.add(HtmlFeature.NEXT_TAG);
 
             if (rel.equals("alternate") && link.hasAttr("type"))
                 features.add(HtmlFeature.FEED);
@@ -192,11 +203,11 @@ public class FeatureExtractor {
 
         for (var scriptTag : scriptTags) {
             if (hasInvasiveTrackingScript(scriptTag)) {
-                features.add(HtmlFeature.TRACKING);
-                features.add(HtmlFeature.TRACKING2);
+                features.add(HtmlFeature.TRACKING_INNOCENT);
+                features.add(HtmlFeature.TRACKING_EVIL);
             }
             else if (hasNaiveTrackingScript(scriptTag)) {
-                features.add(HtmlFeature.TRACKING);
+                features.add(HtmlFeature.TRACKING_INNOCENT);
             }
 
             if (scriptTag.hasAttr("didomi/javascript")) {
@@ -223,44 +234,42 @@ public class FeatureExtractor {
                 features.add(HtmlFeature.COOKIELAW);
             }
             if (scriptText.contains("_linkedin_data_partner_id")) {
-                features.add(HtmlFeature.TRACKING);
-                features.add(HtmlFeature.TRACKING2);
+                features.add(HtmlFeature.TRACKING_EVIL);
             }
             if (scriptText.contains("window.OneSignal")) {
                 features.add(HtmlFeature.ONESIGNAL);
             }
             if (scriptText.contains("connect.facebook.net")) {
-                features.add(HtmlFeature.TRACKING);
-                features.add(HtmlFeature.TRACKING2);
+                features.add(HtmlFeature.TRACKING_EVIL);
             }
             if (scriptText.contains("hotjar.com")) {
-                features.add(HtmlFeature.TRACKING);
+                features.add(HtmlFeature.TRACKING_INNOCENT);
             }
         }
 
         for (var noscript : doc.getElementsByTag("noscript")) {
             for (var iframe : noscript.getElementsByTag("iframe")) {
                 if (hasInvasiveTrackingScript(iframe)) {
-                    features.add(HtmlFeature.TRACKING);
-                    features.add(HtmlFeature.TRACKING2);
+                    features.add(HtmlFeature.TRACKING_INNOCENT);
+                    features.add(HtmlFeature.TRACKING_EVIL);
                 }
                 else if (hasNaiveTrackingScript(iframe)) {
-                    features.add(HtmlFeature.TRACKING);
+                    features.add(HtmlFeature.TRACKING_INNOCENT);
                 }
             }
             for (var img : noscript.getElementsByTag("img")) {
                 if (hasInvasiveTrackingScript(img)) {
-                    features.add(HtmlFeature.TRACKING);
-                    features.add(HtmlFeature.TRACKING2);
+                    features.add(HtmlFeature.TRACKING_INNOCENT);
+                    features.add(HtmlFeature.TRACKING_EVIL);
                 }
                 else if (hasNaiveTrackingScript(img)) {
-                    features.add(HtmlFeature.TRACKING);
+                    features.add(HtmlFeature.TRACKING_INNOCENT);
                 }
             }
         }
 
         if (scriptTags.html().contains("google-analytics.com")) {
-            features.add(HtmlFeature.TRACKING);
+            features.add(HtmlFeature.TRACKING_INNOCENT);
         }
 
         for (var aTag : doc.getElementsByTag("a")) {

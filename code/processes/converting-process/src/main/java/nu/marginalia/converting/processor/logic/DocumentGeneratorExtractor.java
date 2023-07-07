@@ -245,14 +245,17 @@ public class DocumentGeneratorExtractor {
             final GeneratorType type = switch (parts[0]) {
                 case "joomla", "wordpress", "drupal", "plone", "postnuke", "divi", "freeway", "unicity",
                      "modx", "sitemagic", "agility", "edlio", "blogger", "slider", "slider_revolution", "gravcms",
-                     "typo3", "dotnetnuke", "cms", "coremedia", "dspace", "laravel", "trac"
+                     "typo3", "dotnetnuke", "cms", "coremedia", "dspace", "laravel", "trac", "bunnypress", "astro",
+                     "ghost", "publii"
                      -> GeneratorType.CMS;
                 case "wix.com", "one.com", "wpbakery", "claris", "wordpress.com", "hubspot",
                      "visual_composer", "mobirise", "everweb", "rapidweaver", "shorthand",
                      "visual", "nitropack", "squarespace", "editmysite", "websiteeditor.net",
 
-                    "cloversites", // clover is a church-oriented website builder, found that kinda neat
-                    "bndzgl", // band websites ..?
+                     "svbtle.com", "write.as", "montaigne.io", // blogging platforms, maybe should be in another category?
+
+                     "cloversites", // clover is a church-oriented website builder, found that kinda neat
+                     "bndzgl", // band websites ..?
 
                     /* these are not SAAS but close enough */
                     "redux", "bootply"
@@ -264,7 +267,8 @@ public class DocumentGeneratorExtractor {
                      "pdf2htmlex", "nvu", "mozilla", "golive", "tenfingers", "publisher",
                      "allaire", "neooffice"
                      -> GeneratorType.BOOMER_STATIC;
-                case "hugo", "jekyll", "hakyll"
+                case "hugo", "jekyll", "hakyll", "nikola", "zola", "olivetti", "pelican", "sushy", "hexo", "eleventy",
+                     "gridsome", "vuepress", "docusaurus", "docpad", "techou", "quarto", "soupault"
                      -> GeneratorType.ZOOMER_STATIC;
                 case "vi", "vim", "emacs", "orgmode", "hand", "vscode", "atom", "bbedit", "nano",
                      "notepad.exe", "gedit", "me",
@@ -277,7 +281,7 @@ public class DocumentGeneratorExtractor {
                      -> GeneratorType.FORUM;
                 case "mediawiki", "dokuwiki", "wikidot", "sharepoint"
                      -> GeneratorType.WIKI;
-                case "pandoc", "mkdocs", "doxygen", "javadoc"
+                case "pandoc", "mkdocs", "doxygen", "javadoc", "asciidoc", "jsdoc"
                      -> GeneratorType.DOCS;
                 case "woocommerce", "shopfactory", "prestashop", "magento", "shopify", "sitedirect", "seomatic", "osclass"
                      -> GeneratorType.ECOMMERCE_AND_SPAM;

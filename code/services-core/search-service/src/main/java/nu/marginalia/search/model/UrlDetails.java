@@ -121,7 +121,7 @@ public class UrlDetails {
 
         for (var problem :EnumSet.of(
                 HtmlFeature.JS,
-                HtmlFeature.TRACKING,
+                HtmlFeature.TRACKING_INNOCENT,
                 HtmlFeature.AFFILIATE_LINK,
                 HtmlFeature.COOKIES,
                 HtmlFeature.ADVERTISEMENT)) {
@@ -156,7 +156,7 @@ public class UrlDetails {
         return HtmlFeature.hasFeature(features, HtmlFeature.JS);
     }
     public boolean isTracking() {
-        return HtmlFeature.hasFeature(features, HtmlFeature.TRACKING);
+        return HtmlFeature.hasFeature(features, HtmlFeature.TRACKING_INNOCENT);
     }
     public boolean isAffiliate() {
         return HtmlFeature.hasFeature(features, HtmlFeature.AFFILIATE_LINK);

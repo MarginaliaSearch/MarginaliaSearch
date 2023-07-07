@@ -6,8 +6,8 @@ public enum HtmlFeature {
     MEDIA( "special:media"),
     JS("special:scripts"),
     AFFILIATE_LINK( "special:affiliate"),
-    TRACKING("special:tracking"),
-    TRACKING2("special:tracking2"),
+    TRACKING_INNOCENT("special:tracking"),
+    TRACKING_EVIL("special:tracking2"),
 
     VIEWPORT("special:viewport"),
 
@@ -33,6 +33,7 @@ public enum HtmlFeature {
     WEBMENTION("special:webmention"),
     INDIEAUTH("special:indieauth"),
     ME_TAG("special:metag"),
+    NEXT_TAG("special:nexttag"),
     AMPHTML("special:amphtml"),
     JSON_LD("special:jsonld"),
     ORIGIN_TRIAL("special:origintrial"),
@@ -42,6 +43,8 @@ public enum HtmlFeature {
     DIDOMI("special:didomi"),
     PARDOT("special:pardot"),
     ONESIGNAL("special:onesignal"),
+    DATE_TAG("special:date_tag"),
+    NOSCRIPT_TAG("special:noscript_tag"),
 
     ROBOTS_INDEX("robots:index"),
     ROBOTS_FOLLOW("robots:follow"),
