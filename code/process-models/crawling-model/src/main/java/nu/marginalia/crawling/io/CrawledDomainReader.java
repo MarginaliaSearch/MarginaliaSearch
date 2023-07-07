@@ -64,7 +64,7 @@ public class CrawledDomainReader {
             return Optional.of(read(path));
         }
         catch (Exception ex) {
-            logger.warn("Failed to read domain", ex);
+            logger.warn("Failed to read domain " + path, ex);
             return Optional.empty();
         }
     }
