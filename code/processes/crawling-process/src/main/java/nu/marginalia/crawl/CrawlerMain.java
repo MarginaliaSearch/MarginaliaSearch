@@ -18,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.*;
 
 public class CrawlerMain implements AutoCloseable {
@@ -37,6 +39,8 @@ public class CrawlerMain implements AutoCloseable {
     private final ThreadPoolExecutor pool;
     final int poolSize = Integer.getInteger("crawler.pool-size", 512);
     final int poolQueueSize = 32;
+
+    private final Set<String> processedIds = new HashSet<>();
 
     AbortMonitor abortMonitor = AbortMonitor.getInstance();
     Semaphore taskSem = new Semaphore(poolSize);
@@ -87,26 +91,41 @@ public class CrawlerMain implements AutoCloseable {
 
         logger.info("Let's go");
 
+        // TODO: Make this into an iterable instead so we can abort it
         plan.forEachCrawlingSpecification(this::startCrawlTask);
     }
 
-    private void startCrawlTask(CrawlingSpecification crawlingSpecification) {
-        if (abortMonitor.isAlive()) {
-            try {
-                taskSem.acquire();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
 
-            pool.execute(() -> {
-                try {
-                    fetchDomain(crawlingSpecification);
-                }
-                finally {
-                    taskSem.release();
-                }
-            });
+    private void startCrawlTask(CrawlingSpecification crawlingSpecification) {
+
+        if (!processedIds.add(crawlingSpecification.id)) {
+
+            // This is a duplicate id, so we ignore it.  Otherwise we'd end crawling the same site twice,
+            // and if we're really unlucky, we might end up writing to the same output file from multiple
+            // threads with complete bit salad as a result.
+
+            logger.error("Ignoring duplicate id: {}", crawlingSpecification.id);
+            return;
         }
+
+        if (!abortMonitor.isAlive()) {
+            return;
+        }
+
+        try {
+            taskSem.acquire();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        pool.execute(() -> {
+            try {
+                fetchDomain(crawlingSpecification);
+            }
+            finally {
+                taskSem.release();
+            }
+        });
     }
 
     private void fetchDomain(CrawlingSpecification specification) {
