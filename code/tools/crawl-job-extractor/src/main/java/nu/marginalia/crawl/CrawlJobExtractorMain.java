@@ -1,6 +1,5 @@
 package nu.marginalia.crawl;
 
-import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.db.DomainBlacklistImpl;
@@ -10,7 +9,6 @@ import nu.marginalia.service.module.DatabaseModule;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Stream;
 
