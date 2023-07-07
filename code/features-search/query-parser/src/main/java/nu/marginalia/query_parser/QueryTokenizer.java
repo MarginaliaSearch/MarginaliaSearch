@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class QueryTokenizer {
-    private static final Pattern noisePattern = Pattern.compile("[,]");
+    private static final Pattern noisePattern = Pattern.compile("[,\\s]");
 
     public List<Token> tokenizeQuery(String rawQuery) {
         List<Token> tokens = new ArrayList<>();
