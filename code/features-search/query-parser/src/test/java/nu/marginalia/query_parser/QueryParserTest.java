@@ -19,6 +19,29 @@ class QueryParserTest {
     }
 
     @Test
+    public void testTabHandling() {
+        var query = " lorem\tipsum\ndolor  sit";
+        var ret = parser.parse(query);
+        assertEquals(4, ret.size());
+
+        var lorem = ret.get(0);
+        assertEquals("lorem", lorem.str);
+        assertEquals("lorem", lorem.displayStr);
+
+        var ipsum = ret.get(1);
+        assertEquals("ipsum", ipsum.str);
+        assertEquals("ipsum", ipsum.displayStr);
+
+        var dolor = ret.get(2);
+        assertEquals("dolor", dolor.str);
+        assertEquals("dolor", dolor.displayStr);
+
+        var sit = ret.get(3);
+        assertEquals("sit", sit.str);
+        assertEquals("sit", sit.displayStr);
+    }
+
+    @Test
     public void testAdviceString() {
         var ret = parser.parse("alcibiades (plato) \"my query\" -cars");
         assertEquals(4, ret.size());
