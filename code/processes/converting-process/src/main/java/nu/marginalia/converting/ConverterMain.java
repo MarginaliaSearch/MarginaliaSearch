@@ -5,6 +5,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import nu.marginalia.process.log.WorkLog;
+import nu.marginalia.service.module.DatabaseModule;
 import plan.CrawlPlanLoader;
 import plan.CrawlPlan;
 import nu.marginalia.converting.compiler.InstructionsCompiler;
@@ -33,7 +34,8 @@ public class ConverterMain {
         var plan = new CrawlPlanLoader().load(Path.of(args[0]));
 
         Injector injector = Guice.createInjector(
-                new ConverterModule(plan)
+                new ConverterModule(plan),
+                new DatabaseModule()
         );
 
         injector.getInstance(ConverterMain.class);

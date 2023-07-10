@@ -113,7 +113,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         final var generatorParts = documentGeneratorExtractor.detectGenerator(doc, crawledDocument.headers);
 
-        final var specialization = htmlProcessorSpecializations.select(generatorParts);
+        final var specialization = htmlProcessorSpecializations.select(generatorParts, url);
 
         if (!specialization.shouldIndex(url)) {
             throw new DisqualifiedException(DisqualificationReason.IRRELEVANT);
@@ -169,6 +169,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
 
         words.addAllSyntheticTerms(tagWords);
+        specialization.amendWords(doc, words);
 
         getLinks(url, ret, doc, words);
 
@@ -217,8 +218,23 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
             return true;
         }
 
-        // Annoying wordpress crap
-        if (url.path.startsWith("/tag/") && url.path.endsWith("/")) {
+        // Annoying blog crap
+        if (url.path.contains("/tag/") && url.path.endsWith("/")) {
+            return true;
+        }
+        if (url.path.contains("/tags/") && url.path.endsWith("/")) {
+            return true;
+        }
+        if (url.path.contains("/category/") && url.path.endsWith("/")) {
+            return true;
+        }
+        if (url.path.contains("/categories/") && url.path.endsWith("/")) {
+            return true;
+        }
+        if (url.path.contains("/section/") && url.path.endsWith("/")) {
+            return true;
+        }
+        if (url.path.contains("/sections/") && url.path.endsWith("/")) {
             return true;
         }
         return false;
