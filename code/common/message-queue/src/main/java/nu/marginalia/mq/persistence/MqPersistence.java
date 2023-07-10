@@ -35,6 +35,7 @@ public class MqPersistence {
         }
     }
 
+    /** Removes messages that have been set to a terminal state a while after their last update timestamp */
     public int cleanOldMessages() throws SQLException {
         try (var conn = dataSource.getConnection();
              var setToDead = conn.prepareStatement("""
@@ -47,6 +48,16 @@ public class MqPersistence {
         }
     }
 
+    /**
+     * Adds a new message to the message queue.
+     *
+     * @param recipientInboxName The recipient's inbox name
+     * @param senderInboxName (nullable) The sender's inbox name. Only needed if a reply is expected. If null, the message is not expected to be replied to.
+     * @param function The function to call
+     * @param payload The payload to send, typically JSON.
+     * @param ttl (nullable) The time to live of the message, in seconds. If null, the message will never set to DEAD.
+     * @return The id of the message
+     */
     public long sendNewMessage(String recipientInboxName,
                                @Nullable
                                String senderInboxName,
@@ -82,7 +93,7 @@ public class MqPersistence {
         }
     }
 
-
+    /** Modifies the state of a message by id */
     public void updateMessageState(long id, MqMessageState mqMessageState) throws SQLException {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
@@ -99,6 +110,9 @@ public class MqPersistence {
         }
     }
 
+    /** Creates a new message in the queue referencing as a reply to an existing message
+     *  This message will have it's RELATED_ID set to the original message's ID.
+     */
     public long sendResponse(long id, MqMessageState mqMessageState, String message) throws SQLException {
         try (var conn = dataSource.getConnection()) {
             conn.setAutoCommit(false);
@@ -149,6 +163,10 @@ public class MqPersistence {
     }
 
 
+    /** Marks unclaimed messages addressed to this inbox with instanceUUID and tick,
+     * then returns the number of messages marked.  This is an atomic operation that
+     * ensures that messages aren't double processed.
+     */
     private int markInboxMessages(String inboxName, String instanceUUID, long tick) throws SQLException {
         try (var conn = dataSource.getConnection();
              var updateStmt = conn.prepareStatement("""
@@ -170,11 +188,13 @@ public class MqPersistence {
      */
     public Collection<MqMessage> pollInbox(String inboxName, String instanceUUID, long tick) throws SQLException {
 
+        // Mark new messages as claimed
         int expected = markInboxMessages(inboxName, instanceUUID, tick);
         if (expected == 0) {
             return Collections.emptyList();
         }
 
+        // Then fetch the messages that were marked
         try (var conn = dataSource.getConnection();
              var queryStmt = conn.prepareStatement("""
                      SELECT ID, RELATED_ID, FUNCTION, PAYLOAD, STATE, SENDER_INBOX FROM PROC_MESSAGE
@@ -213,11 +233,13 @@ public class MqPersistence {
      */
     public Collection<MqMessage> pollReplyInbox(String inboxName, String instanceUUID, long tick) throws SQLException {
 
+        // Mark new messages as claimed
         int expected = markInboxMessages(inboxName, instanceUUID, tick);
         if (expected == 0) {
             return Collections.emptyList();
         }
 
+        // Then fetch the messages that were marked
         try (var conn = dataSource.getConnection();
              var queryStmt = conn.prepareStatement("""
                      SELECT SELF.ID, SELF.RELATED_ID, SELF.FUNCTION, SELF.PAYLOAD, PARENT.STATE FROM PROC_MESSAGE SELF
@@ -249,6 +271,7 @@ public class MqPersistence {
         }
     }
 
+    /** Returns the last N messages sent to this inbox */
     public List<MqMessage> lastNMessages(String inboxName, int lastN) throws SQLException {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
