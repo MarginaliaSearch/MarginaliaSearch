@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>Control Service</title>
-    <viewport content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -23,27 +23,6 @@
               <td>{{lastSeenMillis}}</td>
           </tr>
           {{/each}}
-      </table>
-
-      <h2>Events</h2>
-
-      <table>
-          <tr>
-                <th>Service Name</th>
-                <th>Instance</th>
-                <th>Event Time</th>
-                <th>Type</th>
-                <th>Message</th>
-          </tr>
-          {{#each events}}
-           <tr>
-                    <td>{{serviceName}}</td>
-                    <td>{{instance}}</td>
-                    <td>{{eventTime}}</td>
-                    <td>{{eventType}}</td>
-                    <td>{{eventMessage}}</td>
-            </tr>
-            {{/each}}
       </table>
   </section>
 </body>

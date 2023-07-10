@@ -33,7 +33,7 @@ public class HeartbeatService {
                 heartbeats.add(new ServiceHeartbeat(
                         rs.getString("SERVICE_NAME"),
                         rs.getString("SERVICE_BASE"),
-                        rs.getString("INSTANCE"),
+                        trimUUID(rs.getString("INSTANCE")),
                         rs.getInt("TSDIFF") / 1000.,
                         rs.getBoolean("ALIVE")
                 ));
@@ -44,5 +44,12 @@ public class HeartbeatService {
         }
 
         return heartbeats;
+    }
+
+    private String trimUUID(String uuid) {
+        if (uuid.length() > 8) {
+            return uuid.substring(0, 8);
+        }
+        return uuid;
     }
 }

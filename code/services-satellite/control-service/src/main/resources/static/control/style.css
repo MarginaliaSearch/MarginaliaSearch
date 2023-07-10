@@ -1,4 +1,38 @@
 body {
     font-family: serif;
     line-height: 1.6;
+
+    display: grid;
+    grid-template-columns: 20ch auto;
+    grid-gap: 1em;
+    grid-template-areas:
+        "left right";
+}
+body > nav {
+    grid-area: left;
+}
+nav ul {
+    list-style-type: none;
+    padding: 0;
+}
+nav ul li {
+    line-height: 2;
+}
+nav ul li a {
+    text-decoration: none;
+    padding: 0.5ch;
+    display: block;
+    color: #000;
+    background-color: #ccc;
+}
+nav ul li a:focus {
+    text-decoration: underline;
+}
+nav ul li a.current {
+    color: #000;
+    background-color: #fff;
+}
+
+body > section {
+    grid-area: right;
 }

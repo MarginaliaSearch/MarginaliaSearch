@@ -11,6 +11,8 @@ import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.service.server.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import spark.Request;
+import spark.Response;
 import spark.Spark;
 
 import java.io.IOException;
@@ -25,7 +27,10 @@ public class ControlService extends Service {
     private final ServiceMonitors monitors;
     private final MustacheRenderer<Object> indexRenderer;
     private final MustacheRenderer<Map<?,?>> servicesRenderer;
+    private final MustacheRenderer<Map<?,?>> eventsRenderer;
+    private final MustacheRenderer<Map<?,?>> messageQueueRenderer;
     private final MqPersistence messageQueuePersistence;
+    private final StaticResources staticResources;
 
 
     @Inject
@@ -35,14 +40,20 @@ public class ControlService extends Service {
                           EventLogService eventLogService,
                           RendererFactory rendererFactory,
                           MqPersistence messageQueuePersistence,
-                          ControlProcesses controlProcesses
+                          ControlProcesses controlProcesses,
+                          StaticResources staticResources,
+                          MessageQueueViewService messageQueueViewService
                       ) throws IOException {
 
         super(params);
         this.monitors = monitors;
         indexRenderer = rendererFactory.renderer("control/index");
         servicesRenderer = rendererFactory.renderer("control/services");
+        eventsRenderer = rendererFactory.renderer("control/events");
+        messageQueueRenderer = rendererFactory.renderer("control/message-queue");
+
         this.messageQueuePersistence = messageQueuePersistence;
+        this.staticResources = staticResources;
 
         Spark.get("/public/heartbeats", (req, res) -> {
             res.type("application/json");
@@ -50,14 +61,17 @@ public class ControlService extends Service {
         }, gson::toJson);
 
         Spark.get("/public/", (req, rsp) -> indexRenderer.render(Map.of()));
-        Spark.get("/public/services", (req, rsp) -> servicesRenderer.render(
-                Map.of("heartbeats", heartbeatService.getHeartbeats(),
-                        "events", eventLogService.getLastEntries(100)
-                        )));
+
+        Spark.get("/public/services", (req, rsp) -> servicesRenderer.render(Map.of("heartbeats", heartbeatService.getHeartbeats())));
+        Spark.get("/public/events", (req, rsp) -> eventsRenderer.render(Map.of("events", eventLogService.getLastEntries(20))));
+        Spark.get("/public/message-queue", (req, rsp) -> messageQueueRenderer.render(Map.of("messages", messageQueueViewService.getLastEntries(20))));
+
         Spark.get("/public/repartition", (req, rsp) -> {
             controlProcesses.start("REPARTITION-REINDEX");
             return "OK";
         });
+
+        Spark.get("/public/:resource", this::serveStatic);
 
         monitors.subscribe(this::logMonitorStateChange);
 
@@ -65,6 +79,16 @@ public class ControlService extends Service {
         reaperThread.setDaemon(true);
         reaperThread.start();
     }
+
+
+    private Object serveStatic(Request request, Response response) {
+        String resource = request.params("resource");
+
+        staticResources.serveStatic("control", resource, request, response);
+
+        return "";
+    }
+
 
     private void reapMessageQueue() {
 

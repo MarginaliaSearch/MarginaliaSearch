@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Control Service</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  {{> control/partials/nav}}
+
+  <section>
+      <h1>Events</h1>
+
+      <table>
+          <tr>
+                <th>Service Name</th>
+                <th>Instance</th>
+                <th>Event Time</th>
+                <th>Type</th>
+                <th>Message</th>
+          </tr>
+          {{#each events}}
+           <tr>
+                    <td>{{serviceName}}</td>
+                    <td>{{instance}}</td>
+                    <td>{{eventTime}}</td>
+                    <td>{{eventType}}</td>
+                    <td>{{eventMessage}}</td>
+            </tr>
+            {{/each}}
+      </table>
+  </section>
+</body>
+</html>
