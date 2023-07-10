@@ -4,6 +4,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.converting.processor.ConverterDomainTypes;
+import org.mockito.Mockito;
 
 public class ConvertingIntegrationTestModule  extends AbstractModule {
     public void configure() {
@@ -13,5 +15,6 @@ public class ConvertingIntegrationTestModule  extends AbstractModule {
         bind(Integer.class).annotatedWith(Names.named("max-summary-length")).toInstance(255);
 
         bind(LanguageModels.class).toInstance(WmsaHome.getLanguageModels());
+        bind(ConverterDomainTypes.class).toInstance(Mockito.mock(ConverterDomainTypes.class));
     }
 }

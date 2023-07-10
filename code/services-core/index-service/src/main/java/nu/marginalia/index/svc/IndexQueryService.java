@@ -211,7 +211,7 @@ public class IndexQueryService {
         return switch (priority) {
             case BEST -> false;
             case GOOD -> resultCount > params.fetchSize / 4;
-            case FALLBACK -> resultCount > params.fetchSize / 256;
+            case FALLBACK -> resultCount > params.fetchSize / 8;
         };
     }
 
