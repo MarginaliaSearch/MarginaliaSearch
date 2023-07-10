@@ -24,14 +24,26 @@ public class MqPersistence {
     /** Flags messages as dead if they have not been set to a terminal state within a TTL after the last update. */
     public int reapDeadMessages() throws SQLException {
         try (var conn = dataSource.getConnection();
-             var stmt = conn.prepareStatement("""
+             var setToDead = conn.prepareStatement("""
                      UPDATE PROC_MESSAGE
                      SET STATE='DEAD', UPDATED_TIME=CURRENT_TIMESTAMP(6)
                      WHERE STATE IN ('NEW', 'ACK')
                      AND TTL IS NOT NULL
                      AND TIMESTAMPDIFF(SECOND, UPDATED_TIME, CURRENT_TIMESTAMP(6)) > TTL
                      """)) {
-            return stmt.executeUpdate();
+            return setToDead.executeUpdate();
+        }
+    }
+
+    public int cleanOldMessages() throws SQLException {
+        try (var conn = dataSource.getConnection();
+             var setToDead = conn.prepareStatement("""
+                     DELETE FROM PROC_MESSAGE
+                     WHERE STATE = 'OK'
+                     AND TTL IS NOT NULL
+                     AND TIMESTAMPDIFF(SECOND, UPDATED_TIME, CURRENT_TIMESTAMP(6)) > 3600
+                     """)) {
+            return setToDead.executeUpdate();
         }
     }
 

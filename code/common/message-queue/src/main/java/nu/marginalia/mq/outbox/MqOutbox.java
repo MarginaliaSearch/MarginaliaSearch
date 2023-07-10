@@ -1,6 +1,7 @@
 package nu.marginalia.mq.outbox;
 
 import nu.marginalia.mq.MqMessage;
+import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.persistence.MqPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,14 +117,25 @@ public class MqOutbox {
             while (!pendingResponses.containsKey(id)) {
                 pendingResponses.wait(100);
             }
-            return pendingResponses.remove(id);
+
+            var msg = pendingResponses.remove(id);
+            // Mark the response as OK so it can be cleaned up
+            persistence.updateMessageState(msg.msgId(), MqMessageState.OK);
+
+            return msg;
         }
     }
 
     /** Polls for a response for the given message id. */
-    public Optional<MqMessage> pollResponse(long id)  {
+    public Optional<MqMessage> pollResponse(long id) throws SQLException {
         // no need to sync here if we aren't going to wait()
-        return Optional.ofNullable(pendingResponses.remove(id));
+        var response = pendingResponses.get(id);
+
+        if (response != null) {
+            // Mark the response as OK so it can be cleaned up
+            persistence.updateMessageState(response.msgId(), MqMessageState.OK);
+        }
+        return Optional.ofNullable(response);
     }
 
     public long notify(String function, String payload) throws Exception {

@@ -13,11 +13,9 @@ import nu.marginalia.mqsm.state.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Executors;
+import java.util.function.BiConsumer;
 
 /** A state machine that can be used to implement a finite state machine
  * using a message queue as the persistence layer.  The state machine is
@@ -34,6 +32,8 @@ public class StateMachine {
     private final MachineState errorState = new StateFactory.ErrorState();
     private final MachineState finalState = new StateFactory.FinalState();
     private final MachineState resumingState = new StateFactory.ResumingState();
+
+    private final List<BiConsumer<String, String>> stateChangeListeners = new ArrayList<>();
 
     private final Map<String, MachineState> allStates = new HashMap<>();
 
@@ -56,6 +56,11 @@ public class StateMachine {
                 throw new IllegalArgumentException("State " + declaredState + " is not defined in the state graph");
             }
         }
+    }
+
+    /** Listen to state changes */
+    public void listen(BiConsumer<String, String> listener) {
+        stateChangeListeners.add(listener);
     }
 
     /** Register the state graph */
@@ -188,6 +193,12 @@ public class StateMachine {
         @Override
         public void onNotification(MqMessage msg) {
             onStateTransition(msg.function(), msg.payload());
+            try {
+                stateChangeListeners.forEach(l -> l.accept(msg.function(), msg.payload()));
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
     }
 }

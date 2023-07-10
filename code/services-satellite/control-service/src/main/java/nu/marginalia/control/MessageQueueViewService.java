@@ -3,7 +3,6 @@ package nu.marginalia.control;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.control.model.EventLogEntry;
 import nu.marginalia.control.model.MessageQueueEntry;
 
 import java.sql.SQLException;

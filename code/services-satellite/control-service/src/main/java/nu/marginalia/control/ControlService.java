@@ -3,11 +3,13 @@ package nu.marginalia.control;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import nu.marginalia.client.ServiceMonitors;
+import nu.marginalia.control.model.ControlProcess;
 import nu.marginalia.control.process.ControlProcesses;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
+import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.server.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +33,7 @@ public class ControlService extends Service {
     private final MustacheRenderer<Map<?,?>> messageQueueRenderer;
     private final MqPersistence messageQueuePersistence;
     private final StaticResources staticResources;
+    private final ServiceEventLog eventLog;
 
 
     @Inject
@@ -47,6 +50,8 @@ public class ControlService extends Service {
 
         super(params);
         this.monitors = monitors;
+        this.eventLog = params.eventLog;
+
         indexRenderer = rendererFactory.renderer("control/index");
         servicesRenderer = rendererFactory.renderer("control/services");
         eventsRenderer = rendererFactory.renderer("control/events");
@@ -67,7 +72,7 @@ public class ControlService extends Service {
         Spark.get("/public/message-queue", (req, rsp) -> messageQueueRenderer.render(Map.of("messages", messageQueueViewService.getLastEntries(20))));
 
         Spark.get("/public/repartition", (req, rsp) -> {
-            controlProcesses.start("REPARTITION-REINDEX");
+            controlProcesses.start(ControlProcess.REPARTITION_REINDEX);
             return "OK";
         });
 
@@ -94,12 +99,20 @@ public class ControlService extends Service {
 
         for (;;) {
             try {
-                TimeUnit.MINUTES.sleep(30);
+                TimeUnit.MINUTES.sleep(10);
 
                 int outcome = messageQueuePersistence.reapDeadMessages();
                 if (outcome > 0) {
+                    eventLog.logEvent("MESSAGE-QUEUE-REAPED", Integer.toString(outcome));
                     logger.info("Reaped {} dead messages from message queue", outcome);
                 }
+
+                outcome = messageQueuePersistence.cleanOldMessages();
+                if (outcome > 0) {
+                    eventLog.logEvent("MESSAGE-QUEUE-CLEANED", Integer.toString(outcome));
+                    logger.info("Cleaned {} stale messages from message queue", outcome);
+                }
+
             }
             catch (InterruptedException ex) {
                 logger.info("Message queue reaper interrupted");

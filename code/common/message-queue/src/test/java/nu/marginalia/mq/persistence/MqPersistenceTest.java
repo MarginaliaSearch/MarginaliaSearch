@@ -63,6 +63,7 @@ public class MqPersistenceTest {
         var messages = MqTestUtil.getMessages(dataSource, recipientId);
         assertEquals(1, messages.size());
         assertEquals(MqMessageState.NEW, messages.get(0).state());
+        System.out.println(messages);
 
         TimeUnit.SECONDS.sleep(5);
 
