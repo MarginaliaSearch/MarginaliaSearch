@@ -71,6 +71,11 @@ public class UrlBlocklist {
                 return true;
             }
 
+            // MDN is nice, but we don't need to crawl a bunch of MDN mirrors >.>
+            if (url.path.contains("developer.mozilla.org")) {
+                return true;
+            }
+
             if ("github.com".equals(url.domain.domain)) {
                 return url.path.chars().filter(c -> c == '/').count() > 2;
             }
@@ -92,6 +97,12 @@ public class UrlBlocklist {
             return true;
         }
         if (path.contains("mailinglist")) {
+            return true;
+        }
+        if (path.contains("mail-archive")) {
+            return true;
+        }
+        if (path.contains("mailman")) {
             return true;
         }
         return false;
