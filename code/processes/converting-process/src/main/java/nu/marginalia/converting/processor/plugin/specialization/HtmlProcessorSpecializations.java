@@ -2,7 +2,9 @@ package nu.marginalia.converting.processor.plugin.specialization;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.converting.processor.ConverterDomainTypes;
 import nu.marginalia.converting.processor.logic.DocumentGeneratorExtractor;
+import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.model.EdgeUrl;
 import org.jsoup.nodes.Document;
 
@@ -10,27 +12,41 @@ import java.util.Set;
 
 @Singleton
 public class HtmlProcessorSpecializations {
+    private final ConverterDomainTypes domainTypes;
     private final LemmySpecialization lemmySpecialization;
     private final XenForoSpecialization xenforoSpecialization;
     private final PhpBBSpecialization phpBBSpecialization;
     private final JavadocSpecialization javadocSpecialization;
+    private final BlogSpecialization blogSpecialization;
     private final DefaultSpecialization defaultSpecialization;
 
     @Inject
-    public HtmlProcessorSpecializations(LemmySpecialization lemmySpecialization,
+    public HtmlProcessorSpecializations(ConverterDomainTypes domainTypes,
+                                        LemmySpecialization lemmySpecialization,
                                         XenForoSpecialization xenforoSpecialization,
                                         PhpBBSpecialization phpBBSpecialization,
                                         JavadocSpecialization javadocSpecialization,
+                                        BlogSpecialization blogSpecialization,
                                         DefaultSpecialization defaultSpecialization) {
+        this.domainTypes = domainTypes;
         this.lemmySpecialization = lemmySpecialization;
         this.xenforoSpecialization = xenforoSpecialization;
         this.phpBBSpecialization = phpBBSpecialization;
         this.javadocSpecialization = javadocSpecialization;
+        this.blogSpecialization = blogSpecialization;
         this.defaultSpecialization = defaultSpecialization;
     }
 
     /** Depending on the generator tag, we may want to use specialized logic for pruning and summarizing the document */
-    public HtmlProcessorSpecializationIf select(DocumentGeneratorExtractor.DocumentGenerator generator) {
+    public HtmlProcessorSpecializationIf select(
+            DocumentGeneratorExtractor.DocumentGenerator generator,
+            EdgeUrl url)
+    {
+
+        if (domainTypes.isBlog(url.domain)) {
+            return blogSpecialization;
+        }
+
         if (generator.keywords().contains("lemmy")) {
             return lemmySpecialization;
         }
@@ -58,5 +74,8 @@ public class HtmlProcessorSpecializations {
 
         default boolean shouldIndex(EdgeUrl url) { return true; }
         default double lengthModifier() { return 1.0; }
+
+        default void amendWords(Document doc, DocumentKeywordsBuilder words) {}
+
     }
 }

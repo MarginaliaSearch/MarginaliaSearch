@@ -37,8 +37,8 @@ class LemmySpecializationTest {
 
     @Test
     void generatorExtraction() {
-        var generatorIndex = generatorExtractor.generatorCleaned(Jsoup.parse(lemmyIndexHtml));
-        var generatorPost = generatorExtractor.generatorCleaned(Jsoup.parse(lemmyPost));
+        var generatorIndex = generatorExtractor.detectGenerator(Jsoup.parse(lemmyIndexHtml), "");
+        var generatorPost = generatorExtractor.detectGenerator(Jsoup.parse(lemmyPost), "");
 
         System.out.println(generatorIndex);
         System.out.println(generatorPost);

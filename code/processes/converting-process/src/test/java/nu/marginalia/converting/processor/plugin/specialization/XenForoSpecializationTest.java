@@ -34,7 +34,7 @@ class XenForoSpecializationTest {
 
     @Test
     void generatorExtraction() {
-        var gen = generatorExtractor.generatorCleaned(Jsoup.parse(thread));
+        var gen = generatorExtractor.detectGenerator(Jsoup.parse(thread), "");
 
         System.out.println(gen);
     }
