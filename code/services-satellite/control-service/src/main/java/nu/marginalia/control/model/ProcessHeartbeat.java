@@ -5,7 +5,7 @@ public record ProcessHeartbeat(
         String processBase,
         String uuid,
         double lastSeenMillis,
-        int progress,
+        Integer progress,
         String status
 ) {
     public boolean isMissing() {
@@ -17,7 +17,7 @@ public record ProcessHeartbeat(
     public String progressStyle() {
         if ("RUNNING".equals(status) && progress > 0) {
             return """
-                    background: linear-gradient(90deg, #ccc %d%%, #ccc %d%%, #fff %d%%)
+                    background: linear-gradient(90deg, #fff 0%%, #ccc %d%%, #fff %d%%)
                     """.formatted(progress, progress, progress);
         }
         return "";
