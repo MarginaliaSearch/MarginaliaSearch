@@ -20,7 +20,10 @@
           {{#each heartbeats}}
           <tr class="{{#if isMissing}}missing{{/if}} {{#unless alive}}terminated{{/unless}}">
               <td>{{serviceId}}</td>
-              <td>{{uuid}}</td>
+              <td title="{{uuidFull}}">
+                  <span style="background-color: {{uuidColor}}" class="uuidPip">&nbsp;</span><span style="background-color: {{uuidColor2}}" class="uuidPip">&nbsp;</span>
+                  {{uuid}}
+              </td>
               <td>{{lastSeenMillis}}</td>
           </tr>
           {{/each}}

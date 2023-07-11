@@ -8,6 +8,11 @@ body {
     grid-template-areas:
         "left right";
 }
+.uuidPip {
+  margin-left: 0.25ch;
+  border-radius: 2ch;
+  border: 1px solid #ccc;
+}
 h1 {
     font-family: serif;
 }

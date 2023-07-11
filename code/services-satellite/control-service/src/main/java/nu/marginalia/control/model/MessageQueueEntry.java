@@ -6,7 +6,7 @@ public record MessageQueueEntry (
         String senderInbox,
         String recipientInbox,
         String function,
-        String ownerInstance,
+        String ownerInstanceFull,
         long ownerTick,
         String state,
         String createdTime,
@@ -14,4 +14,13 @@ public record MessageQueueEntry (
         int ttl
 )
 {
+    public String ownerInstance() {
+        return ownerInstanceFull.substring(0, 8);
+    }
+    public String ownerInstanceColor() {
+        return '#' + ownerInstanceFull.substring(0, 6);
+    }
+    public String ownerInstanceColor2() {
+        return '#' + ownerInstanceFull.substring(25, 31);
+    }
 }

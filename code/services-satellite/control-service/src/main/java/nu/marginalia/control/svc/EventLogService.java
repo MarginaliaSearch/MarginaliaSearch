@@ -32,7 +32,7 @@ public class EventLogService {
             while (rs.next()) {
                 entries.add(new EventLogEntry(
                         rs.getString("SERVICE_NAME"),
-                        trimUUID(rs.getString("INSTANCE")),
+                        rs.getString("INSTANCE"),
                         rs.getTimestamp("EVENT_TIME").toLocalDateTime().toLocalTime().toString(),
                         rs.getString("EVENT_TYPE"),
                         rs.getString("EVENT_MESSAGE")
@@ -43,12 +43,6 @@ public class EventLogService {
         catch (SQLException ex) {
             throw new RuntimeException(ex);
         }
-    }
-    private String trimUUID(String uuid) {
-        if (uuid.length() > 8) {
-            return uuid.substring(0, 8);
-        }
-        return uuid;
     }
 
 }

@@ -23,7 +23,10 @@
           {{#each events}}
            <tr>
                     <td>{{serviceName}}</td>
-                    <td>{{instance}}</td>
+                    <td title="{{instanceFull}}">
+                        <span style="background-color: {{instanceColor}}" class="uuidPip">&nbsp;</span><span style="background-color: {{instanceColor2}}" class="uuidPip">&nbsp;</span>
+                        {{instance}}
+                    </td>
                     <td>{{eventTime}}</td>
                     <td>{{eventType}}</td>
                     <td>{{eventMessage}}</td>

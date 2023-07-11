@@ -22,7 +22,10 @@
           {{#each heartbeats}}
           <tr class="{{#if isMissing}}missing{{/if}}" style="{{progressStyle}}">
               <td>{{processId}}</td>
-              <td>{{uuid}}</td>
+              <td title="{{uuidFull}}">
+                  <span style="background-color: {{uuidColor}}" class="uuidPip">&nbsp;</span><span style="background-color: {{uuidColor2}}" class="uuidPip">&nbsp;</span>
+                  {{uuid}}
+              </td>
               <td>{{status}}</td>
               <td>{{#if progress}}{{progress}}%{{/if}}</td>
               <td>{{#unless isStopped}}{{lastSeenMillis}}{{/unless}}</td>

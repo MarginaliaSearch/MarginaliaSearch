@@ -33,7 +33,10 @@
             <td>{{recipientInbox}}</td>
             <td>{{senderInbox}}</td>
             <td>{{function}}</td>
-            <td>{{ownerInstance}}</td>
+            <td title="{{ownerInstanceFull}}">
+              <span style="background-color: {{ownerInstanceColor}}" class="uuidPip">&nbsp;</span><span style="background-color: {{ownerInstanceColor2}}" class="uuidPip">&nbsp;</span>
+              {{ownerInstance}}
+            </td>
             <td>{{ownerTick}}</td>
             <td>{{state}}</td>
             <td>{{createdTime}}</td>

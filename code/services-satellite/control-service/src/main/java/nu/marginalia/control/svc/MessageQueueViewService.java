@@ -38,7 +38,7 @@ public class MessageQueueViewService {
                         rs.getString("SENDER_INBOX"),
                         rs.getString("RECIPIENT_INBOX"),
                         rs.getString("FUNCTION"),
-                        trimUUID(rs.getString("OWNER_INSTANCE")),
+                        rs.getString("OWNER_INSTANCE"),
                         rs.getLong("OWNER_TICK"),
                         rs.getString("STATE"),
                         rs.getTimestamp("CREATED_TIME").toLocalDateTime().toLocalTime().toString(),
@@ -51,16 +51,6 @@ public class MessageQueueViewService {
         catch (SQLException ex) {
             throw new RuntimeException(ex);
         }
-    }
-    private String trimUUID(String uuid) {
-        if (null == uuid) {
-            return "";
-        }
-
-        if (uuid.length() > 8) {
-            return uuid.substring(0, 8);
-        }
-        return uuid;
     }
 
 }

@@ -34,7 +34,7 @@ public class HeartbeatService {
                 heartbeats.add(new ServiceHeartbeat(
                         rs.getString("SERVICE_NAME"),
                         rs.getString("SERVICE_BASE"),
-                        trimUUID(rs.getString("INSTANCE")),
+                        rs.getString("INSTANCE"),
                         rs.getLong("TSDIFF") / 1000.,
                         rs.getBoolean("ALIVE")
                 ));
@@ -59,12 +59,13 @@ public class HeartbeatService {
 
             var rs = stmt.executeQuery();
             while (rs.next()) {
+                int progress = rs.getInt("PROGRESS");
                 heartbeats.add(new ProcessHeartbeat(
                         rs.getString("PROCESS_NAME"),
                         rs.getString("PROCESS_BASE"),
-                        trimUUID(rs.getString("INSTANCE")),
+                        rs.getString("INSTANCE"),
                         rs.getLong("TSDIFF") / 1000.,
-                        rs.getInt("PROGRESS"),
+                        progress < 0 ? null : progress,
                         rs.getString("STATUS")
                 ));
             }
@@ -75,10 +76,5 @@ public class HeartbeatService {
 
         return heartbeats;
     }
-    private String trimUUID(String uuid) {
-        if (uuid.length() > 8) {
-            return uuid.substring(0, 8);
-        }
-        return uuid;
-    }
+
 }
