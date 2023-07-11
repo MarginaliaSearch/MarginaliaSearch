@@ -9,6 +9,7 @@ import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
@@ -44,6 +45,12 @@ public class KeywordLexicon implements AutoCloseable {
         journal.loadFile(bytes -> reverseIndex.put(hashFunction.hashBytes(bytes).padToLong()));
 
         logger.info("Done creating dictionary writer");
+    }
+
+    public void reload() throws IOException {
+        logger.info("Reloading dictionary writer");
+        journal.loadFile(bytes -> reverseIndex.put(hashFunction.hashBytes(bytes).padToLong()));
+        logger.info("Done reloading dictionary writer");
     }
 
     public int getOrInsert(String macroWord) {

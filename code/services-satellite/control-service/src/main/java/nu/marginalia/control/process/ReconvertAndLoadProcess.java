@@ -11,6 +11,8 @@ import nu.marginalia.mqsm.StateFactory;
 import nu.marginalia.mqsm.graph.AbstractStateGraph;
 import nu.marginalia.mqsm.graph.GraphState;
 import nu.marginalia.mqsm.graph.ResumeBehavior;
+import nu.marginalia.search.client.SearchClient;
+import nu.marginalia.search.client.SearchMqEndpoints;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,14 +27,25 @@ public class ReconvertAndLoadProcess extends AbstractStateGraph {
     private static final String RECONVERT = "RECONVERT";
     private static final String LOAD = "LOAD";
     private static final String MOVE_INDEX_FILES = "MOVE_INDEX_FILES";
+    private static final String RELOAD_LEXICON = "RELOAD_LEXICON";
+    private static final String RELOAD_LEXICON_WAIT = "RELOAD_LEXICON_WAIT";
+    private static final String FLUSH_CACHES = "FLUSH_CACHES";
     private static final String END = "END";
     private final ProcessService processService;
+    private final MqOutbox mqIndexOutbox;
+    private final MqOutbox mqSearchOutbox;
 
 
     @Inject
-    public ReconvertAndLoadProcess(StateFactory stateFactory, ProcessService processService) {
+    public ReconvertAndLoadProcess(StateFactory stateFactory,
+                                   ProcessService processService,
+                                   IndexClient indexClient,
+                                   SearchClient searchClient
+                                   ) {
         super(stateFactory);
         this.processService = processService;
+        this.mqIndexOutbox = indexClient.outbox();
+        this.mqSearchOutbox = searchClient.outbox();
     }
 
     @GraphState(name = INITIAL, next = RECONVERT)
@@ -62,8 +75,8 @@ public class ReconvertAndLoadProcess extends AbstractStateGraph {
             error();
     }
 
-    @GraphState(name = MOVE_INDEX_FILES, next = END, resume = ResumeBehavior.ERROR)
-    public String moveIndexFiles(String crawlJob) throws Exception {
+    @GraphState(name = MOVE_INDEX_FILES, next = RELOAD_LEXICON, resume = ResumeBehavior.ERROR)
+    public void moveIndexFiles(String crawlJob) throws Exception {
         Path indexData = Path.of("/vol/index.dat");
         Path indexDest = Path.of("/vol/iw/0/page-index.dat");
 
@@ -71,7 +84,28 @@ public class ReconvertAndLoadProcess extends AbstractStateGraph {
             error("Index data not found");
 
         Files.move(indexData, indexDest, StandardCopyOption.REPLACE_EXISTING);
+    }
 
-        return crawlJob;
+    @GraphState(name = RELOAD_LEXICON, next = RELOAD_LEXICON_WAIT, resume = ResumeBehavior.ERROR)
+    public long reloadLexicon() throws Exception {
+        return mqIndexOutbox.sendAsync(IndexMqEndpoints.INDEX_RELOAD_LEXICON, "");
+    }
+
+    @GraphState(name = RELOAD_LEXICON_WAIT, next = FLUSH_CACHES, resume = ResumeBehavior.RETRY)
+    public void reloadLexiconWait(long id) throws Exception {
+        var rsp = mqIndexOutbox.waitResponse(id);
+
+        if (rsp.state() != MqMessageState.OK) {
+            error("RELOAD_LEXICON failed");
+        }
+    }
+
+    @GraphState(name = FLUSH_CACHES, next = END, resume = ResumeBehavior.RETRY)
+    public void flushCaches() throws Exception {
+        var rsp = mqSearchOutbox.send(SearchMqEndpoints.FLUSH_CACHES, "");
+
+        if (rsp.state() != MqMessageState.OK) {
+            error("FLUSH_CACHES failed");
+        }
     }
 }

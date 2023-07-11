@@ -27,6 +27,10 @@ public class KeywordLexiconJournalFile implements AutoCloseable {
         this.journalFile = journalFile;
     }
 
+    public void rewind() throws IOException {
+        journalFileRAF.seek(0);
+    }
+
     public void loadFile(Consumer<byte[]> acceptEntry) throws IOException {
         if (!journalFile.exists()) {
             logger.info("File {} does not exist, can't load", journalFile);

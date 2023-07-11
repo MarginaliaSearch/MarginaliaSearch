@@ -64,6 +64,7 @@ public class KeywordLexiconJournal {
     }
 
     public void loadFile(Consumer<byte[]> loadJournalEntry) throws IOException {
+        journalFile.rewind();
         journalFile.loadFile(loadJournalEntry);
     }
 }

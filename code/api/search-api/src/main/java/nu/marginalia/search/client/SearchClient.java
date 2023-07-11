@@ -5,6 +5,8 @@ import com.google.inject.Singleton;
 import io.reactivex.rxjava3.core.Observable;
 import nu.marginalia.client.AbstractDynamicClient;
 import nu.marginalia.model.gson.GsonFactory;
+import nu.marginalia.mq.outbox.MqOutbox;
+import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.search.client.model.ApiSearchResults;
 import nu.marginalia.service.descriptor.ServiceDescriptors;
 import nu.marginalia.service.id.ServiceId;
@@ -16,14 +18,30 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.CheckReturnValue;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 @Singleton
 public class SearchClient extends AbstractDynamicClient {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
+    private final MqOutbox outbox;
+
     @Inject
-    public SearchClient(ServiceDescriptors descriptors) {
+    public SearchClient(ServiceDescriptors descriptors,
+                        MqPersistence persistence) {
+
         super(descriptors.forId(ServiceId.Search), WmsaHome.getHostsFile(), GsonFactory::get);
+
+        String inboxName = ServiceId.Search.name + ":" + "0";
+        String outboxName = System.getProperty("service-name", UUID.randomUUID().toString());
+
+        outbox = new MqOutbox(persistence, inboxName, outboxName, UUID.randomUUID());
+
+    }
+
+
+    public MqOutbox outbox() {
+        return outbox;
     }
 
     @CheckReturnValue

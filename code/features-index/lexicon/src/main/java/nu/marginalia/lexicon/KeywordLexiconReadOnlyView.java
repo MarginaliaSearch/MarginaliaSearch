@@ -4,6 +4,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import lombok.SneakyThrows;
 
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 public class KeywordLexiconReadOnlyView {
@@ -21,4 +22,8 @@ public class KeywordLexiconReadOnlyView {
         return cache.get(word, () -> writer.getReadOnly(word));
     }
 
+    public boolean reload() throws IOException {
+        writer.reload();
+        return true;
+    }
 }

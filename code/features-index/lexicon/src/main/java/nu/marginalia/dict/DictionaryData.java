@@ -9,7 +9,6 @@ public class DictionaryData {
 
     public DictionaryData(int bankSize) {
         this.bankSize = bankSize;
-
         banks.add(new DictionaryDataBank(0, bankSize));
     }
 
@@ -36,4 +35,8 @@ public class DictionaryData {
         return banks.get(offset/ bankSize).keyEquals(offset, otherKey);
     }
 
+    public void clear() {
+        banks.clear();
+        banks.add(new DictionaryDataBank(0, bankSize));
+    }
 }

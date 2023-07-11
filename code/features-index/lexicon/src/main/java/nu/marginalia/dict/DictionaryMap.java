@@ -7,6 +7,8 @@ public interface DictionaryMap {
         return new OnHeapDictionaryMap();
     }
 
+    void clear();
+
     int size();
 
     int put(long key);

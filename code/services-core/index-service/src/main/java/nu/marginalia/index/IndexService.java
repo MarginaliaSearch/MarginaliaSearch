@@ -74,6 +74,17 @@ public class IndexService extends Service {
 
     volatile boolean initialized = false;
 
+    @MqRequest(endpoint = IndexMqEndpoints.INDEX_RELOAD_LEXICON)
+    public String reloadLexicon(String message) throws Exception {
+
+        if (!opsService.reloadLexicon()) {
+            throw new IllegalStateException("Ops lock busy");
+        }
+
+        return "ok";
+    }
+
+
     @MqRequest(endpoint = IndexMqEndpoints.INDEX_REPARTITION)
     public String repartition(String message) {
         if (!opsService.repartition()) {
