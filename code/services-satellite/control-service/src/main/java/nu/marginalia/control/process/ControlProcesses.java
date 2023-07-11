@@ -1,8 +1,10 @@
 package nu.marginalia.control.process;
 
+import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.control.model.ControlProcess;
+import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.mqsm.StateMachine;
 import nu.marginalia.mqsm.graph.AbstractStateGraph;
@@ -17,17 +19,21 @@ import java.util.UUID;
 public class ControlProcesses {
     private final MqPersistence persistence;
     private final ServiceEventLog eventLog;
+    private final Gson gson;
     public Map<ControlProcess, StateMachine> stateMachines = new HashMap<>();
 
     @Inject
     public ControlProcesses(MqPersistence persistence,
+                            GsonFactory gsonFactory,
                             BaseServiceParams baseServiceParams,
-                            RepartitionReindexProcess repartitionReindexProcess
+                            RepartitionReindexProcess repartitionReindexProcess,
+                            ReconvertAndLoadProcess reconvertAndLoadProcess
                             ) {
         this.persistence = persistence;
         this.eventLog = baseServiceParams.eventLog;
-
+        this.gson = gsonFactory.get();
         register(ControlProcess.REPARTITION_REINDEX, repartitionReindexProcess);
+        register(ControlProcess.RECONVERT_LOAD, reconvertAndLoadProcess);
     }
 
     private void register(ControlProcess process, AbstractStateGraph graph) {
@@ -46,6 +52,12 @@ public class ControlProcesses {
         eventLog.logEvent("FSM-START", process.id());
 
         stateMachines.get(process).init();
+    }
+
+    public <T> void start(ControlProcess process, Object arg) throws Exception {
+        eventLog.logEvent("FSM-START", process.id());
+
+        stateMachines.get(process).init(gson.toJson(arg));
     }
 
     public void resume(ControlProcess process) throws Exception {

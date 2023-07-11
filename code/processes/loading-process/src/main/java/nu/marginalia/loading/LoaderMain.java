@@ -108,9 +108,7 @@ public class LoaderMain {
 
         try {
             AtomicInteger loadTotal = new AtomicInteger();
-            WorkLog.readLog(logFile, entry -> {
-                loadTotal.incrementAndGet();
-            });
+            WorkLog.readLog(logFile, entry -> loadTotal.incrementAndGet());
             LoaderMain.loadTotal = loadTotal.get();
 
             AtomicInteger loaded = new AtomicInteger();

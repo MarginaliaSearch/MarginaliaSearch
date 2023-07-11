@@ -35,7 +35,7 @@ public class HeartbeatService {
                         rs.getString("SERVICE_NAME"),
                         rs.getString("SERVICE_BASE"),
                         trimUUID(rs.getString("INSTANCE")),
-                        rs.getInt("TSDIFF") / 1000.,
+                        rs.getLong("TSDIFF") / 1000.,
                         rs.getBoolean("ALIVE")
                 ));
             }
@@ -63,7 +63,7 @@ public class HeartbeatService {
                         rs.getString("PROCESS_NAME"),
                         rs.getString("PROCESS_BASE"),
                         trimUUID(rs.getString("INSTANCE")),
-                        rs.getInt("TSDIFF") / 1000.,
+                        rs.getLong("TSDIFF") / 1000.,
                         rs.getInt("PROGRESS"),
                         rs.getString("STATUS")
                 ));

@@ -103,6 +103,19 @@ public class StateMachine {
         smOutbox.notify(transition.state(), transition.message());
     }
 
+    /** Initialize the state machine. */
+    public void init(String jsonEncodedArgument) throws Exception {
+        var transition = StateTransition.to("INITIAL", jsonEncodedArgument);
+
+        synchronized (this) {
+            this.state = allStates.get(transition.state());
+            notifyAll();
+        }
+
+        smInbox.start();
+        smOutbox.notify(transition.state(), transition.message());
+    }
+
     /** Resume the state machine from the last known state. */
     public void resume() throws Exception {
 

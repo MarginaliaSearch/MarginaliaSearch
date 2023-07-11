@@ -21,6 +21,7 @@ public class ControlMain extends MainClass {
 
         Injector injector = Guice.createInjector(
                 new DatabaseModule(),
+                new ControlProcessModule(),
                 new ConfigurationModule(SearchServiceDescriptors.descriptors, ServiceId.Control));
 
         injector.getInstance(ControlMain.class);

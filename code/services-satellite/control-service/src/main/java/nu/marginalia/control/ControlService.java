@@ -5,10 +5,7 @@ import com.google.inject.Inject;
 import nu.marginalia.client.ServiceMonitors;
 import nu.marginalia.control.model.ControlProcess;
 import nu.marginalia.control.process.ControlProcesses;
-import nu.marginalia.control.svc.EventLogService;
-import nu.marginalia.control.svc.HeartbeatService;
-import nu.marginalia.control.svc.MessageQueueMonitorService;
-import nu.marginalia.control.svc.MessageQueueViewService;
+import nu.marginalia.control.svc.*;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.renderer.MustacheRenderer;
@@ -22,6 +19,7 @@ import spark.Response;
 import spark.Spark;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -51,7 +49,8 @@ public class ControlService extends Service {
                           ControlProcesses controlProcesses,
                           StaticResources staticResources,
                           MessageQueueViewService messageQueueViewService,
-                          MessageQueueMonitorService messageQueueMonitorService
+                          MessageQueueMonitorService messageQueueMonitorService,
+                          ProcessService processService
                       ) throws IOException {
 
         super(params);
@@ -82,6 +81,11 @@ public class ControlService extends Service {
         // TODO: This should be a POST
         Spark.get("/public/repartition", (req, rsp) -> {
             controlProcesses.start(ControlProcess.REPARTITION_REINDEX);
+            return "OK";
+        });
+        // TODO: This should be a POST
+        Spark.get("/public/reconvert", (req, rsp) -> {
+            controlProcesses.start(ControlProcess.RECONVERT_LOAD, "/samples/crawl-blogs/plan.yaml");
             return "OK";
         });
 

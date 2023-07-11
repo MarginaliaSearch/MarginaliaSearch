@@ -9,14 +9,29 @@ version 'SNAPSHOT'
 compileJava.options.encoding = "UTF-8"
 compileTestJava.options.encoding = "UTF-8"
 
-task dist(type: Copy) {
+tasks.register('dist', Copy) {
     from subprojects.collect { it.tasks.withType(Tar) }
     into "$buildDir/dist"
-}
 
+    doLast {
+        copy {
+            from tarTree("$buildDir/dist/converter-process.tar")
+            into "$projectDir/run/dist/"
+        }
+        copy {
+            from tarTree("$buildDir/dist/crawler-process.tar")
+            into "$projectDir/run/dist/"
+        }
+        copy {
+            from tarTree("$buildDir/dist/loader-process.tar")
+            into "$projectDir/run/dist/"
+        }
+    }
+}
 idea {
     module {
         excludeDirs.add(file("$projectDir/run/model"))
+        excludeDirs.add(file("$projectDir/run/dist"))
         excludeDirs.add(file("$projectDir/run/samples"))
         excludeDirs.add(file("$projectDir/run/db"))
         excludeDirs.add(file("$projectDir/run/logs"))
