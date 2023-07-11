@@ -31,11 +31,13 @@ public class FileLinks {
 
     private static void synthesizeFilenameKeyword(Set<String> fileKeywords, EdgeUrl link) {
 
-        Path pFilename = Path.of(link.path.toLowerCase()).getFileName();
+        int lastSlash = link.path.lastIndexOf('/');
+        if (lastSlash < 0) return;
 
-        if (pFilename == null) return;
+        String filename = link.path
+                .substring(lastSlash + 1)
+                .toLowerCase();
 
-        String filename = pFilename.toString();
         if (filename.length() > 32
                 || filename.endsWith(".xml")
                 || filename.endsWith(".jpg")
