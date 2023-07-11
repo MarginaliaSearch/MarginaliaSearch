@@ -23,7 +23,7 @@ public class MessageQueueViewService {
         try (var conn = dataSource.getConnection();
              var query = conn.prepareStatement("""
                 SELECT ID, RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
-                FROM PROC_MESSAGE
+                FROM MESSAGE_QUEUE
                 ORDER BY ID DESC
                 LIMIT ?
                 """)) {

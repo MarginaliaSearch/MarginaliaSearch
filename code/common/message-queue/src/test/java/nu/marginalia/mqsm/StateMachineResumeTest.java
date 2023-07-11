@@ -28,7 +28,7 @@ public class StateMachineResumeTest {
             .withDatabaseName("WMSA_prod")
             .withUsername("wmsa")
             .withPassword("wmsa")
-            .withInitScript("sql/current/11-message-queue.sql")
+            .withInitScript("sql/current/12-message-queue.sql")
             .withNetworkAliases("mariadb");
 
     static HikariDataSource dataSource;

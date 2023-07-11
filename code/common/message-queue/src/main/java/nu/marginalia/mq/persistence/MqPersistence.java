@@ -25,7 +25,7 @@ public class MqPersistence {
     public int reapDeadMessages() throws SQLException {
         try (var conn = dataSource.getConnection();
              var setToDead = conn.prepareStatement("""
-                     UPDATE PROC_MESSAGE
+                     UPDATE MESSAGE_QUEUE
                      SET STATE='DEAD', UPDATED_TIME=CURRENT_TIMESTAMP(6)
                      WHERE STATE IN ('NEW', 'ACK')
                      AND TTL IS NOT NULL
@@ -39,7 +39,7 @@ public class MqPersistence {
     public int cleanOldMessages() throws SQLException {
         try (var conn = dataSource.getConnection();
              var setToDead = conn.prepareStatement("""
-                     DELETE FROM PROC_MESSAGE
+                     DELETE FROM MESSAGE_QUEUE
                      WHERE STATE = 'OK'
                      AND TTL IS NOT NULL
                      AND TIMESTAMPDIFF(SECOND, UPDATED_TIME, CURRENT_TIMESTAMP(6)) > 3600
@@ -67,7 +67,7 @@ public class MqPersistence {
                                ) throws Exception {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                     INSERT INTO PROC_MESSAGE(RECIPIENT_INBOX, SENDER_INBOX, FUNCTION, PAYLOAD, TTL)
+                     INSERT INTO MESSAGE_QUEUE(RECIPIENT_INBOX, SENDER_INBOX, FUNCTION, PAYLOAD, TTL)
                      VALUES(?, ?, ?, ?, ?)
                      """);
              var lastIdQuery = conn.prepareStatement("SELECT LAST_INSERT_ID()")) {
@@ -97,7 +97,7 @@ public class MqPersistence {
     public void updateMessageState(long id, MqMessageState mqMessageState) throws SQLException {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                     UPDATE PROC_MESSAGE
+                     UPDATE MESSAGE_QUEUE
                      SET STATE=?, UPDATED_TIME=CURRENT_TIMESTAMP(6)
                      WHERE ID=?
                      """)) {
@@ -118,14 +118,14 @@ public class MqPersistence {
             conn.setAutoCommit(false);
 
             try (var updateState = conn.prepareStatement("""
-                    UPDATE PROC_MESSAGE
+                    UPDATE MESSAGE_QUEUE
                     SET STATE=?, UPDATED_TIME=CURRENT_TIMESTAMP(6)
                     WHERE ID=?
                     """);
                  var addResponse = conn.prepareStatement("""
-                         INSERT INTO PROC_MESSAGE(RECIPIENT_INBOX, RELATED_ID, FUNCTION, PAYLOAD)
+                         INSERT INTO MESSAGE_QUEUE(RECIPIENT_INBOX, RELATED_ID, FUNCTION, PAYLOAD)
                          SELECT SENDER_INBOX, ID, ?, ?
-                         FROM PROC_MESSAGE
+                         FROM MESSAGE_QUEUE
                          WHERE ID=? AND SENDER_INBOX IS NOT NULL
                          """);
                  var lastIdQuery = conn.prepareStatement("SELECT LAST_INSERT_ID()")
@@ -170,7 +170,7 @@ public class MqPersistence {
     private int markInboxMessages(String inboxName, String instanceUUID, long tick) throws SQLException {
         try (var conn = dataSource.getConnection();
              var updateStmt = conn.prepareStatement("""
-                     UPDATE PROC_MESSAGE
+                     UPDATE MESSAGE_QUEUE
                      SET OWNER_INSTANCE=?, OWNER_TICK=?, UPDATED_TIME=CURRENT_TIMESTAMP(6), STATE='ACK'
                      WHERE RECIPIENT_INBOX=?
                      AND OWNER_INSTANCE IS NULL AND STATE='NEW'
@@ -197,7 +197,7 @@ public class MqPersistence {
         // Then fetch the messages that were marked
         try (var conn = dataSource.getConnection();
              var queryStmt = conn.prepareStatement("""
-                     SELECT ID, RELATED_ID, FUNCTION, PAYLOAD, STATE, SENDER_INBOX FROM PROC_MESSAGE
+                     SELECT ID, RELATED_ID, FUNCTION, PAYLOAD, STATE, SENDER_INBOX FROM MESSAGE_QUEUE
                      WHERE OWNER_INSTANCE=? AND OWNER_TICK=?
                      """)
         ) {
@@ -242,8 +242,8 @@ public class MqPersistence {
         // Then fetch the messages that were marked
         try (var conn = dataSource.getConnection();
              var queryStmt = conn.prepareStatement("""
-                     SELECT SELF.ID, SELF.RELATED_ID, SELF.FUNCTION, SELF.PAYLOAD, PARENT.STATE FROM PROC_MESSAGE SELF
-                     LEFT JOIN PROC_MESSAGE PARENT ON SELF.RELATED_ID=PARENT.ID
+                     SELECT SELF.ID, SELF.RELATED_ID, SELF.FUNCTION, SELF.PAYLOAD, PARENT.STATE FROM MESSAGE_QUEUE SELF
+                     LEFT JOIN MESSAGE_QUEUE PARENT ON SELF.RELATED_ID=PARENT.ID
                      WHERE SELF.OWNER_INSTANCE=? AND SELF.OWNER_TICK=?
                      """)
         ) {
@@ -275,7 +275,7 @@ public class MqPersistence {
     public List<MqMessage> lastNMessages(String inboxName, int lastN) throws SQLException {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                     SELECT ID, RELATED_ID, FUNCTION, PAYLOAD, STATE, SENDER_INBOX FROM PROC_MESSAGE
+                     SELECT ID, RELATED_ID, FUNCTION, PAYLOAD, STATE, SENDER_INBOX FROM MESSAGE_QUEUE
                      WHERE RECIPIENT_INBOX = ?
                      ORDER BY ID DESC LIMIT ?
                      """)) {

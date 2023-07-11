@@ -20,7 +20,7 @@ public class MqTestUtil {
                         OWNER_INSTANCE, OWNER_TICK,
                         CREATED_TIME, UPDATED_TIME,
                         TTL
-                FROM PROC_MESSAGE
+                FROM MESSAGE_QUEUE
                 WHERE RECIPIENT_INBOX = ?
                  """))
         {

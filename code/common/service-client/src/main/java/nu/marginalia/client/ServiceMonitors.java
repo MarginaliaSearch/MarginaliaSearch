@@ -81,7 +81,7 @@ public class ServiceMonitors {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
                     SELECT SERVICE_BASE, TIMESTAMPDIFF(SECOND, HEARTBEAT_TIME, CURRENT_TIMESTAMP(6))
-                    FROM PROC_SERVICE_HEARTBEAT
+                    FROM SERVICE_HEARTBEAT
                     WHERE ALIVE=1
                     """)) {
             try (var rs = stmt.executeQuery()) {

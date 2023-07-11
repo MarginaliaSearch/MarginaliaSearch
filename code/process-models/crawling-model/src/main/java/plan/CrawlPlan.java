@@ -107,6 +107,18 @@ public class CrawlPlan {
             throw new RuntimeException(ex);
         }
     }
+
+    public int countCrawledDomains() {
+        try (Stream<WorkLogEntry> entryStream = WorkLog.streamLog(crawl.getLogFile())) {
+            return (int) entryStream
+                    .map(WorkLogEntry::path)
+                    .count();
+        }
+        catch (IOException ex) {
+            return 0;
+        }
+    }
+
     public void forEachCrawledDomain(Predicate<String> idReadPredicate, Consumer<CrawledDomain> consumer) {
         final CrawledDomainReader reader = new CrawledDomainReader();
 

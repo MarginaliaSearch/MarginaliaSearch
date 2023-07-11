@@ -29,6 +29,7 @@ public class ControlService extends Service {
     private final ServiceMonitors monitors;
     private final MustacheRenderer<Object> indexRenderer;
     private final MustacheRenderer<Map<?,?>> servicesRenderer;
+    private final MustacheRenderer<Map<?,?>> processesRenderer;
     private final MustacheRenderer<Map<?,?>> eventsRenderer;
     private final MustacheRenderer<Map<?,?>> messageQueueRenderer;
     private final MqPersistence messageQueuePersistence;
@@ -54,6 +55,7 @@ public class ControlService extends Service {
 
         indexRenderer = rendererFactory.renderer("control/index");
         servicesRenderer = rendererFactory.renderer("control/services");
+        processesRenderer = rendererFactory.renderer("control/processes");
         eventsRenderer = rendererFactory.renderer("control/events");
         messageQueueRenderer = rendererFactory.renderer("control/message-queue");
 
@@ -62,12 +64,13 @@ public class ControlService extends Service {
 
         Spark.get("/public/heartbeats", (req, res) -> {
             res.type("application/json");
-            return heartbeatService.getHeartbeats();
+            return heartbeatService.getServiceHeartbeats();
         }, gson::toJson);
 
         Spark.get("/public/", (req, rsp) -> indexRenderer.render(Map.of()));
 
-        Spark.get("/public/services", (req, rsp) -> servicesRenderer.render(Map.of("heartbeats", heartbeatService.getHeartbeats())));
+        Spark.get("/public/services", (req, rsp) -> servicesRenderer.render(Map.of("heartbeats", heartbeatService.getServiceHeartbeats())));
+        Spark.get("/public/processes", (req, rsp) -> processesRenderer.render(Map.of("heartbeats", heartbeatService.getProcessHeartbeats())));
         Spark.get("/public/events", (req, rsp) -> eventsRenderer.render(Map.of("events", eventLogService.getLastEntries(20))));
         Spark.get("/public/message-queue", (req, rsp) -> messageQueueRenderer.render(Map.of("messages", messageQueueViewService.getLastEntries(20))));
 

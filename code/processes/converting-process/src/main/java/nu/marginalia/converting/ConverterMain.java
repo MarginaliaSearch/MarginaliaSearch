@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.service.module.DatabaseModule;
 import plan.CrawlPlanLoader;
@@ -19,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ConverterMain {
 
@@ -46,13 +48,21 @@ public class ConverterMain {
             CrawlPlan plan,
             DomainProcessor processor,
             InstructionsCompiler compiler,
-            Gson gson
+            Gson gson,
+            ProcessHeartbeat heartbeat
             ) throws Exception {
+
+        heartbeat.start();
+
         logger.info("Starting pipe");
 
         try (WorkLog processLog = plan.createProcessWorkLog();
              ConversionLog log = new ConversionLog(plan.process.getDir())) {
             instructionWriter = new InstructionWriter(log, plan.process.getDir(), gson);
+
+            int totalDomains = plan.countCrawledDomains();
+            AtomicInteger processedDomains = new AtomicInteger(0);
+
             var pipe = new ParallelPipe<CrawledDomain, ProcessingInstructions>("Converter", 16, 4, 2) {
 
                 @Override
@@ -78,6 +88,8 @@ public class ConverterMain {
 
                         String where = instructionWriter.accept(processedInstructions.id, instructions);
                         processLog.setJobToFinished(processedInstructions.id, where, instructions.size());
+
+                        heartbeat.setProgress(processedDomains.incrementAndGet() / (double) totalDomains);
                     }
                     finally {
                         Thread.currentThread().setName("Converter:Receiver[IDLE]");
@@ -85,6 +97,7 @@ public class ConverterMain {
                 }
 
             };
+
 
             plan.forEachCrawledDomain(id -> !processLog.isJobFinished(id), pipe::accept);
 

@@ -1,5 +1,5 @@
 body {
-    font-family: serif;
+    font-family: sans-serif;
     line-height: 1.6;
 
     display: grid;
@@ -7,6 +7,17 @@ body {
     grid-gap: 1em;
     grid-template-areas:
         "left right";
+}
+h1 {
+    font-family: serif;
+}
+table {
+    font-family: monospace;
+}
+th { text-align: left; }
+td,th { padding-right: 1ch; border: 1px solid #ccc; }
+tr:nth-last-of-type(2n) {
+    background-color: #eee;
 }
 body > nav {
     grid-area: left;

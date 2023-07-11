@@ -1,10 +1,12 @@
 package nu.marginalia.crawl;
 
+import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.UserAgent;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
-import nu.marginalia.crawl.retreival.fetcher.SitemapRetriever;
+import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.process.log.WorkLog;
+import nu.marginalia.service.module.DatabaseModule;
 import plan.CrawlPlanLoader;
 import plan.CrawlPlan;
 import nu.marginalia.crawling.io.CrawledDomainWriter;
@@ -20,7 +22,9 @@ import org.slf4j.LoggerFactory;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class CrawlerMain implements AutoCloseable {
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -44,6 +48,8 @@ public class CrawlerMain implements AutoCloseable {
 
     AbortMonitor abortMonitor = AbortMonitor.getInstance();
     Semaphore taskSem = new Semaphore(poolSize);
+
+    private static ProcessHeartbeat heartbeat;
 
     public CrawlerMain(CrawlPlan plan) throws Exception {
         this.plan = plan;
@@ -77,8 +83,15 @@ public class CrawlerMain implements AutoCloseable {
         }
         var plan = new CrawlPlanLoader().load(Path.of(args[0]));
 
+        heartbeat = new ProcessHeartbeat(new ProcessConfiguration("crawler", 0, UUID.randomUUID()),
+                new DatabaseModule().provideConnection());
+
         try (var crawler = new CrawlerMain(plan)) {
+            heartbeat.start();
             crawler.run();
+        }
+        finally {
+            heartbeat.shutDown();
         }
 
         System.exit(0);
@@ -87,12 +100,18 @@ public class CrawlerMain implements AutoCloseable {
     public void run() throws InterruptedException {
         // First a validation run to ensure the file is all good to parse
         logger.info("Validating JSON");
-        plan.forEachCrawlingSpecification(unused -> {});
+        AtomicInteger countTotal = new AtomicInteger();
+        AtomicInteger countProcessed = new AtomicInteger();
+
+        plan.forEachCrawlingSpecification(unused -> countTotal.incrementAndGet());
 
         logger.info("Let's go");
 
         // TODO: Make this into an iterable instead so we can abort it
-        plan.forEachCrawlingSpecification(this::startCrawlTask);
+        plan.forEachCrawlingSpecification((spec) -> {
+            heartbeat.setProgress(countProcessed.incrementAndGet() / (double) countTotal.get());
+            startCrawlTask(spec);
+        });
     }
 
 

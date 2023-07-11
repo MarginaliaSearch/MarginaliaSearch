@@ -40,7 +40,7 @@ public class ServiceEventLog {
 
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                        INSERT INTO PROC_SERVICE_EVENTLOG(SERVICE_NAME, SERVICE_BASE, INSTANCE, EVENT_TYPE, EVENT_MESSAGE)
+                        INSERT INTO SERVICE_EVENTLOG(SERVICE_NAME, SERVICE_BASE, INSTANCE, EVENT_TYPE, EVENT_MESSAGE)
                         VALUES (?, ?, ?, ?, ?)
                      """)) {
             stmt.setString(1, serviceName);

@@ -23,7 +23,7 @@ public class EventLogService {
         try (var conn = dataSource.getConnection();
              var query = conn.prepareStatement("""
                  SELECT SERVICE_NAME, INSTANCE, EVENT_TIME, EVENT_TYPE, EVENT_MESSAGE
-                 FROM PROC_SERVICE_EVENTLOG ORDER BY ID DESC LIMIT ?
+                 FROM SERVICE_EVENTLOG ORDER BY ID DESC LIMIT ?
                  """)) {
 
             query.setInt(1, n);

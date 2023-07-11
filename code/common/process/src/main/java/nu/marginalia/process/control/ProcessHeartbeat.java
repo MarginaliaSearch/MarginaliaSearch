@@ -1,9 +1,10 @@
-package nu.marginalia.service.control;
+package nu.marginalia.process.control;
+
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.service.module.ServiceConfiguration;
+import nu.marginalia.ProcessConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,25 +14,27 @@ import java.util.concurrent.TimeUnit;
 /** This service sends a heartbeat to the database every 5 seconds.
  */
 @Singleton
-public class ServiceHeartbeat {
-    private final Logger logger = LoggerFactory.getLogger(ServiceHeartbeat.class);
-    private final String serviceName;
-    private final String serviceBase;
+public class ProcessHeartbeat {
+    private final Logger logger = LoggerFactory.getLogger(ProcessHeartbeat.class);
+    private final String processName;
+    private final String processBase;
     private final String instanceUUID;
     private final HikariDataSource dataSource;
 
 
     private final Thread runnerThread;
-    private final int heartbeatInterval = Integer.getInteger("mcp.heartbeat.interval", 5);
+    private final int heartbeatInterval = Integer.getInteger("mcp.heartbeat.interval", 1);
 
     private volatile boolean running = false;
 
+    private volatile int progress = -1;
+
     @Inject
-    public ServiceHeartbeat(ServiceConfiguration configuration,
+    public ProcessHeartbeat(ProcessConfiguration configuration,
                             HikariDataSource dataSource)
     {
-        this.serviceName = configuration.serviceName() + ":" + configuration.node();
-        this.serviceBase = configuration.serviceName();
+        this.processName = configuration.processName() + ":" + configuration.node();
+        this.processBase = configuration.processName();
         this.dataSource = dataSource;
 
         this.instanceUUID = configuration.instanceUuid().toString();
@@ -39,6 +42,10 @@ public class ServiceHeartbeat {
         runnerThread = new Thread(this::run);
 
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutDown));
+    }
+
+    public void setProgress(double progress) {
+        this.progress = (int) (progress * 100);
     }
 
     public void start() {
@@ -93,17 +100,17 @@ public class ServiceHeartbeat {
         try (var connection = dataSource.getConnection()) {
             try (var stmt = connection.prepareStatement(
                     """
-                        INSERT INTO SERVICE_HEARTBEAT (SERVICE_NAME, SERVICE_BASE, INSTANCE, HEARTBEAT_TIME, ALIVE)
-                        VALUES (?, ?, ?, CURRENT_TIMESTAMP(6), 1)
+                        INSERT INTO PROCESS_HEARTBEAT (PROCESS_NAME, PROCESS_BASE, INSTANCE, HEARTBEAT_TIME, STATUS)
+                        VALUES (?, ?, ?, CURRENT_TIMESTAMP(6), 'STARTING')
                         ON DUPLICATE KEY UPDATE
                             INSTANCE = ?,
                             HEARTBEAT_TIME = CURRENT_TIMESTAMP(6),
-                            ALIVE = 1
+                            STATUS = 'STARTING'
                         """
-                    ))
+            ))
             {
-                stmt.setString(1, serviceName);
-                stmt.setString(2, serviceBase);
+                stmt.setString(1, processName);
+                stmt.setString(2, processBase);
                 stmt.setString(3, instanceUUID);
                 stmt.setString(4, instanceUUID);
                 stmt.executeUpdate();
@@ -115,13 +122,14 @@ public class ServiceHeartbeat {
         try (var connection = dataSource.getConnection()) {
             try (var stmt = connection.prepareStatement(
                     """
-                        UPDATE SERVICE_HEARTBEAT
-                        SET HEARTBEAT_TIME = CURRENT_TIMESTAMP(6)
-                        WHERE INSTANCE = ? AND ALIVE = 1
+                        UPDATE PROCESS_HEARTBEAT
+                        SET HEARTBEAT_TIME = CURRENT_TIMESTAMP(6), STATUS = 'RUNNING', PROGRESS = ?
+                        WHERE INSTANCE = ?
                         """)
             )
             {
-                stmt.setString(1, instanceUUID);
+                stmt.setInt(1, progress);
+                stmt.setString(2, instanceUUID);
                 stmt.executeUpdate();
             }
         }
@@ -131,15 +139,17 @@ public class ServiceHeartbeat {
         try (var connection = dataSource.getConnection()) {
             try (var stmt = connection.prepareStatement(
                     """
-                        UPDATE SERVICE_HEARTBEAT
-                        SET HEARTBEAT_TIME = CURRENT_TIMESTAMP(6), ALIVE = 0
+                        UPDATE PROCESS_HEARTBEAT
+                        SET HEARTBEAT_TIME = CURRENT_TIMESTAMP(6), STATUS='STOPPED', PROGRESS=?
                         WHERE INSTANCE = ?
                         """)
             )
             {
-                stmt.setString(1, instanceUUID);
+                stmt.setInt(1, progress);
+                stmt.setString( 2, instanceUUID);
                 stmt.executeUpdate();
             }
         }
     }
 }
+

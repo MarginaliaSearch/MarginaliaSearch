@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
+import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.process.log.WorkLog;
 import plan.CrawlPlanLoader;
 import plan.CrawlPlan;
@@ -32,9 +33,10 @@ public class LoaderMain {
     private final LoaderFactory loaderFactory;
 
     private final IndexLoadKeywords indexLoadKeywords;
+    private final ProcessHeartbeat heartbeat;
     private volatile boolean running = true;
 
-    final Thread processorThread = new Thread(this::processor, "Processor Thread");
+    final Thread processorThread;
 
     public static void main(String... args) throws IOException {
         if (args.length != 1) {
@@ -59,16 +61,23 @@ public class LoaderMain {
     public LoaderMain(CrawlPlan plan,
                       ConvertedDomainReader instructionsReader,
                       HikariDataSource dataSource,
-                      LoaderFactory loaderFactory, IndexLoadKeywords indexLoadKeywords) {
+                      LoaderFactory loaderFactory,
+                      IndexLoadKeywords indexLoadKeywords,
+                      ProcessHeartbeat heartbeat
+                      ) {
 
         this.plan = plan;
         this.instructionsReader = instructionsReader;
         this.loaderFactory = loaderFactory;
         this.indexLoadKeywords = indexLoadKeywords;
+        this.heartbeat = heartbeat;
+
+        heartbeat.start();
 
         nukeTables(dataSource);
 
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutDownIndex));
+        processorThread = new Thread(this::processor, "Processor Thread");
         processorThread.start();
     }
 
@@ -97,17 +106,26 @@ public class LoaderMain {
     public void run() {
         var logFile = plan.process.getLogFile();
 
-        AtomicInteger loadTotal = new AtomicInteger();
-        WorkLog.readLog(logFile, entry -> { loadTotal.incrementAndGet(); });
-        LoaderMain.loadTotal = loadTotal.get();
+        try {
+            AtomicInteger loadTotal = new AtomicInteger();
+            WorkLog.readLog(logFile, entry -> {
+                loadTotal.incrementAndGet();
+            });
+            LoaderMain.loadTotal = loadTotal.get();
 
-        WorkLog.readLog(logFile, entry -> {
-            load(plan, entry.path(), entry.cnt());
-        });
+            AtomicInteger loaded = new AtomicInteger();
+            WorkLog.readLog(logFile, entry -> {
+                heartbeat.setProgress(loaded.incrementAndGet() / (double) loadTotal.get());
 
-        running = false;
-        processorThread.join();
+                load(plan, entry.path(), entry.cnt());
+            });
 
+            running = false;
+            processorThread.join();
+        }
+        finally {
+            heartbeat.shutDown();
+        }
         System.exit(0);
     }
 
