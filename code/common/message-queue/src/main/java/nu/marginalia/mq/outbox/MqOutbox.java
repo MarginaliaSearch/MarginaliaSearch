@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
-import java.sql.Time;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -107,7 +106,7 @@ public class MqOutbox {
      * <br>
      * Use waitResponse(id) or pollResponse(id) to fetch the response.  */
     public long sendAsync(String function, String payload) throws Exception {
-        var id = persistence.sendNewMessage(inboxName, replyInboxName, function, payload, null);
+        var id = persistence.sendNewMessage(inboxName, replyInboxName, null, function, payload, null);
 
         pendingRequests.put(id, id);
 
@@ -163,7 +162,13 @@ public class MqOutbox {
     }
 
     public long notify(String function, String payload) throws Exception {
-        return persistence.sendNewMessage(inboxName, null, function, payload, null);
+        return persistence.sendNewMessage(inboxName, null, null, function, payload, null);
+    }
+    public long notify(long relatedId, String function, String payload) throws Exception {
+        return persistence.sendNewMessage(inboxName, null, relatedId, function, payload, null);
     }
 
+    public void flagAsBad(long id) throws SQLException {
+        persistence.updateMessageState(id, MqMessageState.ERR);
+    }
 }

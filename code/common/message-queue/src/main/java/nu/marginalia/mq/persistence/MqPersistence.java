@@ -52,23 +52,25 @@ public class MqPersistence {
      * Adds a new message to the message queue.
      *
      * @param recipientInboxName The recipient's inbox name
-     * @param senderInboxName (nullable) The sender's inbox name. Only needed if a reply is expected. If null, the message is not expected to be replied to.
-     * @param function The function to call
-     * @param payload The payload to send, typically JSON.
-     * @param ttl (nullable) The time to live of the message, in seconds. If null, the message will never set to DEAD.
+     * @param senderInboxName    (nullable) The sender's inbox name. Only needed if a reply is expected. If null, the message is not expected to be replied to.
+     * @param relatedMessageId   (nullable) The id of the message this message is related to. If null, the message is not related to any other message.
+     * @param function           The function to call
+     * @param payload            The payload to send, typically JSON.
+     * @param ttl                (nullable) The time to live of the message, in seconds. If null, the message will never set to DEAD.
      * @return The id of the message
      */
     public long sendNewMessage(String recipientInboxName,
                                @Nullable
                                String senderInboxName,
+                               Long relatedMessageId,
                                String function,
                                String payload,
                                @Nullable Duration ttl
                                ) throws Exception {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                     INSERT INTO MESSAGE_QUEUE(RECIPIENT_INBOX, SENDER_INBOX, FUNCTION, PAYLOAD, TTL)
-                     VALUES(?, ?, ?, ?, ?)
+                     INSERT INTO MESSAGE_QUEUE(RECIPIENT_INBOX, SENDER_INBOX, RELATED_ID, FUNCTION, PAYLOAD, TTL)
+                     VALUES(?, ?, ?, ?, ?, ?)
                      """);
              var lastIdQuery = conn.prepareStatement("SELECT LAST_INSERT_ID()")) {
 
@@ -77,10 +79,13 @@ public class MqPersistence {
             if (senderInboxName == null) stmt.setNull(2, java.sql.Types.VARCHAR);
             else stmt.setString(2, senderInboxName);
 
-            stmt.setString(3, function);
-            stmt.setString(4, payload);
-            if (ttl == null) stmt.setNull(5, java.sql.Types.BIGINT);
-            else stmt.setLong(5, ttl.toSeconds());
+            if (relatedMessageId == null) stmt.setLong(3, -1);
+            else stmt.setLong(3, relatedMessageId);
+
+            stmt.setString(4, function);
+            stmt.setString(5, payload);
+            if (ttl == null) stmt.setNull(6, java.sql.Types.BIGINT);
+            else stmt.setLong(6, ttl.toSeconds());
 
             stmt.executeUpdate();
             var rsp = lastIdQuery.executeQuery();

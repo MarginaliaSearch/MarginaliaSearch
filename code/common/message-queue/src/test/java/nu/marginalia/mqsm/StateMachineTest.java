@@ -118,4 +118,25 @@ public class StateMachineTest {
         MqTestUtil.getMessages(dataSource, inboxId).forEach(System.out::println);
     }
 
+    @Test
+    public void testFalseTransition() throws Exception {
+        var stateFactory = new StateFactory(new GsonBuilder().create());
+        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new TestGraph(stateFactory));
+
+        // Prep the queue with a message to set the state to initial,
+        // and an additional message to trigger the false transition back to initial
+
+        persistence.sendNewMessage(inboxId,  null, null, "INITIAL", "", null);
+        persistence.sendNewMessage(inboxId,  null, null, "INITIAL", "", null);
+
+        sm.resume();
+
+        Thread.sleep(50);
+
+        sm.join();
+        sm.stop();
+
+        MqTestUtil.getMessages(dataSource, inboxId).forEach(System.out::println);
+    }
+
 }

@@ -81,7 +81,7 @@ public class StateMachineResumeTest {
         var stateFactory = new StateFactory(new GsonBuilder().create());
         var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
 
-        persistence.sendNewMessage(inboxId,  null,"RESUMABLE", "", null);
+        persistence.sendNewMessage(inboxId,  null, -1L, "RESUMABLE", "", null);
 
         sm.resume();
 
@@ -102,7 +102,7 @@ public class StateMachineResumeTest {
         var stateFactory = new StateFactory(new GsonBuilder().create());
         var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
 
-        long id = persistence.sendNewMessage(inboxId,  null,"RESUMABLE", "", null);
+        long id = persistence.sendNewMessage(inboxId,  null, -1L, "RESUMABLE", "", null);
         persistence.updateMessageState(id, MqMessageState.ACK);
 
         sm.resume();
@@ -125,7 +125,7 @@ public class StateMachineResumeTest {
         var stateFactory = new StateFactory(new GsonBuilder().create());
         var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
 
-        persistence.sendNewMessage(inboxId,  null,"NON-RESUMABLE", "", null);
+        persistence.sendNewMessage(inboxId,  null, -1L, "NON-RESUMABLE", "", null);
 
         sm.resume();
 
@@ -146,7 +146,7 @@ public class StateMachineResumeTest {
         var stateFactory = new StateFactory(new GsonBuilder().create());
         var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
 
-        long id = persistence.sendNewMessage(inboxId,  null,"NON-RESUMABLE", "", null);
+        long id = persistence.sendNewMessage(inboxId,  null, null, "NON-RESUMABLE", "", null);
         persistence.updateMessageState(id, MqMessageState.ACK);
 
         sm.resume();

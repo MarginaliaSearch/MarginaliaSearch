@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS MESSAGE_QUEUE (
     ID              BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'Unique id',
-    RELATED_ID      BIGINT                COMMENT 'Unique id a related message',
+    RELATED_ID      BIGINT NOT NULL DEFAULT -1        COMMENT 'Unique id a related message',
     SENDER_INBOX    VARCHAR(255)          COMMENT 'Name of the sender inbox',
     RECIPIENT_INBOX VARCHAR(255) NOT NULL COMMENT 'Name of the recipient inbox',
     FUNCTION        VARCHAR(255) NOT NULL COMMENT 'Which function to run',

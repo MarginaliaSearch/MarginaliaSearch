@@ -57,7 +57,7 @@ public class MqPersistenceTest {
     @Test
     public void testReaper() throws Exception {
 
-        long id = persistence.sendNewMessage(recipientId, senderId, "function", "payload", Duration.ofSeconds(2));
+        long id = persistence.sendNewMessage(recipientId, senderId, null, "function", "payload", Duration.ofSeconds(2));
         persistence.reapDeadMessages();
 
         var messages = MqTestUtil.getMessages(dataSource, recipientId);
@@ -77,7 +77,7 @@ public class MqPersistenceTest {
     @Test
     public void sendWithReplyAddress() throws Exception {
 
-        long id = persistence.sendNewMessage(recipientId, senderId, "function", "payload", Duration.ofSeconds(30));
+        long id = persistence.sendNewMessage(recipientId, senderId, null, "function", "payload", Duration.ofSeconds(30));
 
         var messages = MqTestUtil.getMessages(dataSource, recipientId);
         assertEquals(1, messages.size());
@@ -95,7 +95,7 @@ public class MqPersistenceTest {
     @Test
     public void sendNoReplyAddress() throws Exception {
 
-        long id = persistence.sendNewMessage(recipientId, null, "function", "payload", Duration.ofSeconds(30));
+        long id = persistence.sendNewMessage(recipientId, null, null, "function", "payload", Duration.ofSeconds(30));
 
         var messages = MqTestUtil.getMessages(dataSource, recipientId);
         assertEquals(1, messages.size());
@@ -114,7 +114,7 @@ public class MqPersistenceTest {
     @Test
     public void updateState() throws Exception {
 
-        long id = persistence.sendNewMessage(recipientId, senderId, "function", "payload", Duration.ofSeconds(30));
+        long id = persistence.sendNewMessage(recipientId, senderId, null, "function", "payload", Duration.ofSeconds(30));
         persistence.updateMessageState(id, MqMessageState.OK);
         System.out.println(id);
 
@@ -131,7 +131,7 @@ public class MqPersistenceTest {
 
     @Test
     public void testReply() throws Exception {
-        long request = persistence.sendNewMessage(recipientId, senderId, "function", "payload", Duration.ofSeconds(30));
+        long request = persistence.sendNewMessage(recipientId, senderId, null, "function", "payload", Duration.ofSeconds(30));
         long response = persistence.sendResponse(request,  MqMessageState.OK, "response");
 
         var sentMessages = MqTestUtil.getMessages(dataSource, recipientId);
@@ -159,7 +159,7 @@ public class MqPersistenceTest {
         String instanceId = "BATMAN";
         long tick = 1234L;
 
-        long id = persistence.sendNewMessage(recipientId,  null,"function", "payload", Duration.ofSeconds(30));
+        long id = persistence.sendNewMessage(recipientId,  null, null, "function", "payload", Duration.ofSeconds(30));
 
         var messagesPollFirstTime = persistence.pollInbox(recipientId, instanceId , tick, 10);
 

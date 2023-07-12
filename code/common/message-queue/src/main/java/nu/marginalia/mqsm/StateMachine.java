@@ -36,6 +36,14 @@ public class StateMachine {
 
     private final Map<String, MachineState> allStates = new HashMap<>();
 
+    /* The expectedMessageId guards against spurious state changes being triggered by old messages in the queue
+     *
+     * It contains the message id of the last message that was processed, and the messages sent by the state machine to
+     * itself via the message queue all have relatedId set to expectedMessageId.  If the state machine is unitialized or
+     * in a terminal state, it will accept messages with relatedIds that are equal to -1.
+     * */
+    private long expectedMessageId = -1;
+
     public StateMachine(MqFactory messageQueueFactory,
                         String queueName,
                         UUID instanceUUID,
@@ -99,7 +107,7 @@ public class StateMachine {
         }
 
         smInbox.start();
-        smOutbox.notify(transition.state(), transition.message());
+        smOutbox.notify(expectedMessageId, transition.state(), transition.message());
     }
 
     /** Initialize the state machine. */
@@ -112,7 +120,7 @@ public class StateMachine {
         }
 
         smInbox.start();
-        smOutbox.notify(transition.state(), transition.message());
+        smOutbox.notify(expectedMessageId, transition.state(), transition.message());
     }
 
     /** Resume the state machine from the last known state. */
@@ -133,6 +141,7 @@ public class StateMachine {
 
         smInbox.start();
         logger.info("Resuming state machine from {}({})/{}", firstMessage.function(), firstMessage.payload(), firstMessage.state());
+        expectedMessageId = firstMessage.relatedId();
 
         if (firstMessage.state() == MqMessageState.NEW) {
             // The message is not acknowledged, so starting the inbox will trigger a state transition
@@ -141,10 +150,10 @@ public class StateMachine {
             state = resumingState;
         } else if (resumeState.resumeBehavior().equals(ResumeBehavior.ERROR)) {
             // The message is acknowledged, but the state does not support resuming
-            smOutbox.notify("ERROR", "Illegal resumption from ACK'ed state " + firstMessage.function());
+            smOutbox.notify(expectedMessageId, "ERROR", "Illegal resumption from ACK'ed state " + firstMessage.function());
         } else {
             // The message is already acknowledged, so we replay the last state
-            onStateTransition(firstMessage.function(), firstMessage.payload());
+            onStateTransition(firstMessage);
         }
     }
 
@@ -153,13 +162,24 @@ public class StateMachine {
         smOutbox.stop();
     }
 
-    private void onStateTransition(String nextState, String message) {
+    private void onStateTransition(MqMessage msg) {
+        final String nextState = msg.function();
+        final String data = msg.payload();
+        final long messageId = msg.msgId();
+        final long relatedId = msg.relatedId();
+
+        if (expectedMessageId != relatedId) {
+            // We've received a message that we didn't expect, throwing an exception will cause it to be flagged
+            // as an error in the message queue;  the message queue will proceed
+            throw new IllegalStateException("Unexpected message id " + relatedId + ", expected " + expectedMessageId);
+        }
+
         try {
             logger.info("FSM State change in {}: {}->{}({})",
                     queueName,
                     state == null ? "[null]" : state.name(),
                     nextState,
-                    message);
+                    data);
 
             if (!allStates.containsKey(nextState)) {
                 logger.error("Unknown state {}", nextState);
@@ -173,8 +193,13 @@ public class StateMachine {
             }
 
             if (!state.isFinal()) {
-                var transition = state.next(message);
-                smOutbox.notify(transition.state(), transition.message());
+                var transition = state.next(msg.payload());
+
+                expectedMessageId = messageId;
+                smOutbox.notify(expectedMessageId, transition.state(), transition.message());
+            }
+            else {
+                expectedMessageId = -1;
             }
         }
         catch (Exception e) {
@@ -204,7 +229,7 @@ public class StateMachine {
 
         @Override
         public void onNotification(MqMessage msg) {
-            onStateTransition(msg.function(), msg.payload());
+            onStateTransition(msg);
             try {
                 stateChangeListeners.forEach(l -> l.accept(msg.function(), msg.payload()));
             }
