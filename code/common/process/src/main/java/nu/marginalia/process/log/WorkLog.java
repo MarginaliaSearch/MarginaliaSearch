@@ -31,7 +31,13 @@ public class WorkLog implements AutoCloseable {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public WorkLog(Path logFile) throws IOException {
-        loadLog(logFile);
+        if (Files.exists(logFile)) {
+            try (var lines = Files.lines(logFile)) {
+                lines.filter(WorkLogEntry::isJobId)
+                        .map(WorkLogEntry::parseJobIdFromLogLine)
+                        .forEach(finishedJobs::add);
+            }
+        }
 
         logWriter = new FileOutputStream(logFile.toFile(), true);
         writeLogEntry("# Starting WorkLog @ " + LocalDateTime.now() + "\n");
@@ -58,6 +64,13 @@ public class WorkLog implements AutoCloseable {
     // Use synchro over concurrent set to avoid competing writes
     // - correct is better than fast here, it's sketchy enough to use
     // a PrintWriter
+
+    /** Mark the job as finished in the work log
+     *
+     * @param id  job identifier
+     * @param where  free form field, e.g. location on disk
+     * @param size  free form field, e.g. how many items were processed
+     */
     public synchronized void setJobToFinished(String id, String where, int size) throws IOException {
         if (!finishedJobs.add(id)) {
             logger.warn("Setting job {} to finished, but it was already finished", id);
@@ -66,29 +79,9 @@ public class WorkLog implements AutoCloseable {
         writeLogEntry(String.format("%s\t%s\t%s\t%d\n",id, LocalDateTime.now(), where, size));
     }
 
-    private void loadLog(Path logFile) throws IOException  {
-        if (!Files.exists(logFile)) {
-            return;
-        }
-
-        try (var lines = Files.lines(logFile)) {
-            lines.filter(WorkLogEntry::isJobId)
-                 .map(this::getJobIdFromWrittenString)
-                 .forEach(finishedJobs::add);
-        }
-    }
-
-    private static final Pattern splitPattern = Pattern.compile("\\s+");
-
-    private String getJobIdFromWrittenString(String s) {
-        return splitPattern.split(s, 2)[0];
-    }
-
     public synchronized boolean isJobFinished(String id) {
         return finishedJobs.contains(id);
     }
-
-
 
     private void writeLogEntry(String entry) throws IOException {
         logWriter.write(entry.getBytes(StandardCharsets.UTF_8));
