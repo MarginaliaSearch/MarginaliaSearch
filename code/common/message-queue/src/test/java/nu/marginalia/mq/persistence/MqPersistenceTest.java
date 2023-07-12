@@ -161,7 +161,7 @@ public class MqPersistenceTest {
 
         long id = persistence.sendNewMessage(recipientId,  null,"function", "payload", Duration.ofSeconds(30));
 
-        var messagesPollFirstTime = persistence.pollInbox(recipientId, instanceId , tick);
+        var messagesPollFirstTime = persistence.pollInbox(recipientId, instanceId , tick, 10);
 
         /** CHECK POLL RESULT */
         assertEquals(1, messagesPollFirstTime.size());
@@ -184,7 +184,7 @@ public class MqPersistenceTest {
         assertEquals(tick, message.ownerTick());
 
         /** VERIFY SECOND POLL IS EMPTY */
-        var messagePollSecondTime = persistence.pollInbox(recipientId, instanceId , 1);
+        var messagePollSecondTime = persistence.pollInbox(recipientId, instanceId , 1, 10);
         assertEquals(0, messagePollSecondTime.size());
     }
 }
