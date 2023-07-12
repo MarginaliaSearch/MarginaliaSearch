@@ -107,16 +107,20 @@ public class LoaderMain {
         var logFile = plan.process.getLogFile();
 
         try {
-            AtomicInteger loadTotal = new AtomicInteger();
-            WorkLog.readLog(logFile, entry -> loadTotal.incrementAndGet());
-            LoaderMain.loadTotal = loadTotal.get();
+            int loadTotal = 0;
+            int loaded = 0;
 
-            AtomicInteger loaded = new AtomicInteger();
-            WorkLog.readLog(logFile, entry -> {
-                heartbeat.setProgress(loaded.incrementAndGet() / (double) loadTotal.get());
+            for (var unused : WorkLog.iterable(logFile)) {
+                loadTotal++;
+            }
+
+            LoaderMain.loadTotal = loadTotal;
+
+            for (var entry : WorkLog.iterable(logFile)) {
+                heartbeat.setProgress(loaded++ / (double) loadTotal);
 
                 load(plan, entry.path(), entry.cnt());
-            });
+            }
 
             running = false;
             processorThread.join();

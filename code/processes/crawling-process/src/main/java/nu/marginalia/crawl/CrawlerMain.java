@@ -100,18 +100,19 @@ public class CrawlerMain implements AutoCloseable {
     public void run() throws InterruptedException {
         // First a validation run to ensure the file is all good to parse
         logger.info("Validating JSON");
-        AtomicInteger countTotal = new AtomicInteger();
-        AtomicInteger countProcessed = new AtomicInteger();
+        int countTotal = 0;
+        int countProcessed = 0;
 
-        plan.forEachCrawlingSpecification(unused -> countTotal.incrementAndGet());
+        for (var unused : plan.crawlingSpecificationIterable()) {
+            countTotal++;
+        }
 
         logger.info("Let's go");
 
-        // TODO: Make this into an iterable instead so we can abort it
-        plan.forEachCrawlingSpecification((spec) -> {
-            heartbeat.setProgress(countProcessed.incrementAndGet() / (double) countTotal.get());
+        for (var spec : plan.crawlingSpecificationIterable()) {
+            heartbeat.setProgress(countProcessed / (double) countTotal);
             startCrawlTask(spec);
-        });
+        }
     }
 
 

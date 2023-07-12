@@ -1,20 +1,14 @@
 package nu.marginalia.process.log;
 
-import com.google.errorprone.annotations.MustBeClosed;
-import org.apache.logging.log4j.util.Strings;
-
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.function.Consumer;
+import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 public class WorkLog implements AutoCloseable {
     private final Set<String> finishedJobs = new HashSet<>();
@@ -27,24 +21,22 @@ public class WorkLog implements AutoCloseable {
         writeLogEntry("# Starting WorkLog @ " + LocalDateTime.now());
     }
 
-    public static void readLog(Path logFile, Consumer<WorkLogEntry> entryConsumer) throws FileNotFoundException {
-        if (!Files.exists(logFile)) {
-            throw new FileNotFoundException("Log file not found " + logFile);
-        }
-
-        try (var entries = streamLog(logFile)) {
-            entries.forEach(entryConsumer);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    /** Create an iterable over the work log
+     * <br>
+     * <b>Caveat: </b> If the iterator is not iterated to the end,
+     *                  it will leak a file descriptor.
+     */
+    public static Iterable<WorkLogEntry> iterable(Path logFile) {
+        return new WorkLoadIterable<>(logFile, Optional::of);
     }
 
-    @MustBeClosed
-    public static Stream<WorkLogEntry> streamLog(Path logFile) throws IOException {
-        return Files.lines(logFile).filter(WorkLog::isJobId).map(line -> {
-            String[] parts = line.split("\\s+");
-            return new WorkLogEntry(parts[0], parts[1], parts[2], Integer.parseInt(parts[3]));
-        });
+    /** Create an iterable over the work log, applying a mapping function to each item
+     * <br>
+     * <b>Caveat: </b> If the iterator is not iterated to the end,
+     *                  it will leak a file descriptor.
+     */
+    public static <T> Iterable<T> iterableMap(Path logFile, Function<WorkLogEntry, Optional<T>> mapper) {
+        return new WorkLoadIterable<>(logFile, mapper);
     }
 
     private void loadLog(Path logFile) throws IOException  {
@@ -53,12 +45,10 @@ public class WorkLog implements AutoCloseable {
         }
 
         try (var lines = Files.lines(logFile)) {
-            lines.filter(WorkLog::isJobId).map(this::getJobIdFromWrittenString).forEach(finishedJobs::add);
+            lines.filter(WorkLogEntry::isJobId)
+                 .map(this::getJobIdFromWrittenString)
+                 .forEach(finishedJobs::add);
         }
-    }
-
-    private static boolean isJobId(String s) {
-        return Strings.isNotBlank(s) && !s.startsWith("#");
     }
 
     private static final Pattern splitPattern = Pattern.compile("\\s+");

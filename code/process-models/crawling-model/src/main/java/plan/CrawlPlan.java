@@ -78,100 +78,48 @@ public class CrawlPlan {
         return new WorkLog(process.getLogFile());
     }
 
-    public void forEachCrawlingSpecification(Consumer<CrawlingSpecification> consumer) {
-        CrawlerSpecificationLoader.readInputSpec(getJobSpec(), consumer);
-    }
-
-    public void forEachCrawlingLogEntry(Consumer<WorkLogEntry> consumer) throws FileNotFoundException {
-        WorkLog.readLog(this.crawl.getLogFile(), consumer);
-    }
-    public void forEachProcessingLogEntry(Consumer<WorkLogEntry> consumer) throws FileNotFoundException {
-        WorkLog.readLog(this.process.getLogFile(), consumer);
-    }
-
-    public void forEachCrawledDomain(Consumer<CrawledDomain> consumer) {
-        final CrawledDomainReader reader = new CrawledDomainReader();
-
-        try (Stream<WorkLogEntry> entryStream = WorkLog.streamLog(crawl.getLogFile())) {
-            entryStream
-                    .map(WorkLogEntry::path)
-                    .map(this::getCrawledFilePath)
-                    .map(reader::readOptionally)
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .forEach(consumer);
-        }
-        catch (IOException ex) {
-            logger.warn("Failed to read domains", ex);
-
-            throw new RuntimeException(ex);
-        }
+    public Iterable<CrawlingSpecification> crawlingSpecificationIterable() {
+        return CrawlerSpecificationLoader.asIterable(getJobSpec());
     }
 
     public int countCrawledDomains() {
-        try (Stream<WorkLogEntry> entryStream = WorkLog.streamLog(crawl.getLogFile())) {
-            return (int) entryStream
-                    .map(WorkLogEntry::path)
-                    .count();
+        int count = 0;
+        for (var ignored : WorkLog.iterable(crawl.getLogFile())) {
+            count++;
         }
-        catch (IOException ex) {
-            return 0;
-        }
+        return count;
     }
 
-    public void forEachCrawledDomain(Predicate<String> idReadPredicate, Consumer<CrawledDomain> consumer) {
+    public Iterable<CrawledDomain> domainsIterable() {
         final CrawledDomainReader reader = new CrawledDomainReader();
 
-        try (Stream<WorkLogEntry> entryStream = WorkLog.streamLog(crawl.getLogFile())) {
-            entryStream
-                    .filter(entry -> idReadPredicate.test(entry.id()))
-                    .map(WorkLogEntry::path)
-                    .map(this::getCrawledFilePath)
-                    .filter(path -> {
-                        if (!Files.exists(path)) {
-                            logger.warn("File not found: {}", path);
-                            return false;
-                        }
-                        return true;
-                    })
-                    .map(reader::readOptionally)
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .forEach(consumer);
-        }
-        catch (IOException ex) {
-            logger.error("Failed to read domains", ex);
-
-            throw new RuntimeException(ex);
-        }
-    }
-    public DomainsIterable domainsIterable() throws IOException {
-        return new DomainsIterable();
+        return WorkLog.iterableMap(crawl.getLogFile(),
+                entry -> {
+                    var path = getCrawledFilePath(entry.path());
+                    if (!Files.exists(path)) {
+                        logger.warn("File not found: {}", path);
+                        return Optional.empty();
+                    }
+                    return reader.readOptionally(path);
+                });
     }
 
-    public class DomainsIterable implements Iterable<CrawledDomain>, AutoCloseable {
-        private final Stream<CrawledDomain> stream;
+    public Iterable<CrawledDomain> domainsIterable(Predicate<String> idPredicate) {
+        final CrawledDomainReader reader = new CrawledDomainReader();
 
-        DomainsIterable() throws IOException {
-            final CrawledDomainReader reader = new CrawledDomainReader();
+        return WorkLog.iterableMap(crawl.getLogFile(),
+                entry -> {
+                    if (!idPredicate.test(entry.path())) {
+                        return Optional.empty();
+                    }
 
-            stream = WorkLog.streamLog(crawl.getLogFile())
-                    .map(WorkLogEntry::path)
-                    .map(CrawlPlan.this::getCrawledFilePath)
-                    .map(reader::readOptionally)
-                    .filter(Optional::isPresent)
-                    .map(Optional::get);
-        }
+                    var path = getCrawledFilePath(entry.path());
 
-        @Override
-        public void close() {
-            stream.close();
-        }
-
-        @NotNull
-        @Override
-        public Iterator<CrawledDomain> iterator() {
-            return stream.iterator();
-        }
+                    if (!Files.exists(path)) {
+                        logger.warn("File not found: {}", path);
+                        return Optional.empty();
+                    }
+                    return reader.readOptionally(path);
+                });
     }
 }

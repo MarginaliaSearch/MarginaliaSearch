@@ -47,14 +47,13 @@ public class ExperimentRunnerMain {
         experiment.args(Arrays.copyOfRange(args, 2, args.length));
 
         Map<String, String> idToDomain = new HashMap<>();
-        plan.forEachCrawlingSpecification(spec -> {
+        for (var spec : plan.crawlingSpecificationIterable()) {
             idToDomain.put(spec.id, spec.domain);
-        });
+        }
 
-        plan.forEachCrawledDomain(
-                id -> experiment.isInterested(idToDomain.get(id)),
-                experiment::process
-        );
+        for (var domain : plan.domainsIterable(id -> experiment.isInterested(idToDomain.get(id)))) {
+            experiment.process(domain);
+        }
 
         experiment.onFinish();
 

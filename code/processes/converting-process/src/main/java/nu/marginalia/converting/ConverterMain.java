@@ -98,8 +98,9 @@ public class ConverterMain {
 
             };
 
-
-            plan.forEachCrawledDomain(id -> !processLog.isJobFinished(id), pipe::accept);
+            for (var domain : plan.domainsIterable(id -> !processLog.isJobFinished(id))) {
+                pipe.accept(domain);
+            }
 
             pipe.join();
         }
