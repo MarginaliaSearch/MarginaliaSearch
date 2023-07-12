@@ -3,6 +3,7 @@ package nu.marginalia.mqsm;
 import com.google.gson.GsonBuilder;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.mq.MqFactory;
 import nu.marginalia.mq.MqMessageRow;
 import nu.marginalia.mq.MqTestUtil;
 import nu.marginalia.mq.persistence.MqPersistence;
@@ -32,6 +33,7 @@ public class StateMachineErrorTest {
 
     static HikariDataSource dataSource;
     static MqPersistence persistence;
+    static MqFactory messageQueueFactory;
     private String inboxId;
 
     @BeforeEach
@@ -47,6 +49,7 @@ public class StateMachineErrorTest {
 
         dataSource = new HikariDataSource(config);
         persistence = new MqPersistence(dataSource);
+        messageQueueFactory = new MqFactory(persistence);
     }
 
     @AfterAll
@@ -78,7 +81,7 @@ public class StateMachineErrorTest {
     @Test
     public void smResumeResumableFromNew() throws Exception {
         var stateFactory = new StateFactory(new GsonBuilder().create());
-        var sm = new StateMachine(persistence, inboxId, UUID.randomUUID(), new ErrorHurdles(stateFactory));
+        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ErrorHurdles(stateFactory));
 
         sm.init();
 

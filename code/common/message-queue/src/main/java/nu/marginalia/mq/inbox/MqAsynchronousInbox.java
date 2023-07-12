@@ -15,11 +15,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
-/** Message queue inbox */
-public class MqInbox {
-    private final Logger logger = LoggerFactory.getLogger(MqInbox.class);
+/** Message queue inbox that spawns news threads for each message */
+public class MqAsynchronousInbox implements MqInboxIf {
+    private final Logger logger = LoggerFactory.getLogger(MqAsynchronousInbox.class);
 
     private final String inboxName;
     private final String instanceUUID;
@@ -36,17 +35,17 @@ public class MqInbox {
     private Thread pollDbThread;
     private Thread notifyThread;
 
-    public MqInbox(MqPersistence persistence,
-                   String inboxName,
-                   UUID instanceUUID)
+    public MqAsynchronousInbox(MqPersistence persistence,
+                               String inboxName,
+                               UUID instanceUUID)
     {
         this(persistence, inboxName, instanceUUID, Executors.newCachedThreadPool());
     }
 
-    public MqInbox(MqPersistence persistence,
-                   String inboxName,
-                   UUID instanceUUID,
-                   ExecutorService executorService)
+    public MqAsynchronousInbox(MqPersistence persistence,
+                               String inboxName,
+                               UUID instanceUUID,
+                               ExecutorService executorService)
     {
         this.threadPool = executorService;
         this.persistence = persistence;
@@ -55,6 +54,7 @@ public class MqInbox {
     }
 
     /** Subscribe to messages on this inbox. Must be run before start()! */
+    @Override
     public void subscribe(MqSubscription subscription) {
         eventSubscribers.add(subscription);
     }
@@ -62,6 +62,7 @@ public class MqInbox {
     /** Start receiving messages. <p>
      * <b>Note:</b> Subscribe to messages before calling this method.
      * </p> */
+    @Override
     public void start() {
         run = true;
 
@@ -82,6 +83,7 @@ public class MqInbox {
     }
 
     /** Stop receiving messages and shut down all threads */
+    @Override
     public void stop() throws InterruptedException {
         if (!run)
             return;
@@ -185,7 +187,7 @@ public class MqInbox {
         }
     }
 
-    public void pollDb() {
+    private void pollDb() {
         try {
             for (long tick = 1; run; tick++) {
 
@@ -210,6 +212,7 @@ public class MqInbox {
     }
 
      /** Retrieve the last N messages from the inbox. */
+    @Override
     public List<MqMessage> replay(int lastN) {
         try {
             return persistence.lastNMessages(inboxName, lastN);
@@ -220,23 +223,4 @@ public class MqInbox {
         }
     }
 
-
-    private class MqInboxShredder implements MqSubscription {
-
-        @Override
-        public boolean filter(MqMessage rawMessage) {
-            return true;
-        }
-
-        @Override
-        public MqInboxResponse onRequest(MqMessage msg) {
-            logger.warn("Unhandled message {}", msg.msgId());
-            return MqInboxResponse.err();
-        }
-
-        @Override
-        public void onNotification(MqMessage msg) {
-            logger.warn("Unhandled message {}", msg.msgId());
-        }
-    }
 }

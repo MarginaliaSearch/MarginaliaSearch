@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.control.model.ControlProcess;
 import nu.marginalia.model.gson.GsonFactory;
-import nu.marginalia.mq.persistence.MqPersistence;
+import nu.marginalia.mq.MqFactory;
 import nu.marginalia.mqsm.StateMachine;
 import nu.marginalia.mqsm.graph.AbstractStateGraph;
 import nu.marginalia.service.control.ServiceEventLog;
@@ -17,19 +17,19 @@ import java.util.UUID;
 
 @Singleton
 public class ControlProcesses {
-    private final MqPersistence persistence;
     private final ServiceEventLog eventLog;
     private final Gson gson;
+    private final MqFactory messageQueueFactory;
     public Map<ControlProcess, StateMachine> stateMachines = new HashMap<>();
 
     @Inject
-    public ControlProcesses(MqPersistence persistence,
+    public ControlProcesses(MqFactory messageQueueFactory,
                             GsonFactory gsonFactory,
                             BaseServiceParams baseServiceParams,
                             RepartitionReindexProcess repartitionReindexProcess,
                             ReconvertAndLoadProcess reconvertAndLoadProcess
                             ) {
-        this.persistence = persistence;
+        this.messageQueueFactory = messageQueueFactory;
         this.eventLog = baseServiceParams.eventLog;
         this.gson = gsonFactory.get();
         register(ControlProcess.REPARTITION_REINDEX, repartitionReindexProcess);
@@ -37,7 +37,7 @@ public class ControlProcesses {
     }
 
     private void register(ControlProcess process, AbstractStateGraph graph) {
-        var sm = new StateMachine(persistence, process.id(), UUID.randomUUID(), graph);
+        var sm = new StateMachine(messageQueueFactory, process.id(), UUID.randomUUID(), graph);
 
         sm.listen((function, param) -> logStateChange(process, function));
 

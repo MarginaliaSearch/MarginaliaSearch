@@ -2,7 +2,7 @@ package nu.marginalia.service.server;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.mq.persistence.MqPersistence;
+import nu.marginalia.mq.MqFactory;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.service.module.ServiceConfiguration;
@@ -15,19 +15,19 @@ public class BaseServiceParams {
     public final MetricsServer metricsServer;
     public final ServiceHeartbeat heartbeat;
     public final ServiceEventLog eventLog;
-    public final MqPersistence messageQueuePersistence;
-
+    public final MqFactory messageQueueInboxFactory;
     @Inject
     public BaseServiceParams(ServiceConfiguration configuration,
                              Initialization initialization,
                              MetricsServer metricsServer,
                              ServiceHeartbeat heartbeat,
-                             ServiceEventLog eventLog, MqPersistence messageQueuePersistence) {
+                             ServiceEventLog eventLog,
+                             MqFactory messageQueueInboxFactory) {
         this.configuration = configuration;
         this.initialization = initialization;
         this.metricsServer = metricsServer;
         this.heartbeat = heartbeat;
         this.eventLog = eventLog;
-        this.messageQueuePersistence = messageQueuePersistence;
+        this.messageQueueInboxFactory = messageQueueInboxFactory;
     }
 }

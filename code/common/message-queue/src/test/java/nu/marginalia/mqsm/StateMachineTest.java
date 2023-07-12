@@ -3,6 +3,7 @@ package nu.marginalia.mqsm;
 import com.google.gson.GsonBuilder;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.mq.MqFactory;
 import nu.marginalia.mq.MqTestUtil;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.mqsm.graph.GraphState;
@@ -29,6 +30,7 @@ public class StateMachineTest {
 
     static HikariDataSource dataSource;
     static MqPersistence persistence;
+    static MqFactory messageQueueFactory;
     private String inboxId;
 
     @BeforeEach
@@ -44,6 +46,7 @@ public class StateMachineTest {
 
         dataSource = new HikariDataSource(config);
         persistence = new MqPersistence(dataSource);
+        messageQueueFactory = new MqFactory(persistence);
     }
 
     @AfterAll
@@ -83,7 +86,7 @@ public class StateMachineTest {
         var graph = new TestGraph(stateFactory);
 
 
-        var sm = new StateMachine(persistence, inboxId, UUID.randomUUID(), graph);
+        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), graph);
         sm.registerStates(graph);
 
         sm.init();
@@ -98,7 +101,7 @@ public class StateMachineTest {
     @Test
     public void testStartStopStartStop() throws Exception {
         var stateFactory = new StateFactory(new GsonBuilder().create());
-        var sm = new StateMachine(persistence, inboxId, UUID.randomUUID(), new TestGraph(stateFactory));
+        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new TestGraph(stateFactory));
 
         sm.init();
 
@@ -107,7 +110,7 @@ public class StateMachineTest {
 
         System.out.println("-------------------- ");
 
-        var sm2 = new StateMachine(persistence, inboxId, UUID.randomUUID(), new TestGraph(stateFactory));
+        var sm2 = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new TestGraph(stateFactory));
         sm2.resume();
         sm2.join();
         sm2.stop();

@@ -5,6 +5,7 @@ import nu.marginalia.mq.persistence.MqPersistence;
 
 import java.sql.SQLException;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /** A single-shot inbox that can be used to wait for a single message
@@ -16,11 +17,12 @@ public class MqSingleShotInbox {
     private final String instanceUUID;
     private final MqPersistence persistence;
 
-    public MqSingleShotInbox(String inboxName,
-                             String instanceUUID,
-                             MqPersistence persistence) {
+    public MqSingleShotInbox(MqPersistence persistence,
+                             String inboxName,
+                             UUID instanceUUID
+                             ) {
         this.inboxName = inboxName;
-        this.instanceUUID = instanceUUID;
+        this.instanceUUID = instanceUUID.toString();
         this.persistence = persistence;
     }
 

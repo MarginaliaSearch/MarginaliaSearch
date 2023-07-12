@@ -3,7 +3,7 @@ package nu.marginalia.service.server;
 import io.prometheus.client.Counter;
 import nu.marginalia.client.Context;
 import nu.marginalia.client.exception.MessagingException;
-import nu.marginalia.mq.inbox.MqInbox;
+import nu.marginalia.mq.inbox.*;
 import nu.marginalia.service.server.mq.MqRequest;
 import nu.marginalia.service.server.mq.ServiceMqSubscription;
 import org.slf4j.Logger;
@@ -39,7 +39,7 @@ public class Service {
     private final String serviceName;
     private static volatile boolean initialized = false;
 
-    protected final MqInbox messageQueueInbox;
+    protected final MqInboxIf messageQueueInbox;
 
     public Service(BaseServiceParams params,
                    Runnable configureStaticFiles
@@ -49,9 +49,9 @@ public class Service {
 
         String inboxName = config.serviceName() + ":" + config.node();
         logger.info("Inbox name: {}", inboxName);
-        messageQueueInbox = new MqInbox(params.messageQueuePersistence,
-                inboxName,
-                config.instanceUuid());
+
+        var mqInboxFactory = params.messageQueueInboxFactory;
+        messageQueueInbox = mqInboxFactory.createAsynchronousInbox(inboxName, config.instanceUuid());
         messageQueueInbox.subscribe(new ServiceMqSubscription(this));
 
         serviceName = System.getProperty("service-name");

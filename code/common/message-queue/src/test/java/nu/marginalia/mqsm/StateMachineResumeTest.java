@@ -3,6 +3,7 @@ package nu.marginalia.mqsm;
 import com.google.gson.GsonBuilder;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.mq.MqFactory;
 import nu.marginalia.mq.MqMessageRow;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.MqTestUtil;
@@ -33,6 +34,7 @@ public class StateMachineResumeTest {
 
     static HikariDataSource dataSource;
     static MqPersistence persistence;
+    static MqFactory messageQueueFactory;
     private String inboxId;
 
     @BeforeEach
@@ -48,6 +50,7 @@ public class StateMachineResumeTest {
 
         dataSource = new HikariDataSource(config);
         persistence = new MqPersistence(dataSource);
+        messageQueueFactory = new MqFactory(persistence);
     }
 
     @AfterAll
@@ -76,7 +79,7 @@ public class StateMachineResumeTest {
     @Test
     public void smResumeResumableFromNew() throws Exception {
         var stateFactory = new StateFactory(new GsonBuilder().create());
-        var sm = new StateMachine(persistence, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
+        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
 
         persistence.sendNewMessage(inboxId,  null,"RESUMABLE", "", null);
 
@@ -97,7 +100,7 @@ public class StateMachineResumeTest {
     @Test
     public void smResumeFromAck() throws Exception {
         var stateFactory = new StateFactory(new GsonBuilder().create());
-        var sm = new StateMachine(persistence, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
+        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
 
         long id = persistence.sendNewMessage(inboxId,  null,"RESUMABLE", "", null);
         persistence.updateMessageState(id, MqMessageState.ACK);
@@ -120,7 +123,7 @@ public class StateMachineResumeTest {
     @Test
     public void smResumeNonResumableFromNew() throws Exception {
         var stateFactory = new StateFactory(new GsonBuilder().create());
-        var sm = new StateMachine(persistence, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
+        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
 
         persistence.sendNewMessage(inboxId,  null,"NON-RESUMABLE", "", null);
 
@@ -141,7 +144,7 @@ public class StateMachineResumeTest {
     @Test
     public void smResumeNonResumableFromAck() throws Exception {
         var stateFactory = new StateFactory(new GsonBuilder().create());
-        var sm = new StateMachine(persistence, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
+        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
 
         long id = persistence.sendNewMessage(inboxId,  null,"NON-RESUMABLE", "", null);
         persistence.updateMessageState(id, MqMessageState.ACK);
@@ -163,7 +166,7 @@ public class StateMachineResumeTest {
     @Test
     public void smResumeEmptyQueue() throws Exception {
         var stateFactory = new StateFactory(new GsonBuilder().create());
-        var sm = new StateMachine(persistence, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
+        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
 
         sm.resume();
 

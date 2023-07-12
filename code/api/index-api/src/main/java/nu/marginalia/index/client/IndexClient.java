@@ -10,8 +10,8 @@ import nu.marginalia.client.Context;
 import nu.marginalia.index.client.model.query.SearchSpecification;
 import nu.marginalia.index.client.model.results.SearchResultSet;
 import nu.marginalia.model.gson.GsonFactory;
+import nu.marginalia.mq.MqFactory;
 import nu.marginalia.mq.outbox.MqOutbox;
-import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.service.descriptor.ServiceDescriptors;
 import nu.marginalia.service.id.ServiceId;
 
@@ -27,13 +27,13 @@ public class IndexClient extends AbstractDynamicClient {
 
     @Inject
     public IndexClient(ServiceDescriptors descriptors,
-                       MqPersistence persistence) {
+                       MqFactory messageQueueFactory) {
         super(descriptors.forId(ServiceId.Index), WmsaHome.getHostsFile(), GsonFactory::get);
 
         String inboxName = ServiceId.Index.name + ":" + "0";
         String outboxName = System.getProperty("service-name", UUID.randomUUID().toString());
 
-        outbox = new MqOutbox(persistence, inboxName, outboxName, UUID.randomUUID());
+        outbox = messageQueueFactory.createOutbox(inboxName, outboxName, UUID.randomUUID());
 
         setTimeout(30);
     }

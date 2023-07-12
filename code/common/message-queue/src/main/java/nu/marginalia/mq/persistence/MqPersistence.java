@@ -174,6 +174,7 @@ public class MqPersistence {
                      SET OWNER_INSTANCE=?, OWNER_TICK=?, UPDATED_TIME=CURRENT_TIMESTAMP(6), STATE='ACK'
                      WHERE RECIPIENT_INBOX=?
                      AND OWNER_INSTANCE IS NULL AND STATE='NEW'
+                     ORDER BY ID ASC
                      LIMIT ?
                      """);
         ) {

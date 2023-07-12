@@ -1,12 +1,12 @@
 package nu.marginalia.mqsm;
 
+import nu.marginalia.mq.MqFactory;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.MqMessageState;
-import nu.marginalia.mq.inbox.MqInbox;
+import nu.marginalia.mq.inbox.MqInboxIf;
 import nu.marginalia.mq.inbox.MqInboxResponse;
 import nu.marginalia.mq.inbox.MqSubscription;
 import nu.marginalia.mq.outbox.MqOutbox;
-import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.mqsm.graph.ResumeBehavior;
 import nu.marginalia.mqsm.graph.AbstractStateGraph;
 import nu.marginalia.mqsm.state.*;
@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
 
 /** A state machine that can be used to implement a finite state machine
@@ -24,7 +23,7 @@ import java.util.function.BiConsumer;
 public class StateMachine {
     private final Logger logger = LoggerFactory.getLogger(StateMachine.class);
 
-    private final MqInbox smInbox;
+    private final MqInboxIf smInbox;
     private final MqOutbox smOutbox;
     private final String queueName;
     private MachineState state;
@@ -37,14 +36,14 @@ public class StateMachine {
 
     private final Map<String, MachineState> allStates = new HashMap<>();
 
-    public StateMachine(MqPersistence persistence,
+    public StateMachine(MqFactory messageQueueFactory,
                         String queueName,
                         UUID instanceUUID,
                         AbstractStateGraph stateGraph) {
         this.queueName = queueName;
 
-        smInbox = new MqInbox(persistence, queueName, instanceUUID, Executors.newSingleThreadExecutor());
-        smOutbox = new MqOutbox(persistence, queueName, queueName+"//out", instanceUUID);
+        smInbox = messageQueueFactory.createSynchronousInbox(queueName, instanceUUID);
+        smOutbox = messageQueueFactory.createOutbox(queueName, queueName+"//out", instanceUUID);
 
         smInbox.subscribe(new StateEventSubscription());
 

@@ -2,7 +2,6 @@ package nu.marginalia.control.svc;
 
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.service.control.ServiceEventLog;
-import nu.marginalia.service.server.BaseServiceParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,9 +17,9 @@ public class MessageQueueMonitorService {
     private final ServiceEventLog eventLog;
 
     @Inject
-    public MessageQueueMonitorService(BaseServiceParams params) {
-        this.persistence = params.messageQueuePersistence;
-        this.eventLog = params.eventLog;
+    public MessageQueueMonitorService(ServiceEventLog eventLog, MqPersistence persistence) {
+        this.eventLog = eventLog;
+        this.persistence = persistence;
 
         Thread reaperThread = new Thread(this::run, "message-queue-reaper");
         reaperThread.setDaemon(true);
