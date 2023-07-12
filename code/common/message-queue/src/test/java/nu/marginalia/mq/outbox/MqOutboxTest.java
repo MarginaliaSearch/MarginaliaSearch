@@ -7,6 +7,7 @@ import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.MqTestUtil;
 import nu.marginalia.mq.inbox.MqInboxResponse;
 import nu.marginalia.mq.inbox.MqInbox;
+import nu.marginalia.mq.inbox.MqSingleShotInbox;
 import nu.marginalia.mq.inbox.MqSubscription;
 import nu.marginalia.mq.persistence.MqPersistence;
 import org.junit.jupiter.api.*;
@@ -17,8 +18,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 @Tag("slow")
 @Testcontainers
@@ -57,6 +59,56 @@ public class MqOutboxTest {
     public void testOpenClose() throws InterruptedException {
         var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, inboxId+"/reply", UUID.randomUUID());
         outbox.stop();
+    }
+
+    @Test
+    public void testSingleShotInboxTimeout() throws Exception {
+        var inbox = new MqSingleShotInbox(inboxId, UUID.randomUUID().toString(), new MqPersistence(dataSource));
+        var message = inbox.waitForMessage(100, TimeUnit.MILLISECONDS);
+        assertTrue(message.isEmpty());
+    }
+
+    @Test
+    public void testOutboxTimeout() throws Exception {
+        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, inboxId+"/reply", UUID.randomUUID());
+        long id = outbox.sendAsync("test", "Hello World");
+        try {
+            outbox.waitResponse(id, 100, TimeUnit.MILLISECONDS);
+        }
+        catch (TimeoutException ex) {
+            return; // ok
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        fail();
+    }
+
+    @Test
+    public void testSingleShotInbox() throws Exception {
+        // Send a message to the inbox
+        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId,inboxId+"/reply", UUID.randomUUID());
+        long id = outbox.sendAsync("test", "Hello World");
+
+        // Create a single-shot inbox
+        var inbox = new MqSingleShotInbox(inboxId, UUID.randomUUID().toString(), new MqPersistence(dataSource));
+
+        // Wait for the message to arrive
+        var message = inbox.waitForMessage(1, TimeUnit.SECONDS);
+
+        // Check that the message arrived
+        assertTrue(message.isPresent());
+        assertEquals("Hello World", message.get().payload());
+
+        // Send a response
+        inbox.sendResponse(message.get(), new MqInboxResponse("Alright then", MqMessageState.OK));
+
+        // Wait for the response to arrive
+        var response = outbox.waitResponse(id, 1, TimeUnit.SECONDS);
+
+        // Check that the response arrived
+        assertEquals(MqMessageState.OK, response.state());
+        assertEquals("Alright then", response.payload());
     }
 
     @Test

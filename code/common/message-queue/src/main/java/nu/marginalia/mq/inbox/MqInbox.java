@@ -17,6 +17,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+/** Message queue inbox */
 public class MqInbox {
     private final Logger logger = LoggerFactory.getLogger(MqInbox.class);
 
@@ -53,10 +54,14 @@ public class MqInbox {
         this.instanceUUID = instanceUUID.toString();
     }
 
+    /** Subscribe to messages on this inbox. Must be run before start()! */
     public void subscribe(MqSubscription subscription) {
         eventSubscribers.add(subscription);
     }
 
+    /** Start receiving messages. <p>
+     * <b>Note:</b> Subscribe to messages before calling this method.
+     * </p> */
     public void start() {
         run = true;
 
@@ -76,6 +81,7 @@ public class MqInbox {
         notifyThread.start();
     }
 
+    /** Stop receiving messages and shut down all threads */
     public void stop() throws InterruptedException {
         if (!run)
             return;

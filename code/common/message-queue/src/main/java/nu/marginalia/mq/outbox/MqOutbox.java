@@ -7,10 +7,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
+import java.sql.Time;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class MqOutbox {
     private final Logger logger = LoggerFactory.getLogger(MqOutbox.class);
@@ -112,10 +114,31 @@ public class MqOutbox {
         return id;
     }
 
-    /** Blocks until a response arrives for the given message id. */
+    /** Blocks until a response arrives for the given message id (possibly forever) */
     public MqMessage waitResponse(long id) throws Exception {
         synchronized (pendingResponses) {
             while (!pendingResponses.containsKey(id)) {
+                pendingResponses.wait(100);
+            }
+
+            var msg = pendingResponses.remove(id);
+            // Mark the response as OK so it can be cleaned up
+            persistence.updateMessageState(msg.msgId(), MqMessageState.OK);
+
+            return msg;
+        }
+    }
+
+
+    /** Blocks until a response arrives for the given message id or the timeout passes */
+    public MqMessage waitResponse(long id, int timeout, TimeUnit unit) throws TimeoutException, SQLException, InterruptedException {
+        long deadline = System.currentTimeMillis() + unit.toMillis(timeout);
+
+        synchronized (pendingResponses) {
+            while (!pendingResponses.containsKey(id)) {
+                if (System.currentTimeMillis() > deadline)
+                    throw new TimeoutException("Timeout waiting for response");
+
                 pendingResponses.wait(100);
             }
 
