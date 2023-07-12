@@ -79,8 +79,8 @@ public class MqPersistence {
             if (senderInboxName == null) stmt.setNull(2, java.sql.Types.VARCHAR);
             else stmt.setString(2, senderInboxName);
 
-            if (relatedMessageId == null) stmt.setLong(3, -1);
-            else stmt.setLong(3, relatedMessageId);
+            // Translate null to -1, as 0 is a valid id
+            stmt.setLong(3, Objects.requireNonNullElse(relatedMessageId, -1L));
 
             stmt.setString(4, function);
             stmt.setString(5, payload);
