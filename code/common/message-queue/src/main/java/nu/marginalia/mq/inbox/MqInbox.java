@@ -28,6 +28,7 @@ public class MqInbox {
     private volatile boolean run = true;
 
     private final int pollIntervalMs = Integer.getInteger("mq.inbox.poll-interval-ms", 100);
+    private final int maxPollCount = Integer.getInteger("mq.inbox.max-poll-count", 10);
     private final List<MqSubscription> eventSubscribers = new ArrayList<>();
     private final LinkedBlockingQueue<MqMessage> queue = new LinkedBlockingQueue<>(32);
 
@@ -194,7 +195,7 @@ public class MqInbox {
 
      private Collection<MqMessage> pollInbox(long tick) {
         try {
-            return persistence.pollInbox(inboxName, instanceUUID, tick);
+            return persistence.pollInbox(inboxName, instanceUUID, tick, maxPollCount);
         }
         catch (SQLException ex) {
             logger.error("Failed to poll inbox", ex);

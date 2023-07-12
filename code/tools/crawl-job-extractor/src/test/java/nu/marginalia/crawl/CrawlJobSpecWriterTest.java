@@ -37,7 +37,9 @@ public class CrawlJobSpecWriterTest {
         }
 
         List<CrawlingSpecification> outputs = new ArrayList<>();
-        CrawlerSpecificationLoader.readInputSpec(tempFile, outputs::add);
+        for (var item : CrawlerSpecificationLoader.asIterable(tempFile)) {
+            outputs.add(item);
+        }
 
         assertEquals(outputs.size(), 3);
     }

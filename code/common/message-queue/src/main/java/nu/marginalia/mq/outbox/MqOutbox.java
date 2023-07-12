@@ -23,6 +23,7 @@ public class MqOutbox {
     private final ConcurrentHashMap<Long, MqMessage> pendingResponses = new ConcurrentHashMap<>();
 
     private final int pollIntervalMs = Integer.getInteger("mq.outbox.poll-interval-ms", 100);
+    private final int maxPollCount = Integer.getInteger("mq.outbox.max-poll-count", 10);
     private final Thread pollThread;
 
     private volatile boolean run = true;
@@ -71,7 +72,7 @@ public class MqOutbox {
             return;
 
         try {
-            var updates = persistence.pollReplyInbox(replyInboxName, instanceUUID, tick);
+            var updates = persistence.pollReplyInbox(replyInboxName, instanceUUID, tick, maxPollCount);
 
             for (var message : updates) {
                 pendingResponses.put(message.relatedId(), message);

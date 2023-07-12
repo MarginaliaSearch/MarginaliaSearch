@@ -167,18 +167,20 @@ public class MqPersistence {
      * then returns the number of messages marked.  This is an atomic operation that
      * ensures that messages aren't double processed.
      */
-    private int markInboxMessages(String inboxName, String instanceUUID, long tick) throws SQLException {
+    private int markInboxMessages(String inboxName, String instanceUUID, long tick, int n) throws SQLException {
         try (var conn = dataSource.getConnection();
              var updateStmt = conn.prepareStatement("""
                      UPDATE MESSAGE_QUEUE
                      SET OWNER_INSTANCE=?, OWNER_TICK=?, UPDATED_TIME=CURRENT_TIMESTAMP(6), STATE='ACK'
                      WHERE RECIPIENT_INBOX=?
                      AND OWNER_INSTANCE IS NULL AND STATE='NEW'
+                     LIMIT ?
                      """);
         ) {
             updateStmt.setString(1, instanceUUID);
             updateStmt.setLong(2, tick);
             updateStmt.setString(3, inboxName);
+            updateStmt.setInt(4, n);
             return updateStmt.executeUpdate();
         }
     }
@@ -186,10 +188,10 @@ public class MqPersistence {
     /**  Marks unclaimed messages addressed to this inbox with instanceUUID and tick,
      * then returns these messages.
      */
-    public Collection<MqMessage> pollInbox(String inboxName, String instanceUUID, long tick) throws SQLException {
+    public Collection<MqMessage> pollInbox(String inboxName, String instanceUUID, long tick, int n) throws SQLException {
 
         // Mark new messages as claimed
-        int expected = markInboxMessages(inboxName, instanceUUID, tick);
+        int expected = markInboxMessages(inboxName, instanceUUID, tick, n);
         if (expected == 0) {
             return Collections.emptyList();
         }
@@ -231,10 +233,10 @@ public class MqPersistence {
     /**  Marks unclaimed messages addressed to this inbox with instanceUUID and tick,
      * then returns these messages.
      */
-    public Collection<MqMessage> pollReplyInbox(String inboxName, String instanceUUID, long tick) throws SQLException {
+    public Collection<MqMessage> pollReplyInbox(String inboxName, String instanceUUID, long tick, int n) throws SQLException {
 
         // Mark new messages as claimed
-        int expected = markInboxMessages(inboxName, instanceUUID, tick);
+        int expected = markInboxMessages(inboxName, instanceUUID, tick, n);
         if (expected == 0) {
             return Collections.emptyList();
         }
