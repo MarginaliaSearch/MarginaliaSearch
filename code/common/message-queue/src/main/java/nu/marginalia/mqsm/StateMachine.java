@@ -28,7 +28,11 @@ public class StateMachine {
     private final MqInboxIf smInbox;
     private final MqOutbox smOutbox;
     private final String queueName;
-    private MachineState state;
+
+
+    private volatile MachineState state;
+    private volatile ExpectedMessage expectedMessage = ExpectedMessage.anyUnrelated();
+
 
     private final MachineState errorState = new StateFactory.ErrorState();
     private final MachineState finalState = new StateFactory.FinalState();
@@ -37,7 +41,6 @@ public class StateMachine {
     private final List<BiConsumer<String, String>> stateChangeListeners = new ArrayList<>();
     private final Map<String, MachineState> allStates = new HashMap<>();
 
-    private ExpectedMessage expectedMessage = ExpectedMessage.anyUnrelated();
 
     public StateMachine(MessageQueueFactory messageQueueFactory,
                         String queueName,
@@ -237,8 +240,13 @@ public class StateMachine {
                 logger.info("Transitining from state {}", state.name());
                 var transition = state.next(msg.payload());
 
-                expectedMessage = ExpectedMessage.responseTo(msg);
-                smOutbox.notify(expectedMessage.id, transition.state(), transition.message());
+                if (!expectedMessage.isExpected(msg)) {
+                    logger.warn("Expected message changed during execution, skipping state transition to {}", transition.state());
+                }
+                else {
+                    expectedMessage = ExpectedMessage.responseTo(msg);
+                    smOutbox.notify(expectedMessage.id, transition.state(), transition.message());
+                }
             }
             else {
                 // On terminal transition, we expect any message
@@ -256,6 +264,33 @@ public class StateMachine {
             state = errorState;
             notifyAll();
         }
+    }
+
+    public MachineState getState() {
+        return state;
+    }
+
+    public void abortExecution() throws Exception {
+        // Create a fake message to abort the execution
+        // This helps make sense of the queue when debugging
+        // and also permits the real termination message to have an
+        // unique expected ID
+
+        long abortMsgId = smOutbox.notify(expectedMessage.id, "ABORT", "Aborting execution");
+
+        // Set it as dead to clean up the queue from mystery ACK messages
+        smOutbox.flagAsDead(abortMsgId);
+
+        // Set the expected message to the abort message,
+        // technically there's a slight chance of a race condition here,
+        // which will cause this message to be ERR'd and the process to
+        // continue, but it's very unlikely and the worst that can happen
+        // is you have to abort twice.
+
+        expectedMessage = ExpectedMessage.expectId(abortMsgId);
+
+        // Add a state transition to the final state
+        smOutbox.notify(abortMsgId, finalState.name(), "");
     }
 
     private class StateEventSubscription implements MqSubscription {
@@ -306,6 +341,10 @@ class ExpectedMessage {
 
     public static ExpectedMessage anyUnrelated() {
         return new ExpectedMessage(-1);
+    }
+
+    public static ExpectedMessage expectId(long id) {
+        return new ExpectedMessage(id);
     }
 
     public boolean isExpected(MqMessage message) {

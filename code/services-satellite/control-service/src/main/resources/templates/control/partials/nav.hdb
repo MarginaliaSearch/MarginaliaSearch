@@ -3,7 +3,5 @@
         <li><a href="/">Overview</a></li>
         <li><a href="services">Services</a></li>
         <li><a href="processes">Processes</a></li>
-        <li><a href="events">Events</a></li>
-        <li><a href="message-queue">Message Queue</a></li>
     </ul>
 </nav>

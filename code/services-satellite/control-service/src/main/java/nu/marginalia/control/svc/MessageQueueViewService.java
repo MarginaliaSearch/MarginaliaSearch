@@ -22,7 +22,7 @@ public class MessageQueueViewService {
     public List<MessageQueueEntry> getLastEntries(int n) {
         try (var conn = dataSource.getConnection();
              var query = conn.prepareStatement("""
-                SELECT ID, RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
+                SELECT ID, RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
                 FROM MESSAGE_QUEUE
                 ORDER BY ID DESC
                 LIMIT ?
@@ -38,6 +38,7 @@ public class MessageQueueViewService {
                         rs.getString("SENDER_INBOX"),
                         rs.getString("RECIPIENT_INBOX"),
                         rs.getString("FUNCTION"),
+                        rs.getString("PAYLOAD"),
                         rs.getString("OWNER_INSTANCE"),
                         rs.getLong("OWNER_TICK"),
                         rs.getString("STATE"),

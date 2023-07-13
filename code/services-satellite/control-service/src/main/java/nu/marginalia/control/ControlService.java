@@ -34,6 +34,7 @@ public class ControlService extends Service {
     private final MustacheRenderer<Map<?,?>> processesRenderer;
     private final MustacheRenderer<Map<?,?>> eventsRenderer;
     private final MustacheRenderer<Map<?,?>> messageQueueRenderer;
+    private final MustacheRenderer<Map<?,?>> fsmStateRenderer;
     private final MqPersistence messageQueuePersistence;
     private final StaticResources staticResources;
     private final MessageQueueMonitorService messageQueueMonitorService;
@@ -61,6 +62,7 @@ public class ControlService extends Service {
         processesRenderer = rendererFactory.renderer("control/processes");
         eventsRenderer = rendererFactory.renderer("control/events");
         messageQueueRenderer = rendererFactory.renderer("control/message-queue");
+        fsmStateRenderer = rendererFactory.renderer("control/fsm-states");
 
         this.messageQueuePersistence = messageQueuePersistence;
         this.staticResources = staticResources;
@@ -73,16 +75,34 @@ public class ControlService extends Service {
 
         Spark.get("/public/", (req, rsp) -> indexRenderer.render(Map.of()));
 
-        Spark.get("/public/services", (req, rsp) -> servicesRenderer.render(Map.of("heartbeats", heartbeatService.getServiceHeartbeats())));
-        Spark.get("/public/processes", (req, rsp) -> processesRenderer.render(Map.of("heartbeats", heartbeatService.getProcessHeartbeats())));
-        Spark.get("/public/events", (req, rsp) -> eventsRenderer.render(Map.of("events", eventLogService.getLastEntries(20))));
-        Spark.get("/public/message-queue", (req, rsp) -> messageQueueRenderer.render(Map.of("messages", messageQueueViewService.getLastEntries(20))));
+        Spark.get("/public/services",
+                (req, rsp) -> Map.of("services", heartbeatService.getServiceHeartbeats(),
+                                     "events", eventLogService.getLastEntries(20)),
+                (map) -> servicesRenderer.render((Map<?, ?>) map));
+
+        Spark.get("/public/processes",
+                (req, rsp) -> Map.of("processes", heartbeatService.getProcessHeartbeats(),
+                              "fsms", controlProcesses.getFsmStates(),
+                              "messages", messageQueueViewService.getLastEntries(20)),
+                (map) -> processesRenderer.render((Map<?, ?>) map));
+
+        Spark.post("/public/fsms/:fsm/start", (req, rsp) -> {
+            controlProcesses.start(ControlProcess.valueOf(req.params("fsm").toUpperCase()));
+            rsp.redirect("/processes");
+            return "";
+        });
+        Spark.post("/public/fsms/:fsm/stop", (req, rsp) -> {
+            controlProcesses.stop(ControlProcess.valueOf(req.params("fsm").toUpperCase()));
+            rsp.redirect("/processes");
+            return "";
+        });
 
         // TODO: This should be a POST
         Spark.get("/public/repartition", (req, rsp) -> {
             controlProcesses.start(ControlProcess.REPARTITION_REINDEX);
             return "OK";
         });
+
         // TODO: This should be a POST
         Spark.get("/public/reconvert", (req, rsp) -> {
             controlProcesses.start(ControlProcess.RECONVERT_LOAD, "/samples/crawl-blogs/plan.yaml");

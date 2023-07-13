@@ -3,15 +3,19 @@ package nu.marginalia.control.process;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import lombok.SneakyThrows;
 import nu.marginalia.control.model.ControlProcess;
+import nu.marginalia.control.model.ControlProcessState;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mqsm.StateMachine;
 import nu.marginalia.mqsm.graph.AbstractStateGraph;
+import nu.marginalia.mqsm.state.MachineState;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.server.BaseServiceParams;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -60,4 +64,21 @@ public class ControlProcesses {
         stateMachines.get(process).init(gson.toJson(arg));
     }
 
+    public List<ControlProcessState> getFsmStates() {
+        return stateMachines.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(e -> {
+
+            final MachineState state = e.getValue().getState();
+
+            final String machineName = e.getKey().name();
+            final String stateName = state.name();
+            final boolean terminal = state.isFinal();
+
+            return new ControlProcessState(machineName, stateName, terminal);
+        }).toList();
+    }
+
+    @SneakyThrows
+    public void stop(ControlProcess fsm) {
+        stateMachines.get(fsm).abortExecution();
+    }
 }

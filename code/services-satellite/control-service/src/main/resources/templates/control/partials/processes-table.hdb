@@ -1,0 +1,23 @@
+
+<h1>Processes</h1>
+<table id="processes">
+    <tr>
+        <th>Process ID</th>
+        <th>UUID</th>
+        <th>Status</th>
+        <th>Progress</th>
+        <th>Last Seen (ms)</th>
+    </tr>
+    {{#each processes}}
+    <tr class="{{#if isMissing}}missing{{/if}}" style="{{progressStyle}}">
+        <td>{{processId}}</td>
+        <td title="{{uuidFull}}">
+            <span style="background-color: {{uuidColor}}" class="uuidPip">&nbsp;</span><span style="background-color: {{uuidColor2}}" class="uuidPip">&nbsp;</span>
+            {{uuid}}
+        </td>
+        <td>{{status}}</td>
+        <td>{{#if progress}}{{progress}}%{{/if}}</td>
+        <td>{{#unless isStopped}}{{lastSeenMillis}}{{/unless}}</td>
+    </tr>
+    {{/each}}
+</table>

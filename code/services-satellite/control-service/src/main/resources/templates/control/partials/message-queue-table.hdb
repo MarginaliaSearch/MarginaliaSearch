@@ -1,0 +1,32 @@
+<h1>Message Queue</h1>
+
+<table id="queue">
+    <tr>
+        <th>State<br>TTL</th>
+        <th>Msg ID<br>Related ID</th>
+        <th>Recipient<br>Sender</th>
+        <th>Function<br>Payload</th>
+        <th>Owner Instance<br>Owner Tick</th>
+        <th>Created<br>Updated</th>
+    </tr>
+    {{#each messages}}
+    <tr>
+        <td>{{stateCode}}&nbsp;{{state}}</td>
+        <td>{{id}}</td>
+        <td>{{recipientInbox}}</td>
+        <td>{{function}}</td>
+        <td title="{{ownerInstanceFull}}">
+            <span style="background-color: {{ownerInstanceColor}}" class="uuidPip">&nbsp;</span><span style="background-color: {{ownerInstanceColor2}}" class="uuidPip">&nbsp;</span>&nbsp;{{ownerInstance}}
+        </td>
+        <td>{{createdTime}}</td>
+    </tr>
+    <tr>
+        <td>{{ttl}}</td>
+        <td>{{relatedId}}</td>
+        <td>{{senderInbox}}</td>
+        <td>{{payload}}</td>
+        <td>{{ownerTick}}</td>
+        <td>{{updatedTime}}</td>
+    </tr>
+    {{/each}}
+</table>

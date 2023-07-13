@@ -7,32 +7,15 @@
 </head>
 <body>
   {{> control/partials/nav}}
-
   <section>
-      <h1>Services</h1>
-      <table id="heartbeats">
-          <tr>
-              <th>Service ID</th>
-              <th>UUID</th>
-              <th>Last Seen (ms)</th>
-          </tr>
-          {{#each heartbeats}}
-          <tr class="{{#if isMissing}}missing{{/if}} {{#unless alive}}terminated{{/unless}}">
-              <td>{{serviceId}}</td>
-              <td title="{{uuidFull}}">
-                  <span style="background-color: {{uuidColor}}" class="uuidPip">&nbsp;</span><span style="background-color: {{uuidColor2}}" class="uuidPip">&nbsp;</span>
-                  {{uuid}}
-              </td>
-              <td>{{lastSeenMillis}}</td>
-          </tr>
-          {{/each}}
-      </table>
+  {{> control/partials/services-table }}
+  {{> control/partials/events-table }}
   </section>
 </body>
 <script src="/refresh.js"></script>
 <script>
     window.setInterval(() => {
-        refresh(["heartbeats"]);
+        refresh(["services", "events"]);
     }, 5000);
 </script>
 </html>

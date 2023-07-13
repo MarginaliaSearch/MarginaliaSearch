@@ -6,6 +6,7 @@ public record MessageQueueEntry (
         String senderInbox,
         String recipientInbox,
         String function,
+        String payload,
         String ownerInstanceFull,
         long ownerTick,
         String state,

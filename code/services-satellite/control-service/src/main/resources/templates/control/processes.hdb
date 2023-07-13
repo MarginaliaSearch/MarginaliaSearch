@@ -7,36 +7,16 @@
 </head>
 <body>
   {{> control/partials/nav}}
-
   <section>
-      <h1>Processes</h1>
-      <table id="heartbeats">
-          <tr>
-              <th>Process ID</th>
-              <th>UUID</th>
-              <th>Status</th>
-              <th>Progress</th>
-              <th>Last Seen (ms)</th>
-          </tr>
-          {{#each heartbeats}}
-          <tr class="{{#if isMissing}}missing{{/if}}" style="{{progressStyle}}">
-              <td>{{processId}}</td>
-              <td title="{{uuidFull}}">
-                  <span style="background-color: {{uuidColor}}" class="uuidPip">&nbsp;</span><span style="background-color: {{uuidColor2}}" class="uuidPip">&nbsp;</span>
-                  {{uuid}}
-              </td>
-              <td>{{status}}</td>
-              <td>{{#if progress}}{{progress}}%{{/if}}</td>
-              <td>{{#unless isStopped}}{{lastSeenMillis}}{{/unless}}</td>
-          </tr>
-          {{/each}}
-      </table>
+  {{> control/partials/processes-table}}
+  {{> control/partials/fsm-table}}
+  {{> control/partials/message-queue-table}}
   </section>
 </body>
 <script src="/refresh.js"></script>
 <script>
     window.setInterval(() => {
-        refresh(["heartbeats"]);
+        refresh(["processes", "fsms", "queue"]);
     }, 2000);
 </script>
 </html>
