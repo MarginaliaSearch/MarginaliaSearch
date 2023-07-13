@@ -9,6 +9,7 @@ import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.mqsm.StateFactory;
 import nu.marginalia.mqsm.graph.AbstractStateGraph;
 import nu.marginalia.mqsm.graph.GraphState;
+import nu.marginalia.mqsm.graph.ResumeBehavior;
 
 @Singleton
 public class RepartitionReindexProcess extends AbstractStateGraph {
@@ -26,7 +27,8 @@ public class RepartitionReindexProcess extends AbstractStateGraph {
 
 
     @Inject
-    public RepartitionReindexProcess(StateFactory stateFactory, IndexClient indexClient) {
+    public RepartitionReindexProcess(StateFactory stateFactory,
+                                     IndexClient indexClient) {
         super(stateFactory);
 
         indexOutbox = indexClient.outbox();
@@ -46,7 +48,7 @@ public class RepartitionReindexProcess extends AbstractStateGraph {
         return indexOutbox.sendAsync(IndexMqEndpoints.INDEX_REPARTITION, "");
     }
 
-    @GraphState(name = REPARTITION_REPLY, next = REINDEX)
+    @GraphState(name = REPARTITION_REPLY, next = REINDEX, resume = ResumeBehavior.RETRY)
     public void repartitionReply(Long id) throws Exception {
         var rsp = indexOutbox.waitResponse(id);
 
@@ -60,7 +62,7 @@ public class RepartitionReindexProcess extends AbstractStateGraph {
         return indexOutbox.sendAsync(IndexMqEndpoints.INDEX_REINDEX, "");
     }
 
-    @GraphState(name = REINDEX_REPLY, next = END)
+    @GraphState(name = REINDEX_REPLY, next = END, resume = ResumeBehavior.RETRY)
     public void reindexReply(Long id) throws Exception {
         var rsp = indexOutbox.waitResponse(id);
 

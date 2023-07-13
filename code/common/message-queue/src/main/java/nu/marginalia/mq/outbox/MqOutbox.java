@@ -20,7 +20,6 @@ public class MqOutbox {
     private final String replyInboxName;
     private final String instanceUUID;
 
-    private final ConcurrentHashMap<Long, Long> pendingRequests = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Long, MqMessage> pendingResponses = new ConcurrentHashMap<>();
 
     private final int pollIntervalMs = Integer.getInteger("mq.outbox.poll-interval-ms", 100);
@@ -50,8 +49,6 @@ public class MqOutbox {
 
         logger.info("Shutting down outbox {}", inboxName);
 
-        pendingRequests.clear();
-
         run = false;
         pollThread.join();
     }
@@ -69,18 +66,14 @@ public class MqOutbox {
     }
 
     private void pollDb(long tick) {
-        if (pendingRequests.isEmpty())
-            return;
-
         try {
             var updates = persistence.pollReplyInbox(replyInboxName, instanceUUID, tick, maxPollCount);
 
             for (var message : updates) {
                 pendingResponses.put(message.relatedId(), message);
-                pendingRequests.remove(message.relatedId());
             }
 
-            if (updates.isEmpty() || pendingResponses.isEmpty())
+            if (updates.isEmpty())
                 return;
 
             logger.info("Notifying {} pending responses", pendingResponses.size());
@@ -106,11 +99,7 @@ public class MqOutbox {
      * <br>
      * Use waitResponse(id) or pollResponse(id) to fetch the response.  */
     public long sendAsync(String function, String payload) throws Exception {
-        var id = persistence.sendNewMessage(inboxName, replyInboxName, null, function, payload, null);
-
-        pendingRequests.put(id, id);
-
-        return id;
+        return persistence.sendNewMessage(inboxName, replyInboxName, null, function, payload, null);
     }
 
     /** Blocks until a response arrives for the given message id (possibly forever) */
@@ -170,5 +159,8 @@ public class MqOutbox {
 
     public void flagAsBad(long id) throws SQLException {
         persistence.updateMessageState(id, MqMessageState.ERR);
+    }
+    public void flagAsDead(long id) throws SQLException {
+        persistence.updateMessageState(id, MqMessageState.DEAD);
     }
 }

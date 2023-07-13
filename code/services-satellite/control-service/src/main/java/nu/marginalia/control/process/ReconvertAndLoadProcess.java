@@ -41,7 +41,8 @@ public class ReconvertAndLoadProcess extends AbstractStateGraph {
                                    ProcessService processService,
                                    IndexClient indexClient,
                                    SearchClient searchClient
-                                   ) {
+                                   )
+    {
         super(stateFactory);
         this.processService = processService;
         this.mqIndexOutbox = indexClient.outbox();

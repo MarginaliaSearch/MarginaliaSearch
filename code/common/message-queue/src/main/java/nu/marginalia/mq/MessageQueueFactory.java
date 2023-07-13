@@ -12,13 +12,19 @@ import javax.inject.Singleton;
 import java.util.UUID;
 
 @Singleton
-public class MqFactory {
+public class MessageQueueFactory {
     private final MqPersistence persistence;
 
     @Inject
-    public MqFactory(MqPersistence persistence) {
+    public MessageQueueFactory(MqPersistence persistence) {
         this.persistence = persistence;
     }
+
+    public MqSingleShotInbox createSingleShotInbox(String inboxName, UUID instanceUUID)
+    {
+        return new MqSingleShotInbox(persistence, inboxName, instanceUUID);
+    }
+
 
     public MqInboxIf createAsynchronousInbox(String inboxName, UUID instanceUUID)
     {
@@ -30,10 +36,6 @@ public class MqFactory {
         return new MqSynchronousInbox(persistence, inboxName, instanceUUID);
     }
 
-    public MqSingleShotInbox createSingleShotInbox(String inboxName, UUID instanceUUID)
-    {
-        return new MqSingleShotInbox(persistence, inboxName, instanceUUID);
-    }
 
     public MqOutbox createOutbox(String inboxName, String outboxName, UUID instanceUUID)
     {

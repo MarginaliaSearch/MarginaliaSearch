@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.control.model.ControlProcess;
 import nu.marginalia.model.gson.GsonFactory;
-import nu.marginalia.mq.MqFactory;
+import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mqsm.StateMachine;
 import nu.marginalia.mqsm.graph.AbstractStateGraph;
 import nu.marginalia.service.control.ServiceEventLog;
@@ -19,11 +19,11 @@ import java.util.UUID;
 public class ControlProcesses {
     private final ServiceEventLog eventLog;
     private final Gson gson;
-    private final MqFactory messageQueueFactory;
+    private final MessageQueueFactory messageQueueFactory;
     public Map<ControlProcess, StateMachine> stateMachines = new HashMap<>();
 
     @Inject
-    public ControlProcesses(MqFactory messageQueueFactory,
+    public ControlProcesses(MessageQueueFactory messageQueueFactory,
                             GsonFactory gsonFactory,
                             BaseServiceParams baseServiceParams,
                             RepartitionReindexProcess repartitionReindexProcess,
@@ -60,8 +60,4 @@ public class ControlProcesses {
         stateMachines.get(process).init(gson.toJson(arg));
     }
 
-    public void resume(ControlProcess process) throws Exception {
-        eventLog.logEvent("FSM-RESUME", process.id());
-        stateMachines.get(process).resume();
-    }
 }

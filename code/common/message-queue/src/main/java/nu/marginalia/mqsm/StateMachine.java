@@ -1,6 +1,6 @@
 package nu.marginalia.mqsm;
 
-import nu.marginalia.mq.MqFactory;
+import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.inbox.MqInboxIf;
@@ -14,6 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.BiConsumer;
 
 /** A state machine that can be used to implement a finite state machine
@@ -33,21 +35,15 @@ public class StateMachine {
     private final MachineState resumingState = new StateFactory.ResumingState();
 
     private final List<BiConsumer<String, String>> stateChangeListeners = new ArrayList<>();
-
     private final Map<String, MachineState> allStates = new HashMap<>();
 
-    /* The expectedMessageId guards against spurious state changes being triggered by old messages in the queue
-     *
-     * It contains the message id of the last message that was processed, and the messages sent by the state machine to
-     * itself via the message queue all have relatedId set to expectedMessageId.  If the state machine is unitialized or
-     * in a terminal state, it will accept messages with relatedIds that are equal to -1.
-     * */
-    private long expectedMessageId = -1;
+    private ExpectedMessage expectedMessage = ExpectedMessage.anyUnrelated();
 
-    public StateMachine(MqFactory messageQueueFactory,
+    public StateMachine(MessageQueueFactory messageQueueFactory,
                         String queueName,
                         UUID instanceUUID,
-                        AbstractStateGraph stateGraph) {
+                        AbstractStateGraph stateGraph)
+    {
         this.queueName = queueName;
 
         smInbox = messageQueueFactory.createSynchronousInbox(queueName, instanceUUID);
@@ -63,6 +59,10 @@ public class StateMachine {
                 throw new IllegalArgumentException("State " + declaredState + " is not defined in the state graph");
             }
         }
+
+        resume();
+
+        smInbox.start();
     }
 
     /** Listen to state changes */
@@ -96,6 +96,22 @@ public class StateMachine {
         }
     }
 
+    /** Wait for the state machine to reach a final state up to a given timeout.
+     */
+    public void join(long timeout, TimeUnit timeUnit) throws InterruptedException, TimeoutException {
+        long deadline = System.currentTimeMillis() + timeUnit.toMillis(timeout);
+
+        synchronized (this) {
+            if (null == state)
+                return;
+
+            while (!state.isFinal()) {
+                if (deadline <= System.currentTimeMillis())
+                    throw new TimeoutException("Timeout waiting for state machine to reach final state");
+                wait(100);
+            }
+        }
+    }
 
     /** Initialize the state machine. */
     public void init() throws Exception {
@@ -106,8 +122,7 @@ public class StateMachine {
             notifyAll();
         }
 
-        smInbox.start();
-        smOutbox.notify(expectedMessageId, transition.state(), transition.message());
+        smOutbox.notify(transition.state(), transition.message());
     }
 
     /** Initialize the state machine. */
@@ -119,41 +134,66 @@ public class StateMachine {
             notifyAll();
         }
 
-        smInbox.start();
-        smOutbox.notify(expectedMessageId, transition.state(), transition.message());
+        smOutbox.notify(transition.state(), transition.message());
     }
 
     /** Resume the state machine from the last known state. */
-    public void resume() throws Exception {
+    private void resume() {
 
+        // We only permit resuming from the unitialized state
         if (state != null) {
             return;
         }
 
-        var messages = smInbox.replay(1);
-        if (messages.isEmpty()) {
-            init();
+        // Fetch the last messages from the inbox
+        var message = smInbox.replay(5)
+                .stream()
+                .filter(m -> (m.state() == MqMessageState.NEW) || (m.state() == MqMessageState.ACK))
+                .findFirst();
+
+        if (message.isEmpty()) {
+            // No messages in the inbox, so start in a terminal state
+            expectedMessage = ExpectedMessage.anyUnrelated();
+            state = finalState;
             return;
         }
 
-        var firstMessage = messages.get(0);
+        var firstMessage = message.get();
         var resumeState = allStates.get(firstMessage.function());
 
-        smInbox.start();
         logger.info("Resuming state machine from {}({})/{}", firstMessage.function(), firstMessage.payload(), firstMessage.state());
-        expectedMessageId = firstMessage.relatedId();
+        expectedMessage = ExpectedMessage.expectThis(firstMessage);
 
         if (firstMessage.state() == MqMessageState.NEW) {
             // The message is not acknowledged, so starting the inbox will trigger a state transition
             // We still need to set a state here so that the join() method works
 
             state = resumingState;
-        } else if (resumeState.resumeBehavior().equals(ResumeBehavior.ERROR)) {
-            // The message is acknowledged, but the state does not support resuming
-            smOutbox.notify(expectedMessageId, "ERROR", "Illegal resumption from ACK'ed state " + firstMessage.function());
-        } else {
-            // The message is already acknowledged, so we replay the last state
-            onStateTransition(firstMessage);
+        }
+        else if (firstMessage.state() == MqMessageState.ACK) {
+            resumeFromAck(resumeState, firstMessage);
+        }
+    }
+
+    private void resumeFromAck(MachineState resumeState,
+                               MqMessage message)
+    {
+        try {
+            if (resumeState.resumeBehavior().equals(ResumeBehavior.ERROR)) {
+                // The message is acknowledged, but the state does not support resuming
+                smOutbox.notify(expectedMessage.id, "ERROR", "Illegal resumption from ACK'ed state " + message.function());
+            } else {
+
+                this.state = resumeState;
+
+                // The message is already acknowledged, we flag it as dead and then send an identical message
+                smOutbox.flagAsDead(message.msgId());
+                expectedMessage = ExpectedMessage.responseTo(message);
+                smOutbox.notify(message.msgId(), message.function(), message.payload());
+            }
+        }
+        catch (Exception e) {
+            logger.error("Failed to replay state", e);
         }
     }
 
@@ -165,13 +205,14 @@ public class StateMachine {
     private void onStateTransition(MqMessage msg) {
         final String nextState = msg.function();
         final String data = msg.payload();
-        final long messageId = msg.msgId();
+
         final long relatedId = msg.relatedId();
 
-        if (expectedMessageId != relatedId) {
+        if (!expectedMessage.isExpected(msg)) {
             // We've received a message that we didn't expect, throwing an exception will cause it to be flagged
             // as an error in the message queue;  the message queue will proceed
-            throw new IllegalStateException("Unexpected message id " + relatedId + ", expected " + expectedMessageId);
+
+            throw new IllegalStateException("Unexpected message id " + relatedId + ", expected " + expectedMessage.id);
         }
 
         try {
@@ -193,13 +234,15 @@ public class StateMachine {
             }
 
             if (!state.isFinal()) {
+                logger.info("Transitining from state {}", state.name());
                 var transition = state.next(msg.payload());
 
-                expectedMessageId = messageId;
-                smOutbox.notify(expectedMessageId, transition.state(), transition.message());
+                expectedMessage = ExpectedMessage.responseTo(msg);
+                smOutbox.notify(expectedMessage.id, transition.state(), transition.message());
             }
             else {
-                expectedMessageId = -1;
+                // On terminal transition, we expect any message
+                expectedMessage = ExpectedMessage.anyUnrelated();
             }
         }
         catch (Exception e) {
@@ -234,8 +277,41 @@ public class StateMachine {
                 stateChangeListeners.forEach(l -> l.accept(msg.function(), msg.payload()));
             }
             catch (Exception ex) {
-                ex.printStackTrace();
+                // Rethrowing this will flag the message as an error in the message queue
+                throw new RuntimeException("Error in state change listener", ex);
             }
         }
+    }
+}
+
+/** ExpectedMessage guards against spurious state changes being triggered by old messages in the queue
+ *
+ * It contains the message id of the last message that was processed, and the messages sent by the state machine to
+ * itself via the message queue all have relatedId set to expectedMessageId.  If the state machine is unitialized or
+ * in a terminal state, it will accept messages with relatedIds that are equal to -1.
+ * */
+class ExpectedMessage {
+    public final long id;
+    public ExpectedMessage(long id) {
+        this.id = id;
+    }
+
+    public static ExpectedMessage expectThis(MqMessage message) {
+        return new ExpectedMessage(message.relatedId());
+    }
+
+    public static ExpectedMessage responseTo(MqMessage message) {
+        return new ExpectedMessage(message.msgId());
+    }
+
+    public static ExpectedMessage anyUnrelated() {
+        return new ExpectedMessage(-1);
+    }
+
+    public boolean isExpected(MqMessage message) {
+        if (id < 0)
+            return true;
+
+        return id == message.relatedId();
     }
 }

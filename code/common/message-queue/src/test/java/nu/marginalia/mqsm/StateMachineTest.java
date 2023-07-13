@@ -3,22 +3,26 @@ package nu.marginalia.mqsm;
 import com.google.gson.GsonBuilder;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.mq.MqFactory;
+import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqTestUtil;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.mqsm.graph.GraphState;
 import nu.marginalia.mqsm.graph.AbstractStateGraph;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.parallel.Execution;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 
 @Tag("slow")
 @Testcontainers
+@Execution(SAME_THREAD)
 public class StateMachineTest {
     @Container
     static MariaDBContainer<?> mariaDBContainer = new MariaDBContainer<>("mariadb")
@@ -30,7 +34,7 @@ public class StateMachineTest {
 
     static HikariDataSource dataSource;
     static MqPersistence persistence;
-    static MqFactory messageQueueFactory;
+    static MessageQueueFactory messageQueueFactory;
     private String inboxId;
 
     @BeforeEach
@@ -46,7 +50,7 @@ public class StateMachineTest {
 
         dataSource = new HikariDataSource(config);
         persistence = new MqPersistence(dataSource);
-        messageQueueFactory = new MqFactory(persistence);
+        messageQueueFactory = new MessageQueueFactory(persistence);
     }
 
     @AfterAll
@@ -91,7 +95,7 @@ public class StateMachineTest {
 
         sm.init();
 
-        sm.join();
+        sm.join(2, TimeUnit.SECONDS);
         sm.stop();
 
         MqTestUtil.getMessages(dataSource, inboxId).forEach(System.out::println);
@@ -111,8 +115,7 @@ public class StateMachineTest {
         System.out.println("-------------------- ");
 
         var sm2 = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new TestGraph(stateFactory));
-        sm2.resume();
-        sm2.join();
+        sm2.join(2, TimeUnit.SECONDS);
         sm2.stop();
 
         MqTestUtil.getMessages(dataSource, inboxId).forEach(System.out::println);
@@ -121,7 +124,6 @@ public class StateMachineTest {
     @Test
     public void testFalseTransition() throws Exception {
         var stateFactory = new StateFactory(new GsonBuilder().create());
-        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new TestGraph(stateFactory));
 
         // Prep the queue with a message to set the state to initial,
         // and an additional message to trigger the false transition back to initial
@@ -129,11 +131,11 @@ public class StateMachineTest {
         persistence.sendNewMessage(inboxId,  null, null, "INITIAL", "", null);
         persistence.sendNewMessage(inboxId,  null, null, "INITIAL", "", null);
 
-        sm.resume();
+        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new TestGraph(stateFactory));
 
         Thread.sleep(50);
 
-        sm.join();
+        sm.join(2, TimeUnit.SECONDS);
         sm.stop();
 
         MqTestUtil.getMessages(dataSource, inboxId).forEach(System.out::println);

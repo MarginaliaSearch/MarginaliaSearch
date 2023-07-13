@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import io.reactivex.rxjava3.core.Observable;
 import nu.marginalia.client.AbstractDynamicClient;
 import nu.marginalia.model.gson.GsonFactory;
-import nu.marginalia.mq.MqFactory;
+import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.search.client.model.ApiSearchResults;
 import nu.marginalia.service.descriptor.ServiceDescriptors;
@@ -28,7 +28,7 @@ public class SearchClient extends AbstractDynamicClient {
 
     @Inject
     public SearchClient(ServiceDescriptors descriptors,
-                        MqFactory messageQueueFactory) {
+                        MessageQueueFactory messageQueueFactory) {
 
         super(descriptors.forId(ServiceId.Search), WmsaHome.getHostsFile(), GsonFactory::get);
 

@@ -3,7 +3,7 @@ package nu.marginalia.mqsm;
 import com.google.gson.GsonBuilder;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.mq.MqFactory;
+import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessageRow;
 import nu.marginalia.mq.MqTestUtil;
 import nu.marginalia.mq.persistence.MqPersistence;
@@ -11,17 +11,21 @@ import nu.marginalia.mqsm.graph.GraphState;
 import nu.marginalia.mqsm.graph.AbstractStateGraph;
 import nu.marginalia.mqsm.graph.ResumeBehavior;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.parallel.Execution;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 
 @Tag("slow")
 @Testcontainers
+@Execution(SAME_THREAD)
 public class StateMachineErrorTest {
     @Container
     static MariaDBContainer<?> mariaDBContainer = new MariaDBContainer<>("mariadb")
@@ -33,7 +37,7 @@ public class StateMachineErrorTest {
 
     static HikariDataSource dataSource;
     static MqPersistence persistence;
-    static MqFactory messageQueueFactory;
+    static MessageQueueFactory messageQueueFactory;
     private String inboxId;
 
     @BeforeEach
@@ -49,7 +53,7 @@ public class StateMachineErrorTest {
 
         dataSource = new HikariDataSource(config);
         persistence = new MqPersistence(dataSource);
-        messageQueueFactory = new MqFactory(persistence);
+        messageQueueFactory = new MessageQueueFactory(persistence);
     }
 
     @AfterAll
@@ -85,7 +89,7 @@ public class StateMachineErrorTest {
 
         sm.init();
 
-        sm.join();
+        sm.join(2, TimeUnit.SECONDS);
         sm.stop();
 
         List<String> states = MqTestUtil.getMessages(dataSource, inboxId)

@@ -3,7 +3,7 @@ package nu.marginalia.mqsm;
 import com.google.gson.GsonBuilder;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.mq.MqFactory;
+import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessageRow;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.MqTestUtil;
@@ -12,17 +12,21 @@ import nu.marginalia.mqsm.graph.GraphState;
 import nu.marginalia.mqsm.graph.AbstractStateGraph;
 import nu.marginalia.mqsm.graph.ResumeBehavior;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.parallel.Execution;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 
 @Tag("slow")
 @Testcontainers
+@Execution(SAME_THREAD)
 public class StateMachineResumeTest {
     @Container
     static MariaDBContainer<?> mariaDBContainer = new MariaDBContainer<>("mariadb")
@@ -34,7 +38,7 @@ public class StateMachineResumeTest {
 
     static HikariDataSource dataSource;
     static MqPersistence persistence;
-    static MqFactory messageQueueFactory;
+    static MessageQueueFactory messageQueueFactory;
     private String inboxId;
 
     @BeforeEach
@@ -50,7 +54,7 @@ public class StateMachineResumeTest {
 
         dataSource = new HikariDataSource(config);
         persistence = new MqPersistence(dataSource);
-        messageQueueFactory = new MqFactory(persistence);
+        messageQueueFactory = new MessageQueueFactory(persistence);
     }
 
     @AfterAll
@@ -79,13 +83,12 @@ public class StateMachineResumeTest {
     @Test
     public void smResumeResumableFromNew() throws Exception {
         var stateFactory = new StateFactory(new GsonBuilder().create());
-        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
+
 
         persistence.sendNewMessage(inboxId,  null, -1L, "RESUMABLE", "", null);
+        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
 
-        sm.resume();
-
-        sm.join();
+        sm.join(2, TimeUnit.SECONDS);
         sm.stop();
 
         List<String> states = MqTestUtil.getMessages(dataSource, inboxId)
@@ -100,14 +103,13 @@ public class StateMachineResumeTest {
     @Test
     public void smResumeFromAck() throws Exception {
         var stateFactory = new StateFactory(new GsonBuilder().create());
-        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
 
         long id = persistence.sendNewMessage(inboxId,  null, -1L, "RESUMABLE", "", null);
         persistence.updateMessageState(id, MqMessageState.ACK);
 
-        sm.resume();
+        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
 
-        sm.join();
+        sm.join(4, TimeUnit.SECONDS);
         sm.stop();
 
         List<String> states = MqTestUtil.getMessages(dataSource, inboxId)
@@ -116,20 +118,20 @@ public class StateMachineResumeTest {
                 .map(MqMessageRow::function)
                 .toList();
 
-        assertEquals(List.of("RESUMABLE", "NON-RESUMABLE", "OK", "END"), states);
+        assertEquals(List.of("RESUMABLE", "RESUMABLE", "NON-RESUMABLE", "OK", "END"), states);
     }
 
 
     @Test
     public void smResumeNonResumableFromNew() throws Exception {
         var stateFactory = new StateFactory(new GsonBuilder().create());
-        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
+
 
         persistence.sendNewMessage(inboxId,  null, -1L, "NON-RESUMABLE", "", null);
 
-        sm.resume();
+        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
 
-        sm.join();
+        sm.join(2, TimeUnit.SECONDS);
         sm.stop();
 
         List<String> states = MqTestUtil.getMessages(dataSource, inboxId)
@@ -144,14 +146,14 @@ public class StateMachineResumeTest {
     @Test
     public void smResumeNonResumableFromAck() throws Exception {
         var stateFactory = new StateFactory(new GsonBuilder().create());
-        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
+
 
         long id = persistence.sendNewMessage(inboxId,  null, null, "NON-RESUMABLE", "", null);
         persistence.updateMessageState(id, MqMessageState.ACK);
 
-        sm.resume();
+        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
 
-        sm.join();
+        sm.join(2, TimeUnit.SECONDS);
         sm.stop();
 
         List<String> states = MqTestUtil.getMessages(dataSource, inboxId)
@@ -166,11 +168,11 @@ public class StateMachineResumeTest {
     @Test
     public void smResumeEmptyQueue() throws Exception {
         var stateFactory = new StateFactory(new GsonBuilder().create());
+
+
         var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
 
-        sm.resume();
-
-        sm.join();
+        sm.join(2, TimeUnit.SECONDS);
         sm.stop();
 
         List<String> states = MqTestUtil.getMessages(dataSource, inboxId)
@@ -179,6 +181,6 @@ public class StateMachineResumeTest {
                 .map(MqMessageRow::function)
                 .toList();
 
-        assertEquals(List.of("INITIAL", "RESUMABLE", "NON-RESUMABLE", "OK", "END"), states);
+        assertEquals(List.of(), states);
     }
 }

@@ -10,4 +10,5 @@ public interface MachineState {
     ResumeBehavior resumeBehavior();
 
     boolean isFinal();
+
 }
