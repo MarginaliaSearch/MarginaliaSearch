@@ -13,35 +13,32 @@
 
       <table>
           <tr>
-            <th>Message ID</th>
-            <th>Related ID</th>
-            <th>Recipient</th>
-            <th>Sender</th>
+            <th>State<br>TTL</th>
+            <th>Msg ID<br>Related ID</th>
+            <th>Recipient<br>Sender</th>
             <th>Function</th>
-            <th>Owner Instance</th>
-            <th>Owner Tick</th>
-            <th>State</th>
-            <th>Created Time</th>
-            <th>Updated Time</th>
-            <th>TTL</th>
+            <th>Owner Instance<br>Owner Tick</th>
+            <th>Created<br>Updated</th>
           </tr>
           {{#each messages}}
           <tr>
+            <td>{{stateCode}}&nbsp;{{state}}</td>
             <td>{{id}}</td>
-            <td>{{relatedId}}</td>
             <td>{{recipientInbox}}</td>
-            <td>{{senderInbox}}</td>
             <td>{{function}}</td>
             <td title="{{ownerInstanceFull}}">
               <span style="background-color: {{ownerInstanceColor}}" class="uuidPip">&nbsp;</span><span style="background-color: {{ownerInstanceColor2}}" class="uuidPip">&nbsp;</span>&nbsp;{{ownerInstance}}
             </td>
-            <td>{{ownerTick}}</td>
-            <td>{{stateCode}}&nbsp;{{state}}</td>
             <td>{{createdTime}}</td>
-            <td>{{updatedTime}}</td>
-            <td>{{ttl}}</td>
-
            </tr>
+          <tr>
+              <td>{{ttl}}</td>
+              <td>{{relatedId}}</td>
+              <td>{{senderInbox}}</td>
+              <td></td>
+              <td>{{ownerTick}}</td>
+              <td>{{updatedTime}}</td>
+          </tr>
             {{/each}}
       </table>
   </section>
