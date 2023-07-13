@@ -33,4 +33,10 @@
       </table>
   </section>
 </body>
+<script src="/refresh.js"></script>
+<script>
+    window.setInterval(() => {
+        refresh(["heartbeats"]);
+    }, 2000);
+</script>
 </html>
