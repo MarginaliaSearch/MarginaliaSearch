@@ -44,13 +44,12 @@ public class ProcessService {
         this.distPath = distPath;
     }
 
-    public boolean trigger(ProcessId processId, Path plan) throws Exception {
+    public boolean trigger(ProcessId processId) throws Exception {
         String processPath = processPath(processId);
         String[] args = new String[] {
-                processPath,
-                plan.toString()
+                processPath
         };
-        String[] env = env(plan);
+        String[] env = env();
 
         Process process;
 
@@ -58,10 +57,7 @@ public class ProcessService {
             logger.error("Process not found: {}", processPath);
             return false;
         }
-        if (!Files.exists(plan)) {
-            logger.error("Plan not found: {}", processPath);
-            return false;
-        }
+
 
         logger.info("Starting process: {}", processId + ": " + Arrays.toString(args) + " // " + Arrays.toString(env));
         synchronized (processes) {
@@ -111,7 +107,7 @@ public class ProcessService {
         return distPath.resolve(id.path).toString();
     }
 
-    private String[] env(Path plan) {
+    private String[] env() {
 
         Map<String, String> opts = new HashMap<>();
         String WMSA_HOME = System.getenv("WMSA_HOME");
@@ -120,7 +116,6 @@ public class ProcessService {
         }
         opts.put("WMSA_HOME", WMSA_HOME);
         opts.put("JAVA_HOME", System.getenv("JAVA_HOME"));
-        opts.put("JAVA_OPTS", "-Dcrawl.rootDirRewrite=/crawl:" + plan.getParent().toString());
 
         return opts.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue()).toArray(String[]::new);
     }

@@ -1,15 +1,20 @@
 package nu.marginalia.loading;
 
+import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
+import nu.marginalia.db.storage.FileStorageService;
+import nu.marginalia.db.storage.model.FileStorage;
+import nu.marginalia.mq.MessageQueueFactory;
+import nu.marginalia.mq.MqMessage;
+import nu.marginalia.mq.inbox.MqInboxResponse;
+import nu.marginalia.mq.inbox.MqSingleShotInbox;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.process.log.WorkLog;
-import plan.CrawlPlanLoader;
 import plan.CrawlPlan;
-import nu.marginalia.loading.loader.IndexLoadKeywords;
 import nu.marginalia.loading.loader.Loader;
 import nu.marginalia.loading.loader.LoaderFactory;
 import nu.marginalia.converting.instruction.Instruction;
@@ -17,66 +22,63 @@ import nu.marginalia.service.module.DatabaseModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+
+import static nu.marginalia.converting.mqapi.ConverterInboxNames.LOADER_INBOX;
 
 public class LoaderMain {
     private static final Logger logger = LoggerFactory.getLogger(LoaderMain.class);
 
-    private final CrawlPlan plan;
     private final ConvertedDomainReader instructionsReader;
     private final LoaderFactory loaderFactory;
 
-    private final IndexLoadKeywords indexLoadKeywords;
     private final ProcessHeartbeat heartbeat;
+    private final MessageQueueFactory messageQueueFactory;
+    private final FileStorageService fileStorageService;
+    private final Gson gson;
     private volatile boolean running = true;
 
     final Thread processorThread;
 
-    public static void main(String... args) throws IOException {
-        if (args.length != 1) {
-            System.err.println("Arguments: crawl-plan.yaml");
-            System.exit(0);
-        }
-
+    public static void main(String... args) throws Exception {
         new org.mariadb.jdbc.Driver();
 
-        var plan = new CrawlPlanLoader().load(Path.of(args[0]));
-
         Injector injector = Guice.createInjector(
-                new LoaderModule(plan),
+                new LoaderModule(),
                 new DatabaseModule()
         );
 
         var instance = injector.getInstance(LoaderMain.class);
-        instance.run();
+        var instructions = instance.fetchInstructions();
+        instance.run(instructions);
     }
 
     @Inject
-    public LoaderMain(CrawlPlan plan,
-                      ConvertedDomainReader instructionsReader,
+    public LoaderMain(ConvertedDomainReader instructionsReader,
                       HikariDataSource dataSource,
                       LoaderFactory loaderFactory,
-                      IndexLoadKeywords indexLoadKeywords,
-                      ProcessHeartbeat heartbeat
+                      ProcessHeartbeat heartbeat,
+                      MessageQueueFactory messageQueueFactory,
+                      FileStorageService fileStorageService,
+                      Gson gson
                       ) {
 
-        this.plan = plan;
         this.instructionsReader = instructionsReader;
         this.loaderFactory = loaderFactory;
-        this.indexLoadKeywords = indexLoadKeywords;
         this.heartbeat = heartbeat;
+        this.messageQueueFactory = messageQueueFactory;
+        this.fileStorageService = fileStorageService;
+        this.gson = gson;
 
         heartbeat.start();
 
         nukeTables(dataSource);
 
-        Runtime.getRuntime().addShutdownHook(new Thread(this::shutDownIndex));
         processorThread = new Thread(this::processor, "Processor Thread");
         processorThread.start();
     }
@@ -97,13 +99,8 @@ public class LoaderMain {
     }
 
     @SneakyThrows
-    private void shutDownIndex() {
-        // This must run otherwise the journal doesn't get a proper header
-        indexLoadKeywords.close();
-    }
-
-    @SneakyThrows
-    public void run() {
+    public void run(LoadRequest instructions) {
+        var plan = instructions.getPlan();
         var logFile = plan.process.getLogFile();
 
         try {
@@ -124,6 +121,12 @@ public class LoaderMain {
 
             running = false;
             processorThread.join();
+            instructions.ok();
+        }
+        catch (Exception ex) {
+            logger.error("Failed to load", ex);
+            instructions.err();
+            throw ex;
         }
         finally {
             heartbeat.shutDown();
@@ -182,6 +185,51 @@ public class LoaderMain {
             throw new RuntimeException(e);
         }
 
+    }
+    private static class LoadRequest {
+        private final CrawlPlan plan;
+        private final MqMessage message;
+        private final MqSingleShotInbox inbox;
+
+        LoadRequest(CrawlPlan plan, MqMessage message, MqSingleShotInbox inbox) {
+            this.plan = plan;
+            this.message = message;
+            this.inbox = inbox;
+        }
+
+        public CrawlPlan getPlan() {
+            return plan;
+        }
+
+        public void ok() {
+            inbox.sendResponse(message, MqInboxResponse.ok());
+        }
+        public void err() {
+            inbox.sendResponse(message, MqInboxResponse.err());
+        }
+
+    }
+
+    private LoadRequest fetchInstructions() throws Exception {
+
+        var inbox = messageQueueFactory.createSingleShotInbox(LOADER_INBOX, UUID.randomUUID());
+
+        var msgOpt = inbox.waitForMessage(30, TimeUnit.SECONDS);
+        if (msgOpt.isEmpty())
+            throw new RuntimeException("No instruction received in inbox");
+        var msg = msgOpt.get();
+
+        if (!nu.marginalia.converting.mqapi.LoadRequest.class.getSimpleName().equals(msg.function())) {
+            throw new RuntimeException("Unexpected message in inbox: " + msg);
+        }
+
+        var request = gson.fromJson(msg.payload(), nu.marginalia.converting.mqapi.LoadRequest.class);
+
+        var processData = fileStorageService.getStorage(request.processedDataStorage);
+
+        var plan = new CrawlPlan(null, null,  new CrawlPlan.WorkDir(processData.path(), "processor.log"));
+
+        return new LoadRequest(plan, msg, inbox);
     }
 
 }

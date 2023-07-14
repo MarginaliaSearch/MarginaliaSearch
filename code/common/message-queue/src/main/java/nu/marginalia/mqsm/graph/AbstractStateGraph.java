@@ -29,9 +29,11 @@ public abstract class AbstractStateGraph {
     public void error() {
         throw new ControlFlowException("ERROR", "");
     }
+
     public <T> void error(T payload) {
         throw new ControlFlowException("ERROR", payload);
     }
+
     public void error(Exception ex) {
         throw new ControlFlowException("ERROR", ex.getClass().getSimpleName() + ":" + ex.getMessage());
     }

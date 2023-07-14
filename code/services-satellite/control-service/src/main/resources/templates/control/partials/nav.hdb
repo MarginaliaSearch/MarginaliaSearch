@@ -3,5 +3,6 @@
         <li><a href="/">Overview</a></li>
         <li><a href="services">Services</a></li>
         <li><a href="processes">Processes</a></li>
+        <li><a href="storage">Storage</a></li>
     </ul>
 </nav>

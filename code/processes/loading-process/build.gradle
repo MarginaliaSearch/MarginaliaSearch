@@ -22,6 +22,8 @@ dependencies {
 
     implementation project(':code:api:index-api')
     implementation project(':code:common:model')
+    implementation project(':code:common:db')
+    implementation project(':code:common:message-queue')
     implementation project(':code:common:config')
     implementation project(':code:common:service')
     implementation project(':code:common:service-discovery')

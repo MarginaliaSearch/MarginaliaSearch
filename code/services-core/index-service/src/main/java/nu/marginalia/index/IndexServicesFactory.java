@@ -3,6 +3,8 @@ package nu.marginalia.index;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import nu.marginalia.db.storage.FileStorageService;
+import nu.marginalia.db.storage.model.FileStorageType;
 import nu.marginalia.index.forward.ForwardIndexConverter;
 import nu.marginalia.index.forward.ForwardIndexReader;
 import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile;
@@ -24,12 +26,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.sql.SQLException;
 import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 
 @Singleton
 public class IndexServicesFactory {
     private final Path tmpFileDir;
+    private final Path liveStorage;
+    private final Path stagingStorage;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -50,28 +55,28 @@ public class IndexServicesFactory {
 
     @Inject
     public IndexServicesFactory(
-            @Named("tmp-file-dir") Path tmpFileDir,
-            @Named("partition-root-slow") Path partitionRootSlow,
-            @Named("partition-root-fast") Path partitionRootFast
-            ) throws IOException {
+            FileStorageService fileStorageService
+            ) throws IOException, SQLException {
 
-        this.tmpFileDir = tmpFileDir;
+        liveStorage = fileStorageService.getStorageByType(FileStorageType.INDEX_LIVE).asPath();
+        stagingStorage = fileStorageService.getStorageByType(FileStorageType.INDEX_STAGING).asPath();
+        tmpFileDir = fileStorageService.getStorageByType(FileStorageType.INDEX_STAGING).asPath().resolve("tmp");
+        searchSetsBase = fileStorageService.getStorageByType(FileStorageType.SEARCH_SETS).asPath();
 
-        this.writerIndexFile = new PartitionedDataFile(partitionRootSlow, "page-index.dat");
-
-        fwdIndexDocId = new PartitionedDataFile(partitionRootFast, "fwd-doc-id.dat");
-        fwdIndexDocData = new PartitionedDataFile(partitionRootFast, "fwd-doc-data.dat");
-
-        revIndexDoc = new PartitionedDataFile(partitionRootFast, "rev-doc.dat");
-        revIndexWords = new PartitionedDataFile(partitionRootFast, "rev-words.dat");
-
-        revPrioIndexDoc = new PartitionedDataFile(partitionRootFast, "rev-prio-doc.dat");
-        revPrioIndexWords = new PartitionedDataFile(partitionRootFast, "rev-prio-words.dat");
-
-        searchSetsBase = partitionRootSlow.resolve("search-sets");
-        if (!Files.isDirectory(searchSetsBase)) {
-            Files.createDirectory(searchSetsBase);
+        if (!Files.exists(tmpFileDir)) {
+            Files.createDirectories(tmpFileDir);
         }
+
+        writerIndexFile = new PartitionedDataFile(stagingStorage, "page-index.dat");
+
+        fwdIndexDocId = new PartitionedDataFile(liveStorage, "fwd-doc-id.dat");
+        fwdIndexDocData = new PartitionedDataFile(liveStorage, "fwd-doc-data.dat");
+
+        revIndexDoc = new PartitionedDataFile(liveStorage, "rev-doc.dat");
+        revIndexWords = new PartitionedDataFile(liveStorage, "rev-words.dat");
+
+        revPrioIndexDoc = new PartitionedDataFile(liveStorage, "rev-prio-doc.dat");
+        revPrioIndexWords = new PartitionedDataFile(liveStorage, "rev-prio-words.dat");
     }
 
     public Path getSearchSetsBase() {

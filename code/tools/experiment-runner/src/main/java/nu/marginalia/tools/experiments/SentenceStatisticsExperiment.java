@@ -2,14 +2,10 @@ package nu.marginalia.tools.experiments;
 
 import com.google.inject.Inject;
 import nu.marginalia.WmsaHome;
-import nu.marginalia.adblock.GoogleAnwersSpamDetector;
 import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
 import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.tools.Experiment;
-import nu.marginalia.topic.RecipeDetector;
-import nu.marginalia.topic.TextileCraftDetector;
-import nu.marginalia.topic.WoodworkingDetector;
 import org.jsoup.Jsoup;
 
 import java.io.BufferedOutputStream;

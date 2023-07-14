@@ -1,6 +1,9 @@
 package nu.marginalia.index.svc;
 
 import com.google.inject.AbstractModule;
+import nu.marginalia.db.storage.FileStorageService;
+import nu.marginalia.db.storage.model.FileStorage;
+import nu.marginalia.db.storage.model.FileStorageType;
 import nu.marginalia.index.IndexServicesFactory;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.lexicon.KeywordLexicon;
@@ -19,6 +22,7 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.SQLException;
 import java.util.Random;
 import java.util.UUID;
 
@@ -48,8 +52,16 @@ public class IndexQueryServiceIntegrationTestModule extends AbstractModule {
     protected void configure() {
 
         try {
-            var servicesFactory = new IndexServicesFactory(Path.of("/tmp"),
-                    slowDir, fastDir
+            var fileStorageServiceMock = Mockito.mock(FileStorageService.class);
+
+            when(fileStorageServiceMock.getStorageByType(FileStorageType.SEARCH_SETS)).thenReturn(new FileStorage(null, null, null, fastDir.toString(), null));
+            when(fileStorageServiceMock.getStorageByType(FileStorageType.LEXICON_LIVE)).thenReturn(new FileStorage(null, null, null, fastDir.toString(), null));
+            when(fileStorageServiceMock.getStorageByType(FileStorageType.LEXICON_STAGING)).thenReturn(new FileStorage(null, null, null, fastDir.toString(), null));
+            when(fileStorageServiceMock.getStorageByType(FileStorageType.INDEX_LIVE)).thenReturn(new FileStorage(null, null, null, fastDir.toString(), null));
+            when(fileStorageServiceMock.getStorageByType(FileStorageType.INDEX_STAGING)).thenReturn(new FileStorage(null, null, null, slowDir.toString(), null));
+
+            var servicesFactory = new IndexServicesFactory(
+                    fileStorageServiceMock
             );
             bind(IndexServicesFactory.class).toInstance(servicesFactory);
 
@@ -76,7 +88,7 @@ public class IndexQueryServiceIntegrationTestModule extends AbstractModule {
                     UUID.randomUUID()
             ));
 
-        } catch (IOException e) {
+        } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
         }
 

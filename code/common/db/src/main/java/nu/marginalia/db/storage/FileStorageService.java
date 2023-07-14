@@ -111,8 +111,10 @@ public class FileStorageService {
                 PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x"))
         );
 
+        String relDir = base.asPath().relativize(tempDir).normalize().toString();
+
         try (var conn = dataSource.getConnection();
-             var update = conn.prepareStatement("""
+             var insert = conn.prepareStatement("""
                 INSERT INTO FILE_STORAGE(PATH, TYPE, DESCRIPTION, BASE_ID)
                 VALUES (?, ?, ?, ?)
                 """);
@@ -120,15 +122,17 @@ public class FileStorageService {
                 SELECT ID FROM FILE_STORAGE WHERE PATH = ? AND BASE_ID = ?
                 """)
              ) {
-            update.setString(1, tempDir.toString());
-            update.setString(2, type.name());
-            update.setString(3, description);
-            update.setLong(4, base.id().id());
+            insert.setString(1, relDir);
+            insert.setString(2, type.name());
+            insert.setString(3, description);
+            insert.setLong(4, base.id().id());
 
-            if (update.executeUpdate() < 1)
+            if (insert.executeUpdate() < 1) {
                 throw new SQLException("Failed to insert storage");
+            }
 
-            query.setString(1, tempDir.toString());
+
+            query.setString(1, relDir);
             query.setLong(2, base.id().id());
             var rs = query.executeQuery();
 
@@ -194,6 +198,43 @@ public class FileStorageService {
         }
 
         throw new SQLException("Failed to insert storage");
+    }
+
+    public FileStorage getStorageByType(FileStorageType type) throws SQLException {
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("""
+                     SELECT PATH, DESCRIPTION, ID, BASE_ID
+                     FROM FILE_STORAGE_VIEW WHERE TYPE = ?
+                     """)) {
+            stmt.setString(1, type.name());
+
+            long storageId;
+            long baseId;
+            String path;
+            String description;
+
+            try (var rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    baseId = rs.getLong("BASE_ID");
+                    storageId = rs.getLong("ID");
+                    path = rs.getString("PATH");
+                    description = rs.getString("DESCRIPTION");
+                }
+                else {
+                    return null;
+                }
+
+                var base = getStorageBase(new FileStorageBaseId(baseId));
+
+                return new FileStorage(
+                        new FileStorageId(storageId),
+                        base,
+                        type,
+                        path,
+                        description
+                );
+            }
+        }
     }
 
     /** @return the storage with the given id, or null if it does not exist */

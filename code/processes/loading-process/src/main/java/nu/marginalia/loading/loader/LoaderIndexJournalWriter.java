@@ -2,7 +2,8 @@ package nu.marginalia.loading.loader;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
+import nu.marginalia.db.storage.FileStorageService;
+import nu.marginalia.db.storage.model.FileStorageType;
 import nu.marginalia.dict.OffHeapDictionaryHashMap;
 import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
@@ -19,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.file.Path;
+import java.sql.SQLException;
 import java.util.Arrays;
 
 @Singleton
@@ -30,11 +31,15 @@ public class LoaderIndexJournalWriter {
     private static final Logger logger = LoggerFactory.getLogger(LoaderIndexJournalWriter.class);
 
     @Inject
-    public LoaderIndexJournalWriter(@Named("local-index-path") Path path) throws IOException {
+    public LoaderIndexJournalWriter(FileStorageService fileStorageService) throws IOException, SQLException {
+        var lexiconArea = fileStorageService.getStorageByType(FileStorageType.LEXICON_STAGING);
+        var indexArea = fileStorageService.getStorageByType(FileStorageType.INDEX_STAGING);
 
-        var lexiconJournal = new KeywordLexiconJournal(path.resolve("dictionary.dat").toFile());
-        lexicon = new KeywordLexicon(lexiconJournal);
-        indexWriter = new IndexJournalWriterImpl(lexicon, path.resolve("index.dat"));
+        var lexiconPath = lexiconArea.asPath().resolve("dictionary.dat");
+        var indexPath = indexArea.asPath().resolve("page-index.dat");
+
+        lexicon = new KeywordLexicon(new KeywordLexiconJournal(lexiconPath.toFile()));
+        indexWriter = new IndexJournalWriterImpl(lexicon, indexPath);
     }
 
     public void putWords(EdgeId<EdgeDomain> domain, EdgeId<EdgeUrl> url,

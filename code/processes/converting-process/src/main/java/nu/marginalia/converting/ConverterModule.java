@@ -2,26 +2,33 @@ package nu.marginalia.converting;
 
 import com.google.gson.Gson;
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.name.Names;
+import lombok.SneakyThrows;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.converting.mqapi.ConvertRequest;
+import nu.marginalia.db.storage.FileStorageService;
+import nu.marginalia.mq.MessageQueueFactory;
+import nu.marginalia.mq.persistence.MqPersistence;
 import plan.CrawlPlan;
 import nu.marginalia.model.gson.GsonFactory;
+import plan.CrawlPlanLoader;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.sql.SQLException;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public class ConverterModule extends AbstractModule {
 
-    private final CrawlPlan plan;
-
-    public ConverterModule(CrawlPlan plan) {
-        this.plan = plan;
+    public ConverterModule() {
     }
 
     public void configure() {
-        bind(CrawlPlan.class).toInstance(plan);
-
         bind(Gson.class).toInstance(createGson());
 
         bind(ProcessConfiguration.class).toInstance(new ProcessConfiguration("converter", 0, UUID.randomUUID()));

@@ -30,6 +30,8 @@ dependencies {
     implementation project(':code:common:message-queue')
     implementation project(':code:common:service-discovery')
     implementation project(':code:common:service-client')
+    implementation project(':code:process-models:converting-model')
+    implementation project(':code:process-models:crawling-model')
     implementation project(':code:api:search-api')
     implementation project(':code:api:index-api')
 
