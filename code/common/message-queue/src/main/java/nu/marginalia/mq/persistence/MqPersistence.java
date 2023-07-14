@@ -308,8 +308,8 @@ public class MqPersistence {
                 messages.add(msg);
             }
 
-            Lists.reverse(messages);
-            return messages;
+            // We want the last N messages in ascending order
+            return Lists.reverse(messages);
         }
 
     }
