@@ -83,25 +83,35 @@ public class ControlService extends Service {
 
         Spark.post("/public/fsms/:fsm/start", (req, rsp) -> {
             controlProcesses.start(ControlProcess.valueOf(req.params("fsm").toUpperCase()));
-            rsp.redirect("/processes");
-            return "";
+            return """
+                    <?doctype html>
+                    <html><head><meta http-equiv="refresh" content="0;URL='/processes'" /></head></html>
+                    """;
         });
         Spark.post("/public/fsms/:fsm/stop", (req, rsp) -> {
             controlProcesses.stop(ControlProcess.valueOf(req.params("fsm").toUpperCase()));
-            rsp.redirect("/processes");
-            return "";
+            return """
+                    <?doctype html>
+                    <html><head><meta http-equiv="refresh" content="0;URL='/processes'" /></head></html>
+                    """;
         });
 
         // TODO: This should be a POST
         Spark.get("/public/repartition", (req, rsp) -> {
             controlProcesses.start(ControlProcess.REPARTITION_REINDEX);
-            return "OK";
+            return """
+                    <?doctype html>
+                    <html><head><meta http-equiv="refresh" content="0;URL='/processes'" /></head></html>
+                    """;
         });
 
         // TODO: This should be a POST
         Spark.get("/public/reconvert", (req, rsp) -> {
             controlProcesses.start(ControlProcess.RECONVERT_LOAD, FileStorageId.of(11));
-            return "OK";
+            return """
+                    <?doctype html>
+                    <html><head><meta http-equiv="refresh" content="0;URL='/processes'" /></head></html>
+                    """;
         });
 
         Spark.get("/public/:resource", this::serveStatic);
