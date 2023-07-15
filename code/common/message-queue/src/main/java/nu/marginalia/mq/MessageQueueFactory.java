@@ -26,12 +26,12 @@ public class MessageQueueFactory {
     }
 
 
-    public MqInboxIf createAsynchronousInbox(String inboxName, UUID instanceUUID)
+    public MqAsynchronousInbox createAsynchronousInbox(String inboxName, UUID instanceUUID)
     {
         return new MqAsynchronousInbox(persistence, inboxName, instanceUUID);
     }
 
-    public MqInboxIf createSynchronousInbox(String inboxName, UUID instanceUUID)
+    public MqSynchronousInbox createSynchronousInbox(String inboxName, UUID instanceUUID)
     {
         return new MqSynchronousInbox(persistence, inboxName, instanceUUID);
     }

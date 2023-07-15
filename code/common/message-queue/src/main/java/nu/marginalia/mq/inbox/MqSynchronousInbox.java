@@ -7,10 +7,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /** Message queue inbox that responds to a single message at a time
@@ -29,6 +28,7 @@ public class MqSynchronousInbox implements MqInboxIf {
     private final List<MqSubscription> eventSubscribers = new ArrayList<>();
 
     private Thread pollDbThread;
+    private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     public MqSynchronousInbox(MqPersistence persistence,
                               String inboxName,
@@ -74,6 +74,8 @@ public class MqSynchronousInbox implements MqInboxIf {
 
         run = false;
         pollDbThread.join();
+        executorService.shutdown();
+        executorService.awaitTermination(10, TimeUnit.SECONDS);
 
     }
 
@@ -101,7 +103,8 @@ public class MqSynchronousInbox implements MqInboxIf {
         try {
             subscriber.onNotification(msg);
             updateMessageState(msg, MqMessageState.OK);
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             logger.error("Message Queue subscriber threw exception", ex);
             updateMessageState(msg, MqMessageState.ERR);
         }
@@ -134,6 +137,7 @@ public class MqSynchronousInbox implements MqInboxIf {
         }
     }
 
+    private volatile java.util.concurrent.Future<?> currentTask = null;
     public void pollDb() {
         try {
             for (long tick = 1; run; tick++) {
@@ -141,7 +145,18 @@ public class MqSynchronousInbox implements MqInboxIf {
                 var messages = pollInbox(tick);
 
                 for (var msg : messages) {
-                    handleMessage(msg);
+                    // Handle message in a separate thread but wait for that thread, so we can interrupt that thread
+                    // without interrupting the polling thread and shutting down the inbox completely
+                    try {
+                        currentTask = executorService.submit(() -> handleMessage(msg));
+                        currentTask.get();
+                    }
+                    catch (Exception ex) {
+                        logger.error("Inbox task was aborted", ex);
+                    }
+                    finally {
+                        currentTask = null;
+                    }
                 }
 
                 if (messages.isEmpty()) {
@@ -153,6 +168,16 @@ public class MqSynchronousInbox implements MqInboxIf {
             logger.error("MQ inbox update thread interrupted", ex);
         }
     }
+
+    /** Attempt to abort the current task using an interrupt */
+    public void abortCurrentTask() {
+        var task = currentTask; // capture the value to avoid race conditions with the
+                                // polling thread between the check and the interrupt
+        if (task != null) {
+            task.cancel(true);
+        }
+    }
+
 
     private void handleMessage(MqMessage msg) {
         logger.info("Notifying subscribers of msg {}", msg.msgId());

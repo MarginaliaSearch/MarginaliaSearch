@@ -6,6 +6,7 @@ import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.inbox.MqInboxIf;
 import nu.marginalia.mq.inbox.MqInboxResponse;
 import nu.marginalia.mq.inbox.MqSubscription;
+import nu.marginalia.mq.inbox.MqSynchronousInbox;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.mqsm.graph.ResumeBehavior;
 import nu.marginalia.mqsm.graph.AbstractStateGraph;
@@ -25,7 +26,7 @@ import java.util.function.BiConsumer;
 public class StateMachine {
     private final Logger logger = LoggerFactory.getLogger(StateMachine.class);
 
-    private final MqInboxIf smInbox;
+    private final MqSynchronousInbox smInbox;
     private final MqOutbox smOutbox;
     private final String queueName;
 
@@ -291,6 +292,11 @@ public class StateMachine {
 
         // Add a state transition to the final state
         smOutbox.notify(abortMsgId, finalState.name(), "");
+
+        // Dislodge the current task with an interrupt.
+        // It's actually fine if we accidentally interrupt the wrong thread
+        // (i.e. the abort task), since it shouldn't be doing anything interruptable
+        smInbox.abortCurrentTask();
     }
 
     private class StateEventSubscription implements MqSubscription {

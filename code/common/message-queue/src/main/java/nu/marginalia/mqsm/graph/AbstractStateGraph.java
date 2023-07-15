@@ -124,7 +124,12 @@ public abstract class AbstractStateGraph {
 
         if (ex instanceof ControlFlowException cfe) {
             return stateFactory.transition(cfe.getState(), cfe.getPayload());
-        } else {
+        }
+        else if (ex instanceof InterruptedException intE) {
+            logger.error("State execution was interrupted " + state);
+            return StateTransition.to("ERR", "Execution interrupted");
+        }
+        else {
             logger.error("Error in state invocation " + state, ex);
             return StateTransition.to("ERROR",
                     "Exception: " + ex.getClass().getSimpleName() + "/" +  ex.getMessage());
