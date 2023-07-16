@@ -8,6 +8,9 @@ body {
     grid-template-areas:
         "left right";
 }
+#services .missing {
+    color: #800;
+}
 .uuidPip {
   margin-left: 0.25ch;
   border-radius: 2ch;
