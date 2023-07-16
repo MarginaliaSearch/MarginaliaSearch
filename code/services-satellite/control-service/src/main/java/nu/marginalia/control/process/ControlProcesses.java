@@ -31,13 +31,18 @@ public class ControlProcesses {
                             GsonFactory gsonFactory,
                             BaseServiceParams baseServiceParams,
                             RepartitionReindexProcess repartitionReindexProcess,
-                            ReconvertAndLoadProcess reconvertAndLoadProcess
+                            ReconvertAndLoadProcess reconvertAndLoadProcess,
+                            ConverterMonitorProcess converterMonitorProcess,
+                            LoaderMonitorProcess loaderMonitorProcess
                             ) {
         this.messageQueueFactory = messageQueueFactory;
         this.eventLog = baseServiceParams.eventLog;
         this.gson = gsonFactory.get();
+
         register(ControlProcess.REPARTITION_REINDEX, repartitionReindexProcess);
         register(ControlProcess.RECONVERT_LOAD, reconvertAndLoadProcess);
+        register(ControlProcess.CONVERTER_MONITOR, converterMonitorProcess);
+        register(ControlProcess.LOADER_MONITOR, loaderMonitorProcess);
     }
 
     private void register(ControlProcess process, AbstractStateGraph graph) {

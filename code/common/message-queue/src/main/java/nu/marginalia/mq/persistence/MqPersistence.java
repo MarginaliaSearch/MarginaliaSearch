@@ -191,6 +191,48 @@ public class MqPersistence {
         }
     }
 
+    /** Return up to n unprocessed messages from the specified inbox that are in states 'NEW' or 'ACK' */
+    public Collection<MqMessage> eavesdrop(String inboxName, int n) throws SQLException {
+        try (var conn = dataSource.getConnection();
+             var queryStmt = conn.prepareStatement("""
+                     SELECT
+                        ID,
+                        RELATED_ID,
+                        FUNCTION,
+                        PAYLOAD,
+                        STATE,
+                        SENDER_INBOX IS NOT NULL AS EXPECTS_RESPONSE
+                     FROM MESSAGE_QUEUE
+                     WHERE STATE IN ('NEW', 'ACK')
+                     AND RECIPIENT_INBOX=?
+                     LIMIT ?
+                     """)
+        ) {
+        queryStmt.setString(1, inboxName);
+        queryStmt.setInt(2, n);
+        var rs = queryStmt.executeQuery();
+
+        List<MqMessage> messages = new ArrayList<>(n);
+
+        while (rs.next()) {
+            long msgId = rs.getLong("ID");
+            long relatedId = rs.getLong("RELATED_ID");
+
+            String function = rs.getString("FUNCTION");
+            String payload = rs.getString("PAYLOAD");
+
+            MqMessageState state = MqMessageState.valueOf(rs.getString("STATE"));
+            boolean expectsResponse = rs.getBoolean("EXPECTS_RESPONSE");
+
+            var msg = new MqMessage(msgId, relatedId, function, payload, state, expectsResponse);
+
+            messages.add(msg);
+        }
+
+        return messages;
+    }
+
+}
     /**  Marks unclaimed messages addressed to this inbox with instanceUUID and tick,
      * then returns these messages.
      */
@@ -205,7 +247,14 @@ public class MqPersistence {
         // Then fetch the messages that were marked
         try (var conn = dataSource.getConnection();
              var queryStmt = conn.prepareStatement("""
-                     SELECT ID, RELATED_ID, FUNCTION, PAYLOAD, STATE, SENDER_INBOX FROM MESSAGE_QUEUE
+                     SELECT
+                        ID,
+                        RELATED_ID,
+                        FUNCTION,
+                        PAYLOAD,
+                        STATE,
+                        SENDER_INBOX IS NOT NULL AS EXPECTS_RESPONSE
+                     FROM MESSAGE_QUEUE
                      WHERE OWNER_INSTANCE=? AND OWNER_TICK=?
                      """)
         ) {
@@ -216,14 +265,14 @@ public class MqPersistence {
             List<MqMessage> messages = new ArrayList<>(expected);
 
             while (rs.next()) {
-                long msgId = rs.getLong(1);
-                long relatedId = rs.getLong(2);
+                long msgId = rs.getLong("ID");
+                long relatedId = rs.getLong("RELATED_ID");
 
-                String function = rs.getString(3);
-                String payload = rs.getString(4);
+                String function = rs.getString("FUNCTION");
+                String payload = rs.getString("PAYLOAD");
 
-                MqMessageState state = MqMessageState.valueOf(rs.getString(5));
-                boolean expectsResponse = rs.getBoolean(6);
+                MqMessageState state = MqMessageState.valueOf(rs.getString("STATE"));
+                boolean expectsResponse = rs.getBoolean("EXPECTS_RESPONSE");
 
                 var msg = new MqMessage(msgId, relatedId, function, payload, state, expectsResponse);
 

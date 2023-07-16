@@ -105,14 +105,6 @@ public class ReconvertAndLoadProcess extends AbstractStateGraph {
         var request = new ConvertRequest(message.crawlStorageId, processedArea.id());
         long id = mqConverterOutbox.sendAsync(ConvertRequest.class.getSimpleName(), gson.toJson(request));
 
-        Executors.defaultThreadFactory().newThread(() -> {
-            try {
-                processService.trigger(ProcessService.ProcessId.CONVERTER);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }).start();
-
         return message
                 .withProcessedStorageId(processedArea.id())
                 .withConverterMsgId(id);
@@ -134,14 +126,6 @@ public class ReconvertAndLoadProcess extends AbstractStateGraph {
         var request = new LoadRequest(message.processedStorageId);
         long id = mqLoaderOutbox.sendAsync(LoadRequest.class.getSimpleName(), gson.toJson(request));
 
-        Executors.defaultThreadFactory().newThread(() -> {
-            try {
-                processService.trigger(ProcessService.ProcessId.LOADER);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }).start();
-
         return message.withLoaderMsgId(id);
 
     }
@@ -155,23 +139,33 @@ public class ReconvertAndLoadProcess extends AbstractStateGraph {
     }
 
     public MqMessage waitResponse(MqOutbox outbox, ProcessService.ProcessId processId, long id) throws Exception {
-
+        if (!waitForProcess(processId, TimeUnit.SECONDS, 30)) {
+            error("Process " + processId + " did not launch");
+        }
         for (;;) {
             try {
                 return outbox.waitResponse(id, 1, TimeUnit.SECONDS);
             }
             catch (TimeoutException ex) {
-                if (!processService.isRunning(processId)) {
-                    try {
-                        return outbox.waitResponse(id, 10, TimeUnit.SECONDS);
-                    }
-                    catch (TimeoutException ex2) {
-                        error("Process " + processId + " is not running");
-                    }
+                if (!waitForProcess(processId, TimeUnit.SECONDS, 30)) {
+                    error("Process " + processId + " died and did not re-launch");
                 }
             }
         }
+    }
 
+    public boolean waitForProcess(ProcessService.ProcessId processId, TimeUnit unit, int duration) throws InterruptedException {
+
+        // Wait for process to start
+        long deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(30);
+        while (System.currentTimeMillis() < deadline) {
+            if (processService.isRunning(processId))
+                return true;
+
+            TimeUnit.SECONDS.sleep(1);
+        }
+
+        return false;
     }
 
 //    @GraphState(name = MOVE_INDEX_FILES, next = RELOAD_LEXICON, resume = ResumeBehavior.ERROR)
