@@ -22,6 +22,8 @@ tasks.distZip.enabled = false
 apply from: "$rootProject.projectDir/docker-service.gradle"
 
 dependencies {
+    implementation libs.bundles.gson
+
     implementation project(':code:common:db')
     implementation project(':code:common:model')
     implementation project(':code:common:service')
@@ -30,10 +32,9 @@ dependencies {
     implementation project(':code:common:message-queue')
     implementation project(':code:common:service-discovery')
     implementation project(':code:common:service-client')
-    implementation project(':code:process-models:converting-model')
-    implementation project(':code:process-models:crawling-model')
     implementation project(':code:api:search-api')
     implementation project(':code:api:index-api')
+    implementation project(':code:api:process-mqapi')
 
 
     implementation libs.lombok
@@ -43,11 +44,11 @@ dependencies {
     implementation libs.prometheus
     implementation libs.notnull
     implementation libs.guice
+
     implementation libs.trove
     implementation libs.spark
     implementation libs.fastutil
     implementation libs.commons.io
-    implementation libs.bundles.gson
     implementation libs.bundles.mariadb
 
     testImplementation libs.bundles.slf4j.test

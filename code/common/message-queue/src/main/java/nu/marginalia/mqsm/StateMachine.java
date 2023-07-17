@@ -186,8 +186,16 @@ public class StateMachine {
             if (resumeState.resumeBehavior().equals(ResumeBehavior.ERROR)) {
                 // The message is acknowledged, but the state does not support resuming
                 smOutbox.notify(expectedMessage.id, "ERROR", "Illegal resumption from ACK'ed state " + message.function());
-            } else {
+            }
+            else if (resumeState.resumeBehavior().equals(ResumeBehavior.RESTART)) {
+                this.state = resumeState;
 
+                // The message is already acknowledged, we flag it as dead and then send an identical message
+                smOutbox.flagAsDead(message.msgId());
+                expectedMessage = ExpectedMessage.responseTo(message);
+                smOutbox.notify(message.msgId(), "INITIAL", "");
+            }
+            else {
                 this.state = resumeState;
 
                 // The message is already acknowledged, we flag it as dead and then send an identical message

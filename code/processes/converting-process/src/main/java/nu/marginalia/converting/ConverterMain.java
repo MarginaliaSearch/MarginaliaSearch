@@ -29,7 +29,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static nu.marginalia.converting.mqapi.ConverterInboxNames.CONVERTER_INBOX;
+import static nu.marginalia.mqapi.ProcessInboxNames.CONVERTER_INBOX;
 
 public class ConverterMain {
 
@@ -176,10 +176,10 @@ public class ConverterMain {
 
         var inbox = messageQueueFactory.createSingleShotInbox(CONVERTER_INBOX, UUID.randomUUID());
 
-        var msgOpt = getMessage(inbox, nu.marginalia.converting.mqapi.ConvertRequest.class.getSimpleName());
+        var msgOpt = getMessage(inbox, nu.marginalia.mqapi.converting.ConvertRequest.class.getSimpleName());
         var msg = msgOpt.orElseThrow(() -> new RuntimeException("No message received"));
 
-        var request = gson.fromJson(msg.payload(), nu.marginalia.converting.mqapi.ConvertRequest.class);
+        var request = gson.fromJson(msg.payload(), nu.marginalia.mqapi.converting.ConvertRequest.class);
 
         var crawlData = fileStorageService.getStorage(request.crawlStorage);
         var processData = fileStorageService.getStorage(request.processedDataStorage);

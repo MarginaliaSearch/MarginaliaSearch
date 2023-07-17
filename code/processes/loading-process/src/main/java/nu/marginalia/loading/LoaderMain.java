@@ -7,7 +7,6 @@ import com.google.inject.Injector;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import nu.marginalia.db.storage.FileStorageService;
-import nu.marginalia.db.storage.model.FileStorage;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.inbox.MqInboxResponse;
@@ -30,7 +29,7 @@ import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import static nu.marginalia.converting.mqapi.ConverterInboxNames.LOADER_INBOX;
+import static nu.marginalia.mqapi.ProcessInboxNames.LOADER_INBOX;
 
 public class LoaderMain {
     private static final Logger logger = LoggerFactory.getLogger(LoaderMain.class);
@@ -215,16 +214,16 @@ public class LoaderMain {
 
         var inbox = messageQueueFactory.createSingleShotInbox(LOADER_INBOX, UUID.randomUUID());
 
-        var msgOpt = getMessage(inbox, nu.marginalia.converting.mqapi.LoadRequest.class.getSimpleName());
+        var msgOpt = getMessage(inbox, nu.marginalia.mqapi.loading.LoadRequest.class.getSimpleName());
         if (msgOpt.isEmpty())
             throw new RuntimeException("No instruction received in inbox");
         var msg = msgOpt.get();
 
-        if (!nu.marginalia.converting.mqapi.LoadRequest.class.getSimpleName().equals(msg.function())) {
+        if (!nu.marginalia.mqapi.loading.LoadRequest.class.getSimpleName().equals(msg.function())) {
             throw new RuntimeException("Unexpected message in inbox: " + msg);
         }
 
-        var request = gson.fromJson(msg.payload(), nu.marginalia.converting.mqapi.LoadRequest.class);
+        var request = gson.fromJson(msg.payload(), nu.marginalia.mqapi.loading.LoadRequest.class);
 
         var processData = fileStorageService.getStorage(request.processedDataStorage);
 

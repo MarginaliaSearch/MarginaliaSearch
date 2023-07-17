@@ -3,7 +3,7 @@ package nu.marginalia.control.fsm.monitor;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.control.svc.ProcessService;
-import nu.marginalia.converting.mqapi.ConverterInboxNames;
+import nu.marginalia.mqapi.ProcessInboxNames;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.mqsm.StateFactory;
 
@@ -17,7 +17,7 @@ public class LoaderMonitorFSM extends AbstractProcessSpawnerFSM {
                             ProcessService processService) {
 
         super(stateFactory, persistence, processService,
-                ConverterInboxNames.LOADER_INBOX,
+                ProcessInboxNames.LOADER_INBOX,
                 ProcessService.ProcessId.LOADER);
     }
 

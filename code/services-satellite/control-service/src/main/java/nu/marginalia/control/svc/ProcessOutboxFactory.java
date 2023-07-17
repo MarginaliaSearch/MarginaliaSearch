@@ -2,7 +2,7 @@ package nu.marginalia.control.svc;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.converting.mqapi.ConverterInboxNames;
+import nu.marginalia.mqapi.ProcessInboxNames;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.service.server.BaseServiceParams;
@@ -19,9 +19,9 @@ public class ProcessOutboxFactory {
     }
 
     public MqOutbox createConverterOutbox() {
-        return new MqOutbox(persistence, ConverterInboxNames.CONVERTER_INBOX, params.configuration.serviceName(), params.configuration.instanceUuid());
+        return new MqOutbox(persistence, ProcessInboxNames.CONVERTER_INBOX, params.configuration.serviceName(), params.configuration.instanceUuid());
     }
     public MqOutbox createLoaderOutbox() {
-        return new MqOutbox(persistence, ConverterInboxNames.LOADER_INBOX, params.configuration.serviceName(), params.configuration.instanceUuid());
+        return new MqOutbox(persistence, ProcessInboxNames.LOADER_INBOX, params.configuration.serviceName(), params.configuration.instanceUuid());
     }
 }

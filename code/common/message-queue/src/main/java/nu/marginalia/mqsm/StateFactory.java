@@ -28,6 +28,11 @@ public class StateFactory {
 
             @Override
             public StateTransition next(String message) {
+
+                if (message.equals("")) {
+                    return logic.apply(null);
+                }
+
                 return logic.apply(gson.fromJson(message, param));
             }
 
@@ -72,6 +77,11 @@ public class StateFactory {
     }
 
     public StateTransition transition(String state, Object message) {
+
+        if (null == message) {
+            return StateTransition.to(state);
+        }
+
         return StateTransition.to(state, gson.toJson(message));
     }
 

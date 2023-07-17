@@ -77,38 +77,31 @@ public class ControlService extends Service {
                 (req, rsp) -> Map.of("storage", controlFileStorageService.getStorageList()),
                 (map) -> storageRenderer.render((Map<?, ?>) map));
 
+        final HtmlRedirect redirectToServices = new HtmlRedirect("/services");
+        final HtmlRedirect redirectToProcesses = new HtmlRedirect("/processes");
+        final HtmlRedirect redirectToStorage = new HtmlRedirect("/storage");
+
         Spark.post("/public/fsms/:fsm/start", (req, rsp) -> {
             controlFSMs.start(ControlProcess.valueOf(req.params("fsm").toUpperCase()));
-            return """
-                    <?doctype html>
-                    <html><head><meta http-equiv="refresh" content="0;URL='/processes'" /></head></html>
-                    """;
-        });
+            return "";
+        }, redirectToProcesses);
+
         Spark.post("/public/fsms/:fsm/stop", (req, rsp) -> {
             controlFSMs.stop(ControlProcess.valueOf(req.params("fsm").toUpperCase()));
-            return """
-                    <?doctype html>
-                    <html><head><meta http-equiv="refresh" content="0;URL='/processes'" /></head></html>
-                    """;
-        });
+            return "";
+        }, redirectToProcesses);
 
         // TODO: This should be a POST
         Spark.get("/public/repartition", (req, rsp) -> {
             controlFSMs.start(ControlProcess.REPARTITION_REINDEX);
-            return """
-                    <?doctype html>
-                    <html><head><meta http-equiv="refresh" content="0;URL='/processes'" /></head></html>
-                    """;
-        });
+            return "";
+        } , redirectToProcesses);
 
-        // TODO: This should be a POST
-        Spark.get("/public/reconvert/:fid", (req, rsp) -> {
+        Spark.post("/public/storage/:fid/process", (req, rsp) -> {
             controlFSMs.start(ControlProcess.RECONVERT_LOAD, FileStorageId.of(Integer.parseInt(req.params("fid"))));
-            return """
-                    <?doctype html>
-                    <html><head><meta http-equiv="refresh" content="0;URL='/processes'" /></head></html>
-                    """;
-        });
+            return "";
+        }, redirectToProcesses);
+        Spark.post("/public/storage/:fid/delete", controlFileStorageService::flagFileForDeletionRequest, redirectToStorage);
 
         Spark.get("/public/:resource", this::serveStatic);
 

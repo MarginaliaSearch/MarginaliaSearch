@@ -1,4 +1,4 @@
-package nu.marginalia.converting.mqapi;
+package nu.marginalia.mqapi.converting;
 
 import lombok.AllArgsConstructor;
 import nu.marginalia.db.storage.model.FileStorageId;

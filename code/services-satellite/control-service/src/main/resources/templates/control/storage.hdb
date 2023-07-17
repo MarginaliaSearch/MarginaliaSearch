@@ -33,10 +33,26 @@
       </tr>
       {{#each storage}}
         <tr>
-            <td></td>
-            <td>{{type}}</td>
-            <td colspan="2">{{path}}</td>
-            <td>{{description}}</td>
+            <td>
+                {{#if isLoadable}}
+                    <form method="post" action="/storage/{{storage.id}}/load">
+                        <button type="submit">Load</button>
+                    </form>
+                {{/if}}
+                {{#if isConvertible}}
+                    <form method="post" action="/storage/{{storage.id}}/process">
+                        <button type="submit">Process</button>
+                    </form>
+                {{/if}}
+                {{#if isDeletable}}
+                    <form method="post" action="/storage/{{storage.id}}/delete" onsubmit="return confirm('Confirm deletion of {{storage.path}}')">
+                        <button type="submit">Delete</button>
+                    </form>
+                {{/if}}
+            </td>
+            <td>{{storage.type}}</td>
+            <td colspan="2">{{storage.path}}</td>
+            <td>{{storage.description}}</td>
         </tr>
       {{/each}}
       {{/each}}

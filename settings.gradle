@@ -44,6 +44,7 @@ include 'code:features-index:domain-ranking'
 include 'code:api:search-api'
 include 'code:api:index-api'
 include 'code:api:assistant-api'
+include 'code:api:process-mqapi'
 
 include 'code:common:service-discovery'
 include 'code:common:service-client'
