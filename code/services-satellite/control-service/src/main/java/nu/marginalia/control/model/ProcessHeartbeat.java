@@ -1,5 +1,7 @@
 package nu.marginalia.control.model;
 
+import nu.marginalia.control.svc.ProcessService;
+
 public record ProcessHeartbeat(
         String processId,
         String processBase,
@@ -23,6 +25,9 @@ public record ProcessHeartbeat(
     public boolean isStopped() {
         return "STOPPED".equals(status);
     }
+    public boolean isRunning() {
+        return "RUNNING".equals(status);
+    }
     public String progressStyle() {
         if ("RUNNING".equals(status) && progress != null) {
             return """
@@ -30,5 +35,14 @@ public record ProcessHeartbeat(
                     """.formatted(progress, progress, progress);
         }
         return "";
+    }
+
+    public ProcessService.ProcessId getProcessId() {
+        return switch (processBase) {
+            case "converter" -> ProcessService.ProcessId.CONVERTER;
+            case "crawler" -> ProcessService.ProcessId.CRAWLER;
+            case "loader" -> ProcessService.ProcessId.LOADER;
+            default -> throw new RuntimeException("Unknown process base: " + processBase);
+        };
     }
 }

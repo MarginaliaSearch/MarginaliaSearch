@@ -1,4 +1,4 @@
-package nu.marginalia.control.process;
+package nu.marginalia.control.fsm.task;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
@@ -15,7 +15,6 @@ import nu.marginalia.db.storage.model.FileStorageBaseType;
 import nu.marginalia.db.storage.model.FileStorageId;
 import nu.marginalia.db.storage.model.FileStorageType;
 import nu.marginalia.index.client.IndexClient;
-import nu.marginalia.index.client.IndexMqEndpoints;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.outbox.MqOutbox;
@@ -24,17 +23,12 @@ import nu.marginalia.mqsm.graph.AbstractStateGraph;
 import nu.marginalia.mqsm.graph.GraphState;
 import nu.marginalia.mqsm.graph.ResumeBehavior;
 import nu.marginalia.search.client.SearchClient;
-import nu.marginalia.search.client.SearchMqEndpoints;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @Singleton
-public class ReconvertAndLoadProcess extends AbstractStateGraph {
+public class ReconvertAndLoadFSM extends AbstractStateGraph {
 
     // STATES
 
@@ -66,13 +60,13 @@ public class ReconvertAndLoadProcess extends AbstractStateGraph {
     };
 
     @Inject
-    public ReconvertAndLoadProcess(StateFactory stateFactory,
-                                   ProcessService processService,
-                                   IndexClient indexClient,
-                                   ProcessOutboxFactory processOutboxFactory,
-                                   SearchClient searchClient,
-                                   FileStorageService storageService,
-                                   Gson gson
+    public ReconvertAndLoadFSM(StateFactory stateFactory,
+                               ProcessService processService,
+                               IndexClient indexClient,
+                               ProcessOutboxFactory processOutboxFactory,
+                               SearchClient searchClient,
+                               FileStorageService storageService,
+                               Gson gson
                                    )
     {
         super(stateFactory);

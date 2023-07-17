@@ -4,14 +4,12 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 import nu.marginalia.client.ServiceMonitors;
 import nu.marginalia.control.model.ControlProcess;
-import nu.marginalia.control.process.ControlProcesses;
+import nu.marginalia.control.fsm.ControlFSMs;
 import nu.marginalia.control.svc.*;
 import nu.marginalia.db.storage.model.FileStorageId;
 import nu.marginalia.model.gson.GsonFactory;
-import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
-import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.server.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,9 +18,7 @@ import spark.Response;
 import spark.Spark;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 public class ControlService extends Service {
 
@@ -43,7 +39,7 @@ public class ControlService extends Service {
                           HeartbeatService heartbeatService,
                           EventLogService eventLogService,
                           RendererFactory rendererFactory,
-                          ControlProcesses controlProcesses,
+                          ControlFSMs controlFSMs,
                           StaticResources staticResources,
                           MessageQueueViewService messageQueueViewService,
                           ControlFileStorageService controlFileStorageService
@@ -73,7 +69,7 @@ public class ControlService extends Service {
 
         Spark.get("/public/processes",
                 (req, rsp) -> Map.of("processes", heartbeatService.getProcessHeartbeats(),
-                              "fsms", controlProcesses.getFsmStates(),
+                              "fsms", controlFSMs.getFsmStates(),
                               "messages", messageQueueViewService.getLastEntries(20)),
                 (map) -> processesRenderer.render((Map<?, ?>) map));
 
@@ -82,14 +78,14 @@ public class ControlService extends Service {
                 (map) -> storageRenderer.render((Map<?, ?>) map));
 
         Spark.post("/public/fsms/:fsm/start", (req, rsp) -> {
-            controlProcesses.start(ControlProcess.valueOf(req.params("fsm").toUpperCase()));
+            controlFSMs.start(ControlProcess.valueOf(req.params("fsm").toUpperCase()));
             return """
                     <?doctype html>
                     <html><head><meta http-equiv="refresh" content="0;URL='/processes'" /></head></html>
                     """;
         });
         Spark.post("/public/fsms/:fsm/stop", (req, rsp) -> {
-            controlProcesses.stop(ControlProcess.valueOf(req.params("fsm").toUpperCase()));
+            controlFSMs.stop(ControlProcess.valueOf(req.params("fsm").toUpperCase()));
             return """
                     <?doctype html>
                     <html><head><meta http-equiv="refresh" content="0;URL='/processes'" /></head></html>
@@ -98,7 +94,7 @@ public class ControlService extends Service {
 
         // TODO: This should be a POST
         Spark.get("/public/repartition", (req, rsp) -> {
-            controlProcesses.start(ControlProcess.REPARTITION_REINDEX);
+            controlFSMs.start(ControlProcess.REPARTITION_REINDEX);
             return """
                     <?doctype html>
                     <html><head><meta http-equiv="refresh" content="0;URL='/processes'" /></head></html>
@@ -106,8 +102,8 @@ public class ControlService extends Service {
         });
 
         // TODO: This should be a POST
-        Spark.get("/public/reconvert", (req, rsp) -> {
-            controlProcesses.start(ControlProcess.RECONVERT_LOAD, FileStorageId.of(11));
+        Spark.get("/public/reconvert/:fid", (req, rsp) -> {
+            controlFSMs.start(ControlProcess.RECONVERT_LOAD, FileStorageId.of(Integer.parseInt(req.params("fid"))));
             return """
                     <?doctype html>
                     <html><head><meta http-equiv="refresh" content="0;URL='/processes'" /></head></html>

@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -214,7 +215,7 @@ public class LoaderMain {
 
         var inbox = messageQueueFactory.createSingleShotInbox(LOADER_INBOX, UUID.randomUUID());
 
-        var msgOpt = inbox.waitForMessage(30, TimeUnit.SECONDS);
+        var msgOpt = getMessage(inbox, nu.marginalia.converting.mqapi.LoadRequest.class.getSimpleName());
         if (msgOpt.isEmpty())
             throw new RuntimeException("No instruction received in inbox");
         var msg = msgOpt.get();
@@ -230,6 +231,21 @@ public class LoaderMain {
         var plan = new CrawlPlan(null, null,  new CrawlPlan.WorkDir(processData.path(), "processor.log"));
 
         return new LoadRequest(plan, msg, inbox);
+    }
+
+    private Optional<MqMessage> getMessage(MqSingleShotInbox inbox, String expectedFunction) throws SQLException, InterruptedException {
+        var opt = inbox.waitForMessage(30, TimeUnit.SECONDS);
+        if (opt.isPresent()) {
+            if (!opt.get().function().equals(expectedFunction)) {
+                throw new RuntimeException("Unexpected function: " + opt.get().function());
+            }
+            return opt;
+        }
+        else {
+            var stolenMessage = inbox.stealMessage(msg -> msg.function().equals(expectedFunction));
+            stolenMessage.ifPresent(mqMessage -> logger.info("Stole message {}", mqMessage));
+            return stolenMessage;
+        }
     }
 
 }

@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.sql.SQLException;
+import java.util.Optional;
 
 /** Manages file storage for processes and services
  */
@@ -21,6 +22,21 @@ public class FileStorageService {
     @Inject
     public FileStorageService(HikariDataSource dataSource) {
         this.dataSource = dataSource;
+    }
+
+    public Optional<FileStorage> findFileStorageToDelete() {
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("""
+                SELECT ID FROM FILE_STORAGE WHERE DO_PURGE LIMIT 1
+                """)) {
+            var rs = stmt.executeQuery();
+            if (rs.next()) {
+                return Optional.of(getStorage(new FileStorageId(rs.getLong(1))));
+            }
+        } catch (SQLException e) {
+            return Optional.empty();
+        }
+        return Optional.empty();
     }
 
     /** @return the storage base with the given id, or null if it does not exist */
@@ -278,4 +294,13 @@ public class FileStorageService {
         }
     }
 
+    public void removeFileStorage(FileStorageId id) throws SQLException {
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("""
+                     DELETE FROM FILE_STORAGE WHERE ID = ?
+                     """)) {
+            stmt.setLong(1, id.id());
+            stmt.executeUpdate();
+        }
+    }
 }

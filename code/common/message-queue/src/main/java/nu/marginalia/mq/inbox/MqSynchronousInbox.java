@@ -152,7 +152,7 @@ public class MqSynchronousInbox implements MqInboxIf {
                         currentTask.get();
                     }
                     catch (Exception ex) {
-                        logger.error("Inbox task was aborted", ex);
+                        logger.error("Inbox task was aborted");
                     }
                     finally {
                         currentTask = null;

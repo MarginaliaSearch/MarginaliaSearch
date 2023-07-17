@@ -1,4 +1,4 @@
-package nu.marginalia.control.process;
+package nu.marginalia.control.fsm.task;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -12,7 +12,7 @@ import nu.marginalia.mqsm.graph.GraphState;
 import nu.marginalia.mqsm.graph.ResumeBehavior;
 
 @Singleton
-public class RepartitionReindexProcess extends AbstractStateGraph {
+public class RepartitionReindexFSM extends AbstractStateGraph {
 
     private final MqOutbox indexOutbox;
 
@@ -27,8 +27,8 @@ public class RepartitionReindexProcess extends AbstractStateGraph {
 
 
     @Inject
-    public RepartitionReindexProcess(StateFactory stateFactory,
-                                     IndexClient indexClient) {
+    public RepartitionReindexFSM(StateFactory stateFactory,
+                                 IndexClient indexClient) {
         super(stateFactory);
 
         indexOutbox = indexClient.outbox();

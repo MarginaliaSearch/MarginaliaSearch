@@ -1,9 +1,8 @@
-package nu.marginalia.control.process;
+package nu.marginalia.control.fsm.monitor;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.control.svc.ProcessService;
-import nu.marginalia.converting.mqapi.ConverterInboxNames;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.mqsm.StateFactory;
 import nu.marginalia.mqsm.graph.AbstractStateGraph;
@@ -14,35 +13,39 @@ import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
-public class LoaderMonitorProcess extends AbstractStateGraph {
+public class AbstractProcessSpawnerFSM extends AbstractStateGraph {
 
     private final MqPersistence persistence;
     private final ProcessService processService;
     public static final String INITIAL = "INITIAL";
-    public static final String CHECK = "CHECK";
+    public static final String MONITOR = "MONITOR";
     public static final String RUN = "RUN";
     public static final String END = "END";
 
-    public static final int MAX_ATTEMPTS = 1;
-    public static final String inboxName = ConverterInboxNames.LOADER_INBOX;
-    public static final ProcessService.ProcessId processId = ProcessService.ProcessId.LOADER;
+    public static final int MAX_ATTEMPTS = 3;
+    private final String inboxName;
+    private final ProcessService.ProcessId processId;
 
     @Inject
-    public LoaderMonitorProcess(StateFactory stateFactory,
-                                MqPersistence persistence,
-                                ProcessService processService) {
+    public AbstractProcessSpawnerFSM(StateFactory stateFactory,
+                                     MqPersistence persistence,
+                                     ProcessService processService,
+                                     String inboxName,
+                                     ProcessService.ProcessId processId) {
         super(stateFactory);
         this.persistence = persistence;
         this.processService = processService;
+        this.inboxName = inboxName;
+        this.processId = processId;
     }
 
-    @GraphState(name = INITIAL, next = CHECK)
+    @GraphState(name = INITIAL, next = MONITOR)
     public void init() {
 
     }
 
-    @GraphState(name = CHECK, resume = ResumeBehavior.RETRY)
-    public void check() throws SQLException, InterruptedException {
+    @GraphState(name = MONITOR, resume = ResumeBehavior.RETRY)
+    public void monitor() throws SQLException, InterruptedException {
 
         for (;;) {
             var messages = persistence.eavesdrop(inboxName, 1);
@@ -67,7 +70,7 @@ public class LoaderMonitorProcess extends AbstractStateGraph {
             else throw e;
         }
 
-        transition(CHECK);
+        transition(MONITOR);
     }
 
 }

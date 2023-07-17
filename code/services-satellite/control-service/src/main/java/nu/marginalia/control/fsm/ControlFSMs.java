@@ -1,4 +1,4 @@
-package nu.marginalia.control.process;
+package nu.marginalia.control.fsm;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
@@ -6,6 +6,11 @@ import com.google.inject.Singleton;
 import lombok.SneakyThrows;
 import nu.marginalia.control.model.ControlProcess;
 import nu.marginalia.control.model.ControlProcessState;
+import nu.marginalia.control.fsm.monitor.*;
+import nu.marginalia.control.fsm.monitor.ConverterMonitorFSM;
+import nu.marginalia.control.fsm.monitor.LoaderMonitorFSM;
+import nu.marginalia.control.fsm.task.ReconvertAndLoadFSM;
+import nu.marginalia.control.fsm.task.RepartitionReindexFSM;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mqsm.StateMachine;
@@ -20,29 +25,35 @@ import java.util.Map;
 import java.util.UUID;
 
 @Singleton
-public class ControlProcesses {
+public class ControlFSMs {
     private final ServiceEventLog eventLog;
     private final Gson gson;
     private final MessageQueueFactory messageQueueFactory;
     public Map<ControlProcess, StateMachine> stateMachines = new HashMap<>();
 
     @Inject
-    public ControlProcesses(MessageQueueFactory messageQueueFactory,
-                            GsonFactory gsonFactory,
-                            BaseServiceParams baseServiceParams,
-                            RepartitionReindexProcess repartitionReindexProcess,
-                            ReconvertAndLoadProcess reconvertAndLoadProcess,
-                            ConverterMonitorProcess converterMonitorProcess,
-                            LoaderMonitorProcess loaderMonitorProcess
+    public ControlFSMs(MessageQueueFactory messageQueueFactory,
+                       GsonFactory gsonFactory,
+                       BaseServiceParams baseServiceParams,
+                       RepartitionReindexFSM repartitionReindexFSM,
+                       ReconvertAndLoadFSM reconvertAndLoadFSM,
+                       ConverterMonitorFSM converterMonitorFSM,
+                       LoaderMonitorFSM loaderMonitor,
+                       MessageQueueMonitorFSM messageQueueMonitor,
+                       ProcessLivenessMonitorFSM processMonitorFSM,
+                       FileStorageMonitorFSM fileStorageMonitorFSM
                             ) {
         this.messageQueueFactory = messageQueueFactory;
         this.eventLog = baseServiceParams.eventLog;
         this.gson = gsonFactory.get();
 
-        register(ControlProcess.REPARTITION_REINDEX, repartitionReindexProcess);
-        register(ControlProcess.RECONVERT_LOAD, reconvertAndLoadProcess);
-        register(ControlProcess.CONVERTER_MONITOR, converterMonitorProcess);
-        register(ControlProcess.LOADER_MONITOR, loaderMonitorProcess);
+        register(ControlProcess.REPARTITION_REINDEX, repartitionReindexFSM);
+        register(ControlProcess.RECONVERT_LOAD, reconvertAndLoadFSM);
+        register(ControlProcess.CONVERTER_MONITOR, converterMonitorFSM);
+        register(ControlProcess.LOADER_MONITOR, loaderMonitor);
+        register(ControlProcess.MESSAGE_QUEUE_MONITOR, messageQueueMonitor);
+        register(ControlProcess.PROCESS_LIVENESS_MONITOR, processMonitorFSM);
+        register(ControlProcess.FILE_STORAGE_MONITOR, fileStorageMonitorFSM);
     }
 
     private void register(ControlProcess process, AbstractStateGraph graph) {

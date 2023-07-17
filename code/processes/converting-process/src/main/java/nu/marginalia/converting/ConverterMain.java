@@ -22,7 +22,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -174,14 +176,8 @@ public class ConverterMain {
 
         var inbox = messageQueueFactory.createSingleShotInbox(CONVERTER_INBOX, UUID.randomUUID());
 
-        var msgOpt = inbox.waitForMessage(30, TimeUnit.SECONDS);
-        if (msgOpt.isEmpty())
-            throw new RuntimeException("No instruction received in inbox");
-        var msg = msgOpt.get();
-
-        if (!nu.marginalia.converting.mqapi.ConvertRequest.class.getSimpleName().equals(msg.function())) {
-            throw new RuntimeException("Unexpected message in inbox: " + msg);
-        }
+        var msgOpt = getMessage(inbox, nu.marginalia.converting.mqapi.ConvertRequest.class.getSimpleName());
+        var msg = msgOpt.orElseThrow(() -> new RuntimeException("No message received"));
 
         var request = gson.fromJson(msg.payload(), nu.marginalia.converting.mqapi.ConvertRequest.class);
 
@@ -193,6 +189,21 @@ public class ConverterMain {
                         new CrawlPlan.WorkDir(processData.path(), "processor.log"));
 
         return new ConvertRequest(plan, msg, inbox);
+    }
+
+    private Optional<MqMessage> getMessage(MqSingleShotInbox inbox, String expectedFunction) throws SQLException, InterruptedException {
+        var opt = inbox.waitForMessage(30, TimeUnit.SECONDS);
+        if (opt.isPresent()) {
+            if (!opt.get().function().equals(expectedFunction)) {
+                throw new RuntimeException("Unexpected function: " + opt.get().function());
+            }
+            return opt;
+        }
+        else {
+            var stolenMessage = inbox.stealMessage(msg -> msg.function().equals(expectedFunction));
+            stolenMessage.ifPresent(mqMessage -> logger.info("Stole message {}", mqMessage));
+            return stolenMessage;
+        }
     }
 
 

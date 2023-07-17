@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.control.model.ProcessHeartbeat;
 import nu.marginalia.control.model.ServiceHeartbeat;
+import nu.marginalia.service.control.ServiceEventLog;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -13,10 +14,13 @@ import java.util.List;
 @Singleton
 public class HeartbeatService {
     private final HikariDataSource dataSource;
+    private final ServiceEventLog eventLogService;
 
     @Inject
-    public HeartbeatService(HikariDataSource dataSource) {
+    public HeartbeatService(HikariDataSource dataSource,
+                            ServiceEventLog eventLogService) {
         this.dataSource = dataSource;
+        this.eventLogService = eventLogService;
     }
 
     public List<ServiceHeartbeat> getServiceHeartbeats() {
@@ -75,6 +79,25 @@ public class HeartbeatService {
         }
 
         return heartbeats;
+    }
+
+    public void flagProcessAsStopped(ProcessHeartbeat processHeartbeat) {
+        eventLogService.logEvent("PROCESS-MISSING", "Marking stale process heartbeat "
+                + processHeartbeat.processId() + " / " + processHeartbeat.uuidFull() + " as stopped");
+
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("""
+                     UPDATE PROCESS_HEARTBEAT
+                        SET STATUS = 'STOPPED'
+                      WHERE INSTANCE = ?
+                     """)) {
+
+            stmt.setString(1, processHeartbeat.uuidFull());
+            stmt.executeUpdate();
+        }
+        catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
 }

@@ -46,6 +46,7 @@ dependencies {
     implementation libs.trove
     implementation libs.spark
     implementation libs.fastutil
+    implementation libs.commons.io
     implementation libs.bundles.gson
     implementation libs.bundles.mariadb
 

@@ -362,4 +362,20 @@ public class MqPersistence {
         }
 
     }
+
+    public void changeOwner(long id, String instanceUUID, int tick) {
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("""
+                     UPDATE MESSAGE_QUEUE SET OWNER_INSTANCE=?, OWNER_TICK=?
+                     WHERE ID=?
+                     """)) {
+            stmt.setString(1, instanceUUID);
+            stmt.setInt(2, tick);
+            stmt.setLong(3, id);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

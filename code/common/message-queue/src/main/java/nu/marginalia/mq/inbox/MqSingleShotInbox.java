@@ -1,5 +1,6 @@
 package nu.marginalia.mq.inbox;
 
+import lombok.SneakyThrows;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.persistence.MqPersistence;
 
@@ -7,6 +8,7 @@ import java.sql.SQLException;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 /** A single-shot inbox that can be used to wait for a single message
  *  to arrive in an inbox, and then reply to that message
@@ -26,6 +28,12 @@ public class MqSingleShotInbox {
         this.persistence = persistence;
     }
 
+    /** Wait for a message to arrive in the specified inbox, up to the specified timeout.
+     *
+     *  @param timeout The timeout
+     *  @param unit The time unit
+     *  @return The message, or empty if no message arrived before the timeout
+     */
     public Optional<MqMessage> waitForMessage(long timeout, TimeUnit unit) throws InterruptedException, SQLException {
         final long deadline = System.currentTimeMillis() + unit.toMillis(timeout);
 
@@ -44,6 +52,25 @@ public class MqSingleShotInbox {
         }
     }
 
+
+    /** Steal a message from the inbox, and change the owner to this instance.  This is useful
+     * for resuming an aborted process.
+     *
+     *  @param predicate A predicate that must be true for the message to be stolen
+     *  @return The stolen message, or empty if no message was stolen
+     */
+    @SneakyThrows
+    public Optional<MqMessage> stealMessage(Predicate<MqMessage> predicate) {
+        for (var message : persistence.eavesdrop(inboxName, 5)) {
+            if (predicate.test(message)) {
+                persistence.changeOwner(message.msgId(), instanceUUID, -1);
+                return Optional.of(message);
+            }
+        }
+
+        return Optional.empty();
+    }
+
     public void sendResponse(MqMessage originalMessage, MqInboxResponse response) {
         try {
             persistence.sendResponse(originalMessage.msgId(), response.state(), response.message());
@@ -51,4 +78,5 @@ public class MqSingleShotInbox {
             throw new RuntimeException(e);
         }
     }
+
 }
