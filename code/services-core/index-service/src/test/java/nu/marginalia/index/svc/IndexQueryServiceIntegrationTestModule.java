@@ -6,9 +6,11 @@ import nu.marginalia.db.storage.model.FileStorage;
 import nu.marginalia.db.storage.model.FileStorageType;
 import nu.marginalia.index.IndexServicesFactory;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
+import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.KeywordLexiconReadOnlyView;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
+import nu.marginalia.lexicon.journal.KeywordLexiconJournalMode;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.index.svc.searchset.SearchSetAny;
 import nu.marginalia.index.util.TestUtil;
@@ -70,14 +72,18 @@ public class IndexQueryServiceIntegrationTestModule extends AbstractModule {
             when(setsServiceMock.getDomainRankings()).thenReturn(new DomainRankings());
             bind(IndexSearchSetsService.class).toInstance(setsServiceMock);
 
-            var keywordLexicon = new KeywordLexicon(new KeywordLexiconJournal(slowDir.resolve("dictionary.dat").toFile()));
+            var keywordLexicon = new KeywordLexicon(new KeywordLexiconJournal(
+                    slowDir.resolve("dictionary.dat").toFile(),
+                    KeywordLexiconJournalMode.READ_WRITE)
+            );
             bind(KeywordLexicon.class).toInstance(keywordLexicon);
             bind(KeywordLexiconReadOnlyView.class).toInstance(new KeywordLexiconReadOnlyView(keywordLexicon));
 
-            bind(IndexJournalWriter.class).toInstance(servicesFactory.createIndexJournalWriter(keywordLexicon));
-
             bind(ServiceEventLog.class).toInstance(Mockito.mock(ServiceEventLog.class));
             bind(ServiceHeartbeat.class).toInstance(Mockito.mock(ServiceHeartbeat.class));
+
+            bind(IndexJournalWriter.class).toInstance(new IndexJournalWriterImpl(keywordLexicon,
+                    slowDir.resolve("page-index.dat")));
 
             bind(ServiceConfiguration.class).toInstance(new ServiceConfiguration(
                     ServiceId.Index,

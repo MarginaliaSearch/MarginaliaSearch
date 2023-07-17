@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 
 import static nu.marginalia.mqapi.ProcessInboxNames.CONVERTER_INBOX;
 
@@ -135,7 +136,12 @@ public class ConverterMain {
 
             };
 
-            for (var domain : plan.domainsIterable(id -> !processLog.isJobFinished(id))) {
+            // Advance the progress bar to the current position if this is a resumption
+            processedDomains.set(processLog.countFinishedJobs());
+            heartbeat.setProgress(processedDomains.incrementAndGet() / (double) totalDomains);
+
+            for (var domain : plan.domainsIterable(id -> !processLog.isJobFinished(id)))
+            {
                 pipe.accept(domain);
             }
 

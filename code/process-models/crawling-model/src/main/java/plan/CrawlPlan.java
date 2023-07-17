@@ -109,7 +109,7 @@ public class CrawlPlan {
 
         return WorkLog.iterableMap(crawl.getLogFile(),
                 entry -> {
-                    if (!idPredicate.test(entry.path())) {
+                    if (!idPredicate.test(entry.id())) {
                         return Optional.empty();
                     }
 

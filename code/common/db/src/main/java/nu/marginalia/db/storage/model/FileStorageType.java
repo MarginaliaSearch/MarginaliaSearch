@@ -8,5 +8,6 @@ public enum FileStorageType {
     LEXICON_STAGING,
     INDEX_LIVE,
     LEXICON_LIVE,
+    BACKUP,
     SEARCH_SETS
 }

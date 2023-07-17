@@ -58,7 +58,7 @@ public class AbstractProcessSpawnerFSM extends AbstractStateGraph {
         }
     }
 
-    @GraphState(name = RUN)
+    @GraphState(name = RUN, resume = ResumeBehavior.RESTART)
     public void run(Integer attempts) throws Exception {
         try {
             processService.trigger(processId);

@@ -12,6 +12,7 @@ import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.keyword.model.DocumentKeywords;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
+import nu.marginalia.lexicon.journal.KeywordLexiconJournalMode;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
@@ -20,6 +21,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.sql.SQLException;
 import java.util.Arrays;
 
@@ -38,7 +41,13 @@ public class LoaderIndexJournalWriter {
         var lexiconPath = lexiconArea.asPath().resolve("dictionary.dat");
         var indexPath = indexArea.asPath().resolve("page-index.dat");
 
-        lexicon = new KeywordLexicon(new KeywordLexiconJournal(lexiconPath.toFile()));
+        Files.deleteIfExists(lexiconPath);
+        Files.deleteIfExists(indexPath);
+
+        Files.createFile(indexPath, PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-r--r--")));
+        Files.createFile(lexiconPath, PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-r--r--")));
+
+        lexicon = new KeywordLexicon(new KeywordLexiconJournal(lexiconPath.toFile(), KeywordLexiconJournalMode.READ_WRITE));
         indexWriter = new IndexJournalWriterImpl(lexicon, indexPath);
     }
 

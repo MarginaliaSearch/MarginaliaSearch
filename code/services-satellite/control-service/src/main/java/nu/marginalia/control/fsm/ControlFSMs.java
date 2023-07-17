@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Singleton
 public class ControlFSMs {
@@ -68,10 +69,22 @@ public class ControlFSMs {
         eventLog.logEvent("FSM-STATE-CHANGE", process.id() + " -> " + state);
     }
 
+    public void startFrom(ControlProcess process, String state) throws Exception {
+        eventLog.logEvent("FSM-START", process.id());
+
+        stateMachines.get(process).initFrom(state);
+    }
+
     public void start(ControlProcess process) throws Exception {
         eventLog.logEvent("FSM-START", process.id());
 
         stateMachines.get(process).init();
+    }
+
+    public <T> void startFrom(ControlProcess process, String state, Object arg) throws Exception {
+        eventLog.logEvent("FSM-START", process.id());
+
+        stateMachines.get(process).initFrom(state, gson.toJson(arg));
     }
 
     public <T> void start(ControlProcess process, Object arg) throws Exception {
@@ -80,21 +93,15 @@ public class ControlFSMs {
         stateMachines.get(process).init(gson.toJson(arg));
     }
 
-    public List<ControlProcessState> getFsmStates() {
-        return stateMachines.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(e -> {
-
-            final MachineState state = e.getValue().getState();
-
-            final String machineName = e.getKey().name();
-            final String stateName = state.name();
-            final boolean terminal = state.isFinal();
-
-            return new ControlProcessState(machineName, stateName, terminal);
-        }).toList();
-    }
-
     @SneakyThrows
     public void stop(ControlProcess fsm) {
         stateMachines.get(fsm).abortExecution();
+    }
+
+    public Map<ControlProcess, MachineState> getMachineStates() {
+        return stateMachines.entrySet().stream().collect(
+                Collectors.toMap(
+                        Map.Entry::getKey, e -> e.getValue().getState())
+        );
     }
 }

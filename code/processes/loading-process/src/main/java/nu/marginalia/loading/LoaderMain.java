@@ -7,6 +7,7 @@ import com.google.inject.Injector;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import nu.marginalia.db.storage.FileStorageService;
+import nu.marginalia.loading.loader.IndexLoadKeywords;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.inbox.MqInboxResponse;
@@ -40,6 +41,7 @@ public class LoaderMain {
     private final ProcessHeartbeat heartbeat;
     private final MessageQueueFactory messageQueueFactory;
     private final FileStorageService fileStorageService;
+    private final IndexLoadKeywords indexLoadKeywords;
     private final Gson gson;
     private volatile boolean running = true;
 
@@ -65,6 +67,7 @@ public class LoaderMain {
                       ProcessHeartbeat heartbeat,
                       MessageQueueFactory messageQueueFactory,
                       FileStorageService fileStorageService,
+                      IndexLoadKeywords indexLoadKeywords,
                       Gson gson
                       ) {
 
@@ -73,6 +76,7 @@ public class LoaderMain {
         this.heartbeat = heartbeat;
         this.messageQueueFactory = messageQueueFactory;
         this.fileStorageService = fileStorageService;
+        this.indexLoadKeywords = indexLoadKeywords;
         this.gson = gson;
 
         heartbeat.start();
@@ -122,6 +126,9 @@ public class LoaderMain {
             running = false;
             processorThread.join();
             instructions.ok();
+
+            // This needs to be done in order to have a readable index journal
+            indexLoadKeywords.close();
         }
         catch (Exception ex) {
             logger.error("Failed to load", ex);

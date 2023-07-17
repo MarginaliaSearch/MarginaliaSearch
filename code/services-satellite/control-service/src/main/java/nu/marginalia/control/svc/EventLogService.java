@@ -45,4 +45,66 @@ public class EventLogService {
         }
     }
 
+    public List<EventLogEntry> getLastEntriesForService(String serviceName, int n) {
+        try (var conn = dataSource.getConnection();
+             var query = conn.prepareStatement("""
+                 SELECT SERVICE_NAME, INSTANCE, EVENT_TIME, EVENT_TYPE, EVENT_MESSAGE
+                 FROM SERVICE_EVENTLOG
+                 WHERE SERVICE_NAME = ?
+                 ORDER BY ID DESC
+                 LIMIT ?
+                 """)) {
+
+            query.setString(1, serviceName);
+            query.setInt(2, n);
+
+            List<EventLogEntry> entries = new ArrayList<>(n);
+            var rs = query.executeQuery();
+            while (rs.next()) {
+                entries.add(new EventLogEntry(
+                        rs.getString("SERVICE_NAME"),
+                        rs.getString("INSTANCE"),
+                        rs.getTimestamp("EVENT_TIME").toLocalDateTime().toLocalTime().toString(),
+                        rs.getString("EVENT_TYPE"),
+                        rs.getString("EVENT_MESSAGE")
+                ));
+            }
+            return entries;
+        }
+        catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+
+    public List<EventLogEntry> getLastEntriesForInstance(String instance, int n) {
+        try (var conn = dataSource.getConnection();
+             var query = conn.prepareStatement("""
+                 SELECT SERVICE_NAME, INSTANCE, EVENT_TIME, EVENT_TYPE, EVENT_MESSAGE
+                 FROM SERVICE_EVENTLOG
+                 WHERE INSTANCE = ?
+                 ORDER BY ID DESC
+                 LIMIT ?
+                 """)) {
+
+            query.setString(1, instance);
+            query.setInt(2, n);
+
+            List<EventLogEntry> entries = new ArrayList<>(n);
+            var rs = query.executeQuery();
+            while (rs.next()) {
+                entries.add(new EventLogEntry(
+                        rs.getString("SERVICE_NAME"),
+                        rs.getString("INSTANCE"),
+                        rs.getTimestamp("EVENT_TIME").toLocalDateTime().toLocalTime().toString(),
+                        rs.getString("EVENT_TYPE"),
+                        rs.getString("EVENT_MESSAGE")
+                ));
+            }
+            return entries;
+        }
+        catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
 }

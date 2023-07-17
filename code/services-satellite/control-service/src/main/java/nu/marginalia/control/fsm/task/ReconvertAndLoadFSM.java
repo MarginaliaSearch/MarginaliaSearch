@@ -23,7 +23,13 @@ import nu.marginalia.mqsm.graph.AbstractStateGraph;
 import nu.marginalia.mqsm.graph.GraphState;
 import nu.marginalia.mqsm.graph.ResumeBehavior;
 import nu.marginalia.search.client.SearchClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -32,23 +38,19 @@ public class ReconvertAndLoadFSM extends AbstractStateGraph {
 
     // STATES
 
-    private static final String INITIAL = "INITIAL";
-    private static final String RECONVERT = "RECONVERT";
-    private static final String RECONVERT_WAIT = "RECONVERT_WAIT";
-    private static final String LOAD = "LOAD";
-    private static final String LOAD_WAIT = "LOAD_WAIT";
-    private static final String MOVE_INDEX_FILES = "MOVE_INDEX_FILES";
-    private static final String RELOAD_LEXICON = "RELOAD_LEXICON";
-    private static final String RELOAD_LEXICON_WAIT = "RELOAD_LEXICON_WAIT";
-    private static final String FLUSH_CACHES = "FLUSH_CACHES";
-    private static final String END = "END";
+    public static final String INITIAL = "INITIAL";
+    public static final String RECONVERT = "RECONVERT";
+    public static final String RECONVERT_WAIT = "RECONVERT-WAIT";
+    public static final String LOAD = "LOAD";
+    public static final String LOAD_WAIT = "LOAD-WAIT";
+    public static final String SWAP_LEXICON = "SWAP-LEXICON";
+    public static final String END = "END";
     private final ProcessService processService;
-    private final MqOutbox mqIndexOutbox;
-    private final MqOutbox mqSearchOutbox;
     private final MqOutbox mqConverterOutbox;
     private final MqOutbox mqLoaderOutbox;
     private final FileStorageService storageService;
     private final Gson gson;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
 
     @AllArgsConstructor @With @NoArgsConstructor
@@ -62,17 +64,13 @@ public class ReconvertAndLoadFSM extends AbstractStateGraph {
     @Inject
     public ReconvertAndLoadFSM(StateFactory stateFactory,
                                ProcessService processService,
-                               IndexClient indexClient,
                                ProcessOutboxFactory processOutboxFactory,
-                               SearchClient searchClient,
                                FileStorageService storageService,
                                Gson gson
                                    )
     {
         super(stateFactory);
         this.processService = processService;
-        this.mqIndexOutbox = indexClient.outbox();
-        this.mqSearchOutbox = searchClient.outbox();
         this.mqConverterOutbox = processOutboxFactory.createConverterOutbox();
         this.mqLoaderOutbox = processOutboxFactory.createLoaderOutbox();
         this.storageService = storageService;
@@ -92,8 +90,12 @@ public class ReconvertAndLoadFSM extends AbstractStateGraph {
     @GraphState(name = RECONVERT, next = RECONVERT_WAIT, resume = ResumeBehavior.ERROR)
     public Message reconvert(Message message) throws Exception {
         // Create processed data area
+
+        var toProcess = storageService.getStorage(message.crawlStorageId);
+
         var base = storageService.getStorageBase(FileStorageBaseType.SLOW);
-        var processedArea = storageService.allocateTemporaryStorage(base, FileStorageType.PROCESSED_DATA, "processed-data", "Processed Data");
+        var processedArea = storageService.allocateTemporaryStorage(base, FileStorageType.PROCESSED_DATA, "processed-data",
+                "Processed Data; " + toProcess.description());
 
         // Pre-send convert request
         var request = new ConvertRequest(message.crawlStorageId, processedArea.id());
@@ -124,13 +126,40 @@ public class ReconvertAndLoadFSM extends AbstractStateGraph {
 
     }
 
-    @GraphState(name = LOAD_WAIT, next = END, resume = ResumeBehavior.RETRY)
+    @GraphState(name = LOAD_WAIT, next = SWAP_LEXICON, resume = ResumeBehavior.RETRY)
     public void loadWait(Message message) throws Exception {
         var rsp = waitResponse(mqLoaderOutbox, ProcessService.ProcessId.LOADER, message.loaderMsgId);
 
         if (rsp.state() != MqMessageState.OK)
             error("Loader failed");
     }
+
+
+
+    @GraphState(name = SWAP_LEXICON, next = END, resume = ResumeBehavior.RETRY)
+    public void swapLexicon(Message message) throws Exception {
+        var live = storageService.getStorageByType(FileStorageType.LEXICON_LIVE);
+
+        var staging = storageService.getStorageByType(FileStorageType.LEXICON_STAGING);
+        var fromSource = staging.asPath().resolve("dictionary.dat");
+        var liveDest = live.asPath().resolve("dictionary.dat");
+
+        // Backup live lexicon
+        var backupBase = storageService.getStorageBase(FileStorageBaseType.BACKUP);
+        var backup = storageService.allocateTemporaryStorage(backupBase, FileStorageType.BACKUP,
+                "lexicon", "Lexicon Backup; " + LocalDateTime.now());
+
+        Path backupDest = backup.asPath().resolve("dictionary.dat");
+
+        logger.info("Moving " + liveDest + " to " + backupDest);
+        Files.move(liveDest, backupDest);
+
+        // Swap in new lexicon
+        logger.info("Moving " + fromSource + " to " + liveDest);
+        Files.move(fromSource, liveDest, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+    }
+
+
 
     public MqMessage waitResponse(MqOutbox outbox, ProcessService.ProcessId processId, long id) throws Exception {
         if (!waitForProcess(processId, TimeUnit.SECONDS, 30)) {
@@ -162,37 +191,4 @@ public class ReconvertAndLoadFSM extends AbstractStateGraph {
         return false;
     }
 
-//    @GraphState(name = MOVE_INDEX_FILES, next = RELOAD_LEXICON, resume = ResumeBehavior.ERROR)
-//    public void moveIndexFiles(String crawlJob) throws Exception {
-//        Path indexData = Path.of("/vol/index.dat");
-//        Path indexDest = Path.of("/vol/iw/0/page-index.dat");
-//
-//        if (!Files.exists(indexData))
-//            error("Index data not found");
-//
-//        Files.move(indexData, indexDest, StandardCopyOption.REPLACE_EXISTING);
-//    }
-//
-//    @GraphState(name = RELOAD_LEXICON, next = RELOAD_LEXICON_WAIT, resume = ResumeBehavior.ERROR)
-//    public long reloadLexicon() throws Exception {
-//        return mqIndexOutbox.sendAsync(IndexMqEndpoints.INDEX_RELOAD_LEXICON, "");
-//    }
-//
-//    @GraphState(name = RELOAD_LEXICON_WAIT, next = FLUSH_CACHES, resume = ResumeBehavior.RETRY)
-//    public void reloadLexiconWait(long id) throws Exception {
-//        var rsp = mqIndexOutbox.waitResponse(id);
-//
-//        if (rsp.state() != MqMessageState.OK) {
-//            error("RELOAD_LEXICON failed");
-//        }
-//    }
-//
-//    @GraphState(name = FLUSH_CACHES, next = END, resume = ResumeBehavior.RETRY)
-//    public void flushCaches() throws Exception {
-//        var rsp = mqSearchOutbox.send(SearchMqEndpoints.FLUSH_CACHES, "");
-//
-//        if (rsp.state() != MqMessageState.OK) {
-//            error("FLUSH_CACHES failed");
-//        }
-//    }
 }

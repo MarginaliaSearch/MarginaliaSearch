@@ -12,6 +12,7 @@ import nu.marginalia.index.priority.ReverseIndexPriorityConverter;
 import nu.marginalia.index.priority.ReverseIndexPriorityParameters;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
+import nu.marginalia.lexicon.journal.KeywordLexiconJournalMode;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.test.TestUtil;
 import org.junit.jupiter.api.AfterEach;
@@ -52,7 +53,7 @@ class ReverseIndexPriorityConverterTest2 {
         dictionaryFile = Files.createTempFile("tmp", ".dict");
         dictionaryFile.toFile().deleteOnExit();
 
-        keywordLexicon = new KeywordLexicon(new KeywordLexiconJournal(dictionaryFile.toFile()));
+        keywordLexicon = new KeywordLexicon(new KeywordLexiconJournal(dictionaryFile.toFile(), KeywordLexiconJournalMode.READ_WRITE));
         keywordLexicon.getOrInsert("0");
 
         indexFile = Files.createTempFile("tmp", ".idx");

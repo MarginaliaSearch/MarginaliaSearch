@@ -3,10 +3,7 @@ package nu.marginalia.control;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import nu.marginalia.client.ServiceMonitors;
-import nu.marginalia.control.model.ControlProcess;
-import nu.marginalia.control.fsm.ControlFSMs;
 import nu.marginalia.control.svc.*;
-import nu.marginalia.db.storage.model.FileStorageId;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
@@ -26,11 +23,12 @@ public class ControlService extends Service {
     private final Gson gson = GsonFactory.get();
 
     private final ServiceMonitors monitors;
-    private final MustacheRenderer<Object> indexRenderer;
-    private final MustacheRenderer<Map<?,?>> servicesRenderer;
-    private final MustacheRenderer<Map<?,?>> processesRenderer;
-    private final MustacheRenderer<Map<?,?>> storageRenderer;
+    private final HeartbeatService heartbeatService;
+    private final EventLogService eventLogService;
+    private final ControlFsmService controlFsmService;
     private final StaticResources staticResources;
+    private final MessageQueueViewService messageQueueViewService;
+    private final ControlFileStorageService controlFileStorageService;
 
 
     @Inject
@@ -39,7 +37,7 @@ public class ControlService extends Service {
                           HeartbeatService heartbeatService,
                           EventLogService eventLogService,
                           RendererFactory rendererFactory,
-                          ControlFSMs controlFSMs,
+                          ControlFsmService controlFsmService,
                           StaticResources staticResources,
                           MessageQueueViewService messageQueueViewService,
                           ControlFileStorageService controlFileStorageService
@@ -47,13 +45,20 @@ public class ControlService extends Service {
 
         super(params);
         this.monitors = monitors;
+        this.heartbeatService = heartbeatService;
+        this.eventLogService = eventLogService;
 
-        indexRenderer = rendererFactory.renderer("control/index");
-        servicesRenderer = rendererFactory.renderer("control/services");
-        processesRenderer = rendererFactory.renderer("control/processes");
-        storageRenderer = rendererFactory.renderer("control/storage");
+        var indexRenderer = rendererFactory.renderer("control/index");
+        var servicesRenderer = rendererFactory.renderer("control/services");
+        var serviceByIdRenderer = rendererFactory.renderer("control/service-by-id");
+        var processesRenderer = rendererFactory.renderer("control/processes");
+        var storageRenderer = rendererFactory.renderer("control/storage");
+
+        this.controlFsmService = controlFsmService;
 
         this.staticResources = staticResources;
+        this.messageQueueViewService = messageQueueViewService;
+        this.controlFileStorageService = controlFileStorageService;
 
         Spark.get("/public/heartbeats", (req, res) -> {
             res.type("application/json");
@@ -62,45 +67,21 @@ public class ControlService extends Service {
 
         Spark.get("/public/", (req, rsp) -> indexRenderer.render(Map.of()));
 
-        Spark.get("/public/services",
-                (req, rsp) -> Map.of("services", heartbeatService.getServiceHeartbeats(),
-                                     "events", eventLogService.getLastEntries(20)),
-                (map) -> servicesRenderer.render((Map<?, ?>) map));
-
-        Spark.get("/public/processes",
-                (req, rsp) -> Map.of("processes", heartbeatService.getProcessHeartbeats(),
-                              "fsms", controlFSMs.getFsmStates(),
-                              "messages", messageQueueViewService.getLastEntries(20)),
-                (map) -> processesRenderer.render((Map<?, ?>) map));
-
-        Spark.get("/public/storage",
-                (req, rsp) -> Map.of("storage", controlFileStorageService.getStorageList()),
-                (map) -> storageRenderer.render((Map<?, ?>) map));
+        Spark.get("/public/services", this::servicesModel, servicesRenderer::render);
+        Spark.get("/public/services/:id", this::serviceModel, serviceByIdRenderer::render);
+        Spark.get("/public/processes", this::processesModel, processesRenderer::render);
+        Spark.get("/public/storage", this::storageModel, storageRenderer::render);
 
         final HtmlRedirect redirectToServices = new HtmlRedirect("/services");
         final HtmlRedirect redirectToProcesses = new HtmlRedirect("/processes");
         final HtmlRedirect redirectToStorage = new HtmlRedirect("/storage");
 
-        Spark.post("/public/fsms/:fsm/start", (req, rsp) -> {
-            controlFSMs.start(ControlProcess.valueOf(req.params("fsm").toUpperCase()));
-            return "";
-        }, redirectToProcesses);
+        Spark.post("/public/fsms/:fsm/start", controlFsmService::startFsm, redirectToProcesses);
+        Spark.post("/public/fsms/:fsm/stop", controlFsmService::stopFsm, redirectToProcesses);
 
-        Spark.post("/public/fsms/:fsm/stop", (req, rsp) -> {
-            controlFSMs.stop(ControlProcess.valueOf(req.params("fsm").toUpperCase()));
-            return "";
-        }, redirectToProcesses);
+        Spark.post("/public/storage/:fid/process", controlFsmService::triggerProcessing, redirectToProcesses);
+        Spark.post("/public/storage/:fid/load", controlFsmService::loadProcessedData, redirectToProcesses);
 
-        // TODO: This should be a POST
-        Spark.get("/public/repartition", (req, rsp) -> {
-            controlFSMs.start(ControlProcess.REPARTITION_REINDEX);
-            return "";
-        } , redirectToProcesses);
-
-        Spark.post("/public/storage/:fid/process", (req, rsp) -> {
-            controlFSMs.start(ControlProcess.RECONVERT_LOAD, FileStorageId.of(Integer.parseInt(req.params("fid"))));
-            return "";
-        }, redirectToProcesses);
         Spark.post("/public/storage/:fid/delete", controlFileStorageService::flagFileForDeletionRequest, redirectToStorage);
 
         Spark.get("/public/:resource", this::serveStatic);
@@ -108,6 +89,28 @@ public class ControlService extends Service {
         monitors.subscribe(this::logMonitorStateChange);
     }
 
+    private Object serviceModel(Request request, Response response) {
+        String serviceName = request.params("id");
+
+        return Map.of(
+                "id", serviceName,
+                "events", eventLogService.getLastEntriesForService(serviceName, 20));
+    }
+
+    private Object storageModel(Request request, Response response) {
+        return Map.of("storage", controlFileStorageService.getStorageList());
+    }
+
+    private Object servicesModel(Request request, Response response) {
+        return Map.of("services", heartbeatService.getServiceHeartbeats(),
+                      "events", eventLogService.getLastEntries(20));
+    }
+
+    private Object processesModel(Request request, Response response) {
+        return Map.of("processes", heartbeatService.getProcessHeartbeats(),
+                      "fsms", controlFsmService.getFsmStates(),
+                      "messages", messageQueueViewService.getLastEntries(20));
+    }
 
     private Object serveStatic(Request request, Response response) {
         String resource = request.params("resource");

@@ -144,12 +144,4 @@ public class Loader implements Interpreter {
         sqlLoadProcessedDocument.loadWithError(data, processedDocumentWithErrorList);
     }
 
-    public void close() {
-        try {
-            indexLoadKeywords.close();
-        }
-        catch (Exception ex) {
-            logger.error("Error when closing the index loader", ex);
-        }
-    }
 }

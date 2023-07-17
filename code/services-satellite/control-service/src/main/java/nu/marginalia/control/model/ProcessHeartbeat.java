@@ -31,7 +31,7 @@ public record ProcessHeartbeat(
     public String progressStyle() {
         if ("RUNNING".equals(status) && progress != null) {
             return """
-                    background: linear-gradient(90deg, #fff 0%%, #ccc %d%%, #fff %d%%)
+                    background: linear-gradient(90deg, #ccc 0%%, #ccc %d%%, #fff %d%%)
                     """.formatted(progress, progress, progress);
         }
         return "";

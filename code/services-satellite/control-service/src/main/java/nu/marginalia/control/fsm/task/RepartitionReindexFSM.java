@@ -18,12 +18,12 @@ public class RepartitionReindexFSM extends AbstractStateGraph {
 
     // STATES
 
-    private static final String INITIAL = "INITIAL";
-    private static final String REPARTITION = "REPARTITION";
-    private static final String REPARTITION_REPLY = "REPARTITION-REPLY";
-    private static final String REINDEX = "REINDEX";
-    private static final String REINDEX_REPLY = "REINDEX-REPLY";
-    private static final String END = "END";
+    public static final String INITIAL = "INITIAL";
+    public static final String REPARTITION = "REPARTITION";
+    public static final String REPARTITION_WAIT = "REPARTITION-WAIT";
+    public static final String REINDEX = "REINDEX";
+    public static final String REINDEX_WAIT = "REINDEX-WAIT";
+    public static final String END = "END";
 
 
     @Inject
@@ -43,12 +43,12 @@ public class RepartitionReindexFSM extends AbstractStateGraph {
         }
     }
 
-    @GraphState(name = REPARTITION, next = REPARTITION_REPLY)
+    @GraphState(name = REPARTITION, next = REPARTITION_WAIT)
     public Long repartition() throws Exception {
         return indexOutbox.sendAsync(IndexMqEndpoints.INDEX_REPARTITION, "");
     }
 
-    @GraphState(name = REPARTITION_REPLY, next = REINDEX, resume = ResumeBehavior.RETRY)
+    @GraphState(name = REPARTITION_WAIT, next = REINDEX, resume = ResumeBehavior.RETRY)
     public void repartitionReply(Long id) throws Exception {
         var rsp = indexOutbox.waitResponse(id);
 
@@ -57,12 +57,12 @@ public class RepartitionReindexFSM extends AbstractStateGraph {
         }
     }
 
-    @GraphState(name = REINDEX, next = REINDEX_REPLY)
+    @GraphState(name = REINDEX, next = REINDEX_WAIT)
     public Long reindex() throws Exception {
         return indexOutbox.sendAsync(IndexMqEndpoints.INDEX_REINDEX, "");
     }
 
-    @GraphState(name = REINDEX_REPLY, next = END, resume = ResumeBehavior.RETRY)
+    @GraphState(name = REINDEX_WAIT, next = END, resume = ResumeBehavior.RETRY)
     public void reindexReply(Long id) throws Exception {
         var rsp = indexOutbox.waitResponse(id);
 

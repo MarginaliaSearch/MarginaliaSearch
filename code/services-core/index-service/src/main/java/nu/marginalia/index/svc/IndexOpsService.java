@@ -9,7 +9,6 @@ import spark.Response;
 import spark.Spark;
 
 import javax.annotation.CheckReturnValue;
-import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.locks.ReentrantLock;
@@ -39,10 +38,13 @@ public class IndexOpsService {
         return run(searchSetService::recalculateAll);
     }
     public boolean reindex() throws Exception {
-        return run(index::switchIndex).isPresent();
+        return run(() -> {
+            return index.switchIndex() && lexicon.suggestReload();
+        }).isPresent();
     }
+
     public boolean reloadLexicon() throws Exception {
-        return run(lexicon::reload).isPresent();
+        return run(lexicon::suggestReload).isPresent();
     }
 
     public Object repartitionEndpoint(Request request, Response response) throws Exception {

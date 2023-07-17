@@ -11,6 +11,7 @@ public record FileStorageWithActions(FileStorage storage) {
         return storage.type() == FileStorageType.CRAWL_DATA;
     }
     public boolean isDeletable() {
-        return storage.type() == FileStorageType.PROCESSED_DATA;
+        return storage.type() == FileStorageType.PROCESSED_DATA
+             || storage.type() == FileStorageType.BACKUP;
     }
 }

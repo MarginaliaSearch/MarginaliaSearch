@@ -38,7 +38,7 @@ public class IndexServicesFactory {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final PartitionedDataFile writerIndexFile;
+    private final Path writerIndexFile;
 
     private final PartitionedDataFile fwdIndexDocId;
     private final PartitionedDataFile fwdIndexDocData;
@@ -67,7 +67,7 @@ public class IndexServicesFactory {
             Files.createDirectories(tmpFileDir);
         }
 
-        writerIndexFile = new PartitionedDataFile(stagingStorage, "page-index.dat");
+        writerIndexFile = stagingStorage.resolve("page-index.dat");
 
         fwdIndexDocId = new PartitionedDataFile(liveStorage, "fwd-doc-id.dat");
         fwdIndexDocData = new PartitionedDataFile(liveStorage, "fwd-doc-data.dat");
@@ -85,7 +85,7 @@ public class IndexServicesFactory {
 
     public boolean isPreconvertedIndexPresent() {
         return Stream.of(
-                writerIndexFile.get(LIVE_PART).toPath()
+                writerIndexFile
         ).allMatch(Files::exists);
     }
 
@@ -100,10 +100,6 @@ public class IndexServicesFactory {
         ).noneMatch(Files::exists);
     }
 
-    public IndexJournalWriter createIndexJournalWriter(KeywordLexicon lexicon) throws IOException {
-        return new IndexJournalWriterImpl(lexicon, writerIndexFile.get(LIVE_PART).toPath());
-    }
-
     public void convertIndex(DomainRankings domainRankings) throws IOException {
         convertForwardIndex(domainRankings);
         convertFullReverseIndex(domainRankings);
@@ -111,11 +107,9 @@ public class IndexServicesFactory {
     }
 
     private void convertFullReverseIndex(DomainRankings domainRankings) throws IOException {
-        var source = writerIndexFile.get(0).toPath();
+        logger.info("Converting full reverse index {}", writerIndexFile);
 
-        logger.info("Converting full reverse index {}", source);
-
-        var journalReader = new IndexJournalReaderSingleCompressedFile(source);
+        var journalReader = new IndexJournalReaderSingleCompressedFile(writerIndexFile);
         var converter = new ReverseIndexFullConverter(tmpFileDir,
                 journalReader,
                 domainRankings,
@@ -129,11 +123,9 @@ public class IndexServicesFactory {
 
     private void convertPriorityReverseIndex(DomainRankings domainRankings) throws IOException {
 
-        var source = writerIndexFile.get(0).toPath();
+        logger.info("Converting priority reverse index {}", writerIndexFile);
 
-        logger.info("Converting priority reverse index {}", source);
-
-        var journalReader = new IndexJournalReaderSingleCompressedFile(source, null,
+        var journalReader = new IndexJournalReaderSingleCompressedFile(writerIndexFile, null,
                 ReverseIndexPriorityParameters::filterPriorityRecord);
 
         var converter = new ReverseIndexPriorityConverter(tmpFileDir,
@@ -149,11 +141,10 @@ public class IndexServicesFactory {
 
     private void convertForwardIndex(DomainRankings domainRankings) throws IOException {
 
-        var source = writerIndexFile.get(0);
 
-        logger.info("Converting forward index data {}", source);
+        logger.info("Converting forward index data {}", writerIndexFile);
 
-        new ForwardIndexConverter(source,
+        new ForwardIndexConverter(writerIndexFile.toFile(),
                 fwdIndexDocId.get(NEXT_PART).toPath(),
                 fwdIndexDocData.get(NEXT_PART).toPath(),
                 domainRankings)

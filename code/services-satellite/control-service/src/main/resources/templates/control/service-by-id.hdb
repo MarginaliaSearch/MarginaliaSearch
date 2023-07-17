@@ -8,15 +8,14 @@
 <body>
   {{> control/partials/nav}}
   <section>
-  {{> control/partials/processes-table}}
-  {{> control/partials/fsm-table}}
-  {{> control/partials/message-queue-table}}
+  <h1>Services/{{id}}</h1>
+  {{> control/partials/events-table }}
   </section>
 </body>
 <script src="/refresh.js"></script>
 <script>
     window.setInterval(() => {
-        refresh(["processes", "fsms", "queue"]);
-    }, 2000);
+        refresh(["services", "events"]);
+    }, 5000);
 </script>
 </html>

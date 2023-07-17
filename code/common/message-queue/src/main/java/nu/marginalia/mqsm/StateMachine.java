@@ -130,8 +130,32 @@ public class StateMachine {
     }
 
     /** Initialize the state machine. */
+    public void initFrom(String firstState) throws Exception {
+        var transition = StateTransition.to(firstState);
+
+        synchronized (this) {
+            this.state = allStates.get(transition.state());
+            notifyAll();
+        }
+
+        smOutbox.notify(transition.state(), transition.message());
+    }
+
+    /** Initialize the state machine. */
     public void init(String jsonEncodedArgument) throws Exception {
         var transition = StateTransition.to("INITIAL", jsonEncodedArgument);
+
+        synchronized (this) {
+            this.state = allStates.get(transition.state());
+            notifyAll();
+        }
+
+        smOutbox.notify(transition.state(), transition.message());
+    }
+
+    /** Initialize the state machine. */
+    public void initFrom(String state, String jsonEncodedArgument) throws Exception {
+        var transition = StateTransition.to(state, jsonEncodedArgument);
 
         synchronized (this) {
             this.state = allStates.get(transition.state());

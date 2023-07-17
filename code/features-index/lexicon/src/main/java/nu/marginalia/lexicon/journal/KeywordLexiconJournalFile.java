@@ -1,6 +1,5 @@
 package nu.marginalia.lexicon.journal;
 
-import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -27,7 +27,8 @@ public class IndexJournalWriterImpl implements IndexJournalWriter{
         this.lexicon = lexicon;
         this.outputFile = outputFile;
 
-        var fileStream = Files.newOutputStream(outputFile, StandardOpenOption.CREATE);
+        var fileStream = Files.newOutputStream(outputFile, StandardOpenOption.CREATE,
+                StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
 
         writeHeaderPlaceholder(fileStream);
 

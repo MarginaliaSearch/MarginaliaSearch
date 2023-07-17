@@ -93,4 +93,8 @@ public class WorkLog implements AutoCloseable {
         logWriter.flush();
         logWriter.close();
     }
+
+    public int countFinishedJobs() {
+        return finishedJobs.size();
+    }
 }

@@ -5,6 +5,8 @@ import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.server.BaseServiceParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 import spark.utils.IOUtils;
 
 import javax.inject.Inject;
@@ -21,6 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Singleton
 public class ProcessService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Marker processMarker = MarkerFactory.getMarker("PROCESS");
+
     private final ServiceEventLog eventLog;
     private final Path distPath;
 
@@ -74,9 +78,9 @@ public class ProcessService {
 
             while (process.isAlive()) {
                 if (es.ready())
-                    logger.warn("{}:{}", processId, es.readLine());
+                    logger.warn(processMarker, es.readLine());
                 if (os.ready())
-                    logger.debug("{}:{}", processId, os.readLine());
+                    logger.info(processMarker, os.readLine());
             }
 
             return 0 == process.waitFor();
@@ -116,6 +120,9 @@ public class ProcessService {
         }
         opts.put("WMSA_HOME", WMSA_HOME);
         opts.put("JAVA_HOME", System.getenv("JAVA_HOME"));
+        opts.put("CONVERTER_OPTS", System.getenv("CONVERTER_OPTS"));
+        opts.put("LOADER_OPTS", System.getenv("LOADER_OPTS"));
+        opts.put("CRAWLER_OPTS", System.getenv("CRAWLER_OPTS"));
 
         return opts.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue()).toArray(String[]::new);
     }

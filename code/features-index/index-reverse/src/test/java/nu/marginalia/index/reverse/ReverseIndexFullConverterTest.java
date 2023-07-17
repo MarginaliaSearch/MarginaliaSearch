@@ -8,6 +8,7 @@ import nu.marginalia.index.journal.model.IndexJournalEntry;
 import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile;
 import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
+import nu.marginalia.lexicon.journal.KeywordLexiconJournalMode;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
@@ -42,7 +43,7 @@ class ReverseIndexFullConverterTest {
         dictionaryFile = Files.createTempFile("tmp", ".dict");
         dictionaryFile.toFile().deleteOnExit();
 
-        keywordLexicon = new KeywordLexicon(new KeywordLexiconJournal(dictionaryFile.toFile()));
+        keywordLexicon = new KeywordLexicon(new KeywordLexiconJournal(dictionaryFile.toFile(), KeywordLexiconJournalMode.READ_WRITE));
         keywordLexicon.getOrInsert("0");
 
         indexFile = Files.createTempFile("tmp", ".idx");

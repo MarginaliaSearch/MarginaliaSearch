@@ -3,12 +3,12 @@
 <head>
     <title>Control Service</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   {{> control/partials/nav}}
   <section>
-
+  <h1>Storage</h1>
   <table>
       {{#each storage}}
       <tr>
