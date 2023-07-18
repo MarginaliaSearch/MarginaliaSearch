@@ -1,6 +1,7 @@
 package nu.marginalia.mqsm;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.mqsm.graph.ResumeBehavior;
@@ -29,11 +30,18 @@ public class StateFactory {
             @Override
             public StateTransition next(String message) {
 
-                if (message.equals("")) {
+                if (message.isEmpty()) {
                     return logic.apply(null);
                 }
 
-                return logic.apply(gson.fromJson(message, param));
+                try {
+                    var paramObj = gson.fromJson(message, param);
+                    return logic.apply(paramObj);
+                }
+                catch (JsonSyntaxException ex) {
+                    throw new IllegalArgumentException("Failed to parse '" + message +
+                                "' into a '" + param.getSimpleName() + "'", ex);
+                }
             }
 
             @Override

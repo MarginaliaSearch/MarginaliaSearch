@@ -102,7 +102,6 @@ public class ProcessService {
 
         eventLog.logEvent("PROCESS-KILL", processId.toString());
         process.destroy();
-        processes.remove(processId);
 
         return true;
     }

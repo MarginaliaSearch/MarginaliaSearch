@@ -19,7 +19,7 @@ public abstract class AbstractStateGraph {
     }
 
     public void transition(String state) {
-        throw new ControlFlowException(state, "");
+        throw new ControlFlowException(state, null);
     }
 
     public <T> void transition(String state, T payload) {
