@@ -8,6 +8,19 @@ body {
     grid-template-areas:
         "left right";
 }
+.toggle-switch-off {
+   border-left: 5px solid #f00;
+   width: 8ch;
+}
+.toggle-switch-on {
+    border-right: 5px solid #080;
+    width: 8ch;
+}
+.toggle-switch-active {
+   border-left: 5px solid #00f;
+   border-right: 5px solid #00f;
+   width: 8ch;
+}
 #services .missing {
     color: #800;
 }
@@ -54,4 +67,10 @@ nav ul li a.current {
 
 body > section {
     grid-area: right;
+}
+
+#state-graph .current-state td:first-of-type {
+    border-right: 1em solid #000;
+    font-weight: bold;
+    border-color: #000;
 }

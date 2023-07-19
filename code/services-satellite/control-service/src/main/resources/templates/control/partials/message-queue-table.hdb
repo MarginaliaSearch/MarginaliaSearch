@@ -12,7 +12,7 @@
     {{#each messages}}
     <tr>
         <td>{{stateCode}}&nbsp;{{state}}</td>
-        <td>{{id}}</td>
+        <td><a onClick="editMessage({{id}})" href="#">{{id}}</a></td>
         <td>{{recipientInbox}}</td>
         <td>{{function}}</td>
         <td title="{{ownerInstanceFull}}">
@@ -30,3 +30,61 @@
     </tr>
     {{/each}}
 </table>
+
+<dialog id="edit-message">
+    <h1>Edit Message</h1>
+    <form method="post" action="/message/:id/edit">
+        <div class="form-grid">
+            <label for="id">ID</label> <input readonly type="text" name="id" id="id" pattern="\d+" value="12" />
+            <label for="relatedId">Related ID</label> <input type="text" name="relatedId" id="relatedId" pattern="\d+" />
+
+            <label for="state">State</label>
+            <select name="state" id="state">
+                <option value="NEW">NEW</option>
+                <option value="ACK">ACK</option>
+                <option value="OK">OK</option>
+                <option value="ERR">ERR</option>
+                <option value="DEAD">DEAD</option>
+            </select>
+            <label for="sender">Sender</label> <input type="text" name="sender" id="sender" />
+            <label for="recipient">Recipient</label> <input type="text" name="recipient" id="recipient" />
+            <label for="function">Function</label> <input type="text" name="function" id="function" />
+            <label for="payload">Payload</label> <input type="text" name="payload" id="payload" />
+            <label for="ttl">TTL</label> <input type="text" name="ttl" id="ttl" />
+            <label for="ownerInstance">Owner Instance</label> <input type="text" name="ownerInstance" id="ownerInstance" />
+            <label for="ownerTick" pattern="\d+">Owner Tick</label> <input type="text" name="ownerTick" id="ownerTick" />
+            <div>
+                <input type="submit" value="Save" style="float:left" />
+            </div>
+            <div>
+                <input type="button" value="Cancel" style="float:right" onClick="document.getElementById('edit-message').close()"/>
+            </div>
+        </div>
+    </form>
+</dialog>
+
+<script>
+    function editMessage(id) {
+        var message = document.getElementById('edit-message');
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/messages/' + id, true);
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                var data = JSON.parse(xhr.responseText);
+                message.querySelector('#edit-message #id').value = data.id;
+                message.querySelector('#edit-message #relatedId').value = data.relatedId;
+                message.querySelector('#edit-message #state').value = data.state;
+                message.querySelector('#edit-message #sender').value = data.sender;
+                message.querySelector('#edit-message #recipient').value = data.recipient;
+                message.querySelector('#edit-message #function').value = data.function;
+                message.querySelector('#edit-message #payload').value = data.payload;
+                message.querySelector('#edit-message #ttl').value = data.ttl;
+                message.querySelector('#edit-message #ownerInstance').value = data.ownerInstance;
+                message.querySelector('#edit-message #ownerTick').value = data.ownerTick;
+                message.showModal();
+            }
+        };
+        xhr.send();
+    }
+</script>

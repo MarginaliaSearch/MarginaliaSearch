@@ -1,7 +1,6 @@
 package nu.marginalia.control.model;
 
-public enum ControlProcess {
-    REPARTITION_REINDEX,
+public enum Actor {
     RECONVERT_LOAD,
     CONVERTER_MONITOR,
     LOADER_MONITOR,

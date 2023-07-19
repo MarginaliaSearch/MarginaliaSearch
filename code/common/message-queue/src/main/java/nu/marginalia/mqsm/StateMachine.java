@@ -59,8 +59,16 @@ public class StateMachine {
         registerStates(stateGraph);
 
         for (var declaredState : stateGraph.declaredStates()) {
-            if (!allStates.containsKey(declaredState)) {
-                throw new IllegalArgumentException("State " + declaredState + " is not defined in the state graph");
+            if (!allStates.containsKey(declaredState.name())) {
+                throw new IllegalArgumentException("State " + declaredState.name() + " is not defined in the state graph");
+            }
+            if (!allStates.containsKey(declaredState.next())) {
+                throw new IllegalArgumentException("State " + declaredState.next() + " is not defined in the state graph");
+            }
+            for (var state : declaredState.transitions()) {
+                if (!allStates.containsKey(state)) {
+                    throw new IllegalArgumentException("State " + state + " is not defined in the state graph");
+                }
             }
         }
 

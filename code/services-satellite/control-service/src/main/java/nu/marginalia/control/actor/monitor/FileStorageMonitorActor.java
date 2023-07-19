@@ -1,4 +1,4 @@
-package nu.marginalia.control.fsm.monitor;
+package nu.marginalia.control.actor.monitor;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -19,7 +19,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
-public class FileStorageMonitorFSM extends AbstractStateGraph {
+public class FileStorageMonitorActor extends AbstractStateGraph {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     // STATES
@@ -32,8 +32,8 @@ public class FileStorageMonitorFSM extends AbstractStateGraph {
 
 
     @Inject
-    public FileStorageMonitorFSM(StateFactory stateFactory,
-                                 FileStorageService fileStorageService) {
+    public FileStorageMonitorActor(StateFactory stateFactory,
+                                   FileStorageService fileStorageService) {
         super(stateFactory);
         this.fileStorageService = fileStorageService;
     }
@@ -42,7 +42,11 @@ public class FileStorageMonitorFSM extends AbstractStateGraph {
     public void init() {
     }
 
-    @GraphState(name = MONITOR, resume = ResumeBehavior.RETRY)
+    @GraphState(name = MONITOR, next = PURGE, resume = ResumeBehavior.RETRY, transitions = { PURGE },
+            description = """
+                    Monitor the file storage and trigger at transition to PURGE if any file storage area
+                    has been marked for deletion.
+                    """)
     public void monitor() throws Exception {
 
         for (;;) {
@@ -57,7 +61,13 @@ public class FileStorageMonitorFSM extends AbstractStateGraph {
         }
     }
 
-    @GraphState(name = PURGE, next = MONITOR, resume = ResumeBehavior.RETRY)
+    @GraphState(name = PURGE,
+                next = MONITOR,
+                resume = ResumeBehavior.RETRY,
+                description = """
+                        Purge the file storage area and transition back to MONITOR.
+                        """
+    )
     public void purge(FileStorageId id) throws Exception {
         var storage = fileStorageService.getStorage(id);
         logger.info("Deleting {} ", storage.path());

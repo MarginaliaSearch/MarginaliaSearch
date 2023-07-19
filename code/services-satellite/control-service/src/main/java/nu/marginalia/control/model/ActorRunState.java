@@ -1,6 +1,6 @@
 package nu.marginalia.control.model;
 
-public record ControlProcessState(String name, String state, boolean terminal) {
+public record ActorRunState(String name, String state, boolean terminal) {
     public String stateIcon() {
         if (terminal) {
             return "\uD83D\uDE34";

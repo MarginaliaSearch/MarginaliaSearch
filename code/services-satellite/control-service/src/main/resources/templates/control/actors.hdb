@@ -9,14 +9,14 @@
   {{> control/partials/nav}}
   <section>
   {{> control/partials/processes-table}}
-  {{> control/partials/fsm-table}}
+  {{> control/partials/actors-table}}
   {{> control/partials/message-queue-table}}
   </section>
 </body>
 <script src="/refresh.js"></script>
 <script>
     window.setInterval(() => {
-        refresh(["processes", "fsms", "queue"]);
+        refresh(["processes", "actors", "queue"]);
     }, 2000);
 </script>
 </html>

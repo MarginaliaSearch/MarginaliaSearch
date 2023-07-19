@@ -30,6 +30,7 @@ public abstract class AbstractStateGraph {
         throw new ControlFlowException("ERROR", "");
     }
 
+
     public <T> void error(T payload) {
         throw new ControlFlowException("ERROR", payload);
     }
@@ -38,19 +39,31 @@ public abstract class AbstractStateGraph {
         throw new ControlFlowException("ERROR", ex.getClass().getSimpleName() + ":" + ex.getMessage());
     }
 
-    public Set<String> declaredStates() {
-        Set<String> ret = new HashSet<>();
+    public Set<GraphState> declaredStates() {
+        Set<GraphState> ret = new HashSet<>();
 
         for (var method : getClass().getMethods()) {
             var gs = method.getAnnotation(GraphState.class);
             if (gs != null) {
-                ret.add(gs.name());
-                ret.add(gs.next());
+                ret.add(gs);
             }
         }
 
         return ret;
     }
+    public Set<TerminalState> terminalStates() {
+        Set<TerminalState> ret = new HashSet<>();
+
+        for (var method : getClass().getMethods()) {
+            var gs = method.getAnnotation(TerminalState.class);
+            if (gs != null) {
+                ret.add(gs);
+            }
+        }
+
+        return ret;
+    }
+
     public List<MachineState> asStateList() {
         List<MachineState> ret = new ArrayList<>();
 
@@ -58,6 +71,13 @@ public abstract class AbstractStateGraph {
             var gs = method.getAnnotation(GraphState.class);
             if (gs != null) {
                 ret.add(graphState(method, gs));
+            }
+
+            var ts = method.getAnnotation(TerminalState.class);
+            if (ts != null) {
+                ret.add(stateFactory.create(ts.name(), ResumeBehavior.ERROR, () -> {
+                    throw new ControlFlowException(ts.name(), null);
+                }));
             }
         }
 

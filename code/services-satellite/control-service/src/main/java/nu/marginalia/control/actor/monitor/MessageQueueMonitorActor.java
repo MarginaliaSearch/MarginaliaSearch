@@ -1,4 +1,4 @@
-package nu.marginalia.control.fsm.monitor;
+package nu.marginalia.control.actor.monitor;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -11,7 +11,7 @@ import nu.marginalia.mqsm.graph.ResumeBehavior;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
-public class MessageQueueMonitorFSM extends AbstractStateGraph {
+public class MessageQueueMonitorActor extends AbstractStateGraph {
 
     // STATES
 
@@ -22,8 +22,8 @@ public class MessageQueueMonitorFSM extends AbstractStateGraph {
 
 
     @Inject
-    public MessageQueueMonitorFSM(StateFactory stateFactory,
-                                  MqPersistence persistence) {
+    public MessageQueueMonitorActor(StateFactory stateFactory,
+                                    MqPersistence persistence) {
         super(stateFactory);
         this.persistence = persistence;
     }
@@ -32,7 +32,10 @@ public class MessageQueueMonitorFSM extends AbstractStateGraph {
     public void init() {
     }
 
-    @GraphState(name = MONITOR, resume = ResumeBehavior.RETRY)
+    @GraphState(name = MONITOR, next = MONITOR, resume = ResumeBehavior.RETRY,
+            description = """
+                    Periodically clean up the message queue.
+                    """)
     public void monitor() throws Exception {
 
         for (;;) {

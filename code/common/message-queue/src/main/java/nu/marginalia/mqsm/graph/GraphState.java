@@ -8,5 +8,7 @@ import java.lang.annotation.RetentionPolicy;
 public @interface GraphState {
     String name();
     String next() default "ERROR";
+    String[] transitions() default {};
+    String description() default "";
     ResumeBehavior resume() default ResumeBehavior.ERROR;
 }

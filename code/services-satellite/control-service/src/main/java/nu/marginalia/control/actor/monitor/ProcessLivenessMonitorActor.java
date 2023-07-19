@@ -1,4 +1,4 @@
-package nu.marginalia.control.fsm.monitor;
+package nu.marginalia.control.actor.monitor;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -13,7 +13,7 @@ import nu.marginalia.mqsm.graph.ResumeBehavior;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
-public class ProcessLivenessMonitorFSM extends AbstractStateGraph {
+public class ProcessLivenessMonitorActor extends AbstractStateGraph {
 
     // STATES
 
@@ -25,9 +25,9 @@ public class ProcessLivenessMonitorFSM extends AbstractStateGraph {
 
 
     @Inject
-    public ProcessLivenessMonitorFSM(StateFactory stateFactory,
-                                     ProcessService processService,
-                                     HeartbeatService heartbeatService) {
+    public ProcessLivenessMonitorActor(StateFactory stateFactory,
+                                       ProcessService processService,
+                                       HeartbeatService heartbeatService) {
         super(stateFactory);
         this.processService = processService;
         this.heartbeatService = heartbeatService;
@@ -37,7 +37,12 @@ public class ProcessLivenessMonitorFSM extends AbstractStateGraph {
     public void init() {
     }
 
-    @GraphState(name = MONITOR, resume = ResumeBehavior.RETRY)
+    @GraphState(name = MONITOR, next = MONITOR, resume = ResumeBehavior.RETRY, description = """
+            Periodically check to ensure that the control service's view of
+            running processes is agreement with the process heartbeats table.
+             
+            If the process is not running, mark the process as stopped in the table.
+            """)
     public void monitor() throws Exception {
 
         for (;;) {

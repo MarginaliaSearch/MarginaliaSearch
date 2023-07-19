@@ -1,4 +1,4 @@
-package nu.marginalia.control.fsm.monitor;
+package nu.marginalia.control.actor.monitor;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -8,13 +8,13 @@ import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.mqsm.StateFactory;
 
 @Singleton
-public class ConverterMonitorFSM extends AbstractProcessSpawnerFSM {
+public class ConverterMonitorActor extends AbstractProcessSpawnerActor {
 
 
     @Inject
-    public ConverterMonitorFSM(StateFactory stateFactory,
-                               MqPersistence persistence,
-                               ProcessService processService) {
+    public ConverterMonitorActor(StateFactory stateFactory,
+                                 MqPersistence persistence,
+                                 ProcessService processService) {
         super(stateFactory, persistence, processService, ProcessInboxNames.CONVERTER_INBOX, ProcessService.ProcessId.CONVERTER);
     }
 
