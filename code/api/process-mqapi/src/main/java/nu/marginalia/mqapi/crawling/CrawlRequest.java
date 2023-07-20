@@ -6,6 +6,6 @@ import nu.marginalia.db.storage.model.FileStorageId;
 /** A request to start a crawl */
 @AllArgsConstructor
 public class CrawlRequest {
-    FileStorageId specStorage;
-    FileStorageId crawlStorage;
+    public FileStorageId specStorage;
+    public FileStorageId crawlStorage;
 }

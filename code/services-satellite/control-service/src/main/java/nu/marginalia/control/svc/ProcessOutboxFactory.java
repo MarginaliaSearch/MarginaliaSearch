@@ -24,4 +24,8 @@ public class ProcessOutboxFactory {
     public MqOutbox createLoaderOutbox() {
         return new MqOutbox(persistence, ProcessInboxNames.LOADER_INBOX, params.configuration.serviceName(), params.configuration.instanceUuid());
     }
+
+    public MqOutbox createCrawlerOutbox() {
+        return new MqOutbox(persistence, ProcessInboxNames.CRAWLER_INBOX, params.configuration.serviceName(), params.configuration.instanceUuid());
+    }
 }

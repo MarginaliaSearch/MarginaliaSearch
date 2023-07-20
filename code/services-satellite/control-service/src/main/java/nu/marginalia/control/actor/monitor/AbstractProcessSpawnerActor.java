@@ -64,17 +64,28 @@ public class AbstractProcessSpawnerActor extends AbstractStateGraph {
                 description = """
                         Monitors the inbox of the process for messages.
                         If a message is found, transition to RUN.
+                        The state takes an optional Integer parameter errorAttempts
+                        that is passed to run. errorAttempts is set to zero after
+                        a few seconds of silence.
                         """
     )
-    public void monitor() throws SQLException, InterruptedException {
+    public void monitor(Integer errorAttempts) throws SQLException, InterruptedException {
 
+        if (errorAttempts == null) {
+            errorAttempts = 0;
+        }
         for (;;) {
             var messages = persistence.eavesdrop(inboxName, 1);
 
             if (messages.isEmpty() && !processService.isRunning(processId)) {
                 TimeUnit.SECONDS.sleep(5);
+
+                if (errorAttempts > 0) { // Reset the error counter if there is silence in the inbox
+                    transition(MONITOR, 0);
+                }
+                // else continue
             } else {
-                transition(RUN);
+                transition(RUN, errorAttempts);
             }
         }
     }
@@ -87,7 +98,7 @@ public class AbstractProcessSpawnerActor extends AbstractStateGraph {
                         If the process fails, retransition to RUN up to MAX_ATTEMPTS times.
                         After MAX_ATTEMPTS at restarting the process, transition to ERROR.
                         If the process is cancelled, transition to ABORTED.
-                        If the process is successful, transition to MONITOR.
+                        If the process is successful, transition to MONITOR(errorAttempts).
                         """
     )
     public void run(Integer attempts) throws Exception {
@@ -108,7 +119,7 @@ public class AbstractProcessSpawnerActor extends AbstractStateGraph {
             transition(ABORTED);
         }
 
-        transition(MONITOR);
+        transition(MONITOR, attempts);
     }
 
     @TerminalState(name = ABORTED, description = "The process was manually aborted")

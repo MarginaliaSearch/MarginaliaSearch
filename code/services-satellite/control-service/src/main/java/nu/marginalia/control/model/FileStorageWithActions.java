@@ -4,6 +4,13 @@ import nu.marginalia.db.storage.model.FileStorage;
 import nu.marginalia.db.storage.model.FileStorageType;
 
 public record FileStorageWithActions(FileStorage storage) {
+    public boolean isCrawlable() {
+        return storage.type() == FileStorageType.CRAWL_SPEC;
+    }
+    public boolean isRecrawlable() {
+        return storage.type() == FileStorageType.CRAWL_DATA;
+    }
+
     public boolean isLoadable() {
         return storage.type() == FileStorageType.PROCESSED_DATA;
     }

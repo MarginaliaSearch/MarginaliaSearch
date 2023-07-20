@@ -14,12 +14,15 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 
 public class CrawledDomainWriter implements AutoCloseable {
     private final Path outputDir;
     private final Gson gson = GsonFactory.get();
     private static final Logger logger = LoggerFactory.getLogger(CrawledDomainWriter.class);
     private final Writer writer;
+    private final Path tmpFile;
     private final Path outputFile;
 
     public CrawledDomainWriter(Path outputDir, String name, String id) throws IOException {
@@ -29,8 +32,10 @@ public class CrawledDomainWriter implements AutoCloseable {
             throw new IllegalArgumentException("Output dir " + outputDir + " does not exist");
         }
 
+        tmpFile = getOutputFile(id, name + "_tmp");
         outputFile = getOutputFile(id, name);
-        writer =  new OutputStreamWriter(new ZstdOutputStream(new BufferedOutputStream(Files.newOutputStream(outputFile))));
+        writer =  new OutputStreamWriter(new ZstdOutputStream(new BufferedOutputStream(Files.newOutputStream(tmpFile,
+                StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING))));
     }
 
     public Path getOutputFile() {
@@ -46,32 +51,12 @@ public class CrawledDomainWriter implements AutoCloseable {
     }
 
     private Path getOutputFile(String id, String name) throws IOException {
-        String first = id.substring(0, 2);
-        String second = id.substring(2, 4);
-
-        Path destDir = outputDir.resolve(first).resolve(second);
-        if (!Files.exists(destDir)) {
-            Files.createDirectories(destDir);
-        }
-        return destDir.resolve(id + "-" + filesystemSafeName(name) + ".zstd");
-    }
-
-    private String filesystemSafeName(String name) {
-        StringBuilder nameSaneBuilder = new StringBuilder();
-
-        name.chars()
-                .map(Character::toLowerCase)
-                .map(c -> (c & ~0x7F) == 0 ? c : 'X')
-                .map(c -> (Character.isDigit(c) || Character.isAlphabetic(c) || c == '.') ? c : 'X')
-                .limit(128)
-                .forEach(c -> nameSaneBuilder.append((char) c));
-
-        return nameSaneBuilder.toString();
-
+        return CrawlerOutputFile.createOutputPath(outputDir, id, name);
     }
 
     @Override
     public void close() throws IOException {
+        Files.move(tmpFile, outputFile, StandardCopyOption.REPLACE_EXISTING);
         writer.close();
     }
 }

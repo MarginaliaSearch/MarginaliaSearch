@@ -17,7 +17,7 @@ public class DomainCrawlFrontier {
 
     private Predicate<EdgeUrl> linkFilter = url -> true;
 
-    final int depth;
+    private int depth;
 
     public DomainCrawlFrontier(EdgeDomain thisDomain, Collection<String> urls, int depth) {
         this.thisDomain = thisDomain;
@@ -32,6 +32,9 @@ public class DomainCrawlFrontier {
         }
     }
 
+    public void increaseDepth(double depthIncreaseFactor) {
+        depth = (int)(depth * depthIncreaseFactor);
+    }
     public void setLinkFilter(Predicate<EdgeUrl> linkFilter) {
         this.linkFilter = linkFilter;
     }
@@ -78,6 +81,9 @@ public class DomainCrawlFrontier {
 
         // reduce memory usage by not growing queue huge when crawling large sites
         if (queue.size() + visited.size() >= depth + 100)
+            return;
+
+        if (visited.contains(url.toString()))
             return;
 
         if (known.add(url.toString())) {

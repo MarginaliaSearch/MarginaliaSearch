@@ -29,14 +29,14 @@ class HttpFetcherTest {
     @Test
     void fetchUTF8() throws URISyntaxException, RateLimitException {
         var fetcher = new HttpFetcherImpl("nu.marginalia.edge-crawler");
-        var str = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu"));
+        var str = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu"), null, null);
         System.out.println(str.contentType);
     }
 
     @Test
     void fetchText() throws URISyntaxException, RateLimitException {
         var fetcher = new HttpFetcherImpl("nu.marginalia.edge-crawler");
-        var str = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu/robots.txt"));
+        var str = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu/robots.txt"), null, null);
         System.out.println(str);
     }
 }

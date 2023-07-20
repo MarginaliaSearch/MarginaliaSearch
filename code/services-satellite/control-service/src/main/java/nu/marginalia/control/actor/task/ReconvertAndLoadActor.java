@@ -118,6 +118,8 @@ public class ReconvertAndLoadActor extends AbstractStateGraph {
         var processedArea = storageService.allocateTemporaryStorage(base, FileStorageType.PROCESSED_DATA, "processed-data",
                 "Processed Data; " + toProcess.description());
 
+        storageService.relateFileStorages(toProcess.id(), processedArea.id());
+
         // Pre-send convert request
         var request = new ConvertRequest(message.crawlStorageId, processedArea.id());
         long id = mqConverterOutbox.sendAsync(ConvertRequest.class.getSimpleName(), gson.toJson(request));

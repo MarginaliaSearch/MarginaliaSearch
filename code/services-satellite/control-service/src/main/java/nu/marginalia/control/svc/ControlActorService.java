@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.control.actor.ControlActors;
 import nu.marginalia.control.actor.task.ReconvertAndLoadActor;
+import nu.marginalia.control.actor.task.RecrawlActor;
 import nu.marginalia.control.model.Actor;
 import nu.marginalia.control.model.ActorRunState;
 import nu.marginalia.control.model.ActorStateGraph;
@@ -43,16 +44,33 @@ public class ControlActorService {
         return "";
     }
 
+    public Object triggerCrawling(Request request, Response response) throws Exception {
+        controlActors.start(
+                Actor.CRAWL,
+                FileStorageId.parse(request.params("fid"))
+        );
+        return "";
+    }
+
+    public Object triggerRecrawling(Request request, Response response) throws Exception {
+        controlActors.start(
+                Actor.RECRAWL,
+                RecrawlActor.recrawlFromCrawlData(
+                        FileStorageId.parse(request.params("fid"))
+                )
+        );
+        return "";
+    }
     public Object triggerProcessing(Request request, Response response) throws Exception {
         controlActors.start(
                 Actor.RECONVERT_LOAD,
-                FileStorageId.of(Integer.parseInt(request.params("fid")))
+                FileStorageId.parse(request.params("fid"))
         );
         return "";
     }
 
     public Object loadProcessedData(Request request, Response response) throws Exception {
-        var fid = FileStorageId.of(Integer.parseInt(request.params("fid")));
+        var fid = FileStorageId.parse(request.params("fid"));
 
         // Start the FSM from the intermediate state that triggers the load
         controlActors.startFrom(

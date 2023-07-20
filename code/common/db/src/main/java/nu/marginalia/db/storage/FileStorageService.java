@@ -11,6 +11,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /** Manages file storage for processes and services
@@ -61,6 +63,49 @@ public class FileStorageService {
             }
         }
         return null;
+    }
+
+    public void relateFileStorages(FileStorageId source, FileStorageId target) {
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("""
+                INSERT INTO FILE_STORAGE_RELATION(SOURCE_ID, TARGET_ID) VALUES (?, ?)
+                """)) {
+            stmt.setLong(1, source.id());
+            stmt.setLong(2, target.id());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public List<FileStorage> getSourceFromStorage(FileStorage storage) throws SQLException {
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("""
+                     SELECT SOURCE_ID FROM FILE_STORAGE_RELATION WHERE TARGET_ID = ?
+                     """)) {
+            stmt.setLong(1, storage.id().id());
+            var rs = stmt.executeQuery();
+            List<FileStorage> ret = new ArrayList<>();
+            while (rs.next()) {
+                ret.add(getStorage(new FileStorageId(rs.getLong(1))));
+            }
+            return ret;
+        }
+    }
+
+    public List<FileStorage> getTargetFromStorage(FileStorage storage) throws SQLException {
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("""
+                     SELECT TARGET_ID FROM FILE_STORAGE_RELATION WHERE SOURCE_ID = ?
+                     """)) {
+            stmt.setLong(1, storage.id().id());
+            var rs = stmt.executeQuery();
+            List<FileStorage> ret = new ArrayList<>();
+            while (rs.next()) {
+                ret.add(getStorage(new FileStorageId(rs.getLong(1))));
+            }
+            return ret;
+        }
     }
 
     /** @return the storage base with the given type, or null if it does not exist */
@@ -153,13 +198,7 @@ public class FileStorageService {
             var rs = query.executeQuery();
 
             if (rs.next()) {
-                return new FileStorage(
-                        new FileStorageId(rs.getLong("ID")),
-                        base,
-                        type,
-                        tempDir.toString(),
-                        description
-                );
+                return getStorage(new FileStorageId(rs.getLong("ID")));
             }
 
         }

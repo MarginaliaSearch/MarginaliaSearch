@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.SneakyThrows;
+import nu.marginalia.control.actor.task.CrawlActor;
+import nu.marginalia.control.actor.task.RecrawlActor;
 import nu.marginalia.control.model.Actor;
 import nu.marginalia.control.actor.monitor.*;
 import nu.marginalia.control.actor.monitor.ConverterMonitorActor;
@@ -22,6 +24,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/** This class is responsible for starting and stopping the various actors in the controller service */
 @Singleton
 public class ControlActors {
     private final ServiceEventLog eventLog;
@@ -35,7 +38,10 @@ public class ControlActors {
                          GsonFactory gsonFactory,
                          BaseServiceParams baseServiceParams,
                          ReconvertAndLoadActor reconvertAndLoadActor,
+                         CrawlActor crawlActor,
+                         RecrawlActor recrawlActor,
                          ConverterMonitorActor converterMonitorFSM,
+                         CrawlerMonitorActor crawlerMonitorActor,
                          LoaderMonitorActor loaderMonitor,
                          MessageQueueMonitorActor messageQueueMonitor,
                          ProcessLivenessMonitorActor processMonitorFSM,
@@ -45,9 +51,12 @@ public class ControlActors {
         this.eventLog = baseServiceParams.eventLog;
         this.gson = gsonFactory.get();
 
+        register(Actor.CRAWL, crawlActor);
+        register(Actor.RECRAWL, recrawlActor);
         register(Actor.RECONVERT_LOAD, reconvertAndLoadActor);
         register(Actor.CONVERTER_MONITOR, converterMonitorFSM);
         register(Actor.LOADER_MONITOR, loaderMonitor);
+        register(Actor.CRAWLER_MONITOR, crawlerMonitorActor);
         register(Actor.MESSAGE_QUEUE_MONITOR, messageQueueMonitor);
         register(Actor.PROCESS_LIVENESS_MONITOR, processMonitorFSM);
         register(Actor.FILE_STORAGE_MONITOR, fileStorageMonitorActor);
@@ -99,9 +108,6 @@ public class ControlActors {
                 Collectors.toMap(
                         Map.Entry::getKey, e -> e.getValue().getState())
         );
-    }
-    public MachineState getActorStates(Actor actor) {
-        return stateMachines.get(actor).getState();
     }
 
     public AbstractStateGraph getActorDefinition(Actor actor) {

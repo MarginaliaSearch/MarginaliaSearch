@@ -138,7 +138,7 @@ public class ConverterMain {
 
             // Advance the progress bar to the current position if this is a resumption
             processedDomains.set(processLog.countFinishedJobs());
-            heartbeat.setProgress(processedDomains.incrementAndGet() / (double) totalDomains);
+            heartbeat.setProgress(processedDomains.get() / (double) totalDomains);
 
             for (var domain : plan.domainsIterable(id -> !processLog.isJobFinished(id)))
             {

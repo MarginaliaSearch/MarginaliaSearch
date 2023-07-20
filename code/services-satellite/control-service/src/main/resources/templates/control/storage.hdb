@@ -34,6 +34,11 @@
       {{#each storage}}
         <tr>
             <td>
+                {{#if isCrawlable}}
+                <form method="post" action="/storage/{{storage.id}}/crawl">
+                    <button type="submit">Crawl</button>
+                </form>
+                {{/if}}
                 {{#if isLoadable}}
                     <form method="post" action="/storage/{{storage.id}}/load">
                         <button type="submit">Load</button>
@@ -43,6 +48,11 @@
                     <form method="post" action="/storage/{{storage.id}}/process">
                         <button type="submit">Process</button>
                     </form>
+                {{/if}}
+                {{#if isRecrawlable}}
+                <form method="post" action="/storage/{{storage.id}}/recrawl">
+                    <button type="submit">Recrawl</button>
+                </form>
                 {{/if}}
                 {{#if isDeletable}}
                     <form method="post" action="/storage/{{storage.id}}/delete" onsubmit="return confirm('Confirm deletion of {{storage.path}}')">

@@ -113,7 +113,8 @@ public class ConvertingIntegrationTest {
                     BigString.encode(readClassPathFile(p.toString())),
                     Double.toString(Math.random()),
                     "https://memex.marginalia.nu/" + file,
-                    null
+                    null,
+                    ""
                     );
             docs.add(doc);
         }

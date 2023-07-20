@@ -10,6 +10,7 @@ import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.crawling.model.*;
 import nu.marginalia.ip_blocklist.UrlBlocklist;
+import nu.marginalia.lsh.EasyLSH;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import org.jsoup.Jsoup;
@@ -57,6 +58,7 @@ public class CrawlerRetreiver {
     private final SitemapRetriever sitemapRetriever;
     private final DomainCrawlFrontier crawlFrontier;
 
+    private final CrawlDataReference oldCrawlData;
 
     int errorCount = 0;
 
@@ -64,6 +66,7 @@ public class CrawlerRetreiver {
                             CrawlingSpecification specs,
                             Consumer<SerializableCrawlData> writer) {
         this.fetcher = fetcher;
+        this.oldCrawlData = new CrawlDataReference(specs.oldData);
 
         id = specs.id;
         domain = specs.domain;
@@ -73,9 +76,9 @@ public class CrawlerRetreiver {
         this.crawlFrontier = new DomainCrawlFrontier(new EdgeDomain(domain), specs.urls, specs.crawlDepth);
         sitemapRetriever = fetcher.createSitemapRetriever();
 
+        // We must always crawl the index page first, this is assumed when fingerprinting the server
         var fst = crawlFrontier.peek();
         if (fst != null) {
-
             // Ensure the index page is always crawled
             var root = fst.withPathAndParam("/", null);
 
@@ -141,6 +144,29 @@ public class CrawlerRetreiver {
 
         var robotsRules = fetcher.fetchRobotRules(crawlFrontier.peek().domain);
 
+        CrawlDataComparison comparison = compareWithOldData(robotsRules);
+        logger.info("Comparison result for {} : {}", domain, comparison);
+
+        // If we have reference data, we will always grow the crawl depth a bit
+        if (oldCrawlData.size() > 0) {
+            crawlFrontier.increaseDepth(1.5);
+        }
+
+        // When the reference data doesn't appear to have changed, we'll forego
+        // re-fetching it and just use the old data
+        if (comparison == CrawlDataComparison.NO_CHANGES) {
+            oldCrawlData.allDocuments().forEach((url, doc) -> {
+                if (crawlFrontier.addVisited(url)) {
+                    doc.recrawlState = "RETAINED";
+                    crawledDomainWriter.accept(doc);
+                }
+            });
+
+            // We don't need to hold onto this in RAM anymore
+            oldCrawlData.evict();
+        }
+
+
         downloadSitemaps(robotsRules);
         sniffRootDocument();
 
@@ -161,18 +187,31 @@ public class CrawlerRetreiver {
                 continue;
             }
 
+            // Don't re-fetch links that were previously found dead as it's very unlikely that a
+            // 404:ing link will suddenly start working at a later point
+            if (oldCrawlData.isPreviouslyDead(top))
+                continue;
+
+            // Check the link filter if the endpoint should be fetched based on site-type
             if (!crawlFrontier.filterLink(top))
                 continue;
+
+            // Check vs blocklist
             if (urlBlocklist.isUrlBlocked(top))
                 continue;
+
             if (!isAllowedProtocol(top.proto))
                 continue;
+
+            // Check if the URL is too long to insert into the DB
             if (top.toString().length() > 255)
                 continue;
+
             if (!crawlFrontier.addVisited(top))
                 continue;
 
-            if (fetchDocument(top, crawlDelay)) {
+
+            if (fetchDocument(top, crawlDelay).isPresent()) {
                 fetchedCount++;
             }
         }
@@ -182,6 +221,76 @@ public class CrawlerRetreiver {
         crawledDomainWriter.accept(ret);
 
         return fetchedCount;
+    }
+
+    private CrawlDataComparison compareWithOldData(SimpleRobotRules robotsRules) {
+
+        int numGoodDocuments = oldCrawlData.size();
+
+        if (numGoodDocuments == 0)
+            return CrawlDataComparison.NO_OLD_DATA;
+
+        if (numGoodDocuments < 10)
+            return CrawlDataComparison.SMALL_SAMPLE;
+
+        // We fetch a sample of the data to assess how much it has changed
+        int sampleSize = (int) Math.min(20, 0.25 * numGoodDocuments);
+        Map<EdgeUrl, CrawledDocument> referenceUrls = oldCrawlData.sample(sampleSize);
+
+        int differences = 0;
+
+        long crawlDelay = robotsRules.getCrawlDelay();
+        for (var url : referenceUrls.keySet()) {
+
+            var docMaybe = fetchDocument(url, crawlDelay);
+            if (docMaybe.isEmpty()) {
+                differences++;
+                continue;
+            }
+
+            var newDoc = docMaybe.get();
+            var referenceDoc = referenceUrls.get(url);
+
+            // This looks like a bug but it is not, we want to compare references
+            // to detect if the page has bounced off etag or last-modified headers
+            // to avoid having to do a full content comparison
+            if (newDoc == referenceDoc)
+                continue;
+
+            if (newDoc.httpStatus != referenceDoc.httpStatus) {
+                differences++;
+                continue;
+            }
+
+            if (newDoc.documentBody == null) {
+                differences++;
+                continue;
+            }
+
+            long referenceLsh = hashDoc(referenceDoc);
+            long newLsh = hashDoc(newDoc);
+
+            if (EasyLSH.hammingDistance(referenceLsh, newLsh) > 5) {
+                differences++;
+            }
+        }
+        if (differences > sampleSize/4) {
+            return CrawlDataComparison.CHANGES_FOUND;
+        }
+        else {
+            return CrawlDataComparison.NO_CHANGES;
+        }
+    }
+
+    private static final HashFunction hasher = Hashing.murmur3_128(0);
+    private long hashDoc(CrawledDocument doc) {
+        var hash = new EasyLSH();
+        long val = 0;
+        for (var b : doc.documentBody.decode().getBytes()) {
+            val = val << 8 | (b & 0xFF);
+            hash.addUnordered(hasher.hashLong(val).asLong());
+        }
+        return hash.get();
     }
 
 
@@ -235,7 +344,7 @@ public class CrawlerRetreiver {
         try {
             logger.debug("Configuring link filter");
 
-            var url = crawlFrontier.peek();
+            var url = crawlFrontier.peek().withPathAndParam("/", null);
 
             var maybeSample = fetchUrl(url).filter(sample -> sample.httpStatus == 200);
             if (maybeSample.isEmpty())
@@ -273,7 +382,7 @@ public class CrawlerRetreiver {
         }
     }
 
-    private boolean fetchDocument(EdgeUrl top, long crawlDelay) {
+    private Optional<CrawledDocument> fetchDocument(EdgeUrl top, long crawlDelay) {
         logger.debug("Fetching {}", top);
 
         long startTime = System.currentTimeMillis();
@@ -282,9 +391,14 @@ public class CrawlerRetreiver {
         if (doc.isPresent()) {
             var d = doc.get();
             crawledDomainWriter.accept(d);
+            oldCrawlData.dispose(top);
 
             if (d.url != null) {
-                EdgeUrl.parse(d.url).ifPresent(crawlFrontier::addVisited);
+                // We may have redirected to a different path
+                EdgeUrl.parse(d.url).ifPresent(url -> {
+                    crawlFrontier.addVisited(url);
+                    oldCrawlData.dispose(url);
+                });
             }
 
             if ("ERROR".equals(d.crawlerStatus) && d.httpStatus != 404) {
@@ -296,7 +410,7 @@ public class CrawlerRetreiver {
         long crawledTime = System.currentTimeMillis() - startTime;
         delay(crawlDelay, crawledTime);
 
-        return doc.isPresent();
+        return doc;
     }
 
     private boolean isAllowedProtocol(String proto) {
@@ -333,7 +447,20 @@ public class CrawlerRetreiver {
     private CrawledDocument fetchContent(EdgeUrl top) {
         for (int i = 0; i < 2; i++) {
             try {
-                return fetcher.fetchContent(top);
+                var doc = fetcher.fetchContent(top, oldCrawlData.getEtag(top), oldCrawlData.getLastModified(top));
+
+                doc.recrawlState = "NEW";
+
+                if (doc.httpStatus == 304) {
+                    var referenceData = oldCrawlData.getDoc(top);
+                    if (referenceData != null) {
+                        referenceData.recrawlState = "304/UNCHANGED";
+                        return referenceData;
+                    }
+                }
+
+
+                return doc;
             }
             catch (RateLimitException ex) {
                 slowDown = true;
@@ -442,5 +569,13 @@ public class CrawlerRetreiver {
                 .crawlerStatus(CrawlerDocumentStatus.ERROR.name())
                 .build();
     }
+
+
+    enum CrawlDataComparison {
+        NO_OLD_DATA,
+        SMALL_SAMPLE,
+        CHANGES_FOUND,
+        NO_CHANGES
+    };
 
 }

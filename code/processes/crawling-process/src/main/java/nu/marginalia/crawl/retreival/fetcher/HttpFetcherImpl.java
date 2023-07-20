@@ -125,29 +125,20 @@ public class HttpFetcherImpl implements HttpFetcher {
         }
     }
 
-    private Request createHeadRequest(EdgeUrl url) {
-        return new Request.Builder().head().addHeader("User-agent", userAgent)
-                .url(url.toString())
-                .addHeader("Accept-Encoding", "gzip")
-                .build();
-    }
-
-    private Request createGetRequest(EdgeUrl url) {
-        return new Request.Builder().get().addHeader("User-agent", userAgent)
-                .url(url.toString())
-                .addHeader("Accept-Encoding", "gzip")
-                .build();
-
-    }
 
     @Override
     @SneakyThrows
-    public CrawledDocument fetchContent(EdgeUrl url) throws RateLimitException {
+    public CrawledDocument fetchContent(EdgeUrl url, String etag, String lastMod) throws RateLimitException {
 
         if (contentTypeLogic.isUrlLikeBinary(url)) {
             logger.debug("Probing suspected binary {}", url);
 
-            var head = createHeadRequest(url);
+            var headBuilder = new Request.Builder().head()
+                    .addHeader("User-agent", userAgent)
+                    .url(url.toString())
+                    .addHeader("Accept-Encoding", "gzip");
+
+            var head = headBuilder.build();
             var call = client.newCall(head);
 
             try (var rsp = call.execute()) {
@@ -165,7 +156,15 @@ public class HttpFetcherImpl implements HttpFetcher {
             }
         }
 
-        var get = createGetRequest(url);
+        var getBuilder = new Request.Builder().get();
+        getBuilder.addHeader("User-agent", userAgent)
+                .url(url.toString())
+                .addHeader("Accept-Encoding", "gzip");
+
+        if (etag != null) getBuilder.addHeader("If-None-Match", etag);
+        if (lastMod != null) getBuilder.addHeader("If-Modified-Since", lastMod);
+
+        var get = getBuilder.build();
         var call = client.newCall(get);
 
         try (var rsp = call.execute()) {
@@ -315,7 +314,7 @@ public class HttpFetcherImpl implements HttpFetcher {
     private Optional<SimpleRobotRules> fetchRobotsForProto(String proto, EdgeDomain domain) {
         try {
             var url = new EdgeUrl(proto, domain, null, "/robots.txt", null);
-            return Optional.of(parseRobotsTxt(fetchContent(url)));
+            return Optional.of(parseRobotsTxt(fetchContent(url, null, null)));
         }
         catch (Exception ex) {
             return Optional.empty();

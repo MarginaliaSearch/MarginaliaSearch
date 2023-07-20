@@ -27,9 +27,12 @@ dependencies {
     implementation project(':code:common:service')
     implementation project(':code:libraries:big-string')
     implementation project(':code:api:index-api')
+    implementation project(':code:api:process-mqapi')
     implementation project(':code:common:service-discovery')
     implementation project(':code:common:service-client')
+    implementation project(':code:common:message-queue')
     implementation project(':code:libraries:language-processing')
+    implementation project(':code:libraries:easy-lsh')
     implementation project(':code:process-models:crawling-model')
     implementation project(':code:process-models:converting-model')
 

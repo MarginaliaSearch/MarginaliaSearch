@@ -27,6 +27,8 @@ public class CrawledDocument implements SerializableCrawlData {
     public String canonicalUrl;
     public String redirectUrl;
 
+    public String recrawlState;
+
     public static final String SERIAL_IDENTIFIER = "// DOCUMENT";
     @Override
     public String getSerialIdentifier() {

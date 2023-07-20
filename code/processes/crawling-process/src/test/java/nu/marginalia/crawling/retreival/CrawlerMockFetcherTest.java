@@ -33,7 +33,6 @@ public class CrawlerMockFetcherTest {
 
     Map<EdgeUrl, CrawledDocument> mockData = new HashMap<>();
     HttpFetcher fetcherMock = new MockFetcher();
-    SitemapRetriever sitemapRetriever = new SitemapRetriever();
 
     @AfterEach
     public void tearDown() {
@@ -74,7 +73,7 @@ public class CrawlerMockFetcherTest {
         registerUrlClasspathData(new EdgeUrl("https://startrek.website/c/startrek"), "mock-crawl-data/lemmy/c_startrek.html");
         registerUrlClasspathData(new EdgeUrl("https://startrek.website/post/108995"), "mock-crawl-data/lemmy/108995.html");
 
-        new CrawlerRetreiver(fetcherMock, new CrawlingSpecification("1", 10, "startrek.website", new ArrayList<>()), out::add)
+        new CrawlerRetreiver(fetcherMock, new CrawlingSpecification("1", 10, "startrek.website", new ArrayList<>(), null), out::add)
                 .withNoDelay()
                 .fetch();
 
@@ -87,7 +86,7 @@ public class CrawlerMockFetcherTest {
 
         registerUrlClasspathData(new EdgeUrl("https://en.wikipedia.org/"), "mock-crawl-data/mediawiki/index.html");
 
-        new CrawlerRetreiver(fetcherMock, new CrawlingSpecification("1", 10, "en.wikipedia.org", new ArrayList<>()), out::add)
+        new CrawlerRetreiver(fetcherMock, new CrawlingSpecification("1", 10, "en.wikipedia.org", new ArrayList<>(), null), out::add)
                 .withNoDelay()
                 .fetch();
 
@@ -102,7 +101,7 @@ public class CrawlerMockFetcherTest {
         registerUrlClasspathData(new EdgeUrl("https://community.tt-rss.org/t/telegram-channel-to-idle-on/3501"), "mock-crawl-data/discourse/telegram.html");
         registerUrlClasspathData(new EdgeUrl("https://community.tt-rss.org/t/combined-mode-but-grid/4489"), "mock-crawl-data/discourse/grid.html");
 
-        new CrawlerRetreiver(fetcherMock, new CrawlingSpecification("1", 100, "community.tt-rss.org", new ArrayList<>()), out::add)
+        new CrawlerRetreiver(fetcherMock, new CrawlingSpecification("1", 100, "community.tt-rss.org", new ArrayList<>(), null), out::add)
                 .withNoDelay()
                 .fetch();
 
@@ -127,7 +126,7 @@ public class CrawlerMockFetcherTest {
         }
 
         @Override
-        public CrawledDocument fetchContent(EdgeUrl url) {
+        public CrawledDocument fetchContent(EdgeUrl url, String etag, String lastModified) {
             logger.info("Fetching {}", url);
             if (mockData.containsKey(url)) {
                 return mockData.get(url);
