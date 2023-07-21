@@ -149,6 +149,8 @@ public class AbstractProcessSpawnerActor extends AbstractStateGraph {
     public void aborted() throws Exception {}
 
 
+    /** Encapsulates the execution of the process in a separate thread so that
+     * we can interrupt the thread if the process is cancelled */
     private class TaskExecution {
         private final AtomicBoolean error = new AtomicBoolean(false);
         public TaskExecution() throws ExecutionException, InterruptedException {

@@ -28,7 +28,7 @@ public class HeartbeatService {
 
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                     SELECT SERVICE_NAME, SERVICE_BASE, INSTANCE, ALIVE,
+                    SELECT SERVICE_NAME, SERVICE_BASE, INSTANCE, ALIVE,
                             TIMESTAMPDIFF(MICROSECOND, HEARTBEAT_TIME, CURRENT_TIMESTAMP(6)) AS TSDIFF
                     FROM SERVICE_HEARTBEAT
                      """)) {
@@ -56,7 +56,7 @@ public class HeartbeatService {
 
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                     SELECT PROCESS_NAME, PROCESS_BASE, INSTANCE, STATUS, PROGRESS,
+                    SELECT PROCESS_NAME, PROCESS_BASE, INSTANCE, STATUS, PROGRESS,
                             TIMESTAMPDIFF(MICROSECOND, HEARTBEAT_TIME, CURRENT_TIMESTAMP(6)) AS TSDIFF
                     FROM PROCESS_HEARTBEAT
                      """)) {
