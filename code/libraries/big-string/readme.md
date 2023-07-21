@@ -4,6 +4,10 @@ Microlibrary that offers string compression. This is useful when having to load 
 of HTML documents in memory during conversion. XML has been described as the opposite of a compression scheme,
 and as a result, HTML compresses ridiculously well.
 
+## Configuration 
+
+If the Java property 'bigstring.disabled' is set to true, the BigString class will not compress strings.
+
 ## Demo
 
 ```java

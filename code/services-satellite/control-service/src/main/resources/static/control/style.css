@@ -8,6 +8,17 @@ body {
     grid-template-areas:
         "left right";
 }
+section nav.tabs > a {
+    color: #000;
+    text-decoration: none;
+    background-color: #ccc;
+    padding: 0.5ch;
+    border-radius: .5ch;
+}
+section nav.tabs a.selected {
+    background-color: #eee;
+}
+
 .toggle-switch-off {
    border-left: 5px solid #f00;
    width: 8ch;
@@ -37,7 +48,7 @@ table {
 }
 th { text-align: left; }
 td,th { padding-right: 1ch; border: 1px solid #ccc; }
-tr:nth-last-of-type(2n) {
+tr:nth-of-type(2n) {
     background-color: #eee;
 }
 body > nav {

@@ -1,0 +1,6 @@
+<nav class="tabs">
+    <a href="/storage">Overview</a>
+    <a href="/storage/specs">Specifications</a>
+    <a href="/storage/crawls">Crawl Data</a>
+    <a href="/storage/processed">Processed Data</a>
+</nav>

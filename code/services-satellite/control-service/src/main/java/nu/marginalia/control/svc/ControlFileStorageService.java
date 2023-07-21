@@ -4,15 +4,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
-import nu.marginalia.control.model.FileStorageBaseWithStorage;
-import nu.marginalia.control.model.FileStorageWithActions;
-import nu.marginalia.control.model.ProcessHeartbeat;
-import nu.marginalia.control.model.ServiceHeartbeat;
+import nu.marginalia.control.model.*;
 import nu.marginalia.db.storage.FileStorageService;
-import nu.marginalia.db.storage.model.FileStorage;
-import nu.marginalia.db.storage.model.FileStorageBase;
-import nu.marginalia.db.storage.model.FileStorageBaseId;
-import nu.marginalia.db.storage.model.FileStorageId;
+import nu.marginalia.db.storage.model.*;
 import spark.Request;
 import spark.Response;
 
@@ -49,9 +43,17 @@ public class ControlFileStorageService {
 
     @SneakyThrows
     public List<FileStorageBaseWithStorage> getStorageList() {
-        Map<FileStorageBaseId, FileStorageBase> fileStorageBaseByBaseId = new HashMap<>();
-        Map<FileStorageBaseId, List<FileStorageWithActions>> fileStoragByBaseId = new HashMap<>();
+        var storageIds = getFileStorageIds();
+        return makeFileStorageBaseWithStorage(storageIds);
+    }
 
+    @SneakyThrows
+    public List<FileStorageBaseWithStorage> getStorageList(FileStorageType type) {
+        var storageIds = getFileStorageIds(type);
+        return makeFileStorageBaseWithStorage(storageIds);
+    }
+
+    private List<FileStorageId> getFileStorageIds() throws SQLException {
         List<FileStorageId> storageIds = new ArrayList<>();
 
         try (var conn = dataSource.getConnection();
@@ -61,6 +63,29 @@ public class ControlFileStorageService {
                 storageIds.add(new FileStorageId(rs.getLong("ID")));
             }
         }
+
+        return storageIds;
+    }
+
+    private List<FileStorageId> getFileStorageIds(FileStorageType type) throws SQLException {
+        List<FileStorageId> storageIds = new ArrayList<>();
+
+        try (var conn = dataSource.getConnection();
+             var storageByIdStmt = conn.prepareStatement("SELECT ID FROM FILE_STORAGE WHERE TYPE = ?")) {
+            storageByIdStmt.setString(1, type.name());
+            var rs = storageByIdStmt.executeQuery();
+            while (rs.next()) {
+                storageIds.add(new FileStorageId(rs.getLong("ID")));
+            }
+        }
+
+        return storageIds;
+    }
+
+    private List<FileStorageBaseWithStorage> makeFileStorageBaseWithStorage(List<FileStorageId> storageIds) throws SQLException {
+
+        Map<FileStorageBaseId, FileStorageBase> fileStorageBaseByBaseId = new HashMap<>();
+        Map<FileStorageBaseId, List<FileStorageWithActions>> fileStoragByBaseId = new HashMap<>();
 
         for (var id : storageIds) {
             var storage = fileStorageService.getStorage(id);
@@ -79,5 +104,31 @@ public class ControlFileStorageService {
         return result;
     }
 
+    public FileStorageWithRelatedEntries getFileStorageWithRelatedEntries(FileStorageId id) throws SQLException {
+        var storage = fileStorageService.getStorage(id);
+        var related = getRelatedEntries(id);
+        return new FileStorageWithRelatedEntries(new FileStorageWithActions(storage), related);
+    }
 
+    private List<FileStorage> getRelatedEntries(FileStorageId id) {
+        List<FileStorage> ret = new ArrayList<>();
+        try (var conn = dataSource.getConnection();
+             var relatedIds = conn.prepareStatement("""
+                     (SELECT SOURCE_ID AS ID FROM FILE_STORAGE_RELATION WHERE TARGET_ID = ?)
+                     UNION
+                     (SELECT TARGET_ID AS ID FROM FILE_STORAGE_RELATION WHERE SOURCE_ID = ?)
+                     """))
+        {
+
+            relatedIds.setLong(1, id.id());
+            relatedIds.setLong(2, id.id());
+            var rs = relatedIds.executeQuery();
+            while (rs.next()) {
+                ret.add(fileStorageService.getStorage(new FileStorageId(rs.getLong("ID"))));
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return ret;
+    }
 }

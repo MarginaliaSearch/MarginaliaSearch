@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Control Service</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  {{> control/partials/nav}}
+  <section>
+  {{> control/partials/storage-types}}
+
+  <h1>Crawl Specifications</h1>
+  {{> control/partials/storage-table}}
+
+  <h2>About</h2>
+
+  <p>Crawling specifications are a work order for the crawler, in essence a list of domains that are to be crawled,
+      combined with a list of known URLs for each domain, and instructions on how deep to crawl.  The crawler requires
+      a specification in order to understand what to do.
+  </p>
+  <p>
+      A crawling specification can either be generated from the links in the database, or from a list of domains
+      provided via a URL that links to a text file.
+  </p>
+  <h2>Create New Specification</h2>
+
+  <p>To create a new specification fill out the form below. </p>
+  <form method="post" action="/storage/specs">
+      <div class="form">
+      <label for="description">Description</label><br>
+      <input type="text" name="description" id="description" maxlength="255"><br>
+      <p>(This is how you'll be able to find the
+          specification later so give it a good and descriptive name)</p>
+
+      <p>Source</p>
+      <input type="radio" name="source"
+              value="db" id="db"
+              checked
+              onclick="document.getElementById('spec-url-options').style.display = 'none';"
+      > <label for="db">Use links in database</label><br>
+      <input type="radio" name="source"
+              value="download" id="download"
+              onclick="document.getElementById('spec-url-options').style.display = 'block';"
+      > <label for="download">Download a list of domains from a URL</label><br>
+      <div id="spec-url-options" style="display: none">
+      <label for="url">URL to list of domains</label><br>
+      <input type="text" name="url" id="url" /><br>
+      <br>
+      </div>
+      <br>
+      <input type="submit">
+      </div>
+  </form>
+
+  </section>
+</body>
+<script src="/refresh.js"></script>
+<script>
+    window.setInterval(() => {
+        refresh(["storage"]);
+    }, 30000);
+</script>
+</html>

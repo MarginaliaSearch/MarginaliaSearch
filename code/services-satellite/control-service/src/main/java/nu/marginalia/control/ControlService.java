@@ -5,6 +5,8 @@ import com.google.inject.Inject;
 import nu.marginalia.client.ServiceMonitors;
 import nu.marginalia.control.model.Actor;
 import nu.marginalia.control.svc.*;
+import nu.marginalia.db.storage.model.FileStorageId;
+import nu.marginalia.db.storage.model.FileStorageType;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.service.server.*;
@@ -15,6 +17,7 @@ import spark.Response;
 import spark.Spark;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Map;
 
 public class ControlService extends Service {
@@ -53,7 +56,11 @@ public class ControlService extends Service {
         var serviceByIdRenderer = rendererFactory.renderer("control/service-by-id");
         var actorsRenderer = rendererFactory.renderer("control/actors");
         var actorDetailsRenderer = rendererFactory.renderer("control/actor-details");
-        var storageRenderer = rendererFactory.renderer("control/storage");
+        var storageRenderer = rendererFactory.renderer("control/storage-overview");
+        var storageSpecsRenderer = rendererFactory.renderer("control/storage-specs");
+        var storageCrawlsRenderer = rendererFactory.renderer("control/storage-crawls");
+        var storageProcessedRenderer = rendererFactory.renderer("control/storage-processed");
+        var storageDetailsRenderer = rendererFactory.renderer("control/storage-details");
 
         this.controlActorService = controlActorService;
 
@@ -74,6 +81,11 @@ public class ControlService extends Service {
         Spark.get("/public/actors", this::processesModel, actorsRenderer::render);
         Spark.get("/public/actors/:fsm", this::actorDetailsModel, actorDetailsRenderer::render);
         Spark.get("/public/storage", this::storageModel, storageRenderer::render);
+        Spark.get("/public/storage/specs", this::storageModelSpecs, storageSpecsRenderer::render);
+        Spark.get("/public/storage/crawls", this::storageModelCrawls, storageCrawlsRenderer::render);
+        Spark.get("/public/storage/processed", this::storageModelProcessed, storageProcessedRenderer::render);
+        Spark.get("/public/storage/:id", this::storageDetailsModel, storageDetailsRenderer::render);
+
 
         final HtmlRedirect redirectToServices = new HtmlRedirect("/services");
         final HtmlRedirect redirectToProcesses = new HtmlRedirect("/actors");
@@ -118,6 +130,18 @@ public class ControlService extends Service {
         return Map.of("storage", controlFileStorageService.getStorageList());
     }
 
+    private Object storageDetailsModel(Request request, Response response) throws SQLException {
+        return Map.of("storage", controlFileStorageService.getFileStorageWithRelatedEntries(FileStorageId.parse(request.params("id"))));
+    }
+    private Object storageModelSpecs(Request request, Response response) {
+        return Map.of("storage", controlFileStorageService.getStorageList(FileStorageType.CRAWL_SPEC));
+    }
+    private Object storageModelCrawls(Request request, Response response) {
+        return Map.of("storage", controlFileStorageService.getStorageList(FileStorageType.CRAWL_DATA));
+    }
+    private Object storageModelProcessed(Request request, Response response) {
+        return Map.of("storage", controlFileStorageService.getStorageList(FileStorageType.PROCESSED_DATA));
+    }
     private Object servicesModel(Request request, Response response) {
         return Map.of("services", heartbeatService.getServiceHeartbeats(),
                       "events", eventLogService.getLastEntries(20));

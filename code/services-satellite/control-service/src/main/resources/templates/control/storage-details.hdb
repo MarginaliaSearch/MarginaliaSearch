@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Control Service</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  {{> control/partials/nav}}
+  <section>
+  {{> control/partials/storage-types}}
+  <h1>Storage Details</h1>
+      {{#with storage.self.storage}}
+      <table>
+          <tr>
+              <th>Type</th>
+              <th>Path</th>
+              <th>Details</th>
+          </tr>
+          <tr>
+              <td>{{type}}</td>
+              <td>{{path}}</td>
+              <td>{{description}}</td>
+          </tr>
+      </table>
+      {{/with}}
+  <h2>Actions</h2>
+      {{#with storage.self}}
+      {{#if isCrawlable}}
+      <form method="post" action="/storage/{{storage.id}}/crawl">
+          Perform a full re-crawl of this data: <button type="submit">Crawl</button> <br>
+      </form>
+      {{/if}}
+      {{#if isLoadable}}
+      <form method="post" action="/storage/{{storage.id}}/load">
+          Load this data into index: <button type="submit">Load</button> <br>
+      </form>
+      {{/if}}
+      {{#if isConvertible}}
+      <form method="post" action="/storage/{{storage.id}}/process">
+          Process and load this data into index: <button type="submit">Process</button> <br>
+      </form>
+      {{/if}}
+      {{#if isRecrawlable}}
+      <form method="post" action="/storage/{{storage.id}}/recrawl">
+          Perform a re-crawl of this data: <button type="submit">Recrawl</button><br>
+      </form>
+      {{/if}}
+      {{#if isDeletable}}
+      <form method="post" action="/storage/{{storage.id}}/delete" onsubmit="return confirm('Confirm deletion of {{storage.path}}')">
+          Delete this data: <button type="submit">Delete</button><br>
+      </form>
+      {{/if}}
+      {{/with}}
+  {{#if storage.related}}
+  <h2>Related</h2>
+  <table>
+      <tr>
+          <th>Type</th>
+          <th>Path</th>
+          <th>Details</th>
+      </tr>
+  {{#each storage.related}}
+      <tr>
+            <td>{{type}}</td>
+            <td><a href="/storage/{{id}}">{{path}}</a></td>
+            <td>{{description}}</td>
+      </tr>
+  {{/each}}
+  </table>
+  {{/if}}
+  </section>
+
+</body>
+<script src="/refresh.js"></script>
+<script>
+    window.setInterval(() => {
+        refresh(["storage"]);
+    }, 30000);
+</script>
+</html>

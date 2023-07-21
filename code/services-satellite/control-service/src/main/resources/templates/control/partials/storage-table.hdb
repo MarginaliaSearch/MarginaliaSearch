@@ -1,0 +1,34 @@
+<table>
+    {{#each storage}}
+    <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Path</th>
+        <th>Must Clean</th>
+        <th>Permit Temp</th>
+    </tr>
+    <tr>
+        <td>{{base.type}}</td>
+        <td>{{base.name}}</td>
+        <td>{{base.path}}</td>
+        <td>{{base.mustClean}}</td>
+        <td>{{base.permitTemp}}</td>
+    </tr>
+    <tr>
+        <th></th>
+        <th>Type</th>
+        <th colspan="2">Path</th>
+        <th>Description</th>
+    </tr>
+    {{#each storage}}
+    <tr>
+        <td>
+        <a href="/storage/{{storage.id}}">Info</a>
+        </td>
+        <td>{{storage.type}}</td>
+        <td colspan="2">{{storage.path}}</td>
+        <td>{{storage.description}}</td>
+    </tr>
+    {{/each}}
+    {{/each}}
+</table>
