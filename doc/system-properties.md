@@ -29,3 +29,9 @@ These are JVM system properties used by each service
 |lexiconSizeHint| 800000000  | The default size of the lexicon                       |
 |local-index-path| /some/path | Selects the location the loader will write index data |
 |crawl.rootDirRewrite|/some/path|Sets the base directory of a crawl plan |
+
+## Other
+
+|flag| values     | description                                 |
+|---|------------|---------------------------------------------|
+|bigstring.disabled| true/false | Disables transparent big string compression |
