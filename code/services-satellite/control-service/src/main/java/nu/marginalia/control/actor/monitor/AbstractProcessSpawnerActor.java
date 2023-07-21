@@ -3,6 +3,7 @@ package nu.marginalia.control.actor.monitor;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.control.svc.ProcessService;
+import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.mqsm.StateFactory;
 import nu.marginalia.mqsm.graph.AbstractStateGraph;
@@ -115,11 +116,33 @@ public class AbstractProcessSpawnerActor extends AbstractStateGraph {
             }
         }
         catch (InterruptedException ex) {
+            // We get this exception when the process is cancelled by the user
+
             processService.kill(processId);
+            setCurrentMessageToDead();
+
             transition(ABORTED);
         }
 
         transition(MONITOR, attempts);
+    }
+
+    /** Sets the message to dead in the database to avoid
+     * the service respawning on the same task when we
+     * re-enable this actor */
+    private void setCurrentMessageToDead() {
+        try {
+            var messages = persistence.eavesdrop(inboxName, 1);
+
+            if (messages.isEmpty()) // Possibly a race condition where the task is already finished
+                return;
+
+            var theMessage = messages.iterator().next();
+            persistence.updateMessageState(theMessage.msgId(), MqMessageState.DEAD);
+        }
+        catch (SQLException ex) {
+            logger.error("Tried but failed to set the message for " + processId + " to dead", ex);
+        }
     }
 
     @TerminalState(name = ABORTED, description = "The process was manually aborted")

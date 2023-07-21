@@ -85,7 +85,6 @@ public class RecrawlActor extends AbstractStateGraph {
             error("This Actor requires a message as an argument");
         }
 
-
         var crawlStorage = storageService.getStorage(recrawlMessage.crawlStorageId);
         FileStorage specStorage;
 
@@ -122,10 +121,6 @@ public class RecrawlActor extends AbstractStateGraph {
                         """
     )
     public RecrawlMessage crawl(RecrawlMessage recrawlMessage) throws Exception {
-        // Create processed data area
-
-        var toCrawl = storageService.getStorage(recrawlMessage.crawlSpecId);
-
         // Pre-send crawl request
         var request = new CrawlRequest(recrawlMessage.crawlSpecId, recrawlMessage.crawlStorageId);
         long id = mqCrawlerOutbox.sendAsync(CrawlRequest.class.getSimpleName(), gson.toJson(request));
@@ -138,7 +133,7 @@ public class RecrawlActor extends AbstractStateGraph {
             next = END,
             resume = ResumeBehavior.RETRY,
             description = """
-                    Wait for the crawler to finish retreiving the data.
+                    Wait for the crawler to finish retrieving the data.
                     """
     )
     public RecrawlMessage crawlerWait(RecrawlMessage recrawlMessage) throws Exception {
