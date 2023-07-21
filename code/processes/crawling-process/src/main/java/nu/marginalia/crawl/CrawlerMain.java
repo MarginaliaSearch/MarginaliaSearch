@@ -10,6 +10,7 @@ import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawling.io.CrawledDomainReader;
 import nu.marginalia.crawling.io.CrawlerOutputFile;
 import nu.marginalia.crawling.model.CrawledDomain;
+import nu.marginalia.crawling.model.SerializableCrawlData;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
@@ -32,10 +33,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -201,19 +199,23 @@ public class CrawlerMain implements AutoCloseable {
 
         HttpFetcher fetcher = new HttpFetcherImpl(userAgent.uaString(), dispatcher, connectionPool);
 
-        // Read the previous crawl's data for this domain, if it exists and has a reasonable size
-        Optional<CrawledDomain> domain;
-        if (limits.isRefreshable()) {
-            domain = reader.readOptionally(limits.refreshPath());
-            if (domain.isPresent()) {
-                specification = specification.withOldData(domain.get());
+        Iterator<SerializableCrawlData> iterator;
+        try {
+            if (limits.isRefreshable()) {
+                iterator = reader.createIterator(limits.refreshPath());
             }
+            else {
+                iterator = Collections.emptyIterator();
+            }
+        } catch (IOException e) {
+            logger.warn("Failed to read previous crawl data for {}", specification.domain);
+            iterator = Collections.emptyIterator();
         }
 
         try (CrawledDomainWriter writer = new CrawledDomainWriter(crawlDataDir, specification.domain, specification.id)) {
             var retreiver = new CrawlerRetreiver(fetcher, specification, writer::accept);
 
-            int size = retreiver.fetch();
+            int size = retreiver.fetch(iterator);
 
             workLog.setJobToFinished(specification.id, writer.getOutputFile().toString(), size);
 

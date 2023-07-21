@@ -5,12 +5,18 @@ import nu.marginalia.WmsaHome;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
+import nu.marginalia.crawling.io.CrawledDomainReader;
+import nu.marginalia.crawling.io.CrawledDomainWriter;
+import nu.marginalia.crawling.io.CrawlerOutputFile;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.crawling.model.SerializableCrawlData;
 import org.junit.jupiter.api.*;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -99,7 +105,7 @@ class CrawlerRetreiverTest {
     }
 
     @Test
-    public void testRecrawl() {
+    public void testRecrawl() throws IOException {
 
         var specs = CrawlingSpecification
                 .builder()
@@ -110,6 +116,8 @@ class CrawlerRetreiverTest {
                 .build();
 
 
+        Path out = Files.createTempDirectory("crawling-process");
+        var writer = new CrawledDomainWriter(out, "test", "123456");
         Map<Class<? extends SerializableCrawlData>, List<SerializableCrawlData>> data = new HashMap<>();
 
         new CrawlerRetreiver(httpFetcher, specs, d -> {
@@ -117,7 +125,12 @@ class CrawlerRetreiverTest {
             if (d instanceof CrawledDocument doc) {
                 System.out.println(doc.url + ": " + doc.recrawlState + "\t" + doc.httpStatus);
             }
+            writer.accept(d);
         }).fetch();
+        writer.close();
+
+        var reader = new CrawledDomainReader();
+        var iter = reader.createIterator(CrawlerOutputFile.getOutputFile(out,  "123456", "test"));
 
         CrawledDomain domain = (CrawledDomain) data.get(CrawledDomain.class).get(0);
         domain.doc = data.get(CrawledDocument.class).stream().map(CrawledDocument.class::cast).collect(Collectors.toList());
@@ -128,6 +141,7 @@ class CrawlerRetreiverTest {
             if (d instanceof CrawledDocument doc) {
                 System.out.println(doc.url + ": " + doc.recrawlState + "\t" + doc.httpStatus);
             }
-        }).fetch();
+        }).fetch(iter);
+
     }
 }

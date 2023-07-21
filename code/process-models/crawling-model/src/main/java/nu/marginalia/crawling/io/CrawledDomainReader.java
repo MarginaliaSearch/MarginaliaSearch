@@ -2,8 +2,10 @@ package nu.marginalia.crawling.io;
 
 import com.github.luben.zstd.ZstdInputStream;
 import com.google.gson.Gson;
+import lombok.SneakyThrows;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
+import nu.marginalia.crawling.model.SerializableCrawlData;
 import nu.marginalia.model.gson.GsonFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ForkJoinPool;
@@ -27,6 +30,44 @@ public class CrawledDomainReader {
     public CrawledDomainReader() {
     }
 
+    public Iterator<SerializableCrawlData> createIterator(Path path) throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(new ZstdInputStream(new FileInputStream(path.toFile()))));
+
+        return new Iterator<>() {
+            SerializableCrawlData next;
+
+            @Override
+            @SneakyThrows
+            public boolean hasNext() {
+                String identifier = br.readLine();
+                if (identifier == null) {
+                    br.close();
+                    return false;
+                }
+                String data = br.readLine();
+                if (data == null) {
+                    br.close();
+                    return false;
+                }
+
+                if (identifier.equals(CrawledDomain.SERIAL_IDENTIFIER)) {
+                    next = gson.fromJson(data, CrawledDomain.class);
+                } else if (identifier.equals(CrawledDocument.SERIAL_IDENTIFIER)) {
+                    next = gson.fromJson(data, CrawledDocument.class);
+                }
+                else {
+                    throw new IllegalStateException("Unknown identifier: " + identifier);
+                }
+                return true;
+            }
+
+            @Override
+            public SerializableCrawlData next() {
+                return next;
+            }
+        };
+    }
+    
     public CrawledDomain read(Path path) throws IOException {
         DomainDataAssembler domainData = new DomainDataAssembler();
 

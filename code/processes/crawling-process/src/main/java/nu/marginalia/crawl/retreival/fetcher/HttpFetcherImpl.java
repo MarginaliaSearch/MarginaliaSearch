@@ -128,9 +128,15 @@ public class HttpFetcherImpl implements HttpFetcher {
 
     @Override
     @SneakyThrows
-    public CrawledDocument fetchContent(EdgeUrl url, String etag, String lastMod) throws RateLimitException {
+    public CrawledDocument fetchContent(EdgeUrl url,
+                                        ContentTags contentTags)
+            throws RateLimitException
+    {
 
-        if (contentTypeLogic.isUrlLikeBinary(url)) {
+        // We don't want to waste time and resources on URLs that are not HTML, so if the file ending
+        // looks like it might be something else, we perform a HEAD first to check the content type
+        if (contentTags.isEmpty() && contentTypeLogic.isUrlLikeBinary(url))
+        {
             logger.debug("Probing suspected binary {}", url);
 
             var headBuilder = new Request.Builder().head()
@@ -146,6 +152,21 @@ public class HttpFetcherImpl implements HttpFetcher {
                 if (contentTypeHeader != null && !contentTypeLogic.isAllowableContentType(contentTypeHeader)) {
                     return createErrorResponse(url, rsp, CrawlerDocumentStatus.BAD_CONTENT_TYPE, "Early probe failed");
                 }
+
+                // Update the URL to the final URL of the HEAD request, otherwise we might end up doing
+
+                // HEAD 301 url1 -> url2
+                // HEAD 200 url2
+                // GET 301 url1 -> url2
+                // GET 200 url2
+
+                // which is not what we want. Overall we want to do as few requests as possible to not raise
+                // too many eyebrows when looking at the logs on the target server.  Overall it's probably desirable
+                // that it looks like the traffic makes sense, as opposed to looking like a broken bot.
+
+                var redirectUrl = new EdgeUrl(rsp.request().url().toString());
+                if (Objects.equals(redirectUrl.domain, url.domain))
+                    url = redirectUrl;
             }
             catch (SocketTimeoutException ex) {
                 return createTimeoutErrorRsp(url, ex);
@@ -157,12 +178,12 @@ public class HttpFetcherImpl implements HttpFetcher {
         }
 
         var getBuilder = new Request.Builder().get();
+
         getBuilder.addHeader("User-agent", userAgent)
                 .url(url.toString())
                 .addHeader("Accept-Encoding", "gzip");
 
-        if (etag != null) getBuilder.addHeader("If-None-Match", etag);
-        if (lastMod != null) getBuilder.addHeader("If-Modified-Since", lastMod);
+        contentTags.paint(getBuilder);
 
         var get = getBuilder.build();
         var call = client.newCall(get);
@@ -314,7 +335,7 @@ public class HttpFetcherImpl implements HttpFetcher {
     private Optional<SimpleRobotRules> fetchRobotsForProto(String proto, EdgeDomain domain) {
         try {
             var url = new EdgeUrl(proto, domain, null, "/robots.txt", null);
-            return Optional.of(parseRobotsTxt(fetchContent(url, null, null)));
+            return Optional.of(parseRobotsTxt(fetchContent(url, ContentTags.empty())));
         }
         catch (Exception ex) {
             return Optional.empty();

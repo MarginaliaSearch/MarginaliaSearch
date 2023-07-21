@@ -4,10 +4,7 @@ import crawlercommons.robots.SimpleRobotRules;
 import lombok.SneakyThrows;
 import nu.marginalia.bigstring.BigString;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
-import nu.marginalia.crawl.retreival.fetcher.FetchResult;
-import nu.marginalia.crawl.retreival.fetcher.FetchResultState;
-import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
-import nu.marginalia.crawl.retreival.fetcher.SitemapRetriever;
+import nu.marginalia.crawl.retreival.fetcher.*;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawlerDocumentStatus;
 import nu.marginalia.crawling.model.SerializableCrawlData;
@@ -126,7 +123,7 @@ public class CrawlerMockFetcherTest {
         }
 
         @Override
-        public CrawledDocument fetchContent(EdgeUrl url, String etag, String lastModified) {
+        public CrawledDocument fetchContent(EdgeUrl url, ContentTags tags) {
             logger.info("Fetching {}", url);
             if (mockData.containsKey(url)) {
                 return mockData.get(url);

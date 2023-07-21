@@ -2,6 +2,7 @@ package nu.marginalia.crawling;
 
 import lombok.SneakyThrows;
 import nu.marginalia.crawl.retreival.RateLimitException;
+import nu.marginalia.crawl.retreival.fetcher.ContentTags;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.retreival.logic.ContentTypeLogic;
 import nu.marginalia.model.EdgeUrl;
@@ -29,14 +30,14 @@ class HttpFetcherTest {
     @Test
     void fetchUTF8() throws URISyntaxException, RateLimitException {
         var fetcher = new HttpFetcherImpl("nu.marginalia.edge-crawler");
-        var str = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu"), null, null);
+        var str = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu"), ContentTags.empty());
         System.out.println(str.contentType);
     }
 
     @Test
     void fetchText() throws URISyntaxException, RateLimitException {
         var fetcher = new HttpFetcherImpl("nu.marginalia.edge-crawler");
-        var str = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu/robots.txt"), null, null);
+        var str = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu/robots.txt"), ContentTags.empty());
         System.out.println(str);
     }
 }
