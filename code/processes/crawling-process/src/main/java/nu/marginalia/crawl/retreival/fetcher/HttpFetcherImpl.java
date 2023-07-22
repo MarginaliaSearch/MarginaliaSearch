@@ -17,6 +17,7 @@ import nu.marginalia.crawl.retreival.logic.ContentTypeLogic;
 import nu.marginalia.crawl.retreival.logic.ContentTypeParser;
 import okhttp3.*;
 import org.apache.commons.io.input.BOMInputStream;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +25,6 @@ import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.StandardCharsets;
@@ -273,6 +273,17 @@ public class HttpFetcherImpl implements HttpFetcher {
             return createErrorResponse(url, rsp, CrawlerDocumentStatus.BAD_CHARSET, "");
         }
 
+        if (!isXRobotsTagsPermitted(rsp.headers("X-Robots-Tag"), userAgent)) {
+            return CrawledDocument.builder()
+                    .crawlerStatus(CrawlerDocumentStatus.ROBOTS_TXT.name())
+                    .crawlerStatusDesc("X-Robots-Tag")
+                    .url(responseUrl.toString())
+                    .httpStatus(-1)
+                    .timestamp(LocalDateTime.now().toString())
+                    .headers(rsp.headers().toString())
+                    .build();
+        }
+
         var strData = getStringData(data, contentType);
         var canonical = rsp.header("rel=canonical", "");
 
@@ -286,6 +297,53 @@ public class HttpFetcherImpl implements HttpFetcher {
                 .url(responseUrl.toString())
                 .documentBody(BigString.encode(strData))
                 .build();
+    }
+
+    /**  Check X-Robots-Tag header tag to see if we are allowed to index this page.
+     * <p>
+     * Reference: <a href="https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag">https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag</a>
+     *
+     * @param xRobotsHeaderTags List of X-Robots-Tag values
+     * @param userAgent User agent string
+     * @return true if we are allowed to index this page
+     */
+    // Visible for tests
+    public static boolean isXRobotsTagsPermitted(List<String> xRobotsHeaderTags, String userAgent) {
+        boolean isPermittedGeneral = true;
+        boolean isPermittedMarginalia = false;
+        boolean isForbiddenMarginalia = false;
+
+        for (String header : xRobotsHeaderTags) {
+            if (header.indexOf(':') >= 0) {
+                String[] parts = StringUtils.split(header, ":", 2);
+
+                if (parts.length < 2)
+                    continue;
+
+                // Is this relevant to us?
+                if (!Objects.equals(parts[0].trim(), userAgent))
+                    continue;
+
+                if (parts[1].contains("noindex"))
+                    isForbiddenMarginalia = true;
+                else if (parts[1].contains("none"))
+                    isForbiddenMarginalia = true;
+                else if (parts[1].contains("all"))
+                    isPermittedMarginalia = true;
+            }
+            else {
+                if (header.contains("noindex"))
+                    isPermittedGeneral = false;
+                if (header.contains("none"))
+                    isPermittedGeneral = false;
+            }
+        }
+
+        if (isPermittedMarginalia)
+            return true;
+        if (isForbiddenMarginalia)
+            return false;
+        return isPermittedGeneral;
     }
 
     private String getStringData(byte[] data, ContentType contentType) {
