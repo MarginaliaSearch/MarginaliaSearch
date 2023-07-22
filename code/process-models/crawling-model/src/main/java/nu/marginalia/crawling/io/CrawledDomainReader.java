@@ -6,6 +6,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.crawling.model.SerializableCrawlData;
+import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.model.gson.GsonFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +31,10 @@ public class CrawledDomainReader {
     public CrawledDomainReader() {
     }
 
-    public Iterator<SerializableCrawlData> createIterator(Path path) throws IOException {
+    public Iterator<SerializableCrawlData> createIterator(Path basePath, CrawlingSpecification spec) throws IOException {
+
+        final var path = CrawlerOutputFile.getOutputFile(basePath, spec.id, spec.domain);
+
         BufferedReader br = new BufferedReader(new InputStreamReader(new ZstdInputStream(new FileInputStream(path.toFile()))));
 
         return new Iterator<>() {

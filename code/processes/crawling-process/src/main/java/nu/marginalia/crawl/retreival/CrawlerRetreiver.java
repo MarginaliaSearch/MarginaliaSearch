@@ -97,10 +97,10 @@ public class CrawlerRetreiver {
     }
 
     public int fetch() {
-        return fetch(Collections.emptyIterator());
+        return fetch(new CrawlDataReference());
     }
 
-    public int fetch(Iterator<SerializableCrawlData> oldCrawlData) {
+    public int fetch(CrawlDataReference oldCrawlData) {
         final DomainProber.ProbeResult probeResult = domainProber.probeDomain(fetcher, domain, crawlFrontier.peek());
 
         if (probeResult instanceof DomainProber.ProbeResultOk) {
@@ -141,7 +141,7 @@ public class CrawlerRetreiver {
         throw new IllegalStateException("Unknown probe result: " + probeResult);
     };
 
-    private int crawlDomain(Iterator<SerializableCrawlData> oldCrawlData) {
+    private int crawlDomain(CrawlDataReference oldCrawlData) {
         String ip = findIp(domain);
 
         assert !crawlFrontier.isEmpty();
@@ -207,14 +207,18 @@ public class CrawlerRetreiver {
         return fetchedCount;
     }
 
-    private int recrawl(Iterator<SerializableCrawlData> oldCrawlData,
+    private int recrawl(CrawlDataReference oldCrawlData,
                         SimpleRobotRules robotsRules,
                         long crawlDelay) {
         int recrawled = 0;
         int retained = 0;
 
-        while (oldCrawlData.hasNext()) {
-            if (!(oldCrawlData.next() instanceof CrawledDocument doc)) continue;
+        for (;;) {
+            CrawledDocument doc = oldCrawlData.nextDocument();
+
+            if (doc == null) {
+                break;
+            }
 
             // This Shouldn't Happen (TM)
             var urlMaybe = EdgeUrl.parse(doc.url);
@@ -263,6 +267,9 @@ public class CrawlerRetreiver {
             if (fetchedDocOpt.isEmpty()) continue;
 
             if (Objects.equals(fetchedDocOpt.get().recrawlState, retainedTag)) {
+                retained ++;
+            }
+            else if (oldCrawlData.isContentSame(doc, fetchedDocOpt.get())) {
                 retained ++;
             }
 

@@ -18,8 +18,6 @@ public class CrawlingSpecification {
     public String domain;
     public List<String> urls;
 
-    public CrawledDomain oldData;
-
     @Override
     public String toString() {
         return String.format(getClass().getSimpleName() + "[" + id + "/" + domain + ": " + crawlDepth + "[ " + urls.size() + "]");

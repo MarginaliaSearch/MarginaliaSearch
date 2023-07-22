@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import nu.marginalia.UserAgent;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawling.io.CrawledDomainReader;
 import nu.marginalia.crawling.io.CrawlerOutputFile;
@@ -173,55 +174,53 @@ public class CrawlerMain implements AutoCloseable {
             return;
         }
 
-        var limits = crawlLimiter.getTaskLimits(CrawlerOutputFile.getOutputFile(crawlDataDir, crawlingSpecification));
-
         try {
-            crawlLimiter.acquire(limits);
+            crawlLimiter.acquire();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
 
         pool.execute(() -> {
             try {
-                fetchDomain(crawlingSpecification, limits);
+                fetchDomain(crawlingSpecification);
                 heartbeat.setProgress(tasksDone.incrementAndGet() / (double) totalTasks);
             }
             finally {
-                crawlLimiter.release(limits);
+                crawlLimiter.release();
             }
         });
     }
 
 
-    private void fetchDomain(CrawlingSpecification specification, CrawlLimiter.CrawlTaskLimits limits) {
+    private void fetchDomain(CrawlingSpecification specification) {
         if (workLog.isJobFinished(specification.id))
             return;
 
         HttpFetcher fetcher = new HttpFetcherImpl(userAgent.uaString(), dispatcher, connectionPool);
 
-        Iterator<SerializableCrawlData> iterator;
-        try {
-            if (limits.isRefreshable()) {
-                iterator = reader.createIterator(limits.refreshPath());
-            }
-            else {
-                iterator = Collections.emptyIterator();
-            }
-        } catch (IOException e) {
-            logger.warn("Failed to read previous crawl data for {}", specification.domain);
-            iterator = Collections.emptyIterator();
-        }
 
         try (CrawledDomainWriter writer = new CrawledDomainWriter(crawlDataDir, specification.domain, specification.id)) {
             var retreiver = new CrawlerRetreiver(fetcher, specification, writer::accept);
 
-            int size = retreiver.fetch(iterator);
+            CrawlDataReference reference = getReference(specification);
+
+            int size = retreiver.fetch(reference);
 
             workLog.setJobToFinished(specification.id, writer.getOutputFile().toString(), size);
 
             logger.info("Fetched {}", specification.domain);
         } catch (Exception e) {
             logger.error("Error fetching domain", e);
+        }
+    }
+
+    private CrawlDataReference getReference(CrawlingSpecification specification) {
+        try {
+            var iterator = reader.createIterator(crawlDataDir, specification);
+            return new CrawlDataReference(iterator);
+        } catch (IOException e) {
+            logger.warn("Failed to read previous crawl data for {}", specification.domain);
+            return new CrawlDataReference();
         }
     }
 

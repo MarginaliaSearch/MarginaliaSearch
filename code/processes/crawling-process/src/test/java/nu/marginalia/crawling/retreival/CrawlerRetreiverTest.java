@@ -2,6 +2,7 @@ package nu.marginalia.crawling.retreival;
 
 import lombok.SneakyThrows;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
@@ -109,7 +110,7 @@ class CrawlerRetreiverTest {
 
         var specs = CrawlingSpecification
                 .builder()
-                .id("whatever")
+                .id("123456")
                 .crawlDepth(12)
                 .domain("www.marginalia.nu")
                 .urls(List.of("https://www.marginalia.nu/some-dead-link"))
@@ -117,7 +118,7 @@ class CrawlerRetreiverTest {
 
 
         Path out = Files.createTempDirectory("crawling-process");
-        var writer = new CrawledDomainWriter(out, "test", "123456");
+        var writer = new CrawledDomainWriter(out, "www.marginalia.nu", "123456");
         Map<Class<? extends SerializableCrawlData>, List<SerializableCrawlData>> data = new HashMap<>();
 
         new CrawlerRetreiver(httpFetcher, specs, d -> {
@@ -130,18 +131,16 @@ class CrawlerRetreiverTest {
         writer.close();
 
         var reader = new CrawledDomainReader();
-        var iter = reader.createIterator(CrawlerOutputFile.getOutputFile(out,  "123456", "test"));
+        var iter = reader.createIterator(out, specs);
 
         CrawledDomain domain = (CrawledDomain) data.get(CrawledDomain.class).get(0);
         domain.doc = data.get(CrawledDocument.class).stream().map(CrawledDocument.class::cast).collect(Collectors.toList());
 
-        var newSpec = specs.withOldData(domain);
-
-        new CrawlerRetreiver(httpFetcher, newSpec, d -> {
+        new CrawlerRetreiver(httpFetcher, specs, d -> {
             if (d instanceof CrawledDocument doc) {
                 System.out.println(doc.url + ": " + doc.recrawlState + "\t" + doc.httpStatus);
             }
-        }).fetch(iter);
+        }).fetch(new CrawlDataReference(iter));
 
     }
 }
