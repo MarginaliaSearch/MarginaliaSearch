@@ -50,8 +50,8 @@ public class SearchTermsService {
         }
 
         // we don't care if we can't find these:
-        addEachTerm(excludes, request.searchTermsExclude);
-        addEachTerm(priority, request.searchTermsPriority);
+        addEachNonMandatoryTerm(excludes, request.searchTermsExclude);
+        addEachNonMandatoryTerm(priority, request.searchTermsPriority);
 
         return new SearchIndexSearchTerms(includes, excludes, priority, coherences);
     }
@@ -59,17 +59,23 @@ public class SearchTermsService {
     private boolean addEachTerm(IntList ret, List<String> words) {
         boolean success = true;
 
-        for (var exclude : words) {
-            var word = lookUpWord(exclude);
+        for (var word : words) {
+            var termId = lookUpWord(word);
 
-            if (word.isPresent()) {
-                lookUpWord(exclude).ifPresent(ret::add);
+            if (termId.isPresent()) {
+                lookUpWord(word).ifPresent(ret::add);
             }
             else {
                 success = false;
             }
         }
         return success;
+    }
+
+    private void addEachNonMandatoryTerm(IntList ret, List<String> words) {
+        for (var word : words) {
+            ret.add(lexicon.get(word));
+        }
     }
 
 
