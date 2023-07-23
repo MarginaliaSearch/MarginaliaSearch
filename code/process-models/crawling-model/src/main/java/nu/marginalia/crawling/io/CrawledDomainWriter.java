@@ -6,8 +6,6 @@ import lombok.SneakyThrows;
 import nu.marginalia.crawling.model.SerializableCrawlData;
 import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.model.gson.GsonFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -21,10 +19,9 @@ import java.nio.file.StandardOpenOption;
 public class CrawledDomainWriter implements AutoCloseable {
     private final Path outputDir;
     private final Gson gson = GsonFactory.get();
-    private static final Logger logger = LoggerFactory.getLogger(CrawledDomainWriter.class);
     private final Writer writer;
     private final Path tmpFile;
-    private final Path outputFile;
+    private final Path actualFile;
 
     public CrawledDomainWriter(Path outputDir, CrawlingSpecification spec) throws IOException {
         this.outputDir = outputDir;
@@ -33,14 +30,19 @@ public class CrawledDomainWriter implements AutoCloseable {
             throw new IllegalArgumentException("Output dir " + outputDir + " does not exist");
         }
 
+
+        // Do the actual writing to a temporary file first, then move it to the actual file when close() is invoked
+        // this lets us read the old file and compare its contents while writing the new file.  It also guards against
+        // half-written files if the process is killed.
+
         tmpFile = getOutputFile(spec.id, spec.domain + "_tmp");
-        outputFile = getOutputFile(spec.id, spec.domain);
+        actualFile = getOutputFile(spec.id, spec.domain);
         writer =  new OutputStreamWriter(new ZstdOutputStream(new BufferedOutputStream(Files.newOutputStream(tmpFile,
                 StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING))));
     }
 
     public Path getOutputFile() {
-        return outputFile;
+        return actualFile;
     }
 
     @SneakyThrows
@@ -57,7 +59,7 @@ public class CrawledDomainWriter implements AutoCloseable {
 
     @Override
     public void close() throws IOException {
-        Files.move(tmpFile, outputFile, StandardCopyOption.REPLACE_EXISTING);
+        Files.move(tmpFile, actualFile, StandardCopyOption.REPLACE_EXISTING);
         writer.close();
     }
 }
