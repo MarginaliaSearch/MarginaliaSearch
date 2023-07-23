@@ -80,7 +80,7 @@ public class DomainCrawlFrontier {
             return;
 
         // reduce memory usage by not growing queue huge when crawling large sites
-        if (queue.size() + visited.size() >= depth + 100)
+        if (queue.size() + visited.size() >= depth + 1000)
             return;
 
         if (visited.contains(url.toString()))

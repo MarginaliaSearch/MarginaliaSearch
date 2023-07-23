@@ -118,13 +118,16 @@ class CrawlerRetreiverTest {
 
 
         Path out = Files.createTempDirectory("crawling-process");
-        var writer = new CrawledDomainWriter(out, "www.marginalia.nu", "123456");
+        var writer = new CrawledDomainWriter(out, specs.domain, specs.id);
         Map<Class<? extends SerializableCrawlData>, List<SerializableCrawlData>> data = new HashMap<>();
 
         new CrawlerRetreiver(httpFetcher, specs, d -> {
             data.computeIfAbsent(d.getClass(), k->new ArrayList<>()).add(d);
             if (d instanceof CrawledDocument doc) {
                 System.out.println(doc.url + ": " + doc.recrawlState + "\t" + doc.httpStatus);
+                if (Math.random() > 0.5) {
+                    doc.headers = "";
+                }
             }
             writer.accept(d);
         }).fetch();

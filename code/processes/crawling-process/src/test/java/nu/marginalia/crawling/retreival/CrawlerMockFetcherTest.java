@@ -71,7 +71,6 @@ public class CrawlerMockFetcherTest {
         registerUrlClasspathData(new EdgeUrl("https://startrek.website/post/108995"), "mock-crawl-data/lemmy/108995.html");
 
         new CrawlerRetreiver(fetcherMock, new CrawlingSpecification("1", 10, "startrek.website", new ArrayList<>()), out::add)
-                .withNoDelay()
                 .fetch();
 
         out.forEach(System.out::println);
@@ -84,7 +83,6 @@ public class CrawlerMockFetcherTest {
         registerUrlClasspathData(new EdgeUrl("https://en.wikipedia.org/"), "mock-crawl-data/mediawiki/index.html");
 
         new CrawlerRetreiver(fetcherMock, new CrawlingSpecification("1", 10, "en.wikipedia.org", new ArrayList<>()), out::add)
-                .withNoDelay()
                 .fetch();
 
         out.forEach(System.out::println);
@@ -99,7 +97,6 @@ public class CrawlerMockFetcherTest {
         registerUrlClasspathData(new EdgeUrl("https://community.tt-rss.org/t/combined-mode-but-grid/4489"), "mock-crawl-data/discourse/grid.html");
 
         new CrawlerRetreiver(fetcherMock, new CrawlingSpecification("1", 100, "community.tt-rss.org", new ArrayList<>()), out::add)
-                .withNoDelay()
                 .fetch();
 
         out.forEach(System.out::println);

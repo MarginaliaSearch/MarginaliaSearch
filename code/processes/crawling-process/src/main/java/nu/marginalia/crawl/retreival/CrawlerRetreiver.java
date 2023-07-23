@@ -11,7 +11,6 @@ import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.crawling.model.*;
 import nu.marginalia.ip_blocklist.UrlBlocklist;
-import nu.marginalia.lsh.EasyLSH;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import org.jsoup.Jsoup;
@@ -26,24 +25,11 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Consumer;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
 public class CrawlerRetreiver {
-    private static final long DEFAULT_CRAWL_DELAY_MIN_MS = Long.getLong("defaultCrawlDelay", 1000);
-    private static final long DEFAULT_CRAWL_DELAY_MAX_MS = Long.getLong("defaultCrawlDelaySlow", 2500);
 
     private static final int MAX_ERRORS = 20;
 
     private final HttpFetcher fetcher;
-
-
-    /** Flag to indicate that the crawler should slow down, e.g. from 429s */
-    private boolean slowDown = false;
-
-
-    /** Testing flag to disable crawl delay (otherwise crawler tests take several minutes) */
-    private boolean testFlagIgnoreDelay = false;
 
     private final String id;
     private final String domain;
@@ -61,7 +47,12 @@ public class CrawlerRetreiver {
     private final DomainCrawlFrontier crawlFrontier;
 
     int errorCount = 0;
-    private String retainedTag = "RETAINED/304";
+
+    /** recrawlState tag for documents that had a HTTP status 304 */
+    private static final String documentWasRetainedTag = "RETAINED/304";
+
+    /** recrawlState tag for documents that had a 200 status but were identical to a previous version */
+    private static final String documentWasSameTag = "SAME-BY-COMPARISON";
 
     public CrawlerRetreiver(HttpFetcher fetcher,
                             CrawlingSpecification specs,
@@ -89,11 +80,6 @@ public class CrawlerRetreiver {
             crawlFrontier.addToQueue(new EdgeUrl("http", new EdgeDomain(domain), null, "/", null));
             crawlFrontier.addToQueue(new EdgeUrl("https", new EdgeDomain(domain), null, "/", null));
         }
-    }
-
-    public CrawlerRetreiver withNoDelay() {
-        testFlagIgnoreDelay = true;
-        return this;
     }
 
     public int fetch() {
@@ -146,13 +132,13 @@ public class CrawlerRetreiver {
 
         assert !crawlFrontier.isEmpty();
 
-        var robotsRules = fetcher.fetchRobotRules(crawlFrontier.peek().domain);
-        long crawlDelay = robotsRules.getCrawlDelay();
+        final SimpleRobotRules robotsRules = fetcher.fetchRobotRules(crawlFrontier.peek().domain);
+        final CrawlDelayTimer delayTimer = new CrawlDelayTimer(robotsRules.getCrawlDelay());
 
-        sniffRootDocument();
+        sniffRootDocument(delayTimer);
 
         // Play back the old crawl data (if present) and fetch the documents comparing etags and last-modified
-        int recrawled = recrawl(oldCrawlData, robotsRules, crawlDelay);
+        int recrawled = recrawl(oldCrawlData, robotsRules, delayTimer);
 
         if (recrawled > 0) {
             // If we have reference data, we will always grow the crawl depth a bit
@@ -195,7 +181,7 @@ public class CrawlerRetreiver {
                 continue;
 
 
-            if (fetchDocument(top, null, crawlDelay).isPresent()) {
+            if (fetchWriteAndSleep(top, delayTimer, DocumentWithReference.empty()).isPresent()) {
                 fetchedCount++;
             }
         }
@@ -207,9 +193,10 @@ public class CrawlerRetreiver {
         return fetchedCount;
     }
 
+    /** Performs a re-crawl of old documents, comparing etags and last-modified */
     private int recrawl(CrawlDataReference oldCrawlData,
                         SimpleRobotRules robotsRules,
-                        long crawlDelay) {
+                        CrawlDelayTimer delayTimer) {
         int recrawled = 0;
         int retained = 0;
 
@@ -247,8 +234,6 @@ public class CrawlerRetreiver {
              && retained > 0.9 * recrawled
              && Math.random() < 0.75)
             {
-                logger.info("Direct-loading {}", url);
-
                 // Since it looks like most of these documents haven't changed,
                 // we'll load the documents directly; but we do this in a random
                 // fashion to make sure we eventually catch changes over time
@@ -263,33 +248,19 @@ public class CrawlerRetreiver {
             // providing etag and last-modified headers, so we can recycle the
             // document if it hasn't changed without actually downloading it
 
-            var fetchedDocOpt = fetchDocument(url, doc, crawlDelay);
+            var fetchedDocOpt = fetchWriteAndSleep(url,
+                    delayTimer,
+                    new DocumentWithReference(doc, oldCrawlData));
             if (fetchedDocOpt.isEmpty()) continue;
 
-            if (Objects.equals(fetchedDocOpt.get().recrawlState, retainedTag)) {
-                retained ++;
-            }
-            else if (oldCrawlData.isContentSame(doc, fetchedDocOpt.get())) {
-                retained ++;
-            }
+            if (documentWasRetainedTag.equals(fetchedDocOpt.get().recrawlState)) retained ++;
+            else if (documentWasSameTag.equals(fetchedDocOpt.get().recrawlState)) retained ++;
 
             recrawled ++;
         }
 
         return recrawled;
     }
-
-    private static final HashFunction hasher = Hashing.murmur3_128(0);
-    private long hashDoc(CrawledDocument doc) {
-        var hash = new EasyLSH();
-        long val = 0;
-        for (var b : doc.documentBody.decode().getBytes()) {
-            val = val << 8 | (b & 0xFF);
-            hash.addUnordered(hasher.hashLong(val).asLong());
-        }
-        return hash.get();
-    }
-
 
     private void downloadSitemaps(SimpleRobotRules robotsRules) {
         List<String> sitemaps = robotsRules.getSitemaps();
@@ -337,13 +308,13 @@ public class CrawlerRetreiver {
         logger.debug("Queue is now {}", crawlFrontier.queueSize());
     }
 
-    private void sniffRootDocument() {
+    private void sniffRootDocument(CrawlDelayTimer delayTimer) {
         try {
             logger.debug("Configuring link filter");
 
             var url = crawlFrontier.peek().withPathAndParam("/", null);
 
-            var maybeSample = fetchUrl(url, null).filter(sample -> sample.httpStatus == 200);
+            var maybeSample = fetchUrl(url, delayTimer, DocumentWithReference.empty()).filter(sample -> sample.httpStatus == 200);
             if (maybeSample.isEmpty())
                 return;
             var sample = maybeSample.get();
@@ -379,33 +350,41 @@ public class CrawlerRetreiver {
         }
     }
 
-    private Optional<CrawledDocument> fetchDocument(EdgeUrl top,
-                                                    @Nullable CrawledDocument reference,
-                                                    long crawlDelay) {
+    private Optional<CrawledDocument> fetchWriteAndSleep(EdgeUrl top,
+                                                         CrawlDelayTimer timer,
+                                                         DocumentWithReference reference) {
         logger.debug("Fetching {}", top);
 
         long startTime = System.currentTimeMillis();
 
-        var doc = fetchUrl(top, reference);
-        if (doc.isPresent()) {
-            var d = doc.get();
-            crawledDomainWriter.accept(d);
+        var docOpt = fetchUrl(top, timer, reference);
 
-            if (d.url != null) {
-                // We may have redirected to a different path
-                EdgeUrl.parse(d.url).ifPresent(crawlFrontier::addVisited);
+        if (docOpt.isPresent()) {
+            var doc = docOpt.get();
+
+            if (!Objects.equals(doc.recrawlState, documentWasRetainedTag)
+                && reference.isContentBodySame(doc))
+            {
+                // The document didn't change since the last time
+                doc.recrawlState = documentWasSameTag;
             }
 
-            if ("ERROR".equals(d.crawlerStatus) && d.httpStatus != 404) {
+            crawledDomainWriter.accept(doc);
+
+            if (doc.url != null) {
+                // We may have redirected to a different path
+                EdgeUrl.parse(doc.url).ifPresent(crawlFrontier::addVisited);
+            }
+
+            if ("ERROR".equals(doc.crawlerStatus) && doc.httpStatus != 404) {
                 errorCount++;
             }
 
         }
 
-        long crawledTime = System.currentTimeMillis() - startTime;
-        delay(crawlDelay, crawledTime);
+        timer.delay(System.currentTimeMillis() - startTime);
 
-        return doc;
+        return docOpt;
     }
 
     private boolean isAllowedProtocol(String proto) {
@@ -413,35 +392,23 @@ public class CrawlerRetreiver {
                 || proto.equalsIgnoreCase("https");
     }
 
-    private Optional<CrawledDocument> fetchUrl(EdgeUrl top, @Nullable CrawledDocument reference) {
+    private Optional<CrawledDocument> fetchUrl(EdgeUrl top, CrawlDelayTimer timer, DocumentWithReference reference) {
         try {
-            var contentTags = getContentTags(reference);
-            var fetchedDoc = fetchContent(top, contentTags);
-            CrawledDocument doc;
+            var contentTags = reference.getContentTags();
+            var fetchedDoc = tryDownload(top, timer, contentTags);
 
-            // HTTP status 304 is NOT MODIFIED, which means the document is the same as it was when
-            // we fetched it last time. We can recycle the reference document.
-            if (reference != null
-             && fetchedDoc.httpStatus == 304)
-            {
-                doc = reference;
-                doc.recrawlState = retainedTag;
-                doc.timestamp = LocalDateTime.now().toString();
-            }
-            else {
-                doc = fetchedDoc;
-            }
+            CrawledDocument doc = reference.replaceOn304(fetchedDoc);
 
             if (doc.documentBody != null) {
                 var decoded = doc.documentBody.decode();
 
                 doc.documentBodyHash = createHash(decoded);
 
-                Optional<Document> parsedDoc = parseDoc(decoded);
+                var parsedDoc = Jsoup.parse(decoded);
                 EdgeUrl url = new EdgeUrl(doc.url);
 
-                parsedDoc.ifPresent(parsed -> findLinks(url, parsed));
-                parsedDoc.flatMap(parsed -> findCanonicalUrl(url, parsed))
+                findLinks(url, parsedDoc);
+                findCanonicalUrl(url, parsedDoc)
                         .ifPresent(canonicalLink -> doc.canonicalUrl = canonicalLink.toString());
             }
 
@@ -455,33 +422,9 @@ public class CrawlerRetreiver {
 
     }
 
-    private ContentTags getContentTags(@Nullable CrawledDocument reference) {
-        if (null == reference)
-            return ContentTags.empty();
-
-        String headers = reference.headers;
-        if (headers == null)
-            return ContentTags.empty();
-
-        String[] headersLines = headers.split("\n");
-
-        String lastmod = null;
-        String etag = null;
-
-        for (String line : headersLines) {
-            if (line.toLowerCase().startsWith("etag:")) {
-                etag = line.substring(5).trim();
-            }
-            if (line.toLowerCase().startsWith("last-modified:")) {
-                lastmod = line.substring(14).trim();
-            }
-        }
-
-        return new ContentTags(etag, lastmod);
-    }
 
     @SneakyThrows
-    private CrawledDocument fetchContent(EdgeUrl top, ContentTags tags) {
+    private CrawledDocument tryDownload(EdgeUrl top, CrawlDelayTimer timer, ContentTags tags) {
         for (int i = 0; i < 2; i++) {
             try {
                 var doc = fetcher.fetchContent(top, tags);
@@ -489,7 +432,8 @@ public class CrawlerRetreiver {
                 return doc;
             }
             catch (RateLimitException ex) {
-                slowDown = true;
+                timer.slowDown();
+
                 int delay = ex.retryAfter();
                 if (delay > 0 && delay < 5000) {
                     Thread.sleep(delay);
@@ -502,10 +446,6 @@ public class CrawlerRetreiver {
 
     private String createHash(String documentBodyHash) {
         return hashMethod.hashUnencodedChars(documentBodyHash).toString();
-    }
-
-    private Optional<Document> parseDoc(String decoded) {
-        return Optional.of(Jsoup.parse(decoded));
     }
 
     private void findLinks(EdgeUrl baseUrl, Document parsed) {
@@ -547,36 +487,6 @@ public class CrawlerRetreiver {
         }
     }
 
-    @SneakyThrows
-    private void delay(long sleepTime, long spentTime) {
-        if (testFlagIgnoreDelay)
-            return;
-
-        if (sleepTime >= 1) {
-            if (spentTime > sleepTime)
-                return;
-
-            Thread.sleep(min(sleepTime - spentTime, 5000));
-        }
-        else if (slowDown) {
-            Thread.sleep( 1000);
-        }
-        else {
-            // When no crawl delay is specified, lean toward twice the fetch+process time,
-            // within sane limits. This means slower servers get slower crawling, and faster
-            // servers get faster crawling.
-
-            sleepTime = spentTime * 2;
-            sleepTime = min(sleepTime, DEFAULT_CRAWL_DELAY_MAX_MS);
-            sleepTime = max(sleepTime, DEFAULT_CRAWL_DELAY_MIN_MS);
-
-            if (spentTime > sleepTime)
-                return;
-
-            Thread.sleep(sleepTime - spentTime);
-        }
-    }
-
     private CrawledDocument createRobotsError(EdgeUrl url) {
         return CrawledDocument.builder()
                 .url(url.toString())
@@ -594,12 +504,71 @@ public class CrawlerRetreiver {
                 .build();
     }
 
+    private record DocumentWithReference(
+            @Nullable CrawledDocument doc,
+            @Nullable CrawlDataReference reference) {
 
-    enum CrawlDataComparison {
-        NO_OLD_DATA,
-        SMALL_SAMPLE,
-        CHANGES_FOUND,
-        NO_CHANGES
-    };
+        private static final DocumentWithReference emptyInstance = new DocumentWithReference(null, null);
+        public static DocumentWithReference empty() {
+            return emptyInstance;
+        }
+
+        public boolean isContentBodySame(CrawledDocument newDoc) {
+            if (reference == null)
+                return false;
+            if (doc == null)
+                return false;
+
+            return reference.isContentBodySame(doc, newDoc);
+        }
+
+        private ContentTags getContentTags() {
+            if (null == doc)
+                return ContentTags.empty();
+
+            String headers = doc.headers;
+            if (headers == null)
+                return ContentTags.empty();
+
+            String[] headersLines = headers.split("\n");
+
+            String lastmod = null;
+            String etag = null;
+
+            for (String line : headersLines) {
+                if (line.toLowerCase().startsWith("etag:")) {
+                    etag = line.substring(5).trim();
+                }
+                if (line.toLowerCase().startsWith("last-modified:")) {
+                    lastmod = line.substring(14).trim();
+                }
+            }
+
+            return new ContentTags(etag, lastmod);
+        }
+
+        public boolean isEmpty() {
+            return doc == null || reference == null;
+        }
+
+        /** If the provided document has HTTP status 304, and the reference document is provided,
+         *  return the reference document; otherwise return the provided document.
+         */
+        public CrawledDocument replaceOn304(CrawledDocument fetchedDoc) {
+
+            if (doc == null)
+                return fetchedDoc;
+
+            // HTTP status 304 is NOT MODIFIED, which means the document is the same as it was when
+            // we fetched it last time. We can recycle the reference document.
+            if (fetchedDoc.httpStatus != 304)
+                return fetchedDoc;
+
+            var ret = doc;
+            ret.recrawlState = documentWasRetainedTag;
+            ret.timestamp = LocalDateTime.now().toString();
+            return ret;
+        }
+    }
 
 }
