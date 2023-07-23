@@ -4,11 +4,19 @@ function refresh(ids) {
         .then(html => {
             const parser = new DOMParser();
             const newDocument = parser.parseFromString(html, "text/html");
-            console.log(newDocument);
 
             ids.forEach(id => {
                 const newElement = newDocument.getElementById(id);
-                document.getElementById(id).innerHTML = newDocument.getElementById(id).innerHTML;
+                const targetElement = document.getElementById(id);
+
+                if (newElement == null)
+                    return;
+                if (targetElement == null)
+                    return;
+
+                if (!newElement.isEqualNode(targetElement)) {
+                    targetElement.replaceWith(document.importNode(newElement, true))
+                }
             });
         })
         .catch(error => {
