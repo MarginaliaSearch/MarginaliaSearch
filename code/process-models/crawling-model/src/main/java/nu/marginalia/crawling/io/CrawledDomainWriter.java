@@ -4,6 +4,7 @@ import com.github.luben.zstd.ZstdOutputStream;
 import com.google.gson.Gson;
 import lombok.SneakyThrows;
 import nu.marginalia.crawling.model.SerializableCrawlData;
+import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.model.gson.GsonFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,15 +26,15 @@ public class CrawledDomainWriter implements AutoCloseable {
     private final Path tmpFile;
     private final Path outputFile;
 
-    public CrawledDomainWriter(Path outputDir, String name, String id) throws IOException {
+    public CrawledDomainWriter(Path outputDir, CrawlingSpecification spec) throws IOException {
         this.outputDir = outputDir;
 
         if (!Files.isDirectory(outputDir)) {
             throw new IllegalArgumentException("Output dir " + outputDir + " does not exist");
         }
 
-        tmpFile = getOutputFile(id, name + "_tmp");
-        outputFile = getOutputFile(id, name);
+        tmpFile = getOutputFile(spec.id, spec.domain + "_tmp");
+        outputFile = getOutputFile(spec.id, spec.domain);
         writer =  new OutputStreamWriter(new ZstdOutputStream(new BufferedOutputStream(Files.newOutputStream(tmpFile,
                 StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING))));
     }

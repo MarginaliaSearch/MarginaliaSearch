@@ -118,7 +118,7 @@ class CrawlerRetreiverTest {
 
 
         Path out = Files.createTempDirectory("crawling-process");
-        var writer = new CrawledDomainWriter(out, specs.domain, specs.id);
+        var writer = new CrawledDomainWriter(out, specs);
         Map<Class<? extends SerializableCrawlData>, List<SerializableCrawlData>> data = new HashMap<>();
 
         new CrawlerRetreiver(httpFetcher, specs, d -> {

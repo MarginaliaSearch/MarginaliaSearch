@@ -199,7 +199,7 @@ public class CrawlerMain implements AutoCloseable {
         HttpFetcher fetcher = new HttpFetcherImpl(userAgent.uaString(), dispatcher, connectionPool);
 
 
-        try (CrawledDomainWriter writer = new CrawledDomainWriter(crawlDataDir, specification.domain, specification.id)) {
+        try (CrawledDomainWriter writer = new CrawledDomainWriter(crawlDataDir, specification)) {
             var retreiver = new CrawlerRetreiver(fetcher, specification, writer::accept);
 
             CrawlDataReference reference = getReference(specification);
