@@ -5,22 +5,18 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import nu.marginalia.crawling.io.CrawledDomainReader;
 import nu.marginalia.crawling.model.CrawledDomain;
+import nu.marginalia.crawling.model.SerializableCrawlData;
 import nu.marginalia.crawling.model.spec.CrawlerSpecificationLoader;
 import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.process.log.WorkLog;
-import nu.marginalia.process.log.WorkLogEntry;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 import java.util.Optional;
 
 @AllArgsConstructor @NoArgsConstructor @ToString
@@ -120,6 +116,32 @@ public class CrawlPlan {
                         return Optional.empty();
                     }
                     return reader.readOptionally(path);
+                });
+    }
+
+
+    public Iterable<Iterator<SerializableCrawlData>> crawlDataIterable(Predicate<String> idPredicate) {
+        final CrawledDomainReader reader = new CrawledDomainReader();
+
+        return WorkLog.iterableMap(crawl.getLogFile(),
+                entry -> {
+                    if (!idPredicate.test(entry.id())) {
+                        return Optional.empty();
+                    }
+
+                    var path = getCrawledFilePath(entry.path());
+
+                    if (!Files.exists(path)) {
+                        logger.warn("File not found: {}", path);
+                        return Optional.empty();
+                    }
+
+                    try {
+                        return Optional.of(reader.createIterator(path));
+                    }
+                    catch (IOException ex) {
+                        return Optional.empty();
+                    }
                 });
     }
 }

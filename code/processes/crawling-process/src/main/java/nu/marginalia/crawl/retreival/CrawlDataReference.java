@@ -43,8 +43,7 @@ public class CrawlDataReference {
         return EasyLSH.hammingDistance(contentHashOne, contentHashOther) < 4;
     }
 
-    private long contentHash(BigString documentBody) {
-        String content = documentBody.decode();
+    private long contentHash(String content) {
         EasyLSH hash = new EasyLSH();
         int next = 0;
 

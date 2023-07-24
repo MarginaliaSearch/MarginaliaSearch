@@ -1,18 +1,18 @@
 package nu.marginalia.converting.processor;
 
-import com.google.common.base.Strings;
 import com.google.inject.Inject;
+import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.processor.logic.links.LinkGraph;
-import nu.marginalia.crawling.model.CrawledDocument;
-import nu.marginalia.crawling.model.CrawledDomain;
-import nu.marginalia.crawling.model.CrawlerDocumentStatus;
-import nu.marginalia.crawling.model.CrawlerDomainStatus;
+import nu.marginalia.crawling.model.*;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.converting.processor.logic.links.TopKeywords;
 import nu.marginalia.converting.processor.logic.LshDocumentDeduplicator;
+import nu.marginalia.model.crawl.HtmlFeature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -20,6 +20,8 @@ public class DomainProcessor {
     private final DocumentProcessor documentProcessor;
     private final SiteWords siteWords;
     private final LshDocumentDeduplicator documentDeduplicator;
+
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
     public DomainProcessor(DocumentProcessor documentProcessor,
@@ -30,42 +32,83 @@ public class DomainProcessor {
         this.documentDeduplicator = documentDeduplicator;
     }
 
-    public ProcessedDomain process(CrawledDomain crawledDomain) {
+    public ProcessedDomain process(Iterator<SerializableCrawlData> dataStream) {
         var ret = new ProcessedDomain();
+        List<ProcessedDocument> docs = new ArrayList<>();
 
+        boolean cookies = false;
+        String ip = "";
+        while (dataStream.hasNext()) {
+            var data = dataStream.next();
 
-        ret.domain = new EdgeDomain(crawledDomain.domain);
-        ret.ip = crawledDomain.ip;
+            if (data instanceof CrawledDomain crawledDomain) {
+                ret.domain = new EdgeDomain(crawledDomain.domain);
+                ret.ip = crawledDomain.ip;
+                ret.id = crawledDomain.id;
 
-        if (crawledDomain.redirectDomain != null) {
-            ret.redirect = new EdgeDomain(crawledDomain.redirectDomain);
-        }
+                cookies = Objects.requireNonNullElse(crawledDomain.cookies, Collections.emptyList()).size() > 0;
+                ip = crawledDomain.ip;
 
-        if (crawledDomain.doc != null) {
-            ret.documents = new ArrayList<>(crawledDomain.doc.size());
-
-            fixBadCanonicalTags(crawledDomain.doc);
-
-            for (var doc : crawledDomain.doc) {
-                var processedDoc = documentProcessor.process(doc, crawledDomain);
-
-                if (processedDoc.url != null) {
-                    ret.documents.add(processedDoc);
+                if (crawledDomain.redirectDomain != null) {
+                    ret.redirect = new EdgeDomain(crawledDomain.redirectDomain);
                 }
-
+                ret.documents = docs;
+                ret.state = getState(crawledDomain.crawlerStatus);
             }
+            else if (data instanceof CrawledDocument doc) {
+                try {
+                    if (doc.url == null)
+                        continue;
+                    fixBadCanonicalTag(doc);
 
-            documentDeduplicator.deduplicate(ret.documents);
-
-            calculateStatistics(ret);
+                    docs.add(documentProcessor.process(doc));
+                }
+                catch (Exception ex) {
+                    logger.warn("Failed to process " + doc.url, ex);
+                }
+            }
         }
-        else {
-            ret.documents = Collections.emptyList();
+
+        // Add late keywords and features from domain-level information
+
+        List<String> terms = new ArrayList<>();
+        terms.add("ip:"+ip);
+        if (cookies)
+            terms.add(HtmlFeature.COOKIES.getKeyword());
+
+        for (var document : ret.documents) {
+            if (document.details == null)
+                continue;
+
+            if (cookies)
+                document.details.features.add(HtmlFeature.COOKIES);
+
+            document.words.addAllSyntheticTerms(terms);
         }
 
-        ret.state = getState(crawledDomain.crawlerStatus);
+        documentDeduplicator.deduplicate(ret.documents);
+        calculateStatistics(ret);
 
         return ret;
+    }
+
+    private void fixBadCanonicalTag(CrawledDocument doc) {
+        // Some sites have a canonical tag that points to a different domain,
+        // but our loader can not support this, so we point these back to the
+        // original url.
+
+        var canonicalOpt = EdgeUrl.parse(doc.canonicalUrl);
+        if (canonicalOpt.isEmpty()) return;
+
+        var urlOpt = EdgeUrl.parse(doc.url);
+        if (urlOpt.isEmpty()) return;
+
+        var urlActual = urlOpt.get();
+        var canonicalActual = canonicalOpt.get();
+
+        if (!Objects.equals(urlActual.domain, canonicalActual.domain)) {
+            doc.canonicalUrl = doc.url;
+        }
     }
 
     private void calculateStatistics(ProcessedDomain ret) {
@@ -89,61 +132,6 @@ public class DomainProcessor {
 
         siteWords.flagCommonSiteWords(ret);
         siteWords.flagAdjacentWords(topKeywords, invertedLinkGraph, ret);
-    }
-
-
-    private void fixBadCanonicalTags(List<CrawledDocument> docs) {
-        Map<String, Set<String>> seenCanonicals = new HashMap<>();
-        Set<String> seenUrls = new HashSet<>();
-
-        // Sometimes sites set a blanket canonical link to their root page
-        // this removes such links from consideration
-
-        for (var document : docs) {
-            if (!Strings.isNullOrEmpty(document.canonicalUrl)
-                    && !Objects.equals(document.canonicalUrl, document.url)) {
-                seenCanonicals.computeIfAbsent(document.canonicalUrl, url -> new HashSet<>()).add(document.documentBodyHash);
-            }
-            seenUrls.add(document.url);
-        }
-
-        for (var document : docs) {
-            if (!Strings.isNullOrEmpty(document.canonicalUrl)
-                    && !Objects.equals(document.canonicalUrl, document.url)
-                    && seenCanonicals.getOrDefault(document.canonicalUrl, Collections.emptySet()).size() > 1) {
-
-                if (seenUrls.add(document.canonicalUrl)) {
-                    document.canonicalUrl = document.url;
-                }
-                else {
-                    document.crawlerStatus = CrawlerDocumentStatus.BAD_CANONICAL.name();
-                }
-            }
-        }
-
-        for (var document : docs) {
-            if (!Strings.isNullOrEmpty(document.canonicalUrl)
-                    && !Objects.equals(document.canonicalUrl, document.url)
-                && seenCanonicals.getOrDefault(document.canonicalUrl, Collections.emptySet()).size() > 1) {
-                document.canonicalUrl = document.url;
-            }
-        }
-
-        // Ignore canonical URL if it points to a different domain
-        // ... this confuses the hell out of the loader
-        for (var document : docs) {
-            if (Strings.isNullOrEmpty(document.canonicalUrl))
-                continue;
-
-            Optional<EdgeUrl> cUrl = EdgeUrl.parse(document.canonicalUrl);
-            Optional<EdgeUrl> dUrl = EdgeUrl.parse(document.url);
-
-            if (cUrl.isPresent() && dUrl.isPresent()
-                    && !Objects.equals(cUrl.get().domain, dUrl.get().domain))
-            {
-                document.canonicalUrl = document.url;
-            }
-        }
     }
 
     private DomainIndexingState getState(String crawlerStatus) {

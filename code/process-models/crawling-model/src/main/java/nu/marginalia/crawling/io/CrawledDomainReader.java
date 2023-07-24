@@ -31,11 +31,9 @@ public class CrawledDomainReader {
     public CrawledDomainReader() {
     }
 
-    public Iterator<SerializableCrawlData> createIterator(Path basePath, CrawlingSpecification spec) throws IOException {
+    public Iterator<SerializableCrawlData> createIterator(Path fullPath) throws IOException {
 
-        final var path = CrawlerOutputFile.getOutputFile(basePath, spec.id, spec.domain);
-
-        BufferedReader br = new BufferedReader(new InputStreamReader(new ZstdInputStream(new FileInputStream(path.toFile()))));
+        BufferedReader br = new BufferedReader(new InputStreamReader(new ZstdInputStream(new FileInputStream(fullPath.toFile()))));
 
         return new Iterator<>() {
             SerializableCrawlData next;
@@ -70,6 +68,11 @@ public class CrawledDomainReader {
                 return next;
             }
         };
+    }
+
+    public Iterator<SerializableCrawlData> createIterator(Path basePath, CrawlingSpecification spec) throws IOException {
+
+        return createIterator(CrawlerOutputFile.getOutputFile(basePath, spec.id, spec.domain));
     }
     
     public CrawledDomain read(Path path) throws IOException {

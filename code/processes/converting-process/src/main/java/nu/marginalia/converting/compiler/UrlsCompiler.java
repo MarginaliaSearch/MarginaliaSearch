@@ -6,6 +6,8 @@ import nu.marginalia.converting.instruction.instructions.LoadUrl;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -15,30 +17,39 @@ import java.util.Set;
 public class UrlsCompiler {
 
     private static final int MAX_INTERNAL_LINKS = 25;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public void compile(List<Instruction> ret, List<ProcessedDocument> documents) {
         Set<EdgeUrl> seenUrls = new HashSet<>(documents.size()*4);
         Set<EdgeDomain> seenDomains = new HashSet<>(documents.size());
 
         for (var doc : documents) {
+            if (doc.url == null) {
+                logger.warn("Discovered document with null URL");
+                continue;
+            }
+
             seenUrls.add(doc.url);
 
-            if (doc.details != null) {
+            if (doc.details == null) {
+                continue;
+            }
 
-                for (var url : doc.details.linksExternal) {
-                    if (seenDomains.add(url.domain)) {
-                        seenUrls.add(url);
-                    }
+            // Add *some* external links; to avoid loading too many and gunking up the database with nonsense,
+            // only permit this once per external domain per crawled domain
+            for (var url : doc.details.linksExternal) {
+                if (seenDomains.add(url.domain)) {
+                    seenUrls.add(url);
                 }
+            }
 
-                if (doc.isOk()) {
-                    // Don't load more than a few from linksInternal, grows too big for no reason
-                    var linksToAdd = new ArrayList<>(doc.details.linksInternal);
-                    if (linksToAdd.size() > MAX_INTERNAL_LINKS) {
-                        linksToAdd.subList(MAX_INTERNAL_LINKS, linksToAdd.size()).clear();
-                    }
-                    seenUrls.addAll(linksToAdd);
+            if (doc.isOk()) {
+                // Don't load more than a few from linksInternal, grows too big for no reason
+                var linksToAdd = new ArrayList<>(doc.details.linksInternal);
+                if (linksToAdd.size() > MAX_INTERNAL_LINKS) {
+                    linksToAdd.subList(MAX_INTERNAL_LINKS, linksToAdd.size()).clear();
                 }
+                seenUrls.addAll(linksToAdd);
             }
         }
 

@@ -55,7 +55,11 @@ public class CrawlingThenConvertingIntegrationTest {
 
         CrawledDomain domain = crawl(specs);
 
-        var output = domainProcessor.process(domain);
+        List<SerializableCrawlData> data = new ArrayList<>();
+        data.add(domain);
+        data.addAll(domain.doc);
+
+        var output = domainProcessor.process(data.iterator());
 
         for (var doc : output.documents) {
             if (doc.isOk()) {

@@ -43,13 +43,12 @@ public class CrawlerMockFetcherTest {
                 .contentType("text/html")
                 .httpStatus(200)
                 .crawlerStatus(CrawlerDocumentStatus.OK.name())
-                .documentBody(BigString.encode(documentData))
+                .documentBody(documentData)
                 .build());
     }
 
     @SneakyThrows
     private void registerUrlClasspathData(EdgeUrl url, String path) {
-        var data = BigString.encode(CommonTestData.loadTestData(path));
 
         mockData.put(url, CrawledDocument.builder()
                 .crawlId("1")
@@ -57,7 +56,7 @@ public class CrawlerMockFetcherTest {
                 .contentType("text/html")
                 .httpStatus(200)
                 .crawlerStatus(CrawlerDocumentStatus.OK.name())
-                .documentBody(data)
+                .documentBody(CommonTestData.loadTestData(path))
                 .build());
 
     }

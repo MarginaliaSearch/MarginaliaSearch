@@ -3,7 +3,6 @@ package nu.marginalia.converting.compiler;
 import nu.marginalia.converting.instruction.Instruction;
 import nu.marginalia.converting.instruction.instructions.LoadKeywords;
 import nu.marginalia.converting.instruction.instructions.LoadProcessedDocument;
-import nu.marginalia.converting.instruction.instructions.LoadProcessedDocumentWithError;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.model.crawl.HtmlFeature;
 

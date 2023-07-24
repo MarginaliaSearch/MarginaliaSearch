@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import nu.marginalia.crawling.model.SerializableCrawlData;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
@@ -23,12 +24,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Predicate;
 
 import static nu.marginalia.mqapi.ProcessInboxNames.CONVERTER_INBOX;
 
@@ -101,20 +102,14 @@ public class ConverterMain {
             int totalDomains = plan.countCrawledDomains();
             AtomicInteger processedDomains = new AtomicInteger(0);
 
-            var pipe = new ParallelPipe<CrawledDomain, ProcessingInstructions>("Converter", 16, 4, 2) {
+            var pipe = new ParallelPipe<Iterator<SerializableCrawlData>, ProcessingInstructions>("Converter", 16, 4, 2) {
 
                 @Override
-                protected ProcessingInstructions onProcess(CrawledDomain domainData) {
-                    Thread.currentThread().setName("Converter:Processor["+domainData.domain+"] - " + domainData.size());
-                    try {
-                        var processed = processor.process(domainData);
-                        var compiled = compiler.compile(processed);
+                protected ProcessingInstructions onProcess(Iterator<SerializableCrawlData> dataStream) {
+                    var processed = processor.process(dataStream);
+                    var compiled = compiler.compile(processed);
 
-                        return new ProcessingInstructions(domainData.id, compiled);
-                    }
-                    finally {
-                        Thread.currentThread().setName("Converter:Processor[IDLE]");
-                    }
+                    return new ProcessingInstructions(processed.id, compiled);
                 }
 
                 @Override
@@ -140,7 +135,7 @@ public class ConverterMain {
             processedDomains.set(processLog.countFinishedJobs());
             heartbeat.setProgress(processedDomains.get() / (double) totalDomains);
 
-            for (var domain : plan.domainsIterable(id -> !processLog.isJobFinished(id)))
+            for (var domain : plan.crawlDataIterable(id -> !processLog.isJobFinished(id)))
             {
                 pipe.accept(domain);
             }

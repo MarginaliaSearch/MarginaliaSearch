@@ -323,7 +323,7 @@ public class CrawlerRetreiver {
                 return;
 
             // Sniff the software based on the sample document
-            var doc = Jsoup.parse(sample.documentBody.decode());
+            var doc = Jsoup.parse(sample.documentBody);
             crawlFrontier.setLinkFilter(linkFilterSelector.selectFilter(doc));
 
             for (var link : doc.getElementsByTag("link")) {
@@ -400,11 +400,9 @@ public class CrawlerRetreiver {
             CrawledDocument doc = reference.replaceOn304(fetchedDoc);
 
             if (doc.documentBody != null) {
-                var decoded = doc.documentBody.decode();
+                doc.documentBodyHash = createHash(doc.documentBody);
 
-                doc.documentBodyHash = createHash(decoded);
-
-                var parsedDoc = Jsoup.parse(decoded);
+                var parsedDoc = Jsoup.parse(doc.documentBody);
                 EdgeUrl url = new EdgeUrl(doc.url);
 
                 findLinks(url, parsedDoc);

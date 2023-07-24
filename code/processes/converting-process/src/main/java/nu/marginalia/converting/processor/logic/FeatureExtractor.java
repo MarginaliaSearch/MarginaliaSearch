@@ -65,7 +65,7 @@ public class FeatureExtractor {
         this.googleAnwersSpamDetector = googleAnwersSpamDetector;
     }
 
-    public Set<HtmlFeature> getFeatures(CrawledDomain domain, Document doc, DocumentLanguageData dld) {
+    public Set<HtmlFeature> getFeatures(Document doc, DocumentLanguageData dld) {
         final Set<HtmlFeature> features = new HashSet<>();
 
         final Elements scriptTags = doc.getElementsByTag("script");
@@ -278,9 +278,6 @@ public class FeatureExtractor {
                 break;
             }
         }
-
-        if (!domain.cookies.isEmpty())
-            features.add(HtmlFeature.COOKIES);
 
         if (recipeDetector.testP(dld) > 0.5)
             features.add(HtmlFeature.CATEGORY_FOOD);

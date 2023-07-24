@@ -295,7 +295,7 @@ public class HttpFetcherImpl implements HttpFetcher {
                 .canonicalUrl(canonical)
                 .httpStatus(rsp.code())
                 .url(responseUrl.toString())
-                .documentBody(BigString.encode(strData))
+                .documentBody(strData)
                 .build();
     }
 
@@ -402,7 +402,7 @@ public class HttpFetcherImpl implements HttpFetcher {
 
     private SimpleRobotRules parseRobotsTxt(CrawledDocument doc) {
         return robotsParser.parseContent(doc.url,
-                doc.documentBody.decode().getBytes(),
+                doc.documentBody.getBytes(),
                 doc.contentType,
                 userAgent);
     }
