@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -27,6 +29,7 @@ public class FileStorageMonitorActor extends AbstractStateGraph {
     private static final String INITIAL = "INITIAL";
     private static final String MONITOR = "MONITOR";
     private static final String PURGE = "PURGE";
+    private static final String REMOVE_STALE = "REMOVE-STALE";
     private static final String END = "END";
     private final FileStorageService fileStorageService;
 
@@ -42,7 +45,10 @@ public class FileStorageMonitorActor extends AbstractStateGraph {
     public void init() {
     }
 
-    @GraphState(name = MONITOR, next = PURGE, resume = ResumeBehavior.RETRY, transitions = { PURGE },
+    @GraphState(name = MONITOR,
+            next = PURGE,
+            resume = ResumeBehavior.RETRY,
+            transitions = { PURGE, REMOVE_STALE },
             description = """
                     Monitor the file storage and trigger at transition to PURGE if any file storage area
                     has been marked for deletion.
@@ -52,12 +58,17 @@ public class FileStorageMonitorActor extends AbstractStateGraph {
         for (;;) {
             Optional<FileStorage> toDeleteOpt = fileStorageService.findFileStorageToDelete();
 
-            if (toDeleteOpt.isEmpty()) {
-                TimeUnit.SECONDS.sleep(10);
-            }
-            else {
+            if (toDeleteOpt.isPresent()) {
                 transition(PURGE, toDeleteOpt.get().id());
             }
+
+            List<FileStorage> allStorageItems = fileStorageService.getEachFileStorage();
+            var missing = allStorageItems.stream().filter(storage -> !Files.exists(storage.asPath())).findAny();
+            if (missing.isPresent()) {
+                transition(REMOVE_STALE, missing.get().id());
+            }
+
+            TimeUnit.SECONDS.sleep(10);
         }
     }
 
@@ -78,5 +89,17 @@ public class FileStorageMonitorActor extends AbstractStateGraph {
         }
 
         fileStorageService.removeFileStorage(storage.id());
+    }
+
+    @GraphState(
+            name = REMOVE_STALE,
+            next = MONITOR,
+            resume = ResumeBehavior.RETRY,
+            description = """
+                        Remove file storage from the database if it doesn't exist on disk.
+                        """
+    )
+    public void removeStale(FileStorageId id) throws SQLException {
+        fileStorageService.removeFileStorage(id);
     }
 }

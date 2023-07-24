@@ -342,4 +342,44 @@ public class FileStorageService {
             stmt.executeUpdate();
         }
     }
+
+    public List<FileStorage> getEachFileStorage() {
+        List<FileStorage> ret = new ArrayList<>();
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("""
+                     SELECT PATH, TYPE, DESCRIPTION, ID, BASE_ID
+                     FROM FILE_STORAGE_VIEW
+                     """)) {
+
+            long storageId;
+            long baseId;
+            String path;
+            String description;
+            FileStorageType type;
+
+            try (var rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    baseId = rs.getLong("BASE_ID");
+                    storageId = rs.getLong("ID");
+                    path = rs.getString("PATH");
+                    type = FileStorageType.valueOf(rs.getString("TYPE"));
+                    description = rs.getString("DESCRIPTION");
+
+                    var base = getStorageBase(new FileStorageBaseId(baseId));
+
+                    ret.add(new FileStorage(
+                            new FileStorageId(storageId),
+                            base,
+                            type,
+                            path,
+                            description
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return ret;
+    }
 }

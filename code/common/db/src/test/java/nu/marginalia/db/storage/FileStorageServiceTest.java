@@ -131,7 +131,7 @@ public class FileStorageServiceTest {
 
         var base = storage.createStorageBase(name, createTempDir(), FileStorageBaseType.SLOW, false, false);
 
-        var created = storage.allocatePermanentStorage(base, "xyz", FileStorageType.CRAWL_DATA, "thisShouldFail");
+        var created = storage.allocatePermanentStorage(base, "xyz", FileStorageType.CRAWL_DATA, "thisShouldSucceed");
         tempDirs.add(created.asPath());
 
         var actual = storage.getStorage(created.id());
