@@ -32,6 +32,9 @@ public class SqlLoadProcessedDomain {
                             IN DID INT,
                             IN IP VARCHAR(48))
                         BEGIN
+                            DELETE FROM DOMAIN_METADATA WHERE ID=DID;
+                            DELETE FROM EC_DOMAIN_LINK WHERE SOURCE_DOMAIN_ID=DID;
+                            DELETE FROM EC_URL WHERE DOMAIN_ID = DID;
                             UPDATE EC_DOMAIN SET INDEX_DATE=NOW(), STATE=ST, DOMAIN_ALIAS=NULL, INDEXED=GREATEST(INDEXED,IDX), IP=IP WHERE ID=DID;
                             DELETE FROM EC_DOMAIN_LINK WHERE SOURCE_DOMAIN_ID=DID;
                         END

@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.loading.loader.IndexLoadKeywords;
@@ -62,7 +61,6 @@ public class LoaderMain {
 
     @Inject
     public LoaderMain(ConvertedDomainReader instructionsReader,
-                      HikariDataSource dataSource,
                       LoaderFactory loaderFactory,
                       ProcessHeartbeat heartbeat,
                       MessageQueueFactory messageQueueFactory,
@@ -81,25 +79,8 @@ public class LoaderMain {
 
         heartbeat.start();
 
-        nukeTables(dataSource);
-
         processorThread = new Thread(this::processor, "Processor Thread");
         processorThread.start();
-    }
-
-    private void nukeTables(HikariDataSource dataSource) {
-        try (var conn = dataSource.getConnection();
-             var stmt = conn.createStatement()) {
-            stmt.execute("SET FOREIGN_KEY_CHECKS = 0");
-            stmt.execute("TRUNCATE TABLE EC_PAGE_DATA");
-            stmt.execute("TRUNCATE TABLE EC_URL");
-            stmt.execute("TRUNCATE TABLE EC_DOMAIN_LINK");
-            stmt.execute("TRUNCATE TABLE DOMAIN_METADATA");
-            stmt.execute("SET FOREIGN_KEY_CHECKS = 1");
-        }
-        catch (SQLException ex) {
-            throw new RuntimeException(ex);
-        }
     }
 
     @SneakyThrows

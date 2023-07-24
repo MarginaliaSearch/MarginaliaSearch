@@ -53,6 +53,11 @@ class SqlLoadProcessedDomainTest {
         var loader = new SqlLoadProcessedDomain(dataSource, new SqlLoadDomains(dataSource));
         loader.load(loaderData, new EdgeDomain("www.marginalia.nu"), DomainIndexingState.BLOCKED, "127.0.0.1");
     }
+    @Test
+    public void loadProcessedDomainTwice() {
+        var loader = new SqlLoadProcessedDomain(dataSource, new SqlLoadDomains(dataSource));
+        loader.load(loaderData, new EdgeDomain("www.marginalia.nu"), DomainIndexingState.BLOCKED, "127.0.0.1");
+    }
 
     @Test
     public void loadProcessedDomaiWithExtremelyLongIP() {

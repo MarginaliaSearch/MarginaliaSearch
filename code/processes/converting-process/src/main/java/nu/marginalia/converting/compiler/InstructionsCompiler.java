@@ -8,7 +8,6 @@ import nu.marginalia.converting.model.ProcessedDomain;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import static java.util.Objects.requireNonNullElse;
 
@@ -39,6 +38,7 @@ public class InstructionsCompiler {
     public List<Instruction> compile(ProcessedDomain domain) {
         List<Instruction> ret = new ArrayList<>(domain.size()*4);
 
+        // Guaranteed to always be first
         ret.add(new LoadProcessedDomain(domain.domain, domain.state, domain.ip));
 
         if (domain.documents != null) {
@@ -46,7 +46,6 @@ public class InstructionsCompiler {
             documentsCompiler.compile(ret, domain.documents);
 
             feedsCompiler.compile(ret, domain.documents);
-
             linksCompiler.compile(ret, domain.domain, domain.documents);
         }
         if (domain.redirect != null) {
@@ -57,10 +56,4 @@ public class InstructionsCompiler {
 
         return ret;
     }
-
-
-
-
-
-
 }
