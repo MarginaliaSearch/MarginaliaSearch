@@ -4,8 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import nu.marginalia.crawling.io.CrawledDomainReader;
+import nu.marginalia.crawling.io.SerializableCrawlDataStream;
 import nu.marginalia.crawling.model.CrawledDomain;
-import nu.marginalia.crawling.model.SerializableCrawlData;
 import nu.marginalia.crawling.model.spec.CrawlerSpecificationLoader;
 import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.process.log.WorkLog;
@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Iterator;
 import java.util.function.Predicate;
 import java.util.Optional;
 
@@ -120,7 +119,7 @@ public class CrawlPlan {
     }
 
 
-    public Iterable<Iterator<SerializableCrawlData>> crawlDataIterable(Predicate<String> idPredicate) {
+    public Iterable<SerializableCrawlDataStream> crawlDataIterable(Predicate<String> idPredicate) {
         final CrawledDomainReader reader = new CrawledDomainReader();
 
         return WorkLog.iterableMap(crawl.getLogFile(),
@@ -137,7 +136,7 @@ public class CrawlPlan {
                     }
 
                     try {
-                        return Optional.of(reader.createIterator(path));
+                        return Optional.of(reader.createDataStream(path));
                     }
                     catch (IOException ex) {
                         return Optional.empty();

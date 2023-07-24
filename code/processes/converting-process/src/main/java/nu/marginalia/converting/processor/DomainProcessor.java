@@ -1,8 +1,10 @@
 package nu.marginalia.converting.processor;
 
 import com.google.inject.Inject;
+import lombok.SneakyThrows;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.processor.logic.links.LinkGraph;
+import nu.marginalia.crawling.io.SerializableCrawlDataStream;
 import nu.marginalia.crawling.model.*;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.converting.model.ProcessedDomain;
@@ -32,7 +34,8 @@ public class DomainProcessor {
         this.documentDeduplicator = documentDeduplicator;
     }
 
-    public ProcessedDomain process(Iterator<SerializableCrawlData> dataStream) {
+    @SneakyThrows
+    public ProcessedDomain process(SerializableCrawlDataStream dataStream) {
         var ret = new ProcessedDomain();
         List<ProcessedDocument> docs = new ArrayList<>();
 

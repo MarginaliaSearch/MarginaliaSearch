@@ -9,9 +9,6 @@ import nu.marginalia.WmsaHome;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawling.io.CrawledDomainReader;
-import nu.marginalia.crawling.io.CrawlerOutputFile;
-import nu.marginalia.crawling.model.CrawledDomain;
-import nu.marginalia.crawling.model.SerializableCrawlData;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
@@ -216,8 +213,8 @@ public class CrawlerMain implements AutoCloseable {
 
     private CrawlDataReference getReference(CrawlingSpecification specification) {
         try {
-            var iterator = reader.createIterator(crawlDataDir, specification);
-            return new CrawlDataReference(iterator);
+            var dataStream = reader.createDataStream(crawlDataDir, specification);
+            return new CrawlDataReference(dataStream);
         } catch (IOException e) {
             logger.warn("Failed to read previous crawl data for {}", specification.domain);
             return new CrawlDataReference();

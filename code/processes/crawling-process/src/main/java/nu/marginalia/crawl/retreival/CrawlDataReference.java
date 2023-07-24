@@ -2,33 +2,37 @@ package nu.marginalia.crawl.retreival;
 
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-import nu.marginalia.bigstring.BigString;
+import nu.marginalia.crawling.io.SerializableCrawlDataStream;
 import nu.marginalia.crawling.model.CrawledDocument;
-import nu.marginalia.crawling.model.SerializableCrawlData;
 import nu.marginalia.lsh.EasyLSH;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.io.IOException;
 
 /** A reference to a domain that has been crawled before. */
 public class CrawlDataReference {
 
-    private final Iterator<SerializableCrawlData> data;
+    private final SerializableCrawlDataStream data;
 
-    public CrawlDataReference(Iterator<SerializableCrawlData> data) {
+    public CrawlDataReference(SerializableCrawlDataStream data) {
         this.data = data;
     }
 
     public CrawlDataReference() {
-        this(Collections.emptyIterator());
+        this(SerializableCrawlDataStream.empty());
     }
 
     @Nullable
     public CrawledDocument nextDocument() {
-        while (data.hasNext()) {
-            if (data.next() instanceof CrawledDocument doc) {
-                return doc;
+        try {
+            while (data.hasNext()) {
+                if (data.next() instanceof CrawledDocument doc) {
+                    return doc;
+                }
             }
+        }
+        catch (IOException ex) {
+            ex.printStackTrace();
         }
         return null;
     }

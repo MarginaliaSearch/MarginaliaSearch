@@ -8,6 +8,7 @@ import nu.marginalia.converting.processor.DomainProcessor;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
+import nu.marginalia.crawling.io.SerializableCrawlDataStream;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.crawling.model.SerializableCrawlData;
@@ -59,7 +60,7 @@ public class CrawlingThenConvertingIntegrationTest {
         data.add(domain);
         data.addAll(domain.doc);
 
-        var output = domainProcessor.process(data.iterator());
+        var output = domainProcessor.process(SerializableCrawlDataStream.fromIterator(data.iterator()));
 
         for (var doc : output.documents) {
             if (doc.isOk()) {

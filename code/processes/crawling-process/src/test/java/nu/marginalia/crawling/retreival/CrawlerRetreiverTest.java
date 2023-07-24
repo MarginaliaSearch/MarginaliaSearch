@@ -8,7 +8,6 @@ import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawling.io.CrawledDomainReader;
 import nu.marginalia.crawling.io.CrawledDomainWriter;
-import nu.marginalia.crawling.io.CrawlerOutputFile;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.crawling.model.spec.CrawlingSpecification;
@@ -134,7 +133,7 @@ class CrawlerRetreiverTest {
         writer.close();
 
         var reader = new CrawledDomainReader();
-        var iter = reader.createIterator(out, specs);
+        var stream = reader.createDataStream(out, specs);
 
         CrawledDomain domain = (CrawledDomain) data.get(CrawledDomain.class).get(0);
         domain.doc = data.get(CrawledDocument.class).stream().map(CrawledDocument.class::cast).collect(Collectors.toList());
@@ -143,7 +142,7 @@ class CrawlerRetreiverTest {
             if (d instanceof CrawledDocument doc) {
                 System.out.println(doc.url + ": " + doc.recrawlState + "\t" + doc.httpStatus);
             }
-        }).fetch(new CrawlDataReference(iter));
+        }).fetch(new CrawlDataReference(stream));
 
     }
 }

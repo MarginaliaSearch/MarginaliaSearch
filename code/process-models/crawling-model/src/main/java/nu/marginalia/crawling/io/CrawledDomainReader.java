@@ -2,7 +2,6 @@ package nu.marginalia.crawling.io;
 
 import com.github.luben.zstd.ZstdInputStream;
 import com.google.gson.Gson;
-import lombok.SneakyThrows;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.crawling.model.SerializableCrawlData;
@@ -11,13 +10,9 @@ import nu.marginalia.model.gson.GsonFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ForkJoinPool;
@@ -31,48 +26,12 @@ public class CrawledDomainReader {
     public CrawledDomainReader() {
     }
 
-    public Iterator<SerializableCrawlData> createIterator(Path fullPath) throws IOException {
-
-        BufferedReader br = new BufferedReader(new InputStreamReader(new ZstdInputStream(new FileInputStream(fullPath.toFile()))));
-
-        return new Iterator<>() {
-            SerializableCrawlData next;
-
-            @Override
-            @SneakyThrows
-            public boolean hasNext() {
-                String identifier = br.readLine();
-                if (identifier == null) {
-                    br.close();
-                    return false;
-                }
-                String data = br.readLine();
-                if (data == null) {
-                    br.close();
-                    return false;
-                }
-
-                if (identifier.equals(CrawledDomain.SERIAL_IDENTIFIER)) {
-                    next = gson.fromJson(data, CrawledDomain.class);
-                } else if (identifier.equals(CrawledDocument.SERIAL_IDENTIFIER)) {
-                    next = gson.fromJson(data, CrawledDocument.class);
-                }
-                else {
-                    throw new IllegalStateException("Unknown identifier: " + identifier);
-                }
-                return true;
-            }
-
-            @Override
-            public SerializableCrawlData next() {
-                return next;
-            }
-        };
+    public SerializableCrawlDataStream createDataStream(Path fullPath) throws IOException {
+        return new FileReadingSerializableCrawlDataStream(gson, fullPath.toFile());
     }
 
-    public Iterator<SerializableCrawlData> createIterator(Path basePath, CrawlingSpecification spec) throws IOException {
-
-        return createIterator(CrawlerOutputFile.getOutputFile(basePath, spec.id, spec.domain));
+    public SerializableCrawlDataStream createDataStream(Path basePath, CrawlingSpecification spec) throws IOException {
+        return createDataStream(CrawlerOutputFile.getOutputFile(basePath, spec.id, spec.domain));
     }
     
     public CrawledDomain read(Path path) throws IOException {
@@ -136,6 +95,53 @@ public class CrawledDomainReader {
                 domainPrototype.doc.addAll(docs);
             }
             return domainPrototype;
+        }
+    }
+
+    private static class FileReadingSerializableCrawlDataStream implements AutoCloseable, SerializableCrawlDataStream {
+        private final Gson gson;
+        private final BufferedReader bufferedReader;
+        private SerializableCrawlData next = null;
+
+        public FileReadingSerializableCrawlDataStream(Gson gson, File file) throws IOException {
+            this.gson = gson;
+            bufferedReader = new BufferedReader(new InputStreamReader(new ZstdInputStream(new FileInputStream(file))));
+        }
+
+        @Override
+        public SerializableCrawlData next() throws IOException {
+            if (hasNext()) {
+                var ret = next;
+                next = null;
+                return ret;
+            }
+            throw new IllegalStateException("No more data");
+        }
+
+        @Override
+        public boolean hasNext() throws IOException {
+            if (next != null)
+                return true;
+
+            String identifier = bufferedReader.readLine();
+            if (identifier == null) return false;
+            String data = bufferedReader.readLine();
+            if (data == null) return false;
+
+            if (identifier.equals(CrawledDomain.SERIAL_IDENTIFIER)) {
+                next = gson.fromJson(data, CrawledDomain.class);
+            } else if (identifier.equals(CrawledDocument.SERIAL_IDENTIFIER)) {
+                next = gson.fromJson(data, CrawledDocument.class);
+            }
+            else {
+                throw new IllegalStateException("Unknown identifier: " + identifier);
+            }
+            return true;
+        }
+
+        @Override
+        public void close() throws Exception {
+            bufferedReader.close();
         }
     }
 }

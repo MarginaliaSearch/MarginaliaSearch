@@ -3,10 +3,10 @@ package nu.marginalia.converting;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import nu.marginalia.bigstring.BigString;
 import nu.marginalia.converting.model.HtmlStandard;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.processor.DomainProcessor;
+import nu.marginalia.crawling.io.SerializableCrawlDataStream;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.crawling.model.SerializableCrawlData;
@@ -134,12 +134,13 @@ public class ConvertingIntegrationTest {
     }
 
 
-    private Iterator<SerializableCrawlData> asSerializableCrawlData(CrawledDomain domain) {
+    private SerializableCrawlDataStream asSerializableCrawlData(CrawledDomain domain) {
         List<SerializableCrawlData> data = new ArrayList<>();
         if (domain.doc != null) {
             data.addAll(domain.doc);
         }
         data.add(domain);
-        return data.iterator();
+
+        return SerializableCrawlDataStream.fromIterator(data.iterator());
     }
 }

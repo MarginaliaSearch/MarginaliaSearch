@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import nu.marginalia.crawling.model.SerializableCrawlData;
+import nu.marginalia.crawling.io.SerializableCrawlDataStream;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
@@ -17,14 +17,12 @@ import plan.CrawlPlan;
 import nu.marginalia.converting.compiler.InstructionsCompiler;
 import nu.marginalia.converting.instruction.Instruction;
 import nu.marginalia.converting.processor.DomainProcessor;
-import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.util.ParallelPipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -102,10 +100,10 @@ public class ConverterMain {
             int totalDomains = plan.countCrawledDomains();
             AtomicInteger processedDomains = new AtomicInteger(0);
 
-            var pipe = new ParallelPipe<Iterator<SerializableCrawlData>, ProcessingInstructions>("Converter", 16, 4, 2) {
+            var pipe = new ParallelPipe<SerializableCrawlDataStream, ProcessingInstructions>("Converter", 16, 4, 2) {
 
                 @Override
-                protected ProcessingInstructions onProcess(Iterator<SerializableCrawlData> dataStream) {
+                protected ProcessingInstructions onProcess(SerializableCrawlDataStream dataStream) {
                     var processed = processor.process(dataStream);
                     var compiled = compiler.compile(processed);
 
