@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import nu.marginalia.util.QueryParams;
 
+import javax.annotation.Nullable;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -33,8 +34,12 @@ public class EdgeUrl {
         this(new URI(urlencodeFixer(url)));
     }
 
-    public static Optional<EdgeUrl> parse(String url) {
+    public static Optional<EdgeUrl> parse(@Nullable String url) {
         try {
+            if (null == url) {
+                return Optional.empty();
+            }
+
             return Optional.of(new EdgeUrl(url));
         } catch (URISyntaxException e) {
             return Optional.empty();
