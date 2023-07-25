@@ -15,22 +15,18 @@ import nu.marginalia.model.EdgeUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedOutputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 
-public class InstructionWriter {
+public class InstructionWriterFactory {
 
-    private ConversionLog log;
+    private final ConversionLog log;
     private final Path outputDir;
     private final Gson gson;
-    private static final Logger logger = LoggerFactory.getLogger(InstructionWriter.class);
+    private static final Logger logger = LoggerFactory.getLogger(InstructionWriterFactory.class);
 
-    public InstructionWriter(ConversionLog log, Path outputDir, Gson gson) {
+    public InstructionWriterFactory(ConversionLog log, Path outputDir, Gson gson) {
         this.log = log;
         this.outputDir = outputDir;
         this.gson = gson;
@@ -40,29 +36,57 @@ public class InstructionWriter {
         }
     }
 
-    public String accept(String id, List<Instruction> instructionList) throws IOException {
+    public InstructionWriter createInstructionsForDomainWriter(String id) throws IOException {
         Path outputFile = getOutputFile(id);
+        return new InstructionWriter(outputFile);
+    }
 
-        if (Files.exists(outputFile)) {
-            Files.delete(outputFile);
+    public class InstructionWriter implements AutoCloseable {
+        private final OutputStreamWriter outputStream;
+        private final String where;
+        private final SummarizingInterpreter summary = new SummarizingInterpreter();
+
+        private int size = 0;
+
+
+        InstructionWriter(Path filename) throws IOException {
+            where = filename.getFileName().toString();
+            Files.deleteIfExists(filename);
+            outputStream = new OutputStreamWriter(new ZstdOutputStream(new BufferedOutputStream(new FileOutputStream(filename.toFile()))));
         }
 
-        try (var outputStream = new OutputStreamWriter(new ZstdOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile.toFile()))))) {
+        public void accept(Instruction instruction) {
+            if (instruction.isNoOp()) return;
 
-            SummarizingInterpreter summary = new SummarizingInterpreter(instructionList);
-            logger.info("Writing {} - {} - {}", id, instructionList.size(), summary);
+            instruction.apply(summary);
+            instruction.apply(log);
 
-            for (var instr : instructionList) {
-                instr.apply(log);
+            size++;
 
-                outputStream.append(instr.tag().name());
+            try {
+                outputStream.append(instruction.tag().name());
                 outputStream.append(' ');
-                gson.toJson(instr, outputStream);
+                gson.toJson(instruction, outputStream);
                 outputStream.append('\n');
+            }
+            catch (IOException ex) {
+                logger.warn("IO exception writing instruction", ex);
             }
         }
 
-        return outputFile.getFileName().toString();
+        @Override
+        public void close() throws IOException {
+            logger.info("Wrote {} - {} - {}", where, size, summary);
+            outputStream.close();
+        }
+
+        public String getFileName() {
+            return where;
+        }
+
+        public int getSize() {
+            return size;
+        }
     }
 
     private Path getOutputFile(String id) throws IOException {
@@ -78,12 +102,6 @@ public class InstructionWriter {
     }
 
     private static class SummarizingInterpreter implements Interpreter {
-
-        private SummarizingInterpreter(List<Instruction> instructions) {
-            for (var i : instructions) {
-                i.apply(this);
-            }
-        }
 
         private String domainName;
         private int ok = 0;

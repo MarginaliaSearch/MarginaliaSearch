@@ -8,6 +8,7 @@ import nu.marginalia.converting.model.ProcessedDomain;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static java.util.Objects.requireNonNullElse;
 
@@ -35,25 +36,21 @@ public class InstructionsCompiler {
         this.redirectCompiler = redirectCompiler;
     }
 
-    public List<Instruction> compile(ProcessedDomain domain) {
-        List<Instruction> ret = new ArrayList<>(domain.size()*4);
-
+    public void compile(ProcessedDomain domain, Consumer<Instruction> instructionConsumer) {
         // Guaranteed to always be first
-        ret.add(new LoadProcessedDomain(domain.domain, domain.state, domain.ip));
+        instructionConsumer.accept(new LoadProcessedDomain(domain.domain, domain.state, domain.ip));
 
         if (domain.documents != null) {
-            urlsCompiler.compile(ret, domain.documents);
-            documentsCompiler.compile(ret, domain.documents);
+            urlsCompiler.compile(instructionConsumer, domain.documents);
+            documentsCompiler.compile(instructionConsumer, domain.documents);
 
-            feedsCompiler.compile(ret, domain.documents);
-            linksCompiler.compile(ret, domain.domain, domain.documents);
+            feedsCompiler.compile(instructionConsumer, domain.documents);
+            linksCompiler.compile(instructionConsumer, domain.domain, domain.documents);
         }
         if (domain.redirect != null) {
-            redirectCompiler.compile(ret, domain.domain, domain.redirect);
+            redirectCompiler.compile(instructionConsumer, domain.domain, domain.redirect);
         }
 
-        domainMetadataCompiler.compile(ret, domain.domain, requireNonNullElse(domain.documents, Collections.emptyList()));
-
-        return ret;
+        domainMetadataCompiler.compile(instructionConsumer, domain.domain, requireNonNullElse(domain.documents, Collections.emptyList()));
     }
 }

@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import nu.marginalia.crawling.io.SerializableCrawlDataStream;
+import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
@@ -17,7 +17,6 @@ import plan.CrawlPlan;
 import nu.marginalia.converting.compiler.InstructionsCompiler;
 import nu.marginalia.converting.instruction.Instruction;
 import nu.marginalia.converting.processor.DomainProcessor;
-import nu.marginalia.util.ParallelPipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +25,9 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -55,7 +57,7 @@ public class ConverterMain {
 
         var request = converter.fetchInstructions();
         try {
-            converter.load(request);
+            converter.convert(request);
             request.ok();
         }
         catch (Exception ex) {
@@ -87,47 +89,26 @@ public class ConverterMain {
         heartbeat.start();
     }
 
-
-
-    public void load(ConvertRequest request) throws Exception {
+    public void convert(ConvertRequest request) throws Exception {
 
         var plan = request.getPlan();
 
+        final int maxPoolSize = 16;
+
         try (WorkLog processLog = plan.createProcessWorkLog();
              ConversionLog log = new ConversionLog(plan.process.getDir())) {
-            var instructionWriter = new InstructionWriter(log, plan.process.getDir(), gson);
+            var instructionWriter = new InstructionWriterFactory(log, plan.process.getDir(), gson);
+
+            Semaphore semaphore = new Semaphore(maxPoolSize);
+            var pool = new ThreadPoolExecutor(
+                    maxPoolSize/4,
+                    maxPoolSize,
+                    5, TimeUnit.MINUTES,
+                    new LinkedBlockingQueue<>(8)
+            );
 
             int totalDomains = plan.countCrawledDomains();
             AtomicInteger processedDomains = new AtomicInteger(0);
-
-            var pipe = new ParallelPipe<SerializableCrawlDataStream, ProcessingInstructions>("Converter", 16, 4, 2) {
-
-                @Override
-                protected ProcessingInstructions onProcess(SerializableCrawlDataStream dataStream) {
-                    var processed = processor.process(dataStream);
-                    var compiled = compiler.compile(processed);
-
-                    return new ProcessingInstructions(processed.id, compiled);
-                }
-
-                @Override
-                protected void onReceive(ProcessingInstructions processedInstructions) throws IOException {
-                    Thread.currentThread().setName("Converter:Receiver["+processedInstructions.id+"]");
-                    try {
-                        var instructions = processedInstructions.instructions;
-                        instructions.removeIf(Instruction::isNoOp);
-
-                        String where = instructionWriter.accept(processedInstructions.id, instructions);
-                        processLog.setJobToFinished(processedInstructions.id, where, instructions.size());
-
-                        heartbeat.setProgress(processedDomains.incrementAndGet() / (double) totalDomains);
-                    }
-                    finally {
-                        Thread.currentThread().setName("Converter:Receiver[IDLE]");
-                    }
-                }
-
-            };
 
             // Advance the progress bar to the current position if this is a resumption
             processedDomains.set(processLog.countFinishedJobs());
@@ -135,10 +116,37 @@ public class ConverterMain {
 
             for (var domain : plan.crawlDataIterable(id -> !processLog.isJobFinished(id)))
             {
-                pipe.accept(domain);
+                semaphore.acquire();
+                pool.execute(() -> {
+                    try {
+                        ProcessedDomain processed = processor.process(domain);
+
+                        final String where;
+                        final int size;
+
+                        try (var writer = instructionWriter.createInstructionsForDomainWriter(processed.id)) {
+                            compiler.compile(processed, writer::accept);
+                            where = writer.getFileName();
+                            size = writer.getSize();
+                        }
+
+                        processLog.setJobToFinished(processed.id, where, size);
+                        heartbeat.setProgress(processedDomains.incrementAndGet() / (double) totalDomains);
+                    }
+                    catch (IOException ex) {
+                        logger.warn("IO exception in converter", ex);
+                    }
+                    finally {
+                        semaphore.release();
+                    }
+                });
             }
 
-            pipe.join();
+            pool.shutdown();
+            do {
+                System.out.println("Waiting for pool to terminate... " + pool.getActiveCount() + " remaining");
+            } while (!pool.awaitTermination(60, TimeUnit.SECONDS));
+
             request.ok();
         }
         catch (Exception e) {
@@ -204,8 +212,5 @@ public class ConverterMain {
             return stolenMessage;
         }
     }
-
-
-    record ProcessingInstructions(String id, List<Instruction> instructions) {}
 
 }

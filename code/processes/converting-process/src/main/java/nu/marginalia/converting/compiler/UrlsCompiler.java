@@ -13,13 +13,14 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public class UrlsCompiler {
 
     private static final int MAX_INTERNAL_LINKS = 25;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public void compile(List<Instruction> ret, List<ProcessedDocument> documents) {
+    public void compile(Consumer<Instruction> instructionConsumer, List<ProcessedDocument> documents) {
         Set<EdgeUrl> seenUrls = new HashSet<>(documents.size()*4);
         Set<EdgeDomain> seenDomains = new HashSet<>(documents.size());
 
@@ -53,8 +54,8 @@ public class UrlsCompiler {
             }
         }
 
-        ret.add(new LoadDomain(seenDomains.toArray(EdgeDomain[]::new)));
-        ret.add(new LoadUrl(seenUrls.toArray(EdgeUrl[]::new)));
+        instructionConsumer.accept(new LoadDomain(seenDomains.toArray(EdgeDomain[]::new)));
+        instructionConsumer.accept(new LoadUrl(seenUrls.toArray(EdgeUrl[]::new)));
     }
 
 }

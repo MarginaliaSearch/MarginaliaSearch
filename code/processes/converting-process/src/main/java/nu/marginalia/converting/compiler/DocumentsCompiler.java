@@ -7,34 +7,35 @@ import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.model.crawl.HtmlFeature;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 public class DocumentsCompiler {
 
-    public void compile(List<Instruction> ret, List<ProcessedDocument> documents) {
+    public void compile(Consumer<Instruction> instructionConsumer, List<ProcessedDocument> documents) {
 
         for (var doc : documents) {
-            compileDocumentDetails(ret, doc);
+            compileDocumentDetails(instructionConsumer, doc);
         }
 
         for (var doc : documents) {
-            compileWords(ret, doc);
+            compileWords(instructionConsumer, doc);
         }
 
     }
 
-    private void compileDocumentDetails(List<Instruction> ret, ProcessedDocument doc) {
+    private void compileDocumentDetails(Consumer<Instruction> instructionConsumer, ProcessedDocument doc) {
         var details = doc.details;
 
         if (details != null) {
-            ret.add(new LoadProcessedDocument(doc.url, doc.state, details.title, details.description, HtmlFeature.encode(details.features), details.standard.name(), details.length, details.hashCode, details.quality, details.pubYear));
+            instructionConsumer.accept(new LoadProcessedDocument(doc.url, doc.state, details.title, details.description, HtmlFeature.encode(details.features), details.standard.name(), details.length, details.hashCode, details.quality, details.pubYear));
         }
     }
 
-    private void compileWords(List<Instruction> ret, ProcessedDocument doc) {
+    private void compileWords(Consumer<Instruction> instructionConsumer, ProcessedDocument doc) {
         var words = doc.words;
 
         if (words != null) {
-            ret.add(new LoadKeywords(doc.url, doc.details.metadata, words.build()));
+            instructionConsumer.accept(new LoadKeywords(doc.url, doc.details.metadata, words.build()));
         }
     }
 

@@ -8,10 +8,11 @@ import nu.marginalia.model.EdgeDomain;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public class LinksCompiler {
 
-    public void compile(List<Instruction> ret, EdgeDomain from, List<ProcessedDocument> documents) {
+    public void compile(Consumer<Instruction> instructionConsumer, EdgeDomain from, List<ProcessedDocument> documents) {
 
         DomainLink[] links = documents.stream().map(doc -> doc.details)
                 .filter(Objects::nonNull)
@@ -21,6 +22,6 @@ public class LinksCompiler {
                 .map(domain -> new DomainLink(from, domain))
                 .toArray(DomainLink[]::new);
 
-        ret.add(new LoadDomainLink(links));
+        instructionConsumer.accept(new LoadDomainLink(links));
     }
 }
