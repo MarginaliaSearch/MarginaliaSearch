@@ -5,6 +5,9 @@ import nu.marginalia.db.storage.model.FileStorageType;
 
 import java.util.List;
 
-public record FileStorageWithRelatedEntries(FileStorageWithActions self, List<FileStorage> related) {
+public record FileStorageWithRelatedEntries(FileStorageWithActions self,
+                                            List<FileStorage> related,
+                                            List<FileStorageFileModel> files
+                                            ) {
 
 }

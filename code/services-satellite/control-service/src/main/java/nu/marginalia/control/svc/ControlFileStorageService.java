@@ -7,19 +7,23 @@ import lombok.SneakyThrows;
 import nu.marginalia.control.model.*;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.db.storage.model.*;
+import nu.marginalia.mqsm.graph.AbstractStateGraph;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Singleton
 public class ControlFileStorageService {
     private final HikariDataSource dataSource;
     private final FileStorageService fileStorageService;
+    private Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
     public ControlFileStorageService(HikariDataSource dataSource, FileStorageService fileStorageService) {
@@ -107,9 +111,47 @@ public class ControlFileStorageService {
     public FileStorageWithRelatedEntries getFileStorageWithRelatedEntries(FileStorageId id) throws SQLException {
         var storage = fileStorageService.getStorage(id);
         var related = getRelatedEntries(id);
-        return new FileStorageWithRelatedEntries(new FileStorageWithActions(storage), related);
+
+        List<FileStorageFileModel> files = new ArrayList<>();
+
+        try (var filesStream = Files.list(storage.asPath())) {
+            filesStream
+                    .map(this::createFileModel)
+                    .sorted(Comparator
+                            .comparing(FileStorageFileModel::type)
+                            .thenComparing(FileStorageFileModel::filename)
+                    )
+                    .forEach(files::add);
+        }
+        catch (IOException ex) {
+            logger.error("Failed to list files in storage", ex);
+        }
+
+        return new FileStorageWithRelatedEntries(new FileStorageWithActions(storage), related, files);
     }
 
+    private FileStorageFileModel createFileModel(Path p) {
+        try {
+            String type = Files.isRegularFile(p) ? "file" : "directory";
+            String size;
+            if (Files.isDirectory(p)) {
+                size = "-";
+            }
+            else {
+                long sizeBytes = Files.size(p);
+
+                if (sizeBytes < 1024) size = sizeBytes + " B";
+                else if (sizeBytes < 1024 * 1024) size = sizeBytes / 1024 + " KB";
+                else if (sizeBytes < 1024 * 1024 * 1024) size = sizeBytes / (1024 * 1024) + " MB";
+                else size = sizeBytes / (1024 * 1024 * 1024) + " GB";
+            }
+
+            return new FileStorageFileModel(p.toFile().getName(), type, size);
+        }
+        catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
     private List<FileStorage> getRelatedEntries(FileStorageId id) {
         List<FileStorage> ret = new ArrayList<>();
         try (var conn = dataSource.getConnection();
@@ -130,5 +172,31 @@ public class ControlFileStorageService {
             throwables.printStackTrace();
         }
         return ret;
+    }
+
+    public Object downloadFileFromStorage(Request request, Response response) throws SQLException {
+        var fileStorageId = FileStorageId.parse(request.params("id"));
+        String filename = request.queryParams("name");
+
+        Path root = fileStorageService.getStorage(fileStorageId).asPath();
+        Path filePath = root.resolve(filename).normalize();
+
+        if (!filePath.startsWith(root)) {
+            response.status(403);
+            return "";
+        }
+
+        if (filePath.endsWith(".txt") || filePath.endsWith(".log")) response.type("text/plain");
+        else response.type("application/octet-stream");
+
+        try (var is = Files.newInputStream(filePath)) {
+            is.transferTo(response.raw().getOutputStream());
+        }
+        catch (IOException ex) {
+            logger.error("Failed to download file", ex);
+            throw new RuntimeException(ex);
+        }
+
+        return "";
     }
 }

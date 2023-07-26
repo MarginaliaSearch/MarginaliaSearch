@@ -24,7 +24,28 @@
           </tr>
       </table>
       {{/with}}
-  <h2>Actions</h2>
+
+      {{#if storage.files}}
+      <h1>Contents </h1>
+      <table>
+          <tr>
+              <th>File Name</th>
+              <th>Type</th>
+              <th>Size</th>
+          </tr>
+          {{#each storage.files}}
+          <tr>
+              <td>
+                  {{#if downloadable}}<a href="/storage/{{storage.self.storage.id}}/file?name={{filename}}">{{filename}}</a></td>
+                  {{else}} {{filename}} {{/if}}
+              <td>{{type}}</td>
+              <td>{{size}}</td>
+          </tr>
+          {{/each}}
+      </table>
+      {{/if}}
+
+      <h2>Actions</h2>
       {{#with storage.self}}
       {{#if isCrawlable}}
       <form method="post" action="/storage/{{storage.id}}/crawl">

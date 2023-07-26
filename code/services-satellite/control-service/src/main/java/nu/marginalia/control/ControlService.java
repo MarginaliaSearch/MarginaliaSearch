@@ -85,6 +85,7 @@ public class ControlService extends Service {
         Spark.get("/public/storage/crawls", this::storageModelCrawls, storageCrawlsRenderer::render);
         Spark.get("/public/storage/processed", this::storageModelProcessed, storageProcessedRenderer::render);
         Spark.get("/public/storage/:id", this::storageDetailsModel, storageDetailsRenderer::render);
+        Spark.get("/public/storage/:id/file", controlFileStorageService::downloadFileFromStorage);
 
 
         final HtmlRedirect redirectToServices = new HtmlRedirect("/services");
