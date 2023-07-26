@@ -28,6 +28,8 @@ public class CrawlJobExtractorMain {
             return;
         }
 
+        // TODO (2023-06-26) figure out whether this needs a ProcessHeartbeat
+
         String[] targetDomains = getTargetDomains(Arrays.copyOfRange(args, 1, args.length));
 
         try (CrawlJobSpecWriter out = new CrawlJobSpecWriter(outFile))

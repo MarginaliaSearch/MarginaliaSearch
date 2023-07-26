@@ -42,6 +42,8 @@ public record ProcessHeartbeat(
             case "converter" -> ProcessService.ProcessId.CONVERTER;
             case "crawler" -> ProcessService.ProcessId.CRAWLER;
             case "loader" -> ProcessService.ProcessId.LOADER;
+            case "website-adjacencies-calculator" -> ProcessService.ProcessId.ADJACENCIES_CALCULATOR;
+            case "crawl-job-extractor" -> ProcessService.ProcessId.CRAWL_JOB_EXTRACTOR;
             default -> throw new RuntimeException("Unknown process base: " + processBase);
         };
     }

@@ -3,6 +3,7 @@ package nu.marginalia.control.svc;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.control.actor.ControlActors;
+import nu.marginalia.control.actor.task.CrawlJobExtractorActor;
 import nu.marginalia.control.actor.task.ReconvertAndLoadActor;
 import nu.marginalia.control.actor.task.RecrawlActor;
 import nu.marginalia.control.model.Actor;
@@ -94,4 +95,27 @@ public class ControlActorService {
         }).toList();
     }
 
+    public Object createCrawlSpecification(Request request, Response response) throws Exception {
+        final String description = request.queryParams("description");
+        final String url = request.queryParams("url");
+        final String source = request.queryParams("source");
+
+        if ("db".equals(source)) {
+            controlActors.startFrom(Actor.CRAWL_JOB_EXTRACTOR,
+                    CrawlJobExtractorActor.CREATE_FROM_DB,
+                    new CrawlJobExtractorActor.CrawlJobExtractorArguments(description)
+            );
+        }
+        else if ("download".equals(source)) {
+            controlActors.startFrom(Actor.CRAWL_JOB_EXTRACTOR,
+                    CrawlJobExtractorActor.CREATE_FROM_LINK,
+                    new CrawlJobExtractorActor.CrawlJobExtractorArgumentsWithURL(description, url)
+            );
+        }
+        else {
+            throw new IllegalArgumentException("Unknown source: " + source);
+        }
+
+        return "";
+    }
 }

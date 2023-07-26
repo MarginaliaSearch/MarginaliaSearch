@@ -93,12 +93,12 @@ public class ControlService extends Service {
 
         Spark.post("/public/fsms/:fsm/start", controlActorService::startFsm, redirectToProcesses);
         Spark.post("/public/fsms/:fsm/stop", controlActorService::stopFsm, redirectToProcesses);
-
         Spark.post("/public/storage/:fid/crawl", controlActorService::triggerCrawling, redirectToProcesses);
         Spark.post("/public/storage/:fid/recrawl", controlActorService::triggerRecrawling, redirectToProcesses);
         Spark.post("/public/storage/:fid/process", controlActorService::triggerProcessing, redirectToProcesses);
         Spark.post("/public/storage/:fid/load", controlActorService::loadProcessedData, redirectToProcesses);
 
+        Spark.post("/public/storage/specs", controlActorService::createCrawlSpecification, redirectToStorage);
         Spark.post("/public/storage/:fid/delete", controlFileStorageService::flagFileForDeletionRequest, redirectToStorage);
 
         Spark.get("/public/:resource", this::serveStatic);

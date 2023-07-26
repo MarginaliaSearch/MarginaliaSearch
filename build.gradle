@@ -26,6 +26,14 @@ tasks.register('dist', Copy) {
             from tarTree("$buildDir/dist/loader-process.tar")
             into "$projectDir/run/dist/"
         }
+        copy {
+            from tarTree("$buildDir/dist/website-adjacencies-calculator.tar")
+            into "$projectDir/run/dist/"
+        }
+        copy {
+            from tarTree("$buildDir/dist/crawl-job-extractor-process.tar")
+            into "$projectDir/run/dist/"
+        }
     }
 }
 idea {

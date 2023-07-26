@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
-import spark.utils.IOUtils;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -33,7 +32,11 @@ public class ProcessService {
     public enum ProcessId {
         CRAWLER("crawler-process/bin/crawler-process"),
         CONVERTER("converter-process/bin/converter-process"),
-        LOADER("loader-process/bin/loader-process");
+        LOADER("loader-process/bin/loader-process"),
+        ADJACENCIES_CALCULATOR("website-adjacencies-calculator/bin/website-adjacencies-calculator"),
+        CRAWL_JOB_EXTRACTOR("crawl-job-extractor-process/bin/crawl-job-extractor-process"),
+
+        ;
 
         public final String path;
         ProcessId(String path) {
@@ -49,10 +52,17 @@ public class ProcessService {
     }
 
     public boolean trigger(ProcessId processId) throws Exception {
+        return trigger(processId, new String[0]);
+    }
+
+    public boolean trigger(ProcessId processId, String... parameters) throws Exception {
         String processPath = processPath(processId);
-        String[] args = new String[] {
-                processPath
-        };
+        String[] args = new String[parameters.length + 1];
+
+        args[0] = processPath;
+        for (int i = 0; i < parameters.length; i++)
+            args[i+1] = parameters[i];
+
         String[] env = env();
 
         Process process;

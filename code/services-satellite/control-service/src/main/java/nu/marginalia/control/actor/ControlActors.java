@@ -4,13 +4,11 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.SneakyThrows;
-import nu.marginalia.control.actor.task.CrawlActor;
-import nu.marginalia.control.actor.task.RecrawlActor;
+import nu.marginalia.control.actor.task.*;
 import nu.marginalia.control.model.Actor;
 import nu.marginalia.control.actor.monitor.*;
 import nu.marginalia.control.actor.monitor.ConverterMonitorActor;
 import nu.marginalia.control.actor.monitor.LoaderMonitorActor;
-import nu.marginalia.control.actor.task.ReconvertAndLoadActor;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mqsm.StateMachine;
@@ -45,7 +43,9 @@ public class ControlActors {
                          LoaderMonitorActor loaderMonitor,
                          MessageQueueMonitorActor messageQueueMonitor,
                          ProcessLivenessMonitorActor processMonitorFSM,
-                         FileStorageMonitorActor fileStorageMonitorActor
+                         FileStorageMonitorActor fileStorageMonitorActor,
+                         TriggerAdjacencyCalculationActor triggerAdjacencyCalculationActor,
+                         CrawlJobExtractorActor crawlJobExtractorActor
                             ) {
         this.messageQueueFactory = messageQueueFactory;
         this.eventLog = baseServiceParams.eventLog;
@@ -60,6 +60,8 @@ public class ControlActors {
         register(Actor.MESSAGE_QUEUE_MONITOR, messageQueueMonitor);
         register(Actor.PROCESS_LIVENESS_MONITOR, processMonitorFSM);
         register(Actor.FILE_STORAGE_MONITOR, fileStorageMonitorActor);
+        register(Actor.ADJACENCY_CALCULATION, triggerAdjacencyCalculationActor);
+        register(Actor.CRAWL_JOB_EXTRACTOR, crawlJobExtractorActor);
     }
 
     private void register(Actor process, AbstractStateGraph graph) {

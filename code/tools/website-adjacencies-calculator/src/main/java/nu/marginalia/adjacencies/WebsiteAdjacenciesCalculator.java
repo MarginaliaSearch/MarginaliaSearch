@@ -2,9 +2,11 @@ package nu.marginalia.adjacencies;
 
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
+import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.id.EdgeId;
+import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.service.module.DatabaseModule;
 
 import java.sql.SQLException;
@@ -58,30 +60,22 @@ public class WebsiteAdjacenciesCalculator {
     }
 
     @SneakyThrows
-    public void loadAll() {
+    public void loadAll(ProcessHeartbeat processHeartbeat) {
         AdjacenciesLoader loader = new AdjacenciesLoader(dataSource);
-
         var executor = Executors.newFixedThreadPool(16);
 
-        var ids = adjacenciesData.getIdsList();
-
-        ProgressPrinter progressPrinter = new ProgressPrinter(ids.size());
-        progressPrinter.start();
-
+        int total = adjacenciesData.getIdsList().size();
+        AtomicInteger progress = new AtomicInteger(0);
         IntStream.of(adjacenciesData.getIdsList().toArray()).parallel()
                         .filter(domainAliases::isNotAliased)
                         .forEach(id -> {
                             findAdjacent(id, loader::load);
-                            progressPrinter.advance();
+                            processHeartbeat.setProgress(progress.incrementAndGet() / (double) total);
                         });
-
-        progressPrinter.stop();
 
         executor.shutdown();
         System.out.println("Waiting for wrap-up");
         loader.stop();
-
-
     }
 
     private static class ProgressPrinter {
@@ -192,10 +186,19 @@ public class WebsiteAdjacenciesCalculator {
     public static void main(String[] args) throws SQLException {
         DatabaseModule dm = new DatabaseModule();
 
-        var main = new WebsiteAdjacenciesCalculator(dm.provideConnection());
+        var dataSource = dm.provideConnection();
+
+        var main = new WebsiteAdjacenciesCalculator(dataSource);
 
         if (args.length == 1 && "load".equals(args[0])) {
-            main.loadAll();
+            var processHeartbeat = new ProcessHeartbeat(
+                    new ProcessConfiguration("website-adjacencies-calculator", 0, UUID.randomUUID()),
+                    dataSource
+            );
+
+            processHeartbeat.start();
+            main.loadAll(processHeartbeat);
+            processHeartbeat.shutDown();
             return;
         }
 
