@@ -516,6 +516,10 @@ public class CrawlerRetreiver {
                 return false;
             if (doc == null)
                 return false;
+            if (doc.documentBody == null)
+                return false;
+            if (newDoc.documentBody == null)
+                return false;
 
             return reference.isContentBodySame(doc, newDoc);
         }

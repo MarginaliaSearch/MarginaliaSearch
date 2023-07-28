@@ -53,9 +53,8 @@ public class CrawlerMain implements AutoCloseable {
     private final MessageQueueFactory messageQueueFactory;
     private final FileStorageService fileStorageService;
     private final Gson gson;
-    private final ThreadPoolExecutor pool;
+    private final DumbThreadPool pool;
 
-    public final CrawlLimiter crawlLimiter = new CrawlLimiter();
     private final Set<String> processedIds = new HashSet<>();
 
     final AbortMonitor abortMonitor = AbortMonitor.getInstance();
@@ -76,12 +75,7 @@ public class CrawlerMain implements AutoCloseable {
         this.gson = gson;
 
         // maybe need to set -Xss for JVM to deal with this?
-        pool = new ThreadPoolExecutor(
-                CrawlLimiter.maxPoolSize /128,
-                CrawlLimiter.maxPoolSize,
-                5, TimeUnit.MINUTES,
-                new LinkedBlockingQueue<>(32)
-        );
+        pool = new DumbThreadPool(CrawlLimiter.maxPoolSize, 8);
     }
 
     public static void main(String... args) throws Exception {
@@ -142,7 +136,7 @@ public class CrawlerMain implements AutoCloseable {
                 startCrawlTask(plan, spec);
             }
 
-            pool.shutdown();
+            pool.shutDown();
             do {
                 System.out.println("Waiting for pool to terminate... " + pool.getActiveCount() + " remaining");
             } while (!pool.awaitTermination(60, TimeUnit.SECONDS));
@@ -172,20 +166,19 @@ public class CrawlerMain implements AutoCloseable {
         }
 
         try {
-            crawlLimiter.acquire();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            pool.submit(() -> {
+                try {
+                    Thread.currentThread().setName("crawling:" + crawlingSpecification.domain);
+                    fetchDomain(crawlingSpecification);
+                    heartbeat.setProgress(tasksDone.incrementAndGet() / (double) totalTasks);
+                } finally {
+                    Thread.currentThread().setName("[idle]");
+                }
+            });
         }
-
-        pool.execute(() -> {
-            try {
-                fetchDomain(crawlingSpecification);
-                heartbeat.setProgress(tasksDone.incrementAndGet() / (double) totalTasks);
-            }
-            finally {
-                crawlLimiter.release();
-            }
-        });
+        catch (InterruptedException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
 
@@ -194,7 +187,6 @@ public class CrawlerMain implements AutoCloseable {
             return;
 
         HttpFetcher fetcher = new HttpFetcherImpl(userAgent.uaString(), dispatcher, connectionPool);
-
 
         try (CrawledDomainWriter writer = new CrawledDomainWriter(crawlDataDir, specification)) {
             var retreiver = new CrawlerRetreiver(fetcher, specification, writer::accept);
@@ -282,7 +274,7 @@ public class CrawlerMain implements AutoCloseable {
 
     public void close() throws Exception {
         logger.info("Awaiting termination");
-        pool.shutdown();
+        pool.shutDown();
 
         while (!pool.awaitTermination(1, TimeUnit.SECONDS));
         logger.info("All finished");

@@ -21,10 +21,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLException;
 import javax.net.ssl.X509TrustManager;
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.StandardCharsets;
@@ -120,7 +123,7 @@ public class HttpFetcherImpl implements HttpFetcher {
                 return probeDomain(new EdgeUrl("https", url.domain, url.port, url.path, url.param));
             }
 
-            logger.info("Error during fetching {}[{}]", ex.getClass().getSimpleName(), ex.getMessage());
+            logger.info("Error during fetching", ex);
             return new FetchResult(FetchResultState.ERROR, url.domain);
         }
     }
@@ -197,11 +200,18 @@ public class HttpFetcherImpl implements HttpFetcher {
         catch (SocketTimeoutException ex) {
             return createTimeoutErrorRsp(url, ex);
         }
-        catch (IllegalCharsetNameException ex) {
+        catch (IllegalCharsetNameException | SSLException | EOFException ex) {
+            // This is a bit of a grab-bag of errors that crop up
+            // IllegalCharsetName is egg on our face,
+            // but SSLException and EOFException are probably the server's fault
+
             return createHardErrorRsp(url, ex);
         }
+        catch (UnknownHostException ex) {
+            return createUnknownHostError(url, ex);
+        }
         catch (Exception ex) {
-            logger.error("Error during fetching {}[{}]", ex.getClass().getSimpleName(), ex.getMessage());
+            logger.error("Error during fetching", ex);
             return createHardErrorRsp(url, ex);
         }
     }
@@ -214,6 +224,16 @@ public class HttpFetcherImpl implements HttpFetcher {
                 .url(url.toString())
                 .build();
     }
+
+    private CrawledDocument createUnknownHostError(EdgeUrl url, Exception why) {
+        return CrawledDocument.builder()
+                .crawlerStatus(CrawlerDocumentStatus.ERROR.toString())
+                .crawlerStatusDesc("Unknown Host")
+                .timestamp(LocalDateTime.now().toString())
+                .url(url.toString())
+                .build();
+    }
+
     private CrawledDocument createTimeoutErrorRsp(EdgeUrl url, Exception why) {
         return CrawledDocument.builder()
                 .crawlerStatus("Timeout")
