@@ -116,11 +116,9 @@ public class ControlFileStorageService {
 
         try (var filesStream = Files.list(storage.asPath())) {
             filesStream
+                    .filter(Files::isRegularFile)
                     .map(this::createFileModel)
-                    .sorted(Comparator
-                            .comparing(FileStorageFileModel::type)
-                            .thenComparing(FileStorageFileModel::filename)
-                    )
+                    .sorted(Comparator.comparing(FileStorageFileModel::filename))
                     .forEach(files::add);
         }
         catch (IOException ex) {
@@ -132,7 +130,7 @@ public class ControlFileStorageService {
 
     private FileStorageFileModel createFileModel(Path p) {
         try {
-            String type = Files.isRegularFile(p) ? "file" : "directory";
+            String mTime = Files.getLastModifiedTime(p).toInstant().toString();
             String size;
             if (Files.isDirectory(p)) {
                 size = "-";
@@ -146,7 +144,7 @@ public class ControlFileStorageService {
                 else size = sizeBytes / (1024 * 1024 * 1024) + " GB";
             }
 
-            return new FileStorageFileModel(p.toFile().getName(), type, size);
+            return new FileStorageFileModel(p.toFile().getName(), mTime, size);
         }
         catch (IOException ex) {
             throw new RuntimeException(ex);

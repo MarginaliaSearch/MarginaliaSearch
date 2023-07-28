@@ -30,15 +30,14 @@
       <table>
           <tr>
               <th>File Name</th>
-              <th>Type</th>
+              <th>Last Mod</th>
               <th>Size</th>
           </tr>
           {{#each storage.files}}
           <tr>
               <td>
-                  {{#if downloadable}}<a href="/storage/{{storage.self.storage.id}}/file?name={{filename}}">{{filename}}</a></td>
-                  {{else}} {{filename}} {{/if}}
-              <td>{{type}}</td>
+                  <a href="/storage/{{storage.self.storage.id}}/file?name={{filename}}">{{filename}}</a>
+              <td>{{mTime}}</td>
               <td>{{size}}</td>
           </tr>
           {{/each}}

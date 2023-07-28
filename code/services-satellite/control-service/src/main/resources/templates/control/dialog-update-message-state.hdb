@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+<link rel="stylesheet" href="/style.css" />
+<head><title>Update ID</title></head>
+<body>
+{{> control/partials/nav}}
+<section>
+<h1>Update Message State</h1>
+<p>Update the of a message in the message queue.  This may be useful to prevent an actor
+from resuming an action when this is not desirable. Setting an old message to 'NEW' will
+erase information about its owner, and inboxes will consider the message new again.</p>
+<form method="post" action="/message/{{msgId}}/state">
+    <label for="msgId">msgId</label><br>
+    <input type="text" disabled id="msgId" name="msgId" value="{{msgId}}">
+    <br><br>
+    <label for="relatedId">relatedId</label><br>
+    <input type="text" disabled id="relatedId" name="relatedId" value="{{relatedId}}">
+    <br><br>
+    <label for="function">function</label><br>
+    <input type="text" disabled id="function" name="function" value="{{function}}">
+    <br><br>
+    <label for="payload">payload</label><br>
+    <input type="text" disabled id="payload" name="payload" value="{{payload}}">
+    <br><br>
+    <label for="oldState">current state</label><br>
+    <input type="text" disabled id="oldState" name="oldState" value="{{state}}">
+    <br>
+    <br>
+    <label for="state">new state</label><br>
+    <select id="state" name="state">
+        <option value="NEW">NEW</option>
+        <option value="ACK">ACK</option>
+        <option value="OK">OK</option>
+        <option value="ERR">ERR</option>
+        <option value="DEAD">DEAD</option>
+    </select>
+
+    <input type="submit" value="Update">
+</form>
+</section>
+</html>

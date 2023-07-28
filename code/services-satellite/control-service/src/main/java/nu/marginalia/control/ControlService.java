@@ -8,6 +8,8 @@ import nu.marginalia.control.svc.*;
 import nu.marginalia.db.storage.model.FileStorageId;
 import nu.marginalia.db.storage.model.FileStorageType;
 import nu.marginalia.model.gson.GsonFactory;
+import nu.marginalia.mq.MqMessageState;
+import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.service.server.*;
 import org.slf4j.Logger;
@@ -43,7 +45,8 @@ public class ControlService extends Service {
                           ControlActorService controlActorService,
                           StaticResources staticResources,
                           MessageQueueViewService messageQueueViewService,
-                          ControlFileStorageService controlFileStorageService
+                          ControlFileStorageService controlFileStorageService,
+                          MqPersistence persistence
                       ) throws IOException {
 
         super(params);
@@ -60,7 +63,9 @@ public class ControlService extends Service {
         var storageSpecsRenderer = rendererFactory.renderer("control/storage-specs");
         var storageCrawlsRenderer = rendererFactory.renderer("control/storage-crawls");
         var storageProcessedRenderer = rendererFactory.renderer("control/storage-processed");
+
         var storageDetailsRenderer = rendererFactory.renderer("control/storage-details");
+        var updateMessageStateRenderer = rendererFactory.renderer("control/dialog-update-message-state");
 
         this.controlActorService = controlActorService;
 
@@ -101,6 +106,14 @@ public class ControlService extends Service {
 
         Spark.post("/public/storage/specs", controlActorService::createCrawlSpecification, redirectToStorage);
         Spark.post("/public/storage/:fid/delete", controlFileStorageService::flagFileForDeletionRequest, redirectToStorage);
+
+        Spark.get("/public/message/:id/state", (rq, rsp) -> persistence.getMessage(Long.parseLong(rq.params("id"))), updateMessageStateRenderer::render);
+        Spark.post("/public/message/:id/state", (rq, rsp) -> {
+            MqMessageState state = MqMessageState.valueOf(rq.queryParams("state"));
+            long id = Long.parseLong(rq.params("id"));
+            persistence.updateMessageState(id, state);
+            return "";
+        }, redirectToProcesses);
 
         Spark.get("/public/:resource", this::serveStatic);
 

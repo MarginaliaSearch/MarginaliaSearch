@@ -12,6 +12,8 @@ import java.sql.SQLException;
 import java.time.Duration;
 import java.util.*;
 
+import static nu.marginalia.mq.MqMessageState.NEW;
+
 @Singleton
 public class MqPersistence {
     private final HikariDataSource dataSource;
@@ -100,14 +102,40 @@ public class MqPersistence {
 
     /** Modifies the state of a message by id */
     public void updateMessageState(long id, MqMessageState mqMessageState) throws SQLException {
+        if (NEW == mqMessageState) {
+            reinitializeMessage(id);
+            return;
+        }
+
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
                      UPDATE MESSAGE_QUEUE
                      SET STATE=?, UPDATED_TIME=CURRENT_TIMESTAMP(6)
                      WHERE ID=?
                      """)) {
+
             stmt.setString(1, mqMessageState.name());
             stmt.setLong(2, id);
+
+            if (stmt.executeUpdate() != 1) {
+                throw new IllegalArgumentException("No rows updated");
+            }
+        }
+    }
+
+    /** Sets the message to 'NEW' state and removes any owner */
+    public void reinitializeMessage(long id) throws SQLException {
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("""
+                     UPDATE MESSAGE_QUEUE
+                     SET STATE='NEW',
+                         OWNER_INSTANCE=NULL,
+                         OWNER_TICK=NULL,
+                         UPDATED_TIME=CURRENT_TIMESTAMP(6)
+                     WHERE ID=?
+                     """)) {
+
+            stmt.setLong(1, id);
 
             if (stmt.executeUpdate() != 1) {
                 throw new IllegalArgumentException("No rows updated");
@@ -207,7 +235,8 @@ public class MqPersistence {
                      AND RECIPIENT_INBOX=?
                      LIMIT ?
                      """)
-        ) {
+        )
+        {
         queryStmt.setString(1, inboxName);
         queryStmt.setInt(2, n);
         var rs = queryStmt.executeQuery();
@@ -230,9 +259,44 @@ public class MqPersistence {
         }
 
         return messages;
+        }
+
     }
 
-}
+    public MqMessage getMessage(long id) throws SQLException {
+        try (var conn = dataSource.getConnection();
+             var queryStmt = conn.prepareStatement("""
+                     SELECT
+                        ID,
+                        RELATED_ID,
+                        FUNCTION,
+                        PAYLOAD,
+                        STATE,
+                        SENDER_INBOX IS NOT NULL AS EXPECTS_RESPONSE
+                     FROM MESSAGE_QUEUE
+                     WHERE ID=?
+                     """)
+        )
+        {
+            queryStmt.setLong(1, id);
+            var rs = queryStmt.executeQuery();
+
+            if (rs.next()) {
+                long msgId = rs.getLong("ID");
+                long relatedId = rs.getLong("RELATED_ID");
+
+                String function = rs.getString("FUNCTION");
+                String payload = rs.getString("PAYLOAD");
+
+                MqMessageState state = MqMessageState.valueOf(rs.getString("STATE"));
+                boolean expectsResponse = rs.getBoolean("EXPECTS_RESPONSE");
+
+                return new MqMessage(msgId, relatedId, function, payload, state, expectsResponse);
+            }
+        }
+
+        throw new IllegalArgumentException("No message with id " + id);
+    }
     /**  Marks unclaimed messages addressed to this inbox with instanceUUID and tick,
      * then returns these messages.
      */
@@ -377,5 +441,6 @@ public class MqPersistence {
             throw new RuntimeException(e);
         }
     }
+
 
 }
