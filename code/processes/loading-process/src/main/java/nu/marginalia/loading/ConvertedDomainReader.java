@@ -2,10 +2,8 @@ package nu.marginalia.loading;
 
 import com.github.luben.zstd.ZstdInputStream;
 import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
+import lombok.SneakyThrows;
 import nu.marginalia.converting.instruction.Instruction;
-import nu.marginalia.converting.instruction.InstructionTag;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,6 +11,7 @@ import javax.inject.Inject;
 import java.io.*;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class ConvertedDomainReader {
@@ -27,30 +26,48 @@ public class ConvertedDomainReader {
     public List<Instruction> read(Path path, int cntHint) throws IOException {
         List<Instruction> ret = new ArrayList<>(cntHint);
 
-        try (var br = new BufferedReader(new InputStreamReader(new ZstdInputStream(new BufferedInputStream(new FileInputStream(path.toFile())))))) {
-            String line;
-            for (;;) {
-                line = br.readLine();
-
-                if (line == null) {
-                    break;
-                }
-                if (line.isBlank()) {
-                    continue;
-                }
-                var parts=  line.split(" ", 2);
-                var type = InstructionTag.valueOf(parts[0]).clazz;
-
-                try {
-                    ret.add(gson.fromJson(parts[1], type));
-                }
-                catch (NullPointerException|JsonParseException ex) {
-                    logger.warn("Failed to deserialize {} {}", type.getSimpleName(), StringUtils.abbreviate(parts[1], 255));
-                    logger.warn("Json error", ex);
-                }
+        try (var or = new ObjectInputStream(new ZstdInputStream(new FileInputStream(path.toFile())))) {
+            var object = or.readObject();
+            if (object instanceof Instruction is) {
+                ret.add(is);
             }
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
 
         return ret;
+    }
+
+    public Iterator<Instruction> createIterator(Path path) throws IOException {
+        var or = new ObjectInputStream(new ZstdInputStream(new BufferedInputStream(new FileInputStream(path.toFile()))));
+
+        return new Iterator<>() {
+            Instruction next;
+            @SneakyThrows
+            @Override
+            public boolean hasNext() {
+                if (next != null)
+                    return true;
+
+                try {
+                    next = (Instruction) or.readObject();
+                    return true;
+                }
+                catch (java.io.EOFException ex) {
+                    or.close();
+                    return false;
+                }
+            }
+
+            @Override
+            public Instruction next() {
+                if (next != null || hasNext()) {
+                    var ret = next;
+                    next = null;
+                    return ret;
+                }
+                throw new IllegalStateException();
+            }
+        };
     }
 }

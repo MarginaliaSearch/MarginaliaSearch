@@ -42,7 +42,7 @@ public class InstructionWriterFactory {
     }
 
     public class InstructionWriter implements AutoCloseable {
-        private final OutputStreamWriter outputStream;
+        private final ObjectOutputStream outputStream;
         private final String where;
         private final SummarizingInterpreter summary = new SummarizingInterpreter();
 
@@ -52,7 +52,7 @@ public class InstructionWriterFactory {
         InstructionWriter(Path filename) throws IOException {
             where = filename.getFileName().toString();
             Files.deleteIfExists(filename);
-            outputStream = new OutputStreamWriter(new ZstdOutputStream(new BufferedOutputStream(new FileOutputStream(filename.toFile()))));
+            outputStream = new ObjectOutputStream(new ZstdOutputStream(new FileOutputStream(filename.toFile())));
         }
 
         public void accept(Instruction instruction) {
@@ -64,10 +64,12 @@ public class InstructionWriterFactory {
             size++;
 
             try {
-                outputStream.append(instruction.tag().name());
-                outputStream.append(' ');
-                gson.toJson(instruction, outputStream);
-                outputStream.append('\n');
+                outputStream.writeObject(instruction);
+
+                // Reset the stream to avoid keeping references to the objects
+                // (as this will cause the memory usage to grow indefinitely when
+                // writing huge amounts of data)
+                outputStream.reset();
             }
             catch (IOException ex) {
                 logger.warn("IO exception writing instruction", ex);

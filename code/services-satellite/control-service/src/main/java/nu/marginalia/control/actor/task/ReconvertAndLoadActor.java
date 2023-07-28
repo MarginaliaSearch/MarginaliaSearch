@@ -10,6 +10,7 @@ import nu.marginalia.control.svc.ProcessOutboxFactory;
 import nu.marginalia.control.svc.ProcessService;
 import nu.marginalia.index.client.IndexClient;
 import nu.marginalia.index.client.IndexMqEndpoints;
+import nu.marginalia.mqapi.converting.ConvertAction;
 import nu.marginalia.mqapi.converting.ConvertRequest;
 import nu.marginalia.mqapi.loading.LoadRequest;
 import nu.marginalia.db.storage.FileStorageService;
@@ -121,7 +122,10 @@ public class ReconvertAndLoadActor extends AbstractStateGraph {
         storageService.relateFileStorages(toProcess.id(), processedArea.id());
 
         // Pre-send convert request
-        var request = new ConvertRequest(message.crawlStorageId, processedArea.id());
+        var request = new ConvertRequest(ConvertAction.ConvertCrawlData,
+                null,
+                message.crawlStorageId,
+                processedArea.id());
         long id = mqConverterOutbox.sendAsync(ConvertRequest.class.getSimpleName(), gson.toJson(request));
 
         return message

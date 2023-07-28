@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.sql.SQLException;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -55,8 +55,13 @@ public class LoaderMain {
         );
 
         var instance = injector.getInstance(LoaderMain.class);
-        var instructions = instance.fetchInstructions();
-        instance.run(instructions);
+        try {
+            var instructions = instance.fetchInstructions();
+            instance.run(instructions);
+        }
+        catch (Exception ex) {
+            logger.error("Error running loader", ex);
+        }
     }
 
     @Inject
@@ -101,7 +106,19 @@ public class LoaderMain {
             for (var entry : WorkLog.iterable(logFile)) {
                 heartbeat.setProgress(loaded++ / (double) loadTotal);
 
-                load(plan, entry.path(), entry.cnt());
+                var loader = loaderFactory.create(entry.cnt());
+                Path destDir = plan.getProcessedFilePath(entry.path());
+
+                var instructionsIter = instructionsReader.createIterator(destDir);
+                while (instructionsIter.hasNext()) {
+                    var next = instructionsIter.next();
+                    try {
+                        next.apply(loader);
+                    }
+                    catch (Exception ex) {
+                        logger.error("Failed to load instruction {}", next);
+                    }
+                }
             }
 
             running = false;
@@ -110,6 +127,7 @@ public class LoaderMain {
 
             // This needs to be done in order to have a readable index journal
             indexLoadKeywords.close();
+            logger.info("Loading finished");
         }
         catch (Exception ex) {
             logger.error("Failed to load", ex);
@@ -119,6 +137,7 @@ public class LoaderMain {
         finally {
             heartbeat.shutDown();
         }
+
         System.exit(0);
     }
 
@@ -128,7 +147,7 @@ public class LoaderMain {
         Path destDir = plan.getProcessedFilePath(path);
         try {
             var loader = loaderFactory.create(cnt);
-            var instructions = instructionsReader.read(destDir, cnt);
+            var instructions = instructionsReader.createIterator(destDir);
             processQueue.put(new LoadJob(path, loader, instructions));
         } catch (Exception e) {
             logger.error("Failed to load " + destDir, e);
@@ -137,15 +156,16 @@ public class LoaderMain {
 
     static final TaskStats taskStats = new TaskStats(100);
 
-    private record LoadJob(String path, Loader loader, List<Instruction> instructionList) {
+    private record LoadJob(String path, Loader loader, Iterator<Instruction> instructionIterator) {
         public void run() {
             long startTime = System.currentTimeMillis();
-            for (var i : instructionList) {
+            while (instructionIterator.hasNext()) {
+                var next = instructionIterator.next();
                 try {
-                    i.apply(loader);
+                    next.apply(loader);
                 }
                 catch (Exception ex) {
-                    logger.error("Failed to load instruction {}", i);
+                    logger.error("Failed to load instruction {}", next);
                 }
             }
 

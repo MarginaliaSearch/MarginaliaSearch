@@ -175,6 +175,8 @@ dependencyResolutionManagement {
             library('handlebars','com.github.jknack','handlebars').version('4.3.1')
             library('handlebars.markdown','com.github.jknack','handlebars-markdown').version('4.2.1')
 
+            library('sqlite','org.xerial','sqlite-jdbc').version('3.41.2.1')
+
             bundle('slf4j', ['slf4j.api', 'log4j.api', 'log4j.core', 'log4j.slf4j'])
             bundle('slf4j.test', ['slf4j.jdk14'])
             bundle('prometheus', ['prometheus', 'prometheus-servlet', 'prometheus-server', 'prometheus-hotspot'])

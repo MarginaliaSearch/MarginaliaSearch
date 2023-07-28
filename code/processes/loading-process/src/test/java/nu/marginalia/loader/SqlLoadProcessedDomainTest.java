@@ -5,6 +5,7 @@ import nu.marginalia.loading.loader.LoaderData;
 import nu.marginalia.loading.loader.SqlLoadDomains;
 import nu.marginalia.loading.loader.SqlLoadProcessedDomain;
 import nu.marginalia.converting.instruction.instructions.DomainLink;
+import nu.marginalia.loading.loader.SqlLoadUrls;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import org.junit.jupiter.api.AfterEach;
@@ -50,18 +51,18 @@ class SqlLoadProcessedDomainTest {
 
     @Test
     public void loadProcessedDomain() {
-        var loader = new SqlLoadProcessedDomain(dataSource, new SqlLoadDomains(dataSource));
+        var loader = new SqlLoadProcessedDomain(dataSource, new SqlLoadDomains(dataSource), new SqlLoadUrls(dataSource));
         loader.load(loaderData, new EdgeDomain("www.marginalia.nu"), DomainIndexingState.BLOCKED, "127.0.0.1");
     }
     @Test
     public void loadProcessedDomainTwice() {
-        var loader = new SqlLoadProcessedDomain(dataSource, new SqlLoadDomains(dataSource));
+        var loader = new SqlLoadProcessedDomain(dataSource, new SqlLoadDomains(dataSource), new SqlLoadUrls(dataSource));
         loader.load(loaderData, new EdgeDomain("www.marginalia.nu"), DomainIndexingState.BLOCKED, "127.0.0.1");
     }
 
     @Test
     public void loadProcessedDomaiWithExtremelyLongIP() {
-        var loader = new SqlLoadProcessedDomain(dataSource, new SqlLoadDomains(dataSource));
+        var loader = new SqlLoadProcessedDomain(dataSource, new SqlLoadDomains(dataSource), new SqlLoadUrls(dataSource));
 
         String ip = Stream.generate(() -> "127.").limit(1024).collect(Collectors.joining());
 
@@ -70,7 +71,7 @@ class SqlLoadProcessedDomainTest {
 
     @Test
     public void loadDomainAlias() {
-        var loader = new SqlLoadProcessedDomain(dataSource, new SqlLoadDomains(dataSource));
+        var loader = new SqlLoadProcessedDomain(dataSource, new SqlLoadDomains(dataSource), new SqlLoadUrls(dataSource));
         loader.loadAlias(loaderData, new DomainLink(new EdgeDomain("memex.marginalia.nu"), new EdgeDomain("www.marginalia.nu")));
     }
 }

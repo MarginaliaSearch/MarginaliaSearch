@@ -73,7 +73,7 @@ public class SqlLoadProcessedDocument {
                 int urlId = data.getUrlId(doc.url());
                 if (urlId <= 0) {
                     logger.warn("Failed to resolve ID for URL {}", doc.url());
-                    return;
+                    continue;
                 }
 
                 stmt.setInt(1, urlId);

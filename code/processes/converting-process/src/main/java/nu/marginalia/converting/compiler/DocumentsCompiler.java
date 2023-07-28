@@ -23,7 +23,7 @@ public class DocumentsCompiler {
 
     }
 
-    private void compileDocumentDetails(Consumer<Instruction> instructionConsumer, ProcessedDocument doc) {
+    public void compileDocumentDetails(Consumer<Instruction> instructionConsumer, ProcessedDocument doc) {
         var details = doc.details;
 
         if (details != null) {
@@ -31,7 +31,7 @@ public class DocumentsCompiler {
         }
     }
 
-    private void compileWords(Consumer<Instruction> instructionConsumer, ProcessedDocument doc) {
+    public void compileWords(Consumer<Instruction> instructionConsumer, ProcessedDocument doc) {
         var words = doc.words;
 
         if (words != null) {

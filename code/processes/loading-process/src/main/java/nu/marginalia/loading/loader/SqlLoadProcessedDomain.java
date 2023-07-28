@@ -14,12 +14,14 @@ import java.sql.SQLException;
 public class SqlLoadProcessedDomain {
     private final HikariDataSource dataSource;
     private final SqlLoadDomains loadDomains;
+    private final SqlLoadUrls loadUrls;
     private static final Logger logger = LoggerFactory.getLogger(SqlLoadProcessedDomain.class);
 
     @Inject
-    public SqlLoadProcessedDomain(HikariDataSource dataSource, SqlLoadDomains loadDomains) {
+    public SqlLoadProcessedDomain(HikariDataSource dataSource, SqlLoadDomains loadDomains, SqlLoadUrls loadUrls) {
         this.dataSource = dataSource;
         this.loadDomains = loadDomains;
+        this.loadUrls = loadUrls;
 
 
         try (var conn = dataSource.getConnection()) {
@@ -34,7 +36,7 @@ public class SqlLoadProcessedDomain {
                         BEGIN
                             DELETE FROM DOMAIN_METADATA WHERE ID=DID;
                             DELETE FROM EC_DOMAIN_LINK WHERE SOURCE_DOMAIN_ID=DID;
-                            DELETE FROM EC_URL WHERE DOMAIN_ID = DID;
+                            DELETE FROM EC_PAGE_DATA WHERE ID IN (SELECT ID FROM EC_URL WHERE DOMAIN_ID = DID);
                             UPDATE EC_DOMAIN SET INDEX_DATE=NOW(), STATE=ST, DOMAIN_ALIAS=NULL, INDEXED=GREATEST(INDEXED,IDX), IP=IP WHERE ID=DID;
                             DELETE FROM EC_DOMAIN_LINK WHERE SOURCE_DOMAIN_ID=DID;
                         END
@@ -47,6 +49,7 @@ public class SqlLoadProcessedDomain {
     }
 
     public void load(LoaderData data, EdgeDomain domain, DomainIndexingState state, String ip) {
+
         data.setTargetDomain(domain);
 
         loadDomains.load(data, domain);
@@ -63,6 +66,8 @@ public class SqlLoadProcessedDomain {
             if (rc < 1) {
                 logger.warn("load({},{}) -- bad rowcount {}", domain, state, rc);
             }
+
+            loadUrls.loadUrlsForDomain(data, domain, 0);
         }
         catch (SQLException ex) {
             logger.warn("SQL error initializing domain", ex);

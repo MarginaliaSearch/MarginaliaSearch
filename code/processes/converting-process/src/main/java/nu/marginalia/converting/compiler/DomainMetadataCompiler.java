@@ -40,4 +40,8 @@ public class DomainMetadataCompiler {
         instructionConsumer.accept(new LoadDomainMetadata(domain, knownUrls.size(), goodUrls, visitedUrls));
     }
 
+    public void compileFake(Consumer<Instruction> instructionConsumer, EdgeDomain domain, int countAll, int countGood) {
+        instructionConsumer.accept(new LoadDomainMetadata(domain, countAll, countGood, countAll));
+    }
+
 }

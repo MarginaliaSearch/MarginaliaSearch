@@ -86,40 +86,24 @@ public class Loader implements Interpreter {
 
     @Override
     public void loadProcessedDocument(LoadProcessedDocument document) {
-        deferralCheck(document.url());
-
         processedDocumentList.add(document);
+        if (processedDocumentList.size() > 100) {
+            sqlLoadProcessedDocument.load(data, processedDocumentList);
+            processedDocumentList.clear();
+        }
     }
 
     @Override
     public void loadProcessedDocumentWithError(LoadProcessedDocumentWithError document) {
-        deferralCheck(document.url());
-
         processedDocumentWithErrorList.add(document);
-    }
-
-    private void deferralCheck(EdgeUrl url) {
-        if (data.getDomainId(url.domain) <= 0)
-            deferredDomains.add(url.domain);
-
-        if (data.getUrlId(url) <= 0)
-            deferredUrls.add(url);
+        if (processedDocumentWithErrorList.size() > 100) {
+            sqlLoadProcessedDocument.loadWithError(data, processedDocumentWithErrorList);
+            processedDocumentWithErrorList.clear();
+        }
     }
 
     @Override
     public void loadKeywords(EdgeUrl url, DocumentMetadata metadata, DocumentKeywords words) {
-        // This is a bit of a bandaid safeguard against a bug in
-        // in the converter, shouldn't be necessary in the future
-        if (!deferredDomains.isEmpty()) {
-            loadDomain(deferredDomains.toArray(EdgeDomain[]::new));
-            deferredDomains.clear();
-        }
-
-        if (!deferredUrls.isEmpty()) {
-            loadUrl(deferredUrls.toArray(EdgeUrl[]::new));
-            deferredUrls.clear();
-        }
-
         try {
             indexLoadKeywords.load(data, url, metadata, words);
         } catch (InterruptedException e) {
@@ -140,8 +124,12 @@ public class Loader implements Interpreter {
     public void finish() {
         // Some work needs to be processed out of order for the database relations to work out
 
-        sqlLoadProcessedDocument.load(data, processedDocumentList);
-        sqlLoadProcessedDocument.loadWithError(data, processedDocumentWithErrorList);
+        if (processedDocumentList.size() > 0) {
+            sqlLoadProcessedDocument.load(data, processedDocumentList);
+        }
+        if (processedDocumentWithErrorList.size() > 0) {
+            sqlLoadProcessedDocument.loadWithError(data, processedDocumentWithErrorList);
+        }
     }
 
 }

@@ -9,10 +9,7 @@ import nu.marginalia.model.EdgeUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class UrlsCompiler {
@@ -58,4 +55,20 @@ public class UrlsCompiler {
         instructionConsumer.accept(new LoadUrl(seenUrls.toArray(EdgeUrl[]::new)));
     }
 
+    public void compileJustUrls(Consumer<Instruction> instructionConsumer, Iterator<EdgeUrl> urlsIterator) {
+        var urls = new ArrayList<EdgeUrl>(1000);
+
+        while (urlsIterator.hasNext()) {
+            if (urls.size() >= 1000) {
+                instructionConsumer.accept(new LoadUrl(urls.toArray(EdgeUrl[]::new)));
+                urls.clear();
+            }
+
+            urls.add(urlsIterator.next());
+        }
+    }
+
+    public void compileJustDomain(Consumer<Instruction> instructionConsumer, EdgeDomain domain) {
+        instructionConsumer.accept(new LoadDomain(domain));
+    }
 }

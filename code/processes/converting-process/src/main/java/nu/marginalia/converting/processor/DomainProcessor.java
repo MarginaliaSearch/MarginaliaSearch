@@ -28,7 +28,8 @@ public class DomainProcessor {
     @Inject
     public DomainProcessor(DocumentProcessor documentProcessor,
                            SiteWords siteWords,
-                           LshDocumentDeduplicator documentDeduplicator) {
+                           LshDocumentDeduplicator documentDeduplicator)
+    {
         this.documentProcessor = documentProcessor;
         this.siteWords = siteWords;
         this.documentDeduplicator = documentDeduplicator;
