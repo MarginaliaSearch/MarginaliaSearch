@@ -34,69 +34,76 @@ public class SqlLoadUrls {
             return;
 
         int maxOldId = 0;
-        try (var conn = dataSource.getConnection();
-             var insertCall = conn.prepareStatement("INSERT IGNORE INTO EC_URL (PROTO,DOMAIN_ID,PORT,PATH,PARAM,PATH_HASH) VALUES (?,?,?,?,?,?)");
-             var queryMaxId = conn.prepareStatement("SELECT MAX(ID) FROM EC_URL"))
-        {
-            conn.setAutoCommit(false);
-            var rs = queryMaxId.executeQuery();
-            if (rs.next()) {
-                maxOldId = rs.getInt(1);
-            }
+        try (var conn = dataSource.getConnection()) {
 
-            int cnt = 0; int batchOffset = 0;
+            try (var insertStmt = conn.prepareStatement("INSERT IGNORE INTO EC_URL (PROTO,DOMAIN_ID,PORT,PATH,PARAM,PATH_HASH) VALUES (?,?,?,?,?,?)");
+                 var queryMaxId = conn.prepareStatement("SELECT MAX(ID) FROM EC_URL")) {
 
-            for (var url : urls) {
-                if (data.getUrlId(url) != 0)
-                    continue;
-                if (url.path.length() >= 255) {
-                    logger.info("Skipping bad URL {}", url);
-                    continue;
+                conn.setAutoCommit(false);
+
+                var rs = queryMaxId.executeQuery();
+                if (rs.next()) {
+                    maxOldId = rs.getInt(1);
                 }
-                var domainId = data.getDomainId(url.domain);
 
-                affectedDomains.add(url.domain);
+                int cnt = 0;
+                int batchOffset = 0;
 
-                insertCall.setString(1, url.proto);
-                insertCall.setInt(2, domainId);
-                if (url.port != null) {
-                    insertCall.setInt(3, url.port);
+                for (var url : urls) {
+                    if (data.getUrlId(url) != 0)
+                        continue;
+                    if (url.path.length() >= 255) {
+                        logger.info("Skipping bad URL {}", url);
+                        continue;
+                    }
+                    var domainId = data.getDomainId(url.domain);
+
+                    affectedDomains.add(url.domain);
+
+                    insertStmt.setString(1, url.proto);
+                    insertStmt.setInt(2, domainId);
+                    if (url.port != null) {
+                        insertStmt.setInt(3, url.port);
+                    } else {
+                        insertStmt.setNull(3, Types.INTEGER);
+                    }
+                    insertStmt.setString(4, url.path);
+                    insertStmt.setString(5, url.param);
+                    insertStmt.setLong(6, hashPath(url.path, url.param));
+                    insertStmt.addBatch();
+
+                    if (++cnt == 1000) {
+                        var ret = insertStmt.executeBatch();
+                        for (int rv = 0; rv < cnt; rv++) {
+                            if (ret[rv] < 0 && ret[rv] != SUCCESS_NO_INFO) {
+                                logger.warn("load({}) -- bad row count {}", urls[batchOffset + rv], ret[rv]);
+                            }
+                        }
+
+                        batchOffset += cnt;
+                        cnt = 0;
+                    }
                 }
-                else {
-                    insertCall.setNull(3, Types.INTEGER);
-                }
-                insertCall.setString(4, url.path);
-                insertCall.setString(5, url.param);
-                insertCall.setLong(6, hashPath(url.path, url.param));
-                insertCall.addBatch();
 
-                if (++cnt == 1000) {
-                    var ret = insertCall.executeBatch();
+                if (cnt > 0) {
+                    var ret = insertStmt.executeBatch();
                     for (int rv = 0; rv < cnt; rv++) {
                         if (ret[rv] < 0 && ret[rv] != SUCCESS_NO_INFO) {
                             logger.warn("load({}) -- bad row count {}", urls[batchOffset + rv], ret[rv]);
                         }
                     }
+                }
 
-                    batchOffset += cnt;
-                    cnt = 0;
+                conn.commit();
+                conn.setAutoCommit(true);
+
+                for (var domain : affectedDomains) {
+                    loadUrlsForDomain(data, domain, maxOldId);
                 }
             }
-
-            if (cnt > 0) {
-                var ret = insertCall.executeBatch();
-                for (int rv = 0; rv < cnt; rv++) {
-                    if (ret[rv] < 0 && ret[rv] != SUCCESS_NO_INFO) {
-                        logger.warn("load({}) -- bad row count {}", urls[batchOffset + rv], ret[rv]);
-                    }
-                }
-            }
-
-            conn.commit();
-            conn.setAutoCommit(true);
-
-            for (var domain : affectedDomains) {
-                loadUrlsForDomain(data, domain, maxOldId);
+            catch (SQLException ex) {
+                conn.rollback();
+                throw ex;
             }
         }
         catch (SQLException ex) {

@@ -57,6 +57,7 @@ public class LoaderMain {
         var instance = injector.getInstance(LoaderMain.class);
         try {
             var instructions = instance.fetchInstructions();
+            logger.info("Instructions received");
             instance.run(instructions);
         }
         catch (Exception ex) {
@@ -103,6 +104,7 @@ public class LoaderMain {
 
             LoaderMain.loadTotal = loadTotal;
 
+            logger.info("Loading {} files", loadTotal);
             for (var entry : WorkLog.iterable(logFile)) {
                 heartbeat.setProgress(loaded++ / (double) loadTotal);
 
@@ -130,6 +132,7 @@ public class LoaderMain {
             logger.info("Loading finished");
         }
         catch (Exception ex) {
+            ex.printStackTrace();
             logger.error("Failed to load", ex);
             instructions.err();
             throw ex;
