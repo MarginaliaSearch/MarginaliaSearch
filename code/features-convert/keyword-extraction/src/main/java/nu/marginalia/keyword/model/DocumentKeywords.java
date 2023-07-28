@@ -3,11 +3,13 @@ package nu.marginalia.keyword.model;
 
 import nu.marginalia.model.idx.WordMetadata;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
-public record DocumentKeywords(
-                               String[] keywords,
-                               long[] metadata) {
+public record DocumentKeywords(String[] keywords,
+                               long[] metadata)
+implements Serializable
+{
 
     @Override
     public String toString() {

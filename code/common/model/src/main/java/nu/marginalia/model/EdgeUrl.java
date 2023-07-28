@@ -6,6 +6,7 @@ import lombok.Setter;
 import nu.marginalia.util.QueryParams;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -15,7 +16,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 @Getter @Setter @Builder
-public class EdgeUrl {
+public class EdgeUrl implements Serializable {
     public final String proto;
     public final EdgeDomain domain;
     public final Integer port;

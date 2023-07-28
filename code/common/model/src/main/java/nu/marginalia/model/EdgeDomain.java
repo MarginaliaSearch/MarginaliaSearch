@@ -3,13 +3,15 @@ package nu.marginalia.model;
 import lombok.*;
 
 import javax.annotation.Nonnull;
+import java.io.Serializable;
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 @AllArgsConstructor
 @Getter @Setter @Builder
-public class EdgeDomain {
+public class EdgeDomain implements Serializable {
+
     @Nonnull
     public final String subDomain;
     @Nonnull

@@ -1,6 +1,8 @@
 package nu.marginalia.converting.instruction;
 
-public interface Instruction {
+import java.io.Serializable;
+
+public interface Instruction extends Serializable {
     void apply(Interpreter interpreter);
     boolean isNoOp();
 
