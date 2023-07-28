@@ -32,7 +32,7 @@ public class IndexJournalWriterImpl implements IndexJournalWriter{
 
         writeHeaderPlaceholder(fileStream);
 
-        outputStream = new DataOutputStream(new ZstdOutputStream(fileStream));
+        outputStream = new DataOutputStream(new ZstdOutputStream(new BufferedOutputStream(fileStream)));
     }
 
     private static void writeHeaderPlaceholder(OutputStream fileStream) throws IOException {
