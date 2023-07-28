@@ -2,6 +2,7 @@ package nu.marginalia.mq.inbox;
 
 import lombok.SneakyThrows;
 import nu.marginalia.mq.MqMessage;
+import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.persistence.MqPersistence;
 
 import java.sql.SQLException;
@@ -71,9 +72,24 @@ public class MqSingleShotInbox {
         return Optional.empty();
     }
 
+    /** Send a response to the specified message. If the original message has no response inbox,
+     * the original message will be marked as OK instead.
+     *
+     *  @param originalMessage The original message
+     *  @param response The response
+     */
     public void sendResponse(MqMessage originalMessage, MqInboxResponse response) {
         try {
-            persistence.sendResponse(originalMessage.msgId(), response.state(), response.message());
+            if (!originalMessage.expectsResponse()) {
+                // If the original message doesn't expect a response, we can just mark it as OK,
+                // since the sendResponse method will fail explosively since it can't insert a response
+                // to a non-existent inbox.
+
+                persistence.updateMessageState(originalMessage.msgId(), MqMessageState.OK);
+            }
+            else {
+                persistence.sendResponse(originalMessage.msgId(), response.state(), response.message());
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
