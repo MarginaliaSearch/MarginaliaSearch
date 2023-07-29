@@ -84,7 +84,6 @@ public class ProcessService {
              var os = new BufferedReader(new InputStreamReader(process.getInputStream()))
         ) {
             eventLog.logEvent("PROCESS-STARTED", processId.toString());
-            process.onExit().whenComplete((p,t) -> eventLog.logEvent("PROCESS-EXIT", processId.toString()));
 
             while (process.isAlive()) {
                 if (es.ready())
@@ -93,9 +92,16 @@ public class ProcessService {
                     logger.info(processMarker, os.readLine());
             }
 
-            return 0 == process.waitFor();
+            final int returnCode = process.waitFor();
+            logger.info("Process {} terminated with code {}", processId, returnCode);
+            return 0 == returnCode;
+        }
+        catch (Exception ex) {
+            logger.info("Process {} terminated with code exception", processId);
+            throw ex;
         }
         finally {
+            eventLog.logEvent("PROCESS-EXIT", processId.toString());
             processes.remove(processId);
         }
 
