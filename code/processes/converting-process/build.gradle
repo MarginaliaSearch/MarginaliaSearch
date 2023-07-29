@@ -20,7 +20,7 @@ tasks.distZip.enabled = false
 
 dependencies {
 
-    implementation project(':third-party:monkey-patch-gson')
+    //implementation project(':third-party:monkey-patch-gson')
 
     implementation project(':code:common:process')
 
