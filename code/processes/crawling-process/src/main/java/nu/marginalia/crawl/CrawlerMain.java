@@ -61,6 +61,7 @@ public class CrawlerMain implements AutoCloseable {
 
     volatile int totalTasks;
     final AtomicInteger tasksDone = new AtomicInteger(0);
+    private final CrawlLimiter limiter = new CrawlLimiter();
 
     @Inject
     public CrawlerMain(UserAgent userAgent,
@@ -75,7 +76,7 @@ public class CrawlerMain implements AutoCloseable {
         this.gson = gson;
 
         // maybe need to set -Xss for JVM to deal with this?
-        pool = new DumbThreadPool(CrawlLimiter.maxPoolSize, 8);
+        pool = new DumbThreadPool(CrawlLimiter.maxPoolSize, 1);
     }
 
     public static void main(String... args) throws Exception {
@@ -136,6 +137,8 @@ public class CrawlerMain implements AutoCloseable {
                 startCrawlTask(plan, spec);
             }
 
+            logger.info("Shutting down the pool, waiting for tasks to complete...");
+
             pool.shutDown();
             do {
                 System.out.println("Waiting for pool to terminate... " + pool.getActiveCount() + " remaining");
@@ -167,6 +170,8 @@ public class CrawlerMain implements AutoCloseable {
 
         try {
             pool.submit(() -> {
+                limiter.waitForEnoughRAM();
+
                 try {
                     Thread.currentThread().setName("crawling:" + crawlingSpecification.domain);
                     fetchDomain(crawlingSpecification);
@@ -200,6 +205,8 @@ public class CrawlerMain implements AutoCloseable {
             logger.info("Fetched {}", specification.domain);
         } catch (Exception e) {
             logger.error("Error fetching domain", e);
+        } finally {
+            logger.info("Done with {}", specification.domain);
         }
     }
 

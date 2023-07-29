@@ -12,8 +12,8 @@ public class CrawlLimiter {
     public static final int maxPoolSize = Integer.getInteger("crawler.pool-size", 256);
 
     // Thresholds for throttling task-spawning. Note there's a bit of hysteresis to this
-    private static final long THROTTLE_TRIGGER_FREE_RAM = 2 * 1024 * 1024 * 1024L;
-    private static final long THROTTLE_RELEASE_FREE_RAM = 4 * 1024 * 1024 * 1024L;
+    private final long THROTTLE_TRIGGER_FREE_RAM = Runtime.getRuntime().maxMemory() / 4;
+    private final long THROTTLE_RELEASE_FREE_RAM = Runtime.getRuntime().maxMemory() / 2;
 
     private final Semaphore taskSemCount = new Semaphore(maxPoolSize);
 
@@ -68,23 +68,13 @@ public class CrawlLimiter {
         }
     }
 
-    private void waitForEnoughRAM() throws InterruptedException {
-        while (!throttle.get()) {
+    @SneakyThrows
+    public void waitForEnoughRAM() {
+        while (throttle.get()) {
             synchronized (throttle) {
                 throttle.wait(30000);
             }
         }
     }
 
-    public void acquire() throws InterruptedException {
-        taskSemCount.acquire(1);
-
-        if (taskSemCount.availablePermits() < maxPoolSize / 2) {
-            waitForEnoughRAM();
-        }
-    }
-
-    public void release() {
-        taskSemCount.release(1);
-    }
 }
