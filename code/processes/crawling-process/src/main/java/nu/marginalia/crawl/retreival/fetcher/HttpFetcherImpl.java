@@ -12,7 +12,6 @@ import nu.marginalia.crawling.model.CrawlerDocumentStatus;
 import nu.marginalia.crawling.model.ContentType;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.bigstring.BigString;
 import nu.marginalia.crawl.retreival.logic.ContentTypeLogic;
 import nu.marginalia.crawl.retreival.logic.ContentTypeParser;
 import okhttp3.*;
@@ -25,9 +24,7 @@ import javax.net.ssl.SSLException;
 import javax.net.ssl.X509TrustManager;
 import java.io.EOFException;
 import java.io.IOException;
-import java.net.SocketTimeoutException;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.StandardCharsets;
@@ -200,15 +197,15 @@ public class HttpFetcherImpl implements HttpFetcher {
         catch (SocketTimeoutException ex) {
             return createTimeoutErrorRsp(url, ex);
         }
-        catch (IllegalCharsetNameException | SSLException | EOFException ex) {
+        catch (UnknownHostException ex) {
+            return createUnknownHostError(url, ex);
+        }
+        catch (SocketException | ProtocolException | IllegalCharsetNameException | SSLException | EOFException ex) {
             // This is a bit of a grab-bag of errors that crop up
             // IllegalCharsetName is egg on our face,
             // but SSLException and EOFException are probably the server's fault
 
             return createHardErrorRsp(url, ex);
-        }
-        catch (UnknownHostException ex) {
-            return createUnknownHostError(url, ex);
         }
         catch (Exception ex) {
             logger.error("Error during fetching", ex);
