@@ -204,9 +204,7 @@ public class CrawlerMain implements AutoCloseable {
 
             logger.info("Fetched {}", specification.domain);
         } catch (Exception e) {
-            logger.error("Error fetching domain", e);
-        } finally {
-            logger.info("Done with {}", specification.domain);
+            logger.error("Error fetching domain " + specification.domain, e);
         }
     }
 
