@@ -108,19 +108,13 @@ public class ConverterMain {
 
     public void convert(CrawlPlan plan) throws Exception {
 
-        final int maxPoolSize = 16;
+        final int maxPoolSize = Runtime.getRuntime().availableProcessors();
 
         try (WorkLog processLog = plan.createProcessWorkLog();
              ConversionLog log = new ConversionLog(plan.process.getDir())) {
             var instructionWriter = new InstructionWriterFactory(log, plan.process.getDir(), gson);
 
-            Semaphore semaphore = new Semaphore(maxPoolSize);
-            var pool = new ThreadPoolExecutor(
-                    maxPoolSize/4,
-                    maxPoolSize,
-                    5, TimeUnit.MINUTES,
-                    new LinkedBlockingQueue<>(8)
-            );
+            var pool = new DumbThreadPool(maxPoolSize, 2);
 
             int totalDomains = plan.countCrawledDomains();
             AtomicInteger processedDomains = new AtomicInteger(0);
@@ -131,8 +125,7 @@ public class ConverterMain {
 
             for (var domain : plan.crawlDataIterable(id -> !processLog.isJobFinished(id)))
             {
-                semaphore.acquire();
-                pool.execute(() -> {
+                pool.submit(() -> {
                     try {
                         ProcessedDomain processed = processor.process(domain);
 
@@ -151,13 +144,10 @@ public class ConverterMain {
                     catch (IOException ex) {
                         logger.warn("IO exception in converter", ex);
                     }
-                    finally {
-                        semaphore.release();
-                    }
                 });
             }
 
-            pool.shutdown();
+            pool.shutDown();
             do {
                 System.out.println("Waiting for pool to terminate... " + pool.getActiveCount() + " remaining");
             } while (!pool.awaitTermination(60, TimeUnit.SECONDS));
