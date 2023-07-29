@@ -5,7 +5,6 @@ import nu.marginalia.model.EdgeUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Singleton;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
@@ -44,12 +43,17 @@ public class SitemapRetriever {
         final List<EdgeUrl> urlsList = new ArrayList<>(10000);
         final Set<EdgeUrl> seenUrls = new HashSet<>();
 
-        final LinkedList<AbstractSiteMap> maps = new LinkedList<>();
+        final ArrayDeque<AbstractSiteMap> maps = new ArrayDeque<>();
 
         maps.add(map);
 
-        while (!maps.isEmpty()) {
+        while (!maps.isEmpty() && seenSiteMapUrls.size() > 2) {
             if (urlsList.size() >= 10000)
+                break;
+
+            // This is some weird site that too many sitemaps
+            // ... it's causing us to run out of memory
+            if (seenSiteMapUrls.size() > 25)
                 break;
 
             var firstMap = maps.removeFirst();
@@ -74,7 +78,12 @@ public class SitemapRetriever {
             }
             else if (map instanceof SiteMapIndex index) {
                 var sitemaps = index.getSitemaps(false);
-                maps.addAll(sitemaps);
+                for (var sitemap : sitemaps) {
+                    // Limit how many sitemaps we can add to the queue
+                    if (maps.size() < 25) {
+                        maps.add(sitemap);
+                    }
+                }
             }
             else {
                 logger.warn("Unknown sitemap type: {}", map.getClass());
