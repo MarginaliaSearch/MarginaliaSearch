@@ -52,6 +52,8 @@ dependencies {
     implementation libs.jsoup
     implementation libs.opencsv
     implementation libs.rxjava
+    implementation libs.fastutil
+
     implementation libs.bundles.mariadb
 
     testImplementation libs.bundles.slf4j.test

@@ -1,16 +1,28 @@
 package nu.marginalia.crawl.retreival;
 
+import com.google.common.hash.HashFunction;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import nu.marginalia.ip_blocklist.UrlBlocklist;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.function.Predicate;
 
 public class DomainCrawlFrontier {
-    private final LinkedList<EdgeUrl> queue = new LinkedList<>();
-    private final HashSet<String> visited;
-    private final HashSet<String> known;
+    private final ArrayDeque<String> queue;
+
+    // To save the number of strings kept in memory,
+    // do an approximate check using 64 bit hashes instead
+    // ..
+    // This isn't perfect, and may lead to false positives,
+    // but this is relatively unlikely, since the cardinality of these
+    // need to be in the billions to approach Birthday Paradox
+    // territory
+    private final LongOpenHashSet visited;
+    private final LongOpenHashSet known;
+    private final HashFunction hasher = com.google.common.hash.Hashing.murmur3_128();
 
     private final EdgeDomain thisDomain;
     private final UrlBlocklist urlBlocklist;
@@ -24,8 +36,9 @@ public class DomainCrawlFrontier {
         this.urlBlocklist = new UrlBlocklist();
         this.depth = depth;
 
-        visited = new HashSet<>((int)(urls.size() * 1.5));
-        known = new HashSet<>(urls.size() * 10);
+        queue = new ArrayDeque<>(10 + (int) (urls.size()*1.2));
+        visited = new LongOpenHashSet(10 + (int)(urls.size() * 1.5));
+        known = new LongOpenHashSet(10 + urls.size() * 2);
 
         for (String urlStr : urls) {
             EdgeUrl.parse(urlStr).ifPresent(this::addToQueue);
@@ -48,21 +61,42 @@ public class DomainCrawlFrontier {
     }
 
     public void addFirst(EdgeUrl url) {
-        if (known.add(url.toString())) {
-            queue.addFirst(url);
+        if (addKnown(url)) {
+            queue.addFirst(url.toString());
         }
     }
 
     public EdgeUrl takeNextUrl() {
-        return queue.removeFirst();
+        try {
+            return new EdgeUrl(queue.removeFirst());
+        } catch (URISyntaxException e) {
+            // This should never happen since we only add urls via EdgeUrl.toString()
+            throw new RuntimeException(e);
+        }
     }
 
     public EdgeUrl peek() {
-        return queue.peek();
+        try {
+            return new EdgeUrl(queue.peek());
+        } catch (URISyntaxException e) {
+            // This should never happen since we only add urls via EdgeUrl.toString()
+            throw new RuntimeException(e);
+        }
     }
 
     public boolean addVisited(EdgeUrl url) {
-        return visited.add(url.toString());
+        long hashCode = hasher.hashUnencodedChars(url.toString()).padToLong();
+
+        return visited.add(hashCode);
+    }
+    public boolean addKnown(EdgeUrl url) {
+        long hashCode = hasher.hashUnencodedChars(url.toString()).padToLong();
+        return known.add(hashCode);
+    }
+
+    boolean isVisited(EdgeUrl url) {
+        long hashCode = hasher.hashUnencodedChars(url.toString()).padToLong();
+        return visited.contains(hashCode);
     }
 
     public boolean filterLink(EdgeUrl url) {
@@ -80,14 +114,14 @@ public class DomainCrawlFrontier {
             return;
 
         // reduce memory usage by not growing queue huge when crawling large sites
-        if (queue.size() + visited.size() >= depth + 1000)
+        if (queue.size() + visited.size() >= depth + 200)
             return;
 
-        if (visited.contains(url.toString()))
+        if (isVisited(url))
             return;
 
-        if (known.add(url.toString())) {
-            queue.addLast(url);
+        if (addKnown(url)) {
+            queue.addLast(url.toString());
         }
     }
 
