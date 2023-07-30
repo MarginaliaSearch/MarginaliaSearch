@@ -136,9 +136,9 @@ public class ProcessService {
         opts.put("WMSA_HOME", WMSA_HOME);
         opts.put("JAVA_HOME", System.getenv("JAVA_HOME"));
         opts.put("JAVA_OPTS", "");
-        opts.put("CONVERTER_OPTS", System.getenv("CONVERTER_OPTS"));
-        opts.put("LOADER_OPTS", System.getenv("LOADER_OPTS"));
-        opts.put("CRAWLER_OPTS", System.getenv("CRAWLER_OPTS"));
+        opts.put("CONVERTER_PROCESS_OPTS", System.getenv("CONVERTER_PROCESS_OPTS"));
+        opts.put("LOADER_PROCESS_OPTS", System.getenv("LOADER_PROCESS_OPTS"));
+        opts.put("CRAWLER_PROCESS_OPTS", System.getenv("CRAWLER_PROCESS_OPTS"));
 
         return opts.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue()).toArray(String[]::new);
     }
