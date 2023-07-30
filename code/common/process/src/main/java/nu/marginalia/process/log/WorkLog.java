@@ -3,6 +3,7 @@ package nu.marginalia.process.log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -11,7 +12,6 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 
 /** WorkLog is a journal of work done by a process,
  * so that it can be resumed after a crash or termination.
@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  * </p>
  *
  */
-public class WorkLog implements AutoCloseable {
+public class WorkLog implements AutoCloseable, Closeable {
     private final Set<String> finishedJobs = new HashSet<>();
     private final FileOutputStream logWriter;
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -89,9 +89,14 @@ public class WorkLog implements AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
-        logWriter.flush();
-        logWriter.close();
+    public void close() {
+        try {
+            logWriter.flush();
+            logWriter.close();
+        }
+        catch (IOException e) {
+            logger.error("Error closing work log", e);
+        }
     }
 
     public int countFinishedJobs() {

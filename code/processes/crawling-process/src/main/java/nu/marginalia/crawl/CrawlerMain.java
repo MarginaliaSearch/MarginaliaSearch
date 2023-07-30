@@ -37,11 +37,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static nu.marginalia.mqapi.ProcessInboxNames.CRAWLER_INBOX;
 
-public class CrawlerMain implements AutoCloseable {
+public class CrawlerMain {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private Path crawlDataDir;
-    private WorkLog workLog;
 
     private final ProcessHeartbeat heartbeat;
     private final ConnectionPool connectionPool = new ConnectionPool(5, 10, TimeUnit.SECONDS);
@@ -56,6 +55,7 @@ public class CrawlerMain implements AutoCloseable {
     private final DumbThreadPool pool;
 
     private final Set<String> processingIds = new HashSet<>();
+    private final CrawledDomainReader reader = new CrawledDomainReader();
 
     final AbortMonitor abortMonitor = AbortMonitor.getInstance();
 
@@ -120,12 +120,10 @@ public class CrawlerMain implements AutoCloseable {
     public void run(CrawlPlan plan) throws InterruptedException, IOException {
 
         heartbeat.start();
-        try {
+        try (WorkLog workLog = plan.createCrawlWorkLog()) {
             // First a validation run to ensure the file is all good to parse
             logger.info("Validating JSON");
 
-
-            workLog = plan.createCrawlWorkLog();
             crawlDataDir = plan.crawl.getDir();
 
             int countTotal = 0;
@@ -136,8 +134,26 @@ public class CrawlerMain implements AutoCloseable {
 
             logger.info("Let's go");
 
-            for (var spec : plan.crawlingSpecificationIterable()) {
-                startCrawlTask(plan, spec);
+            for (var crawlingSpecification : plan.crawlingSpecificationIterable()) {
+
+                if (!abortMonitor.isAlive())
+                    break;
+
+                // Check #1: Have we already crawled this site? Check is necessary for resuming a craw after a crash or something
+                if (workLog.isJobFinished(crawlingSpecification.id)) {
+                    continue;
+                }
+
+                // Check #2: Have we already started this crawl (but not finished it)?
+                // This shouldn't realistically happen, but if it does, we need to ignore it, otherwise
+                // we'd end crawling the same site twice and might end up writing to the same output
+                // file from multiple threads with complete bit salad as a result.
+                if (!processingIds.add(crawlingSpecification.id)) {
+                    logger.error("Ignoring duplicate id: {}", crawlingSpecification.id);
+                    continue;
+                }
+
+                pool.submit(new CrawlTask(crawlingSpecification, workLog));
             }
 
             logger.info("Shutting down the pool, waiting for tasks to complete...");
@@ -152,77 +168,59 @@ public class CrawlerMain implements AutoCloseable {
         }
     }
 
-    CrawledDomainReader reader = new CrawledDomainReader();
+    class CrawlTask implements DumbThreadPool.Task {
 
+        private final CrawlingSpecification specification;
+        private final WorkLog workLog;
 
-    private void startCrawlTask(CrawlPlan plan, CrawlingSpecification crawlingSpecification) {
-
-        if (workLog.isJobFinished(crawlingSpecification.id) || !processingIds.add(crawlingSpecification.id)) {
-
-            // This is a duplicate id, so we ignore it.  Otherwise we'd end crawling the same site twice,
-            // and if we're really unlucky, we might end up writing to the same output file from multiple
-            // threads with complete bit salad as a result.
-
-            logger.error("Ignoring duplicate id: {}", crawlingSpecification.id);
-            return;
+        CrawlTask(CrawlingSpecification specification, WorkLog workLog) {
+            this.specification = specification;
+            this.workLog = workLog;
         }
 
-        if (!abortMonitor.isAlive()) {
-            return;
+        @Override
+        public void run() throws Exception {
+
+            limiter.waitForEnoughRAM();
+
+            HttpFetcher fetcher = new HttpFetcherImpl(userAgent.uaString(), dispatcher, connectionPool);
+
+            try (CrawledDomainWriter writer = new CrawledDomainWriter(crawlDataDir, specification);
+                 CrawlDataReference reference = getReference(specification))
+            {
+                Thread.currentThread().setName("crawling:" + specification.domain);
+
+                var retreiver = new CrawlerRetreiver(fetcher, specification, writer::accept);
+                int size = retreiver.fetch(reference);
+
+                workLog.setJobToFinished(specification.id, writer.getOutputFile().toString(), size);
+                heartbeat.setProgress(tasksDone.incrementAndGet() / (double) totalTasks);
+
+                logger.info("Fetched {}", specification.domain);
+
+            } catch (Exception e) {
+                logger.error("Error fetching domain " + specification.domain, e);
+            }
+            finally {
+                // We don't need to double-count these; it's also kept int he workLog
+                processingIds.remove(specification.id);
+                Thread.currentThread().setName("[idle]");
+            }
         }
 
-        try {
-            pool.submit(() -> {
-                limiter.waitForEnoughRAM();
+        private CrawlDataReference getReference(CrawlingSpecification specification) {
+            try {
+                var dataStream = reader.createDataStream(crawlDataDir, specification);
+                return new CrawlDataReference(dataStream);
+            } catch (IOException e) {
+                logger.warn("Failed to read previous crawl data for {}", specification.domain);
+                return new CrawlDataReference();
+            }
+        }
 
-                try {
-                    Thread.currentThread().setName("crawling:" + crawlingSpecification.domain);
-                    fetchDomain(crawlingSpecification);
-                    heartbeat.setProgress(tasksDone.incrementAndGet() / (double) totalTasks);
-                } finally {
-                    Thread.currentThread().setName("[idle]");
-                }
-            });
-        }
-        catch (InterruptedException ex) {
-            throw new RuntimeException(ex);
-        }
     }
 
 
-    private void fetchDomain(CrawlingSpecification specification) {
-        if (workLog.isJobFinished(specification.id))
-            return;
-
-        HttpFetcher fetcher = new HttpFetcherImpl(userAgent.uaString(), dispatcher, connectionPool);
-
-        try (CrawledDomainWriter writer = new CrawledDomainWriter(crawlDataDir, specification);
-             CrawlDataReference reference = getReference(specification))
-        {
-            var retreiver = new CrawlerRetreiver(fetcher, specification, writer::accept);
-            int size = retreiver.fetch(reference);
-
-            workLog.setJobToFinished(specification.id, writer.getOutputFile().toString(), size);
-
-            logger.info("Fetched {}", specification.domain);
-        } catch (Exception e) {
-            logger.error("Error fetching domain " + specification.domain, e);
-        }
-        finally {
-            // We don't need to double-count these; it's also kept int he workLog
-            processingIds.remove(specification.id);
-        }
-    }
-
-    private CrawlDataReference getReference(CrawlingSpecification specification) {
-        try {
-            var dataStream = reader.createDataStream(crawlDataDir, specification);
-            return new CrawlDataReference(dataStream);
-        } catch (IOException e) {
-            logger.warn("Failed to read previous crawl data for {}", specification.domain);
-            return new CrawlDataReference();
-        }
-    }
 
     private static class CrawlRequest {
         private final CrawlPlan plan;
@@ -252,6 +250,7 @@ public class CrawlerMain implements AutoCloseable {
 
         var inbox = messageQueueFactory.createSingleShotInbox(CRAWLER_INBOX, UUID.randomUUID());
 
+        logger.info("Waiting for instructions");
         var msgOpt = getMessage(inbox, nu.marginalia.mqapi.crawling.CrawlRequest.class.getSimpleName());
         var msg = msgOpt.orElseThrow(() -> new RuntimeException("No message received"));
 
@@ -280,18 +279,6 @@ public class CrawlerMain implements AutoCloseable {
             stolenMessage.ifPresent(mqMessage -> logger.info("Stole message {}", mqMessage));
             return stolenMessage;
         }
-    }
-
-
-    public void close() throws Exception {
-        logger.info("Awaiting termination");
-        pool.shutDown();
-
-        while (!pool.awaitTermination(1, TimeUnit.SECONDS));
-        logger.info("All finished");
-
-        workLog.close();
-        dispatcher.executorService().shutdownNow();
     }
 
 }

@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class DumbThreadPool {
     private final List<Thread> workers = new ArrayList<>();
-    private final LinkedBlockingQueue<Runnable> tasks;
+    private final LinkedBlockingQueue<Task> tasks;
     private volatile boolean shutDown = false;
     private final AtomicInteger taskCount = new AtomicInteger(0);
     private final Logger logger = LoggerFactory.getLogger(DumbThreadPool.class);
@@ -34,8 +34,8 @@ public class DumbThreadPool {
 
     }
 
-    public void submit(Runnable runnable) throws InterruptedException {
-        tasks.put(runnable);
+    public void submit(Task task) throws InterruptedException {
+        tasks.put(task);
     }
 
     public void shutDown() {
@@ -52,7 +52,7 @@ public class DumbThreadPool {
     private void worker() {
         while (!shutDown) {
             try {
-                Runnable task = tasks.poll(1, TimeUnit.SECONDS);
+                Task task = tasks.poll(1, TimeUnit.SECONDS);
                 if (task == null) {
                     continue;
                 }
@@ -115,4 +115,7 @@ public class DumbThreadPool {
         return taskCount.get();
     }
 
+    public interface Task {
+        void run() throws Exception;
+    }
 }

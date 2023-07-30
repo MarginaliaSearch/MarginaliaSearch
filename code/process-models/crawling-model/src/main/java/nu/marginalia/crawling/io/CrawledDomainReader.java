@@ -27,14 +27,17 @@ public class CrawledDomainReader {
     public CrawledDomainReader() {
     }
 
+    /** An iterator-like access to domain data  This must be closed otherwise it will leak off-heap memory! */
     public SerializableCrawlDataStream createDataStream(Path fullPath) throws IOException {
         return new FileReadingSerializableCrawlDataStream(gson, fullPath.toFile());
     }
 
+    /** An iterator-like access to domain data. This must be closed otherwise it will leak off-heap memory! */
     public SerializableCrawlDataStream createDataStream(Path basePath, CrawlingSpecification spec) throws IOException {
         return createDataStream(CrawlerOutputFile.getOutputFile(basePath, spec.id, spec.domain));
     }
-    
+
+    /** Read the entirety of the domain data into memory. This uses a lot of RAM */
     public CrawledDomain read(Path path) throws IOException {
         DomainDataAssembler domainData = new DomainDataAssembler();
 

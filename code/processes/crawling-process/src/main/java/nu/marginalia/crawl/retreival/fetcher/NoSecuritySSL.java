@@ -36,9 +36,6 @@ public class NoSecuritySSL {
 
         var clientSessionContext = sslContext.getClientSessionContext();
 
-        System.out.println("Default session cache size: " + clientSessionContext.getSessionCacheSize());
-        System.out.println("Session timeout: " + clientSessionContext.getSessionTimeout());
-
         // The default value for this is very high and will use a crapload of memory
         // since the crawler will be making a lot of requests to various hosts
         clientSessionContext.setSessionCacheSize(2048);
