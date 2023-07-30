@@ -77,6 +77,9 @@ public class DomainCrawlFrontier {
 
     public EdgeUrl peek() {
         try {
+            if (queue.peek() == null) {
+                return null;
+            }
             return new EdgeUrl(queue.peek());
         } catch (URISyntaxException e) {
             // This should never happen since we only add urls via EdgeUrl.toString()
