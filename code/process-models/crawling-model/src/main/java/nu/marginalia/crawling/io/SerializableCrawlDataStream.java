@@ -8,7 +8,7 @@ import java.util.Iterator;
 /** Closable iterator over serialized crawl data
  * The data may appear in any order, and the iterator must be closed.
  * */
-public interface SerializableCrawlDataStream {
+public interface SerializableCrawlDataStream extends AutoCloseable {
     static SerializableCrawlDataStream empty() {
         return new SerializableCrawlDataStream() {
             @Override
@@ -20,6 +20,8 @@ public interface SerializableCrawlDataStream {
             public boolean hasNext() throws IOException {
                 return false;
             }
+
+            public void close() {}
         };
     }
 
@@ -35,6 +37,8 @@ public interface SerializableCrawlDataStream {
             public boolean hasNext() throws IOException {
                 return iterator.hasNext();
             }
+
+            public void close() {}
         };
 
     }

@@ -1,5 +1,6 @@
 package nu.marginalia.crawling.io;
 
+import com.github.luben.zstd.RecyclingBufferPool;
 import com.github.luben.zstd.ZstdOutputStream;
 import com.google.gson.Gson;
 import lombok.SneakyThrows;
@@ -38,7 +39,8 @@ public class CrawledDomainWriter implements AutoCloseable {
         tmpFile = getOutputFile(spec.id, spec.domain + "_tmp");
         actualFile = getOutputFile(spec.id, spec.domain);
         writer =  new OutputStreamWriter(new ZstdOutputStream(new BufferedOutputStream(Files.newOutputStream(tmpFile,
-                StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING))));
+                StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)),
+                RecyclingBufferPool.INSTANCE));
     }
 
     public Path getOutputFile() {

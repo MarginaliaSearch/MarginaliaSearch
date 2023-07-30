@@ -10,7 +10,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 
 /** A reference to a domain that has been crawled before. */
-public class CrawlDataReference {
+public class CrawlDataReference implements AutoCloseable {
 
     private final SerializableCrawlDataStream data;
 
@@ -75,4 +75,8 @@ public class CrawlDataReference {
         return hashFunction.hashInt(v).asInt();
     }
 
+    @Override
+    public void close() throws Exception {
+        data.close();
+    }
 }

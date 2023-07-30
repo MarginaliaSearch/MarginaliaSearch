@@ -1,5 +1,6 @@
 package nu.marginalia.crawling.io;
 
+import com.github.luben.zstd.RecyclingBufferPool;
 import com.github.luben.zstd.ZstdInputStream;
 import com.google.gson.Gson;
 import nu.marginalia.crawling.model.CrawledDocument;
@@ -37,7 +38,7 @@ public class CrawledDomainReader {
     public CrawledDomain read(Path path) throws IOException {
         DomainDataAssembler domainData = new DomainDataAssembler();
 
-        try (var br = new BufferedReader(new InputStreamReader(new ZstdInputStream(new FileInputStream(path.toFile()))))) {
+        try (var br = new BufferedReader(new InputStreamReader(new ZstdInputStream(new FileInputStream(path.toFile()), RecyclingBufferPool.INSTANCE)))) {
             String line;
             while ((line = br.readLine()) != null) {
                 if (line.startsWith("//")) {
@@ -105,7 +106,7 @@ public class CrawledDomainReader {
 
         public FileReadingSerializableCrawlDataStream(Gson gson, File file) throws IOException {
             this.gson = gson;
-            bufferedReader = new BufferedReader(new InputStreamReader(new ZstdInputStream(new FileInputStream(file))));
+            bufferedReader = new BufferedReader(new InputStreamReader(new ZstdInputStream(new FileInputStream(file), RecyclingBufferPool.INSTANCE)));
         }
 
         @Override
@@ -124,9 +125,15 @@ public class CrawledDomainReader {
                 return true;
 
             String identifier = bufferedReader.readLine();
-            if (identifier == null) return false;
+            if (identifier == null) {
+                bufferedReader.close();
+                return false;
+            }
             String data = bufferedReader.readLine();
-            if (data == null) return false;
+            if (data == null) {
+                bufferedReader.close();
+                return false;
+            }
 
             if (identifier.equals(CrawledDomain.SERIAL_IDENTIFIER)) {
                 next = gson.fromJson(data, CrawledDomain.class);

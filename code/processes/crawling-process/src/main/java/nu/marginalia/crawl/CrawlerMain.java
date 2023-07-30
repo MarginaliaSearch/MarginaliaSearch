@@ -55,7 +55,7 @@ public class CrawlerMain implements AutoCloseable {
     private final Gson gson;
     private final DumbThreadPool pool;
 
-    private final Set<String> processedIds = new HashSet<>();
+    private final Set<String> processingIds = new HashSet<>();
 
     final AbortMonitor abortMonitor = AbortMonitor.getInstance();
 
@@ -91,6 +91,9 @@ public class CrawlerMain implements AutoCloseable {
         // If these aren't set properly, the JVM will hang forever on some requests
         System.setProperty("sun.net.client.defaultConnectTimeout", "30000");
         System.setProperty("sun.net.client.defaultReadTimeout", "30000");
+
+        // We don't want to use too much memory caching sessions for https
+        System.setProperty("javax.net.ssl.sessionCacheSize", "2048");
 
         Injector injector = Guice.createInjector(
                 new CrawlerModule(),
@@ -154,7 +157,7 @@ public class CrawlerMain implements AutoCloseable {
 
     private void startCrawlTask(CrawlPlan plan, CrawlingSpecification crawlingSpecification) {
 
-        if (!processedIds.add(crawlingSpecification.id)) {
+        if (workLog.isJobFinished(crawlingSpecification.id) || !processingIds.add(crawlingSpecification.id)) {
 
             // This is a duplicate id, so we ignore it.  Otherwise we'd end crawling the same site twice,
             // and if we're really unlucky, we might end up writing to the same output file from multiple
@@ -193,11 +196,10 @@ public class CrawlerMain implements AutoCloseable {
 
         HttpFetcher fetcher = new HttpFetcherImpl(userAgent.uaString(), dispatcher, connectionPool);
 
-        try (CrawledDomainWriter writer = new CrawledDomainWriter(crawlDataDir, specification)) {
+        try (CrawledDomainWriter writer = new CrawledDomainWriter(crawlDataDir, specification);
+             CrawlDataReference reference = getReference(specification))
+        {
             var retreiver = new CrawlerRetreiver(fetcher, specification, writer::accept);
-
-            CrawlDataReference reference = getReference(specification);
-
             int size = retreiver.fetch(reference);
 
             workLog.setJobToFinished(specification.id, writer.getOutputFile().toString(), size);
@@ -205,6 +207,10 @@ public class CrawlerMain implements AutoCloseable {
             logger.info("Fetched {}", specification.domain);
         } catch (Exception e) {
             logger.error("Error fetching domain " + specification.domain, e);
+        }
+        finally {
+            // We don't need to double-count these; it's also kept int he workLog
+            processingIds.remove(specification.id);
         }
     }
 

@@ -1,5 +1,6 @@
 package nu.marginalia.loading;
 
+import com.github.luben.zstd.RecyclingBufferPool;
 import com.github.luben.zstd.ZstdInputStream;
 import com.google.gson.Gson;
 import lombok.SneakyThrows;
@@ -26,7 +27,7 @@ public class ConvertedDomainReader {
     public List<Instruction> read(Path path, int cntHint) throws IOException {
         List<Instruction> ret = new ArrayList<>(cntHint);
 
-        try (var or = new ObjectInputStream(new ZstdInputStream(new FileInputStream(path.toFile())))) {
+        try (var or = new ObjectInputStream(new ZstdInputStream(new FileInputStream(path.toFile()), RecyclingBufferPool.INSTANCE))) {
             var object = or.readObject();
             if (object instanceof Instruction is) {
                 ret.add(is);
@@ -39,7 +40,7 @@ public class ConvertedDomainReader {
     }
 
     public Iterator<Instruction> createIterator(Path path) throws IOException {
-        var or = new ObjectInputStream(new ZstdInputStream(new BufferedInputStream(new FileInputStream(path.toFile()))));
+        var or = new ObjectInputStream(new ZstdInputStream(new BufferedInputStream(new FileInputStream(path.toFile())), RecyclingBufferPool.INSTANCE));
 
         return new Iterator<>() {
             Instruction next;

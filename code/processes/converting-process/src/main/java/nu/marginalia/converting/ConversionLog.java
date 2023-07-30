@@ -1,5 +1,6 @@
 package nu.marginalia.converting;
 
+import com.github.luben.zstd.RecyclingBufferPool;
 import com.github.luben.zstd.ZstdOutputStream;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.idx.DocumentMetadata;
@@ -27,8 +28,7 @@ public class ConversionLog implements AutoCloseable, Interpreter {
         String fileName = String.format("conversion-log-%s.zstd", LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
         Path logFile = rootDir.resolve(fileName);
 
-        writer = new PrintWriter(new ZstdOutputStream(
-                new BufferedOutputStream(Files.newOutputStream(logFile, StandardOpenOption.WRITE, StandardOpenOption.CREATE))));
+        writer = new PrintWriter(new ZstdOutputStream(new BufferedOutputStream(Files.newOutputStream(logFile, StandardOpenOption.WRITE, StandardOpenOption.CREATE)), RecyclingBufferPool.INSTANCE));
     }
 
     @Override

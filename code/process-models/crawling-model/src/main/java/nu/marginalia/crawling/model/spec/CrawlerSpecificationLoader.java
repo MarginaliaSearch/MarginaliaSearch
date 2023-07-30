@@ -1,5 +1,6 @@
 package nu.marginalia.crawling.model.spec;
 
+import com.github.luben.zstd.RecyclingBufferPool;
 import com.github.luben.zstd.ZstdInputStream;
 import com.google.gson.Gson;
 import com.google.gson.JsonStreamParser;
@@ -17,7 +18,8 @@ public class CrawlerSpecificationLoader {
 
     @SneakyThrows
     public static Iterable<CrawlingSpecification> asIterable(Path inputSpec) {
-        var inputStream = new BufferedReader(new InputStreamReader(new ZstdInputStream(new FileInputStream(inputSpec.toFile()))));
+        var inputStream = new BufferedReader(new InputStreamReader(new ZstdInputStream(new FileInputStream(inputSpec.toFile()),
+                RecyclingBufferPool.INSTANCE)));
         var parser = new JsonStreamParser(inputStream);
 
         return () -> new Iterator<>() {
