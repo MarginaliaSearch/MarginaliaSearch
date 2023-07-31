@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * becomes available to run the task. This is useful for coarse grained
  * tasks where the calling thread might otherwise block for hours.
  */
+// TODO: This class exists in crawler as well, should probably be broken out into a common library; use the one from crawler instead
 public class DumbThreadPool {
     private final List<Thread> workers = new ArrayList<>();
     private final LinkedBlockingQueue<Runnable> tasks;
