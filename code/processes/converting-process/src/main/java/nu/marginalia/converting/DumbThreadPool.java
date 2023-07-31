@@ -26,7 +26,7 @@ public class DumbThreadPool {
         tasks = new LinkedBlockingQueue<>(queueSize);
 
         for (int i = 0; i < poolSize; i++) {
-            Thread worker = new Thread(this::worker, "Crawler Thread " + i);
+            Thread worker = new Thread(this::worker, "Converter Thread " + i);
             worker.setDaemon(true);
             worker.start();
             workers.add(worker);
