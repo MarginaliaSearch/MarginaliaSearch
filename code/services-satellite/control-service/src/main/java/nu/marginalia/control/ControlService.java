@@ -120,6 +120,23 @@ public class ControlService extends Service {
         monitors.subscribe(this::logMonitorStateChange);
     }
 
+    @Override
+    public void logRequest(Request request) {
+        if ("GET".equals(request.requestMethod()))
+            return;
+
+        super.logRequest(request);
+    }
+
+    @Override
+    public void logResponse(Request request, Response response) {
+        if ("GET".equals(request.requestMethod()))
+            return;
+
+        super.logResponse(request, response);
+    }
+
+
     private Object messageModel(Request request, Response response) {
         var message = messageQueueViewService.getMessage(Long.parseLong(request.params("id")));
         if (message != null) {

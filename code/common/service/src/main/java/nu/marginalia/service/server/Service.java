@@ -119,11 +119,7 @@ public class Service {
             Spark.halt(403);
         }
 
-        String url = request.pathInfo();
-        if (request.queryString() != null) {
-            url = url + "?" + request.queryString();
-        }
-        logger.info(httpMarker, "PUBLIC {}: {} {}", Context.fromRequest(request).getContextId(), request.requestMethod(), url);
+        logRequest(request);
     }
 
     private Object isInitialized(Request request, Response response) {
@@ -168,9 +164,8 @@ public class Service {
             request_counter_bad.labels(serviceName).inc();
         }
 
-        if (null != request.headers("X-Public")) {
-            logger.info(httpMarker, "RSP {}", response.status());
-        }
+        logResponse(request, response);
+
     }
 
     private void paintThreadName(Request request, String prefix) {
@@ -178,13 +173,30 @@ public class Service {
         Thread.currentThread().setName(prefix + ctx.getContextId());
     }
 
-    private void handleException(Exception ex, Request request, Response response) {
+    protected void handleException(Exception ex, Request request, Response response) {
         request_counter_err.labels(serviceName).inc();
         if (ex instanceof MessagingException) {
             logger.error("{} {}", ex.getClass().getSimpleName(), ex.getMessage());
         }
         else {
             logger.error("Uncaught exception", ex);
+        }
+    }
+
+    /** Log the request on the HTTP log */
+    protected void logRequest(Request request) {
+        String url = request.pathInfo();
+        if (request.queryString() != null) {
+            url = url + "?" + request.queryString();
+        }
+
+        logger.info(httpMarker, "PUBLIC {}: {} {}", Context.fromRequest(request).getContextId(), request.requestMethod(), url);
+    }
+
+    /** Log the response on the HTTP log */
+    protected void logResponse(Request request, Response response) {
+        if (null != request.headers("X-Public")) {
+            logger.info(httpMarker, "RSP {}", response.status());
         }
     }
 
