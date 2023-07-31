@@ -162,20 +162,14 @@ public class EdgeDomain implements Serializable {
 
     public boolean equals(final Object o) {
         if (o == this) return true;
-        if (!(o instanceof EdgeDomain)) return false;
-        final EdgeDomain other = (EdgeDomain) o;
-        if (!other.canEqual((Object) this)) return false;
+        if (!(o instanceof EdgeDomain other)) return false;
         final String this$subDomain = this.getSubDomain();
         final String other$subDomain = other.getSubDomain();
-        if (!this$subDomain.equalsIgnoreCase(other$subDomain)) return false;
+        if (!Objects.equals(this$subDomain,other$subDomain)) return false;
         final String this$domain = this.getDomain();
         final String other$domain = other.getDomain();
-        if (!this$domain.equalsIgnoreCase(other$domain)) return false;
+        if (!Objects.equals(this$domain,other$domain)) return false;
         return true;
-    }
-
-    protected boolean canEqual(final Object other) {
-        return other instanceof EdgeDomain;
     }
 
     public int hashCode() {
