@@ -12,25 +12,15 @@ import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.db.storage.model.FileStorageBaseType;
 import nu.marginalia.db.storage.model.FileStorageId;
 import nu.marginalia.db.storage.model.FileStorageType;
-import nu.marginalia.index.client.IndexClient;
-import nu.marginalia.index.client.IndexMqEndpoints;
-import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.outbox.MqOutbox;
-import nu.marginalia.mqapi.converting.ConvertRequest;
 import nu.marginalia.mqapi.crawling.CrawlRequest;
-import nu.marginalia.mqapi.loading.LoadRequest;
 import nu.marginalia.mqsm.StateFactory;
 import nu.marginalia.mqsm.graph.AbstractStateGraph;
 import nu.marginalia.mqsm.graph.GraphState;
 import nu.marginalia.mqsm.graph.ResumeBehavior;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 @Singleton
 public class CrawlActor extends AbstractStateGraph {
@@ -41,11 +31,12 @@ public class CrawlActor extends AbstractStateGraph {
     public static final String CRAWL = "CRAWL";
     public static final String CRAWL_WAIT = "CRAWL-WAIT";
     public static final String END = "END";
-    private final ProcessService processService;
     private final MqOutbox mqCrawlerOutbox;
     private final FileStorageService storageService;
     private final Gson gson;
     private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    private final ActorProcessWatcher processWatcher;
 
 
     @AllArgsConstructor @With @NoArgsConstructor
@@ -57,17 +48,16 @@ public class CrawlActor extends AbstractStateGraph {
 
     @Inject
     public CrawlActor(StateFactory stateFactory,
-                      ProcessService processService,
                       ProcessOutboxFactory processOutboxFactory,
                       FileStorageService storageService,
-                      Gson gson
-                                   )
+                      Gson gson,
+                      ActorProcessWatcher processWatcher)
     {
         super(stateFactory);
-        this.processService = processService;
         this.mqCrawlerOutbox = processOutboxFactory.createCrawlerOutbox();
         this.storageService = storageService;
         this.gson = gson;
+        this.processWatcher = processWatcher;
     }
 
     @GraphState(name = INITIAL,
@@ -128,7 +118,7 @@ public class CrawlActor extends AbstractStateGraph {
                     """
     )
     public Message crawlerWait(Message message) throws Exception {
-        var rsp = waitResponse(mqCrawlerOutbox, ProcessService.ProcessId.CRAWLER, message.crawlerMsgId);
+        var rsp = processWatcher.waitResponse(mqCrawlerOutbox, ProcessService.ProcessId.CRAWLER, message.crawlerMsgId);
 
         if (rsp.state() != MqMessageState.OK)
             error("Crawler failed");
@@ -136,36 +126,5 @@ public class CrawlActor extends AbstractStateGraph {
         return message;
     }
 
-
-    public MqMessage waitResponse(MqOutbox outbox, ProcessService.ProcessId processId, long id) throws Exception {
-        if (!waitForProcess(processId, TimeUnit.SECONDS, 30)) {
-            error("Process " + processId + " did not launch");
-        }
-        for (;;) {
-            try {
-                return outbox.waitResponse(id, 1, TimeUnit.SECONDS);
-            }
-            catch (TimeoutException ex) {
-                // Maybe the process died, wait a moment for it to restart
-                if (!waitForProcess(processId, TimeUnit.SECONDS, 30)) {
-                    error("Process " + processId + " died and did not re-launch");
-                }
-            }
-        }
-    }
-
-    public boolean waitForProcess(ProcessService.ProcessId processId, TimeUnit unit, int duration) throws InterruptedException {
-
-        // Wait for process to start
-        long deadline = System.currentTimeMillis() + unit.toMillis(duration);
-        while (System.currentTimeMillis() < deadline) {
-            if (processService.isRunning(processId))
-                return true;
-
-            TimeUnit.SECONDS.sleep(1);
-        }
-
-        return false;
-    }
 
 }

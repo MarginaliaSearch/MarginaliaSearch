@@ -107,12 +107,22 @@ public class AbstractProcessSpawnerActor extends AbstractStateGraph {
             attempts = 0;
 
         try {
+            long startTime = System.currentTimeMillis();
             var exec = new TaskExecution();
+            long endTime = System.currentTimeMillis();
+
             if (exec.isError()) {
-                if (attempts < MAX_ATTEMPTS)
-                    transition(RUN, attempts + 1);
-                else
-                    transition(ERROR);
+                if (attempts < MAX_ATTEMPTS) transition(RUN, attempts + 1);
+                else error();
+            }
+            else if (endTime - startTime < TimeUnit.SECONDS.toMillis(10)) {
+                // To avoid boot loops, we transition to error if the process
+                // didn't run for longer than 10 seconds.  This might happen if
+                // the process crashes before it can reach the heartbeat and inbox
+                // stages of execution.  In this case it would not report having acted
+                // on its message, and the process would be restarted forever without
+                // the attempts counter incrementing.
+                error("Process terminated within 10 seconds of starting");
             }
         }
         catch (InterruptedException ex) {

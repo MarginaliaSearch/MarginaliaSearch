@@ -17,7 +17,6 @@ import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.db.storage.model.FileStorageBaseType;
 import nu.marginalia.db.storage.model.FileStorageId;
 import nu.marginalia.db.storage.model.FileStorageType;
-import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.mqsm.StateFactory;
@@ -29,8 +28,6 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 @Singleton
 public class ReconvertAndLoadActor extends AbstractStateGraph {
@@ -49,7 +46,7 @@ public class ReconvertAndLoadActor extends AbstractStateGraph {
     public static final String REINDEX = "REINDEX";
     public static final String REINDEX_WAIT = "REINDEX-WAIT";
     public static final String END = "END";
-    private final ProcessService processService;
+    private final ActorProcessWatcher processWatcher;
     private final MqOutbox mqConverterOutbox;
     private final MqOutbox mqLoaderOutbox;
     private final MqOutbox indexOutbox;
@@ -68,7 +65,7 @@ public class ReconvertAndLoadActor extends AbstractStateGraph {
 
     @Inject
     public ReconvertAndLoadActor(StateFactory stateFactory,
-                                 ProcessService processService,
+                                 ActorProcessWatcher processWatcher,
                                  ProcessOutboxFactory processOutboxFactory,
                                  FileStorageService storageService,
                                  IndexClient indexClient,
@@ -76,8 +73,8 @@ public class ReconvertAndLoadActor extends AbstractStateGraph {
                                    )
     {
         super(stateFactory);
+        this.processWatcher = processWatcher;
         this.indexOutbox = indexClient.outbox();
-        this.processService = processService;
         this.mqConverterOutbox = processOutboxFactory.createConverterOutbox();
         this.mqLoaderOutbox = processOutboxFactory.createLoaderOutbox();
         this.storageService = storageService;
@@ -142,7 +139,7 @@ public class ReconvertAndLoadActor extends AbstractStateGraph {
                     """
     )
     public Message reconvertWait(Message message) throws Exception {
-        var rsp = waitResponse(mqConverterOutbox, ProcessService.ProcessId.CONVERTER, message.converterMsgId);
+        var rsp = processWatcher.waitResponse(mqConverterOutbox, ProcessService.ProcessId.CONVERTER, message.converterMsgId);
 
         if (rsp.state() != MqMessageState.OK)
             error("Converter failed");
@@ -176,7 +173,7 @@ public class ReconvertAndLoadActor extends AbstractStateGraph {
                     """
     )
     public void loadWait(Message message) throws Exception {
-        var rsp = waitResponse(mqLoaderOutbox, ProcessService.ProcessId.LOADER, message.loaderMsgId);
+        var rsp = processWatcher.waitResponse(mqLoaderOutbox, ProcessService.ProcessId.LOADER, message.loaderMsgId);
 
         if (rsp.state() != MqMessageState.OK)
             error("Loader failed");
@@ -260,35 +257,5 @@ public class ReconvertAndLoadActor extends AbstractStateGraph {
         }
     }
 
-    public MqMessage waitResponse(MqOutbox outbox, ProcessService.ProcessId processId, long id) throws Exception {
-        if (!waitForProcess(processId, TimeUnit.SECONDS, 30)) {
-            error("Process " + processId + " did not launch");
-        }
-        for (;;) {
-            try {
-                return outbox.waitResponse(id, 1, TimeUnit.SECONDS);
-            }
-            catch (TimeoutException ex) {
-                // Maybe the process died, wait a moment for it to restart
-                if (!waitForProcess(processId, TimeUnit.SECONDS, 30)) {
-                    error("Process " + processId + " died and did not re-launch");
-                }
-            }
-        }
-    }
-
-    public boolean waitForProcess(ProcessService.ProcessId processId, TimeUnit unit, int duration) throws InterruptedException {
-
-        // Wait for process to start
-        long deadline = System.currentTimeMillis() + unit.toMillis(duration);
-        while (System.currentTimeMillis() < deadline) {
-            if (processService.isRunning(processId))
-                return true;
-
-            TimeUnit.SECONDS.sleep(1);
-        }
-
-        return false;
-    }
 
 }

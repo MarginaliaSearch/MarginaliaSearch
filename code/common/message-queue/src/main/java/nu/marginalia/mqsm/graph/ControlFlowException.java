@@ -1,6 +1,6 @@
 package nu.marginalia.mqsm.graph;
 
-class ControlFlowException extends RuntimeException {
+public class ControlFlowException extends RuntimeException {
     private final String state;
     private final Object payload;
 

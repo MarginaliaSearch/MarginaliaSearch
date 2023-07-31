@@ -29,7 +29,6 @@ public class CrawlJobExtractorActor extends AbstractStateGraph {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     // STATES
 
-    public static final String INITIAL = "INITIAL";
     public static final String CREATE_FROM_DB = "CREATE_FROM_DB";
     public static final String CREATE_FROM_LINK = "CREATE_FROM_LINK";
     public static final String END = "END";
@@ -52,8 +51,6 @@ public class CrawlJobExtractorActor extends AbstractStateGraph {
 
     public record CrawlJobExtractorArguments(String description) { }
     public record CrawlJobExtractorArgumentsWithURL(String description, String url) { }
-    @GraphState(name = INITIAL, next = END)
-    public void initial() throws Exception { error("This state does nothing"); }
 
     @GraphState(name = CREATE_FROM_LINK, next = END,
             resume = ResumeBehavior.ERROR,
