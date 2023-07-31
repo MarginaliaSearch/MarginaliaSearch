@@ -9,8 +9,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 /** Converter-side wrapper for of common:db's DomainTypes,
  * which is a list of domains of a known type (e.g. blog)
@@ -18,11 +18,7 @@ import java.util.Map;
 @Singleton
 public class ConverterDomainTypes {
     private final Logger logger = LoggerFactory.getLogger(ConverterDomainTypes.class);
-    private final Map<EdgeDomain, DomainType> domainTypes = new HashMap<>();
-
-    private enum DomainType {
-        BLOG
-    }
+    private final Set<EdgeDomain> blogs = new HashSet<>(10000, 0.5f);
 
     @Inject
     public ConverterDomainTypes(DomainTypes types) throws SQLException {
@@ -40,14 +36,13 @@ public class ConverterDomainTypes {
         }
 
         for (var item : allBlogs) {
-            domainTypes.put(new EdgeDomain(item), DomainType.BLOG);
+            blogs.add(new EdgeDomain(item));
         }
 
-        logger.info("Loaded {} domain types", domainTypes.size());
-
+        logger.info("Loaded {} domain types", blogs.size());
     }
 
     public boolean isBlog(EdgeDomain domain) {
-        return domainTypes.get(domain) == DomainType.BLOG;
+        return blogs.contains(domain);
     }
 }
