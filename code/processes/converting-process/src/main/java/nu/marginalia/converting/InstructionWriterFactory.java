@@ -109,21 +109,15 @@ public class InstructionWriterFactory {
         private int ok = 0;
         private int error = 0;
 
+        int keywords = 0;
+        int documents = 0;
+
         public String toString() {
+            // This shouldn't happen (TM)
+            assert keywords == documents : "keywords != documents";
+
             return String.format("%s - %d %d", domainName, ok, error);
         }
-
-        @Override
-        public void loadUrl(EdgeUrl[] url) {}
-
-        @Override
-        public void loadDomain(EdgeDomain[] domain) {}
-
-        @Override
-        public void loadRssFeed(EdgeUrl[] rssFeed) {}
-
-        @Override
-        public void loadDomainLink(DomainLink[] links) {}
 
         @Override
         public void loadProcessedDomain(EdgeDomain domain, DomainIndexingState state, String ip) {
@@ -132,19 +126,13 @@ public class InstructionWriterFactory {
 
         @Override
         public void loadProcessedDocument(LoadProcessedDocument loadProcessedDocument) {
-
-        }
-
-        @Override
-        public void loadProcessedDocumentWithError(LoadProcessedDocumentWithError loadProcessedDocumentWithError) {
+            documents++;
         }
 
         @Override
         public void loadKeywords(EdgeUrl url, DocumentMetadata metadata, DocumentKeywords words) {
+            keywords++;
         }
-
-        @Override
-        public void loadDomainRedirect(DomainLink link) {}
 
         @Override
         public void loadDomainMetadata(EdgeDomain domain, int knownUrls, int goodUrls, int visitedUrls) {

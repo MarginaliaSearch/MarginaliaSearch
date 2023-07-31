@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Loader implements Interpreter {
+public class Loader implements Interpreter, AutoCloseable {
     private final SqlLoadUrls sqlLoadUrls;
     private final SqlLoadDomains sqlLoadDomains;
     private final SqlLoadDomainLinks sqlLoadDomainLinks;
@@ -30,8 +30,6 @@ public class Loader implements Interpreter {
     private final List<LoadProcessedDocument> processedDocumentList;
     private final List<LoadProcessedDocumentWithError> processedDocumentWithErrorList;
 
-    private final List<EdgeDomain> deferredDomains = new ArrayList<>();
-    private final List<EdgeUrl> deferredUrls = new ArrayList<>();
 
     public final LoaderData data;
 
@@ -87,6 +85,7 @@ public class Loader implements Interpreter {
     @Override
     public void loadProcessedDocument(LoadProcessedDocument document) {
         processedDocumentList.add(document);
+
         if (processedDocumentList.size() > 100) {
             sqlLoadProcessedDocument.load(data, processedDocumentList);
             processedDocumentList.clear();
@@ -96,6 +95,7 @@ public class Loader implements Interpreter {
     @Override
     public void loadProcessedDocumentWithError(LoadProcessedDocumentWithError document) {
         processedDocumentWithErrorList.add(document);
+
         if (processedDocumentWithErrorList.size() > 100) {
             sqlLoadProcessedDocument.loadWithError(data, processedDocumentWithErrorList);
             processedDocumentWithErrorList.clear();
@@ -121,9 +121,7 @@ public class Loader implements Interpreter {
         sqlLoadDomainMetadata.load(data, domain, knownUrls, goodUrls, visitedUrls);
     }
 
-    public void finish() {
-        // Some work needs to be processed out of order for the database relations to work out
-
+    public void close() {
         if (processedDocumentList.size() > 0) {
             sqlLoadProcessedDocument.load(data, processedDocumentList);
         }

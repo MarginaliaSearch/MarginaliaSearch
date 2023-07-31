@@ -118,7 +118,11 @@ public class MqOutbox {
     }
 
 
-    /** Blocks until a response arrives for the given message id or the timeout passes */
+    /** Blocks until a response arrives for the given message id or the timeout passes.
+     * <p>
+     * @throws TimeoutException if the timeout passes before a response arrives.
+     * @throws InterruptedException if the thread is interrupted while waiting.
+     */
     public MqMessage waitResponse(long id, int timeout, TimeUnit unit) throws TimeoutException, SQLException, InterruptedException {
         long deadline = System.currentTimeMillis() + unit.toMillis(timeout);
 
@@ -160,7 +164,9 @@ public class MqOutbox {
     public void flagAsBad(long id) throws SQLException {
         persistence.updateMessageState(id, MqMessageState.ERR);
     }
+
     public void flagAsDead(long id) throws SQLException {
         persistence.updateMessageState(id, MqMessageState.DEAD);
     }
+
 }

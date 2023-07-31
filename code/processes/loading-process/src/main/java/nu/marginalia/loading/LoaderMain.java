@@ -1,12 +1,18 @@
 package nu.marginalia.loading;
 
+import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import lombok.SneakyThrows;
+import nu.marginalia.converting.instruction.Interpreter;
+import nu.marginalia.converting.instruction.instructions.LoadProcessedDocument;
 import nu.marginalia.db.storage.FileStorageService;
+import nu.marginalia.keyword.model.DocumentKeywords;
 import nu.marginalia.loading.loader.IndexLoadKeywords;
+import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.inbox.MqInboxResponse;
@@ -14,19 +20,17 @@ import nu.marginalia.mq.inbox.MqSingleShotInbox;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.process.log.WorkLog;
 import plan.CrawlPlan;
-import nu.marginalia.loading.loader.Loader;
 import nu.marginalia.loading.loader.LoaderFactory;
-import nu.marginalia.converting.instruction.Instruction;
 import nu.marginalia.service.module.DatabaseModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.sql.SQLException;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import static nu.marginalia.mqapi.ProcessInboxNames.LOADER_INBOX;
@@ -42,9 +46,6 @@ public class LoaderMain {
     private final FileStorageService fileStorageService;
     private final IndexLoadKeywords indexLoadKeywords;
     private final Gson gson;
-    private volatile boolean running = true;
-
-    final Thread processorThread;
 
     public static void main(String... args) throws Exception {
         new org.mariadb.jdbc.Driver();
@@ -84,9 +85,6 @@ public class LoaderMain {
         this.gson = gson;
 
         heartbeat.start();
-
-        processorThread = new Thread(this::processor, "Processor Thread");
-        processorThread.start();
     }
 
     @SneakyThrows
@@ -94,6 +92,7 @@ public class LoaderMain {
         var plan = instructions.getPlan();
         var logFile = plan.process.getLogFile();
 
+        TaskStats taskStats = new TaskStats(100);
         try {
             int loadTotal = 0;
             int loaded = 0;
@@ -102,29 +101,37 @@ public class LoaderMain {
                 loadTotal++;
             }
 
-            LoaderMain.loadTotal = loadTotal;
-
             logger.info("Loading {} files", loadTotal);
             for (var entry : WorkLog.iterable(logFile)) {
-                heartbeat.setProgress(loaded++ / (double) loadTotal);
+                InstructionCounter instructionCounter = new InstructionCounter();
 
-                var loader = loaderFactory.create(entry.cnt());
+                heartbeat.setProgress(loaded++ / (double) loadTotal);
+                long startTime = System.currentTimeMillis();
+
                 Path destDir = plan.getProcessedFilePath(entry.path());
 
-                var instructionsIter = instructionsReader.createIterator(destDir);
-                while (instructionsIter.hasNext()) {
-                    var next = instructionsIter.next();
-                    try {
-                        next.apply(loader);
-                    }
-                    catch (Exception ex) {
-                        logger.error("Failed to load instruction {}", next);
+                try (var loader = loaderFactory.create(entry.cnt())) {
+                    var instructionsIter = instructionsReader.createIterator(destDir);
+
+                    while (instructionsIter.hasNext()) {
+                        var next = instructionsIter.next();
+                        try {
+                            next.apply(instructionCounter);
+                            next.apply(loader);
+                        } catch (Exception ex) {
+                            logger.error("Failed to load instruction {}", next);
+                        }
                     }
                 }
+
+                long endTime = System.currentTimeMillis();
+                long loadTime = endTime - startTime;
+                taskStats.observe(endTime - startTime);
+
+                logger.info("Loaded {}/{} : {} ({}) {}ms {} l/s", taskStats.getCount(),
+                        loadTotal, destDir, instructionCounter.getCount(), loadTime, taskStats.avgTime());
             }
 
-            running = false;
-            processorThread.join();
             instructions.ok();
 
             // This needs to be done in order to have a readable index journal
@@ -144,59 +151,6 @@ public class LoaderMain {
         System.exit(0);
     }
 
-    private volatile static int loadTotal;
-
-    private void load(CrawlPlan plan, String path, int cnt) {
-        Path destDir = plan.getProcessedFilePath(path);
-        try {
-            var loader = loaderFactory.create(cnt);
-            var instructions = instructionsReader.createIterator(destDir);
-            processQueue.put(new LoadJob(path, loader, instructions));
-        } catch (Exception e) {
-            logger.error("Failed to load " + destDir, e);
-        }
-    }
-
-    static final TaskStats taskStats = new TaskStats(100);
-
-    private record LoadJob(String path, Loader loader, Iterator<Instruction> instructionIterator) {
-        public void run() {
-            long startTime = System.currentTimeMillis();
-            while (instructionIterator.hasNext()) {
-                var next = instructionIterator.next();
-                try {
-                    next.apply(loader);
-                }
-                catch (Exception ex) {
-                    logger.error("Failed to load instruction {}", next);
-                }
-            }
-
-            loader.finish();
-            long loadTime = System.currentTimeMillis() - startTime;
-            taskStats.observe(loadTime);
-            logger.info("Loaded {}/{} : {} ({}) {}ms {} l/s", taskStats.getCount(),
-                    loadTotal, path, loader.data.sizeHint, loadTime, taskStats.avgTime());
-        }
-
-    }
-
-    private static final LinkedBlockingQueue<LoadJob> processQueue = new LinkedBlockingQueue<>(2);
-
-    private void processor() {
-        try {
-            while (running || !processQueue.isEmpty()) {
-                LoadJob job = processQueue.poll(1, TimeUnit.SECONDS);
-
-                if (job != null) {
-                    job.run();
-                }
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
     private static class LoadRequest {
         private final CrawlPlan plan;
         private final MqMessage message;
@@ -258,4 +212,13 @@ public class LoaderMain {
         }
     }
 
+    public class InstructionCounter implements Interpreter {
+        private int count = 0;
+        public void loadProcessedDocument(LoadProcessedDocument loadProcessedDocument) {
+            count++;
+        }
+        public int getCount() {
+            return count;
+        }
+    }
 }
