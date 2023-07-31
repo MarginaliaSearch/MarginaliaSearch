@@ -14,9 +14,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Singleton
@@ -56,14 +54,9 @@ public class ProcessService {
     }
 
     public boolean trigger(ProcessId processId, String... parameters) throws Exception {
-        String processPath = processPath(processId);
-        String[] args = new String[parameters.length + 1];
-
-        args[0] = processPath;
-        for (int i = 0; i < parameters.length; i++)
-            args[i+1] = parameters[i];
-
-        String[] env = env();
+        final String processPath = distPath.resolve(processId.path).toString();
+        final String[] env = createEnvironmentVariables();
+        final String[] args = createCommandArguments(processPath, parameters);
 
         Process process;
 
@@ -72,8 +65,8 @@ public class ProcessService {
             return false;
         }
 
+        logger.info("Starting process: {}: {} // {}", processId, Arrays.toString(args), Arrays.toString(env));
 
-        logger.info("Starting process: {}", processId + ": " + Arrays.toString(args) + " // " + Arrays.toString(env));
         synchronized (processes) {
             if (processes.containsKey(processId)) return false;
             process = Runtime.getRuntime().exec(args, env);
@@ -104,8 +97,13 @@ public class ProcessService {
             eventLog.logEvent("PROCESS-EXIT", processId.toString());
             processes.remove(processId);
         }
+    }
 
-
+    private String[] createCommandArguments(String processPath, String[] parameters) {
+        final String[] args = new String[parameters.length + 1];
+        args[0] = processPath;
+        System.arraycopy(parameters, 0, args, 1, parameters.length);
+        return args;
     }
 
     public boolean isRunning(ProcessId processId) {
@@ -122,24 +120,38 @@ public class ProcessService {
         return true;
     }
 
-    private String processPath(ProcessId id) {
-        return distPath.resolve(id.path).toString();
-    }
+    /** These environment variables are propagated from the parent process to the child process,
+     * along with WMSA_HOME, but it has special logic */
+    private final List<String> propagatedEnvironmentVariables = List.of(
+            "JAVA_HOME",
+            "CONVERTER_PROCESS_OPTS",
+            "LOADER_PROCESS_OPTS",
+            "CRAWLER_PROCESS_OPTS");
 
-    private String[] env() {
+    private String[] createEnvironmentVariables() {
+        List<String> opts = new ArrayList<>();
 
-        Map<String, String> opts = new HashMap<>();
         String WMSA_HOME = System.getenv("WMSA_HOME");
+
         if (WMSA_HOME == null || WMSA_HOME.isBlank()) {
             WMSA_HOME = "/var/lib/wmsa";
         }
-        opts.put("WMSA_HOME", WMSA_HOME);
-        opts.put("JAVA_HOME", System.getenv("JAVA_HOME"));
-        opts.put("JAVA_OPTS", "");
-        opts.put("CONVERTER_PROCESS_OPTS", System.getenv("CONVERTER_PROCESS_OPTS"));
-        opts.put("LOADER_PROCESS_OPTS", System.getenv("LOADER_PROCESS_OPTS"));
-        opts.put("CRAWLER_PROCESS_OPTS", System.getenv("CRAWLER_PROCESS_OPTS"));
 
-        return opts.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue()).toArray(String[]::new);
+        opts.add(env2str("WMSA_HOME", WMSA_HOME));
+        opts.add(env2str("JAVA_OPTS", "")); // We explicitly empty this to avoid inheriting the parent process' JAVA_OPTS
+
+        for (String envKey : propagatedEnvironmentVariables) {
+            String envValue = System.getenv(envKey);
+            if (envValue != null && !envValue.isBlank()) {
+                opts.add(env2str(envKey, envValue));
+            }
+        }
+
+        return opts.toArray(String[]::new);
     }
+
+    private String env2str(String key, String val) {
+        return key + "=" + val;
+    }
+
 }
