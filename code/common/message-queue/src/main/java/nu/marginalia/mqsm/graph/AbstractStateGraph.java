@@ -39,6 +39,21 @@ public abstract class AbstractStateGraph {
         throw new ControlFlowException("ERROR", ex.getClass().getSimpleName() + ":" + ex.getMessage());
     }
 
+    /** Check whether there is an INITIAL state that can be directly initialized
+     * without declared parameters. */
+    public boolean isDirectlyInitializable() {
+        for (var method : getClass().getMethods()) {
+            var gs = method.getAnnotation(GraphState.class);
+            if (gs == null) {
+                continue;
+            }
+            if ("INITIAL".equals(gs.name()) && method.getParameterCount() == 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public Set<GraphState> declaredStates() {
         Set<GraphState> ret = new HashSet<>();
 

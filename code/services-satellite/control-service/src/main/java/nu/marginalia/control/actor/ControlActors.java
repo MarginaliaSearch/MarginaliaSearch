@@ -112,6 +112,10 @@ public class ControlActors {
         );
     }
 
+    public boolean isDirectlyInitializable(Actor actor) {
+        return actorDefinitions.get(actor).isDirectlyInitializable();
+    }
+
     public AbstractStateGraph getActorDefinition(Actor actor) {
         return actorDefinitions.get(actor);
     }

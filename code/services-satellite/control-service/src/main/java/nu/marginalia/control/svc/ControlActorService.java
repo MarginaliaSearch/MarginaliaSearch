@@ -90,8 +90,9 @@ public class ControlActorService {
             final String machineName = e.getKey().name();
             final String stateName = state.name();
             final boolean terminal = state.isFinal();
+            final boolean canStart = controlActors.isDirectlyInitializable(e.getKey()) && terminal;
 
-            return new ActorRunState(machineName, stateName, terminal);
+            return new ActorRunState(machineName, stateName, terminal, canStart);
         }).toList();
     }
 

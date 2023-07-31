@@ -42,6 +42,7 @@ public class StateMachine {
     private final List<BiConsumer<String, String>> stateChangeListeners = new ArrayList<>();
     private final Map<String, MachineState> allStates = new HashMap<>();
 
+    private final boolean isDirectlyInitializable;
 
     public StateMachine(MessageQueueFactory messageQueueFactory,
                         String queueName,
@@ -57,6 +58,7 @@ public class StateMachine {
 
         registerStates(List.of(errorState, finalState, resumingState));
         registerStates(stateGraph);
+        isDirectlyInitializable = stateGraph.isDirectlyInitializable();
 
         for (var declaredState : stateGraph.declaredStates()) {
             if (!allStates.containsKey(declaredState.name())) {
@@ -337,6 +339,11 @@ public class StateMachine {
         // It's actually fine if we accidentally interrupt the wrong thread
         // (i.e. the abort task), since it shouldn't be doing anything interruptable
         smInbox.abortCurrentTask();
+    }
+
+    /** Returns true if there is an INITIAL state that requires no parameters */
+    public boolean isDirectlyInitializable() {
+        return isDirectlyInitializable;
     }
 
     private class StateEventSubscription implements MqSubscription {
