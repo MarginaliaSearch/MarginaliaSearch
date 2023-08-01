@@ -3,7 +3,6 @@ CREATE TABLE IF NOT EXISTS FILE_STORAGE_BASE (
     NAME VARCHAR(255) NOT NULL UNIQUE,
     PATH VARCHAR(255) NOT NULL UNIQUE COMMENT 'The path to the storage base',
     TYPE ENUM ('SSD_INDEX', 'SSD_WORK', 'SLOW', 'BACKUP') NOT NULL,
-    MUST_CLEAN BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'If true, the storage must be cleaned after use',
     PERMIT_TEMP BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'If true, the storage can be used for temporary files'
 )
 CHARACTER SET utf8mb4

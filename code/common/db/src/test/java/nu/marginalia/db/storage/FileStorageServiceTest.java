@@ -97,11 +97,10 @@ public class FileStorageServiceTest {
         String name = "test-" + UUID.randomUUID();
 
         var storage = new FileStorageService(dataSource);
-        var base = storage.createStorageBase(name, createTempDir(), FileStorageBaseType.SLOW, false, false);
+        var base = storage.createStorageBase(name, createTempDir(), FileStorageBaseType.SLOW, false);
 
         Assertions.assertEquals(name, base.name());
         Assertions.assertEquals(FileStorageBaseType.SLOW, base.type());
-        Assertions.assertFalse(base.mustClean());
         Assertions.assertFalse(base.permitTemp());
     }
     @Test
@@ -110,7 +109,7 @@ public class FileStorageServiceTest {
 
         var storage = new FileStorageService(dataSource);
 
-        var base = storage.createStorageBase(name, createTempDir(), FileStorageBaseType.SLOW, false, false);
+        var base = storage.createStorageBase(name, createTempDir(), FileStorageBaseType.SLOW, false);
 
         try {
             storage.allocateTemporaryStorage(base, FileStorageType.CRAWL_DATA, "xyz", "thisShouldFail");
@@ -129,7 +128,7 @@ public class FileStorageServiceTest {
 
         var storage = new FileStorageService(dataSource);
 
-        var base = storage.createStorageBase(name, createTempDir(), FileStorageBaseType.SLOW, false, false);
+        var base = storage.createStorageBase(name, createTempDir(), FileStorageBaseType.SLOW, false);
 
         var created = storage.allocatePermanentStorage(base, "xyz", FileStorageType.CRAWL_DATA, "thisShouldSucceed");
         tempDirs.add(created.asPath());
@@ -144,7 +143,7 @@ public class FileStorageServiceTest {
 
         var storage = new FileStorageService(dataSource);
 
-        var base = storage.createStorageBase(name, createTempDir(), FileStorageBaseType.SLOW, false, true);
+        var base = storage.createStorageBase(name, createTempDir(), FileStorageBaseType.SLOW, true);
         var fileStorage = storage.allocateTemporaryStorage(base, FileStorageType.CRAWL_DATA, "xyz", "thisShouldSucceed");
 
         Assertions.assertTrue(Files.exists(fileStorage.asPath()));

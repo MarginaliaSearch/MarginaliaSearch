@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.*;
@@ -46,7 +45,7 @@ public class FileStorageService {
     public FileStorageBase getStorageBase(FileStorageBaseId type) throws SQLException  {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                     SELECT ID, NAME, PATH, TYPE, MUST_CLEAN, PERMIT_TEMP
+                     SELECT ID, NAME, PATH, TYPE, PERMIT_TEMP
                      FROM FILE_STORAGE_BASE WHERE ID = ?
                      """)) {
             stmt.setLong(1, type.id());
@@ -57,8 +56,7 @@ public class FileStorageService {
                             FileStorageBaseType.valueOf(rs.getString(4)),
                             rs.getString(2),
                             rs.getString(3),
-                            rs.getBoolean(5),
-                            rs.getBoolean(6)
+                            rs.getBoolean(5)
                     );
                 }
             }
@@ -156,7 +154,7 @@ public class FileStorageService {
     public FileStorageBase getStorageBase(FileStorageBaseType type) throws SQLException {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                     SELECT ID, NAME, PATH, TYPE, MUST_CLEAN, PERMIT_TEMP
+                     SELECT ID, NAME, PATH, TYPE, PERMIT_TEMP
                      FROM FILE_STORAGE_BASE WHERE TYPE = ?
                      """)) {
             stmt.setString(1, type.name());
@@ -167,8 +165,7 @@ public class FileStorageService {
                             FileStorageBaseType.valueOf(rs.getString(4)),
                             rs.getString(2),
                             rs.getString(3),
-                            rs.getBoolean(5),
-                            rs.getBoolean(6)
+                            rs.getBoolean(5)
                     );
                 }
             }
@@ -176,7 +173,7 @@ public class FileStorageService {
         return null;
     }
 
-    public FileStorageBase createStorageBase(String name, Path path, FileStorageBaseType type, boolean mustClean, boolean permitTemp) throws SQLException, FileNotFoundException {
+    public FileStorageBase createStorageBase(String name, Path path, FileStorageBaseType type, boolean permitTemp) throws SQLException, FileNotFoundException {
 
         if (!Files.exists(path)) {
             throw new FileNotFoundException("Storage base path does not exist: " + path);
@@ -184,14 +181,13 @@ public class FileStorageService {
 
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                     INSERT INTO FILE_STORAGE_BASE(NAME, PATH, TYPE, MUST_CLEAN, PERMIT_TEMP)
+                     INSERT INTO FILE_STORAGE_BASE(NAME, PATH, TYPE, PERMIT_TEMP)
                      VALUES (?, ?, ?, ?, ?)
                      """)) {
             stmt.setString(1, name);
             stmt.setString(2, path.toString());
             stmt.setString(3, type.name());
-            stmt.setBoolean(4, mustClean);
-            stmt.setBoolean(5, permitTemp);
+            stmt.setBoolean(4, permitTemp);
 
             int update = stmt.executeUpdate();
             if (update < 0) {
