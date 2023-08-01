@@ -30,22 +30,9 @@ This can be done by editing the file `${WMSA_HOME}/conf/user-agent`.
 
 ## Setup
 
-To operate the crawler, you need to set up a filesystem structure.
+Ensure that the system is running and go to https://localhost:8081.  See the documentation in [run/](../run/) for more information.
+By default the system is configured to store data in `run/samples`.  (!!!FIXME: How do you change this now?!!!)
 
-You need 
-
-* a directory for crawl data 
-* a directory for processed data
-* a crawl specification file
-* a crawl plan file
-
-Assuming we want to keep our crawl and processed data in
-`/data`, then we would create the following directories:
-
-```bash
-$ mkdir /data/crawl
-$ mkdir /data/processed
-```
 
 ### Specifications
 
