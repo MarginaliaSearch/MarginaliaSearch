@@ -54,7 +54,7 @@ public class CrawlerMain {
     private final Gson gson;
     private final DumbThreadPool pool;
 
-    private final Set<String> processingIds = new HashSet<>();
+    private final Map<String, String> processingIds = new ConcurrentHashMap<>();
     private final CrawledDomainReader reader = new CrawledDomainReader();
 
     final AbortMonitor abortMonitor = AbortMonitor.getInstance();
@@ -148,7 +148,7 @@ public class CrawlerMain {
                 // This shouldn't realistically happen, but if it does, we need to ignore it, otherwise
                 // we'd end crawling the same site twice and might end up writing to the same output
                 // file from multiple threads with complete bit salad as a result.
-                if (!processingIds.add(crawlingSpecification.id)) {
+                if (processingIds.put(crawlingSpecification.id, "") != null) {
                     logger.error("Ignoring duplicate id: {}", crawlingSpecification.id);
                     continue;
                 }
