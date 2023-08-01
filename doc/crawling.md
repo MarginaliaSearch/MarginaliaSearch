@@ -1,6 +1,6 @@
 # Crawling
 
-This document is a first draft.
+This document is a draft.
 
 ## WARNING
 Please don't run the crawler unless you intend to actually operate a public
@@ -22,6 +22,11 @@ These processes require a lot of disk space.  It's strongly recommended to use a
 it doesn't need to be extremely fast, but it should be a few terabytes in size.  It should be mounted
 with `noatime` and partitioned with a large block size.  It may be a good idea to format the disk with 
 a block size of 4096 bytes.  This will reduce the amount of disk space used by the crawler.
+
+Make sure you configure the user-agent properly.  This will be used to identify the crawler,
+and is matched against the robots.txt file.  The crawler will not crawl sites that don't allow it.
+
+This can be done by editing the file `${WMSA_HOME}/conf/user-agent`.
 
 ## Setup
 
@@ -45,66 +50,28 @@ $ mkdir /data/processed
 ### Specifications
 
 A crawl specification file is a compressed JSON file with each domain name to crawl, as well as
-known URLs for each domain.  These are created with the [crawl-job-extractor](../tools/crawl-job-extractor/)
-tool.
+known URLs for each domain.  These are created in the `storage -> specifications` view in the operator's gui.
 
-Let's put this in `/data/crawl.spec`
+To bootstrap the system, you need a list of known domains.  This is just a text file with one domain name per line,
+with blanlines and comments starting with `#` ignored.
 
-### Crawl Plan
-
-You also need a crawl plan. This is a YAML file that specifies where to store the crawl data. This
-file is also used by the converter.
-
-This is an example from production. Note that the crawl specification mentioned previously is pointed
-to by the `jobSpec` key.
-
-```yaml
-jobSpec: "/data/crawl.spec"
-crawl:
-  dir: "/data/crawl"
-  logName: "crawler.log"
-process:
-  dir: "/data/processed"
-  logName: "process.log"
-```
-
-Let's put it in `/data/crawl-plan.yaml`
+Make it available over HTTP(S) and select `Download a list of domains from a URL` in the `Create New Specification`
+form.  Make sure to give this specification a good description, as it will follow you around for  a while.
 
 ## Crawling
 
-Run the crawler-process script with the crawl plan as an argument.
+Refresh the specification list in the operator's gui.  You should see your new specification in the list.
+Click the `[Info]` link next to it and select `[Crawl]` under `Actions`.
 
-In practice something like this:
-
-```bash
-screen sudo -u searchengine WMSA_HOME=/path/to/install/dir ./crawler-process /data/crawl-plan.yaml
-```
-
-This proces will run for a long time, up to a week.  It will journal its progress in `crawler.log`,
-and if the process should halt somehow, it replay the journal and continue where was.  Do give it a 
-while before restarting though, to not annoy webmasters by re-crawling a bunch of websites.
-
-The crawler will populate the crawl directory with a directory structure.  Note that on mechanical drives,
-removing these files will take hours.  You probably want a separate hard drive for this as the filesystem
-will get severely gunked up. 
+Depending on the size of the specification, this may take anywhere between a few minutes to a few weeks. 
+You can follow the progress in the `Actors` view.
 
 ## Converting
 
-The converter process takes the same argument as the crawler process.  It will read the crawl data
-and extract keywords and metadata and save them as compressed JSON models.  It will create another huge
-directory structure in the process directory, and uses its own journal to keep track of progress.
+Once the crawl is finished, you can convert the data to a format that can be loaded into the database.
+This is done by going to the `storage -> crawl` view in the operator's gui, clicking the `[Info]` link
+and pressing `[Convert]` under `Actions`.
 
-```bash
-screen sudo -u searchengine WMSA_HOME=/path/to/install/dir ./converter-process /data/crawl-plan.yaml
-```
-
-**Note:** This process will use *a lot* of CPU.  Expect every available core to be at 100% for several days.
-
-## Loader
-
-The loader process takes the same argument as the crawler and converter processes.  It will read converted
-data and insert it into the database and create a lexicon and index journal.
-
-**Note:** It will wipe the URL database before inserting data.  It is a good idea to 
-bring the entire search-engine offline while this is happening.  The loader will run
-for a day or so. 
+The rest of the process should be automatic.  Follow the progress in the `Actors` view; the actor
+`RECONVERT_LOAD` drives the process.  The process can be stopped by terminating this actor.  Depending on the
+state, it may be necessary to restart from the beginning.  

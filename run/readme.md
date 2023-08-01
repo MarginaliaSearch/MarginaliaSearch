@@ -51,7 +51,31 @@ $ docker-compose up
 
 6. Download Sample Data
 
-TODO: How?
+A script is available for downloading sample data. The script will download the
+data from https://downloads.marginalia.nu/ and extract it to the correct location.
+
+The system will pick the data up automatically.
+
+```shell
+$ run/download-samples l
+```
+
+Four sets are available:
+
+| Name | Description                     |
+|------|---------------------------------|
+| s    | Small set, 1000 domains         |
+| m    | Medium set, 2000 domains        |
+| l    | Large set, 5000 domains         |
+| xl   | Extra large set, 50,000 domains |
+
+Warning: The XL set is intended to provide a large amount of data for 
+setting up a pre-production environment. It may be hard to run on a smaller
+machine.  It's barely runnable on a 32GB machine; and total processing time
+is around 5 hours.
+
+The 'l' set is a good compromise between size and processing time and should
+work on most machines.
 
 ## Experiment Runner
 
