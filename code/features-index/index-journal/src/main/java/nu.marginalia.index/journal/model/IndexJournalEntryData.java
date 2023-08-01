@@ -8,7 +8,7 @@ import java.util.Iterator;
 
 public class IndexJournalEntryData implements Iterable<IndexJournalEntryData.Record> {
     private final int size;
-    private final long[] underlyingArray;
+    public final long[] underlyingArray;
 
     public static final int MAX_LENGTH = 1000;
     public static final int ENTRY_SIZE = 2;
@@ -23,11 +23,6 @@ public class IndexJournalEntryData implements Iterable<IndexJournalEntryData.Rec
         this.underlyingArray = underlyingArray;
     }
 
-    public void write(DataOutputStream dos) throws IOException {
-        for (int i = 0; i < size; i++) {
-            dos.writeLong(underlyingArray[i]);
-        }
-    }
     public long get(int idx) {
         if (idx >= size)
             throw new ArrayIndexOutOfBoundsException();
@@ -37,7 +32,6 @@ public class IndexJournalEntryData implements Iterable<IndexJournalEntryData.Rec
     public int size() {
         return size;
     }
-
     public long[] toArray() {
         if (size == underlyingArray.length)
             return underlyingArray;

@@ -2,6 +2,7 @@ package nu.marginalia.loading.loader;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import lombok.SneakyThrows;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.db.storage.model.FileStorageType;
 import nu.marginalia.dict.OffHeapDictionaryHashMap;
@@ -25,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.concurrent.*;
 
 @Singleton
 public class LoaderIndexJournalWriter {
@@ -51,6 +53,12 @@ public class LoaderIndexJournalWriter {
         indexWriter = new IndexJournalWriterImpl(lexicon, indexPath);
     }
 
+    private final LinkedBlockingQueue<Runnable> keywordInsertTaskQueue =
+            new LinkedBlockingQueue<>(65536);
+    private final ExecutorService keywordInsertionExecutor =
+            new ThreadPoolExecutor(8, 16, 1, TimeUnit.MINUTES, keywordInsertTaskQueue);
+
+    @SneakyThrows
     public void putWords(EdgeId<EdgeDomain> domain, EdgeId<EdgeUrl> url,
                          DocumentMetadata metadata,
                          DocumentKeywords wordSet) {
@@ -62,14 +70,27 @@ public class LoaderIndexJournalWriter {
             return;
         }
 
+        // Due to the very bursty access patterns of this method, doing the actual insertions in separate threads
+        // with a chonky work queue is a fairly decent improvement
         for (var chunk : KeywordListChunker.chopList(wordSet, IndexJournalEntryData.MAX_LENGTH)) {
-
-            var entry = new IndexJournalEntryData(getOrInsertWordIds(chunk.keywords(), chunk.metadata()));
-            var header = new IndexJournalEntryHeader(domain, url, metadata.encode());
-
-            indexWriter.put(header, entry);
+            try {
+                keywordInsertionExecutor.submit(() -> loadWords(domain, url, metadata, chunk));
+            }
+            catch (RejectedExecutionException ex) {
+                loadWords(domain, url, metadata, chunk);
+            }
         }
 
+    }
+
+    private void loadWords(EdgeId<EdgeDomain> domain,
+                           EdgeId<EdgeUrl> url,
+                           DocumentMetadata metadata,
+                           DocumentKeywords wordSet) {
+        var entry = new IndexJournalEntryData(getOrInsertWordIds(wordSet.keywords(), wordSet.metadata()));
+        var header = new IndexJournalEntryHeader(domain, url, metadata.encode());
+
+        indexWriter.put(header, entry);
     }
 
     private long[] getOrInsertWordIds(String[] words, long[] meta) {
@@ -93,6 +114,10 @@ public class LoaderIndexJournalWriter {
     }
 
     public void close() throws Exception {
+        keywordInsertionExecutor.shutdown();
+        while (!keywordInsertionExecutor.awaitTermination(1, TimeUnit.DAYS)) {
+            // ...?
+        }
         indexWriter.close();
         lexicon.close();
     }

@@ -12,9 +12,6 @@ public interface IndexJournalWriter {
         put(entry.header(), entry.data());
     }
 
-    void forceWrite() throws IOException;
-
-    void flushWords();
     void close() throws IOException;
 
 }

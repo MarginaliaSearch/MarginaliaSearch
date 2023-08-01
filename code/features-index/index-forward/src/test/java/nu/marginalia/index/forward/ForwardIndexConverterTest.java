@@ -64,7 +64,6 @@ class ForwardIndexConverterTest {
 
 
         keywordLexicon.commitToDisk();
-        writer.forceWrite();
         writer.close();
 
 

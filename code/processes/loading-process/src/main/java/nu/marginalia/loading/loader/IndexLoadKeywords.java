@@ -16,7 +16,7 @@ public class IndexLoadKeywords implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(IndexLoadKeywords.class);
 
     private final LinkedBlockingQueue<InsertTask> insertQueue = new LinkedBlockingQueue<>(32);
-    private final LoaderIndexJournalWriter client;
+    private final LoaderIndexJournalWriter journalWriter;
 
     private record InsertTask(int urlId, int domainId, DocumentMetadata metadata, DocumentKeywords wordSet) {}
 
@@ -25,8 +25,8 @@ public class IndexLoadKeywords implements Runnable {
     private volatile boolean canceled = false;
 
     @Inject
-    public IndexLoadKeywords(LoaderIndexJournalWriter client) {
-        this.client = client;
+    public IndexLoadKeywords(LoaderIndexJournalWriter journalWriter) {
+        this.journalWriter = journalWriter;
         runThread = new Thread(this, getClass().getSimpleName());
         runThread.start();
     }
@@ -36,7 +36,7 @@ public class IndexLoadKeywords implements Runnable {
         while (!canceled) {
             var data = insertQueue.poll(1, TimeUnit.SECONDS);
             if (data != null) {
-                client.putWords(new EdgeId<>(data.domainId), new EdgeId<>(data.urlId), data.metadata(), data.wordSet);
+                journalWriter.putWords(new EdgeId<>(data.domainId), new EdgeId<>(data.urlId), data.metadata(), data.wordSet);
             }
         }
     }
@@ -45,7 +45,7 @@ public class IndexLoadKeywords implements Runnable {
         if (!canceled) {
             canceled = true;
             runThread.join();
-            client.close();
+            journalWriter.close();
         }
     }
 

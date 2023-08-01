@@ -76,7 +76,7 @@ class ReverseIndexFullConverterTest2 {
 
         keywordLexicon.commitToDisk();
         Thread.sleep(1000);
-        writer.forceWrite();
+        writer.close();
 
         var reader = new IndexJournalReaderSingleCompressedFile(indexFile);
 

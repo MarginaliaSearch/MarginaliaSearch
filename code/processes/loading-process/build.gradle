@@ -31,7 +31,7 @@ dependencies {
     implementation project(':code:features-index:lexicon')
     implementation project(':code:features-index:index-journal')
     implementation project(':code:libraries:language-processing')
-
+    implementation project(':third-party:commons-codec')
     testImplementation project(':code:services-core:search-service')
 
     implementation project(':code:process-models:crawling-model')

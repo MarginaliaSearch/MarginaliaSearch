@@ -1,5 +1,6 @@
 package nu.marginalia.index.journal.writer;
 
+import com.github.luben.zstd.ZstdDirectBufferCompressingStream;
 import com.github.luben.zstd.ZstdOutputStream;
 import lombok.SneakyThrows;
 import nu.marginalia.index.journal.model.IndexJournalEntryData;
@@ -10,65 +11,105 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
 public class IndexJournalWriterImpl implements IndexJournalWriter{
     private final KeywordLexicon lexicon;
-    private final Path outputFile;
-    private final DataOutputStream outputStream;
 
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private static final int ZSTD_BUFFER_SIZE = 8192;
+    private static final int DATA_BUFFER_SIZE = 8192;
 
+    private final ByteBuffer dataBuffer = ByteBuffer.allocateDirect(DATA_BUFFER_SIZE);
+
+
+    private final ZstdDirectBufferCompressingStream compressingStream;
     private int numEntries = 0;
+    private final FileChannel fileChannel;
 
     public IndexJournalWriterImpl(KeywordLexicon lexicon, Path outputFile) throws IOException {
         this.lexicon = lexicon;
-        this.outputFile = outputFile;
 
-        var fileStream = Files.newOutputStream(outputFile, StandardOpenOption.CREATE,
+        fileChannel = FileChannel.open(outputFile, StandardOpenOption.CREATE,
                 StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
 
-        writeHeaderPlaceholder(fileStream);
+        writeHeaderPlaceholder(fileChannel);
+        compressingStream = new ZstdDirectBufferCompressingStream(ByteBuffer.allocateDirect(ZSTD_BUFFER_SIZE), 3) {
+            protected ByteBuffer flushBuffer(ByteBuffer toFlush) throws IOException {
+                toFlush.flip();
+                while (toFlush.hasRemaining()) {
+                    fileChannel.write(toFlush);
+                }
+                toFlush.clear();
 
-        outputStream = new DataOutputStream(new ZstdOutputStream(new BufferedOutputStream(fileStream)));
+                return toFlush;
+            }
+        };
     }
 
-    private static void writeHeaderPlaceholder(OutputStream fileStream) throws IOException {
-        fileStream.write(new byte[IndexJournalReader.FILE_HEADER_SIZE_BYTES]);
+    private static void writeHeaderPlaceholder(FileChannel fileStream) throws IOException {
+        var buffer = ByteBuffer.allocate(IndexJournalReader.FILE_HEADER_SIZE_BYTES);
+
+        buffer.position(0);
+        buffer.limit(buffer.capacity());
+
+        while (buffer.hasRemaining())
+            fileStream.write(buffer, buffer.position());
+
+        fileStream.position(IndexJournalReader.FILE_HEADER_SIZE_BYTES);
     }
 
     @Override
     @SneakyThrows
-    public void put(IndexJournalEntryHeader header, IndexJournalEntryData entry) {
-        outputStream.writeInt(entry.size());
-        outputStream.writeInt(0);
-        outputStream.writeLong(header.combinedId());
-        outputStream.writeLong(header.documentMeta());
-        entry.write(outputStream);
+    public synchronized void put(IndexJournalEntryHeader header, IndexJournalEntryData entry) {
+        if (dataBuffer.capacity() - dataBuffer.position() < 3*8) {
+            dataBuffer.flip();
+            compressingStream.compress(dataBuffer);
+            dataBuffer.clear();
+        }
+
+        dataBuffer.putInt(entry.size());
+        dataBuffer.putInt(0);
+        dataBuffer.putLong(header.combinedId());
+        dataBuffer.putLong(header.documentMeta());
+
+        for (int i = 0; i < entry.size(); ) {
+            int remaining = (dataBuffer.capacity() - dataBuffer.position()) / 8;
+            if (remaining <= 0) {
+                dataBuffer.flip();
+                compressingStream.compress(dataBuffer);
+                dataBuffer.clear();
+            }
+            else while (remaining-- > 0 && i < entry.size()) {
+                dataBuffer.putLong(entry.underlyingArray[i++]);
+            }
+        }
 
         numEntries++;
     }
 
-    @Override
-    public void forceWrite() throws IOException {
-        outputStream.flush();
-
-        try (var raf = new RandomAccessFile(outputFile.toFile(), "rws")) {
-            raf.writeLong(numEntries);
-            raf.writeLong(lexicon.size());
-        }
-    }
-
-    @Override
-    public void flushWords() {
-        lexicon.commitToDisk();
-    }
-
     public void close() throws IOException {
-        forceWrite();
+        dataBuffer.flip();
+        compressingStream.compress(dataBuffer);
+        dataBuffer.clear();
+        compressingStream.flush();
+        compressingStream.close();
 
-        outputStream.close();
+
+        // Finalize the file by writing a header
+
+        ByteBuffer header = ByteBuffer.allocate(16);
+        header.putLong(numEntries);
+        header.putLong(lexicon.size());
+        header.flip();
+
+        while (header.position() < header.limit()) {
+            fileChannel.write(header, header.position());
+        }
+
+        fileChannel.close();
     }
 }

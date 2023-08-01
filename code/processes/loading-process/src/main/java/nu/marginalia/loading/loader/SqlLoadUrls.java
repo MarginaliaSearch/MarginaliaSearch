@@ -1,15 +1,13 @@
 package nu.marginalia.loading.loader;
 
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.HashSet;
@@ -26,6 +24,7 @@ public class SqlLoadUrls {
     public SqlLoadUrls(HikariDataSource dataSource) {
         this.dataSource = dataSource;
     }
+    private final MurmurHash3_128 murmurHash = new MurmurHash3_128();
 
     public void load(LoaderData data, EdgeUrl[] urls) {
         Set<EdgeDomain> affectedDomains = new HashSet<>();
@@ -52,6 +51,7 @@ public class SqlLoadUrls {
                 for (var url : urls) {
                     if (data.getUrlId(url) != 0)
                         continue;
+
                     if (url.path.length() >= 255) {
                         logger.info("Skipping bad URL {}", url);
                         continue;
@@ -114,16 +114,16 @@ public class SqlLoadUrls {
         }
     }
 
-    private static final HashFunction murmur3_128 = Hashing.murmur3_128();
+    /* We use a uniqueness constraint on DOMAIN_ID and this hash instead of on the PATH and PARAM
+     * fields as the uniqueness index grows absurdly large for some reason, possibly due to the prevalent
+     * shared leading substrings in paths?
+     */
     private long hashPath(String path, String queryParam) {
-        long pathHash = murmur3_128.hashString(path, StandardCharsets.UTF_8).padToLong();
-
-        if (queryParam == null) {
-            return pathHash;
+        long hash = murmurHash.hashNearlyASCII(path);
+        if (queryParam != null) {
+            hash ^= murmurHash.hashNearlyASCII(queryParam);
         }
-        else {
-            return pathHash + murmur3_128.hashString(queryParam, StandardCharsets.UTF_8).padToLong();
-        }
+        return hash;
     }
 
     /** Loads urlIDs for the domain into `data` from the database, starting at URL ID minId. */
@@ -131,11 +131,11 @@ public class SqlLoadUrls {
         try (var conn = dataSource.getConnection();
              var queryCall = conn.prepareStatement("SELECT ID, PROTO, PATH, PARAM FROM EC_URL WHERE DOMAIN_ID=? AND ID > ?")) {
 
+            queryCall.setFetchSize(1000);
             queryCall.setInt(1, data.getDomainId(domain));
             queryCall.setInt(2, minId);
 
             var rsp = queryCall.executeQuery();
-            rsp.setFetchSize(1000);
 
             while (rsp.next()) {
                 int urlId = rsp.getInt(1);
