@@ -6,7 +6,7 @@ import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.With;
-import nu.marginalia.control.svc.ProcessOutboxFactory;
+import nu.marginalia.control.svc.ProcessOutboxes;
 import nu.marginalia.control.svc.ProcessService;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.db.storage.model.FileStorageBaseType;
@@ -48,13 +48,13 @@ public class CrawlActor extends AbstractStateGraph {
 
     @Inject
     public CrawlActor(StateFactory stateFactory,
-                      ProcessOutboxFactory processOutboxFactory,
+                      ProcessOutboxes processOutboxes,
                       FileStorageService storageService,
                       Gson gson,
                       ActorProcessWatcher processWatcher)
     {
         super(stateFactory);
-        this.mqCrawlerOutbox = processOutboxFactory.createCrawlerOutbox();
+        this.mqCrawlerOutbox = processOutboxes.getCrawlerOutbox();
         this.storageService = storageService;
         this.gson = gson;
         this.processWatcher = processWatcher;

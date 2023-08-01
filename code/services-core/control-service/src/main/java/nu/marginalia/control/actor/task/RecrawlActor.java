@@ -6,14 +6,12 @@ import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.With;
-import nu.marginalia.control.svc.ProcessOutboxFactory;
+import nu.marginalia.control.svc.ProcessOutboxes;
 import nu.marginalia.control.svc.ProcessService;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.db.storage.model.FileStorage;
 import nu.marginalia.db.storage.model.FileStorageId;
 import nu.marginalia.db.storage.model.FileStorageType;
-import nu.marginalia.index.client.IndexClient;
-import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.mqapi.crawling.CrawlRequest;
@@ -21,14 +19,10 @@ import nu.marginalia.mqsm.StateFactory;
 import nu.marginalia.mqsm.graph.AbstractStateGraph;
 import nu.marginalia.mqsm.graph.GraphState;
 import nu.marginalia.mqsm.graph.ResumeBehavior;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
 import java.sql.SQLException;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 @Singleton
 public class RecrawlActor extends AbstractStateGraph {
@@ -62,14 +56,14 @@ public class RecrawlActor extends AbstractStateGraph {
     @Inject
     public RecrawlActor(StateFactory stateFactory,
                         ActorProcessWatcher processWatcher,
-                        ProcessOutboxFactory processOutboxFactory,
+                        ProcessOutboxes processOutboxes,
                         FileStorageService storageService,
                         Gson gson
                                    )
     {
         super(stateFactory);
         this.processWatcher = processWatcher;
-        this.mqCrawlerOutbox = processOutboxFactory.createCrawlerOutbox();
+        this.mqCrawlerOutbox = processOutboxes.getCrawlerOutbox();
         this.storageService = storageService;
         this.gson = gson;
     }

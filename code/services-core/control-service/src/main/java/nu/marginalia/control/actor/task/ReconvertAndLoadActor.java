@@ -6,7 +6,7 @@ import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.With;
-import nu.marginalia.control.svc.ProcessOutboxFactory;
+import nu.marginalia.control.svc.ProcessOutboxes;
 import nu.marginalia.control.svc.ProcessService;
 import nu.marginalia.index.client.IndexClient;
 import nu.marginalia.index.client.IndexMqEndpoints;
@@ -66,7 +66,7 @@ public class ReconvertAndLoadActor extends AbstractStateGraph {
     @Inject
     public ReconvertAndLoadActor(StateFactory stateFactory,
                                  ActorProcessWatcher processWatcher,
-                                 ProcessOutboxFactory processOutboxFactory,
+                                 ProcessOutboxes processOutboxes,
                                  FileStorageService storageService,
                                  IndexClient indexClient,
                                  Gson gson
@@ -75,8 +75,8 @@ public class ReconvertAndLoadActor extends AbstractStateGraph {
         super(stateFactory);
         this.processWatcher = processWatcher;
         this.indexOutbox = indexClient.outbox();
-        this.mqConverterOutbox = processOutboxFactory.createConverterOutbox();
-        this.mqLoaderOutbox = processOutboxFactory.createLoaderOutbox();
+        this.mqConverterOutbox = processOutboxes.getConverterOutbox();
+        this.mqLoaderOutbox = processOutboxes.getLoaderOutbox();
         this.storageService = storageService;
         this.gson = gson;
     }

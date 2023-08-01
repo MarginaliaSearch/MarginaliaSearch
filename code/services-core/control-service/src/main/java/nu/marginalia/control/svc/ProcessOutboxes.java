@@ -8,35 +8,40 @@ import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.service.server.BaseServiceParams;
 
 @Singleton
-public class ProcessOutboxFactory {
-    private final BaseServiceParams params;
-    private final MqPersistence persistence;
+public class ProcessOutboxes {
+    private final MqOutbox converterOutbox;
+    private final MqOutbox loaderOutbox;
+    private final MqOutbox crawlerOutbox;
 
     @Inject
-    public ProcessOutboxFactory(BaseServiceParams params, MqPersistence persistence) {
-        this.params = params;
-        this.persistence = persistence;
-    }
-
-    public MqOutbox createConverterOutbox() {
-        return new MqOutbox(persistence,
+    public ProcessOutboxes(BaseServiceParams params, MqPersistence persistence) {
+        converterOutbox = new MqOutbox(persistence,
                 ProcessInboxNames.CONVERTER_INBOX,
                 params.configuration.serviceName(),
                 params.configuration.instanceUuid()
         );
-    }
-    public MqOutbox createLoaderOutbox() {
-        return new MqOutbox(persistence,
+        loaderOutbox = new MqOutbox(persistence,
                 ProcessInboxNames.LOADER_INBOX,
                 params.configuration.serviceName(),
                 params.configuration.instanceUuid()
         );
-    }
-    public MqOutbox createCrawlerOutbox() {
-        return new MqOutbox(persistence,
+        crawlerOutbox = new MqOutbox(persistence,
                 ProcessInboxNames.CRAWLER_INBOX,
                 params.configuration.serviceName(),
                 params.configuration.instanceUuid()
         );
+    }
+
+
+    public MqOutbox getConverterOutbox() {
+        return converterOutbox;
+    }
+
+    public MqOutbox getLoaderOutbox() {
+        return loaderOutbox;
+    }
+
+    public MqOutbox getCrawlerOutbox() {
+        return crawlerOutbox;
     }
 }

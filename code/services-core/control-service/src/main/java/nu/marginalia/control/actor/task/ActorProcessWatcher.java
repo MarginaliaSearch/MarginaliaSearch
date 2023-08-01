@@ -28,22 +28,23 @@ public class ActorProcessWatcher {
      * <p>
      * When interrupted, the process is killed and the message is marked as dead.
      */
-    public MqMessage waitResponse(MqOutbox outbox, ProcessService.ProcessId processId, long id)
+    public MqMessage waitResponse(MqOutbox outbox, ProcessService.ProcessId processId, long msgId)
             throws ControlFlowException, InterruptedException, SQLException
     {
         if (!waitForProcess(processId, TimeUnit.SECONDS, 30)) {
             throw new ControlFlowException("ERROR",
                     "Process " + processId + " did not launch");
         }
+
         for (;;) {
             try {
-                return outbox.waitResponse(id, 5, TimeUnit.SECONDS);
+                return outbox.waitResponse(msgId, 5, TimeUnit.SECONDS);
             }
             catch (InterruptedException ex) {
                 // Here we mark the message as dead, as it's the user that has aborted the process
                 // This will prevent the monitor process from attempting to respawn the process as we kill it
 
-                outbox.flagAsDead(id);
+                outbox.flagAsDead(msgId);
                 processService.kill(processId);
 
                 throw ex;
@@ -67,7 +68,7 @@ public class ActorProcessWatcher {
             if (processService.isRunning(processId))
                 return true;
 
-            TimeUnit.SECONDS.sleep(1);
+            TimeUnit.MILLISECONDS.sleep(100);
         }
 
         return false;
