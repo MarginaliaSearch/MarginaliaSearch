@@ -40,7 +40,7 @@ A crawl specification file is a compressed JSON file with each domain name to cr
 known URLs for each domain.  These are created in the `storage -> specifications` view in the operator's gui.
 
 To bootstrap the system, you need a list of known domains.  This is just a text file with one domain name per line,
-with blanlines and comments starting with `#` ignored.
+with blanklines and comments starting with `#` ignored.
 
 Make it available over HTTP(S) and select `Download a list of domains from a URL` in the `Create New Specification`
 form.  Make sure to give this specification a good description, as it will follow you around for  a while.
