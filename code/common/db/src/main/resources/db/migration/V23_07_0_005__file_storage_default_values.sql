@@ -1,7 +1,7 @@
 INSERT IGNORE INTO FILE_STORAGE_BASE(NAME, PATH, TYPE, PERMIT_TEMP)
 VALUES
 ('Index Storage', '/vol', 'SSD_INDEX', false),
-('Data Storage', '/samples', 'SLOW', false);
+('Data Storage', '/samples', 'SLOW', true);
 
 INSERT IGNORE INTO FILE_STORAGE(BASE_ID, PATH, DESCRIPTION, TYPE)
 SELECT ID, 'iw', "Index Staging Area", 'INDEX_STAGING'

@@ -2,25 +2,26 @@ package nu.marginalia.db.storage;
 
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.db.storage.model.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.io.File;
+import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.*;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /** Manages file storage for processes and services
  */
 @Singleton
 public class FileStorageService {
     private final HikariDataSource dataSource;
-
+    private final Logger logger = LoggerFactory.getLogger(FileStorageService.class);
     @Inject
     public FileStorageService(HikariDataSource dataSource) {
         this.dataSource = dataSource;
@@ -65,6 +66,49 @@ public class FileStorageService {
         return null;
     }
 
+    public void synchronizeStorageManifests(FileStorageBase base) {
+        Set<String> ignoredPaths = new HashSet<>();
+
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("""
+                SELECT PATH FROM FILE_STORAGE WHERE BASE_ID = ?
+                """)) {
+            stmt.setLong(1, base.id().id());
+            var rs = stmt.executeQuery();
+            while (rs.next()) {
+                ignoredPaths.add(rs.getString(1));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        File basePathFile = Path.of(base.path()).toFile();
+        File[] files = basePathFile.listFiles(pathname -> pathname.isDirectory() && !ignoredPaths.contains(pathname.getName()));
+        if (files == null) return;
+        for (File file : files) {
+            var maybeManifest = FileStorageManifest.find(file.toPath());
+            if (maybeManifest.isEmpty()) continue;
+            var manifest = maybeManifest.get();
+
+            logger.info("Discovered new file storage: " + file.getName() + " (" + manifest.type() + ")");
+
+            try (var conn = dataSource.getConnection();
+                 var stmt = conn.prepareStatement("""
+                    INSERT INTO FILE_STORAGE(BASE_ID, PATH, TYPE, DESCRIPTION)
+                    VALUES (?, ?, ?, ?)
+                    """)) {
+                stmt.setLong(1, base.id().id());
+                stmt.setString(2, file.getName());
+                stmt.setString(3, manifest.type().name());
+                stmt.setString(4, manifest.description());
+                stmt.execute();
+                conn.commit();
+
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
     public void relateFileStorages(FileStorageId source, FileStorageId target) {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
@@ -198,7 +242,14 @@ public class FileStorageService {
             var rs = query.executeQuery();
 
             if (rs.next()) {
-                return getStorage(new FileStorageId(rs.getLong("ID")));
+                var storage = getStorage(new FileStorageId(rs.getLong("ID")));
+
+                // Write a manifest file so we can pick this up later without needing to insert it into DB
+                // (e.g. when loading from outside the system)
+                var manifest = new FileStorageManifest(type, description);
+                manifest.write(storage);
+
+                return storage;
             }
 
         }

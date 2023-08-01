@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.db.storage.model.FileStorage;
+import nu.marginalia.db.storage.model.FileStorageBaseType;
 import nu.marginalia.db.storage.model.FileStorageId;
 import nu.marginalia.mqsm.StateFactory;
 import nu.marginalia.mqsm.graph.AbstractStateGraph;
@@ -67,6 +68,8 @@ public class FileStorageMonitorActor extends AbstractStateGraph {
             if (missing.isPresent()) {
                 transition(REMOVE_STALE, missing.get().id());
             }
+
+            fileStorageService.synchronizeStorageManifests(fileStorageService.getStorageBase(FileStorageBaseType.SLOW));
 
             TimeUnit.SECONDS.sleep(10);
         }
