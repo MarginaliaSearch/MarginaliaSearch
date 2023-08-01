@@ -22,6 +22,7 @@ dependencies {
     implementation libs.prometheus
     implementation libs.guava
     implementation libs.fastutil
+    implementation project(':third-party:commons-codec')
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit

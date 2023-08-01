@@ -1,10 +1,9 @@
 package nu.marginalia.lexicon;
 
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 import io.prometheus.client.Gauge;
 import lombok.SneakyThrows;
 import nu.marginalia.dict.DictionaryMap;
+import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournalFingerprint;
 import org.slf4j.Logger;
@@ -37,7 +36,6 @@ public class KeywordLexicon implements AutoCloseable {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private static final AtomicInteger instances = new AtomicInteger();
-    private final HashFunction hashFunction = Hashing.murmur3_128();
 
     private static final Gauge request_time_metrics
             = Gauge.build("wmsa_edge_index_dictionary_size", "Dictionary Size")
@@ -45,6 +43,8 @@ public class KeywordLexicon implements AutoCloseable {
     private final KeywordLexiconJournal journal;
 
     private volatile KeywordLexiconJournalFingerprint fingerprint = null;
+
+    private final MurmurHash3_128 hasher = new MurmurHash3_128();
 
     @SneakyThrows
     public KeywordLexicon(KeywordLexiconJournal keywordLexiconJournal) {
@@ -74,7 +74,7 @@ public class KeywordLexicon implements AutoCloseable {
         lock.lock();
         try {
             reverseIndex.clear();
-            journal.loadFile(bytes -> reverseIndex.put(hashFunction.hashBytes(bytes).padToLong()));
+            journal.loadFile(bytes -> reverseIndex.put(hasher.hash(bytes)));
             fingerprint = journal.journalFingerprint();
         }
         finally {
@@ -95,7 +95,7 @@ public class KeywordLexicon implements AutoCloseable {
             return DictionaryMap.NO_VALUE;
         }
 
-        final long key = hashFunction.hashBytes(bytes).padToLong();
+        final long key = hasher.hash(bytes);
 
         int idx = getReadOnly(key);
 
@@ -130,7 +130,7 @@ public class KeywordLexicon implements AutoCloseable {
     /** Get method that does not modify the lexicon if the word is not present */
     public int getReadOnly(String word) {
         final byte[] bytes = word.getBytes(StandardCharsets.UTF_8);
-        return getReadOnly(hashFunction.hashBytes(bytes).padToLong());
+        return getReadOnly(hasher.hash(bytes));
     }
 
     /** Get method that does not modify the lexicon if the word is not present */
