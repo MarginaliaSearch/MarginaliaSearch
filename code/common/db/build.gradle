@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id "io.freefair.lombok" version "5.3.3.3"
     id 'jvm-test-suite'
+    id "org.flywaydb.flyway" version "8.2.0"
 
 }
 
@@ -9,6 +10,10 @@ java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
+}
+
+configurations {
+    flywayMigration.extendsFrom(implementation)
 }
 
 dependencies {
@@ -29,6 +34,7 @@ dependencies {
 
     implementation libs.rxjava
     implementation libs.bundles.mariadb
+    flywayMigration 'org.flywaydb:flyway-mysql:9.8.1'
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
@@ -40,6 +46,15 @@ dependencies {
     testImplementation 'org.testcontainers:junit-jupiter:1.17.4'
 }
 
+flyway {
+
+    url = 'jdbc:mariadb://localhost:3306/WMSA_prod'
+    user = 'wmsa'
+    password = 'wmsa'
+    schemas = ['WMSA_prod']
+    configurations = [ 'compileClasspath', 'flywayMigration' ]
+    locations = ['filesystem:src/main/resources/db/migration']
+}
 
 test {
     maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1

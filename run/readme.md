@@ -17,7 +17,7 @@ follow these steps. You're assumed to sit in the project root the whole time.
 
 1. Run the one-time setup, it will create the
 basic runtime directory structure and download some models and data that doesn't
-come with the git repo.
+come with the git repo because git deals poorly with large binary files.
 
 ```
 $ run/setup.sh
@@ -29,48 +29,29 @@ $ run/setup.sh
 $ ./gradlew assemble docker
 ```
 
-3. Download a sample of crawl data, process it and stick the metadata
-into the database. The data is only downloaded once. Grab a cup of coffee, this takes a few minutes. 
-This needs to be done whenever the crawler or processor has changed. 
-
+3. Initialize the database
 ```
 $ docker-compose up -d mariadb
-$ run/reconvert.sh
+$ ./gradlew flywayMigrate
 ```
 
 4. Bring the system online. We'll run it in the foreground in the terminal this time
 because it's educational to see the logs. Add `-d` to run in the background.
 
-
 ```
 $ docker-compose up
 ```
 
-5. Since we've just processed new crawl data, the system needs to construct static
-indexes. Wait for the line 'Auto-conversion finished!'  
+5. You should now be able to access the system.
 
-When all is done, it should be possible to visit
-[http://localhost:8080](http://localhost:8080) and try a few searches!
+| Address                 | Description      |
+|-------------------------|------------------|
+| https://localhost:8080/ | User-facing GUI  |
+| https://localhost:8081/ | Operator's GUI   |
 
+6. Download Sample Data
 
-## Other Crawl Data
-
-By default, `reconvert.sh` will load the medium dataset. This is appropriate for a demo,
-but other datasets also exist.
-
-| Set | Description                                                                |
-|-----|----------------------------------------------------------------------------|
-| s   | 1000 domains, suitable for low-end machines                                |
-| m   | 2000 domains                                                               |
-| l   | 5000 domains                                                               |
-| xl  | 50,000 domains, basically pre-prod.<br><b>Warning</b>: 5h+ processing time |
-
-To switch datasets, run e.g. 
-
-```shell
-$ docker-compose up -d mariadb
-$ ./run/reconvert.sh l
-```
+TODO: How?
 
 ## Experiment Runner
 

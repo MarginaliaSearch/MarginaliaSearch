@@ -19,7 +19,7 @@ class SqlLoadDomainsTest {
             .withDatabaseName("WMSA_prod")
             .withUsername("wmsa")
             .withPassword("wmsa")
-            .withInitScript("sql/current/00-base.sql")
+            .withInitScript("db/migration/V23_06_0_000__base.sql")
             .withNetworkAliases("mariadb");
 
     @Test

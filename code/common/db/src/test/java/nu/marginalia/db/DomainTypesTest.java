@@ -24,7 +24,7 @@ public class DomainTypesTest {
             .withDatabaseName("WMSA_prod")
             .withUsername("wmsa")
             .withPassword("wmsa")
-            .withInitScript("sql/current/10-domain-type.sql")
+            .withInitScript("db/migration/V23_07_0_001__domain_type.sql")
             .withNetworkAliases("mariadb");
 
     static HikariDataSource dataSource;

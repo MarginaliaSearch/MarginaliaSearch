@@ -29,7 +29,7 @@ public class StateMachineNullTest {
             .withDatabaseName("WMSA_prod")
             .withUsername("wmsa")
             .withPassword("wmsa")
-            .withInitScript("sql/current/12-message-queue.sql")
+            .withInitScript("db/migration/V23_07_0_003__message_queue.sql")
             .withNetworkAliases("mariadb");
 
     static HikariDataSource dataSource;

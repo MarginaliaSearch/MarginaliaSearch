@@ -32,7 +32,7 @@ public class FileStorageServiceTest {
             .withDatabaseName("WMSA_prod")
             .withUsername("wmsa")
             .withPassword("wmsa")
-            .withInitScript("sql/current/13-file-storage.sql")
+            .withInitScript("db/migration/V23_07_0_004__file_storage.sql")
             .withNetworkAliases("mariadb");
 
     static HikariDataSource dataSource;
