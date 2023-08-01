@@ -80,6 +80,7 @@ include 'third-party:openzim'
 include 'third-party:count-min-sketch'
 include 'third-party:monkey-patch-opennlp'
 include 'third-party:monkey-patch-gson'
+include 'third-party:commons-codec'
 
 
 dependencyResolutionManagement {
@@ -142,6 +143,7 @@ dependencyResolutionManagement {
             library('commons.lang3', 'org.apache.commons','commons-lang3').version('3.12.0')
             library('commons.compress','org.apache.commons','commons-compress').version('1.21')
             library('commons.io','commons-io','commons-io').version('2.11.0')
+            library('commons.codec', 'commons-codec', 'commons-codec').version('1.16.0')
 
             library('ffi','com.github.jnr','jnr-ffi').version('2.2.12')
             library('databind','com.fasterxml.jackson.core','jackson-databind').version('2.13.2.1')
