@@ -47,22 +47,22 @@
       <h2>Actions</h2>
       {{#with storage.self}}
       {{#if isCrawlable}}
-      <form method="post" action="/storage/{{storage.id}}/crawl">
+      <form method="post" action="/storage/{{storage.id}}/crawl" onsubmit="return confirm('Confirm crawling of {{storage.path}}')">
           Perform a full re-crawl of this data: <button type="submit">Crawl</button> <br>
       </form>
       {{/if}}
       {{#if isLoadable}}
-      <form method="post" action="/storage/{{storage.id}}/load">
+      <form method="post" action="/storage/{{storage.id}}/load" onsubmit="return confirm('Confirm loading of {{storage.path}}')">
           Load this data into index: <button type="submit">Load</button> <br>
       </form>
       {{/if}}
       {{#if isConvertible}}
-      <form method="post" action="/storage/{{storage.id}}/process">
+      <form method="post" action="/storage/{{storage.id}}/process" onsubmit="return confirm('Confirm processing of {{storage.path}}')">
           Process and load this data into index: <button type="submit">Process</button> <br>
       </form>
       {{/if}}
       {{#if isRecrawlable}}
-      <form method="post" action="/storage/{{storage.id}}/recrawl">
+      <form method="post" action="/storage/{{storage.id}}/recrawl" onsubmit="return confirm('Confirm re-crawling of {{storage.path}}')">
           Perform a re-crawl of this data: <button type="submit">Recrawl</button><br>
       </form>
       {{/if}}

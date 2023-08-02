@@ -12,16 +12,16 @@ erase information about its owner, and inboxes will consider the message new aga
 <form method="post" action="/message/{{msgId}}/state">
     <label for="msgId">msgId</label><br>
     <input type="text" disabled id="msgId" name="msgId" value="{{msgId}}">
-    <br><br>
+    <br>
     <label for="relatedId">relatedId</label><br>
     <input type="text" disabled id="relatedId" name="relatedId" value="{{relatedId}}">
-    <br><br>
+    <br>
     <label for="function">function</label><br>
     <input type="text" disabled id="function" name="function" value="{{function}}">
-    <br><br>
+    <br>
     <label for="payload">payload</label><br>
     <input type="text" disabled id="payload" name="payload" value="{{payload}}">
-    <br><br>
+    <br>
     <label for="oldState">current state</label><br>
     <input type="text" disabled id="oldState" name="oldState" value="{{state}}">
     <br>
@@ -37,5 +37,8 @@ erase information about its owner, and inboxes will consider the message new aga
 
     <input type="submit" value="Update">
 </form>
+    <p>Note that while setting a message to NEW or in some instances ACK typically causes an Actor
+    to act on the message, setting a message in ACK to ERR or DEAD will not stop action, but only
+    prevent resumption of action.  To stop a running actor, use the Actors view and press the toggle.</p>
 </section>
 </html>

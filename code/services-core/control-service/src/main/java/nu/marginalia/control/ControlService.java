@@ -12,6 +12,7 @@ import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.service.server.*;
+import org.eclipse.jetty.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -30,6 +31,7 @@ public class ControlService extends Service {
     private final ServiceMonitors monitors;
     private final HeartbeatService heartbeatService;
     private final EventLogService eventLogService;
+    private final ApiKeyService apiKeyService;
     private final ControlActorService controlActorService;
     private final StaticResources staticResources;
     private final MessageQueueViewService messageQueueViewService;
@@ -46,6 +48,7 @@ public class ControlService extends Service {
                           StaticResources staticResources,
                           MessageQueueViewService messageQueueViewService,
                           ControlFileStorageService controlFileStorageService,
+                          ApiKeyService apiKeyService,
                           MqPersistence persistence
                       ) throws IOException {
 
@@ -53,6 +56,7 @@ public class ControlService extends Service {
         this.monitors = monitors;
         this.heartbeatService = heartbeatService;
         this.eventLogService = eventLogService;
+        this.apiKeyService = apiKeyService;
 
         var indexRenderer = rendererFactory.renderer("control/index");
         var servicesRenderer = rendererFactory.renderer("control/services");
@@ -63,6 +67,8 @@ public class ControlService extends Service {
         var storageSpecsRenderer = rendererFactory.renderer("control/storage-specs");
         var storageCrawlsRenderer = rendererFactory.renderer("control/storage-crawls");
         var storageProcessedRenderer = rendererFactory.renderer("control/storage-processed");
+
+        var apiKeysRenderer = rendererFactory.renderer("control/api-keys");
 
         var storageDetailsRenderer = rendererFactory.renderer("control/storage-details");
         var updateMessageStateRenderer = rendererFactory.renderer("control/dialog-update-message-state");
@@ -95,6 +101,7 @@ public class ControlService extends Service {
 
         final HtmlRedirect redirectToServices = new HtmlRedirect("/services");
         final HtmlRedirect redirectToProcesses = new HtmlRedirect("/actors");
+        final HtmlRedirect redirectToApiKeys = new HtmlRedirect("/api-keys");
         final HtmlRedirect redirectToStorage = new HtmlRedirect("/storage");
 
         Spark.post("/public/fsms/:fsm/start", controlActorService::startFsm, redirectToProcesses);
@@ -106,6 +113,12 @@ public class ControlService extends Service {
 
         Spark.post("/public/storage/specs", controlActorService::createCrawlSpecification, redirectToStorage);
         Spark.post("/public/storage/:fid/delete", controlFileStorageService::flagFileForDeletionRequest, redirectToStorage);
+
+        Spark.get("/public/api-keys", this::apiKeysModel, apiKeysRenderer::render);
+        Spark.post("/public/api-keys", this::createApiKey, redirectToApiKeys);
+        Spark.delete("/public/api-keys/:key", this::deleteApiKey, redirectToApiKeys);
+        // HTML forms don't support the DELETE verb :-(
+        Spark.post("/public/api-keys/:key/delete", this::deleteApiKey, redirectToApiKeys);
 
         Spark.get("/public/message/:id/state", (rq, rsp) -> persistence.getMessage(Long.parseLong(rq.params("id"))), updateMessageStateRenderer::render);
         Spark.post("/public/message/:id/state", (rq, rsp) -> {
@@ -119,6 +132,37 @@ public class ControlService extends Service {
 
         monitors.subscribe(this::logMonitorStateChange);
     }
+
+    private Object createApiKey(Request request, Response response) {
+        String license = request.queryParams("license");
+        String name = request.queryParams("name");
+        String email = request.queryParams("email");
+        int rate = Integer.parseInt(request.queryParams("rate"));
+
+        if (StringUtil.isBlank(license) ||
+            StringUtil.isBlank(name) ||
+            StringUtil.isBlank(email) ||
+            rate <= 0)
+        {
+            response.status(400);
+            return "";
+        }
+
+        apiKeyService.addApiKey(license, name, email, rate);
+
+        return "";
+    }
+
+    private Object deleteApiKey(Request request, Response response) {
+        String licenseKey = request.params("key");
+        apiKeyService.deleteApiKey(licenseKey);
+        return "";
+    }
+
+    private Object apiKeysModel(Request request, Response response) {
+        return Map.of("apikeys", apiKeyService.getApiKeys());
+    }
+
 
     @Override
     public void logRequest(Request request) {

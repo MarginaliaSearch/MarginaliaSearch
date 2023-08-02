@@ -15,7 +15,13 @@
                     action="/fsms/{{name}}/stop"
                     method="post"
                     onsubmit="return toggleActorSwitch('{{name}}')">
-                    <input type="submit" value="On" class="toggle-switch-on" id="toggle-{{name}}-button">
+                    <input
+                            type="submit"
+                            value="On"
+                            class="toggle-switch-on"
+                            id="toggle-{{name}}-button"
+                            title="Terminate the actor"
+                    >
                 </form>
             {{/unless}}
             {{#if terminal}}
@@ -32,6 +38,7 @@
                         {{/unless}}
                         {{#if canStart}}
                         value="Off"
+                        title="Start the actor"
                         {{/if}}
                         class="toggle-switch-off"
 

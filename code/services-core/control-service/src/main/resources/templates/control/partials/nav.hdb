@@ -4,5 +4,8 @@
         <li><a href="/services">Services</a></li>
         <li><a href="/actors">Actors</a></li>
         <li><a href="/storage">Storage</a></li>
+        <li><a href="/api-keys">API Keys</a></li>
+        <li><a href="/blacklist">Blacklist</a></li>
+        <li><a href="/complaints">Complaints</a></li>
     </ul>
 </nav>
