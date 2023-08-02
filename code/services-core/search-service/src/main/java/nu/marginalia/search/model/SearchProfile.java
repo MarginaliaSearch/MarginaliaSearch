@@ -10,6 +10,7 @@ import java.util.Objects;
 public enum SearchProfile {
     DEFAULT("default",  SearchSetIdentifier.RETRO),
     MODERN("modern", SearchSetIdentifier.SMALLWEB),
+    BLOGOSPHERE("blogosphere", SearchSetIdentifier.BLOGS),
     CORPO("corpo", SearchSetIdentifier.NONE),
     YOLO("yolo", SearchSetIdentifier.NONE),
     VINTAGE("vintage", SearchSetIdentifier.NONE),

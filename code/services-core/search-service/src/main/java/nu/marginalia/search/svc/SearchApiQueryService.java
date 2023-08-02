@@ -48,6 +48,7 @@ public class SearchApiQueryService {
                 case "1" -> SearchProfile.MODERN;
                 case "2" -> SearchProfile.DEFAULT;
                 case "3" -> SearchProfile.CORPO_CLEAN;
+                case "blogosphere" -> SearchProfile.BLOGOSPHERE;
                 default -> SearchProfile.CORPO_CLEAN;
             };
         }
