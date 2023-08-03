@@ -52,7 +52,7 @@ public class DomainBlacklistImpl implements DomainBlacklist {
         }
 
         try (var connection = dataSource.getConnection()) {
-            try (var stmt = connection.prepareStatement("SELECT EC_DOMAIN.ID FROM EC_DOMAIN INNER JOIN EC_DOMAIN_BLACKLIST ON EC_DOMAIN_BLACKLIST.URL_DOMAIN = EC_DOMAIN.DOMAIN_TOP")) {
+            try (var stmt = connection.prepareStatement("SELECT EC_DOMAIN.ID FROM EC_DOMAIN INNER JOIN EC_DOMAIN_BLACKLIST ON (EC_DOMAIN_BLACKLIST.URL_DOMAIN = EC_DOMAIN.DOMAIN_TOP OR EC_DOMAIN_BLACKLIST.URL_DOMAIN = EC_DOMAIN.DOMAIN_NAME)")) {
                 stmt.setFetchSize(1000);
                 var rsp = stmt.executeQuery();
                 while (rsp.next()) {
