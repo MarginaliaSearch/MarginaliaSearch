@@ -17,6 +17,9 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/** Service for handling flagging sites. This code has an admin-facing correspondent in
+ * DomainComplaintService in control-service
+ */
 public class SearchFlagSiteService {
     private final MustacheRenderer<FlagSiteViewModel> formTemplate;
     private final HikariDataSource dataSource;
@@ -83,9 +86,9 @@ public class SearchFlagSiteService {
 
         try (var conn = dataSource.getConnection();
              var complaintsStmt = conn.prepareStatement("""
-                     SELECT CATEGORY, FILE_DATE, REVIEWED, DECISION 
+                     SELECT CATEGORY, FILE_DATE, REVIEWED, DECISION
                      FROM DOMAIN_COMPLAINT
-                     WHERE DOMAIN_ID=?                     
+                     WHERE DOMAIN_ID=?
                      """);
              var stmt = conn.prepareStatement(
                      """

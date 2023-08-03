@@ -1,6 +1,6 @@
 <h1>Message Queue</h1>
 
-<table id="queue">
+<table id="queue" class="table-rh-2">
     <tr>
         <th>State<br>TTL</th>
         <th>Msg ID<br>Related ID</th>
@@ -9,6 +9,7 @@
         <th>Owner Instance<br>Owner Tick</th>
         <th>Created<br>Updated</th>
     </tr>
+    <tr></tr>
     {{#each messages}}
     <tr>
         <td>{{stateCode}}&nbsp;<a onClick="updateMsgState({{id}})" href="/message/{{id}}/state">{{state}}</a></td>

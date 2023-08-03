@@ -4,9 +4,12 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 import nu.marginalia.client.ServiceMonitors;
 import nu.marginalia.control.model.Actor;
+import nu.marginalia.control.model.DomainComplaintModel;
+import nu.marginalia.control.model.ProcessHeartbeat;
 import nu.marginalia.control.svc.*;
 import nu.marginalia.db.storage.model.FileStorageId;
 import nu.marginalia.db.storage.model.FileStorageType;
+import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.persistence.MqPersistence;
@@ -21,7 +24,10 @@ import spark.Spark;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ControlService extends Service {
 
@@ -32,6 +38,7 @@ public class ControlService extends Service {
     private final HeartbeatService heartbeatService;
     private final EventLogService eventLogService;
     private final ApiKeyService apiKeyService;
+    private final DomainComplaintService domainComplaintService;
     private final ControlActorService controlActorService;
     private final StaticResources staticResources;
     private final MessageQueueViewService messageQueueViewService;
@@ -49,6 +56,7 @@ public class ControlService extends Service {
                           MessageQueueViewService messageQueueViewService,
                           ControlFileStorageService controlFileStorageService,
                           ApiKeyService apiKeyService,
+                          DomainComplaintService domainComplaintService,
                           MqPersistence persistence
                       ) throws IOException {
 
@@ -57,6 +65,7 @@ public class ControlService extends Service {
         this.heartbeatService = heartbeatService;
         this.eventLogService = eventLogService;
         this.apiKeyService = apiKeyService;
+        this.domainComplaintService = domainComplaintService;
 
         var indexRenderer = rendererFactory.renderer("control/index");
         var servicesRenderer = rendererFactory.renderer("control/services");
@@ -69,6 +78,7 @@ public class ControlService extends Service {
         var storageProcessedRenderer = rendererFactory.renderer("control/storage-processed");
 
         var apiKeysRenderer = rendererFactory.renderer("control/api-keys");
+        var domainComplaintsRenderer = rendererFactory.renderer("control/domain-complaints");
 
         var storageDetailsRenderer = rendererFactory.renderer("control/storage-details");
         var updateMessageStateRenderer = rendererFactory.renderer("control/dialog-update-message-state");
@@ -103,6 +113,7 @@ public class ControlService extends Service {
         final HtmlRedirect redirectToProcesses = new HtmlRedirect("/actors");
         final HtmlRedirect redirectToApiKeys = new HtmlRedirect("/api-keys");
         final HtmlRedirect redirectToStorage = new HtmlRedirect("/storage");
+        final HtmlRedirect redirectToComplaints = new HtmlRedirect("/complaints");
 
         Spark.post("/public/fsms/:fsm/start", controlActorService::startFsm, redirectToProcesses);
         Spark.post("/public/fsms/:fsm/stop", controlActorService::stopFsm, redirectToProcesses);
@@ -120,6 +131,9 @@ public class ControlService extends Service {
         // HTML forms don't support the DELETE verb :-(
         Spark.post("/public/api-keys/:key/delete", this::deleteApiKey, redirectToApiKeys);
 
+        Spark.get("/public/complaints", this::complaintsModel, domainComplaintsRenderer::render);
+        Spark.post("/public/complaints/:domain", this::reviewComplaint, redirectToComplaints);
+
         Spark.get("/public/message/:id/state", (rq, rsp) -> persistence.getMessage(Long.parseLong(rq.params("id"))), updateMessageStateRenderer::render);
         Spark.post("/public/message/:id/state", (rq, rsp) -> {
             MqMessageState state = MqMessageState.valueOf(rq.queryParams("state"));
@@ -131,6 +145,35 @@ public class ControlService extends Service {
         Spark.get("/public/:resource", this::serveStatic);
 
         monitors.subscribe(this::logMonitorStateChange);
+    }
+
+    private Object complaintsModel(Request request, Response response) {
+        Map<Boolean, List<DomainComplaintModel>> complaintsByReviewed =
+                domainComplaintService.getComplaints().stream().collect(Collectors.partitioningBy(DomainComplaintModel::reviewed));
+
+        var reviewed = complaintsByReviewed.get(true);
+        var unreviewed = complaintsByReviewed.get(false);
+
+        reviewed.sort(Comparator.comparing(DomainComplaintModel::reviewDate).reversed());
+        unreviewed.sort(Comparator.comparing(DomainComplaintModel::fileDate).reversed());
+
+        return Map.of("complaintsNew", unreviewed, "complaintsReviewed", reviewed);
+    }
+
+    private Object reviewComplaint(Request request, Response response) {
+        var domain = new EdgeDomain(request.params("domain"));
+        String action = request.queryParams("action");
+
+        logger.info("Reviewing complaint for domain {} with action {}", domain, action);
+
+        switch (action) {
+            case "noop" -> domainComplaintService.reviewNoAction(domain);
+            case "appeal" -> domainComplaintService.approveAppealBlacklisting(domain);
+            case "blacklist" -> domainComplaintService.blacklistDomain(domain);
+            default -> throw new UnsupportedOperationException();
+        }
+
+        return "";
     }
 
     private Object createApiKey(Request request, Response response) {
@@ -223,7 +266,11 @@ public class ControlService extends Service {
     }
 
     private Object processesModel(Request request, Response response) {
-        return Map.of("processes", heartbeatService.getProcessHeartbeats(),
+        var heartbeatsAll = heartbeatService.getProcessHeartbeats();
+        var byIsJob = heartbeatsAll.stream().collect(Collectors.partitioningBy(ProcessHeartbeat::isServiceJob));
+
+        return Map.of("processes", byIsJob.get(false),
+                      "jobs", byIsJob.get(true),
                       "actors", controlActorService.getActorStates(),
                       "messages", messageQueueViewService.getLastEntries(20));
     }

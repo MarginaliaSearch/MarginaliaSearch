@@ -10,7 +10,7 @@
 <section>
 
     <h1>API Keys</h1>
-    <table id="apikeys">
+    <table id="apikeys" class="table-rh-2">
         <tr>
             <th colspan="3">Key</th>
             <th>&nbsp;</th>
