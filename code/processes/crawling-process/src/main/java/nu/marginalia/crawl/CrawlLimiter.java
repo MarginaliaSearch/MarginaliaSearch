@@ -51,6 +51,9 @@ public class CrawlLimiter {
                 else if (!oldThrottle && freeMemory < THROTTLE_TRIGGER_FREE_RAM) {
                     newThrottle = true;
                     logger.warn("Memory based throttling triggered");
+
+                    // Try to GC
+                    System.gc();
                 }
 
 
