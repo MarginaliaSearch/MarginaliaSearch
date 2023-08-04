@@ -166,6 +166,37 @@ public class MessageQueueViewService {
         }
     }
 
+    public List<MessageQueueEntry> getRelatedMessages(long relatedId) {
+        try (var conn = dataSource.getConnection();
+             var query = conn.prepareStatement("""
+                     (SELECT ID, RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
+                     FROM MESSAGE_QUEUE
+                     WHERE RELATED_ID = ?
+                     ORDER BY ID DESC
+                     LIMIT 100)
+                     UNION
+                     (SELECT ID, RELATED_ID, SENDER_INBOX, RECIPIENT_INBOX, FUNCTION, PAYLOAD, OWNER_INSTANCE, OWNER_TICK, STATE, CREATED_TIME, UPDATED_TIME, TTL
+                     FROM MESSAGE_QUEUE
+                     WHERE ID = (SELECT RELATED_ID FROM MESSAGE_QUEUE WHERE ID=?)
+                     ORDER BY ID DESC
+                     LIMIT 100)
+                     """)) {
+
+            query.setLong(1, relatedId);
+            query.setLong(2, relatedId);
+
+            List<MessageQueueEntry> entries = new ArrayList<>(100);
+            var rs = query.executeQuery();
+            while (rs.next()) {
+                entries.add(newEntry(rs));
+            }
+            return entries;
+        }
+        catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
     private MessageQueueEntry newEntry(ResultSet rs) throws SQLException {
         return new MessageQueueEntry(
                 rs.getLong("ID"),

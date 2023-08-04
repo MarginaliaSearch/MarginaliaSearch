@@ -15,6 +15,9 @@ public record MessageQueueEntry (
         int ttl
 )
 {
+    public boolean hasRelatedMessage() {
+        return relatedId > 0;
+    }
     public String ownerInstance() {
         if (ownerInstanceFull == null) {
             return "";

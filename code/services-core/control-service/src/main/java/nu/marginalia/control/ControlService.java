@@ -84,8 +84,9 @@ public class ControlService extends Service {
         var messageQueueRenderer = rendererFactory.renderer("control/message-queue");
 
         var storageDetailsRenderer = rendererFactory.renderer("control/storage-details");
-        var updateMessageStateRenderer = rendererFactory.renderer("control/dialog-update-message-state");
+        var updateMessageStateRenderer = rendererFactory.renderer("control/update-message-state");
         var newMessageRenderer = rendererFactory.renderer("control/new-message");
+        var viewMessageRenderer = rendererFactory.renderer("control/view-message");
 
         this.controlActorService = controlActorService;
 
@@ -132,7 +133,7 @@ public class ControlService extends Service {
             String payload = rq.queryParams("payload");
 
             persistence.sendNewMessage(recipient,
-                    sender,
+                    sender.isBlank() ? null : sender,
                     relatedMessage == null ? null : Long.parseLong(relatedMessage),
                     function,
                     payload,
@@ -141,6 +142,11 @@ public class ControlService extends Service {
             return "";
         }, redirectToMessageQueue);
         Spark.get("/public/message-queue/new", this::newMessageModel, newMessageRenderer::render);
+        Spark.get("/public/message-queue/:id",
+                (rq, rsp) -> Map.of("message", messageQueueViewService.getMessage(Long.parseLong(rq.params("id"))),
+                                    "relatedMessages", messageQueueViewService.getRelatedMessages(Long.parseLong(rq.params("id"))))
+                        , viewMessageRenderer::render);
+
         Spark.get("/public/message-queue/:id/reply", this::replyMessageModel, newMessageRenderer::render);
         Spark.get("/public/message-queue/:id/edit", (rq, rsp) -> persistence.getMessage(Long.parseLong(rq.params("id"))), updateMessageStateRenderer::render);
         Spark.post("/public/message-queue/:id/edit", (rq, rsp) -> {
@@ -181,10 +187,13 @@ public class ControlService extends Service {
 
         List<MessageQueueEntry> entries;
 
+        String mqFilter = "filter=none";
         if (inboxParam != null) {
+            mqFilter = "inbox=" + inboxParam;
             entries = messageQueueViewService.getEntriesForInbox(inboxParam, afterId, 20);
         }
         else if (instanceParam != null) {
+            mqFilter = "instance=" + instanceParam;
             entries = messageQueueViewService.getEntriesForInstance(instanceParam, afterId, 20);
         }
         else {
@@ -200,7 +209,10 @@ public class ControlService extends Service {
 
         Object prev = afterParam == null ? "" : afterParam;
 
-        return Map.of("messages", entries, "next", next, "prev", prev);
+        return Map.of("messages", entries,
+                "next", next,
+                "prev", prev,
+                "mqFilter", mqFilter);
     }
 
     private Object complaintsModel(Request request, Response response) {

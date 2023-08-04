@@ -3,7 +3,6 @@
 <table id="queue" class="table-rh-2">
     <thead>
     <tr>
-        <th>Action</th>
         <th>State<br>TTL</th>
         <th>Msg ID<br>Related ID</th>
         <th>Recipient<br>Sender</th>
@@ -12,16 +11,15 @@
         <th>Created<br>Updated</th>
     </tr>
     <tr>
-        <td colspan="7" style="padding: 0.5ch">
+        <td colspan="6" style="padding: 0.5ch">
             <a style="float:right" href="/message-queue/new">[Add Message]</a>
         </td>
     </tr>
     </thead>
     {{#each messages}}
     <tr>
-        <td><a href="/message-queue/{{id}}/edit">[Edit]</a></td>
         <td>{{stateCode}}&nbsp;{{state}}</td>
-        <td>{{id}}</td>
+        <td><a href="/message-queue/{{id}}">{{id}}</a></td>
         <td><a href="/message-queue?inbox={{recipientInbox}}">{{recipientInbox}}</a></td>
         <td>{{function}}</td>
         <td title="{{ownerInstanceFull}}">
@@ -30,11 +28,14 @@
         <td>{{createdTime}}</td>
     </tr>
     <tr>
-        <td>
-            {{#if senderInbox}}<a href="/message-queue/{{id}}/reply">[Reply]</a>{{/if}}
-        </td>
         <td>{{ttl}}</td>
-        <td>{{relatedId}}</td>
+        <td>
+        {{#if hasRelatedMessage}}
+        <a href="/message-queue/{{relatedId}}">{{relatedId}}</a>
+        {{else}}
+            {{relatedId}}
+        {{/if}}
+        </td>
         <td><a href="/message-queue?inbox={{senderInbox}}">{{senderInbox}}</a></td>
         <td>{{payload}}</td>
         <td>{{ownerTick}}</td>
@@ -43,9 +44,9 @@
     {{/each}}
     <tfoot>
     <tr>
-        <td colspan="7" style="padding: 0.5ch">
-            {{#if prev}}<a href="?after={{prev}}">Prev</a>{{/if}}
-            {{#if next}}<a href="?after={{next}}" style="float:right">Next</a>{{/if}}
+        <td colspan="6" style="padding: 0.5ch">
+            {{#if prev}}<a href="?after={{prev}}&{{mqFilter}}">Prev</a>{{/if}}
+            {{#if next}}<a href="?after={{next}}&{{mqFilter}}" style="float:right">Next</a>{{/if}}
         </td>
     </tr>
     </tfoot>
