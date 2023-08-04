@@ -9,7 +9,7 @@
 <p>Update the of a message in the message queue.  This may be useful to prevent an actor
 from resuming an action when this is not desirable. Setting an old message to 'NEW' will
 erase information about its owner, and inboxes will consider the message new again.</p>
-<form method="post" action="/message/{{msgId}}/state">
+<form method="post" action="/message-queue/{{msgId}}/edit">
     <label for="msgId">msgId</label><br>
     <input type="text" disabled id="msgId" name="msgId" value="{{msgId}}">
     <br>

@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<link rel="stylesheet" href="/style.css" />
+<head><title>Update ID</title></head>
+<body>
+{{> control/partials/nav}}
+<section>
+<h1>Create Message</h1>
+<form method="post" action="/message-queue/">
+    <label for="recipientInbox">recipientInbox</label><br>
+    <input type="text" id="recipientInbox" name="recipientInbox" value="{{recipientInbox}}">
+    <br>
+    <label for="senderInbox">senderInbox</label><br>
+    <input type="text" id="senderInbox" name="senderInbox" value="{{senderInbox}}">
+    <br>
+    <label for="relatedId">relatedId</label><br>
+    <input type="text" id="relatedId" name="relatedId" value="{{relatedId}}">
+    <br>
+    <label for="function">function</label><br>
+    <input type="text" id="function" name="function" value="{{function}}">
+    <br>
+    <label for="payload">payload</label><br>
+    <textarea rows="6" cols="40" id="payload" name="payload">{{payload}}</textarea>
+    <br>
+    <br>
+
+    <input type="submit" value="Create Message">
+</form>
+</section>
+</body>
+</html>

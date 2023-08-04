@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import nu.marginalia.client.ServiceMonitors;
 import nu.marginalia.control.model.Actor;
 import nu.marginalia.control.model.DomainComplaintModel;
-import nu.marginalia.control.model.ProcessHeartbeat;
+import nu.marginalia.control.model.MessageQueueEntry;
 import nu.marginalia.control.svc.*;
 import nu.marginalia.db.storage.model.FileStorageId;
 import nu.marginalia.db.storage.model.FileStorageType;
@@ -27,6 +27,7 @@ import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ControlService extends Service {
@@ -80,8 +81,11 @@ public class ControlService extends Service {
         var apiKeysRenderer = rendererFactory.renderer("control/api-keys");
         var domainComplaintsRenderer = rendererFactory.renderer("control/domain-complaints");
 
+        var messageQueueRenderer = rendererFactory.renderer("control/message-queue");
+
         var storageDetailsRenderer = rendererFactory.renderer("control/storage-details");
         var updateMessageStateRenderer = rendererFactory.renderer("control/dialog-update-message-state");
+        var newMessageRenderer = rendererFactory.renderer("control/new-message");
 
         this.controlActorService = controlActorService;
 
@@ -98,7 +102,7 @@ public class ControlService extends Service {
 
         Spark.get("/public/services", this::servicesModel, servicesRenderer::render);
         Spark.get("/public/services/:id", this::serviceModel, serviceByIdRenderer::render);
-        Spark.get("/public/messages/:id", this::messageModel, gson::toJson);
+        Spark.get("/public/messages/:id", this::existingMessageModel, gson::toJson);
         Spark.get("/public/actors", this::processesModel, actorsRenderer::render);
         Spark.get("/public/actors/:fsm", this::actorDetailsModel, actorDetailsRenderer::render);
         Spark.get("/public/storage", this::storageModel, storageRenderer::render);
@@ -114,9 +118,38 @@ public class ControlService extends Service {
         final HtmlRedirect redirectToApiKeys = new HtmlRedirect("/api-keys");
         final HtmlRedirect redirectToStorage = new HtmlRedirect("/storage");
         final HtmlRedirect redirectToComplaints = new HtmlRedirect("/complaints");
+        final HtmlRedirect redirectToMessageQueue = new HtmlRedirect("/message-queue");
 
         Spark.post("/public/fsms/:fsm/start", controlActorService::startFsm, redirectToProcesses);
         Spark.post("/public/fsms/:fsm/stop", controlActorService::stopFsm, redirectToProcesses);
+
+        Spark.get("/public/message-queue", this::messageQueueModel, messageQueueRenderer::render);
+        Spark.post("/public/message-queue/", (rq, rsp) -> {
+            String recipient = rq.queryParams("recipientInbox");
+            String sender = rq.queryParams("senderInbox");
+            String relatedMessage = rq.queryParams("relatedId");
+            String function = rq.queryParams("function");
+            String payload = rq.queryParams("payload");
+
+            persistence.sendNewMessage(recipient,
+                    sender,
+                    relatedMessage == null ? null : Long.parseLong(relatedMessage),
+                    function,
+                    payload,
+                    null);
+
+            return "";
+        }, redirectToMessageQueue);
+        Spark.get("/public/message-queue/new", this::newMessageModel, newMessageRenderer::render);
+        Spark.get("/public/message-queue/:id/reply", this::replyMessageModel, newMessageRenderer::render);
+        Spark.get("/public/message-queue/:id/edit", (rq, rsp) -> persistence.getMessage(Long.parseLong(rq.params("id"))), updateMessageStateRenderer::render);
+        Spark.post("/public/message-queue/:id/edit", (rq, rsp) -> {
+            MqMessageState state = MqMessageState.valueOf(rq.queryParams("state"));
+            long id = Long.parseLong(rq.params("id"));
+            persistence.updateMessageState(id, state);
+            return "";
+        }, redirectToMessageQueue);
+
         Spark.post("/public/storage/:fid/crawl", controlActorService::triggerCrawling, redirectToProcesses);
         Spark.post("/public/storage/:fid/recrawl", controlActorService::triggerRecrawling, redirectToProcesses);
         Spark.post("/public/storage/:fid/process", controlActorService::triggerProcessing, redirectToProcesses);
@@ -134,17 +167,40 @@ public class ControlService extends Service {
         Spark.get("/public/complaints", this::complaintsModel, domainComplaintsRenderer::render);
         Spark.post("/public/complaints/:domain", this::reviewComplaint, redirectToComplaints);
 
-        Spark.get("/public/message/:id/state", (rq, rsp) -> persistence.getMessage(Long.parseLong(rq.params("id"))), updateMessageStateRenderer::render);
-        Spark.post("/public/message/:id/state", (rq, rsp) -> {
-            MqMessageState state = MqMessageState.valueOf(rq.queryParams("state"));
-            long id = Long.parseLong(rq.params("id"));
-            persistence.updateMessageState(id, state);
-            return "";
-        }, redirectToProcesses);
-
         Spark.get("/public/:resource", this::serveStatic);
 
         monitors.subscribe(this::logMonitorStateChange);
+    }
+
+    private Object messageQueueModel(Request request, Response response) {
+        String inboxParam = request.queryParams("inbox");
+        String instanceParam = request.queryParams("instance");
+        String afterParam = request.queryParams("after");
+
+        long afterId = Optional.ofNullable(afterParam).map(Long::parseLong).orElse(Long.MAX_VALUE);
+
+        List<MessageQueueEntry> entries;
+
+        if (inboxParam != null) {
+            entries = messageQueueViewService.getEntriesForInbox(inboxParam, afterId, 20);
+        }
+        else if (instanceParam != null) {
+            entries = messageQueueViewService.getEntriesForInstance(instanceParam, afterId, 20);
+        }
+        else {
+            entries = messageQueueViewService.getEntries(afterId, 20);
+        }
+
+        Object next;
+
+        if (entries.size() == 20)
+            next = entries.stream().mapToLong(MessageQueueEntry::id).min().getAsLong();
+        else
+            next = "";
+
+        Object prev = afterParam == null ? "" : afterParam;
+
+        return Map.of("messages", entries, "next", next, "prev", prev);
     }
 
     private Object complaintsModel(Request request, Response response) {
@@ -224,7 +280,7 @@ public class ControlService extends Service {
     }
 
 
-    private Object messageModel(Request request, Response response) {
+    private Object existingMessageModel(Request request, Response response) {
         var message = messageQueueViewService.getMessage(Long.parseLong(request.params("id")));
         if (message != null) {
             response.type("application/json");
@@ -236,11 +292,34 @@ public class ControlService extends Service {
         }
     }
 
+    private Object newMessageModel(Request request, Response response) {
+        String idParam = request.queryParams("id");
+        if (null == idParam)
+            return Map.of("relatedId", "-1");
+
+        var message = messageQueueViewService.getMessage(Long.parseLong(idParam));
+        if (message != null)
+            return message;
+
+        return Map.of("relatedId", "-1");
+    }
+    private Object replyMessageModel(Request request, Response response) {
+        String idParam = request.params("id");
+
+        var message = messageQueueViewService.getMessage(Long.parseLong(idParam));
+
+        return Map.of("relatedId", message.id(),
+                "recipientInbox", message.senderInbox(),
+                "function", "REPLY");
+    }
+
+
     private Object serviceModel(Request request, Response response) {
         String serviceName = request.params("id");
 
         return Map.of(
                 "id", serviceName,
+                "messages", messageQueueViewService.getEntriesForInbox(serviceName, Long.MAX_VALUE, 20),
                 "events", eventLogService.getLastEntriesForService(serviceName, 20));
     }
 

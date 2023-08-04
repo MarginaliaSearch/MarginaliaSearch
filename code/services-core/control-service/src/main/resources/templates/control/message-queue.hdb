@@ -8,15 +8,13 @@
 <body>
   {{> control/partials/nav}}
   <section>
-  <h1>Services/{{id}}</h1>
-  {{> control/partials/events-table }}
   {{> control/partials/message-queue-table }}
   </section>
 </body>
 <script src="/refresh.js"></script>
 <script>
     window.setInterval(() => {
-        refresh(["services", "events"]);
+        refresh(["queue"]);
     }, 5000);
 </script>
 </html>
