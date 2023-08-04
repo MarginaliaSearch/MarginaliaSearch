@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.control.model.ProcessHeartbeat;
 import nu.marginalia.control.model.ServiceHeartbeat;
+import nu.marginalia.control.model.TaskHeartbeat;
 import nu.marginalia.service.control.ServiceEventLog;
 
 import java.sql.SQLException;
@@ -49,6 +50,49 @@ public class HeartbeatService {
         }
 
         return heartbeats;
+    }
+
+     public List<TaskHeartbeat> getTaskHeartbeats() {
+        List<TaskHeartbeat> heartbeats = new ArrayList<>();
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("""
+                    SELECT TASK_NAME, TASK_BASE, SERVICE_INSTANCE,  STATUS, STAGE_NAME, PROGRESS, TIMESTAMPDIFF(MICROSECOND, TASK_HEARTBEAT.HEARTBEAT_TIME, CURRENT_TIMESTAMP(6)) AS TSDIFF
+                    FROM TASK_HEARTBEAT
+                    INNER JOIN SERVICE_HEARTBEAT ON SERVICE_HEARTBEAT.`INSTANCE` = SERVICE_INSTANCE
+                     """)) {
+            var rs = stmt.executeQuery();
+            while (rs.next()) {
+                int progress = rs.getInt("PROGRESS");
+                heartbeats.add(new TaskHeartbeat(
+                        rs.getString("TASK_NAME"),
+                        rs.getString("TASK_BASE"),
+                        rs.getString("SERVICE_INSTANCE"),
+                        rs.getLong("TSDIFF") / 1000.,
+                        progress < 0 ? null : progress,
+                        rs.getString("STAGE_NAME"),
+                        rs.getString("STATUS")
+                ));
+            }
+        }
+        catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+        return heartbeats;
+    }
+
+    public void removeTaskHeartbeat(TaskHeartbeat heartbeat) {
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("""
+                     DELETE FROM TASK_HEARTBEAT
+                      WHERE SERVICE_INSTANCE = ?
+                     """)) {
+
+            stmt.setString(1, heartbeat.serviceUuuidFull());
+            stmt.executeUpdate();
+        }
+        catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public List<ProcessHeartbeat> getProcessHeartbeats() {
@@ -99,5 +143,4 @@ public class HeartbeatService {
             throw new RuntimeException(ex);
         }
     }
-
 }

@@ -13,9 +13,11 @@ import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
 import nu.marginalia.model.idx.DocumentMetadata;
+import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.test.TestUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,7 +86,9 @@ class ReverseIndexFullConverterTest {
         var docsFile = dataDir.resolve("docs.dat");
         var journalReader = new IndexJournalReaderSingleCompressedFile(indexFile);
 
-        new ReverseIndexFullConverter(tmpDir, journalReader, new DomainRankings(), wordsFile, docsFile)
+        new ReverseIndexFullConverter(
+                Mockito.mock(ServiceHeartbeat.class),
+                tmpDir, journalReader, new DomainRankings(), wordsFile, docsFile)
                 .convert();
 
         var reverseIndexReader = new ReverseIndexFullReader(wordsFile, docsFile);

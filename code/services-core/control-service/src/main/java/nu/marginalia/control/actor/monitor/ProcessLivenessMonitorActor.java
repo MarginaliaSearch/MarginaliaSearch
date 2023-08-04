@@ -3,6 +3,7 @@ package nu.marginalia.control.actor.monitor;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.control.model.ProcessHeartbeat;
+import nu.marginalia.control.model.ServiceHeartbeat;
 import nu.marginalia.control.svc.HeartbeatService;
 import nu.marginalia.control.svc.ProcessService;
 import nu.marginalia.mqsm.StateFactory;
@@ -11,6 +12,7 @@ import nu.marginalia.mqsm.graph.GraphState;
 import nu.marginalia.mqsm.graph.ResumeBehavior;
 
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Singleton
 public class ProcessLivenessMonitorActor extends AbstractStateGraph {
@@ -46,12 +48,33 @@ public class ProcessLivenessMonitorActor extends AbstractStateGraph {
     public void monitor() throws Exception {
 
         for (;;) {
-            var processHeartbeats = heartbeatService.getProcessHeartbeats();
+            for (var heartbeat : heartbeatService.getProcessHeartbeats()) {
+                if (!heartbeat.isRunning()) {
+                    continue;
+                }
 
-            processHeartbeats.stream()
-                    .filter(ProcessHeartbeat::isRunning)
-                    .filter(p -> !processService.isRunning(p.getProcessId()))
-                    .forEach(heartbeatService::flagProcessAsStopped);
+                var processId = heartbeat.getProcessId();
+                if (null == processId)
+                    continue;
+
+                if (processService.isRunning(processId) && heartbeat.lastSeenMillis() < 10000) {
+                    continue;
+                }
+
+                heartbeatService.flagProcessAsStopped(heartbeat);
+            }
+
+            var livingServices = heartbeatService.getServiceHeartbeats().stream()
+                    .filter(ServiceHeartbeat::alive)
+                    .map(ServiceHeartbeat::uuidFull)
+                    .collect(Collectors.toSet());
+
+            for (var heartbeat : heartbeatService.getTaskHeartbeats()) {
+                if (!livingServices.contains(heartbeat.serviceUuuidFull())) {
+                    heartbeatService.removeTaskHeartbeat(heartbeat);
+                }
+            }
+
 
             TimeUnit.SECONDS.sleep(60);
         }

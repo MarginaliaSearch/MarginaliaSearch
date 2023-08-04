@@ -16,7 +16,7 @@
 <script src="/refresh.js"></script>
 <script>
     window.setInterval(() => {
-        refresh(["processes", "actors", "queue"]);
+        refresh(["processes", "jobs", "actors", "queue"]);
     }, 2000);
 </script>
 </html>

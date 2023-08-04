@@ -63,6 +63,7 @@ public class IndexQueryServiceIntegrationTestModule extends AbstractModule {
             when(fileStorageServiceMock.getStorageByType(FileStorageType.INDEX_STAGING)).thenReturn(new FileStorage(null, null, null, slowDir.toString(), null));
 
             var servicesFactory = new IndexServicesFactory(
+                    Mockito.mock(ServiceHeartbeat.class),
                     fileStorageServiceMock
             );
             bind(IndexServicesFactory.class).toInstance(servicesFactory);

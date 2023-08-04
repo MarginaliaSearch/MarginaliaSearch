@@ -14,10 +14,12 @@ import nu.marginalia.lexicon.journal.KeywordLexiconJournalMode;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
+import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.test.TestUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,7 +119,7 @@ class ReverseIndexFullConverterTest2 {
 
         Path tmpDir = Path.of("/tmp");
 
-        new ReverseIndexFullConverter(tmpDir, new IndexJournalReaderSingleCompressedFile(indexFile), new DomainRankings(), wordsFile, docsFile).convert();
+        new ReverseIndexFullConverter(Mockito.mock(ServiceHeartbeat.class), tmpDir, new IndexJournalReaderSingleCompressedFile(indexFile), new DomainRankings(), wordsFile, docsFile).convert();
 
         var reverseReader = new ReverseIndexFullReader(wordsFile, docsFile);
 
@@ -142,7 +144,7 @@ class ReverseIndexFullConverterTest2 {
 
         Path tmpDir = Path.of("/tmp");
 
-        new ReverseIndexFullConverter(tmpDir, new IndexJournalReaderSingleCompressedFile(indexFile, null, ReverseIndexPriorityParameters::filterPriorityRecord), new DomainRankings(), wordsFile, docsFile).convert();
+        new ReverseIndexFullConverter(Mockito.mock(ServiceHeartbeat.class), tmpDir, new IndexJournalReaderSingleCompressedFile(indexFile, null, ReverseIndexPriorityParameters::filterPriorityRecord), new DomainRankings(), wordsFile, docsFile).convert();
 
         var reverseReader = new ReverseIndexFullReader(wordsFile, docsFile);
 

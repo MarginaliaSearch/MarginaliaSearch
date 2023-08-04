@@ -15,9 +15,9 @@ import nu.marginalia.index.full.ReverseIndexFullConverter;
 import nu.marginalia.index.priority.ReverseIndexPriorityReader;
 import nu.marginalia.index.priority.ReverseIndexPriorityParameters;
 import nu.marginalia.index.full.ReverseIndexFullReader;
-import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.index.index.SearchIndexReader;
+import nu.marginalia.service.control.ServiceHeartbeat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +33,7 @@ import java.util.stream.Stream;
 @Singleton
 public class IndexServicesFactory {
     private final Path tmpFileDir;
+    private final ServiceHeartbeat heartbeat;
     private final Path liveStorage;
     private final Path stagingStorage;
 
@@ -55,8 +56,10 @@ public class IndexServicesFactory {
 
     @Inject
     public IndexServicesFactory(
+            ServiceHeartbeat heartbeat,
             FileStorageService fileStorageService
             ) throws IOException, SQLException {
+        this.heartbeat = heartbeat;
 
         liveStorage = fileStorageService.getStorageByType(FileStorageType.INDEX_LIVE).asPath();
         stagingStorage = fileStorageService.getStorageByType(FileStorageType.INDEX_STAGING).asPath();
@@ -100,17 +103,34 @@ public class IndexServicesFactory {
         ).noneMatch(Files::exists);
     }
 
+    enum ConvertSteps {
+        FORWARD_INDEX,
+        FULL_REVERSE_INDEX,
+        PRIORITY_REVERSE_INDEX,
+        FINISHED
+    }
     public void convertIndex(DomainRankings domainRankings) throws IOException {
-        convertForwardIndex(domainRankings);
-        convertFullReverseIndex(domainRankings);
-        convertPriorityReverseIndex(domainRankings);
+        try (var hb = heartbeat.createServiceProcessHeartbeat(ConvertSteps.class, "index-conversion")) {
+            hb.progress(ConvertSteps.FORWARD_INDEX);
+            convertForwardIndex(domainRankings);
+
+            hb.progress(ConvertSteps.FULL_REVERSE_INDEX);
+            convertFullReverseIndex(domainRankings);
+
+            hb.progress(ConvertSteps.PRIORITY_REVERSE_INDEX);
+            convertPriorityReverseIndex(domainRankings);
+
+            hb.progress(ConvertSteps.FINISHED);
+        }
     }
 
     private void convertFullReverseIndex(DomainRankings domainRankings) throws IOException {
         logger.info("Converting full reverse index {}", writerIndexFile);
 
         var journalReader = new IndexJournalReaderSingleCompressedFile(writerIndexFile);
-        var converter = new ReverseIndexFullConverter(tmpFileDir,
+        var converter = new ReverseIndexFullConverter(
+                heartbeat,
+                tmpFileDir,
                 journalReader,
                 domainRankings,
                 revIndexWords.get(NEXT_PART).toPath(),
@@ -128,7 +148,8 @@ public class IndexServicesFactory {
         var journalReader = new IndexJournalReaderSingleCompressedFile(writerIndexFile, null,
                 ReverseIndexPriorityParameters::filterPriorityRecord);
 
-        var converter = new ReverseIndexPriorityConverter(tmpFileDir,
+        var converter = new ReverseIndexPriorityConverter(heartbeat,
+                tmpFileDir,
                 journalReader,
                 domainRankings,
                 revPrioIndexWords.get(NEXT_PART).toPath(),
@@ -144,7 +165,8 @@ public class IndexServicesFactory {
 
         logger.info("Converting forward index data {}", writerIndexFile);
 
-        new ForwardIndexConverter(writerIndexFile.toFile(),
+        new ForwardIndexConverter(heartbeat,
+                writerIndexFile.toFile(),
                 fwdIndexDocId.get(NEXT_PART).toPath(),
                 fwdIndexDocData.get(NEXT_PART).toPath(),
                 domainRankings)

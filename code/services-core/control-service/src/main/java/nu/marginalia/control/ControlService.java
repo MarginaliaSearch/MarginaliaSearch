@@ -266,11 +266,11 @@ public class ControlService extends Service {
     }
 
     private Object processesModel(Request request, Response response) {
-        var heartbeatsAll = heartbeatService.getProcessHeartbeats();
-        var byIsJob = heartbeatsAll.stream().collect(Collectors.partitioningBy(ProcessHeartbeat::isServiceJob));
+        var processes = heartbeatService.getProcessHeartbeats();
+        var jobs = heartbeatService.getTaskHeartbeats();
 
-        return Map.of("processes", byIsJob.get(false),
-                      "jobs", byIsJob.get(true),
+        return Map.of("processes", processes,
+                      "jobs", jobs,
                       "actors", controlActorService.getActorStates(),
                       "messages", messageQueueViewService.getLastEntries(20));
     }

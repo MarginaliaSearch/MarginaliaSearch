@@ -1,5 +1,6 @@
 
 <h1>Processes</h1>
+
 <table id="processes">
     <tr>
         <th>Process ID</th>
@@ -10,13 +11,31 @@
     </tr>
     {{#each processes}}
     <tr class="{{#if isMissing}}missing{{/if}}">
-        <td>{{processId}}</td>
+        <td>{{displayName}}</td>
         <td title="{{uuidFull}}">
             <span style="background-color: {{uuidColor}}" class="uuidPip">&nbsp;</span><span style="background-color: {{uuidColor2}}" class="uuidPip">&nbsp;</span>
             {{uuid}}
         </td>
         <td>{{status}}</td>
         <td style="{{progressStyle}}">{{#if progress}}{{progress}}%{{/if}}</td>
+        <td>{{#unless isStopped}}{{lastSeenMillis}}{{/unless}}</td>
+    </tr>
+    {{/each}}
+</table>
+
+<h1>Jobs</h1>
+<table id="jobs">
+    <tr>
+        <th>Process ID</th>
+        <th>Status</th>
+        <th>Progress</th>
+        <th>Last Seen (ms)</th>
+    </tr>
+    {{#each jobs}}
+    <tr class="{{#if isMissing}}missing{{/if}}">
+        <td>{{taskBase}}</td>
+        <td>{{status}}</td>
+        <td style="{{progressStyle}}">{{#if progress}}{{progress}}%{{/if}} {{stage}}</td>
         <td>{{#unless isStopped}}{{lastSeenMillis}}{{/unless}}</td>
     </tr>
     {{/each}}

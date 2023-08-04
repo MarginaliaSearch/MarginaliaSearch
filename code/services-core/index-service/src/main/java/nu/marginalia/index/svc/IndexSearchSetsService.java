@@ -21,6 +21,7 @@ import nu.marginalia.index.config.RankingSettings;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.index.client.model.query.SearchSetIdentifier;
 import nu.marginalia.index.db.DbUpdateRanks;
+import nu.marginalia.service.control.ServiceHeartbeat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +31,7 @@ import java.io.IOException;
 public class IndexSearchSetsService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final DomainTypes domainTypes;
+    private final ServiceHeartbeat heartbeat;
     private final DbUpdateRanks dbUpdateRanks;
     private final RankingDomainFetcher similarityDomains;
     private final RankingSettings rankingSettings;
@@ -47,12 +49,14 @@ public class IndexSearchSetsService {
 
     @Inject
     public IndexSearchSetsService(DomainTypes domainTypes,
+                                  ServiceHeartbeat heartbeat,
                                   RankingDomainFetcher rankingDomains,
                                   RankingDomainFetcherForSimilarityData similarityDomains,
                                   RankingSettings rankingSettings,
                                   IndexServicesFactory servicesFactory,
                                   DbUpdateRanks dbUpdateRanks) throws IOException {
         this.domainTypes = domainTypes;
+        this.heartbeat = heartbeat;
 
         this.dbUpdateRanks = dbUpdateRanks;
 
@@ -90,12 +94,34 @@ public class IndexSearchSetsService {
         };
     }
 
+    enum RepartitionSteps {
+        UPDATE_ACADEMIA,
+        UPDATE_RETRO,
+        UPDATE_SMALL_WEB,
+        UPDATE_BLOGS,
+        UPDATE_RANKINGS,
+        FINISHED
+    }
     public void recalculateAll() {
-        updateAcademiaDomainsSet();
-        updateRetroDomainsSet();
-        updateSmallWebDomainsSet();
-        updateBlogsSet();
-        updateDomainRankings();
+        try (var processHeartbeat = heartbeat.createServiceProcessHeartbeat(RepartitionSteps.class, "repartitionAll")) {
+
+            processHeartbeat.progress(RepartitionSteps.UPDATE_ACADEMIA);
+            updateAcademiaDomainsSet();
+
+            processHeartbeat.progress(RepartitionSteps.UPDATE_RETRO);
+            updateRetroDomainsSet();
+
+            processHeartbeat.progress(RepartitionSteps.UPDATE_SMALL_WEB);
+            updateSmallWebDomainsSet();
+
+            processHeartbeat.progress(RepartitionSteps.UPDATE_BLOGS);
+            updateBlogsSet();
+
+            processHeartbeat.progress(RepartitionSteps.UPDATE_RANKINGS);
+            updateDomainRankings();
+
+            processHeartbeat.progress(RepartitionSteps.FINISHED);
+        }
     }
 
     private void updateDomainRankings() {

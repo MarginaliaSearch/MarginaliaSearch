@@ -10,7 +10,8 @@ import org.slf4j.LoggerFactory;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 
-/** This service sends a heartbeat to the database every 5 seconds.
+/** This service sends a heartbeat to the database every 5 seconds,
+ * updating the control service with the liveness information for the service.
  */
 @Singleton
 public class ServiceHeartbeat {
@@ -18,6 +19,7 @@ public class ServiceHeartbeat {
     private final String serviceName;
     private final String serviceBase;
     private final String instanceUUID;
+    private final ServiceConfiguration configuration;
     private final HikariDataSource dataSource;
 
 
@@ -32,6 +34,7 @@ public class ServiceHeartbeat {
     {
         this.serviceName = configuration.serviceName() + ":" + configuration.node();
         this.serviceBase = configuration.serviceName();
+        this.configuration = configuration;
         this.dataSource = dataSource;
 
         this.instanceUUID = configuration.instanceUuid().toString();
@@ -40,6 +43,11 @@ public class ServiceHeartbeat {
 
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutDown));
     }
+
+    public <T extends Enum<T>> ServiceTaskHeartbeat<T> createServiceProcessHeartbeat(Class<T> steps, String processName) {
+        return new ServiceTaskHeartbeat<>(steps, configuration, processName, dataSource);
+    }
+
 
     public void start() {
         if (!running) {
@@ -142,4 +150,5 @@ public class ServiceHeartbeat {
             }
         }
     }
+
 }

@@ -44,7 +44,17 @@ public record ProcessHeartbeat(
             case "loader" -> ProcessService.ProcessId.LOADER;
             case "website-adjacencies-calculator" -> ProcessService.ProcessId.ADJACENCIES_CALCULATOR;
             case "crawl-job-extractor" -> ProcessService.ProcessId.CRAWL_JOB_EXTRACTOR;
-            default -> throw new RuntimeException("Unknown process base: " + processBase);
+            default -> null;
         };
+    }
+
+    public String displayName() {
+        var pid = getProcessId();
+        if (pid != null) {
+            return pid.name();
+        }
+        else {
+            return processBase;
+        }
     }
 }
