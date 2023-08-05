@@ -11,7 +11,7 @@ import nu.marginalia.search.db.DbUrlDetailsQuery;
 import nu.marginalia.search.svc.SearchFrontPageService;
 import nu.marginalia.search.svc.*;
 import nu.marginalia.service.server.*;
-import nu.marginalia.service.server.mq.MqRequest;
+import nu.marginalia.service.server.mq.MqNotification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -76,11 +76,10 @@ public class SearchService extends Service {
         Spark.awaitInitialization();
     }
 
-    @MqRequest(endpoint = SearchMqEndpoints.FLUSH_CACHES)
-    public String flushCaches(String unusedArg) {
+    @MqNotification(endpoint = SearchMqEndpoints.FLUSH_CACHES)
+    public void flushCaches(String unusedArg) {
         logger.info("Flushing caches");
         dbUrlDetailsQuery.clearCaches();
-        return "OK";
     }
 
     private Object serveStatic(Request request, Response response) {
