@@ -11,6 +11,7 @@ import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.search.client.SearchClient;
 import nu.marginalia.search.client.model.ApiSearchResults;
 import nu.marginalia.service.server.*;
+import nu.marginalia.service.server.mq.MqNotification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -56,6 +57,14 @@ public class ApiService extends Service {
         Spark.get("/public/api/:key/", (rq, rsp) -> licenseService.getLicense(rq.params("key")), gson::toJson);
 
         Spark.get("/public/api/:key/search/*", this::search, gson::toJson);
+    }
+
+    @MqNotification(endpoint = "FLUSH_CACHES")
+    public void flushCaches(String unusedArg) {
+        logger.info("Flushing caches");
+
+        responseCache.flush();
+        licenseService.flushCache();
     }
 
     private Object search(Request request, Response response) {
