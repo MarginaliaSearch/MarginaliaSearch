@@ -18,7 +18,7 @@ function download_model {
 
 pushd $(dirname $0)
 
-mkdir -p model logs db samples install vol/ir/{0,1}/ vol/{lr,lw} vol/iw/{0,1}/search-sets vol/{tmpf,tmps} data
+mkdir -p model logs db samples install vol/ir/{0,1}/ vol/{lr,lw} vol/iw/{0,1}/search-sets vol/{tmpf,tmps} data samples/export
 
 download_model model/English.DICT https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/master/Models/POS/English.DICT
 download_model model/English.RDR https://raw.githubusercontent.com/datquocnguyen/RDRPOSTagger/master/Models/POS/English.RDR

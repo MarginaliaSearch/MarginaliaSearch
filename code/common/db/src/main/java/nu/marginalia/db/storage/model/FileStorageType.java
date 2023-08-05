@@ -9,5 +9,6 @@ public enum FileStorageType {
     INDEX_LIVE,
     LEXICON_LIVE,
     BACKUP,
+    EXPORT,
     SEARCH_SETS
 }
