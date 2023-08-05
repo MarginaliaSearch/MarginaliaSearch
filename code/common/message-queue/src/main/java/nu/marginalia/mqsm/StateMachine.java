@@ -3,7 +3,6 @@ package nu.marginalia.mqsm;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.MqMessageState;
-import nu.marginalia.mq.inbox.MqInboxIf;
 import nu.marginalia.mq.inbox.MqInboxResponse;
 import nu.marginalia.mq.inbox.MqSubscription;
 import nu.marginalia.mq.inbox.MqSynchronousInbox;
@@ -136,7 +135,7 @@ public class StateMachine {
             notifyAll();
         }
 
-        smOutbox.notify(transition.state(), transition.message());
+        smOutbox.sendNotice(transition.state(), transition.message());
     }
 
     /** Initialize the state machine. */
@@ -148,7 +147,7 @@ public class StateMachine {
             notifyAll();
         }
 
-        smOutbox.notify(transition.state(), transition.message());
+        smOutbox.sendNotice(transition.state(), transition.message());
     }
 
     /** Initialize the state machine. */
@@ -160,7 +159,7 @@ public class StateMachine {
             notifyAll();
         }
 
-        smOutbox.notify(transition.state(), transition.message());
+        smOutbox.sendNotice(transition.state(), transition.message());
     }
 
     /** Initialize the state machine. */
@@ -172,7 +171,7 @@ public class StateMachine {
             notifyAll();
         }
 
-        smOutbox.notify(transition.state(), transition.message());
+        smOutbox.sendNotice(transition.state(), transition.message());
     }
 
     /** Resume the state machine from the last known state. */
@@ -219,7 +218,7 @@ public class StateMachine {
         try {
             if (resumeState.resumeBehavior().equals(ResumeBehavior.ERROR)) {
                 // The message is acknowledged, but the state does not support resuming
-                smOutbox.notify(expectedMessage.id, "ERROR", "Illegal resumption from ACK'ed state " + message.function());
+                smOutbox.sendNotice(expectedMessage.id, "ERROR", "Illegal resumption from ACK'ed state " + message.function());
             }
             else if (resumeState.resumeBehavior().equals(ResumeBehavior.RESTART)) {
                 this.state = resumeState;
@@ -227,7 +226,7 @@ public class StateMachine {
                 // The message is already acknowledged, we flag it as dead and then send an identical message
                 smOutbox.flagAsDead(message.msgId());
                 expectedMessage = ExpectedMessage.responseTo(message);
-                smOutbox.notify(message.msgId(), "INITIAL", "");
+                smOutbox.sendNotice(message.msgId(), "INITIAL", "");
             }
             else {
                 this.state = resumeState;
@@ -235,7 +234,7 @@ public class StateMachine {
                 // The message is already acknowledged, we flag it as dead and then send an identical message
                 smOutbox.flagAsDead(message.msgId());
                 expectedMessage = ExpectedMessage.responseTo(message);
-                smOutbox.notify(message.msgId(), message.function(), message.payload());
+                smOutbox.sendNotice(message.msgId(), message.function(), message.payload());
             }
         }
         catch (Exception e) {
@@ -288,7 +287,7 @@ public class StateMachine {
                 }
                 else {
                     expectedMessage = ExpectedMessage.responseTo(msg);
-                    smOutbox.notify(expectedMessage.id, transition.state(), transition.message());
+                    smOutbox.sendNotice(expectedMessage.id, transition.state(), transition.message());
                 }
             }
             else {
@@ -319,7 +318,7 @@ public class StateMachine {
         // and also permits the real termination message to have an
         // unique expected ID
 
-        long abortMsgId = smOutbox.notify(expectedMessage.id, "ABORT", "Aborting execution");
+        long abortMsgId = smOutbox.sendNotice(expectedMessage.id, "ABORT", "Aborting execution");
 
         // Set it as dead to clean up the queue from mystery ACK messages
         smOutbox.flagAsDead(abortMsgId);
@@ -333,7 +332,7 @@ public class StateMachine {
         expectedMessage = ExpectedMessage.expectId(abortMsgId);
 
         // Add a state transition to the final state
-        smOutbox.notify(abortMsgId, finalState.name(), "");
+        smOutbox.sendNotice(abortMsgId, finalState.name(), "");
 
         // Dislodge the current task with an interrupt.
         // It's actually fine if we accidentally interrupt the wrong thread

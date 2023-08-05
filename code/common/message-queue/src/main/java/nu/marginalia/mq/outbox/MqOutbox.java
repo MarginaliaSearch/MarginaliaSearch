@@ -154,10 +154,10 @@ public class MqOutbox {
         return Optional.ofNullable(response);
     }
 
-    public long notify(String function, String payload) throws Exception {
+    public long sendNotice(String function, String payload) throws Exception {
         return persistence.sendNewMessage(inboxName, null, null, function, payload, null);
     }
-    public long notify(long relatedId, String function, String payload) throws Exception {
+    public long sendNotice(long relatedId, String function, String payload) throws Exception {
         return persistence.sendNewMessage(inboxName, null, relatedId, function, payload, null);
     }
 
