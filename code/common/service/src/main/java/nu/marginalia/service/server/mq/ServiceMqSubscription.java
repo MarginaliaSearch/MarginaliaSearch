@@ -18,29 +18,40 @@ public class ServiceMqSubscription implements MqSubscription {
     private final Map<String, Method> notifications = new HashMap<>();
     private final Service service;
 
+
     public ServiceMqSubscription(Service service) {
         this.service = service;
+
+        /* Wire up all methods annotated with @MqRequest and @MqNotification
+         * to receive corresponding messages from this subscription */
+
         for (var method : service.getClass().getMethods()) {
             var annotation = method.getAnnotation(MqRequest.class);
             if (annotation != null) {
                 requests.put(annotation.endpoint(), method);
             }
-            if (method.getAnnotation(MqNotification.class) != null) {
-                notifications.put(method.getName(), method);
+        }
+
+        for (var method : service.getClass().getMethods()) {
+            var annotation = method.getAnnotation(MqNotification.class);
+            if (annotation != null) {
+                notifications.put(annotation.endpoint(), method);
             }
         }
     }
 
     @Override
     public boolean filter(MqMessage rawMessage) {
-        boolean isInteresting = requests.containsKey(rawMessage.function())
-                || notifications.containsKey(rawMessage.function());
-
-        if (!isInteresting) {
-            logger.warn("Received message for unknown function " + rawMessage.function());
+        if (requests.containsKey(rawMessage.function())) {
+            return true;
+        }
+        if (notifications.containsKey(rawMessage.function())) {
+            return true;
         }
 
-        return isInteresting;
+        logger.warn("Received message for unknown function " + rawMessage.function());
+
+        return false;
     }
 
     @Override
