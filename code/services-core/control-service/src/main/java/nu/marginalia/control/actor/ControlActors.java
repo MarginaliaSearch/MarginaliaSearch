@@ -45,7 +45,9 @@ public class ControlActors {
                          ProcessLivenessMonitorActor processMonitorFSM,
                          FileStorageMonitorActor fileStorageMonitorActor,
                          TriggerAdjacencyCalculationActor triggerAdjacencyCalculationActor,
-                         CrawlJobExtractorActor crawlJobExtractorActor
+                         CrawlJobExtractorActor crawlJobExtractorActor,
+                         ExportDataActor exportDataActor,
+                         FlushLinkDatabase flushLinkDatabase
                             ) {
         this.messageQueueFactory = messageQueueFactory;
         this.eventLog = baseServiceParams.eventLog;
@@ -62,6 +64,8 @@ public class ControlActors {
         register(Actor.FILE_STORAGE_MONITOR, fileStorageMonitorActor);
         register(Actor.ADJACENCY_CALCULATION, triggerAdjacencyCalculationActor);
         register(Actor.CRAWL_JOB_EXTRACTOR, crawlJobExtractorActor);
+        register(Actor.EXPORT_DATA, exportDataActor);
+        register(Actor.FLUSH_LINK_DATABASE, flushLinkDatabase);
     }
 
     private void register(Actor process, AbstractStateGraph graph) {

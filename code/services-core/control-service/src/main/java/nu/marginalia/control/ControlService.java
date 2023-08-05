@@ -58,6 +58,7 @@ public class ControlService extends Service {
                           ControlFileStorageService controlFileStorageService,
                           ApiKeyService apiKeyService,
                           DomainComplaintService domainComplaintService,
+                          ControlActionsService controlActionsService,
                           MqPersistence persistence
                       ) throws IOException {
 
@@ -88,6 +89,8 @@ public class ControlService extends Service {
         var newMessageRenderer = rendererFactory.renderer("control/new-message");
         var viewMessageRenderer = rendererFactory.renderer("control/view-message");
 
+        var actionsViewRenderer = rendererFactory.renderer("control/actions");
+
         this.controlActorService = controlActorService;
 
         this.staticResources = staticResources;
@@ -101,28 +104,26 @@ public class ControlService extends Service {
 
         Spark.get("/public/", (req, rsp) -> indexRenderer.render(Map.of()));
 
+        Spark.get("/public/actions", (rq,rsp) -> new Object() , actionsViewRenderer::render);
         Spark.get("/public/services", this::servicesModel, servicesRenderer::render);
         Spark.get("/public/services/:id", this::serviceModel, serviceByIdRenderer::render);
         Spark.get("/public/messages/:id", this::existingMessageModel, gson::toJson);
         Spark.get("/public/actors", this::processesModel, actorsRenderer::render);
         Spark.get("/public/actors/:fsm", this::actorDetailsModel, actorDetailsRenderer::render);
-        Spark.get("/public/storage", this::storageModel, storageRenderer::render);
-        Spark.get("/public/storage/specs", this::storageModelSpecs, storageSpecsRenderer::render);
-        Spark.get("/public/storage/crawls", this::storageModelCrawls, storageCrawlsRenderer::render);
-        Spark.get("/public/storage/processed", this::storageModelProcessed, storageProcessedRenderer::render);
-        Spark.get("/public/storage/:id", this::storageDetailsModel, storageDetailsRenderer::render);
-        Spark.get("/public/storage/:id/file", controlFileStorageService::downloadFileFromStorage);
-
 
         final HtmlRedirect redirectToServices = new HtmlRedirect("/services");
-        final HtmlRedirect redirectToProcesses = new HtmlRedirect("/actors");
+        final HtmlRedirect redirectToActors = new HtmlRedirect("/actors");
         final HtmlRedirect redirectToApiKeys = new HtmlRedirect("/api-keys");
         final HtmlRedirect redirectToStorage = new HtmlRedirect("/storage");
         final HtmlRedirect redirectToComplaints = new HtmlRedirect("/complaints");
         final HtmlRedirect redirectToMessageQueue = new HtmlRedirect("/message-queue");
 
-        Spark.post("/public/fsms/:fsm/start", controlActorService::startFsm, redirectToProcesses);
-        Spark.post("/public/fsms/:fsm/stop", controlActorService::stopFsm, redirectToProcesses);
+        // FSMs
+
+        Spark.post("/public/fsms/:fsm/start", controlActorService::startFsm, redirectToActors);
+        Spark.post("/public/fsms/:fsm/stop", controlActorService::stopFsm, redirectToActors);
+
+        // Message Queue
 
         Spark.get("/public/message-queue", this::messageQueueModel, messageQueueRenderer::render);
         Spark.post("/public/message-queue/", (rq, rsp) -> {
@@ -156,13 +157,25 @@ public class ControlService extends Service {
             return "";
         }, redirectToMessageQueue);
 
-        Spark.post("/public/storage/:fid/crawl", controlActorService::triggerCrawling, redirectToProcesses);
-        Spark.post("/public/storage/:fid/recrawl", controlActorService::triggerRecrawling, redirectToProcesses);
-        Spark.post("/public/storage/:fid/process", controlActorService::triggerProcessing, redirectToProcesses);
-        Spark.post("/public/storage/:fid/load", controlActorService::loadProcessedData, redirectToProcesses);
+        // Storage
+        Spark.get("/public/storage", this::storageModel, storageRenderer::render);
+        Spark.get("/public/storage/specs", this::storageModelSpecs, storageSpecsRenderer::render);
+        Spark.get("/public/storage/crawls", this::storageModelCrawls, storageCrawlsRenderer::render);
+        Spark.get("/public/storage/processed", this::storageModelProcessed, storageProcessedRenderer::render);
+        Spark.get("/public/storage/:id", this::storageDetailsModel, storageDetailsRenderer::render);
+        Spark.get("/public/storage/:id/file", controlFileStorageService::downloadFileFromStorage);
+
+        // Storage Actions
+
+        Spark.post("/public/storage/:fid/crawl", controlActorService::triggerCrawling, redirectToActors);
+        Spark.post("/public/storage/:fid/recrawl", controlActorService::triggerRecrawling, redirectToActors);
+        Spark.post("/public/storage/:fid/process", controlActorService::triggerProcessing, redirectToActors);
+        Spark.post("/public/storage/:fid/load", controlActorService::loadProcessedData, redirectToActors);
 
         Spark.post("/public/storage/specs", controlActorService::createCrawlSpecification, redirectToStorage);
         Spark.post("/public/storage/:fid/delete", controlFileStorageService::flagFileForDeletionRequest, redirectToStorage);
+
+        // API Keys
 
         Spark.get("/public/api-keys", this::apiKeysModel, apiKeysRenderer::render);
         Spark.post("/public/api-keys", this::createApiKey, redirectToApiKeys);
@@ -172,6 +185,16 @@ public class ControlService extends Service {
 
         Spark.get("/public/complaints", this::complaintsModel, domainComplaintsRenderer::render);
         Spark.post("/public/complaints/:domain", this::reviewComplaint, redirectToComplaints);
+
+        // Actions
+
+        Spark.post("/public/actions/calculate-adjacencies", controlActionsService::calculateAdjacencies, redirectToActors);
+        Spark.post("/public/actions/repartition-index", controlActionsService::triggerRepartition, redirectToActors);
+        Spark.post("/public/actions/reconvert-index", controlActionsService::triggerReconversion, redirectToActors);
+        Spark.post("/public/actions/trigger-data-exports", controlActionsService::triggerDataExports, redirectToActors);
+        Spark.post("/public/actions/flush-search-caches", controlActionsService::flushSearchCaches, redirectToActors);
+        Spark.post("/public/actions/flush-api-caches", controlActionsService::flushApiCaches, redirectToActors);
+        Spark.post("/public/actions/flush-links-database", controlActionsService::flushLinkDatabase, redirectToActors);
 
         Spark.get("/public/:resource", this::serveStatic);
 

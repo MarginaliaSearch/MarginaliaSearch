@@ -45,33 +45,54 @@
       {{/if}}
 
       <h2>Actions</h2>
-      {{#with storage.self}}
-      {{#if isCrawlable}}
-      <form method="post" action="/storage/{{storage.id}}/crawl" onsubmit="return confirm('Confirm crawling of {{storage.path}}')">
-          Perform a full re-crawl of this data: <button type="submit">Crawl</button> <br>
-      </form>
-      {{/if}}
-      {{#if isLoadable}}
-      <form method="post" action="/storage/{{storage.id}}/load" onsubmit="return confirm('Confirm loading of {{storage.path}}')">
-          Load this data into index: <button type="submit">Load</button> <br>
-      </form>
-      {{/if}}
-      {{#if isConvertible}}
-      <form method="post" action="/storage/{{storage.id}}/process" onsubmit="return confirm('Confirm processing of {{storage.path}}')">
-          Process and load this data into index: <button type="submit">Process</button> <br>
-      </form>
-      {{/if}}
-      {{#if isRecrawlable}}
-      <form method="post" action="/storage/{{storage.id}}/recrawl" onsubmit="return confirm('Confirm re-crawling of {{storage.path}}')">
-          Perform a re-crawl of this data: <button type="submit">Recrawl</button><br>
-      </form>
-      {{/if}}
-      {{#if isDeletable}}
-      <form method="post" action="/storage/{{storage.id}}/delete" onsubmit="return confirm('Confirm deletion of {{storage.path}}')">
-          Delete this data: <button type="submit">Delete</button><br>
-      </form>
-      {{/if}}
-      {{/with}}
+      <table>
+          <tr>
+              <th>Description</th>
+              <th>Trigger</th>
+          </tr>
+          {{#with storage.self}}
+          {{#if isCrawlable}}
+          <form method="post" action="/storage/{{storage.id}}/crawl" onsubmit="return confirm('Confirm crawling of {{storage.path}}')">
+              <tr>
+                  <td>Perform a full re-crawl of this data</td>
+                  <td><button type="submit">Crawl</button></td>
+              </tr>
+          </form>
+          {{/if}}
+          {{#if isLoadable}}
+          <form method="post" action="/storage/{{storage.id}}/load" onsubmit="return confirm('Confirm loading of {{storage.path}}')">
+          <tr>
+              <td>Load this data into index</td>
+              <td><button type="submit">Load</button></td>
+          </tr>
+          </form>
+          {{/if}}
+          {{#if isConvertible}}
+          <form method="post" action="/storage/{{storage.id}}/process" onsubmit="return confirm('Confirm processing of {{storage.path}}')">
+            <tr>
+                <td>Process and load this data into index</td>
+                <td><button type="submit">Process</button></td>
+            </tr>
+          </form>
+          {{/if}}
+          {{#if isRecrawlable}}
+          <form method="post" action="/storage/{{storage.id}}/recrawl" onsubmit="return confirm('Confirm re-crawling of {{storage.path}}')">
+            <tr>
+                <td>Perform a re-crawl of this data</td>
+                <td><button type="submit">Recrawl</button></td>
+            </tr>
+          </form>
+          {{/if}}
+          {{#if isDeletable}}
+          <form method="post" action="/storage/{{storage.id}}/delete" onsubmit="return confirm('Confirm deletion of {{storage.path}}')">
+              <tr>
+                  <td>Delete this data</td>
+                  <td><button type="submit">Delete</button></td>
+              </tr>
+          </form>
+          {{/if}}
+        {{/with}}
+      </table>
   {{#if storage.related}}
   <h2>Related</h2>
   <table>

@@ -1,12 +1,16 @@
 <nav>
     <ul>
         <li><a href="/">Overview</a></li>
-        <li><a href="/services">Services</a></li>
-        <li><a href="/actors">Actors</a></li>
-        <li><a href="/message-queue">Message Queue</a></li>
-        <li><a href="/storage">Storage</a></li>
+        <li>---</li>
         <li><a href="/api-keys">API Keys</a></li>
         <li><a href="/blacklist">Blacklist</a></li>
         <li><a href="/complaints">Complaints</a></li>
+        <li>---</li>
+        <li><a href="/actions">Actions</a></li>
+        <li><a href="/storage">Storage</a></li>
+        <li>---</li>
+        <li><a href="/services">Services</a></li>
+        <li><a href="/actors">Actors</a></li>
+        <li><a href="/message-queue">Message Queue</a></li>
     </ul>
 </nav>
