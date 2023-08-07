@@ -3,7 +3,6 @@ plugins {
     id "io.freefair.lombok" version "5.3.3.3"
     id 'jvm-test-suite'
     id "org.flywaydb.flyway" version "8.2.0"
-
 }
 
 java {
@@ -47,7 +46,6 @@ dependencies {
 }
 
 flyway {
-
     url = 'jdbc:mariadb://localhost:3306/WMSA_prod'
     user = 'wmsa'
     password = 'wmsa'
@@ -55,6 +53,7 @@ flyway {
     configurations = [ 'compileClasspath', 'flywayMigration' ]
     locations = ['filesystem:src/main/resources/db/migration']
 }
+
 
 test {
     maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1

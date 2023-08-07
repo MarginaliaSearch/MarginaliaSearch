@@ -36,6 +36,7 @@ public class ConverterDomainTypes {
         }
 
         for (var item : allBlogs) {
+
             blogs.add(new EdgeDomain(item));
         }
 
