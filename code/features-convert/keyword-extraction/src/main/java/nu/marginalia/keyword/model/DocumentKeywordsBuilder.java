@@ -62,7 +62,7 @@ public class DocumentKeywordsBuilder {
         words.putIfAbsent(word, 0);
     }
 
-    public void setFlagOnMetadataForWords(WordFlags flag, Set<String> flagWords) {
+    public void setFlagOnMetadataForWords(WordFlags flag, Collection<String> flagWords) {
         flagWords.forEach(word ->
             words.mergeLong(word, flag.asBit(), (a, b) -> a|b)
         );

@@ -79,11 +79,14 @@ dependencies {
     implementation libs.crawlercommons
 
     implementation libs.commons.lang3
+    implementation libs.commons.compress
     implementation libs.sqlite
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
+
+    implementation 'org.tukaani:xz:1.8'
 
     testImplementation project(':code:processes:test-data')
     testImplementation project(':code:processes:crawling-process')

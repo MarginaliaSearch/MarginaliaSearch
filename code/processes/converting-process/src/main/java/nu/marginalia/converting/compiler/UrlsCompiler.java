@@ -66,6 +66,9 @@ public class UrlsCompiler {
 
             urls.add(urlsIterator.next());
         }
+        if (!urls.isEmpty()) {
+            instructionConsumer.accept(new LoadUrl(urls.toArray(EdgeUrl[]::new)));
+        }
     }
 
     public void compileJustDomain(Consumer<Instruction> instructionConsumer, EdgeDomain domain) {

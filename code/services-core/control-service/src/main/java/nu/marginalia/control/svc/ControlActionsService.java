@@ -12,7 +12,6 @@ import nu.marginalia.search.client.SearchClient;
 import nu.marginalia.search.client.SearchMqEndpoints;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.id.ServiceId;
-import nu.marginalia.service.server.BaseServiceParams;
 import spark.Request;
 import spark.Response;
 import spark.Spark;
@@ -81,18 +80,18 @@ public class ControlActionsService {
         return "";
     }
 
-    public Object flushLinkDatabase(Request request, Response response) throws Exception {
+    public Object truncateLinkDatabase(Request request, Response response) throws Exception {
 
         String footgunLicense = request.queryParams("footgun-license");
 
         if (!"YES".equals(footgunLicense)) {
             Spark.halt(403);
-            return "You must agree to the footgun license to flush the link database";
+            return "You must agree to the footgun license to truncate the link database";
         }
 
         eventLog.logEvent("USER-ACTION", "FLUSH-LINK-DATABASE");
 
-        actors.start(Actor.FLUSH_LINK_DATABASE);
+        actors.start(Actor.TRUNCATE_LINK_DATABASE);
 
         return "";
     }
@@ -103,7 +102,7 @@ public class ControlActionsService {
         return null;
     }
 
-    public Object triggerReconversion(Request request, Response response) throws Exception {
+    public Object triggerIndexReconstruction(Request request, Response response) throws Exception {
         indexClient.outbox().sendAsync(IndexMqEndpoints.INDEX_REINDEX, "");
 
         return null;

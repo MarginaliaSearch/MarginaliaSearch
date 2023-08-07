@@ -1,5 +1,6 @@
 package nu.marginalia.mqsm.graph;
 
+/** Exception thrown by a state to indicate that the state machine should jump to a different state. */
 public class ControlFlowException extends RuntimeException {
     private final String state;
     private final Object payload;

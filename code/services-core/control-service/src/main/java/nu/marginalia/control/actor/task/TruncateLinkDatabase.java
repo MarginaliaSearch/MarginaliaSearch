@@ -14,17 +14,10 @@ import nu.marginalia.mqsm.graph.ResumeBehavior;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedWriter;
-import java.io.OutputStreamWriter;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.sql.SQLException;
-import java.util.zip.GZIPOutputStream;
 
 @Singleton
-public class FlushLinkDatabase extends AbstractStateGraph {
+public class TruncateLinkDatabase extends AbstractStateGraph {
 
 
     // STATES
@@ -41,8 +34,8 @@ public class FlushLinkDatabase extends AbstractStateGraph {
     };
 
     @Inject
-    public FlushLinkDatabase(StateFactory stateFactory,
-                             HikariDataSource dataSource)
+    public TruncateLinkDatabase(StateFactory stateFactory,
+                                HikariDataSource dataSource)
     {
         super(stateFactory);
         this.dataSource = dataSource;

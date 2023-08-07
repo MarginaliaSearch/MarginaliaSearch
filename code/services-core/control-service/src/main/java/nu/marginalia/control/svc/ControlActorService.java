@@ -14,7 +14,7 @@ import nu.marginalia.mqsm.state.MachineState;
 import spark.Request;
 import spark.Response;
 
-import java.util.Map;
+import java.util.Comparator;
 
 @Singleton
 public class ControlActorService {
@@ -84,7 +84,7 @@ public class ControlActorService {
     }
 
     public Object getActorStates() {
-        return controlActors.getActorStates().entrySet().stream().sorted(Map.Entry.comparingByKey()).map(e -> {
+        return controlActors.getActorStates().entrySet().stream().map(e -> {
 
             final MachineState state = e.getValue();
             final String machineName = e.getKey().name();
@@ -93,7 +93,10 @@ public class ControlActorService {
             final boolean canStart = controlActors.isDirectlyInitializable(e.getKey()) && terminal;
 
             return new ActorRunState(machineName, stateName, terminal, canStart);
-        }).toList();
+        })
+                .filter(s -> !s.terminal() || s.canStart())
+                .sorted(Comparator.comparing(ActorRunState::name))
+                .toList();
     }
 
     public Object createCrawlSpecification(Request request, Response response) throws Exception {

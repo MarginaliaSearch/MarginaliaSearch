@@ -250,6 +250,15 @@ public class ConverterMain {
                     msg, inbox);
         }
 
+        if (request.action == ConvertAction.SideloadStackexchange) {
+            var processData = fileStorageService.getStorage(request.processedDataStorage);
+            var filePath = Path.of(request.inputSource);
+            var domainName = filePath.toFile().getName().substring(0, filePath.toFile().getName().lastIndexOf('.'));
+            return new SideloadAction(sideloadSourceFactory.sideloadStackexchange(filePath, domainName),
+                    processData.asPath(),
+                    msg, inbox);
+        }
+
         else {
             throw new RuntimeException("Unknown action: " + request.action);
         }

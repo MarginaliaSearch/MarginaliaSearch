@@ -66,11 +66,13 @@ public abstract class AbstractStateGraph {
 
         return ret;
     }
-    public Set<TerminalState> terminalStates() {
-        Set<TerminalState> ret = new HashSet<>();
+
+
+    public Set<TerminalGraphState> terminalStates() {
+        Set<TerminalGraphState> ret = new HashSet<>();
 
         for (var method : getClass().getMethods()) {
-            var gs = method.getAnnotation(TerminalState.class);
+            var gs = method.getAnnotation(TerminalGraphState.class);
             if (gs != null) {
                 ret.add(gs);
             }
@@ -88,7 +90,7 @@ public abstract class AbstractStateGraph {
                 ret.add(graphState(method, gs));
             }
 
-            var ts = method.getAnnotation(TerminalState.class);
+            var ts = method.getAnnotation(TerminalGraphState.class);
             if (ts != null) {
                 ret.add(stateFactory.create(ts.name(), ResumeBehavior.ERROR, () -> {
                     throw new ControlFlowException(ts.name(), null);

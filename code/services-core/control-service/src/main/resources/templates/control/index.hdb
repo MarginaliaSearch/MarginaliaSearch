@@ -8,8 +8,16 @@
 <body>
   {{> control/partials/nav}}
   <section>
-      <h1>Overview</h1>
+      {{> control/partials/services-table }}
+      {{> control/partials/processes-table}}
+      {{> control/partials/actors-table}}
+      {{> control/partials/events-table }}
   </section>
 </body>
 <script src="/refresh.js"></script>
+<script>
+    window.setInterval(() => {
+        refresh(["processes", "jobs", "actors", "services", "events"]);
+    }, 2000);
+</script>
 </html>

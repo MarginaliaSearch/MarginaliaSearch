@@ -55,8 +55,10 @@ public class MqSingleShotInbox {
 
 
     /** Steal a message from the inbox, and change the owner to this instance.  This is useful
-     * for resuming an aborted process.
-     *
+     * for resuming an aborted process.  This should be done judiciously, only in cases we're certain
+     * that the original owner is no longer running as it may cause duplicate processing, race
+     * conditions, etc.
+     * <p>
      *  @param predicate A predicate that must be true for the message to be stolen
      *  @return The stolen message, or empty if no message was stolen
      */

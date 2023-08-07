@@ -14,6 +14,10 @@ import java.util.*;
 
 import static nu.marginalia.mq.MqMessageState.NEW;
 
+/** A persistence layer for the message queue.
+ *  <p>
+ *  All storage operations must be done through this class.
+ */
 @Singleton
 public class MqPersistence {
     private final HikariDataSource dataSource;
@@ -21,33 +25,6 @@ public class MqPersistence {
     @Inject
     public MqPersistence(HikariDataSource dataSource) {
         this.dataSource = dataSource;
-    }
-
-    /** Flags messages as dead if they have not been set to a terminal state within a TTL after the last update. */
-    public int reapDeadMessages() throws SQLException {
-        try (var conn = dataSource.getConnection();
-             var setToDead = conn.prepareStatement("""
-                     UPDATE MESSAGE_QUEUE
-                     SET STATE='DEAD', UPDATED_TIME=CURRENT_TIMESTAMP(6)
-                     WHERE STATE IN ('NEW', 'ACK')
-                     AND TTL IS NOT NULL
-                     AND TIMESTAMPDIFF(SECOND, UPDATED_TIME, CURRENT_TIMESTAMP(6)) > TTL
-                     """)) {
-            return setToDead.executeUpdate();
-        }
-    }
-
-    /** Removes messages that have been set to a terminal state a while after their last update timestamp */
-    public int cleanOldMessages() throws SQLException {
-        try (var conn = dataSource.getConnection();
-             var setToDead = conn.prepareStatement("""
-                     DELETE FROM MESSAGE_QUEUE
-                     WHERE STATE = 'OK'
-                     AND TTL IS NOT NULL
-                     AND TIMESTAMPDIFF(SECOND, UPDATED_TIME, CURRENT_TIMESTAMP(6)) > 3600
-                     """)) {
-            return setToDead.executeUpdate();
-        }
     }
 
     /**
@@ -100,7 +77,14 @@ public class MqPersistence {
         }
     }
 
-    /** Modifies the state of a message by id */
+    /** Modifies the state of a message by id.
+     * <p>
+     * If the state is 'NEW', ownership information will be stripped to avoid creating
+     * a broken message that can't be dequeued because it has an owner.
+     *
+     * @param id The id of the message
+     * @param mqMessageState The new state
+     * */
     public void updateMessageState(long id, MqMessageState mqMessageState) throws SQLException {
         if (NEW == mqMessageState) {
             reinitializeMessage(id);
@@ -124,7 +108,7 @@ public class MqPersistence {
     }
 
     /** Sets the message to 'NEW' state and removes any owner */
-    public void reinitializeMessage(long id) throws SQLException {
+    private void reinitializeMessage(long id) throws SQLException {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
                      UPDATE MESSAGE_QUEUE
@@ -219,7 +203,9 @@ public class MqPersistence {
         }
     }
 
-    /** Return up to n unprocessed messages from the specified inbox that are in states 'NEW' or 'ACK' */
+    /** Return up to n unprocessed messages from the specified inbox that are in states 'NEW' or 'ACK'
+     * without updating their ownership information
+     */
     public Collection<MqMessage> eavesdrop(String inboxName, int n) throws SQLException {
         try (var conn = dataSource.getConnection();
              var queryStmt = conn.prepareStatement("""
@@ -263,6 +249,11 @@ public class MqPersistence {
 
     }
 
+    /** Returns the message with the specified ID
+     *
+     * @throws SQLException if there is a problem with the database
+     * @throws IllegalArgumentException if the message doesn't exist
+     */
     public MqMessage getMessage(long id) throws SQLException {
         try (var conn = dataSource.getConnection();
              var queryStmt = conn.prepareStatement("""
@@ -427,6 +418,7 @@ public class MqPersistence {
 
     }
 
+    /** Modify the message indicated by id to have the given owner information */
     public void changeOwner(long id, String instanceUUID, int tick) {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
@@ -443,4 +435,30 @@ public class MqPersistence {
     }
 
 
+    /** Flags messages as dead if they have not been set to a terminal state within a TTL after the last update. */
+    public int reapDeadMessages() throws SQLException {
+        try (var conn = dataSource.getConnection();
+             var setToDead = conn.prepareStatement("""
+                     UPDATE MESSAGE_QUEUE
+                     SET STATE='DEAD', UPDATED_TIME=CURRENT_TIMESTAMP(6)
+                     WHERE STATE IN ('NEW', 'ACK')
+                     AND TTL IS NOT NULL
+                     AND TIMESTAMPDIFF(SECOND, UPDATED_TIME, CURRENT_TIMESTAMP(6)) > TTL
+                     """)) {
+            return setToDead.executeUpdate();
+        }
+    }
+
+    /** Removes messages that have been set to a terminal state a while after their last update timestamp */
+    public int cleanOldMessages() throws SQLException {
+        try (var conn = dataSource.getConnection();
+             var setToDead = conn.prepareStatement("""
+                     DELETE FROM MESSAGE_QUEUE
+                     WHERE STATE = 'OK'
+                     AND TTL IS NOT NULL
+                     AND TIMESTAMPDIFF(SECOND, UPDATED_TIME, CURRENT_TIMESTAMP(6)) > 3600
+                     """)) {
+            return setToDead.executeUpdate();
+        }
+    }
 }

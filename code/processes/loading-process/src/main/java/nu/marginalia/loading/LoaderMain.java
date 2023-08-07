@@ -119,7 +119,7 @@ public class LoaderMain {
                             next.apply(instructionCounter);
                             next.apply(loader);
                         } catch (Exception ex) {
-                            logger.error("Failed to load instruction {}", next);
+                            logger.error("Failed to load instruction " + next.getClass().getSimpleName(), ex);
                         }
                     }
                 }
@@ -214,9 +214,11 @@ public class LoaderMain {
 
     public class InstructionCounter implements Interpreter {
         private int count = 0;
-        public void loadProcessedDocument(LoadProcessedDocument loadProcessedDocument) {
+
+        public void loadKeywords(EdgeUrl url, DocumentMetadata metadata, DocumentKeywords words) {
             count++;
         }
+
         public int getCount() {
             return count;
         }

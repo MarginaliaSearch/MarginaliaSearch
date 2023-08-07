@@ -9,7 +9,7 @@ import nu.marginalia.mqsm.StateFactory;
 import nu.marginalia.mqsm.graph.AbstractStateGraph;
 import nu.marginalia.mqsm.graph.GraphState;
 import nu.marginalia.mqsm.graph.ResumeBehavior;
-import nu.marginalia.mqsm.graph.TerminalState;
+import nu.marginalia.mqsm.graph.TerminalGraphState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -155,7 +155,7 @@ public class AbstractProcessSpawnerActor extends AbstractStateGraph {
         }
     }
 
-    @TerminalState(name = ABORTED, description = "The process was manually aborted")
+    @TerminalGraphState(name = ABORTED, description = "The process was manually aborted")
     public void aborted() throws Exception {}
 
 

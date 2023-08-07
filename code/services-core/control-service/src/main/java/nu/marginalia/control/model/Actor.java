@@ -13,7 +13,9 @@ public enum Actor {
     ADJACENCY_CALCULATION,
     CRAWL_JOB_EXTRACTOR,
     EXPORT_DATA,
-    FLUSH_LINK_DATABASE;
+    TRUNCATE_LINK_DATABASE,
+
+    CONVERT;
 
 
     public String id() {

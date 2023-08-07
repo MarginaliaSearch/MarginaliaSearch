@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 @Tag("slow")
 @Testcontainers
 @Execution(SAME_THREAD)
-public class StateMachineResumeTest {
+public class ActorStateMachineResumeTest {
     @Container
     static MariaDBContainer<?> mariaDBContainer = new MariaDBContainer<>("mariadb")
             .withDatabaseName("WMSA_prod")
@@ -86,7 +86,7 @@ public class StateMachineResumeTest {
 
 
         persistence.sendNewMessage(inboxId,  null, -1L, "RESUMABLE", "", null);
-        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
+        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
 
         sm.join(2, TimeUnit.SECONDS);
         sm.stop();
@@ -107,7 +107,7 @@ public class StateMachineResumeTest {
         long id = persistence.sendNewMessage(inboxId,  null, -1L, "RESUMABLE", "", null);
         persistence.updateMessageState(id, MqMessageState.ACK);
 
-        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
+        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
 
         sm.join(4, TimeUnit.SECONDS);
         sm.stop();
@@ -129,7 +129,7 @@ public class StateMachineResumeTest {
 
         persistence.sendNewMessage(inboxId,  null, -1L, "NON-RESUMABLE", "", null);
 
-        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
+        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
 
         sm.join(2, TimeUnit.SECONDS);
         sm.stop();
@@ -151,7 +151,7 @@ public class StateMachineResumeTest {
         long id = persistence.sendNewMessage(inboxId,  null, null, "NON-RESUMABLE", "", null);
         persistence.updateMessageState(id, MqMessageState.ACK);
 
-        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
+        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
 
         sm.join(2, TimeUnit.SECONDS);
         sm.stop();
@@ -170,7 +170,7 @@ public class StateMachineResumeTest {
         var stateFactory = new StateFactory(new GsonBuilder().create());
 
 
-        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
+        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
 
         sm.join(2, TimeUnit.SECONDS);
         sm.stop();

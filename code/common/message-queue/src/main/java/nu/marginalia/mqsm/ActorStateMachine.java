@@ -18,12 +18,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BiConsumer;
 
-/** A state machine that can be used to implement a finite state machine
+/** A state machine that can be used to implement an actor
  * using a message queue as the persistence layer.  The state machine is
  * resilient to crashes and can be resumed from the last state.
  */
-public class StateMachine {
-    private final Logger logger = LoggerFactory.getLogger(StateMachine.class);
+public class ActorStateMachine {
+    private final Logger logger = LoggerFactory.getLogger(ActorStateMachine.class);
 
     private final MqSynchronousInbox smInbox;
     private final MqOutbox smOutbox;
@@ -43,10 +43,10 @@ public class StateMachine {
 
     private final boolean isDirectlyInitializable;
 
-    public StateMachine(MessageQueueFactory messageQueueFactory,
-                        String queueName,
-                        UUID instanceUUID,
-                        AbstractStateGraph stateGraph)
+    public ActorStateMachine(MessageQueueFactory messageQueueFactory,
+                             String queueName,
+                             UUID instanceUUID,
+                             AbstractStateGraph stateGraph)
     {
         this.queueName = queueName;
 

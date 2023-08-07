@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 @Tag("slow")
 @Testcontainers
 @Execution(SAME_THREAD)
-public class StateMachineErrorTest {
+public class ActorStateMachineErrorTest {
     @Container
     static MariaDBContainer<?> mariaDBContainer = new MariaDBContainer<>("mariadb")
             .withDatabaseName("WMSA_prod")
@@ -85,7 +85,7 @@ public class StateMachineErrorTest {
     @Test
     public void smResumeResumableFromNew() throws Exception {
         var stateFactory = new StateFactory(new GsonBuilder().create());
-        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ErrorHurdles(stateFactory));
+        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ErrorHurdles(stateFactory));
 
         sm.init();
 

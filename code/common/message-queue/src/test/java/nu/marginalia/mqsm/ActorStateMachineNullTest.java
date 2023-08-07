@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 @Tag("slow")
 @Testcontainers
 @Execution(SAME_THREAD)
-public class StateMachineNullTest {
+public class ActorStateMachineNullTest {
     @Container
     static MariaDBContainer<?> mariaDBContainer = new MariaDBContainer<>("mariadb")
             .withDatabaseName("WMSA_prod")
@@ -83,7 +83,7 @@ public class StateMachineNullTest {
         var graph = new TestGraph(stateFactory);
 
 
-        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), graph);
+        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), graph);
         sm.registerStates(graph);
 
         sm.init();

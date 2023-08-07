@@ -24,8 +24,9 @@ The inbox implementations as well as the outbox can be constructed via the `Mess
 
 ## Message Queue State Machine (MQSM)
 
-The MQSM is a finite state machine that is backed by the message queue.  The machine itself
-is defined through a class that extends the 'AbstractStateGraph'; with state transitions and
+The MQSM is a finite state machine that is backed by the message queue used to implement an Actor style paradigm. 
+
+The machine itself is defined through a class that extends the 'AbstractStateGraph'; with state transitions and
 names defined as implementations.
 
 Example:
@@ -80,4 +81,20 @@ It can not be assumed that the states are invoked within the same process, or ev
 on the same day, etc.
 
 The usual considerations for writing deterministic Java code are advisable unless unavoidable; 
-all state must be local, don't iterate over hash maps, etc. 
+all state must be local, don't iterate over hash maps, etc.
+
+### Create a state machine
+To create an ActorStateMachine from the above class, the following code can be used:
+
+```java
+ActorStateMachine actorStateMachine = new ActorStateMachine(
+        messageQueueFactory, 
+        actorInboxName, 
+        actorInstanceUUID,
+        new ExampleStateMachine());
+
+actorStateMachine.start();
+```
+
+The state machine will now run until it reaches the end state 
+and listen to messages on the inbox for state transitions.

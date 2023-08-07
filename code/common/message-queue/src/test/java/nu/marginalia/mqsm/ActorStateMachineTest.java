@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 @Tag("slow")
 @Testcontainers
 @Execution(SAME_THREAD)
-public class StateMachineTest {
+public class ActorStateMachineTest {
     @Container
     static MariaDBContainer<?> mariaDBContainer = new MariaDBContainer<>("mariadb")
             .withDatabaseName("WMSA_prod")
@@ -90,7 +90,7 @@ public class StateMachineTest {
         var graph = new TestGraph(stateFactory);
 
 
-        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), graph);
+        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), graph);
         sm.registerStates(graph);
 
         sm.init();
@@ -105,7 +105,7 @@ public class StateMachineTest {
     @Test
     public void testStartStopStartStop() throws Exception {
         var stateFactory = new StateFactory(new GsonBuilder().create());
-        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new TestGraph(stateFactory));
+        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new TestGraph(stateFactory));
 
         sm.init();
 
@@ -114,7 +114,7 @@ public class StateMachineTest {
 
         System.out.println("-------------------- ");
 
-        var sm2 = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new TestGraph(stateFactory));
+        var sm2 = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new TestGraph(stateFactory));
         sm2.join(2, TimeUnit.SECONDS);
         sm2.stop();
 
@@ -131,7 +131,7 @@ public class StateMachineTest {
         persistence.sendNewMessage(inboxId,  null, null, "INITIAL", "", null);
         persistence.sendNewMessage(inboxId,  null, null, "INITIAL", "", null);
 
-        var sm = new StateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new TestGraph(stateFactory));
+        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new TestGraph(stateFactory));
 
         Thread.sleep(50);
 

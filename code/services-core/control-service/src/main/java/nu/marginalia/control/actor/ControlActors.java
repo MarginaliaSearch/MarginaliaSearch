@@ -11,7 +11,7 @@ import nu.marginalia.control.actor.monitor.ConverterMonitorActor;
 import nu.marginalia.control.actor.monitor.LoaderMonitorActor;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.mq.MessageQueueFactory;
-import nu.marginalia.mqsm.StateMachine;
+import nu.marginalia.mqsm.ActorStateMachine;
 import nu.marginalia.mqsm.graph.AbstractStateGraph;
 import nu.marginalia.mqsm.state.MachineState;
 import nu.marginalia.service.control.ServiceEventLog;
@@ -28,13 +28,14 @@ public class ControlActors {
     private final ServiceEventLog eventLog;
     private final Gson gson;
     private final MessageQueueFactory messageQueueFactory;
-    public Map<Actor, StateMachine> stateMachines = new HashMap<>();
+    public Map<Actor, ActorStateMachine> stateMachines = new HashMap<>();
     public Map<Actor, AbstractStateGraph> actorDefinitions = new HashMap<>();
 
     @Inject
     public ControlActors(MessageQueueFactory messageQueueFactory,
                          GsonFactory gsonFactory,
                          BaseServiceParams baseServiceParams,
+                         ConvertActor convertActor,
                          ReconvertAndLoadActor reconvertAndLoadActor,
                          CrawlActor crawlActor,
                          RecrawlActor recrawlActor,
@@ -47,7 +48,7 @@ public class ControlActors {
                          TriggerAdjacencyCalculationActor triggerAdjacencyCalculationActor,
                          CrawlJobExtractorActor crawlJobExtractorActor,
                          ExportDataActor exportDataActor,
-                         FlushLinkDatabase flushLinkDatabase
+                         TruncateLinkDatabase truncateLinkDatabase
                             ) {
         this.messageQueueFactory = messageQueueFactory;
         this.eventLog = baseServiceParams.eventLog;
@@ -55,21 +56,24 @@ public class ControlActors {
 
         register(Actor.CRAWL, crawlActor);
         register(Actor.RECRAWL, recrawlActor);
+        register(Actor.CONVERT, convertActor);
         register(Actor.RECONVERT_LOAD, reconvertAndLoadActor);
+
         register(Actor.CONVERTER_MONITOR, converterMonitorFSM);
         register(Actor.LOADER_MONITOR, loaderMonitor);
         register(Actor.CRAWLER_MONITOR, crawlerMonitorActor);
         register(Actor.MESSAGE_QUEUE_MONITOR, messageQueueMonitor);
         register(Actor.PROCESS_LIVENESS_MONITOR, processMonitorFSM);
         register(Actor.FILE_STORAGE_MONITOR, fileStorageMonitorActor);
+
         register(Actor.ADJACENCY_CALCULATION, triggerAdjacencyCalculationActor);
         register(Actor.CRAWL_JOB_EXTRACTOR, crawlJobExtractorActor);
         register(Actor.EXPORT_DATA, exportDataActor);
-        register(Actor.FLUSH_LINK_DATABASE, flushLinkDatabase);
+        register(Actor.TRUNCATE_LINK_DATABASE, truncateLinkDatabase);
     }
 
     private void register(Actor process, AbstractStateGraph graph) {
-        var sm = new StateMachine(messageQueueFactory, process.id(), UUID.randomUUID(), graph);
+        var sm = new ActorStateMachine(messageQueueFactory, process.id(), UUID.randomUUID(), graph);
         sm.listen((function, param) -> logStateChange(process, function));
 
         stateMachines.put(process, sm);

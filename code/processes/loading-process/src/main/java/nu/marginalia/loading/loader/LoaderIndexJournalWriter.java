@@ -43,8 +43,8 @@ public class LoaderIndexJournalWriter {
         var lexiconPath = lexiconArea.asPath().resolve("dictionary.dat");
         var indexPath = indexArea.asPath().resolve("page-index.dat");
 
-        Files.deleteIfExists(lexiconPath);
         Files.deleteIfExists(indexPath);
+        Files.deleteIfExists(lexiconPath);
 
         Files.createFile(indexPath, PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-r--r--")));
         Files.createFile(lexiconPath, PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-r--r--")));
@@ -62,8 +62,10 @@ public class LoaderIndexJournalWriter {
     public void putWords(EdgeId<EdgeDomain> domain, EdgeId<EdgeUrl> url,
                          DocumentMetadata metadata,
                          DocumentKeywords wordSet) {
-        if (wordSet.keywords().length == 0)
+        if (wordSet.keywords().length == 0) {
+            logger.info("Skipping zero-length word set for {}:{}", domain, url);
             return;
+        }
 
         if (domain.id() <= 0 || url.id() <= 0) {
             logger.warn("Bad ID: {}:{}", domain, url);
@@ -87,6 +89,11 @@ public class LoaderIndexJournalWriter {
                            EdgeId<EdgeUrl> url,
                            DocumentMetadata metadata,
                            DocumentKeywords wordSet) {
+        if (null == metadata) {
+            logger.warn("Null metadata for {}:{}", domain, url);
+            return;
+        }
+
         var entry = new IndexJournalEntryData(getOrInsertWordIds(wordSet.keywords(), wordSet.metadata()));
         var header = new IndexJournalEntryHeader(domain, url, metadata.encode());
 

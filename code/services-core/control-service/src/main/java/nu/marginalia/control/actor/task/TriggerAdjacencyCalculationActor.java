@@ -38,7 +38,7 @@ public class TriggerAdjacencyCalculationActor extends AbstractStateGraph {
                         Spawns a WebsitesAdjacenciesCalculator process and waits for it to finish.
                         """
     )
-    public void init() throws Exception {
+    public void init(Integer unused) throws Exception {
         AtomicBoolean hasError = new AtomicBoolean(false);
         var future = executor.submit(() -> {
             try {

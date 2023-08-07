@@ -102,7 +102,7 @@ public class ControlService extends Service {
             return heartbeatService.getServiceHeartbeats();
         }, gson::toJson);
 
-        Spark.get("/public/", (req, rsp) -> indexRenderer.render(Map.of()));
+        Spark.get("/public/", this::overviewModel, indexRenderer::render);
 
         Spark.get("/public/actions", (rq,rsp) -> new Object() , actionsViewRenderer::render);
         Spark.get("/public/services", this::servicesModel, servicesRenderer::render);
@@ -190,15 +190,25 @@ public class ControlService extends Service {
 
         Spark.post("/public/actions/calculate-adjacencies", controlActionsService::calculateAdjacencies, redirectToActors);
         Spark.post("/public/actions/repartition-index", controlActionsService::triggerRepartition, redirectToActors);
-        Spark.post("/public/actions/reconvert-index", controlActionsService::triggerReconversion, redirectToActors);
+        Spark.post("/public/actions/reconstruct-index", controlActionsService::triggerIndexReconstruction, redirectToActors);
         Spark.post("/public/actions/trigger-data-exports", controlActionsService::triggerDataExports, redirectToActors);
         Spark.post("/public/actions/flush-search-caches", controlActionsService::flushSearchCaches, redirectToActors);
         Spark.post("/public/actions/flush-api-caches", controlActionsService::flushApiCaches, redirectToActors);
-        Spark.post("/public/actions/flush-links-database", controlActionsService::flushLinkDatabase, redirectToActors);
+        Spark.post("/public/actions/truncate-links-database", controlActionsService::truncateLinkDatabase, redirectToActors);
 
         Spark.get("/public/:resource", this::serveStatic);
 
         monitors.subscribe(this::logMonitorStateChange);
+    }
+
+    private Object overviewModel(Request request, Response response) {
+
+        return Map.of("processes", heartbeatService.getProcessHeartbeats(),
+                "jobs", heartbeatService.getTaskHeartbeats(),
+                "actors", controlActorService.getActorStates(),
+                "services", heartbeatService.getServiceHeartbeats(),
+                "events", eventLogService.getLastEntries(20)
+                );
     }
 
     private Object messageQueueModel(Request request, Response response) {

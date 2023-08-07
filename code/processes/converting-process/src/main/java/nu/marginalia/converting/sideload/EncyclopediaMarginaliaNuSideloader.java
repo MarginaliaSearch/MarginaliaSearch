@@ -103,7 +103,7 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
                 while (rs.next()) {
                     var articleParts = fromCompressedJson(rs.getBytes("html"), ArticleParts.class);
                     String title = rs.getString("title");
-                    String url = rs.getString("url");
+                    String url = URLEncoder.encode(rs.getString("url"), StandardCharsets.UTF_8);
 
                     sem.acquire();
 
@@ -176,6 +176,8 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
 
             ret.words = details.words();
             ret.details = details.details();
+            ret.details.metadata = ret.details.metadata
+                    .withSize(10_000_000, Math.max(0, 255 - url.length()));
             ret.url = new EdgeUrl(fullUrl);
             ret.state = UrlIndexingState.OK;
             ret.stateReason = "SIDELOAD";
