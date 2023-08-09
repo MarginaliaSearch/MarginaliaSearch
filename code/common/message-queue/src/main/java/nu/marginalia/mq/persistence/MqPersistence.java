@@ -67,6 +67,10 @@ public class MqPersistence {
             else stmt.setLong(6, ttl.toSeconds());
 
             stmt.executeUpdate();
+
+            if (!conn.getAutoCommit())
+                conn.commit();
+
             var rsp = lastIdQuery.executeQuery();
 
             if (!rsp.next()) {
@@ -104,6 +108,9 @@ public class MqPersistence {
             if (stmt.executeUpdate() != 1) {
                 throw new IllegalArgumentException("No rows updated");
             }
+
+            if (!conn.getAutoCommit())
+                conn.commit();
         }
     }
 
@@ -124,6 +131,9 @@ public class MqPersistence {
             if (stmt.executeUpdate() != 1) {
                 throw new IllegalArgumentException("No rows updated");
             }
+
+            if (!conn.getAutoCommit())
+                conn.commit();
         }
     }
 
@@ -199,7 +209,10 @@ public class MqPersistence {
             updateStmt.setLong(2, tick);
             updateStmt.setString(3, inboxName);
             updateStmt.setInt(4, n);
-            return updateStmt.executeUpdate();
+            var ret = updateStmt.executeUpdate();
+            if (!conn.getAutoCommit())
+                conn.commit();
+            return ret;
         }
     }
 
@@ -429,6 +442,10 @@ public class MqPersistence {
             stmt.setInt(2, tick);
             stmt.setLong(3, id);
             stmt.executeUpdate();
+
+            if (!conn.getAutoCommit())
+                conn.commit();
+
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -445,7 +462,10 @@ public class MqPersistence {
                      AND TTL IS NOT NULL
                      AND TIMESTAMPDIFF(SECOND, UPDATED_TIME, CURRENT_TIMESTAMP(6)) > TTL
                      """)) {
-            return setToDead.executeUpdate();
+            int ret = setToDead.executeUpdate();
+            if (!conn.getAutoCommit())
+                conn.commit();
+            return ret;
         }
     }
 
@@ -458,7 +478,10 @@ public class MqPersistence {
                      AND TTL IS NOT NULL
                      AND TIMESTAMPDIFF(SECOND, UPDATED_TIME, CURRENT_TIMESTAMP(6)) > 3600
                      """)) {
-            return setToDead.executeUpdate();
+            int ret = setToDead.executeUpdate();
+            if (!conn.getAutoCommit())
+                conn.commit();
+            return ret;
         }
     }
 }
