@@ -20,6 +20,7 @@ public class ServiceHeartbeat {
     private final String serviceBase;
     private final String instanceUUID;
     private final ServiceConfiguration configuration;
+    private final ServiceEventLog eventLog;
     private final HikariDataSource dataSource;
 
 
@@ -30,11 +31,13 @@ public class ServiceHeartbeat {
 
     @Inject
     public ServiceHeartbeat(ServiceConfiguration configuration,
+                            ServiceEventLog eventLog,
                             HikariDataSource dataSource)
     {
         this.serviceName = configuration.serviceName() + ":" + configuration.node();
         this.serviceBase = configuration.serviceName();
         this.configuration = configuration;
+        this.eventLog = eventLog;
         this.dataSource = dataSource;
 
         this.instanceUUID = configuration.instanceUuid().toString();
@@ -45,7 +48,7 @@ public class ServiceHeartbeat {
     }
 
     public <T extends Enum<T>> ServiceTaskHeartbeat<T> createServiceTaskHeartbeat(Class<T> steps, String processName) {
-        return new ServiceTaskHeartbeat<>(steps, configuration, processName, dataSource);
+        return new ServiceTaskHeartbeat<>(steps, configuration, processName, eventLog, dataSource);
     }
 
 

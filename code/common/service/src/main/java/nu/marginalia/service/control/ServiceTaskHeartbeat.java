@@ -27,6 +27,7 @@ public class ServiceTaskHeartbeat<T extends Enum<T>> implements AutoCloseable {
     private final int heartbeatInterval = Integer.getInteger("mcp.heartbeat.interval", 1);
     private final String serviceInstanceUUID;
     private final int stepCount;
+    private final ServiceEventLog eventLog;
 
     private volatile boolean running = false;
     private volatile int stepNum = 0;
@@ -35,8 +36,10 @@ public class ServiceTaskHeartbeat<T extends Enum<T>> implements AutoCloseable {
     ServiceTaskHeartbeat(Class<T> stepClass,
                         ServiceConfiguration configuration,
                          String taskName,
+                         ServiceEventLog eventLog,
                          HikariDataSource dataSource)
     {
+        this.eventLog = eventLog;
         this.taskName = configuration.serviceName() + "." + taskName + ":" + configuration.node();
         this.taskBase = configuration.serviceName() + "." + taskName;
         this.dataSource = dataSource;
@@ -45,6 +48,8 @@ public class ServiceTaskHeartbeat<T extends Enum<T>> implements AutoCloseable {
         this.serviceInstanceUUID = configuration.instanceUuid().toString();
 
         this.stepCount = stepClass.getEnumConstants().length;
+
+        heartbeatInit();
 
         runnerThread = new Thread(this::run);
         runnerThread.start();
@@ -58,6 +63,7 @@ public class ServiceTaskHeartbeat<T extends Enum<T>> implements AutoCloseable {
     public void progress(T step) {
         this.step = step.name();
 
+
         // off by one since we calculate the progress based on the number of steps,
         // and Enum.ordinal() is zero-based (so the 5th step in a 5 step task is 4, not 5; resulting in the
         // final progress being 80% and not 100%)
@@ -65,6 +71,7 @@ public class ServiceTaskHeartbeat<T extends Enum<T>> implements AutoCloseable {
         this.stepNum = 1 + step.ordinal();
 
         logger.info("ServiceTask {} progress: {}", taskBase, step.name());
+        eventLog.logEvent("TASK-STEP", taskName + " = " + step.name());
     }
 
     public void shutDown() {
@@ -89,8 +96,6 @@ public class ServiceTaskHeartbeat<T extends Enum<T>> implements AutoCloseable {
             return;
 
         try {
-            heartbeatInit();
-
             while (running) {
                 try {
                     heartbeatUpdate();
@@ -102,13 +107,13 @@ public class ServiceTaskHeartbeat<T extends Enum<T>> implements AutoCloseable {
                 TimeUnit.SECONDS.sleep(heartbeatInterval);
             }
         }
-        catch (InterruptedException|SQLException ex) {
+        catch (InterruptedException ex) {
             logger.error("ServiceHeartbeat caught irrecoverable exception, killing service", ex);
             System.exit(255);
         }
     }
 
-    private void heartbeatInit() throws SQLException {
+    private void heartbeatInit() {
         try (var connection = dataSource.getConnection()) {
             try (var stmt = connection.prepareStatement(
                     """
@@ -131,6 +136,12 @@ public class ServiceTaskHeartbeat<T extends Enum<T>> implements AutoCloseable {
                 stmt.executeUpdate();
             }
         }
+        catch (SQLException ex) {
+            logger.error("ServiceHeartbeat failed to initialize", ex);
+            throw new RuntimeException(ex);
+        }
+
+        eventLog.logEvent("TASK-STARTED", taskName);
     }
 
     private void heartbeatUpdate() throws SQLException {
@@ -173,6 +184,7 @@ public class ServiceTaskHeartbeat<T extends Enum<T>> implements AutoCloseable {
                 stmt.executeUpdate();
             }
         }
+        eventLog.logEvent("TASK-TERMINATED", taskName);
     }
 
     @Override
