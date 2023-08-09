@@ -5,7 +5,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.SneakyThrows;
 import nu.marginalia.control.actor.task.*;
-import nu.marginalia.control.model.Actor;
 import nu.marginalia.control.actor.monitor.*;
 import nu.marginalia.control.actor.monitor.ConverterMonitorActor;
 import nu.marginalia.control.actor.monitor.LoaderMonitorActor;

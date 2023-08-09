@@ -1,4 +1,4 @@
-package nu.marginalia.control.model;
+package nu.marginalia.control.actor;
 
 public enum Actor {
     CRAWL,

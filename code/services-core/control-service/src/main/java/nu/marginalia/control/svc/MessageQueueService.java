@@ -3,23 +3,123 @@ package nu.marginalia.control.svc;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.control.model.Actor;
 import nu.marginalia.control.model.MessageQueueEntry;
-import nu.marginalia.mqsm.graph.AbstractStateGraph;
+import nu.marginalia.mq.MqMessageState;
+import nu.marginalia.mq.persistence.MqPersistence;
+import spark.Request;
+import spark.Response;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Singleton
-public class MessageQueueViewService {
+public class MessageQueueService {
 
     private final HikariDataSource dataSource;
+    private final MqPersistence persistence;
 
     @Inject
-    public MessageQueueViewService(HikariDataSource dataSource) {
+    public MessageQueueService(HikariDataSource dataSource, MqPersistence persistence) {
         this.dataSource = dataSource;
+        this.persistence = persistence;
+    }
+
+
+    public Object viewMessageModel(Request request, Response response) {
+        return Map.of("message", getMessage(Long.parseLong(request.params("id"))),
+                "relatedMessages", getRelatedMessages(Long.parseLong(request.params("id"))));
+    }
+
+
+    public Object listMessageQueueModel(Request request, Response response) {
+        String inboxParam = request.queryParams("inbox");
+        String instanceParam = request.queryParams("instance");
+        String afterParam = request.queryParams("after");
+
+        long afterId = Optional.ofNullable(afterParam).map(Long::parseLong).orElse(Long.MAX_VALUE);
+
+        List<MessageQueueEntry> entries;
+
+        String mqFilter = "filter=none";
+        if (inboxParam != null) {
+            mqFilter = "inbox=" + inboxParam;
+            entries = getEntriesForInbox(inboxParam, afterId, 20);
+        }
+        else if (instanceParam != null) {
+            mqFilter = "instance=" + instanceParam;
+            entries = getEntriesForInstance(instanceParam, afterId, 20);
+        }
+        else {
+            entries = getEntries(afterId, 20);
+        }
+
+        Object next;
+
+        if (entries.size() == 20)
+            next = entries.stream().mapToLong(MessageQueueEntry::id).min().getAsLong();
+        else
+            next = "";
+
+        Object prev = afterParam == null ? "" : afterParam;
+
+        return Map.of("messages", entries,
+                "next", next,
+                "prev", prev,
+                "mqFilter", mqFilter);
+    }
+
+    public Object newMessageModel(Request request, Response response) {
+        String idParam = request.queryParams("id");
+        if (null == idParam)
+            return Map.of("relatedId", "-1");
+
+        var message = getMessage(Long.parseLong(idParam));
+        if (message != null)
+            return message;
+
+        return Map.of("relatedId", "-1");
+    }
+
+    public Object replyMessageModel(Request request, Response response) {
+        String idParam = request.params("id");
+
+        var message = getMessage(Long.parseLong(idParam));
+
+        return Map.of("relatedId", message.id(),
+                "recipientInbox", message.senderInbox(),
+                "function", "REPLY");
+    }
+
+    public Object createMessage(Request request, Response response) throws Exception {
+        String recipient = request.queryParams("recipientInbox");
+        String sender = request.queryParams("senderInbox");
+        String relatedMessage = request.queryParams("relatedId");
+        String function = request.queryParams("function");
+        String payload = request.queryParams("payload");
+
+        persistence.sendNewMessage(recipient,
+                sender.isBlank() ? null : sender,
+                relatedMessage == null ? null : Long.parseLong(relatedMessage),
+                function,
+                payload,
+                null);
+
+        return "";
+    }
+
+    public Object viewMessageForEditStateModel(Request request, Response response) throws SQLException {
+        return persistence.getMessage(Long.parseLong(request.params("id")));
+    }
+
+    public Object editMessageState(Request request, Response response) throws SQLException {
+        MqMessageState state = MqMessageState.valueOf(request.queryParams("state"));
+        long id = Long.parseLong(request.params("id"));
+        persistence.updateMessageState(id, state);
+        return "";
     }
 
     public List<MessageQueueEntry> getLastEntries(int n) {
@@ -43,7 +143,6 @@ public class MessageQueueViewService {
             throw new RuntimeException(ex);
         }
     }
-
     public MessageQueueEntry getMessage(long id) {
         try (var conn = dataSource.getConnection();
              var query = conn.prepareStatement("""
@@ -115,6 +214,7 @@ public class MessageQueueViewService {
             throw new RuntimeException(ex);
         }
     }
+
     public List<MessageQueueEntry> getEntriesForInstance(String instance, long afterId, int n) {
         try (var conn = dataSource.getConnection();
              var query = conn.prepareStatement("""

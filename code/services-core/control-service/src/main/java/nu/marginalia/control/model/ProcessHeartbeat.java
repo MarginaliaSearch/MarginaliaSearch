@@ -1,6 +1,6 @@
 package nu.marginalia.control.model;
 
-import nu.marginalia.control.svc.ProcessService;
+import nu.marginalia.control.process.ProcessService;
 
 public record ProcessHeartbeat(
         String processId,

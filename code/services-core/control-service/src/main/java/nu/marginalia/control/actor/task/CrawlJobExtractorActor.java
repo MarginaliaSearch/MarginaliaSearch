@@ -3,7 +3,7 @@ package nu.marginalia.control.actor.task;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.control.svc.ControlFileStorageService;
-import nu.marginalia.control.svc.ProcessService;
+import nu.marginalia.control.process.ProcessService;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.db.storage.model.FileStorage;
 import nu.marginalia.db.storage.model.FileStorageBaseType;

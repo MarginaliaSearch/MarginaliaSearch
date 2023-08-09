@@ -2,10 +2,9 @@ package nu.marginalia.control.actor.monitor;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.control.model.ProcessHeartbeat;
 import nu.marginalia.control.model.ServiceHeartbeat;
 import nu.marginalia.control.svc.HeartbeatService;
-import nu.marginalia.control.svc.ProcessService;
+import nu.marginalia.control.process.ProcessService;
 import nu.marginalia.mqsm.StateFactory;
 import nu.marginalia.mqsm.graph.AbstractStateGraph;
 import nu.marginalia.mqsm.graph.GraphState;

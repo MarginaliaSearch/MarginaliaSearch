@@ -3,16 +3,13 @@ package nu.marginalia.control;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import nu.marginalia.client.ServiceMonitors;
-import nu.marginalia.control.model.Actor;
+import nu.marginalia.control.actor.Actor;
 import nu.marginalia.control.model.DomainComplaintModel;
-import nu.marginalia.control.model.MessageQueueEntry;
 import nu.marginalia.control.svc.*;
 import nu.marginalia.db.storage.model.FileStorageId;
 import nu.marginalia.db.storage.model.FileStorageType;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.gson.GsonFactory;
-import nu.marginalia.mq.MqMessageState;
-import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.service.server.*;
 import org.eclipse.jetty.util.StringUtil;
@@ -27,7 +24,6 @@ import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ControlService extends Service {
@@ -42,7 +38,7 @@ public class ControlService extends Service {
     private final DomainComplaintService domainComplaintService;
     private final ControlActorService controlActorService;
     private final StaticResources staticResources;
-    private final MessageQueueViewService messageQueueViewService;
+    private final MessageQueueService messageQueueService;
     private final ControlFileStorageService controlFileStorageService;
 
 
@@ -54,12 +50,11 @@ public class ControlService extends Service {
                           RendererFactory rendererFactory,
                           ControlActorService controlActorService,
                           StaticResources staticResources,
-                          MessageQueueViewService messageQueueViewService,
+                          MessageQueueService messageQueueService,
                           ControlFileStorageService controlFileStorageService,
                           ApiKeyService apiKeyService,
                           DomainComplaintService domainComplaintService,
-                          ControlActionsService controlActionsService,
-                          MqPersistence persistence
+                          ControlActionsService controlActionsService
                       ) throws IOException {
 
         super(params);
@@ -94,7 +89,7 @@ public class ControlService extends Service {
         this.controlActorService = controlActorService;
 
         this.staticResources = staticResources;
-        this.messageQueueViewService = messageQueueViewService;
+        this.messageQueueService = messageQueueService;
         this.controlFileStorageService = controlFileStorageService;
 
         Spark.get("/public/heartbeats", (req, res) -> {
@@ -107,7 +102,6 @@ public class ControlService extends Service {
         Spark.get("/public/actions", (rq,rsp) -> new Object() , actionsViewRenderer::render);
         Spark.get("/public/services", this::servicesModel, servicesRenderer::render);
         Spark.get("/public/services/:id", this::serviceModel, serviceByIdRenderer::render);
-        Spark.get("/public/messages/:id", this::existingMessageModel, gson::toJson);
         Spark.get("/public/actors", this::processesModel, actorsRenderer::render);
         Spark.get("/public/actors/:fsm", this::actorDetailsModel, actorDetailsRenderer::render);
 
@@ -125,37 +119,13 @@ public class ControlService extends Service {
 
         // Message Queue
 
-        Spark.get("/public/message-queue", this::messageQueueModel, messageQueueRenderer::render);
-        Spark.post("/public/message-queue/", (rq, rsp) -> {
-            String recipient = rq.queryParams("recipientInbox");
-            String sender = rq.queryParams("senderInbox");
-            String relatedMessage = rq.queryParams("relatedId");
-            String function = rq.queryParams("function");
-            String payload = rq.queryParams("payload");
-
-            persistence.sendNewMessage(recipient,
-                    sender.isBlank() ? null : sender,
-                    relatedMessage == null ? null : Long.parseLong(relatedMessage),
-                    function,
-                    payload,
-                    null);
-
-            return "";
-        }, redirectToMessageQueue);
-        Spark.get("/public/message-queue/new", this::newMessageModel, newMessageRenderer::render);
-        Spark.get("/public/message-queue/:id",
-                (rq, rsp) -> Map.of("message", messageQueueViewService.getMessage(Long.parseLong(rq.params("id"))),
-                                    "relatedMessages", messageQueueViewService.getRelatedMessages(Long.parseLong(rq.params("id"))))
-                        , viewMessageRenderer::render);
-
-        Spark.get("/public/message-queue/:id/reply", this::replyMessageModel, newMessageRenderer::render);
-        Spark.get("/public/message-queue/:id/edit", (rq, rsp) -> persistence.getMessage(Long.parseLong(rq.params("id"))), updateMessageStateRenderer::render);
-        Spark.post("/public/message-queue/:id/edit", (rq, rsp) -> {
-            MqMessageState state = MqMessageState.valueOf(rq.queryParams("state"));
-            long id = Long.parseLong(rq.params("id"));
-            persistence.updateMessageState(id, state);
-            return "";
-        }, redirectToMessageQueue);
+        Spark.get("/public/message-queue", messageQueueService::listMessageQueueModel, messageQueueRenderer::render);
+        Spark.post("/public/message-queue/", messageQueueService::createMessage, redirectToMessageQueue);
+        Spark.get("/public/message-queue/new", messageQueueService::newMessageModel, newMessageRenderer::render);
+        Spark.get("/public/message-queue/:id", messageQueueService::viewMessageModel, viewMessageRenderer::render);
+        Spark.get("/public/message-queue/:id/reply", messageQueueService::replyMessageModel, newMessageRenderer::render);
+        Spark.get("/public/message-queue/:id/edit", messageQueueService::viewMessageForEditStateModel, updateMessageStateRenderer::render);
+        Spark.post("/public/message-queue/:id/edit", messageQueueService::editMessageState, redirectToMessageQueue);
 
         // Storage
         Spark.get("/public/storage", this::storageModel, storageRenderer::render);
@@ -211,42 +181,6 @@ public class ControlService extends Service {
                 );
     }
 
-    private Object messageQueueModel(Request request, Response response) {
-        String inboxParam = request.queryParams("inbox");
-        String instanceParam = request.queryParams("instance");
-        String afterParam = request.queryParams("after");
-
-        long afterId = Optional.ofNullable(afterParam).map(Long::parseLong).orElse(Long.MAX_VALUE);
-
-        List<MessageQueueEntry> entries;
-
-        String mqFilter = "filter=none";
-        if (inboxParam != null) {
-            mqFilter = "inbox=" + inboxParam;
-            entries = messageQueueViewService.getEntriesForInbox(inboxParam, afterId, 20);
-        }
-        else if (instanceParam != null) {
-            mqFilter = "instance=" + instanceParam;
-            entries = messageQueueViewService.getEntriesForInstance(instanceParam, afterId, 20);
-        }
-        else {
-            entries = messageQueueViewService.getEntries(afterId, 20);
-        }
-
-        Object next;
-
-        if (entries.size() == 20)
-            next = entries.stream().mapToLong(MessageQueueEntry::id).min().getAsLong();
-        else
-            next = "";
-
-        Object prev = afterParam == null ? "" : afterParam;
-
-        return Map.of("messages", entries,
-                "next", next,
-                "prev", prev,
-                "mqFilter", mqFilter);
-    }
 
     private Object complaintsModel(Request request, Response response) {
         Map<Boolean, List<DomainComplaintModel>> complaintsByReviewed =
@@ -325,46 +259,12 @@ public class ControlService extends Service {
     }
 
 
-    private Object existingMessageModel(Request request, Response response) {
-        var message = messageQueueViewService.getMessage(Long.parseLong(request.params("id")));
-        if (message != null) {
-            response.type("application/json");
-            return message;
-        }
-        else {
-            response.status(404);
-            return "";
-        }
-    }
-
-    private Object newMessageModel(Request request, Response response) {
-        String idParam = request.queryParams("id");
-        if (null == idParam)
-            return Map.of("relatedId", "-1");
-
-        var message = messageQueueViewService.getMessage(Long.parseLong(idParam));
-        if (message != null)
-            return message;
-
-        return Map.of("relatedId", "-1");
-    }
-    private Object replyMessageModel(Request request, Response response) {
-        String idParam = request.params("id");
-
-        var message = messageQueueViewService.getMessage(Long.parseLong(idParam));
-
-        return Map.of("relatedId", message.id(),
-                "recipientInbox", message.senderInbox(),
-                "function", "REPLY");
-    }
-
-
     private Object serviceModel(Request request, Response response) {
         String serviceName = request.params("id");
 
         return Map.of(
                 "id", serviceName,
-                "messages", messageQueueViewService.getEntriesForInbox(serviceName, Long.MAX_VALUE, 20),
+                "messages", messageQueueService.getEntriesForInbox(serviceName, Long.MAX_VALUE, 20),
                 "events", eventLogService.getLastEntriesForService(serviceName, 20));
     }
 
@@ -396,7 +296,7 @@ public class ControlService extends Service {
         return Map.of("processes", processes,
                       "jobs", jobs,
                       "actors", controlActorService.getActorStates(),
-                      "messages", messageQueueViewService.getLastEntries(20));
+                      "messages", messageQueueService.getLastEntries(20));
     }
     private Object actorDetailsModel(Request request, Response response) {
         final Actor actor = Actor.valueOf(request.params("fsm").toUpperCase());
@@ -405,7 +305,7 @@ public class ControlService extends Service {
         return Map.of(
                 "actor", actor,
                 "state-graph", controlActorService.getActorStateGraph(actor),
-                "messages", messageQueueViewService.getLastEntriesForInbox(inbox, 20));
+                "messages", messageQueueService.getLastEntriesForInbox(inbox, 20));
     }
     private Object serveStatic(Request request, Response response) {
         String resource = request.params("resource");

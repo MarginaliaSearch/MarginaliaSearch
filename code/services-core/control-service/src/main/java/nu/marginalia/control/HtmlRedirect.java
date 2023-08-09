@@ -5,6 +5,9 @@ import spark.ResponseTransformer;
 public class HtmlRedirect implements ResponseTransformer {
     private final String html;
 
+    /** Because Spark doesn't have a redirect method that works with relative URLs
+     * (without explicitly providing the external address),we use HTML and let the
+     * browser resolve the relative redirect instead */
     public HtmlRedirect(String destination) {
         this.html = """
                     <?doctype html>

@@ -3,7 +3,7 @@ package nu.marginalia.control.svc;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.control.actor.ControlActors;
-import nu.marginalia.control.model.Actor;
+import nu.marginalia.control.actor.Actor;
 import nu.marginalia.index.client.IndexClient;
 import nu.marginalia.index.client.IndexMqEndpoints;
 import nu.marginalia.mq.MessageQueueFactory;

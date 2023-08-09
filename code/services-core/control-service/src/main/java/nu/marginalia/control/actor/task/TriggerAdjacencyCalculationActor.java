@@ -2,7 +2,7 @@ package nu.marginalia.control.actor.task;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.control.svc.ProcessService;
+import nu.marginalia.control.process.ProcessService;
 import nu.marginalia.mqsm.StateFactory;
 import nu.marginalia.mqsm.graph.AbstractStateGraph;
 import nu.marginalia.mqsm.graph.GraphState;

@@ -1,4 +1,4 @@
-package nu.marginalia.control.svc;
+package nu.marginalia.control.process;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

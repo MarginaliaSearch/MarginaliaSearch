@@ -6,7 +6,7 @@ import nu.marginalia.control.actor.ControlActors;
 import nu.marginalia.control.actor.task.CrawlJobExtractorActor;
 import nu.marginalia.control.actor.task.ReconvertAndLoadActor;
 import nu.marginalia.control.actor.task.RecrawlActor;
-import nu.marginalia.control.model.Actor;
+import nu.marginalia.control.actor.Actor;
 import nu.marginalia.control.model.ActorRunState;
 import nu.marginalia.control.model.ActorStateGraph;
 import nu.marginalia.db.storage.model.FileStorageId;
