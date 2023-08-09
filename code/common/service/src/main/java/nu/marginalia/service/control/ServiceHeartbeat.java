@@ -44,7 +44,7 @@ public class ServiceHeartbeat {
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutDown));
     }
 
-    public <T extends Enum<T>> ServiceTaskHeartbeat<T> createServiceProcessHeartbeat(Class<T> steps, String processName) {
+    public <T extends Enum<T>> ServiceTaskHeartbeat<T> createServiceTaskHeartbeat(Class<T> steps, String processName) {
         return new ServiceTaskHeartbeat<>(steps, configuration, processName, dataSource);
     }
 

@@ -103,7 +103,7 @@ public class IndexSearchSetsService {
         FINISHED
     }
     public void recalculateAll() {
-        try (var processHeartbeat = heartbeat.createServiceProcessHeartbeat(RepartitionSteps.class, "repartitionAll")) {
+        try (var processHeartbeat = heartbeat.createServiceTaskHeartbeat(RepartitionSteps.class, "repartitionAll")) {
 
             processHeartbeat.progress(RepartitionSteps.UPDATE_ACADEMIA);
             updateAcademiaDomainsSet();

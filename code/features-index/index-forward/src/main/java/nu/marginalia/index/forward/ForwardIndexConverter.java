@@ -64,7 +64,7 @@ public class ForwardIndexConverter {
 
         logger.info("Domain Rankings size = {}", domainRankings.size());
 
-        try (var progress = heartbeat.createServiceProcessHeartbeat(TaskSteps.class, "forwardIndexConverter")) {
+        try (var progress = heartbeat.createServiceTaskHeartbeat(TaskSteps.class, "forwardIndexConverter")) {
             progress.progress(TaskSteps.GET_DOC_IDS);
 
             LongArray docsFileId = getDocIds(outputFileDocsId, journalReader);

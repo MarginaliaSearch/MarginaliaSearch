@@ -17,6 +17,7 @@ import nu.marginalia.index.util.TestUtil;
 import nu.marginalia.index.client.model.query.SearchSetIdentifier;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.control.ServiceHeartbeat;
+import nu.marginalia.service.control.ServiceTaskHeartbeat;
 import nu.marginalia.service.id.ServiceId;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.mockito.Mockito;
@@ -62,8 +63,14 @@ public class IndexQueryServiceIntegrationTestModule extends AbstractModule {
             when(fileStorageServiceMock.getStorageByType(FileStorageType.INDEX_LIVE)).thenReturn(new FileStorage(null, null, null, fastDir.toString(), null));
             when(fileStorageServiceMock.getStorageByType(FileStorageType.INDEX_STAGING)).thenReturn(new FileStorage(null, null, null, slowDir.toString(), null));
 
+            var serviceHeartbeat = Mockito.mock(ServiceHeartbeat.class);
+            // RIP fairies
+            when(serviceHeartbeat.createServiceTaskHeartbeat(Mockito.any(), Mockito.any()))
+                    .thenReturn(Mockito.mock(ServiceTaskHeartbeat.class));
+            bind(ServiceHeartbeat.class).toInstance(serviceHeartbeat);
+
             var servicesFactory = new IndexServicesFactory(
-                    Mockito.mock(ServiceHeartbeat.class),
+                    serviceHeartbeat,
                     fileStorageServiceMock
             );
             bind(IndexServicesFactory.class).toInstance(servicesFactory);
@@ -81,7 +88,7 @@ public class IndexQueryServiceIntegrationTestModule extends AbstractModule {
             bind(KeywordLexiconReadOnlyView.class).toInstance(new KeywordLexiconReadOnlyView(keywordLexicon));
 
             bind(ServiceEventLog.class).toInstance(Mockito.mock(ServiceEventLog.class));
-            bind(ServiceHeartbeat.class).toInstance(Mockito.mock(ServiceHeartbeat.class));
+
 
             bind(IndexJournalWriter.class).toInstance(new IndexJournalWriterImpl(keywordLexicon,
                     slowDir.resolve("page-index.dat")));

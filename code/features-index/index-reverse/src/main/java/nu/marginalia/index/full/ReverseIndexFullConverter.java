@@ -76,7 +76,7 @@ public class ReverseIndexFullConverter {
 
         final Path intermediateUrlsFile = Files.createTempFile(tmpFileDir, "urls-sorted", ".dat");
 
-        try (var progress = heartbeat.createServiceProcessHeartbeat(TaskSteps.class, "reverseIndexFullConverter")) {
+        try (var progress = heartbeat.createServiceTaskHeartbeat(TaskSteps.class, "reverseIndexFullConverter")) {
             progress.progress(TaskSteps.ACCUMULATE_STATISTICS);
 
             final IndexJournalStatistics statistics = journalReader.getStatistics();

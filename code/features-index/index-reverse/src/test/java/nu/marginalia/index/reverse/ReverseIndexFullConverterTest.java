@@ -14,6 +14,7 @@ import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.service.control.ServiceHeartbeat;
+import nu.marginalia.service.control.ServiceTaskHeartbeat;
 import nu.marginalia.test.TestUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,7 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.mockito.Mockito.when;
 
 class ReverseIndexFullConverterTest {
     KeywordLexicon keywordLexicon;
@@ -86,8 +88,13 @@ class ReverseIndexFullConverterTest {
         var docsFile = dataDir.resolve("docs.dat");
         var journalReader = new IndexJournalReaderSingleCompressedFile(indexFile);
 
+        // RIP fairies
+        var serviceHeartbeat = Mockito.mock(ServiceHeartbeat.class);
+        when(serviceHeartbeat.createServiceTaskHeartbeat(Mockito.any(), Mockito.any()))
+                .thenReturn(Mockito.mock(ServiceTaskHeartbeat.class));
+
         new ReverseIndexFullConverter(
-                Mockito.mock(ServiceHeartbeat.class),
+                serviceHeartbeat,
                 tmpDir, journalReader, new DomainRankings(), wordsFile, docsFile)
                 .convert();
 

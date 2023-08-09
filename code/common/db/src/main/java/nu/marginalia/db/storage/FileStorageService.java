@@ -182,7 +182,7 @@ public class FileStorageService {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
                      INSERT INTO FILE_STORAGE_BASE(NAME, PATH, TYPE, PERMIT_TEMP)
-                     VALUES (?, ?, ?, ?, ?)
+                     VALUES (?, ?, ?, ?)
                      """)) {
             stmt.setString(1, name);
             stmt.setString(2, path.toString());

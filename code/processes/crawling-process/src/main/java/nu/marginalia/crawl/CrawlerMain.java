@@ -166,15 +166,6 @@ public class CrawlerMain {
         finally {
             heartbeat.shutDown();
         }
-
-        pool.execute(() -> {
-            try {
-                fetchDomain(crawlingSpecification);
-            }
-            finally {
-                taskSem.release();
-            }
-        });
     }
 
     class CrawlTask implements DumbThreadPool.Task {

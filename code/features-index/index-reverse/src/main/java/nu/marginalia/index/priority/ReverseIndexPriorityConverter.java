@@ -75,7 +75,7 @@ public class ReverseIndexPriorityConverter {
 
         final Path intermediateUrlsFile = Files.createTempFile(tmpFileDir, "urls-sorted", ".dat");
 
-        try (var progress = heartbeat.createServiceProcessHeartbeat(TaskSteps.class, "reverseIndexPriorityConverter")) {
+        try (var progress = heartbeat.createServiceTaskHeartbeat(TaskSteps.class, "reverseIndexPriorityConverter")) {
             progress.progress(TaskSteps.ACCUMULATE_STATISTICS);
 
             final IndexJournalStatistics statistics = journalReader.getStatistics();

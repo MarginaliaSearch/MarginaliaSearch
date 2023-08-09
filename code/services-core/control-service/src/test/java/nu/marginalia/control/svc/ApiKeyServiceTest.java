@@ -3,15 +3,13 @@ package nu.marginalia.control.svc;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.control.model.ApiKeyModel;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.parallel.Execution;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.sql.SQLException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -44,6 +42,15 @@ public class ApiKeyServiceTest {
     public static void tearDown() {
         dataSource.close();
         mariaDBContainer.close();
+    }
+
+    @AfterEach
+    public void cleanDb() {
+        try (var conn = dataSource.getConnection(); var stmt = conn.createStatement()) {
+            stmt.executeUpdate("TRUNCATE TABLE EC_API_KEY");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     @Test

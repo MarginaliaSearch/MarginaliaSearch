@@ -15,6 +15,7 @@ import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
 import nu.marginalia.service.control.ServiceHeartbeat;
+import nu.marginalia.service.control.ServiceTaskHeartbeat;
 import nu.marginalia.test.TestUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +30,8 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
+
+import static org.mockito.Mockito.when;
 
 class ReverseIndexFullConverterTest2 {
 
@@ -119,7 +122,12 @@ class ReverseIndexFullConverterTest2 {
 
         Path tmpDir = Path.of("/tmp");
 
-        new ReverseIndexFullConverter(Mockito.mock(ServiceHeartbeat.class), tmpDir, new IndexJournalReaderSingleCompressedFile(indexFile), new DomainRankings(), wordsFile, docsFile).convert();
+        // RIP fairies
+        var serviceHeartbeat = Mockito.mock(ServiceHeartbeat.class);
+        when(serviceHeartbeat.createServiceTaskHeartbeat(Mockito.any(), Mockito.any()))
+                .thenReturn(Mockito.mock(ServiceTaskHeartbeat.class));
+
+        new ReverseIndexFullConverter(serviceHeartbeat, tmpDir, new IndexJournalReaderSingleCompressedFile(indexFile), new DomainRankings(), wordsFile, docsFile).convert();
 
         var reverseReader = new ReverseIndexFullReader(wordsFile, docsFile);
 
@@ -144,7 +152,12 @@ class ReverseIndexFullConverterTest2 {
 
         Path tmpDir = Path.of("/tmp");
 
-        new ReverseIndexFullConverter(Mockito.mock(ServiceHeartbeat.class), tmpDir, new IndexJournalReaderSingleCompressedFile(indexFile, null, ReverseIndexPriorityParameters::filterPriorityRecord), new DomainRankings(), wordsFile, docsFile).convert();
+        // RIP fairies
+        var serviceHeartbeat = Mockito.mock(ServiceHeartbeat.class);
+        when(serviceHeartbeat.createServiceTaskHeartbeat(Mockito.any(), Mockito.any()))
+                .thenReturn(Mockito.mock(ServiceTaskHeartbeat.class));
+
+        new ReverseIndexFullConverter(serviceHeartbeat, tmpDir, new IndexJournalReaderSingleCompressedFile(indexFile, null, ReverseIndexPriorityParameters::filterPriorityRecord), new DomainRankings(), wordsFile, docsFile).convert();
 
         var reverseReader = new ReverseIndexFullReader(wordsFile, docsFile);
 

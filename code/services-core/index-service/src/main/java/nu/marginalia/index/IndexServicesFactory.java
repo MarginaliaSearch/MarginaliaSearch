@@ -2,14 +2,11 @@ package nu.marginalia.index;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.db.storage.model.FileStorageType;
 import nu.marginalia.index.forward.ForwardIndexConverter;
 import nu.marginalia.index.forward.ForwardIndexReader;
 import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile;
-import nu.marginalia.index.journal.writer.IndexJournalWriter;
-import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
 import nu.marginalia.index.priority.ReverseIndexPriorityConverter;
 import nu.marginalia.index.full.ReverseIndexFullConverter;
 import nu.marginalia.index.priority.ReverseIndexPriorityReader;
@@ -110,7 +107,7 @@ public class IndexServicesFactory {
         FINISHED
     }
     public void convertIndex(DomainRankings domainRankings) throws IOException {
-        try (var hb = heartbeat.createServiceProcessHeartbeat(ConvertSteps.class, "index-conversion")) {
+        try (var hb = heartbeat.createServiceTaskHeartbeat(ConvertSteps.class, "index-conversion")) {
             hb.progress(ConvertSteps.FORWARD_INDEX);
             convertForwardIndex(domainRankings);
 
