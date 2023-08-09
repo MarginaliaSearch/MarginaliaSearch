@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.adblock.AdblockSimulator;
 import nu.marginalia.adblock.GoogleAnwersSpamDetector;
-import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.topic.RecipeDetector;
@@ -25,9 +24,11 @@ public class FeatureExtractor {
             "twitter.com",
             "bing.com",
             "msn.com");
-    private static final List<String> shittyTrackers = List.of("adform.net",
+    private static final List<String> adtechTrackers = List.of("adform.net",
             "connect.facebook",
             "facebook.com/tr",
+            "absbygoogle.com",
+            "adnxs.com",
             "googletagmanager.com",
             "googlesyndication.com",
             "smartadserver.com",
@@ -203,11 +204,11 @@ public class FeatureExtractor {
 
         for (var scriptTag : scriptTags) {
             if (hasInvasiveTrackingScript(scriptTag)) {
-                features.add(HtmlFeature.TRACKING_INNOCENT);
-                features.add(HtmlFeature.TRACKING_EVIL);
+                features.add(HtmlFeature.TRACKING);
+                features.add(HtmlFeature.TRACKING_ADTECH);
             }
             else if (hasNaiveTrackingScript(scriptTag)) {
-                features.add(HtmlFeature.TRACKING_INNOCENT);
+                features.add(HtmlFeature.TRACKING);
             }
 
             if (scriptTag.hasAttr("didomi/javascript")) {
@@ -234,42 +235,44 @@ public class FeatureExtractor {
                 features.add(HtmlFeature.COOKIELAW);
             }
             if (scriptText.contains("_linkedin_data_partner_id")) {
-                features.add(HtmlFeature.TRACKING_EVIL);
+                features.add(HtmlFeature.TRACKING);
+                features.add(HtmlFeature.TRACKING_ADTECH);
             }
             if (scriptText.contains("window.OneSignal")) {
                 features.add(HtmlFeature.ONESIGNAL);
             }
             if (scriptText.contains("connect.facebook.net")) {
-                features.add(HtmlFeature.TRACKING_EVIL);
+                features.add(HtmlFeature.TRACKING);
+                features.add(HtmlFeature.TRACKING_ADTECH);
             }
             if (scriptText.contains("hotjar.com")) {
-                features.add(HtmlFeature.TRACKING_INNOCENT);
+                features.add(HtmlFeature.TRACKING);
             }
         }
 
         for (var noscript : doc.getElementsByTag("noscript")) {
             for (var iframe : noscript.getElementsByTag("iframe")) {
                 if (hasInvasiveTrackingScript(iframe)) {
-                    features.add(HtmlFeature.TRACKING_INNOCENT);
-                    features.add(HtmlFeature.TRACKING_EVIL);
+                    features.add(HtmlFeature.TRACKING);
+                    features.add(HtmlFeature.TRACKING_ADTECH);
                 }
                 else if (hasNaiveTrackingScript(iframe)) {
-                    features.add(HtmlFeature.TRACKING_INNOCENT);
+                    features.add(HtmlFeature.TRACKING);
                 }
             }
             for (var img : noscript.getElementsByTag("img")) {
                 if (hasInvasiveTrackingScript(img)) {
-                    features.add(HtmlFeature.TRACKING_INNOCENT);
-                    features.add(HtmlFeature.TRACKING_EVIL);
+                    features.add(HtmlFeature.TRACKING);
+                    features.add(HtmlFeature.TRACKING_ADTECH);
                 }
                 else if (hasNaiveTrackingScript(img)) {
-                    features.add(HtmlFeature.TRACKING_INNOCENT);
+                    features.add(HtmlFeature.TRACKING);
                 }
             }
         }
 
         if (scriptTags.html().contains("google-analytics.com")) {
-            features.add(HtmlFeature.TRACKING_INNOCENT);
+            features.add(HtmlFeature.TRACKING);
         }
 
         for (var aTag : doc.getElementsByTag("a")) {
@@ -296,7 +299,7 @@ public class FeatureExtractor {
     }
     private boolean hasInvasiveTrackingScript(String src) {
 
-        for (var tracker : shittyTrackers) {
+        for (var tracker : adtechTrackers) {
             if (src.contains(tracker)) {
                 return true;
             }
