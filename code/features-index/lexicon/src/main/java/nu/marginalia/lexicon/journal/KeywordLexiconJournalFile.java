@@ -1,6 +1,5 @@
 package nu.marginalia.lexicon.journal;
 
-import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +24,10 @@ public class KeywordLexiconJournalFile implements AutoCloseable {
     public KeywordLexiconJournalFile(File journalFile) throws IOException {
         this.journalFileRAF = new RandomAccessFile(journalFile, "rw");
         this.journalFile = journalFile;
+    }
+
+    public void rewind() throws IOException {
+        journalFileRAF.seek(0);
     }
 
     public void loadFile(Consumer<byte[]> acceptEntry) throws IOException {

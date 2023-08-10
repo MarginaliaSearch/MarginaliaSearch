@@ -12,6 +12,7 @@ import nu.marginalia.index.journal.model.IndexJournalStatistics;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.rwf.RandomWriteFunnel;
+import nu.marginalia.service.control.ServiceHeartbeat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,9 +22,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
+import static nu.marginalia.index.priority.ReverseIndexPriorityParameters.bTreeContext;
+
 public class ReverseIndexPriorityConverter {
     private static final int RWF_BIN_SIZE = 10_000_000;
 
+    private final ServiceHeartbeat heartbeat;
     private final Path tmpFileDir;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -34,17 +38,31 @@ public class ReverseIndexPriorityConverter {
     private final Path outputFileDocs;
     private final SortingContext sortingContext;
 
-    public ReverseIndexPriorityConverter(Path tmpFileDir,
+    public ReverseIndexPriorityConverter(ServiceHeartbeat heartbeat,
+                                         Path tmpFileDir,
                                          IndexJournalReader journalReader,
                                          DomainRankings domainRankings,
                                          Path outputFileWords,
                                          Path outputFileDocs) {
+        this.heartbeat = heartbeat;
         this.tmpFileDir = tmpFileDir;
         this.journalReader = journalReader;
         this.domainRankings = domainRankings;
         this.outputFileWords = outputFileWords;
         this.outputFileDocs = outputFileDocs;
         this.sortingContext = new SortingContext(tmpFileDir, 64_000);
+    }
+
+    public enum TaskSteps {
+        ACCUMULATE_STATISTICS,
+        INCREMENT_OFFSETS,
+        COUNT_OFFSETS,
+        CREATE_INTERMEDIATE_DOCS,
+        SORT_INTERMEDIATE_DOCS,
+        SIZING,
+        FINALIZING_DOCS,
+        FORCE,
+        FINISHED,
     }
 
     public void convert() throws IOException {
@@ -55,28 +73,32 @@ public class ReverseIndexPriorityConverter {
             return;
         }
 
-        final IndexJournalStatistics statistics = journalReader.getStatistics();
-
         final Path intermediateUrlsFile = Files.createTempFile(tmpFileDir, "urls-sorted", ".dat");
 
+        try (var progress = heartbeat.createServiceTaskHeartbeat(TaskSteps.class, "reverseIndexPriorityConverter")) {
+            progress.progress(TaskSteps.ACCUMULATE_STATISTICS);
 
-        try {
+            final IndexJournalStatistics statistics = journalReader.getStatistics();
             final long wordsFileSize = statistics.highestWord() + 1;
+
+            progress.progress(TaskSteps.INCREMENT_OFFSETS);
 
             logger.debug("Words file size: {}", wordsFileSize);
             // Create a count of how many documents has contains each word
             final LongArray wordsOffsets = LongArray.allocate(wordsFileSize);
 
-            logger.info("Gathering Offsets");
             journalReader.forEachWordId(wordsOffsets::increment);
+            progress.progress(TaskSteps.COUNT_OFFSETS);
+
             wordsOffsets.transformEach(0, wordsFileSize, new CountToOffsetTransformer(ReverseIndexPriorityParameters.ENTRY_SIZE));
+
+            progress.progress(TaskSteps.CREATE_INTERMEDIATE_DOCS);
 
             // Construct an intermediate representation of the reverse documents index
             try (FileChannel intermediateDocChannel =
                          (FileChannel) Files.newByteChannel(intermediateUrlsFile,
                                  StandardOpenOption.CREATE, StandardOpenOption.READ, StandardOpenOption.WRITE))
             {
-                logger.info("Creating Intermediate Docs File");
 
                 // Construct intermediate index
                 try (RandomWriteFunnel intermediateDocumentWriteFunnel = new RandomWriteFunnel(tmpFileDir, RWF_BIN_SIZE);
@@ -87,8 +109,7 @@ public class ReverseIndexPriorityConverter {
                     intermediateDocumentWriteFunnel.write(intermediateDocChannel);
                 }
                 intermediateDocChannel.force(false);
-
-                logger.info("Sorting Intermediate Docs File");
+                progress.progress(TaskSteps.SORT_INTERMEDIATE_DOCS);
 
                 // Sort each segment of the intermediate file
                 {
@@ -100,32 +121,29 @@ public class ReverseIndexPriorityConverter {
                     intermediateDocs.force();
                 }
 
+                progress.progress(TaskSteps.SIZING);
 
-                logger.info("Sizing");
-
-                IndexSizeEstimator indexSizeEstimator = new IndexSizeEstimator(
-                        ReverseIndexPriorityParameters.bTreeContext,
+                IndexSizeEstimator sizeEstimator = new IndexSizeEstimator(
+                        bTreeContext,
                         ReverseIndexPriorityParameters.ENTRY_SIZE);
 
-                wordsOffsets.fold(0, 0, wordsOffsets.size(), indexSizeEstimator);
+                wordsOffsets.fold(0, 0, wordsOffsets.size(), sizeEstimator);
+                progress.progress(TaskSteps.FINALIZING_DOCS);
 
-                logger.info("Finalizing Docs File");
-
-                LongArray finalDocs = LongArray.mmapForWriting(outputFileDocs, indexSizeEstimator.size);
+                LongArray finalDocs = LongArray.mmapForWriting(outputFileDocs, sizeEstimator.size);
                 // Construct the proper reverse index
-                wordsOffsets.transformEachIO(0, wordsOffsets.size(),
-                        new ReverseIndexBTreeTransformer(finalDocs,
-                                ReverseIndexPriorityParameters.ENTRY_SIZE,
-                                ReverseIndexPriorityParameters.bTreeContext,
-                                intermediateDocChannel));
+                wordsOffsets.transformEachIO(0, wordsOffsets.size(), new ReverseIndexBTreeTransformer(finalDocs, ReverseIndexPriorityParameters.ENTRY_SIZE, bTreeContext, intermediateDocChannel));
                 wordsOffsets.write(outputFileWords);
+
+                progress.progress(TaskSteps.FORCE);
 
                 // Attempt to clean up before forcing (important disk space preservation)
                 Files.deleteIfExists(intermediateUrlsFile);
 
                 wordsOffsets.force();
                 finalDocs.force();
-                logger.info("Done");
+
+                progress.progress(TaskSteps.FINISHED);
             }
 
         } catch (IOException ex) {

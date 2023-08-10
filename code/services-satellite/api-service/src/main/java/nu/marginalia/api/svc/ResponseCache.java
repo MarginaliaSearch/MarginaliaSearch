@@ -40,6 +40,10 @@ public class ResponseCache {
         return license.getKey() + ":" +  queryString + ":" + queryParams;
     }
 
+    public void flush() {
+        cache.invalidateAll();
+    }
+
     public void cleanUp() {
         cache.cleanUp();
     }

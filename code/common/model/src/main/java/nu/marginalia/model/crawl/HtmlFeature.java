@@ -3,11 +3,15 @@ package nu.marginalia.model.crawl;
 import java.util.Collection;
 
 public enum HtmlFeature {
+    // Note, the first 32 of these features are bit encoded in the database
+    // so be sure to keep anything that's potentially important toward the top
+    // of the list
+
     MEDIA( "special:media"),
     JS("special:scripts"),
     AFFILIATE_LINK( "special:affiliate"),
-    TRACKING_INNOCENT("special:tracking"),
-    TRACKING_EVIL("special:tracking2"),
+    TRACKING("special:tracking"),
+    TRACKING_ADTECH("special:ads"), // We'll this as ads for now
 
     VIEWPORT("special:viewport"),
 

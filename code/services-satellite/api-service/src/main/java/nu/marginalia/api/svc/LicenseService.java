@@ -8,7 +8,6 @@ import nu.marginalia.api.model.ApiLicense;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
 import spark.Spark;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -56,5 +55,9 @@ public class LicenseService {
         Spark.halt(401, "Invalid license key");
 
         throw new IllegalStateException("This is unreachable");
+    }
+
+    public void flushCache() {
+        licenseCache.clear();
     }
 }

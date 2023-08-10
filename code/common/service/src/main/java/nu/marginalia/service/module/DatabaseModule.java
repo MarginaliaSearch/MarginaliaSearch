@@ -90,8 +90,8 @@ public class DatabaseModule extends AbstractModule {
             config.addDataSourceProperty("prepStmtCacheSize", "250");
             config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
 
-            config.setMaximumPoolSize(100);
-            config.setMinimumIdle(10);
+            config.setMaximumPoolSize(20);
+            config.setMinimumIdle(2);
 
             config.setMaxLifetime(Duration.ofMinutes(9).toMillis());
 

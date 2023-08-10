@@ -2,6 +2,7 @@ package nu.marginalia.lexicon;
 
 import nu.marginalia.dict.OnHeapDictionaryMap;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
+import nu.marginalia.lexicon.journal.KeywordLexiconJournalMode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +24,7 @@ public class KeywordLexiconTest {
     public void setUp() throws IOException {
         journalFile = Files.createTempFile(getClass().getSimpleName(), ".dat");
 
-        var lexiconJournal = new KeywordLexiconJournal(journalFile.toFile());
+        var lexiconJournal = new KeywordLexiconJournal(journalFile.toFile(), KeywordLexiconJournalMode.READ_WRITE);
         lexicon = new KeywordLexicon(lexiconJournal);
     }
 
@@ -64,7 +65,7 @@ public class KeywordLexiconTest {
         int c = lexicon.getOrInsert("ccc");
         lexicon.commitToDisk();
 
-        var lexiconJournal = new KeywordLexiconJournal(journalFile.toFile());
+        var lexiconJournal = new KeywordLexiconJournal(journalFile.toFile(), KeywordLexiconJournalMode.READ_WRITE);
         try (var anotherLexicon = new KeywordLexicon(lexiconJournal)) {
             assertEquals(a, anotherLexicon.getReadOnly("aaa"));
             assertEquals(b, anotherLexicon.getReadOnly("bbb"));

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Control Service</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  {{> control/partials/nav}}
+  <section>
+  <h1>Services/{{id}}</h1>
+  {{> control/partials/events-table }}
+  {{> control/partials/message-queue-table }}
+  </section>
+</body>
+<script src="/refresh.js"></script>
+<script>
+    window.setInterval(() => {
+        refresh(["services", "events"]);
+    }, 5000);
+</script>
+</html>

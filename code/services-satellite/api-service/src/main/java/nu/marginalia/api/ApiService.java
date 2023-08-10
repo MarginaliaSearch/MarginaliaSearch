@@ -2,7 +2,6 @@ package nu.marginalia.api;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import nu.marginalia.api.model.ApiLicense;
 import nu.marginalia.api.svc.LicenseService;
 import nu.marginalia.api.svc.RateLimiterService;
@@ -11,9 +10,8 @@ import nu.marginalia.client.Context;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.search.client.SearchClient;
 import nu.marginalia.search.client.model.ApiSearchResults;
-import nu.marginalia.service.server.Initialization;
-import nu.marginalia.service.server.MetricsServer;
-import nu.marginalia.service.server.Service;
+import nu.marginalia.service.server.*;
+import nu.marginalia.service.server.mq.MqNotification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -36,16 +34,14 @@ public class ApiService extends Service {
     private final Marker queryMarker = MarkerFactory.getMarker("QUERY");
 
     @Inject
-    public ApiService(@Named("service-host") String ip,
-                      @Named("service-port") Integer port,
-                      Initialization initialization,
-                      MetricsServer metricsServer,
+    public ApiService(BaseServiceParams params,
                       SearchClient searchClient,
                       ResponseCache responseCache,
                       LicenseService licenseService,
-                      RateLimiterService rateLimiterService) {
+                      RateLimiterService rateLimiterService
+                      ) {
 
-        super(ip, port, initialization, metricsServer);
+        super(params);
 
         this.searchClient = searchClient;
         this.responseCache = responseCache;
@@ -61,6 +57,14 @@ public class ApiService extends Service {
         Spark.get("/public/api/:key/", (rq, rsp) -> licenseService.getLicense(rq.params("key")), gson::toJson);
 
         Spark.get("/public/api/:key/search/*", this::search, gson::toJson);
+    }
+
+    @MqNotification(endpoint = "FLUSH_CACHES")
+    public void flushCaches(String unusedArg) {
+        logger.info("Flushing caches");
+
+        responseCache.flush();
+        licenseService.flushCache();
     }
 
     private Object search(Request request, Response response) {

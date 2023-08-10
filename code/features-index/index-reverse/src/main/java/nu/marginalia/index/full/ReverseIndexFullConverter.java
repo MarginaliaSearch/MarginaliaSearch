@@ -21,11 +21,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
+import nu.marginalia.service.control.ServiceHeartbeat;
+
 import static nu.marginalia.index.full.ReverseIndexFullParameters.bTreeContext;
 
 public class ReverseIndexFullConverter {
     private static final int RWF_BIN_SIZE = 10_000_000;
 
+    private final ServiceHeartbeat heartbeat;
     private final Path tmpFileDir;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -36,17 +39,31 @@ public class ReverseIndexFullConverter {
     private final Path outputFileDocs;
     private final SortingContext sortingContext;
 
-    public ReverseIndexFullConverter(Path tmpFileDir,
+    public ReverseIndexFullConverter(ServiceHeartbeat heartbeat,
+                                     Path tmpFileDir,
                                      IndexJournalReader journalReader,
                                      DomainRankings domainRankings,
                                      Path outputFileWords,
                                      Path outputFileDocs) {
+        this.heartbeat = heartbeat;
         this.tmpFileDir = tmpFileDir;
         this.journalReader = journalReader;
         this.domainRankings = domainRankings;
         this.outputFileWords = outputFileWords;
         this.outputFileDocs = outputFileDocs;
         this.sortingContext = new SortingContext(tmpFileDir, 64_000);
+    }
+
+    public enum TaskSteps {
+        ACCUMULATE_STATISTICS,
+        INCREMENT_OFFSETS,
+        COUNT_OFFSETS,
+        CREATE_INTERMEDIATE_DOCS,
+        SORT_INTERMEDIATE_DOCS,
+        SIZING,
+        FINALIZING_DOCS,
+        FORCE,
+        FINISHED,
     }
 
     public void convert() throws IOException {
@@ -57,28 +74,32 @@ public class ReverseIndexFullConverter {
             return;
         }
 
-        final IndexJournalStatistics statistics = journalReader.getStatistics();
-
         final Path intermediateUrlsFile = Files.createTempFile(tmpFileDir, "urls-sorted", ".dat");
 
+        try (var progress = heartbeat.createServiceTaskHeartbeat(TaskSteps.class, "reverseIndexFullConverter")) {
+            progress.progress(TaskSteps.ACCUMULATE_STATISTICS);
 
-        try {
+            final IndexJournalStatistics statistics = journalReader.getStatistics();
             final long wordsFileSize = statistics.highestWord() + 1;
+
+            progress.progress(TaskSteps.INCREMENT_OFFSETS);
 
             logger.debug("Words file size: {}", wordsFileSize);
             // Create a count of how many documents has contains each word
             final LongArray wordsOffsets = LongArray.allocate(wordsFileSize);
 
-            logger.info("Gathering Offsets");
             journalReader.forEachWordId(wordsOffsets::increment);
+            progress.progress(TaskSteps.COUNT_OFFSETS);
+
             wordsOffsets.transformEach(0, wordsFileSize, new CountToOffsetTransformer(ReverseIndexFullParameters.ENTRY_SIZE));
+
+            progress.progress(TaskSteps.CREATE_INTERMEDIATE_DOCS);
 
             // Construct an intermediate representation of the reverse documents index
             try (FileChannel intermediateDocChannel =
                          (FileChannel) Files.newByteChannel(intermediateUrlsFile,
                                  StandardOpenOption.CREATE, StandardOpenOption.READ, StandardOpenOption.WRITE))
             {
-                logger.info("Creating Intermediate Docs File");
 
                 // Construct intermediate index
                 try (RandomWriteFunnel intermediateDocumentWriteFunnel = new RandomWriteFunnel(tmpFileDir, RWF_BIN_SIZE);
@@ -89,8 +110,7 @@ public class ReverseIndexFullConverter {
                     intermediateDocumentWriteFunnel.write(intermediateDocChannel);
                 }
                 intermediateDocChannel.force(false);
-
-                logger.info("Sorting Intermediate Docs File");
+                progress.progress(TaskSteps.SORT_INTERMEDIATE_DOCS);
 
                 // Sort each segment of the intermediate file
                 {
@@ -102,28 +122,29 @@ public class ReverseIndexFullConverter {
                     intermediateDocs.force();
                 }
 
-
-                logger.info("Sizing");
+                progress.progress(TaskSteps.SIZING);
 
                 IndexSizeEstimator sizeEstimator = new IndexSizeEstimator(
                         ReverseIndexFullParameters.bTreeContext,
                         ReverseIndexFullParameters.ENTRY_SIZE);
 
                 wordsOffsets.fold(0, 0, wordsOffsets.size(), sizeEstimator);
-
-                logger.info("Finalizing Docs File");
+                progress.progress(TaskSteps.FINALIZING_DOCS);
 
                 LongArray finalDocs = LongArray.mmapForWriting(outputFileDocs, sizeEstimator.size);
                 // Construct the proper reverse index
                 wordsOffsets.transformEachIO(0, wordsOffsets.size(), new ReverseIndexBTreeTransformer(finalDocs, ReverseIndexFullParameters.ENTRY_SIZE, bTreeContext, intermediateDocChannel));
                 wordsOffsets.write(outputFileWords);
 
+                progress.progress(TaskSteps.FORCE);
+
                 // Attempt to clean up before forcing (important disk space preservation)
                 Files.deleteIfExists(intermediateUrlsFile);
 
                 wordsOffsets.force();
                 finalDocs.force();
-                logger.info("Done");
+
+                progress.progress(TaskSteps.FINISHED);
             }
 
         } catch (IOException ex) {

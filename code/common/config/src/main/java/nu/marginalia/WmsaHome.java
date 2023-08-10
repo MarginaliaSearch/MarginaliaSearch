@@ -10,7 +10,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.stream.Stream;
 
 public class WmsaHome {
@@ -77,35 +76,6 @@ public class WmsaHome {
 
     public static Path getIPLocationDatabse() {
         return getHomePath().resolve("data").resolve("IP2LOCATION-LITE-DB1.CSV");
-    }
-
-    public static Path getDisk(String name) {
-        var pathStr = getDiskProperties().getProperty(name);
-        if (null == pathStr) {
-            throw new RuntimeException("Disk " + name + " was not configured");
-        }
-        Path p = Path.of(pathStr);
-        if (!Files.isDirectory(p)) {
-            throw new RuntimeException("Disk " + name + " does not exist or is not a directory!");
-        }
-        return p;
-    }
-
-    public static Properties getDiskProperties() {
-        Path settingsFile = getHomePath().resolve("conf/disks.properties");
-
-        if (!Files.isRegularFile(settingsFile)) {
-            throw new RuntimeException("Could not find disk settings " + settingsFile);
-        }
-
-        try (var is = Files.newInputStream(settingsFile)) {
-            var props = new Properties();
-            props.load(is);
-            return props;
-        }
-        catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
     }
 
     public static LanguageModels getLanguageModels() {

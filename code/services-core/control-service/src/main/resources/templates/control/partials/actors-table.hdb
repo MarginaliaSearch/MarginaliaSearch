@@ -1,0 +1,69 @@
+<h1>Actors</h1>
+<table id="actors">
+    <tr>
+        <th>Actor</th>
+        <th>State</th>
+        <th>Action</th>
+    </tr>
+    {{#each actors}}
+    <tr>
+        <td><a href="/actors/{{name}}">{{name}}</a></td>
+        <td>{{stateIcon}}&nbsp;{{state}}</td>
+        <td>
+            {{#unless terminal}}
+                <form id="toggle-{{name}}"
+                    action="/fsms/{{name}}/stop"
+                    method="post"
+                    onsubmit="return toggleActorSwitch('{{name}}')">
+                    <input
+                            type="submit"
+                            value="On"
+                            class="toggle-switch-on"
+                            id="toggle-{{name}}-button"
+                            title="Terminate the actor"
+                    >
+                </form>
+            {{/unless}}
+            {{#if terminal}}
+                <form id="toggle-{{name}}"
+                    action="/fsms/{{name}}/start"
+                    method="post"
+                    onsubmit="return toggleActorSwitch('{{name}}')">
+                    <input
+                        type="submit"
+                        {{#unless canStart}}
+                        disabled
+                        value="Stop"
+                        title="This actor cannot be started here"
+                        {{/unless}}
+                        {{#if canStart}}
+                        value="Off"
+                        title="Start the actor"
+                        {{/if}}
+                        class="toggle-switch-off"
+
+                        id="toggle-{{name}}-button">
+                </form>
+            {{/if}}
+
+        </td>
+    </tr>
+    {{/each}}
+</table>
+
+<script>
+    function toggleActorSwitch(name) {
+        var toggle = document.getElementById("toggle-" + name + "-button");
+        toggle.classList.remove('toggle-switch-on');
+        toggle.classList.remove('toggle-switch-off');
+        toggle.classList.add("toggle-switch-active");
+        toggle.value = '...';
+
+        var form = document.getElementById("toggle-" + name);
+        var xhr = new XMLHttpRequest();
+        xhr.open(form.method, form.action, true);
+        xhr.send();
+
+        return false;
+    }
+</script>

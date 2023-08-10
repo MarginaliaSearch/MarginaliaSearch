@@ -11,6 +11,9 @@ import org.slf4j.LoggerFactory;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
+/** Each main class of a service should extend this class.
+ *  They must also invoke init() in their main method.
+ */
 public abstract class MainClass {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 

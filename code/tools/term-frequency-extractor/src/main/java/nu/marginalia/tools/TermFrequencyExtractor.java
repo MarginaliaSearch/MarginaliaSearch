@@ -58,7 +58,7 @@ public class TermFrequencyExtractor {
                         continue;
                     docCount.incrementAndGet();
 
-                    Document parsed = Jsoup.parse(doc.documentBody.decode());
+                    Document parsed = Jsoup.parse(doc.documentBody);
                     parsed.body().filter(new DomPruningFilter(0.5));
 
                     DocumentLanguageData dld = se.get().extractSentences(parsed);

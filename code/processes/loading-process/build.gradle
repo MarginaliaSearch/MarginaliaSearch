@@ -19,9 +19,11 @@ tasks.distZip.enabled = false
 
 dependencies {
     implementation project(':code:common:process')
-
+    implementation project(':code:api:process-mqapi')
     implementation project(':code:api:index-api')
     implementation project(':code:common:model')
+    implementation project(':code:common:db')
+    implementation project(':code:common:message-queue')
     implementation project(':code:common:config')
     implementation project(':code:common:service')
     implementation project(':code:common:service-discovery')
@@ -29,7 +31,7 @@ dependencies {
     implementation project(':code:features-index:lexicon')
     implementation project(':code:features-index:index-journal')
     implementation project(':code:libraries:language-processing')
-
+    implementation project(':third-party:commons-codec')
     testImplementation project(':code:services-core:search-service')
 
     implementation project(':code:process-models:crawling-model')

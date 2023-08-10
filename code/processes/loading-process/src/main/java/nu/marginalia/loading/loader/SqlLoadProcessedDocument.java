@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.converting.instruction.instructions.LoadProcessedDocument;
 import nu.marginalia.converting.instruction.instructions.LoadProcessedDocumentWithError;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,61 +64,66 @@ public class SqlLoadProcessedDocument {
 
     public void load(LoaderData data, List<LoadProcessedDocument> documents) {
 
-        try (var conn = dataSource.getConnection();
-             var stmt = conn.prepareCall("CALL INSERT_PAGE_VISIT(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
-            conn.setAutoCommit(false);
+        try (var conn = dataSource.getConnection()) {
+            try (var insertCall = conn.prepareCall("CALL INSERT_PAGE_VISIT(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+            ) {
+                conn.setAutoCommit(false);
 
-            int cnt = 0; int batchOffset = 0;
-            for (var doc : documents) {
-                int urlId = data.getUrlId(doc.url());
-                if (urlId <= 0) {
-                    logger.warn("Failed to resolve ID for URL {}", doc.url());
-                    return;
-                }
+                int cnt = 0;
+                int batchOffset = 0;
+                for (var doc : documents) {
+                    int urlId = data.getUrlId(doc.url());
+                    if (urlId <= 0) {
+                        logger.warn("Failed to resolve ID for URL {}", doc.url());
+                        continue;
+                    }
 
-                stmt.setInt(1, urlId);
-                stmt.setString(2, doc.state().name());
-                stmt.setString(3, doc.title());
-                stmt.setString(4, doc.description());
-                stmt.setInt(5, doc.length());
-                stmt.setInt(6, doc.htmlFeatures());
-                stmt.setString(7, doc.standard());
-                stmt.setDouble(8, doc.quality());
-                stmt.setLong(9, doc.hash());
-                if (doc.pubYear() != null) {
-                    stmt.setShort(10, (short) doc.pubYear().intValue());
-                }
-                else {
-                    stmt.setInt(10, Types.SMALLINT);
-                }
-                stmt.addBatch();
+                    insertCall.setInt(1, urlId);
+                    insertCall.setString(2, doc.state().name());
+                    insertCall.setString(3, doc.title());
+                    insertCall.setString(4, StringUtils.truncate(doc.description(), 255));
+                    insertCall.setInt(5, doc.length());
+                    insertCall.setInt(6, doc.htmlFeatures());
+                    insertCall.setString(7, doc.standard());
+                    insertCall.setDouble(8, doc.quality());
+                    insertCall.setLong(9, doc.hash());
+                    if (doc.pubYear() != null) {
+                        insertCall.setShort(10, (short) doc.pubYear().intValue());
+                    } else {
+                        insertCall.setInt(10, Types.SMALLINT);
+                    }
+                    insertCall.addBatch();
 
-                if (++cnt == 100) {
-                    var ret = stmt.executeBatch();
+                    if (++cnt == 100) {
+                        var ret = insertCall.executeBatch();
+                        conn.commit();
+
+                        for (int rv = 0; rv < cnt; rv++) {
+                            if (ret[rv] < 0 && ret[rv] != SUCCESS_NO_INFO) {
+                                logger.warn("load({}) -- bad row count {}", documents.get(batchOffset + rv), ret[rv]);
+                            }
+                        }
+
+                        cnt = 0;
+                        batchOffset += 100;
+                    }
+                }
+                if (cnt > 0) {
+                    var ret = insertCall.executeBatch();
                     conn.commit();
-
                     for (int rv = 0; rv < cnt; rv++) {
                         if (ret[rv] < 0 && ret[rv] != SUCCESS_NO_INFO) {
                             logger.warn("load({}) -- bad row count {}", documents.get(batchOffset + rv), ret[rv]);
                         }
                     }
-
-                    cnt = 0;
-                    batchOffset += 100;
                 }
-            }
-            if (cnt > 0) {
-                var ret = stmt.executeBatch();
-                conn.commit();
-                for (int rv = 0; rv < cnt; rv++) {
-                    if (ret[rv] < 0 && ret[rv] != SUCCESS_NO_INFO) {
-                        logger.warn("load({}) -- bad row count {}", documents.get(batchOffset + rv), ret[rv]);
-                    }
-                }
-            }
 
-            conn.setAutoCommit(true);
-
+                conn.setAutoCommit(true);
+            }
+            catch (SQLException ex) {
+                conn.rollback();
+                throw ex;
+            }
         } catch (SQLException ex) {
             logger.warn("SQL error inserting document", ex);
 

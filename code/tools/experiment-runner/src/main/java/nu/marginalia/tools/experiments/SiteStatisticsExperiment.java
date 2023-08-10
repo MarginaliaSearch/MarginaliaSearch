@@ -31,12 +31,12 @@ public class SiteStatisticsExperiment extends Experiment {
 
     @Override
     public boolean process(CrawledDomain domain) {
-        var ret = domainProcessor.process(domain);
-
-        ret.documents.stream()
-                .filter(ProcessedDocument::isProcessedFully)
-                .sorted(Comparator.comparing(doc -> doc.details.metadata.topology()))
-                .forEach(doc -> System.out.println(doc.url + ":" + doc.details.metadata));
+//        var ret = domainProcessor.process(domain);
+//
+//        ret.documents.stream()
+//                .filter(ProcessedDocument::isProcessedFully)
+//                .sorted(Comparator.comparing(doc -> doc.details.metadata.topology()))
+//                .forEach(doc -> System.out.println(doc.url + ":" + doc.details.metadata));
 
         return true;
     }

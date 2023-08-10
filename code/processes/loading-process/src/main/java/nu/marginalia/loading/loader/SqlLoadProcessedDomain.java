@@ -14,17 +14,23 @@ import java.sql.SQLException;
 public class SqlLoadProcessedDomain {
     private final HikariDataSource dataSource;
     private final SqlLoadDomains loadDomains;
+    private final SqlLoadUrls loadUrls;
     private static final Logger logger = LoggerFactory.getLogger(SqlLoadProcessedDomain.class);
 
     @Inject
-    public SqlLoadProcessedDomain(HikariDataSource dataSource, SqlLoadDomains loadDomains) {
+    public SqlLoadProcessedDomain(HikariDataSource dataSource, SqlLoadDomains loadDomains, SqlLoadUrls loadUrls) {
         this.dataSource = dataSource;
         this.loadDomains = loadDomains;
+        this.loadUrls = loadUrls;
 
 
         try (var conn = dataSource.getConnection()) {
             try (var stmt = conn.createStatement()) {
                 stmt.execute("DROP PROCEDURE IF EXISTS INITIALIZE_DOMAIN");
+
+                // Note that there should be no need to delete from EC_PAGE_DATA here as it's done via their
+                // CASCADE DELETE constraint on EC_URL.
+
                 stmt.execute("""
                         CREATE PROCEDURE INITIALIZE_DOMAIN (
                             IN ST ENUM('ACTIVE', 'EXHAUSTED', 'SPECIAL', 'SOCIAL_MEDIA', 'BLOCKED', 'REDIR', 'ERROR', 'UNKNOWN'),
@@ -32,6 +38,9 @@ public class SqlLoadProcessedDomain {
                             IN DID INT,
                             IN IP VARCHAR(48))
                         BEGIN
+                            DELETE FROM DOMAIN_METADATA WHERE ID=DID;
+                            DELETE FROM EC_DOMAIN_LINK WHERE SOURCE_DOMAIN_ID=DID;
+                            DELETE FROM EC_URL WHERE DOMAIN_ID=DID;
                             UPDATE EC_DOMAIN SET INDEX_DATE=NOW(), STATE=ST, DOMAIN_ALIAS=NULL, INDEXED=GREATEST(INDEXED,IDX), IP=IP WHERE ID=DID;
                             DELETE FROM EC_DOMAIN_LINK WHERE SOURCE_DOMAIN_ID=DID;
                         END
@@ -44,21 +53,28 @@ public class SqlLoadProcessedDomain {
     }
 
     public void load(LoaderData data, EdgeDomain domain, DomainIndexingState state, String ip) {
+
         data.setTargetDomain(domain);
 
         loadDomains.load(data, domain);
 
-        try (var conn = dataSource.getConnection();
-             var initCall = conn.prepareCall("CALL INITIALIZE_DOMAIN(?,?,?,?)"))
-        {
-            initCall.setString(1, state.name());
-            initCall.setInt(2, 1 + data.sizeHint / 100);
-            initCall.setInt(3, data.getDomainId(domain));
-            initCall.setString(4, StringUtils.truncate(ip, 48));
-            int rc = initCall.executeUpdate();
-            conn.commit();
-            if (rc < 1) {
-                logger.warn("load({},{}) -- bad rowcount {}", domain, state, rc);
+        try (var conn = dataSource.getConnection()) {
+            try (var initCall = conn.prepareCall("CALL INITIALIZE_DOMAIN(?,?,?,?)")) {
+                initCall.setString(1, state.name());
+                initCall.setInt(2, 1 + data.sizeHint / 100);
+                initCall.setInt(3, data.getDomainId(domain));
+                initCall.setString(4, StringUtils.truncate(ip, 48));
+                int rc = initCall.executeUpdate();
+                conn.commit();
+                if (rc < 1) {
+                    logger.warn("load({},{}) -- bad rowcount {}", domain, state, rc);
+                }
+
+                loadUrls.loadUrlsForDomain(data, domain, 0);
+            }
+            catch (SQLException ex) {
+                conn.rollback();
+                throw ex;
             }
         }
         catch (SQLException ex) {

@@ -1,17 +1,17 @@
 package nu.marginalia.crawling.io;
 
+import com.github.luben.zstd.RecyclingBufferPool;
 import com.github.luben.zstd.ZstdInputStream;
 import com.google.gson.Gson;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
+import nu.marginalia.crawling.model.SerializableCrawlData;
+import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.model.gson.GsonFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,10 +27,21 @@ public class CrawledDomainReader {
     public CrawledDomainReader() {
     }
 
+    /** An iterator-like access to domain data  This must be closed otherwise it will leak off-heap memory! */
+    public SerializableCrawlDataStream createDataStream(Path fullPath) throws IOException {
+        return new FileReadingSerializableCrawlDataStream(gson, fullPath.toFile());
+    }
+
+    /** An iterator-like access to domain data. This must be closed otherwise it will leak off-heap memory! */
+    public SerializableCrawlDataStream createDataStream(Path basePath, CrawlingSpecification spec) throws IOException {
+        return createDataStream(CrawlerOutputFile.getOutputFile(basePath, spec.id, spec.domain));
+    }
+
+    /** Read the entirety of the domain data into memory. This uses a lot of RAM */
     public CrawledDomain read(Path path) throws IOException {
         DomainDataAssembler domainData = new DomainDataAssembler();
 
-        try (var br = new BufferedReader(new InputStreamReader(new ZstdInputStream(new FileInputStream(path.toFile()))))) {
+        try (var br = new BufferedReader(new InputStreamReader(new ZstdInputStream(new FileInputStream(path.toFile()), RecyclingBufferPool.INSTANCE)))) {
             String line;
             while ((line = br.readLine()) != null) {
                 if (line.startsWith("//")) {
@@ -64,7 +75,6 @@ public class CrawledDomainReader {
             return Optional.of(read(path));
         }
         catch (Exception ex) {
-            logger.warn("Failed to read domain " + path, ex);
             return Optional.empty();
         }
     }
@@ -89,6 +99,59 @@ public class CrawledDomainReader {
                 domainPrototype.doc.addAll(docs);
             }
             return domainPrototype;
+        }
+    }
+
+    private static class FileReadingSerializableCrawlDataStream implements AutoCloseable, SerializableCrawlDataStream {
+        private final Gson gson;
+        private final BufferedReader bufferedReader;
+        private SerializableCrawlData next = null;
+
+        public FileReadingSerializableCrawlDataStream(Gson gson, File file) throws IOException {
+            this.gson = gson;
+            bufferedReader = new BufferedReader(new InputStreamReader(new ZstdInputStream(new FileInputStream(file), RecyclingBufferPool.INSTANCE)));
+        }
+
+        @Override
+        public SerializableCrawlData next() throws IOException {
+            if (hasNext()) {
+                var ret = next;
+                next = null;
+                return ret;
+            }
+            throw new IllegalStateException("No more data");
+        }
+
+        @Override
+        public boolean hasNext() throws IOException {
+            if (next != null)
+                return true;
+
+            String identifier = bufferedReader.readLine();
+            if (identifier == null) {
+                bufferedReader.close();
+                return false;
+            }
+            String data = bufferedReader.readLine();
+            if (data == null) {
+                bufferedReader.close();
+                return false;
+            }
+
+            if (identifier.equals(CrawledDomain.SERIAL_IDENTIFIER)) {
+                next = gson.fromJson(data, CrawledDomain.class);
+            } else if (identifier.equals(CrawledDocument.SERIAL_IDENTIFIER)) {
+                next = gson.fromJson(data, CrawledDocument.class);
+            }
+            else {
+                throw new IllegalStateException("Unknown identifier: " + identifier);
+            }
+            return true;
+        }
+
+        @Override
+        public void close() throws Exception {
+            bufferedReader.close();
         }
     }
 }

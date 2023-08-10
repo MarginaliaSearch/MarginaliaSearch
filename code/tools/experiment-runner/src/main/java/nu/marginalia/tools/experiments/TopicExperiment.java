@@ -37,7 +37,7 @@ public class TopicExperiment extends Experiment {
         for (var doc : domain.doc) {
             if (doc.documentBody == null) continue;
 
-            var parsed = Jsoup.parse(doc.documentBody.decode());
+            var parsed = Jsoup.parse(doc.documentBody);
 
             parsed.body().filter(new DomPruningFilter(0.5));
             var dld = se.extractSentences(parsed);

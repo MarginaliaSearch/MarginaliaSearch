@@ -4,22 +4,21 @@ import com.google.gson.Gson;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import nu.marginalia.LanguageModels;
+import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.WmsaHome;
-import plan.CrawlPlan;
 import nu.marginalia.model.gson.GsonFactory;
+
+import java.util.UUID;
 
 public class ConverterModule extends AbstractModule {
 
-    private final CrawlPlan plan;
-
-    public ConverterModule(CrawlPlan plan) {
-        this.plan = plan;
+    public ConverterModule() {
     }
 
     public void configure() {
-        bind(CrawlPlan.class).toInstance(plan);
-
         bind(Gson.class).toInstance(createGson());
+
+        bind(ProcessConfiguration.class).toInstance(new ProcessConfiguration("converter", 0, UUID.randomUUID()));
 
         bind(Double.class).annotatedWith(Names.named("min-document-quality")).toInstance(-15.);
         bind(Integer.class).annotatedWith(Names.named("min-document-length")).toInstance(250);

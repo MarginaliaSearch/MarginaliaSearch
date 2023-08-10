@@ -19,7 +19,7 @@ import java.util.*;
 public abstract class AbstractDocumentProcessorPlugin {
     protected LanguageFilter languageFilter = new LanguageFilter();
 
-    public abstract DetailsWithWords createDetails(CrawledDomain crawledDomain, CrawledDocument crawledDocument) throws DisqualifiedException, URISyntaxException;
+    public abstract DetailsWithWords createDetails(CrawledDocument crawledDocument) throws DisqualifiedException, URISyntaxException;
     public abstract boolean isApplicable(CrawledDocument doc);
 
     protected void checkDocumentLanguage(DocumentLanguageData dld) throws DisqualifiedException {
@@ -42,12 +42,6 @@ public abstract class AbstractDocumentProcessorPlugin {
             }
 
             tagWords.add(key + ":" + value.toString().toLowerCase());
-        }
-
-        public MetaTagsBuilder addDomainCrawlData(CrawledDomain domain) {
-            add("ip", domain.ip);
-
-            return this;
         }
 
         public MetaTagsBuilder addUrl(EdgeUrl url) {

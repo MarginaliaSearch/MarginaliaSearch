@@ -94,10 +94,10 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     }
 
     @Override
-    public DetailsWithWords createDetails(CrawledDomain crawledDomain, CrawledDocument crawledDocument)
+    public DetailsWithWords createDetails(CrawledDocument crawledDocument)
             throws DisqualifiedException, URISyntaxException {
 
-        String documentBody = crawledDocument.documentBody.decode();
+        String documentBody = crawledDocument.documentBody;
 
         if (languageFilter.isBlockedUnicodeRange(documentBody)) {
             throw new DisqualifiedException(DisqualificationReason.LANGUAGE);
@@ -141,7 +141,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
             throw new DisqualifiedException(DisqualificationReason.QUALITY);
         }
 
-        final Set<HtmlFeature> features = featureExtractor.getFeatures(crawledDomain, doc, dld);
+        final Set<HtmlFeature> features = featureExtractor.getFeatures(doc, dld);
         ret.features = features;
         ret.hashCode = dld.localitySensitiveHashCode();
 
@@ -159,7 +159,6 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         ret.generator = generatorParts.type();
 
         var tagWords = new MetaTagsBuilder()
-                .addDomainCrawlData(crawledDomain)
                 .addPubDate(pubDate)
                 .addUrl(url)
                 .addFeatures(features)

@@ -2,20 +2,19 @@ package nu.marginalia.index;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
+import nu.marginalia.db.storage.FileStorageService;
+import nu.marginalia.db.storage.model.FileStorageType;
 import nu.marginalia.index.forward.ForwardIndexConverter;
 import nu.marginalia.index.forward.ForwardIndexReader;
 import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile;
-import nu.marginalia.index.journal.writer.IndexJournalWriter;
-import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
 import nu.marginalia.index.priority.ReverseIndexPriorityConverter;
 import nu.marginalia.index.full.ReverseIndexFullConverter;
 import nu.marginalia.index.priority.ReverseIndexPriorityReader;
 import nu.marginalia.index.priority.ReverseIndexPriorityParameters;
 import nu.marginalia.index.full.ReverseIndexFullReader;
-import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.index.index.SearchIndexReader;
+import nu.marginalia.service.control.ServiceHeartbeat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,16 +23,20 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.sql.SQLException;
 import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 
 @Singleton
 public class IndexServicesFactory {
     private final Path tmpFileDir;
+    private final ServiceHeartbeat heartbeat;
+    private final Path liveStorage;
+    private final Path stagingStorage;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final PartitionedDataFile writerIndexFile;
+    private final Path writerIndexFile;
 
     private final PartitionedDataFile fwdIndexDocId;
     private final PartitionedDataFile fwdIndexDocData;
@@ -50,28 +53,30 @@ public class IndexServicesFactory {
 
     @Inject
     public IndexServicesFactory(
-            @Named("tmp-file-dir") Path tmpFileDir,
-            @Named("partition-root-slow") Path partitionRootSlow,
-            @Named("partition-root-fast") Path partitionRootFast
-            ) throws IOException {
+            ServiceHeartbeat heartbeat,
+            FileStorageService fileStorageService
+            ) throws IOException, SQLException {
+        this.heartbeat = heartbeat;
 
-        this.tmpFileDir = tmpFileDir;
+        liveStorage = fileStorageService.getStorageByType(FileStorageType.INDEX_LIVE).asPath();
+        stagingStorage = fileStorageService.getStorageByType(FileStorageType.INDEX_STAGING).asPath();
+        tmpFileDir = fileStorageService.getStorageByType(FileStorageType.INDEX_STAGING).asPath().resolve("tmp");
+        searchSetsBase = fileStorageService.getStorageByType(FileStorageType.SEARCH_SETS).asPath();
 
-        this.writerIndexFile = new PartitionedDataFile(partitionRootSlow, "page-index.dat");
-
-        fwdIndexDocId = new PartitionedDataFile(partitionRootFast, "fwd-doc-id.dat");
-        fwdIndexDocData = new PartitionedDataFile(partitionRootFast, "fwd-doc-data.dat");
-
-        revIndexDoc = new PartitionedDataFile(partitionRootFast, "rev-doc.dat");
-        revIndexWords = new PartitionedDataFile(partitionRootFast, "rev-words.dat");
-
-        revPrioIndexDoc = new PartitionedDataFile(partitionRootFast, "rev-prio-doc.dat");
-        revPrioIndexWords = new PartitionedDataFile(partitionRootFast, "rev-prio-words.dat");
-
-        searchSetsBase = partitionRootSlow.resolve("search-sets");
-        if (!Files.isDirectory(searchSetsBase)) {
-            Files.createDirectory(searchSetsBase);
+        if (!Files.exists(tmpFileDir)) {
+            Files.createDirectories(tmpFileDir);
         }
+
+        writerIndexFile = stagingStorage.resolve("page-index.dat");
+
+        fwdIndexDocId = new PartitionedDataFile(liveStorage, "fwd-doc-id.dat");
+        fwdIndexDocData = new PartitionedDataFile(liveStorage, "fwd-doc-data.dat");
+
+        revIndexDoc = new PartitionedDataFile(liveStorage, "rev-doc.dat");
+        revIndexWords = new PartitionedDataFile(liveStorage, "rev-words.dat");
+
+        revPrioIndexDoc = new PartitionedDataFile(liveStorage, "rev-prio-doc.dat");
+        revPrioIndexWords = new PartitionedDataFile(liveStorage, "rev-prio-words.dat");
     }
 
     public Path getSearchSetsBase() {
@@ -80,7 +85,7 @@ public class IndexServicesFactory {
 
     public boolean isPreconvertedIndexPresent() {
         return Stream.of(
-                writerIndexFile.get(LIVE_PART).toPath()
+                writerIndexFile
         ).allMatch(Files::exists);
     }
 
@@ -95,23 +100,34 @@ public class IndexServicesFactory {
         ).noneMatch(Files::exists);
     }
 
-    public IndexJournalWriter createIndexJournalWriter(KeywordLexicon lexicon) throws IOException {
-        return new IndexJournalWriterImpl(lexicon, writerIndexFile.get(LIVE_PART).toPath());
+    enum ConvertSteps {
+        FORWARD_INDEX,
+        FULL_REVERSE_INDEX,
+        PRIORITY_REVERSE_INDEX,
+        FINISHED
     }
-
     public void convertIndex(DomainRankings domainRankings) throws IOException {
-        convertForwardIndex(domainRankings);
-        convertFullReverseIndex(domainRankings);
-        convertPriorityReverseIndex(domainRankings);
+        try (var hb = heartbeat.createServiceTaskHeartbeat(ConvertSteps.class, "index-conversion")) {
+            hb.progress(ConvertSteps.FORWARD_INDEX);
+            convertForwardIndex(domainRankings);
+
+            hb.progress(ConvertSteps.FULL_REVERSE_INDEX);
+            convertFullReverseIndex(domainRankings);
+
+            hb.progress(ConvertSteps.PRIORITY_REVERSE_INDEX);
+            convertPriorityReverseIndex(domainRankings);
+
+            hb.progress(ConvertSteps.FINISHED);
+        }
     }
 
     private void convertFullReverseIndex(DomainRankings domainRankings) throws IOException {
-        var source = writerIndexFile.get(0).toPath();
+        logger.info("Converting full reverse index {}", writerIndexFile);
 
-        logger.info("Converting full reverse index {}", source);
-
-        var journalReader = new IndexJournalReaderSingleCompressedFile(source);
-        var converter = new ReverseIndexFullConverter(tmpFileDir,
+        var journalReader = new IndexJournalReaderSingleCompressedFile(writerIndexFile);
+        var converter = new ReverseIndexFullConverter(
+                heartbeat,
+                tmpFileDir,
                 journalReader,
                 domainRankings,
                 revIndexWords.get(NEXT_PART).toPath(),
@@ -124,14 +140,13 @@ public class IndexServicesFactory {
 
     private void convertPriorityReverseIndex(DomainRankings domainRankings) throws IOException {
 
-        var source = writerIndexFile.get(0).toPath();
+        logger.info("Converting priority reverse index {}", writerIndexFile);
 
-        logger.info("Converting priority reverse index {}", source);
-
-        var journalReader = new IndexJournalReaderSingleCompressedFile(source, null,
+        var journalReader = new IndexJournalReaderSingleCompressedFile(writerIndexFile, null,
                 ReverseIndexPriorityParameters::filterPriorityRecord);
 
-        var converter = new ReverseIndexPriorityConverter(tmpFileDir,
+        var converter = new ReverseIndexPriorityConverter(heartbeat,
+                tmpFileDir,
                 journalReader,
                 domainRankings,
                 revPrioIndexWords.get(NEXT_PART).toPath(),
@@ -144,11 +159,11 @@ public class IndexServicesFactory {
 
     private void convertForwardIndex(DomainRankings domainRankings) throws IOException {
 
-        var source = writerIndexFile.get(0);
 
-        logger.info("Converting forward index data {}", source);
+        logger.info("Converting forward index data {}", writerIndexFile);
 
-        new ForwardIndexConverter(source,
+        new ForwardIndexConverter(heartbeat,
+                writerIndexFile.toFile(),
                 fwdIndexDocId.get(NEXT_PART).toPath(),
                 fwdIndexDocData.get(NEXT_PART).toPath(),
                 domainRankings)

@@ -11,11 +11,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public class DomainMetadataCompiler {
 
 
-    public void compile(List<Instruction> ret, EdgeDomain domain, @NotNull List<ProcessedDocument> documents) {
+    public void compile(Consumer<Instruction> instructionConsumer, EdgeDomain domain, @NotNull List<ProcessedDocument> documents) {
 
         int visitedUrls = 0;
         int goodUrls = 0;
@@ -36,7 +37,11 @@ public class DomainMetadataCompiler {
                     .ifPresent(knownUrls::addAll);
         }
 
-        ret.add(new LoadDomainMetadata(domain, knownUrls.size(), goodUrls, visitedUrls));
+        instructionConsumer.accept(new LoadDomainMetadata(domain, knownUrls.size(), goodUrls, visitedUrls));
+    }
+
+    public void compileFake(Consumer<Instruction> instructionConsumer, EdgeDomain domain, int countAll, int countGood) {
+        instructionConsumer.accept(new LoadDomainMetadata(domain, countAll, countGood, countAll));
     }
 
 }

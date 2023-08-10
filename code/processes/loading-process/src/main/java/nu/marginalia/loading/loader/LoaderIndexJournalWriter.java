@@ -2,7 +2,9 @@ package nu.marginalia.loading.loader;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
+import lombok.SneakyThrows;
+import nu.marginalia.db.storage.FileStorageService;
+import nu.marginalia.db.storage.model.FileStorageType;
 import nu.marginalia.dict.OffHeapDictionaryHashMap;
 import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
@@ -11,6 +13,7 @@ import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.keyword.model.DocumentKeywords;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
+import nu.marginalia.lexicon.journal.KeywordLexiconJournalMode;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
@@ -19,8 +22,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.file.Path;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.concurrent.*;
 
 @Singleton
 public class LoaderIndexJournalWriter {
@@ -30,32 +36,68 @@ public class LoaderIndexJournalWriter {
     private static final Logger logger = LoggerFactory.getLogger(LoaderIndexJournalWriter.class);
 
     @Inject
-    public LoaderIndexJournalWriter(@Named("local-index-path") Path path) throws IOException {
+    public LoaderIndexJournalWriter(FileStorageService fileStorageService) throws IOException, SQLException {
+        var lexiconArea = fileStorageService.getStorageByType(FileStorageType.LEXICON_STAGING);
+        var indexArea = fileStorageService.getStorageByType(FileStorageType.INDEX_STAGING);
 
-        var lexiconJournal = new KeywordLexiconJournal(path.resolve("dictionary.dat").toFile());
-        lexicon = new KeywordLexicon(lexiconJournal);
-        indexWriter = new IndexJournalWriterImpl(lexicon, path.resolve("index.dat"));
+        var lexiconPath = lexiconArea.asPath().resolve("dictionary.dat");
+        var indexPath = indexArea.asPath().resolve("page-index.dat");
+
+        Files.deleteIfExists(indexPath);
+        Files.deleteIfExists(lexiconPath);
+
+        Files.createFile(indexPath, PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-r--r--")));
+        Files.createFile(lexiconPath, PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-r--r--")));
+
+        lexicon = new KeywordLexicon(new KeywordLexiconJournal(lexiconPath.toFile(), KeywordLexiconJournalMode.READ_WRITE));
+        indexWriter = new IndexJournalWriterImpl(lexicon, indexPath);
     }
 
+    private final LinkedBlockingQueue<Runnable> keywordInsertTaskQueue =
+            new LinkedBlockingQueue<>(65536);
+    private final ExecutorService keywordInsertionExecutor =
+            new ThreadPoolExecutor(8, 16, 1, TimeUnit.MINUTES, keywordInsertTaskQueue);
+
+    @SneakyThrows
     public void putWords(EdgeId<EdgeDomain> domain, EdgeId<EdgeUrl> url,
                          DocumentMetadata metadata,
                          DocumentKeywords wordSet) {
-        if (wordSet.keywords().length == 0)
+        if (wordSet.keywords().length == 0) {
+            logger.info("Skipping zero-length word set for {}:{}", domain, url);
             return;
+        }
 
         if (domain.id() <= 0 || url.id() <= 0) {
             logger.warn("Bad ID: {}:{}", domain, url);
             return;
         }
 
+        // Due to the very bursty access patterns of this method, doing the actual insertions in separate threads
+        // with a chonky work queue is a fairly decent improvement
         for (var chunk : KeywordListChunker.chopList(wordSet, IndexJournalEntryData.MAX_LENGTH)) {
-
-            var entry = new IndexJournalEntryData(getOrInsertWordIds(chunk.keywords(), chunk.metadata()));
-            var header = new IndexJournalEntryHeader(domain, url, metadata.encode());
-
-            indexWriter.put(header, entry);
+            try {
+                keywordInsertionExecutor.submit(() -> loadWords(domain, url, metadata, chunk));
+            }
+            catch (RejectedExecutionException ex) {
+                loadWords(domain, url, metadata, chunk);
+            }
         }
 
+    }
+
+    private void loadWords(EdgeId<EdgeDomain> domain,
+                           EdgeId<EdgeUrl> url,
+                           DocumentMetadata metadata,
+                           DocumentKeywords wordSet) {
+        if (null == metadata) {
+            logger.warn("Null metadata for {}:{}", domain, url);
+            return;
+        }
+
+        var entry = new IndexJournalEntryData(getOrInsertWordIds(wordSet.keywords(), wordSet.metadata()));
+        var header = new IndexJournalEntryHeader(domain, url, metadata.encode());
+
+        indexWriter.put(header, entry);
     }
 
     private long[] getOrInsertWordIds(String[] words, long[] meta) {
@@ -79,6 +121,10 @@ public class LoaderIndexJournalWriter {
     }
 
     public void close() throws Exception {
+        keywordInsertionExecutor.shutdown();
+        while (!keywordInsertionExecutor.awaitTermination(1, TimeUnit.DAYS)) {
+            // ...?
+        }
         indexWriter.close();
         lexicon.close();
     }

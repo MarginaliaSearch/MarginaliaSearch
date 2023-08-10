@@ -18,6 +18,7 @@ import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.idx.WordMetadata;
+import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.service.server.Initialization;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -48,6 +49,9 @@ public class IndexQueryServiceIntegrationTest {
 
     @Inject
     KeywordLexicon keywordLexicon;
+
+    @Inject
+    ServiceHeartbeat heartbeat;
 
     @Inject
     IndexJournalWriter indexJournalWriter;

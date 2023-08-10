@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Loader implements Interpreter {
+public class Loader implements Interpreter, AutoCloseable {
     private final SqlLoadUrls sqlLoadUrls;
     private final SqlLoadDomains sqlLoadDomains;
     private final SqlLoadDomainLinks sqlLoadDomainLinks;
@@ -30,8 +30,6 @@ public class Loader implements Interpreter {
     private final List<LoadProcessedDocument> processedDocumentList;
     private final List<LoadProcessedDocumentWithError> processedDocumentWithErrorList;
 
-    private final List<EdgeDomain> deferredDomains = new ArrayList<>();
-    private final List<EdgeUrl> deferredUrls = new ArrayList<>();
 
     public final LoaderData data;
 
@@ -86,40 +84,26 @@ public class Loader implements Interpreter {
 
     @Override
     public void loadProcessedDocument(LoadProcessedDocument document) {
-        deferralCheck(document.url());
-
         processedDocumentList.add(document);
+
+        if (processedDocumentList.size() > 100) {
+            sqlLoadProcessedDocument.load(data, processedDocumentList);
+            processedDocumentList.clear();
+        }
     }
 
     @Override
     public void loadProcessedDocumentWithError(LoadProcessedDocumentWithError document) {
-        deferralCheck(document.url());
-
         processedDocumentWithErrorList.add(document);
-    }
 
-    private void deferralCheck(EdgeUrl url) {
-        if (data.getDomainId(url.domain) <= 0)
-            deferredDomains.add(url.domain);
-
-        if (data.getUrlId(url) <= 0)
-            deferredUrls.add(url);
+        if (processedDocumentWithErrorList.size() > 100) {
+            sqlLoadProcessedDocument.loadWithError(data, processedDocumentWithErrorList);
+            processedDocumentWithErrorList.clear();
+        }
     }
 
     @Override
     public void loadKeywords(EdgeUrl url, DocumentMetadata metadata, DocumentKeywords words) {
-        // This is a bit of a bandaid safeguard against a bug in
-        // in the converter, shouldn't be necessary in the future
-        if (!deferredDomains.isEmpty()) {
-            loadDomain(deferredDomains.toArray(EdgeDomain[]::new));
-            deferredDomains.clear();
-        }
-
-        if (!deferredUrls.isEmpty()) {
-            loadUrl(deferredUrls.toArray(EdgeUrl[]::new));
-            deferredUrls.clear();
-        }
-
         try {
             indexLoadKeywords.load(data, url, metadata, words);
         } catch (InterruptedException e) {
@@ -137,19 +121,13 @@ public class Loader implements Interpreter {
         sqlLoadDomainMetadata.load(data, domain, knownUrls, goodUrls, visitedUrls);
     }
 
-    public void finish() {
-        // Some work needs to be processed out of order for the database relations to work out
-
-        sqlLoadProcessedDocument.load(data, processedDocumentList);
-        sqlLoadProcessedDocument.loadWithError(data, processedDocumentWithErrorList);
-    }
-
     public void close() {
-        try {
-            indexLoadKeywords.close();
+        if (processedDocumentList.size() > 0) {
+            sqlLoadProcessedDocument.load(data, processedDocumentList);
         }
-        catch (Exception ex) {
-            logger.error("Error when closing the index loader", ex);
+        if (processedDocumentWithErrorList.size() > 0) {
+            sqlLoadProcessedDocument.loadWithError(data, processedDocumentWithErrorList);
         }
     }
+
 }

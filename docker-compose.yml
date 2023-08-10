@@ -6,6 +6,8 @@ x-svc: &service
     - conf:/wmsa/conf:ro
     - model:/wmsa/model
     - data:/wmsa/data
+    - dist:/dist
+    - samples:/samples
     - logs:/var/log/wmsa
   networks:
     - wmsa
@@ -71,6 +73,17 @@ services:
       - "127.0.0.1:7071:4000"
     depends_on:
       - mariadb
+  control-service:
+    <<: *service
+    image: "marginalia.nu/control-service"
+    container_name: "control-service"
+    ports:
+      - "127.0.0.1:5090:5090"
+      - "127.0.0.1:4090:5000"
+      - "127.0.0.1:7090:4000"
+      - "127.0.0.1:7099:4001"
+    depends_on:
+      - mariadb
   mariadb:
     image: "mariadb/server:10.3"
     container_name: "mariadb"
@@ -88,6 +101,7 @@ services:
     container_name: "nginx-gw"
     ports:
       - "127.0.0.1:8080:80"
+      - "127.0.0.1:8081:81"
     volumes:
       - "./run/nginx-site.conf:/etc/nginx/conf.d/default.conf"
     networks:
@@ -133,3 +147,15 @@ volumes:
       type: none
       o: bind
       device: run/data
+  dist:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: run/dist
+  samples:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: run/samples

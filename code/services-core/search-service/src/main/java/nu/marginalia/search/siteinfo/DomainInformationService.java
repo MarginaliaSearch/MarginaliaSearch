@@ -115,14 +115,11 @@ public class DomainInformationService {
     public boolean isBlacklisted(EdgeDomain domain) {
 
         try (var connection = dataSource.getConnection()) {
-            try (var stmt = connection.prepareStatement("SELECT ID FROM EC_DOMAIN_BLACKLIST WHERE URL_DOMAIN=?")) {
+            try (var stmt = connection.prepareStatement("SELECT ID FROM EC_DOMAIN_BLACKLIST WHERE URL_DOMAIN IN (?,?)")) {
                 stmt.setString(1, domain.domain);
+                stmt.setString(2, domain.toString());
                 var rsp = stmt.executeQuery();
-                if (rsp.next()) {
-                    return true;
-                } else {
-                    return false;
-                }
+                return rsp.next();
             }
         }
     }

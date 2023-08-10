@@ -6,7 +6,6 @@ import nu.marginalia.model.crawl.DomainIndexingState;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.OptionalDouble;
 
 @ToString
 public class ProcessedDomain {
@@ -16,17 +15,7 @@ public class ProcessedDomain {
     public DomainIndexingState state;
     public EdgeDomain redirect;
     public String ip;
-
-    public OptionalDouble averageQuality() {
-        if (documents == null) {
-            return OptionalDouble.empty();
-        }
-        return documents.stream()
-                .map(ProcessedDocument::quality)
-                .filter(OptionalDouble::isPresent)
-                .mapToDouble(OptionalDouble::getAsDouble)
-                .average();
-    }
+    public String id;
 
     public int size() {
         return Optional.ofNullable(documents).map(List::size).orElse(1);

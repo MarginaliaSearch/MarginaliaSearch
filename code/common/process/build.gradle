@@ -20,6 +20,7 @@ dependencies {
 
     implementation libs.guava
     implementation libs.guice
+    implementation libs.bundles.mariadb
     implementation libs.commons.lang3
 
     implementation libs.snakeyaml
@@ -29,4 +30,16 @@ dependencies {
     testImplementation libs.mockito
 }
 
+test {
+    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+    maxHeapSize = "8G"
+    useJUnitPlatform()
+}
 
+task fastTests(type: Test) {
+    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+    maxHeapSize = "8G"
+    useJUnitPlatform {
+        excludeTags "slow"
+    }
+}

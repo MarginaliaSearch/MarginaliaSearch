@@ -12,8 +12,9 @@ java {
 }
 dependencies {
 
-    implementation project(':third-party:monkey-patch-gson')
+    //implementation project(':third-party:monkey-patch-gson')
 
+    implementation project(':code:common:db')
     implementation project(':code:common:model')
     implementation project(':code:api:index-api')
     implementation project(':code:common:service-discovery')

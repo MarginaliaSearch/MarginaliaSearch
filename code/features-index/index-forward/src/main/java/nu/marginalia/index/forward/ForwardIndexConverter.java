@@ -7,6 +7,7 @@ import nu.marginalia.array.LongArray;
 import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.ranking.DomainRankings;
+import nu.marginalia.service.control.ServiceHeartbeat;
 import org.roaringbitmap.IntConsumer;
 import org.roaringbitmap.RoaringBitmap;
 import org.slf4j.Logger;
@@ -19,6 +20,7 @@ import java.nio.file.Path;
 
 public class ForwardIndexConverter {
 
+    private final ServiceHeartbeat heartbeat;
     private final File inputFile;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -28,16 +30,25 @@ public class ForwardIndexConverter {
     private final DomainRankings domainRankings;
 
 
-    public ForwardIndexConverter(
+    public ForwardIndexConverter(ServiceHeartbeat heartbeat,
                                  File inputFile,
                                  Path outputFileDocsId,
                                  Path outputFileDocsData,
                                  DomainRankings domainRankings
                                  ) {
+        this.heartbeat = heartbeat;
         this.inputFile = inputFile;
         this.outputFileDocsId = outputFileDocsId;
         this.outputFileDocsData = outputFileDocsData;
         this.domainRankings = domainRankings;
+    }
+
+    public enum TaskSteps {
+        GET_DOC_IDS,
+        GATHER_OFFSETS,
+        SUPPLEMENTAL_INDEXES,
+        FORCE,
+        FINISHED
     }
 
     public void convert() throws IOException {
@@ -53,18 +64,21 @@ public class ForwardIndexConverter {
 
         logger.info("Domain Rankings size = {}", domainRankings.size());
 
-        try {
+        try (var progress = heartbeat.createServiceTaskHeartbeat(TaskSteps.class, "forwardIndexConverter")) {
+            progress.progress(TaskSteps.GET_DOC_IDS);
+
             LongArray docsFileId = getDocIds(outputFileDocsId, journalReader);
+
+            progress.progress(TaskSteps.GATHER_OFFSETS);
 
             // doc ids -> sorted list of ids
 
-            logger.info("Gathering Offsets");
             Long2IntOpenHashMap docIdToIdx = new Long2IntOpenHashMap((int) docsFileId.size());
             docsFileId.forEach(0, docsFileId.size(), (pos, val) -> docIdToIdx.put(val, (int) pos));
 
-            // docIdToIdx -> file offset for id
+            progress.progress(TaskSteps.SUPPLEMENTAL_INDEXES);
 
-            logger.info("Creating Supplementary Indexes");
+            // docIdToIdx -> file offset for id
 
             LongArray docFileData = LongArray.mmapForWriting(outputFileDocsData, ForwardIndexParameters.ENTRY_SIZE * docsFileId.size());
 
@@ -78,11 +92,15 @@ public class ForwardIndexConverter {
                 docFileData.set(entryOffset + ForwardIndexParameters.DOMAIN_OFFSET, entry.domainId());
             });
 
+            progress.progress(TaskSteps.FORCE);
+
             docFileData.force();
             docsFileId.force();
 
             docFileData.advice(NativeIO.Advice.DontNeed);
             docsFileId.advice(NativeIO.Advice.DontNeed);
+
+            progress.progress(TaskSteps.FINISHED);
         } catch (IOException ex) {
             logger.error("Failed to convert", ex);
             throw ex;

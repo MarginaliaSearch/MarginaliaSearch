@@ -32,7 +32,7 @@ public class AdblockExperiment extends Experiment {
     }
 
     private void processDocument(CrawledDocument doc) {
-        Document parsedDocument = Jsoup.parse(doc.documentBody.decode());
+        Document parsedDocument = Jsoup.parse(doc.documentBody);
 
         if (simulator.hasAds(parsedDocument)) {
             System.out.println(doc.url);

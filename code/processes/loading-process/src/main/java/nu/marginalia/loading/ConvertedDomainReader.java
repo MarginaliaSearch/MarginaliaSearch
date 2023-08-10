@@ -1,56 +1,96 @@
 package nu.marginalia.loading;
 
+import com.github.luben.zstd.RecyclingBufferPool;
 import com.github.luben.zstd.ZstdInputStream;
-import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
+import lombok.SneakyThrows;
 import nu.marginalia.converting.instruction.Instruction;
-import nu.marginalia.converting.instruction.InstructionTag;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
 import java.io.*;
+import java.lang.ref.Cleaner;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Iterator;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ConvertedDomainReader {
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private static final Logger logger = LoggerFactory.getLogger(ConvertedDomainReader.class);
-    private final Gson gson;
 
-    @Inject
-    public ConvertedDomainReader(Gson gson) {
-        this.gson = gson;
+    /** Creates a new iterator over Path.  The implementation will try to read the file in a separate thread, and
+     * will block until the first instruction is available. Iterator$hasNext may block.
+     */
+    public Iterator<Instruction> createIterator(Path path) {
+        return new PrefetchingInstructionIterator(path);
     }
 
-    public List<Instruction> read(Path path, int cntHint) throws IOException {
-        List<Instruction> ret = new ArrayList<>(cntHint);
+    class PrefetchingInstructionIterator implements  Iterator<Instruction> {
 
-        try (var br = new BufferedReader(new InputStreamReader(new ZstdInputStream(new BufferedInputStream(new FileInputStream(path.toFile())))))) {
-            String line;
-            for (;;) {
-                line = br.readLine();
+        private final LinkedBlockingQueue<Instruction> queue = new LinkedBlockingQueue<>(16);
+        private final AtomicBoolean finished = new AtomicBoolean(false);
 
-                if (line == null) {
-                    break;
-                }
-                if (line.isBlank()) {
-                    continue;
-                }
-                var parts=  line.split(" ", 2);
-                var type = InstructionTag.valueOf(parts[0]).clazz;
+        private Instruction next = null;
 
-                try {
-                    ret.add(gson.fromJson(parts[1], type));
+        public PrefetchingInstructionIterator(Path path) {
+            Future<Object> future = executorService.submit(() -> readerThread(path));
+
+            // Cancel the future if the iterator is garbage collected
+            // to reduce the risk of leaking resources; as the worker thread
+            // will spin forever on put if the queue is full.
+            Cleaner.create().register(this, () -> {
+                future.cancel(true);
+            });
+        }
+
+        private Object readerThread(Path path) {
+            try (var or = new ObjectInputStream(new ZstdInputStream(new BufferedInputStream(new FileInputStream(path.toFile())), RecyclingBufferPool.INSTANCE))) {
+                for (; ; ) {
+                    var nextObject = or.readObject();
+                    if (nextObject instanceof Instruction is) {
+                        queue.put(is);
+                    } else {
+                        logger.warn("Spurious object in file: {}", nextObject.getClass().getSimpleName());
+                    }
                 }
-                catch (NullPointerException|JsonParseException ex) {
-                    logger.warn("Failed to deserialize {} {}", type.getSimpleName(), StringUtils.abbreviate(parts[1], 255));
-                    logger.warn("Json error", ex);
-                }
+            } catch (EOFException ex) {
+                // Expected
+                return null;
+            } catch (ClassNotFoundException | IOException | InterruptedException e) {
+                logger.warn("Error reading file " + path, e);
+                throw new RuntimeException(e);
+            } finally {
+                finished.set(true);
             }
         }
 
-        return ret;
+        @SneakyThrows
+        @Override
+        public boolean hasNext() {
+            if (next != null)
+                return true;
+
+            // As long as the worker is still running, we'll do a blocking poll to wait for the next instruction
+            // (but we wake up every second to check if the worker is still running)
+            while (!finished.get()) {
+                if (null != (next = queue.poll(1, TimeUnit.SECONDS))) {
+                    return true;
+                }
+            }
+
+            // If the worker is not running, we just drain the queue without waiting
+            return null != (next = queue.poll());
+        }
+
+        @Override
+        public Instruction next() {
+            if (next != null || hasNext()) {
+                try { return next; }
+                finally { next = null; }
+            }
+            throw new IllegalStateException();
+        }
+
     }
+
 }

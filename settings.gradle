@@ -3,6 +3,7 @@ rootProject.name = 'marginalia.nu'
 include 'code:services-core:index-service'
 include 'code:services-core:assistant-service'
 include 'code:services-core:search-service'
+include 'code:services-core:control-service'
 
 include 'code:services-satellite:api-service'
 include 'code:services-satellite:dating-service'
@@ -43,10 +44,12 @@ include 'code:features-index:domain-ranking'
 include 'code:api:search-api'
 include 'code:api:index-api'
 include 'code:api:assistant-api'
+include 'code:api:process-mqapi'
 
 include 'code:common:service-discovery'
 include 'code:common:service-client'
 include 'code:common:db'
+include 'code:common:message-queue'
 include 'code:common:service'
 include 'code:common:config'
 include 'code:common:model'
@@ -77,6 +80,7 @@ include 'third-party:openzim'
 include 'third-party:count-min-sketch'
 include 'third-party:monkey-patch-opennlp'
 include 'third-party:monkey-patch-gson'
+include 'third-party:commons-codec'
 
 
 dependencyResolutionManagement {
@@ -139,6 +143,7 @@ dependencyResolutionManagement {
             library('commons.lang3', 'org.apache.commons','commons-lang3').version('3.12.0')
             library('commons.compress','org.apache.commons','commons-compress').version('1.21')
             library('commons.io','commons-io','commons-io').version('2.11.0')
+            library('commons.codec', 'commons-codec', 'commons-codec').version('1.16.0')
 
             library('ffi','com.github.jnr','jnr-ffi').version('2.2.12')
             library('databind','com.fasterxml.jackson.core','jackson-databind').version('2.13.2.1')
@@ -171,6 +176,8 @@ dependencyResolutionManagement {
 
             library('handlebars','com.github.jknack','handlebars').version('4.3.1')
             library('handlebars.markdown','com.github.jknack','handlebars-markdown').version('4.2.1')
+
+            library('sqlite','org.xerial','sqlite-jdbc').version('3.41.2.1')
 
             bundle('slf4j', ['slf4j.api', 'log4j.api', 'log4j.core', 'log4j.slf4j'])
             bundle('slf4j.test', ['slf4j.jdk14'])

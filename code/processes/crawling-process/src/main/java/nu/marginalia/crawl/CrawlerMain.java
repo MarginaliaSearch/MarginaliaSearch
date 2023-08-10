@@ -1,11 +1,22 @@
 package nu.marginalia.crawl;
 
+import com.google.gson.Gson;
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import nu.marginalia.UserAgent;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
-import nu.marginalia.crawl.retreival.fetcher.SitemapRetriever;
+import nu.marginalia.crawling.io.CrawledDomainReader;
+import nu.marginalia.db.storage.FileStorageService;
+import nu.marginalia.mq.MessageQueueFactory;
+import nu.marginalia.mq.MqMessage;
+import nu.marginalia.mq.inbox.MqInboxResponse;
+import nu.marginalia.mq.inbox.MqSingleShotInbox;
+import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.process.log.WorkLog;
-import plan.CrawlPlanLoader;
+import nu.marginalia.service.module.DatabaseModule;
 import plan.CrawlPlan;
 import nu.marginalia.crawling.io.CrawledDomainWriter;
 import nu.marginalia.crawling.model.spec.CrawlingSpecification;
@@ -17,45 +28,55 @@ import okhttp3.internal.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Set;
+import java.sql.SQLException;
+import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class CrawlerMain implements AutoCloseable {
+import static nu.marginalia.mqapi.ProcessInboxNames.CRAWLER_INBOX;
+
+public class CrawlerMain {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final CrawlPlan plan;
-    private final Path crawlDataDir;
+    private Path crawlDataDir;
 
-    private final WorkLog workLog;
-
+    private final ProcessHeartbeat heartbeat;
     private final ConnectionPool connectionPool = new ConnectionPool(5, 10, TimeUnit.SECONDS);
 
     private final Dispatcher dispatcher = new Dispatcher(new ThreadPoolExecutor(0, Integer.MAX_VALUE, 5, TimeUnit.SECONDS,
             new SynchronousQueue<>(), Util.threadFactory("OkHttp Dispatcher", true)));
 
     private final UserAgent userAgent;
-    private final ThreadPoolExecutor pool;
-    final int poolSize = Integer.getInteger("crawler.pool-size", 512);
-    final int poolQueueSize = 32;
+    private final MessageQueueFactory messageQueueFactory;
+    private final FileStorageService fileStorageService;
+    private final Gson gson;
+    private final DumbThreadPool pool;
 
-    private final Set<String> processedIds = new HashSet<>();
+    private final Map<String, String> processingIds = new ConcurrentHashMap<>();
+    private final CrawledDomainReader reader = new CrawledDomainReader();
 
-    AbortMonitor abortMonitor = AbortMonitor.getInstance();
-    Semaphore taskSem = new Semaphore(poolSize);
+    final AbortMonitor abortMonitor = AbortMonitor.getInstance();
 
-    public CrawlerMain(CrawlPlan plan) throws Exception {
-        this.plan = plan;
-        this.userAgent = WmsaHome.getUserAgent();
+    volatile int totalTasks;
+    final AtomicInteger tasksDone = new AtomicInteger(0);
+    private final CrawlLimiter limiter = new CrawlLimiter();
 
-        // Ensure that the user agent is set for Java's HTTP requests
+    @Inject
+    public CrawlerMain(UserAgent userAgent,
+                       ProcessHeartbeat heartbeat,
+                       MessageQueueFactory messageQueueFactory,
+                       FileStorageService fileStorageService,
+                       Gson gson) {
+        this.heartbeat = heartbeat;
+        this.userAgent = userAgent;
+        this.messageQueueFactory = messageQueueFactory;
+        this.fileStorageService = fileStorageService;
+        this.gson = gson;
 
-        BlockingQueue<Runnable> queue = new LinkedBlockingQueue<>(poolQueueSize);
-        pool = new ThreadPoolExecutor(poolSize/128, poolSize, 5, TimeUnit.MINUTES, queue); // maybe need to set -Xss for JVM to deal with this?
-
-        workLog = plan.createCrawlWorkLog();
-        crawlDataDir = plan.crawl.getDir();
+        // maybe need to set -Xss for JVM to deal with this?
+        pool = new DumbThreadPool(CrawlLimiter.maxPoolSize, 1);
     }
 
     public static void main(String... args) throws Exception {
@@ -71,93 +92,193 @@ public class CrawlerMain implements AutoCloseable {
         System.setProperty("sun.net.client.defaultConnectTimeout", "30000");
         System.setProperty("sun.net.client.defaultReadTimeout", "30000");
 
-        if (args.length != 1) {
-            System.err.println("Arguments: crawl-plan.yaml");
-            System.exit(0);
-        }
-        var plan = new CrawlPlanLoader().load(Path.of(args[0]));
+        // We don't want to use too much memory caching sessions for https
+        System.setProperty("javax.net.ssl.sessionCacheSize", "2048");
 
-        try (var crawler = new CrawlerMain(plan)) {
-            crawler.run();
+        Injector injector = Guice.createInjector(
+                new CrawlerModule(),
+                new DatabaseModule()
+        );
+        var crawler = injector.getInstance(CrawlerMain.class);
+
+        var instructions = crawler.fetchInstructions();
+        try {
+            crawler.run(instructions.getPlan());
+            instructions.ok();
         }
+        catch (Exception ex) {
+            System.err.println("Crawler failed");
+            ex.printStackTrace();
+            instructions.err();
+        }
+
+        TimeUnit.SECONDS.sleep(5);
 
         System.exit(0);
     }
 
-    public void run() throws InterruptedException {
-        // First a validation run to ensure the file is all good to parse
-        logger.info("Validating JSON");
-        plan.forEachCrawlingSpecification(unused -> {});
+    public void run(CrawlPlan plan) throws InterruptedException, IOException {
 
-        logger.info("Let's go");
+        heartbeat.start();
+        try (WorkLog workLog = plan.createCrawlWorkLog()) {
+            // First a validation run to ensure the file is all good to parse
+            logger.info("Validating JSON");
 
-        // TODO: Make this into an iterable instead so we can abort it
-        plan.forEachCrawlingSpecification(this::startCrawlTask);
+            crawlDataDir = plan.crawl.getDir();
+
+            int countTotal = 0;
+            for (var unused : plan.crawlingSpecificationIterable()) {
+                countTotal++;
+            }
+            totalTasks = countTotal;
+
+            logger.info("Let's go");
+
+            for (var crawlingSpecification : plan.crawlingSpecificationIterable()) {
+
+                if (!abortMonitor.isAlive())
+                    break;
+
+                // Check #1: Have we already crawled this site? Check is necessary for resuming a craw after a crash or something
+                if (workLog.isJobFinished(crawlingSpecification.id)) {
+                    continue;
+                }
+
+                // Check #2: Have we already started this crawl (but not finished it)?
+                // This shouldn't realistically happen, but if it does, we need to ignore it, otherwise
+                // we'd end crawling the same site twice and might end up writing to the same output
+                // file from multiple threads with complete bit salad as a result.
+                if (processingIds.put(crawlingSpecification.id, "") != null) {
+                    logger.error("Ignoring duplicate id: {}", crawlingSpecification.id);
+                    continue;
+                }
+
+                pool.submit(new CrawlTask(crawlingSpecification, workLog));
+            }
+
+            logger.info("Shutting down the pool, waiting for tasks to complete...");
+
+            pool.shutDown();
+            do {
+                System.out.println("Waiting for pool to terminate... " + pool.getActiveCount() + " remaining");
+            } while (!pool.awaitTermination(60, TimeUnit.SECONDS));
+        }
+        finally {
+            heartbeat.shutDown();
+        }
     }
 
+    class CrawlTask implements DumbThreadPool.Task {
 
-    private void startCrawlTask(CrawlingSpecification crawlingSpecification) {
+        private final CrawlingSpecification specification;
+        private final WorkLog workLog;
 
-        if (!processedIds.add(crawlingSpecification.id)) {
-
-            // This is a duplicate id, so we ignore it.  Otherwise we'd end crawling the same site twice,
-            // and if we're really unlucky, we might end up writing to the same output file from multiple
-            // threads with complete bit salad as a result.
-
-            logger.error("Ignoring duplicate id: {}", crawlingSpecification.id);
-            return;
+        CrawlTask(CrawlingSpecification specification, WorkLog workLog) {
+            this.specification = specification;
+            this.workLog = workLog;
         }
 
-        if (!abortMonitor.isAlive()) {
-            return;
-        }
+        @Override
+        public void run() throws Exception {
 
-        try {
-            taskSem.acquire();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+            limiter.waitForEnoughRAM();
 
-        pool.execute(() -> {
-            try {
-                fetchDomain(crawlingSpecification);
+            HttpFetcher fetcher = new HttpFetcherImpl(userAgent.uaString(), dispatcher, connectionPool);
+
+            try (CrawledDomainWriter writer = new CrawledDomainWriter(crawlDataDir, specification);
+                 CrawlDataReference reference = getReference(specification))
+            {
+                Thread.currentThread().setName("crawling:" + specification.domain);
+
+                var retreiver = new CrawlerRetreiver(fetcher, specification, writer::accept);
+                int size = retreiver.fetch(reference);
+
+                workLog.setJobToFinished(specification.id, writer.getOutputFile().toString(), size);
+                heartbeat.setProgress(tasksDone.incrementAndGet() / (double) totalTasks);
+
+                logger.info("Fetched {}", specification.domain);
+
+            } catch (Exception e) {
+                logger.error("Error fetching domain " + specification.domain, e);
             }
             finally {
-                taskSem.release();
+                // We don't need to double-count these; it's also kept int he workLog
+                processingIds.remove(specification.id);
+                Thread.currentThread().setName("[idle]");
             }
-        });
-    }
-
-    private void fetchDomain(CrawlingSpecification specification) {
-        if (workLog.isJobFinished(specification.id))
-            return;
-
-        HttpFetcher fetcher = new HttpFetcherImpl(userAgent.uaString(), dispatcher, connectionPool);
-
-        try (CrawledDomainWriter writer = new CrawledDomainWriter(crawlDataDir, specification.domain, specification.id)) {
-            var retreiver = new CrawlerRetreiver(fetcher, specification, writer::accept);
-
-            int size = retreiver.fetch();
-
-            workLog.setJobToFinished(specification.id, writer.getOutputFile().toString(), size);
-
-            logger.info("Fetched {}", specification.domain);
-        } catch (Exception e) {
-            logger.error("Error fetching domain", e);
         }
+
+        private CrawlDataReference getReference(CrawlingSpecification specification) {
+            try {
+                var dataStream = reader.createDataStream(crawlDataDir, specification);
+                return new CrawlDataReference(dataStream);
+            } catch (IOException e) {
+                logger.warn("Failed to read previous crawl data for {}", specification.domain);
+                return new CrawlDataReference();
+            }
+        }
+
     }
 
-    public void close() throws Exception {
-        logger.info("Awaiting termination");
-        pool.shutdown();
-
-        while (!pool.awaitTermination(1, TimeUnit.SECONDS));
-        logger.info("All finished");
-
-        workLog.close();
-        dispatcher.executorService().shutdownNow();
 
 
+    private static class CrawlRequest {
+        private final CrawlPlan plan;
+        private final MqMessage message;
+        private final MqSingleShotInbox inbox;
+
+        CrawlRequest(CrawlPlan plan, MqMessage message, MqSingleShotInbox inbox) {
+            this.plan = plan;
+            this.message = message;
+            this.inbox = inbox;
+        }
+
+        public CrawlPlan getPlan() {
+            return plan;
+        }
+
+        public void ok() {
+            inbox.sendResponse(message, MqInboxResponse.ok());
+        }
+        public void err() {
+            inbox.sendResponse(message, MqInboxResponse.err());
+        }
+
+    }
+
+    private CrawlRequest fetchInstructions() throws Exception {
+
+        var inbox = messageQueueFactory.createSingleShotInbox(CRAWLER_INBOX, UUID.randomUUID());
+
+        logger.info("Waiting for instructions");
+        var msgOpt = getMessage(inbox, nu.marginalia.mqapi.crawling.CrawlRequest.class.getSimpleName());
+        var msg = msgOpt.orElseThrow(() -> new RuntimeException("No message received"));
+
+        var request = gson.fromJson(msg.payload(), nu.marginalia.mqapi.crawling.CrawlRequest.class);
+
+        var specData = fileStorageService.getStorage(request.specStorage);
+        var crawlData = fileStorageService.getStorage(request.crawlStorage);
+
+        var plan = new CrawlPlan(specData.asPath().resolve("crawler.spec").toString(),
+                new CrawlPlan.WorkDir(crawlData.path(), "crawler.log"),
+                null);
+
+        return new CrawlRequest(plan, msg, inbox);
+    }
+
+    private Optional<MqMessage> getMessage(MqSingleShotInbox inbox, String expectedFunction) throws SQLException, InterruptedException {
+        var opt = inbox.waitForMessage(30, TimeUnit.SECONDS);
+        if (opt.isPresent()) {
+            if (!opt.get().function().equals(expectedFunction)) {
+                throw new RuntimeException("Unexpected function: " + opt.get().function());
+            }
+            return opt;
+        }
+        else {
+            var stolenMessage = inbox.stealMessage(msg -> msg.function().equals(expectedFunction));
+            stolenMessage.ifPresent(mqMessage -> logger.info("Stole message {}", mqMessage));
+            return stolenMessage;
+        }
     }
 
 }

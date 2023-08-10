@@ -20,6 +20,7 @@ dependencies {
     implementation project(':code:features-index:index-journal')
     implementation project(':code:features-index:lexicon')
     implementation project(':code:common:model')
+    implementation project(':code:common:service')
 
     implementation libs.lombok
     annotationProcessor libs.lombok

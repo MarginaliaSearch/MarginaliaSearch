@@ -18,7 +18,7 @@ public interface HttpFetcher {
 
     FetchResult probeDomain(EdgeUrl url);
 
-    CrawledDocument fetchContent(EdgeUrl url) throws RateLimitException;
+    CrawledDocument fetchContent(EdgeUrl url, ContentTags tags) throws RateLimitException;
 
     SimpleRobotRules fetchRobotRules(EdgeDomain domain);
 

@@ -59,6 +59,13 @@ public class OffHeapDictionaryHashMap implements DictionaryMap {
     }
 
     @Override
+    public void clear() {
+        dictionaryData.clear();
+        initializeBuffers();
+        sz.set(0);
+    }
+
+    @Override
     public int size() {
         return sz.get();
     }

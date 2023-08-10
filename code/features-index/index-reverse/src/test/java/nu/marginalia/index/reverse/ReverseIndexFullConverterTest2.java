@@ -10,13 +10,17 @@ import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile
 import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.index.priority.ReverseIndexPriorityParameters;
+import nu.marginalia.lexicon.journal.KeywordLexiconJournalMode;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
+import nu.marginalia.service.control.ServiceHeartbeat;
+import nu.marginalia.service.control.ServiceTaskHeartbeat;
 import nu.marginalia.test.TestUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +30,8 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
+
+import static org.mockito.Mockito.when;
 
 class ReverseIndexFullConverterTest2 {
 
@@ -52,7 +58,7 @@ class ReverseIndexFullConverterTest2 {
         dictionaryFile = Files.createTempFile("tmp", ".dict");
         dictionaryFile.toFile().deleteOnExit();
 
-        keywordLexicon = new KeywordLexicon(new KeywordLexiconJournal(dictionaryFile.toFile()));
+        keywordLexicon = new KeywordLexicon(new KeywordLexiconJournal(dictionaryFile.toFile(), KeywordLexiconJournalMode.READ_WRITE));
         keywordLexicon.getOrInsert("0");
 
         indexFile = Files.createTempFile("tmp", ".idx");
@@ -75,7 +81,7 @@ class ReverseIndexFullConverterTest2 {
 
         keywordLexicon.commitToDisk();
         Thread.sleep(1000);
-        writer.forceWrite();
+        writer.close();
 
         var reader = new IndexJournalReaderSingleCompressedFile(indexFile);
 
@@ -116,7 +122,12 @@ class ReverseIndexFullConverterTest2 {
 
         Path tmpDir = Path.of("/tmp");
 
-        new ReverseIndexFullConverter(tmpDir, new IndexJournalReaderSingleCompressedFile(indexFile), new DomainRankings(), wordsFile, docsFile).convert();
+        // RIP fairies
+        var serviceHeartbeat = Mockito.mock(ServiceHeartbeat.class);
+        when(serviceHeartbeat.createServiceTaskHeartbeat(Mockito.any(), Mockito.any()))
+                .thenReturn(Mockito.mock(ServiceTaskHeartbeat.class));
+
+        new ReverseIndexFullConverter(serviceHeartbeat, tmpDir, new IndexJournalReaderSingleCompressedFile(indexFile), new DomainRankings(), wordsFile, docsFile).convert();
 
         var reverseReader = new ReverseIndexFullReader(wordsFile, docsFile);
 
@@ -141,7 +152,12 @@ class ReverseIndexFullConverterTest2 {
 
         Path tmpDir = Path.of("/tmp");
 
-        new ReverseIndexFullConverter(tmpDir, new IndexJournalReaderSingleCompressedFile(indexFile, null, ReverseIndexPriorityParameters::filterPriorityRecord), new DomainRankings(), wordsFile, docsFile).convert();
+        // RIP fairies
+        var serviceHeartbeat = Mockito.mock(ServiceHeartbeat.class);
+        when(serviceHeartbeat.createServiceTaskHeartbeat(Mockito.any(), Mockito.any()))
+                .thenReturn(Mockito.mock(ServiceTaskHeartbeat.class));
+
+        new ReverseIndexFullConverter(serviceHeartbeat, tmpDir, new IndexJournalReaderSingleCompressedFile(indexFile, null, ReverseIndexPriorityParameters::filterPriorityRecord), new DomainRankings(), wordsFile, docsFile).convert();
 
         var reverseReader = new ReverseIndexFullReader(wordsFile, docsFile);
 

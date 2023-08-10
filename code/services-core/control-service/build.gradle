@@ -1,0 +1,71 @@
+plugins {
+    id 'java'
+    id "io.freefair.lombok" version "5.3.3.3"
+    id 'application'
+    id 'com.palantir.docker' version '0.34.0'
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
+application {
+    mainClass = 'nu.marginalia.control.ControlMain'
+    applicationName = 'control-service'
+}
+
+tasks.distZip.enabled = false
+
+apply from: "$rootProject.projectDir/docker-service.gradle"
+
+dependencies {
+    implementation libs.bundles.gson
+
+    implementation project(':code:common:db')
+    implementation project(':code:common:model')
+    implementation project(':code:common:service')
+    implementation project(':code:common:config')
+    implementation project(':code:common:renderer')
+    implementation project(':code:common:message-queue')
+    implementation project(':code:common:service-discovery')
+    implementation project(':code:common:service-client')
+    implementation project(':code:api:search-api')
+    implementation project(':code:api:index-api')
+    implementation project(':code:api:process-mqapi')
+
+
+    implementation libs.lombok
+    annotationProcessor libs.lombok
+    implementation libs.bundles.slf4j
+
+    implementation libs.prometheus
+    implementation libs.notnull
+    implementation libs.guice
+
+    implementation libs.trove
+    implementation libs.spark
+    implementation libs.fastutil
+    implementation libs.commons.io
+    implementation libs.bundles.mariadb
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+    testImplementation platform('org.testcontainers:testcontainers-bom:1.17.4')
+    testImplementation 'org.testcontainers:mariadb:1.17.4'
+    testImplementation 'org.testcontainers:junit-jupiter:1.17.4'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+task fastTests(type: Test) {
+    useJUnitPlatform {
+        excludeTags "slow"
+    }
+}
+

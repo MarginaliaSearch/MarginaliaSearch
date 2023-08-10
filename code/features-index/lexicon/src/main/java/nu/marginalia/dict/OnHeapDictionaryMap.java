@@ -7,6 +7,11 @@ public class OnHeapDictionaryMap implements DictionaryMap {
     private final Long2IntOpenHashMap entries = new Long2IntOpenHashMap(DEFAULT_SIZE, 0.75f);
 
     @Override
+    public void clear() {
+        entries.clear();
+    }
+
+    @Override
     public int size() {
         return entries.size();
     }

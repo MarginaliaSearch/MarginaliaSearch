@@ -9,7 +9,7 @@
             <select name="profile" id="profile">
                 <optgroup label="General Search">
                     <option {{#eq profile "default"}}selected{{/eq}} value="default">Popular Sites</option>
-                    <option {{#eq profile "modern"}}selected{{/eq}} value="modern">Blogs and Personal Websites</option>
+                    <option {{#eq profile "modern"}}selected{{/eq}} value="modern">Personal Websites</option>
                     <option {{#eq profile "academia"}}selected{{/eq}} value="academia">Academia</option>
                     <option {{#eq profile "corpo"}}selected{{/eq}} value="corpo">No Domain Ranking</option>
                 </optgroup>
@@ -18,6 +18,7 @@
                     <option {{#eq profile "plain-text"}}selected{{/eq}} value="plain-text">Text Files</option>
                 </optgroup>
                 <optgroup label="Category">
+                    <option {{#eq profile "blogosphere"}}selected{{/eq}} value="blogosphere">Blogosphere (NEW)</option>
                     <option {{#eq profile "wiki"}}selected{{/eq}} value="wiki">Wiki</option>
                     <option {{#eq profile "forum"}}selected{{/eq}} value="forum">Forum</option>
                     <option {{#eq profile "docs"}}selected{{/eq}} value="docs">Docs (experimental)</option>

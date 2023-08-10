@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Control Service</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+{{> control/partials/nav}}
+<section>
+
+    <h1>API Keys</h1>
+    <table id="apikeys" class="table-rh-2">
+        <tr>
+            <th colspan="3">Key</th>
+            <th>&nbsp;</th>
+        </tr>
+        <tr>
+            <th>License</th>
+            <th>Name</th>
+            <th>Contact</th>
+            <th>Rate</th>
+        </tr>
+    {{#each apikeys}}
+        <tr>
+            <td colspan="3">{{licenseKey}}</td>
+            <td>
+                <form method="post" action="/api-keys/{{licenseKey}}/delete" onsubmit="return confirm('Confirm deletion of {{licenseKey}}')">
+                    <input type="submit" value="Delete" />
+                </form>
+            </td>
+        </tr>
+        <tr>
+            <td>{{license}}</td>
+            <td>{{name}}</td>
+            <td>{{email}}</td>
+            <td>{{rate}}</td>
+        </tr>
+    {{/each}}
+    </table>
+    <h2>Add New</h2>
+    <form action="/api-keys" method="post">
+        <label for="name">Name</label><br>
+        <input type="text" name="name" id="name" /><br>
+        <label for="email">Contact Email</label><br>
+        <input type="text" name="email" id="email" /><br>
+        <label for="license">License</label><br>
+        <input type="text" name="license" id="license" value="CC-BY-NC-SA 4.0" /><br>
+        <label for="rate">Rate</label><br>
+        <input type="text" name="rate" id="rate" value="15" /><br><br>
+        <input type="submit" value="Create" />
+    </form>
+</section>
+</body>
+<script src="/refresh.js"></script>
+<script>
+    window.setInterval(() => {
+        refresh(["apikeys"]);
+    }, 2000);
+</script>
+</html>

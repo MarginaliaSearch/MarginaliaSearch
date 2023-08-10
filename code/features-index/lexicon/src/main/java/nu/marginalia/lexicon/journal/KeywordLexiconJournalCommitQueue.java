@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/** An in-memory queue for lexicon journal entries used to improve the performance of
+ * large bursts of insert-operations.
+ */
 class KeywordLexiconJournalCommitQueue {
     private final ArrayList<byte[]> commitQueue = new ArrayList<>(10_000);
     private final Logger logger = LoggerFactory.getLogger(getClass());

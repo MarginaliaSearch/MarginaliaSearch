@@ -2,16 +2,25 @@ package nu.marginalia.crawling.retreival;
 
 import lombok.SneakyThrows;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
+import nu.marginalia.crawling.io.CrawledDomainReader;
+import nu.marginalia.crawling.io.CrawledDomainWriter;
 import nu.marginalia.crawling.model.CrawledDocument;
+import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.crawling.model.SerializableCrawlData;
 import org.junit.jupiter.api.*;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -95,4 +104,45 @@ class CrawlerRetreiverTest {
         );
     }
 
+    @Test
+    public void testRecrawl() throws IOException {
+
+        var specs = CrawlingSpecification
+                .builder()
+                .id("123456")
+                .crawlDepth(12)
+                .domain("www.marginalia.nu")
+                .urls(List.of("https://www.marginalia.nu/some-dead-link"))
+                .build();
+
+
+        Path out = Files.createTempDirectory("crawling-process");
+        var writer = new CrawledDomainWriter(out, specs);
+        Map<Class<? extends SerializableCrawlData>, List<SerializableCrawlData>> data = new HashMap<>();
+
+        new CrawlerRetreiver(httpFetcher, specs, d -> {
+            data.computeIfAbsent(d.getClass(), k->new ArrayList<>()).add(d);
+            if (d instanceof CrawledDocument doc) {
+                System.out.println(doc.url + ": " + doc.recrawlState + "\t" + doc.httpStatus);
+                if (Math.random() > 0.5) {
+                    doc.headers = "";
+                }
+            }
+            writer.accept(d);
+        }).fetch();
+        writer.close();
+
+        var reader = new CrawledDomainReader();
+        var stream = reader.createDataStream(out, specs);
+
+        CrawledDomain domain = (CrawledDomain) data.get(CrawledDomain.class).get(0);
+        domain.doc = data.get(CrawledDocument.class).stream().map(CrawledDocument.class::cast).collect(Collectors.toList());
+
+        new CrawlerRetreiver(httpFetcher, specs, d -> {
+            if (d instanceof CrawledDocument doc) {
+                System.out.println(doc.url + ": " + doc.recrawlState + "\t" + doc.httpStatus);
+            }
+        }).fetch(new CrawlDataReference(stream));
+
+    }
 }

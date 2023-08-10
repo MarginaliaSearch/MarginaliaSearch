@@ -33,7 +33,14 @@ public class NoSecuritySSL {
         // Install the all-trusting trust manager
         final SSLContext sslContext = SSLContext.getInstance("SSL");
         sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-        // Create an ssl socket factory with our all-trusting manager
+
+        var clientSessionContext = sslContext.getClientSessionContext();
+
+        // The default value for this is very high and will use a crapload of memory
+        // since the crawler will be making a lot of requests to various hosts
+        clientSessionContext.setSessionCacheSize(2048);
+
+        // Create a ssl socket factory with our all-trusting manager
         return sslContext.getSocketFactory();
     }
 

@@ -2,7 +2,6 @@ package nu.marginalia.assistant;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import lombok.SneakyThrows;
 import nu.marginalia.assistant.eval.Units;
 import nu.marginalia.assistant.suggest.Suggestions;
@@ -10,9 +9,7 @@ import nu.marginalia.assistant.eval.MathParser;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.screenshot.ScreenshotService;
 import nu.marginalia.assistant.dict.DictionaryService;
-import nu.marginalia.service.server.Initialization;
-import nu.marginalia.service.server.MetricsServer;
-import nu.marginalia.service.server.Service;
+import nu.marginalia.service.server.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -28,18 +25,15 @@ public class AssistantService extends Service {
 
     @SneakyThrows
     @Inject
-    public AssistantService(@Named("service-host") String ip,
-                            @Named("service-port") Integer port,
-                            Initialization initialization,
-                            MetricsServer metricsServer,
+    public AssistantService(BaseServiceParams params,
                             DictionaryService dictionaryService,
                             MathParser mathParser,
                             Units units,
                             ScreenshotService screenshotService,
-                            Suggestions suggestions
-                                )
+                            Suggestions suggestions)
     {
-        super(ip, port, initialization, metricsServer);
+        super(params);
+
         this.mathParser = mathParser;
         this.units = units;
         this.suggestions = suggestions;

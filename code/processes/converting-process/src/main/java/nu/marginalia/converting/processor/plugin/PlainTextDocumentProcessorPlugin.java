@@ -55,10 +55,10 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
     }
 
     @Override
-    public DetailsWithWords createDetails(CrawledDomain crawledDomain, CrawledDocument crawledDocument)
+    public DetailsWithWords createDetails(CrawledDocument crawledDocument)
             throws DisqualifiedException, URISyntaxException {
 
-        String documentBody = crawledDocument.documentBody.decode();
+        String documentBody = crawledDocument.documentBody;
 
         if (languageFilter.isBlockedUnicodeRange(documentBody)) {
             throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.LANGUAGE);
@@ -97,7 +97,6 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
         DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, url);
 
         var tagWords = new MetaTagsBuilder()
-                .addDomainCrawlData(crawledDomain)
                 .addPubDate(pubDate)
                 .addUrl(url)
                 .addFeatures(ret.features)

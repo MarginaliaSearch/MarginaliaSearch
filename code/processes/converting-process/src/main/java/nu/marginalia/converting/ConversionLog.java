@@ -1,5 +1,6 @@
 package nu.marginalia.converting;
 
+import com.github.luben.zstd.RecyclingBufferPool;
 import com.github.luben.zstd.ZstdOutputStream;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.idx.DocumentMetadata;
@@ -27,8 +28,7 @@ public class ConversionLog implements AutoCloseable, Interpreter {
         String fileName = String.format("conversion-log-%s.zstd", LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
         Path logFile = rootDir.resolve(fileName);
 
-        writer = new PrintWriter(new ZstdOutputStream(
-                new BufferedOutputStream(Files.newOutputStream(logFile, StandardOpenOption.WRITE, StandardOpenOption.CREATE))));
+        writer = new PrintWriter(new ZstdOutputStream(new BufferedOutputStream(Files.newOutputStream(logFile, StandardOpenOption.WRITE, StandardOpenOption.CREATE)), RecyclingBufferPool.INSTANCE));
     }
 
     @Override
@@ -37,34 +37,8 @@ public class ConversionLog implements AutoCloseable, Interpreter {
     }
 
     @Override
-    public void loadUrl(EdgeUrl[] url) {}
-
-    @Override
-    public void loadDomain(EdgeDomain[] domain) {}
-
-    @Override
-    public void loadRssFeed(EdgeUrl[] rssFeed) {}
-
-    @Override
-    public void loadDomainLink(DomainLink[] links) {}
-
-    @Override
-    public void loadProcessedDomain(EdgeDomain domain, DomainIndexingState state, String ip) {}
-
-    @Override
-    public void loadProcessedDocument(LoadProcessedDocument loadProcessedDocument) {}
-
-    @Override
     public synchronized void loadProcessedDocumentWithError(LoadProcessedDocumentWithError loadProcessedDocumentWithError) {
         writer.printf("%s\t%s\n", loadProcessedDocumentWithError.url(), loadProcessedDocumentWithError.reason());
     }
 
-    @Override
-    public void loadKeywords(EdgeUrl url, DocumentMetadata metadata, DocumentKeywords words) {}
-
-    @Override
-    public void loadDomainRedirect(DomainLink link) {}
-
-    @Override
-    public void loadDomainMetadata(EdgeDomain domain, int knownUrls, int goodUrls, int visitedUrls) {}
 }

@@ -2,7 +2,6 @@ package nu.marginalia.converting.processor;
 
 import com.google.inject.Inject;
 import nu.marginalia.crawling.model.CrawledDocument;
-import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.crawling.model.CrawlerDocumentStatus;
 import nu.marginalia.model.crawl.UrlIndexingState;
 import nu.marginalia.converting.model.DisqualifiedException;
@@ -38,11 +37,14 @@ public class DocumentProcessor {
         processorPlugins.add(plainTextDocumentProcessorPlugin);
     }
 
-    public ProcessedDocument process(CrawledDocument crawledDocument, CrawledDomain crawledDomain) {
+    public ProcessedDocument process(CrawledDocument crawledDocument) {
         ProcessedDocument ret = new ProcessedDocument();
 
         try {
-            processDocument(crawledDocument, crawledDomain, ret);
+            // We must always provide the URL, even if we don't process the document
+            ret.url = getDocumentUrl(crawledDocument);
+
+            processDocument(crawledDocument, ret);
         }
         catch (DisqualifiedException ex) {
             ret.state = UrlIndexingState.DISQUALIFIED;
@@ -53,13 +55,12 @@ public class DocumentProcessor {
             ret.state = UrlIndexingState.DISQUALIFIED;
             ret.stateReason = DisqualifiedException.DisqualificationReason.PROCESSING_EXCEPTION.toString();
             logger.info("Failed to convert " + crawledDocument.url, ex);
-            ex.printStackTrace();
         }
 
         return ret;
     }
 
-    private void processDocument(CrawledDocument crawledDocument, CrawledDomain crawledDomain, ProcessedDocument ret) throws URISyntaxException, DisqualifiedException {
+    private void processDocument(CrawledDocument crawledDocument, ProcessedDocument ret) throws URISyntaxException, DisqualifiedException {
 
         var crawlerStatus = CrawlerDocumentStatus.valueOf(crawledDocument.crawlerStatus);
         if (crawlerStatus != CrawlerDocumentStatus.OK) {
@@ -74,15 +75,11 @@ public class DocumentProcessor {
             throw new DisqualifiedException(DisqualifiedException.DisqualificationReason.CONTENT_TYPE);
         }
 
-
-        ret.url = getDocumentUrl(crawledDocument);
         ret.state = crawlerStatusToUrlState(crawledDocument.crawlerStatus, crawledDocument.httpStatus);
 
         final var plugin = findPlugin(crawledDocument);
 
-        AbstractDocumentProcessorPlugin.DetailsWithWords detailsWithWords = plugin.createDetails(crawledDomain, crawledDocument);
-
-        crawledDocument.dispose();
+        AbstractDocumentProcessorPlugin.DetailsWithWords detailsWithWords = plugin.createDetails(crawledDocument);
 
         ret.details = detailsWithWords.details();
         ret.words = detailsWithWords.words();

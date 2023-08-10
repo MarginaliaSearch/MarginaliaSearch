@@ -1,0 +1,113 @@
+body {
+    background-color: #f8f8ee;
+    font-family: sans-serif;
+    line-height: 1.6;
+
+    display: grid;
+    grid-template-columns: 20ch auto;
+    grid-gap: 1em;
+    grid-template-areas:
+        "left right";
+}
+section nav.tabs > a {
+    color: #000;
+    text-decoration: none;
+    background-color: #ccc;
+    padding: 0.5ch;
+    border-radius: .5ch;
+}
+section nav.tabs a.selected {
+    background-color: #eee;
+}
+
+.toggle-switch-off {
+   border-left: 5px solid #f00;
+   width: 8ch;
+}
+.toggle-switch-on {
+    border-right: 5px solid #080;
+    width: 8ch;
+}
+.toggle-switch-active {
+   border-left: 5px solid #00f;
+   border-right: 5px solid #00f;
+   width: 8ch;
+}
+#services .missing {
+    color: #800;
+}
+.uuidPip {
+  margin-left: 0.25ch;
+  border-radius: 2ch;
+  border: 1px solid #ccc;
+}
+h1 {
+    font-family: serif;
+}
+table {
+    font-family: monospace;
+}
+th { text-align: left; }
+td,th { padding-right: 1ch; border: 1px solid #ccc; }
+
+tr:nth-of-type(2n) {
+    background-color: #eee;
+}
+
+
+table.table-rh-2 tr:nth-of-type(4n+1) { background-color: #eee; }
+table.table-rh-2 tr:nth-of-type(4n+2) { background-color: #eee; }
+table.table-rh-2 tr:nth-of-type(4n+3) { background-color: unset; }
+table.table-rh-2 tr:nth-of-type(4n) { background-color: unset; }
+
+table.table-rh-2 tr:nth-of-type(4n) td,
+table.table-rh-2 tr:nth-of-type(4n) th { border-bottom: 1px solid #888; }
+table.table-rh-2 tr:nth-of-type(4n+2) td,
+table.table-rh-2 tr:nth-of-type(4n+2) th { border-bottom: 1px solid #888; }
+
+table.table-rh-3 tr:nth-of-type(6n+1) { background-color: #eee; }
+table.table-rh-3 tr:nth-of-type(6n+2) { background-color: #eee; }
+table.table-rh-3 tr:nth-of-type(6n+3) { background-color: #eee; }
+table.table-rh-3 tr:nth-of-type(6n+4) { background-color: unset; }
+table.table-rh-3 tr:nth-of-type(6n+5) { background-color: unset; }
+table.table-rh-3 tr:nth-of-type(6n) { background-color: unset; }
+
+table.table-rh-3 tr:nth-of-type(6n) td,
+table.table-rh-3 tr:nth-of-type(6n) th { border-bottom: 1px solid #888; }
+table.table-rh-3 tr:nth-of-type(6n+3) td,
+table.table-rh-3 tr:nth-of-type(6n+3) th { border-bottom: 1px solid #888; }
+
+body > nav {
+    grid-area: left;
+}
+nav ul {
+    list-style-type: none;
+    padding: 0;
+}
+nav ul li {
+    line-height: 2;
+}
+nav ul li a {
+    text-decoration: none;
+    padding: 0.5ch;
+    display: block;
+    color: #000;
+    background-color: #ccc;
+}
+nav ul li a:focus {
+    text-decoration: underline;
+}
+nav ul li a.current {
+    color: #000;
+    background-color: #fff;
+}
+
+body > section {
+    grid-area: right;
+}
+
+#state-graph .current-state td:first-of-type {
+    border-right: 1em solid #000;
+    font-weight: bold;
+    border-color: #000;
+}

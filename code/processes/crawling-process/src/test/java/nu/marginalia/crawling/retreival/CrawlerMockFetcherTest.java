@@ -4,10 +4,7 @@ import crawlercommons.robots.SimpleRobotRules;
 import lombok.SneakyThrows;
 import nu.marginalia.bigstring.BigString;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
-import nu.marginalia.crawl.retreival.fetcher.FetchResult;
-import nu.marginalia.crawl.retreival.fetcher.FetchResultState;
-import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
-import nu.marginalia.crawl.retreival.fetcher.SitemapRetriever;
+import nu.marginalia.crawl.retreival.fetcher.*;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawlerDocumentStatus;
 import nu.marginalia.crawling.model.SerializableCrawlData;
@@ -33,7 +30,6 @@ public class CrawlerMockFetcherTest {
 
     Map<EdgeUrl, CrawledDocument> mockData = new HashMap<>();
     HttpFetcher fetcherMock = new MockFetcher();
-    SitemapRetriever sitemapRetriever = new SitemapRetriever();
 
     @AfterEach
     public void tearDown() {
@@ -47,13 +43,12 @@ public class CrawlerMockFetcherTest {
                 .contentType("text/html")
                 .httpStatus(200)
                 .crawlerStatus(CrawlerDocumentStatus.OK.name())
-                .documentBody(BigString.encode(documentData))
+                .documentBody(documentData)
                 .build());
     }
 
     @SneakyThrows
     private void registerUrlClasspathData(EdgeUrl url, String path) {
-        var data = BigString.encode(CommonTestData.loadTestData(path));
 
         mockData.put(url, CrawledDocument.builder()
                 .crawlId("1")
@@ -61,7 +56,7 @@ public class CrawlerMockFetcherTest {
                 .contentType("text/html")
                 .httpStatus(200)
                 .crawlerStatus(CrawlerDocumentStatus.OK.name())
-                .documentBody(data)
+                .documentBody(CommonTestData.loadTestData(path))
                 .build());
 
     }
@@ -75,7 +70,6 @@ public class CrawlerMockFetcherTest {
         registerUrlClasspathData(new EdgeUrl("https://startrek.website/post/108995"), "mock-crawl-data/lemmy/108995.html");
 
         new CrawlerRetreiver(fetcherMock, new CrawlingSpecification("1", 10, "startrek.website", new ArrayList<>()), out::add)
-                .withNoDelay()
                 .fetch();
 
         out.forEach(System.out::println);
@@ -88,7 +82,6 @@ public class CrawlerMockFetcherTest {
         registerUrlClasspathData(new EdgeUrl("https://en.wikipedia.org/"), "mock-crawl-data/mediawiki/index.html");
 
         new CrawlerRetreiver(fetcherMock, new CrawlingSpecification("1", 10, "en.wikipedia.org", new ArrayList<>()), out::add)
-                .withNoDelay()
                 .fetch();
 
         out.forEach(System.out::println);
@@ -103,7 +96,6 @@ public class CrawlerMockFetcherTest {
         registerUrlClasspathData(new EdgeUrl("https://community.tt-rss.org/t/combined-mode-but-grid/4489"), "mock-crawl-data/discourse/grid.html");
 
         new CrawlerRetreiver(fetcherMock, new CrawlingSpecification("1", 100, "community.tt-rss.org", new ArrayList<>()), out::add)
-                .withNoDelay()
                 .fetch();
 
         out.forEach(System.out::println);
@@ -127,7 +119,7 @@ public class CrawlerMockFetcherTest {
         }
 
         @Override
-        public CrawledDocument fetchContent(EdgeUrl url) {
+        public CrawledDocument fetchContent(EdgeUrl url, ContentTags tags) {
             logger.info("Fetching {}", url);
             if (mockData.containsKey(url)) {
                 return mockData.get(url);

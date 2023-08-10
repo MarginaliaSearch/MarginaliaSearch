@@ -41,7 +41,6 @@ public class IndexJournalTest {
                 .add(5, 5)
                 .add(6, 6)
                 .build());
-        journalWriter.forceWrite();
         journalWriter.close();
 
         reader = new IndexJournalReaderSingleCompressedFile(tempFile);

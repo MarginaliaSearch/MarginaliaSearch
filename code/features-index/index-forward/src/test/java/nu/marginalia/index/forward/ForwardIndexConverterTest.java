@@ -1,17 +1,20 @@
 package nu.marginalia.index.forward;
 
 import lombok.SneakyThrows;
-import nu.marginalia.dict.OffHeapDictionaryHashMap;
 import nu.marginalia.index.journal.model.IndexJournalEntry;
 import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
+import nu.marginalia.lexicon.journal.KeywordLexiconJournalMode;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
+import nu.marginalia.service.control.ServiceHeartbeat;
+import nu.marginalia.service.control.ServiceTaskHeartbeat;
 import nu.marginalia.test.TestUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +24,7 @@ import java.nio.file.Path;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
 
 class ForwardIndexConverterTest {
 
@@ -45,7 +49,7 @@ class ForwardIndexConverterTest {
         dictionaryFile = Files.createTempFile("tmp", ".dict");
         dictionaryFile.toFile().deleteOnExit();
 
-        keywordLexicon = new KeywordLexicon(new KeywordLexiconJournal(dictionaryFile.toFile()));
+        keywordLexicon = new KeywordLexicon(new KeywordLexiconJournal(dictionaryFile.toFile(), KeywordLexiconJournalMode.READ_WRITE));
         keywordLexicon.getOrInsert("0");
 
         indexFile = Files.createTempFile("tmp", ".idx");
@@ -63,7 +67,6 @@ class ForwardIndexConverterTest {
 
 
         keywordLexicon.commitToDisk();
-        writer.forceWrite();
         writer.close();
 
 
@@ -98,7 +101,12 @@ class ForwardIndexConverterTest {
     @Test
     void testForwardIndex() throws IOException {
 
-        new ForwardIndexConverter(indexFile.toFile(), docsFileId, docsFileData, new DomainRankings()).convert();
+        // RIP fairies
+        var serviceHeartbeat = Mockito.mock(ServiceHeartbeat.class);
+        when(serviceHeartbeat.createServiceTaskHeartbeat(Mockito.any(), Mockito.any()))
+                .thenReturn(Mockito.mock(ServiceTaskHeartbeat.class));
+
+        new ForwardIndexConverter(serviceHeartbeat, indexFile.toFile(), docsFileId, docsFileData, new DomainRankings()).convert();
 
         var forwardReader = new ForwardIndexReader(docsFileId, docsFileData);
 

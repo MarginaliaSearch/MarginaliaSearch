@@ -8,13 +8,17 @@ import nu.marginalia.index.journal.model.IndexJournalEntry;
 import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile;
 import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
+import nu.marginalia.lexicon.journal.KeywordLexiconJournalMode;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
 import nu.marginalia.model.idx.DocumentMetadata;
+import nu.marginalia.service.control.ServiceHeartbeat;
+import nu.marginalia.service.control.ServiceTaskHeartbeat;
 import nu.marginalia.test.TestUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +29,7 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.mockito.Mockito.when;
 
 class ReverseIndexFullConverterTest {
     KeywordLexicon keywordLexicon;
@@ -42,7 +47,7 @@ class ReverseIndexFullConverterTest {
         dictionaryFile = Files.createTempFile("tmp", ".dict");
         dictionaryFile.toFile().deleteOnExit();
 
-        keywordLexicon = new KeywordLexicon(new KeywordLexiconJournal(dictionaryFile.toFile()));
+        keywordLexicon = new KeywordLexicon(new KeywordLexiconJournal(dictionaryFile.toFile(), KeywordLexiconJournalMode.READ_WRITE));
         keywordLexicon.getOrInsert("0");
 
         indexFile = Files.createTempFile("tmp", ".idx");
@@ -83,7 +88,14 @@ class ReverseIndexFullConverterTest {
         var docsFile = dataDir.resolve("docs.dat");
         var journalReader = new IndexJournalReaderSingleCompressedFile(indexFile);
 
-        new ReverseIndexFullConverter(tmpDir, journalReader, new DomainRankings(), wordsFile, docsFile)
+        // RIP fairies
+        var serviceHeartbeat = Mockito.mock(ServiceHeartbeat.class);
+        when(serviceHeartbeat.createServiceTaskHeartbeat(Mockito.any(), Mockito.any()))
+                .thenReturn(Mockito.mock(ServiceTaskHeartbeat.class));
+
+        new ReverseIndexFullConverter(
+                serviceHeartbeat,
+                tmpDir, journalReader, new DomainRankings(), wordsFile, docsFile)
                 .convert();
 
         var reverseIndexReader = new ReverseIndexFullReader(wordsFile, docsFile);

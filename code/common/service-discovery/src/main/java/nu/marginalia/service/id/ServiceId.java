@@ -7,19 +7,22 @@ public enum ServiceId {
     Search("search-service"),
     Index("index-service"),
 
+    Control("control-service"),
+
     Dating("dating-service"),
-    Explorer("explorer-service"),
-
-    Other_Auth("auth"),
-    Other_Memex("memex"),
-
-
-    Other_ResourceStore("resource-store"),
-    Other_Renderer("renderer"),
-    Other_PodcastScraper("podcast-scraper");
+    Explorer("explorer-service");
 
     public final String name;
     ServiceId(String name) {
         this.name = name;
+    }
+
+    public static ServiceId byName(String name) {
+        for (ServiceId id : values()) {
+            if (id.name.equals(name)) {
+                return id;
+            }
+        }
+        return null;
     }
 }

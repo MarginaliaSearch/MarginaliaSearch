@@ -21,11 +21,13 @@ public class CrawledDocument implements SerializableCrawlData {
     public String crawlerStatusDesc;
 
     public String headers;
-    public BigString documentBody;
+    public String documentBody;
     public String documentBodyHash;
 
     public String canonicalUrl;
     public String redirectUrl;
+
+    public String recrawlState;
 
     public static final String SERIAL_IDENTIFIER = "// DOCUMENT";
     @Override
@@ -33,9 +35,4 @@ public class CrawledDocument implements SerializableCrawlData {
         return SERIAL_IDENTIFIER;
     }
 
-    /** Remove all large data from this object to save memory */
-    public void dispose() {
-        documentBody = null;
-        headers = null;
-    }
 }

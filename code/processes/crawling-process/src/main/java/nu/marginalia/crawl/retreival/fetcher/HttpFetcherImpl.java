@@ -12,19 +12,19 @@ import nu.marginalia.crawling.model.CrawlerDocumentStatus;
 import nu.marginalia.crawling.model.ContentType;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.bigstring.BigString;
 import nu.marginalia.crawl.retreival.logic.ContentTypeLogic;
 import nu.marginalia.crawl.retreival.logic.ContentTypeParser;
 import okhttp3.*;
 import org.apache.commons.io.input.BOMInputStream;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLException;
 import javax.net.ssl.X509TrustManager;
+import java.io.EOFException;
 import java.io.IOException;
-import java.net.SocketTimeoutException;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.net.*;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.StandardCharsets;
@@ -120,34 +120,31 @@ public class HttpFetcherImpl implements HttpFetcher {
                 return probeDomain(new EdgeUrl("https", url.domain, url.port, url.path, url.param));
             }
 
-            logger.info("Error during fetching {}[{}]", ex.getClass().getSimpleName(), ex.getMessage());
+            logger.info("Error during fetching", ex);
             return new FetchResult(FetchResultState.ERROR, url.domain);
         }
     }
 
-    private Request createHeadRequest(EdgeUrl url) {
-        return new Request.Builder().head().addHeader("User-agent", userAgent)
-                .url(url.toString())
-                .addHeader("Accept-Encoding", "gzip")
-                .build();
-    }
-
-    private Request createGetRequest(EdgeUrl url) {
-        return new Request.Builder().get().addHeader("User-agent", userAgent)
-                .url(url.toString())
-                .addHeader("Accept-Encoding", "gzip")
-                .build();
-
-    }
 
     @Override
     @SneakyThrows
-    public CrawledDocument fetchContent(EdgeUrl url) throws RateLimitException {
+    public CrawledDocument fetchContent(EdgeUrl url,
+                                        ContentTags contentTags)
+            throws RateLimitException
+    {
 
-        if (contentTypeLogic.isUrlLikeBinary(url)) {
+        // We don't want to waste time and resources on URLs that are not HTML, so if the file ending
+        // looks like it might be something else, we perform a HEAD first to check the content type
+        if (contentTags.isEmpty() && contentTypeLogic.isUrlLikeBinary(url))
+        {
             logger.debug("Probing suspected binary {}", url);
 
-            var head = createHeadRequest(url);
+            var headBuilder = new Request.Builder().head()
+                    .addHeader("User-agent", userAgent)
+                    .url(url.toString())
+                    .addHeader("Accept-Encoding", "gzip");
+
+            var head = headBuilder.build();
             var call = client.newCall(head);
 
             try (var rsp = call.execute()) {
@@ -155,6 +152,21 @@ public class HttpFetcherImpl implements HttpFetcher {
                 if (contentTypeHeader != null && !contentTypeLogic.isAllowableContentType(contentTypeHeader)) {
                     return createErrorResponse(url, rsp, CrawlerDocumentStatus.BAD_CONTENT_TYPE, "Early probe failed");
                 }
+
+                // Update the URL to the final URL of the HEAD request, otherwise we might end up doing
+
+                // HEAD 301 url1 -> url2
+                // HEAD 200 url2
+                // GET 301 url1 -> url2
+                // GET 200 url2
+
+                // which is not what we want. Overall we want to do as few requests as possible to not raise
+                // too many eyebrows when looking at the logs on the target server.  Overall it's probably desirable
+                // that it looks like the traffic makes sense, as opposed to looking like a broken bot.
+
+                var redirectUrl = new EdgeUrl(rsp.request().url().toString());
+                if (Objects.equals(redirectUrl.domain, url.domain))
+                    url = redirectUrl;
             }
             catch (SocketTimeoutException ex) {
                 return createTimeoutErrorRsp(url, ex);
@@ -165,7 +177,15 @@ public class HttpFetcherImpl implements HttpFetcher {
             }
         }
 
-        var get = createGetRequest(url);
+        var getBuilder = new Request.Builder().get();
+
+        getBuilder.addHeader("User-agent", userAgent)
+                .url(url.toString())
+                .addHeader("Accept-Encoding", "gzip");
+
+        contentTags.paint(getBuilder);
+
+        var get = getBuilder.build();
         var call = client.newCall(get);
 
         try (var rsp = call.execute()) {
@@ -177,11 +197,18 @@ public class HttpFetcherImpl implements HttpFetcher {
         catch (SocketTimeoutException ex) {
             return createTimeoutErrorRsp(url, ex);
         }
-        catch (IllegalCharsetNameException ex) {
+        catch (UnknownHostException ex) {
+            return createUnknownHostError(url, ex);
+        }
+        catch (SocketException | ProtocolException | IllegalCharsetNameException | SSLException | EOFException ex) {
+            // This is a bit of a grab-bag of errors that crop up
+            // IllegalCharsetName is egg on our face,
+            // but SSLException and EOFException are probably the server's fault
+
             return createHardErrorRsp(url, ex);
         }
         catch (Exception ex) {
-            logger.error("Error during fetching {}[{}]", ex.getClass().getSimpleName(), ex.getMessage());
+            logger.error("Error during fetching", ex);
             return createHardErrorRsp(url, ex);
         }
     }
@@ -194,6 +221,16 @@ public class HttpFetcherImpl implements HttpFetcher {
                 .url(url.toString())
                 .build();
     }
+
+    private CrawledDocument createUnknownHostError(EdgeUrl url, Exception why) {
+        return CrawledDocument.builder()
+                .crawlerStatus(CrawlerDocumentStatus.ERROR.toString())
+                .crawlerStatusDesc("Unknown Host")
+                .timestamp(LocalDateTime.now().toString())
+                .url(url.toString())
+                .build();
+    }
+
     private CrawledDocument createTimeoutErrorRsp(EdgeUrl url, Exception why) {
         return CrawledDocument.builder()
                 .crawlerStatus("Timeout")
@@ -253,6 +290,17 @@ public class HttpFetcherImpl implements HttpFetcher {
             return createErrorResponse(url, rsp, CrawlerDocumentStatus.BAD_CHARSET, "");
         }
 
+        if (!isXRobotsTagsPermitted(rsp.headers("X-Robots-Tag"), userAgent)) {
+            return CrawledDocument.builder()
+                    .crawlerStatus(CrawlerDocumentStatus.ROBOTS_TXT.name())
+                    .crawlerStatusDesc("X-Robots-Tag")
+                    .url(responseUrl.toString())
+                    .httpStatus(-1)
+                    .timestamp(LocalDateTime.now().toString())
+                    .headers(rsp.headers().toString())
+                    .build();
+        }
+
         var strData = getStringData(data, contentType);
         var canonical = rsp.header("rel=canonical", "");
 
@@ -264,8 +312,55 @@ public class HttpFetcherImpl implements HttpFetcher {
                 .canonicalUrl(canonical)
                 .httpStatus(rsp.code())
                 .url(responseUrl.toString())
-                .documentBody(BigString.encode(strData))
+                .documentBody(strData)
                 .build();
+    }
+
+    /**  Check X-Robots-Tag header tag to see if we are allowed to index this page.
+     * <p>
+     * Reference: <a href="https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag">https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag</a>
+     *
+     * @param xRobotsHeaderTags List of X-Robots-Tag values
+     * @param userAgent User agent string
+     * @return true if we are allowed to index this page
+     */
+    // Visible for tests
+    public static boolean isXRobotsTagsPermitted(List<String> xRobotsHeaderTags, String userAgent) {
+        boolean isPermittedGeneral = true;
+        boolean isPermittedMarginalia = false;
+        boolean isForbiddenMarginalia = false;
+
+        for (String header : xRobotsHeaderTags) {
+            if (header.indexOf(':') >= 0) {
+                String[] parts = StringUtils.split(header, ":", 2);
+
+                if (parts.length < 2)
+                    continue;
+
+                // Is this relevant to us?
+                if (!Objects.equals(parts[0].trim(), userAgent))
+                    continue;
+
+                if (parts[1].contains("noindex"))
+                    isForbiddenMarginalia = true;
+                else if (parts[1].contains("none"))
+                    isForbiddenMarginalia = true;
+                else if (parts[1].contains("all"))
+                    isPermittedMarginalia = true;
+            }
+            else {
+                if (header.contains("noindex"))
+                    isPermittedGeneral = false;
+                if (header.contains("none"))
+                    isPermittedGeneral = false;
+            }
+        }
+
+        if (isPermittedMarginalia)
+            return true;
+        if (isForbiddenMarginalia)
+            return false;
+        return isPermittedGeneral;
     }
 
     private String getStringData(byte[] data, ContentType contentType) {
@@ -315,7 +410,7 @@ public class HttpFetcherImpl implements HttpFetcher {
     private Optional<SimpleRobotRules> fetchRobotsForProto(String proto, EdgeDomain domain) {
         try {
             var url = new EdgeUrl(proto, domain, null, "/robots.txt", null);
-            return Optional.of(parseRobotsTxt(fetchContent(url)));
+            return Optional.of(parseRobotsTxt(fetchContent(url, ContentTags.empty())));
         }
         catch (Exception ex) {
             return Optional.empty();
@@ -324,7 +419,7 @@ public class HttpFetcherImpl implements HttpFetcher {
 
     private SimpleRobotRules parseRobotsTxt(CrawledDocument doc) {
         return robotsParser.parseContent(doc.url,
-                doc.documentBody.decode().getBytes(),
+                doc.documentBody.getBytes(),
                 doc.contentType,
                 userAgent);
     }

@@ -6,6 +6,7 @@ import nu.marginalia.index.IndexServicesFactory;
 import nu.marginalia.index.query.*;
 import nu.marginalia.index.query.filter.QueryFilterStepFromPredicate;
 import nu.marginalia.index.svc.IndexSearchSetsService;
+import nu.marginalia.service.control.ServiceEventLog;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,10 +37,15 @@ public class SearchIndex {
     private final IndexServicesFactory servicesFactory;
     private final IndexSearchSetsService searchSetsService;
 
+    private final ServiceEventLog eventLog;
+
     @Inject
-    public SearchIndex(@NotNull IndexServicesFactory servicesFactory, IndexSearchSetsService searchSetsService) {
+    public SearchIndex(@NotNull IndexServicesFactory servicesFactory,
+                       IndexSearchSetsService searchSetsService,
+                       ServiceEventLog eventLog) {
         this.servicesFactory = servicesFactory;
         this.searchSetsService = searchSetsService;
+        this.eventLog = eventLog;
     }
 
     public void init() {
@@ -51,7 +57,13 @@ public class SearchIndex {
 
             if (indexReader == null) {
                 indexReader = servicesFactory.getSearchIndexReader();
+                eventLog.logEvent("INDEX-INIT", "Index loaded");
             }
+            else {
+                eventLog.logEvent("INDEX-INIT", "No index loaded");
+            }
+
+
         }
         catch (Exception ex) {
             logger.error("Uncaught exception", ex);
@@ -63,9 +75,12 @@ public class SearchIndex {
 
     public boolean switchIndex() throws IOException {
 
+        eventLog.logEvent("CONVERT-INDEX-BEGIN", "");
         servicesFactory.convertIndex(searchSetsService.getDomainRankings());
+        eventLog.logEvent("CONVERT-INDEX-END", "");
         System.gc();
 
+        eventLog.logEvent("INDEX-SWITCH-BEGIN", "");
         Lock lock = indexReplacementLock.writeLock();
         try {
             lock.lock();
@@ -73,11 +88,15 @@ public class SearchIndex {
             servicesFactory.switchFilesJob().call();
 
             indexReader = servicesFactory.getSearchIndexReader();
+
+            eventLog.logEvent("INDEX-SWITCH-OK", "");
         }
         catch (Exception ex) {
+            eventLog.logEvent("INDEX-SWITCH-ERR", "");
             logger.error("Uncaught exception", ex);
         }
         finally {
+
             lock.unlock();
         }
 

@@ -7,10 +7,11 @@ import nu.marginalia.model.EdgeUrl;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public class FeedsCompiler {
 
-    public void compile(List<Instruction> ret, List<ProcessedDocument> documents) {
+    public void compile(Consumer<Instruction> instructionConsumer, List<ProcessedDocument> documents) {
 
         EdgeUrl[] feeds = documents.stream().map(doc -> doc.details)
                 .filter(Objects::nonNull)
@@ -18,6 +19,6 @@ public class FeedsCompiler {
                 .distinct()
                 .toArray(EdgeUrl[]::new);
 
-        ret.add(new LoadRssFeed(feeds));
+        instructionConsumer.accept(new LoadRssFeed(feeds));
     }
 }

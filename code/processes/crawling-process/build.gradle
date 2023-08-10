@@ -21,14 +21,18 @@ tasks.distZip.enabled = false
 dependencies {
     implementation project(':code:common:process')
 
+    implementation project(':code:common:db')
     implementation project(':code:common:model')
     implementation project(':code:common:config')
     implementation project(':code:common:service')
     implementation project(':code:libraries:big-string')
     implementation project(':code:api:index-api')
+    implementation project(':code:api:process-mqapi')
     implementation project(':code:common:service-discovery')
     implementation project(':code:common:service-client')
+    implementation project(':code:common:message-queue')
     implementation project(':code:libraries:language-processing')
+    implementation project(':code:libraries:easy-lsh')
     implementation project(':code:process-models:crawling-model')
     implementation project(':code:process-models:converting-model')
 
@@ -48,6 +52,8 @@ dependencies {
     implementation libs.jsoup
     implementation libs.opencsv
     implementation libs.rxjava
+    implementation libs.fastutil
+
     implementation libs.bundles.mariadb
 
     testImplementation libs.bundles.slf4j.test

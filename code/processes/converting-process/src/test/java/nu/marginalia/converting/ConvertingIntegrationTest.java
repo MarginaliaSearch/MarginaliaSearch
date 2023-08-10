@@ -3,12 +3,13 @@ package nu.marginalia.converting;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import nu.marginalia.bigstring.BigString;
 import nu.marginalia.converting.model.HtmlStandard;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.processor.DomainProcessor;
+import nu.marginalia.crawling.io.SerializableCrawlDataStream;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
+import nu.marginalia.crawling.model.SerializableCrawlData;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.crawl.PubDate;
@@ -40,18 +41,17 @@ public class ConvertingIntegrationTest {
     public void testEmptyDomain() {
         var docs = new ArrayList<CrawledDocument>();
 
-        var ret = domainProcessor.process(
-                new CrawledDomain("123", "memex.marginalia.nu", null, "OK", "-", "127.0.0.1",
-                        docs, Collections.emptyList()));
+        var domain = new CrawledDomain("123", "memex.marginalia.nu", null, "OK", "-", "127.0.0.1",
+                docs, Collections.emptyList());
+        var ret = domainProcessor.process(asSerializableCrawlData(domain));
 
         assertEquals(ret.state, DomainIndexingState.ACTIVE);
         assertEquals(ret.domain, new EdgeDomain("memex.marginalia.nu"));
         assertTrue(ret.documents.isEmpty());
     }
-
     @Test
     public void testMemexMarginaliaNuDateInternalConsistency() throws IOException {
-        var ret = domainProcessor.process(readMarginaliaWorkingSet());
+        var ret = domainProcessor.process(asSerializableCrawlData(readMarginaliaWorkingSet()));
         ret.documents.stream().filter(ProcessedDocument::isProcessedFully).forEach(doc -> {
             int year = PubDate.fromYearByte(doc.details.metadata.year());
             Integer yearMeta = doc.details.pubYear;
@@ -64,7 +64,7 @@ public class ConvertingIntegrationTest {
 
     @Test
     public void testMemexMarginaliaNu() throws IOException {
-        var ret = domainProcessor.process(readMarginaliaWorkingSet());
+        var ret = domainProcessor.process(asSerializableCrawlData(readMarginaliaWorkingSet()));
         assertEquals(ret.state, DomainIndexingState.ACTIVE);
         assertEquals(ret.domain, new EdgeDomain("memex.marginalia.nu"));
 
@@ -110,10 +110,11 @@ public class ConvertingIntegrationTest {
                     "OK",
                     "",
                     "",
-                    BigString.encode(readClassPathFile(p.toString())),
+                    readClassPathFile(p.toString()),
                     Double.toString(Math.random()),
                     "https://memex.marginalia.nu/" + file,
-                    null
+                    null,
+                    ""
                     );
             docs.add(doc);
         }
@@ -132,4 +133,14 @@ public class ConvertingIntegrationTest {
         return new String(Objects.requireNonNull(ClassLoader.getSystemResourceAsStream(s)).readAllBytes());
     }
 
+
+    private SerializableCrawlDataStream asSerializableCrawlData(CrawledDomain domain) {
+        List<SerializableCrawlData> data = new ArrayList<>();
+        if (domain.doc != null) {
+            data.addAll(domain.doc);
+        }
+        data.add(domain);
+
+        return SerializableCrawlDataStream.fromIterator(data.iterator());
+    }
 }

@@ -1,9 +1,11 @@
 package nu.marginalia.service.server;
 
-import com.google.common.base.Strings;
 import io.prometheus.client.Counter;
 import nu.marginalia.client.Context;
 import nu.marginalia.client.exception.MessagingException;
+import nu.marginalia.mq.inbox.*;
+import nu.marginalia.service.server.mq.MqRequest;
+import nu.marginalia.service.server.mq.ServiceMqSubscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -35,22 +37,39 @@ public class Service {
             .labelNames("service")
             .register();
     private final String serviceName;
-
     private static volatile boolean initialized = false;
 
-    public Service(String ip, int port, Initialization initialization, MetricsServer metricsServer, Runnable configureStaticFiles) {
-        this.initialization = initialization;
+    protected final MqInboxIf messageQueueInbox;
+
+    public Service(BaseServiceParams params,
+                   Runnable configureStaticFiles
+                   ) {
+        this.initialization = params.initialization;
+        var config = params.configuration;
+
+        String inboxName = config.serviceName() + ":" + config.node();
+        logger.info("Inbox name: {}", inboxName);
+
+        var mqInboxFactory = params.messageQueueInboxFactory;
+        messageQueueInbox = mqInboxFactory.createAsynchronousInbox(inboxName, config.instanceUuid());
+        messageQueueInbox.subscribe(new ServiceMqSubscription(this));
 
         serviceName = System.getProperty("service-name");
+
+        initialization.addCallback(params.heartbeat::start);
+        initialization.addCallback(messageQueueInbox::start);
+        initialization.addCallback(() -> params.eventLog.logEvent("SVC-INIT", ""));
 
         if (!initialization.isReady() && ! initialized ) {
             initialized = true;
 
             Spark.threadPool(32, 4, 60_000);
-            Spark.ipAddress(ip);
-            Spark.port(port);
+            Spark.ipAddress(params.configuration.host());
+            Spark.port(params.configuration.port());
 
-            logger.info("{} Listening to {}:{}", getClass().getSimpleName(), ip == null ? "" : ip, port);
+            logger.info("{} Listening to {}:{}", getClass().getSimpleName(),
+                    params.configuration.host(),
+                    params.configuration.port());
 
             configureStaticFiles.run();
 
@@ -66,14 +85,24 @@ public class Service {
         }
     }
 
-    public Service(String ip, int port, Initialization initialization, MetricsServer metricsServer) {
-        this(ip, port, initialization, metricsServer, () -> {
+    public Service(BaseServiceParams params) {
+        this(params, () -> {
             // configureStaticFiles can't be an overridable method in Service because it may
             // need to depend on parameters to the constructor, and super-constructors
             // must run first
             Spark.staticFiles.expireTime(3600);
             Spark.staticFiles.header("Cache-control", "public");
         });
+    }
+
+    @MqRequest(endpoint = "SVC-READY")
+    public boolean mqIsReady() {
+        return initialization.isReady();
+    }
+
+    @MqRequest(endpoint = "SVC-PING")
+    public String mqPing() {
+        return "pong";
     }
 
     private void filterPublicRequests(Request request, Response response) {
@@ -90,11 +119,7 @@ public class Service {
             Spark.halt(403);
         }
 
-        String url = request.pathInfo();
-        if (request.queryString() != null) {
-            url = url + "?" + request.queryString();
-        }
-        logger.info(httpMarker, "PUBLIC {}: {} {}", Context.fromRequest(request).getContextId(), request.requestMethod(), url);
+        logRequest(request);
     }
 
     private Object isInitialized(Request request, Response response) {
@@ -139,9 +164,8 @@ public class Service {
             request_counter_bad.labels(serviceName).inc();
         }
 
-        if (null != request.headers("X-Public")) {
-            logger.info(httpMarker, "RSP {}", response.status());
-        }
+        logResponse(request, response);
+
     }
 
     private void paintThreadName(Request request, String prefix) {
@@ -149,13 +173,30 @@ public class Service {
         Thread.currentThread().setName(prefix + ctx.getContextId());
     }
 
-    private void handleException(Exception ex, Request request, Response response) {
+    protected void handleException(Exception ex, Request request, Response response) {
         request_counter_err.labels(serviceName).inc();
         if (ex instanceof MessagingException) {
             logger.error("{} {}", ex.getClass().getSimpleName(), ex.getMessage());
         }
         else {
             logger.error("Uncaught exception", ex);
+        }
+    }
+
+    /** Log the request on the HTTP log */
+    protected void logRequest(Request request) {
+        String url = request.pathInfo();
+        if (request.queryString() != null) {
+            url = url + "?" + request.queryString();
+        }
+
+        logger.info(httpMarker, "PUBLIC {}: {} {}", Context.fromRequest(request).getContextId(), request.requestMethod(), url);
+    }
+
+    /** Log the response on the HTTP log */
+    protected void logResponse(Request request, Response response) {
+        if (null != request.headers("X-Public")) {
+            logger.info(httpMarker, "RSP {}", response.status());
         }
     }
 

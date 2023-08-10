@@ -26,7 +26,7 @@ public class DebugConverterExperiment extends Experiment {
         for (var doc : domain.doc) {
             if (doc.documentBody == null) continue;
 
-            var parsed = Jsoup.parse(doc.documentBody.decode());
+            var parsed = Jsoup.parse(doc.documentBody);
 
             var tagExtractor = new BlogSpecialization.BlogTagExtractor();
             parsed.traverse(tagExtractor);

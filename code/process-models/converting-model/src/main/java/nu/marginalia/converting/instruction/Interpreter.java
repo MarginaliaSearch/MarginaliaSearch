@@ -10,18 +10,18 @@ import nu.marginalia.converting.instruction.instructions.LoadProcessedDocument;
 import nu.marginalia.converting.instruction.instructions.LoadProcessedDocumentWithError;
 
 public interface Interpreter {
-    void loadUrl(EdgeUrl[] url);
-    void loadDomain(EdgeDomain[] domain);
-    void loadRssFeed(EdgeUrl[] rssFeed);
-    void loadDomainLink(DomainLink[] links);
+    default void loadUrl(EdgeUrl[] url) {}
+    default void loadDomain(EdgeDomain[] domain) {}
+    default void loadRssFeed(EdgeUrl[] rssFeed) {}
+    default void loadDomainLink(DomainLink[] links) {}
 
-    void loadProcessedDomain(EdgeDomain domain, DomainIndexingState state, String ip);
-    void loadProcessedDocument(LoadProcessedDocument loadProcessedDocument);
-    void loadProcessedDocumentWithError(LoadProcessedDocumentWithError loadProcessedDocumentWithError);
+    default void loadProcessedDomain(EdgeDomain domain, DomainIndexingState state, String ip) {}
+    default void loadProcessedDocument(LoadProcessedDocument loadProcessedDocument) {}
+    default void loadProcessedDocumentWithError(LoadProcessedDocumentWithError loadProcessedDocumentWithError) {}
 
-    void loadKeywords(EdgeUrl url, DocumentMetadata metadata, DocumentKeywords words);
+    default void loadKeywords(EdgeUrl url, DocumentMetadata metadata, DocumentKeywords words) {}
 
-    void loadDomainRedirect(DomainLink link);
+    default void loadDomainRedirect(DomainLink link) {}
 
-    void loadDomainMetadata(EdgeDomain domain, int knownUrls, int goodUrls, int visitedUrls);
+    default void loadDomainMetadata(EdgeDomain domain, int knownUrls, int goodUrls, int visitedUrls) {}
 }
