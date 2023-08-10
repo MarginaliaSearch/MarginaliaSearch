@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Control Service</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+{{> control/partials/nav}}
+<section>
+    <h1>Blacklist</h1>
+
+    <p>
+        The blacklist is a list of sanctioned domains that will not be
+        crawled, indexed, or returned from the search results.
+    </p>
+
+    <table style="max-width: 80ch">
+        <tr>
+            <th>Description</th><th>Action</th>
+        </tr>
+        <tr>
+            <td><b>Add To Blacklist</b><p>
+                This will add the given domain to the blacklist.
+            </td>
+            <td>
+                <form method="post" action="/blacklist?act=add" onsubmit="return confirm('Confirm addition')">
+                    <label for="add-domain">Domain: </label>&nbsp;<input type="text" id="add-domain" name="domain" placeholder="Domain" /><br>
+                    <label for="comment">Comment: </label>&nbsp;<input type="text" id="comment" name="comment" value="Manually Added" />
+                    <br>
+                    <br>
+                    <input type="submit" value="Add">
+                </form>
+            </td>
+        </tr>
+        <tr>
+            <td><b>Remove from blacklist</b><p>
+                Remove the specified domain from the blacklist.  This will ensure that
+                the domain is not blacklisted, in doing so it may remove the root domain
+                from the blacklist as well.
+            </td>
+            <td>
+                <form method="post" action="/blacklist?act=del" onsubmit="return confirm('Confirm removal')">
+                    <label for="rm-domain">Domain: </label>&nbsp;<input type="text" id="rm-domain" name="domain" placeholder="Domain" />
+                    <br>
+                    <br>
+                    <input type="submit" value="Add">
+                </form>
+            </td>
+        </tr>
+    </table>
+
+    <h1>Recent Additions</h1>
+    <table>
+        <tr>
+            <th>Domain</th>
+            <th>Comment</th>
+        </tr>
+        {{#each blacklist}}
+        <tr>
+            <td>{{domain}}</td>
+            <td>{{comment}}</td>
+        </tr>
+        {{/each}}
+    </table>
+</section>
+</body>
+</html>

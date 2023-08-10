@@ -24,6 +24,7 @@ import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class ControlService extends Service {
@@ -36,6 +37,7 @@ public class ControlService extends Service {
     private final EventLogService eventLogService;
     private final ApiKeyService apiKeyService;
     private final DomainComplaintService domainComplaintService;
+    private final ControlBlacklistService blacklistService;
     private final ControlActorService controlActorService;
     private final StaticResources staticResources;
     private final MessageQueueService messageQueueService;
@@ -54,6 +56,7 @@ public class ControlService extends Service {
                           ControlFileStorageService controlFileStorageService,
                           ApiKeyService apiKeyService,
                           DomainComplaintService domainComplaintService,
+                          ControlBlacklistService blacklistService,
                           ControlActionsService controlActionsService
                       ) throws IOException {
 
@@ -63,6 +66,7 @@ public class ControlService extends Service {
         this.eventLogService = eventLogService;
         this.apiKeyService = apiKeyService;
         this.domainComplaintService = domainComplaintService;
+        this.blacklistService = blacklistService;
 
         var indexRenderer = rendererFactory.renderer("control/index");
         var servicesRenderer = rendererFactory.renderer("control/services");
@@ -85,6 +89,7 @@ public class ControlService extends Service {
         var viewMessageRenderer = rendererFactory.renderer("control/view-message");
 
         var actionsViewRenderer = rendererFactory.renderer("control/actions");
+        var blacklistRenderer = rendererFactory.renderer("control/blacklist");
 
         this.controlActorService = controlActorService;
 
@@ -109,6 +114,7 @@ public class ControlService extends Service {
         final HtmlRedirect redirectToActors = new HtmlRedirect("/actors");
         final HtmlRedirect redirectToApiKeys = new HtmlRedirect("/api-keys");
         final HtmlRedirect redirectToStorage = new HtmlRedirect("/storage");
+        final HtmlRedirect redirectToBlacklist = new HtmlRedirect("/blacklist");
         final HtmlRedirect redirectToComplaints = new HtmlRedirect("/complaints");
         final HtmlRedirect redirectToMessageQueue = new HtmlRedirect("/message-queue");
 
@@ -145,6 +151,11 @@ public class ControlService extends Service {
         Spark.post("/public/storage/specs", controlActorService::createCrawlSpecification, redirectToStorage);
         Spark.post("/public/storage/:fid/delete", controlFileStorageService::flagFileForDeletionRequest, redirectToStorage);
 
+        // Blacklist
+
+        Spark.get("/public/blacklist", this::blacklistModel, blacklistRenderer::render);
+        Spark.post("/public/blacklist", this::updateBlacklist, redirectToBlacklist);
+
         // API Keys
 
         Spark.get("/public/api-keys", this::apiKeysModel, apiKeysRenderer::render);
@@ -169,6 +180,22 @@ public class ControlService extends Service {
         Spark.get("/public/:resource", this::serveStatic);
 
         monitors.subscribe(this::logMonitorStateChange);
+    }
+
+    private Object blacklistModel(Request request, Response response) {
+        return Map.of("blacklist", blacklistService.lastNAdditions(100));
+    }
+
+    private Object updateBlacklist(Request request, Response response) {
+        var domain = new EdgeDomain(request.queryParams("domain"));
+        if ("add".equals(request.queryParams("act"))) {
+            var comment = Objects.requireNonNullElse(request.queryParams("comment"), "");
+            blacklistService.addToBlacklist(domain, comment);
+        } else if ("del".equals(request.queryParams("act"))) {
+            blacklistService.removeFromBlacklist(domain);
+        }
+
+        return "";
     }
 
     private Object overviewModel(Request request, Response response) {

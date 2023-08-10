@@ -18,10 +18,14 @@ import java.util.Optional;
  */
 public class DomainComplaintService {
     private final HikariDataSource dataSource;
+    private final ControlBlacklistService blacklistService;
 
     @Inject
-    public DomainComplaintService(HikariDataSource dataSource) {
+    public DomainComplaintService(HikariDataSource dataSource,
+                                  ControlBlacklistService blacklistService
+    ) {
         this.dataSource = dataSource;
+        this.blacklistService = blacklistService;
     }
 
     public List<DomainComplaintModel> getComplaints() {
@@ -53,12 +57,13 @@ public class DomainComplaintService {
     }
 
     public void approveAppealBlacklisting(EdgeDomain domain) {
-        removeFromBlacklist(domain);
+        blacklistService.removeFromBlacklist(domain);
         setDecision(domain, "APPROVED");
     }
 
     public void blacklistDomain(EdgeDomain domain) {
-        addToBlacklist(domain);
+        blacklistService.addToBlacklist(domain, "Domain complaint");
+
         setDecision(domain, "BLACKLISTED");
     }
 
@@ -66,33 +71,7 @@ public class DomainComplaintService {
         setDecision(domain, "REJECTED");
     }
 
-    private void addToBlacklist(EdgeDomain domain) {
-        try (var conn = dataSource.getConnection();
-             var stmt = conn.prepareStatement("""
-                     INSERT IGNORE INTO EC_DOMAIN_BLACKLIST (URL_DOMAIN) VALUES (?)
-                     """)) {
-            stmt.setString(1, domain.toString());
-            stmt.executeUpdate();
-        }
-        catch (SQLException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
 
-    private void removeFromBlacklist(EdgeDomain domain) {
-        try (var conn = dataSource.getConnection();
-             var stmt = conn.prepareStatement("""
-                     DELETE FROM EC_DOMAIN_BLACKLIST WHERE URL_DOMAIN=?
-                     """)) {
-            stmt.setString(1, domain.toString());
-            stmt.addBatch();
-            stmt.setString(1, domain.domain);
-            stmt.executeBatch();
-        }
-        catch (SQLException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
 
     private void setDecision(EdgeDomain domain, String decision) {
         try (var conn = dataSource.getConnection();
