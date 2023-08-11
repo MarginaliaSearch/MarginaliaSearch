@@ -77,6 +77,34 @@ is around 5 hours.
 The 'l' set is a good compromise between size and processing time and should
 work on most machines.
 
+7. Process the data
+
+Bring the system online if it isn't (see step 4), then go to the operator's
+GUI (see step 5).  
+
+* Go to `Storage`
+* Go to `Crawl Data`
+* Find the data set you want to process and click `[Info]`
+* Click `[Process]`
+
+This will take anywhere between a few minutes to a few hours depending on which
+data set you downloaded.  You can monitor the progress from the `Overview` tab
+under `Processes`.
+
+First the CONVERTER is expected to run; this will process the data into a format 
+that can easily be inserted into the database and index.
+
+Next the LOADER will run; this will insert the data into the database and index.
+
+Next the link database will repartition itself, and finally the index will be
+reconstructed.  You can view the process of these steps in the `Jobs` listing.
+
+Once all this is done, you can go to the user-facing GUI (see step 5) and try
+a search.  
+
+Important! Use the 'No Ranking' option when running locally, since you'll very
+likely not have enough links for the ranking algorithm to perform well.
+
 ## Experiment Runner
 
 The script `experiment.sh` is a launcher for the experiment runner, which is useful when 
