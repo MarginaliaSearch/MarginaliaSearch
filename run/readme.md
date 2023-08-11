@@ -99,6 +99,8 @@ Next the LOADER will run; this will insert the data into the database and index.
 Next the link database will repartition itself, and finally the index will be
 reconstructed.  You can view the process of these steps in the `Jobs` listing.
 
+8. Run the system
+
 Once all this is done, you can go to the user-facing GUI (see step 5) and try
 a search.  
 
