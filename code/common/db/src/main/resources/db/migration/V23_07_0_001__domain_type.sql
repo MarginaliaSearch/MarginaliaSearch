@@ -15,5 +15,5 @@ CHARACTER SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
 
 INSERT IGNORE INTO DOMAIN_SELECTION_TYPE(NAME, SOURCE)
-VALUES ('BLOG', 'https://raw.githubusercontent.com/MarginaliaSearch/submit-site-to-marginalia-search/master/blogs.txt'),
+VALUES ('BLOG', 'https://raw.githubusercontent.com/MarginaliaSearch/PublicData/master/sets/blogs.txt'),
        ('TEST', 'https://downloads.marginalia.nu/domain-list-test.txt');
