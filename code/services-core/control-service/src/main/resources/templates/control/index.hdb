@@ -10,7 +10,6 @@
   <section>
       {{> control/partials/services-table }}
       {{> control/partials/processes-table}}
-      {{> control/partials/actors-table }}
       {{> control/partials/events-table-summary }}
   </section>
 </body>

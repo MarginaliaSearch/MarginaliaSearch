@@ -20,6 +20,11 @@
         <td>{{#unless isStopped}}{{lastSeenMillis}}{{/unless}}</td>
     </tr>
     {{/each}}
+    {{#unless processes}}
+    <tr>
+        <td colspan="5">No processes running lately</td>
+    </tr>
+    {{/unless}}
 </table>
 
 <h1>Jobs</h1>
@@ -38,4 +43,9 @@
         <td>{{#unless isStopped}}{{lastSeenMillis}}{{/unless}}</td>
     </tr>
     {{/each}}
+    {{#unless jobs}}
+    <tr>
+      <td colspan="4">No jobs running lately</td>
+    </tr>
+    {{/unless}}
 </table>

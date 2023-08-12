@@ -16,6 +16,11 @@
         </td>
     </tr>
     </thead>
+    {{#unless messages}}
+    <tr>
+        <td colspan="6" rowspan="2">No messages found</td>
+    </tr>
+    {{/unless}}
     {{#each messages}}
     <tr>
         <td>{{stateCode}}&nbsp;{{state}}</td>
