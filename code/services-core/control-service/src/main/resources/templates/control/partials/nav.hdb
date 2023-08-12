@@ -1,16 +1,16 @@
 <nav>
     <ul>
-        <li><a href="/">Overview</a></li>
-        <li>---</li>
-        <li><a href="/api-keys">API Keys</a></li>
-        <li><a href="/blacklist">Blacklist</a></li>
-        <li><a href="/complaints">Complaints</a></li>
-        <li>---</li>
-        <li><a href="/actions">Actions</a></li>
-        <li><a href="/storage">Storage</a></li>
-        <li>---</li>
-        <li><a href="/services">Services</a></li>
-        <li><a href="/actors">Actors</a></li>
-        <li><a href="/message-queue">Message Queue</a></li>
+        <li><a href="/" title="System overview">Overview</a></li>
+        <li>Manage</li>
+        <li><a href="/api-keys" title="Create or remove API keys">API Keys</a></li>
+        <li><a href="/blacklist" title="Add or remove website sanctions">Blacklist</a></li>
+        <li><a href="/complaints" title="View and act on user complaints">Complaints</a></li>
+        <li>System</li>
+        <li><a href="/actions" title="Trigger system actions">Actions</a></li>
+        <li><a href="/storage" title="View file storage, trigger crawling and processing">Storage</a></li>
+        <li>Plumbing</li>
+        <li><a href="/events" title="View the event log">Events</a></li>
+        <li><a href="/actors" title="View and toggle system actors">Actors</a></li>
+        <li><a href="/message-queue" title="View or manipulate the system message queue">Message Queue</a></li>
     </ul>
 </nav>

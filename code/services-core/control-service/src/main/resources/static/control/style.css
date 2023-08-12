@@ -9,6 +9,9 @@ body {
     grid-template-areas:
         "left right";
 }
+
+
+
 section nav.tabs > a {
     color: #000;
     text-decoration: none;
@@ -93,10 +96,17 @@ nav ul li a {
     display: block;
     color: #000;
     background-color: #ccc;
+    border: 2px #ccc solid;
 }
 nav ul li a:focus {
     text-decoration: underline;
+    border: 2px #eee inset;
 }
+
+nav ul li a:hover {
+    border: 2px #eee outset;
+}
+
 nav ul li a.current {
     color: #000;
     background-color: #fff;
