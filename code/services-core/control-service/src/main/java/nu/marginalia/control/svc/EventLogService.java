@@ -79,14 +79,11 @@ public class EventLogService {
         else
             next = "";
 
-        Object prev = afterParam == null ? "" : afterParam;
-
         return Map.of(
                 "events", entries,
                 "types", typeFilterList,
                 "services", serviceFilterList,
                 "next", next,
-                "prev", prev,
                 "elFilter", elFilter);
 
     }

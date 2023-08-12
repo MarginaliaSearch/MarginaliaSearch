@@ -9,17 +9,24 @@
         <th>Message</th>
     </tr>
     <tr>
-        <td colspan="6" style="padding: 0.5ch">
-            <form method="GET" action="/events">
-                <select name="service" id="service">
-                    {{#each services}}<option value="{{value}}" {{#if current}}selected{{/if}} >{{name}}</option>{{/each}}
-                </select>
-                <select name="type" id="type">
-                    {{#each types}}<option value="{{value}}" {{#if current}}selected{{/if}} >{{name}}</option>{{/each}}
-                </select>
-                <input type="submit" value="Filter Results">
-            </form>
-        </td>
+
+        <form method="GET" action="/events">
+            <td>
+            <select name="service" id="service">
+                {{#each services}}<option value="{{value}}" {{#if current}}selected{{/if}} >{{name}}</option>{{/each}}
+            </select>
+            </td>
+            <td colspan="2"></td>
+            <td>
+            <select name="type" id="type">
+                {{#each types}}<option value="{{value}}" {{#if current}}selected{{/if}} >{{name}}</option>{{/each}}
+            </select>
+            </td>
+            <td>
+            <input type="submit" value="Filter Results">
+            </td>
+        </form>
+
     </tr>
     {{#each events}}
     <tr>
@@ -36,7 +43,6 @@
     <tfoot>
     <tr>
         <td colspan="6" style="padding: 0.5ch">
-            {{#if prev}}<a href="/events?after={{prev}}&{{elFilter}}">Prev</a>{{/if}}
             {{#if next}}<a href="/events?after={{next}}&{{elFilter}}" style="float:right">Next</a>{{/if}}
         </td>
     </tr>

@@ -1,0 +1,23 @@
+<h1>Event Summary</h1>
+
+<table id="events">
+    <tr>
+        <th>Service Name</th>
+        <th>Instance</th>
+        <th>Event Time</th>
+        <th>Type</th>
+        <th>Message</th>
+    </tr>
+    {{#each events}}
+    <tr>
+        <td>{{serviceName}}</td>
+        <td title="{{instanceFull}}">
+            <span style="background-color: {{instanceColor}}" class="uuidPip">&nbsp;</span><span style="background-color: {{instanceColor2}}" class="uuidPip">&nbsp;</span>
+            {{instance}}
+        </td>
+        <td title="{{eventDateTime}}">{{eventTime}}</td>
+        <td>{{eventType}}</td>
+        <td>{{eventMessage}}</td>
+    </tr>
+    {{/each}}
+</table>

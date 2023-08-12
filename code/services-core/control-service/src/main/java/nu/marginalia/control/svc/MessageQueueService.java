@@ -64,11 +64,8 @@ public class MessageQueueService {
         else
             next = "";
 
-        Object prev = afterParam == null ? "" : afterParam;
-
         return Map.of("messages", entries,
                 "next", next,
-                "prev", prev,
                 "mqFilter", mqFilter);
     }
 

@@ -45,7 +45,6 @@
     <tfoot>
     <tr>
         <td colspan="6" style="padding: 0.5ch">
-            {{#if prev}}<a href="?after={{prev}}&{{mqFilter}}">Prev</a>{{/if}}
             {{#if next}}<a href="?after={{next}}&{{mqFilter}}" style="float:right">Next</a>{{/if}}
         </td>
     </tr>

@@ -9,7 +9,7 @@
   {{> control/partials/nav}}
   <section>
   <h1>Services/{{id}}</h1>
-  {{> control/partials/events-table }}
+  {{> control/partials/events-table-summary }}
   {{> control/partials/message-queue-table }}
   </section>
 </body>
