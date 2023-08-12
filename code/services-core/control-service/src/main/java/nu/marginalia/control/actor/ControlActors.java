@@ -108,8 +108,10 @@ public class ControlActors {
     }
 
     @SneakyThrows
-    public void stop(Actor fsm) {
-        stateMachines.get(fsm).abortExecution();
+    public void stop(Actor process) {
+        eventLog.logEvent("FSM-STOP", process.id());
+
+        stateMachines.get(process).abortExecution();
     }
 
     public Map<Actor, MachineState> getActorStates() {
