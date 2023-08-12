@@ -15,7 +15,7 @@ you're on the right track.
 To go from a clean check out of the git repo to a running search engine,
 follow these steps. You're assumed to sit in the project root the whole time.
 
-1. Run the one-time setup, it will create the
+### 1. Run the one-time setup, it will create the
 basic runtime directory structure and download some models and data that doesn't
 come with the git repo because git deals poorly with large binary files.
 
@@ -23,33 +23,33 @@ come with the git repo because git deals poorly with large binary files.
 $ run/setup.sh
 ```
 
-2. Compile the project and build docker images
+### 2. Compile the project and build docker images
 
 ```
 $ ./gradlew assemble docker
 ```
 
-3. Initialize the database
+### 3. Initialize the database
 ```
 $ docker-compose up -d mariadb
 $ ./gradlew flywayMigrate
 ```
 
-4. Bring the system online. We'll run it in the foreground in the terminal this time
+### 4. Bring the system online. We'll run it in the foreground in the terminal this time
 because it's educational to see the logs. Add `-d` to run in the background.
 
 ```
 $ docker-compose up
 ```
 
-5. You should now be able to access the system.
+### 5. You should now be able to access the system.
 
 | Address                 | Description      |
 |-------------------------|------------------|
 | https://localhost:8080/ | User-facing GUI  |
 | https://localhost:8081/ | Operator's GUI   |
 
-6. Download Sample Data
+### 6. Download Sample Data
 
 A script is available for downloading sample data. The script will download the
 data from https://downloads.marginalia.nu/ and extract it to the correct location.
@@ -77,7 +77,7 @@ is around 5 hours.
 The 'l' set is a good compromise between size and processing time and should
 work on most machines.
 
-7. Process the data
+### 7. Process the data
 
 Bring the system online if it isn't (see step 4), then go to the operator's
 GUI (see step 5).  
@@ -99,7 +99,7 @@ Next the LOADER will run; this will insert the data into the database and index.
 Next the link database will repartition itself, and finally the index will be
 reconstructed.  You can view the process of these steps in the `Jobs` listing.
 
-8. Run the system
+### 8. Run the system
 
 Once all this is done, you can go to the user-facing GUI (see step 5) and try
 a search.  
