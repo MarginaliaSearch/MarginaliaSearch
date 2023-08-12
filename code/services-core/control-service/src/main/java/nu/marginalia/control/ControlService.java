@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 import nu.marginalia.client.ServiceMonitors;
 import nu.marginalia.control.actor.Actor;
-import nu.marginalia.control.model.DomainComplaintModel;
+import nu.marginalia.control.model.*;
 import nu.marginalia.control.svc.*;
 import nu.marginalia.db.storage.model.FileStorageId;
 import nu.marginalia.db.storage.model.FileStorageType;
@@ -21,10 +21,7 @@ import spark.Spark;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ControlService extends Service {
@@ -69,6 +66,7 @@ public class ControlService extends Service {
         this.blacklistService = blacklistService;
 
         var indexRenderer = rendererFactory.renderer("control/index");
+        var eventsRenderer = rendererFactory.renderer("control/events");
         var servicesRenderer = rendererFactory.renderer("control/services");
         var serviceByIdRenderer = rendererFactory.renderer("control/service-by-id");
         var actorsRenderer = rendererFactory.renderer("control/actors");
@@ -105,6 +103,7 @@ public class ControlService extends Service {
         Spark.get("/public/", this::overviewModel, indexRenderer::render);
 
         Spark.get("/public/actions", (rq,rsp) -> new Object() , actionsViewRenderer::render);
+        Spark.get("/public/events", eventLogService::eventsListModel , eventsRenderer::render);
         Spark.get("/public/services", this::servicesModel, servicesRenderer::render);
         Spark.get("/public/services/:id", this::serviceModel, serviceByIdRenderer::render);
         Spark.get("/public/actors", this::processesModel, actorsRenderer::render);
@@ -182,6 +181,7 @@ public class ControlService extends Service {
         monitors.subscribe(this::logMonitorStateChange);
     }
 
+
     private Object blacklistModel(Request request, Response response) {
         return Map.of("blacklist", blacklistService.lastNAdditions(100));
     }
@@ -204,7 +204,7 @@ public class ControlService extends Service {
                 "jobs", heartbeatService.getTaskHeartbeats(),
                 "actors", controlActorService.getActorStates(),
                 "services", heartbeatService.getServiceHeartbeats(),
-                "events", eventLogService.getLastEntries(20)
+                "events", eventLogService.getLastEntries(Long.MAX_VALUE, 20)
                 );
     }
 
@@ -292,7 +292,7 @@ public class ControlService extends Service {
         return Map.of(
                 "id", serviceName,
                 "messages", messageQueueService.getEntriesForInbox(serviceName, Long.MAX_VALUE, 20),
-                "events", eventLogService.getLastEntriesForService(serviceName, 20));
+                "events", eventLogService.getLastEntriesForService(serviceName, Long.MAX_VALUE, 20));
     }
 
     private Object storageModel(Request request, Response response) {
@@ -313,7 +313,7 @@ public class ControlService extends Service {
     }
     private Object servicesModel(Request request, Response response) {
         return Map.of("services", heartbeatService.getServiceHeartbeats(),
-                      "events", eventLogService.getLastEntries(20));
+                      "events", eventLogService.getLastEntries(Long.MAX_VALUE, 20));
     }
 
     private Object processesModel(Request request, Response response) {
