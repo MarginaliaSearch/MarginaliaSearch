@@ -49,6 +49,9 @@ $ docker-compose up
 | https://localhost:8080/ | User-facing GUI  |
 | https://localhost:8081/ | Operator's GUI   |
 
+Note that the operator's GUI does not perform any sort of authentication.  Preferrably don't expose
+it publicly, but if you absolutely must, use a proxy or Basic Auth to add security.
+
 ### 6. Download Sample Data
 
 A script is available for downloading sample data. The script will download the
