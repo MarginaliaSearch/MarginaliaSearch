@@ -8,8 +8,8 @@
         <li>System</li>
         <li><a href="/actions" title="Trigger system actions">Actions</a></li>
         <li><a href="/storage" title="View file storage, trigger crawling and processing">Storage</a></li>
-        <li>Plumbing</li>
         <li><a href="/events" title="View the event log">Events</a></li>
+        <li>Plumbing</li>
         <li><a href="/actors" title="View and toggle system actors">Actors</a></li>
         <li><a href="/message-queue" title="View or manipulate the system message queue">Message Queue</a></li>
     </ul>
