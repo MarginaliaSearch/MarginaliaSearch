@@ -74,7 +74,16 @@
                 <td><button type="submit">Process</button></td>
             </tr>
           </form>
+
+          <form method="post" action="/storage/{{storage.id}}/process-and-load" onsubmit="return confirm('Confirm processing and loading of {{storage.path}}')">
+              <tr>
+                  <td>Process and load this data into index<br>
+                      then automatically load it into the index and db</td>
+                  <td><button type="submit">Process and load</button></td>
+              </tr>
+          </form>
           {{/if}}
+
           {{#if isRecrawlable}}
           <form method="post" action="/storage/{{storage.id}}/recrawl" onsubmit="return confirm('Confirm re-crawling of {{storage.path}}')">
             <tr>

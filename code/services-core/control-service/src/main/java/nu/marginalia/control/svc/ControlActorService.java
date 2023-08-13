@@ -3,6 +3,7 @@ package nu.marginalia.control.svc;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.control.actor.ControlActors;
+import nu.marginalia.control.actor.task.ConvertActor;
 import nu.marginalia.control.actor.task.CrawlJobExtractorActor;
 import nu.marginalia.control.actor.task.ConvertAndLoadActor;
 import nu.marginalia.control.actor.task.RecrawlActor;
@@ -65,7 +66,18 @@ public class ControlActorService {
         );
         return "";
     }
+
     public Object triggerProcessing(Request request, Response response) throws Exception {
+        controlActors.startFrom(
+                Actor.CONVERT,
+                ConvertActor.CONVERT,
+                FileStorageId.parse(request.params("fid"))
+        );
+
+        return "";
+    }
+
+    public Object triggerProcessingWithLoad(Request request, Response response) throws Exception {
         controlActors.start(
                 Actor.CONVERT_AND_LOAD,
                 FileStorageId.parse(request.params("fid"))

@@ -31,6 +31,7 @@ public class ConvertActor extends AbstractStateGraph {
 
     // STATES
 
+    public static final String INITIAL = "INITIAL";
     public static final String CONVERT = "CONVERT";
     public static final String CONVERT_ENCYCLOPEDIA = "CONVERT_ENCYCLOPEDIA";
     public static final String CONVERT_STACKEXCHANGE = "CONVERT_STACKEXCHANGE";
@@ -70,6 +71,12 @@ public class ConvertActor extends AbstractStateGraph {
         this.mqConverterOutbox = processOutboxes.getConverterOutbox();
         this.storageService = storageService;
         this.gson = gson;
+    }
+
+    @GraphState(name= INITIAL, resume = ResumeBehavior.ERROR,
+                description = "Pro forma initial state")
+    public void initial(Integer unused) {
+        error("This actor does not support the initial state");
     }
 
     @GraphState(name = CONVERT,

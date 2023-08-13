@@ -1,6 +1,7 @@
 package nu.marginalia.control.model;
 
 import nu.marginalia.db.storage.model.FileStorage;
+import nu.marginalia.db.storage.model.FileStorageBaseType;
 import nu.marginalia.db.storage.model.FileStorageType;
 
 public record FileStorageWithActions(FileStorage storage) {
@@ -18,7 +19,6 @@ public record FileStorageWithActions(FileStorage storage) {
         return storage.type() == FileStorageType.CRAWL_DATA;
     }
     public boolean isDeletable() {
-        return storage.type() == FileStorageType.PROCESSED_DATA
-             || storage.type() == FileStorageType.BACKUP;
+        return storage.base().type() == FileStorageBaseType.SLOW;
     }
 }

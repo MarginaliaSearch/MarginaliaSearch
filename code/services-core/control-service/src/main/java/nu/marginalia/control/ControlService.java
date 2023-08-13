@@ -145,6 +145,7 @@ public class ControlService extends Service {
         Spark.post("/public/storage/:fid/crawl", controlActorService::triggerCrawling, redirectToActors);
         Spark.post("/public/storage/:fid/recrawl", controlActorService::triggerRecrawling, redirectToActors);
         Spark.post("/public/storage/:fid/process", controlActorService::triggerProcessing, redirectToActors);
+        Spark.post("/public/storage/:fid/process-and-load", controlActorService::triggerProcessingWithLoad, redirectToActors);
         Spark.post("/public/storage/:fid/load", controlActorService::loadProcessedData, redirectToActors);
 
         Spark.post("/public/storage/specs", controlActorService::createCrawlSpecification, redirectToStorage);

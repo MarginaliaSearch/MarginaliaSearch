@@ -88,7 +88,7 @@ GUI (see step 5).
 * Go to `Storage`
 * Go to `Crawl Data`
 * Find the data set you want to process and click `[Info]`
-* Click `[Process]`
+* Click `[Process and load]`
 
 This will take anywhere between a few minutes to a few hours depending on which
 data set you downloaded.  You can monitor the progress from the `Overview` tab
