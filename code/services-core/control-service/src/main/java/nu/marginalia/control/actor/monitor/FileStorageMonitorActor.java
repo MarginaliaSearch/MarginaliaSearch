@@ -34,6 +34,11 @@ public class FileStorageMonitorActor extends AbstractStateGraph {
     private static final String END = "END";
     private final FileStorageService fileStorageService;
 
+    @Override
+    public String describe() {
+        return "Monitor the file storage directories and purge any file storage area that has been marked for deletion," +
+                " and remove any file storage area that is missing from disk.";
+    }
 
     @Inject
     public FileStorageMonitorActor(StateFactory stateFactory,

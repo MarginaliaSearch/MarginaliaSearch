@@ -46,6 +46,10 @@ public class RecrawlActor extends AbstractStateGraph {
         public long crawlerMsgId = 0L;
     };
 
+    @Override
+    public String describe() {
+        return "Run the crawler with the given crawl spec using previous crawl data for a reference";
+    }
     public static RecrawlMessage recrawlFromCrawlData(FileStorageId crawlData) {
         return new RecrawlMessage(null, crawlData, 0L);
     }

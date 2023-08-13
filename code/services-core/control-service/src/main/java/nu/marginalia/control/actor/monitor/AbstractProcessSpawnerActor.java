@@ -40,6 +40,10 @@ public class AbstractProcessSpawnerActor extends AbstractStateGraph {
     private final ProcessService.ProcessId processId;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
+    public String describe() {
+        return "Spawns a(n) " + processId +  " process and monitors its inbox for messages";
+    }
+
     @Inject
     public AbstractProcessSpawnerActor(StateFactory stateFactory,
                                        MqPersistence persistence,

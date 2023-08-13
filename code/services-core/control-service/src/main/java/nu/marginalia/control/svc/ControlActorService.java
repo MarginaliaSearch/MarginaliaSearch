@@ -4,17 +4,20 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.control.actor.ControlActors;
 import nu.marginalia.control.actor.task.CrawlJobExtractorActor;
-import nu.marginalia.control.actor.task.ReconvertAndLoadActor;
+import nu.marginalia.control.actor.task.ConvertAndLoadActor;
 import nu.marginalia.control.actor.task.RecrawlActor;
 import nu.marginalia.control.actor.Actor;
 import nu.marginalia.control.model.ActorRunState;
 import nu.marginalia.control.model.ActorStateGraph;
 import nu.marginalia.db.storage.model.FileStorageId;
+import nu.marginalia.mqsm.graph.GraphState;
 import nu.marginalia.mqsm.state.MachineState;
 import spark.Request;
 import spark.Response;
 
 import java.util.Comparator;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Singleton
 public class ControlActorService {
@@ -64,7 +67,7 @@ public class ControlActorService {
     }
     public Object triggerProcessing(Request request, Response response) throws Exception {
         controlActors.start(
-                Actor.RECONVERT_LOAD,
+                Actor.CONVERT_AND_LOAD,
                 FileStorageId.parse(request.params("fid"))
         );
         return "";
@@ -75,24 +78,45 @@ public class ControlActorService {
 
         // Start the FSM from the intermediate state that triggers the load
         controlActors.startFrom(
-                Actor.RECONVERT_LOAD,
-                ReconvertAndLoadActor.LOAD,
-                new ReconvertAndLoadActor.Message(null, fid, 0L, 0L)
+                Actor.CONVERT_AND_LOAD,
+                ConvertAndLoadActor.LOAD,
+                new ConvertAndLoadActor.Message(null, fid, 0L, 0L)
         );
 
         return "";
     }
 
+    private final ConcurrentHashMap<String, String> actorStateDescriptions = new ConcurrentHashMap<>();
+
     public Object getActorStates() {
         return controlActors.getActorStates().entrySet().stream().map(e -> {
 
+            final var stateGraph = controlActors.getActorDefinition(e.getKey());
+
             final MachineState state = e.getValue();
+            final String actorDescription = stateGraph.describe();
+
             final String machineName = e.getKey().name();
             final String stateName = state.name();
+
+            final String stateDescription = actorStateDescriptions.computeIfAbsent(
+                    (machineName + "." + stateName),
+                    k -> Optional.ofNullable(stateGraph.declaredStates().get(stateName))
+                            .map(GraphState::description)
+                            .orElse("Description missing for " + stateName)
+            );
+
+
+
             final boolean terminal = state.isFinal();
             final boolean canStart = controlActors.isDirectlyInitializable(e.getKey()) && terminal;
 
-            return new ActorRunState(machineName, stateName, terminal, canStart);
+            return new ActorRunState(machineName,
+                    stateName,
+                    actorDescription,
+                    stateDescription,
+                    terminal,
+                    canStart);
         })
                 .filter(s -> !s.terminal() || s.canStart())
                 .sorted(Comparator.comparing(ActorRunState::name))

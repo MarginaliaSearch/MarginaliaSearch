@@ -33,6 +33,11 @@ public class TruncateLinkDatabase extends AbstractStateGraph {
         public FileStorageId storageId = null;
     };
 
+    @Override
+    public String describe() {
+        return "Remove all data from the link database.";
+    }
+
     @Inject
     public TruncateLinkDatabase(StateFactory stateFactory,
                                 HikariDataSource dataSource)

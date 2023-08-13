@@ -52,6 +52,11 @@ public class ConvertActor extends AbstractStateGraph {
         public long loaderMsgId = 0L;
     };
 
+    @Override
+    public String describe() {
+        return "Convert a set of crawl data into a format suitable for loading into the database.";
+    }
+
     @Inject
     public ConvertActor(StateFactory stateFactory,
                         ActorProcessWatcher processWatcher,

@@ -46,6 +46,11 @@ public class CrawlActor extends AbstractStateGraph {
         public long crawlerMsgId = 0L;
     };
 
+    @Override
+    public String describe() {
+        return "Run the crawler with the given crawl spec using no previous crawl data for a reference";
+    }
+
     @Inject
     public CrawlActor(StateFactory stateFactory,
                       ProcessOutboxes processOutboxes,

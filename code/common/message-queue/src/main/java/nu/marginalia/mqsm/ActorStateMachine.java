@@ -59,9 +59,9 @@ public class ActorStateMachine {
         registerStates(stateGraph);
         isDirectlyInitializable = stateGraph.isDirectlyInitializable();
 
-        for (var declaredState : stateGraph.declaredStates()) {
-            if (!allStates.containsKey(declaredState.name())) {
-                throw new IllegalArgumentException("State " + declaredState.name() + " is not defined in the state graph");
+        stateGraph.declaredStates().forEach((name, declaredState) -> {
+            if (!allStates.containsKey(name)) {
+                throw new IllegalArgumentException("State " + name + " is not defined in the state graph");
             }
             if (!allStates.containsKey(declaredState.next())) {
                 throw new IllegalArgumentException("State " + declaredState.next() + " is not defined in the state graph");
@@ -71,7 +71,7 @@ public class ActorStateMachine {
                     throw new IllegalArgumentException("State " + state + " is not defined in the state graph");
                 }
             }
-        }
+        });
 
         resume();
 

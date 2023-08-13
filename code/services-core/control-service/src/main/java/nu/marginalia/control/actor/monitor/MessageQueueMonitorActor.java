@@ -20,6 +20,10 @@ public class MessageQueueMonitorActor extends AbstractStateGraph {
     private static final String END = "END";
     private final MqPersistence persistence;
 
+    @Override
+    public String describe() {
+        return "Periodically run maintenance tasks on the message queue";
+    }
 
     @Inject
     public MessageQueueMonitorActor(StateFactory stateFactory,

@@ -18,6 +18,9 @@ public abstract class AbstractStateGraph {
         this.stateFactory = stateFactory;
     }
 
+    /** User-facing description of the actor. */
+    public abstract String describe();
+
     public void transition(String state) {
         throw new ControlFlowException(state, null);
     }
@@ -29,7 +32,6 @@ public abstract class AbstractStateGraph {
     public void error() {
         throw new ControlFlowException("ERROR", "");
     }
-
 
     public <T> void error(T payload) {
         throw new ControlFlowException("ERROR", payload);
@@ -54,13 +56,13 @@ public abstract class AbstractStateGraph {
         return false;
     }
 
-    public Set<GraphState> declaredStates() {
-        Set<GraphState> ret = new HashSet<>();
+    public Map<String, GraphState> declaredStates() {
+        Map<String, GraphState> ret = new HashMap<>();
 
         for (var method : getClass().getMethods()) {
             var gs = method.getAnnotation(GraphState.class);
             if (gs != null) {
-                ret.add(gs);
+                ret.put(gs.name(), gs);
             }
         }
 

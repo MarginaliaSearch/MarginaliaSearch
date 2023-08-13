@@ -34,6 +34,11 @@ public class ProcessLivenessMonitorActor extends AbstractStateGraph {
         this.heartbeatService = heartbeatService;
     }
 
+    @Override
+    public String describe() {
+        return "Periodically check to ensure that the control service's view of running processes is agreement with the process heartbeats table.";
+    }
+
     @GraphState(name = INITIAL, next = MONITOR)
     public void init() {
     }

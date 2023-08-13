@@ -7,8 +7,8 @@
     </tr>
     {{#each actors}}
     <tr>
-        <td><a href="/actors/{{name}}">{{name}}</a></td>
-        <td>{{stateIcon}}&nbsp;{{state}}</td>
+        <td title="{{actorDescription}}"><a href="/actors/{{name}}">{{name}}</a></td>
+        <td title="{{stateDescription}}">{{stateIcon}}&nbsp;{{state}}</td>
         <td>
             {{#unless terminal}}
                 <form id="toggle-{{name}}"

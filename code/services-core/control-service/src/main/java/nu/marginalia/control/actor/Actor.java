@@ -3,7 +3,7 @@ package nu.marginalia.control.actor;
 public enum Actor {
     CRAWL,
     RECRAWL,
-    RECONVERT_LOAD,
+    CONVERT_AND_LOAD,
     CONVERTER_MONITOR,
     LOADER_MONITOR,
     CRAWLER_MONITOR,

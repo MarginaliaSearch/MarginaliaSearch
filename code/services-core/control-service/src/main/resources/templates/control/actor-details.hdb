@@ -9,6 +9,7 @@
   {{> control/partials/nav}}
   <section>
   <h1>{{actor}}</h1>
+  <p>{{state-graph.description}}</p>
   {{> control/partials/actor-state-graph}}
   {{> control/partials/message-queue-table}}
   </section>

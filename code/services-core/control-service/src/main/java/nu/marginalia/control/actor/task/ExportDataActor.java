@@ -48,6 +48,11 @@ public class ExportDataActor extends AbstractStateGraph {
         public FileStorageId storageId = null;
     };
 
+    @Override
+    public String describe() {
+        return "Export data from the database to a storage area of type EXPORT.";
+    }
+
     @Inject
     public ExportDataActor(StateFactory stateFactory,
                            FileStorageService storageService,

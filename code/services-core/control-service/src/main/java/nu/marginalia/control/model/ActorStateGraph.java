@@ -7,17 +7,17 @@ import nu.marginalia.mqsm.state.MachineState;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public record ActorStateGraph(List<ActorState> states) {
+public record ActorStateGraph(String description, List<ActorState> states) {
 
     public ActorStateGraph(AbstractStateGraph graph, MachineState currentState) {
-        this(getStateList(graph, currentState));
+        this(graph.describe(), getStateList(graph, currentState));
     }
 
     private static List<ActorState> getStateList(
             AbstractStateGraph graph,
             MachineState currentState)
     {
-        Map<String, GraphState> declaredStates = graph.declaredStates().stream().collect(Collectors.toMap(GraphState::name, gs -> gs));
+        Map<String, GraphState> declaredStates = graph.declaredStates();
         Set<GraphState> seenStates = new HashSet<>(declaredStates.size());
         LinkedList<GraphState> edge = new LinkedList<>();
 

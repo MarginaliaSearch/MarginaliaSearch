@@ -32,6 +32,11 @@ public class TriggerAdjacencyCalculationActor extends AbstractStateGraph {
         this.processService = processService;
     }
 
+    @Override
+    public String describe() {
+        return "Calculate website similarities";
+    }
+
     @GraphState(name = INITIAL, next = END,
                 resume = ResumeBehavior.ERROR,
                 description = """

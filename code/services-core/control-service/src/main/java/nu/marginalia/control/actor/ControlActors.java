@@ -35,7 +35,7 @@ public class ControlActors {
                          GsonFactory gsonFactory,
                          BaseServiceParams baseServiceParams,
                          ConvertActor convertActor,
-                         ReconvertAndLoadActor reconvertAndLoadActor,
+                         ConvertAndLoadActor convertAndLoadActor,
                          CrawlActor crawlActor,
                          RecrawlActor recrawlActor,
                          ConverterMonitorActor converterMonitorFSM,
@@ -56,7 +56,7 @@ public class ControlActors {
         register(Actor.CRAWL, crawlActor);
         register(Actor.RECRAWL, recrawlActor);
         register(Actor.CONVERT, convertActor);
-        register(Actor.RECONVERT_LOAD, reconvertAndLoadActor);
+        register(Actor.CONVERT_AND_LOAD, convertAndLoadActor);
 
         register(Actor.CONVERTER_MONITOR, converterMonitorFSM);
         register(Actor.LOADER_MONITOR, loaderMonitor);

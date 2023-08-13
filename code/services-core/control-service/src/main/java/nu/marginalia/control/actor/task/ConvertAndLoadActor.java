@@ -30,7 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
 @Singleton
-public class ReconvertAndLoadActor extends AbstractStateGraph {
+public class ConvertAndLoadActor extends AbstractStateGraph {
 
     // STATES
 
@@ -63,13 +63,18 @@ public class ReconvertAndLoadActor extends AbstractStateGraph {
         public long loaderMsgId = 0L;
     };
 
+    @Override
+    public String describe() {
+        return "Process a set of crawl data and then load it into the database.";
+    }
+
     @Inject
-    public ReconvertAndLoadActor(StateFactory stateFactory,
-                                 ActorProcessWatcher processWatcher,
-                                 ProcessOutboxes processOutboxes,
-                                 FileStorageService storageService,
-                                 IndexClient indexClient,
-                                 Gson gson
+    public ConvertAndLoadActor(StateFactory stateFactory,
+                               ActorProcessWatcher processWatcher,
+                               ProcessOutboxes processOutboxes,
+                               FileStorageService storageService,
+                               IndexClient indexClient,
+                               Gson gson
                                    )
     {
         super(stateFactory);

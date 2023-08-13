@@ -52,6 +52,11 @@ public class CrawlJobExtractorActor extends AbstractStateGraph {
     public record CrawlJobExtractorArguments(String description) { }
     public record CrawlJobExtractorArgumentsWithURL(String description, String url) { }
 
+    @Override
+    public String describe() {
+        return "Run the crawler job extractor process";
+    }
+
     @GraphState(name = CREATE_FROM_LINK, next = END,
             resume = ResumeBehavior.ERROR,
             description = """
