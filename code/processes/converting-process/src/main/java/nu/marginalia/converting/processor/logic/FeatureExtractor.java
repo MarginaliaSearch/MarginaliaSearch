@@ -23,8 +23,12 @@ public class FeatureExtractor {
     private static final List<String> innocentTrackers = List.of(
             "twitter.com",
             "bing.com",
-            "msn.com");
-    private static final List<String> adtechTrackers = List.of("adform.net",
+            "msn.com",
+            "mail.ru/counter"
+            );
+    private static final List<String> adtechTrackers = List.of(
+            "publir.com",
+            "adform.net",
             "connect.facebook",
             "facebook.com/tr",
             "absbygoogle.com",
@@ -222,6 +226,12 @@ public class FeatureExtractor {
 
             String scriptText = scriptTag.html();
 
+            if (scriptText.contains("_ga=") || scriptText.contains("ga('create'")) {
+                features.add(HtmlFeature.TRACKING);
+            }
+            if (scriptText.contains("_tmr")) {
+                features.add(HtmlFeature.TRACKING);
+            }
             if (scriptText.contains("'pd.js'")) {
                 features.add(HtmlFeature.PARDOT);
             }
