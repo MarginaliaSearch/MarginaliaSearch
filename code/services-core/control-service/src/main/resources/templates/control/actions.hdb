@@ -25,6 +25,17 @@
             </td>
         </tr>
         <tr>
+            <td>
+                <b>Reload Blogs List</b>
+                <p>This will reload the list of blogs from its source.</p>
+            </td>
+            <td>
+                <form method="post" action="/actions/reload-blogs-list" onsubmit="return confirm('Confirm reload blogs list')">
+                    <input type="submit" value="Reload Blogs List">
+                </form>
+            </td>
+        </tr>
+        <tr>
             <td><b>Repartition Index</b><p>
                 This will recalculate the rankings and search sets for the index.
             </td>
