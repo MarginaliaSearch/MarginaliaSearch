@@ -6,18 +6,18 @@ import com.zaxxer.hikari.HikariDataSource;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.With;
+import nu.marginalia.actor.ActorStateFactory;
 import nu.marginalia.db.storage.model.FileStorageId;
-import nu.marginalia.mqsm.StateFactory;
-import nu.marginalia.mqsm.graph.AbstractStateGraph;
-import nu.marginalia.mqsm.graph.GraphState;
-import nu.marginalia.mqsm.graph.ResumeBehavior;
+import nu.marginalia.actor.prototype.AbstractActorPrototype;
+import nu.marginalia.actor.state.ActorState;
+import nu.marginalia.actor.state.ActorResumeBehavior;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 
 @Singleton
-public class TruncateLinkDatabase extends AbstractStateGraph {
+public class TruncateLinkDatabase extends AbstractActorPrototype {
 
 
     // STATES
@@ -39,14 +39,14 @@ public class TruncateLinkDatabase extends AbstractStateGraph {
     }
 
     @Inject
-    public TruncateLinkDatabase(StateFactory stateFactory,
+    public TruncateLinkDatabase(ActorStateFactory stateFactory,
                                 HikariDataSource dataSource)
     {
         super(stateFactory);
         this.dataSource = dataSource;
     }
 
-    @GraphState(name = INITIAL,
+    @ActorState(name = INITIAL,
                 next = FLUSH_DATABASE,
                 description = """
                     Initial stage
@@ -55,9 +55,9 @@ public class TruncateLinkDatabase extends AbstractStateGraph {
 
     }
 
-    @GraphState(name = FLUSH_DATABASE,
+    @ActorState(name = FLUSH_DATABASE,
                 next = END,
-                resume = ResumeBehavior.ERROR,
+                resume = ActorResumeBehavior.ERROR,
                 description = """
                         Truncate the domain and link tables.
                         """

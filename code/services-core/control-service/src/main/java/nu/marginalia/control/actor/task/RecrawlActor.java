@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.With;
+import nu.marginalia.actor.ActorStateFactory;
 import nu.marginalia.control.process.ProcessOutboxes;
 import nu.marginalia.control.process.ProcessService;
 import nu.marginalia.db.storage.FileStorageService;
@@ -15,17 +16,16 @@ import nu.marginalia.db.storage.model.FileStorageType;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.mqapi.crawling.CrawlRequest;
-import nu.marginalia.mqsm.StateFactory;
-import nu.marginalia.mqsm.graph.AbstractStateGraph;
-import nu.marginalia.mqsm.graph.GraphState;
-import nu.marginalia.mqsm.graph.ResumeBehavior;
+import nu.marginalia.actor.prototype.AbstractActorPrototype;
+import nu.marginalia.actor.state.ActorState;
+import nu.marginalia.actor.state.ActorResumeBehavior;
 
 import java.nio.file.Files;
 import java.sql.SQLException;
 import java.util.Optional;
 
 @Singleton
-public class RecrawlActor extends AbstractStateGraph {
+public class RecrawlActor extends AbstractActorPrototype {
 
     // STATES
 
@@ -58,7 +58,7 @@ public class RecrawlActor extends AbstractStateGraph {
     }
 
     @Inject
-    public RecrawlActor(StateFactory stateFactory,
+    public RecrawlActor(ActorStateFactory stateFactory,
                         ActorProcessWatcher processWatcher,
                         ProcessOutboxes processOutboxes,
                         FileStorageService storageService,
@@ -72,7 +72,7 @@ public class RecrawlActor extends AbstractStateGraph {
         this.gson = gson;
     }
 
-    @GraphState(name = INITIAL,
+    @ActorState(name = INITIAL,
                 next = CRAWL,
                 description = """
                     Validate the input and transition to CRAWL
@@ -110,9 +110,9 @@ public class RecrawlActor extends AbstractStateGraph {
                 .findFirst();
     }
 
-    @GraphState(name = CRAWL,
+    @ActorState(name = CRAWL,
                 next = CRAWL_WAIT,
-                resume = ResumeBehavior.ERROR,
+                resume = ActorResumeBehavior.ERROR,
                 description = """
                         Send a crawl request to the crawler and transition to CRAWL_WAIT.
                         """
@@ -125,10 +125,10 @@ public class RecrawlActor extends AbstractStateGraph {
         return recrawlMessage.withCrawlerMsgId(id);
     }
 
-    @GraphState(
+    @ActorState(
             name = CRAWL_WAIT,
             next = END,
-            resume = ResumeBehavior.RETRY,
+            resume = ActorResumeBehavior.RETRY,
             description = """
                     Wait for the crawler to finish retrieving the data.
                     """

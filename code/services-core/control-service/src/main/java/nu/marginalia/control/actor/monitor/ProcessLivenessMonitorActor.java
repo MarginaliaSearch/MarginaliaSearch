@@ -2,19 +2,19 @@ package nu.marginalia.control.actor.monitor;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.actor.ActorStateFactory;
 import nu.marginalia.control.model.ServiceHeartbeat;
 import nu.marginalia.control.svc.HeartbeatService;
 import nu.marginalia.control.process.ProcessService;
-import nu.marginalia.mqsm.StateFactory;
-import nu.marginalia.mqsm.graph.AbstractStateGraph;
-import nu.marginalia.mqsm.graph.GraphState;
-import nu.marginalia.mqsm.graph.ResumeBehavior;
+import nu.marginalia.actor.prototype.AbstractActorPrototype;
+import nu.marginalia.actor.state.ActorState;
+import nu.marginalia.actor.state.ActorResumeBehavior;
 
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Singleton
-public class ProcessLivenessMonitorActor extends AbstractStateGraph {
+public class ProcessLivenessMonitorActor extends AbstractActorPrototype {
 
     // STATES
 
@@ -26,7 +26,7 @@ public class ProcessLivenessMonitorActor extends AbstractStateGraph {
 
 
     @Inject
-    public ProcessLivenessMonitorActor(StateFactory stateFactory,
+    public ProcessLivenessMonitorActor(ActorStateFactory stateFactory,
                                        ProcessService processService,
                                        HeartbeatService heartbeatService) {
         super(stateFactory);
@@ -39,11 +39,11 @@ public class ProcessLivenessMonitorActor extends AbstractStateGraph {
         return "Periodically check to ensure that the control service's view of running processes is agreement with the process heartbeats table.";
     }
 
-    @GraphState(name = INITIAL, next = MONITOR)
+    @ActorState(name = INITIAL, next = MONITOR)
     public void init() {
     }
 
-    @GraphState(name = MONITOR, next = MONITOR, resume = ResumeBehavior.RETRY, description = """
+    @ActorState(name = MONITOR, next = MONITOR, resume = ActorResumeBehavior.RETRY, description = """
             Periodically check to ensure that the control service's view of
             running processes is agreement with the process heartbeats table.
              

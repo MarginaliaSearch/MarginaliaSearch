@@ -2,16 +2,16 @@ package nu.marginalia.control.actor.monitor;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.actor.ActorStateFactory;
 import nu.marginalia.mq.persistence.MqPersistence;
-import nu.marginalia.mqsm.StateFactory;
-import nu.marginalia.mqsm.graph.AbstractStateGraph;
-import nu.marginalia.mqsm.graph.GraphState;
-import nu.marginalia.mqsm.graph.ResumeBehavior;
+import nu.marginalia.actor.prototype.AbstractActorPrototype;
+import nu.marginalia.actor.state.ActorState;
+import nu.marginalia.actor.state.ActorResumeBehavior;
 
 import java.util.concurrent.TimeUnit;
 
 @Singleton
-public class MessageQueueMonitorActor extends AbstractStateGraph {
+public class MessageQueueMonitorActor extends AbstractActorPrototype {
 
     // STATES
 
@@ -26,17 +26,17 @@ public class MessageQueueMonitorActor extends AbstractStateGraph {
     }
 
     @Inject
-    public MessageQueueMonitorActor(StateFactory stateFactory,
+    public MessageQueueMonitorActor(ActorStateFactory stateFactory,
                                     MqPersistence persistence) {
         super(stateFactory);
         this.persistence = persistence;
     }
 
-    @GraphState(name = INITIAL, next = MONITOR)
+    @ActorState(name = INITIAL, next = MONITOR)
     public void init() {
     }
 
-    @GraphState(name = MONITOR, next = MONITOR, resume = ResumeBehavior.RETRY,
+    @ActorState(name = MONITOR, next = MONITOR, resume = ActorResumeBehavior.RETRY,
             description = """
                     Periodically clean up the message queue.
                     """)

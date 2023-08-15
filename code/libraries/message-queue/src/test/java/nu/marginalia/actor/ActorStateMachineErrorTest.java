@@ -1,15 +1,15 @@
-package nu.marginalia.mqsm;
+package nu.marginalia.actor;
 
 import com.google.gson.GsonBuilder;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.actor.prototype.AbstractActorPrototype;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessageRow;
 import nu.marginalia.mq.MqTestUtil;
 import nu.marginalia.mq.persistence.MqPersistence;
-import nu.marginalia.mqsm.graph.GraphState;
-import nu.marginalia.mqsm.graph.AbstractStateGraph;
-import nu.marginalia.mqsm.graph.ResumeBehavior;
+import nu.marginalia.actor.state.ActorState;
+import nu.marginalia.actor.state.ActorResumeBehavior;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.parallel.Execution;
 import org.testcontainers.containers.MariaDBContainer;
@@ -61,21 +61,24 @@ public class ActorStateMachineErrorTest {
         dataSource.close();
     }
 
-    public static class ErrorHurdles extends AbstractStateGraph {
+    public static class ErrorHurdles extends AbstractActorPrototype {
 
-        public ErrorHurdles(StateFactory stateFactory) {
+        public ErrorHurdles(ActorStateFactory stateFactory) {
             super(stateFactory);
         }
 
-        @GraphState(name = "INITIAL", next = "FAILING")
+        public String describe() {
+            return "Test graph";
+        }
+        @ActorState(name = "INITIAL", next = "FAILING")
         public void initial() {
 
         }
-        @GraphState(name = "FAILING", next = "OK", resume = ResumeBehavior.RETRY)
+        @ActorState(name = "FAILING", next = "OK", resume = ActorResumeBehavior.RETRY)
         public void resumable() {
             throw new RuntimeException("Boom!");
         }
-        @GraphState(name = "OK", next = "END")
+        @ActorState(name = "OK", next = "END")
         public void ok() {
 
         }
@@ -84,7 +87,7 @@ public class ActorStateMachineErrorTest {
 
     @Test
     public void smResumeResumableFromNew() throws Exception {
-        var stateFactory = new StateFactory(new GsonBuilder().create());
+        var stateFactory = new ActorStateFactory(new GsonBuilder().create());
         var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ErrorHurdles(stateFactory));
 
         sm.init();

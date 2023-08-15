@@ -26,25 +26,25 @@ The inbox implementations as well as the outbox can be constructed via the `Mess
 
 The MQSM is a finite state machine that is backed by the message queue used to implement an Actor style paradigm. 
 
-The machine itself is defined through a class that extends the 'AbstractStateGraph'; with state transitions and
+The machine itself is defined through a class that extends the 'AbstractActorPrototype'; with state transitions and
 names defined as implementations.
 
 Example:
 
 ```java
-class ExampleStateMachine extends AbstractStateGraph {
+class ExampleStateMachine extends AbstractActorPrototype {
     
-    @GraphState(name = "INITIAL", next="GREET")
+    @ActorState(name = "INITIAL", next="GREET")
     public void initial() {
         return "World"; // passed to the next state
     }
 
-    @GraphState(name = "GREET", next="COUNT-TO-FIVE")
+    @ActorState(name = "GREET", next="COUNT-TO-FIVE")
     public void greet(String name) {
         System.out.println("Hello " + name);
     }
 
-    @GraphState(name = "COUNT-TO-FIVE", next="END")
+    @ActorState(name = "COUNT-TO-FIVE", next="END")
     public void countToFive(Integer value) {
         // value is passed from the previous state, since greet didn't pass a value,
         // null will be the default.
@@ -69,7 +69,7 @@ class ExampleStateMachine extends AbstractStateGraph {
         // Default transition is to END
     }
     
-    @GraphState(name="END")
+    @ActorState(name="END")
     public void end() {
         System.out.println("Done");
     }

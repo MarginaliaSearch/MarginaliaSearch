@@ -30,7 +30,7 @@ dependencies {
     implementation project(':code:api:process-mqapi')
     implementation project(':code:common:service-discovery')
     implementation project(':code:common:service-client')
-    implementation project(':code:common:message-queue')
+    implementation project(':code:libraries:message-queue')
     implementation project(':code:libraries:language-processing')
     implementation project(':code:libraries:easy-lsh')
     implementation project(':code:process-models:crawling-model')

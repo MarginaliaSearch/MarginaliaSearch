@@ -1,34 +1,33 @@
-package nu.marginalia.mqsm;
+package nu.marginalia.actor;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import nu.marginalia.mqsm.graph.ResumeBehavior;
-import nu.marginalia.mqsm.state.MachineState;
-import nu.marginalia.mqsm.state.StateTransition;
+import nu.marginalia.actor.state.ActorResumeBehavior;
+import nu.marginalia.actor.state.ActorStateInstance;
+import nu.marginalia.actor.state.ActorStateTransition;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-@Singleton
-public class StateFactory {
+/** Factory for creating actor state instances. You probably don't want to use this directly.
+ * <p>
+ * Use AbstractStatePrototype instead. */
+public class ActorStateFactory {
     private final Gson gson;
 
-    @Inject
-    public StateFactory(Gson gson) {
+    public ActorStateFactory(Gson gson) {
         this.gson = gson;
     }
 
-    public <T> MachineState create(String name, ResumeBehavior resumeBehavior, Class<T> param, Function<T, StateTransition> logic) {
-        return new MachineState() {
+    public <T> ActorStateInstance create(String name, ActorResumeBehavior resumeBehavior, Class<T> param, Function<T, ActorStateTransition> logic) {
+        return new ActorStateInstance() {
             @Override
             public String name() {
                 return name;
             }
 
             @Override
-            public StateTransition next(String message) {
+            public ActorStateTransition next(String message) {
 
                 if (message.isEmpty()) {
                     return logic.apply(null);
@@ -45,7 +44,7 @@ public class StateFactory {
             }
 
             @Override
-            public ResumeBehavior resumeBehavior() {
+            public ActorResumeBehavior resumeBehavior() {
                 return resumeBehavior;
             }
 
@@ -56,21 +55,21 @@ public class StateFactory {
         };
     }
 
-    public MachineState create(String name, ResumeBehavior resumeBehavior, Supplier<StateTransition> logic) {
-        return new MachineState() {
+    public ActorStateInstance create(String name, ActorResumeBehavior actorResumeBehavior, Supplier<ActorStateTransition> logic) {
+        return new ActorStateInstance() {
             @Override
             public String name() {
                 return name;
             }
 
             @Override
-            public StateTransition next(String message) {
+            public ActorStateTransition next(String message) {
                 return logic.get();
             }
 
             @Override
-            public ResumeBehavior resumeBehavior() {
-                return resumeBehavior;
+            public ActorResumeBehavior resumeBehavior() {
+                return actorResumeBehavior;
             }
 
             @Override
@@ -80,62 +79,62 @@ public class StateFactory {
         };
     }
 
-    public StateTransition transition(String state) {
-        return StateTransition.to(state);
+    public ActorStateTransition transition(String state) {
+        return ActorStateTransition.to(state);
     }
 
-    public StateTransition transition(String state, Object message) {
+    public ActorStateTransition transition(String state, Object message) {
 
         if (null == message) {
-            return StateTransition.to(state);
+            return ActorStateTransition.to(state);
         }
 
-        return StateTransition.to(state, gson.toJson(message));
+        return ActorStateTransition.to(state, gson.toJson(message));
     }
 
-    public static class ErrorState implements MachineState {
+    static class ErrorStateInstance implements ActorStateInstance {
         @Override
         public String name() { return "ERROR"; }
 
         @Override
-        public StateTransition next(String message) {
+        public ActorStateTransition next(String message) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public ResumeBehavior resumeBehavior() { return ResumeBehavior.RETRY; }
+        public ActorResumeBehavior resumeBehavior() { return ActorResumeBehavior.RETRY; }
 
         @Override
         public boolean isFinal() { return true; }
     }
 
-    public static class FinalState implements MachineState {
+    static class FinalState implements ActorStateInstance {
         @Override
         public String name() { return "END"; }
 
         @Override
-        public StateTransition next(String message) {
+        public ActorStateTransition next(String message) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public ResumeBehavior resumeBehavior() { return ResumeBehavior.RETRY; }
+        public ActorResumeBehavior resumeBehavior() { return ActorResumeBehavior.RETRY; }
 
         @Override
         public boolean isFinal() { return true; }
     }
 
-    public static class ResumingState implements MachineState {
+    static class ResumingState implements ActorStateInstance {
         @Override
         public String name() { return "RESUMING"; }
 
         @Override
-        public StateTransition next(String message) {
+        public ActorStateTransition next(String message) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public ResumeBehavior resumeBehavior() { return ResumeBehavior.RETRY; }
+        public ActorResumeBehavior resumeBehavior() { return ActorResumeBehavior.RETRY; }
 
         @Override
         public boolean isFinal() { return false; }

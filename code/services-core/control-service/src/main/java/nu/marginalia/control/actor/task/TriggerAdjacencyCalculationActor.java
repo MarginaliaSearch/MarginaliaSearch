@@ -2,11 +2,11 @@ package nu.marginalia.control.actor.task;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.actor.ActorStateFactory;
 import nu.marginalia.control.process.ProcessService;
-import nu.marginalia.mqsm.StateFactory;
-import nu.marginalia.mqsm.graph.AbstractStateGraph;
-import nu.marginalia.mqsm.graph.GraphState;
-import nu.marginalia.mqsm.graph.ResumeBehavior;
+import nu.marginalia.actor.prototype.AbstractActorPrototype;
+import nu.marginalia.actor.state.ActorState;
+import nu.marginalia.actor.state.ActorResumeBehavior;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +15,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Singleton
-public class TriggerAdjacencyCalculationActor extends AbstractStateGraph {
+public class TriggerAdjacencyCalculationActor extends AbstractActorPrototype {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     // STATES
@@ -26,7 +26,7 @@ public class TriggerAdjacencyCalculationActor extends AbstractStateGraph {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Inject
-    public TriggerAdjacencyCalculationActor(StateFactory stateFactory,
+    public TriggerAdjacencyCalculationActor(ActorStateFactory stateFactory,
                                             ProcessService processService) {
         super(stateFactory);
         this.processService = processService;
@@ -37,8 +37,8 @@ public class TriggerAdjacencyCalculationActor extends AbstractStateGraph {
         return "Calculate website similarities";
     }
 
-    @GraphState(name = INITIAL, next = END,
-                resume = ResumeBehavior.ERROR,
+    @ActorState(name = INITIAL, next = END,
+                resume = ActorResumeBehavior.ERROR,
                 description = """
                         Spawns a WebsitesAdjacenciesCalculator process and waits for it to finish.
                         """

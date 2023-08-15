@@ -2,16 +2,16 @@ package nu.marginalia.control.actor.task;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.actor.ActorStateFactory;
 import nu.marginalia.control.svc.ControlFileStorageService;
 import nu.marginalia.control.process.ProcessService;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.db.storage.model.FileStorage;
 import nu.marginalia.db.storage.model.FileStorageBaseType;
 import nu.marginalia.db.storage.model.FileStorageType;
-import nu.marginalia.mqsm.StateFactory;
-import nu.marginalia.mqsm.graph.AbstractStateGraph;
-import nu.marginalia.mqsm.graph.GraphState;
-import nu.marginalia.mqsm.graph.ResumeBehavior;
+import nu.marginalia.actor.prototype.AbstractActorPrototype;
+import nu.marginalia.actor.state.ActorState;
+import nu.marginalia.actor.state.ActorResumeBehavior;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +24,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Singleton
-public class CrawlJobExtractorActor extends AbstractStateGraph {
+public class CrawlJobExtractorActor extends AbstractActorPrototype {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     // STATES
@@ -38,7 +38,7 @@ public class CrawlJobExtractorActor extends AbstractStateGraph {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Inject
-    public CrawlJobExtractorActor(StateFactory stateFactory,
+    public CrawlJobExtractorActor(ActorStateFactory stateFactory,
                                   ProcessService processService,
                                   FileStorageService fileStorageService,
                                   ControlFileStorageService controlFileStorageService
@@ -57,8 +57,8 @@ public class CrawlJobExtractorActor extends AbstractStateGraph {
         return "Run the crawler job extractor process";
     }
 
-    @GraphState(name = CREATE_FROM_LINK, next = END,
-            resume = ResumeBehavior.ERROR,
+    @ActorState(name = CREATE_FROM_LINK, next = END,
+            resume = ActorResumeBehavior.ERROR,
             description = """
                         Download a list of URLs as provided, 
                         and then spawn a CrawlJobExtractor process, 
@@ -92,8 +92,8 @@ public class CrawlJobExtractorActor extends AbstractStateGraph {
     }
 
 
-    @GraphState(name = CREATE_FROM_DB, next = END,
-                resume = ResumeBehavior.ERROR,
+    @ActorState(name = CREATE_FROM_DB, next = END,
+                resume = ActorResumeBehavior.ERROR,
                 description = """
                         Spawns a CrawlJobExtractor process that loads data from the link database, and wait for it to finish.
                         """

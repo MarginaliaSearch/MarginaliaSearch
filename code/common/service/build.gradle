@@ -12,7 +12,7 @@ java {
 dependencies {
     implementation project(':code:common:service-client')
     implementation project(':code:common:service-discovery')
-    implementation project(':code:common:message-queue')
+    implementation project(':code:libraries:message-queue')
     implementation project(':code:common:db')
 
     implementation libs.lombok

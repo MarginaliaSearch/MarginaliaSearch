@@ -6,13 +6,13 @@ import com.zaxxer.hikari.HikariDataSource;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.With;
+import nu.marginalia.actor.ActorStateFactory;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.db.storage.model.FileStorageId;
 import nu.marginalia.db.storage.model.FileStorageType;
-import nu.marginalia.mqsm.StateFactory;
-import nu.marginalia.mqsm.graph.AbstractStateGraph;
-import nu.marginalia.mqsm.graph.GraphState;
-import nu.marginalia.mqsm.graph.ResumeBehavior;
+import nu.marginalia.actor.prototype.AbstractActorPrototype;
+import nu.marginalia.actor.state.ActorState;
+import nu.marginalia.actor.state.ActorResumeBehavior;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +25,7 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.zip.GZIPOutputStream;
 
 @Singleton
-public class ExportDataActor extends AbstractStateGraph {
+public class ExportDataActor extends AbstractActorPrototype {
 
     private static final String blacklistFilename = "blacklist.csv.gz";
     private static final String domainsFilename = "domains.csv.gz";
@@ -54,7 +54,7 @@ public class ExportDataActor extends AbstractStateGraph {
     }
 
     @Inject
-    public ExportDataActor(StateFactory stateFactory,
+    public ExportDataActor(ActorStateFactory stateFactory,
                            FileStorageService storageService,
                            HikariDataSource dataSource)
     {
@@ -63,7 +63,7 @@ public class ExportDataActor extends AbstractStateGraph {
         this.dataSource = dataSource;
     }
 
-    @GraphState(name = INITIAL,
+    @ActorState(name = INITIAL,
                 next = EXPORT_BLACKLIST,
                 description = """
                     Find EXPORT storage area, then transition to EXPORT-BLACKLIST.
@@ -76,9 +76,9 @@ public class ExportDataActor extends AbstractStateGraph {
         return new Message().withStorageId(storage.id());
     }
 
-    @GraphState(name = EXPORT_BLACKLIST,
+    @ActorState(name = EXPORT_BLACKLIST,
                 next = EXPORT_DOMAINS,
-                resume = ResumeBehavior.ERROR,
+                resume = ActorResumeBehavior.ERROR,
                 description = """
                         Export the blacklist from the database to the EXPORT storage area.
                         """
@@ -112,10 +112,10 @@ public class ExportDataActor extends AbstractStateGraph {
         return message;
     }
 
-    @GraphState(
+    @ActorState(
             name = EXPORT_DOMAINS,
             next = EXPORT_LINK_GRAPH,
-            resume = ResumeBehavior.RETRY,
+            resume = ActorResumeBehavior.RETRY,
             description = """
                     Export known domains to the EXPORT storage area.
                     """
@@ -155,10 +155,10 @@ public class ExportDataActor extends AbstractStateGraph {
         return message;
     }
 
-    @GraphState(
+    @ActorState(
             name = EXPORT_LINK_GRAPH,
             next = END,
-            resume = ResumeBehavior.RETRY,
+            resume = ActorResumeBehavior.RETRY,
             description = """
                     Export known domains to the EXPORT storage area.
                     """

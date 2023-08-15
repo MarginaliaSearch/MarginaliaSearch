@@ -2,14 +2,14 @@ package nu.marginalia.control.actor.monitor;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.actor.ActorStateFactory;
 import nu.marginalia.control.process.ProcessService;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.persistence.MqPersistence;
-import nu.marginalia.mqsm.StateFactory;
-import nu.marginalia.mqsm.graph.AbstractStateGraph;
-import nu.marginalia.mqsm.graph.GraphState;
-import nu.marginalia.mqsm.graph.ResumeBehavior;
-import nu.marginalia.mqsm.graph.TerminalGraphState;
+import nu.marginalia.actor.prototype.AbstractActorPrototype;
+import nu.marginalia.actor.state.ActorState;
+import nu.marginalia.actor.state.ActorResumeBehavior;
+import nu.marginalia.actor.state.ActorTerminalState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Singleton
-public class AbstractProcessSpawnerActor extends AbstractStateGraph {
+public class AbstractProcessSpawnerActor extends AbstractActorPrototype {
 
     private final MqPersistence persistence;
     private final ProcessService processService;
@@ -45,7 +45,7 @@ public class AbstractProcessSpawnerActor extends AbstractStateGraph {
     }
 
     @Inject
-    public AbstractProcessSpawnerActor(StateFactory stateFactory,
+    public AbstractProcessSpawnerActor(ActorStateFactory stateFactory,
                                        MqPersistence persistence,
                                        ProcessService processService,
                                        String inboxName,
@@ -57,14 +57,14 @@ public class AbstractProcessSpawnerActor extends AbstractStateGraph {
         this.processId = processId;
     }
 
-    @GraphState(name = INITIAL, next = MONITOR)
+    @ActorState(name = INITIAL, next = MONITOR)
     public void init() {
 
     }
 
-    @GraphState(name = MONITOR,
+    @ActorState(name = MONITOR,
                 next = MONITOR,
-                resume = ResumeBehavior.RETRY,
+                resume = ActorResumeBehavior.RETRY,
                 transitions = {MONITOR, RUN},
                 description = """
                         Monitors the inbox of the process for messages.
@@ -95,8 +95,8 @@ public class AbstractProcessSpawnerActor extends AbstractStateGraph {
         }
     }
 
-    @GraphState(name = RUN,
-                resume = ResumeBehavior.RESTART,
+    @ActorState(name = RUN,
+                resume = ActorResumeBehavior.RESTART,
                 transitions = {MONITOR, ERROR, RUN, ABORTED},
                 description = """
                         Runs the process.
@@ -159,7 +159,7 @@ public class AbstractProcessSpawnerActor extends AbstractStateGraph {
         }
     }
 
-    @TerminalGraphState(name = ABORTED, description = "The process was manually aborted")
+    @ActorTerminalState(name = ABORTED, description = "The process was manually aborted")
     public void aborted() throws Exception {}
 
 

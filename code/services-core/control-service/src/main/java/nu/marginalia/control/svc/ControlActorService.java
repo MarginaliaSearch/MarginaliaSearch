@@ -11,8 +11,8 @@ import nu.marginalia.control.actor.Actor;
 import nu.marginalia.control.model.ActorRunState;
 import nu.marginalia.control.model.ActorStateGraph;
 import nu.marginalia.db.storage.model.FileStorageId;
-import nu.marginalia.mqsm.graph.GraphState;
-import nu.marginalia.mqsm.state.MachineState;
+import nu.marginalia.actor.state.ActorState;
+import nu.marginalia.actor.state.ActorStateInstance;
 import spark.Request;
 import spark.Response;
 
@@ -105,7 +105,7 @@ public class ControlActorService {
 
             final var stateGraph = controlActors.getActorDefinition(e.getKey());
 
-            final MachineState state = e.getValue();
+            final ActorStateInstance state = e.getValue();
             final String actorDescription = stateGraph.describe();
 
             final String machineName = e.getKey().name();
@@ -114,7 +114,7 @@ public class ControlActorService {
             final String stateDescription = actorStateDescriptions.computeIfAbsent(
                     (machineName + "." + stateName),
                     k -> Optional.ofNullable(stateGraph.declaredStates().get(stateName))
-                            .map(GraphState::description)
+                            .map(ActorState::description)
                             .orElse("Description missing for " + stateName)
             );
 

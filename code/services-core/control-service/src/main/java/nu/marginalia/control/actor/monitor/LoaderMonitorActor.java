@@ -2,17 +2,17 @@ package nu.marginalia.control.actor.monitor;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.actor.ActorStateFactory;
 import nu.marginalia.control.process.ProcessService;
 import nu.marginalia.mqapi.ProcessInboxNames;
 import nu.marginalia.mq.persistence.MqPersistence;
-import nu.marginalia.mqsm.StateFactory;
 
 @Singleton
 public class LoaderMonitorActor extends AbstractProcessSpawnerActor {
 
 
     @Inject
-    public LoaderMonitorActor(StateFactory stateFactory,
+    public LoaderMonitorActor(ActorStateFactory stateFactory,
                               MqPersistence persistence,
                               ProcessService processService) {
 

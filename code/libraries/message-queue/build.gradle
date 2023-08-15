@@ -10,10 +10,6 @@ java {
 }
 
 dependencies {
-    implementation project(':code:common:service-client')
-    implementation project(':code:common:service-discovery')
-    implementation project(':code:common:db')
-
     implementation libs.lombok
     annotationProcessor libs.lombok
 
@@ -22,7 +18,6 @@ dependencies {
     implementation libs.gson
     implementation libs.rxjava
 
-    implementation libs.bundles.prometheus
     implementation libs.bundles.slf4j
     implementation libs.bucket4j
 
@@ -32,6 +27,7 @@ dependencies {
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
+    testImplementation project(':code:common:db')
 
     testImplementation platform('org.testcontainers:testcontainers-bom:1.17.4')
     testImplementation 'org.testcontainers:mariadb:1.17.4'

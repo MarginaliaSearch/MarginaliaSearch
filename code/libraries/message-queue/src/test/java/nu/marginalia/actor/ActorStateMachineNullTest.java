@@ -1,13 +1,13 @@
-package nu.marginalia.mqsm;
+package nu.marginalia.actor;
 
 import com.google.gson.GsonBuilder;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.actor.prototype.AbstractActorPrototype;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqTestUtil;
 import nu.marginalia.mq.persistence.MqPersistence;
-import nu.marginalia.mqsm.graph.AbstractStateGraph;
-import nu.marginalia.mqsm.graph.GraphState;
+import nu.marginalia.actor.state.ActorState;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.parallel.Execution;
 import org.testcontainers.containers.MariaDBContainer;
@@ -58,15 +58,18 @@ public class ActorStateMachineNullTest {
         dataSource.close();
     }
 
-    public static class TestGraph extends AbstractStateGraph {
-        public TestGraph(StateFactory stateFactory) {
+    public static class TestPrototypeActor extends AbstractActorPrototype {
+        public TestPrototypeActor(ActorStateFactory stateFactory) {
             super(stateFactory);
         }
 
-        @GraphState(name = "INITIAL", next = "GREET")
+        public String describe() {
+            return "Test graph";
+        }
+        @ActorState(name = "INITIAL", next = "GREET")
         public void initial() {}
 
-        @GraphState(name = "GREET", next = "END")
+        @ActorState(name = "GREET", next = "END")
         public void greet(String message) {
             if (null == message) {
                 System.out.println("Hello, null!");
@@ -79,8 +82,8 @@ public class ActorStateMachineNullTest {
 
     @Test
     public void testStateGraphNullSerialization() throws Exception {
-        var stateFactory = new StateFactory(new GsonBuilder().create());
-        var graph = new TestGraph(stateFactory);
+        var stateFactory = new ActorStateFactory(new GsonBuilder().create());
+        var graph = new TestPrototypeActor(stateFactory);
 
 
         var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), graph);

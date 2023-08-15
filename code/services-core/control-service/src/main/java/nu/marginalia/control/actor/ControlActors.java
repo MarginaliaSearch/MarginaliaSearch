@@ -10,9 +10,9 @@ import nu.marginalia.control.actor.monitor.ConverterMonitorActor;
 import nu.marginalia.control.actor.monitor.LoaderMonitorActor;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.mq.MessageQueueFactory;
-import nu.marginalia.mqsm.ActorStateMachine;
-import nu.marginalia.mqsm.graph.AbstractStateGraph;
-import nu.marginalia.mqsm.state.MachineState;
+import nu.marginalia.actor.ActorStateMachine;
+import nu.marginalia.actor.prototype.AbstractActorPrototype;
+import nu.marginalia.actor.state.ActorStateInstance;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.server.BaseServiceParams;
 
@@ -28,7 +28,7 @@ public class ControlActors {
     private final Gson gson;
     private final MessageQueueFactory messageQueueFactory;
     public Map<Actor, ActorStateMachine> stateMachines = new HashMap<>();
-    public Map<Actor, AbstractStateGraph> actorDefinitions = new HashMap<>();
+    public Map<Actor, AbstractActorPrototype> actorDefinitions = new HashMap<>();
 
     @Inject
     public ControlActors(MessageQueueFactory messageQueueFactory,
@@ -71,7 +71,7 @@ public class ControlActors {
         register(Actor.TRUNCATE_LINK_DATABASE, truncateLinkDatabase);
     }
 
-    private void register(Actor process, AbstractStateGraph graph) {
+    private void register(Actor process, AbstractActorPrototype graph) {
         var sm = new ActorStateMachine(messageQueueFactory, process.id(), UUID.randomUUID(), graph);
         sm.listen((function, param) -> logStateChange(process, function));
 
@@ -114,7 +114,7 @@ public class ControlActors {
         stateMachines.get(process).abortExecution();
     }
 
-    public Map<Actor, MachineState> getActorStates() {
+    public Map<Actor, ActorStateInstance> getActorStates() {
         return stateMachines.entrySet().stream().collect(
                 Collectors.toMap(
                         Map.Entry::getKey, e -> e.getValue().getState())
@@ -125,7 +125,7 @@ public class ControlActors {
         return actorDefinitions.get(actor).isDirectlyInitializable();
     }
 
-    public AbstractStateGraph getActorDefinition(Actor actor) {
+    public AbstractActorPrototype getActorDefinition(Actor actor) {
         return actorDefinitions.get(actor);
     }
 

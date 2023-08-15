@@ -1,16 +1,16 @@
-package nu.marginalia.mqsm;
+package nu.marginalia.actor;
 
 import com.google.gson.GsonBuilder;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.actor.prototype.AbstractActorPrototype;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessageRow;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.MqTestUtil;
 import nu.marginalia.mq.persistence.MqPersistence;
-import nu.marginalia.mqsm.graph.GraphState;
-import nu.marginalia.mqsm.graph.AbstractStateGraph;
-import nu.marginalia.mqsm.graph.ResumeBehavior;
+import nu.marginalia.actor.state.ActorState;
+import nu.marginalia.actor.state.ActorResumeBehavior;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.parallel.Execution;
 import org.testcontainers.containers.MariaDBContainer;
@@ -62,31 +62,34 @@ public class ActorStateMachineResumeTest {
         dataSource.close();
     }
 
-    public static class ResumeTrialsGraph extends AbstractStateGraph {
+    public static class ResumeTrialsPrototypeActor extends AbstractActorPrototype {
 
-        public ResumeTrialsGraph(StateFactory stateFactory) {
+        public ResumeTrialsPrototypeActor(ActorStateFactory stateFactory) {
             super(stateFactory);
         }
 
-        @GraphState(name = "INITIAL", next = "RESUMABLE")
+        public String describe() {
+            return "Test graph";
+        }
+        @ActorState(name = "INITIAL", next = "RESUMABLE")
         public void initial() {}
-        @GraphState(name = "RESUMABLE", next = "NON-RESUMABLE", resume = ResumeBehavior.RETRY)
+        @ActorState(name = "RESUMABLE", next = "NON-RESUMABLE", resume = ActorResumeBehavior.RETRY)
         public void resumable() {}
-        @GraphState(name = "NON-RESUMABLE", next = "OK", resume = ResumeBehavior.ERROR)
+        @ActorState(name = "NON-RESUMABLE", next = "OK", resume = ActorResumeBehavior.ERROR)
         public void nonResumable() {}
 
-        @GraphState(name = "OK", next = "END")
+        @ActorState(name = "OK", next = "END")
         public void ok() {}
 
     }
 
     @Test
     public void smResumeResumableFromNew() throws Exception {
-        var stateFactory = new StateFactory(new GsonBuilder().create());
+        var stateFactory = new ActorStateFactory(new GsonBuilder().create());
 
 
         persistence.sendNewMessage(inboxId,  null, -1L, "RESUMABLE", "", null);
-        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
+        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsPrototypeActor(stateFactory));
 
         sm.join(2, TimeUnit.SECONDS);
         sm.stop();
@@ -102,12 +105,12 @@ public class ActorStateMachineResumeTest {
 
     @Test
     public void smResumeFromAck() throws Exception {
-        var stateFactory = new StateFactory(new GsonBuilder().create());
+        var stateFactory = new ActorStateFactory(new GsonBuilder().create());
 
         long id = persistence.sendNewMessage(inboxId,  null, -1L, "RESUMABLE", "", null);
         persistence.updateMessageState(id, MqMessageState.ACK);
 
-        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
+        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsPrototypeActor(stateFactory));
 
         sm.join(4, TimeUnit.SECONDS);
         sm.stop();
@@ -124,12 +127,12 @@ public class ActorStateMachineResumeTest {
 
     @Test
     public void smResumeNonResumableFromNew() throws Exception {
-        var stateFactory = new StateFactory(new GsonBuilder().create());
+        var stateFactory = new ActorStateFactory(new GsonBuilder().create());
 
 
         persistence.sendNewMessage(inboxId,  null, -1L, "NON-RESUMABLE", "", null);
 
-        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
+        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsPrototypeActor(stateFactory));
 
         sm.join(2, TimeUnit.SECONDS);
         sm.stop();
@@ -145,13 +148,13 @@ public class ActorStateMachineResumeTest {
 
     @Test
     public void smResumeNonResumableFromAck() throws Exception {
-        var stateFactory = new StateFactory(new GsonBuilder().create());
+        var stateFactory = new ActorStateFactory(new GsonBuilder().create());
 
 
         long id = persistence.sendNewMessage(inboxId,  null, null, "NON-RESUMABLE", "", null);
         persistence.updateMessageState(id, MqMessageState.ACK);
 
-        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
+        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsPrototypeActor(stateFactory));
 
         sm.join(2, TimeUnit.SECONDS);
         sm.stop();
@@ -167,10 +170,10 @@ public class ActorStateMachineResumeTest {
 
     @Test
     public void smResumeEmptyQueue() throws Exception {
-        var stateFactory = new StateFactory(new GsonBuilder().create());
+        var stateFactory = new ActorStateFactory(new GsonBuilder().create());
 
 
-        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsGraph(stateFactory));
+        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsPrototypeActor(stateFactory));
 
         sm.join(2, TimeUnit.SECONDS);
         sm.stop();

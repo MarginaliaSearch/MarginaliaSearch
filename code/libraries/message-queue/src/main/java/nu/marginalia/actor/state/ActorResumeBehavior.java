@@ -1,6 +1,6 @@
-package nu.marginalia.mqsm.graph;
+package nu.marginalia.actor.state;
 
-public enum ResumeBehavior {
+public enum ActorResumeBehavior {
     /** Retry the state on resume */
     RETRY,
     /** Jump to ERROR on resume if the message has been acknowledged */

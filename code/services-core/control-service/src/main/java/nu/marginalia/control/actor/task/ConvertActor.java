@@ -16,10 +16,10 @@ import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.mqapi.converting.ConvertAction;
 import nu.marginalia.mqapi.converting.ConvertRequest;
-import nu.marginalia.mqsm.StateFactory;
-import nu.marginalia.mqsm.graph.AbstractStateGraph;
-import nu.marginalia.mqsm.graph.GraphState;
-import nu.marginalia.mqsm.graph.ResumeBehavior;
+import nu.marginalia.actor.ActorStateFactory;
+import nu.marginalia.actor.prototype.AbstractActorPrototype;
+import nu.marginalia.actor.state.ActorState;
+import nu.marginalia.actor.state.ActorResumeBehavior;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 @Singleton
-public class ConvertActor extends AbstractStateGraph {
+public class ConvertActor extends AbstractActorPrototype {
 
     // STATES
 
@@ -59,7 +59,7 @@ public class ConvertActor extends AbstractStateGraph {
     }
 
     @Inject
-    public ConvertActor(StateFactory stateFactory,
+    public ConvertActor(ActorStateFactory stateFactory,
                         ActorProcessWatcher processWatcher,
                         ProcessOutboxes processOutboxes,
                         FileStorageService storageService,
@@ -73,15 +73,15 @@ public class ConvertActor extends AbstractStateGraph {
         this.gson = gson;
     }
 
-    @GraphState(name= INITIAL, resume = ResumeBehavior.ERROR,
+    @ActorState(name= INITIAL, resume = ActorResumeBehavior.ERROR,
                 description = "Pro forma initial state")
     public void initial(Integer unused) {
         error("This actor does not support the initial state");
     }
 
-    @GraphState(name = CONVERT,
+    @ActorState(name = CONVERT,
                 next = CONVERT_WAIT,
-                resume = ResumeBehavior.ERROR,
+                resume = ActorResumeBehavior.ERROR,
                 description = """
                         Allocate a storage area for the processed data,
                         then send a convert request to the converter and transition to RECONVERT_WAIT.
@@ -107,9 +107,9 @@ public class ConvertActor extends AbstractStateGraph {
         return mqConverterOutbox.sendAsync(ConvertRequest.class.getSimpleName(), gson.toJson(request));
     }
 
-    @GraphState(name = CONVERT_ENCYCLOPEDIA,
+    @ActorState(name = CONVERT_ENCYCLOPEDIA,
             next = CONVERT_WAIT,
-            resume = ResumeBehavior.ERROR,
+            resume = ActorResumeBehavior.ERROR,
             description = """
                         Allocate a storage area for the processed data,
                         then send a convert request to the converter and transition to RECONVERT_WAIT.
@@ -138,9 +138,9 @@ public class ConvertActor extends AbstractStateGraph {
         return mqConverterOutbox.sendAsync(ConvertRequest.class.getSimpleName(), gson.toJson(request));
     }
 
-    @GraphState(name = CONVERT_STACKEXCHANGE,
+    @ActorState(name = CONVERT_STACKEXCHANGE,
             next = CONVERT_WAIT,
-            resume = ResumeBehavior.ERROR,
+            resume = ActorResumeBehavior.ERROR,
             description = """
                         Allocate a storage area for the processed data,
                         then send a convert request to the converter and transition to RECONVERT_WAIT.
@@ -169,10 +169,10 @@ public class ConvertActor extends AbstractStateGraph {
         return mqConverterOutbox.sendAsync(ConvertRequest.class.getSimpleName(), gson.toJson(request));
     }
 
-    @GraphState(
+    @ActorState(
             name = CONVERT_WAIT,
             next = END,
-            resume = ResumeBehavior.RETRY,
+            resume = ActorResumeBehavior.RETRY,
             description = """
                     Wait for the converter to finish processing the data.
                     """

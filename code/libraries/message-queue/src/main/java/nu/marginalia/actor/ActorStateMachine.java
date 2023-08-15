@@ -1,5 +1,6 @@
-package nu.marginalia.mqsm;
+package nu.marginalia.actor;
 
+import nu.marginalia.actor.prototype.ActorPrototype;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.MqMessageState;
@@ -7,9 +8,8 @@ import nu.marginalia.mq.inbox.MqInboxResponse;
 import nu.marginalia.mq.inbox.MqSubscription;
 import nu.marginalia.mq.inbox.MqSynchronousInbox;
 import nu.marginalia.mq.outbox.MqOutbox;
-import nu.marginalia.mqsm.graph.ResumeBehavior;
-import nu.marginalia.mqsm.graph.AbstractStateGraph;
-import nu.marginalia.mqsm.state.*;
+import nu.marginalia.actor.state.ActorResumeBehavior;
+import nu.marginalia.actor.state.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,23 +30,23 @@ public class ActorStateMachine {
     private final String queueName;
 
 
-    private volatile MachineState state;
+    private volatile ActorStateInstance state;
     private volatile ExpectedMessage expectedMessage = ExpectedMessage.anyUnrelated();
 
 
-    private final MachineState errorState = new StateFactory.ErrorState();
-    private final MachineState finalState = new StateFactory.FinalState();
-    private final MachineState resumingState = new StateFactory.ResumingState();
+    private final ActorStateInstance errorState = new ActorStateFactory.ErrorStateInstance();
+    private final ActorStateInstance finalState = new ActorStateFactory.FinalState();
+    private final ActorStateInstance resumingState = new ActorStateFactory.ResumingState();
 
     private final List<BiConsumer<String, String>> stateChangeListeners = new ArrayList<>();
-    private final Map<String, MachineState> allStates = new HashMap<>();
+    private final Map<String, ActorStateInstance> allStates = new HashMap<>();
 
     private final boolean isDirectlyInitializable;
 
     public ActorStateMachine(MessageQueueFactory messageQueueFactory,
                              String queueName,
                              UUID instanceUUID,
-                             AbstractStateGraph stateGraph)
+                             ActorPrototype statePrototype)
     {
         this.queueName = queueName;
 
@@ -56,10 +56,10 @@ public class ActorStateMachine {
         smInbox.subscribe(new StateEventSubscription());
 
         registerStates(List.of(errorState, finalState, resumingState));
-        registerStates(stateGraph);
-        isDirectlyInitializable = stateGraph.isDirectlyInitializable();
+        registerStates(statePrototype);
+        isDirectlyInitializable = statePrototype.isDirectlyInitializable();
 
-        stateGraph.declaredStates().forEach((name, declaredState) -> {
+        statePrototype.declaredStates().forEach((name, declaredState) -> {
             if (!allStates.containsKey(name)) {
                 throw new IllegalArgumentException("State " + name + " is not defined in the state graph");
             }
@@ -84,14 +84,14 @@ public class ActorStateMachine {
     }
 
     /** Register the state graph */
-    void registerStates(List<MachineState> states) {
+    void registerStates(List<ActorStateInstance> states) {
         for (var state : states) {
             allStates.put(state.name(), state);
         }
     }
 
     /** Register the state graph */
-    void registerStates(AbstractStateGraph states) {
+    void registerStates(ActorPrototype states) {
         registerStates(states.asStateList());
     }
 
@@ -128,7 +128,7 @@ public class ActorStateMachine {
 
     /** Initialize the state machine. */
     public void init() throws Exception {
-        var transition = StateTransition.to("INITIAL");
+        var transition = ActorStateTransition.to("INITIAL");
 
         synchronized (this) {
             this.state = allStates.get(transition.state());
@@ -140,7 +140,7 @@ public class ActorStateMachine {
 
     /** Initialize the state machine. */
     public void initFrom(String firstState) throws Exception {
-        var transition = StateTransition.to(firstState);
+        var transition = ActorStateTransition.to(firstState);
 
         synchronized (this) {
             this.state = allStates.get(transition.state());
@@ -152,7 +152,7 @@ public class ActorStateMachine {
 
     /** Initialize the state machine. */
     public void init(String jsonEncodedArgument) throws Exception {
-        var transition = StateTransition.to("INITIAL", jsonEncodedArgument);
+        var transition = ActorStateTransition.to("INITIAL", jsonEncodedArgument);
 
         synchronized (this) {
             this.state = allStates.get(transition.state());
@@ -164,7 +164,7 @@ public class ActorStateMachine {
 
     /** Initialize the state machine. */
     public void initFrom(String state, String jsonEncodedArgument) throws Exception {
-        var transition = StateTransition.to(state, jsonEncodedArgument);
+        var transition = ActorStateTransition.to(state, jsonEncodedArgument);
 
         synchronized (this) {
             this.state = allStates.get(transition.state());
@@ -212,15 +212,15 @@ public class ActorStateMachine {
         }
     }
 
-    private void resumeFromAck(MachineState resumeState,
+    private void resumeFromAck(ActorStateInstance resumeState,
                                MqMessage message)
     {
         try {
-            if (resumeState.resumeBehavior().equals(ResumeBehavior.ERROR)) {
+            if (resumeState.resumeBehavior().equals(ActorResumeBehavior.ERROR)) {
                 // The message is acknowledged, but the state does not support resuming
                 smOutbox.sendNotice(expectedMessage.id, "ERROR", "Illegal resumption from ACK'ed state " + message.function());
             }
-            else if (resumeState.resumeBehavior().equals(ResumeBehavior.RESTART)) {
+            else if (resumeState.resumeBehavior().equals(ActorResumeBehavior.RESTART)) {
                 this.state = resumeState;
 
                 // The message is already acknowledged, we flag it as dead and then send an identical message
@@ -308,7 +308,7 @@ public class ActorStateMachine {
         }
     }
 
-    public MachineState getState() {
+    public ActorStateInstance getState() {
         return state;
     }
 
@@ -371,38 +371,3 @@ public class ActorStateMachine {
     }
 }
 
-/** ExpectedMessage guards against spurious state changes being triggered by old messages in the queue
- *
- * It contains the message id of the last message that was processed, and the messages sent by the state machine to
- * itself via the message queue all have relatedId set to expectedMessageId.  If the state machine is unitialized or
- * in a terminal state, it will accept messages with relatedIds that are equal to -1.
- * */
-class ExpectedMessage {
-    public final long id;
-    public ExpectedMessage(long id) {
-        this.id = id;
-    }
-
-    public static ExpectedMessage expectThis(MqMessage message) {
-        return new ExpectedMessage(message.relatedId());
-    }
-
-    public static ExpectedMessage responseTo(MqMessage message) {
-        return new ExpectedMessage(message.msgId());
-    }
-
-    public static ExpectedMessage anyUnrelated() {
-        return new ExpectedMessage(-1);
-    }
-
-    public static ExpectedMessage expectId(long id) {
-        return new ExpectedMessage(id);
-    }
-
-    public boolean isExpected(MqMessage message) {
-        if (id < 0)
-            return true;
-
-        return id == message.relatedId();
-    }
-}

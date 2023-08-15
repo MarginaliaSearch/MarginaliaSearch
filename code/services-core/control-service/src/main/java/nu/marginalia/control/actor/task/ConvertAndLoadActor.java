@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.With;
+import nu.marginalia.actor.ActorStateFactory;
 import nu.marginalia.control.process.ProcessOutboxes;
 import nu.marginalia.control.process.ProcessService;
 import nu.marginalia.index.client.IndexClient;
@@ -19,10 +20,9 @@ import nu.marginalia.db.storage.model.FileStorageId;
 import nu.marginalia.db.storage.model.FileStorageType;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.outbox.MqOutbox;
-import nu.marginalia.mqsm.StateFactory;
-import nu.marginalia.mqsm.graph.AbstractStateGraph;
-import nu.marginalia.mqsm.graph.GraphState;
-import nu.marginalia.mqsm.graph.ResumeBehavior;
+import nu.marginalia.actor.prototype.AbstractActorPrototype;
+import nu.marginalia.actor.state.ActorState;
+import nu.marginalia.actor.state.ActorResumeBehavior;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
 @Singleton
-public class ConvertAndLoadActor extends AbstractStateGraph {
+public class ConvertAndLoadActor extends AbstractActorPrototype {
 
     // STATES
 
@@ -69,7 +69,7 @@ public class ConvertAndLoadActor extends AbstractStateGraph {
     }
 
     @Inject
-    public ConvertAndLoadActor(StateFactory stateFactory,
+    public ConvertAndLoadActor(ActorStateFactory stateFactory,
                                ActorProcessWatcher processWatcher,
                                ProcessOutboxes processOutboxes,
                                FileStorageService storageService,
@@ -86,7 +86,7 @@ public class ConvertAndLoadActor extends AbstractStateGraph {
         this.gson = gson;
     }
 
-    @GraphState(name = INITIAL,
+    @ActorState(name = INITIAL,
                 next = RECONVERT,
                 description = """
                     Validate the input and transition to RECONVERT
@@ -104,9 +104,9 @@ public class ConvertAndLoadActor extends AbstractStateGraph {
         return new Message().withCrawlStorageId(crawlStorageId);
     }
 
-    @GraphState(name = RECONVERT,
+    @ActorState(name = RECONVERT,
                 next = RECONVERT_WAIT,
-                resume = ResumeBehavior.ERROR,
+                resume = ActorResumeBehavior.ERROR,
                 description = """
                         Allocate a storage area for the processed data,
                         then send a convert request to the converter and transition to RECONVERT_WAIT.
@@ -135,10 +135,10 @@ public class ConvertAndLoadActor extends AbstractStateGraph {
                 .withConverterMsgId(id);
     }
 
-    @GraphState(
+    @ActorState(
             name = RECONVERT_WAIT,
             next = LOAD,
-            resume = ResumeBehavior.RETRY,
+            resume = ActorResumeBehavior.RETRY,
             description = """
                     Wait for the converter to finish processing the data.
                     """
@@ -153,10 +153,10 @@ public class ConvertAndLoadActor extends AbstractStateGraph {
     }
 
 
-    @GraphState(
+    @ActorState(
             name = LOAD,
             next = LOAD_WAIT,
-            resume = ResumeBehavior.ERROR,
+            resume = ActorResumeBehavior.ERROR,
             description = """
                     Send a load request to the loader and transition to LOAD_WAIT.
                     """)
@@ -169,10 +169,10 @@ public class ConvertAndLoadActor extends AbstractStateGraph {
 
     }
 
-    @GraphState(
+    @ActorState(
             name = LOAD_WAIT,
             next = SWAP_LEXICON,
-            resume = ResumeBehavior.RETRY,
+            resume = ActorResumeBehavior.RETRY,
             description = """
                     Wait for the loader to finish loading the data.
                     """
@@ -186,10 +186,10 @@ public class ConvertAndLoadActor extends AbstractStateGraph {
 
 
 
-    @GraphState(
+    @ActorState(
             name = SWAP_LEXICON,
             next = REPARTITION,
-            resume = ResumeBehavior.RETRY,
+            resume = ActorResumeBehavior.RETRY,
             description = """
                     Move the lexicon from the LEXICON_STAGING area to the LEXICON_LIVE area,
                     then instruct the index-service to reload the lexicon.
@@ -208,7 +208,7 @@ public class ConvertAndLoadActor extends AbstractStateGraph {
     }
 
 
-    @GraphState(
+    @ActorState(
             name = REPARTITION,
             next = REPARTITION_WAIT,
             description = """
@@ -219,10 +219,10 @@ public class ConvertAndLoadActor extends AbstractStateGraph {
         return indexOutbox.sendAsync(IndexMqEndpoints.INDEX_REPARTITION, "");
     }
 
-    @GraphState(
+    @ActorState(
             name = REPARTITION_WAIT,
             next = REINDEX,
-            resume = ResumeBehavior.RETRY,
+            resume = ActorResumeBehavior.RETRY,
             description = """
                     Wait for the index-service to finish repartitioning the index.
                     """
@@ -235,7 +235,7 @@ public class ConvertAndLoadActor extends AbstractStateGraph {
         }
     }
 
-    @GraphState(
+    @ActorState(
             name = REINDEX,
             next = REINDEX_WAIT,
             description = """
@@ -246,10 +246,10 @@ public class ConvertAndLoadActor extends AbstractStateGraph {
         return indexOutbox.sendAsync(IndexMqEndpoints.INDEX_REINDEX, "");
     }
 
-    @GraphState(
+    @ActorState(
             name = REINDEX_WAIT,
             next = END,
-            resume = ResumeBehavior.RETRY,
+            resume = ActorResumeBehavior.RETRY,
             description = """
                     Wait for the index-service to finish reindexing the data.
                     """

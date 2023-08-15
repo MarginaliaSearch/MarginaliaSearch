@@ -1,27 +1,26 @@
 package nu.marginalia.control.model;
 
-import nu.marginalia.mqsm.graph.AbstractStateGraph;
-import nu.marginalia.mqsm.graph.GraphState;
-import nu.marginalia.mqsm.state.MachineState;
+import nu.marginalia.actor.prototype.AbstractActorPrototype;
+import nu.marginalia.actor.state.ActorState;
+import nu.marginalia.actor.state.ActorStateInstance;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
-public record ActorStateGraph(String description, List<ActorState> states) {
+public record ActorStateGraph(String description, List<nu.marginalia.control.model.ActorState> states) {
 
-    public ActorStateGraph(AbstractStateGraph graph, MachineState currentState) {
+    public ActorStateGraph(AbstractActorPrototype graph, ActorStateInstance currentState) {
         this(graph.describe(), getStateList(graph, currentState));
     }
 
-    private static List<ActorState> getStateList(
-            AbstractStateGraph graph,
-            MachineState currentState)
+    private static List<nu.marginalia.control.model.ActorState> getStateList(
+            AbstractActorPrototype graph,
+            ActorStateInstance currentState)
     {
-        Map<String, GraphState> declaredStates = graph.declaredStates();
-        Set<GraphState> seenStates = new HashSet<>(declaredStates.size());
-        LinkedList<GraphState> edge = new LinkedList<>();
+        Map<String, ActorState> declaredStates = graph.declaredStates();
+        Set<ActorState> seenStates = new HashSet<>(declaredStates.size());
+        LinkedList<ActorState> edge = new LinkedList<>();
 
-        List<ActorState> statesList = new ArrayList<>(declaredStates.size());
+        List<nu.marginalia.control.model.ActorState> statesList = new ArrayList<>(declaredStates.size());
 
         edge.add(declaredStates.get("INITIAL"));
 
@@ -30,7 +29,7 @@ public record ActorStateGraph(String description, List<ActorState> states) {
             if (first == null || !seenStates.add(first)) {
                 continue;
             }
-            statesList.add(new ActorState(first, currentState.name().equals(first.name())));
+            statesList.add(new nu.marginalia.control.model.ActorState(first, currentState.name().equals(first.name())));
 
             edge.add(declaredStates.get(first.next()));
 
@@ -40,10 +39,10 @@ public record ActorStateGraph(String description, List<ActorState> states) {
         }
 
         if (!declaredStates.containsKey("ERROR")) {
-            statesList.add(new ActorState("ERROR", currentState.name().equals("ERROR"), List.of(), "Terminal error state"));
+            statesList.add(new nu.marginalia.control.model.ActorState("ERROR", currentState.name().equals("ERROR"), List.of(), "Terminal error state"));
         }
         if (!declaredStates.containsKey("END")) {
-            statesList.add(new ActorState("END", currentState.name().equals("END"), List.of(), "The machine terminated successfully"));
+            statesList.add(new nu.marginalia.control.model.ActorState("END", currentState.name().equals("END"), List.of(), "The machine terminated successfully"));
         }
 
         return statesList;
