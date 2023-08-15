@@ -20,4 +20,4 @@ requests can be sent.
 [process-mqapi](process-mqapi/) defines requests and inboxes for the message queue based API used 
 for interacting with processes.   
 
-See [common/message-queue](../common/message-queue) and [services-satellite/control-service](../services-satellite/control-service). 
+See [libraries/message-queue](../libraries/message-queue) and [services-satellite/control-service](../services-satellite/control-service). 

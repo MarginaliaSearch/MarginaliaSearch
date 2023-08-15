@@ -15,4 +15,4 @@ monitoring their message queue inboxes.
 ## See Also
 
 * [processes](../../processes)
-* [common/message-queue](../../common/message-queue) - The Message Queue and MQFSM abstractions
+* [libraries/message-queue](../../libraries/message-queue) - The Message Queue and Actor abstractions
