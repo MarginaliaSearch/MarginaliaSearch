@@ -2,6 +2,7 @@ package nu.marginalia.actor;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import com.google.inject.Inject;
 import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStateInstance;
 import nu.marginalia.actor.state.ActorStateTransition;
@@ -15,6 +16,7 @@ import java.util.function.Supplier;
 public class ActorStateFactory {
     private final Gson gson;
 
+    @Inject
     public ActorStateFactory(Gson gson) {
         this.gson = gson;
     }
