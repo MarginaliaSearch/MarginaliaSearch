@@ -213,7 +213,7 @@ public class CrawlerMain {
                 var dataStream = reader.createDataStream(crawlDataDir, specification);
                 return new CrawlDataReference(dataStream);
             } catch (IOException e) {
-                logger.warn("Failed to read previous crawl data for {}", specification.domain);
+                logger.debug("Failed to read previous crawl data for {}", specification.domain);
                 return new CrawlDataReference();
             }
         }
