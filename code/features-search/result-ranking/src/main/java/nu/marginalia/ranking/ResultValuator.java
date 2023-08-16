@@ -3,6 +3,7 @@ package nu.marginalia.ranking;
 import nu.marginalia.index.client.model.results.ResultRankingContext;
 import nu.marginalia.index.client.model.results.ResultRankingParameters;
 import nu.marginalia.index.client.model.results.SearchResultKeywordScore;
+import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.ranking.factors.*;
@@ -53,6 +54,7 @@ public class ResultValuator {
         int rank = DocumentMetadata.decodeRank(documentMetadata);
         int asl = DocumentMetadata.decodeAvgSentenceLength(documentMetadata);
         int quality = DocumentMetadata.decodeQuality(documentMetadata);
+        int urlTypePenalty = getUrlTypePenalty(documentMetadata);
         int topology = DocumentMetadata.decodeTopology(documentMetadata);
         int year = DocumentMetadata.decodeYear(documentMetadata);
 
@@ -78,6 +80,7 @@ public class ResultValuator {
                            + rankingBonus
                            + topologyBonus
                            + temporalBias
+                           + urlTypePenalty
                            + priorityTermBonus.calculate(scores);
 
         for (int set = 0; set <= sets; set++) {
@@ -97,6 +100,18 @@ public class ResultValuator {
         }
 
         return bestScore;
+    }
+
+    private int getUrlTypePenalty(long documentMetadata) {
+
+        // Long urls-that-look-like-this tend to be poor search results
+        if (DocumentMetadata.hasFlags(documentMetadata,
+                HtmlFeature.LONG_URL.getFeatureBit()
+                      | HtmlFeature.KEBAB_CASE_URL.getFeatureBit())) {
+            return 2;
+        }
+
+        return 0;
     }
 
     private long documentMetadata(List<SearchResultKeywordScore> rawScores) {

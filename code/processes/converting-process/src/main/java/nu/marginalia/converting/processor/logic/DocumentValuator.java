@@ -4,6 +4,7 @@ import crawlercommons.utils.Strings;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.converting.model.HtmlStandard;
 import nu.marginalia.converting.model.DisqualifiedException;
+import nu.marginalia.model.crawl.HtmlFeature;
 import org.jetbrains.annotations.NotNull;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -11,12 +12,15 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.NodeVisitor;
 
+import java.util.Set;
+
 public class DocumentValuator {
 
     public double getQuality(CrawledDocument crawledDocument,
                              HtmlStandard htmlStandard,
                              Document parsedDocument,
                              int textLength) throws DisqualifiedException {
+
         double scriptPenalty = getScriptPenalty(parsedDocument);
 
         int rawLength = crawledDocument.documentBody.length();
@@ -44,6 +48,55 @@ public class DocumentValuator {
         }
 
         return value;
+    }
+
+    public double adjustQuality(double quality, Set<HtmlFeature> features) {
+        double adjustment = 0;
+
+        if (features.contains(HtmlFeature.TRACKING_ADTECH)) {
+            adjustment -= 2.5;
+        }
+        if (features.contains(HtmlFeature.TRACKING)) {
+            adjustment -= 2.5;
+        }
+        if (features.contains(HtmlFeature.AFFILIATE_LINK)) {
+            adjustment -= 1.5;
+        }
+        if (features.contains(HtmlFeature.GA_SPAM)) {
+            adjustment -= 1;
+        }
+        if (features.contains(HtmlFeature.COOKIES)) {
+            adjustment -= 1;
+        }
+        if (features.contains(HtmlFeature.KEBAB_CASE_URL)) {
+            adjustment -= 2;
+        }
+
+        if (features.contains(HtmlFeature.COOKIELAW)) {
+            adjustment -= 1;
+        }
+        if (features.contains(HtmlFeature.PARDOT)) {
+            adjustment -= 1;
+        }
+        if (features.contains(HtmlFeature.QUANTCAST)) {
+            adjustment -= 1;
+        }
+
+        if (features.contains(HtmlFeature.WEBMENTION)) {
+            adjustment += 1;
+        }
+        if (features.contains(HtmlFeature.INDIEAUTH)) {
+            adjustment += 1;
+        }
+
+        if (quality + adjustment > 0) {
+            return 0;
+        }
+        if (quality + adjustment < -15) {
+            return -15;
+        }
+
+        return quality + adjustment;
     }
 
     private static class ScriptVisitor implements NodeVisitor {

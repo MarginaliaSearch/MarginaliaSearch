@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 import nu.marginalia.adblock.AdblockSimulator;
 import nu.marginalia.adblock.GoogleAnwersSpamDetector;
 import nu.marginalia.language.model.DocumentLanguageData;
+import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.topic.RecipeDetector;
 import nu.marginalia.topic.TextileCraftDetector;
@@ -48,7 +49,9 @@ public class FeatureExtractor {
             "linkedin.com",
             "perfectaudience.com",
             "marketingautomation.services",
-            "usefathom");
+            "usefathom",
+            "adthrive"
+    );
 
     private final AdblockSimulator adblockSimulator;
     private final RecipeDetector recipeDetector;
@@ -70,13 +73,20 @@ public class FeatureExtractor {
         this.googleAnwersSpamDetector = googleAnwersSpamDetector;
     }
 
-    public Set<HtmlFeature> getFeatures(Document doc, DocumentLanguageData dld) {
+    public Set<HtmlFeature> getFeatures(EdgeUrl url, Document doc, DocumentLanguageData dld) {
         final Set<HtmlFeature> features = new HashSet<>();
 
         final Elements scriptTags = doc.getElementsByTag("script");
 
         if (googleAnwersSpamDetector.testP(doc) > 0.5) {
             features.add(HtmlFeature.GA_SPAM);
+        }
+
+        if (isKebabCase(url)) {
+            features.add(HtmlFeature.KEBAB_CASE_URL);
+        }
+        if (url.path.length() > 64) {
+            features.add(HtmlFeature.LONG_URL);
         }
 
         for (var scriptTag : scriptTags) {
@@ -299,6 +309,10 @@ public class FeatureExtractor {
             features.add(HtmlFeature.CATEGORY_CRAFTS);
 
         return features;
+    }
+
+    private boolean isKebabCase(EdgeUrl url) {
+        return url.path.chars().filter(c -> c=='-').count() > 3;
     }
 
     private boolean hasInvasiveTrackingScript(Element scriptTag) {

@@ -132,7 +132,6 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         ret.length = length;
         ret.standard = standard;
         ret.title = titleExtractor.getTitleAbbreviated(doc, dld, crawledDocument.url);
-        ret.quality = quality;
 
         // don't move this up! it uses title and quality
         // and is run before the heavy computations below
@@ -141,8 +140,9 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
             throw new DisqualifiedException(DisqualificationReason.QUALITY);
         }
 
-        final Set<HtmlFeature> features = featureExtractor.getFeatures(doc, dld);
+        final Set<HtmlFeature> features = featureExtractor.getFeatures(url, doc, dld);
         ret.features = features;
+        ret.quality = documentValuator.adjustQuality(quality, features);
         ret.hashCode = dld.localitySensitiveHashCode();
 
         PubDate pubDate = pubDateSniffer.getPubDate(crawledDocument.headers, url, doc, standard, true);
@@ -151,7 +151,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         ret.metadata = new DocumentMetadata(
                 documentLengthLogic.getEncodedAverageLength(dld),
-                pubDate.yearByte(), (int) -quality, documentFlags);
+                pubDate.yearByte(), (int) -ret.quality, documentFlags);
 
         DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, url);
 

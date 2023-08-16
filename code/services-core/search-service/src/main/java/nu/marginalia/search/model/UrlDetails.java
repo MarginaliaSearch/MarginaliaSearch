@@ -148,7 +148,9 @@ public class UrlDetails {
         if (isAffiliate()) {
             sj.add("Affiliate Linking");
         }
-
+        if (isAds()) {
+            sj.add("Ads/Adtech Tracking");
+        }
         return sj.toString();
 
     }

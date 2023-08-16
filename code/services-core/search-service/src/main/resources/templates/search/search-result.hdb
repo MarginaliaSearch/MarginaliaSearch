@@ -1,7 +1,11 @@
-  <!-- {{rankingId}}.{{id}}/{{ranking}}/{{termScore}} -->
+  <!-- RankingID: {{rankingId}}
+       ID: {{id}}
+       Ranking: {{ranking}}
+       TermScore: {{termScore}}
+       Quality: {{urlQuality}}
+  -->
   <!--
-  {{#each keywordScores}} {{{.}}}
-  {{/each}}
+  {{#each keywordScores}} {{{.}}} {{/each}}
   -->
   <section class="card search-result {{#unless hideRanking}}rs-rank-{{logRank}} ms-rank-{{matchRank}}{{/unless}} {{#if specialDomain}}special-domain{{/if}}" >
     <div class="url"><a rel="nofollow external" href="{{url}}">{{url}}</a></div>
