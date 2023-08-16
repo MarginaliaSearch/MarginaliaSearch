@@ -101,9 +101,15 @@ public class SummarizingDOMFilter implements NodeFilter {
 
         for (var stats : in) {
             // text() is expensive, we don't mind sifting through superfluous whitespace
-            int cnt = stats.score(tn ->
-                    countOccurrencesOfAnyWord(tn.getWholeText(), importantWords)
-                        - countOccurrencesOfAnyWord(tn.getWholeText(), badWords));
+            int cnt = stats.score(tn -> {
+                String wholeText = tn.getWholeText();
+
+                if (wholeText.length() > 128)
+                    return 0;
+
+                return countOccurrencesOfAnyWord(wholeText, importantWords)
+                        - countOccurrencesOfAnyWord(wholeText, badWords);
+            });
 
             if (cnt > 0) {
                 ret.put(stats, -cnt);
