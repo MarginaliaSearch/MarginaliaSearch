@@ -1,5 +1,7 @@
 package nu.marginalia.converting.language;
 
+import lombok.SneakyThrows;
+import nu.marginalia.LanguageModels;
 import nu.marginalia.language.encoding.UnicodeRanges;
 import nu.marginalia.language.model.DocumentLanguageData;
 import org.jsoup.nodes.Document;
@@ -8,10 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.HashSet;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -20,48 +18,29 @@ public class LanguageFilter {
 
     private static final Set<String> interestingLanguages = Set.of("en", "en-us", "en-gb", "eng", "english");
 
-    private static final Set<String> englishWords = new HashSet<>();
     private static final Logger logger = LoggerFactory.getLogger(LanguageFilter.class);
-    static {
-        try (var resource = Objects.requireNonNull(ClassLoader.getSystemResourceAsStream("dictionary/en-1000"),
-                "Could not load word frequency table");
-             var br = new BufferedReader(new InputStreamReader(resource))
-        ) {
-            for (;;) {
-                String s = br.readLine();
-                if (s == null) {
-                    break;
-                }
-                englishWords.add(s.toLowerCase());
-            }
-        }
-        catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
 
-    }
+    private final LanguagePredictionModel languagePredictionModel;
 
+
+    /** Returns the probability the language is in English */
     public double dictionaryAgreement(DocumentLanguageData dld) {
-        Set<String> seenWords = new HashSet<>();
-        int englishCount = 0;
-
-        for (var sent : dld.sentences) {
-            for (var word : sent.wordsLowerCase) {
-                if (seenWords.add(word) && englishWords.contains(word)) {
-                    englishCount++;
-                }
-            }
-        }
-
-        double englishAgreement = englishCount / (double) Math.min(seenWords.size(), englishWords.size());
-
-        logger.debug("Agreement: {}", englishAgreement);
-
-        return englishAgreement;
+        return languagePredictionModel.predictEnglish(dld);
     }
 
     @Inject
-    public LanguageFilter() {
+    @SneakyThrows
+    public LanguageFilter(LanguageModels lm) {
+        try {
+            if (Boolean.getBoolean("disable-fasttext")) {
+                languagePredictionModel = new UngaBungaLanguagePredictionModel();
+            }
+            else {
+                languagePredictionModel = new FasttextLanguagePredictionModel(lm);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public Optional<Boolean> isPageInterestingByHtmlTag(Document parsed) {
@@ -72,20 +51,17 @@ public class LanguageFilter {
                 .map(interestingLanguages::contains);
     }
 
-    public Optional<Boolean> isPageInterestingByMetaLanguage(Document parsed) {
-        return parsed.getElementsByTag("meta").stream().filter(elem -> "content-language".equalsIgnoreCase(elem.attr("http-equiv")))
-                .map(elem -> elem.attr("content"))
-                .filter(s -> !s.isBlank())
-                .map(String::toLowerCase)
-                .map(interestingLanguages::contains)
-                .findAny();
-    }
 
     public boolean isBlockedUnicodeRange(String data) {
+        if (!languagePredictionModel.hasPoorAccuracy()) {
+            return false;
+        }
+
         for (var range: UnicodeRanges.values()) {
             if (range.test(data))
                 return true;
         }
         return false;
     }
+
 }

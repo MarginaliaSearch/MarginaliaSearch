@@ -2,6 +2,7 @@ package nu.marginalia.converting.processor.plugin;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import nu.marginalia.converting.language.LanguageFilter;
 import nu.marginalia.converting.processor.logic.DocumentLengthLogic;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
@@ -38,11 +39,13 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
 
     @Inject
     public PlainTextDocumentProcessorPlugin(@Named("max-title-length") Integer maxTitleLength,
+                                            LanguageFilter languageFilter,
                                             SentenceExtractor sentenceExtractor,
                                             DocumentKeywordExtractor keywordExtractor,
                                             DocumentLengthLogic documentLengthLogic
                                             )
     {
+        super(languageFilter);
         this.documentLengthLogic = documentLengthLogic;
         this.maxTitleLength = maxTitleLength;
         this.sentenceExtractor = sentenceExtractor;

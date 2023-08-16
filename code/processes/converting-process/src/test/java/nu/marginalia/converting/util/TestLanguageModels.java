@@ -1,4 +1,4 @@
-package nu.marginalia.test.util;
+package nu.marginalia.converting.util;
 
 import nu.marginalia.LanguageModels;
 import nu.marginalia.WmsaHome;

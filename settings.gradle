@@ -153,7 +153,7 @@ dependencyResolutionManagement {
 
             library('stanford.corenlp','edu.stanford.nlp','stanford-corenlp').version('4.4.0')
             library('opennlp','org.apache.opennlp','opennlp-tools').version('1.9.4')
-
+            library('fasttext','com.github.vinhkhuc','jfasttext').version('0.5')
             library('roaringbitmap','org.roaringbitmap','RoaringBitmap').version('0.9.32')
             library('opencsv','com.opencsv','opencsv').version('5.6')
             library('bucket4j','com.github.vladimir-bukhtoyarov','bucket4j-core').version('7.5.0')
@@ -184,7 +184,7 @@ dependencyResolutionManagement {
             bundle('slf4j.test', ['slf4j.jdk14'])
             bundle('prometheus', ['prometheus', 'prometheus-servlet', 'prometheus-server', 'prometheus-hotspot'])
             bundle('mariadb', ['mariadb-client', 'hikaricp'])
-            bundle('nlp', ['stanford.corenlp', 'opennlp'])
+            bundle('nlp', ['stanford.corenlp', 'opennlp', 'fasttext'])
             bundle('selenium', ['selenium.chrome', 'selenium.java'])
             bundle('handlebars', ['handlebars', 'handlebars.markdown'])
 

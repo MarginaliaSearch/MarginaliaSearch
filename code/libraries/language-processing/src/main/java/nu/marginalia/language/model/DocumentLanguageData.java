@@ -16,13 +16,15 @@ public class DocumentLanguageData {
     public final DocumentSentence[] sentences;
     public final DocumentSentence[] titleSentences;
     public final TObjectIntHashMap<String> wordCount;
+    public final String text;
 
     /** for test convenience */
     public static DocumentLanguageData empty() {
         return new DocumentLanguageData(
                 new DocumentSentence[0],
                 new DocumentSentence[0],
-                new TObjectIntHashMap<>()
+                new TObjectIntHashMap<>(),
+                ""
         );
     }
 

@@ -17,7 +17,10 @@ import java.net.URISyntaxException;
 import java.util.*;
 
 public abstract class AbstractDocumentProcessorPlugin {
-    protected LanguageFilter languageFilter = new LanguageFilter();
+    protected LanguageFilter languageFilter;
+    public AbstractDocumentProcessorPlugin(LanguageFilter languageFilter) {
+        this.languageFilter = languageFilter;
+    }
 
     public abstract DetailsWithWords createDetails(CrawledDocument crawledDocument) throws DisqualifiedException, URISyntaxException;
     public abstract boolean isApplicable(CrawledDocument doc);

@@ -36,7 +36,7 @@ public class TermFrequencyExtractor {
         var plan = new CrawlPlanLoader().load(Path.of(args[0]));
 
         ThreadLocal<SentenceExtractor> se = ThreadLocal.withInitial(() -> new SentenceExtractor(WmsaHome.getLanguageModels()));
-        LanguageFilter lf = new LanguageFilter();
+        LanguageFilter lf = new LanguageFilter(WmsaHome.getLanguageModels());
 
         TLongIntHashMap counts = new TLongIntHashMap(100_000_000, 0.7f, -1, -1);
 

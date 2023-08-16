@@ -72,6 +72,7 @@ dependencies {
     implementation libs.zstd
 
     implementation libs.bundles.mariadb
+    implementation libs.bundles.nlp
 
     implementation libs.trove
     implementation libs.fastutil

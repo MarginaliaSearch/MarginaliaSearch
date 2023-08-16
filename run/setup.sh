@@ -26,6 +26,7 @@ download_model model/opennlp-sentence.bin https://mirrors.estointernet.in/apache
 download_model model/opennlp-tokens.bin https://mirrors.estointernet.in/apache/opennlp/models/ud-models-1.0/opennlp-en-ud-ewt-tokens-1.0-1.9.3.bin
 download_model model/ngrams.bin https://downloads.marginalia.nu/model/ngrams.bin
 download_model model/tfreq-new-algo3.bin https://downloads.marginalia.nu/model/tfreq-new-algo3.bin
+download_model model/lid.176.ftz https://s3-us-west-1.amazonaws.com/fasttext-vectors/supervised_models/lid.176.ftz
 
 download_model data/IP2LOCATION-LITE-DB1.CSV.ZIP https://download.ip2location.com/lite/IP2LOCATION-LITE-DB1.CSV.ZIP
 unzip -qn -d data data/IP2LOCATION-LITE-DB1.CSV.ZIP

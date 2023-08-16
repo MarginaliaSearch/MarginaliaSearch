@@ -71,7 +71,7 @@ public class SentenceExtractor {
 
         TObjectIntHashMap<String> counts = calculateWordCounts(textSentences);
         var titleSentences = extractSentencesFromString(title.toLowerCase());
-        return new DocumentLanguageData(textSentences, titleSentences, counts);
+        return new DocumentLanguageData(textSentences, titleSentences, counts, text);
     }
 
     public DocumentLanguageData extractSentences(String text, String title) {
@@ -79,7 +79,7 @@ public class SentenceExtractor {
 
         TObjectIntHashMap<String> counts = calculateWordCounts(textSentences);
         var titleSentences = extractSentencesFromString(title.toLowerCase());
-        return new DocumentLanguageData(textSentences, titleSentences, counts);
+        return new DocumentLanguageData(textSentences, titleSentences, counts, text);
     }
 
     private String getTitle(Document doc, DocumentSentence[] textSentences) {

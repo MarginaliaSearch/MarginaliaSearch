@@ -2,6 +2,7 @@ package nu.marginalia.converting.processor.plugin;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import nu.marginalia.converting.language.LanguageFilter;
 import nu.marginalia.converting.model.GeneratorType;
 import nu.marginalia.converting.processor.MetaRobotsTag;
 import nu.marginalia.converting.processor.logic.dom.MeasureLengthVisitor;
@@ -64,6 +65,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     @Inject
     public HtmlDocumentProcessorPlugin(
             @Named("min-document-quality") Double minDocumentQuality,
+            LanguageFilter languageFilter,
             SentenceExtractor sentenceExtractor,
             FeatureExtractor featureExtractor,
             TitleExtractor titleExtractor,
@@ -74,6 +76,8 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
             DocumentGeneratorExtractor documentGeneratorExtractor,
             HtmlProcessorSpecializations specializations)
     {
+        super(languageFilter);
+
         this.documentLengthLogic = documentLengthLogic;
         this.minDocumentQuality = minDocumentQuality;
         this.sentenceExtractor = sentenceExtractor;

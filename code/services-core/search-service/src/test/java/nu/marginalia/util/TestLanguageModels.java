@@ -31,7 +31,8 @@ public class TestLanguageModels {
                 languageModelsHome.resolve("opennlp-sentence.bin"),
                 languageModelsHome.resolve("English.RDR"),
                 languageModelsHome.resolve("English.DICT"),
-                languageModelsHome.resolve("opennlp-tokens.bin")
+                languageModelsHome.resolve("opennlp-tokens.bin"),
+                languageModelsHome.resolve("lid.176.ftz")
         );
     }
 }
