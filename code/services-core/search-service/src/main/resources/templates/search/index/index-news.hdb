@@ -10,5 +10,8 @@
             {{/each}}
             </dl>
         </div>
+        <div class="utils">
+            <a href="/news.xml">📡 RSS Feed</a>
+        </div>
     </section>
 {{/if}}

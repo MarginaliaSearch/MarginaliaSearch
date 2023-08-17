@@ -58,6 +58,7 @@ public class SearchService extends Service {
         Spark.get("/public/search", searchQueryService::pathSearch);
         Spark.get("/public/site-search/:site/*", this::siteSearchRedir);
         Spark.get("/public/", frontPageService::render);
+        Spark.get("/public/news.xml", frontPageService::renderNewsFeed);
         Spark.get("/public/:resource", this::serveStatic);
 
         Spark.post("/public/site/suggest/", addToCrawlQueueService::suggestCrawling);

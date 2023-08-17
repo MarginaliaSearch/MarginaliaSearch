@@ -14,6 +14,9 @@ import spark.Response;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -70,6 +73,43 @@ public class SearchFrontPageService {
         }
 
         return items;
+    }
+
+    public Object renderNewsFeed(Request request, Response response) {
+        List<NewsItem> newsItems = getNewsItems();
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("""
+                <?xml version="1.0" encoding="UTF-8"?>
+                <rss version="2.0">
+                <channel>
+                <title>Marginalia Search News and Mentions</title>
+                <link>https://search.marginalia.nu/</link>
+                <description>News and Mentions of Marginalia Search</description>
+                <language>en-us</language>
+                <ttl>60</ttl>
+                """);
+
+        sb.append("<lastBuildDate>").append(ZonedDateTime.now().format(DateTimeFormatter.RFC_1123_DATE_TIME)).append("</lastBuildDate>\n");
+        sb.append("<pubDate>").append(ZonedDateTime.now().format(DateTimeFormatter.RFC_1123_DATE_TIME)).append("</pubDate>\n");
+        sb.append("<ttl>60</ttl>\n");
+        for (var item : newsItems) {
+            sb.append("<item>\n");
+            sb.append("<title>").append(item.title()).append("</title>\n");
+            sb.append("<link>").append(item.url()).append("</link>\n");
+            if (item.source != null) {
+                sb.append("<author>").append(item.source()).append("</author>\n");
+            }
+            sb.append("<pubDate>").append(item.date().atStartOfDay().atZone(ZoneId.systemDefault()).format(DateTimeFormatter.RFC_1123_DATE_TIME)).append("</pubDate>\n");
+            sb.append("</item>\n");
+        }
+        sb.append("</channel>\n");
+        sb.append("</rss>\n");
+
+        response.type("application/rss+xml");
+
+        return sb.toString();
     }
 
     private record IndexModel(List<NewsItem> news, int searchPerMinute) { }
