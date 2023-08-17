@@ -9,6 +9,17 @@ import java.util.Set;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+/**  Document level metadata designed to fit in a single 64 bit long.
+ *
+ * @param avgSentLength average sentence length
+ * @param rank domain ranking
+ * @param encDomainSize encoded number of documents in the domain
+ * @param topology a measure of how important the document is
+ * @param year encoded publishing year
+ * @param sets bit mask for search sets
+ * @param quality quality of the document
+ * @param flags flags (see {@link DocumentFlags})
+ */
 public record DocumentMetadata(int avgSentLength,
                                int rank,
                                int encDomainSize,
@@ -98,7 +109,7 @@ public record DocumentMetadata(int avgSentLength,
     }
 
     public static boolean hasFlags(long encoded, long metadataBitMask) {
-        return (encoded & metadataBitMask) == metadataBitMask;
+        return ((encoded & 0xFF) & metadataBitMask) == metadataBitMask;
     }
 
     public long encode() {

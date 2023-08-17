@@ -25,7 +25,7 @@ public enum DocumentFlags {
         EnumSet<DocumentFlags> ret = EnumSet.noneOf(DocumentFlags.class);
 
         for (DocumentFlags f : values()) {
-            if ((encodedValue & f.asBit()) > 0) {
+            if ((encodedValue & f.asBit() & 0xff) > 0) {
                 ret.add(f);
             }
         }

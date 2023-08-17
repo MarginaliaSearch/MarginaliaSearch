@@ -6,6 +6,11 @@ import nu.marginalia.bbpc.BrailleBlockPunchCards;
 import java.util.EnumSet;
 import java.util.Set;
 
+/** Word level metadata designed to fit in a single 64 bit long.
+ *
+ * @param positions bitmask of term positions within the document
+ * @param flags word flags (see {@link WordFlags})
+ */
 public record WordMetadata(long positions,
                            byte flags) {
 
