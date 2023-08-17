@@ -8,8 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /** Deduplicates documents based on their LSH
  *
@@ -22,31 +20,43 @@ public class LshDocumentDeduplicator {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public void deduplicate(List<ProcessedDocument> documents) {
-        Set<ProcessedDocument> goodDocuments = documents.stream()
+        ProcessedDocument[] goodDocuments = documents.stream()
                 .filter(ProcessedDocument::isProcessedFully)
-                .collect(Collectors.toSet());
+                .filter(doc -> doc.words.size() > 100)
+                .toArray(ProcessedDocument[]::new);
 
-        for (var document : documents) {
-            if (!goodDocuments.contains(document)) {
-                continue;
+        long[] hashCodes = new long[goodDocuments.length];
+        for (int i = 0; i < goodDocuments.length; i++) {
+            hashCodes[i] = goodDocuments[i].details.hashCode;
+        }
+
+        // These arrays can be fairly large (~10,000) so we need to be
+        // careful about what we do in this O(n^2) loop
+
+        for (int i = 0; i < hashCodes.length; i++) {
+            for (int j = 0; j < hashCodes.length; j++) {
+                // This is basically just a 64 bit XOR and a POPCOUNT so it's pretty fast.
+                if (EasyLSH.hammingDistance(hashCodes[i], hashCodes[j]) < DISTANCE_THRESHOLD) {
+                    if (i == j)
+                        continue;
+
+                    if (flagIfDuplicate(goodDocuments[i], goodDocuments[j])) {
+                        break;
+                    }
+                }
             }
-
-            goodDocuments.removeIf(other -> removeIfDuplicate(document, other));
         }
     }
 
-    private boolean removeIfDuplicate(ProcessedDocument thisDoc, ProcessedDocument otherDoc) {
-        if (thisDoc == otherDoc)
+    private boolean flagIfDuplicate(ProcessedDocument thisDoc, ProcessedDocument otherDoc) {
+
+        // This document has already been disqualified as a duplicate
+        if (thisDoc.state != UrlIndexingState.OK)
             return false;
 
-        if (thisDoc.words.size() < 100
-        || otherDoc.words.size() < 100) {
-            return false;
-        }
 
-        if (EasyLSH.hammingDistance(thisDoc.details.hashCode, otherDoc.details.hashCode) > DISTANCE_THRESHOLD)
-            return false;
-
+        // We might consider using thisDoc.details.metadata.topology() here instead of the
+        // URL length to determine which document is the "better" one.
         if (thisDoc.url.path.length()
                 < otherDoc.url.path.length())
         {
