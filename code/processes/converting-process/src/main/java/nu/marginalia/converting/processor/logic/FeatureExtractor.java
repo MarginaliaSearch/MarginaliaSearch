@@ -34,6 +34,7 @@ public class FeatureExtractor {
             "facebook.com/tr",
             "absbygoogle.com",
             "adnxs.com",
+            "monsterinsights",
             "googletagmanager.com",
             "googlesyndication.com",
             "smartadserver.com",
