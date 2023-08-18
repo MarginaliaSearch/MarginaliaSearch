@@ -2,7 +2,6 @@ package nu.marginalia.index.client.model.results;
 
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.idx.WordMetadata;
-import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
 
 import java.util.Objects;
@@ -14,15 +13,19 @@ public final class SearchResultKeywordScore {
     private final long encodedDocMetadata;
     private final boolean hasPriorityTerms;
 
+    private final int htmlFeatures;
+
     public SearchResultKeywordScore(int subquery,
                                     String keyword,
                                     long encodedWordMetadata,
                                     long encodedDocMetadata,
+                                    int htmlFeatures,
                                     boolean hasPriorityTerms) {
         this.subquery = subquery;
         this.keyword = keyword;
         this.encodedWordMetadata = encodedWordMetadata;
         this.encodedDocMetadata = encodedDocMetadata;
+        this.htmlFeatures = htmlFeatures;
         this.hasPriorityTerms = hasPriorityTerms;
     }
 
@@ -56,6 +59,10 @@ public final class SearchResultKeywordScore {
 
     public long encodedDocMetadata() {
         return encodedDocMetadata;
+    }
+
+    public int htmlFeatures() {
+        return htmlFeatures;
     }
 
     public boolean hasPriorityTerms() {

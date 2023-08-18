@@ -19,7 +19,7 @@ public interface Interpreter {
     default void loadProcessedDocument(LoadProcessedDocument loadProcessedDocument) {}
     default void loadProcessedDocumentWithError(LoadProcessedDocumentWithError loadProcessedDocumentWithError) {}
 
-    default void loadKeywords(EdgeUrl url, DocumentMetadata metadata, DocumentKeywords words) {}
+    default void loadKeywords(EdgeUrl url, int features, DocumentMetadata metadata, DocumentKeywords words) {}
 
     default void loadDomainRedirect(DomainLink link) {}
 

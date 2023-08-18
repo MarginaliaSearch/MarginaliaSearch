@@ -103,9 +103,9 @@ public class Loader implements Interpreter, AutoCloseable {
     }
 
     @Override
-    public void loadKeywords(EdgeUrl url, DocumentMetadata metadata, DocumentKeywords words) {
+    public void loadKeywords(EdgeUrl url, int features, DocumentMetadata metadata, DocumentKeywords words) {
         try {
-            indexLoadKeywords.load(data, url, metadata, words);
+            indexLoadKeywords.load(data, url, features, metadata, words);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }

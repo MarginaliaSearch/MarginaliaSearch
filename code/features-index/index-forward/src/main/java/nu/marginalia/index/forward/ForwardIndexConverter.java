@@ -88,8 +88,9 @@ public class ForwardIndexConverter {
                 int ranking = domainRankings.getRanking(entry.domainId());
                 long meta = DocumentMetadata.encodeRank(entry.docMeta(), ranking);
 
-                docFileData.set(entryOffset + ForwardIndexParameters.METADATA_OFFSET, meta);
                 docFileData.set(entryOffset + ForwardIndexParameters.DOMAIN_OFFSET, entry.domainId());
+                docFileData.set(entryOffset + ForwardIndexParameters.METADATA_OFFSET, meta);
+                docFileData.set(entryOffset + ForwardIndexParameters.FEATURES_OFFSET, entry.header.documentFeatures());
             });
 
             progress.progress(TaskSteps.FORCE);

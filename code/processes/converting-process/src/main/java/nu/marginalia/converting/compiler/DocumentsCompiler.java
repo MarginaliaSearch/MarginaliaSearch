@@ -31,11 +31,16 @@ public class DocumentsCompiler {
         }
     }
 
-    public void compileWords(Consumer<Instruction> instructionConsumer, ProcessedDocument doc) {
+    public void compileWords(Consumer<Instruction> instructionConsumer,
+                             ProcessedDocument doc) {
         var words = doc.words;
 
         if (words != null) {
-            instructionConsumer.accept(new LoadKeywords(doc.url, doc.details.metadata, words.build()));
+            instructionConsumer.accept(new LoadKeywords(doc.url,
+                    HtmlFeature.encode(doc.details.features),
+                    doc.details.metadata,
+                    words.build())
+            );
         }
     }
 

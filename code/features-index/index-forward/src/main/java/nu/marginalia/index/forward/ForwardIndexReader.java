@@ -77,6 +77,13 @@ public class ForwardIndexReader {
         return data.get(ENTRY_SIZE * offset + METADATA_OFFSET);
     }
 
+    public int getHtmlFeatures(long docId) {
+        long offset = idxForDoc(docId);
+        if (offset < 0) return 0;
+
+        return (int) data.get(ENTRY_SIZE * offset + FEATURES_OFFSET);
+    }
+
     public int getDomainId(long docId) {
         long offset = idxForDoc(docId);
         if (offset < 0) return 0;

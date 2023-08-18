@@ -18,7 +18,11 @@ public class IndexLoadKeywords implements Runnable {
     private final LinkedBlockingQueue<InsertTask> insertQueue = new LinkedBlockingQueue<>(32);
     private final LoaderIndexJournalWriter journalWriter;
 
-    private record InsertTask(int urlId, int domainId, DocumentMetadata metadata, DocumentKeywords wordSet) {}
+    private record InsertTask(int urlId,
+                              int domainId,
+                              int features,
+                              DocumentMetadata metadata,
+                              DocumentKeywords wordSet) {}
 
     private final Thread runThread;
 
@@ -36,7 +40,10 @@ public class IndexLoadKeywords implements Runnable {
         while (!canceled) {
             var data = insertQueue.poll(1, TimeUnit.SECONDS);
             if (data != null) {
-                journalWriter.putWords(new EdgeId<>(data.domainId), new EdgeId<>(data.urlId), data.metadata(), data.wordSet);
+                journalWriter.putWords(new EdgeId<>(data.domainId), new EdgeId<>(data.urlId),
+                        data.features,
+                        data.metadata(),
+                        data.wordSet);
             }
         }
     }
@@ -49,7 +56,11 @@ public class IndexLoadKeywords implements Runnable {
         }
     }
 
-    public void load(LoaderData loaderData, EdgeUrl url, DocumentMetadata metadata, DocumentKeywords words) throws InterruptedException {
+    public void load(LoaderData loaderData,
+                     EdgeUrl url,
+                     int features,
+                     DocumentMetadata metadata,
+                     DocumentKeywords words) throws InterruptedException {
         int domainId = loaderData.getDomainId(url.domain);
         int urlId = loaderData.getUrlId(url);
 
@@ -58,6 +69,6 @@ public class IndexLoadKeywords implements Runnable {
             return;
         }
 
-        insertQueue.put(new InsertTask(urlId, domainId, metadata, words));
+        insertQueue.put(new InsertTask(urlId, domainId, features, metadata, words));
     }
 }

@@ -106,7 +106,7 @@ class ReverseIndexFullConverterTest2 {
     }
     public void createEntry(IndexJournalWriter writer, KeywordLexicon keywordLexicon, int id) {
         int[] factors = getFactorsI(id);
-        var header = new IndexJournalEntryHeader(factors.length, createId(id, id/20), id % 5);
+        var header = new IndexJournalEntryHeader(factors.length, 0, createId(id, id/20), id % 5);
 
         long[] data = new long[factors.length*2];
         for (int i = 0; i < factors.length; i++) {

@@ -72,7 +72,7 @@ public class IndexJournalWriterImpl implements IndexJournalWriter{
         }
 
         dataBuffer.putInt(entry.size());
-        dataBuffer.putInt(0);
+        dataBuffer.putInt(header.documentFeatures());
         dataBuffer.putLong(header.combinedId());
         dataBuffer.putLong(header.documentMeta());
 

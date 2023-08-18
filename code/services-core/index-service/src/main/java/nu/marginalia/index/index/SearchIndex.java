@@ -196,6 +196,9 @@ public class SearchIndex {
     public long getDocumentMetadata(long docId) {
         return indexReader.getDocumentMetadata(docId);
     }
+    public int getHtmlFeatures(long docId) {
+        return indexReader.getHtmlFeatures(docId);
+    }
 
     public int getDomainId(long docId) {
         return indexReader.getDomainId(docId);

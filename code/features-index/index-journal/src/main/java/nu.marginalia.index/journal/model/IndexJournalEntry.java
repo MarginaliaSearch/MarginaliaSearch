@@ -7,7 +7,7 @@ import nu.marginalia.model.id.EdgeId;
 public record IndexJournalEntry(IndexJournalEntryHeader header, IndexJournalEntryData data) {
 
     public static IndexJournalEntryBuilder builder(long documentId, long documentMeta) {
-        return new IndexJournalEntryBuilder(documentId, documentMeta);
+        return new IndexJournalEntryBuilder(0, documentId, documentMeta);
     }
 
     public static IndexJournalEntryBuilder builder(int domainId,
@@ -15,7 +15,9 @@ public record IndexJournalEntry(IndexJournalEntryHeader header, IndexJournalEntr
                                                    long documentMeta) {
 
 
-        return builder(new EdgeId<>(domainId), new EdgeId<>(urlId), documentMeta);
+        return builder(new EdgeId<>(domainId),
+                new EdgeId<>(urlId),
+                documentMeta);
     }
 
     public static IndexJournalEntryBuilder builder(EdgeId<EdgeDomain> domainId,
@@ -23,6 +25,8 @@ public record IndexJournalEntry(IndexJournalEntryHeader header, IndexJournalEntr
                                                    long documentMeta) {
 
 
-        return new IndexJournalEntryBuilder(IndexJournalEntryHeader.combineIds(domainId, urlId), documentMeta);
+        return new IndexJournalEntryBuilder(0,
+                IndexJournalEntryHeader.combineIds(domainId, urlId),
+                documentMeta);
     }
 }

@@ -67,4 +67,8 @@ public class SearchIndexReader {
     public int totalDocCount() {
         return forwardIndexReader.totalDocCount();
     }
+
+    public int getHtmlFeatures(long docId) {
+        return forwardIndexReader.getHtmlFeatures(docId);
+    }
 }

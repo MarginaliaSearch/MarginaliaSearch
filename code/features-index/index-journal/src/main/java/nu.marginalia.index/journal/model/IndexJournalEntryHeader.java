@@ -4,10 +4,19 @@ import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.id.EdgeId;
 
-public record IndexJournalEntryHeader(int entrySize, long combinedId, long documentMeta) {
+public record IndexJournalEntryHeader(int entrySize,
+                                      int documentFeatures,
+                                      long combinedId,
+                                      long documentMeta) {
 
-    public IndexJournalEntryHeader(EdgeId<EdgeDomain> domainId, EdgeId<EdgeUrl> urlId, long documentMeta) {
-        this(-1, combineIds(domainId, urlId), documentMeta);
+    public IndexJournalEntryHeader(EdgeId<EdgeDomain> domainId,
+                                   int documentFeatures,
+                                   EdgeId<EdgeUrl> urlId,
+                                   long documentMeta) {
+        this(-1,
+                documentFeatures,
+                combineIds(domainId, urlId),
+                documentMeta);
     }
 
     static long combineIds(EdgeId<EdgeDomain> domainId, EdgeId<EdgeUrl> urlId) {

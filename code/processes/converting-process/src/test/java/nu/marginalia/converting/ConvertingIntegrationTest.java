@@ -17,7 +17,7 @@ import nu.marginalia.model.crawl.UrlIndexingState;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Path;
 import java.time.LocalTime;
 import java.util.*;
@@ -143,4 +143,5 @@ public class ConvertingIntegrationTest {
 
         return SerializableCrawlDataStream.fromIterator(data.iterator());
     }
+
 }

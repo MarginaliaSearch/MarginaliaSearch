@@ -30,6 +30,7 @@ public class IndexJournalReadEntry {
 
         var header = new IndexJournalEntryHeader(
                 (int) (sizeBlock >>> 32L),
+                (int) (sizeBlock & 0xFFFF_FFFFL),
                 docId,
                 meta);
 

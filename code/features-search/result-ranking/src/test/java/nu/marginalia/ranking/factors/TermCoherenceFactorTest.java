@@ -89,7 +89,7 @@ class TermCoherenceFactorTest {
 
         for (int i = 0; i < positionMasks.length; i++) {
             keywords.add(new SearchResultKeywordScore(0, "",
-                    new WordMetadata(positionMasks[i], (byte) 0).encode(), 0, false));
+                    new WordMetadata(positionMasks[i], (byte) 0).encode(), 0, 0, false));
         }
 
         return new ResultKeywordSet(keywords);

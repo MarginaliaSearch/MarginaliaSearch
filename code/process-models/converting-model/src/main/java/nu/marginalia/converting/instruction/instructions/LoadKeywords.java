@@ -7,11 +7,11 @@ import nu.marginalia.converting.instruction.InstructionTag;
 import nu.marginalia.converting.instruction.Interpreter;
 import nu.marginalia.model.EdgeUrl;
 
-public record LoadKeywords(EdgeUrl url, DocumentMetadata metadata, DocumentKeywords words) implements Instruction {
+public record LoadKeywords(EdgeUrl url, int features, DocumentMetadata metadata, DocumentKeywords words) implements Instruction {
 
     @Override
     public void apply(Interpreter interpreter) {
-        interpreter.loadKeywords(url, metadata, words);
+        interpreter.loadKeywords(url, features, metadata, words);
     }
 
     @Override

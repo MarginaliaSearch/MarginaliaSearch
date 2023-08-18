@@ -40,20 +40,20 @@ class ResultValuatorTest {
             new SearchResultKeywordScore(0, "bob",
                     wordMetadata(Set.of(1), EnumSet.of(WordFlags.Title)),
                     docMetadata(0, 2010, 5, EnumSet.noneOf(DocumentFlags.class)),
-                    false)
+                    0, false)
     );
     List<SearchResultKeywordScore> highCountNoTitleSet = List.of(
             new SearchResultKeywordScore(0, "bob",
                     wordMetadata(Set.of(1,3,4,6,7,9,10,11,12,14,15,16), EnumSet.of(WordFlags.TfIdfHigh)),
                     docMetadata(0, 2010,  5, EnumSet.noneOf(DocumentFlags.class)),
-                    false)
+                    0, false)
     );
 
     List<SearchResultKeywordScore> highCountSubjectSet = List.of(
             new SearchResultKeywordScore(0, "bob",
                     wordMetadata(Set.of(1,3,4,6,7,9,10,11,12,14,15,16), EnumSet.of(WordFlags.TfIdfHigh, WordFlags.Subjects)),
                     docMetadata(0, 2010, 5, EnumSet.noneOf(DocumentFlags.class)),
-                    false)
+                    0, false)
     );
 
 

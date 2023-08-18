@@ -177,7 +177,7 @@ public class IndexQueryServiceIntegrationTest {
 
         long fullId = id | ((long) (32 - (id % 32)) << 32);
 
-        var header = new IndexJournalEntryHeader(factors.length, fullId, new DocumentMetadata(0, 0, 0, 0, id % 5, id, id % 20, (byte) 0).encode());
+        var header = new IndexJournalEntryHeader(factors.length, 0, fullId, new DocumentMetadata(0, 0, 0, 0, id % 5, id, id % 20, (byte) 0).encode());
 
         long[] data = new long[factors.length*2];
         for (int i = 0; i < factors.length; i++) {
@@ -190,7 +190,7 @@ public class IndexQueryServiceIntegrationTest {
 
     public void loadDataWithDomain(int domain, int id) {
         int[] factors = IntStream.rangeClosed(1, id).filter(v -> (id % v) == 0).toArray();
-        var header = new IndexJournalEntryHeader(factors.length, id | ((long) domain << 32), DocumentMetadata.defaultValue());
+        var header = new IndexJournalEntryHeader(factors.length, 0, id | ((long) domain << 32), DocumentMetadata.defaultValue());
 
         long[] data = new long[factors.length*2];
         for (int i = 0; i < factors.length; i++) {

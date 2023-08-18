@@ -59,6 +59,7 @@ public class IndexResultValuator {
         searchResult.setDomainId(metadataService.getDomainId(urlIdInt));
 
         long docMetadata = metadataService.getDocumentMetadata(urlIdInt);
+        int htmlFeatures = metadataService.getHtmlFeatures(urlIdInt);
 
         int maxFlagsCount = 0;
         boolean anyAllSynthetic = false;
@@ -85,6 +86,7 @@ public class IndexResultValuator {
                         searchTerm,
                         metadata,
                         docMetadata,
+                        htmlFeatures,
                         resultsWithPriorityTerms.contains(searchResult.combinedId)
                 );
 

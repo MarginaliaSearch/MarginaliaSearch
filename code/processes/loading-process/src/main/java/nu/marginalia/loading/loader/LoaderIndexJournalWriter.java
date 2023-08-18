@@ -60,6 +60,7 @@ public class LoaderIndexJournalWriter {
 
     @SneakyThrows
     public void putWords(EdgeId<EdgeDomain> domain, EdgeId<EdgeUrl> url,
+                         int features,
                          DocumentMetadata metadata,
                          DocumentKeywords wordSet) {
         if (wordSet.keywords().length == 0) {
@@ -76,10 +77,10 @@ public class LoaderIndexJournalWriter {
         // with a chonky work queue is a fairly decent improvement
         for (var chunk : KeywordListChunker.chopList(wordSet, IndexJournalEntryData.MAX_LENGTH)) {
             try {
-                keywordInsertionExecutor.submit(() -> loadWords(domain, url, metadata, chunk));
+                keywordInsertionExecutor.submit(() -> loadWords(domain, url, features, metadata, chunk));
             }
             catch (RejectedExecutionException ex) {
-                loadWords(domain, url, metadata, chunk);
+                loadWords(domain, url, features, metadata, chunk);
             }
         }
 
@@ -87,6 +88,7 @@ public class LoaderIndexJournalWriter {
 
     private void loadWords(EdgeId<EdgeDomain> domain,
                            EdgeId<EdgeUrl> url,
+                           int features,
                            DocumentMetadata metadata,
                            DocumentKeywords wordSet) {
         if (null == metadata) {
@@ -95,7 +97,7 @@ public class LoaderIndexJournalWriter {
         }
 
         var entry = new IndexJournalEntryData(getOrInsertWordIds(wordSet.keywords(), wordSet.metadata()));
-        var header = new IndexJournalEntryHeader(domain, url, metadata.encode());
+        var header = new IndexJournalEntryHeader(domain, features, url, metadata.encode());
 
         indexWriter.put(header, entry);
     }

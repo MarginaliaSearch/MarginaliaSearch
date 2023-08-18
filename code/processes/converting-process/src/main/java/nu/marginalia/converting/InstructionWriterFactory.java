@@ -130,7 +130,7 @@ public class InstructionWriterFactory {
         }
 
         @Override
-        public void loadKeywords(EdgeUrl url, DocumentMetadata metadata, DocumentKeywords words) {
+        public void loadKeywords(EdgeUrl url, int features, DocumentMetadata metadata, DocumentKeywords words) {
             keywords++;
         }
 

@@ -34,6 +34,10 @@ public class IndexMetadataService {
         return index.getDocumentMetadata(urlId);
     }
 
+    public int getHtmlFeatures(long urlId) {
+        return index.getHtmlFeatures(urlId);
+    }
+
     public int getDomainId(long urlId) {
         return index.getDomainId(urlId);
     }
