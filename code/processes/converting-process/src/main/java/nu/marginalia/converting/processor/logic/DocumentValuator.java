@@ -99,7 +99,7 @@ public class DocumentValuator {
         return quality + adjustment;
     }
 
-    private static class ScriptVisitor implements NodeVisitor {
+    public static class ScriptVisitor implements NodeVisitor {
         boolean hasBadScript = false;
         int scriptLength = 0;
         double penalty = 0.;
@@ -113,26 +113,23 @@ public class DocumentValuator {
             if (node instanceof Element el) {
                 visitTag(el);
             }
-            else if (node instanceof TextNode tn) {
-                visitScriptText(tn);
-            }
-        }
-
-        private void visitScriptText(TextNode tn) {
-            String wholeText = tn.getWholeText();
-            scriptLength += wholeText.length();
-
-            if (!hasBadScript) {
-                hasBadScript = wholeText.contains(".createElement(");
-            }
         }
 
         public void visitTag(Element el) {
             String srcAttr = el.attr("src");
+
             if (srcAttr.contains("wp-content") || srcAttr.contains("wp-includes") || srcAttr.contains("jquery")) {
                 penalty += 0.49;
             } else if (!Strings.isBlank(srcAttr)) {
                 penalty += 1;
+            } else {
+                var wt = el.wholeText();
+                scriptLength += wt.length();
+                penalty += 0.25;
+
+                if (!hasBadScript) {
+                    hasBadScript = wt.contains(".createElement(");
+                }
             }
         }
     }
