@@ -51,7 +51,13 @@ public class FeatureExtractor {
             "perfectaudience.com",
             "marketingautomation.services",
             "usefathom",
-            "adthrive"
+            "adthrive",
+            "wordads",
+            "wa_smart",
+            "personalized-ads-consent",
+            "_taboola",
+            "nativeads",
+            "skimlinks"
     );
 
     private final AdblockSimulator adblockSimulator;
