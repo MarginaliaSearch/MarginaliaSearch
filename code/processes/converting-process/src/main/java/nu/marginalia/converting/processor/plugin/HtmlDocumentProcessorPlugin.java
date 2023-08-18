@@ -155,7 +155,9 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         ret.metadata = new DocumentMetadata(
                 documentLengthLogic.getEncodedAverageLength(dld),
-                pubDate.yearByte(), (int) -ret.quality, documentFlags);
+                pubDate.yearByte(),
+                (int) -ret.quality, // ret.quality is negative
+                documentFlags);
 
         DocumentKeywordsBuilder words = keywordExtractor.extractKeywords(dld, url);
 
