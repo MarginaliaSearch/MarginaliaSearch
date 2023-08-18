@@ -170,7 +170,7 @@ public class UrlDetails {
     public boolean isCookies() {
         return HtmlFeature.hasFeature(features, HtmlFeature.COOKIES);
     }
-    public boolean isAds() { return HtmlFeature.hasFeature(features, HtmlFeature.ADVERTISEMENT); }
+    public boolean isAds() { return HtmlFeature.hasFeature(features, HtmlFeature.TRACKING_ADTECH); }
 
     public boolean isSpecialDomain() {
         return domainState == DomainIndexingState.SPECIAL;
