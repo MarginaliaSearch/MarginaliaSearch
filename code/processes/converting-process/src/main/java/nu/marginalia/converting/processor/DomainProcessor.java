@@ -125,13 +125,15 @@ public class DomainProcessor {
         var invertedLinkGraph = linkGraph.invert();
 
         ret.documents.forEach(doc -> {
-            if (doc.details != null && doc.details.metadata != null) {
+            if (doc.details == null)
+                return;
+            if (doc.details.metadata == null)
+                return;
 
-                int size = linkGraph.size();
-                int topology = invertedLinkGraph.numLinks(doc.url);
+            int size = linkGraph.size();
+            int topology = invertedLinkGraph.numLinks(doc.url);
 
-                doc.details.metadata = doc.details.metadata.withSize(size, topology);
-            }
+            doc.details.metadata = doc.details.metadata.withSize(size, topology);
         });
 
         siteWords.flagCommonSiteWords(ret);
