@@ -17,7 +17,7 @@ import static java.lang.Math.min;
  * @param topology a measure of how important the document is
  * @param year encoded publishing year
  * @param sets bit mask for search sets
- * @param quality quality of the document
+ * @param quality quality of the document (0-15); 0 is best, 15 is worst
  * @param flags flags (see {@link DocumentFlags})
  */
 public record DocumentMetadata(int avgSentLength,
