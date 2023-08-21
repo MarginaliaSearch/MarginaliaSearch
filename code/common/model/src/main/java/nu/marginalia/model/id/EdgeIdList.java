@@ -5,7 +5,9 @@ import gnu.trove.list.array.TIntArrayList;
 
 import java.util.stream.IntStream;
 
-public record EdgeIdList<T> (TIntArrayList list) implements EdgeIdCollection<T>, EdgeIdCollectionMutable<T> {
+public record EdgeIdList<T> (TIntArrayList list) implements
+        EdgeIdCollection<T>,
+        EdgeIdCollectionMutable<T> {
 
     public EdgeIdList(int... values) { this(new TIntArrayList(values)); }
     public static <T> EdgeIdList<T> gather(IntStream stream) {

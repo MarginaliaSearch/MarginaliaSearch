@@ -2,6 +2,7 @@ package nu.marginalia.control;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import gnu.trove.list.array.TIntArrayList;
 import nu.marginalia.client.ServiceMonitors;
 import nu.marginalia.control.actor.Actor;
 import nu.marginalia.control.model.*;
@@ -10,7 +11,9 @@ import nu.marginalia.db.storage.model.FileStorageId;
 import nu.marginalia.db.storage.model.FileStorageType;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.gson.GsonFactory;
+import nu.marginalia.model.id.EdgeIdList;
 import nu.marginalia.renderer.RendererFactory;
+import nu.marginalia.screenshot.ScreenshotService;
 import nu.marginalia.service.server.*;
 import org.eclipse.jetty.util.StringUtil;
 import org.slf4j.Logger;
@@ -35,6 +38,7 @@ public class ControlService extends Service {
     private final ApiKeyService apiKeyService;
     private final DomainComplaintService domainComplaintService;
     private final ControlBlacklistService blacklistService;
+    private final RandomExplorationService randomExplorationService;
     private final ControlActorService controlActorService;
     private final StaticResources staticResources;
     private final MessageQueueService messageQueueService;
@@ -54,7 +58,9 @@ public class ControlService extends Service {
                           ApiKeyService apiKeyService,
                           DomainComplaintService domainComplaintService,
                           ControlBlacklistService blacklistService,
-                          ControlActionsService controlActionsService
+                          ControlActionsService controlActionsService,
+                          ScreenshotService screenshotService,
+                          RandomExplorationService randomExplorationService
                       ) throws IOException {
 
         super(params);
@@ -64,6 +70,7 @@ public class ControlService extends Service {
         this.apiKeyService = apiKeyService;
         this.domainComplaintService = domainComplaintService;
         this.blacklistService = blacklistService;
+        this.randomExplorationService = randomExplorationService;
 
         var indexRenderer = rendererFactory.renderer("control/index");
         var eventsRenderer = rendererFactory.renderer("control/events");
@@ -75,6 +82,7 @@ public class ControlService extends Service {
         var storageSpecsRenderer = rendererFactory.renderer("control/storage-specs");
         var storageCrawlsRenderer = rendererFactory.renderer("control/storage-crawls");
         var storageProcessedRenderer = rendererFactory.renderer("control/storage-processed");
+        var reviewRandomDomainsRenderer = rendererFactory.renderer("control/review-random-domains");
 
         var apiKeysRenderer = rendererFactory.renderer("control/api-keys");
         var domainComplaintsRenderer = rendererFactory.renderer("control/domain-complaints");
@@ -116,6 +124,9 @@ public class ControlService extends Service {
         final HtmlRedirect redirectToBlacklist = new HtmlRedirect("/blacklist");
         final HtmlRedirect redirectToComplaints = new HtmlRedirect("/complaints");
         final HtmlRedirect redirectToMessageQueue = new HtmlRedirect("/message-queue");
+
+        // Needed to be able to show website screenshots
+        Spark.get("/public/screenshot/:id", screenshotService::serveScreenshotRequest);
 
         // FSMs
 
@@ -178,9 +189,49 @@ public class ControlService extends Service {
         Spark.post("/public/actions/flush-api-caches", controlActionsService::flushApiCaches, redirectToActors);
         Spark.post("/public/actions/truncate-links-database", controlActionsService::truncateLinkDatabase, redirectToActors);
 
+        // Review Random Domains
+        Spark.get("/public/review-random-domains", this::reviewRandomDomainsModel, reviewRandomDomainsRenderer::render);
+
+        Spark.post("/public/review-random-domains", this::reviewRandomDomainsAction);
+
+
         Spark.get("/public/:resource", this::serveStatic);
 
         monitors.subscribe(this::logMonitorStateChange);
+    }
+
+    private Object reviewRandomDomainsModel(Request request, Response response) throws SQLException {
+        String afterVal = Objects.requireNonNullElse(request.queryParams("after"), "0");
+        int after = Integer.parseInt(afterVal);
+        var domains = randomExplorationService.getDomains(after, 25);
+        int nextAfter = domains.stream().mapToInt(RandomExplorationService.RandomDomainResult::id).max().orElse(Integer.MAX_VALUE);
+
+        return Map.of("domains", domains,
+                        "after", nextAfter);
+
+    }
+
+    private Object reviewRandomDomainsAction(Request request, Response response) throws SQLException {
+        TIntArrayList idList = new TIntArrayList();
+
+        request.queryParams().forEach(key -> {
+            if (key.startsWith("domain-")) {
+                String value = request.queryParams(key);
+                if ("on".equalsIgnoreCase(value)) {
+                    int id = Integer.parseInt(key.substring(7));
+                    idList.add(id);
+                }
+            }
+        });
+
+        randomExplorationService.removeRandomDomains(new EdgeIdList<>(idList.toArray()));
+
+        String after = request.queryParams("after");
+
+        return """
+                <?doctype html>
+                <html><head><meta http-equiv="refresh" content="0;URL='/review-random-domains?after=%s'" /></head></html>
+                """.formatted(after);
     }
 
 

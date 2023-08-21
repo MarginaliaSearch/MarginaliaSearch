@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Control Service</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+{{> control/partials/nav}}
+<section>
+    <h1>Domain Review</h1>
+    <form method="POST" action="/review-random-domains">
+    <table>
+        <tr>
+            <th>Action</th><th>Domain Name</th><th>Screenshot</th>
+        </tr>
+        {{#each domains}}
+        <tr>
+            <td>
+                <input type="checkbox" name="domain-{{id}}" id="domain-{{id}}"/> <label for="domain-{{id}}">Remove</label>
+            </td>
+            <td>
+                <a href="https://{{domainName}}">{{domainName}}</a>
+            </td>
+            <td>
+                <img src="/screenshot/{{id}}" style="max-width: 100%; max-height: 100px"/>
+            </td>
+        </tr>
+        {{/each}}
+        <tr>
+            <td colspan="3"><input type="Submit" value="Process"></td>
+        </tr>
+    </table>
+        <input type="hidden" name="after" value="{{after}}" />
+    </form>
+</section>
