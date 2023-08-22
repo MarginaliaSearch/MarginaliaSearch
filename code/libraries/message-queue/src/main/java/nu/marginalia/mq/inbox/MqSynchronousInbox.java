@@ -24,7 +24,7 @@ public class MqSynchronousInbox implements MqInboxIf {
 
     private volatile boolean run = true;
 
-    private final int pollIntervalMs = Integer.getInteger("mq.inbox.poll-interval-ms", 100);
+    private final int pollIntervalMs = Integer.getInteger("mq.inbox.poll-interval-ms", 1000);
     private final List<MqSubscription> eventSubscribers = new ArrayList<>();
 
     private Thread pollDbThread;
