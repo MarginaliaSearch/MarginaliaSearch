@@ -9,7 +9,7 @@ import java.nio.file.Path;
 public class ControlProcessModule extends AbstractModule {
     @Override
     protected void configure() {
-        String dist = System.getProperty("distPath", System.getProperty("WMSA_HOME") + "/dist/current");
+        String dist = System.getProperty("distPath", System.getProperty("WMSA_HOME", "/var/lib/wmsa") + "/dist/current");
         bind(Path.class).annotatedWith(Names.named("distPath")).toInstance(Path.of(dist));
     }
 }
