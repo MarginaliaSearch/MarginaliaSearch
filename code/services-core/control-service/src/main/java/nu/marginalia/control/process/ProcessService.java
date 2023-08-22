@@ -11,6 +11,7 @@ import org.slf4j.MarkerFactory;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -72,24 +73,16 @@ public class ProcessService {
             processes.put(processId, process);
         }
 
-        try (var es = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-             var os = new BufferedReader(new InputStreamReader(process.getInputStream()))
-        ) {
-            eventLog.logEvent("PROCESS-STARTED", processId.toString());
-
-            while (process.isAlive()) {
-                if (es.ready())
-                    logger.warn(processMarker, es.readLine());
-                if (os.ready())
-                    logger.info(processMarker, os.readLine());
-            }
+        try {
+            new Thread(new ProcessLogStderr(process)).start();
+            new Thread(new ProcessLogStdout(process)).start();
 
             final int returnCode = process.waitFor();
             logger.info("Process {} terminated with code {}", processId, returnCode);
             return 0 == returnCode;
         }
         catch (Exception ex) {
-            logger.info("Process {} terminated with code exception", processId);
+            logger.info("Process {} terminated with exception", processId);
             throw ex;
         }
         finally {
@@ -97,6 +90,7 @@ public class ProcessService {
             processes.remove(processId);
         }
     }
+
 
     private String[] createCommandArguments(String processPath, String[] parameters) {
         final String[] args = new String[parameters.length + 1];
@@ -151,6 +145,51 @@ public class ProcessService {
 
     private String env2str(String key, String val) {
         return key + "=" + val;
+    }
+
+
+
+
+    class ProcessLogStderr implements Runnable {
+        private final Process process;
+
+        public ProcessLogStderr(Process process) {
+            this.process = process;
+        }
+
+        @Override
+        public void run() {
+            try (var es = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+                String line;
+                while (((line = es.readLine()) != null)) {
+                    logger.warn(processMarker, line);
+                }
+            }
+            catch (IOException ex) {
+                logger.error("Error reading process error stream", ex);
+            }
+        }
+    }
+
+    class ProcessLogStdout implements Runnable {
+        private final Process process;
+
+        public ProcessLogStdout(Process process) {
+            this.process = process;
+        }
+
+        @Override
+        public void run() {
+            try (var is = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while (((line = is.readLine()) != null)) {
+                    logger.info(processMarker, line);
+                }
+            }
+            catch (IOException ex) {
+                logger.error("Error reading process output stream", ex);
+            }
+        }
     }
 
 }
