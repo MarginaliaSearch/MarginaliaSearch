@@ -1,12 +1,9 @@
 package nu.marginalia.browse.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import java.util.Collection;
 
-import java.util.List;
-
-@AllArgsConstructor
-@Getter
-public class BrowseResultSet {
-    public final List<BrowseResult> results;
+public record BrowseResultSet(Collection<BrowseResult> results, String focusDomain) {
+    public BrowseResultSet(Collection<BrowseResult> results) {
+        this(results, "");
+    }
 }

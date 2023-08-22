@@ -62,7 +62,10 @@ public class BrowseCommand implements SearchCommandInterface {
         }
 
         return Optional.ofNullable(browseSite(ctx, query))
-                .map(results -> browseResultsRenderer.render(results, Map.of("query", query, "profile", parameters.profileStr())));
+                .map(results -> browseResultsRenderer.render(results,
+                        Map.of("query", query,
+                        "profile", parameters.profileStr(),
+                        "focusDomain", results.focusDomain())));
     }
 
 
@@ -89,7 +92,7 @@ public class BrowseCommand implements SearchCommandInterface {
     }
 
     private BrowseResultSet getRandomEntries(int set) {
-        var results = randomDomains.getRandomDomains(25, blacklist, set);
+        List<BrowseResult> results = randomDomains.getRandomDomains(25, blacklist, set);
 
         results.removeIf(browseResultCleaner.shouldRemoveResultPredicate());
 
@@ -115,7 +118,7 @@ public class BrowseCommand implements SearchCommandInterface {
         // shuffle the items for a less repetitive experience
         shuffle(neighbors);
 
-        return new BrowseResultSet(neighbors);
+        return new BrowseResultSet(neighbors, word);
     }
 
 }

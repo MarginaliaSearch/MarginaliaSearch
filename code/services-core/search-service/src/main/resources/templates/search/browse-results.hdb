@@ -36,7 +36,7 @@
     <h2>Random Domains</h2>
 
     <p class="description">
-        This list of domains is random. <b>Refresh</b> to get
+        This list of domains is random. <a href="/explore/random">Refresh</a> to get
         new domains, or click <b>Similar Domains</b> to
         take the helm.
     </p>
