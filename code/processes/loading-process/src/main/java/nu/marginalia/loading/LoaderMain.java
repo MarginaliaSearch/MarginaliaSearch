@@ -215,7 +215,7 @@ public class LoaderMain {
     public class InstructionCounter implements Interpreter {
         private int count = 0;
 
-        public void loadKeywords(EdgeUrl url, DocumentMetadata metadata, DocumentKeywords words) {
+        public void loadKeywords(EdgeUrl url, int features, DocumentMetadata metadata, DocumentKeywords words) {
             count++;
         }
 
