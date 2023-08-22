@@ -32,20 +32,33 @@ public class ConvertedDomainReader {
 
         private Instruction next = null;
 
+        private final static Cleaner cleaner = Cleaner.create();
+        static class CancelAction implements Runnable {
+            private final Future<?> future;
+
+            public CancelAction(Future<Object> taskFuture) {
+                this.future = taskFuture;
+            }
+
+            public void run() {
+                future.cancel(true);
+            }
+
+        }
+
         public PrefetchingInstructionIterator(Path path) {
-            Future<Object> future = executorService.submit(() -> readerThread(path));
+            var taskFuture = executorService.submit(() -> readerThread(path));
 
             // Cancel the future if the iterator is garbage collected
             // to reduce the risk of leaking resources; as the worker thread
             // will spin forever on put if the queue is full.
-            Cleaner.create().register(this, () -> {
-                future.cancel(true);
-            });
+
+            cleaner.register(this, new CancelAction(taskFuture));
         }
 
         private Object readerThread(Path path) {
             try (var or = new ObjectInputStream(new ZstdInputStream(new BufferedInputStream(new FileInputStream(path.toFile())), RecyclingBufferPool.INSTANCE))) {
-                for (; ; ) {
+                for (;;) {
                     var nextObject = or.readObject();
                     if (nextObject instanceof Instruction is) {
                         queue.put(is);
