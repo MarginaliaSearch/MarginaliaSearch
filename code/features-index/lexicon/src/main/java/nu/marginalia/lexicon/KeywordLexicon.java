@@ -145,7 +145,7 @@ public class KeywordLexicon implements AutoCloseable {
         }
     }
 
-    public int size() {
+    public long size() {
         Lock lock = memoryLock.readLock();
         try {
             lock.lock();
