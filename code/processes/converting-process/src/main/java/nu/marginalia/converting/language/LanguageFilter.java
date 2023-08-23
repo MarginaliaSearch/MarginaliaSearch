@@ -20,24 +20,24 @@ public class LanguageFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(LanguageFilter.class);
 
-    private final LanguagePredictionModel languagePredictionModel;
+    private final LanguagePredictionModel languagePredictionModel1;
+    private final LanguagePredictionModel languagePredictionModel2;
 
 
     /** Returns the probability the language is in English */
     public double dictionaryAgreement(DocumentLanguageData dld) {
-        return languagePredictionModel.predictEnglish(dld);
+        if (languagePredictionModel1.predictEnglish(dld) < 0.5)
+            return 0;
+
+        return languagePredictionModel2.predictEnglish(dld);
     }
 
     @Inject
     @SneakyThrows
     public LanguageFilter(LanguageModels lm) {
         try {
-            if (Boolean.getBoolean("disable-fasttext")) {
-                languagePredictionModel = new UngaBungaLanguagePredictionModel();
-            }
-            else {
-                languagePredictionModel = new FasttextLanguagePredictionModel(lm);
-            }
+            languagePredictionModel1 = new UngaBungaLanguagePredictionModel();
+            languagePredictionModel2 = new FasttextLanguagePredictionModel(lm);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -53,10 +53,6 @@ public class LanguageFilter {
 
 
     public boolean isBlockedUnicodeRange(String data) {
-        if (!languagePredictionModel.hasPoorAccuracy()) {
-            return false;
-        }
-
         for (var range: UnicodeRanges.values()) {
             if (range.test(data))
                 return true;
