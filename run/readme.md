@@ -26,8 +26,11 @@ $ run/setup.sh
 ### 2. Compile the project and build docker images
 
 ```
-$ ./gradlew assemble docker
+$ ./gradlew dist docker
 ```
+
+* `dist` is necessary for the processes to be possible to start and run.
+* `docker` is necessary for the services to be possible to start and run.
 
 ### 3. Initialize the database
 ```
