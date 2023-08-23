@@ -107,7 +107,7 @@ dependencyResolutionManagement {
 
     versionCatalogs {
         libs {
-            library('lombok', 'org.projectlombok', 'lombok').version('1.18.24')
+            library('lombok', 'org.projectlombok', 'lombok').version('1.18.28')
             library('mariadb-client', 'org.mariadb.jdbc', 'mariadb-java-client').version('3.0.6')
             library('hikaricp', 'com.zaxxer:HikariCP:5.0.1')
 
