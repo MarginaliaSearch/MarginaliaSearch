@@ -3,7 +3,7 @@ plugins {
     id "io.freefair.lombok" version "5.3.3.3"
     id 'application'
     id 'jvm-test-suite'
-    id 'com.palantir.docker' version '0.34.0'
+    id 'com.palantir.docker' version '0.35.0'
 }
 
 application {
