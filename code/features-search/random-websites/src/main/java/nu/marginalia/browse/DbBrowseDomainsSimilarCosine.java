@@ -6,7 +6,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.browse.model.BrowseResult;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.db.DomainBlacklist;
-import nu.marginalia.model.id.EdgeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +23,7 @@ public class DbBrowseDomainsSimilarCosine {
         this.dataSource = dataSource;
     }
 
-    public List<BrowseResult> getDomainNeighborsAdjacentCosine(EdgeId<EdgeDomain> domainId, DomainBlacklist blacklist, int count) {
+    public List<BrowseResult> getDomainNeighborsAdjacentCosine(int domainId, DomainBlacklist blacklist, int count) {
         List<BrowseResult> domains = new ArrayList<>(count);
 
         String q = """
@@ -43,7 +42,7 @@ public class DbBrowseDomainsSimilarCosine {
         try (var connection = dataSource.getConnection()) {
             try (var stmt = connection.prepareStatement(q)) {
                 stmt.setFetchSize(count);
-                stmt.setInt(1, domainId.id());
+                stmt.setInt(1, domainId);
                 stmt.setInt(2, count);
                 var rsp = stmt.executeQuery();
                 while (rsp.next() && domains.size() < count) {

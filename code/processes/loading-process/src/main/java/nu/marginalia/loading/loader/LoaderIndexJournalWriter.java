@@ -15,9 +15,6 @@ import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournalMode;
 import nu.marginalia.model.idx.DocumentMetadata;
-import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.model.id.EdgeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

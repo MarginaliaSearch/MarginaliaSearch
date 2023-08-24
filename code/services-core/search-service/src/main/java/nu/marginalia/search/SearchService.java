@@ -10,7 +10,6 @@ import nu.marginalia.db.storage.model.FileStorageType;
 import nu.marginalia.linkdb.LinkdbReader;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.search.client.SearchMqEndpoints;
-import nu.marginalia.search.db.DbUrlDetailsQuery;
 import nu.marginalia.search.svc.SearchFrontPageService;
 import nu.marginalia.search.svc.*;
 import nu.marginalia.service.control.ServiceEventLog;
@@ -30,7 +29,6 @@ import java.nio.file.Path;
 public class SearchService extends Service {
 
     private final WebsiteUrl websiteUrl;
-    private final DbUrlDetailsQuery dbUrlDetailsQuery;
     private final StaticResources staticResources;
     private final FileStorageService fileStorageService;
     private final LinkdbReader linkdbReader;
@@ -42,7 +40,6 @@ public class SearchService extends Service {
     @Inject
     public SearchService(BaseServiceParams params,
                          WebsiteUrl websiteUrl,
-                         DbUrlDetailsQuery dbUrlDetailsQuery,
                          StaticResources staticResources,
                          SearchFrontPageService frontPageService,
                          SearchErrorPageService errorPageService,
@@ -57,7 +54,6 @@ public class SearchService extends Service {
 
         this.eventLog = params.eventLog;
         this.websiteUrl = websiteUrl;
-        this.dbUrlDetailsQuery = dbUrlDetailsQuery;
         this.staticResources = staticResources;
         this.fileStorageService = fileStorageService;
         this.linkdbReader = linkdbReader;
@@ -89,12 +85,6 @@ public class SearchService extends Service {
         });
 
         Spark.awaitInitialization();
-    }
-
-    @MqNotification(endpoint = SearchMqEndpoints.FLUSH_CACHES)
-    public void flushCaches(String unusedArg) {
-        logger.info("Flushing caches");
-        dbUrlDetailsQuery.clearCaches();
     }
 
     @SneakyThrows

@@ -2,8 +2,6 @@ package nu.marginalia.control.svc;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.id.EdgeIdList;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -18,7 +16,7 @@ public class RandomExplorationService {
         this.dataSource = dataSource;
     }
 
-    public void removeRandomDomains(EdgeIdList<EdgeDomain> ids) throws SQLException {
+    public void removeRandomDomains(int[] ids) throws SQLException {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
                      DELETE FROM EC_RANDOM_DOMAINS
@@ -27,7 +25,7 @@ public class RandomExplorationService {
                      """))
         {
             for (var id : ids) {
-                stmt.setInt(1, id.id());
+                stmt.setInt(1, id);
                 stmt.addBatch();
             }
             stmt.executeBatch();

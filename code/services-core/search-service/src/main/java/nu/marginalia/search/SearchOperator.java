@@ -106,16 +106,11 @@ public class SearchOperator {
     }
 
     private int getDomainId(String domain) {
-        int domainId = -1;
-        try {
-            if (domain != null) {
-                return domainQueries.getDomainId(new EdgeDomain(domain)).id();
-            }
+        if (domain == null) {
+            return -1;
         }
-        catch (NoSuchElementException ex) {
 
-        }
-        return domainId;
+        return domainQueries.tryGetDomainId(new EdgeDomain(domain)).orElse(-1);
     }
 
     private List<String> getProblems(Context ctx, String evalResult, List<UrlDetails> queryResults, SearchQuery processedQuery) {

@@ -5,10 +5,7 @@ import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.browse.model.BrowseResult;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.db.DomainBlacklist;
-import nu.marginalia.model.id.EdgeId;
-import nu.marginalia.model.id.EdgeIdCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +23,7 @@ public class DbBrowseDomainsSimilarOldAlgo {
         this.dataSource = dataSource;
     }
 
-    public List<BrowseResult> getDomainNeighborsAdjacent(EdgeId<EdgeDomain> domainId, DomainBlacklist blacklist, int count) {
+    public List<BrowseResult> getDomainNeighborsAdjacent(int domainId, DomainBlacklist blacklist, int count) {
         final Set<BrowseResult> domains = new HashSet<>(count*3);
 
         final String q = """
@@ -49,7 +46,7 @@ public class DbBrowseDomainsSimilarOldAlgo {
         try (var connection = dataSource.getConnection()) {
             try (var stmt = connection.prepareStatement(q)) {
                 stmt.setFetchSize(count);
-                stmt.setInt(1, domainId.id());
+                stmt.setInt(1, domainId);
                 stmt.setInt(2, count);
                 var rsp = stmt.executeQuery();
                 while (rsp.next()) {
@@ -78,7 +75,7 @@ public class DbBrowseDomainsSimilarOldAlgo {
                 try (var stmt = connection.prepareStatement(q2)) {
 
                     stmt.setFetchSize(count/2);
-                    stmt.setInt(1, domainId.id());
+                    stmt.setInt(1, domainId);
                     stmt.setInt(2, count/2 - domains.size());
                     var rsp = stmt.executeQuery();
                     while (rsp.next()  && domains.size() < count/2) {
@@ -109,7 +106,7 @@ public class DbBrowseDomainsSimilarOldAlgo {
                     LIMIT ?""";
                 try (var stmt = connection.prepareStatement(q3)) {
                     stmt.setFetchSize(count/2);
-                    stmt.setInt(1, domainId.id());
+                    stmt.setInt(1, domainId);
                     stmt.setInt(2, count/2 - domains.size());
 
                     var rsp = stmt.executeQuery();
@@ -164,50 +161,5 @@ public class DbBrowseDomainsSimilarOldAlgo {
         }
         return domains;
     }
-
-
-    private <T> String idList(EdgeIdCollection<EdgeUrl> ids) {
-        StringJoiner j = new StringJoiner(",", "(", ")");
-        for (var id : ids.values()) {
-            j.add(Integer.toString(id));
-        }
-        return j.toString();
-    }
-
-    public List<BrowseResult> getBrowseResultFromUrlIds(EdgeIdCollection<EdgeUrl> urlIds) {
-        if (urlIds.isEmpty())
-            return Collections.emptyList();
-
-        List<BrowseResult> ret = new ArrayList<>(urlIds.size());
-
-        try (var conn = dataSource.getConnection()) {
-            try (var stmt = conn.createStatement()) {
-
-                String inStmt = idList(urlIds);
-
-                var rsp = stmt.executeQuery("""
-                    SELECT DOMAIN_ID, DOMAIN_NAME
-                    FROM EC_URL_VIEW 
-                    INNER JOIN DOMAIN_METADATA ON EC_URL_VIEW.DOMAIN_ID=DOMAIN_METADATA.ID 
-                    WHERE 
-                        KNOWN_URLS<5000 
-                    AND QUALITY>-10 
-                    AND EC_URL_VIEW.ID IN 
-                    """ + inStmt); // this injection is safe, inStmt is derived from concatenating a list of integers
-                while (rsp.next()) {
-                    int id = rsp.getInt(1);
-                    String domain = rsp.getString(2);
-
-                    ret.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id, 0));
-                }
-            }
-        }
-        catch (SQLException ex) {
-            logger.error("SQL error", ex);
-        }
-
-        return ret;
-    }
-
 
 }

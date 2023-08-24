@@ -1,8 +1,9 @@
 package nu.marginalia.db;
 
 import com.zaxxer.hikari.HikariDataSource;
+import gnu.trove.list.TIntList;
+import gnu.trove.list.array.TIntArrayList;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.id.EdgeIdList;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -58,10 +59,10 @@ public class DomainTypes {
         return ret;
     }
 
-    /** Retrieve the EdgeId of all domains of a certain type,
+    /** Retrieve the domain id of all domains of a certain type,
      * ignoring entries that are not in the EC_DOMAIN table */
-    public EdgeIdList<EdgeDomain> getKnownDomainsByType(Type type) {
-        EdgeIdList<EdgeDomain> ret = new EdgeIdList<>();
+    public TIntList getKnownDomainsByType(Type type) {
+        TIntList ret = new TIntArrayList();
 
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""

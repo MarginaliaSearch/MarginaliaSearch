@@ -2,8 +2,6 @@ package nu.marginalia.index.client.model.results;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.model.id.EdgeId;
 import nu.marginalia.model.id.UrlIdCodec;
 import org.jetbrains.annotations.NotNull;
 

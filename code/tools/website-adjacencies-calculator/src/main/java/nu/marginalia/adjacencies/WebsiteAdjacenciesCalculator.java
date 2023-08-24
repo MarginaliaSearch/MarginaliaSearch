@@ -5,7 +5,6 @@ import lombok.SneakyThrows;
 import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.id.EdgeId;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.service.module.DatabaseModule;
 
@@ -40,8 +39,7 @@ public class WebsiteAdjacenciesCalculator {
         System.out.println(Arrays.toString(domainName));
 
         int[] domainIds = Arrays.stream(domainName).map(EdgeDomain::new)
-                .map(dataStoreDao::getDomainId)
-                .mapToInt(EdgeId::id)
+                .mapToInt(dataStoreDao::getDomainId)
                 .map(domainAliases::deAlias)
                 .toArray();
 
@@ -49,7 +47,7 @@ public class WebsiteAdjacenciesCalculator {
             findAdjacentDtoS(domainId, similarities -> {
                 for (var similarity : similarities.similarities()) {
                     if (adjacenciesData.isIndexedDomain(similarity.domainId)) System.out.print("*");
-                    System.out.println(dataStoreDao.getDomain(new EdgeId<>(similarity.domainId)).map(Object::toString).orElse("") + " " + prettyPercent(similarity.value));
+                    System.out.println(dataStoreDao.getDomain(similarity.domainId).map(Object::toString).orElse("") + " " + prettyPercent(similarity.value));
                 }
             });
         }

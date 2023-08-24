@@ -5,7 +5,6 @@ import lombok.SneakyThrows;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.db.DbDomainQueries;
-import nu.marginalia.model.id.EdgeId;
 import nu.marginalia.search.model.DomainInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,10 +12,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /*
   TODO: This class needs to be refactored, a lot of
@@ -42,10 +38,11 @@ public class DomainInformationService {
 
     public Optional<DomainInformation> domainInfo(String site) {
 
-        EdgeId<EdgeDomain> domainId = getDomainFromPartial(site);
-        if (domainId == null) {
+        OptionalInt maybeDomainId = getDomainFromPartial(site);
+        if (maybeDomainId.isEmpty()) {
             return Optional.empty();
         }
+        int domainId = maybeDomainId.getAsInt();
 
         Optional<EdgeDomain> domain = dbDomainQueries.getDomain(domainId);
         if (domain.isEmpty()) {
@@ -85,7 +82,7 @@ public class DomainInformationService {
     }
 
     @SneakyThrows
-    private boolean inCrawlQueue(EdgeId<EdgeDomain> domainId) {
+    private boolean inCrawlQueue(int domainId) {
         try (var connection = dataSource.getConnection()) {
             try (var stmt = connection.prepareStatement(
                 """
@@ -94,21 +91,15 @@ public class DomainInformationService {
                     WHERE EC_DOMAIN.ID=?
                     """))
             {
-                stmt.setInt(1, domainId.id());
+                stmt.setInt(1, domainId);
                 var rsp = stmt.executeQuery();
                 return rsp.next();
             }
         }
     }
 
-    private EdgeId<EdgeDomain> getDomainFromPartial(String site) {
-        try {
-            return dbDomainQueries.getDomainId(new EdgeDomain(site));
-        }
-        catch (Exception ex) {
-            return null;
-        }
-
+    private OptionalInt getDomainFromPartial(String site) {
+        return dbDomainQueries.tryGetDomainId(new EdgeDomain(site));
     }
 
     @SneakyThrows
@@ -125,11 +116,11 @@ public class DomainInformationService {
     }
 
     @SneakyThrows
-    public int getPagesKnown(EdgeId<EdgeDomain> domainId) {
+    public int getPagesKnown(int domainId) {
         try (var connection = dataSource.getConnection()) {
 
             try (var stmt = connection.prepareStatement("SELECT KNOWN_URLS FROM DOMAIN_METADATA WHERE ID=?")) {
-                stmt.setInt(1, domainId.id());
+                stmt.setInt(1, domainId);
                 var rsp = stmt.executeQuery();
                 if (rsp.next()) {
                     return rsp.getInt(1);
@@ -142,11 +133,11 @@ public class DomainInformationService {
     }
 
     @SneakyThrows
-    public int getPagesVisited(EdgeId<EdgeDomain> domainId) {
+    public int getPagesVisited(int domainId) {
         try (var connection = dataSource.getConnection()) {
 
             try (var stmt = connection.prepareStatement("SELECT VISITED_URLS FROM DOMAIN_METADATA WHERE ID=?")) {
-                stmt.setInt(1, domainId.id());
+                stmt.setInt(1, domainId);
                 var rsp = stmt.executeQuery();
                 if (rsp.next()) {
                     return rsp.getInt(1);
@@ -160,11 +151,11 @@ public class DomainInformationService {
 
 
     @SneakyThrows
-    public int getPagesIndexed(EdgeId<EdgeDomain> domainId) {
+    public int getPagesIndexed(int domainId) {
         try (var connection = dataSource.getConnection()) {
 
             try (var stmt = connection.prepareStatement("SELECT GOOD_URLS FROM DOMAIN_METADATA WHERE ID=?")) {
-                stmt.setInt(1, domainId.id());
+                stmt.setInt(1, domainId);
                 var rsp = stmt.executeQuery();
                 if (rsp.next()) {
                     return rsp.getInt(1);
@@ -177,11 +168,11 @@ public class DomainInformationService {
     }
 
     @SneakyThrows
-    public int getIncomingLinks(EdgeId<EdgeDomain> domainId) {
+    public int getIncomingLinks(int domainId) {
         try (var connection = dataSource.getConnection()) {
 
             try (var stmt = connection.prepareStatement("SELECT COUNT(ID) FROM EC_DOMAIN_LINK WHERE DEST_DOMAIN_ID=?")) {
-                stmt.setInt(1, domainId.id());
+                stmt.setInt(1, domainId);
                 var rsp = stmt.executeQuery();
                 if (rsp.next()) {
                     return rsp.getInt(1);
@@ -193,11 +184,11 @@ public class DomainInformationService {
         }
     }
     @SneakyThrows
-    public int getOutboundLinks(EdgeId<EdgeDomain> domainId) {
+    public int getOutboundLinks(int domainId) {
         try (var connection = dataSource.getConnection()) {
 
             try (var stmt = connection.prepareStatement("SELECT COUNT(ID) FROM EC_DOMAIN_LINK WHERE SOURCE_DOMAIN_ID=?")) {
-                stmt.setInt(1, domainId.id());
+                stmt.setInt(1, domainId);
                 var rsp = stmt.executeQuery();
                 if (rsp.next()) {
                     return rsp.getInt(1);
@@ -210,11 +201,11 @@ public class DomainInformationService {
     }
 
     @SneakyThrows
-    public double getDomainQuality(EdgeId<EdgeDomain> domainId) {
+    public double getDomainQuality(int domainId) {
         try (var connection = dataSource.getConnection()) {
 
             try (var stmt = connection.prepareStatement("SELECT QUALITY FROM EC_DOMAIN WHERE ID=?")) {
-                stmt.setInt(1, domainId.id());
+                stmt.setInt(1, domainId);
                 var rsp = stmt.executeQuery();
                 if (rsp.next()) {
                     return rsp.getDouble(1);
@@ -226,11 +217,11 @@ public class DomainInformationService {
         }
     }
 
-    public DomainIndexingState getDomainState(EdgeId<EdgeDomain> domainId) {
+    public DomainIndexingState getDomainState(int domainId) {
         try (var connection = dataSource.getConnection()) {
 
             try (var stmt = connection.prepareStatement("SELECT STATE FROM EC_DOMAIN WHERE ID=?")) {
-                stmt.setInt(1, domainId.id());
+                stmt.setInt(1, domainId);
                 var rsp = stmt.executeQuery();
                 if (rsp.next()) {
                     return DomainIndexingState.valueOf(rsp.getString(1));
@@ -244,11 +235,11 @@ public class DomainInformationService {
         return DomainIndexingState.ERROR;
     }
 
-    public List<EdgeDomain> getLinkingDomains(EdgeId<EdgeDomain> domainId) {
+    public List<EdgeDomain> getLinkingDomains(int domainId) {
         try (var connection = dataSource.getConnection()) {
             List<EdgeDomain> results = new ArrayList<>(25);
             try (var stmt = connection.prepareStatement("SELECT SOURCE_DOMAIN FROM EC_RELATED_LINKS_VIEW WHERE DEST_DOMAIN_ID=? ORDER BY SOURCE_DOMAIN_ID LIMIT 25")) {
-                stmt.setInt(1, domainId.id());
+                stmt.setInt(1, domainId);
                 var rsp = stmt.executeQuery();
                 while (rsp.next()) {
                     results.add(new EdgeDomain(rsp.getString(1)));
@@ -264,11 +255,11 @@ public class DomainInformationService {
         return Collections.emptyList();
     }
 
-    public double getRank(EdgeId<EdgeDomain> domainId) {
+    public double getRank(int domainId) {
         try (var connection = dataSource.getConnection()) {
 
             try (var stmt = connection.prepareStatement("SELECT IFNULL(RANK, 1) FROM EC_DOMAIN WHERE ID=?")) {
-                stmt.setInt(1, domainId.id());
+                stmt.setInt(1, domainId);
                 var rsp = stmt.executeQuery();
                 if (rsp.next()) {
                     return rsp.getDouble(1);

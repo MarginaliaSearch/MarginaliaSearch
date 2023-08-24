@@ -11,7 +11,6 @@ import nu.marginalia.db.storage.model.FileStorageId;
 import nu.marginalia.db.storage.model.FileStorageType;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.gson.GsonFactory;
-import nu.marginalia.model.id.EdgeIdList;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.screenshot.ScreenshotService;
 import nu.marginalia.service.server.*;
@@ -224,7 +223,7 @@ public class ControlService extends Service {
             }
         });
 
-        randomExplorationService.removeRandomDomains(new EdgeIdList<>(idList.toArray()));
+        randomExplorationService.removeRandomDomains(idList.toArray());
 
         String after = request.queryParams("after");
 
