@@ -199,7 +199,7 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
             resume = ActorResumeBehavior.RETRY,
             description = """
                     Move the lexicon from the LEXICON_STAGING area to the LEXICON_LIVE area,
-                    then instruct the index-service to reload the lexicon.
+                    so that the index service can load it after repartitioning.
                     """
     )
     public void swapLexicon(Message message) throws Exception {
