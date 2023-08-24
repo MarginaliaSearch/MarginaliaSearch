@@ -10,6 +10,8 @@ import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.service.control.ServiceHeartbeat;
 import org.roaringbitmap.IntConsumer;
 import org.roaringbitmap.RoaringBitmap;
+import org.roaringbitmap.longlong.LongConsumer;
+import org.roaringbitmap.longlong.Roaring64Bitmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,12 +85,11 @@ public class ForwardIndexConverter {
             LongArray docFileData = LongArray.mmapForWriting(outputFileDocsData, ForwardIndexParameters.ENTRY_SIZE * docsFileId.size());
 
             journalReader.forEach(entry -> {
-                long entryOffset = (long) ForwardIndexParameters.ENTRY_SIZE * docIdToIdx.get(entry.urlId());
+                long entryOffset = (long) ForwardIndexParameters.ENTRY_SIZE * docIdToIdx.get(entry.docId());
 
                 int ranking = domainRankings.getRanking(entry.domainId());
                 long meta = DocumentMetadata.encodeRank(entry.docMeta(), ranking);
 
-                docFileData.set(entryOffset + ForwardIndexParameters.DOMAIN_OFFSET, entry.domainId());
                 docFileData.set(entryOffset + ForwardIndexParameters.METADATA_OFFSET, meta);
                 docFileData.set(entryOffset + ForwardIndexParameters.FEATURES_OFFSET, entry.header.documentFeatures());
             });
@@ -109,17 +110,18 @@ public class ForwardIndexConverter {
     }
 
     private LongArray getDocIds(Path outputFileDocs, IndexJournalReader journalReader) throws IOException {
-        RoaringBitmap rbm = new RoaringBitmap();
-        journalReader.forEachUrlId(rbm::add);
+        Roaring64Bitmap rbm = new Roaring64Bitmap();
+        journalReader.forEachDocId(rbm::add);
 
-        LongArray ret = LongArray.mmapForWriting(outputFileDocs, rbm.getCardinality());
-        rbm.forEach(new IntConsumer() {
+        LongArray ret = LongArray.mmapForWriting(outputFileDocs, rbm.getIntCardinality());
+        rbm.forEach(new LongConsumer() {
             int offset;
             @Override
-            public void accept(int value) {
+            public void accept(long value) {
                 ret.set(offset++, value);
             }
         });
+
         return ret;
     }
 

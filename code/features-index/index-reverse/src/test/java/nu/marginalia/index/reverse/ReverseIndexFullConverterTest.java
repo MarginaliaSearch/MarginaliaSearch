@@ -9,6 +9,7 @@ import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile
 import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournalMode;
+import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
@@ -113,17 +114,17 @@ class ReverseIndexFullConverterTest {
 
         var buffer = new LongQueryBuffer(32);
         reverseIndexReader.documents(keywordLexicon.getReadOnly("1")).read(buffer);
-        assertArrayEquals(LongStream.range(1, 17).map(v -> v | (255L << 32)).toArray(), buffer.copyData());
+        assertArrayEquals(LongStream.range(1, 17).map(this::addMaxRank).toArray(), buffer.copyData());
         System.out.println(buffer);
 
         buffer.reset();
         reverseIndexReader.documents(keywordLexicon.getReadOnly("2")).read(buffer);
-        assertArrayEquals(LongStream.range(1, 17).map(v -> v*2).map(v -> v | (255L << 32)).toArray(), buffer.copyData());
+        assertArrayEquals(LongStream.range(1, 17).map(v -> v*2).map(this::addMaxRank).toArray(), buffer.copyData());
         System.out.println(buffer);
 
         buffer.reset();
         reverseIndexReader.documents(keywordLexicon.getReadOnly("3")).read(buffer);
-        assertArrayEquals(LongStream.range(1, 17).map(v -> v*3).map(v -> v | (255L << 32)).toArray(), buffer.copyData());
+        assertArrayEquals(LongStream.range(1, 17).map(v -> v*3).map(this::addMaxRank).toArray(), buffer.copyData());
         System.out.println(buffer);
 
         buffer.reset();
@@ -136,5 +137,10 @@ class ReverseIndexFullConverterTest {
 
 
         TestUtil.clearTempDir(dataDir);
+    }
+
+    // Add a max domain rank component to the input, when interpreted as an ID
+    private long addMaxRank(long in) {
+        return UrlIdCodec.addRank(1f, in);
     }
 }

@@ -60,10 +60,6 @@ public class SearchIndexReader {
         return forwardIndexReader.getDocMeta(docId);
     }
 
-    public int getDomainId(long docId) {
-        return forwardIndexReader.getDomainId(docId);
-    }
-
     public int totalDocCount() {
         return forwardIndexReader.totalDocCount();
     }

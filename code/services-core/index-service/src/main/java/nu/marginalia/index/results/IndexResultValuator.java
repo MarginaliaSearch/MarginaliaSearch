@@ -13,6 +13,7 @@ import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.index.query.IndexQueryParams;
 import nu.marginalia.ranking.ResultValuator;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class IndexResultValuator {
@@ -21,7 +22,7 @@ public class IndexResultValuator {
     private final IndexQueryParams queryParams;
     private final TLongHashSet resultsWithPriorityTerms;
 
-    private final IndexMetadataService.TermMetadata termMetadata;
+    private final IndexMetadataService.TermMetadataForDocuments termMetadataForDocuments;
     private final IndexMetadataService.QuerySearchTerms searchTerms;
 
     private final ResultRankingContext rankingContext;
@@ -36,16 +37,17 @@ public class IndexResultValuator {
         this.rankingContext = rankingContext;
         this.searchResultValuator = metadataService.getSearchResultValuator();
 
-        final long[] resultsArray = results.toArray();
+        final long[] ids = results.toArray();
+        Arrays.sort(ids);
 
         this.searchTermVariants = subqueries.stream().map(sq -> sq.searchTermsInclude).distinct().toList();
         this.queryParams = queryParams;
         this.metadataService = metadataService;
 
         this.searchTerms = metadataService.getSearchTerms(subqueries);
-        this.termMetadata = metadataService.getTermMetadata(results.toArray(), searchTerms.termIdsAll);
+        this.termMetadataForDocuments = metadataService.getTermMetadataForDocuments(ids, searchTerms.termIdsAll);
 
-        resultsWithPriorityTerms = metadataService.getResultsWithPriorityTerms(subqueries, resultsArray);
+        resultsWithPriorityTerms = metadataService.getResultsWithPriorityTerms(subqueries, ids);
     }
 
     private final long flagsFilterMask =
@@ -54,12 +56,10 @@ public class IndexResultValuator {
     public SearchResultItem calculatePreliminaryScore(long id) {
 
         SearchResultItem searchResult = new SearchResultItem(id);
-        final long urlIdInt = searchResult.getUrlIdInt();
+        final long docId = searchResult.getDocumentId();
 
-        searchResult.setDomainId(metadataService.getDomainId(urlIdInt));
-
-        long docMetadata = metadataService.getDocumentMetadata(urlIdInt);
-        int htmlFeatures = metadataService.getHtmlFeatures(urlIdInt);
+        long docMetadata = metadataService.getDocumentMetadata(docId);
+        int htmlFeatures = metadataService.getHtmlFeatures(docId);
 
         int maxFlagsCount = 0;
         boolean anyAllSynthetic = false;
@@ -76,21 +76,21 @@ public class IndexResultValuator {
             for (int termIdx = 0; termIdx < termList.size(); termIdx++) {
                 String searchTerm = termList.get(termIdx);
 
-                long metadata = termMetadata.getTermMetadata(
-                        searchTerms.get(searchTerm),
-                        searchResult.getUrlIdInt()
+                long termMetadata = termMetadataForDocuments.getTermMetadata(
+                        searchTerms.getIdForTerm(searchTerm),
+                        searchResult.combinedId
                 );
 
                 var score = new SearchResultKeywordScore(
                         querySetId,
                         searchTerm,
-                        metadata,
+                        termMetadata,
                         docMetadata,
                         htmlFeatures,
                         resultsWithPriorityTerms.contains(searchResult.combinedId)
                 );
 
-                synthetic &= WordFlags.Synthetic.isPresent(metadata);
+                synthetic &= WordFlags.Synthetic.isPresent(termMetadata);
 
                 searchResult.keywordScores.add(score);
 
@@ -117,11 +117,13 @@ public class IndexResultValuator {
 
         final boolean hasPriorityTerm = resultsWithPriorityTerms.contains(id);
 
-        double score = searchResultValuator.calculateSearchResultValue(searchResult.keywordScores, 5000, rankingContext);
+        double score = searchResultValuator.calculateSearchResultValue(searchResult.keywordScores,
+                5000,
+                rankingContext);
 
         boolean disqualified = false;
 
-        if (!termMetadata.testCoherence(urlIdInt, searchTerms.coherences))
+        if (!termMetadataForDocuments.testCoherence(docId, searchTerms.coherences))
             disqualified = true;
         else if (maxFlagsCount == 0 && !anyAllSynthetic && maxPositionsSet == 0)
             disqualified = true;

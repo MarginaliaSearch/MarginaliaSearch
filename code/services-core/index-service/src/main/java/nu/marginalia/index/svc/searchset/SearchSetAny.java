@@ -4,7 +4,7 @@ import nu.marginalia.index.searchset.SearchSet;
 
 public class SearchSetAny implements SearchSet {
     @Override
-    public boolean contains(int urlId, long meta) {
+    public boolean contains(int domainId, long meta) {
         return true;
     }
 

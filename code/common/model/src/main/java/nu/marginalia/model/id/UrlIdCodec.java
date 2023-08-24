@@ -29,31 +29,15 @@ package nu.marginalia.model.id;
  * </pre></code>
  */
 public class UrlIdCodec {
-    private static final long RANK_MASK = 0x8600_0000_0000_0000L;
+    private static final long RANK_MASK = 0xFE00_0000_0000_0000L;
     private static final int DOCORD_MASK = 0x03FF_FFFF;
 
     /** Encode a URL id without a ranking element */
     public static long encodeId(int domainId, int documentOrdinal) {
-        domainId &= 0x7FFF_FFFFL;
+        domainId &= 0x7FFF_FFFF;
         documentOrdinal &= 0x03FF_FFFF;
 
         return ((long) domainId << 26) | documentOrdinal;
-    }
-
-    /** Encode a URL id with the optional ranking part
-     *
-     * @param rank [0,1] the importance of the domain, low is good
-     * @param domainId
-     * @param documentOrdinal
-     * @return
-     */
-    public static long encodeIdWithRank(float rank, int domainId, int documentOrdinal) {
-        long rankPart = (int)(rank * (1<<6));
-
-        if (rankPart >= 64) rankPart = 63;
-        if (rankPart < 0) rankPart = 0;
-
-        return encodeId(domainId, documentOrdinal) | (rankPart << 57);
     }
 
     /** Add a ranking element to an existing combined URL id.
@@ -88,7 +72,7 @@ public class UrlIdCodec {
 
     /** Mask out the ranking element from this URL id */
     public static long removeRank(long combinedId) {
-        return combinedId & (~RANK_MASK);
+        return combinedId & ~RANK_MASK;
     }
 
 }

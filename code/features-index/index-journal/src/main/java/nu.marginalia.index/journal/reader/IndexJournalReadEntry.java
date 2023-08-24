@@ -2,6 +2,7 @@ package nu.marginalia.index.journal.reader;
 
 import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
+import nu.marginalia.model.id.UrlIdCodec;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -51,11 +52,7 @@ public class IndexJournalReadEntry {
     }
 
     public int domainId() {
-        return (int) (docId() >>> 32L);
-    }
-
-    public int urlId() {
-        return (int) (docId() & 0xFFFF_FFFFL);
+        return UrlIdCodec.getDomainId(docId());
     }
 
     public IndexJournalEntryData readEntry() {

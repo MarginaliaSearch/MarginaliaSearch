@@ -7,6 +7,7 @@ import nu.marginalia.index.construction.IndexSizeEstimator;
 import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.model.IndexJournalStatistics;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
+import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.rwf.RandomWriteFunnel;
 import nu.marginalia.array.IntArray;
@@ -179,21 +180,9 @@ public class ReverseIndexFullConverter {
         @SneakyThrows
         @Override
         public void accept(long docId, IndexJournalEntryData.Record record) {
-
-            /* Encode the ID as
-             *
-             *     32 bits  32 bits
-             *   [ ranking | url-id ]
-             *
-             *  in order to get low-ranking documents to be considered first
-             *  when sorting the items.
-             */
-
-            int domainId = (int) (docId >>> 32);
-            long rankingId = (long) domainRankings.getRanking(domainId) << 32;
-
-            int urlId = (int) (docId & 0xFFFF_FFFFL);
-            long rankEncodedId = rankingId | urlId;
+            int domainId = UrlIdCodec.getDomainId(docId);
+            float rankingPart = domainRankings.getSortRanking(domainId);
+            long rankEncodedId = UrlIdCodec.addRank(rankingPart, docId);
 
             final int wordId = record.wordId();
             long offset = startOfRange(wordId);

@@ -15,6 +15,7 @@ import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.lexicon.KeywordLexicon;
+import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.idx.WordMetadata;
@@ -96,12 +97,14 @@ public class IndexQueryServiceIntegrationTest {
                                 List.of("3", "5", "2"), List.of("4"), Collections.emptyList(), Collections.emptyList(),
                                 Collections.emptyList()))).build());
 
-        Assertions.assertArrayEquals(
-                new int[] { 30, 90, 150, 210, 270, 330, 390, 450, 510 },
-                rsp.results
-                        .stream()
-                        .mapToInt(SearchResultItem::getUrlIdInt)
-                        .toArray());
+        int[] idxes = new int[] { 30, 510, 90, 150, 210, 270, 330, 390, 450 };
+        long[] ids = IntStream.of(idxes).mapToLong(this::fullId).toArray();
+        long[] actual = rsp.results
+                .stream()
+                .mapToLong(SearchResultItem::getDocumentId)
+                .toArray();
+
+        Assertions.assertArrayEquals(ids, actual);
     }
 
 
@@ -127,9 +130,11 @@ public class IndexQueryServiceIntegrationTest {
                         .subqueries(List.of(new SearchSubquery(
                                 List.of("3", "5", "2"), List.of("4"), Collections.emptyList(), Collections.emptyList(),
                                 Collections.emptyList()))).build());
-        Assertions.assertArrayEquals(
-                new int[] { 210, 270 },
-                rsp.results.stream().mapToInt(SearchResultItem::getUrlIdInt).toArray());
+        int[] idxes = new int[] {  210, 270 };
+        long[] ids = IntStream.of(idxes).mapToLong(id -> UrlIdCodec.encodeId(id/100, id)).toArray();
+        long[] actual = rsp.results.stream().mapToLong(SearchResultItem::getDocumentId).toArray();
+
+        Assertions.assertArrayEquals(ids, actual);
     }
 
     @Test
@@ -169,13 +174,17 @@ public class IndexQueryServiceIntegrationTest {
 
     }
 
+    private long fullId(int id) {
+        return UrlIdCodec.encodeId((32 - (id % 32)), id);
+    }
+
     public void loadData(int id) {
         int[] factors = IntStream
                 .rangeClosed(1, id)
                 .filter(v -> (id % v) == 0)
                 .toArray();
 
-        long fullId = id | ((long) (32 - (id % 32)) << 32);
+        long fullId = fullId(id);
 
         var header = new IndexJournalEntryHeader(factors.length, 0, fullId, new DocumentMetadata(0, 0, 0, 0, id % 5, id, id % 20, (byte) 0).encode());
 
@@ -190,7 +199,7 @@ public class IndexQueryServiceIntegrationTest {
 
     public void loadDataWithDomain(int domain, int id) {
         int[] factors = IntStream.rangeClosed(1, id).filter(v -> (id % v) == 0).toArray();
-        var header = new IndexJournalEntryHeader(factors.length, 0, id | ((long) domain << 32), DocumentMetadata.defaultValue());
+        var header = new IndexJournalEntryHeader(factors.length, 0, UrlIdCodec.encodeId(domain, id), DocumentMetadata.defaultValue());
 
         long[] data = new long[factors.length*2];
         for (int i = 0; i < factors.length; i++) {

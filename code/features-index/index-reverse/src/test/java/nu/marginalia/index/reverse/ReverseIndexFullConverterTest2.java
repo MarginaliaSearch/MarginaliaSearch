@@ -11,6 +11,7 @@ import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.index.priority.ReverseIndexPriorityParameters;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournalMode;
+import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
@@ -101,8 +102,8 @@ class ReverseIndexFullConverterTest2 {
         return LongStream.rangeClosed(1, id).filter(v -> (id % v) == 0).toArray();
     }
 
-    long createId(long url, long domain) {
-        return (domain << 32) | url;
+    long createId(int url, int domain) {
+        return UrlIdCodec.encodeId(domain, url);
     }
     public void createEntry(IndexJournalWriter writer, KeywordLexicon keywordLexicon, int id) {
         int[] factors = getFactorsI(id);

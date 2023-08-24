@@ -266,9 +266,7 @@ public class IndexQueryService {
 
         var domainCountFilter = new IndexResultDomainDeduplicator(params.limitByDomain);
 
-        results.sort(Comparator.comparing(SearchResultItem::getScore).reversed()
-                .thenComparingInt(SearchResultItem::getRanking)
-                .thenComparingInt(SearchResultItem::getUrlIdInt));
+        results.sort(Comparator.naturalOrder());
 
         List<SearchResultItem> resultsList = new ArrayList<>(results.size());
 

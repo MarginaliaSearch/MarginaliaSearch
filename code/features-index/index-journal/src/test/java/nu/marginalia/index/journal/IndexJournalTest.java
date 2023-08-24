@@ -6,6 +6,7 @@ import nu.marginalia.index.journal.reader.IndexJournalReader;
 import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile;
 import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
 import nu.marginalia.lexicon.KeywordLexicon;
+import nu.marginalia.model.id.UrlIdCodec;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +25,9 @@ public class IndexJournalTest {
     Path tempFile;
     KeywordLexicon lexicon;
     IndexJournalReader reader;
+
+    long firstDocId = UrlIdCodec.encodeId(44, 10);
+    long secondDocId = UrlIdCodec.encodeId(43, 15);
 
     @BeforeEach
     public void setUp() throws IOException {
@@ -65,11 +69,11 @@ public class IndexJournalTest {
     }
 
     @Test
-    public void forEachUrlId() {
-        List<Integer> expected = List.of(10, 15);
-        List<Integer> actual = new ArrayList<>();
+    public void forEachDocId() {
+        List<Long> expected = List.of(firstDocId, secondDocId);
+        List<Long> actual = new ArrayList<>();
 
-        reader.forEachUrlId(actual::add);
+        reader.forEachDocId(actual::add);
         assertEquals(expected, actual);
     }
 
@@ -82,31 +86,15 @@ public class IndexJournalTest {
         assertEquals(expected, actual);
     }
 
-
-    @Test
-    public void forEachUrlIdWordId() {
-        List<Pair<Integer, Integer>> expected = List.of(
-                Pair.of(10, 1),
-                Pair.of(10, 2),
-                Pair.of(10, 3),
-                Pair.of(10, 5),
-                Pair.of(15, 5),
-                Pair.of(15, 6));
-        List<Pair<Integer, Integer>> actual = new ArrayList<>();
-
-        reader.forEachUrlIdWordId((url, word) -> actual.add(Pair.of(url, word)));
-        assertEquals(expected, actual);
-    }
-
     @Test
     public void forEachDocIdWordId() {
         List<Pair<Long, Integer>> expected = List.of(
-                Pair.of(10L | (44L << 32), 1),
-                Pair.of(10L | (44L << 32), 2),
-                Pair.of(10L | (44L << 32), 3),
-                Pair.of(10L | (44L << 32), 5),
-                Pair.of(15L | (43L << 32), 5),
-                Pair.of(15L | (43L << 32), 6));
+                Pair.of(firstDocId, 1),
+                Pair.of(firstDocId, 2),
+                Pair.of(firstDocId, 3),
+                Pair.of(firstDocId, 5),
+                Pair.of(secondDocId, 5),
+                Pair.of(secondDocId, 6));
         List<Pair<Long, Integer>> actual = new ArrayList<>();
 
         reader.forEachDocIdWordId((url, word) -> actual.add(Pair.of(url, word)));
@@ -116,12 +104,12 @@ public class IndexJournalTest {
     @Test
     public void forEachDocIdRecord() {
         List<Pair<Long, IndexJournalEntryData.Record>> expected = List.of(
-                Pair.of(10L | (44L << 32), new IndexJournalEntryData.Record(1, 2)),
-                Pair.of(10L | (44L << 32), new IndexJournalEntryData.Record(2, 3)),
-                Pair.of(10L | (44L << 32), new IndexJournalEntryData.Record(3, 4)),
-                Pair.of(10L | (44L << 32), new IndexJournalEntryData.Record(5, 6)),
-                Pair.of(15L | (43L << 32), new IndexJournalEntryData.Record(5, 5)),
-                Pair.of(15L | (43L << 32), new IndexJournalEntryData.Record(6, 6))
+                Pair.of(firstDocId, new IndexJournalEntryData.Record(1, 2)),
+                Pair.of(firstDocId, new IndexJournalEntryData.Record(2, 3)),
+                Pair.of(firstDocId, new IndexJournalEntryData.Record(3, 4)),
+                Pair.of(firstDocId, new IndexJournalEntryData.Record(5, 6)),
+                Pair.of(secondDocId, new IndexJournalEntryData.Record(5, 5)),
+                Pair.of(secondDocId, new IndexJournalEntryData.Record(6, 6))
         );
         List<Pair<Long, IndexJournalEntryData.Record>> actual = new ArrayList<>();
 

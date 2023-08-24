@@ -188,7 +188,11 @@ public class SearchIndex {
                 indexReader.numHitsPrio(b)
         );
     }
-    /** Replaces the values of ids with their associated metadata, or 0L if absent */
+
+    /** Return an array of encoded document metadata longs corresponding to the
+     * document identifiers provided; with metadata for termId.  The input array
+     * docs[] *must* be sorted.
+     */
     public long[] getTermMetadata(int termId, long[] docs) {
         return indexReader.getMetadata(termId, docs);
     }
@@ -198,10 +202,6 @@ public class SearchIndex {
     }
     public int getHtmlFeatures(long docId) {
         return indexReader.getHtmlFeatures(docId);
-    }
-
-    public int getDomainId(long docId) {
-        return indexReader.getDomainId(docId);
     }
 
     public int getTotalDocCount() {

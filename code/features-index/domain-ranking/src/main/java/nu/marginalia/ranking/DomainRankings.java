@@ -37,6 +37,10 @@ public class DomainRankings {
         return rankings.getOrDefault(domainId, (short) MAX_RANK_VALUE);
     }
 
+    public float getSortRanking(int domainId) {
+        return rankings.getOrDefault(domainId, (short) MAX_RANK_VALUE) / (float) MAX_RANK_VALUE;
+    }
+
     public int size() {
         return rankings.size();
     }

@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.function.IntConsumer;
+import java.util.function.LongConsumer;
 
 public interface IndexJournalReader extends Iterable<IndexJournalReadEntry> {
     int FILE_HEADER_SIZE_LONGS = 2;
@@ -19,13 +20,12 @@ public interface IndexJournalReader extends Iterable<IndexJournalReadEntry> {
 
     void forEachWordId(IntConsumer consumer);
 
-    void forEachUrlIdWordId(BiIntConsumer consumer);
 
     void forEachDocIdWordId(LongIntConsumer consumer);
 
     void forEachDocIdRecord(LongObjectConsumer<IndexJournalEntryData.Record> consumer);
 
-    void forEachUrlId(IntConsumer consumer);
+    void forEachDocId(LongConsumer consumer);
 
     @NotNull
     @Override

@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Iterator;
 import java.util.function.IntConsumer;
+import java.util.function.LongConsumer;
 import java.util.function.Predicate;
 
 public class IndexJournalReaderSingleCompressedFile implements IndexJournalReader {
@@ -116,19 +117,6 @@ public class IndexJournalReaderSingleCompressedFile implements IndexJournalReade
     }
 
     @Override
-    public void forEachUrlIdWordId(BiIntConsumer consumer) {
-        for (var entry : this) {
-            var data = entry.readEntry();
-
-            for (var post : data) {
-                if (filter(entry, post)) {
-                    consumer.accept(entry.urlId(), post.wordId());
-                }
-            }
-        }
-    }
-
-    @Override
     public void forEachDocIdWordId(LongIntConsumer consumer) {
         for (var entry : this) {
             var data = entry.readEntry();
@@ -154,10 +142,10 @@ public class IndexJournalReaderSingleCompressedFile implements IndexJournalReade
         }
     }
     @Override
-    public void forEachUrlId(IntConsumer consumer) {
+    public void forEachDocId(LongConsumer consumer) {
         for (var entry : this) {
             if (filter(entry)) {
-                consumer.accept(entry.urlId());
+                consumer.accept(entry.docId());
             }
         }
     }

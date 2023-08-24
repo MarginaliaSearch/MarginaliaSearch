@@ -113,8 +113,9 @@ class ForwardIndexConverterTest {
         var forwardReader = new ForwardIndexReader(docsFileId, docsFileData);
 
         for (int i = 36; i < workSetSize; i++) {
-            assertEquals(0x00FF000000000000L | (i % 5), forwardReader.getDocMeta(i));
-            assertEquals(i/20, forwardReader.getDomainId(i));
+            long docId = createId(i, i/20);
+            assertEquals(0x00FF000000000000L | (i % 5), forwardReader.getDocMeta(docId));
+            assertEquals(i/20, UrlIdCodec.getDomainId(docId));
         }
 
     }

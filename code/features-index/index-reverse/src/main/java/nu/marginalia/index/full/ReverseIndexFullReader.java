@@ -111,10 +111,23 @@ public class ReverseIndexFullReader {
             return new long[docIds.length];
         }
 
-        Arrays.sort(docIds);
+        assert isSorted(docIds) : "The input array docIds is assumed to be sorted";
 
         var reader = createReaderNew(offset);
         return reader.queryData(docIds, 1);
+    }
+
+    private boolean isSorted(long[] ids) {
+        if (ids.length == 0)
+            return true;
+        long prev = ids[0];
+
+        for (int i = 1; i < ids.length; i++) {
+            if(ids[i] <= prev)
+                return false;
+        }
+
+        return true;
     }
 
 }
