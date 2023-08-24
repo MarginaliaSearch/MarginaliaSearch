@@ -11,7 +11,8 @@ import java.util.List;
 /** Represents a document matching a search query */
 @AllArgsConstructor @Getter
 public class SearchResultItem implements Comparable<SearchResultItem> {
-    /** Encoded ID that contains both the URL id and its ranking */
+    /** Encoded ID that contains both the URL id and its ranking.  This is
+     * probably not what you want, use getDocumentId() instead */
     public final long combinedId;
 
     /** How did the subqueries match against the document ? */
@@ -20,8 +21,8 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
     /** How many other potential results existed in the same domain */
     public int resultsFromDomain;
 
-    public SearchResultItem(long val) {
-        this.combinedId = val;
+    public SearchResultItem(long combinedId) {
+        this.combinedId = combinedId;
         this.keywordScores = new ArrayList<>(16);
     }
 
@@ -64,16 +65,6 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
             return o.getDocumentId()  == getDocumentId();
         }
         return false;
-    }
-
-    public long deduplicationKey() {
-        final int domainId = getDomainId();
-
-        if (domainId == Integer.MAX_VALUE || domainId == Integer.MIN_VALUE) {
-            return 0;
-        }
-
-        return domainId;
     }
 
     @Override
