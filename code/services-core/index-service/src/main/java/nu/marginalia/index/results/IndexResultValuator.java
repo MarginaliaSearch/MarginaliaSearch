@@ -4,6 +4,7 @@ import gnu.trove.list.TLongList;
 import gnu.trove.set.hash.TLongHashSet;
 import nu.marginalia.index.client.model.results.SearchResultPreliminaryScore;
 import nu.marginalia.index.client.model.results.ResultRankingContext;
+import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.index.query.limit.QueryStrategy;
@@ -13,6 +14,7 @@ import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.index.query.IndexQueryParams;
 import nu.marginalia.ranking.ResultValuator;
 
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
 
@@ -53,10 +55,13 @@ public class IndexResultValuator {
     private final long flagsFilterMask =
             WordFlags.Title.asBit() | WordFlags.Subjects.asBit() | WordFlags.UrlDomain.asBit() | WordFlags.UrlPath.asBit();
 
+    @Nullable
     public SearchResultItem calculatePreliminaryScore(long id) {
 
-        SearchResultItem searchResult = new SearchResultItem(id);
-        final long docId = searchResult.getDocumentId();
+        final long docId = UrlIdCodec.removeRank(id);
+
+        if (!termMetadataForDocuments.testCoherence(docId, searchTerms.coherences))
+            return null;
 
         long docMetadata = metadataService.getDocumentMetadata(docId);
         int htmlFeatures = metadataService.getHtmlFeatures(docId);
@@ -65,8 +70,12 @@ public class IndexResultValuator {
         boolean anyAllSynthetic = false;
         int maxPositionsSet = 0;
 
-        for (int querySetId = 0; querySetId < searchTermVariants.size(); querySetId++) {
+        SearchResultItem searchResult = new SearchResultItem(id);
 
+        for (int querySetId = 0;
+             querySetId < searchTermVariants.size();
+             querySetId++)
+        {
             var termList = searchTermVariants.get(querySetId);
 
             SearchResultKeywordScore[] termScoresForSet = new SearchResultKeywordScore[termList.size()];
@@ -115,22 +124,15 @@ public class IndexResultValuator {
             anyAllSynthetic |= synthetic;
         }
 
-        final boolean hasPriorityTerm = resultsWithPriorityTerms.contains(id);
+        if (maxFlagsCount == 0 && !anyAllSynthetic && maxPositionsSet == 0)
+            return null;
 
         double score = searchResultValuator.calculateSearchResultValue(searchResult.keywordScores,
-                5000,
+                5000, // use a dummy value here as it's not present in the index
                 rankingContext);
 
-        boolean disqualified = false;
-
-        if (!termMetadataForDocuments.testCoherence(docId, searchTerms.coherences))
-            disqualified = true;
-        else if (maxFlagsCount == 0 && !anyAllSynthetic && maxPositionsSet == 0)
-            disqualified = true;
-
         searchResult.setScore(new SearchResultPreliminaryScore(
-                disqualified,
-                hasPriorityTerm,
+                resultsWithPriorityTerms.contains(id),
                 score
         ));
 

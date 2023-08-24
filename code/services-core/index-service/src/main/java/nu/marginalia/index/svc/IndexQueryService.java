@@ -258,7 +258,7 @@ public class IndexQueryService {
         return Arrays.stream(resultIds.toArray())
                 .parallel()
                 .mapToObj(evaluator::calculatePreliminaryScore)
-                .filter(score -> !score.getScore().isDisqualified())
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
