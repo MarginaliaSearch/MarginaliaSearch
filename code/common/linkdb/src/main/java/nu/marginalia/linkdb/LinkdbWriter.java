@@ -1,6 +1,6 @@
 package nu.marginalia.linkdb;
 
-import nu.marginalia.linkdb.model.UrlDetail;
+import nu.marginalia.linkdb.model.LdbUrlDetail;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -31,11 +31,11 @@ public class LinkdbWriter {
         }
     }
 
-    public void add(UrlDetail urlDetail) throws SQLException {
-        add(List.of(urlDetail));
+    public void add(LdbUrlDetail ldbUrlDetail) throws SQLException {
+        add(List.of(ldbUrlDetail));
     }
 
-    public void add(List<UrlDetail> urlDetail) throws SQLException {
+    public void add(List<LdbUrlDetail> ldbUrlDetail) throws SQLException {
 
         try (var stmt = connection.prepareStatement("""
                 INSERT OR IGNORE INTO DOCUMENT(ID, URL, TITLE, DESCRIPTION, WORDS_TOTAL, FORMAT, FEATURES, DATA_HASH, QUALITY, PUB_YEAR)
@@ -43,7 +43,7 @@ public class LinkdbWriter {
                 """)) {
 
             int i = 0;
-            for (var document : urlDetail) {
+            for (var document : ldbUrlDetail) {
                 var url = document.url();
 
                 stmt.setLong(1, document.urlId());

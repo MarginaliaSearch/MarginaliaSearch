@@ -14,7 +14,7 @@ import java.util.StringJoiner;
 
 @AllArgsConstructor @NoArgsConstructor @With @Getter @ToString
 public class UrlDetails {
-    public int id;
+    public long id;
     public int domainId;
     public EdgeUrl url;
     public String title;
@@ -66,7 +66,7 @@ public class UrlDetails {
     }
 
     public int hashCode() {
-        return Integer.hashCode(id);
+        return Long.hashCode(id);
     }
 
     public boolean equals(Object other) {

@@ -27,18 +27,9 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
         this.keywordScores = new ArrayList<>(16);
     }
 
-    @Deprecated
-    public EdgeId<EdgeUrl> getUrlId() {
-        return new EdgeId<>(getUrlIdInt());
-    }
 
     public long getDocumentId() {
         return UrlIdCodec.removeRank(combinedId);
-    }
-
-    @Deprecated
-    public int getUrlIdInt() {
-        return (int)(combinedId & 0xFFFF_FFFFL);
     }
 
     public int getRanking() {
@@ -63,7 +54,7 @@ public class SearchResultItem implements Comparable<SearchResultItem> {
     }
 
     public String toString() {
-        return getClass().getSimpleName() + "[ url= " + getUrlId() + ", rank=" + getRanking() + "]";
+        return getClass().getSimpleName() + "[ url= " + getDocumentId() + ", rank=" + getRanking() + "]";
     }
 
     public boolean equals(Object other) {

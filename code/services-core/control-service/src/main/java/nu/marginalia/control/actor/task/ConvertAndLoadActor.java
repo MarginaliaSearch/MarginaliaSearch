@@ -23,6 +23,8 @@ import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.actor.prototype.AbstractActorPrototype;
 import nu.marginalia.actor.state.ActorState;
 import nu.marginalia.actor.state.ActorResumeBehavior;
+import nu.marginalia.search.client.SearchClient;
+import nu.marginalia.search.client.SearchMqEndpoints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,11 +47,14 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
     public static final String REPARTITION_WAIT = "REPARTITION-WAIT";
     public static final String REINDEX = "REINDEX";
     public static final String REINDEX_WAIT = "REINDEX-WAIT";
+    public static final String SWITCH_LINKDB = "SWITCH-LINKDB";
+
     public static final String END = "END";
     private final ActorProcessWatcher processWatcher;
     private final MqOutbox mqConverterOutbox;
     private final MqOutbox mqLoaderOutbox;
     private final MqOutbox indexOutbox;
+    private final MqOutbox searchOutbox;
     private final FileStorageService storageService;
     private final Gson gson;
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -74,12 +79,14 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
                                ProcessOutboxes processOutboxes,
                                FileStorageService storageService,
                                IndexClient indexClient,
+                               SearchClient searchClient,
                                Gson gson
                                    )
     {
         super(stateFactory);
         this.processWatcher = processWatcher;
         this.indexOutbox = indexClient.outbox();
+        this.searchOutbox = searchClient.outbox();
         this.mqConverterOutbox = processOutboxes.getConverterOutbox();
         this.mqLoaderOutbox = processOutboxes.getLoaderOutbox();
         this.storageService = storageService;
@@ -248,7 +255,7 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
 
     @ActorState(
             name = REINDEX_WAIT,
-            next = END,
+            next = SWITCH_LINKDB,
             resume = ActorResumeBehavior.RETRY,
             description = """
                     Wait for the index-service to finish reindexing the data.
@@ -262,5 +269,16 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
         }
     }
 
+    @ActorState(
+            name = SWITCH_LINKDB,
+            next = END,
+            resume = ActorResumeBehavior.RETRY,
+            description = """
+                    Instruct the search service to switch to the new linkdb
+                    """
+    )
+    public void switchLinkdb(Long id) throws Exception {
+        searchOutbox.sendNotice(SearchMqEndpoints.SWITCH_LINKDB, ":-)");
+    }
 
 }

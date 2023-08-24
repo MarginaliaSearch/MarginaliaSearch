@@ -5,7 +5,7 @@ import nu.marginalia.converting.instruction.instructions.LoadProcessedDocument;
 import nu.marginalia.converting.instruction.instructions.LoadProcessedDocumentWithError;
 import nu.marginalia.linkdb.LinkdbStatusWriter;
 import nu.marginalia.linkdb.LinkdbWriter;
-import nu.marginalia.linkdb.model.UrlDetail;
+import nu.marginalia.linkdb.model.LdbUrlDetail;
 import nu.marginalia.linkdb.model.UrlStatus;
 import nu.marginalia.model.id.UrlIdCodec;
 import org.slf4j.Logger;
@@ -29,14 +29,14 @@ public class LdbLoadProcessedDocument {
     }
 
     public void load(LoaderData data, List<LoadProcessedDocument> documents) {
-        var details = new ArrayList<UrlDetail>();
+        var details = new ArrayList<LdbUrlDetail>();
 
         int domainId = data.getTargetDomainId();
         var statusList = new ArrayList<UrlStatus>();
 
         for (var document : documents) {
             long id = UrlIdCodec.encodeId(domainId, document.ordinal());
-            details.add(new UrlDetail(
+            details.add(new LdbUrlDetail(
                     id,
                     document.url(),
                     document.title(),

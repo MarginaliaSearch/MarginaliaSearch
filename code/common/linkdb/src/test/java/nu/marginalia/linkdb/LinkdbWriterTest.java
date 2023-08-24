@@ -1,7 +1,7 @@
 package nu.marginalia.linkdb;
 
 import gnu.trove.list.array.TLongArrayList;
-import nu.marginalia.linkdb.model.UrlDetail;
+import nu.marginalia.linkdb.model.LdbUrlDetail;
 import nu.marginalia.model.EdgeDomain;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +16,7 @@ public class LinkdbWriterTest {
         Path tempPath = Files.createTempFile("linkdb", ".db");
         try {
             var writer = new LinkdbWriter(tempPath);
-            writer.add(new UrlDetail(
+            writer.add(new LdbUrlDetail(
                     1,
                     new nu.marginalia.model.EdgeUrl("http", new EdgeDomain("example.com"), null, "/", null),
                     "Test",

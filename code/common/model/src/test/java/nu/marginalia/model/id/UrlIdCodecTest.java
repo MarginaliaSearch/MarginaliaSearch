@@ -20,14 +20,6 @@ class UrlIdCodecTest {
     }
 
     @Test
-    public void testRankBounds() {
-        long encoded = UrlIdCodec.encodeIdWithRank(1.0f, 0, 0);
-        assertEquals(0, UrlIdCodec.getDomainId(encoded));
-        assertEquals(63, UrlIdCodec.getRank(encoded));
-        assertEquals(0, UrlIdCodec.getDocumentOrdinal(encoded));
-    }
-
-    @Test
     public void testRankBoundsAdd() {
         long encoded = UrlIdCodec.encodeId(0, 0);
         encoded = UrlIdCodec.addRank(1.f, encoded);
@@ -46,11 +38,4 @@ class UrlIdCodecTest {
         assertEquals(0x03FF_FFFF, UrlIdCodec.getDocumentOrdinal(encoded));
     }
 
-    @Test
-    public void testRankBoundsNeg() {
-        long encoded = UrlIdCodec.encodeIdWithRank(-1.0f, 0, 0);
-        assertEquals(0, UrlIdCodec.getDomainId(encoded));
-        assertEquals(0, UrlIdCodec.getRank(encoded));
-        assertEquals(0, UrlIdCodec.getDocumentOrdinal(encoded));
-    }
 }

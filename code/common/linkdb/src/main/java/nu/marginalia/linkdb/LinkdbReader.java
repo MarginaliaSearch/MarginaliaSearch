@@ -4,10 +4,10 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import gnu.trove.list.TLongList;
-import nu.marginalia.linkdb.model.UrlDetail;
-import nu.marginalia.linkdb.model.UrlProtocol;
-import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.linkdb.model.LdbUrlDetail;
 import nu.marginalia.model.EdgeUrl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -23,13 +23,27 @@ import java.util.List;
 
 @Singleton
 public class LinkdbReader {
-    Path dbFile;
-    volatile Connection connection;
+    private Path dbFile;
+    private volatile Connection connection;
+
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
     public LinkdbReader(@Named("linkdb-file") Path dbFile) throws SQLException {
         this.dbFile = dbFile;
-        connection = createConnection();
+
+        if (Files.exists(dbFile)) {
+            try {
+                connection = createConnection();
+            }
+            catch (SQLException ex) {
+                connection = null;
+                logger.error("Failed to load linkdb file", ex);
+            }
+        }
+        else {
+            logger.warn("No linkdb file {}", dbFile);
+        }
     }
 
     private Connection createConnection() throws SQLException {
@@ -38,17 +52,21 @@ public class LinkdbReader {
     }
 
     public void switchInput(Path newDbFile) throws IOException, SQLException {
-        connection.close();
+        if (connection != null) {
+            connection.close();
+        }
 
         Files.move(newDbFile, dbFile, StandardCopyOption.REPLACE_EXISTING);
 
         connection = createConnection();
     }
 
-    public List<UrlDetail> getUrlDetails(TLongList ids) throws SQLException {
-        List<UrlDetail> ret = new ArrayList<>(ids.size());
+    public List<LdbUrlDetail> getUrlDetails(TLongList ids) throws SQLException {
+        List<LdbUrlDetail> ret = new ArrayList<>(ids.size());
 
-        if (connection.isClosed()) {
+        if (connection == null ||
+            connection.isClosed())
+        {
             throw new RuntimeException("URL query temporarily unavailable due to database switch");
         }
 
@@ -62,7 +80,7 @@ public class LinkdbReader {
                 var rs = stmt.executeQuery();
                 if (rs.next()) {
                     var url = new EdgeUrl(rs.getString("URL"));
-                    ret.add(new UrlDetail(
+                    ret.add(new LdbUrlDetail(
                             rs.getLong("ID"),
                             url,
                             rs.getString("TITLE"),
