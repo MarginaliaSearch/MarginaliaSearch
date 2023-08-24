@@ -3,6 +3,7 @@ package nu.marginalia.model.id;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
+@Deprecated
 public record EdgeIdArray<T> (int... values) implements EdgeIdCollection<T> {
 
     public static <T> EdgeIdArray<T> gather(IntStream stream) {

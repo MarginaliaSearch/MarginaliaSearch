@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.stream.IntStream;
 
+@Deprecated
 public interface EdgeIdCollection<T> extends Iterable<EdgeId<T>> {
     int size();
     boolean isEmpty();

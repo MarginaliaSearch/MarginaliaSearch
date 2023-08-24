@@ -5,6 +5,7 @@ import gnu.trove.list.array.TIntArrayList;
 
 import java.util.stream.IntStream;
 
+@Deprecated
 public record EdgeIdList<T> (TIntArrayList list) implements
         EdgeIdCollection<T>,
         EdgeIdCollectionMutable<T> {

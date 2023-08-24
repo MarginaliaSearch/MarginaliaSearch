@@ -2,6 +2,7 @@ package nu.marginalia.model.id;
 
 import gnu.trove.TIntCollection;
 
+@Deprecated
 public interface EdgeIdCollectionMutable<T> {
     TIntCollection underlyingCollection();
 

@@ -5,6 +5,7 @@ import gnu.trove.set.hash.TIntHashSet;
 
 import java.util.stream.IntStream;
 
+@Deprecated
 public record EdgeIdSet<T> (TIntHashSet set) implements EdgeIdCollection<T>, EdgeIdCollectionMutable<T> {
 
     public EdgeIdSet(int... values) {
