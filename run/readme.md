@@ -5,11 +5,14 @@ the search engine. In a clean check-out, it only contains the tools required to
 bootstrap this directory structure.
 
 ## Requirements
+
 While the system is designed to run bare metal in production,
 for local development, you're strongly encouraged to use docker
 or podman. These are a bit of a pain to install, but if you follow
 [this guide](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository) 
 you're on the right track.
+
+The system requires JDK20+.
 
 ## Set up
 To go from a clean check out of the git repo to a running search engine,
