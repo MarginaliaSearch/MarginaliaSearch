@@ -14,14 +14,12 @@ import java.sql.SQLException;
 public class SqlLoadProcessedDomain {
     private final HikariDataSource dataSource;
     private final SqlLoadDomains loadDomains;
-    private final SqlLoadUrls loadUrls;
     private static final Logger logger = LoggerFactory.getLogger(SqlLoadProcessedDomain.class);
 
     @Inject
-    public SqlLoadProcessedDomain(HikariDataSource dataSource, SqlLoadDomains loadDomains, SqlLoadUrls loadUrls) {
+    public SqlLoadProcessedDomain(HikariDataSource dataSource, SqlLoadDomains loadDomains) {
         this.dataSource = dataSource;
         this.loadDomains = loadDomains;
-        this.loadUrls = loadUrls;
 
 
         try (var conn = dataSource.getConnection()) {
@@ -69,8 +67,6 @@ public class SqlLoadProcessedDomain {
                 if (rc < 1) {
                     logger.warn("load({},{}) -- bad rowcount {}", domain, state, rc);
                 }
-
-                loadUrls.loadUrlsForDomain(data, domain, 0);
             }
             catch (SQLException ex) {
                 conn.rollback();

@@ -7,9 +7,9 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import lombok.SneakyThrows;
 import nu.marginalia.converting.instruction.Interpreter;
-import nu.marginalia.converting.instruction.instructions.LoadProcessedDocument;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.keyword.model.DocumentKeywords;
+import nu.marginalia.linkdb.LinkdbWriter;
 import nu.marginalia.loading.loader.IndexLoadKeywords;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.idx.DocumentMetadata;
@@ -45,6 +45,7 @@ public class LoaderMain {
     private final MessageQueueFactory messageQueueFactory;
     private final FileStorageService fileStorageService;
     private final IndexLoadKeywords indexLoadKeywords;
+    private final LinkdbWriter writer;
     private final Gson gson;
 
     public static void main(String... args) throws Exception {
@@ -73,6 +74,7 @@ public class LoaderMain {
                       MessageQueueFactory messageQueueFactory,
                       FileStorageService fileStorageService,
                       IndexLoadKeywords indexLoadKeywords,
+                      LinkdbWriter writer,
                       Gson gson
                       ) {
 
@@ -82,6 +84,7 @@ public class LoaderMain {
         this.messageQueueFactory = messageQueueFactory;
         this.fileStorageService = fileStorageService;
         this.indexLoadKeywords = indexLoadKeywords;
+        this.writer = writer;
         this.gson = gson;
 
         heartbeat.start();
@@ -136,6 +139,7 @@ public class LoaderMain {
 
             // This needs to be done in order to have a readable index journal
             indexLoadKeywords.close();
+            writer.close();
             logger.info("Loading finished");
         }
         catch (Exception ex) {
@@ -215,7 +219,7 @@ public class LoaderMain {
     public class InstructionCounter implements Interpreter {
         private int count = 0;
 
-        public void loadKeywords(EdgeUrl url, int features, DocumentMetadata metadata, DocumentKeywords words) {
+        public void loadKeywords(EdgeUrl url, int ordinal, int features, DocumentMetadata metadata, DocumentKeywords words) {
             count++;
         }
 

@@ -8,7 +8,6 @@ import java.util.Iterator;
 
 public interface SideloadSource {
     ProcessedDomain getDomain();
-    Iterator<EdgeUrl> getUrlsIterator();
     Iterator<ProcessedDocument> getDocumentsStream();
 
     String getId();

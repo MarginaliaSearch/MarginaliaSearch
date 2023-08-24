@@ -5,7 +5,6 @@ import nu.marginalia.converting.instruction.instructions.*;
 public enum InstructionTag {
 
     DOMAIN(LoadDomain.class),
-    URL(LoadUrl.class),
     LINK(LoadDomainLink.class),
     REDIRECT(LoadDomainRedirect.class),
     WORDS(LoadKeywords.class),

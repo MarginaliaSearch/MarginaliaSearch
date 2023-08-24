@@ -1,7 +1,6 @@
 package nu.marginalia.linkdb;
 
 import nu.marginalia.linkdb.model.UrlDetail;
-import nu.marginalia.linkdb.model.UrlProtocol;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -19,7 +18,7 @@ public class LinkdbWriter {
         String connStr = "jdbc:sqlite:" + outputFile.toString();
         connection = DriverManager.getConnection(connStr);
 
-        try (var stream = ClassLoader.getSystemResourceAsStream("db/linkdb.sql");
+        try (var stream = ClassLoader.getSystemResourceAsStream("db/linkdb-document.sql");
              var stmt = connection.createStatement()
         ) {
             var sql = new String(stream.readAllBytes());

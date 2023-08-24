@@ -5,6 +5,7 @@ import nu.marginalia.index.journal.model.IndexJournalEntry;
 import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournalMode;
+import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
@@ -84,8 +85,9 @@ class ForwardIndexConverterTest {
     }
 
     long createId(long url, long domain) {
-        return (domain << 32) | url;
+        return UrlIdCodec.encodeId((int) domain, (int) url);
     }
+
     public void createEntry(IndexJournalWriter writer, KeywordLexicon keywordLexicon, int id) {
         int[] factors = getFactorsI(id);
 

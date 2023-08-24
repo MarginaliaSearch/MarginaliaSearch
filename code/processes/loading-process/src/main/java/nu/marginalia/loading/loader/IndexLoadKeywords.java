@@ -3,9 +3,9 @@ package nu.marginalia.loading.loader;
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
 import nu.marginalia.keyword.model.DocumentKeywords;
+import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.model.id.EdgeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,8 +18,7 @@ public class IndexLoadKeywords implements Runnable {
     private final LinkedBlockingQueue<InsertTask> insertQueue = new LinkedBlockingQueue<>(32);
     private final LoaderIndexJournalWriter journalWriter;
 
-    private record InsertTask(int urlId,
-                              int domainId,
+    private record InsertTask(long combinedId,
                               int features,
                               DocumentMetadata metadata,
                               DocumentKeywords wordSet) {}
@@ -40,7 +39,7 @@ public class IndexLoadKeywords implements Runnable {
         while (!canceled) {
             var data = insertQueue.poll(1, TimeUnit.SECONDS);
             if (data != null) {
-                journalWriter.putWords(new EdgeId<>(data.domainId), new EdgeId<>(data.urlId),
+                journalWriter.putWords(data.combinedId,
                         data.features,
                         data.metadata(),
                         data.wordSet);
@@ -57,18 +56,18 @@ public class IndexLoadKeywords implements Runnable {
     }
 
     public void load(LoaderData loaderData,
+                     int ordinal,
                      EdgeUrl url,
                      int features,
                      DocumentMetadata metadata,
                      DocumentKeywords words) throws InterruptedException {
-        int domainId = loaderData.getDomainId(url.domain);
-        int urlId = loaderData.getUrlId(url);
+        long combinedId = UrlIdCodec.encodeId(loaderData.getTargetDomainId(), ordinal);
 
-        if (urlId <= 0 || domainId <= 0) {
-            logger.warn("Failed to get IDs for {}  -- d={},u={}", url, domainId, urlId);
+        if (combinedId <= 0) {
+            logger.warn("Failed to get IDs for {}  -- c={}", url, combinedId);
             return;
         }
 
-        insertQueue.put(new InsertTask(urlId, domainId, features, metadata, words));
+        insertQueue.put(new InsertTask(combinedId, features, metadata, words));
     }
 }

@@ -59,17 +59,17 @@ public class LoaderIndexJournalWriter {
             new ThreadPoolExecutor(8, 16, 1, TimeUnit.MINUTES, keywordInsertTaskQueue);
 
     @SneakyThrows
-    public void putWords(EdgeId<EdgeDomain> domain, EdgeId<EdgeUrl> url,
+    public void putWords(long combinedId,
                          int features,
                          DocumentMetadata metadata,
                          DocumentKeywords wordSet) {
         if (wordSet.keywords().length == 0) {
-            logger.info("Skipping zero-length word set for {}:{}", domain, url);
+            logger.info("Skipping zero-length word set for {}", combinedId);
             return;
         }
 
-        if (domain.id() <= 0 || url.id() <= 0) {
-            logger.warn("Bad ID: {}:{}", domain, url);
+        if (combinedId <= 0) {
+            logger.warn("Bad ID: {}", combinedId);
             return;
         }
 
@@ -77,27 +77,26 @@ public class LoaderIndexJournalWriter {
         // with a chonky work queue is a fairly decent improvement
         for (var chunk : KeywordListChunker.chopList(wordSet, IndexJournalEntryData.MAX_LENGTH)) {
             try {
-                keywordInsertionExecutor.submit(() -> loadWords(domain, url, features, metadata, chunk));
+                keywordInsertionExecutor.submit(() -> loadWords(combinedId, features, metadata, chunk));
             }
             catch (RejectedExecutionException ex) {
-                loadWords(domain, url, features, metadata, chunk);
+                loadWords(combinedId, features, metadata, chunk);
             }
         }
 
     }
 
-    private void loadWords(EdgeId<EdgeDomain> domain,
-                           EdgeId<EdgeUrl> url,
+    private void loadWords(long combinedId,
                            int features,
                            DocumentMetadata metadata,
                            DocumentKeywords wordSet) {
         if (null == metadata) {
-            logger.warn("Null metadata for {}:{}", domain, url);
+            logger.warn("Null metadata for {}", combinedId);
             return;
         }
 
         var entry = new IndexJournalEntryData(getOrInsertWordIds(wordSet.keywords(), wordSet.metadata()));
-        var header = new IndexJournalEntryHeader(domain, features, url, metadata.encode());
+        var header = new IndexJournalEntryHeader(combinedId, features, metadata.encode());
 
         indexWriter.put(header, entry);
     }

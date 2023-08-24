@@ -9,7 +9,8 @@ import nu.marginalia.model.EdgeUrl;
 
 public record LoadProcessedDocumentWithError(EdgeUrl url,
                                              UrlIndexingState state,
-                                             String reason) implements Instruction
+                                             String reason,
+                                             int ordinal) implements Instruction
 {
     @Override
     public void apply(Interpreter interpreter) {
