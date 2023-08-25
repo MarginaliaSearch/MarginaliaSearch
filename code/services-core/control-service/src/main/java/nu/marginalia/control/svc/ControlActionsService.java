@@ -71,13 +71,6 @@ public class ControlActionsService {
         return "";
     }
 
-    public Object flushSearchCaches(Request request, Response response) throws Exception {
-        eventLog.logEvent("USER-ACTION", "FLUSH-SEARCH-CACHES");
-        searchClient.outbox().sendNotice(SearchMqEndpoints.FLUSH_CACHES, "");
-
-        return "";
-    }
-
     public Object reloadBlogsList(Request request, Response response) throws Exception {
         eventLog.logEvent("USER-ACTION", "RELOAD-BLOGS-LIST");
 
