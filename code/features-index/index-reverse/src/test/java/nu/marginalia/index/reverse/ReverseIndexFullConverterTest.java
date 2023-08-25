@@ -10,12 +10,12 @@ import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournalMode;
 import nu.marginalia.model.id.UrlIdCodec;
+import nu.marginalia.process.control.ProcessHeartbeat;
+import nu.marginalia.process.control.ProcessTaskHeartbeat;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
 import nu.marginalia.model.idx.DocumentMetadata;
-import nu.marginalia.service.control.ServiceHeartbeat;
-import nu.marginalia.service.control.ServiceTaskHeartbeat;
 import nu.marginalia.test.TestUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -90,12 +90,12 @@ class ReverseIndexFullConverterTest {
         var journalReader = new IndexJournalReaderSingleCompressedFile(indexFile);
 
         // RIP fairies
-        var serviceHeartbeat = Mockito.mock(ServiceHeartbeat.class);
-        when(serviceHeartbeat.createServiceTaskHeartbeat(Mockito.any(), Mockito.any()))
-                .thenReturn(Mockito.mock(ServiceTaskHeartbeat.class));
+        var processHeartbeat = Mockito.mock(ProcessHeartbeat.class);
+        when(processHeartbeat.createProcessTaskHeartbeat(Mockito.any(), Mockito.any()))
+                .thenReturn(Mockito.mock(ProcessTaskHeartbeat.class));
 
         new ReverseIndexFullConverter(
-                serviceHeartbeat,
+                processHeartbeat,
                 tmpDir, journalReader, new DomainRankings(), wordsFile, docsFile)
                 .convert();
 

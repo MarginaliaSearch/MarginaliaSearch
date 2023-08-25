@@ -6,10 +6,8 @@ import nu.marginalia.index.journal.reader.IndexJournalReader;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile;
 import nu.marginalia.model.idx.DocumentMetadata;
+import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.ranking.DomainRankings;
-import nu.marginalia.service.control.ServiceHeartbeat;
-import org.roaringbitmap.IntConsumer;
-import org.roaringbitmap.RoaringBitmap;
 import org.roaringbitmap.longlong.LongConsumer;
 import org.roaringbitmap.longlong.Roaring64Bitmap;
 import org.slf4j.Logger;
@@ -22,7 +20,7 @@ import java.nio.file.Path;
 
 public class ForwardIndexConverter {
 
-    private final ServiceHeartbeat heartbeat;
+    private final ProcessHeartbeat heartbeat;
     private final File inputFile;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -32,7 +30,7 @@ public class ForwardIndexConverter {
     private final DomainRankings domainRankings;
 
 
-    public ForwardIndexConverter(ServiceHeartbeat heartbeat,
+    public ForwardIndexConverter(ProcessHeartbeat heartbeat,
                                  File inputFile,
                                  Path outputFileDocsId,
                                  Path outputFileDocsData,
@@ -66,7 +64,7 @@ public class ForwardIndexConverter {
 
         logger.info("Domain Rankings size = {}", domainRankings.size());
 
-        try (var progress = heartbeat.createServiceTaskHeartbeat(TaskSteps.class, "forwardIndexConverter")) {
+        try (var progress = heartbeat.createProcessTaskHeartbeat(TaskSteps.class, "forwardIndexConverter")) {
             progress.progress(TaskSteps.GET_DOC_IDS);
 
             LongArray docsFileId = getDocIds(outputFileDocsId, journalReader);

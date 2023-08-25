@@ -15,6 +15,7 @@ import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournalMode;
 import nu.marginalia.model.idx.DocumentMetadata;
+import nu.marginallia.index.journal.IndexJournalFileNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +39,7 @@ public class LoaderIndexJournalWriter {
         var indexArea = fileStorageService.getStorageByType(FileStorageType.INDEX_STAGING);
 
         var lexiconPath = lexiconArea.asPath().resolve("dictionary.dat");
-        var indexPath = indexArea.asPath().resolve("page-index.dat");
+        var indexPath = IndexJournalFileNames.resolve(indexArea.asPath());
 
         Files.deleteIfExists(indexPath);
         Files.deleteIfExists(lexiconPath);

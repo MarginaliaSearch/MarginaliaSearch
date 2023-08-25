@@ -11,6 +11,7 @@ import nu.marginalia.index.svc.IndexSearchSetsService;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.server.*;
+import nu.marginalia.service.server.mq.MqNotification;
 import nu.marginalia.service.server.mq.MqRequest;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -93,7 +94,7 @@ public class IndexService extends Service {
         return "ok";
     }
 
-    @MqRequest(endpoint = IndexMqEndpoints.INDEX_REINDEX)
+    @MqNotification(endpoint = IndexMqEndpoints.INDEX_REINDEX)
     public String reindex(String message) throws Exception {
         if (!opsService.reindex()) {
             throw new IllegalStateException("Ops lock busy");
@@ -112,33 +113,7 @@ public class IndexService extends Service {
             searchIndex.init();
             initialized = true;
         }
-
-        if (!opsService.run(this::autoConvert)) {
-            logger.warn("Auto-convert could not be performed, ops lock busy");
-        }
     }
-
-    private void autoConvert() {
-        if (!servicesFactory.isConvertedIndexMissing()
-            || !servicesFactory.isPreconvertedIndexPresent()
-            || Boolean.getBoolean("no-auto-convert")
-        ) {
-            return;
-        }
-
-        try {
-            eventLog.logEvent("INDEX-AUTO-CONVERT-BEGIN", "");
-            logger.info("Auto-converting");
-            searchSetsService.recalculateAll();
-            searchIndex.switchIndex();
-            eventLog.logEvent("INDEX-AUTO-CONVERT-END", "");
-            logger.info("Auto-conversion finished!");
-        }
-        catch (IOException ex) {
-            logger.error("Auto convert failed", ex);
-        }
-    }
-
 
 }
 

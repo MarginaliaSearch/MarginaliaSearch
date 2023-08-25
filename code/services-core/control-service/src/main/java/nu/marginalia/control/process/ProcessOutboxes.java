@@ -12,6 +12,7 @@ public class ProcessOutboxes {
     private final MqOutbox converterOutbox;
     private final MqOutbox loaderOutbox;
     private final MqOutbox crawlerOutbox;
+    private final MqOutbox indexConstructorOutbox;
 
     @Inject
     public ProcessOutboxes(BaseServiceParams params, MqPersistence persistence) {
@@ -30,6 +31,11 @@ public class ProcessOutboxes {
                 params.configuration.serviceName(),
                 params.configuration.instanceUuid()
         );
+        indexConstructorOutbox = new MqOutbox(persistence,
+                ProcessInboxNames.INDEX_CONSTRUCTOR_INBOX,
+                params.configuration.serviceName(),
+                params.configuration.instanceUuid()
+        );
     }
 
 
@@ -44,4 +50,6 @@ public class ProcessOutboxes {
     public MqOutbox getCrawlerOutbox() {
         return crawlerOutbox;
     }
+
+    public MqOutbox getIndexConstructorOutbox() { return indexConstructorOutbox; }
 }

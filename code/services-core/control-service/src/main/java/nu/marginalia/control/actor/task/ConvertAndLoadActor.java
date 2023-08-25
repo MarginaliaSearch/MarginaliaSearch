@@ -13,6 +13,8 @@ import nu.marginalia.index.client.IndexClient;
 import nu.marginalia.index.client.IndexMqEndpoints;
 import nu.marginalia.mqapi.converting.ConvertAction;
 import nu.marginalia.mqapi.converting.ConvertRequest;
+import nu.marginalia.mqapi.index.CreateIndexRequest;
+import nu.marginalia.mqapi.index.IndexName;
 import nu.marginalia.mqapi.loading.LoadRequest;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.db.storage.model.FileStorageBaseType;
@@ -45,14 +47,19 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
 
     public static final String REPARTITION = "REPARTITION";
     public static final String REPARTITION_WAIT = "REPARTITION-WAIT";
-    public static final String REINDEX = "REINDEX";
-    public static final String REINDEX_WAIT = "REINDEX-WAIT";
-    public static final String SWITCH_LINKDB = "SWITCH-LINKDB";
+    public static final String REINDEX_FWD = "REINDEX_FWD";
+    public static final String REINDEX_FWD_WAIT = "REINDEX-FWD-WAIT";
+    public static final String REINDEX_FULL = "REINDEX_FULL";
+    public static final String REINDEX_FULL_WAIT = "REINDEX-FULL-WAIT";
+    public static final String REINDEX_PRIO = "REINDEX_PRIO";
+    public static final String REINDEX_PRIO_WAIT = "REINDEX-PRIO-WAIT";
+    public static final String SWITCH_OVER = "SWITCH-LINKDB";
 
     public static final String END = "END";
     private final ActorProcessWatcher processWatcher;
     private final MqOutbox mqConverterOutbox;
     private final MqOutbox mqLoaderOutbox;
+    private final MqOutbox mqIndexConstructorOutbox;
     private final MqOutbox indexOutbox;
     private final MqOutbox searchOutbox;
     private final FileStorageService storageService;
@@ -89,6 +96,7 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
         this.searchOutbox = searchClient.outbox();
         this.mqConverterOutbox = processOutboxes.getConverterOutbox();
         this.mqLoaderOutbox = processOutboxes.getLoaderOutbox();
+        this.mqIndexConstructorOutbox = processOutboxes.getIndexConstructorOutbox();
         this.storageService = storageService;
         this.gson = gson;
     }
@@ -228,7 +236,7 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
 
     @ActorState(
             name = REPARTITION_WAIT,
-            next = REINDEX,
+            next = REINDEX_FWD,
             resume = ActorResumeBehavior.RETRY,
             description = """
                     Wait for the index-service to finish repartitioning the index.
@@ -243,26 +251,27 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
     }
 
     @ActorState(
-            name = REINDEX,
-            next = REINDEX_WAIT,
+            name = REINDEX_FWD,
+            next = REINDEX_FWD_WAIT,
             description = """
-                    Instruct the index-service to reindex the data then transition to REINDEX_WAIT.
+                    Reconstruct the fwd index
                     """
     )
-    public Long reindex() throws Exception {
-        return indexOutbox.sendAsync(IndexMqEndpoints.INDEX_REINDEX, "");
+    public Long reindexFwd() throws Exception {
+        var request = new CreateIndexRequest(IndexName.FORWARD);
+        return mqIndexConstructorOutbox.sendAsync(CreateIndexRequest.class.getSimpleName(), gson.toJson(request));
     }
 
     @ActorState(
-            name = REINDEX_WAIT,
-            next = SWITCH_LINKDB,
+            name = REINDEX_FWD_WAIT,
+            next = REINDEX_FULL,
             resume = ActorResumeBehavior.RETRY,
             description = """
-                    Wait for the index-service to finish reindexing the data.
+                    Wait for the reindex job to finish.
                     """
     )
-    public void reindexReply(Long id) throws Exception {
-        var rsp = indexOutbox.waitResponse(id);
+    public void reindexFwdWait(Long id) throws Exception {
+        var rsp = mqIndexConstructorOutbox.waitResponse(id);
 
         if (rsp.state() != MqMessageState.OK) {
             error("Repartition failed");
@@ -270,15 +279,74 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
     }
 
     @ActorState(
-            name = SWITCH_LINKDB,
+            name = REINDEX_FULL,
+            next = REINDEX_FULL_WAIT,
+            description = """
+                    Reconstruct the full index
+                    """
+    )
+    public Long reindexFull() throws Exception {
+        var request = new CreateIndexRequest(IndexName.REVERSE_FULL);
+        return mqIndexConstructorOutbox.sendAsync(CreateIndexRequest.class.getSimpleName(), gson.toJson(request));
+    }
+
+    @ActorState(
+            name = REINDEX_FULL_WAIT,
+            next = REINDEX_PRIO,
+            resume = ActorResumeBehavior.RETRY,
+            description = """
+                    Wait for the reindex job to finish.
+                    """
+    )
+    public void reindexFullWait(Long id) throws Exception {
+        var rsp = mqIndexConstructorOutbox.waitResponse(id);
+
+        if (rsp.state() != MqMessageState.OK) {
+            error("Repartition failed");
+        }
+    }
+
+    @ActorState(
+            name = REINDEX_PRIO,
+            next = REINDEX_PRIO_WAIT,
+            resume = ActorResumeBehavior.RETRY,
+            description = """
+                    Reconstruct the prio index
+                    """
+    )
+    public long reindexPrio() throws Exception {
+        var request = new CreateIndexRequest(IndexName.REVERSE_PRIO);
+        return mqIndexConstructorOutbox.sendAsync(CreateIndexRequest.class.getSimpleName(), gson.toJson(request));
+    }
+    @ActorState(
+            name = REINDEX_PRIO_WAIT,
+            next = SWITCH_OVER,
+            resume = ActorResumeBehavior.RETRY,
+            description = """
+                    Wait for the reindex job to finish.
+                    """
+    )
+    public void reindexPrioWait(Long id) throws Exception {
+        var rsp = mqIndexConstructorOutbox.waitResponse(id);
+
+        if (rsp.state() != MqMessageState.OK) {
+            error("Repartition failed");
+        }
+    }
+
+
+    @ActorState(
+            name = SWITCH_OVER,
             next = END,
             resume = ActorResumeBehavior.RETRY,
             description = """
-                    Instruct the search service to switch to the new linkdb
+                    Instruct the search service to switch to the new linkdb,
+                    and the index service to switch over to the new index.
                     """
     )
-    public void switchLinkdb(Long id) throws Exception {
+    public void switchOver(Long id) throws Exception {
         searchOutbox.sendNotice(SearchMqEndpoints.SWITCH_LINKDB, ":-)");
+        indexOutbox.sendNotice(IndexMqEndpoints.INDEX_REINDEX, ":^D");
     }
 
 }

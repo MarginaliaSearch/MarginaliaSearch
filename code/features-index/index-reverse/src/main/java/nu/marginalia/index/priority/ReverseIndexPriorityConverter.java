@@ -11,9 +11,9 @@ import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.model.IndexJournalStatistics;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
 import nu.marginalia.model.id.UrlIdCodec;
+import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.rwf.RandomWriteFunnel;
-import nu.marginalia.service.control.ServiceHeartbeat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +28,7 @@ import static nu.marginalia.index.priority.ReverseIndexPriorityParameters.bTreeC
 public class ReverseIndexPriorityConverter {
     private static final int RWF_BIN_SIZE = 10_000_000;
 
-    private final ServiceHeartbeat heartbeat;
+    private final ProcessHeartbeat heartbeat;
     private final Path tmpFileDir;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -39,7 +39,7 @@ public class ReverseIndexPriorityConverter {
     private final Path outputFileDocs;
     private final SortingContext sortingContext;
 
-    public ReverseIndexPriorityConverter(ServiceHeartbeat heartbeat,
+    public ReverseIndexPriorityConverter(ProcessHeartbeat heartbeat,
                                          Path tmpFileDir,
                                          IndexJournalReader journalReader,
                                          DomainRankings domainRankings,
@@ -76,7 +76,7 @@ public class ReverseIndexPriorityConverter {
 
         final Path intermediateUrlsFile = Files.createTempFile(tmpFileDir, "urls-sorted", ".dat");
 
-        try (var progress = heartbeat.createServiceTaskHeartbeat(TaskSteps.class, "reverseIndexPriorityConverter")) {
+        try (var progress = heartbeat.createProcessTaskHeartbeat(TaskSteps.class, "reverseIndexPriorityConverter")) {
             progress.progress(TaskSteps.ACCUMULATE_STATISTICS);
 
             final IndexJournalStatistics statistics = journalReader.getStatistics();

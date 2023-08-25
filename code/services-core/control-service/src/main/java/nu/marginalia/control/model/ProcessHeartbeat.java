@@ -44,6 +44,7 @@ public record ProcessHeartbeat(
             case "loader" -> ProcessService.ProcessId.LOADER;
             case "website-adjacencies-calculator" -> ProcessService.ProcessId.ADJACENCIES_CALCULATOR;
             case "crawl-job-extractor" -> ProcessService.ProcessId.CRAWL_JOB_EXTRACTOR;
+            case "index-constructor" -> ProcessService.ProcessId.INDEX_CONSTRUCTOR;
             default -> null;
         };
     }

@@ -61,6 +61,7 @@ include 'code:common:process'
 include 'code:processes:converting-process'
 include 'code:processes:crawling-process'
 include 'code:processes:loading-process'
+include 'code:processes:index-constructor-process'
 include 'code:processes:test-data'
 
 include 'code:process-models:converting-model'

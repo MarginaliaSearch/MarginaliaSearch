@@ -34,6 +34,10 @@ tasks.register('dist', Copy) {
             from tarTree("$buildDir/dist/crawl-job-extractor-process.tar")
             into "$projectDir/run/dist/"
         }
+        copy {
+            from tarTree("$buildDir/dist/index-construction-process.tar")
+            into "$projectDir/run/dist/"
+        }
     }
 }
 idea {

@@ -19,6 +19,8 @@ public class ProcessHeartbeat {
     private final String processName;
     private final String processBase;
     private final String instanceUUID;
+    @org.jetbrains.annotations.NotNull
+    private final ProcessConfiguration configuration;
     private final HikariDataSource dataSource;
 
 
@@ -35,6 +37,7 @@ public class ProcessHeartbeat {
     {
         this.processName = configuration.processName() + ":" + configuration.node();
         this.processBase = configuration.processName();
+        this.configuration = configuration;
         this.dataSource = dataSource;
 
         this.instanceUUID = configuration.instanceUuid().toString();
@@ -43,6 +46,12 @@ public class ProcessHeartbeat {
 
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutDown));
     }
+
+
+    public <T extends Enum<T>> ProcessTaskHeartbeat<T> createProcessTaskHeartbeat(Class<T> steps, String processName) {
+        return new ProcessTaskHeartbeat<>(steps, configuration, processName, dataSource);
+    }
+
 
     public void setProgress(double progress) {
         this.progress = (int) (progress * 100);

@@ -62,8 +62,6 @@ public class SearchIndex {
             else {
                 eventLog.logEvent("INDEX-INIT", "No index loaded");
             }
-
-
         }
         catch (Exception ex) {
             logger.error("Uncaught exception", ex);
@@ -74,19 +72,12 @@ public class SearchIndex {
     }
 
     public boolean switchIndex() throws IOException {
-
-        eventLog.logEvent("CONVERT-INDEX-BEGIN", "");
-        servicesFactory.convertIndex(searchSetsService.getDomainRankings());
-        eventLog.logEvent("CONVERT-INDEX-END", "");
-        System.gc();
-
         eventLog.logEvent("INDEX-SWITCH-BEGIN", "");
         Lock lock = indexReplacementLock.writeLock();
         try {
             lock.lock();
 
-            servicesFactory.switchFilesJob().call();
-
+            servicesFactory.switchFiles();
             indexReader = servicesFactory.getSearchIndexReader();
 
             eventLog.logEvent("INDEX-SWITCH-OK", "");

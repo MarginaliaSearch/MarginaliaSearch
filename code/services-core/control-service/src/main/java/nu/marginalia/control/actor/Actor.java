@@ -14,8 +14,8 @@ public enum Actor {
     CRAWL_JOB_EXTRACTOR,
     EXPORT_DATA,
     TRUNCATE_LINK_DATABASE,
+    INDEX_CONSTRUCTOR_MONITOR,
     CONVERT;
-
 
     public String id() {
         return "fsm:" + name().toLowerCase();

@@ -6,11 +6,11 @@ import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournalMode;
 import nu.marginalia.model.id.UrlIdCodec;
+import nu.marginalia.process.control.ProcessHeartbeat;
+import nu.marginalia.process.control.ProcessTaskHeartbeat;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.lexicon.KeywordLexicon;
 import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
-import nu.marginalia.service.control.ServiceHeartbeat;
-import nu.marginalia.service.control.ServiceTaskHeartbeat;
 import nu.marginalia.test.TestUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -104,9 +104,9 @@ class ForwardIndexConverterTest {
     void testForwardIndex() throws IOException {
 
         // RIP fairies
-        var serviceHeartbeat = Mockito.mock(ServiceHeartbeat.class);
-        when(serviceHeartbeat.createServiceTaskHeartbeat(Mockito.any(), Mockito.any()))
-                .thenReturn(Mockito.mock(ServiceTaskHeartbeat.class));
+        var serviceHeartbeat = Mockito.mock(ProcessHeartbeat.class);
+        when(serviceHeartbeat.createProcessTaskHeartbeat(Mockito.any(), Mockito.any()))
+                .thenReturn(Mockito.mock(ProcessTaskHeartbeat.class));
 
         new ForwardIndexConverter(serviceHeartbeat, indexFile.toFile(), docsFileId, docsFileData, new DomainRankings()).convert();
 

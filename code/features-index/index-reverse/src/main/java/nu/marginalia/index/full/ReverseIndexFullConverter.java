@@ -8,6 +8,7 @@ import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.model.IndexJournalStatistics;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
 import nu.marginalia.model.id.UrlIdCodec;
+import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.rwf.RandomWriteFunnel;
 import nu.marginalia.array.IntArray;
@@ -22,14 +23,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-import nu.marginalia.service.control.ServiceHeartbeat;
-
 import static nu.marginalia.index.full.ReverseIndexFullParameters.bTreeContext;
 
 public class ReverseIndexFullConverter {
     private static final int RWF_BIN_SIZE = 10_000_000;
 
-    private final ServiceHeartbeat heartbeat;
+    private final ProcessHeartbeat heartbeat;
     private final Path tmpFileDir;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -40,7 +39,7 @@ public class ReverseIndexFullConverter {
     private final Path outputFileDocs;
     private final SortingContext sortingContext;
 
-    public ReverseIndexFullConverter(ServiceHeartbeat heartbeat,
+    public ReverseIndexFullConverter(ProcessHeartbeat heartbeat,
                                      Path tmpFileDir,
                                      IndexJournalReader journalReader,
                                      DomainRankings domainRankings,
@@ -77,7 +76,7 @@ public class ReverseIndexFullConverter {
 
         final Path intermediateUrlsFile = Files.createTempFile(tmpFileDir, "urls-sorted", ".dat");
 
-        try (var progress = heartbeat.createServiceTaskHeartbeat(TaskSteps.class, "reverseIndexFullConverter")) {
+        try (var progress = heartbeat.createProcessTaskHeartbeat(TaskSteps.class, "reverseIndexFullConverter")) {
             progress.progress(TaskSteps.ACCUMULATE_STATISTICS);
 
             final IndexJournalStatistics statistics = journalReader.getStatistics();
