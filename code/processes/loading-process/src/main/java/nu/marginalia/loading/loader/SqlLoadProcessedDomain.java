@@ -26,9 +26,6 @@ public class SqlLoadProcessedDomain {
             try (var stmt = conn.createStatement()) {
                 stmt.execute("DROP PROCEDURE IF EXISTS INITIALIZE_DOMAIN");
 
-                // Note that there should be no need to delete from EC_PAGE_DATA here as it's done via their
-                // CASCADE DELETE constraint on EC_URL.
-
                 stmt.execute("""
                         CREATE PROCEDURE INITIALIZE_DOMAIN (
                             IN ST ENUM('ACTIVE', 'EXHAUSTED', 'SPECIAL', 'SOCIAL_MEDIA', 'BLOCKED', 'REDIR', 'ERROR', 'UNKNOWN'),
@@ -38,7 +35,6 @@ public class SqlLoadProcessedDomain {
                         BEGIN
                             DELETE FROM DOMAIN_METADATA WHERE ID=DID;
                             DELETE FROM EC_DOMAIN_LINK WHERE SOURCE_DOMAIN_ID=DID;
-                            DELETE FROM EC_URL WHERE DOMAIN_ID=DID;
                             UPDATE EC_DOMAIN SET INDEX_DATE=NOW(), STATE=ST, DOMAIN_ALIAS=NULL, INDEXED=GREATEST(INDEXED,IDX), IP=IP WHERE ID=DID;
                             DELETE FROM EC_DOMAIN_LINK WHERE SOURCE_DOMAIN_ID=DID;
                         END

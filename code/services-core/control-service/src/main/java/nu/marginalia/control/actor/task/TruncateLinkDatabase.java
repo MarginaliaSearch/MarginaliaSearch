@@ -62,13 +62,11 @@ public class TruncateLinkDatabase extends AbstractActorPrototype {
                         Truncate the domain and link tables.
                         """
     )
-    public void exportBlacklist() throws Exception {
+    public void flushDatabase() throws Exception {
         try (var conn = dataSource.getConnection();
              var stmt = conn.createStatement())
         {
             stmt.executeUpdate("SET FOREIGN_KEY_CHECKS = 0");
-            stmt.executeUpdate("TRUNCATE TABLE EC_PAGE_DATA");
-            stmt.executeUpdate("TRUNCATE TABLE EC_URL");
             stmt.executeUpdate("TRUNCATE TABLE EC_DOMAIN_LINK");
             stmt.executeUpdate("TRUNCATE TABLE DOMAIN_METADATA");
             stmt.executeUpdate("SET FOREIGN_KEY_CHECKS = 1");
