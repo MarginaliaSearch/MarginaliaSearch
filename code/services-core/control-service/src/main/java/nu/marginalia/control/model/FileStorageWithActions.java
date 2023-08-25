@@ -15,10 +15,16 @@ public record FileStorageWithActions(FileStorage storage) {
     public boolean isLoadable() {
         return storage.type() == FileStorageType.PROCESSED_DATA;
     }
+    public boolean isRestorable() {
+        return storage.type() == FileStorageType.BACKUP;
+    }
     public boolean isConvertible() {
         return storage.type() == FileStorageType.CRAWL_DATA;
     }
     public boolean isDeletable() {
-        return storage.base().type() == FileStorageBaseType.SLOW;
+        var baseType = storage.base().type();
+
+        return baseType == FileStorageBaseType.SLOW
+            || baseType == FileStorageBaseType.BACKUP;
     }
 }

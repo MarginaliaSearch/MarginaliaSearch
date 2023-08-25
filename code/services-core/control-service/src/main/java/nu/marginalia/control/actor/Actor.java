@@ -15,7 +15,8 @@ public enum Actor {
     EXPORT_DATA,
     TRUNCATE_LINK_DATABASE,
     INDEX_CONSTRUCTOR_MONITOR,
-    CONVERT;
+    CONVERT,
+    RESTORE_BACKUP;
 
     public String id() {
         return "fsm:" + name().toLowerCase();

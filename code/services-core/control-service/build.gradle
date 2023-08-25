@@ -44,6 +44,7 @@ dependencies {
     implementation libs.prometheus
     implementation libs.notnull
     implementation libs.guice
+    implementation libs.zstd
 
     implementation libs.trove
     implementation libs.spark

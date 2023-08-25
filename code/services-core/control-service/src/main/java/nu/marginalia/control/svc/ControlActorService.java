@@ -3,10 +3,7 @@ package nu.marginalia.control.svc;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.control.actor.ControlActors;
-import nu.marginalia.control.actor.task.ConvertActor;
-import nu.marginalia.control.actor.task.CrawlJobExtractorActor;
-import nu.marginalia.control.actor.task.ConvertAndLoadActor;
-import nu.marginalia.control.actor.task.RecrawlActor;
+import nu.marginalia.control.actor.task.*;
 import nu.marginalia.control.actor.Actor;
 import nu.marginalia.control.model.ActorRunState;
 import nu.marginalia.control.model.ActorStateGraph;
@@ -158,4 +155,12 @@ public class ControlActorService {
 
         return "";
     }
+
+    public Object restoreBackup(Request request, Response response) throws Exception {
+        var fid = FileStorageId.parse(request.params("fid"));
+        controlActors.startFrom(Actor.RESTORE_BACKUP, RestoreBackupActor.RESTORE, fid);
+        return "";
+    }
+
+
 }

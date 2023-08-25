@@ -9,6 +9,8 @@ import lombok.With;
 import nu.marginalia.actor.ActorStateFactory;
 import nu.marginalia.control.process.ProcessOutboxes;
 import nu.marginalia.control.process.ProcessService;
+import nu.marginalia.control.svc.BackupService;
+import nu.marginalia.db.storage.model.FileStorage;
 import nu.marginalia.index.client.IndexClient;
 import nu.marginalia.index.client.IndexMqEndpoints;
 import nu.marginalia.mqapi.converting.ConvertAction;
@@ -27,11 +29,15 @@ import nu.marginalia.actor.state.ActorState;
 import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.search.client.SearchClient;
 import nu.marginalia.search.client.SearchMqEndpoints;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import com.github.luben.zstd.ZstdOutputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
 
 @Singleton
 public class ConvertAndLoadActor extends AbstractActorPrototype {
@@ -42,6 +48,7 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
     public static final String RECONVERT = "RECONVERT";
     public static final String RECONVERT_WAIT = "RECONVERT-WAIT";
     public static final String LOAD = "LOAD";
+    public static final String BACKUP = "BACKUP";
     public static final String REPARTITION = "REPARTITION";
     public static final String REINDEX_FWD = "REINDEX_FWD";
     public static final String REINDEX_FULL = "REINDEX_FULL";
@@ -56,6 +63,7 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
     private final MqOutbox indexOutbox;
     private final MqOutbox searchOutbox;
     private final FileStorageService storageService;
+    private final BackupService backupService;
     private final Gson gson;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -80,6 +88,7 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
                                FileStorageService storageService,
                                IndexClient indexClient,
                                SearchClient searchClient,
+                               BackupService backupService,
                                Gson gson
                                    )
     {
@@ -91,6 +100,7 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
         this.mqLoaderOutbox = processOutboxes.getLoaderOutbox();
         this.mqIndexConstructorOutbox = processOutboxes.getIndexConstructorOutbox();
         this.storageService = storageService;
+        this.backupService = backupService;
         this.gson = gson;
     }
 
@@ -163,12 +173,12 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
 
     @ActorState(
             name = LOAD,
-            next = REPARTITION,
+            next = BACKUP,
             resume = ActorResumeBehavior.RETRY,
             description = """
                     Instruct the loader to process the data
                     """)
-    public void load(Message message) throws Exception {
+    public Message load(Message message) throws Exception {
         if (message.loaderMsgId <= 0) {
             var request = new LoadRequest(message.processedStorageId);
             long id = mqLoaderOutbox.sendAsync(LoadRequest.class.getSimpleName(), gson.toJson(request));
@@ -180,6 +190,18 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
         if (rsp.state() != MqMessageState.OK)
             error("Loader failed");
 
+        return message;
+    }
+
+    @ActorState(
+            name = BACKUP,
+            next = REPARTITION,
+            resume = ActorResumeBehavior.RETRY,
+            description = """
+                    Create a backup snapshot of the new data
+                    """)
+    public void createBackup(Message message) throws SQLException, IOException {
+        backupService.createBackupFromStaging(message.processedStorageId);
     }
 
     @ActorState(

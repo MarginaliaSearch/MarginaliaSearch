@@ -59,6 +59,14 @@
               </tr>
           </form>
           {{/if}}
+          {{#if isRestorable}}
+          <form method="post" action="/storage/{{storage.id}}/restore-backup" onsubmit="return confirm('Confirm restoring backup {{storage.path}}')">
+              <tr>
+                  <td>Restore into live index</td>
+                  <td><button type="submit">Restore</button></td>
+              </tr>
+          </form>
+          {{/if}}
           {{#if isLoadable}}
           <form method="post" action="/storage/{{storage.id}}/load" onsubmit="return confirm('Confirm loading of {{storage.path}}')">
           <tr>

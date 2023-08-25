@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Control Service</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  {{> control/partials/nav}}
+  <section>
+  {{> control/partials/storage-types}}
+  <h1>Backups</h1>
+  {{> control/partials/storage-table}}
+
+  <h2>About</h2>
+  <p>Backups are compressed snapshots of index data, lexicon data and the document database.</p>
+  <p>Assuming no changes have been made to the binary format of these files, they are recoverable.</p>
+  </section>
+
+</body>
+<script src="/refresh.js"></script>
+<script>
+    window.setInterval(() => {
+        refresh(["storage"]);
+    }, 30000);
+</script>
+</html>

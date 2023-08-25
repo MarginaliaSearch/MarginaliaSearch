@@ -3,6 +3,7 @@ x-svc: &service
     - "run/env/service.env"
   volumes:
     - vol:/vol
+    - backup:/backup
     - conf:/wmsa/conf:ro
     - model:/wmsa/model
     - data:/wmsa/data
@@ -123,6 +124,12 @@ volumes:
       type: none
       o: bind
       device: run/vol
+  backup:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: run/backup
   logs:
     driver: local
     driver_opts:
