@@ -12,22 +12,23 @@ public class TestUtil {
         return dir.startsWith("/tmp") || dir.toString().contains("tmp");
     }
 
-    public static void clearTempDir(Path dir) {
-        if (!isTempDir(dir)) {
+    public static void clearTempDir(Path path) {
+        if (!isTempDir(path)) {
             throw new IllegalArgumentException("Refusing to recursively delete directory with that name");
         }
-        if (Files.isDirectory(dir)) {
-            for (File f : dir.toFile().listFiles()) {
+        if (Files.isDirectory(path)) {
+            for (File f : path.toFile().listFiles()) {
                 File[] files = f.listFiles();
                 if (files != null) {
                     Arrays.stream(files).map(File::toPath).forEach(TestUtil::clearTempDir);
                 }
-                System.out.println("Deleting " + f + " (" + fileSize(f.toPath()) + ")");
+                System.out.println("Deleting " + path);
                 f.delete();
             }
         }
-        System.out.println("Deleting " + dir);
-        dir.toFile().delete();
+
+        System.out.println("Deleting " + path + " (" + fileSize(path) + ")");
+        path.toFile().delete();
     }
 
     private static String fileSize(Path path) {

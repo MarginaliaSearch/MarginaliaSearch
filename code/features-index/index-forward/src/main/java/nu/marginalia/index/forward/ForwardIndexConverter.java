@@ -21,23 +21,23 @@ import java.nio.file.Path;
 public class ForwardIndexConverter {
 
     private final ProcessHeartbeat heartbeat;
-    private final File inputFile;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
+    private final IndexJournalReader journalReader;
     private final Path outputFileDocsId;
     private final Path outputFileDocsData;
     private final DomainRankings domainRankings;
 
 
     public ForwardIndexConverter(ProcessHeartbeat heartbeat,
-                                 File inputFile,
+                                 IndexJournalReader journalReader,
                                  Path outputFileDocsId,
                                  Path outputFileDocsData,
                                  DomainRankings domainRankings
                                  ) {
         this.heartbeat = heartbeat;
-        this.inputFile = inputFile;
+        this.journalReader = journalReader;
         this.outputFileDocsId = outputFileDocsId;
         this.outputFileDocsData = outputFileDocsData;
         this.domainRankings = domainRankings;
@@ -53,14 +53,6 @@ public class ForwardIndexConverter {
 
     public void convert() throws IOException {
         deleteOldFiles();
-
-        IndexJournalReaderSingleCompressedFile journalReader = new IndexJournalReaderSingleCompressedFile(inputFile.toPath());
-        if (journalReader.fileHeader().fileSize() <= IndexJournalReader.FILE_HEADER_SIZE_BYTES) {
-            logger.warn("Bailing: Journal is empty!");
-            return;
-        }
-
-        logger.info("Converting  {} {}", inputFile, journalReader.fileHeader);
 
         logger.info("Domain Rankings size = {}", domainRankings.size());
 

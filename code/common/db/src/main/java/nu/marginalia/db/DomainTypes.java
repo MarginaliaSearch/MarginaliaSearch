@@ -7,8 +7,8 @@ import nu.marginalia.model.EdgeDomain;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;

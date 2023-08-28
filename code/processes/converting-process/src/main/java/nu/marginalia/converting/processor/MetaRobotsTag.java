@@ -2,7 +2,7 @@ package nu.marginalia.converting.processor;
 
 import org.jsoup.nodes.Document;
 
-import javax.inject.Singleton;
+import com.google.inject.Singleton;
 
 @Singleton
 public class MetaRobotsTag {

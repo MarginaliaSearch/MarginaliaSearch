@@ -9,7 +9,7 @@ import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.converting.processor.logic.links.CommonKeywordExtractor;
 import nu.marginalia.converting.processor.logic.links.TopKeywords;
 
-import javax.inject.Singleton;
+import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;

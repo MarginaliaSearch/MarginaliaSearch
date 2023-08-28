@@ -107,8 +107,8 @@ public class SearchIndex {
             return Collections.emptyList();
         }
 
-        final int[] orderedIncludes = terms.sortedDistinctIncludes(this::compareKeywords);
-        final int[] orderedIncludesPrio = terms.sortedDistinctIncludes(this::compareKeywordsPrio);
+        final long[] orderedIncludes = terms.sortedDistinctIncludes(this::compareKeywords);
+        final long[] orderedIncludesPrio = terms.sortedDistinctIncludes(this::compareKeywordsPrio);
 
         List<IndexQueryBuilder> queryHeads = new ArrayList<>(10);
         List<IndexQuery> queries = new ArrayList<>(10);
@@ -146,11 +146,11 @@ public class SearchIndex {
                 return Collections.emptyList();
             }
 
-            for (int orderedInclude : orderedIncludes) {
+            for (long orderedInclude : orderedIncludes) {
                 query = query.alsoFull(orderedInclude);
             }
 
-            for (int term : terms.excludes()) {
+            for (long term : terms.excludes()) {
                 query = query.notFull(term);
             }
 
@@ -166,14 +166,14 @@ public class SearchIndex {
         return queries;
     }
 
-    private int compareKeywords(int a, int b) {
+    private int compareKeywords(long a, long b) {
         return Long.compare(
                 indexReader.numHits(a),
                 indexReader.numHits(b)
         );
     }
 
-    private int compareKeywordsPrio(int a, int b) {
+    private int compareKeywordsPrio(long a, long b) {
         return Long.compare(
                 indexReader.numHitsPrio(a),
                 indexReader.numHitsPrio(b)
@@ -184,7 +184,7 @@ public class SearchIndex {
      * document identifiers provided; with metadata for termId.  The input array
      * docs[] *must* be sorted.
      */
-    public long[] getTermMetadata(int termId, long[] docs) {
+    public long[] getTermMetadata(long termId, long[] docs) {
         return indexReader.getMetadata(termId, docs);
     }
 
@@ -199,10 +199,10 @@ public class SearchIndex {
         return indexReader.totalDocCount();
     }
 
-    public int getTermFrequency(int id) {
+    public int getTermFrequency(long id) {
         return (int) indexReader.numHits(id);
     }
-    public int getTermFrequencyPrio(int id) {
+    public int getTermFrequencyPrio(long id) {
         return (int) indexReader.numHitsPrio(id);
     }
 }

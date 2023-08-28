@@ -5,6 +5,7 @@ import nu.marginalia.array.LongArray;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
@@ -117,5 +118,32 @@ class TwoArrayOperationsTest {
 
         assertEquals(distinctSize, mergedSize);
 
+    }
+
+    @Test
+    public void mergeArrays2() {
+        LongArray left = LongArray.allocate(4);
+        LongArray right = LongArray.allocate(2);
+        LongArray out = LongArray.allocate(4);
+        left.set(0, 40, 3, 41, 4);
+        right.set(0, 40, 5);
+
+        System.out.println(Arrays.toString(longArrayToJavaArray(left)));
+        System.out.println(Arrays.toString(longArrayToJavaArray(right)));
+        System.out.println(Arrays.toString(longArrayToJavaArray(out)));
+        long numDistinct = TwoArrayOperations.countDistinctElementsN(2, left, right, 0, 4, 0, 2);
+        System.out.println(numDistinct);
+        System.out.println(numDistinct);
+
+        TwoArrayOperations.mergeArrays2(out, left, right, 0, 4, 0, 4, 0, 2);
+
+        System.out.println(Arrays.toString(longArrayToJavaArray(out)));
+
+    }
+
+    long[] longArrayToJavaArray(LongArray longArray) {
+        long[] vals = new long[(int) longArray.size()];
+        longArray.get(0, vals);
+        return vals;
     }
 }

@@ -369,7 +369,8 @@ public class TwoArrayOperations {
         }
 
         while (aPos < aEnd) {
-            long val = a.get(aPos+=stepSize);
+            long val = a.get(aPos);
+            aPos+=stepSize;
             if (distinct == 0 || val != lastValue) {
                 distinct++;
             }
@@ -377,7 +378,8 @@ public class TwoArrayOperations {
         }
 
         while (bPos < bEnd) {
-            long val = b.get(bPos+=stepSize);
+            long val = b.get(bPos);
+            bPos+=stepSize;
             if (distinct == 0 || val != lastValue) {
                 distinct++;
             }

@@ -296,15 +296,6 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
                     """
     )
     public void switchOver(Long id) throws Exception {
-        var live = storageService.getStorageByType(FileStorageType.LEXICON_LIVE);
-        var staging = storageService.getStorageByType(FileStorageType.LEXICON_STAGING);
-        var fromSource = staging.asPath().resolve("dictionary.dat");
-        var liveDest = live.asPath().resolve("dictionary.dat");
-
-        // Swap in new lexicon
-        logger.info("Moving " + fromSource + " to " + liveDest);
-        Files.move(fromSource, liveDest, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-
         // Notify services to switch over
         searchOutbox.sendNotice(SearchMqEndpoints.SWITCH_LINKDB, ":-)");
         indexOutbox.sendNotice(IndexMqEndpoints.INDEX_REINDEX, ":^D");

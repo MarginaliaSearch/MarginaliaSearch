@@ -4,32 +4,18 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.db.storage.model.FileStorageType;
-import nu.marginalia.index.forward.ForwardIndexConverter;
 import nu.marginalia.index.forward.ForwardIndexFileNames;
 import nu.marginalia.index.forward.ForwardIndexReader;
-import nu.marginalia.index.full.ReverseIndexFullFileNames;
-import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile;
-import nu.marginalia.index.priority.ReverseIndexPrioFileNames;
-import nu.marginalia.index.priority.ReverseIndexPriorityConverter;
-import nu.marginalia.index.full.ReverseIndexFullConverter;
-import nu.marginalia.index.priority.ReverseIndexPriorityReader;
-import nu.marginalia.index.priority.ReverseIndexPriorityParameters;
-import nu.marginalia.index.full.ReverseIndexFullReader;
-import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.index.index.SearchIndexReader;
 import nu.marginalia.service.control.ServiceHeartbeat;
-import org.checkerframework.checker.units.qual.C;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
-import java.util.concurrent.Callable;
-import java.util.stream.Stream;
 
 @Singleton
 public class IndexServicesFactory {
@@ -55,16 +41,16 @@ public class IndexServicesFactory {
         return searchSetsBase;
     }
 
-    public ReverseIndexFullReader getReverseIndexReader() throws IOException {
+    public ReverseIndexReader getReverseIndexReader() throws IOException {
 
-        return new ReverseIndexFullReader(
+        return new ReverseIndexReader(
                 ReverseIndexFullFileNames.resolve(liveStorage, ReverseIndexFullFileNames.FileIdentifier.WORDS, ReverseIndexFullFileNames.FileVersion.CURRENT),
                 ReverseIndexFullFileNames.resolve(liveStorage, ReverseIndexFullFileNames.FileIdentifier.DOCS, ReverseIndexFullFileNames.FileVersion.CURRENT)
         );
     }
 
-    public ReverseIndexPriorityReader getReverseIndexPrioReader() throws IOException {
-        return new ReverseIndexPriorityReader(
+    public ReverseIndexReader getReverseIndexPrioReader() throws IOException {
+        return new ReverseIndexReader(
                 ReverseIndexPrioFileNames.resolve(liveStorage, ReverseIndexPrioFileNames.FileIdentifier.WORDS, ReverseIndexPrioFileNames.FileVersion.CURRENT),
                 ReverseIndexPrioFileNames.resolve(liveStorage, ReverseIndexPrioFileNames.FileIdentifier.DOCS, ReverseIndexPrioFileNames.FileVersion.CURRENT)
         );

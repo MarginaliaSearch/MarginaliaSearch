@@ -1,19 +1,15 @@
 package nu.marginalia.index.index;
 
-import gnu.trove.set.hash.TIntHashSet;
-import nu.marginalia.index.priority.ReverseIndexPriorityReader;
+import gnu.trove.set.hash.TLongHashSet;
+import nu.marginalia.index.ReverseIndexReader;
 import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.query.IndexQueryBuilder;
 import nu.marginalia.index.query.filter.QueryFilterStepIf;
-import nu.marginalia.index.full.ReverseIndexFullReader;
-
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class SearchIndexQueryBuilder implements IndexQueryBuilder  {
     private final IndexQuery query;
-    private final ReverseIndexFullReader reverseIndexFullReader;
-    private final ReverseIndexPriorityReader reverseIndexPrioReader;
+    private final ReverseIndexReader reverseIndexFullReader;
+    private final ReverseIndexReader reverseIndexPrioReader;
 
     /* Keep track of already added include terms to avoid redundant checks.
      *
@@ -21,11 +17,11 @@ public class SearchIndexQueryBuilder implements IndexQueryBuilder  {
      * first check one index and then another for the same term. At the moment, that
      * makes no sense, but in the future, that might be a thing one might want to do.
      * */
-    private final TIntHashSet alreadyConsideredTerms = new TIntHashSet();
+    private final TLongHashSet alreadyConsideredTerms = new TLongHashSet();
 
-    SearchIndexQueryBuilder(ReverseIndexFullReader reverseIndexFullReader,
-                            ReverseIndexPriorityReader reverseIndexPrioReader,
-                            IndexQuery query, int... sourceTerms)
+    SearchIndexQueryBuilder(ReverseIndexReader reverseIndexFullReader,
+                            ReverseIndexReader reverseIndexPrioReader,
+                            IndexQuery query, long... sourceTerms)
     {
         this.query = query;
         this.reverseIndexFullReader = reverseIndexFullReader;
@@ -34,7 +30,7 @@ public class SearchIndexQueryBuilder implements IndexQueryBuilder  {
         alreadyConsideredTerms.addAll(sourceTerms);
     }
 
-    public IndexQueryBuilder alsoFull(int termId) {
+    public IndexQueryBuilder alsoFull(long termId) {
 
         if (alreadyConsideredTerms.add(termId)) {
             query.addInclusionFilter(reverseIndexFullReader.also(termId));
@@ -43,7 +39,7 @@ public class SearchIndexQueryBuilder implements IndexQueryBuilder  {
         return this;
     }
 
-    public IndexQueryBuilder alsoPrio(int termId) {
+    public IndexQueryBuilder alsoPrio(long termId) {
 
         if (alreadyConsideredTerms.add(termId)) {
             query.addInclusionFilter(reverseIndexPrioReader.also(termId));
@@ -52,7 +48,7 @@ public class SearchIndexQueryBuilder implements IndexQueryBuilder  {
         return this;
     }
 
-    public IndexQueryBuilder notFull(int termId) {
+    public IndexQueryBuilder notFull(long termId) {
 
         query.addInclusionFilter(reverseIndexFullReader.not(termId));
 

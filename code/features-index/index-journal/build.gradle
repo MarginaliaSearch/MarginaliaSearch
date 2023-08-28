@@ -13,7 +13,6 @@ java {
 dependencies {
     implementation project(':code:libraries:array')
     implementation project(':code:common:model')
-    implementation project(':code:features-index:lexicon')
 
     implementation libs.lombok
     annotationProcessor libs.lombok
@@ -22,6 +21,7 @@ dependencies {
     implementation libs.prometheus
     implementation libs.notnull
     implementation libs.rxjava
+    implementation libs.guava
     implementation libs.trove
     implementation libs.zstd
     implementation libs.commons.lang3

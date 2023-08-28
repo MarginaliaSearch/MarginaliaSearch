@@ -2,15 +2,13 @@ package nu.marginalia.index.forward;
 
 import lombok.SneakyThrows;
 import nu.marginalia.index.journal.model.IndexJournalEntry;
-import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
+import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
-import nu.marginalia.lexicon.journal.KeywordLexiconJournalMode;
+import nu.marginalia.index.journal.writer.IndexJournalWriterSingleFileImpl;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.process.control.ProcessTaskHeartbeat;
 import nu.marginalia.ranking.DomainRankings;
-import nu.marginalia.lexicon.KeywordLexicon;
-import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
 import nu.marginalia.test.TestUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +27,6 @@ import static org.mockito.Mockito.when;
 
 class ForwardIndexConverterTest {
 
-    KeywordLexicon keywordLexicon;
     IndexJournalWriter writer;
 
     Path indexFile;
@@ -50,12 +47,9 @@ class ForwardIndexConverterTest {
         dictionaryFile = Files.createTempFile("tmp", ".dict");
         dictionaryFile.toFile().deleteOnExit();
 
-        keywordLexicon = new KeywordLexicon(new KeywordLexiconJournal(dictionaryFile.toFile(), KeywordLexiconJournalMode.READ_WRITE));
-        keywordLexicon.getOrInsert("0");
-
         indexFile = Files.createTempFile("tmp", ".idx");
         indexFile.toFile().deleteOnExit();
-        writer = new IndexJournalWriterImpl(keywordLexicon, indexFile);
+        writer = new IndexJournalWriterSingleFileImpl(indexFile);
 
         wordsFile1 = Files.createTempFile("words1", ".idx");
         urlsFile1 = Files.createTempFile("urls1", ".idx");
@@ -63,11 +57,9 @@ class ForwardIndexConverterTest {
         dataDir = Files.createTempDirectory(getClass().getSimpleName());
 
         for (int i = 1; i < workSetSize; i++) {
-            createEntry(writer, keywordLexicon, i);
+            createEntry(writer, i);
         }
 
-
-        keywordLexicon.commitToDisk();
         writer.close();
 
 
@@ -88,13 +80,13 @@ class ForwardIndexConverterTest {
         return UrlIdCodec.encodeId((int) domain, (int) url);
     }
 
-    public void createEntry(IndexJournalWriter writer, KeywordLexicon keywordLexicon, int id) {
+    public void createEntry(IndexJournalWriter writer, int id) {
         int[] factors = getFactorsI(id);
 
         var entryBuilder = IndexJournalEntry.builder(createId(id, id/20), id%5);
 
         for (int i = 0; i+1 < factors.length; i+=2) {
-            entryBuilder.add(keywordLexicon.getOrInsert(Integer.toString(factors[i])), -factors[i+1]);
+            entryBuilder.add(factors[i], -factors[i+1]);
         }
 
         writer.put(entryBuilder.build());
@@ -108,7 +100,7 @@ class ForwardIndexConverterTest {
         when(serviceHeartbeat.createProcessTaskHeartbeat(Mockito.any(), Mockito.any()))
                 .thenReturn(Mockito.mock(ProcessTaskHeartbeat.class));
 
-        new ForwardIndexConverter(serviceHeartbeat, indexFile.toFile(), docsFileId, docsFileData, new DomainRankings()).convert();
+        new ForwardIndexConverter(serviceHeartbeat, new IndexJournalReaderSingleCompressedFile(indexFile), docsFileId, docsFileData, new DomainRankings()).convert();
 
         var forwardReader = new ForwardIndexReader(docsFileId, docsFileData);
 

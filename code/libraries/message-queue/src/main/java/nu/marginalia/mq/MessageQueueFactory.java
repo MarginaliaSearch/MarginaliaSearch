@@ -1,5 +1,7 @@
 package nu.marginalia.mq;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import nu.marginalia.mq.inbox.MqAsynchronousInbox;
 import nu.marginalia.mq.inbox.MqInboxIf;
 import nu.marginalia.mq.inbox.MqSingleShotInbox;
@@ -7,8 +9,6 @@ import nu.marginalia.mq.inbox.MqSynchronousInbox;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.mq.persistence.MqPersistence;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.util.UUID;
 
 @Singleton

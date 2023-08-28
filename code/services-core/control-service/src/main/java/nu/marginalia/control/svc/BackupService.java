@@ -7,9 +7,10 @@ import nu.marginalia.db.storage.model.FileStorage;
 import nu.marginalia.db.storage.model.FileStorageBaseType;
 import nu.marginalia.db.storage.model.FileStorageId;
 import nu.marginalia.db.storage.model.FileStorageType;
+import nu.marginallia.index.journal.IndexJournalFileNames;
 import org.apache.commons.io.IOUtils;
 
-import javax.inject.Inject;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.sql.SQLException;
@@ -38,12 +39,10 @@ public class BackupService {
 
         var indexStagingStorage = storageService.getStorageByType(FileStorageType.INDEX_STAGING);
         var linkdbStagingStorage = storageService.getStorageByType(FileStorageType.LINKDB_STAGING);
-        var lexiconStagingStorage = storageService.getStorageByType(FileStorageType.LEXICON_STAGING);
 
         backupFileCompressed("links.db", linkdbStagingStorage, backupStorage);
-        backupFileCompressed("dictionary.dat", lexiconStagingStorage, backupStorage);
         // This file format is already compressed
-        backupFileNoCompression("page-index.dat", indexStagingStorage, backupStorage);
+        backupJournal(indexStagingStorage, backupStorage);
     }
 
 
@@ -53,29 +52,37 @@ public class BackupService {
 
         var indexStagingStorage = storageService.getStorageByType(FileStorageType.INDEX_STAGING);
         var linkdbStagingStorage = storageService.getStorageByType(FileStorageType.LINKDB_STAGING);
-        var lexiconStagingStorage = storageService.getStorageByType(FileStorageType.LEXICON_STAGING);
 
         restoreBackupCompressed("links.db", linkdbStagingStorage, backupStorage);
-        restoreBackupCompressed("dictionary.dat", lexiconStagingStorage, backupStorage);
-        restoreBackupNoCompression("page-index.dat", indexStagingStorage, backupStorage);
+        restoreJournal(indexStagingStorage, backupStorage);
     }
 
 
-    private void backupFileNoCompression(String fileName, FileStorage inputStorage, FileStorage backupStorage) throws IOException
+    private void backupJournal(FileStorage inputStorage, FileStorage backupStorage) throws IOException
     {
-        try (var is = Files.newInputStream(inputStorage.asPath().resolve(fileName));
-             var os = Files.newOutputStream(backupStorage.asPath().resolve(fileName))
-        ) {
-            IOUtils.copyLarge(is, os);
+        for (var source : IndexJournalFileNames.findJournalFiles(inputStorage.asPath())) {
+            var dest = backupStorage.asPath().resolve(source.toFile().getName());
+
+            try (var is = Files.newInputStream(source);
+                 var os = Files.newOutputStream(dest)
+            ) {
+                IOUtils.copyLarge(is, os);
+            }
         }
+
     }
 
-    private void restoreBackupNoCompression(String fileName, FileStorage inputStorage, FileStorage backupStorage) throws IOException {
-        try (var is = Files.newInputStream(backupStorage.asPath().resolve(fileName));
-             var os = Files.newOutputStream(inputStorage.asPath().resolve(fileName))
-        ) {
-            IOUtils.copyLarge(is, os);
+    private void restoreJournal(FileStorage destStorage, FileStorage backupStorage) throws IOException {
+        for (var source : IndexJournalFileNames.findJournalFiles(backupStorage.asPath())) {
+            var dest = destStorage.asPath().resolve(source.toFile().getName());
+
+            try (var is = Files.newInputStream(source);
+                 var os = Files.newOutputStream(dest)
+            ) {
+                IOUtils.copyLarge(is, os);
+            }
         }
+
     }
 
     private void backupFileCompressed(String fileName, FileStorage inputStorage, FileStorage backupStorage) throws IOException

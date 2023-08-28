@@ -4,14 +4,12 @@ import nu.marginalia.index.journal.model.IndexJournalEntry;
 import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
 import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile;
-import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
-import nu.marginalia.lexicon.KeywordLexicon;
+import nu.marginalia.index.journal.writer.IndexJournalWriterSingleFileImpl;
 import nu.marginalia.model.id.UrlIdCodec;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class IndexJournalTest {
     Path tempFile;
-    KeywordLexicon lexicon;
     IndexJournalReader reader;
 
     long firstDocId = UrlIdCodec.encodeId(44, 10);
@@ -32,9 +29,8 @@ public class IndexJournalTest {
     @BeforeEach
     public void setUp() throws IOException {
         tempFile = Files.createTempFile(getClass().getSimpleName(), ".dat");
-        lexicon = Mockito.mock(KeywordLexicon.class);
 
-        var journalWriter = new IndexJournalWriterImpl(lexicon, tempFile);
+        var journalWriter = new IndexJournalWriterSingleFileImpl( tempFile);
         journalWriter.put(IndexJournalEntry.builder(44, 10, 55)
                 .add(1, 2)
                 .add(2, 3)
@@ -82,22 +78,7 @@ public class IndexJournalTest {
         List<Integer> expected = List.of(1, 2, 3, 5, 5 ,6);
         List<Integer> actual = new ArrayList<>();
 
-        reader.forEachWordId(actual::add);
-        assertEquals(expected, actual);
-    }
-
-    @Test
-    public void forEachDocIdWordId() {
-        List<Pair<Long, Integer>> expected = List.of(
-                Pair.of(firstDocId, 1),
-                Pair.of(firstDocId, 2),
-                Pair.of(firstDocId, 3),
-                Pair.of(firstDocId, 5),
-                Pair.of(secondDocId, 5),
-                Pair.of(secondDocId, 6));
-        List<Pair<Long, Integer>> actual = new ArrayList<>();
-
-        reader.forEachDocIdWordId((url, word) -> actual.add(Pair.of(url, word)));
+        reader.forEachWordId(i -> actual.add((int) i));
         assertEquals(expected, actual);
     }
 

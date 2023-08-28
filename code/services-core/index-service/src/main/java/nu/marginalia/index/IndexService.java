@@ -77,12 +77,7 @@ public class IndexService extends Service {
 
     @MqRequest(endpoint = IndexMqEndpoints.INDEX_RELOAD_LEXICON)
     public String reloadLexicon(String message) throws Exception {
-
-        if (!opsService.reloadLexicon()) {
-            throw new IllegalStateException("Ops lock busy");
-        }
-
-        return "ok";
+        throw new UnsupportedOperationException();
     }
 
 

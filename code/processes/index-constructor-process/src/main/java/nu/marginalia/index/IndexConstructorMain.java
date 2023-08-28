@@ -6,13 +6,12 @@ import com.google.inject.Inject;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.db.storage.model.FileStorage;
 import nu.marginalia.db.storage.model.FileStorageType;
+import nu.marginalia.index.construction.ReverseIndexConstructor;
 import nu.marginalia.index.forward.ForwardIndexConverter;
 import nu.marginalia.index.forward.ForwardIndexFileNames;
-import nu.marginalia.index.full.ReverseIndexFullConverter;
-import nu.marginalia.index.full.ReverseIndexFullFileNames;
-import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile;
-import nu.marginalia.index.priority.ReverseIndexPrioFileNames;
-import nu.marginalia.index.priority.ReverseIndexPriorityConverter;
+import nu.marginalia.index.journal.model.IndexJournalEntryData;
+import nu.marginalia.index.journal.reader.IndexJournalReadEntry;
+import nu.marginalia.index.journal.reader.IndexJournalReader;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
@@ -23,7 +22,6 @@ import nu.marginalia.mqapi.index.IndexName;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.service.module.DatabaseModule;
-import nu.marginallia.index.journal.IndexJournalFileNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,52 +95,35 @@ public class IndexConstructorMain {
         FileStorage indexLive = fileStorageService.getStorageByType(FileStorageType.INDEX_LIVE);
         FileStorage indexStaging = fileStorageService.getStorageByType(FileStorageType.INDEX_STAGING);
 
-        Path inputFile = IndexJournalFileNames.resolve(indexStaging.asPath());
         Path outputFileDocs = ReverseIndexFullFileNames.resolve(indexLive.asPath(), ReverseIndexFullFileNames.FileIdentifier.DOCS, ReverseIndexFullFileNames.FileVersion.NEXT);
         Path outputFileWords = ReverseIndexFullFileNames.resolve(indexLive.asPath(), ReverseIndexFullFileNames.FileIdentifier.WORDS, ReverseIndexFullFileNames.FileVersion.NEXT);
 
         Path tmpDir = indexStaging.asPath().resolve("tmp");
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-        var journalReader = new IndexJournalReaderSingleCompressedFile(inputFile);
 
-        ReverseIndexFullConverter converter = new ReverseIndexFullConverter(
-                heartbeat,
-                tmpDir,
-                journalReader,
-                domainRankings,
-                outputFileWords,
-                outputFileDocs
-        );
-
-        converter.convert();
+        ReverseIndexConstructor.
+                createReverseIndex(IndexJournalReader::singleFile,
+                        indexStaging.asPath(),
+                        tmpDir,
+                        outputFileDocs,
+                        outputFileWords);
     }
-
 
     private void createPrioReverseIndex() throws SQLException, IOException {
 
         FileStorage indexLive = fileStorageService.getStorageByType(FileStorageType.INDEX_LIVE);
         FileStorage indexStaging = fileStorageService.getStorageByType(FileStorageType.INDEX_STAGING);
 
-        Path inputFile = IndexJournalFileNames.resolve(indexStaging.asPath());
         Path outputFileDocs = ReverseIndexPrioFileNames.resolve(indexLive.asPath(), ReverseIndexPrioFileNames.FileIdentifier.DOCS, ReverseIndexPrioFileNames.FileVersion.NEXT);
         Path outputFileWords = ReverseIndexPrioFileNames.resolve(indexLive.asPath(), ReverseIndexPrioFileNames.FileIdentifier.WORDS, ReverseIndexPrioFileNames.FileVersion.NEXT);
 
         Path tmpDir = indexStaging.asPath().resolve("tmp");
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-        var journalReader = new IndexJournalReaderSingleCompressedFile(inputFile);
-
-        ReverseIndexPriorityConverter converter = new ReverseIndexPriorityConverter(
-                heartbeat,
-                tmpDir,
-                journalReader,
-                domainRankings,
-                outputFileWords,
-                outputFileDocs
-        );
-
-        converter.convert();
+        ReverseIndexConstructor.
+            createReverseIndex(IndexJournalReader::singleFileWithPriorityFilters,
+                    indexStaging.asPath(), tmpDir, outputFileDocs, outputFileWords);
     }
 
     private void createForwardIndex() throws SQLException, IOException {
@@ -150,12 +131,11 @@ public class IndexConstructorMain {
         FileStorage indexLive = fileStorageService.getStorageByType(FileStorageType.INDEX_LIVE);
         FileStorage indexStaging = fileStorageService.getStorageByType(FileStorageType.INDEX_STAGING);
 
-        Path inputFile = IndexJournalFileNames.resolve(indexStaging.asPath());
         Path outputFileDocsId = ForwardIndexFileNames.resolve(indexLive.asPath(), ForwardIndexFileNames.FileIdentifier.DOC_ID, ForwardIndexFileNames.FileVersion.NEXT);
         Path outputFileDocsData = ForwardIndexFileNames.resolve(indexLive.asPath(), ForwardIndexFileNames.FileIdentifier.DOC_DATA, ForwardIndexFileNames.FileVersion.NEXT);
 
         ForwardIndexConverter converter = new ForwardIndexConverter(heartbeat,
-                inputFile.toFile(),
+                IndexJournalReader.paging(indexStaging.asPath()),
                 outputFileDocsId,
                 outputFileDocsData,
                 domainRankings

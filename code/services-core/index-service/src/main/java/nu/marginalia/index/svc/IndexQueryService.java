@@ -142,8 +142,8 @@ public class IndexQueryService {
      * accurately */
     private ResultRankingContext createRankingContext(ResultRankingParameters rankingParams, List<SearchSubquery> subqueries) {
         final var termToId = searchTermsSvc.getAllIncludeTerms(subqueries);
-        final var termFrequencies = new HashMap<>(termToId);
-        final var prioFrequencies = new HashMap<>(termToId);
+        final Map<String, Integer> termFrequencies = new HashMap<>(termToId.size());
+        final Map<String, Integer> prioFrequencies = new HashMap<>(termToId.size());
 
         termToId.forEach((key, id) -> termFrequencies.put(key, index.getTermFrequency(id)));
         termToId.forEach((key, id) -> prioFrequencies.put(key, index.getTermFrequencyPrio(id)));
@@ -230,16 +230,16 @@ public class IndexQueryService {
         var priority = subquery.searchTermsPriority;
 
         for (int i = 0; i < includes.size(); i++) {
-            logger.info(queryMarker, "{} -> {} I", includes.get(i), searchTerms.includes().getInt(i));
+            logger.info(queryMarker, "{} -> {} I", includes.get(i), searchTerms.includes().getLong(i));
         }
         for (int i = 0; i < advice.size(); i++) {
-            logger.info(queryMarker, "{} -> {} A", advice.get(i), searchTerms.includes().getInt(includes.size() + i));
+            logger.info(queryMarker, "{} -> {} A", advice.get(i), searchTerms.includes().getLong(includes.size() + i));
         }
         for (int i = 0; i < excludes.size(); i++) {
-            logger.info(queryMarker, "{} -> {} E", excludes.get(i), searchTerms.excludes().getInt(i));
+            logger.info(queryMarker, "{} -> {} E", excludes.get(i), searchTerms.excludes().getLong(i));
         }
         for (int i = 0; i < priority.size(); i++) {
-            logger.info(queryMarker, "{} -> {} P", priority.get(i), searchTerms.priority().getInt(i));
+            logger.info(queryMarker, "{} -> {} P", priority.get(i), searchTerms.priority().getLong(i));
         }
     }
 

@@ -12,6 +12,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.function.IntConsumer;
 import java.util.function.LongConsumer;
@@ -19,8 +20,13 @@ import java.util.function.Predicate;
 
 public class IndexJournalReaderSingleCompressedFile implements IndexJournalReader {
 
-    private static Path journalFile;
+    private Path journalFile;
     public final IndexJournalFileHeader fileHeader;
+
+    @Override
+    public String toString() {
+        return "IndexJournalReaderSingleCompressedFile{" + journalFile + " }";
+    }
 
     private DataInputStream dataInputStream = null;
 
@@ -28,6 +34,8 @@ public class IndexJournalReaderSingleCompressedFile implements IndexJournalReade
     final Predicate<IndexJournalEntryData.Record> recordPredicate;
 
     public IndexJournalReaderSingleCompressedFile(Path file) throws IOException {
+        this.journalFile = file;
+
         fileHeader = readHeader(file);
 
         this.recordPredicate = null;
@@ -35,7 +43,8 @@ public class IndexJournalReaderSingleCompressedFile implements IndexJournalReade
     }
 
     public IndexJournalReaderSingleCompressedFile(Path file, Predicate<IndexJournalReadEntry> entryPredicate, Predicate<IndexJournalEntryData.Record> recordPredicate) throws IOException {
-        journalFile = file;
+        this.journalFile = file;
+
         fileHeader = readHeader(file);
 
         this.recordPredicate = recordPredicate;
@@ -43,8 +52,6 @@ public class IndexJournalReaderSingleCompressedFile implements IndexJournalReade
     }
 
     private static IndexJournalFileHeader readHeader(Path file) throws IOException {
-        journalFile = file;
-
         try (var raf = new RandomAccessFile(file.toFile(), "r")) {
             long unused = raf.readLong();
             long wordCount = raf.readLong();
@@ -62,10 +69,6 @@ public class IndexJournalReaderSingleCompressedFile implements IndexJournalReade
         return new DataInputStream(new ZstdInputStream(new BufferedInputStream(fileInputStream)));
     }
 
-    public IndexJournalFileHeader fileHeader() {
-        return fileHeader;
-    }
-
     public boolean filter(IndexJournalReadEntry entry) {
         return entryPredicate == null || entryPredicate.test(entry);
     }
@@ -81,49 +84,12 @@ public class IndexJournalReaderSingleCompressedFile implements IndexJournalReade
 
 
     @Override
-    public IndexJournalStatistics getStatistics() {
-        int highestWord = 0;
-
-        // Docs cardinality is a candidate for a HyperLogLog
-        Roaring64Bitmap docsBitmap = new Roaring64Bitmap();
-
-        for (var entry : this) {
-            var entryData = entry.readEntry();
-
-            if (filter(entry)) {
-                docsBitmap.addLong(entry.docId() & 0x0000_0000_FFFF_FFFFL);
-
-                for (var item : entryData) {
-                    if (filter(entry, item)) {
-                        highestWord = Integer.max(item.wordId(), highestWord);
-                    }
-                }
-            }
-        }
-
-        return new IndexJournalStatistics(highestWord, docsBitmap.getIntCardinality());
-    }
-
-    @Override
-    public void forEachWordId(IntConsumer consumer) {
+    public void forEachWordId(LongConsumer consumer) {
         for (var entry : this) {
             var data = entry.readEntry();
             for (var post : data) {
                 if (filter(entry, post)) {
                     consumer.accept(post.wordId());
-                }
-            }
-        }
-    }
-
-    @Override
-    public void forEachDocIdWordId(LongIntConsumer consumer) {
-        for (var entry : this) {
-            var data = entry.readEntry();
-
-            for (var post : data) {
-                if (filter(entry, post)) {
-                    consumer.accept(entry.docId(), post.wordId());
                 }
             }
         }

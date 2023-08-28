@@ -3,7 +3,6 @@ package nu.marginalia.index.svc;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.index.index.SearchIndex;
-import nu.marginalia.lexicon.KeywordLexiconReadOnlyView;
 import spark.Request;
 import spark.Response;
 import spark.Spark;
@@ -19,15 +18,12 @@ public class IndexOpsService {
 
     private final SearchIndex index;
     private final IndexSearchSetsService searchSetService;
-    private final KeywordLexiconReadOnlyView lexicon;
 
     @Inject
     public IndexOpsService(SearchIndex index,
-                           IndexSearchSetsService searchSetService,
-                           KeywordLexiconReadOnlyView lexicon) {
+                           IndexSearchSetsService searchSetService) {
         this.index = index;
         this.searchSetService = searchSetService;
-        this.lexicon = lexicon;
     }
 
     public boolean isBusy() {
@@ -39,13 +35,10 @@ public class IndexOpsService {
     }
     public boolean reindex() throws Exception {
         return run(() -> {
-            return index.switchIndex() && lexicon.suggestReload();
+            return index.switchIndex();
         }).isPresent();
     }
 
-    public boolean reloadLexicon() throws Exception {
-        return run(lexicon::suggestReload).isPresent();
-    }
 
     public Object repartitionEndpoint(Request request, Response response) throws Exception {
 

@@ -12,6 +12,7 @@ import nu.marginalia.converting.instruction.instructions.LoadProcessedDocumentWi
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,14 +34,14 @@ public class Loader implements Interpreter, AutoCloseable {
     public final LoaderData data;
 
     public Loader(int sizeHint,
+                  OldDomains oldDomains,
                   SqlLoadDomains sqlLoadDomains,
                   SqlLoadDomainLinks sqlLoadDomainLinks,
                   SqlLoadProcessedDomain sqlLoadProcessedDomain,
                   LdbLoadProcessedDocument loadProcessedDocument,
                   SqlLoadDomainMetadata sqlLoadDomainMetadata,
-                  IndexLoadKeywords indexLoadKeywords)
-    {
-        data = new LoaderData(sizeHint);
+                  IndexLoadKeywords indexLoadKeywords) {
+        data = new LoaderData(oldDomains, sizeHint);
 
         this.sqlLoadDomains = sqlLoadDomains;
         this.sqlLoadDomainLinks = sqlLoadDomainLinks;
@@ -93,11 +94,7 @@ public class Loader implements Interpreter, AutoCloseable {
     }
     @Override
     public void loadKeywords(EdgeUrl url, int ordinal, int features, DocumentMetadata metadata, DocumentKeywords words) {
-        try {
-            indexLoadKeywords.load(data, ordinal, url, features, metadata, words);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        indexLoadKeywords.load(data, ordinal, url, features, metadata, words);
     }
 
     @Override

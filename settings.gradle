@@ -36,7 +36,6 @@ include 'code:features-convert:topic-detection'
 include 'code:features-crawl:crawl-blocklist'
 include 'code:features-crawl:link-parser'
 
-include 'code:features-index:lexicon'
 include 'code:features-index:index-journal'
 include 'code:features-index:index-query'
 include 'code:features-index:index-forward'
@@ -114,7 +113,7 @@ dependencyResolutionManagement {
             library('hikaricp', 'com.zaxxer:HikariCP:5.0.1')
 
             library('spark', 'com.sparkjava', 'spark-core').version('2.9.4')
-            library('guice', 'com.google.inject', 'guice').version('5.1.0')
+            library('guice', 'com.google.inject', 'guice').version('7.0.0')
             library('guava', 'com.google.guava', 'guava').version('32.0.1-jre')
 
             library('rxjava', 'io.reactivex.rxjava3', 'rxjava').version('3.1.6')
