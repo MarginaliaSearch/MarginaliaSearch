@@ -17,7 +17,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /** A LongArray with document data, segmented according to
- * the associated ReversePReindexWordSegments data
+ * the associated ReversePreindexWordSegments data
  */
 public class ReversePreindexDocuments {
     private final Path file;
@@ -38,7 +38,7 @@ public class ReversePreindexDocuments {
             ReversePreindexWordSegments segments) throws IOException {
 
 
-        logger.info("Transfering data");
+        logger.info("Transferring data");
         createUnsortedDocsFile(docsFile, reader, segments, docIdRewriter);
 
         LongArray docsFileMap = LongArray.mmapForWriting(docsFile, 8 * Files.size(docsFile));
@@ -71,16 +71,20 @@ public class ReversePreindexDocuments {
         var offsetMap = segments.asMap(RECORD_SIZE_LONGS);
         offsetMap.defaultReturnValue(0);
 
-        reader.forEachDocIdRecord((docId, rec) -> {
-            long wordId = rec.wordId();
-            long meta = rec.metadata();
+        for (var entry : reader) {
+            long rankEncodedId = docIdRewriter.rewriteDocId(entry.docId());
 
-            long rankEncodedId = docIdRewriter.rewriteDocId(docId);
+            var data = entry.readEntry();
+            for (int i = 0; i + 1 < data.size(); i+=2) {
+                long wordId = data.get(i);
+                long meta = data.get(i+1);
 
-            long offset = offsetMap.addTo(wordId, RECORD_SIZE_LONGS);
-            outArray.set(offset + 0, rankEncodedId);
-            outArray.set(offset + 1, meta);
-        });
+                long offset = offsetMap.addTo(wordId, RECORD_SIZE_LONGS);
+
+                outArray.set(offset + 0, rankEncodedId);
+                outArray.set(offset + 1, meta);
+            }
+        }
 
         outArray.force();
     }

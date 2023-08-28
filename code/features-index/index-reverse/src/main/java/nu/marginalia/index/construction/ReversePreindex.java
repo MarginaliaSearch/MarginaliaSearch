@@ -73,6 +73,7 @@ public class ReversePreindex {
         documents.delete();
     }
     public static ReversePreindex constructPreindex(IndexJournalReader reader,
+                                                    DocIdRewriter docIdRewriter,
                                                     Path tempDir,
                                                     Path destDir) throws IOException
     {
@@ -84,7 +85,7 @@ public class ReversePreindex {
         logger.info("Segmenting");
         var segments = ReversePreindexWordSegments.construct(reader, ctx, segmentWordsFile, segmentCountsFile);
         logger.info("Mapping docs");
-        var docs = ReversePreindexDocuments.construct(docsFile, reader, DocIdRewriter.identity(), ctx, segments);
+        var docs = ReversePreindexDocuments.construct(docsFile, reader, docIdRewriter, ctx, segments);
         logger.info("Done");
         return new ReversePreindex(segments, docs);
     }

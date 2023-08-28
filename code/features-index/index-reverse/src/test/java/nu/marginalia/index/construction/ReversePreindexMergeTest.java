@@ -54,8 +54,8 @@ class ReversePreindexMergeTest {
         var reader1 = journalFactory.createReader(leftData.toArray(EntryDataWithWordMeta[]::new));
         var reader2 = journalFactory.createReader(rightData.toArray(EntryDataWithWordMeta[]::new));
 
-        var left = ReversePreindex.constructPreindex(reader1, tempDir, tempDir);
-        var right = ReversePreindex.constructPreindex(reader2, tempDir, tempDir);
+        var left = ReversePreindex.constructPreindex(reader1, DocIdRewriter.identity(), tempDir, tempDir);
+        var right = ReversePreindex.constructPreindex(reader2, DocIdRewriter.identity(), tempDir, tempDir);
         return ReversePreindex.merge(tempDir, left, right);
     }
 

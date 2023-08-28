@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.db.storage.model.FileStorage;
 import nu.marginalia.db.storage.model.FileStorageType;
+import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.construction.ReverseIndexConstructor;
 import nu.marginalia.index.forward.ForwardIndexConverter;
 import nu.marginalia.index.forward.ForwardIndexFileNames;
@@ -13,6 +14,7 @@ import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.reader.IndexJournalReadEntry;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
 import nu.marginalia.model.gson.GsonFactory;
+import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.inbox.MqInboxResponse;
@@ -105,6 +107,7 @@ public class IndexConstructorMain {
         ReverseIndexConstructor.
                 createReverseIndex(IndexJournalReader::singleFile,
                         indexStaging.asPath(),
+                        this::addRank,
                         tmpDir,
                         outputFileDocs,
                         outputFileWords);
@@ -123,7 +126,7 @@ public class IndexConstructorMain {
 
         ReverseIndexConstructor.
             createReverseIndex(IndexJournalReader::singleFileWithPriorityFilters,
-                    indexStaging.asPath(), tmpDir, outputFileDocs, outputFileWords);
+                    indexStaging.asPath(), this::addRank, tmpDir, outputFileDocs, outputFileWords);
     }
 
     private void createForwardIndex() throws SQLException, IOException {
@@ -144,7 +147,13 @@ public class IndexConstructorMain {
         converter.convert();
     }
 
+    private long addRank(long docId) {
+        float rank = domainRankings.getSortRanking(docId);
+        return UrlIdCodec.addRank(rank, docId);
+    }
+
     private class CreateIndexInstructions {
+
         public final IndexName name;
         private final MqSingleShotInbox inbox;
         private final MqMessage message;

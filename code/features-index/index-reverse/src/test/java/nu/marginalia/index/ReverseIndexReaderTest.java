@@ -2,6 +2,7 @@ package nu.marginalia.index;
 
 import nu.marginalia.array.algo.SortingContext;
 import nu.marginalia.array.buffer.LongQueryBuffer;
+import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.construction.ReversePreindex;
 import nu.marginalia.index.construction.TestJournalFactory;
 import nu.marginalia.index.construction.TestJournalFactory.EntryDataWithWordMeta;
@@ -93,7 +94,7 @@ class ReverseIndexReaderTest {
 
     private ReverseIndexReader createIndex(EntryDataWithWordMeta... scenario) throws IOException {
         var reader = journalFactory.createReader(scenario);
-        var preindex = ReversePreindex.constructPreindex(reader, tempDir, tempDir);
+        var preindex = ReversePreindex.constructPreindex(reader, DocIdRewriter.identity(), tempDir, tempDir);
 
 
         Path docsFile = tempDir.resolve("docs.dat");

@@ -54,7 +54,7 @@ class ReversePreindexFinalizeTest {
     @Test
     public void testFinalizeSimple() throws IOException {
         var reader = journalFactory.createReader(new EntryDataWithWordMeta(100, 101, wm(50, 51)));
-        var preindex = ReversePreindex.constructPreindex(reader, tempDir, tempDir);
+        var preindex = ReversePreindex.constructPreindex(reader, DocIdRewriter.identity(), tempDir, tempDir);
 
 
         preindex.finalizeIndex(tempDir.resolve( "docs.dat"), tempDir.resolve("words.dat"));
@@ -92,7 +92,7 @@ class ReversePreindexFinalizeTest {
                 new EntryDataWithWordMeta(101, 101, wm(51, 52))
                 );
 
-        var preindex = ReversePreindex.constructPreindex(reader, tempDir, tempDir);
+        var preindex = ReversePreindex.constructPreindex(reader, DocIdRewriter.identity(), tempDir, tempDir);
 
         preindex.finalizeIndex(tempDir.resolve( "docs.dat"), tempDir.resolve("words.dat"));
         preindex.delete();

@@ -17,6 +17,7 @@ public class ReverseIndexConstructor {
     public static void createReverseIndex(
                                     JournalReaderSource readerSource,
                                     Path sourceBaseDir,
+                                    DocIdRewriter docIdRewriter,
                                     Path tmpDir,
                                     Path outputFileDocs,
                                     Path outputFileWords) throws IOException
@@ -31,8 +32,7 @@ public class ReverseIndexConstructor {
 
         for (var input : inputs) {
             logger.info("Construcing preindex from {}", input);
-            var preindex = ReversePreindex.constructPreindex(readerSource.construct(input),
-                    tmpDir, tmpDir);
+            var preindex = ReversePreindex.constructPreindex(readerSource.construct(input), docIdRewriter, tmpDir, tmpDir);
             preindexes.add(preindex);
         }
 
