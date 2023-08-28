@@ -34,14 +34,13 @@ public class Loader implements Interpreter, AutoCloseable {
     public final LoaderData data;
 
     public Loader(int sizeHint,
-                  OldDomains oldDomains,
                   SqlLoadDomains sqlLoadDomains,
                   SqlLoadDomainLinks sqlLoadDomainLinks,
                   SqlLoadProcessedDomain sqlLoadProcessedDomain,
                   LdbLoadProcessedDocument loadProcessedDocument,
                   SqlLoadDomainMetadata sqlLoadDomainMetadata,
                   IndexLoadKeywords indexLoadKeywords) {
-        data = new LoaderData(oldDomains, sizeHint);
+        data = new LoaderData(sizeHint);
 
         this.sqlLoadDomains = sqlLoadDomains;
         this.sqlLoadDomainLinks = sqlLoadDomainLinks;

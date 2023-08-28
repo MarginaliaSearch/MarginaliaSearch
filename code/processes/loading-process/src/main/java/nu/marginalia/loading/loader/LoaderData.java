@@ -1,16 +1,17 @@
 package nu.marginalia.loading.loader;
 
+import gnu.trove.map.hash.TObjectIntHashMap;
 import nu.marginalia.model.EdgeDomain;
 
 public class LoaderData {
 
-    private final OldDomains oldDomains;
+    private final TObjectIntHashMap<EdgeDomain> domainIds;
     private EdgeDomain targetDomain;
     public final int sizeHint;
     private int targetDomainId = -1;
 
-    public LoaderData(OldDomains oldDomains, int sizeHint) {
-        this.oldDomains = oldDomains;
+    public LoaderData(int sizeHint) {
+        domainIds = new TObjectIntHashMap<>(10);
         this.sizeHint = sizeHint;
     }
 
@@ -23,15 +24,15 @@ public class LoaderData {
 
     public int getTargetDomainId() {
         if (targetDomainId < 0)
-            targetDomainId = oldDomains.getId(targetDomain);
+            targetDomainId = domainIds.get(targetDomain);
         return targetDomainId;
     }
 
     public void addDomain(EdgeDomain domain, int id) {
-        oldDomains.add(domain, id);
+        domainIds.put(domain, id);
     }
 
     public int getDomainId(EdgeDomain domain) {
-        return oldDomains.getId(domain);
+        return domainIds.get(domain);
     }
 }

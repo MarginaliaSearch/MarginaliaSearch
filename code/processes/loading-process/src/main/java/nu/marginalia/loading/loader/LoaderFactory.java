@@ -30,6 +30,6 @@ public class LoaderFactory {
     }
 
     public Loader create(int sizeHint) {
-        return new Loader(sizeHint, oldDomains, sqlLoadDomains, sqlLoadDomainLinks, sqlLoadProcessedDomain, sqlLoadProcessedDocument, sqlLoadDomainMetadata, indexLoadKeywords);
+        return new Loader(sizeHint, sqlLoadDomains, sqlLoadDomainLinks, sqlLoadProcessedDomain, sqlLoadProcessedDocument, sqlLoadDomainMetadata, indexLoadKeywords);
     }
 }
