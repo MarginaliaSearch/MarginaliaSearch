@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
 
 public class SearchResultDecorator {
     private final LinkdbReader linkDbReader;
@@ -98,7 +99,11 @@ public class SearchResultDecorator {
             retList.add(details);
         }
         if (!missedIds.isEmpty()) {
-            logger.info("Could not look up documents: {}", missedIds.toArray());
+            StringJoiner missingDocs = new StringJoiner(",");
+            for (var id : missedIds.toArray()) {
+                missingDocs.add(Long.toHexString(id) + "/" + UrlIdCodec.getDomainId(id) + "." + UrlIdCodec.getDocumentOrdinal(id));
+            }
+            logger.info("Could not look up documents: {}", missingDocs);
         }
 
         return retList;

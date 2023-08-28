@@ -25,7 +25,7 @@ public class IndexJournalEntryData implements Iterable<IndexJournalEntryData.Rec
 
     public long get(int idx) {
         if (idx >= size)
-            throw new ArrayIndexOutOfBoundsException();
+            throw new ArrayIndexOutOfBoundsException(idx + " vs " + size);
         return underlyingArray[idx];
     }
 
