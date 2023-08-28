@@ -28,6 +28,8 @@ public class ReversePreindexWordSegments {
                                        Path wordsFile,
                                        Path countsFile)
     {
+        assert wordIds.size() == counts.size();
+
         this.wordIds = wordIds;
         this.counts = counts;
         this.wordsFile = wordsFile;
@@ -95,6 +97,11 @@ public class ReversePreindexWordSegments {
     public void delete() throws IOException {
         Files.delete(countsFile);
         Files.delete(wordsFile);
+    }
+
+    public void force() {
+        counts.force();
+        wordIds.force();
     }
 
     public class SegmentIterator {

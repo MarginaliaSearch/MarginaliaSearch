@@ -38,7 +38,6 @@ public class ReversePreindex {
         IndexSizeEstimator sizeEstimator = new IndexSizeEstimator(ReverseIndexParameters.docsBTreeContext, 2);
         offsets.fold(0, 0, offsets.size(), sizeEstimator);
 
-        System.out.println("size estimate = " + sizeEstimator.size);
         // Write the docs file
         LongArray finalDocs = LongArray.mmapForWriting(outputFileDocs, sizeEstimator.size);
         try (var intermediateDocChannel = documents.createDocumentsFileChannel()) {
@@ -47,6 +46,8 @@ public class ReversePreindex {
         }
 
         LongArray wordIds = segments.wordIds;
+
+        assert offsets.size() == wordIds.size() : "Offsets and word-ids of different size";
 
         // Estimate the size of the words index data
         long wordsSize = ReverseIndexParameters.wordsBTreeContext.calculateSize((int) offsets.size());
@@ -108,7 +109,7 @@ public class ReversePreindex {
                 0, left.wordIds.size(),
                 0, right.wordIds.size());
 
-        LongArray counts = LongArray.mmapForWriting(segmentCountsFile, 8*segmentsSize);
+        LongArray counts = LongArray.mmapForWriting(segmentCountsFile, segmentsSize);
 
         return new ReversePreindexWordSegments(wordIdsFile, counts, segmentWordsFile, segmentCountsFile);
     }
@@ -176,6 +177,8 @@ public class ReversePreindex {
         // duplicates in the data, so we need to shrink it to the actual size we wrote.
 
         mergedDocuments = shrinkMergedDocuments(mergedDocuments, docsFile, 2 * mergingSegment.totalSize());
+
+        mergingSegment.force();
 
         return new ReversePreindex(
                 mergingSegment,

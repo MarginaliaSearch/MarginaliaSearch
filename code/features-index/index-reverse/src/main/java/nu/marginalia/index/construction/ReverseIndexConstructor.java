@@ -56,10 +56,11 @@ public class ReverseIndexConstructor {
         List<ReversePreindex> merged = new ArrayList<>();
 
         while (toMerge.size() != 1) {
-            for (int i = 0; i < toMerge.size(); i+=2) {
+            for (int i = 0; i + 1< toMerge.size(); i+=2) {
                 var left = toMerge.get(i);
                 var right = toMerge.get(i+1);
 
+                logger.info("Merge {}, {}", i, i+1);
                 merged.add(ReversePreindex.merge(workDir, left, right));
 
                 left.delete();
