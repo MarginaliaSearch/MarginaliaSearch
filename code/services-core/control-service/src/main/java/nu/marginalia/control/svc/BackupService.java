@@ -73,6 +73,12 @@ public class BackupService {
     }
 
     private void restoreJournal(FileStorage destStorage, FileStorage backupStorage) throws IOException {
+
+        // Remove any old journal files first to avoid them getting loaded
+        for (var garbage : IndexJournalFileNames.findJournalFiles(destStorage.asPath())) {
+            Files.delete(garbage);
+        }
+
         for (var source : IndexJournalFileNames.findJournalFiles(backupStorage.asPath())) {
             var dest = destStorage.asPath().resolve(source.toFile().getName());
 
