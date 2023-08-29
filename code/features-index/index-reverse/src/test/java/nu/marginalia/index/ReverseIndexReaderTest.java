@@ -94,7 +94,7 @@ class ReverseIndexReaderTest {
 
     private ReverseIndexReader createIndex(EntryDataWithWordMeta... scenario) throws IOException {
         var reader = journalFactory.createReader(scenario);
-        var preindex = ReversePreindex.constructPreindex(reader, DocIdRewriter.identity(), tempDir, tempDir);
+        var preindex = ReversePreindex.constructPreindex(reader, DocIdRewriter.identity(), tempDir);
 
 
         Path docsFile = tempDir.resolve("docs.dat");

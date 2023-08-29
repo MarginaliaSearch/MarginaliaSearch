@@ -51,7 +51,6 @@ public class ReversePreindexWordSegments {
     }
 
     public static ReversePreindexWordSegments construct(IndexJournalReader reader,
-                                                        SortingContext ctx,
                                                         Path wordIdsFile,
                                                         Path countsFile)
     throws IOException
@@ -73,7 +72,7 @@ public class ReversePreindexWordSegments {
         }
 
         // Sort the words file
-        words.sortLargeSpan(ctx, 0, counts.size());
+        words.quickSort(0, counts.size());
 
         // Populate the counts
         for (i = 0; i < countsMap.size(); i++) {

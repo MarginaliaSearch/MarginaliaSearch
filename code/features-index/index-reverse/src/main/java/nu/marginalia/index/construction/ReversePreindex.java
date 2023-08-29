@@ -16,9 +16,18 @@ import java.nio.file.StandardOpenOption;
 
 import static nu.marginalia.array.algo.TwoArrayOperations.*;
 
+/** Contains the data that would go into a reverse index,
+ * that is, a mapping from words to documents, minus the actual
+ * index structure that makes the data quick to access while
+ * searching.
+ * <p>
+ * Two preindexes can be merged into a third preindex containing
+ * the union of their data.  This operation requires no additional
+ * RAM.
+ */
 public class ReversePreindex {
-    public final ReversePreindexWordSegments segments;
-    public final ReversePreindexDocuments documents;
+    final ReversePreindexWordSegments segments;
+    final ReversePreindexDocuments documents;
 
     private static final Logger logger = LoggerFactory.getLogger(ReversePreindex.class);
 
@@ -27,6 +36,26 @@ public class ReversePreindex {
         this.documents = documents;
     }
 
+    /** Constructs a new preindex with the data associated with reader.  The backing files
+     * will have randomly assigned names.
+     */
+    public static ReversePreindex constructPreindex(IndexJournalReader reader,
+                                                    DocIdRewriter docIdRewriter,
+                                                    Path destDir) throws IOException
+    {
+        Path segmentWordsFile = Files.createTempFile(destDir, "segment_words", ".dat");
+        Path segmentCountsFile = Files.createTempFile(destDir, "segment_counts", ".dat");
+        Path docsFile = Files.createTempFile(destDir, "docs", ".dat");
+
+        logger.info("Segmenting");
+        var segments = ReversePreindexWordSegments.construct(reader, segmentWordsFile, segmentCountsFile);
+        logger.info("Mapping docs");
+        var docs = ReversePreindexDocuments.construct(docsFile, reader, docIdRewriter, segments);
+        logger.info("Done");
+        return new ReversePreindex(segments, docs);
+    }
+
+    /** Transform the preindex into a reverse index */
     public void finalizeIndex(Path outputFileDocs, Path outputFileWords) throws IOException {
         var offsets = segments.counts;
 
@@ -72,30 +101,87 @@ public class ReversePreindex {
         segments.delete();
         documents.delete();
     }
-    public static ReversePreindex constructPreindex(IndexJournalReader reader,
-                                                    DocIdRewriter docIdRewriter,
-                                                    Path tempDir,
-                                                    Path destDir) throws IOException
-    {
-        Path segmentWordsFile = Files.createTempFile(destDir, "segment_words", ".dat");
-        Path segmentCountsFile = Files.createTempFile(destDir, "segment_counts", ".dat");
+
+    public static ReversePreindex merge(Path destDir,
+                                        ReversePreindex left,
+                                        ReversePreindex right) throws IOException {
+
+        ReversePreindexWordSegments mergingSegment =
+                createMergedSegmentWordFile(destDir, left.segments, right.segments);
+
+        var mergingIter = mergingSegment.constructionIterator(2);
+        var leftIter = left.segments.iterator(2);
+        var rightIter = right.segments.iterator(2);
+
         Path docsFile = Files.createTempFile(destDir, "docs", ".dat");
 
-        SortingContext ctx = new SortingContext(tempDir, 1<<31);
-        logger.info("Segmenting");
-        var segments = ReversePreindexWordSegments.construct(reader, ctx, segmentWordsFile, segmentCountsFile);
-        logger.info("Mapping docs");
-        var docs = ReversePreindexDocuments.construct(docsFile, reader, docIdRewriter, ctx, segments);
-        logger.info("Done");
-        return new ReversePreindex(segments, docs);
+        LongArray mergedDocuments = LongArray.mmapForWriting(docsFile, 8 * (left.documents.size() + right.documents.size()));
+
+        leftIter.next();
+        rightIter.next();
+
+        try (FileChannel leftChannel = left.documents.createDocumentsFileChannel();
+             FileChannel rightChannel = right.documents.createDocumentsFileChannel())
+        {
+
+            while (mergingIter.canPutMore()
+                    && leftIter.isPositionBeforeEnd()
+                    && rightIter.isPositionBeforeEnd())
+            {
+                final long currentWord = mergingIter.wordId;
+
+                if (leftIter.wordId == currentWord && rightIter.wordId == currentWord)
+                {
+                    // both inputs have documents for the current word
+                    mergeSegments(leftIter, rightIter,
+                            left.documents, right.documents,
+                            mergedDocuments, mergingIter);
+                }
+                else if (leftIter.wordId == currentWord) {
+                    if (!copySegment(leftIter, mergedDocuments, leftChannel, mergingIter))
+                        break;
+                }
+                else if (rightIter.wordId == currentWord) {
+                    if (!copySegment(rightIter, mergedDocuments, rightChannel, mergingIter))
+                        break;
+                }
+                else assert false : "This should never happen"; // the helvetica scenario
+            }
+
+            if (leftIter.isPositionBeforeEnd()) {
+                while (copySegment(leftIter, mergedDocuments, leftChannel, mergingIter));
+            }
+
+            if (rightIter.isPositionBeforeEnd()) {
+                while (copySegment(rightIter, mergedDocuments, rightChannel, mergingIter));
+            }
+
+        }
+
+        assert !leftIter.isPositionBeforeEnd() : "Left has more to go";
+        assert !rightIter.isPositionBeforeEnd() : "Right has more to go";
+        assert !mergingIter.canPutMore() : "Source iters ran dry before merging iter";
+
+        // We may have overestimated the size of the merged docs size in the case there were
+        // duplicates in the data, so we need to shrink it to the actual size we wrote.
+
+        mergedDocuments = shrinkMergedDocuments(mergedDocuments,
+                docsFile, 2 * mergingSegment.totalSize());
+
+        mergingSegment.force();
+
+        return new ReversePreindex(
+                mergingSegment,
+                new ReversePreindexDocuments(mergedDocuments, docsFile)
+        );
     }
 
     /** Create a segment word file with each word from both inputs, with zero counts for all the data.
      * This is an intermediate product in merging.
      */
     static ReversePreindexWordSegments createMergedSegmentWordFile(Path destDir,
-                                                                           ReversePreindexWordSegments left,
-                                                                           ReversePreindexWordSegments right) throws IOException {
+                                                                   ReversePreindexWordSegments left,
+                                                                   ReversePreindexWordSegments right) throws IOException {
         Path segmentWordsFile = Files.createTempFile(destDir, "segment_words", ".dat");
         Path segmentCountsFile = Files.createTempFile(destDir, "segment_counts", ".dat");
 
@@ -114,79 +200,10 @@ public class ReversePreindex {
 
         return new ReversePreindexWordSegments(wordIdsFile, counts, segmentWordsFile, segmentCountsFile);
     }
-    public static ReversePreindex merge(Path destDir,
-                                 ReversePreindex left,
-                                 ReversePreindex right) throws IOException {
 
-        ReversePreindexWordSegments mergingSegment = createMergedSegmentWordFile(destDir,
-                left.segments,
-                right.segments);
-
-        var mergingIter = mergingSegment.constructionIterator(2);
-        var leftIter = left.segments.iterator(2);
-        var rightIter = right.segments.iterator(2);
-
-        Path docsFile = Files.createTempFile(destDir, "docs", ".dat");
-
-        LongArray mergedDocuments = LongArray.mmapForWriting(docsFile, 8 * (left.documents.size() + right.documents.size()));
-
-        leftIter.next();
-        rightIter.next();
-
-        FileChannel leftChannel = left.documents.createDocumentsFileChannel();
-        FileChannel rightChannel = right.documents.createDocumentsFileChannel();
-
-        while (mergingIter.canPutMore()
-                && leftIter.isPositionBeforeEnd()
-                && rightIter.isPositionBeforeEnd())
-        {
-            if (leftIter.wordId == mergingIter.wordId
-            && rightIter.wordId == mergingIter.wordId) {
-                mergeSegments(leftIter,
-                        rightIter,
-                        left.documents,
-                        right.documents,
-                        mergedDocuments,
-                        mergingIter);
-            }
-            else if (leftIter.wordId == mergingIter.wordId) {
-                if (!copySegment(leftIter, mergedDocuments, leftChannel, mergingIter))
-                    break;
-            }
-            else if (rightIter.wordId == mergingIter.wordId) {
-                if (!copySegment(rightIter, mergedDocuments, rightChannel, mergingIter))
-                    break;
-            }
-            else {
-                assert false : "This should never happen";
-            }
-        }
-
-        if (leftIter.isPositionBeforeEnd()) {
-            while (copySegment(leftIter, mergedDocuments, leftChannel, mergingIter));
-
-        }
-        if (rightIter.isPositionBeforeEnd()) {
-            while (copySegment(rightIter, mergedDocuments, rightChannel, mergingIter));
-        }
-
-        assert !leftIter.isPositionBeforeEnd() : "Left has more to go";
-        assert !rightIter.isPositionBeforeEnd() : "Right has more to go";
-        assert !mergingIter.canPutMore() : "Source iters ran dry before merging iter";
-
-        // We may have overestimated the size of the merged docs size in the case there were
-        // duplicates in the data, so we need to shrink it to the actual size we wrote.
-
-        mergedDocuments = shrinkMergedDocuments(mergedDocuments, docsFile, 2 * mergingSegment.totalSize());
-
-        mergingSegment.force();
-
-        return new ReversePreindex(
-                mergingSegment,
-                new ReversePreindexDocuments(mergedDocuments, docsFile)
-        );
-    }
-
+    /** It's possible we overestimated the necessary size of the documents file,
+     * this will permit us to shrink it down to the smallest necessary size.
+     */
     private static LongArray shrinkMergedDocuments(LongArray mergedDocuments, Path docsFile, long sizeLongs) throws IOException {
 
         mergedDocuments.force();
@@ -205,12 +222,15 @@ public class ReversePreindex {
         return mergedDocuments;
     }
 
+    /** Merge contents of the segments indicated by leftIter and rightIter into the destionation
+     * segment, and advance the construction iterator with the appropriate size.
+     */
     private static void mergeSegments(ReversePreindexWordSegments.SegmentIterator leftIter,
                                       ReversePreindexWordSegments.SegmentIterator rightIter,
                                       ReversePreindexDocuments left,
                                       ReversePreindexDocuments right,
-                                      LongArray documentsFile,
-                                      ReversePreindexWordSegments.SegmentConstructionIterator mergingIter)
+                                      LongArray dest,
+                                      ReversePreindexWordSegments.SegmentConstructionIterator destIter)
     {
         long distinct = countDistinctElementsN(2,
                 left.documents,
@@ -218,29 +238,32 @@ public class ReversePreindex {
                 leftIter.startOffset, leftIter.endOffset,
                 rightIter.startOffset, rightIter.endOffset);
 
-        mergeArrays2(documentsFile,
+        mergeArrays2(dest,
                 left.documents,
                 right.documents,
-                mergingIter.startOffset,
-                mergingIter.startOffset + 2*distinct,
+                destIter.startOffset,
+                destIter.startOffset + 2*distinct,
                 leftIter.startOffset, leftIter.endOffset,
                 rightIter.startOffset, rightIter.endOffset);
 
-        mergingIter.putNext(distinct);
+        destIter.putNext(distinct);
         leftIter.next();
         rightIter.next();
     }
 
+    /** Copy the data from the source segment at the position and length indicated by sourceIter,
+     * into the destination segment, and advance the construction iterator.
+     */
     private static boolean copySegment(ReversePreindexWordSegments.SegmentIterator sourceIter,
-                                    LongArray documentsFile,
-                                    FileChannel leftChannel,
+                                    LongArray dest,
+                                    FileChannel sourceChannel,
                                     ReversePreindexWordSegments.SegmentConstructionIterator mergingIter) throws IOException {
 
         long size = sourceIter.endOffset - sourceIter.startOffset;
         long start = mergingIter.startOffset;
         long end = start + size;
 
-        documentsFile.transferFrom(leftChannel,
+        dest.transferFrom(sourceChannel,
                 sourceIter.startOffset,
                 mergingIter.startOffset,
                 end);
@@ -248,12 +271,9 @@ public class ReversePreindex {
         boolean putNext = mergingIter.putNext(size / 2);
         boolean iterNext = sourceIter.next();
 
-        if (!putNext) {
-            assert !iterNext: "Source iterator ran out before dest iterator?!";
-        }
+        assert putNext || !iterNext : "Source iterator ran out before dest iterator?!";
 
         return iterNext;
-
     }
 
 

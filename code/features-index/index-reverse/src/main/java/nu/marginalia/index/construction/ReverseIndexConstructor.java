@@ -32,7 +32,7 @@ public class ReverseIndexConstructor {
 
         for (var input : inputs) {
             logger.info("Construcing preindex from {}", input);
-            var preindex = ReversePreindex.constructPreindex(readerSource.construct(input), docIdRewriter, tmpDir, tmpDir);
+            var preindex = ReversePreindex.constructPreindex(readerSource.construct(input), docIdRewriter, tmpDir);
             preindexes.add(preindex);
         }
 

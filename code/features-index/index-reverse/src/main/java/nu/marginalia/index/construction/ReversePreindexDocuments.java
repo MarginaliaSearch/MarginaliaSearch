@@ -34,7 +34,6 @@ public class ReversePreindexDocuments {
             Path docsFile,
             IndexJournalReader reader,
             DocIdRewriter docIdRewriter,
-            SortingContext sortingContext,
             ReversePreindexWordSegments segments) throws IOException {
 
 
@@ -43,7 +42,7 @@ public class ReversePreindexDocuments {
 
         LongArray docsFileMap = LongArray.mmapForWriting(docsFile, 8 * Files.size(docsFile));
         logger.info("Sorting data");
-        sortDocsFile(docsFileMap, segments, sortingContext);
+        sortDocsFile(docsFileMap, segments);
 
         return new ReversePreindexDocuments(docsFileMap, docsFile);
     }
@@ -90,7 +89,7 @@ public class ReversePreindexDocuments {
     }
 
     @SneakyThrows
-    private static void sortDocsFile(LongArray docsFileMap, ReversePreindexWordSegments segments, SortingContext sortingContext) throws IOException {
+    private static void sortDocsFile(LongArray docsFileMap, ReversePreindexWordSegments segments) throws IOException {
 
         var iter = segments.iterator(RECORD_SIZE_LONGS);
 

@@ -20,7 +20,6 @@ class ReversePreindexDocsTest {
     Path wordsIdFile;
     Path docsFile;
     Path tempDir;
-    SortingContext sortingContext;
 
     TestJournalFactory journalFactory;
 
@@ -32,7 +31,6 @@ class ReversePreindexDocsTest {
         wordsIdFile = Files.createTempFile("words", ".dat");
         docsFile = Files.createTempFile("docs", ".dat");
         tempDir = Files.createTempDirectory("sort");
-        sortingContext = new SortingContext(Path.of("invalid"), 1<<20);
     }
 
     @AfterEach
@@ -55,8 +53,8 @@ class ReversePreindexDocsTest {
                 new EntryData(-0xF00BA3L, 0, 10, 40, -100, 33)
         );
 
-        var segments = ReversePreindexWordSegments.construct(reader, sortingContext, wordsIdFile, countsFile);
-        var docs = ReversePreindexDocuments.construct(docsFile, reader, DocIdRewriter.identity(), sortingContext, segments);
+        var segments = ReversePreindexWordSegments.construct(reader, wordsIdFile, countsFile);
+        var docs = ReversePreindexDocuments.construct(docsFile, reader, DocIdRewriter.identity(), segments);
 
         List<TestSegmentData> expected = List.of(
                 new TestSegmentData(-100, 0, 2, new long[] { -0xF00BA3L, 0 }),
@@ -84,8 +82,8 @@ class ReversePreindexDocsTest {
                 new EntryData(-0xF00BA3L, 0, 4, 4)
         );
 
-        var segments = ReversePreindexWordSegments.construct(reader, sortingContext, wordsIdFile, countsFile);
-        var docs = ReversePreindexDocuments.construct(docsFile, reader, DocIdRewriter.identity(), sortingContext, segments);
+        var segments = ReversePreindexWordSegments.construct(reader, wordsIdFile, countsFile);
+        var docs = ReversePreindexDocuments.construct(docsFile, reader, DocIdRewriter.identity(), segments);
 
         List<TestSegmentData> expected = List.of(
                 new TestSegmentData(4, 0, 4, new long[] { -0xF00BA3L, 0, -0xF00BA3L, 0 })
@@ -110,8 +108,8 @@ class ReversePreindexDocsTest {
                 new EntryData(0xF00BA4L, 0, 15, 30, -100, 33)
         );
 
-        var segments = ReversePreindexWordSegments.construct(reader, sortingContext, wordsIdFile, countsFile);
-        var docs = ReversePreindexDocuments.construct(docsFile, reader, DocIdRewriter.identity(), sortingContext, segments);
+        var segments = ReversePreindexWordSegments.construct(reader, wordsIdFile, countsFile);
+        var docs = ReversePreindexDocuments.construct(docsFile, reader, DocIdRewriter.identity(), segments);
 
         List<TestSegmentData> expected = List.of(
                 new TestSegmentData(-100, 0, 4, new long[] { -0xF00BA3L, 0, 0xF00BA4L, 0 }),
