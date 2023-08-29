@@ -119,7 +119,7 @@ public class ProcessService {
     private final List<String> propagatedEnvironmentVariables = List.of(
             "JAVA_HOME",
             "CONVERTER_PROCESS_OPTS",
-//            "LOADER_PROCESS_OPTS",
+            "LOADER_PROCESS_OPTS",
             "CRAWLER_PROCESS_OPTS");
 
     private String[] createEnvironmentVariables() {

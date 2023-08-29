@@ -3,7 +3,6 @@ package nu.marginalia.loading.loader;
 import com.google.inject.Inject;
 
 public class LoaderFactory {
-    private final OldDomains oldDomains;
     private final SqlLoadDomains sqlLoadDomains;
     private final SqlLoadDomainLinks sqlLoadDomainLinks;
     private final SqlLoadProcessedDomain sqlLoadProcessedDomain;
@@ -12,15 +11,12 @@ public class LoaderFactory {
     private final IndexLoadKeywords indexLoadKeywords;
 
     @Inject
-    public LoaderFactory(OldDomains oldDomains,
-                         SqlLoadDomains sqlLoadDomains,
+    public LoaderFactory(SqlLoadDomains sqlLoadDomains,
                          SqlLoadDomainLinks sqlLoadDomainLinks,
                          SqlLoadProcessedDomain sqlLoadProcessedDomain,
                          LdbLoadProcessedDocument sqlLoadProcessedDocument,
                          SqlLoadDomainMetadata sqlLoadDomainMetadata,
                          IndexLoadKeywords indexLoadKeywords) {
-        this.oldDomains = oldDomains;
-
         this.sqlLoadDomains = sqlLoadDomains;
         this.sqlLoadDomainLinks = sqlLoadDomainLinks;
         this.sqlLoadProcessedDomain = sqlLoadProcessedDomain;

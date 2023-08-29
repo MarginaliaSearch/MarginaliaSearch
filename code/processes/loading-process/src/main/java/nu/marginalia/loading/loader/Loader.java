@@ -77,7 +77,7 @@ public class Loader implements Interpreter, AutoCloseable {
     public void loadProcessedDocument(LoadProcessedDocument document) {
         processedDocumentList.add(document);
 
-        if (processedDocumentList.size() > 100) {
+        if (processedDocumentList.size() > 1000) {
             loadProcessedDocument.load(data, processedDocumentList);
             processedDocumentList.clear();
         }
@@ -86,7 +86,7 @@ public class Loader implements Interpreter, AutoCloseable {
     public void loadProcessedDocumentWithError(LoadProcessedDocumentWithError document) {
         processedDocumentWithErrorList.add(document);
 
-        if (processedDocumentWithErrorList.size() > 100) {
+        if (processedDocumentWithErrorList.size() > 1000) {
             loadProcessedDocument.loadWithError(data, processedDocumentWithErrorList);
             processedDocumentWithErrorList.clear();
         }

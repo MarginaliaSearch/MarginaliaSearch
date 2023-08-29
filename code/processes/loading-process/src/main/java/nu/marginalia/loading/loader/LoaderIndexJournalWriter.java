@@ -43,7 +43,7 @@ public class LoaderIndexJournalWriter {
     }
 
     MurmurHash3_128 hasher = new MurmurHash3_128();
-
+    long[] buffer = new long[MAX_LENGTH * 2];
     @SneakyThrows
     public void putWords(long combinedId,
                          int features,
@@ -60,18 +60,14 @@ public class LoaderIndexJournalWriter {
         }
 
         String[] words = wordSet.keywords();
-        long[] wordIds = new long[wordSet.size()];
         long[] meta = wordSet.metadata();
 
-        Arrays.parallelSetAll(wordIds, i -> hasher.hashNearlyASCII(words[i]));
-
-        long[] buffer = new long[MAX_LENGTH * 2];
         for (int start = 0; start < words.length; ) {
             int end = Math.min(start + MAX_LENGTH, words.length);
 
             for (int i = 0; i < end - start; i++) {
-                buffer[2*i] = wordIds[i];
-                buffer[2*i + 1] = meta[i];
+                buffer[2*i] = hasher.hashNearlyASCII(words[start+i]);
+                buffer[2*i + 1] = meta[start+i];
             }
 
             var entry = new IndexJournalEntryData(end-start, buffer);

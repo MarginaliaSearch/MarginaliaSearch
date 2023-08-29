@@ -47,7 +47,8 @@ public class LinkdbStatusWriter {
                     stmt.setString(4, status.description());
                 }
                 stmt.addBatch();
-                if (++count > 100) {
+                if (++count > 1000) {
+                    count = 0;
                     stmt.executeBatch();
                 }
             }
