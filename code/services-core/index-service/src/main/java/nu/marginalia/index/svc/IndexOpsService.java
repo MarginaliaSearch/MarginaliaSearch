@@ -33,10 +33,8 @@ public class IndexOpsService {
     public boolean repartition() {
         return run(searchSetService::recalculateAll);
     }
-    public boolean reindex() throws Exception {
-        return run(() -> {
-            return index.switchIndex();
-        }).isPresent();
+    public boolean switchIndex() throws Exception {
+        return run(index::switchIndex).isPresent();
     }
 
 

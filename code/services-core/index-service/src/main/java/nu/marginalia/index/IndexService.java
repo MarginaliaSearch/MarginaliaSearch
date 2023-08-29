@@ -20,7 +20,6 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
-import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import static spark.Spark.get;
@@ -75,12 +74,6 @@ public class IndexService extends Service {
 
     volatile boolean initialized = false;
 
-    @MqRequest(endpoint = IndexMqEndpoints.INDEX_RELOAD_LEXICON)
-    public String reloadLexicon(String message) throws Exception {
-        throw new UnsupportedOperationException();
-    }
-
-
     @MqRequest(endpoint = IndexMqEndpoints.INDEX_REPARTITION)
     public String repartition(String message) {
         if (!opsService.repartition()) {
@@ -89,9 +82,9 @@ public class IndexService extends Service {
         return "ok";
     }
 
-    @MqNotification(endpoint = IndexMqEndpoints.INDEX_REINDEX)
-    public String reindex(String message) throws Exception {
-        if (!opsService.reindex()) {
+    @MqNotification(endpoint = IndexMqEndpoints.SWITCH_INDEX)
+    public String switchIndex(String message) throws Exception {
+        if (!opsService.switchIndex()) {
             throw new IllegalStateException("Ops lock busy");
         }
 

@@ -185,7 +185,6 @@ public class ControlService extends Service {
         Spark.post("/public/actions/calculate-adjacencies", controlActionsService::calculateAdjacencies, redirectToActors);
         Spark.post("/public/actions/reload-blogs-list", controlActionsService::reloadBlogsList, redirectToActors);
         Spark.post("/public/actions/repartition-index", controlActionsService::triggerRepartition, redirectToActors);
-        Spark.post("/public/actions/reconstruct-index", controlActionsService::triggerIndexReconstruction, redirectToActors);
         Spark.post("/public/actions/trigger-data-exports", controlActionsService::triggerDataExports, redirectToActors);
         Spark.post("/public/actions/flush-api-caches", controlActionsService::flushApiCaches, redirectToActors);
         Spark.post("/public/actions/truncate-links-database", controlActionsService::truncateLinkDatabase, redirectToActors);

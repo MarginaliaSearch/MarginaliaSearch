@@ -10,7 +10,6 @@ import nu.marginalia.actor.ActorStateFactory;
 import nu.marginalia.control.process.ProcessOutboxes;
 import nu.marginalia.control.process.ProcessService;
 import nu.marginalia.control.svc.BackupService;
-import nu.marginalia.db.storage.model.FileStorage;
 import nu.marginalia.index.client.IndexClient;
 import nu.marginalia.index.client.IndexMqEndpoints;
 import nu.marginalia.mqapi.converting.ConvertAction;
@@ -29,15 +28,11 @@ import nu.marginalia.actor.state.ActorState;
 import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.search.client.SearchClient;
 import nu.marginalia.search.client.SearchMqEndpoints;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.github.luben.zstd.ZstdOutputStream;
+
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 
 @Singleton
 public class ConvertAndLoadActor extends AbstractActorPrototype {
@@ -298,7 +293,7 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
     public void switchOver(Long id) throws Exception {
         // Notify services to switch over
         searchOutbox.sendNotice(SearchMqEndpoints.SWITCH_LINKDB, ":-)");
-        indexOutbox.sendNotice(IndexMqEndpoints.INDEX_REINDEX, ":^D");
+        indexOutbox.sendNotice(IndexMqEndpoints.SWITCH_INDEX, ":^D");
     }
 
 }

@@ -4,14 +4,12 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.control.actor.ControlActors;
 import nu.marginalia.control.actor.Actor;
-import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.db.DomainTypes;
 import nu.marginalia.index.client.IndexClient;
 import nu.marginalia.index.client.IndexMqEndpoints;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.search.client.SearchClient;
-import nu.marginalia.search.client.SearchMqEndpoints;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.id.ServiceId;
 import spark.Request;
@@ -24,7 +22,6 @@ import java.util.UUID;
 public class ControlActionsService {
 
     private final ControlActors actors;
-    private final SearchClient searchClient;
     private final IndexClient indexClient;
     private final MqOutbox apiOutbox;
     private final ServiceEventLog eventLog;
@@ -32,14 +29,12 @@ public class ControlActionsService {
 
     @Inject
     public ControlActionsService(ControlActors actors,
-                                 SearchClient searchClient,
                                  IndexClient indexClient,
                                  MessageQueueFactory mqFactory,
                                  ServiceEventLog eventLog,
                                  DomainTypes domainTypes) {
 
         this.actors = actors;
-        this.searchClient = searchClient;
         this.indexClient = indexClient;
         this.apiOutbox = createApiOutbox(mqFactory);
         this.eventLog = eventLog;
@@ -104,12 +99,6 @@ public class ControlActionsService {
 
     public Object triggerRepartition(Request request, Response response) throws Exception {
         indexClient.outbox().sendAsync(IndexMqEndpoints.INDEX_REPARTITION, "");
-
-        return null;
-    }
-
-    public Object triggerIndexReconstruction(Request request, Response response) throws Exception {
-        indexClient.outbox().sendAsync(IndexMqEndpoints.INDEX_REINDEX, "");
 
         return null;
     }

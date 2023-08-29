@@ -23,14 +23,11 @@ public class IndexServicesFactory {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Path searchSetsBase;
 
-    final int LIVE_PART = 0;
-    final int NEXT_PART = 1;
-
     @Inject
     public IndexServicesFactory(
             ServiceHeartbeat heartbeat,
             FileStorageService fileStorageService
-            ) throws IOException, SQLException {
+            ) throws SQLException {
 
         liveStorage = fileStorageService.getStorageByType(FileStorageType.INDEX_LIVE).asPath();
         searchSetsBase = fileStorageService.getStorageByType(FileStorageType.SEARCH_SETS).asPath();
