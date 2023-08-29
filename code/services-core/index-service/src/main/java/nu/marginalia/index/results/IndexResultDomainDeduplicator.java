@@ -5,7 +5,7 @@ import gnu.trove.map.hash.TLongIntHashMap;
 import nu.marginalia.index.client.model.results.SearchResultItem;
 
 public class IndexResultDomainDeduplicator {
-    final TLongIntMap resultsByRankingId = CachedObjects.getMap();
+    final TLongIntMap resultsByDomainId = CachedObjects.getMap();
     final int limitByDomain;
 
     public IndexResultDomainDeduplicator(int limitByDomain) {
@@ -13,19 +13,15 @@ public class IndexResultDomainDeduplicator {
     }
 
     public boolean test(SearchResultItem item) {
-        final long key = item.deduplicationKey();
-        if (key == 0)
-            return true;
+        final long key = item.getDomainId();
 
-        return resultsByRankingId.adjustOrPutValue(key, 1, 1) <= limitByDomain;
+        return resultsByDomainId.adjustOrPutValue(key, 1, 1) <= limitByDomain;
     }
 
     public int getCount(SearchResultItem item) {
-        final long key = item.deduplicationKey();
-        if (key == 0)
-            return 1;
+        final long key = item.getDomainId();
 
-        return resultsByRankingId.get(key);
+        return resultsByDomainId.get(key);
     }
 
     private static class CachedObjects {
@@ -38,7 +34,14 @@ public class IndexResultDomainDeduplicator {
             ret.clear();
             return ret;
         }
+
+        public static void clear() {
+            mapCache.remove();
+        }
     }
 
+    static void clearCachedObjects() {
+        CachedObjects.clear();
+    }
 }
 

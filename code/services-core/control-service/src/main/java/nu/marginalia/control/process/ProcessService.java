@@ -8,8 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -32,6 +32,7 @@ public class ProcessService {
         CRAWLER("crawler-process/bin/crawler-process"),
         CONVERTER("converter-process/bin/converter-process"),
         LOADER("loader-process/bin/loader-process"),
+        INDEX_CONSTRUCTOR("index-construction-process/bin/index-construction-process"),
         ADJACENCIES_CALCULATOR("website-adjacencies-calculator/bin/website-adjacencies-calculator"),
         CRAWL_JOB_EXTRACTOR("crawl-job-extractor-process/bin/crawl-job-extractor-process")
         ;
@@ -118,7 +119,7 @@ public class ProcessService {
     private final List<String> propagatedEnvironmentVariables = List.of(
             "JAVA_HOME",
             "CONVERTER_PROCESS_OPTS",
-//            "LOADER_PROCESS_OPTS",
+            "LOADER_PROCESS_OPTS",
             "CRAWLER_PROCESS_OPTS");
 
     private String[] createEnvironmentVariables() {

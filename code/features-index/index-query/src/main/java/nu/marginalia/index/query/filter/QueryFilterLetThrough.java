@@ -21,7 +21,7 @@ public class QueryFilterLetThrough implements QueryFilterStepIf {
     }
 
     public String describe() {
-        return "[NoPass]";
+        return "[PassThrough]";
     }
 
 }

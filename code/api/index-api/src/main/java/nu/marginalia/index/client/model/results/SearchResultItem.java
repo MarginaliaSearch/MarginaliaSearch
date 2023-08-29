@@ -2,16 +2,17 @@ package nu.marginalia.index.client.model.results;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.model.id.EdgeId;
+import nu.marginalia.model.id.UrlIdCodec;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /** Represents a document matching a search query */
 @AllArgsConstructor @Getter
-public class SearchResultItem {
-    /** Encoded ID that contains both the URL id and its ranking */
+public class SearchResultItem implements Comparable<SearchResultItem> {
+    /** Encoded ID that contains both the URL id and its ranking.  This is
+     * probably not what you want, use getDocumentId() instead */
     public final long combinedId;
 
     /** How did the subqueries match against the document ? */
@@ -20,20 +21,18 @@ public class SearchResultItem {
     /** How many other potential results existed in the same domain */
     public int resultsFromDomain;
 
-    public SearchResultItem(long val) {
-        this.combinedId = val;
+    public SearchResultItem(long combinedId) {
+        this.combinedId = combinedId;
         this.keywordScores = new ArrayList<>(16);
     }
 
-    public EdgeId<EdgeUrl> getUrlId() {
-        return new EdgeId<>(getUrlIdInt());
+
+    public long getDocumentId() {
+        return UrlIdCodec.removeRank(combinedId);
     }
 
-    public int getUrlIdInt() {
-        return (int)(combinedId & 0xFFFF_FFFFL);
-    }
     public int getRanking() {
-        return (int)(combinedId >>> 32);
+        return UrlIdCodec.getRank(combinedId);
     }
 
     /* Used for evaluation */
@@ -45,20 +44,16 @@ public class SearchResultItem {
         return scoreValue;
     }
 
-    private transient int domainId = Integer.MIN_VALUE;
-    public void setDomainId(int domainId) {
-        this.domainId = domainId;
-    }
     public int getDomainId() {
-        return this.domainId;
+        return UrlIdCodec.getDomainId(this.combinedId);
     }
 
     public int hashCode() {
-        return getUrlIdInt();
+        return Long.hashCode(combinedId);
     }
 
     public String toString() {
-        return getClass().getSimpleName() + "[ url= " + getUrlId() + ", rank=" + getRanking() + "]";
+        return getClass().getSimpleName() + "[ url= " + getDocumentId() + ", rank=" + getRanking() + "]";
     }
 
     public boolean equals(Object other) {
@@ -67,18 +62,18 @@ public class SearchResultItem {
         if (other == this)
             return true;
         if (other instanceof SearchResultItem o) {
-            return o.getUrlIdInt()  == getUrlIdInt();
+            return o.getDocumentId()  == getDocumentId();
         }
         return false;
     }
 
-    public long deduplicationKey() {
-        final int domainId = getDomainId();
+    @Override
+    public int compareTo(@NotNull SearchResultItem o) {
+        // this looks like a bug, but we actually want this in a reversed order
+        int diff = o.getScore().compareTo(getScore());
+        if (diff != 0)
+            return diff;
 
-        if (domainId == Integer.MAX_VALUE || domainId == Integer.MIN_VALUE) {
-            return 0;
-        }
-
-        return domainId;
+        return Long.compare(this.combinedId, o.combinedId);
     }
 }

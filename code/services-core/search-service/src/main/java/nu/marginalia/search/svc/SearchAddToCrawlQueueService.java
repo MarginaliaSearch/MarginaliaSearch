@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.db.DbDomainQueries;
-import nu.marginalia.model.id.EdgeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -61,7 +60,7 @@ public class SearchAddToCrawlQueueService {
     }
 
     private String getDomainName(int id) {
-        var domain = domainQueries.getDomain(new EdgeId<>(id));
+        var domain = domainQueries.getDomain(id);
         if (domain.isEmpty())
             Spark.halt(404);
         return domain.get().toString();

@@ -22,7 +22,6 @@ import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 
 /** This code is broken */
 @Deprecated()
@@ -53,17 +52,6 @@ public class StackexchangeSideloader implements SideloadSource {
         ret.state = DomainIndexingState.ACTIVE;
 
         return ret;
-    }
-
-    @SneakyThrows
-    @Override
-    public Iterator<EdgeUrl> getUrlsIterator() {
-        var ids = reader.getIds();
-        return ids.stream()
-                .map(id -> EdgeUrl.parse("https://" + domainName + "/questions/" + id))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .iterator();
     }
 
     @Override

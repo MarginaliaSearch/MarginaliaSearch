@@ -6,10 +6,10 @@ import nu.marginalia.index.journal.reader.IndexJournalReader;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile;
 import nu.marginalia.model.idx.DocumentMetadata;
+import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.ranking.DomainRankings;
-import nu.marginalia.service.control.ServiceHeartbeat;
-import org.roaringbitmap.IntConsumer;
-import org.roaringbitmap.RoaringBitmap;
+import org.roaringbitmap.longlong.LongConsumer;
+import org.roaringbitmap.longlong.Roaring64Bitmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,24 +20,24 @@ import java.nio.file.Path;
 
 public class ForwardIndexConverter {
 
-    private final ServiceHeartbeat heartbeat;
-    private final File inputFile;
+    private final ProcessHeartbeat heartbeat;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
+    private final IndexJournalReader journalReader;
     private final Path outputFileDocsId;
     private final Path outputFileDocsData;
     private final DomainRankings domainRankings;
 
 
-    public ForwardIndexConverter(ServiceHeartbeat heartbeat,
-                                 File inputFile,
+    public ForwardIndexConverter(ProcessHeartbeat heartbeat,
+                                 IndexJournalReader journalReader,
                                  Path outputFileDocsId,
                                  Path outputFileDocsData,
                                  DomainRankings domainRankings
                                  ) {
         this.heartbeat = heartbeat;
-        this.inputFile = inputFile;
+        this.journalReader = journalReader;
         this.outputFileDocsId = outputFileDocsId;
         this.outputFileDocsData = outputFileDocsData;
         this.domainRankings = domainRankings;
@@ -54,17 +54,9 @@ public class ForwardIndexConverter {
     public void convert() throws IOException {
         deleteOldFiles();
 
-        IndexJournalReaderSingleCompressedFile journalReader = new IndexJournalReaderSingleCompressedFile(inputFile.toPath());
-        if (journalReader.fileHeader().fileSize() <= IndexJournalReader.FILE_HEADER_SIZE_BYTES) {
-            logger.warn("Bailing: Journal is empty!");
-            return;
-        }
-
-        logger.info("Converting  {} {}", inputFile, journalReader.fileHeader);
-
         logger.info("Domain Rankings size = {}", domainRankings.size());
 
-        try (var progress = heartbeat.createServiceTaskHeartbeat(TaskSteps.class, "forwardIndexConverter")) {
+        try (var progress = heartbeat.createProcessTaskHeartbeat(TaskSteps.class, "forwardIndexConverter")) {
             progress.progress(TaskSteps.GET_DOC_IDS);
 
             LongArray docsFileId = getDocIds(outputFileDocsId, journalReader);
@@ -83,12 +75,11 @@ public class ForwardIndexConverter {
             LongArray docFileData = LongArray.mmapForWriting(outputFileDocsData, ForwardIndexParameters.ENTRY_SIZE * docsFileId.size());
 
             journalReader.forEach(entry -> {
-                long entryOffset = (long) ForwardIndexParameters.ENTRY_SIZE * docIdToIdx.get(entry.urlId());
+                long entryOffset = (long) ForwardIndexParameters.ENTRY_SIZE * docIdToIdx.get(entry.docId());
 
                 int ranking = domainRankings.getRanking(entry.domainId());
                 long meta = DocumentMetadata.encodeRank(entry.docMeta(), ranking);
 
-                docFileData.set(entryOffset + ForwardIndexParameters.DOMAIN_OFFSET, entry.domainId());
                 docFileData.set(entryOffset + ForwardIndexParameters.METADATA_OFFSET, meta);
                 docFileData.set(entryOffset + ForwardIndexParameters.FEATURES_OFFSET, entry.header.documentFeatures());
             });
@@ -109,17 +100,18 @@ public class ForwardIndexConverter {
     }
 
     private LongArray getDocIds(Path outputFileDocs, IndexJournalReader journalReader) throws IOException {
-        RoaringBitmap rbm = new RoaringBitmap();
-        journalReader.forEachUrlId(rbm::add);
+        Roaring64Bitmap rbm = new Roaring64Bitmap();
+        journalReader.forEachDocId(rbm::add);
 
-        LongArray ret = LongArray.mmapForWriting(outputFileDocs, rbm.getCardinality());
-        rbm.forEach(new IntConsumer() {
+        LongArray ret = LongArray.mmapForWriting(outputFileDocs, rbm.getIntCardinality());
+        rbm.forEach(new LongConsumer() {
             int offset;
             @Override
-            public void accept(int value) {
+            public void accept(long value) {
                 ret.set(offset++, value);
             }
         });
+
         return ret;
     }
 

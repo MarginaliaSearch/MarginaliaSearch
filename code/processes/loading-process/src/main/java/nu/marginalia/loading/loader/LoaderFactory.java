@@ -3,24 +3,20 @@ package nu.marginalia.loading.loader;
 import com.google.inject.Inject;
 
 public class LoaderFactory {
-    private final SqlLoadUrls sqlLoadUrls;
     private final SqlLoadDomains sqlLoadDomains;
     private final SqlLoadDomainLinks sqlLoadDomainLinks;
     private final SqlLoadProcessedDomain sqlLoadProcessedDomain;
-    private final SqlLoadProcessedDocument sqlLoadProcessedDocument;
+    private final LdbLoadProcessedDocument sqlLoadProcessedDocument;
     private final SqlLoadDomainMetadata sqlLoadDomainMetadata;
     private final IndexLoadKeywords indexLoadKeywords;
 
     @Inject
-    public LoaderFactory(SqlLoadUrls sqlLoadUrls,
-                         SqlLoadDomains sqlLoadDomains,
+    public LoaderFactory(SqlLoadDomains sqlLoadDomains,
                          SqlLoadDomainLinks sqlLoadDomainLinks,
                          SqlLoadProcessedDomain sqlLoadProcessedDomain,
-                         SqlLoadProcessedDocument sqlLoadProcessedDocument,
+                         LdbLoadProcessedDocument sqlLoadProcessedDocument,
                          SqlLoadDomainMetadata sqlLoadDomainMetadata,
                          IndexLoadKeywords indexLoadKeywords) {
-
-        this.sqlLoadUrls = sqlLoadUrls;
         this.sqlLoadDomains = sqlLoadDomains;
         this.sqlLoadDomainLinks = sqlLoadDomainLinks;
         this.sqlLoadProcessedDomain = sqlLoadProcessedDomain;
@@ -30,6 +26,6 @@ public class LoaderFactory {
     }
 
     public Loader create(int sizeHint) {
-        return new Loader(sizeHint, sqlLoadUrls, sqlLoadDomains, sqlLoadDomainLinks, sqlLoadProcessedDomain, sqlLoadProcessedDocument, sqlLoadDomainMetadata, indexLoadKeywords);
+        return new Loader(sizeHint, sqlLoadDomains, sqlLoadDomainLinks, sqlLoadProcessedDomain, sqlLoadProcessedDocument, sqlLoadDomainMetadata, indexLoadKeywords);
     }
 }

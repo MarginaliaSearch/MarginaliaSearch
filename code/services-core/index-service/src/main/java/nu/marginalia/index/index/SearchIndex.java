@@ -62,8 +62,6 @@ public class SearchIndex {
             else {
                 eventLog.logEvent("INDEX-INIT", "No index loaded");
             }
-
-
         }
         catch (Exception ex) {
             logger.error("Uncaught exception", ex);
@@ -74,19 +72,12 @@ public class SearchIndex {
     }
 
     public boolean switchIndex() throws IOException {
-
-        eventLog.logEvent("CONVERT-INDEX-BEGIN", "");
-        servicesFactory.convertIndex(searchSetsService.getDomainRankings());
-        eventLog.logEvent("CONVERT-INDEX-END", "");
-        System.gc();
-
         eventLog.logEvent("INDEX-SWITCH-BEGIN", "");
         Lock lock = indexReplacementLock.writeLock();
         try {
             lock.lock();
 
-            servicesFactory.switchFilesJob().call();
-
+            servicesFactory.switchFiles();
             indexReader = servicesFactory.getSearchIndexReader();
 
             eventLog.logEvent("INDEX-SWITCH-OK", "");
@@ -116,8 +107,8 @@ public class SearchIndex {
             return Collections.emptyList();
         }
 
-        final int[] orderedIncludes = terms.sortedDistinctIncludes(this::compareKeywords);
-        final int[] orderedIncludesPrio = terms.sortedDistinctIncludes(this::compareKeywordsPrio);
+        final long[] orderedIncludes = terms.sortedDistinctIncludes(this::compareKeywords);
+        final long[] orderedIncludesPrio = terms.sortedDistinctIncludes(this::compareKeywordsPrio);
 
         List<IndexQueryBuilder> queryHeads = new ArrayList<>(10);
         List<IndexQuery> queries = new ArrayList<>(10);
@@ -155,11 +146,11 @@ public class SearchIndex {
                 return Collections.emptyList();
             }
 
-            for (int orderedInclude : orderedIncludes) {
+            for (long orderedInclude : orderedIncludes) {
                 query = query.alsoFull(orderedInclude);
             }
 
-            for (int term : terms.excludes()) {
+            for (long term : terms.excludes()) {
                 query = query.notFull(term);
             }
 
@@ -175,21 +166,25 @@ public class SearchIndex {
         return queries;
     }
 
-    private int compareKeywords(int a, int b) {
+    private int compareKeywords(long a, long b) {
         return Long.compare(
                 indexReader.numHits(a),
                 indexReader.numHits(b)
         );
     }
 
-    private int compareKeywordsPrio(int a, int b) {
+    private int compareKeywordsPrio(long a, long b) {
         return Long.compare(
                 indexReader.numHitsPrio(a),
                 indexReader.numHitsPrio(b)
         );
     }
-    /** Replaces the values of ids with their associated metadata, or 0L if absent */
-    public long[] getTermMetadata(int termId, long[] docs) {
+
+    /** Return an array of encoded document metadata longs corresponding to the
+     * document identifiers provided; with metadata for termId.  The input array
+     * docs[] *must* be sorted.
+     */
+    public long[] getTermMetadata(long termId, long[] docs) {
         return indexReader.getMetadata(termId, docs);
     }
 
@@ -200,18 +195,14 @@ public class SearchIndex {
         return indexReader.getHtmlFeatures(docId);
     }
 
-    public int getDomainId(long docId) {
-        return indexReader.getDomainId(docId);
-    }
-
     public int getTotalDocCount() {
         return indexReader.totalDocCount();
     }
 
-    public int getTermFrequency(int id) {
+    public int getTermFrequency(long id) {
         return (int) indexReader.numHits(id);
     }
-    public int getTermFrequencyPrio(int id) {
+    public int getTermFrequencyPrio(long id) {
         return (int) indexReader.numHitsPrio(id);
     }
 }

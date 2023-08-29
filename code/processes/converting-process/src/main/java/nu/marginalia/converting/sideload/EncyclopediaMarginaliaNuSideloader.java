@@ -64,25 +64,6 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
         return ret;
     }
 
-    @Override
-    @SneakyThrows
-    public Iterator<EdgeUrl> getUrlsIterator() {
-        EdgeUrl base = new EdgeUrl("https://encyclopedia.marginalia.nu/");
-
-        return new SqlQueryIterator<>(connection.prepareStatement("""
-                SELECT url, html FROM articles
-                """))
-        {
-            @Override
-            public EdgeUrl convert(ResultSet rs) throws Exception {
-                var path = URLEncoder.encode(rs.getString("url"), StandardCharsets.UTF_8);
-
-                return base.withPathAndParam("/article/"+path, null);
-            }
-        };
-    }
-
-
     @SneakyThrows
     @Override
     public Iterator<ProcessedDocument> getDocumentsStream() {

@@ -3,8 +3,8 @@ package nu.marginalia.assistant.eval;
 import com.opencsv.CSVReader;
 import lombok.SneakyThrows;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;

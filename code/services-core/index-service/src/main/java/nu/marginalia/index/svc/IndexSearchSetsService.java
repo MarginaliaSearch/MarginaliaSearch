@@ -2,13 +2,12 @@ package nu.marginalia.index.svc;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import gnu.trove.list.TIntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import lombok.SneakyThrows;
 import nu.marginalia.db.DomainTypes;
 import nu.marginalia.index.IndexServicesFactory;
 import nu.marginalia.index.searchset.SearchSet;
-import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.id.EdgeIdList;
 import nu.marginalia.ranking.ReversePageRank;
 import nu.marginalia.ranking.StandardPageRank;
 import nu.marginalia.ranking.accumulator.RankingResultHashMapAccumulator;
@@ -168,7 +167,7 @@ public class IndexSearchSetsService {
 
     @SneakyThrows
     public void updateBlogsSet() {
-        EdgeIdList<EdgeDomain> knownDomains = domainTypes.getKnownDomainsByType(DomainTypes.Type.BLOG);
+        TIntList knownDomains = domainTypes.getKnownDomainsByType(DomainTypes.Type.BLOG);
 
         if (knownDomains.isEmpty()) {
             // FIXME: We don't want to reload the entire list every time, but we do want to do it sometimes. Actor maybe?
@@ -177,7 +176,7 @@ public class IndexSearchSetsService {
         }
 
         synchronized (this) {
-            blogsSet = new RankingSearchSet(SearchSetIdentifier.BLOGS, blogsSet.source, new IntOpenHashSet(knownDomains.values()));
+            blogsSet = new RankingSearchSet(SearchSetIdentifier.BLOGS, blogsSet.source, new IntOpenHashSet(knownDomains.toArray()));
             blogsSet.write();
         }
     }

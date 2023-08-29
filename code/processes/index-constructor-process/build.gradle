@@ -1,0 +1,57 @@
+plugins {
+    id 'java'
+    id "io.freefair.lombok" version "8.2.2"
+    id 'application'
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(20))
+    }
+}
+
+application {
+    mainClass = 'nu.marginalia.index.IndexConstructorMain'
+    applicationName = 'index-construction-process'
+}
+
+tasks.distZip.enabled = false
+
+dependencies {
+    implementation project(':code:api:process-mqapi')
+    implementation project(':code:common:process')
+    implementation project(':code:common:service')
+    implementation project(':code:common:db')
+    implementation project(':code:common:model')
+    implementation project(':code:libraries:message-queue')
+
+    implementation project(':code:features-index:index-forward')
+    implementation project(':code:features-index:index-reverse')
+    implementation project(':code:features-index:index-journal')
+    implementation project(':code:features-index:domain-ranking')
+
+    implementation libs.lombok
+    annotationProcessor libs.lombok
+
+    implementation libs.bundles.slf4j
+    implementation libs.guice
+    implementation libs.bundles.mariadb
+    implementation libs.bundles.gson
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+
+    testImplementation project(':code:processes:test-data')
+}
+
+test {
+    useJUnitPlatform()
+}
+
+task fastTests(type: Test) {
+    useJUnitPlatform {
+        excludeTags "slow"
+    }
+}

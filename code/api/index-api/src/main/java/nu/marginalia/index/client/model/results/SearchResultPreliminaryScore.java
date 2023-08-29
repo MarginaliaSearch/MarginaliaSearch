@@ -6,7 +6,6 @@ import static java.lang.Boolean.compare;
 import static java.lang.Double.compare;
 
 public record SearchResultPreliminaryScore(
-        boolean disqualified,
         boolean hasPriorityTerm,
         double searchRankingScore)
         implements Comparable<SearchResultPreliminaryScore>
@@ -25,7 +24,4 @@ public record SearchResultPreliminaryScore(
         return PREFER_LOW * compare(searchRankingScore, other.searchRankingScore);
     }
 
-    public boolean isDisqualified() {
-        return disqualified;
-    }
 }

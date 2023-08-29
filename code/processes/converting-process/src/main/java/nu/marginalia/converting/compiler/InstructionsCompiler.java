@@ -6,7 +6,6 @@ import nu.marginalia.converting.instruction.instructions.LoadProcessedDomain;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.sideload.SideloadSource;
-import nu.marginalia.model.EdgeUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +16,6 @@ import java.util.function.Consumer;
 import static java.util.Objects.requireNonNullElse;
 
 public class InstructionsCompiler {
-    private final UrlsCompiler urlsCompiler;
     private final DocumentsCompiler documentsCompiler;
     private final DomainMetadataCompiler domainMetadataCompiler;
     private final FeedsCompiler feedsCompiler;
@@ -27,14 +25,12 @@ public class InstructionsCompiler {
     private final Logger logger = LoggerFactory.getLogger(InstructionsCompiler.class);
 
     @Inject
-    public InstructionsCompiler(UrlsCompiler urlsCompiler,
-                                DocumentsCompiler documentsCompiler,
+    public InstructionsCompiler(DocumentsCompiler documentsCompiler,
                                 DomainMetadataCompiler domainMetadataCompiler,
                                 FeedsCompiler feedsCompiler,
                                 LinksCompiler linksCompiler,
                                 RedirectCompiler redirectCompiler)
     {
-        this.urlsCompiler = urlsCompiler;
         this.documentsCompiler = documentsCompiler;
         this.domainMetadataCompiler = domainMetadataCompiler;
         this.feedsCompiler = feedsCompiler;
@@ -47,8 +43,13 @@ public class InstructionsCompiler {
         instructionConsumer.accept(new LoadProcessedDomain(domain.domain, domain.state, domain.ip));
 
         if (domain.documents != null) {
-            urlsCompiler.compile(instructionConsumer, domain.documents);
-            documentsCompiler.compile(instructionConsumer, domain.documents);
+
+            int ordinal = 0;
+            for (var doc : domain.documents) {
+                documentsCompiler.compileDocumentDetails(instructionConsumer, doc, ordinal);
+                documentsCompiler.compileWords(instructionConsumer, doc, ordinal);
+                ordinal++;
+            }
 
             feedsCompiler.compile(instructionConsumer, domain.documents);
             linksCompiler.compile(instructionConsumer, domain.domain, domain.documents);
@@ -63,7 +64,6 @@ public class InstructionsCompiler {
     public void compileStreaming(SideloadSource sideloadSource,
                                  Consumer<Instruction> instructionConsumer) {
         ProcessedDomain domain = sideloadSource.getDomain();
-        Iterator<EdgeUrl> urlsIterator = sideloadSource.getUrlsIterator();
         Iterator<ProcessedDocument> documentsIterator = sideloadSource.getDocumentsStream();
 
         // Guaranteed to always be first
@@ -72,11 +72,6 @@ public class InstructionsCompiler {
         int countAll = 0;
         int countGood = 0;
 
-        logger.info("Writing domains");
-        urlsCompiler.compileJustDomain(instructionConsumer, domain.domain);
-        logger.info("Writing urls");
-        urlsCompiler.compileJustUrls(instructionConsumer, urlsIterator);
-
         logger.info("Writing docs");
 
         while (documentsIterator.hasNext()) {
@@ -84,8 +79,8 @@ public class InstructionsCompiler {
             countAll++;
             if (doc.isOk()) countGood++;
 
-            documentsCompiler.compileDocumentDetails(instructionConsumer, doc);
-            documentsCompiler.compileWords(instructionConsumer, doc);
+            documentsCompiler.compileDocumentDetails(instructionConsumer, doc, countAll);
+            documentsCompiler.compileWords(instructionConsumer, doc, countAll);
         }
 
         domainMetadataCompiler.compileFake(instructionConsumer, domain.domain, countAll, countGood);

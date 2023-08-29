@@ -3,6 +3,7 @@ package nu.marginalia.index.forward;
 import com.upserve.uppend.blobs.NativeIO;
 import gnu.trove.map.hash.TLongIntHashMap;
 import nu.marginalia.array.LongArray;
+import nu.marginalia.model.id.UrlIdCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,6 +72,8 @@ public class ForwardIndexReader {
     }
 
     public long getDocMeta(long docId) {
+        assert UrlIdCodec.getRank(docId) == 0 : "Forward Index Reader fed dirty reverse index id";
+
         long offset = idxForDoc(docId);
         if (offset < 0) return 0;
 
@@ -78,20 +81,17 @@ public class ForwardIndexReader {
     }
 
     public int getHtmlFeatures(long docId) {
+        assert UrlIdCodec.getRank(docId) == 0 : "Forward Index Reader fed dirty reverse index id";
+
         long offset = idxForDoc(docId);
         if (offset < 0) return 0;
 
         return (int) data.get(ENTRY_SIZE * offset + FEATURES_OFFSET);
     }
 
-    public int getDomainId(long docId) {
-        long offset = idxForDoc(docId);
-        if (offset < 0) return 0;
-
-        return Math.max(0, (int) data.get(ENTRY_SIZE * offset + DOMAIN_OFFSET));
-    }
-
     private int idxForDoc(long docId) {
+        assert UrlIdCodec.getRank(docId) == 0 : "Forward Index Reader fed dirty reverse index id";
+
         return idToOffset.get(docId);
     }
 

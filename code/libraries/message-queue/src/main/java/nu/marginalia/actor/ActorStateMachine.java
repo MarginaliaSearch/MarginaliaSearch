@@ -279,7 +279,7 @@ public class ActorStateMachine {
             }
 
             if (!state.isFinal()) {
-                logger.info("Transitining from state {}", state.name());
+                logger.info("Transitioning from state {}", state.name());
                 var transition = state.next(msg.payload());
 
                 if (!expectedMessage.isExpected(msg)) {

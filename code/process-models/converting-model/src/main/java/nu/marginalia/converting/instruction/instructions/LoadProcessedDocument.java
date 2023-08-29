@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 
 
 public record LoadProcessedDocument(EdgeUrl url,
-                                    UrlIndexingState state,
+                                    int ordinal, UrlIndexingState state,
                                     String title,
                                     String description,
                                     int htmlFeatures,
@@ -17,7 +17,8 @@ public record LoadProcessedDocument(EdgeUrl url,
                                     int length,
                                     long hash,
                                     double quality,
-                                    @Nullable Integer pubYear) implements Instruction
+                                    @Nullable Integer pubYear
+) implements Instruction
 {
     @Override
     public void apply(Interpreter interpreter) {

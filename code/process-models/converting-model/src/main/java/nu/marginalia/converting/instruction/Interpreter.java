@@ -10,7 +10,6 @@ import nu.marginalia.converting.instruction.instructions.LoadProcessedDocument;
 import nu.marginalia.converting.instruction.instructions.LoadProcessedDocumentWithError;
 
 public interface Interpreter {
-    default void loadUrl(EdgeUrl[] url) {}
     default void loadDomain(EdgeDomain[] domain) {}
     default void loadRssFeed(EdgeUrl[] rssFeed) {}
     default void loadDomainLink(DomainLink[] links) {}
@@ -19,7 +18,7 @@ public interface Interpreter {
     default void loadProcessedDocument(LoadProcessedDocument loadProcessedDocument) {}
     default void loadProcessedDocumentWithError(LoadProcessedDocumentWithError loadProcessedDocumentWithError) {}
 
-    default void loadKeywords(EdgeUrl url, int features, DocumentMetadata metadata, DocumentKeywords words) {}
+    default void loadKeywords(EdgeUrl url, int ordinal, int features, DocumentMetadata metadata, DocumentKeywords words) {}
 
     default void loadDomainRedirect(DomainLink link) {}
 

@@ -1,35 +1,35 @@
 package nu.marginalia.index.index;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntComparator;
-import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongComparator;
+import it.unimi.dsi.fastutil.longs.LongList;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
 import java.util.Collections;
 import java.util.List;
 
 public record SearchIndexSearchTerms(
-        IntList includes,
-        IntList excludes,
-        IntList priority,
-        List<IntList> coherences
+        LongList includes,
+        LongList excludes,
+        LongList priority,
+        List<LongList> coherences
         )
 {
     public SearchIndexSearchTerms() {
-        this(IntList.of(), IntList.of(), IntList.of(), Collections.emptyList());
+        this(LongList.of(), LongList.of(), LongList.of(), Collections.emptyList());
     }
 
     public boolean isEmpty() {
         return includes.isEmpty();
     }
 
-    public int[] sortedDistinctIncludes(IntComparator comparator) {
+    public long[] sortedDistinctIncludes(LongComparator comparator) {
         if (includes.isEmpty())
-            return includes.toIntArray();
+            return includes.toLongArray();
 
-        IntList list = new IntArrayList(new IntOpenHashSet(includes));
+        LongList list = new LongArrayList(new LongOpenHashSet(includes));
         list.sort(comparator);
-        return list.toIntArray();
+        return list.toLongArray();
     }
 
     public int size() {

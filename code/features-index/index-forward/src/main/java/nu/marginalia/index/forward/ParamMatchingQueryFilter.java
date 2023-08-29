@@ -1,5 +1,6 @@
 package nu.marginalia.index.forward;
 
+import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.index.query.limit.SpecificationLimitType;
 import nu.marginalia.index.query.IndexQueryParams;
@@ -15,10 +16,11 @@ public class ParamMatchingQueryFilter implements QueryFilterStepIf {
     }
 
     @Override
-    public boolean test(long docId) {
-        int urlId = (int) (docId & 0xFFFF_FFFFL);
-        int domainId = forwardIndexReader.getDomainId(urlId);
-        long meta = forwardIndexReader.getDocMeta(urlId);
+    public boolean test(long combinedId) {
+        long docId = UrlIdCodec.removeRank(combinedId);
+        int domainId = UrlIdCodec.getDomainId(docId);
+
+        long meta = forwardIndexReader.getDocMeta(docId);
 
         if (!validateDomain(domainId, meta)) {
             return false;

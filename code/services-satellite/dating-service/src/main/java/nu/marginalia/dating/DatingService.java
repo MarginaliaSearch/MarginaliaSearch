@@ -9,7 +9,6 @@ import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.screenshot.ScreenshotService;
-import nu.marginalia.model.id.EdgeId;
 import nu.marginalia.service.server.*;
 import org.jetbrains.annotations.NotNull;
 import spark.Request;
@@ -156,7 +155,7 @@ public class DatingService extends Service {
         var session = sessionObjectOpt.get();
 
         int id = Integer.parseInt(request.params("id"));
-        BrowseResult res = session.nextSimilar(new EdgeId<>(id), browseSimilarCosine, blacklist);
+        BrowseResult res = session.nextSimilar(id, browseSimilarCosine, blacklist);
 
         res = findViableDomain(session, res);
 
@@ -168,7 +167,7 @@ public class DatingService extends Service {
 
     @NotNull
     private BrowseResult findViableDomain(DatingSessionObject session, BrowseResult res) {
-        while (!screenshotService.hasScreenshot(new EdgeId<>(res.domainId())) || session.isRecent(res)) {
+        while (!screenshotService.hasScreenshot(res.domainId()) || session.isRecent(res)) {
             res = session.next(browseRandom, blacklist);
         }
         return res;

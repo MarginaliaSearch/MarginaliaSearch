@@ -12,15 +12,15 @@ import nu.marginalia.converting.instruction.instructions.LoadProcessedDocumentWi
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Loader implements Interpreter, AutoCloseable {
-    private final SqlLoadUrls sqlLoadUrls;
     private final SqlLoadDomains sqlLoadDomains;
     private final SqlLoadDomainLinks sqlLoadDomainLinks;
     private final SqlLoadProcessedDomain sqlLoadProcessedDomain;
-    private final SqlLoadProcessedDocument sqlLoadProcessedDocument;
+    private final LdbLoadProcessedDocument loadProcessedDocument;
     private final SqlLoadDomainMetadata sqlLoadDomainMetadata;
 
     private final IndexLoadKeywords indexLoadKeywords;
@@ -34,32 +34,23 @@ public class Loader implements Interpreter, AutoCloseable {
     public final LoaderData data;
 
     public Loader(int sizeHint,
-                  SqlLoadUrls sqlLoadUrls,
                   SqlLoadDomains sqlLoadDomains,
                   SqlLoadDomainLinks sqlLoadDomainLinks,
                   SqlLoadProcessedDomain sqlLoadProcessedDomain,
-                  SqlLoadProcessedDocument sqlLoadProcessedDocument,
+                  LdbLoadProcessedDocument loadProcessedDocument,
                   SqlLoadDomainMetadata sqlLoadDomainMetadata,
-                  IndexLoadKeywords indexLoadKeywords)
-    {
+                  IndexLoadKeywords indexLoadKeywords) {
         data = new LoaderData(sizeHint);
 
-        this.sqlLoadUrls = sqlLoadUrls;
         this.sqlLoadDomains = sqlLoadDomains;
         this.sqlLoadDomainLinks = sqlLoadDomainLinks;
         this.sqlLoadProcessedDomain = sqlLoadProcessedDomain;
-        this.sqlLoadProcessedDocument = sqlLoadProcessedDocument;
+        this.loadProcessedDocument = loadProcessedDocument;
         this.sqlLoadDomainMetadata = sqlLoadDomainMetadata;
         this.indexLoadKeywords = indexLoadKeywords;
 
         processedDocumentList = new ArrayList<>(sizeHint);
         processedDocumentWithErrorList = new ArrayList<>(sizeHint);
-    }
-
-
-    @Override
-    public void loadUrl(EdgeUrl[] urls) {
-        sqlLoadUrls.load(data, urls);
     }
 
     @Override
@@ -86,29 +77,23 @@ public class Loader implements Interpreter, AutoCloseable {
     public void loadProcessedDocument(LoadProcessedDocument document) {
         processedDocumentList.add(document);
 
-        if (processedDocumentList.size() > 100) {
-            sqlLoadProcessedDocument.load(data, processedDocumentList);
+        if (processedDocumentList.size() > 1000) {
+            loadProcessedDocument.load(data, processedDocumentList);
             processedDocumentList.clear();
         }
     }
-
     @Override
     public void loadProcessedDocumentWithError(LoadProcessedDocumentWithError document) {
         processedDocumentWithErrorList.add(document);
 
-        if (processedDocumentWithErrorList.size() > 100) {
-            sqlLoadProcessedDocument.loadWithError(data, processedDocumentWithErrorList);
+        if (processedDocumentWithErrorList.size() > 1000) {
+            loadProcessedDocument.loadWithError(data, processedDocumentWithErrorList);
             processedDocumentWithErrorList.clear();
         }
     }
-
     @Override
-    public void loadKeywords(EdgeUrl url, int features, DocumentMetadata metadata, DocumentKeywords words) {
-        try {
-            indexLoadKeywords.load(data, url, features, metadata, words);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+    public void loadKeywords(EdgeUrl url, int ordinal, int features, DocumentMetadata metadata, DocumentKeywords words) {
+        indexLoadKeywords.load(data, ordinal, url, features, metadata, words);
     }
 
     @Override
@@ -123,10 +108,10 @@ public class Loader implements Interpreter, AutoCloseable {
 
     public void close() {
         if (processedDocumentList.size() > 0) {
-            sqlLoadProcessedDocument.load(data, processedDocumentList);
+            loadProcessedDocument.load(data, processedDocumentList);
         }
         if (processedDocumentWithErrorList.size() > 0) {
-            sqlLoadProcessedDocument.loadWithError(data, processedDocumentWithErrorList);
+            loadProcessedDocument.loadWithError(data, processedDocumentWithErrorList);
         }
     }
 

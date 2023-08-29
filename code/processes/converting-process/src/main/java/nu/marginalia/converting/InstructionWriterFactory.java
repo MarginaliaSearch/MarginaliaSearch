@@ -7,9 +7,7 @@ import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.converting.instruction.Instruction;
 import nu.marginalia.converting.instruction.Interpreter;
 import nu.marginalia.keyword.model.DocumentKeywords;
-import nu.marginalia.converting.instruction.instructions.DomainLink;
 import nu.marginalia.converting.instruction.instructions.LoadProcessedDocument;
-import nu.marginalia.converting.instruction.instructions.LoadProcessedDocumentWithError;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import org.slf4j.Logger;
@@ -130,7 +128,7 @@ public class InstructionWriterFactory {
         }
 
         @Override
-        public void loadKeywords(EdgeUrl url, int features, DocumentMetadata metadata, DocumentKeywords words) {
+        public void loadKeywords(EdgeUrl url, int ordinal, int features, DocumentMetadata metadata, DocumentKeywords words) {
             keywords++;
         }
 

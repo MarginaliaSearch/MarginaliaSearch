@@ -38,12 +38,14 @@ public class ControlActors {
                          ConvertAndLoadActor convertAndLoadActor,
                          CrawlActor crawlActor,
                          RecrawlActor recrawlActor,
+                         RestoreBackupActor restoreBackupActor,
                          ConverterMonitorActor converterMonitorFSM,
                          CrawlerMonitorActor crawlerMonitorActor,
                          LoaderMonitorActor loaderMonitor,
                          MessageQueueMonitorActor messageQueueMonitor,
                          ProcessLivenessMonitorActor processMonitorFSM,
                          FileStorageMonitorActor fileStorageMonitorActor,
+                         IndexConstructorMonitorActor indexConstructorMonitorActor,
                          TriggerAdjacencyCalculationActor triggerAdjacencyCalculationActor,
                          CrawlJobExtractorActor crawlJobExtractorActor,
                          ExportDataActor exportDataActor,
@@ -56,8 +58,10 @@ public class ControlActors {
         register(Actor.CRAWL, crawlActor);
         register(Actor.RECRAWL, recrawlActor);
         register(Actor.CONVERT, convertActor);
+        register(Actor.RESTORE_BACKUP, restoreBackupActor);
         register(Actor.CONVERT_AND_LOAD, convertAndLoadActor);
 
+        register(Actor.INDEX_CONSTRUCTOR_MONITOR, indexConstructorMonitorActor);
         register(Actor.CONVERTER_MONITOR, converterMonitorFSM);
         register(Actor.LOADER_MONITOR, loaderMonitor);
         register(Actor.CRAWLER_MONITOR, crawlerMonitorActor);

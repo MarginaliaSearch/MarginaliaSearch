@@ -13,6 +13,10 @@ tasks.register('dist', Copy) {
     from subprojects.collect { it.tasks.withType(Tar) }
     into "$buildDir/dist"
 
+    // For local development, each processes that are to be triggerable
+    // from the control-service need to go here to end up somewhere the
+    // control-service can find them
+
     doLast {
         copy {
             from tarTree("$buildDir/dist/converter-process.tar")
@@ -34,10 +38,18 @@ tasks.register('dist', Copy) {
             from tarTree("$buildDir/dist/crawl-job-extractor-process.tar")
             into "$projectDir/run/dist/"
         }
+        copy {
+            from tarTree("$buildDir/dist/index-construction-process.tar")
+            into "$projectDir/run/dist/"
+        }
     }
 }
 idea {
     module {
+        // Exclude these directories from being indexed by IntelliJ
+        // as they tend to bring the IDE to its knees and use up all
+        // Inotify spots in a hurry
+        excludeDirs.add(file("$projectDir/run/backup"))
         excludeDirs.add(file("$projectDir/run/model"))
         excludeDirs.add(file("$projectDir/run/dist"))
         excludeDirs.add(file("$projectDir/run/samples"))

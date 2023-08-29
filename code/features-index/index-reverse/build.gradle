@@ -18,15 +18,15 @@ dependencies {
     implementation project(':code:features-index:domain-ranking')
     implementation project(':code:features-index:index-query')
     implementation project(':code:features-index:index-journal')
-    implementation project(':code:features-index:lexicon')
     implementation project(':code:common:model')
-    implementation project(':code:common:service')
+    implementation project(':code:common:process')
+
 
     implementation libs.lombok
     annotationProcessor libs.lombok
     implementation libs.bundles.slf4j
 
-    implementation libs.prometheus
+    implementation libs.fastutil
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit

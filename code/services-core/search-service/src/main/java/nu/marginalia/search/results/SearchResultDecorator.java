@@ -1,45 +1,72 @@
 package nu.marginalia.search.results;
 
 import com.google.inject.Inject;
-import gnu.trove.list.array.TIntArrayList;
-import gnu.trove.map.hash.TIntObjectHashMap;
+import gnu.trove.list.array.TLongArrayList;
+import gnu.trove.map.hash.TLongObjectHashMap;
 import it.unimi.dsi.fastutil.ints.Int2LongArrayMap;
+import lombok.SneakyThrows;
 import nu.marginalia.bbpc.BrailleBlockPunchCards;
 import nu.marginalia.index.client.model.results.ResultRankingContext;
-import nu.marginalia.index.client.model.results.SearchResultSet;
-import nu.marginalia.ranking.ResultValuator;
-import nu.marginalia.search.db.DbUrlDetailsQuery;
-import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.model.crawl.DomainIndexingState;
-import nu.marginalia.model.id.EdgeIdList;
 import nu.marginalia.index.client.model.results.SearchResultItem;
+import nu.marginalia.index.client.model.results.SearchResultSet;
+import nu.marginalia.model.crawl.DomainIndexingState;
+import nu.marginalia.model.id.UrlIdCodec;
+import nu.marginalia.ranking.ResultValuator;
+import nu.marginalia.search.model.PageScoreAdjustment;
 import nu.marginalia.search.model.UrlDetails;
+import nu.marginalia.linkdb.LinkdbReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
 
 public class SearchResultDecorator {
-    private final DbUrlDetailsQuery dbUrlDetailsQuery;
+    private final LinkdbReader linkDbReader;
     private final ResultValuator valuator;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
-    public SearchResultDecorator(DbUrlDetailsQuery dbUrlDetailsQuery,
+    public SearchResultDecorator(LinkdbReader linkDbReader,
                                  ResultValuator valuator) {
-        this.dbUrlDetailsQuery = dbUrlDetailsQuery;
+        this.linkDbReader = linkDbReader;
         this.valuator = valuator;
     }
 
+    @SneakyThrows
     public List<UrlDetails> getAllUrlDetails(SearchResultSet resultSet) {
-        TIntObjectHashMap<UrlDetails> detailsById = new TIntObjectHashMap<>(resultSet.size());
+        TLongObjectHashMap<UrlDetails> detailsById = new TLongObjectHashMap<>(resultSet.size());
 
-        EdgeIdList<EdgeUrl> idList = resultSet.results.stream()
-                                                .mapToInt(SearchResultItem::getUrlIdInt)
-                                                .collect(EdgeIdList::new, EdgeIdList::add, EdgeIdList::addAll);
+        TLongArrayList idsList = new TLongArrayList(resultSet.results.size());
+        for (var result : resultSet.results) {
+            idsList.add(result.getDocumentId());
+        }
 
-        List<UrlDetails> ret = dbUrlDetailsQuery.getUrlDetailsMulti(idList);
+        List<UrlDetails> ret = new ArrayList<>(idsList.size());
+        for (var rawDetail : linkDbReader.getUrlDetails(idsList)) {
+            ret.add(new UrlDetails(
+                    rawDetail.urlId(),
+                    UrlIdCodec.getDomainId(rawDetail.urlId()),
+                    rawDetail.url(),
+                    rawDetail.title(),
+                    rawDetail.description(),
+                    rawDetail.urlQuality(),
+                    rawDetail.wordsTotal(),
+                    rawDetail.format(),
+                    rawDetail.features(),
+                    "",
+                    DomainIndexingState.ACTIVE,
+                    rawDetail.dataHash(),
+                    PageScoreAdjustment.zero(), // urlQualityAdjustment
+                    Integer.MAX_VALUE, // rankingId
+                    Double.MAX_VALUE, // termScore
+                    1, // resultsFromSameDomain
+                    "", // positions
+                    null, // result item
+                    null // keyword scores
+                    ));
+        }
 
         for (var val : ret) {
             detailsById.put(val.id, val);
@@ -47,11 +74,11 @@ public class SearchResultDecorator {
 
         List<UrlDetails> retList = new ArrayList<>(resultSet.size());
 
-        TIntArrayList missedIds = new TIntArrayList();
+        TLongArrayList missedIds = new TLongArrayList();
         for (var resultItem : resultSet.results) {
 
             var rankingId = resultItem.getRanking();
-            var uid = resultItem.getUrlId().id();
+            var uid = resultItem.getDocumentId();
 
             var details = detailsById.get(uid);
             if (details == null) {
@@ -72,7 +99,11 @@ public class SearchResultDecorator {
             retList.add(details);
         }
         if (!missedIds.isEmpty()) {
-            logger.info("Could not look up documents: {}", missedIds.toArray());
+            StringJoiner missingDocs = new StringJoiner(",");
+            for (var id : missedIds.toArray()) {
+                missingDocs.add(Long.toHexString(id) + "/" + UrlIdCodec.getDomainId(id) + "." + UrlIdCodec.getDocumentOrdinal(id));
+            }
+            logger.info("Could not look up documents: {}", missingDocs);
         }
 
         return retList;

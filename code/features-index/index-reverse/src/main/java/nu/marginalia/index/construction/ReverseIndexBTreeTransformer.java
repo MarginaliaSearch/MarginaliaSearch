@@ -4,7 +4,6 @@ import nu.marginalia.array.LongArray;
 import nu.marginalia.array.functional.LongIOTransformer;
 import nu.marginalia.btree.BTreeWriter;
 import nu.marginalia.btree.model.BTreeContext;
-import nu.marginalia.index.priority.ReverseIndexPriorityParameters;
 
 import java.io.IOException;
 import java.nio.channels.FileChannel;

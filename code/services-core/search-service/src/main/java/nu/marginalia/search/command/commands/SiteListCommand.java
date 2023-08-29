@@ -61,13 +61,13 @@ public class SiteListCommand implements SearchCommandInterface {
 
         List<UrlDetails> resultSet;
         Path screenshotPath = null;
-        Integer domainId = -1;
+        int domainId = -1;
         if (null != domain) {
             var dumbQuery = queryFactory.createQuery(SearchProfile.CORPO, 100, 100, "site:"+domain);
             resultSet = searchQueryIndexService.executeQuery(ctx, dumbQuery);
             var maybeId = domainQueries.tryGetDomainId(domain);
             if (maybeId.isPresent()) {
-                domainId = maybeId.get().id();
+                domainId = maybeId.getAsInt();
                 screenshotPath = Path.of("/screenshot/" + domainId);
             }
             else {

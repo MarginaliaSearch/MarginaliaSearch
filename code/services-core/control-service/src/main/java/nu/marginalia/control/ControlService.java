@@ -11,7 +11,6 @@ import nu.marginalia.db.storage.model.FileStorageId;
 import nu.marginalia.db.storage.model.FileStorageType;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.gson.GsonFactory;
-import nu.marginalia.model.id.EdgeIdList;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.screenshot.ScreenshotService;
 import nu.marginalia.service.server.*;
@@ -81,6 +80,7 @@ public class ControlService extends Service {
         var storageRenderer = rendererFactory.renderer("control/storage-overview");
         var storageSpecsRenderer = rendererFactory.renderer("control/storage-specs");
         var storageCrawlsRenderer = rendererFactory.renderer("control/storage-crawls");
+        var storageBackupsRenderer = rendererFactory.renderer("control/storage-backups");
         var storageProcessedRenderer = rendererFactory.renderer("control/storage-processed");
         var reviewRandomDomainsRenderer = rendererFactory.renderer("control/review-random-domains");
 
@@ -147,6 +147,7 @@ public class ControlService extends Service {
         Spark.get("/public/storage", this::storageModel, storageRenderer::render);
         Spark.get("/public/storage/specs", this::storageModelSpecs, storageSpecsRenderer::render);
         Spark.get("/public/storage/crawls", this::storageModelCrawls, storageCrawlsRenderer::render);
+        Spark.get("/public/storage/backups", this::storageModelBackups, storageBackupsRenderer::render);
         Spark.get("/public/storage/processed", this::storageModelProcessed, storageProcessedRenderer::render);
         Spark.get("/public/storage/:id", this::storageDetailsModel, storageDetailsRenderer::render);
         Spark.get("/public/storage/:id/file", controlFileStorageService::downloadFileFromStorage);
@@ -158,6 +159,7 @@ public class ControlService extends Service {
         Spark.post("/public/storage/:fid/process", controlActorService::triggerProcessing, redirectToActors);
         Spark.post("/public/storage/:fid/process-and-load", controlActorService::triggerProcessingWithLoad, redirectToActors);
         Spark.post("/public/storage/:fid/load", controlActorService::loadProcessedData, redirectToActors);
+        Spark.post("/public/storage/:fid/restore-backup", controlActorService::restoreBackup, redirectToActors);
 
         Spark.post("/public/storage/specs", controlActorService::createCrawlSpecification, redirectToStorage);
         Spark.post("/public/storage/:fid/delete", controlFileStorageService::flagFileForDeletionRequest, redirectToStorage);
@@ -183,9 +185,7 @@ public class ControlService extends Service {
         Spark.post("/public/actions/calculate-adjacencies", controlActionsService::calculateAdjacencies, redirectToActors);
         Spark.post("/public/actions/reload-blogs-list", controlActionsService::reloadBlogsList, redirectToActors);
         Spark.post("/public/actions/repartition-index", controlActionsService::triggerRepartition, redirectToActors);
-        Spark.post("/public/actions/reconstruct-index", controlActionsService::triggerIndexReconstruction, redirectToActors);
         Spark.post("/public/actions/trigger-data-exports", controlActionsService::triggerDataExports, redirectToActors);
-        Spark.post("/public/actions/flush-search-caches", controlActionsService::flushSearchCaches, redirectToActors);
         Spark.post("/public/actions/flush-api-caches", controlActionsService::flushApiCaches, redirectToActors);
         Spark.post("/public/actions/truncate-links-database", controlActionsService::truncateLinkDatabase, redirectToActors);
 
@@ -224,7 +224,7 @@ public class ControlService extends Service {
             }
         });
 
-        randomExplorationService.removeRandomDomains(new EdgeIdList<>(idList.toArray()));
+        randomExplorationService.removeRandomDomains(idList.toArray());
 
         String after = request.queryParams("after");
 
@@ -360,6 +360,9 @@ public class ControlService extends Service {
     }
     private Object storageModelCrawls(Request request, Response response) {
         return Map.of("storage", controlFileStorageService.getStorageList(FileStorageType.CRAWL_DATA));
+    }
+    private Object storageModelBackups(Request request, Response response) {
+        return Map.of("storage", controlFileStorageService.getStorageList(FileStorageType.BACKUP));
     }
     private Object storageModelProcessed(Request request, Response response) {
         return Map.of("storage", controlFileStorageService.getStorageList(FileStorageType.PROCESSED_DATA));

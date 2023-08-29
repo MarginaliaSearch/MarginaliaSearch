@@ -27,7 +27,7 @@ dependencies {
     implementation project(':code:common:service')
     implementation project(':code:common:service-discovery')
     implementation project(':code:common:service-client')
-    implementation project(':code:features-index:lexicon')
+    implementation project(':code:common:linkdb')
     implementation project(':code:features-index:index-journal')
     implementation project(':code:libraries:message-queue')
     implementation project(':code:libraries:language-processing')

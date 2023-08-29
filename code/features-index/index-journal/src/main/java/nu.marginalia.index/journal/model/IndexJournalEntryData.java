@@ -25,7 +25,7 @@ public class IndexJournalEntryData implements Iterable<IndexJournalEntryData.Rec
 
     public long get(int idx) {
         if (idx >= size)
-            throw new ArrayIndexOutOfBoundsException();
+            throw new ArrayIndexOutOfBoundsException(idx + " vs " + size);
         return underlyingArray[idx];
     }
 
@@ -58,9 +58,9 @@ public class IndexJournalEntryData implements Iterable<IndexJournalEntryData.Rec
         public Record next() {
             pos+=ENTRY_SIZE;
 
-            return new Record((int) underlyingArray[pos], underlyingArray[pos+1]);
+            return new Record(underlyingArray[pos], underlyingArray[pos+1]);
         }
     }
 
-    public record Record(int wordId, long metadata) {}
+    public record Record(long wordId, long metadata) {}
 }

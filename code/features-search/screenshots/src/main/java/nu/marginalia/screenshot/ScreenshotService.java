@@ -4,9 +4,7 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
-import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.db.DbDomainQueries;
-import nu.marginalia.model.id.EdgeId;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +28,7 @@ public class ScreenshotService {
         this.dataSource = dataSource;
     }
 
-    public boolean hasScreenshot(EdgeId<EdgeDomain> domainId) {
+    public boolean hasScreenshot(int domainId) {
         try (var conn = dataSource.getConnection();
              var ps = conn.prepareStatement("""
                     SELECT TRUE
@@ -38,7 +36,7 @@ public class ScreenshotService {
                         INNER JOIN EC_DOMAIN ON EC_DOMAIN.DOMAIN_NAME=DATA_DOMAIN_SCREENSHOT.DOMAIN_NAME
                         WHERE EC_DOMAIN.ID=?
                     """)) {
-            ps.setInt(1, domainId.id());
+            ps.setInt(1, domainId);
             var rs = ps.executeQuery();
             if (rs.next()) {
                 return rs.getBoolean(1);
@@ -86,7 +84,7 @@ public class ScreenshotService {
 
     private Object serveSvgPlaceholder(Response response, int id) {
 
-        var name = domainQueries.getDomain(new EdgeId<>(id)).map(Object::toString)
+        var name = domainQueries.getDomain(id).map(Object::toString)
                 .orElse("[Screenshot Not Yet Captured]");
 
         response.type("image/svg+xml");

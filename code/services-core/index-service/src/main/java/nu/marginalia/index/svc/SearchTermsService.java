@@ -2,32 +2,28 @@ package nu.marginalia.index.svc;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
-import nu.marginalia.dict.OffHeapDictionaryHashMap;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongList;
+import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.index.index.SearchIndexSearchTerms;
-import nu.marginalia.lexicon.KeywordLexiconReadOnlyView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Singleton
 public class SearchTermsService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final KeywordLexiconReadOnlyView lexicon;
-
-    @Inject
-    public SearchTermsService(KeywordLexiconReadOnlyView lexicon) {
-        this.lexicon = lexicon;
-    }
 
     public SearchIndexSearchTerms getSearchTerms(SearchSubquery request) {
-        final IntList excludes = new IntArrayList();
-        final IntList includes = new IntArrayList();
-        final IntList priority = new IntArrayList();
-        final List<IntList> coherences = new ArrayList<>();
+        final LongList excludes = new LongArrayList();
+        final LongList includes = new LongArrayList();
+        final LongList priority = new LongArrayList();
+        final List<LongList> coherences = new ArrayList<>();
 
         if (!addEachTerm(includes, request.searchTermsInclude)) {
             return new SearchIndexSearchTerms();
@@ -40,7 +36,7 @@ public class SearchTermsService {
         }
 
         for (var coherence : request.searchTermCoherences) {
-            IntList parts = new IntArrayList(coherence.size());
+            LongList parts = new LongArrayList(coherence.size());
 
             if (!addEachTerm(parts, coherence)) {
                 return new SearchIndexSearchTerms();
@@ -56,46 +52,37 @@ public class SearchTermsService {
         return new SearchIndexSearchTerms(includes, excludes, priority, coherences);
     }
 
-    private boolean addEachTerm(IntList ret, List<String> words) {
+    private boolean addEachTerm(LongList ret, List<String> words) {
         boolean success = true;
 
         for (var word : words) {
-            var termId = lookUpWord(word);
-
-            if (termId.isPresent()) {
-                lookUpWord(word).ifPresent(ret::add);
-            }
-            else {
-                success = false;
-            }
+            ret.add(getWordId(word));
         }
+
         return success;
     }
 
-    private void addEachNonMandatoryTerm(IntList ret, List<String> words) {
+    private void addEachNonMandatoryTerm(LongList ret, List<String> words) {
         for (var word : words) {
-            ret.add(lexicon.get(word));
+            ret.add(getWordId(word));
         }
     }
 
 
-    public OptionalInt lookUpWord(String s) {
-        int ret = lexicon.get(s);
-        if (ret == OffHeapDictionaryHashMap.NO_VALUE) {
-            return OptionalInt.empty();
-        }
-        return OptionalInt.of(ret);
-    }
-
-    public Map<String, Integer> getAllIncludeTerms(List<SearchSubquery> subqueries) {
-        Map<String, Integer> ret = new HashMap<>();
+    public Map<String, Long> getAllIncludeTerms(List<SearchSubquery> subqueries) {
+        Map<String, Long> ret = new HashMap<>();
 
         for (var subquery : subqueries) {
             for (var include : subquery.searchTermsInclude) {
-                ret.computeIfAbsent(include, term -> lookUpWord(term).orElse(-1));
+                ret.computeIfAbsent(include, i -> getWordId(include));
             }
         }
 
         return ret;
+    }
+
+    static MurmurHash3_128 hasher = new MurmurHash3_128();
+    public long getWordId(String s) {
+        return hasher.hashNearlyASCII(s);
     }
 }

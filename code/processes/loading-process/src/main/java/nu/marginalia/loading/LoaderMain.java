@@ -1,15 +1,14 @@
 package nu.marginalia.loading;
 
-import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import lombok.SneakyThrows;
 import nu.marginalia.converting.instruction.Interpreter;
-import nu.marginalia.converting.instruction.instructions.LoadProcessedDocument;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.keyword.model.DocumentKeywords;
+import nu.marginalia.linkdb.LinkdbWriter;
 import nu.marginalia.loading.loader.IndexLoadKeywords;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.idx.DocumentMetadata;
@@ -17,7 +16,7 @@ import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.inbox.MqInboxResponse;
 import nu.marginalia.mq.inbox.MqSingleShotInbox;
-import nu.marginalia.process.control.ProcessHeartbeat;
+import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.process.log.WorkLog;
 import plan.CrawlPlan;
 import nu.marginalia.loading.loader.LoaderFactory;
@@ -27,9 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.sql.SQLException;
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -41,10 +38,11 @@ public class LoaderMain {
     private final ConvertedDomainReader instructionsReader;
     private final LoaderFactory loaderFactory;
 
-    private final ProcessHeartbeat heartbeat;
+    private final ProcessHeartbeatImpl heartbeat;
     private final MessageQueueFactory messageQueueFactory;
     private final FileStorageService fileStorageService;
     private final IndexLoadKeywords indexLoadKeywords;
+    private final LinkdbWriter writer;
     private final Gson gson;
 
     public static void main(String... args) throws Exception {
@@ -69,10 +67,11 @@ public class LoaderMain {
     @Inject
     public LoaderMain(ConvertedDomainReader instructionsReader,
                       LoaderFactory loaderFactory,
-                      ProcessHeartbeat heartbeat,
+                      ProcessHeartbeatImpl heartbeat,
                       MessageQueueFactory messageQueueFactory,
                       FileStorageService fileStorageService,
                       IndexLoadKeywords indexLoadKeywords,
+                      LinkdbWriter writer,
                       Gson gson
                       ) {
 
@@ -82,6 +81,7 @@ public class LoaderMain {
         this.messageQueueFactory = messageQueueFactory;
         this.fileStorageService = fileStorageService;
         this.indexLoadKeywords = indexLoadKeywords;
+        this.writer = writer;
         this.gson = gson;
 
         heartbeat.start();
@@ -136,6 +136,7 @@ public class LoaderMain {
 
             // This needs to be done in order to have a readable index journal
             indexLoadKeywords.close();
+            writer.close();
             logger.info("Loading finished");
         }
         catch (Exception ex) {
@@ -215,7 +216,7 @@ public class LoaderMain {
     public class InstructionCounter implements Interpreter {
         private int count = 0;
 
-        public void loadKeywords(EdgeUrl url, int features, DocumentMetadata metadata, DocumentKeywords words) {
+        public void loadKeywords(EdgeUrl url, int ordinal, int features, DocumentMetadata metadata, DocumentKeywords words) {
             count++;
         }
 

@@ -2,6 +2,7 @@ package nu.marginalia.ranking;
 
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ShortOpenHashMap;
+import nu.marginalia.model.id.UrlIdCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +36,11 @@ public class DomainRankings {
 
     public int getRanking(int domainId) {
         return rankings.getOrDefault(domainId, (short) MAX_RANK_VALUE);
+    }
+
+    public float getSortRanking(long docId) {
+        int domainId = UrlIdCodec.getDomainId(docId);
+        return rankings.getOrDefault(domainId, (short) MAX_RANK_VALUE) / (float) MAX_RANK_VALUE;
     }
 
     public int size() {

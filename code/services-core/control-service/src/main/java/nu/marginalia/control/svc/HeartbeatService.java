@@ -58,7 +58,6 @@ public class HeartbeatService {
              var stmt = conn.prepareStatement("""
                     SELECT TASK_NAME, TASK_BASE, SERVICE_INSTANCE,  STATUS, STAGE_NAME, PROGRESS, TIMESTAMPDIFF(MICROSECOND, TASK_HEARTBEAT.HEARTBEAT_TIME, CURRENT_TIMESTAMP(6)) AS TSDIFF
                     FROM TASK_HEARTBEAT
-                    INNER JOIN SERVICE_HEARTBEAT ON SERVICE_HEARTBEAT.`INSTANCE` = SERVICE_INSTANCE
                      """)) {
             var rs = stmt.executeQuery();
             while (rs.next()) {

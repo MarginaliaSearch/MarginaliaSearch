@@ -46,35 +46,13 @@
             </td>
         </tr>
         <tr>
-            <td><b>Reconstruct Index</b><p>
-                This will reconstruct the index from the index journal.
-            </td>
-            <td>
-                <form method="post" action="/actions/reconstruct-index" onsubmit="return confirm('Confirm reconstruction')">
-                    <input type="submit" value="Trigger Reconstruction">
-                </form>
-            </td>
-        </tr>
-        <tr>
-            <td><b>Flush <tt>search-service</tt> Caches</b><p>
-                This will instruct the search-service to flush its caches,
-                getting rid of any stale data.  This may rarely be necessary after
-                reloading the index.
-            </td>
-            <td>
-                <form method="post" action="/actions/flush-search-caches" onsubmit="return confirm('Confirm flushing search chaches')">
-                    <input type="submit" value="Flush Search">
-                </form>
-            </td>
-        </tr>
-        <tr>
             <td><b>Flush <tt>api-service</tt> Caches</b><p>
                 This will instruct the api-service to flush its caches,
                 getting rid of any stale data.  This will be necessary after
                 changes to the API licenses directly through the database.
             </td>
             <td>
-                <form method="post" action="/actions/flush-index-caches" onsubmit="return confirm('Confirm flushing api chaches')">
+                <form method="post" action="/actions/flush-api-caches" onsubmit="return confirm('Confirm flushing api chaches')">
                     <input type="submit" value="Flush API">
                 </form>
             </td>

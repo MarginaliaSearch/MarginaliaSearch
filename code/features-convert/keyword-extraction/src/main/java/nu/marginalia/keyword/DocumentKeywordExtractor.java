@@ -7,7 +7,7 @@ import nu.marginalia.language.model.WordRep;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.model.EdgeUrl;
 
-import javax.inject.Inject;
+import com.google.inject.Inject;
 import java.util.*;
 import java.util.stream.Stream;
 

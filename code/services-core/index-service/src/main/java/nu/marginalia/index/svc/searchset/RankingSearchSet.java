@@ -63,12 +63,13 @@ public class RankingSearchSet implements SearchSet {
     }
 
     @Override
-    public boolean contains(int urlId, long documentMetadata) {
+    public boolean contains(int domainId, long documentMetadata) {
 
         // This is the main check
-        if (set.contains(urlId) || set.isEmpty()) {
+        if (set.contains(domainId) || set.isEmpty()) {
             return true;
         }
+
         // TODO
         return false;
     }

@@ -6,7 +6,6 @@ import nu.marginalia.bigstring.BigString;
 import nu.marginalia.bigstring.CompressedBigString;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.model.id.EdgeId;
 
 import java.net.URISyntaxException;
 
@@ -24,8 +23,6 @@ public class GsonFactory {
                     }
                 })
                 .registerTypeAdapter(EdgeDomain.class, (JsonDeserializer<EdgeDomain>) (json, typeOfT, context) -> new EdgeDomain(json.getAsString()))
-                .registerTypeAdapter(EdgeId.class, (JsonDeserializer<EdgeId<?>>) (json, typeOfT, context) -> new EdgeId<>(json.getAsInt()))
-                .registerTypeAdapter(EdgeId.class, (JsonSerializer<EdgeId<?>>) (src, typeOfSrc, context) -> new JsonPrimitive(src.id()))
                 .registerTypeAdapter(BigString.class, (JsonDeserializer<BigString>) (json, typeOfT, context) -> BigString.encode(json.getAsString()))
                 .registerTypeAdapter(BigString.class, (JsonSerializer<BigString>) (src, typeOfT, context) -> new JsonPrimitive(src.decode()))
                 .registerTypeAdapter(CompressedBigString.class, (JsonSerializer<BigString>) (src, typeOfT, context) -> new JsonPrimitive(src.decode()))

@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.ToString;
 
-import javax.inject.Singleton;
+import com.google.inject.Singleton;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;

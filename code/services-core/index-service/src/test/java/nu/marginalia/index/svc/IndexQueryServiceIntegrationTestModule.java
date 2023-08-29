@@ -6,18 +6,14 @@ import nu.marginalia.db.storage.model.FileStorage;
 import nu.marginalia.db.storage.model.FileStorageType;
 import nu.marginalia.index.IndexServicesFactory;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
-import nu.marginalia.index.journal.writer.IndexJournalWriterImpl;
-import nu.marginalia.lexicon.KeywordLexicon;
-import nu.marginalia.lexicon.KeywordLexiconReadOnlyView;
-import nu.marginalia.lexicon.journal.KeywordLexiconJournal;
-import nu.marginalia.lexicon.journal.KeywordLexiconJournalMode;
+import nu.marginalia.index.journal.writer.IndexJournalWriterPagingImpl;
+import nu.marginalia.process.control.FakeProcessHeartbeat;
+import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.index.svc.searchset.SearchSetAny;
 import nu.marginalia.index.util.TestUtil;
 import nu.marginalia.index.client.model.query.SearchSetIdentifier;
-import nu.marginalia.service.control.ServiceEventLog;
-import nu.marginalia.service.control.ServiceHeartbeat;
-import nu.marginalia.service.control.ServiceTaskHeartbeat;
+import nu.marginalia.service.control.*;
 import nu.marginalia.service.id.ServiceId;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.mockito.Mockito;
@@ -58,40 +54,22 @@ public class IndexQueryServiceIntegrationTestModule extends AbstractModule {
             var fileStorageServiceMock = Mockito.mock(FileStorageService.class);
 
             when(fileStorageServiceMock.getStorageByType(FileStorageType.SEARCH_SETS)).thenReturn(new FileStorage(null, null, null, fastDir.toString(), null));
-            when(fileStorageServiceMock.getStorageByType(FileStorageType.LEXICON_LIVE)).thenReturn(new FileStorage(null, null, null, fastDir.toString(), null));
-            when(fileStorageServiceMock.getStorageByType(FileStorageType.LEXICON_STAGING)).thenReturn(new FileStorage(null, null, null, fastDir.toString(), null));
             when(fileStorageServiceMock.getStorageByType(FileStorageType.INDEX_LIVE)).thenReturn(new FileStorage(null, null, null, fastDir.toString(), null));
             when(fileStorageServiceMock.getStorageByType(FileStorageType.INDEX_STAGING)).thenReturn(new FileStorage(null, null, null, slowDir.toString(), null));
 
-            var serviceHeartbeat = Mockito.mock(ServiceHeartbeat.class);
-            // RIP fairies
-            when(serviceHeartbeat.createServiceTaskHeartbeat(Mockito.any(), Mockito.any()))
-                    .thenReturn(Mockito.mock(ServiceTaskHeartbeat.class));
-            bind(ServiceHeartbeat.class).toInstance(serviceHeartbeat);
+            bind(FileStorageService.class).toInstance(fileStorageServiceMock);
 
-            var servicesFactory = new IndexServicesFactory(
-                    serviceHeartbeat,
-                    fileStorageServiceMock
-            );
-            bind(IndexServicesFactory.class).toInstance(servicesFactory);
+            bind(ServiceHeartbeat.class).toInstance(new FakeServiceHeartbeat());
+            bind(ProcessHeartbeat.class).toInstance(new FakeProcessHeartbeat());
 
             IndexSearchSetsService setsServiceMock = Mockito.mock(IndexSearchSetsService.class);
             when(setsServiceMock.getSearchSetByName(SearchSetIdentifier.NONE)).thenReturn(new SearchSetAny());
             when(setsServiceMock.getDomainRankings()).thenReturn(new DomainRankings());
             bind(IndexSearchSetsService.class).toInstance(setsServiceMock);
 
-            var keywordLexicon = new KeywordLexicon(new KeywordLexiconJournal(
-                    slowDir.resolve("dictionary.dat").toFile(),
-                    KeywordLexiconJournalMode.READ_WRITE)
-            );
-            bind(KeywordLexicon.class).toInstance(keywordLexicon);
-            bind(KeywordLexiconReadOnlyView.class).toInstance(new KeywordLexiconReadOnlyView(keywordLexicon));
-
             bind(ServiceEventLog.class).toInstance(Mockito.mock(ServiceEventLog.class));
 
-
-            bind(IndexJournalWriter.class).toInstance(new IndexJournalWriterImpl(keywordLexicon,
-                    slowDir.resolve("page-index.dat")));
+            bind(IndexJournalWriter.class).toInstance(new IndexJournalWriterPagingImpl(slowDir));
 
             bind(ServiceConfiguration.class).toInstance(new ServiceConfiguration(
                     ServiceId.Index,
