@@ -61,22 +61,19 @@ public class ProcessLivenessMonitorActor extends AbstractActorPrototype {
                 if (null == processId)
                     continue;
 
-                if (processService.isRunning(processId) && heartbeat.lastSeenMillis() < 10000) {
+                if (processService.isRunning(processId) && heartbeat.lastSeenMillis() < 10_000) {
                     continue;
                 }
 
                 heartbeatService.flagProcessAsStopped(heartbeat);
             }
 
-            var livingServices = heartbeatService.getServiceHeartbeats().stream()
-                    .filter(ServiceHeartbeat::alive)
-                    .map(ServiceHeartbeat::uuidFull)
-                    .collect(Collectors.toSet());
-
             for (var heartbeat : heartbeatService.getTaskHeartbeats()) {
-                if (!livingServices.contains(heartbeat.serviceUuuidFull())) {
-                    heartbeatService.removeTaskHeartbeat(heartbeat);
+                if (heartbeat.lastSeenMillis() < 10_000) {
+                    continue;
                 }
+
+                heartbeatService.removeTaskHeartbeat(heartbeat);
             }
 
 
