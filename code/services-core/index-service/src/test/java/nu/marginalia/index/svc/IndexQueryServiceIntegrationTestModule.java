@@ -7,15 +7,13 @@ import nu.marginalia.db.storage.model.FileStorageType;
 import nu.marginalia.index.IndexServicesFactory;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.index.journal.writer.IndexJournalWriterPagingImpl;
+import nu.marginalia.process.control.FakeProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeat;
-import nu.marginalia.process.control.ProcessTaskHeartbeat;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.index.svc.searchset.SearchSetAny;
 import nu.marginalia.index.util.TestUtil;
 import nu.marginalia.index.client.model.query.SearchSetIdentifier;
-import nu.marginalia.service.control.ServiceEventLog;
-import nu.marginalia.service.control.ServiceHeartbeat;
-import nu.marginalia.service.control.ServiceTaskHeartbeat;
+import nu.marginalia.service.control.*;
 import nu.marginalia.service.id.ServiceId;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.mockito.Mockito;
@@ -61,21 +59,8 @@ public class IndexQueryServiceIntegrationTestModule extends AbstractModule {
 
             bind(FileStorageService.class).toInstance(fileStorageServiceMock);
 
-            var serviceHeartbeat = Mockito.mock(ServiceHeartbeat.class);
-            when(serviceHeartbeat.createServiceTaskHeartbeat(Mockito.any(), Mockito.any()))
-                    .thenReturn(Mockito.mock(ServiceTaskHeartbeat.class));
-            bind(ServiceHeartbeat.class).toInstance(serviceHeartbeat);
-
-            var processHeartbeat = Mockito.mock(ProcessHeartbeat.class);
-            when(processHeartbeat.createProcessTaskHeartbeat(Mockito.any(), Mockito.any()))
-                    .thenReturn(Mockito.mock(ProcessTaskHeartbeat.class));
-            bind(ProcessHeartbeat.class).toInstance(processHeartbeat);
-
-            var servicesFactory = new IndexServicesFactory(
-                    serviceHeartbeat,
-                    fileStorageServiceMock
-            );
-            bind(IndexServicesFactory.class).toInstance(servicesFactory);
+            bind(ServiceHeartbeat.class).toInstance(new FakeServiceHeartbeat());
+            bind(ProcessHeartbeat.class).toInstance(new FakeProcessHeartbeat());
 
             IndexSearchSetsService setsServiceMock = Mockito.mock(IndexSearchSetsService.class);
             when(setsServiceMock.getSearchSetByName(SearchSetIdentifier.NONE)).thenReturn(new SearchSetAny());

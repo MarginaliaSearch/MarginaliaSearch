@@ -6,6 +6,7 @@ import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.process.control.ProcessHeartbeat;
+import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.service.module.DatabaseModule;
 
 import java.sql.SQLException;
@@ -189,7 +190,7 @@ public class WebsiteAdjacenciesCalculator {
         var main = new WebsiteAdjacenciesCalculator(dataSource);
 
         if (args.length == 1 && "load".equals(args[0])) {
-            var processHeartbeat = new ProcessHeartbeat(
+            var processHeartbeat = new ProcessHeartbeatImpl(
                     new ProcessConfiguration("website-adjacencies-calculator", 0, UUID.randomUUID()),
                     dataSource
             );

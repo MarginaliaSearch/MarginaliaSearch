@@ -6,12 +6,9 @@ import com.google.inject.Inject;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.db.storage.model.FileStorage;
 import nu.marginalia.db.storage.model.FileStorageType;
-import nu.marginalia.index.construction.DocIdRewriter;
 import nu.marginalia.index.construction.ReverseIndexConstructor;
 import nu.marginalia.index.forward.ForwardIndexConverter;
 import nu.marginalia.index.forward.ForwardIndexFileNames;
-import nu.marginalia.index.journal.model.IndexJournalEntryData;
-import nu.marginalia.index.journal.reader.IndexJournalReadEntry;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.model.id.UrlIdCodec;
@@ -21,7 +18,7 @@ import nu.marginalia.mq.inbox.MqInboxResponse;
 import nu.marginalia.mq.inbox.MqSingleShotInbox;
 import nu.marginalia.mqapi.index.CreateIndexRequest;
 import nu.marginalia.mqapi.index.IndexName;
-import nu.marginalia.process.control.ProcessHeartbeat;
+import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.service.module.DatabaseModule;
 import org.slf4j.Logger;
@@ -39,7 +36,7 @@ import static nu.marginalia.mqapi.ProcessInboxNames.INDEX_CONSTRUCTOR_INBOX;
 
 public class IndexConstructorMain {
     private final FileStorageService fileStorageService;
-    private final ProcessHeartbeat heartbeat;
+    private final ProcessHeartbeatImpl heartbeat;
     private final MessageQueueFactory messageQueueFactory;
     private final DomainRankings domainRankings;
     private static final Logger logger = LoggerFactory.getLogger(IndexConstructorMain.class);
@@ -70,7 +67,7 @@ public class IndexConstructorMain {
 
     @Inject
     public IndexConstructorMain(FileStorageService fileStorageService,
-                                ProcessHeartbeat heartbeat,
+                                ProcessHeartbeatImpl heartbeat,
                                 MessageQueueFactory messageQueueFactory,
                                 DomainRankings domainRankings) {
 
@@ -105,7 +102,9 @@ public class IndexConstructorMain {
 
 
         ReverseIndexConstructor.
-                createReverseIndex(IndexJournalReader::singleFile,
+                createReverseIndex(
+                        heartbeat,
+                        IndexJournalReader::singleFile,
                         indexStaging.asPath(),
                         this::addRank,
                         tmpDir,
@@ -125,7 +124,8 @@ public class IndexConstructorMain {
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
         ReverseIndexConstructor.
-            createReverseIndex(IndexJournalReader::singleFileWithPriorityFilters,
+            createReverseIndex(heartbeat,
+                    IndexJournalReader::singleFileWithPriorityFilters,
                     indexStaging.asPath(), this::addRank, tmpDir, outputFileDocs, outputFileWords);
     }
 

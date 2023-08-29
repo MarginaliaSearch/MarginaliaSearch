@@ -29,6 +29,7 @@ import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.idx.WordMetadata;
+import nu.marginalia.process.control.FakeProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.service.control.ServiceHeartbeat;
@@ -149,7 +150,7 @@ public class IndexQueryServiceIntegrationTest {
 
 
         ReverseIndexConstructor.
-                createReverseIndex(IndexJournalReader::singleFile, indexStaging.asPath(), DocIdRewriter.identity(), tmpDir, outputFileDocs, outputFileWords);
+                createReverseIndex(new FakeProcessHeartbeat(), IndexJournalReader::singleFile, indexStaging.asPath(), DocIdRewriter.identity(), tmpDir, outputFileDocs, outputFileWords);
     }
 
     private void createPrioReverseIndex() throws SQLException, IOException {
@@ -164,7 +165,7 @@ public class IndexQueryServiceIntegrationTest {
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
         ReverseIndexConstructor.
-                createReverseIndex(IndexJournalReader::singleFile, indexStaging.asPath(), DocIdRewriter.identity(), tmpDir, outputFileDocs, outputFileWords);
+                createReverseIndex(new FakeProcessHeartbeat(), IndexJournalReader::singleFile, indexStaging.asPath(), DocIdRewriter.identity(), tmpDir, outputFileDocs, outputFileWords);
     }
 
     private void createForwardIndex() throws SQLException, IOException {

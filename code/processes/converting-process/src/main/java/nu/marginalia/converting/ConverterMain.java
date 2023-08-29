@@ -14,6 +14,7 @@ import nu.marginalia.mq.inbox.MqInboxResponse;
 import nu.marginalia.mq.inbox.MqSingleShotInbox;
 import nu.marginalia.mqapi.converting.ConvertAction;
 import nu.marginalia.process.control.ProcessHeartbeat;
+import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.service.module.DatabaseModule;
 import plan.CrawlPlan;
@@ -27,9 +28,6 @@ import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -69,7 +67,7 @@ public class ConverterMain {
             DomainProcessor processor,
             InstructionsCompiler compiler,
             Gson gson,
-            ProcessHeartbeat heartbeat,
+            ProcessHeartbeatImpl heartbeat,
             MessageQueueFactory messageQueueFactory,
             FileStorageService fileStorageService,
             SideloadSourceFactory sideloadSourceFactory

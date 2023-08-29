@@ -1,6 +1,7 @@
 package nu.marginalia.index.construction;
 
-import nu.marginalia.index.journal.reader.IndexJournalReader;
+import nu.marginalia.process.control.ProcessAdHocTaskHeartbeat;
+import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginallia.index.journal.IndexJournalFileNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +15,14 @@ public class ReverseIndexConstructor {
 
     private static final Logger logger = LoggerFactory.getLogger(ReverseIndexConstructor.class);
 
+    public enum CreateReverseIndexSteps {
+        CREATE_PREINDEXES,
+        MERGE_PREINDEXES,
+        FINALIZE,
+        FINISHED
+    }
     public static void createReverseIndex(
+                                    ProcessHeartbeat processHeartbeat,
                                     JournalReaderSource readerSource,
                                     Path sourceBaseDir,
                                     DocIdRewriter docIdRewriter,
@@ -28,23 +36,39 @@ public class ReverseIndexConstructor {
             return;
         }
 
-        List<ReversePreindex> preindexes = new ArrayList<>();
+        try (var heartbeat = processHeartbeat.createProcessTaskHeartbeat(CreateReverseIndexSteps.class, "createReverseIndex")) {
+            List<ReversePreindex> preindexes = new ArrayList<>();
 
-        for (var input : inputs) {
-            logger.info("Construcing preindex from {}", input);
-            var preindex = ReversePreindex.constructPreindex(readerSource.construct(input), docIdRewriter, tmpDir);
-            preindexes.add(preindex);
+            heartbeat.progress(CreateReverseIndexSteps.CREATE_PREINDEXES);
+
+            try (var preindexHeartbeat = processHeartbeat.createAdHocTaskHeartbeat("constructPreindexes")) {
+                for (int i = 0; i < inputs.size(); i++) {
+                    var input = inputs.get(i);
+
+                    preindexHeartbeat.progress(input.toFile().getName(), i, inputs.size());
+
+                    preindexes.add(ReversePreindex.constructPreindex(readerSource.construct(input), docIdRewriter, tmpDir));
+                }
+
+                preindexHeartbeat.progress("FINISHED", inputs.size(), inputs.size());
+            }
+
+            heartbeat.progress(CreateReverseIndexSteps.MERGE_PREINDEXES);
+            ReversePreindex finalPreindex;
+
+            try (var mergeHeartbeat = processHeartbeat.createAdHocTaskHeartbeat("mergePreindexes")) {
+                finalPreindex = mergePreindexes(tmpDir, mergeHeartbeat, preindexes);
+            }
+
+            heartbeat.progress(CreateReverseIndexSteps.FINALIZE);
+            finalPreindex.finalizeIndex(outputFileDocs, outputFileWords);
+
+            heartbeat.progress(CreateReverseIndexSteps.FINISHED);
+            finalPreindex.delete();
         }
-
-        logger.info("Merging");
-        var finalPreindex = mergePreindexes(tmpDir, preindexes);
-        logger.info("Finalizing");
-        finalPreindex.finalizeIndex(outputFileDocs, outputFileWords);
-        logger.info("Done");
-        finalPreindex.delete();
     }
 
-    private static ReversePreindex mergePreindexes(Path workDir, List<ReversePreindex> preindexes) throws IOException {
+    private static ReversePreindex mergePreindexes(Path workDir, ProcessAdHocTaskHeartbeat mergeHeartbeat, List<ReversePreindex> preindexes) throws IOException {
         assert !preindexes.isEmpty();
 
         if (preindexes.size() == 1) {
@@ -55,12 +79,19 @@ public class ReverseIndexConstructor {
         List<ReversePreindex> toMerge = new ArrayList<>(preindexes);
         List<ReversePreindex> merged = new ArrayList<>();
 
+        int pass = 0;
         while (toMerge.size() != 1) {
-            for (int i = 0; i + 1< toMerge.size(); i+=2) {
+            String stage = String.format("PASS[%d]: %d -> %d", ++pass,
+                    toMerge.size(),
+                    toMerge.size()/2 + (toMerge.size() % 2)
+            );
+
+            for (int i = 0; i + 1 < toMerge.size(); i+=2) {
+                mergeHeartbeat.progress(stage, i/2, toMerge.size()/2);
+
                 var left = toMerge.get(i);
                 var right = toMerge.get(i+1);
 
-                logger.info("Merge {}, {}", i, i+1);
                 merged.add(ReversePreindex.merge(workDir, left, right));
 
                 left.delete();
@@ -75,6 +106,8 @@ public class ReverseIndexConstructor {
             toMerge.addAll(merged);
             merged.clear();
         }
+
+        mergeHeartbeat.progress("FINISHED", 1, 1);
 
         return toMerge.get(0);
     }

@@ -14,7 +14,7 @@ import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.inbox.MqInboxResponse;
 import nu.marginalia.mq.inbox.MqSingleShotInbox;
-import nu.marginalia.process.control.ProcessHeartbeat;
+import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.service.module.DatabaseModule;
 import plan.CrawlPlan;
@@ -42,7 +42,7 @@ public class CrawlerMain {
 
     private Path crawlDataDir;
 
-    private final ProcessHeartbeat heartbeat;
+    private final ProcessHeartbeatImpl heartbeat;
     private final ConnectionPool connectionPool = new ConnectionPool(5, 10, TimeUnit.SECONDS);
 
     private final Dispatcher dispatcher = new Dispatcher(new ThreadPoolExecutor(0, Integer.MAX_VALUE, 5, TimeUnit.SECONDS,
@@ -65,7 +65,7 @@ public class CrawlerMain {
 
     @Inject
     public CrawlerMain(UserAgent userAgent,
-                       ProcessHeartbeat heartbeat,
+                       ProcessHeartbeatImpl heartbeat,
                        MessageQueueFactory messageQueueFactory,
                        FileStorageService fileStorageService,
                        Gson gson) {

@@ -1,6 +1,5 @@
 package nu.marginalia.loading;
 
-import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -17,7 +16,7 @@ import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.inbox.MqInboxResponse;
 import nu.marginalia.mq.inbox.MqSingleShotInbox;
-import nu.marginalia.process.control.ProcessHeartbeat;
+import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.process.log.WorkLog;
 import plan.CrawlPlan;
 import nu.marginalia.loading.loader.LoaderFactory;
@@ -27,9 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.sql.SQLException;
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -41,7 +38,7 @@ public class LoaderMain {
     private final ConvertedDomainReader instructionsReader;
     private final LoaderFactory loaderFactory;
 
-    private final ProcessHeartbeat heartbeat;
+    private final ProcessHeartbeatImpl heartbeat;
     private final MessageQueueFactory messageQueueFactory;
     private final FileStorageService fileStorageService;
     private final IndexLoadKeywords indexLoadKeywords;
@@ -70,7 +67,7 @@ public class LoaderMain {
     @Inject
     public LoaderMain(ConvertedDomainReader instructionsReader,
                       LoaderFactory loaderFactory,
-                      ProcessHeartbeat heartbeat,
+                      ProcessHeartbeatImpl heartbeat,
                       MessageQueueFactory messageQueueFactory,
                       FileStorageService fileStorageService,
                       IndexLoadKeywords indexLoadKeywords,
