@@ -57,12 +57,11 @@ public class LinkdbWriter {
                 stmt.setLong(8, document.dataHash());
                 stmt.setDouble(9, document.urlQuality());
                 if (document.pubYear() == null) {
-                    stmt.setNull(10, Types.INTEGER);
+                    stmt.setInt(10, 0);
                 } else {
                     stmt.setInt(10, document.pubYear());
                 }
 
-                stmt.addBatch();
 
                 if (++i > 1000) {
                     stmt.executeBatch();
