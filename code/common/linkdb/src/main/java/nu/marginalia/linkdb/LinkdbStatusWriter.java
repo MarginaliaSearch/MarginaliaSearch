@@ -33,7 +33,7 @@ public class LinkdbStatusWriter {
 
     public void add(List<UrlStatus> statuses) throws SQLException {
         try (var stmt = connection.prepareStatement("""
-                INSERT INTO STATUS(ID, URL, STATUS, DESCRIPTION)
+                INSERT OR IGNORE INTO STATUS(ID, URL, STATUS, DESCRIPTION)
                 VALUES (?, ?, ?, ?)
                 """)) {
             int count = 0;
