@@ -185,6 +185,8 @@ public class ReversePreindex {
         Path segmentWordsFile = Files.createTempFile(destDir, "segment_words", ".dat");
         Path segmentCountsFile = Files.createTempFile(destDir, "segment_counts", ".dat");
 
+        // We need total size to request a direct LongArray range.  Seems slower, but is faster.
+        // ... see LongArray.directRangeIfPossible(long start, long end)
         long segmentsSize = countDistinctElements(left.wordIds, right.wordIds,
                 0,  left.wordIds.size(),
                 0,  right.wordIds.size());

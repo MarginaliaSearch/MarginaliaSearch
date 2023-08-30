@@ -139,7 +139,8 @@ public class IndexMetadataService {
             for (var coherenceSet : coherences.words()) {
                 long overlap = 0xFF_FFFF_FFFF_FFFFL;
                 for (var word : coherenceSet) {
-                    overlap &= WordMetadata.decodePositions(getTermMetadata(word, docId));
+                    long positions = WordMetadata.decodePositions(getTermMetadata(word, docId));
+                    overlap &= positions;
                 }
                 if (overlap == 0L) {
                     return false;

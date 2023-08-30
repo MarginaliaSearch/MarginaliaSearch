@@ -2,12 +2,14 @@ package nu.marginalia.index.client.model.query;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.With;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
 @AllArgsConstructor
+@With
 public class SearchSubquery {
 
     /** These terms must be present in the document and are used in ranking*/
@@ -26,6 +28,14 @@ public class SearchSubquery {
     public final List<List<String>> searchTermCoherences;
 
     private double value = 0;
+
+    public SearchSubquery() {
+        this.searchTermsInclude = List.of();
+        this.searchTermsExclude = List.of();
+        this.searchTermsAdvice = List.of();
+        this.searchTermsPriority = List.of();
+        this.searchTermCoherences = List.of();
+    }
 
     public SearchSubquery(List<String> searchTermsInclude,
                           List<String> searchTermsExclude,

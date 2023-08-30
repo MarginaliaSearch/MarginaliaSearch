@@ -4,7 +4,6 @@ import com.google.inject.AbstractModule;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.db.storage.model.FileStorage;
 import nu.marginalia.db.storage.model.FileStorageType;
-import nu.marginalia.index.IndexServicesFactory;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.index.journal.writer.IndexJournalWriterPagingImpl;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
@@ -35,7 +34,7 @@ public class IndexQueryServiceIntegrationTestModule extends AbstractModule {
     Random random = new Random();
 
     public IndexQueryServiceIntegrationTestModule() throws IOException {
-        workDir = Files.createTempDirectory(IndexQueryServiceIntegrationTest.class.getSimpleName());
+        workDir = Files.createTempDirectory(IndexQueryServiceIntegrationSmokeTest.class.getSimpleName());
         slowDir = workDir.resolve("slow");
         fastDir = workDir.resolve("fast");
 
