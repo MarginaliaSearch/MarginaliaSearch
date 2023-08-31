@@ -28,6 +28,7 @@ public class IndexJournalWriterSingleFileImpl implements IndexJournalWriter{
     private final FileChannel fileChannel;
 
     private int numEntries = 0;
+    private boolean closed = false;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -99,6 +100,11 @@ public class IndexJournalWriterSingleFileImpl implements IndexJournalWriter{
     }
 
     public void close() throws IOException {
+        if (closed)
+            return;
+        else
+            closed = true;
+
         dataBuffer.flip();
         compressingStream.compress(dataBuffer);
         dataBuffer.clear();

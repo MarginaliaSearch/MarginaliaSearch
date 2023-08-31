@@ -70,7 +70,7 @@ public class LoaderIndexJournalWriter {
                 buffer[2*i + 1] = meta[start+i];
             }
 
-            var entry = new IndexJournalEntryData(end-start, buffer);
+            var entry = new IndexJournalEntryData(2 * (end-start), buffer);
             var header = new IndexJournalEntryHeader(combinedId, features, metadata.encode());
 
             indexWriter.put(header, entry);
