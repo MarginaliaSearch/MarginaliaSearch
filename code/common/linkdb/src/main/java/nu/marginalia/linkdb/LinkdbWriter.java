@@ -62,6 +62,7 @@ public class LinkdbWriter {
                     stmt.setInt(10, document.pubYear());
                 }
 
+                stmt.addBatch();
 
                 if (++i > 1000) {
                     stmt.executeBatch();
