@@ -62,25 +62,6 @@ public class PagingLongArray extends AbstractPagingArray<LongArrayPage, LongBuff
         return new PagingLongArray(partitioningScheme, pages, size);
     }
 
-    public static PagingLongArray mapFileReadWrite(ArrayPartitioningScheme partitioningScheme, Path file)
-            throws IOException
-    {
-        long sizeBytes = Files.size(file);
-        assert sizeBytes % WORD_SIZE == 0;
-
-        long size = sizeBytes / WORD_SIZE;
-
-        LongArrayPage[] pages = new LongArrayPage[partitioningScheme.getPartitions(size)];
-        long offset = 0;
-        for (int i = 0; i < pages.length; i++) {
-            int partitionSize = partitioningScheme.getRequiredPageSize(i, size);
-            pages[i] = LongArrayPage.fromMmapReadWrite(file, offset, partitionSize);
-            offset += partitionSize;
-        }
-
-        return new PagingLongArray(partitioningScheme, pages, size);
-    }
-
     public static PagingLongArray mapFileReadWrite(ArrayPartitioningScheme partitioningScheme, Path file, long size)
             throws IOException
     {

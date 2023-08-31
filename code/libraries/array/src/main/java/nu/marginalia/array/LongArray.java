@@ -43,10 +43,19 @@ public interface LongArray extends LongArrayBase, LongArrayTransformations, Long
 
     /** Map an existing file for writing */
     static LongArray mmapForModifying(Path path) throws IOException {
-        return PagingLongArray.mapFileReadWrite(DEFAULT_PARTITIONING_SCHEME, path);
+        long sizeBytes = Files.size(path);
+        assert sizeBytes % WORD_SIZE == 0;
+
+        long size = sizeBytes / WORD_SIZE;
+
+        return mmapForWriting(path, size);
     }
 
     static LongArray mmapForWriting(Path path, long size) throws IOException {
+        if (size < MAX_CONTINUOUS_SIZE) {
+            return LongArrayPage.fromMmapReadWrite(path, 0, (int) size);
+        }
+
         return PagingLongArray.mapFileReadWrite(DEFAULT_PARTITIONING_SCHEME, path, size);
     }
 
