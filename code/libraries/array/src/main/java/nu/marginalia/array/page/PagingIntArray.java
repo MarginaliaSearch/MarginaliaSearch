@@ -6,6 +6,7 @@ import nu.marginalia.array.IntArray;
 import nu.marginalia.array.algo.SortingContext;
 import nu.marginalia.array.buffer.IntQueryBuffer;
 import nu.marginalia.array.delegate.ReferenceImplIntArrayDelegate;
+import nu.marginalia.array.delegate.ShiftedIntArray;
 import nu.marginalia.array.functional.*;
 import nu.marginalia.array.functor.IntFolder;
 import nu.marginalia.array.functor.IntIOFolder;
@@ -368,6 +369,19 @@ public class PagingIntArray extends AbstractPagingArray<IntArrayPage, IntBuffer>
         }
         return size;
     }
+
+    public ShiftedIntArray range(long start, long end) {
+        if (partitioningScheme.isSamePage(start, end)) {
+            return pages[partitioningScheme.getPage(start)]
+                    .range(partitioningScheme.getOffset(start),
+                            partitioningScheme.getEndOffset(start, end)
+                    );
+        }
+        else {
+            return new ShiftedIntArray(start, end, this);
+        }
+    }
+
 
     @Override
     public ArrayRangeReference<IntArray> directRangeIfPossible(long start, long end) {

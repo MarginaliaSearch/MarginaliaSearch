@@ -6,6 +6,7 @@ import nu.marginalia.array.LongArray;
 import nu.marginalia.array.algo.SortingContext;
 import nu.marginalia.array.buffer.LongQueryBuffer;
 import nu.marginalia.array.delegate.ReferenceImplLongArrayDelegate;
+import nu.marginalia.array.delegate.ShiftedLongArray;
 import nu.marginalia.array.functional.LongBinaryIOOperation;
 import nu.marginalia.array.functional.LongIOTransformer;
 import nu.marginalia.array.functional.LongLongConsumer;
@@ -563,6 +564,18 @@ public class PagingLongArray extends AbstractPagingArray<LongArrayPage, LongBuff
 
     public LongArrayPage getPage(int forOffset) {
         return pages[partitioningScheme.getPage(forOffset)];
+    }
+
+    public ShiftedLongArray range(long start, long end) {
+        if (partitioningScheme.isSamePage(start, end)) {
+            return pages[partitioningScheme.getPage(start)]
+                    .range(partitioningScheme.getOffset(start),
+                           partitioningScheme.getEndOffset(start, end)
+                    );
+        }
+        else {
+            return new ShiftedLongArray(start, end, this);
+        }
     }
 
     public ArrayRangeReference<LongArray> directRangeIfPossible(long start, long end) {
