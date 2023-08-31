@@ -35,7 +35,7 @@ public interface IndexJournalReader extends Iterable<IndexJournalReadEntry> {
                         | WordFlags.SiteAdjacent.asBit();
 
         return new IndexJournalReaderSingleCompressedFile(path, null,
-                r -> (r.metadata() & highPriorityFlags) != 0);
+                r -> (r & highPriorityFlags) != 0);
     }
 
     void forEachWordId(LongConsumer consumer);
@@ -47,6 +47,12 @@ public interface IndexJournalReader extends Iterable<IndexJournalReadEntry> {
     @NotNull
     @Override
     Iterator<IndexJournalReadEntry> iterator();
+
+    boolean filter(IndexJournalReadEntry entry);
+
+    boolean filter(IndexJournalReadEntry entry, IndexJournalEntryData.Record record);
+
+    boolean filter(IndexJournalReadEntry entry, long metadata);
 
     void close() throws IOException;
 

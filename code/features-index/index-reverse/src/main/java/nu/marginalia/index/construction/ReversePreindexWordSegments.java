@@ -67,8 +67,7 @@ public class ReversePreindexWordSegments {
         int i = 0;
         LongIterator iter = countsMap.keySet().iterator();
         while (iter.hasNext()) {
-            words.set(i, iter.nextLong());
-            i++;
+            words.set(i++, iter.nextLong());
         }
 
         // Sort the words file

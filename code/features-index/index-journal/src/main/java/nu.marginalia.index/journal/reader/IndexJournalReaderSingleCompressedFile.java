@@ -4,17 +4,13 @@ import com.github.luben.zstd.ZstdInputStream;
 import lombok.SneakyThrows;
 import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.model.IndexJournalFileHeader;
-import nu.marginalia.index.journal.model.IndexJournalStatistics;
 import org.jetbrains.annotations.NotNull;
-import org.roaringbitmap.longlong.Roaring64Bitmap;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Arrays;
 import java.util.Iterator;
-import java.util.function.IntConsumer;
 import java.util.function.LongConsumer;
 import java.util.function.Predicate;
 
@@ -31,23 +27,23 @@ public class IndexJournalReaderSingleCompressedFile implements IndexJournalReade
     private DataInputStream dataInputStream = null;
 
     final Predicate<IndexJournalReadEntry> entryPredicate;
-    final Predicate<IndexJournalEntryData.Record> recordPredicate;
+    final Predicate<Long> metadataPredicate;
 
     public IndexJournalReaderSingleCompressedFile(Path file) throws IOException {
         this.journalFile = file;
 
         fileHeader = readHeader(file);
 
-        this.recordPredicate = null;
+        this.metadataPredicate = null;
         this.entryPredicate = null;
     }
 
-    public IndexJournalReaderSingleCompressedFile(Path file, Predicate<IndexJournalReadEntry> entryPredicate, Predicate<IndexJournalEntryData.Record> recordPredicate) throws IOException {
+    public IndexJournalReaderSingleCompressedFile(Path file, Predicate<IndexJournalReadEntry> entryPredicate, Predicate<Long> metadataPredicate) throws IOException {
         this.journalFile = file;
 
         fileHeader = readHeader(file);
 
-        this.recordPredicate = recordPredicate;
+        this.metadataPredicate = metadataPredicate;
         this.entryPredicate = entryPredicate;
     }
 
@@ -69,13 +65,21 @@ public class IndexJournalReaderSingleCompressedFile implements IndexJournalReade
         return new DataInputStream(new ZstdInputStream(new BufferedInputStream(fileInputStream)));
     }
 
+    @Override
     public boolean filter(IndexJournalReadEntry entry) {
         return entryPredicate == null || entryPredicate.test(entry);
     }
 
+    @Override
     public boolean filter(IndexJournalReadEntry entry, IndexJournalEntryData.Record record) {
         return (entryPredicate == null || entryPredicate.test(entry))
-            && (recordPredicate == null || recordPredicate.test(record));
+            && (metadataPredicate == null || metadataPredicate.test(record.metadata()));
+    }
+
+    @Override
+    public boolean filter(IndexJournalReadEntry entry, long metadata) {
+        return (entryPredicate == null || entryPredicate.test(entry))
+                && (metadataPredicate == null || metadataPredicate.test(metadata));
     }
 
     public void close() throws IOException {
@@ -129,19 +133,35 @@ public class IndexJournalReaderSingleCompressedFile implements IndexJournalReade
     }
 
     private class JournalEntryIterator implements Iterator<IndexJournalReadEntry> {
-        private int i = 0;
+        private int i = -1;
+        private IndexJournalReadEntry next;
 
         @Override
         @SneakyThrows
         public boolean hasNext() {
-            return i < fileHeader.fileSize();
+            if (next != null)
+                return true;
+
+            while (++i < fileHeader.fileSize()) {
+                var entry = IndexJournalReadEntry.read(dataInputStream);
+                if (filter(entry)) {
+                    next = entry;
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         @SneakyThrows
         @Override
         public IndexJournalReadEntry next() {
-            i++;
-            return IndexJournalReadEntry.read(dataInputStream);
+            if (hasNext()) {
+                var ret = next;
+                next = null;
+                return ret;
+            }
+            throw new IllegalStateException();
         }
 
     }

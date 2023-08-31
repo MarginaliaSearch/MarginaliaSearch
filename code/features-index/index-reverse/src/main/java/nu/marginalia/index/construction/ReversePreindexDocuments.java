@@ -40,7 +40,7 @@ public class ReversePreindexDocuments {
         logger.info("Transferring data");
         createUnsortedDocsFile(docsFile, reader, segments, docIdRewriter);
 
-        LongArray docsFileMap = LongArray.mmapForWriting(docsFile, 8 * Files.size(docsFile));
+        LongArray docsFileMap = LongArray.mmapForModifying(docsFile);
         logger.info("Sorting data");
         sortDocsFile(docsFileMap, segments);
 
@@ -64,7 +64,7 @@ public class ReversePreindexDocuments {
                                                IndexJournalReader reader,
                                                ReversePreindexWordSegments segments,
                                                DocIdRewriter docIdRewriter) throws IOException {
-        long fileSize = 8 * segments.totalSize();
+        long fileSize = RECORD_SIZE_LONGS * segments.totalSize();
         LongArray outArray = LongArray.mmapForWriting(docsFile, fileSize);
 
         var offsetMap = segments.asMap(RECORD_SIZE_LONGS);
@@ -77,6 +77,10 @@ public class ReversePreindexDocuments {
             for (int i = 0; i + 1 < data.size(); i+=2) {
                 long wordId = data.get(i);
                 long meta = data.get(i+1);
+
+                if (!reader.filter(entry, meta)) {
+                    continue;
+                }
 
                 long offset = offsetMap.addTo(wordId, RECORD_SIZE_LONGS);
 

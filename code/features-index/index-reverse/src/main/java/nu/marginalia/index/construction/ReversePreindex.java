@@ -115,7 +115,7 @@ public class ReversePreindex {
 
         Path docsFile = Files.createTempFile(destDir, "docs", ".dat");
 
-        LongArray mergedDocuments = LongArray.mmapForWriting(docsFile, 8 * (left.documents.size() + right.documents.size()));
+        LongArray mergedDocuments = LongArray.mmapForWriting(docsFile, 2 * (left.documents.size() + right.documents.size()));
 
         leftIter.next();
         rightIter.next();

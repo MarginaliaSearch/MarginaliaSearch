@@ -53,6 +53,21 @@ public class IndexJournalReaderPagingImpl implements IndexJournalReader {
     }
 
     @Override
+    public boolean filter(IndexJournalReadEntry entry) {
+        return readers.get(0).filter(entry);
+    }
+
+    @Override
+    public boolean filter(IndexJournalReadEntry entry, IndexJournalEntryData.Record record) {
+        return readers.get(0).filter(entry, record);
+    }
+
+    @Override
+    public boolean filter(IndexJournalReadEntry entry, long metadata) {
+        return readers.get(0).filter(entry, metadata);
+    }
+
+    @Override
     public void close() throws IOException {
         for (var reader : readers) {
             reader.close();
