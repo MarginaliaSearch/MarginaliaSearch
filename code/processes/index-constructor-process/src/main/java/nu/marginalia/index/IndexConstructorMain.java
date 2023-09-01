@@ -13,6 +13,7 @@ import nu.marginalia.index.journal.reader.IndexJournalReader;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.WordFlags;
+import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.inbox.MqInboxResponse;
@@ -125,11 +126,15 @@ public class IndexConstructorMain {
         Path tmpDir = indexStaging.asPath().resolve("tmp");
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
+        // The priority index only includes words that have bits indicating they are
+        // important to the document.  This filter will act on the encoded {@see WordMetadata}
         LongPredicate wordMetaFilter = getPriorityIndexWordMetaFilter();
 
         ReverseIndexConstructor.
             createReverseIndex(heartbeat,
-                    (path) -> IndexJournalReader.filteringSingleFile(path, wordMetaFilter),
+                    (path) -> IndexJournalReader
+                            .singleFile(path)
+                            .filtering(wordMetaFilter),
                     indexStaging.asPath(), this::addRank, tmpDir, outputFileDocs, outputFileWords);
     }
 
@@ -145,7 +150,7 @@ public class IndexConstructorMain {
                         | WordFlags.Site.asBit()
                         | WordFlags.SiteAdjacent.asBit();
 
-        return r -> (r & highPriorityFlags) != 0;
+        return r -> WordMetadata.hasAnyFlags(r, highPriorityFlags);
     }
 
     private void createForwardIndex() throws SQLException, IOException {

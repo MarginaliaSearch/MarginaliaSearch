@@ -19,10 +19,6 @@ public interface IndexJournalReader {
     static IndexJournalReader paging(Path baseDir) throws IOException {
         return new IndexJournalReaderPagingImpl(baseDir);
     }
-    static IndexJournalReader filteringSingleFile(Path path, LongPredicate wordMetaFilter) throws IOException {
-        return new IndexJournalReaderSingleFile(path)
-                .filtering(wordMetaFilter);
-    }
 
     default void forEachWordId(LongConsumer consumer) {
         var ptr = this.newPointer();
@@ -32,6 +28,7 @@ public interface IndexJournalReader {
             }
         }
     }
+
     default void forEachDocId(LongConsumer consumer) {
         var ptr = this.newPointer();
         while (ptr.nextDocument()) {
@@ -44,10 +41,6 @@ public interface IndexJournalReader {
 
     default IndexJournalReader filtering(LongPredicate termMetaFilter) {
         return new FilteringIndexJournalReader(this, termMetaFilter);
-    }
-
-    interface LongObjectConsumer<T> {
-        void accept(long left, T right);
     }
 
 }
