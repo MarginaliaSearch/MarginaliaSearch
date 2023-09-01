@@ -230,16 +230,24 @@ public class IndexQueryService {
         var priority = subquery.searchTermsPriority;
 
         for (int i = 0; i < includes.size(); i++) {
-            logger.info(queryMarker, "{} -> {} I", includes.get(i), searchTerms.includes().getLong(i));
+            logger.info(queryMarker, "{} -> {} I", includes.get(i),
+                    Long.toHexString(searchTerms.includes().getLong(i))
+            );
         }
         for (int i = 0; i < advice.size(); i++) {
-            logger.info(queryMarker, "{} -> {} A", advice.get(i), searchTerms.includes().getLong(includes.size() + i));
+            logger.info(queryMarker, "{} -> {} A", advice.get(i),
+                    Long.toHexString(searchTerms.includes().getLong(includes.size() + i))
+            );
         }
         for (int i = 0; i < excludes.size(); i++) {
-            logger.info(queryMarker, "{} -> {} E", excludes.get(i), searchTerms.excludes().getLong(i));
+            logger.info(queryMarker, "{} -> {} E", excludes.get(i),
+                    Long.toHexString(searchTerms.excludes().getLong(i))
+            );
         }
         for (int i = 0; i < priority.size(); i++) {
-            logger.info(queryMarker, "{} -> {} P", priority.get(i), searchTerms.priority().getLong(i));
+            logger.info(queryMarker, "{} -> {} P", priority.get(i),
+                    Long.toHexString(searchTerms.priority().getLong(i))
+            );
         }
     }
 

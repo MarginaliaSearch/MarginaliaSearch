@@ -60,6 +60,6 @@ public class ReverseIndexEntrySource implements EntrySource {
 
     @Override
     public String indexName() {
-        return "Full:" + wordId;
+        return "Full:" + Long.toHexString(wordId);
     }
 }
