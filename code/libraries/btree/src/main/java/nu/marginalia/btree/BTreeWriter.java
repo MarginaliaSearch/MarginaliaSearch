@@ -41,6 +41,8 @@ public class BTreeWriter {
             throw new IllegalStateException("Dog ear was not overwritten: " + header);
         }
 
+        assert slice.isSortedN(ctx.entrySize) : "Provided data was not sorted";
+
         if (header.layers() >= 1) { // Omit layer if data fits within a single block
             writeIndex(header);
         }

@@ -123,9 +123,7 @@ public class BTreeReader {
      */
     public long[] queryData(long[] keys, int offset) {
 
-        if (getClass().desiredAssertionStatus()) {
-            assert(isSorted(keys));
-        }
+        assert(isSorted(keys)) : "The input array docIds is assumed to be sorted";
 
         if (header.layers() == 0) {
             return queryDataNoIndex(keys, offset);
