@@ -12,6 +12,7 @@ import nu.marginalia.index.forward.ForwardIndexFileNames;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.model.id.UrlIdCodec;
+import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.inbox.MqInboxResponse;
@@ -31,6 +32,7 @@ import java.sql.SQLException;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.function.LongPredicate;
 
 import static nu.marginalia.mqapi.ProcessInboxNames.INDEX_CONSTRUCTOR_INBOX;
 
@@ -123,10 +125,27 @@ public class IndexConstructorMain {
         Path tmpDir = indexStaging.asPath().resolve("tmp");
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
+        LongPredicate wordMetaFilter = getPriorityIndexWordMetaFilter();
+
         ReverseIndexConstructor.
             createReverseIndex(heartbeat,
-                    IndexJournalReader::singleFileWithPriorityFilters,
+                    (path) -> IndexJournalReader.filteringSingleFile(path, wordMetaFilter),
                     indexStaging.asPath(), this::addRank, tmpDir, outputFileDocs, outputFileWords);
+    }
+
+    private static LongPredicate getPriorityIndexWordMetaFilter() {
+
+        long highPriorityFlags =
+                WordFlags.Title.asBit()
+                        | WordFlags.Subjects.asBit()
+                        | WordFlags.TfIdfHigh.asBit()
+                        | WordFlags.NamesWords.asBit()
+                        | WordFlags.UrlDomain.asBit()
+                        | WordFlags.UrlPath.asBit()
+                        | WordFlags.Site.asBit()
+                        | WordFlags.SiteAdjacent.asBit();
+
+        return r -> (r & highPriorityFlags) != 0;
     }
 
     private void createForwardIndex() throws SQLException, IOException {

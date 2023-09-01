@@ -3,7 +3,7 @@ package nu.marginalia.index.construction;
 import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
-import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile;
+import nu.marginalia.index.journal.reader.IndexJournalReaderSingleFile;
 import nu.marginalia.index.journal.writer.IndexJournalWriterSingleFileImpl;
 
 import java.io.IOException;
@@ -68,7 +68,7 @@ public class TestJournalFactory {
                     new IndexJournalEntryData(data));
         }
         writer.close();
-        var ret = new IndexJournalReaderSingleCompressedFile(jf);
+        var ret = new IndexJournalReaderSingleFile(jf);
         return ret;
     }
 
@@ -87,7 +87,7 @@ public class TestJournalFactory {
                     new IndexJournalEntryData(data));
         }
         writer.close();
-        var ret = new IndexJournalReaderSingleCompressedFile(jf);
+        var ret = new IndexJournalReaderSingleFile(jf);
         return ret;
     }
 }

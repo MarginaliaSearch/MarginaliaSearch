@@ -4,7 +4,7 @@ import com.upserve.uppend.blobs.NativeIO;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
 import nu.marginalia.array.LongArray;
-import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile;
+import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.ranking.DomainRankings;
@@ -13,7 +13,6 @@ import org.roaringbitmap.longlong.Roaring64Bitmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -74,15 +73,19 @@ public class ForwardIndexConverter {
 
             LongArray docFileData = LongArray.mmapForWriting(outputFileDocsData, ForwardIndexParameters.ENTRY_SIZE * docsFileId.size());
 
-            journalReader.forEach(entry -> {
-                long entryOffset = (long) ForwardIndexParameters.ENTRY_SIZE * docIdToIdx.get(entry.docId());
+            var pointer = journalReader.newPointer();
+            while (pointer.nextDocument()) {
+                long docId = pointer.documentId();
+                int domainId = UrlIdCodec.getDomainId(docId);
 
-                int ranking = domainRankings.getRanking(entry.domainId());
-                long meta = DocumentMetadata.encodeRank(entry.docMeta(), ranking);
+                long entryOffset = (long) ForwardIndexParameters.ENTRY_SIZE * docIdToIdx.get(docId);
+
+                int ranking = domainRankings.getRanking(domainId);
+                long meta = DocumentMetadata.encodeRank(pointer.documentMeta(), ranking);
 
                 docFileData.set(entryOffset + ForwardIndexParameters.METADATA_OFFSET, meta);
-                docFileData.set(entryOffset + ForwardIndexParameters.FEATURES_OFFSET, entry.header.documentFeatures());
-            });
+                docFileData.set(entryOffset + ForwardIndexParameters.FEATURES_OFFSET, pointer.documentFeatures());
+            }
 
             progress.progress(TaskSteps.FORCE);
 

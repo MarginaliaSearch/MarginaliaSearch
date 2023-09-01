@@ -2,19 +2,16 @@ package nu.marginalia.index.forward;
 
 import lombok.SneakyThrows;
 import nu.marginalia.index.journal.model.IndexJournalEntry;
-import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile;
+import nu.marginalia.index.journal.reader.IndexJournalReaderSingleFile;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.index.journal.writer.IndexJournalWriterSingleFileImpl;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
-import nu.marginalia.process.control.ProcessHeartbeatImpl;
-import nu.marginalia.process.control.ProcessTaskHeartbeatImpl;
 import nu.marginalia.ranking.DomainRankings;
 import nu.marginalia.test.TestUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +21,6 @@ import java.nio.file.Path;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.when;
 
 class ForwardIndexConverterTest {
 
@@ -96,7 +92,7 @@ class ForwardIndexConverterTest {
     @Test
     void testForwardIndex() throws IOException {
 
-        new ForwardIndexConverter(new FakeProcessHeartbeat(), new IndexJournalReaderSingleCompressedFile(indexFile), docsFileId, docsFileData, new DomainRankings()).convert();
+        new ForwardIndexConverter(new FakeProcessHeartbeat(), new IndexJournalReaderSingleFile(indexFile), docsFileId, docsFileData, new DomainRankings()).convert();
 
         var forwardReader = new ForwardIndexReader(docsFileId, docsFileData);
 

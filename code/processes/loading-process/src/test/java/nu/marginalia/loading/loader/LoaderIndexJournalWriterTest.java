@@ -3,14 +3,13 @@ package nu.marginalia.loading.loader;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.db.storage.model.FileStorage;
 import nu.marginalia.db.storage.model.FileStorageType;
-import nu.marginalia.index.journal.reader.IndexJournalReaderSingleCompressedFile;
+import nu.marginalia.index.journal.reader.IndexJournalReaderSingleFile;
 import nu.marginalia.keyword.model.DocumentKeywords;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginallia.index.journal.IndexJournalFileNames;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
 
 import java.io.IOException;
@@ -18,7 +17,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.LongStream;
 
@@ -64,19 +62,18 @@ class LoaderIndexJournalWriterTest {
         List<Path> journalFiles =IndexJournalFileNames.findJournalFiles(tempDir);
         assertEquals(1, journalFiles.size());
 
-        var reader = new IndexJournalReaderSingleCompressedFile(journalFiles.get(0));
+        var reader = new IndexJournalReaderSingleFile(journalFiles.get(0));
         List<Long> docIds = new ArrayList<>();
         reader.forEachDocId(docIds::add);
         assertEquals(List.of(1L, 1L), docIds);
 
         List<Long> metas = new ArrayList<Long>();
-        reader.forEach(r -> {
-            var entry = r.readEntry();
-            for (int i = 0; i + 1 < entry.size(); i+=2) {
-                entry.get(i);
-                metas.add(entry.get(i+1));
+        var ptr = reader.newPointer();
+        while (ptr.nextDocument()) {
+            while (ptr.nextRecord()) {
+                metas.add(ptr.wordMeta());
             }
-        });
+        }
 
         assertEquals(LongStream.of(metadata).boxed().toList(), metas);
     }

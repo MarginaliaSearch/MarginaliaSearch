@@ -2,7 +2,6 @@ package nu.marginalia.index.construction;
 
 import lombok.SneakyThrows;
 import nu.marginalia.array.LongArray;
-import nu.marginalia.array.algo.SortingContext;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,22 +69,17 @@ public class ReversePreindexDocuments {
         var offsetMap = segments.asMap(RECORD_SIZE_LONGS);
         offsetMap.defaultReturnValue(0);
 
-        for (var entry : reader) {
-            long rankEncodedId = docIdRewriter.rewriteDocId(entry.docId());
-
-            var data = entry.readEntry();
-            for (int i = 0; i + 1 < data.size(); i+=2) {
-                long wordId = data.get(i);
-                long meta = data.get(i+1);
-
-                if (!reader.filter(entry, meta)) {
-                    continue;
-                }
+        var pointer = reader.newPointer();
+        while (pointer.nextDocument()) {
+            long rankEncodedId = docIdRewriter.rewriteDocId(pointer.documentId());
+            while (pointer.nextRecord()) {
+                long wordId = pointer.wordId();
+                long wordMeta = pointer.wordMeta();
 
                 long offset = offsetMap.addTo(wordId, RECORD_SIZE_LONGS);
 
                 outArray.set(offset + 0, rankEncodedId);
-                outArray.set(offset + 1, meta);
+                outArray.set(offset + 1, wordMeta);
             }
         }
 

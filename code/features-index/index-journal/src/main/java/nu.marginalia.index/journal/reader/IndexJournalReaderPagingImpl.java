@@ -1,17 +1,12 @@
 package nu.marginalia.index.journal.reader;
 
-import com.google.common.collect.Iterators;
-import nu.marginalia.index.journal.model.IndexJournalEntryData;
-import nu.marginalia.index.journal.model.IndexJournalStatistics;
+import nu.marginalia.index.journal.reader.pointer.IndexJournalPointer;
 import nu.marginallia.index.journal.IndexJournalFileNames;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.function.LongConsumer;
 
 public class IndexJournalReaderPagingImpl implements IndexJournalReader {
 
@@ -22,55 +17,16 @@ public class IndexJournalReaderPagingImpl implements IndexJournalReader {
         this.readers = new ArrayList<>(inputFiles.size());
 
         for (var inputFile : inputFiles) {
-            readers.add(new IndexJournalReaderSingleCompressedFile(inputFile));
+            readers.add(new IndexJournalReaderSingleFile(inputFile));
         }
     }
 
     @Override
-    public void forEachWordId(LongConsumer consumer) {
-        for (var reader : readers) {
-            reader.forEachWordId(consumer);
-        }
-    }
-
-    @Override
-    public void forEachDocIdRecord(LongObjectConsumer<IndexJournalEntryData.Record> consumer) {
-        for (var reader : readers) {
-            reader.forEachDocIdRecord(consumer);
-        }
-    }
-
-    @Override
-    public void forEachDocId(LongConsumer consumer) {
-        for (var reader : readers) {
-            reader.forEachDocId(consumer);
-        }
-    }
-
-    @Override
-    public @NotNull Iterator<IndexJournalReadEntry> iterator() {
-        return Iterators.concat(readers.stream().map(IndexJournalReader::iterator).iterator());
-    }
-
-    @Override
-    public boolean filter(IndexJournalReadEntry entry) {
-        return readers.get(0).filter(entry);
-    }
-
-    @Override
-    public boolean filter(IndexJournalReadEntry entry, IndexJournalEntryData.Record record) {
-        return readers.get(0).filter(entry, record);
-    }
-
-    @Override
-    public boolean filter(IndexJournalReadEntry entry, long metadata) {
-        return readers.get(0).filter(entry, metadata);
-    }
-
-    @Override
-    public void close() throws IOException {
-        for (var reader : readers) {
-            reader.close();
-        }
+    public IndexJournalPointer newPointer() {
+        return IndexJournalPointer.concatenate(
+                readers.stream()
+                        .map(IndexJournalReader::newPointer)
+                        .toArray(IndexJournalPointer[]::new)
+        );
     }
 }
