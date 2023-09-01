@@ -94,16 +94,15 @@ public class ReversePreindexDocuments {
         ExecutorService sortingWorkers = Executors.newWorkStealingPool(Runtime.getRuntime().availableProcessors());
 
         while (iter.next()) {
+            long iterStart = iter.startOffset;
+            long iterEnd = iter.endOffset;
+
             if (iter.size() < 1024) {
-                docsFileMap.quickSortN(RECORD_SIZE_LONGS,
-                        iter.startOffset,
-                        iter.endOffset);
+                docsFileMap.quickSortN(RECORD_SIZE_LONGS, iterStart, iterEnd);
             }
             else {
                 sortingWorkers.execute(() ->
-                        docsFileMap.quickSortN(RECORD_SIZE_LONGS,
-                                iter.startOffset,
-                                iter.endOffset));
+                    docsFileMap.quickSortN(RECORD_SIZE_LONGS, iterStart, iterEnd));
             }
         }
 
