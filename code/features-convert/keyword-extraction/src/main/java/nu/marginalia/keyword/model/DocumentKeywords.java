@@ -3,26 +3,32 @@ package nu.marginalia.keyword.model;
 
 import nu.marginalia.model.idx.WordMetadata;
 
-import java.io.Serializable;
-import java.util.Arrays;
+public final class DocumentKeywords {
+    final String[] keywords;
+    final long[] metadata;
 
-public record DocumentKeywords(String[] keywords,
-                               long[] metadata)
-implements Serializable
-{
+    public DocumentKeywords(String[] keywords,
+                            long[] metadata)
+    {
+        this.keywords = keywords;
+        this.metadata = metadata;
+    }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(getClass().getSimpleName());
         sb.append('[');
-        for (int i = 0; i < keywords.length; i++) {
+        var pointer = newPointer();
+        while (pointer.advancePointer()) {
             sb.append("\n\t ");
-            if (metadata[i] != 0) {
-                sb.append(keywords[i]).append("/").append(new WordMetadata(metadata[i]));
-            }
-            else {
-                sb.append(keywords[i]);
+
+            long metadata = pointer.getMetadata();
+            String keyword = pointer.getKeyword();
+            sb.append(keyword);
+
+            if (metadata != 0) {
+                sb.append("/").append(new WordMetadata(metadata));
             }
         }
         return sb.append("\n]").toString();
@@ -36,7 +42,11 @@ implements Serializable
         return keywords.length;
     }
 
-    public DocumentKeywords subList(int start, int end) {
-        return new DocumentKeywords(Arrays.copyOfRange(keywords, start, end), Arrays.copyOfRange(metadata, start, end));
+    /** Return a pointer for traversing this structure */
+    public DocumentKeywordsPointer newPointer() {
+        return new DocumentKeywordsPointer(this);
     }
+
 }
+
+

@@ -9,7 +9,6 @@ import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
 import nu.marginalia.index.journal.writer.IndexJournalWriterPagingImpl;
-import nu.marginalia.index.journal.writer.IndexJournalWriterSingleFileImpl;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.keyword.model.DocumentKeywords;
 import nu.marginalia.model.idx.DocumentMetadata;
@@ -20,7 +19,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.sql.SQLException;
-import java.util.Arrays;
 
 import static nu.marginalia.index.journal.model.IndexJournalEntryData.MAX_LENGTH;
 
@@ -29,6 +27,10 @@ public class LoaderIndexJournalWriter {
 
     private final IndexJournalWriter indexWriter;
     private static final Logger logger = LoggerFactory.getLogger(LoaderIndexJournalWriter.class);
+
+    private final MurmurHash3_128 hasher = new MurmurHash3_128();
+    private final long[] buffer = new long[MAX_LENGTH * 2];
+
 
     @Inject
     public LoaderIndexJournalWriter(FileStorageService fileStorageService) throws IOException, SQLException {
@@ -42,14 +44,13 @@ public class LoaderIndexJournalWriter {
         indexWriter = new IndexJournalWriterPagingImpl(indexArea.asPath());
     }
 
-    MurmurHash3_128 hasher = new MurmurHash3_128();
-    long[] buffer = new long[MAX_LENGTH * 2];
     @SneakyThrows
     public void putWords(long combinedId,
                          int features,
                          DocumentMetadata metadata,
                          DocumentKeywords wordSet) {
-        if (wordSet.keywords().length == 0) {
+
+        if (wordSet.isEmpty()) {
             logger.info("Skipping zero-length word set for {}", combinedId);
             return;
         }
@@ -59,23 +60,24 @@ public class LoaderIndexJournalWriter {
             return;
         }
 
-        String[] words = wordSet.keywords();
-        long[] meta = wordSet.metadata();
+        var pointer = wordSet.newPointer();
 
-        for (int start = 0; start < words.length; ) {
-            int end = Math.min(start + MAX_LENGTH, words.length);
+        while (pointer.hasMore()) {
+            int i = 0;
 
-            for (int i = 0; i < end - start; i++) {
-                buffer[2*i] = hasher.hashNearlyASCII(words[start+i]);
-                buffer[2*i + 1] = meta[start+i];
+            while (i < buffer.length
+                && pointer.advancePointer())
+            {
+                final long hashedKeyword = hasher.hashNearlyASCII(pointer.getKeyword());
+
+                buffer[i++] = hashedKeyword;
+                buffer[i++] = pointer.getMetadata();
             }
 
-            var entry = new IndexJournalEntryData(2 * (end-start), buffer);
+            var entry = new IndexJournalEntryData(i, buffer);
             var header = new IndexJournalEntryHeader(combinedId, features, metadata.encode());
 
             indexWriter.put(header, entry);
-
-            start = end;
         }
 
     }

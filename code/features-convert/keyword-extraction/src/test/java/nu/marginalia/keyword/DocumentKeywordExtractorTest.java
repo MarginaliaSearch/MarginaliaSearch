@@ -17,10 +17,11 @@ import java.util.Objects;
 
 class DocumentKeywordExtractorTest {
 
+    DocumentKeywordExtractor extractor = new DocumentKeywordExtractor(new TermFrequencyDict(WmsaHome.getLanguageModels()));
+    SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
+
     @Test
     public void testWordPattern() {
-        DocumentKeywordExtractor extractor = new DocumentKeywordExtractor(null);
-
         Assertions.assertTrue(extractor.matchesWordPattern("test"));
         Assertions.assertTrue(extractor.matchesWordPattern("1234567890abcde"));
         Assertions.assertFalse(extractor.matchesWordPattern("1234567890abcdef"));
@@ -34,6 +35,24 @@ class DocumentKeywordExtractorTest {
         Assertions.assertFalse(extractor.matchesWordPattern("Stulpnagelstrasse"));
     }
 
+
+    @Test
+    public void testEmptyMetadata() throws URISyntaxException {
+        var dld = se.extractSentences("""
+                Some sample text, I'm not sure what even triggers this
+                """, "A title perhaps?");
+        var keywordBuilder = extractor.extractKeywords(dld, new EdgeUrl("https://www.example.com/invalid"));
+        var keywords = keywordBuilder.build();
+
+        var pointer = keywords.newPointer();
+        while (pointer.advancePointer()) {
+            if (pointer.getMetadata() == 0L) {
+                System.out.println("Aha! " + pointer.getKeyword());
+            }
+        }
+
+    }
+
     @Test
     public void testKeyboards() throws IOException, URISyntaxException {
         var resource = Objects.requireNonNull(ClassLoader.getSystemResourceAsStream("test-data/keyboards.html"),
@@ -41,9 +60,6 @@ class DocumentKeywordExtractorTest {
         String html = new String(resource.readAllBytes(), Charset.defaultCharset());
         var doc = Jsoup.parse(html);
         doc.filter(new DomPruningFilter(0.5));
-
-        DocumentKeywordExtractor extractor = new DocumentKeywordExtractor(new TermFrequencyDict(WmsaHome.getLanguageModels()));
-        SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
 
         var keywords = extractor.extractKeywords(se.extractSentences(doc), new EdgeUrl("https://pmortensen.eu/world2/2021/12/24/rapoo-mechanical-keyboards-gotchas-and-setup/"));
         System.out.println(keywords.getMetaForWord("mechanical"));
