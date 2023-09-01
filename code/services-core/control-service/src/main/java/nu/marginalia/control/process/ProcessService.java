@@ -120,6 +120,7 @@ public class ProcessService {
             "JAVA_HOME",
             "CONVERTER_PROCESS_OPTS",
             "LOADER_PROCESS_OPTS",
+            "INDEX_CONSTRUCTION_PROCESS_OPTS",
             "CRAWLER_PROCESS_OPTS");
 
     private String[] createEnvironmentVariables() {
