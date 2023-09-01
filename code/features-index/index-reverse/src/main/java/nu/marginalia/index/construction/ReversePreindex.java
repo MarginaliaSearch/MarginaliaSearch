@@ -1,7 +1,6 @@
 package nu.marginalia.index.construction;
 
 import nu.marginalia.array.LongArray;
-import nu.marginalia.array.algo.SortingContext;
 import nu.marginalia.btree.BTreeWriter;
 import nu.marginalia.index.ReverseIndexParameters;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
@@ -70,7 +69,10 @@ public class ReversePreindex {
         // Write the docs file
         LongArray finalDocs = LongArray.mmapForWriting(outputFileDocs, sizeEstimator.size);
         try (var intermediateDocChannel = documents.createDocumentsFileChannel()) {
-            offsets.transformEachIO(0, offsets.size(), new ReverseIndexBTreeTransformer(finalDocs, 2, ReverseIndexParameters.docsBTreeContext, intermediateDocChannel));
+            offsets.transformEachIO(0, offsets.size(),
+                    new ReverseIndexBTreeTransformer(finalDocs, 2,
+                            ReverseIndexParameters.docsBTreeContext,
+                            intermediateDocChannel));
             intermediateDocChannel.force(false);
         }
 
@@ -92,6 +94,7 @@ public class ReversePreindex {
             }
         });
 
+        finalDocs.force();
         wordsArray.force();
 
     }
