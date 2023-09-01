@@ -109,7 +109,7 @@ public class IndexConstructorMain {
                         heartbeat,
                         IndexJournalReader::singleFile,
                         indexStaging.asPath(),
-                        this::addRank,
+                        this::addRankToIdEncoding,
                         tmpDir,
                         outputFileDocs,
                         outputFileWords);
@@ -135,7 +135,8 @@ public class IndexConstructorMain {
                     (path) -> IndexJournalReader
                             .singleFile(path)
                             .filtering(wordMetaFilter),
-                    indexStaging.asPath(), this::addRank, tmpDir, outputFileDocs, outputFileWords);
+                    indexStaging.asPath(),
+                    this::addRankToIdEncoding, tmpDir, outputFileDocs, outputFileWords);
     }
 
     private static LongPredicate getPriorityIndexWordMetaFilter() {
@@ -171,12 +172,16 @@ public class IndexConstructorMain {
         converter.convert();
     }
 
-    private long addRank(long docId) {
-        float rank = domainRankings.getSortRanking(docId);
-        return UrlIdCodec.addRank(rank, docId);
+    /** Append the domain's ranking to the high bits of a document ID
+     * to ensure they're sorted in order of rank within the index.
+     */
+    private long addRankToIdEncoding(long docId) {
+        return UrlIdCodec.addRank(
+                domainRankings.getSortRanking(docId),
+                docId);
     }
 
-    private class CreateIndexInstructions {
+    private static class CreateIndexInstructions {
 
         public final IndexName name;
         private final MqSingleShotInbox inbox;
