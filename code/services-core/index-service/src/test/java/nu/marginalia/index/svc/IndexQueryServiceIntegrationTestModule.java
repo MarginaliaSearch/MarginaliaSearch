@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.Random;
 import java.util.UUID;
 
@@ -52,9 +53,9 @@ public class IndexQueryServiceIntegrationTestModule extends AbstractModule {
         try {
             var fileStorageServiceMock = Mockito.mock(FileStorageService.class);
 
-            when(fileStorageServiceMock.getStorageByType(FileStorageType.SEARCH_SETS)).thenReturn(new FileStorage(null, null, null, fastDir.toString(), null));
-            when(fileStorageServiceMock.getStorageByType(FileStorageType.INDEX_LIVE)).thenReturn(new FileStorage(null, null, null, fastDir.toString(), null));
-            when(fileStorageServiceMock.getStorageByType(FileStorageType.INDEX_STAGING)).thenReturn(new FileStorage(null, null, null, slowDir.toString(), null));
+            when(fileStorageServiceMock.getStorageByType(FileStorageType.SEARCH_SETS)).thenReturn(new FileStorage(null, null, null, LocalDateTime.now(), fastDir.toString(), null));
+            when(fileStorageServiceMock.getStorageByType(FileStorageType.INDEX_LIVE)).thenReturn(new FileStorage(null, null, null, LocalDateTime.now(), fastDir.toString(), null));
+            when(fileStorageServiceMock.getStorageByType(FileStorageType.INDEX_STAGING)).thenReturn(new FileStorage(null, null, null, LocalDateTime.now(), slowDir.toString(), null));
 
             bind(FileStorageService.class).toInstance(fileStorageServiceMock);
 

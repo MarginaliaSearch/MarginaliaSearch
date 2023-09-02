@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.*;
 
 /** Manages file storage for processes and services
@@ -292,6 +293,7 @@ public class FileStorageService {
                         new FileStorageId(rs.getLong("ID")),
                         base,
                         type,
+                        LocalDateTime.now(),
                         newDir.toString(),
                         description
                 );
@@ -305,7 +307,7 @@ public class FileStorageService {
     public FileStorage getStorageByType(FileStorageType type) throws SQLException {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                     SELECT PATH, DESCRIPTION, ID, BASE_ID
+                     SELECT PATH, DESCRIPTION, ID, BASE_ID, CREATE_DATE
                      FROM FILE_STORAGE_VIEW WHERE TYPE = ?
                      """)) {
             stmt.setString(1, type.name());
@@ -314,11 +316,13 @@ public class FileStorageService {
             long baseId;
             String path;
             String description;
+            LocalDateTime createDateTime;
 
             try (var rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     baseId = rs.getLong("BASE_ID");
                     storageId = rs.getLong("ID");
+                    createDateTime = rs.getTimestamp("CREATE_DATE").toLocalDateTime();
                     path = rs.getString("PATH");
                     description = rs.getString("DESCRIPTION");
                 }
@@ -332,6 +336,7 @@ public class FileStorageService {
                         new FileStorageId(storageId),
                         base,
                         type,
+                        createDateTime,
                         path,
                         description
                 );
@@ -344,7 +349,7 @@ public class FileStorageService {
 
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                     SELECT PATH, TYPE, DESCRIPTION, ID, BASE_ID
+                     SELECT PATH, TYPE, DESCRIPTION, CREATE_DATE, ID, BASE_ID
                      FROM FILE_STORAGE_VIEW WHERE ID = ?
                      """)) {
             stmt.setLong(1, id.id());
@@ -354,6 +359,7 @@ public class FileStorageService {
             String path;
             String description;
             FileStorageType type;
+            LocalDateTime createDateTime;
 
             try (var rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -362,6 +368,7 @@ public class FileStorageService {
                     type = FileStorageType.valueOf(rs.getString("TYPE"));
                     path = rs.getString("PATH");
                     description = rs.getString("DESCRIPTION");
+                    createDateTime = rs.getTimestamp("CREATE_DATE").toLocalDateTime();
                 }
                 else {
                     return null;
@@ -373,6 +380,7 @@ public class FileStorageService {
                         new FileStorageId(storageId),
                         base,
                         type,
+                        createDateTime,
                         path,
                         description
                 );
@@ -394,7 +402,7 @@ public class FileStorageService {
         List<FileStorage> ret = new ArrayList<>();
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                     SELECT PATH, TYPE, DESCRIPTION, ID, BASE_ID
+                     SELECT PATH, TYPE, DESCRIPTION, CREATE_DATE, ID, BASE_ID
                      FROM FILE_STORAGE_VIEW
                      """)) {
 
@@ -402,6 +410,7 @@ public class FileStorageService {
             long baseId;
             String path;
             String description;
+            LocalDateTime createDateTime;
             FileStorageType type;
 
             try (var rs = stmt.executeQuery()) {
@@ -411,13 +420,14 @@ public class FileStorageService {
                     path = rs.getString("PATH");
                     type = FileStorageType.valueOf(rs.getString("TYPE"));
                     description = rs.getString("DESCRIPTION");
-
+                    createDateTime = rs.getTimestamp("CREATE_DATE").toLocalDateTime();
                     var base = getStorageBase(new FileStorageBaseId(baseId));
 
                     ret.add(new FileStorage(
                             new FileStorageId(storageId),
                             base,
                             type,
+                            createDateTime,
                             path,
                             description
                     ));

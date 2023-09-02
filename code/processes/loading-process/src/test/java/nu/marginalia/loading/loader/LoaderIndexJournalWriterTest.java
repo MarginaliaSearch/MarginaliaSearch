@@ -31,7 +31,7 @@ class LoaderIndexJournalWriterTest {
         tempDir = Files.createTempDirectory(getClass().getSimpleName());
         FileStorageService storageService = Mockito.mock(FileStorageService.class);
         Mockito.when(storageService.getStorageByType(FileStorageType.INDEX_STAGING)).
-                thenReturn(new FileStorage(null, null, null, tempDir.toString(),
+                thenReturn(new FileStorage(null, null, null, null, tempDir.toString(),
                         "test"));
         writer = new LoaderIndexJournalWriter(storageService);
     }

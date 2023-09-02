@@ -1,22 +1,22 @@
-<table>
+<table class="table-rh-2">
     {{#each storage}}
     <tr>
         <th>Type</th>
         <th>Name</th>
         <th>Path</th>
-        <th>Permit Temp</th>
     </tr>
     <tr>
         <td>{{base.type}}</td>
         <td>{{base.name}}</td>
         <td>{{base.path}}</td>
-        <td>{{base.permitTemp}}</td>
     </tr>
     <tr>
         <th></th>
         <th>Type</th>
         <th>Path</th>
-        <th>Description</th>
+    <tr>
+        <th>Created</th>
+        <th colspan="2">Description</th>
     </tr>
     {{#each storage}}
     <tr>
@@ -24,8 +24,11 @@
         <a href="/storage/{{storage.id}}">Info</a>
         </td>
         <td>{{storage.type}}</td>
-        <td>{{storage.path}}</td>
-        <td>{{storage.description}}</td>
+        <td>{{relPath}}</td>
+    </tr>
+    <tr>
+        <td title="{{timestampFull}}">{{timestamp}}</td>
+        <td colspan="2">{{storage.description}}</td>
     </tr>
     {{/each}}
     {{/each}}
