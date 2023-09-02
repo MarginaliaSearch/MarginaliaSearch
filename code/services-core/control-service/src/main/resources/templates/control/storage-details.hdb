@@ -25,25 +25,6 @@
       </table>
       {{/with}}
 
-      {{#if storage.files}}
-      <h1>Contents </h1>
-      <table>
-          <tr>
-              <th>File Name</th>
-              <th>Last Mod</th>
-              <th>Size</th>
-          </tr>
-          {{#each storage.files}}
-          <tr>
-              <td>
-                  <a href="/storage/{{storage.self.storage.id}}/file?name={{filename}}">{{filename}}</a>
-              <td>{{mTime}}</td>
-              <td>{{size}}</td>
-          </tr>
-          {{/each}}
-      </table>
-      {{/if}}
-
       <h2>Actions</h2>
       <table>
           <tr>
@@ -110,6 +91,26 @@
           {{/if}}
         {{/with}}
       </table>
+
+    {{#if storage.files}}
+    <h1>Contents </h1>
+    <table>
+        <tr>
+            <th>File Name</th>
+            <th>Last Mod</th>
+            <th>Size</th>
+        </tr>
+        {{#each storage.files}}
+        <tr>
+            <td>
+                <a href="/storage/{{storage.self.storage.id}}/file?name={{filename}}">{{filename}}</a>
+            <td>{{mTime}}</td>
+            <td>{{size}}</td>
+        </tr>
+        {{/each}}
+    </table>
+    {{/if}}
+
   {{#if storage.related}}
   <h2>Related</h2>
   <table>
