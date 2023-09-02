@@ -89,7 +89,11 @@ public class DocumentKeywordExtractor {
             var word = rep.word;
 
             if (!word.isBlank()) {
-                wordsBuilder.add(word, metadata.getMetadataForWord(rep.stemmed));
+                long meta = metadata.getMetadataForWord(rep.stemmed);
+
+                assert meta != 0L : "Missing meta for " + rep.word;
+
+                wordsBuilder.add(word, meta);
             }
         }
     }
@@ -112,14 +116,20 @@ public class DocumentKeywordExtractor {
 
                 String w = word.wordLowerCase();
                 if (matchesWordPattern(w)) {
-                    wordsBuilder.add(w, metadata.getMetadataForWord(word.stemmed()));
+                    long meta = metadata.getMetadataForWord(word.stemmed());
+                    assert meta != 0L : "Missing meta for " + word.word();
+
+                    wordsBuilder.add(w, meta);
                 }
             }
 
             for (var names : keywordExtractor.getProperNames(sent)) {
                 var rep = new WordRep(sent, names);
 
-                wordsBuilder.add(rep.word, metadata.getMetadataForWord(rep.stemmed));
+                long meta = metadata.getMetadataForWord(rep.stemmed);
+                assert meta != 0L : "Missing meta for " + rep.word;
+
+                wordsBuilder.add(rep.word, meta);
             }
         }
     }

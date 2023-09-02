@@ -1,10 +1,14 @@
 package nu.marginalia.tools.experiments;
 
 import com.google.inject.Inject;
+import lombok.SneakyThrows;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
 import nu.marginalia.crawling.model.CrawledDomain;
+import nu.marginalia.keyword.DocumentKeywordExtractor;
 import nu.marginalia.language.sentence.SentenceExtractor;
+import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.tools.Experiment;
 import org.jsoup.Jsoup;
 
@@ -18,6 +22,7 @@ import java.nio.file.Path;
 public class SentenceStatisticsExperiment extends Experiment {
 
     SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
+    DocumentKeywordExtractor documentKeywordExtractor = new DocumentKeywordExtractor(new TermFrequencyDict(WmsaHome.getLanguageModels()));
     Path filename;
     PrintWriter writer;
 
@@ -32,6 +37,7 @@ public class SentenceStatisticsExperiment extends Experiment {
     private void logLine(String message) {
         System.out.printf("\u001b[2K\r%s", message);
     }
+    @SneakyThrows
     @Override
     public boolean process(CrawledDomain domain) {
         if (domain.doc == null) return true;
@@ -46,17 +52,9 @@ public class SentenceStatisticsExperiment extends Experiment {
             parsed.body().filter(new DomPruningFilter(0.5));
 
             var dld = se.extractSentences(parsed);
+            var keywords = documentKeywordExtractor.extractKeywords(dld, new EdgeUrl(doc.url));
 
-
-            int numSentences = dld.sentences.length;
-            if (numSentences == 0) {
-                continue;
-            }
-
-            double avgLength = dld.totalNumWords() / (double) numSentences;
-            if (avgLength < 5 && dld.totalNumWords() > 250) {
-                writer.printf("%s\t%d\t%f\n", doc.url, dld.totalNumWords(), avgLength);
-            }
+            keywords.build();
         }
 
         return true;

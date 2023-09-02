@@ -14,6 +14,7 @@ echo "args = $ARGS"
 JAVA_OPTS="
 -Dcrawl.rootDirRewrite=/crawl:${SAMPLE_DIR}
 -Ddb.overrideJdbc=jdbc:mariadb://localhost:3306/WMSA_prod?rewriteBatchedStatements=true
+-ea
 "
 
 ## Configuration ends

@@ -23,6 +23,10 @@ public class KeywordPositionBitmask {
                 positionMask.merge(word.stemmed(), posBit, this::bitwiseOr);
             }
 
+            for (var span : keywordExtractor.getKeywordsFromSentence(sent)) {
+                positionMask.merge(sent.constructStemmedWordFromSpan(span), posBit, this::bitwiseOr);
+            }
+
             for (var span : keywordExtractor.getProperNames(sent)) {
                 positionMask.merge(sent.constructStemmedWordFromSpan(span), posBit, this::bitwiseOr);
             }
@@ -36,6 +40,10 @@ public class KeywordPositionBitmask {
 
             for (var word : sent) {
                 positionMask.merge(word.stemmed(), posBit, this::bitwiseOr);
+            }
+
+            for (var span : keywordExtractor.getKeywordsFromSentence(sent)) {
+                positionMask.merge(sent.constructStemmedWordFromSpan(span), posBit, this::bitwiseOr);
             }
 
             for (var span : keywordExtractor.getProperNames(sent)) {

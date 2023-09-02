@@ -51,7 +51,7 @@ public class WordsTfIdfCounts implements WordReps, Comparator<WordRep> {
         for (var sent : dld.sentences) {
             var keywords = keywordExtractor.getKeywordsFromSentence(sent);
             for (var span : keywords) {
-                if (highTfIdfInstances.contains(spanToStemmed(sent, span))) {
+                if (highTfIdfInstances.contains(sent.constructStemmedWordFromSpan(span))) {
                     tfIdfHigh.add(new WordRep(sent, span));
                 }
             }
@@ -66,7 +66,7 @@ public class WordsTfIdfCounts implements WordReps, Comparator<WordRep> {
         for (var sent : dld.sentences) {
             var keywords = keywordExtractor.getKeywordsFromSentence(sent);
             for (var span : keywords) {
-                counts.addTo(spanToStemmed(sent, span), 1);
+                counts.addTo(sent.constructStemmedWordFromSpan(span), 1);
             }
         }
 
@@ -75,20 +75,6 @@ public class WordsTfIdfCounts implements WordReps, Comparator<WordRep> {
 
     public long termFrequencyDictValue(WordRep rep) {
         return dict.getTermFreqStemmed(rep.stemmed);
-    }
-
-    private String spanToStemmed(DocumentSentence sentence, WordSpan span) {
-        if (span.size() == 1)
-            return sentence.stemmedWords[span.start];
-
-        StringBuilder builder = new StringBuilder();
-        for (int i = span.start; i < span.end; i++) {
-            if (!builder.isEmpty())
-                builder.append('_');
-            builder.append(sentence.stemmedWords[i]);
-        }
-        return builder.toString();
-
     }
 
     public int getTfIdf(String stemmed) {

@@ -1,10 +1,5 @@
 package nu.marginalia.keyword.model;
 
-
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import nu.marginalia.model.idx.WordMetadata;
 
 import java.io.Serial;
@@ -23,6 +18,16 @@ public final class DocumentKeywords implements Serializable {
     {
         this.keywords = keywords;
         this.metadata = metadata;
+
+        assert keywords.length == metadata.length;
+
+        if (DocumentKeywords.class.desiredAssertionStatus()) {
+            for (int i = 0; i < metadata.length; i++) {
+                if (metadata[i] == 0) {
+                    System.err.println("Bad metadata for keyword " + keywords[i]);
+                }
+            }
+        }
     }
 
     @Override
