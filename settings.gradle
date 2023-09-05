@@ -83,6 +83,7 @@ include 'third-party:count-min-sketch'
 include 'third-party:monkey-patch-opennlp'
 include 'third-party:monkey-patch-gson'
 include 'third-party:commons-codec'
+include 'third-party:parquet-floor'
 
 
 dependencyResolutionManagement {
