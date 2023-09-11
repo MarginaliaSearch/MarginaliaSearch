@@ -62,7 +62,7 @@ public final class ParquetWriter<T> implements Closeable {
         this.writer = new Builder<T>(outputFile)
                 .withType(schema)
                 .withDehydrator(dehydrator)
-                .withCompressionCodec(CompressionCodecName.SNAPPY)
+                .withCompressionCodec(CompressionCodecName.ZSTD)
                 .withWriterVersion(ParquetProperties.WriterVersion.PARQUET_2_0)
                 .build();
     }
