@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 
 public final class ParquetWriter<T> implements Closeable {
 
@@ -108,7 +109,17 @@ public final class ParquetWriter<T> implements Closeable {
     private static class SimpleWriteSupport<T> extends WriteSupport<T> {
         private final MessageType schema;
         private final Dehydrator<T> dehydrator;
-        private final ValueWriter valueWriter = SimpleWriteSupport.this::writeField;
+        private final ValueWriter valueWriter = new ValueWriter() {
+            @Override
+            public void write(String name, Object value) {
+                SimpleWriteSupport.this.writeField(name, value);
+            }
+
+            @Override
+            public void writeList(String name, List<?> value) {
+                SimpleWriteSupport.this.writeList(name, value);
+            }
+        };
 
         private RecordConsumer recordConsumer;
 
@@ -144,23 +155,39 @@ public final class ParquetWriter<T> implements Closeable {
             PrimitiveType type = schema.getType(fieldIndex).asPrimitiveType();
             recordConsumer.startField(name, fieldIndex);
 
-            switch (type.getPrimitiveTypeName()) {
-            case INT32: recordConsumer.addInteger((int)value); break;
-            case INT64: recordConsumer.addLong((long)value); break;
-            case DOUBLE: recordConsumer.addDouble((double)value); break;
-            case BOOLEAN: recordConsumer.addBoolean((boolean)value); break;
-            case FLOAT: recordConsumer.addFloat((float)value); break;
-            case BINARY:
-                if (type.getLogicalTypeAnnotation() == LogicalTypeAnnotation.stringType()) {
-                    recordConsumer.addBinary(Binary.fromString((String)value));
-                } else {
-                    throw new UnsupportedOperationException("We don't support writing " + type.getLogicalTypeAnnotation());
-                }
-                break;
-            default:
-                throw new UnsupportedOperationException("We don't support writing " + type.getPrimitiveTypeName());
+            writeValue(type, value);
+
+            recordConsumer.endField(name, fieldIndex);
+        }
+
+        private void writeList(String name, List<?> values) {
+            int fieldIndex = schema.getFieldIndex(name);
+            PrimitiveType type = schema.getType(fieldIndex).asPrimitiveType();
+            recordConsumer.startField(name, fieldIndex);
+            for (var value : values) {
+                writeValue(type, value);
             }
             recordConsumer.endField(name, fieldIndex);
+        }
+
+        void writeValue(PrimitiveType type, Object value) {
+            switch (type.getPrimitiveTypeName()) {
+                case INT32: recordConsumer.addInteger((int)value); break;
+                case INT64: recordConsumer.addLong((long)value); break;
+                case DOUBLE: recordConsumer.addDouble((double)value); break;
+                case BOOLEAN: recordConsumer.addBoolean((boolean)value); break;
+                case FLOAT: recordConsumer.addFloat((float)value); break;
+                case BINARY:
+                    if (type.getLogicalTypeAnnotation() == LogicalTypeAnnotation.stringType()) {
+                        recordConsumer.addBinary(Binary.fromString((String)value));
+                    } else {
+                        throw new UnsupportedOperationException("We don't support writing logical annotation type " + type.getLogicalTypeAnnotation());
+                    }
+                    break;
+                default:
+                    throw new UnsupportedOperationException("We don't support writing " + type.getPrimitiveTypeName());
+            }
+
         }
     }
 }

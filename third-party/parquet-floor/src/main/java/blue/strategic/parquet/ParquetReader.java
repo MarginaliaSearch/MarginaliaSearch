@@ -20,11 +20,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.Spliterator;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -195,8 +191,11 @@ public final class ParquetReader<U, S> implements Spliterator<S>, Closeable {
 
             U record = hydrator.start();
             for (ColumnReader columnReader: this.currentRowGroupColumnReaders) {
-                record = hydrator.add(record, columnReader.getDescriptor().getPath()[0], readValue(columnReader));
-                columnReader.consume();
+                do {
+                    record = hydrator.add(record, columnReader.getDescriptor().getPath()[0], readValue(columnReader));
+                    columnReader.consume();
+                } while (columnReader.getCurrentRepetitionLevel() != 0);
+
                 if (columnReader.getCurrentRepetitionLevel() != 0) {
                     throw new IllegalStateException("Unexpected repetition");
                 }
