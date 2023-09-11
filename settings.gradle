@@ -66,6 +66,7 @@ include 'code:processes:test-data'
 include 'code:process-models:converting-model'
 include 'code:process-models:crawling-model'
 include 'code:process-models:work-log'
+include 'code:process-models:processed-data'
 
 include 'code:tools:term-frequency-extractor'
 include 'code:tools:crawl-job-extractor'

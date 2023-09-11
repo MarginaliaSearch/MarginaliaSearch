@@ -1,0 +1,37 @@
+plugins {
+    id 'java'
+    id "io.freefair.lombok" version "8.2.2"
+
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(20))
+    }
+}
+dependencies {
+    implementation libs.lombok
+    annotationProcessor libs.lombok
+    implementation libs.bundles.slf4j
+
+    implementation project(':third-party:parquet-floor')
+
+    implementation libs.notnull
+    implementation libs.trove
+    implementation libs.bundles.parquet
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+}
+
+test {
+    useJUnitPlatform()
+}
+
+task fastTests(type: Test) {
+    useJUnitPlatform {
+        excludeTags "slow"
+    }
+}
