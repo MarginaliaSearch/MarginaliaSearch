@@ -1,5 +1,7 @@
 package blue.strategic.parquet;
 
+import gnu.trove.list.TIntList;
+import gnu.trove.list.TLongList;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.parquet.column.ParquetProperties;
 import org.apache.parquet.hadoop.api.WriteSupport;
@@ -19,6 +21,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+
+import static org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.INT32;
+import static org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.INT64;
 
 public final class ParquetWriter<T> implements Closeable {
 
@@ -117,6 +122,28 @@ public final class ParquetWriter<T> implements Closeable {
 
             @Override
             public void writeList(String name, List<?> value) {
+                if (value.isEmpty()) {
+                    return;
+                }
+
+                SimpleWriteSupport.this.writeList(name, value);
+            }
+
+            @Override
+            public void writeList(String name, TLongList value) {
+                if (value.isEmpty()) {
+                    return;
+                }
+
+                SimpleWriteSupport.this.writeList(name, value);
+            }
+
+            @Override
+            public void writeList(String name, TIntList value) {
+                if (value.isEmpty()) {
+                    return;
+                }
+
                 SimpleWriteSupport.this.writeList(name, value);
             }
         };
@@ -168,6 +195,40 @@ public final class ParquetWriter<T> implements Closeable {
                 writeValue(type, value);
             }
             recordConsumer.endField(name, fieldIndex);
+        }
+
+        private void writeList(String name, TLongList values) {
+            int fieldIndex = schema.getFieldIndex(name);
+            PrimitiveType type = schema.getType(fieldIndex).asPrimitiveType();
+            recordConsumer.startField(name, fieldIndex);
+
+            for (int i = 0; i < values.size(); i++) {
+                writeValue(type, values.get(i));
+            }
+
+            recordConsumer.endField(name, fieldIndex);
+        }
+
+        private void writeList(String name, TIntList values) {
+            int fieldIndex = schema.getFieldIndex(name);
+            PrimitiveType type = schema.getType(fieldIndex).asPrimitiveType();
+            recordConsumer.startField(name, fieldIndex);
+
+            for (int i = 0; i < values.size(); i++) {
+                writeValue(type, values.get(i));
+            }
+
+            recordConsumer.endField(name, fieldIndex);
+        }
+
+        void writeValue(PrimitiveType type, long value) {
+            assert type.getPrimitiveTypeName() == INT64;
+            recordConsumer.addLong(value);
+        }
+
+        void writeValue(PrimitiveType type, int value) {
+            assert type.getPrimitiveTypeName() == INT32;
+            recordConsumer.addInteger(value);
         }
 
         void writeValue(PrimitiveType type, Object value) {

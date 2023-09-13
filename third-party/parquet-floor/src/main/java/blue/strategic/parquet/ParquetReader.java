@@ -192,7 +192,10 @@ public final class ParquetReader<U, S> implements Spliterator<S>, Closeable {
             U record = hydrator.start();
             for (ColumnReader columnReader: this.currentRowGroupColumnReaders) {
                 do {
-                    record = hydrator.add(record, columnReader.getDescriptor().getPath()[0], readValue(columnReader));
+                    var value = readValue(columnReader);
+                    if (value != null) {
+                        record = hydrator.add(record, columnReader.getDescriptor().getPath()[0], value);
+                    }
                     columnReader.consume();
                 } while (columnReader.getCurrentRepetitionLevel() != 0);
 
