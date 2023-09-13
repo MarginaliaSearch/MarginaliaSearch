@@ -44,6 +44,8 @@ dependencies {
     implementation project(':code:libraries:language-processing')
 
     implementation project(':code:process-models:converting-model')
+    implementation project(':code:process-models:processed-data')
+    implementation project(':code:process-models:work-log')
     implementation project(':code:process-models:crawling-model')
 
     implementation project(':code:features-convert:adblock')

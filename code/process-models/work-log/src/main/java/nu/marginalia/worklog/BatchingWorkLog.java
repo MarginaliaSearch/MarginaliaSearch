@@ -23,6 +23,10 @@ public interface BatchingWorkLog extends AutoCloseable {
      * */
     boolean isItemInCurrentBatch(String id);
 
+    default boolean isItemProcessed(String id) {
+        return isItemCommitted(id) || isItemInCurrentBatch(id);
+    }
+
     /** Log additional item to the current batch */
     void logItem(String id) throws IOException;
 
@@ -32,4 +36,9 @@ public interface BatchingWorkLog extends AutoCloseable {
     void logFinishedBatch() throws IOException;
 
     int getBatchNumber();
+
+    /** Returns false if logItem has been invoked since last logFinishedBatch */
+    boolean isCurrentBatchEmpty();
+
+    int size();
 }

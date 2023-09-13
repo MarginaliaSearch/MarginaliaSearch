@@ -6,15 +6,24 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class BatchingWorkLogImpl implements BatchingWorkLog {
     private int batchNumber = 0;
-    private final Set<String> currentBatchItems = new HashSet<>(1000);
-    private final Set<String> commitedItems = new HashSet<>(10_000);
+
+    private final Set<String> currentBatchItems = ConcurrentHashMap.newKeySet(10_000);
+    private final Set<String> committedItems = ConcurrentHashMap.newKeySet(10_000);
     private final OutputStream writer;
 
+    /** Create or open a work log for appending new entries.
+     * <p></p>
+     * Opening a work log this way will cause it to be modified
+     * with a comment annotating when it was opened, and possibly
+     * a crash marker to indicate that data is to be discarded.
+     * <p></p>
+     * Use BatchingWorkLogInspector for read-only access!
+     */
     public BatchingWorkLogImpl(Path file) throws IOException  {
         if (Files.exists(file)) {
             try (var linesStream = Files.lines(file)) {
@@ -24,7 +33,11 @@ public class BatchingWorkLogImpl implements BatchingWorkLog {
             }
 
             writer = Files.newOutputStream(file, StandardOpenOption.APPEND);
+
+            // This is helpful for debugging, and will also ensure any partially written line
+            // gets a newline at the end
             writeLogEntry(new CommentLine("Log resumed on " + LocalDateTime.now()));
+
             if (getCurrentBatchSize() > 0) {
                 writeLogEntry(new CrashMarker());
             }
@@ -38,8 +51,6 @@ public class BatchingWorkLogImpl implements BatchingWorkLog {
             writeLogEntry(new CommentLine(" " + CrashMarker.MARKER + "\tdiscard contents from the current batch and start over, written after a crash"));
             writeLogEntry(new CommentLine("Upon a crash, items that have re-process until their batch is finalized"));
         }
-
-
     }
 
     void writeLogEntry(WorkLogItem item) throws IOException {
@@ -54,7 +65,7 @@ public class BatchingWorkLogImpl implements BatchingWorkLog {
 
     @Override
     public boolean isItemCommitted(String id) {
-        return commitedItems.contains(id);
+        return committedItems.contains(id);
     }
 
     @Override
@@ -76,7 +87,7 @@ public class BatchingWorkLogImpl implements BatchingWorkLog {
         batchNumber++;
 
         // Transfer all items from the current batch to the committed items' batch
-        commitedItems.addAll(currentBatchItems);
+        committedItems.addAll(currentBatchItems);
         currentBatchItems.clear();
     }
 
@@ -99,8 +110,17 @@ public class BatchingWorkLogImpl implements BatchingWorkLog {
         return batchNumber;
     }
 
+    @Override
+    public boolean isCurrentBatchEmpty() {
+        return currentBatchItems.isEmpty();
+    }
+
     public int getCurrentBatchSize() {
         return currentBatchItems.size();
+    }
+
+    public int size() {
+        return currentBatchItems.size() + committedItems.size();
     }
 }
 

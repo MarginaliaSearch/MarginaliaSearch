@@ -31,11 +31,19 @@ class BatchingWorkLogImplTest {
             wl.logItem("1");
             wl.logItem("2");
             wl.logItem("3");
+            assertEquals(wl.getBatchNumber(), BatchingWorkLogInspector.getValidBatches(fileName));
             wl.logFinishedBatch();
+
+            assertEquals(wl.getBatchNumber(), BatchingWorkLogInspector.getValidBatches(fileName));
             wl.logItem("4");
             wl.logItem("5");
+
+            assertEquals(wl.getBatchNumber(), BatchingWorkLogInspector.getValidBatches(fileName));
+
             wl.logFinishedBatch();
             wl.logItem("6");
+
+            assertEquals(wl.getBatchNumber(), BatchingWorkLogInspector.getValidBatches(fileName));
         }
 
         try (var wl = new BatchingWorkLogImpl(fileName)) {
@@ -56,7 +64,10 @@ class BatchingWorkLogImplTest {
             assertTrue(wl.isItemCommitted("5"));
             assertFalse(wl.isItemCommitted("6"));
             assertTrue(wl.isItemCommitted("7"));
+
+            assertEquals(wl.getBatchNumber(), BatchingWorkLogInspector.getValidBatches(fileName));
         }
+
 
         Files.readAllLines(fileName).forEach(System.out::println);
     }

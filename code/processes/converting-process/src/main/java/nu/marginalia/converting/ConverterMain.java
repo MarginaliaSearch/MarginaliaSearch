@@ -7,6 +7,7 @@ import com.google.inject.Injector;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.converting.sideload.SideloadSourceFactory;
+import nu.marginalia.converting.writer.ConverterWriter;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
@@ -17,6 +18,9 @@ import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.service.module.DatabaseModule;
+import nu.marginalia.worklog.BatchingWorkLog;
+import nu.marginalia.worklog.BatchingWorkLogImpl;
+import org.checkerframework.checker.units.qual.C;
 import plan.CrawlPlan;
 import nu.marginalia.converting.compiler.InstructionsCompiler;
 import nu.marginalia.converting.processor.DomainProcessor;
@@ -108,7 +112,10 @@ public class ConverterMain {
 
         final int maxPoolSize = Runtime.getRuntime().availableProcessors();
 
-        try (WorkLog processLog = plan.createProcessWorkLog();
+
+
+        try (BatchingWorkLog batchingWorkLog = new BatchingWorkLogImpl(plan.process.getLogFile());
+             ConverterWriter converterWriter = new ConverterWriter(batchingWorkLog, plan.process.getDir());
              ConversionLog log = new ConversionLog(plan.process.getDir())) {
             var instructionWriter = new InstructionWriterFactory(log, plan.process.getDir(), gson);
 
@@ -118,30 +125,17 @@ public class ConverterMain {
             AtomicInteger processedDomains = new AtomicInteger(0);
 
             // Advance the progress bar to the current position if this is a resumption
-            processedDomains.set(processLog.countFinishedJobs());
+            processedDomains.set(batchingWorkLog.size());
             heartbeat.setProgress(processedDomains.get() / (double) totalDomains);
 
-            for (var domain : plan.crawlDataIterable(id -> !processLog.isJobFinished(id)))
+            for (var domain : plan.crawlDataIterable(id -> !batchingWorkLog.isItemProcessed(id)))
             {
                 pool.submit(() -> {
-                    try {
-                        ProcessedDomain processed = processor.process(domain);
+                    ProcessedDomain processed = processor.process(domain);
 
-                        final String where;
-                        final int size;
+                    converterWriter.accept(processed);
 
-                        try (var writer = instructionWriter.createInstructionsForDomainWriter(processed.id)) {
-                            compiler.compile(processed, writer::accept);
-                            where = writer.getFileName();
-                            size = writer.getSize();
-                        }
-
-                        processLog.setJobToFinished(processed.id, where, size);
-                        heartbeat.setProgress(processedDomains.incrementAndGet() / (double) totalDomains);
-                    }
-                    catch (IOException ex) {
-                        logger.warn("IO exception in converter", ex);
-                    }
+                    heartbeat.setProgress(processedDomains.incrementAndGet() / (double) totalDomains);
                 });
             }
 
