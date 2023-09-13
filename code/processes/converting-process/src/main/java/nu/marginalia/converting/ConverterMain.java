@@ -20,14 +20,11 @@ import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.worklog.BatchingWorkLog;
 import nu.marginalia.worklog.BatchingWorkLogImpl;
-import org.checkerframework.checker.units.qual.C;
 import plan.CrawlPlan;
-import nu.marginalia.converting.compiler.InstructionsCompiler;
 import nu.marginalia.converting.processor.DomainProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.Optional;
@@ -40,7 +37,6 @@ import static nu.marginalia.mqapi.ProcessInboxNames.CONVERTER_INBOX;
 public class ConverterMain {
     private static final Logger logger = LoggerFactory.getLogger(ConverterMain.class);
     private final DomainProcessor processor;
-    private final InstructionsCompiler compiler;
     private final Gson gson;
     private final ProcessHeartbeat heartbeat;
     private final MessageQueueFactory messageQueueFactory;
@@ -69,7 +65,6 @@ public class ConverterMain {
     @Inject
     public ConverterMain(
             DomainProcessor processor,
-            InstructionsCompiler compiler,
             Gson gson,
             ProcessHeartbeatImpl heartbeat,
             MessageQueueFactory messageQueueFactory,
@@ -78,7 +73,6 @@ public class ConverterMain {
             )
     {
         this.processor = processor;
-        this.compiler = compiler;
         this.gson = gson;
         this.heartbeat = heartbeat;
         this.messageQueueFactory = messageQueueFactory;
@@ -91,21 +85,7 @@ public class ConverterMain {
     public void convert(SideloadSource sideloadSource, Path writeDir) throws Exception {
         int maxPoolSize = 16;
 
-        try (WorkLog workLog = new WorkLog(writeDir.resolve("processor.log"));
-             ConversionLog conversionLog = new ConversionLog(writeDir)) {
-            var instructionWriter = new InstructionWriterFactory(conversionLog, writeDir, gson);
-
-            final String where;
-            final int size;
-
-            try (var writer = instructionWriter.createInstructionsForDomainWriter(sideloadSource.getId())) {
-                compiler.compileStreaming(sideloadSource, writer::accept);
-                where = writer.getFileName();
-                size = writer.getSize();
-            }
-
-            workLog.setJobToFinished(sideloadSource.getId(), where, size);
-        }
+        // FIXME
     }
 
     public void convert(CrawlPlan plan) throws Exception {
@@ -115,10 +95,8 @@ public class ConverterMain {
 
 
         try (BatchingWorkLog batchingWorkLog = new BatchingWorkLogImpl(plan.process.getLogFile());
-             ConverterWriter converterWriter = new ConverterWriter(batchingWorkLog, plan.process.getDir());
-             ConversionLog log = new ConversionLog(plan.process.getDir())) {
-            var instructionWriter = new InstructionWriterFactory(log, plan.process.getDir(), gson);
-
+             ConverterWriter converterWriter = new ConverterWriter(batchingWorkLog, plan.process.getDir()))
+        {
             var pool = new DumbThreadPool(maxPoolSize, 2);
 
             int totalDomains = plan.countCrawledDomains();
@@ -132,9 +110,7 @@ public class ConverterMain {
             {
                 pool.submit(() -> {
                     ProcessedDomain processed = processor.process(domain);
-
                     converterWriter.accept(processed);
-
                     heartbeat.setProgress(processedDomains.incrementAndGet() / (double) totalDomains);
                 });
             }
