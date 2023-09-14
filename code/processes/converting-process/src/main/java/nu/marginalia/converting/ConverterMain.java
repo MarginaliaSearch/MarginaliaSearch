@@ -84,9 +84,14 @@ public class ConverterMain {
         heartbeat.start();
     }
 
-    public void convert(SideloadSource sideloadSource, Path writeDir) throws IOException {
-        try (var writer = new ConverterBatchWriter(writeDir, 0)) {
+    public void convert(SideloadSource sideloadSource, Path writeDir) throws Exception {
+        try (var writer = new ConverterBatchWriter(writeDir, 0);
+             BatchingWorkLog batchingWorkLog = new BatchingWorkLogImpl(writeDir.resolve("processor.log"))
+        ) {
             writer.write(sideloadSource);
+
+            // We write an empty log with just a finish marker for the sideloading action
+            batchingWorkLog.logFinishedBatch();
         }
     }
 
