@@ -63,7 +63,6 @@ include 'code:processes:loading-process'
 include 'code:processes:index-constructor-process'
 include 'code:processes:test-data'
 
-include 'code:process-models:converting-model'
 include 'code:process-models:crawling-model'
 include 'code:process-models:work-log'
 include 'code:process-models:processed-data'

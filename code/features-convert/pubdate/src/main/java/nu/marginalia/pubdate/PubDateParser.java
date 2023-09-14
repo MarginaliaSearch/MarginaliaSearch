@@ -1,6 +1,6 @@
 package nu.marginalia.pubdate;
 
-import nu.marginalia.converting.model.HtmlStandard;
+import nu.marginalia.model.html.HtmlStandard;
 import nu.marginalia.model.crawl.PubDate;
 
 import java.time.DateTimeException;

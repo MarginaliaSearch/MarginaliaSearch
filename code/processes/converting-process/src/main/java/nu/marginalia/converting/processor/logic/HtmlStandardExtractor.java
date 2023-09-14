@@ -1,7 +1,7 @@
 package nu.marginalia.converting.processor.logic;
 
 import com.google.common.base.Strings;
-import nu.marginalia.converting.model.HtmlStandard;
+import nu.marginalia.model.html.HtmlStandard;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.DocumentType;
 import org.slf4j.Logger;

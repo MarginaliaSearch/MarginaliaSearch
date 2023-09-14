@@ -2,14 +2,13 @@ package nu.marginalia.converting.processor.logic;
 
 import crawlercommons.utils.Strings;
 import nu.marginalia.crawling.model.CrawledDocument;
-import nu.marginalia.converting.model.HtmlStandard;
+import nu.marginalia.model.html.HtmlStandard;
 import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.model.crawl.HtmlFeature;
 import org.jetbrains.annotations.NotNull;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
-import org.jsoup.nodes.TextNode;
 import org.jsoup.select.NodeVisitor;
 
 import java.util.Set;

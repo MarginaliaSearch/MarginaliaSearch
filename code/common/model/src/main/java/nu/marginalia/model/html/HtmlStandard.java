@@ -1,6 +1,6 @@
-package nu.marginalia.converting.model;
+package nu.marginalia.model.html;
 
-
+// This class really doesn't belong anywhere, but will squat here for now
 public enum HtmlStandard {
     PLAIN(0, 1),
     UNKNOWN(0, 1),

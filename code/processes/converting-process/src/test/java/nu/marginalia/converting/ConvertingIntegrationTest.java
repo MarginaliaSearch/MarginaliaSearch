@@ -3,7 +3,7 @@ package nu.marginalia.converting;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import nu.marginalia.converting.model.HtmlStandard;
+import nu.marginalia.model.html.HtmlStandard;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.processor.DomainProcessor;
 import nu.marginalia.crawling.io.SerializableCrawlDataStream;

@@ -10,6 +10,7 @@ import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.crawl.UrlIndexingState;
+import nu.marginalia.model.html.HtmlStandard;
 import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.idx.WordFlags;

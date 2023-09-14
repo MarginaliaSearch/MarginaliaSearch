@@ -1,10 +1,9 @@
 package nu.marginalia.converting.processor.plugin;
 
 import nu.marginalia.crawling.model.CrawledDocument;
-import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.converting.language.LanguageFilter;
 import nu.marginalia.language.model.DocumentLanguageData;
-import nu.marginalia.converting.model.HtmlStandard;
+import nu.marginalia.model.html.HtmlStandard;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.converting.model.DisqualifiedException;

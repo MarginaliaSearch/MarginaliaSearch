@@ -2,7 +2,7 @@ package nu.marginalia.pubdate;
 
 import nu.marginalia.WmsaHome;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.converting.model.HtmlStandard;
+import nu.marginalia.model.html.HtmlStandard;
 import nu.marginalia.pubdate.heuristic.PubDateHeuristicDOMParsingPass2;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Test;

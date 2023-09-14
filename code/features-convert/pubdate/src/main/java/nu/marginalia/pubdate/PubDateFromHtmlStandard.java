@@ -1,6 +1,6 @@
 package nu.marginalia.pubdate;
 
-import nu.marginalia.converting.model.HtmlStandard;
+import nu.marginalia.model.html.HtmlStandard;
 
 public class PubDateFromHtmlStandard {
     /** Used to bias pub date heuristics */

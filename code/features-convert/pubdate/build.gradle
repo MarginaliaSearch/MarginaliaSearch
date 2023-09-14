@@ -15,7 +15,6 @@ java {
 
 dependencies {
     implementation project(':code:common:model')
-    implementation project(':code:process-models:converting-model')
 
     implementation libs.lombok
     annotationProcessor libs.lombok

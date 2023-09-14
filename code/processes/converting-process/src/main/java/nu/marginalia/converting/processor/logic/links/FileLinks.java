@@ -4,7 +4,6 @@ import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import org.jsoup.nodes.Document;
 
-import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 
