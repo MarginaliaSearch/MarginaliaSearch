@@ -9,7 +9,6 @@ import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.linkdb.LinkdbWriter;
 import nu.marginalia.loading.documents.DocumentLoaderService;
 import nu.marginalia.loading.documents.KeywordLoaderService;
-import nu.marginalia.loading.documents.LoaderIndexJournalWriter;
 import nu.marginalia.loading.domains.DomainIdRegistry;
 import nu.marginalia.loading.domains.DomainLoaderService;
 import nu.marginalia.loading.links.DomainLinksLoaderService;
@@ -26,8 +25,11 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static nu.marginalia.mqapi.ProcessInboxNames.LOADER_INBOX;
@@ -106,12 +108,20 @@ public class LoaderMain {
                         validBatchCount);
 
         try {
-            linksService
-                    .loadLinks(domainIdRegistry, inputDataDir, validBatchCount);
-            keywordLoaderService
-                    .loadKeywords(domainIdRegistry, inputDataDir, validBatchCount);
-            documentLoaderService
-                    .loadDocuments(domainIdRegistry, inputDataDir, validBatchCount);
+            var results = ForkJoinPool.commonPool()
+                    .invokeAll(
+                        List.of(
+                            () -> linksService.loadLinks(domainIdRegistry, heartbeat, inputDataDir, validBatchCount),
+                            () -> keywordLoaderService.loadKeywords(domainIdRegistry, heartbeat, inputDataDir, validBatchCount),
+                            () -> documentLoaderService.loadDocuments(domainIdRegistry, heartbeat, inputDataDir, validBatchCount)
+                        )
+            );
+
+            for (var result : results) {
+                if (result.state() == Future.State.FAILED) {
+                    throw result.exceptionNow();
+                }
+            }
 
             instructions.ok();
         }
@@ -124,7 +134,6 @@ public class LoaderMain {
             linkdbWriter.close();
             heartbeat.shutDown();
         }
-
 
         System.exit(0);
     }

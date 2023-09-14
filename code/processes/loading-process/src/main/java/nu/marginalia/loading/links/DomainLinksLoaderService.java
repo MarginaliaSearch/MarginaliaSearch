@@ -7,6 +7,7 @@ import nu.marginalia.io.processed.DomainLinkRecordParquetFileReader;
 import nu.marginalia.io.processed.ProcessedDataFileNames;
 import nu.marginalia.loading.domains.DomainIdRegistry;
 import nu.marginalia.model.processed.DomainLinkRecord;
+import nu.marginalia.process.control.ProcessHeartbeat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,14 +28,29 @@ public class DomainLinksLoaderService {
         this.dataSource = dataSource;
     }
 
-    public void loadLinks(DomainIdRegistry domainIdRegistry, Path processedDataPathBase, int untilBatch) throws IOException, SQLException {
+    public boolean loadLinks(DomainIdRegistry domainIdRegistry,
+                             ProcessHeartbeat heartbeat,
+                             Path processedDataPathBase,
+                             int untilBatch) throws IOException, SQLException {
 
         dropLinkData();
 
-        var linkFiles = ProcessedDataFileNames.listDomainLinkFiles(processedDataPathBase, untilBatch);
-        for (var file : linkFiles) {
-            loadLinksFromFile(domainIdRegistry, file);
+        try (var task = heartbeat.createAdHocTaskHeartbeat("LINKS")) {
+            var linkFiles = ProcessedDataFileNames.listDomainLinkFiles(processedDataPathBase, untilBatch);
+
+            int processed = 0;
+
+            for (var file : linkFiles) {
+                task.progress("LOAD", processed++, linkFiles.size());
+
+                loadLinksFromFile(domainIdRegistry, file);
+            }
+
+            task.progress("LOAD", processed, linkFiles.size());
         }
+
+        logger.info("Finished");
+        return true;
     }
 
     private void dropLinkData() throws SQLException {

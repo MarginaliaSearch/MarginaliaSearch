@@ -3,6 +3,8 @@ package nu.marginalia.converting.writer;
 import lombok.SneakyThrows;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.worklog.BatchingWorkLog;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.time.Duration;
@@ -14,19 +16,22 @@ import java.util.concurrent.TimeUnit;
 
 public class ConverterWriter implements AutoCloseable {
 
+    private static final Logger logger = LoggerFactory.getLogger(ConverterWriter.class);
+
     private final BatchingWorkLog workLog;
     private final Path basePath;
 
-    private final Duration switchInterval =
-            Duration.of(10, ChronoUnit.MINUTES);
-    private final ArrayBlockingQueue<ProcessedDomain> domainData =
-            new ArrayBlockingQueue<>(4);
+    private final Duration switchInterval
+            = Duration.of(10, ChronoUnit.MINUTES);
+    private final ArrayBlockingQueue<ProcessedDomain> domainData
+            = new ArrayBlockingQueue<>(4);
 
     private final Thread workerThread;
 
-    ConverterBatchWriter writer;
+    private ConverterBatchWriter currentWriter;
 
     volatile boolean running = true;
+
     public ConverterWriter(BatchingWorkLog workLog, Path basePath) {
         this.workLog = workLog;
         this.basePath = basePath;
@@ -44,20 +49,27 @@ public class ConverterWriter implements AutoCloseable {
     private void writerThread() {
         IntervalAction switcher = new IntervalAction(this::switchBatch, switchInterval);
 
-        writer = new ConverterBatchWriter(basePath, workLog.getBatchNumber());
+        currentWriter = new ConverterBatchWriter(basePath, workLog.getBatchNumber());
 
         while (running || !domainData.isEmpty()) {
-            var data = domainData.poll(10, TimeUnit.SECONDS);
+            // poll with a timeout so we have an
+            // opportunity to check the running condition
+            // ... we could interrupt the thread as well, but
+            // as we enter third party code it's difficult to guarantee it will deal
+            // well with being interrupted
+            var data = domainData.poll(1, TimeUnit.SECONDS);
 
             if (data == null)
                 continue;
 
             String id = data.id;
 
-            if (workLog.isItemCommitted(id) || workLog.isItemInCurrentBatch(id))
+            if (workLog.isItemCommitted(id) || workLog.isItemInCurrentBatch(id)) {
+                logger.warn("Skipping already logged item {}", id);
                 continue;
+            }
 
-            writer.write(data);
+            currentWriter.write(data);
 
             workLog.logItem(id);
 
@@ -72,10 +84,12 @@ public class ConverterWriter implements AutoCloseable {
             return false;
         }
 
+
         // order matters here
-        writer.close();
+        currentWriter.close();
         workLog.logFinishedBatch();
-        writer = new ConverterBatchWriter(basePath, workLog.getBatchNumber());
+        logger.info("Switching to batch {}", workLog.getBatchNumber());
+        currentWriter = new ConverterBatchWriter(basePath, workLog.getBatchNumber());
 
         return true;
     }
@@ -86,7 +100,7 @@ public class ConverterWriter implements AutoCloseable {
         workerThread.join();
 
         // order matters here
-        writer.close();
+        currentWriter.close();
         workLog.logFinishedBatch();
     }
 }
@@ -105,17 +119,17 @@ class IntervalAction {
     /** Execute the provided action if enough time has passed
      * since the last successful invocation */
     public void tick() {
+        var now = Instant.now();
         if (nextActionInstant == null) {
-            nextActionInstant = Instant.now().plus(interval);
+            nextActionInstant = now.plus(interval);
             return;
         }
 
-        if (Instant.now().isBefore(nextActionInstant))
-            return;
-
         try {
-            if (action.call()) {
-                nextActionInstant = Instant.now().plus(interval);
+            if (now.isAfter(nextActionInstant)
+                    && action.call())
+            {
+                nextActionInstant = now.plus(interval);
             }
         }
         catch (Exception ex) {

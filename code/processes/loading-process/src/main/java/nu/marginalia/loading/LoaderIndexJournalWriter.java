@@ -1,4 +1,4 @@
-package nu.marginalia.loading.documents;
+package nu.marginalia.loading;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

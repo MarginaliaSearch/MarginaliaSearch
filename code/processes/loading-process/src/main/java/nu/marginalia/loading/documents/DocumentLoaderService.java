@@ -11,6 +11,9 @@ import nu.marginalia.loading.domains.DomainIdRegistry;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.processed.DocumentRecordMetadataProjection;
+import nu.marginalia.process.control.ProcessHeartbeat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -20,6 +23,8 @@ import java.util.List;
 
 @Singleton
 public class DocumentLoaderService {
+    private static final Logger logger = LoggerFactory.getLogger(DocumentLoaderService.class);
+
     private final LinkdbWriter linkdbWriter;
 
     @Inject
@@ -27,15 +32,30 @@ public class DocumentLoaderService {
         this.linkdbWriter = linkdbWriter;
     }
 
-    public void loadDocuments(DomainIdRegistry domainIdRegistry,
+    public boolean loadDocuments(
+                             DomainIdRegistry domainIdRegistry,
+                             ProcessHeartbeat processHeartbeat,
                              Path processedDataPathBase,
                              int untilBatch)
             throws IOException, SQLException
     {
         var documentFiles = ProcessedDataFileNames.listDocumentFiles(processedDataPathBase, untilBatch);
-        for (var file : documentFiles) {
-            loadDocumentsFromFile(domainIdRegistry, file);
+
+        try (var taskHeartbeat = processHeartbeat.createAdHocTaskHeartbeat("DOCUMENTS")) {
+
+            int processed = 0;
+
+            for (var file : documentFiles) {
+                taskHeartbeat.progress("LOAD", processed++, documentFiles.size());
+
+                loadDocumentsFromFile(domainIdRegistry, file);
+            }
+            taskHeartbeat.progress("LOAD", processed, documentFiles.size());
         }
+
+        logger.info("Finished");
+
+        return true;
     }
 
     private void loadDocumentsFromFile(DomainIdRegistry domainIdRegistry, Path file)
@@ -45,6 +65,8 @@ public class DocumentLoaderService {
              LinkdbLoader loader = new LinkdbLoader(domainIdRegistry)
         )
         {
+            logger.info("Loading document meta from {}", file);
+
             stream.forEach(loader::accept);
         }
     }

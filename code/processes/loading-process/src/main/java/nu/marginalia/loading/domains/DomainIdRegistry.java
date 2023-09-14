@@ -1,7 +1,5 @@
 package nu.marginalia.loading.domains;
 
-import nu.marginalia.model.EdgeDomain;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,15 +16,6 @@ public class DomainIdRegistry {
         }
 
         return id;
-    }
-
-    public int getDomainId(EdgeDomain domainName) {
-        return getDomainId(domainName.toString());
-    }
-
-
-    public boolean isKnown(String domainName) {
-        return domainIds.containsKey(domainName);
     }
 
     void add(String domainName, int id) {

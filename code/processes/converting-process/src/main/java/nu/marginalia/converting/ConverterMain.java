@@ -92,8 +92,6 @@ public class ConverterMain {
 
         final int maxPoolSize = Runtime.getRuntime().availableProcessors();
 
-
-
         try (BatchingWorkLog batchingWorkLog = new BatchingWorkLogImpl(plan.process.getLogFile());
              ConverterWriter converterWriter = new ConverterWriter(batchingWorkLog, plan.process.getDir()))
         {
@@ -111,6 +109,7 @@ public class ConverterMain {
                 pool.submit(() -> {
                     ProcessedDomain processed = processor.process(domain);
                     converterWriter.accept(processed);
+
                     heartbeat.setProgress(processedDomains.incrementAndGet() / (double) totalDomains);
                 });
             }

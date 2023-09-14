@@ -8,9 +8,14 @@ import nu.marginalia.loader.DbTestUtil;
 import nu.marginalia.loading.domains.DomainLoaderService;
 import nu.marginalia.model.processed.DomainLinkRecord;
 import nu.marginalia.model.processed.DomainRecord;
+import nu.marginalia.process.control.ProcessAdHocTaskHeartbeat;
+import nu.marginalia.process.control.ProcessHeartbeat;
+import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -27,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Testcontainers
 class DomainLinksLoaderServiceTest {
     List<Path> toDelete = new ArrayList<>();
+    ProcessHeartbeat heartbeat;
 
     @Container
     static MariaDBContainer<?> mariaDBContainer = new MariaDBContainer<>("mariadb")
@@ -35,6 +41,15 @@ class DomainLinksLoaderServiceTest {
             .withPassword("wmsa")
             .withInitScript("db/migration/V23_06_0_000__base.sql")
             .withNetworkAliases("mariadb");
+
+    @BeforeEach
+    public void setUp() {
+        heartbeat = Mockito.mock(ProcessHeartbeat.class);
+
+        Mockito.when(heartbeat.createAdHocTaskHeartbeat(Mockito.anyString())).thenReturn(
+                Mockito.mock(ProcessAdHocTaskHeartbeat.class)
+        );
+    }
 
     @AfterEach
     public void tearDown() throws IOException {
@@ -87,7 +102,7 @@ class DomainLinksLoaderServiceTest {
             var domainRegistry = domainService.getOrCreateDomainIds(workDir, 2);
 
             var dls = new DomainLinksLoaderService(dataSource);
-            dls.loadLinks(domainRegistry, workDir, 2);
+            dls.loadLinks(domainRegistry, heartbeat, workDir, 2);
 
             Map<Integer, Set<Integer>> expected = new HashMap<>();
             Map<Integer, Set<Integer>> actual = new HashMap<>();

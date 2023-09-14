@@ -7,10 +7,10 @@ import nu.marginalia.io.processed.ProcessedDataFileNames;
 import nu.marginalia.loader.DbTestUtil;
 import nu.marginalia.model.processed.DomainLinkRecord;
 import nu.marginalia.model.processed.DomainRecord;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import nu.marginalia.process.control.ProcessAdHocTaskHeartbeat;
+import nu.marginalia.process.control.ProcessHeartbeat;
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Testcontainers
 class DomainLoaderServiceTest {
     List<Path> toDelete = new ArrayList<>();
+    ProcessHeartbeat heartbeat;
 
     @Container
     static MariaDBContainer<?> mariaDBContainer = new MariaDBContainer<>("mariadb")
@@ -37,6 +38,15 @@ class DomainLoaderServiceTest {
             .withPassword("wmsa")
             .withInitScript("db/migration/V23_06_0_000__base.sql")
             .withNetworkAliases("mariadb");
+
+    @BeforeEach
+    public void setUp() {
+        heartbeat = Mockito.mock(ProcessHeartbeat.class);
+
+        Mockito.when(heartbeat.createAdHocTaskHeartbeat(Mockito.anyString())).thenReturn(
+                Mockito.mock(ProcessAdHocTaskHeartbeat.class)
+        );
+    }
 
     @AfterEach
     public void tearDown() throws IOException {
