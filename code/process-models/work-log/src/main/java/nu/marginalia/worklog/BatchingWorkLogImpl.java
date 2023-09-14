@@ -75,6 +75,7 @@ public class BatchingWorkLogImpl implements BatchingWorkLog {
     @Override
     public void logItem(String id) throws IOException {
         writeLogEntry(new AddItem(id));
+        addItemToCurrentBatch(id);
     }
 
     @Override
