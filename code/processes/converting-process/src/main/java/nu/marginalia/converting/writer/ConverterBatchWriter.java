@@ -2,7 +2,9 @@ package nu.marginalia.converting.writer;
 
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
+import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.model.ProcessedDomain;
+import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.io.processed.DocumentRecordParquetFileWriter;
 import nu.marginalia.io.processed.DomainLinkRecordParquetFileWriter;
 import nu.marginalia.io.processed.DomainRecordParquetFileWriter;
@@ -24,14 +26,15 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 
-public class ConverterBatchWriter {
+/** Writer for a single batch of converter parquet files */
+public class ConverterBatchWriter implements AutoCloseable {
     private final DomainRecordParquetFileWriter domainWriter;
     private final DomainLinkRecordParquetFileWriter domainLinkWriter;
     private final DocumentRecordParquetFileWriter documentWriter;
 
     private static final Logger logger = LoggerFactory.getLogger(ConverterBatchWriter.class);
 
-    ConverterBatchWriter(Path basePath, int batchNumber) throws IOException {
+    public ConverterBatchWriter(Path basePath, int batchNumber) throws IOException {
         domainWriter = new DomainRecordParquetFileWriter(
                 ProcessedDataFileNames.domainFileName(basePath, batchNumber)
         );
@@ -41,6 +44,14 @@ public class ConverterBatchWriter {
         documentWriter = new DocumentRecordParquetFileWriter(
                 ProcessedDataFileNames.documentFileName(basePath, batchNumber)
         );
+    }
+
+    public void write(SideloadSource sideloadSource) throws IOException {
+        var domain = sideloadSource.getDomain();
+
+        writeDomainData(domain);
+
+        writeDocumentData(domain.domain, sideloadSource.getDocumentsStream());
     }
 
     public void write(ProcessedDomain domain) {
@@ -67,10 +78,22 @@ public class ConverterBatchWriter {
         if (domain.documents == null)
             return this;
 
-        String domainName = domain.domain.toString();
+        writeDocumentData(domain.domain, domain.documents.iterator());
+
+        return this;
+    }
+
+    private void writeDocumentData(EdgeDomain domain,
+                                     Iterator<ProcessedDocument> documentIterator)
+            throws IOException
+    {
+
         int ordinal = 0;
 
-        for (var document : domain.documents) {
+        String domainName = domain.toString();
+
+        while (documentIterator.hasNext()) {
+            var document = documentIterator.next();
             if (document.details == null) {
                 new DocumentRecord(
                         domainName,
@@ -119,7 +142,6 @@ public class ConverterBatchWriter {
             ordinal++;
         }
 
-        return this;
     }
 
     private Object writeLinkData(ProcessedDomain domain) throws IOException {

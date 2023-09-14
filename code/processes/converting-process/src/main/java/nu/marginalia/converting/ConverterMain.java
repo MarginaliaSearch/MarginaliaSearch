@@ -7,6 +7,7 @@ import com.google.inject.Injector;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.converting.sideload.SideloadSourceFactory;
+import nu.marginalia.converting.writer.ConverterBatchWriter;
 import nu.marginalia.converting.writer.ConverterWriter;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.mq.MessageQueueFactory;
@@ -25,6 +26,7 @@ import nu.marginalia.converting.processor.DomainProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.Optional;
@@ -82,10 +84,10 @@ public class ConverterMain {
         heartbeat.start();
     }
 
-    public void convert(SideloadSource sideloadSource, Path writeDir) throws Exception {
-        int maxPoolSize = 16;
-
-        // FIXME
+    public void convert(SideloadSource sideloadSource, Path writeDir) throws IOException {
+        try (var writer = new ConverterBatchWriter(writeDir, 0)) {
+            writer.write(sideloadSource);
+        }
     }
 
     public void convert(CrawlPlan plan) throws Exception {
