@@ -22,9 +22,12 @@ To set up a local test environment, follow the instructions in [📄 run/readme.
 
 ## Hardware Requirements
 
-A production-like environment requires at least 128 Gb of RAM and ideally 2 Tb+ of enterprise 
-grade SSD storage, as well as some additional terabytes of slower harddrives for storing crawl
-data. It can be made to run on smaller hardware by limiting size of the index. 
+A production-like environment requires a lot of RAM and ideally enterprise SSDs for
+the index, as well as some additional terabytes of slower harddrives for storing crawl
+data. It can be made to run on smaller hardware by limiting size of the index.  
+
+The system will definitely run on a 32 Gb machine, possibly smaller, but at that size it may not perform
+very well as it relies on disk caching to be fast. 
 
 A local developer's deployment is possible with much smaller hardware (and index size). 
 

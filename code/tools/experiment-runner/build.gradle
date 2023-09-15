@@ -31,7 +31,6 @@ dependencies {
     implementation project(':code:libraries:term-frequency-dict')
     implementation project(':code:libraries:big-string')
     implementation project(':code:processes:converting-process')
-    implementation project(':code:process-models:converting-model')
     implementation project(':code:process-models:crawling-model')
 
     implementation project(':code:features-convert:adblock')

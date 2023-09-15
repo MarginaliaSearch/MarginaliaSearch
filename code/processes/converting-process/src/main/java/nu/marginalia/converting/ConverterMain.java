@@ -7,6 +7,8 @@ import com.google.inject.Injector;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.converting.sideload.SideloadSourceFactory;
+import nu.marginalia.converting.writer.ConverterBatchWriter;
+import nu.marginalia.converting.writer.ConverterWriter;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
@@ -17,8 +19,9 @@ import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.service.module.DatabaseModule;
+import nu.marginalia.worklog.BatchingWorkLog;
+import nu.marginalia.worklog.BatchingWorkLogImpl;
 import plan.CrawlPlan;
-import nu.marginalia.converting.compiler.InstructionsCompiler;
 import nu.marginalia.converting.processor.DomainProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +39,6 @@ import static nu.marginalia.mqapi.ProcessInboxNames.CONVERTER_INBOX;
 public class ConverterMain {
     private static final Logger logger = LoggerFactory.getLogger(ConverterMain.class);
     private final DomainProcessor processor;
-    private final InstructionsCompiler compiler;
     private final Gson gson;
     private final ProcessHeartbeat heartbeat;
     private final MessageQueueFactory messageQueueFactory;
@@ -65,7 +67,6 @@ public class ConverterMain {
     @Inject
     public ConverterMain(
             DomainProcessor processor,
-            InstructionsCompiler compiler,
             Gson gson,
             ProcessHeartbeatImpl heartbeat,
             MessageQueueFactory messageQueueFactory,
@@ -74,7 +75,6 @@ public class ConverterMain {
             )
     {
         this.processor = processor;
-        this.compiler = compiler;
         this.gson = gson;
         this.heartbeat = heartbeat;
         this.messageQueueFactory = messageQueueFactory;
@@ -85,22 +85,13 @@ public class ConverterMain {
     }
 
     public void convert(SideloadSource sideloadSource, Path writeDir) throws Exception {
-        int maxPoolSize = 16;
+        try (var writer = new ConverterBatchWriter(writeDir, 0);
+             BatchingWorkLog batchingWorkLog = new BatchingWorkLogImpl(writeDir.resolve("processor.log"))
+        ) {
+            writer.write(sideloadSource);
 
-        try (WorkLog workLog = new WorkLog(writeDir.resolve("processor.log"));
-             ConversionLog conversionLog = new ConversionLog(writeDir)) {
-            var instructionWriter = new InstructionWriterFactory(conversionLog, writeDir, gson);
-
-            final String where;
-            final int size;
-
-            try (var writer = instructionWriter.createInstructionsForDomainWriter(sideloadSource.getId())) {
-                compiler.compileStreaming(sideloadSource, writer::accept);
-                where = writer.getFileName();
-                size = writer.getSize();
-            }
-
-            workLog.setJobToFinished(sideloadSource.getId(), where, size);
+            // We write an empty log with just a finish marker for the sideloading action
+            batchingWorkLog.logFinishedBatch();
         }
     }
 
@@ -108,40 +99,25 @@ public class ConverterMain {
 
         final int maxPoolSize = Runtime.getRuntime().availableProcessors();
 
-        try (WorkLog processLog = plan.createProcessWorkLog();
-             ConversionLog log = new ConversionLog(plan.process.getDir())) {
-            var instructionWriter = new InstructionWriterFactory(log, plan.process.getDir(), gson);
-
+        try (BatchingWorkLog batchingWorkLog = new BatchingWorkLogImpl(plan.process.getLogFile());
+             ConverterWriter converterWriter = new ConverterWriter(batchingWorkLog, plan.process.getDir()))
+        {
             var pool = new DumbThreadPool(maxPoolSize, 2);
 
             int totalDomains = plan.countCrawledDomains();
             AtomicInteger processedDomains = new AtomicInteger(0);
 
             // Advance the progress bar to the current position if this is a resumption
-            processedDomains.set(processLog.countFinishedJobs());
+            processedDomains.set(batchingWorkLog.size());
             heartbeat.setProgress(processedDomains.get() / (double) totalDomains);
 
-            for (var domain : plan.crawlDataIterable(id -> !processLog.isJobFinished(id)))
+            for (var domain : plan.crawlDataIterable(id -> !batchingWorkLog.isItemProcessed(id)))
             {
                 pool.submit(() -> {
-                    try {
-                        ProcessedDomain processed = processor.process(domain);
+                    ProcessedDomain processed = processor.process(domain);
+                    converterWriter.accept(processed);
 
-                        final String where;
-                        final int size;
-
-                        try (var writer = instructionWriter.createInstructionsForDomainWriter(processed.id)) {
-                            compiler.compile(processed, writer::accept);
-                            where = writer.getFileName();
-                            size = writer.getSize();
-                        }
-
-                        processLog.setJobToFinished(processed.id, where, size);
-                        heartbeat.setProgress(processedDomains.incrementAndGet() / (double) totalDomains);
-                    }
-                    catch (IOException ex) {
-                        logger.warn("IO exception in converter", ex);
-                    }
+                    heartbeat.setProgress(processedDomains.incrementAndGet() / (double) totalDomains);
                 });
             }
 

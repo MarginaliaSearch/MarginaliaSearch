@@ -25,6 +25,21 @@
             </td>
         </tr>
         <tr>
+            <td><b>Sideload Encyclopedia</b><p>
+                This will load pre-digested encyclopedia data
+                from a encyclopedia.marginalia.nu-style database.
+            </td>
+            <td>
+                <form method="post" action="/actions/sideload-encyclopedia" onsubmit="return confirm('Confirm sideloading')">
+                    <label for="source">articles.db location on server</label><br>
+                    <input id="source" name="source" value="">
+                    <br><br>
+
+                    <input type="submit" value="Sideload Encyclopedia">
+                </form>
+            </td>
+        </tr>
+        <tr>
             <td>
                 <b>Reload Blogs List</b>
                 <p>This will reload the list of blogs from its source.</p>

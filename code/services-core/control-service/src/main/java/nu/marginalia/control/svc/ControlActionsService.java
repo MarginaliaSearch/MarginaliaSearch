@@ -4,18 +4,20 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.control.actor.ControlActors;
 import nu.marginalia.control.actor.Actor;
+import nu.marginalia.control.actor.task.ConvertActor;
 import nu.marginalia.db.DomainTypes;
 import nu.marginalia.index.client.IndexClient;
 import nu.marginalia.index.client.IndexMqEndpoints;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.outbox.MqOutbox;
-import nu.marginalia.search.client.SearchClient;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.id.ServiceId;
 import spark.Request;
 import spark.Response;
 import spark.Spark;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.UUID;
 
 @Singleton
@@ -96,6 +98,22 @@ public class ControlActionsService {
 
         return "";
     }
+
+    public Object sideloadEncyclopedia(Request request, Response response) throws Exception {
+
+        Path sourcePath = Path.of(request.queryParams("source"));
+        if (!Files.exists(sourcePath)) {
+            Spark.halt(404);
+            return "No such file " + sourcePath;
+        }
+
+        eventLog.logEvent("USER-ACTION", "SIDELOAD ENCYCLOPEDIA");
+
+        actors.startFrom(Actor.CONVERT, ConvertActor.CONVERT_ENCYCLOPEDIA, sourcePath.toString());
+
+        return "";
+    }
+
 
     public Object triggerRepartition(Request request, Response response) throws Exception {
         indexClient.outbox().sendAsync(IndexMqEndpoints.INDEX_REPARTITION, "");

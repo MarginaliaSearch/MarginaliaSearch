@@ -11,13 +11,17 @@ based on the content in the database.
 ## 2. Converting Process
 
 The [converting-process](converting-process/) reads crawl data from the crawling step and 
-processes them, extracting keywords and metadata and saves them as compressed JSON models 
-described in [converting-model](../process-models/converting-model/).
+processes them, extracting keywords and metadata and saves them as parquet files 
+described in [processed-data](../process-models/processed-data/).
 
 ## 3. Loading Process
 
-The [loading-process](loading-process/) reads the processed data and creates an index journal
-and lexicon, and loads domains and addresses into the MariaDB-database.
+The [loading-process](loading-process/) reads the processed data.
+
+It has creates an [index journal](../features-index/index-journal), 
+a [link database](../common/linkdb), 
+and loads domains and domain-links 
+into the [MariaDB database](../common/db).
 
 ## 4. Index Construction Process
 
@@ -56,21 +60,14 @@ Schematically the crawling and loading process looks like this:
     +------------+  features, links, URLs
           |
     //==================\\
-    || Compressed JSON: ||  Processed
-    ||  URLs[]          ||  Files
+    || Parquet:         ||  Processed
+    ||  Documents[]     ||  Files
     ||  Domains[]       ||
     ||  Links[]         ||  
-    ||  Keywords[]      ||
-    ||    ...           ||
-    ||  URLs[]          ||
-    ||  Domains[]       ||
-    ||  Links[]         ||    
-    ||  Keywords[]      ||
-    ||    ...           ||
     \\==================//
           |
-    +------------+
-    |  LOADING   | Insert URLs in link DB
+    +------------+ Insert domains into mariadb
+    |  LOADING   | Insert URLs, titles in link DB
     |    STEP    | Insert keywords in Index
     +------------+    
           |

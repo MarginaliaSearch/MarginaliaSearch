@@ -2,6 +2,7 @@ package nu.marginalia.converting.model;
 
 import lombok.ToString;
 import nu.marginalia.model.crawl.HtmlFeature;
+import nu.marginalia.model.html.HtmlStandard;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.EdgeUrl;
 

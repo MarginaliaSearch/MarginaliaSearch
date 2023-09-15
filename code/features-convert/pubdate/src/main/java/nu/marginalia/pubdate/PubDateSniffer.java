@@ -1,6 +1,6 @@
 package nu.marginalia.pubdate;
 
-import nu.marginalia.converting.model.HtmlStandard;
+import nu.marginalia.model.html.HtmlStandard;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.pubdate.heuristic.*;

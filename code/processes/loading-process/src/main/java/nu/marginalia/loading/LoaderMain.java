@@ -5,29 +5,31 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import lombok.SneakyThrows;
-import nu.marginalia.converting.instruction.Interpreter;
 import nu.marginalia.db.storage.FileStorageService;
-import nu.marginalia.keyword.model.DocumentKeywords;
 import nu.marginalia.linkdb.LinkdbWriter;
-import nu.marginalia.loading.loader.IndexLoadKeywords;
-import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.model.idx.DocumentMetadata;
+import nu.marginalia.loading.documents.DocumentLoaderService;
+import nu.marginalia.loading.documents.KeywordLoaderService;
+import nu.marginalia.loading.domains.DomainIdRegistry;
+import nu.marginalia.loading.domains.DomainLoaderService;
+import nu.marginalia.loading.links.DomainLinksLoaderService;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.inbox.MqInboxResponse;
 import nu.marginalia.mq.inbox.MqSingleShotInbox;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
-import nu.marginalia.process.log.WorkLog;
+import nu.marginalia.worklog.BatchingWorkLogInspector;
 import plan.CrawlPlan;
-import nu.marginalia.loading.loader.LoaderFactory;
 import nu.marginalia.service.module.DatabaseModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static nu.marginalia.mqapi.ProcessInboxNames.LOADER_INBOX;
@@ -35,14 +37,15 @@ import static nu.marginalia.mqapi.ProcessInboxNames.LOADER_INBOX;
 public class LoaderMain {
     private static final Logger logger = LoggerFactory.getLogger(LoaderMain.class);
 
-    private final ConvertedDomainReader instructionsReader;
-    private final LoaderFactory loaderFactory;
-
     private final ProcessHeartbeatImpl heartbeat;
     private final MessageQueueFactory messageQueueFactory;
     private final FileStorageService fileStorageService;
-    private final IndexLoadKeywords indexLoadKeywords;
-    private final LinkdbWriter writer;
+    private final LinkdbWriter linkdbWriter;
+    private final LoaderIndexJournalWriter journalWriter;
+    private final DomainLoaderService domainService;
+    private final DomainLinksLoaderService linksService;
+    private final KeywordLoaderService keywordLoaderService;
+    private final DocumentLoaderService documentLoaderService;
     private final Gson gson;
 
     public static void main(String... args) throws Exception {
@@ -65,87 +68,70 @@ public class LoaderMain {
     }
 
     @Inject
-    public LoaderMain(ConvertedDomainReader instructionsReader,
-                      LoaderFactory loaderFactory,
-                      ProcessHeartbeatImpl heartbeat,
+    public LoaderMain(ProcessHeartbeatImpl heartbeat,
                       MessageQueueFactory messageQueueFactory,
                       FileStorageService fileStorageService,
-                      IndexLoadKeywords indexLoadKeywords,
-                      LinkdbWriter writer,
+                      LinkdbWriter linkdbWriter,
+                      LoaderIndexJournalWriter journalWriter,
+                      DomainLoaderService domainService,
+                      DomainLinksLoaderService linksService,
+                      KeywordLoaderService keywordLoaderService,
+                      DocumentLoaderService documentLoaderService,
                       Gson gson
                       ) {
 
-        this.instructionsReader = instructionsReader;
-        this.loaderFactory = loaderFactory;
         this.heartbeat = heartbeat;
         this.messageQueueFactory = messageQueueFactory;
         this.fileStorageService = fileStorageService;
-        this.indexLoadKeywords = indexLoadKeywords;
-        this.writer = writer;
+        this.linkdbWriter = linkdbWriter;
+        this.journalWriter = journalWriter;
+        this.domainService = domainService;
+        this.linksService = linksService;
+        this.keywordLoaderService = keywordLoaderService;
+        this.documentLoaderService = documentLoaderService;
         this.gson = gson;
 
         heartbeat.start();
     }
 
     @SneakyThrows
-    public void run(LoadRequest instructions) {
+    void run(LoadRequest instructions) {
         var plan = instructions.getPlan();
-        var logFile = plan.process.getLogFile();
+        var processLogFile = plan.process.getLogFile();
 
-        TaskStats taskStats = new TaskStats(100);
+        Path inputDataDir = plan.process.getDir();
+        int validBatchCount = BatchingWorkLogInspector.getValidBatches(processLogFile);
+
+        DomainIdRegistry domainIdRegistry =
+                domainService.getOrCreateDomainIds(
+                        inputDataDir,
+                        validBatchCount);
+
         try {
-            int loadTotal = 0;
-            int loaded = 0;
+            var results = ForkJoinPool.commonPool()
+                    .invokeAll(
+                        List.of(
+                            () -> linksService.loadLinks(domainIdRegistry, heartbeat, inputDataDir, validBatchCount),
+                            () -> keywordLoaderService.loadKeywords(domainIdRegistry, heartbeat, inputDataDir, validBatchCount),
+                            () -> documentLoaderService.loadDocuments(domainIdRegistry, heartbeat, inputDataDir, validBatchCount)
+                        )
+            );
 
-            for (var unused : WorkLog.iterable(logFile)) {
-                loadTotal++;
-            }
-
-            logger.info("Loading {} files", loadTotal);
-            for (var entry : WorkLog.iterable(logFile)) {
-                InstructionCounter instructionCounter = new InstructionCounter();
-
-                heartbeat.setProgress(loaded++ / (double) loadTotal);
-                long startTime = System.currentTimeMillis();
-
-                Path destDir = plan.getProcessedFilePath(entry.path());
-
-                try (var loader = loaderFactory.create(entry.cnt())) {
-                    var instructionsIter = instructionsReader.createIterator(destDir);
-
-                    while (instructionsIter.hasNext()) {
-                        var next = instructionsIter.next();
-                        try {
-                            next.apply(instructionCounter);
-                            next.apply(loader);
-                        } catch (Exception ex) {
-                            logger.error("Failed to load instruction " + next.getClass().getSimpleName(), ex);
-                        }
-                    }
+            for (var result : results) {
+                if (result.state() == Future.State.FAILED) {
+                    throw result.exceptionNow();
                 }
-
-                long endTime = System.currentTimeMillis();
-                long loadTime = endTime - startTime;
-                taskStats.observe(endTime - startTime);
-
-                logger.info("Loaded {}/{} : {} ({}) {}ms {} l/s", taskStats.getCount(),
-                        loadTotal, destDir, instructionCounter.getCount(), loadTime, taskStats.avgTime());
             }
 
             instructions.ok();
-
-            // This needs to be done in order to have a readable index journal
-            indexLoadKeywords.close();
-            writer.close();
-            logger.info("Loading finished");
         }
         catch (Exception ex) {
-            ex.printStackTrace();
-            logger.error("Failed to load", ex);
             instructions.err();
-            throw ex;
+            logger.error("Error", ex);
         }
         finally {
+            journalWriter.close();
+            linkdbWriter.close();
             heartbeat.shutDown();
         }
 
@@ -213,15 +199,4 @@ public class LoaderMain {
         }
     }
 
-    public class InstructionCounter implements Interpreter {
-        private int count = 0;
-
-        public void loadKeywords(EdgeUrl url, int ordinal, int features, DocumentMetadata metadata, DocumentKeywords words) {
-            count++;
-        }
-
-        public int getCount() {
-            return count;
-        }
-    }
 }
