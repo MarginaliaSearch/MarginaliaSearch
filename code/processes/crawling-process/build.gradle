@@ -34,6 +34,7 @@ dependencies {
     implementation project(':code:libraries:language-processing')
     implementation project(':code:libraries:easy-lsh')
     implementation project(':code:process-models:crawling-model')
+    implementation project(':code:process-models:crawl-spec')
 
     implementation project(':code:features-crawl:crawl-blocklist')
     implementation project(':code:features-crawl:link-parser')

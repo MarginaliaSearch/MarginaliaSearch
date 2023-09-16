@@ -6,7 +6,6 @@ import com.google.gson.Gson;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.crawling.model.SerializableCrawlData;
-import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.model.gson.GsonFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,8 +32,8 @@ public class CrawledDomainReader {
     }
 
     /** An iterator-like access to domain data. This must be closed otherwise it will leak off-heap memory! */
-    public SerializableCrawlDataStream createDataStream(Path basePath, CrawlingSpecification spec) throws IOException {
-        return createDataStream(CrawlerOutputFile.getOutputFile(basePath, spec.id, spec.domain));
+    public SerializableCrawlDataStream createDataStream(Path basePath, String domain, String id) throws IOException {
+        return createDataStream(CrawlerOutputFile.getOutputFile(basePath, id, domain));
     }
 
     /** Read the entirety of the domain data into memory. This uses a lot of RAM */

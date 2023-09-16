@@ -57,6 +57,7 @@ dependencies {
     implementation project(':code:features-crawl:link-parser')
 
     testImplementation project(':code:libraries:term-frequency-dict')
+    testImplementation project(':code:process-models:crawl-spec')
 
     implementation libs.lombok
     annotationProcessor libs.lombok

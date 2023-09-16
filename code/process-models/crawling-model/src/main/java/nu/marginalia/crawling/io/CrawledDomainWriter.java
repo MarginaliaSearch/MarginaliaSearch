@@ -5,7 +5,6 @@ import com.github.luben.zstd.ZstdOutputStream;
 import com.google.gson.Gson;
 import lombok.SneakyThrows;
 import nu.marginalia.crawling.model.SerializableCrawlData;
-import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.model.gson.GsonFactory;
 
 import java.io.BufferedOutputStream;
@@ -24,7 +23,7 @@ public class CrawledDomainWriter implements AutoCloseable {
     private final Path tmpFile;
     private final Path actualFile;
 
-    public CrawledDomainWriter(Path outputDir, CrawlingSpecification spec) throws IOException {
+    public CrawledDomainWriter(Path outputDir, String domain, String id) throws IOException {
         this.outputDir = outputDir;
 
         if (!Files.isDirectory(outputDir)) {
@@ -36,8 +35,8 @@ public class CrawledDomainWriter implements AutoCloseable {
         // this lets us read the old file and compare its contents while writing the new file.  It also guards against
         // half-written files if the process is killed.
 
-        tmpFile = getOutputFile(spec.id, spec.domain + "_tmp");
-        actualFile = getOutputFile(spec.id, spec.domain);
+        tmpFile = getOutputFile(id, domain + "_tmp");
+        actualFile = getOutputFile(id, domain);
         writer =  new OutputStreamWriter(new ZstdOutputStream(new BufferedOutputStream(Files.newOutputStream(tmpFile,
                 StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)),
                 RecyclingBufferPool.INSTANCE));

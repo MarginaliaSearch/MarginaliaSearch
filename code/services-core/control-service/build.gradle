@@ -37,6 +37,7 @@ dependencies {
     implementation project(':code:api:process-mqapi')
     implementation project(':code:features-search:screenshots')
     implementation project(':code:features-index:index-journal')
+    implementation project(':code:process-models:crawl-spec')
 
     implementation libs.lombok
     annotationProcessor libs.lombok

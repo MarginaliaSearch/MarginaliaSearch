@@ -6,8 +6,6 @@ import lombok.ToString;
 import nu.marginalia.crawling.io.CrawledDomainReader;
 import nu.marginalia.crawling.io.SerializableCrawlDataStream;
 import nu.marginalia.crawling.model.CrawledDomain;
-import nu.marginalia.crawling.model.spec.CrawlerSpecificationLoader;
-import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.process.log.WorkLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +14,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 import java.util.Optional;
 
 @AllArgsConstructor @NoArgsConstructor @ToString
@@ -72,10 +69,6 @@ public class CrawlPlan {
 
     public WorkLog createProcessWorkLog() throws IOException {
         return new WorkLog(process.getLogFile());
-    }
-
-    public Iterable<CrawlingSpecification> crawlingSpecificationIterable() {
-        return CrawlerSpecificationLoader.asIterable(getJobSpec());
     }
 
     public int countCrawledDomains() {

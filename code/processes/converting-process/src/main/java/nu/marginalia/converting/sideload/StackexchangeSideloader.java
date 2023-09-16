@@ -48,7 +48,6 @@ public class StackexchangeSideloader implements SideloadSource {
         var ret = new ProcessedDomain();
 
         ret.domain = new EdgeDomain(domainName);
-        ret.id = domainName;
         ret.ip = "127.0.0.1";
         ret.state = DomainIndexingState.ACTIVE;
 

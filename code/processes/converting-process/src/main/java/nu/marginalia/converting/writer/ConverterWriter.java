@@ -62,7 +62,7 @@ public class ConverterWriter implements AutoCloseable {
             if (data == null)
                 continue;
 
-            String id = data.id;
+            String id = data.domain.toString();
 
             if (workLog.isItemCommitted(id) || workLog.isItemInCurrentBatch(id)) {
                 logger.warn("Skipping already logged item {}", id);

@@ -12,7 +12,7 @@ import nu.marginalia.crawling.io.SerializableCrawlDataStream;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.crawling.model.SerializableCrawlData;
-import nu.marginalia.crawling.model.spec.CrawlingSpecification;
+import nu.marginalia.model.crawlspec.CrawlSpecRecord;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -47,8 +47,7 @@ public class CrawlingThenConvertingIntegrationTest {
 
     @Test
     public void crawlThenProcess() {
-        var specs = CrawlingSpecification.builder()
-                .id("some-string")
+        var specs = CrawlSpecRecord.builder()
                 .domain("www.marginalia.nu")
                 .crawlDepth(10)
                 .urls(List.of()) // add specific URLs to crawl here
@@ -73,7 +72,7 @@ public class CrawlingThenConvertingIntegrationTest {
 
     }
 
-    private CrawledDomain crawl(CrawlingSpecification specs) {
+    private CrawledDomain crawl(CrawlSpecRecord specs) {
         List<SerializableCrawlData> data = new ArrayList<>();
 
         new CrawlerRetreiver(httpFetcher, specs, data::add).fetch();

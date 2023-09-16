@@ -10,8 +10,8 @@ import nu.marginalia.crawling.io.CrawledDomainReader;
 import nu.marginalia.crawling.io.CrawledDomainWriter;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
-import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.crawling.model.SerializableCrawlData;
+import nu.marginalia.model.crawlspec.CrawlSpecRecord;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
@@ -43,9 +43,8 @@ class CrawlerRetreiverTest {
 
     @Test
     public void testWithKnownDomains() {
-        var specs = CrawlingSpecification
+        var specs = CrawlSpecRecord
                 .builder()
-                .id("whatever")
                 .crawlDepth(5)
                 .domain("www.marginalia.nu")
                 .urls(List.of("https://www.marginalia.nu/misc/debian-laptop-install-log/"))
@@ -73,9 +72,8 @@ class CrawlerRetreiverTest {
     @Test
     public void testEmptySet() {
 
-        var specs = CrawlingSpecification
+        var specs = CrawlSpecRecord
                 .builder()
-                .id("whatever")
                 .crawlDepth(5)
                 .domain("www.marginalia.nu")
                 .urls(List.of())
@@ -107,9 +105,8 @@ class CrawlerRetreiverTest {
     @Test
     public void testRecrawl() throws IOException {
 
-        var specs = CrawlingSpecification
+        var specs = CrawlSpecRecord
                 .builder()
-                .id("123456")
                 .crawlDepth(12)
                 .domain("www.marginalia.nu")
                 .urls(List.of("https://www.marginalia.nu/some-dead-link"))
@@ -117,7 +114,7 @@ class CrawlerRetreiverTest {
 
 
         Path out = Files.createTempDirectory("crawling-process");
-        var writer = new CrawledDomainWriter(out, specs);
+        var writer = new CrawledDomainWriter(out, specs.domain, "idid");
         Map<Class<? extends SerializableCrawlData>, List<SerializableCrawlData>> data = new HashMap<>();
 
         new CrawlerRetreiver(httpFetcher, specs, d -> {
@@ -133,7 +130,7 @@ class CrawlerRetreiverTest {
         writer.close();
 
         var reader = new CrawledDomainReader();
-        var stream = reader.createDataStream(out, specs);
+        var stream = reader.createDataStream(out, specs.domain, "idid");
 
         CrawledDomain domain = (CrawledDomain) data.get(CrawledDomain.class).get(0);
         domain.doc = data.get(CrawledDocument.class).stream().map(CrawledDocument.class::cast).collect(Collectors.toList());

@@ -15,7 +15,6 @@ public class ProcessedDomain {
     public DomainIndexingState state;
     public EdgeDomain redirect;
     public String ip;
-    public String id;
 
     public int size() {
         return Optional.ofNullable(documents).map(List::size).orElse(1);

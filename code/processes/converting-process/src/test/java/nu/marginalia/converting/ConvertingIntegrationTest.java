@@ -41,7 +41,7 @@ public class ConvertingIntegrationTest {
     public void testEmptyDomain() {
         var docs = new ArrayList<CrawledDocument>();
 
-        var domain = new CrawledDomain("123", "memex.marginalia.nu", null, "OK", "-", "127.0.0.1",
+        var domain = new CrawledDomain("memex.marginalia.nu", null, "OK", "-", "127.0.0.1",
                 docs, Collections.emptyList());
         var ret = domainProcessor.process(asSerializableCrawlData(domain));
 
@@ -120,7 +120,6 @@ public class ConvertingIntegrationTest {
         }
 
         return new CrawledDomain(
-                "1",
                 "memex.marginalia.nu",
                 null,
                 "OK",

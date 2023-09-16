@@ -38,7 +38,14 @@ public class DumbThreadPool {
     public void submit(Task task) throws InterruptedException {
         tasks.put(task);
     }
-
+    public void submitQuietly(Task task) {
+        try {
+            tasks.put(task);
+        }
+        catch (InterruptedException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
     public void shutDown() {
         this.shutDown = true;
     }

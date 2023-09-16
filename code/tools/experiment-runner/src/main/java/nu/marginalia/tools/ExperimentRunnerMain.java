@@ -46,16 +46,18 @@ public class ExperimentRunnerMain {
 
         experiment.args(Arrays.copyOfRange(args, 2, args.length));
 
-        Map<String, String> idToDomain = new HashMap<>();
-        for (var spec : plan.crawlingSpecificationIterable()) {
-            idToDomain.put(spec.id, spec.domain);
-        }
+        // FIXME: This is broken
 
-        for (var domain : plan.domainsIterable(id -> experiment.isInterested(idToDomain.get(id)))) {
-            experiment.process(domain);
-        }
-
-        experiment.onFinish();
+//        Map<String, String> idToDomain = new HashMap<>();
+//        for (var spec : plan.crawlingSpecificationIterable()) {
+//            idToDomain.put(spec.id, spec.domain);
+//        }
+//
+//        for (var domain : plan.domainsIterable(id -> experiment.isInterested(idToDomain.get(id)))) {
+//            experiment.process(domain);
+//        }
+//
+//        experiment.onFinish();
 
     }
 }

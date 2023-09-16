@@ -6,6 +6,7 @@ import com.google.inject.name.Named;
 import gnu.trove.list.TLongList;
 import nu.marginalia.linkdb.model.LdbUrlDetail;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.model.id.UrlIdCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +60,35 @@ public class LinkdbReader {
         Files.move(newDbFile, dbFile, StandardCopyOption.REPLACE_EXISTING);
 
         connection = createConnection();
+    }
+
+    public List<String> getUrlsFromDomain(int domainId) throws SQLException {
+        if (connection == null ||
+                connection.isClosed())
+        {
+            throw new RuntimeException("URL query temporarily unavailable due to database switch");
+        }
+
+        long minId = UrlIdCodec.encodeId(domainId, 0);
+        long maxId = UrlIdCodec.encodeId(domainId+1, 0);
+
+        List<String> ret = new ArrayList<>();
+
+        try (var stmt = connection.prepareStatement("""
+                SELECT URL
+                FROM DOCUMENT
+                WHERE ID >= ? AND ID < ?
+                """))
+        {
+            stmt.setLong(1, minId);
+            stmt.setLong(2, maxId);
+            var rs = stmt.executeQuery();
+            while (rs.next()) {
+                ret.add(rs.getString(1));
+            }
+        }
+
+        return ret;
     }
 
     public List<LdbUrlDetail> getUrlDetails(TLongList ids) throws SQLException {

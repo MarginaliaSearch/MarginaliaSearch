@@ -9,7 +9,10 @@ import nu.marginalia.WmsaHome;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawling.io.CrawledDomainReader;
+import nu.marginalia.crawlspec.CrawlSpecFileNames;
 import nu.marginalia.db.storage.FileStorageService;
+import nu.marginalia.io.crawlspec.CrawlSpecRecordParquetFileReader;
+import nu.marginalia.model.crawlspec.CrawlSpecRecord;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.inbox.MqInboxResponse;
@@ -17,9 +20,7 @@ import nu.marginalia.mq.inbox.MqSingleShotInbox;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.service.module.DatabaseModule;
-import plan.CrawlPlan;
 import nu.marginalia.crawling.io.CrawledDomainWriter;
-import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
 import okhttp3.ConnectionPool;
@@ -103,7 +104,7 @@ public class CrawlerMain {
 
         var instructions = crawler.fetchInstructions();
         try {
-            crawler.run(instructions.getPlan());
+            crawler.run(instructions.crawlSpec, instructions.outputDir);
             instructions.ok();
         }
         catch (Exception ex) {
@@ -117,43 +118,24 @@ public class CrawlerMain {
         System.exit(0);
     }
 
-    public void run(CrawlPlan plan) throws InterruptedException, IOException {
+    public void run(Path crawlSpec, Path outputDir) throws InterruptedException, IOException {
 
         heartbeat.start();
-        try (WorkLog workLog = plan.createCrawlWorkLog()) {
+        try (WorkLog workLog = new WorkLog(outputDir.resolve("crawler.log"))) {
             // First a validation run to ensure the file is all good to parse
             logger.info("Validating JSON");
 
-            crawlDataDir = plan.crawl.getDir();
-
-            int countTotal = 0;
-            for (var unused : plan.crawlingSpecificationIterable()) {
-                countTotal++;
-            }
-            totalTasks = countTotal;
+            totalTasks = CrawlSpecRecordParquetFileReader.count(crawlSpec);
 
             logger.info("Let's go");
 
-            for (var crawlingSpecification : plan.crawlingSpecificationIterable()) {
-
-                if (!abortMonitor.isAlive())
-                    break;
-
-                // Check #1: Have we already crawled this site? Check is necessary for resuming a craw after a crash or something
-                if (workLog.isJobFinished(crawlingSpecification.id)) {
-                    continue;
-                }
-
-                // Check #2: Have we already started this crawl (but not finished it)?
-                // This shouldn't realistically happen, but if it does, we need to ignore it, otherwise
-                // we'd end crawling the same site twice and might end up writing to the same output
-                // file from multiple threads with complete bit salad as a result.
-                if (processingIds.put(crawlingSpecification.id, "") != null) {
-                    logger.error("Ignoring duplicate id: {}", crawlingSpecification.id);
-                    continue;
-                }
-
-                pool.submit(new CrawlTask(crawlingSpecification, workLog));
+            try (var specStream = CrawlSpecRecordParquetFileReader.stream(crawlSpec)) {
+                specStream
+                        .takeWhile((e) -> abortMonitor.isAlive())
+                        .filter(e -> workLog.isJobFinished(e.domain))
+                        .filter(e -> processingIds.put(e.domain, "") == null)
+                        .map(e -> new CrawlTask(e, workLog))
+                        .forEach(pool::submitQuietly);
             }
 
             logger.info("Shutting down the pool, waiting for tasks to complete...");
@@ -170,12 +152,19 @@ public class CrawlerMain {
 
     class CrawlTask implements DumbThreadPool.Task {
 
-        private final CrawlingSpecification specification;
+        private final CrawlSpecRecord specification;
+
+        private final String domain;
+        private final String id;
+
         private final WorkLog workLog;
 
-        CrawlTask(CrawlingSpecification specification, WorkLog workLog) {
+        CrawlTask(CrawlSpecRecord specification, WorkLog workLog) {
             this.specification = specification;
             this.workLog = workLog;
+
+            this.domain = specification.domain;
+            this.id = Integer.toHexString(domain.hashCode());
         }
 
         @Override
@@ -185,15 +174,15 @@ public class CrawlerMain {
 
             HttpFetcher fetcher = new HttpFetcherImpl(userAgent.uaString(), dispatcher, connectionPool);
 
-            try (CrawledDomainWriter writer = new CrawledDomainWriter(crawlDataDir, specification);
-                 CrawlDataReference reference = getReference(specification))
+            try (CrawledDomainWriter writer = new CrawledDomainWriter(crawlDataDir, domain, id);
+                 CrawlDataReference reference = getReference())
             {
                 Thread.currentThread().setName("crawling:" + specification.domain);
 
                 var retreiver = new CrawlerRetreiver(fetcher, specification, writer::accept);
                 int size = retreiver.fetch(reference);
 
-                workLog.setJobToFinished(specification.id, writer.getOutputFile().toString(), size);
+                workLog.setJobToFinished(specification.domain, writer.getOutputFile().toString(), size);
                 heartbeat.setProgress(tasksDone.incrementAndGet() / (double) totalTasks);
 
                 logger.info("Fetched {}", specification.domain);
@@ -203,14 +192,14 @@ public class CrawlerMain {
             }
             finally {
                 // We don't need to double-count these; it's also kept int he workLog
-                processingIds.remove(specification.id);
+                processingIds.remove(domain);
                 Thread.currentThread().setName("[idle]");
             }
         }
 
-        private CrawlDataReference getReference(CrawlingSpecification specification) {
+        private CrawlDataReference getReference() {
             try {
-                var dataStream = reader.createDataStream(crawlDataDir, specification);
+                var dataStream = reader.createDataStream(crawlDataDir, domain, id);
                 return new CrawlDataReference(dataStream);
             } catch (IOException e) {
                 logger.debug("Failed to read previous crawl data for {}", specification.domain);
@@ -223,19 +212,18 @@ public class CrawlerMain {
 
 
     private static class CrawlRequest {
-        private final CrawlPlan plan;
+        private final Path crawlSpec;
+        private final Path outputDir;
         private final MqMessage message;
         private final MqSingleShotInbox inbox;
 
-        CrawlRequest(CrawlPlan plan, MqMessage message, MqSingleShotInbox inbox) {
-            this.plan = plan;
+        CrawlRequest(Path crawlSpec, Path outputDir, MqMessage message, MqSingleShotInbox inbox) {
             this.message = message;
             this.inbox = inbox;
+            this.crawlSpec = crawlSpec;
+            this.outputDir = outputDir;
         }
 
-        public CrawlPlan getPlan() {
-            return plan;
-        }
 
         public void ok() {
             inbox.sendResponse(message, MqInboxResponse.ok());
@@ -259,11 +247,11 @@ public class CrawlerMain {
         var specData = fileStorageService.getStorage(request.specStorage);
         var crawlData = fileStorageService.getStorage(request.crawlStorage);
 
-        var plan = new CrawlPlan(specData.asPath().resolve("crawler.spec").toString(),
-                new CrawlPlan.WorkDir(crawlData.path(), "crawler.log"),
-                null);
-
-        return new CrawlRequest(plan, msg, inbox);
+        return new CrawlRequest(
+                CrawlSpecFileNames.resolve(specData),
+                crawlData.asPath(),
+                msg,
+                inbox);
     }
 
     private Optional<MqMessage> getMessage(MqSingleShotInbox inbox, String expectedFunction) throws SQLException, InterruptedException {

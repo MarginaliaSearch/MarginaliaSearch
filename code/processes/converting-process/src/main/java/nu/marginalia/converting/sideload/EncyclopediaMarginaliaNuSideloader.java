@@ -57,7 +57,6 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
         var ret = new ProcessedDomain();
 
         ret.domain = new EdgeDomain("encyclopedia.marginalia.nu");
-        ret.id = "encyclopedia.marginalia.nu";
         ret.ip = "127.0.0.1";
         ret.state = DomainIndexingState.ACTIVE;
 

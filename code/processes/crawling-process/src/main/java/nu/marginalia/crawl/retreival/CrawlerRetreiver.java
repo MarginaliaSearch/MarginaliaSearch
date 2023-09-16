@@ -7,12 +7,12 @@ import lombok.SneakyThrows;
 import nu.marginalia.crawl.retreival.fetcher.ContentTags;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
 import nu.marginalia.crawl.retreival.fetcher.SitemapRetriever;
-import nu.marginalia.crawling.model.spec.CrawlingSpecification;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.crawling.model.*;
 import nu.marginalia.ip_blocklist.UrlBlocklist;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.model.crawlspec.CrawlSpecRecord;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
@@ -31,7 +31,6 @@ public class CrawlerRetreiver {
 
     private final HttpFetcher fetcher;
 
-    private final String id;
     private final String domain;
     private final Consumer<SerializableCrawlData> crawledDomainWriter;
 
@@ -55,16 +54,15 @@ public class CrawlerRetreiver {
     private static final String documentWasSameTag = "SAME-BY-COMPARISON";
 
     public CrawlerRetreiver(HttpFetcher fetcher,
-                            CrawlingSpecification specs,
+                            CrawlSpecRecord specs,
                             Consumer<SerializableCrawlData> writer) {
         this.fetcher = fetcher;
 
-        id = specs.id;
         domain = specs.domain;
 
         crawledDomainWriter = writer;
 
-        this.crawlFrontier = new DomainCrawlFrontier(new EdgeDomain(domain), specs.urls, specs.crawlDepth);
+        this.crawlFrontier = new DomainCrawlFrontier(new EdgeDomain(domain), Objects.requireNonNullElse(specs.urls, List.of()), specs.crawlDepth);
         sitemapRetriever = fetcher.createSitemapRetriever();
 
         // We must always crawl the index page first, this is assumed when fingerprinting the server
@@ -102,7 +100,6 @@ public class CrawlerRetreiver {
                     CrawledDomain.builder()
                             .crawlerStatus(err.status().name())
                             .crawlerStatusDesc(err.desc())
-                            .id(id)
                             .domain(domain)
                             .ip(ip)
                             .build()
@@ -116,7 +113,6 @@ public class CrawlerRetreiver {
                             .crawlerStatus(CrawlerDomainStatus.REDIRECT.name())
                             .crawlerStatusDesc("Redirected to different domain")
                             .redirectDomain(redirect.domain().toString())
-                            .id(id)
                             .domain(domain)
                             .ip(ip)
                             .build()
@@ -147,7 +143,7 @@ public class CrawlerRetreiver {
 
         downloadSitemaps(robotsRules);
 
-        CrawledDomain ret = new CrawledDomain(id, domain, null, CrawlerDomainStatus.OK.name(), null, ip, new ArrayList<>(), null);
+        CrawledDomain ret = new CrawledDomain(domain, null, CrawlerDomainStatus.OK.name(), null, ip, new ArrayList<>(), null);
 
         int fetchedCount = recrawled;
 

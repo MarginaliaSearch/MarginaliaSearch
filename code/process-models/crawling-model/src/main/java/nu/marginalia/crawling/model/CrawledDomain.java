@@ -8,7 +8,6 @@ import java.util.List;
 
 @AllArgsConstructor @Data @Builder
 public class CrawledDomain implements SerializableCrawlData {
-    public String id;
     public String domain;
 
     public String redirectDomain;

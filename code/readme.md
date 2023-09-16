@@ -35,7 +35,6 @@ Processes are batch jobs that deal with data retrieval, processing and loading.
 
 #### Tools
 
-* * [crawl-job-extractor](tools/crawl-job-extractor)
 * * [term-frequency-extractor](tools/term-frequency-extractor)
 
 ### Features

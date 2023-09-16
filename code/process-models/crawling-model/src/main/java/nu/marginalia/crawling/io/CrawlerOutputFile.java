@@ -1,17 +1,10 @@
 package nu.marginalia.crawling.io;
 
-import nu.marginalia.crawling.model.spec.CrawlingSpecification;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class CrawlerOutputFile {
-
-    public static Path getOutputFile(Path base, CrawlingSpecification spec) {
-        return getOutputFile(base, spec.id, spec.domain);
-    }
-
 
     /** Return the Path to a file for the given id and name */
     public static Path getOutputFile(Path base, String id, String name) {

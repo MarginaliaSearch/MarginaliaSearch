@@ -33,8 +33,7 @@ public class ProcessService {
         CONVERTER("converter-process/bin/converter-process"),
         LOADER("loader-process/bin/loader-process"),
         INDEX_CONSTRUCTOR("index-construction-process/bin/index-construction-process"),
-        ADJACENCIES_CALCULATOR("website-adjacencies-calculator/bin/website-adjacencies-calculator"),
-        CRAWL_JOB_EXTRACTOR("crawl-job-extractor-process/bin/crawl-job-extractor-process")
+        ADJACENCIES_CALCULATOR("website-adjacencies-calculator/bin/website-adjacencies-calculator")
         ;
 
         public final String path;

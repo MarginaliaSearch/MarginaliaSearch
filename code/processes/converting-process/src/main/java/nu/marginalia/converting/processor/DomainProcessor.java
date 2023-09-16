@@ -48,7 +48,6 @@ public class DomainProcessor {
             if (data instanceof CrawledDomain crawledDomain) {
                 ret.domain = new EdgeDomain(crawledDomain.domain);
                 ret.ip = crawledDomain.ip;
-                ret.id = crawledDomain.id;
 
                 cookies = Objects.requireNonNullElse(crawledDomain.cookies, Collections.emptyList()).size() > 0;
                 ip = crawledDomain.ip;
