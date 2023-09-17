@@ -9,6 +9,4 @@ import java.util.Iterator;
 public interface SideloadSource {
     ProcessedDomain getDomain();
     Iterator<ProcessedDocument> getDocumentsStream();
-
-    String getId();
 }

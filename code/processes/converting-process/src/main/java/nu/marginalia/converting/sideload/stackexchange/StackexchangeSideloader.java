@@ -1,7 +1,8 @@
-package nu.marginalia.converting.sideload;
+package nu.marginalia.converting.sideload.stackexchange;
 
 import lombok.SneakyThrows;
 import nu.marginalia.converting.model.*;
+import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.model.EdgeDomain;
@@ -127,11 +128,5 @@ public class StackexchangeSideloader implements SideloadSource {
         }
 
         return ret;
-    }
-
-
-    @Override
-    public String getId() {
-        return domainName;
     }
 }

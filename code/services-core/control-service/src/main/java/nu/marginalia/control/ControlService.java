@@ -189,6 +189,7 @@ public class ControlService extends Service {
         Spark.post("/public/actions/flush-api-caches", controlActionsService::flushApiCaches, redirectToActors);
         Spark.post("/public/actions/truncate-links-database", controlActionsService::truncateLinkDatabase, redirectToActors);
         Spark.post("/public/actions/sideload-encyclopedia", controlActionsService::sideloadEncyclopedia, redirectToActors);
+        Spark.post("/public/actions/sideload-dirtree", controlActionsService::sideloadDirtree, redirectToActors);
 
         // Review Random Domains
         Spark.get("/public/review-random-domains", this::reviewRandomDomainsModel, reviewRandomDomainsRenderer::render);

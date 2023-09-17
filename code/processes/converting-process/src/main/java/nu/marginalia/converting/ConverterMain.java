@@ -29,6 +29,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.SQLException;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -84,11 +86,14 @@ public class ConverterMain {
         heartbeat.start();
     }
 
-    public void convert(SideloadSource sideloadSource, Path writeDir) throws Exception {
+    public void convert(Collection<? extends SideloadSource> sideloadSources, Path writeDir) throws Exception {
         try (var writer = new ConverterBatchWriter(writeDir, 0);
              BatchingWorkLog batchingWorkLog = new BatchingWorkLogImpl(writeDir.resolve("processor.log"))
         ) {
-            writer.write(sideloadSource);
+            for (var sideloadSource : sideloadSources) {
+                logger.info("Sideloading {}", sideloadSource.getDomain());
+                writer.write(sideloadSource);
+            }
 
             // We write an empty log with just a finish marker for the sideloading action
             batchingWorkLog.logFinishedBatch();
@@ -149,21 +154,27 @@ public class ConverterMain {
 
     private static class SideloadAction extends ConvertRequest {
 
-        private final SideloadSource sideloadSource;
+        private final Collection<? extends SideloadSource> sideloadSources;
         private final Path workDir;
 
         SideloadAction(SideloadSource sideloadSource,
                        Path workDir,
                        MqMessage message, MqSingleShotInbox inbox) {
             super(message, inbox);
-            this.sideloadSource = sideloadSource;
+            this.sideloadSources = List.of(sideloadSource);
             this.workDir = workDir;
         }
-
+        SideloadAction(Collection<? extends SideloadSource> sideloadSources,
+                       Path workDir,
+                       MqMessage message, MqSingleShotInbox inbox) {
+            super(message, inbox);
+            this.sideloadSources = sideloadSources;
+            this.workDir = workDir;
+        }
         @Override
         public void execute(ConverterMain converterMain) throws Exception {
             try {
-                converterMain.convert(sideloadSource, workDir);
+                converterMain.convert(sideloadSources, workDir);
                 ok();
             }
             catch (Exception ex) {
@@ -203,39 +214,43 @@ public class ConverterMain {
 
         var request = gson.fromJson(msg.payload(), nu.marginalia.mqapi.converting.ConvertRequest.class);
 
-        if (request.action == ConvertAction.ConvertCrawlData) {
+        var filePath = Path.of(request.inputSource);
 
-            var crawlData = fileStorageService.getStorage(request.crawlStorage);
-            var processData = fileStorageService.getStorage(request.processedDataStorage);
+        return switch(request.action) {
+            case ConvertCrawlData -> {
+                var crawlData = fileStorageService.getStorage(request.crawlStorage);
+                var processData = fileStorageService.getStorage(request.processedDataStorage);
 
-            var plan = new CrawlPlan(null,
-                    new CrawlPlan.WorkDir(crawlData.path(), "crawler.log"),
-                    new CrawlPlan.WorkDir(processData.path(), "processor.log"));
+                var plan = new CrawlPlan(null,
+                        new CrawlPlan.WorkDir(crawlData.path(), "crawler.log"),
+                        new CrawlPlan.WorkDir(processData.path(), "processor.log"));
 
-            return new ConvertCrawlDataAction(plan, msg, inbox);
-        }
+                yield new ConvertCrawlDataAction(plan, msg, inbox);
+            }
+            case SideloadEncyclopedia -> {
+                var processData = fileStorageService.getStorage(request.processedDataStorage);
 
-        if (request.action == ConvertAction.SideloadEncyclopedia) {
-            var processData = fileStorageService.getStorage(request.processedDataStorage);
-            var filePath = Path.of(request.inputSource);
+                yield new SideloadAction(sideloadSourceFactory.sideloadEncyclopediaMarginaliaNu(filePath),
+                        processData.asPath(),
+                        msg, inbox);
+            }
+            case SideloadDirtree -> {
+                var processData = fileStorageService.getStorage(request.processedDataStorage);
 
-            return new SideloadAction(sideloadSourceFactory.sideloadEncyclopediaMarginaliaNu(filePath),
-                    processData.asPath(),
-                    msg, inbox);
-        }
+                yield new SideloadAction(
+                        sideloadSourceFactory.sideloadDirtree(filePath),
+                        processData.asPath(),
+                        msg, inbox);
+            }
+            case SideloadStackexchange -> {
+                var processData = fileStorageService.getStorage(request.processedDataStorage);
+                var domainName = filePath.toFile().getName().substring(0, filePath.toFile().getName().lastIndexOf('.'));
 
-        if (request.action == ConvertAction.SideloadStackexchange) {
-            var processData = fileStorageService.getStorage(request.processedDataStorage);
-            var filePath = Path.of(request.inputSource);
-            var domainName = filePath.toFile().getName().substring(0, filePath.toFile().getName().lastIndexOf('.'));
-            return new SideloadAction(sideloadSourceFactory.sideloadStackexchange(filePath, domainName),
-                    processData.asPath(),
-                    msg, inbox);
-        }
-
-        else {
-            throw new RuntimeException("Unknown action: " + request.action);
-        }
+                yield new SideloadAction(sideloadSourceFactory.sideloadStackexchange(filePath, domainName),
+                        processData.asPath(),
+                        msg, inbox);
+            }
+        };
     }
 
     private Optional<MqMessage> getMessage(MqSingleShotInbox inbox, String expectedFunction) throws SQLException, InterruptedException {

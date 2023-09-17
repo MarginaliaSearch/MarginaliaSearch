@@ -40,6 +40,21 @@
             </td>
         </tr>
         <tr>
+            <td><b>Sideload Dirtree</b><p>
+                This will load HTML from a directory structure as specified
+                 by a YAML file.
+            </td>
+            <td>
+                <form method="post" action="/actions/sideload-dirtree" onsubmit="return confirm('Confirm sideloading')">
+                    <label for="source">yaml file location on server</label><br>
+                    <input id="source" name="source" value="">
+                    <br><br>
+
+                    <input type="submit" value="Sideload Dirtree">
+                </form>
+            </td>
+        </tr>
+        <tr>
             <td>
                 <b>Reload Blogs List</b>
                 <p>This will reload the list of blogs from its source.</p>

@@ -34,6 +34,7 @@ public class ConvertActor extends AbstractActorPrototype {
     public static final String INITIAL = "INITIAL";
     public static final String CONVERT = "CONVERT";
     public static final String CONVERT_ENCYCLOPEDIA = "CONVERT_ENCYCLOPEDIA";
+    public static final String CONVERT_DIRTREE = "CONVERT_DIRTREE";
     public static final String CONVERT_STACKEXCHANGE = "CONVERT_STACKEXCHANGE";
     public static final String CONVERT_WAIT = "CONVERT-WAIT";
 
@@ -131,6 +132,38 @@ public class ConvertActor extends AbstractActorPrototype {
 
         // Pre-send convert request
         var request = new ConvertRequest(ConvertAction.SideloadEncyclopedia,
+                sourcePath.toString(),
+                null,
+                processedArea.id());
+
+        return mqConverterOutbox.sendAsync(ConvertRequest.class.getSimpleName(), gson.toJson(request));
+    }
+
+
+    @ActorState(name = CONVERT_DIRTREE,
+            next = CONVERT_WAIT,
+            resume = ActorResumeBehavior.ERROR,
+            description = """
+                        Allocate a storage area for the processed data,
+                        then send a convert request to the converter and transition to RECONVERT_WAIT.
+                        """
+    )
+    public Long convertDirtree(String source) throws Exception {
+        // Create processed data area
+
+        Path sourcePath = Path.of(source);
+        if (!Files.exists(sourcePath))
+            error("Source path does not exist: " + sourcePath);
+
+        String fileName = sourcePath.toFile().getName();
+
+        var base = storageService.getStorageBase(FileStorageBaseType.SLOW);
+        var processedArea = storageService.allocateTemporaryStorage(base,
+                FileStorageType.PROCESSED_DATA, "processed-data",
+                "Processed Dirtree Data; " + fileName);
+
+        // Pre-send convert request
+        var request = new ConvertRequest(ConvertAction.SideloadDirtree,
                 sourcePath.toString(),
                 null,
                 processedArea.id());

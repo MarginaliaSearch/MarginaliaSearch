@@ -79,6 +79,8 @@ dependencies {
     implementation libs.trove
     implementation libs.fastutil
 
+    implementation libs.snakeyaml
+
     implementation libs.crawlercommons
 
     implementation libs.commons.lang3

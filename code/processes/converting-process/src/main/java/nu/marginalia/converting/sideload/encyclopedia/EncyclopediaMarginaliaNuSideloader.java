@@ -1,4 +1,4 @@
-package nu.marginalia.converting.sideload;
+package nu.marginalia.converting.sideload.encyclopedia;
 
 import com.github.luben.zstd.ZstdInputStream;
 import com.google.gson.Gson;
@@ -6,12 +6,10 @@ import lombok.SneakyThrows;
 import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.model.ProcessedDomain;
-import nu.marginalia.converting.processor.plugin.HtmlDocumentProcessorPlugin;
-import nu.marginalia.crawling.model.CrawledDocument;
+import nu.marginalia.converting.sideload.SideloadSource;
+import nu.marginalia.converting.sideload.SideloaderProcessing;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
-import nu.marginalia.model.crawl.UrlIndexingState;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -21,7 +19,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.sql.*;
-import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -39,13 +36,13 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
 
     private final Connection connection;
     private final Gson gson;
-    private final HtmlDocumentProcessorPlugin htmlProcessorPlugin;
+    private final SideloaderProcessing sideloaderProcessing;
 
     public EncyclopediaMarginaliaNuSideloader(Path pathToDbFile,
                                               Gson gson,
-                                              HtmlDocumentProcessorPlugin htmlProcessorPlugin) throws SQLException {
+                                              SideloaderProcessing sideloaderProcessing) throws SQLException {
         this.gson = gson;
-        this.htmlProcessorPlugin = htmlProcessorPlugin;
+        this.sideloaderProcessing = sideloaderProcessing;
         String sqliteDbString = "jdbc:sqlite:" + pathToDbFile.toString();
 
         connection = DriverManager.getConnection(sqliteDbString);
@@ -57,7 +54,7 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
         var ret = new ProcessedDomain();
 
         ret.domain = new EdgeDomain("encyclopedia.marginalia.nu");
-        ret.ip = "127.0.0.1";
+        ret.ip = "0.0.0.0";
         ret.state = DomainIndexingState.ACTIVE;
 
         return ret;
@@ -134,42 +131,11 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
         }
         fullHtml.append("</body></html>");
 
-        var crawledDoc = new CrawledDocument(
-                "encyclopedia.marginalia.nu",
-                fullUrl,
-                "text/html",
-                LocalDateTime.now().toString(),
-                200,
-                "OK",
-                "NP",
-                "",
-                fullHtml.toString(),
-                Integer.toHexString(fullHtml.hashCode()),
-                fullUrl,
-                "",
-                "SIDELOAD"
-        );
-
-        var ret = new ProcessedDocument();
-        try {
-            var details = htmlProcessorPlugin.createDetails(crawledDoc);
-
-            ret.words = details.words();
-            ret.details = details.details();
-            ret.details.metadata = ret.details.metadata
-                    .withSize(10_000_000, Math.max(0, 255 - url.length()));
-            ret.url = new EdgeUrl(fullUrl);
-            ret.state = UrlIndexingState.OK;
-            ret.stateReason = "SIDELOAD";
-        }
-        catch (Exception e) {
-            ret.url = new EdgeUrl(fullUrl);
-            ret.state = UrlIndexingState.DISQUALIFIED;
-            ret.stateReason = "SIDELOAD";
-        }
-
-        return ret;
-
+        return sideloaderProcessing
+                .processDocument(fullUrl,
+                        fullHtml.toString(),
+                        List.of("encyclopedia", "wiki"),
+                        10_000_000);
     }
 
     private <T> T fromCompressedJson(byte[] stream, Class<T> type) throws IOException {
@@ -179,51 +145,7 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
     private record ArticleParts(List<String> parts) {}
 
     @Override
-    public String getId() {
-        return "encyclopedia.marginalia.nu";
-    }
-
-    @Override
     public void close() throws Exception {
         connection.close();
-    }
-
-    private abstract static class SqlQueryIterator<T> implements Iterator<T> {
-        PreparedStatement stmt;
-        ResultSet rs;
-        T next = null;
-
-        public SqlQueryIterator(PreparedStatement stmt) throws SQLException {
-            this.stmt = stmt;
-            stmt.setFetchSize(1000);
-            rs = stmt.executeQuery();
-        }
-
-        @SneakyThrows
-        @Override
-        public boolean hasNext() {
-            if (next != null) {
-                return true;
-            }
-            if (!rs.next()) {
-                stmt.close();
-                return false;
-            }
-
-            next = convert(rs);
-
-            return true;
-        }
-
-        public abstract T convert(ResultSet rs) throws Exception;
-
-        @Override
-        public T next () {
-            if (!hasNext())
-                throw new IllegalStateException("No next element");
-            var ret = next;
-            next = null;
-            return ret;
-        }
     }
 }

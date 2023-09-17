@@ -1,4 +1,4 @@
-package nu.marginalia.converting.sideload;
+package nu.marginalia.converting.sideload.stackexchange;
 
 import lombok.SneakyThrows;
 import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry;

@@ -114,6 +114,20 @@ public class ControlActionsService {
         return "";
     }
 
+    public Object sideloadDirtree(Request request, Response response) throws Exception {
+
+        Path sourcePath = Path.of(request.queryParams("source"));
+        if (!Files.exists(sourcePath)) {
+            Spark.halt(404);
+            return "No such file " + sourcePath;
+        }
+
+        eventLog.logEvent("USER-ACTION", "SIDELOAD DIRTREE");
+
+        actors.startFrom(Actor.CONVERT, ConvertActor.CONVERT_DIRTREE, sourcePath.toString());
+
+        return "";
+    }
 
     public Object triggerRepartition(Request request, Response response) throws Exception {
         indexClient.outbox().sendAsync(IndexMqEndpoints.INDEX_REPARTITION, "");

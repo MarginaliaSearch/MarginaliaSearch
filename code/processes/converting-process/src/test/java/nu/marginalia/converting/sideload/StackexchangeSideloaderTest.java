@@ -1,5 +1,6 @@
 package nu.marginalia.converting.sideload;
 
+import nu.marginalia.converting.sideload.stackexchange.StackExchange7zReader;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
