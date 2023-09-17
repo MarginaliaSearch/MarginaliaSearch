@@ -71,6 +71,12 @@ public class DirtreeSideloader implements SideloadSource, AutoCloseable {
         String body = Files.readString(path);
         String url = urlBase + dirBase.relativize(path);
 
+        // We trim "/index.html"-suffixes from the index if they are present,
+        // since this is typically an artifact from document retrieval
+        if (url.endsWith("/index.html")) {
+            url = url.substring(0, url.length() - "index.html".length());
+        }
+
         return sideloaderProcessing
                 .processDocument(url, body, extraKeywords, 10_000);
     }
