@@ -33,8 +33,9 @@ public class StackExchangePostsDb {
 
     /** Construct a SQLIte file containing the Posts in the stack exchange-style 7z file */
     @SneakyThrows
-    public static void create(Path sqliteFile,
-                       Path stackExchange7zFile) {
+    public static void create(String domain,
+                              Path sqliteFile,
+                              Path stackExchange7zFile) {
         if (Files.exists(sqliteFile))
             Files.delete(sqliteFile);
         String connStr = "jdbc:sqlite:" + sqliteFile;
@@ -57,6 +58,13 @@ public class StackExchangePostsDb {
             var postReader = new StackExchangeXmlPostReader(
                     stackExchange7zFile
             );
+
+            var insertMeta = connection.prepareStatement("""
+                    INSERT INTO metadata(domainName)
+                    VALUES (?)
+                    """);
+            insertMeta.setString(1, domain);
+            insertMeta.executeUpdate();
 
             var insertPost = connection.prepareStatement("""
                      INSERT INTO post(id, threadId, postYear, title, body, origSize, tags)

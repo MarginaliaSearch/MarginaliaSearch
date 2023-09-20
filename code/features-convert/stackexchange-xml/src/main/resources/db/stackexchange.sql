@@ -8,4 +8,8 @@ CREATE TABLE post (
     tags TEXT
 );
 
+CREATE TABLE metadata (
+   domainName TEXT
+);
+
 CREATE INDEX post_threadId ON post(threadId);
