@@ -29,6 +29,7 @@ include 'code:features-search:query-parser'
 include 'code:features-search:result-ranking'
 
 include 'code:features-convert:adblock'
+include 'code:features-convert:stackexchange-xml'
 include 'code:features-convert:pubdate'
 include 'code:features-convert:summary-extraction'
 include 'code:features-convert:keyword-extraction'

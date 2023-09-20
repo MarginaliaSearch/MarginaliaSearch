@@ -1,0 +1,39 @@
+plugins {
+    id 'java'
+    id "io.freefair.lombok" version "8.2.2"
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(20))
+    }
+}
+
+dependencies {
+    implementation libs.lombok
+    annotationProcessor libs.lombok
+    implementation libs.bundles.slf4j
+
+    implementation 'org.tukaani:xz:1.8'
+    implementation project(':code:libraries:blocking-thread-pool')
+    implementation libs.notnull
+
+    implementation libs.jsoup
+    implementation libs.sqlite
+
+    implementation libs.guice
+    implementation libs.guava
+    implementation libs.zstd
+    implementation libs.trove
+    implementation libs.commons.compress
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+}
+
+test {
+    maxHeapSize = "8G"
+    useJUnitPlatform()
+}
