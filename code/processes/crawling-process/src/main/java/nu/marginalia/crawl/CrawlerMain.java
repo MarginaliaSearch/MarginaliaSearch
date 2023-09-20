@@ -23,6 +23,7 @@ import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.crawling.io.CrawledDomainWriter;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
+import nu.marginalia.util.SimpleBlockingThreadPool;
 import okhttp3.ConnectionPool;
 import okhttp3.Dispatcher;
 import okhttp3.internal.Util;
@@ -53,7 +54,7 @@ public class CrawlerMain {
     private final MessageQueueFactory messageQueueFactory;
     private final FileStorageService fileStorageService;
     private final Gson gson;
-    private final DumbThreadPool pool;
+    private final SimpleBlockingThreadPool pool;
 
     private final Map<String, String> processingIds = new ConcurrentHashMap<>();
     private final CrawledDomainReader reader = new CrawledDomainReader();
@@ -77,7 +78,7 @@ public class CrawlerMain {
         this.gson = gson;
 
         // maybe need to set -Xss for JVM to deal with this?
-        pool = new DumbThreadPool(CrawlLimiter.maxPoolSize, 1);
+        pool = new SimpleBlockingThreadPool("CrawlerPool", CrawlLimiter.maxPoolSize, 1);
     }
 
     public static void main(String... args) throws Exception {
@@ -150,7 +151,7 @@ public class CrawlerMain {
         }
     }
 
-    class CrawlTask implements DumbThreadPool.Task {
+    class CrawlTask implements SimpleBlockingThreadPool.Task {
 
         private final CrawlSpecRecord specification;
 

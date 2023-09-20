@@ -14,11 +14,10 @@ import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.inbox.MqInboxResponse;
 import nu.marginalia.mq.inbox.MqSingleShotInbox;
-import nu.marginalia.mqapi.converting.ConvertAction;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
-import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.service.module.DatabaseModule;
+import nu.marginalia.util.SimpleBlockingThreadPool;
 import nu.marginalia.worklog.BatchingWorkLog;
 import nu.marginalia.worklog.BatchingWorkLogImpl;
 import plan.CrawlPlan;
@@ -26,7 +25,6 @@ import nu.marginalia.converting.processor.DomainProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -107,7 +105,7 @@ public class ConverterMain {
         try (BatchingWorkLog batchingWorkLog = new BatchingWorkLogImpl(plan.process.getLogFile());
              ConverterWriter converterWriter = new ConverterWriter(batchingWorkLog, plan.process.getDir()))
         {
-            var pool = new DumbThreadPool(maxPoolSize, 2);
+            var pool = new SimpleBlockingThreadPool("ConverterThread", maxPoolSize, 2);
 
             int totalDomains = plan.countCrawledDomains();
             AtomicInteger processedDomains = new AtomicInteger(0);

@@ -35,6 +35,7 @@ dependencies {
     implementation project(':code:common:service')
     implementation project(':code:common:config')
     implementation project(':code:libraries:message-queue')
+    implementation project(':code:libraries:blocking-thread-pool')
     implementation project(':code:common:service-discovery')
     implementation project(':code:common:service-client')
 

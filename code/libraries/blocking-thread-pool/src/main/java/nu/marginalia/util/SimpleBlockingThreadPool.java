@@ -1,40 +1,37 @@
-package nu.marginalia.crawl;
+package nu.marginalia.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/** A simple thread pool implementation that will never invoke
- * a task in the calling thread like {@link java.util.concurrent.ThreadPoolExecutor}
- * does when the queue is full. Instead, it will block until a thread
- * becomes available to run the task. This is useful for coarse grained
- * tasks where the calling thread might otherwise block for hours.
+/** A dead simple thread pool implementation that will block the caller
+ * when it is not able to perform a task.  This is desirable in batch
+ * processing workloads.
  */
-// TODO: This class exists in converter as well, should probably be broken out into a common library; use this version
-public class DumbThreadPool {
+public class SimpleBlockingThreadPool {
     private final List<Thread> workers = new ArrayList<>();
-    private final LinkedBlockingQueue<Task> tasks;
+    private final BlockingQueue<Task> tasks;
     private volatile boolean shutDown = false;
     private final AtomicInteger taskCount = new AtomicInteger(0);
-    private final Logger logger = LoggerFactory.getLogger(DumbThreadPool.class);
+    private final Logger logger = LoggerFactory.getLogger(SimpleBlockingThreadPool.class);
 
-    public DumbThreadPool(int poolSize, int queueSize) {
-        tasks = new LinkedBlockingQueue<>(queueSize);
+    public SimpleBlockingThreadPool(String name, int poolSize, int queueSize) {
+        tasks = new ArrayBlockingQueue<>(queueSize);
 
         for (int i = 0; i < poolSize; i++) {
-            Thread worker = new Thread(this::worker, "Crawler Thread " + i);
+            Thread worker = new Thread(this::worker, name  + "[" + i + "]");
             worker.setDaemon(true);
             worker.start();
             workers.add(worker);
         }
 
     }
-
     public void submit(Task task) throws InterruptedException {
         tasks.put(task);
     }
@@ -126,4 +123,5 @@ public class DumbThreadPool {
     public interface Task {
         void run() throws Exception;
     }
+
 }

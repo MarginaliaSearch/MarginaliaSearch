@@ -17,6 +17,7 @@ public class HtmlProcessorSpecializations {
     private final XenForoSpecialization xenforoSpecialization;
     private final PhpBBSpecialization phpBBSpecialization;
     private final JavadocSpecialization javadocSpecialization;
+    private final MariadbKbSpecialization mariadbKbSpecialization;
     private final BlogSpecialization blogSpecialization;
     private final DefaultSpecialization defaultSpecialization;
 
@@ -26,13 +27,14 @@ public class HtmlProcessorSpecializations {
                                         XenForoSpecialization xenforoSpecialization,
                                         PhpBBSpecialization phpBBSpecialization,
                                         JavadocSpecialization javadocSpecialization,
-                                        BlogSpecialization blogSpecialization,
+                                        MariadbKbSpecialization mariadbKbSpecialization, BlogSpecialization blogSpecialization,
                                         DefaultSpecialization defaultSpecialization) {
         this.domainTypes = domainTypes;
         this.lemmySpecialization = lemmySpecialization;
         this.xenforoSpecialization = xenforoSpecialization;
         this.phpBBSpecialization = phpBBSpecialization;
         this.javadocSpecialization = javadocSpecialization;
+        this.mariadbKbSpecialization = mariadbKbSpecialization;
         this.blogSpecialization = blogSpecialization;
         this.defaultSpecialization = defaultSpecialization;
     }
@@ -45,6 +47,11 @@ public class HtmlProcessorSpecializations {
 
         if (domainTypes.isBlog(url.domain)) {
             return blogSpecialization;
+        }
+
+        if (url.domain.getDomain().equals("mariadb.com")
+                && url.path.startsWith("/kb")) {
+            return mariadbKbSpecialization;
         }
 
         if (generator.keywords().contains("lemmy")) {
