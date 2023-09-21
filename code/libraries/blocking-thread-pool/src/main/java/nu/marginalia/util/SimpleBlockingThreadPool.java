@@ -120,6 +120,10 @@ public class SimpleBlockingThreadPool {
         return taskCount.get();
     }
 
+    public boolean isTerminated() {
+        return shutDown && getActiveCount() == 0;
+    }
+
     public interface Task {
         void run() throws Exception;
     }
