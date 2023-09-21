@@ -29,9 +29,3 @@ incorporates the project's cal-ver versioning; and are applied in lexicographica
 ## See Also 
 
 * [common/service](../service) implements DatabaseModule, which is from where the services get database connections.
-
-## Relation diagrams for EC_DOMAIN and EC_URL
-
-![image](../../../doc/sql/er-diagram-domain.png)
-
-![image](../../../doc/sql/er-diagram-url.png)
