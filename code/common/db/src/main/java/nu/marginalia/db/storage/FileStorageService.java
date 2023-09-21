@@ -1,6 +1,7 @@
 package nu.marginalia.db.storage;
 
 import com.zaxxer.hikari.HikariDataSource;
+import lombok.SneakyThrows;
 import nu.marginalia.db.storage.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +15,10 @@ import java.nio.file.*;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 /** Manages file storage for processes and services
  */
@@ -22,6 +26,8 @@ import java.util.*;
 public class FileStorageService {
     private final HikariDataSource dataSource;
     private final Logger logger = LoggerFactory.getLogger(FileStorageService.class);
+
+    private static final DateTimeFormatter dirNameDatePattern = DateTimeFormatter.ofPattern("__uu-MM-dd'T'HH_mm_ss.SSS"); // filesystem safe ISO8601
     @Inject
     public FileStorageService(HikariDataSource dataSource) {
         this.dataSource = dataSource;
@@ -199,6 +205,29 @@ public class FileStorageService {
         return getStorageBase(type);
     }
 
+    @SneakyThrows
+    private Path allocateDirectory(Path basePath, String prefix) throws IOException {
+        LocalDateTime now = LocalDateTime.now();
+        String timestampPart = now.format(dirNameDatePattern);
+        Path maybePath = basePath.resolve(prefix + timestampPart);
+
+        try {
+            Files.createDirectory(maybePath,
+                    PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x"))
+            );
+        }
+        catch (FileAlreadyExistsException ex) {
+            // in case of a race condition, try again with some random cruft at the end
+            maybePath = basePath.resolve(prefix + timestampPart + "_" + Long.toHexString(ThreadLocalRandom.current().nextLong()));
+
+            Files.createDirectory(maybePath,
+                    PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x"))
+            );
+        }
+
+        return maybePath;
+    }
+
     /** Allocate a temporary storage of the given type if temporary allocation is permitted */
     public FileStorage allocateTemporaryStorage(FileStorageBase base,
                                                 FileStorageType type,
@@ -209,11 +238,9 @@ public class FileStorageService {
             throw new IllegalArgumentException("Temporary storage not permitted in base "  + base.name());
         }
 
-        Path tempDir = Files.createTempDirectory(base.asPath(), prefix,
-                PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x"))
-        );
+        Path newDir = allocateDirectory(base.asPath(), prefix);
 
-        String relDir = base.asPath().relativize(tempDir).normalize().toString();
+        String relDir = base.asPath().relativize(newDir).normalize().toString();
 
         try (var conn = dataSource.getConnection();
              var insert = conn.prepareStatement("""

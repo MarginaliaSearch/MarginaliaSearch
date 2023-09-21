@@ -145,7 +145,7 @@ public class FileStorageServiceTest {
 
         var base = storage.createStorageBase(name, createTempDir(), FileStorageBaseType.SLOW, true);
         var fileStorage = storage.allocateTemporaryStorage(base, FileStorageType.CRAWL_DATA, "xyz", "thisShouldSucceed");
-
+        System.out.println("Allocated " + fileStorage.asPath());
         Assertions.assertTrue(Files.exists(fileStorage.asPath()));
         tempDirs.add(fileStorage.asPath());
     }
