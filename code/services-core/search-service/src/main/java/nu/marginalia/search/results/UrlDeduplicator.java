@@ -22,16 +22,16 @@ public class UrlDeduplicator {
         this.resultsPerKey = resultsPerKey;
     }
 
-    public boolean shouldRemove(UrlDetails details) {
-        return !filter(details);
-    }
+    public synchronized boolean shouldRemove(UrlDetails details) {
+        if (!deduplicateOnSuperficialHash(details))
+            return true;
+        if (!deduplicateOnLSH(details))
+            return true;
+        if (!limitResultsPerDomain(details))
+            return true;
 
-    public synchronized boolean filter(UrlDetails details) {
-        return deduplicateOnSuperficialHash(details)
-                && deduplicateOnLSH(details)
-                && limitResultsPerDomain(details);
+        return false;
     }
-
 
     private boolean deduplicateOnSuperficialHash(UrlDetails details) {
         return seenSuperficialhashes.add(details.getSuperficialHash());
@@ -40,11 +40,15 @@ public class UrlDeduplicator {
     private boolean deduplicateOnLSH(UrlDetails details) {
         long thisHash = details.dataHash;
 
+        if (0 == thisHash)
+            return true;
+
         if (seehLSHList.forEach(otherHash -> EasyLSH.hammingDistance(thisHash, otherHash) >= LSH_SIMILARITY_THRESHOLD))
         {
             seehLSHList.add(thisHash);
             return true;
         }
+
         return false;
 
     }
