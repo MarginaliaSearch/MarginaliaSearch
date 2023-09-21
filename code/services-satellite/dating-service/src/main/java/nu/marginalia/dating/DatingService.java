@@ -47,24 +47,12 @@ public class DatingService extends Service {
         this.screenshotService = screenshotService;
 
         Spark.get("/public/reset", this::getReset);
-        Spark.get("/public/", this::serveIndex);
+        Spark.get("/public/", this::getInitSession);
         Spark.get("/public/view", this::getCurrent);
         Spark.get("/public/next", this::getNext);
         Spark.get("/public/similar/:id", this::getSimilar);
         Spark.get("/public/rewind", this::getRewind);
         Spark.get("/public/init", this::getInitSession);
-    }
-
-    @SneakyThrows
-    private Object serveIndex(Request request, Response response) {
-        try {
-            ClassPathResource resource = new ClassPathResource("static/dating/index.html");
-            resource.getInputStream().transferTo(response.raw().getOutputStream());
-        }
-        catch (IllegalArgumentException| FileNotFoundException ex) {
-            return false;
-        }
-        return "";
     }
 
     private Object getInitSession(Request request, Response response) {
