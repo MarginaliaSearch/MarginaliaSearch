@@ -53,6 +53,7 @@ dependencies {
     implementation project(':code:features-convert:pubdate')
     implementation project(':code:features-convert:keyword-extraction')
     implementation project(':code:features-convert:summary-extraction')
+    implementation project(':code:features-convert:stackexchange-xml')
 
     implementation project(':code:features-crawl:crawl-blocklist')
     implementation project(':code:features-crawl:link-parser')

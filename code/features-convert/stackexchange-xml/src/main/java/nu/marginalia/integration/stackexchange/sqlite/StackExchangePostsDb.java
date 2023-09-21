@@ -155,6 +155,8 @@ public class StackExchangePostsDb {
                 String title = "";
                 int year = 2023;
 
+                String tags = "";
+
                 List<Future<String>> partWork = new ArrayList<>();
                 var commonPool = ForkJoinPool.commonPool();
                 while (rs.next()) {
@@ -162,6 +164,11 @@ public class StackExchangePostsDb {
 
                     if (maybeTitle != null && !maybeTitle.isBlank())
                         title = maybeTitle;
+
+                    String maybeTags = rs.getString("tags");
+                    if (maybeTags != null && !maybeTags.isBlank())
+                        tags = maybeTags;
+
                     int origSize = rs.getInt("origSize");
 
                     year = Math.min(year, rs.getInt("postYear"));
@@ -177,7 +184,7 @@ public class StackExchangePostsDb {
                     parts.add(workItem.get());
                 }
 
-                if (!consumer.test(new CombinedPostModel(ordinal++, threadId, title, year, parts)))
+                if (!consumer.test(new CombinedPostModel(ordinal++, threadId, title, year, parts, tags)))
                     break;
             }
 
@@ -188,11 +195,27 @@ public class StackExchangePostsDb {
 
     }
 
+    public static String getDomainName(Path pathToDbFile) throws SQLException {
+        String connStr = "jdbc:sqlite:" + pathToDbFile;
+
+        try (var connection = DriverManager.getConnection(connStr);
+             var stmt = connection.prepareStatement("SELECT domainName FROM metadata")
+        ) {
+            var rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString(1);
+            }
+            throw new IllegalArgumentException("No metadata in db file " + pathToDbFile);
+        }
+
+    }
+
     public record CombinedPostModel(int ordinal,
                                     int threadId,
                                     String title,
                                     int year,
-                                    List<String> bodies)
+                                    List<String> bodies,
+                                    String tags)
     { }
 
 }

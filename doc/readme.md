@@ -6,6 +6,7 @@ Start in [📁 ../code/](../code/) and poke around.
 ## Operations
 
 * [System Properties](system-properties.md) - JVM property flags
+* [Sideloading How-To](sideloading-howto.md) - How to sideload various data sets
 
 ## Set-up
 

@@ -129,6 +129,21 @@ public class ControlActionsService {
         return "";
     }
 
+    public Object sideloadStackexchange(Request request, Response response) throws Exception {
+
+        Path sourcePath = Path.of(request.queryParams("source"));
+        if (!Files.exists(sourcePath)) {
+            Spark.halt(404);
+            return "No such file " + sourcePath;
+        }
+
+        eventLog.logEvent("USER-ACTION", "SIDELOAD STACKEXCHANGE");
+
+        actors.startFrom(Actor.CONVERT, ConvertActor.CONVERT_STACKEXCHANGE, sourcePath.toString());
+
+        return "";
+    }
+
     public Object triggerRepartition(Request request, Response response) throws Exception {
         indexClient.outbox().sendAsync(IndexMqEndpoints.INDEX_REPARTITION, "");
 

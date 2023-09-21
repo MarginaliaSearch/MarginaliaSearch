@@ -9,6 +9,7 @@ import nu.marginalia.keyword.DocumentKeywordExtractor;
 import nu.marginalia.language.sentence.SentenceExtractor;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -42,8 +43,13 @@ public class SideloadSourceFactory {
     }
 
     /** Do not use, this code isn't finished */
-    @Deprecated()
-    public SideloadSource sideloadStackexchange(Path pathTo7zFile, String domainName) {
-        return new StackexchangeSideloader(pathTo7zFile, domainName, sentenceExtractor, documentKeywordExtractor);
+    public Collection<? extends SideloadSource> sideloadStackexchange(Path pathToDbFileRoot) throws IOException {
+        try (var dirs = Files.walk(pathToDbFileRoot)) {
+            return dirs
+                .filter(Files::isRegularFile)
+                .filter(f -> f.toFile().getName().endsWith(".db"))
+                .map(dbFile -> new StackexchangeSideloader(dbFile, sentenceExtractor, documentKeywordExtractor))
+                .toList();
+        }
     }
 }

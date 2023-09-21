@@ -7,12 +7,6 @@ These are JVM system properties used by each service
 |-------------|------------|-------------------------------------------------------|
 | website-url |https://search.marginalia.nu/|Overrides the website URL used in rendering|
 
-## Index Service
-
-|flag| values     | description                                                   |
-|---|------------|---------------------------------------------------------------|
-|lexiconSizeHint| 1000000000 | The default size of the lexicon, speeds up start time in prod |
-
 ## Crawler Process
 |flag| values     | description                                           |
 |---|------------|-------------------------------------------------------|
@@ -26,12 +20,5 @@ These are JVM system properties used by each service
 ## Loader Process
 |flag| values     | description                                           |
 |---|------------|-------------------------------------------------------|
-|lexiconSizeHint| 800000000  | The default size of the lexicon                       |
 |local-index-path| /some/path | Selects the location the loader will write index data |
 |crawl.rootDirRewrite|/some/path|Sets the base directory of a crawl plan |
-
-## Other
-
-|flag| values     | description                                 |
-|---|------------|---------------------------------------------|
-|bigstring.disabled| true/false | Disables transparent big string compression |

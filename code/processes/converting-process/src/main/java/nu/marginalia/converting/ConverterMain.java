@@ -25,6 +25,7 @@ import nu.marginalia.converting.processor.DomainProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -86,12 +87,19 @@ public class ConverterMain {
 
     public void convert(Collection<? extends SideloadSource> sideloadSources, Path writeDir) throws Exception {
         try (var writer = new ConverterBatchWriter(writeDir, 0);
+             var taskHeartbeat = heartbeat.createAdHocTaskHeartbeat("Sideloading");
              BatchingWorkLog batchingWorkLog = new BatchingWorkLogImpl(writeDir.resolve("processor.log"))
         ) {
+
+            int i = 0;
             for (var sideloadSource : sideloadSources) {
                 logger.info("Sideloading {}", sideloadSource.getDomain());
+
+                taskHeartbeat.progress(sideloadSource.getDomain().toString(), i++, sideloadSources.size());
+
                 writer.write(sideloadSource);
             }
+            taskHeartbeat.progress("Finished", i, sideloadSources.size());
 
             // We write an empty log with just a finish marker for the sideloading action
             batchingWorkLog.logFinishedBatch();
@@ -242,9 +250,8 @@ public class ConverterMain {
             }
             case SideloadStackexchange -> {
                 var processData = fileStorageService.getStorage(request.processedDataStorage);
-                var domainName = filePath.toFile().getName().substring(0, filePath.toFile().getName().lastIndexOf('.'));
 
-                yield new SideloadAction(sideloadSourceFactory.sideloadStackexchange(filePath, domainName),
+                yield new SideloadAction(sideloadSourceFactory.sideloadStackexchange(filePath),
                         processData.asPath(),
                         msg, inbox);
             }

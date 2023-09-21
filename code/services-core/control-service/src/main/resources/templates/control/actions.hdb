@@ -55,6 +55,20 @@
             </td>
         </tr>
         <tr>
+            <td><b>Sideload Stackexchange</b><p>
+                Will load a set of pre-converted stackexchange .db files.
+            </td>
+            <td>
+                <form method="post" action="/actions/sideload-stackexchange" onsubmit="return confirm('Confirm sideloading')">
+                    <label for="source">Directory with .db files location on server</label><br>
+                    <input id="source" name="source" value="">
+                    <br><br>
+
+                    <input type="submit" value="Sideload Stackexchange">
+                </form>
+            </td>
+        </tr>
+        <tr>
             <td>
                 <b>Reload Blogs List</b>
                 <p>This will reload the list of blogs from its source.</p>
