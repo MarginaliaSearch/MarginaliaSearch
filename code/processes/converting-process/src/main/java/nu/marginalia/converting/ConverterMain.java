@@ -220,8 +220,6 @@ public class ConverterMain {
 
         var request = gson.fromJson(msg.payload(), nu.marginalia.mqapi.converting.ConvertRequest.class);
 
-        var filePath = Path.of(request.inputSource);
-
         return switch(request.action) {
             case ConvertCrawlData -> {
                 var crawlData = fileStorageService.getStorage(request.crawlStorage);
@@ -236,7 +234,7 @@ public class ConverterMain {
             case SideloadEncyclopedia -> {
                 var processData = fileStorageService.getStorage(request.processedDataStorage);
 
-                yield new SideloadAction(sideloadSourceFactory.sideloadEncyclopediaMarginaliaNu(filePath),
+                yield new SideloadAction(sideloadSourceFactory.sideloadEncyclopediaMarginaliaNu(Path.of(request.inputSource)),
                         processData.asPath(),
                         msg, inbox);
             }
@@ -244,14 +242,14 @@ public class ConverterMain {
                 var processData = fileStorageService.getStorage(request.processedDataStorage);
 
                 yield new SideloadAction(
-                        sideloadSourceFactory.sideloadDirtree(filePath),
+                        sideloadSourceFactory.sideloadDirtree(Path.of(request.inputSource)),
                         processData.asPath(),
                         msg, inbox);
             }
             case SideloadStackexchange -> {
                 var processData = fileStorageService.getStorage(request.processedDataStorage);
 
-                yield new SideloadAction(sideloadSourceFactory.sideloadStackexchange(filePath),
+                yield new SideloadAction(sideloadSourceFactory.sideloadStackexchange(Path.of(request.inputSource)),
                         processData.asPath(),
                         msg, inbox);
             }
