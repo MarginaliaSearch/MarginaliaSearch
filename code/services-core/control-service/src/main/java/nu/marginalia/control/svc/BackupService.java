@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class BackupService {
 
@@ -28,14 +29,16 @@ public class BackupService {
     /** Create a new backup of the contents in the _STAGING storage areas.
      * This backup can later be dehydrated and quickly loaded into _LIVE.
      * */
-    public void createBackupFromStaging(FileStorageId associatedId) throws SQLException, IOException {
+    public void createBackupFromStaging(List<FileStorageId> associatedIds) throws SQLException, IOException {
         var backupBase = storageService.getStorageBase(FileStorageBaseType.BACKUP);
 
         String desc = "Pre-load backup snapshot " + LocalDateTime.now();
 
         var backupStorage = storageService.allocateTemporaryStorage(backupBase, FileStorageType.BACKUP, "snapshot", desc);
 
-        storageService.relateFileStorages(associatedId, backupStorage.id());
+        for (var associatedId : associatedIds) {
+            storageService.relateFileStorages(associatedId, backupStorage.id());
+        }
 
         var indexStagingStorage = storageService.getStorageByType(FileStorageType.INDEX_STAGING);
         var linkdbStagingStorage = storageService.getStorageByType(FileStorageType.LINKDB_STAGING);
@@ -99,10 +102,10 @@ public class BackupService {
             IOUtils.copyLarge(is, os);
         }
     }
-    private void restoreBackupCompressed(String fileName, FileStorage inputStorage, FileStorage backupStorage) throws IOException
+    private void restoreBackupCompressed(String fileName, FileStorage destStorage, FileStorage backupStorage) throws IOException
     {
         try (var is = new ZstdInputStream(Files.newInputStream(backupStorage.asPath().resolve(fileName)));
-             var os = Files.newOutputStream(backupStorage.asPath().resolve(fileName))
+             var os = Files.newOutputStream(destStorage.asPath().resolve(fileName))
         ) {
             IOUtils.copyLarge(is, os);
         }
