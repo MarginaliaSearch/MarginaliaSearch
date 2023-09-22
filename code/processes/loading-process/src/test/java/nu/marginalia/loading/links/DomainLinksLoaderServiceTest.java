@@ -5,6 +5,7 @@ import nu.marginalia.io.processed.DomainLinkRecordParquetFileWriter;
 import nu.marginalia.io.processed.DomainRecordParquetFileWriter;
 import nu.marginalia.io.processed.ProcessedDataFileNames;
 import nu.marginalia.loader.DbTestUtil;
+import nu.marginalia.loading.LoaderInputData;
 import nu.marginalia.loading.domains.DomainLoaderService;
 import nu.marginalia.model.processed.DomainLinkRecord;
 import nu.marginalia.model.processed.DomainRecord;
@@ -99,10 +100,11 @@ class DomainLinksLoaderServiceTest {
                      """)
         ) {
             var domainService = new DomainLoaderService(dataSource);
-            var domainRegistry = domainService.getOrCreateDomainIds(workDir, 2);
+            var input = new LoaderInputData(workDir, 2);
+            var domainRegistry = domainService.getOrCreateDomainIds(input);
 
             var dls = new DomainLinksLoaderService(dataSource);
-            dls.loadLinks(domainRegistry, heartbeat, workDir, 2);
+            dls.loadLinks(domainRegistry, heartbeat, input);
 
             Map<Integer, Set<Integer>> expected = new HashMap<>();
             Map<Integer, Set<Integer>> actual = new HashMap<>();

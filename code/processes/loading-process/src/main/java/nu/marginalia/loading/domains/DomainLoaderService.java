@@ -6,6 +6,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.io.processed.DomainLinkRecordParquetFileReader;
 import nu.marginalia.io.processed.DomainRecordParquetFileReader;
 import nu.marginalia.io.processed.ProcessedDataFileNames;
+import nu.marginalia.loading.LoaderInputData;
 import nu.marginalia.model.EdgeDomain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,22 +31,22 @@ public class DomainLoaderService {
      *  compare with SQL domain database, fetch those
      *  that exist, insert those that don't.
      */
-    public DomainIdRegistry getOrCreateDomainIds(Path processedDataPathBase, int untilBatch)
+    public DomainIdRegistry getOrCreateDomainIds(LoaderInputData inputData)
             throws IOException, SQLException
     {
-        Collection<String> domainNamesAll = readDomainNames(processedDataPathBase, untilBatch);
+        Collection<String> domainNamesAll = readDomainNames(inputData);
         return getDatabaseIds(domainNamesAll);
     }
 
-    Collection<String> readDomainNames(Path processedDataPathBase, int untilBatch) throws IOException {
+    Collection<String> readDomainNames(LoaderInputData inputData) throws IOException {
         final Set<String> domainNamesAll = new HashSet<>(100_000);
 
-        var domainFiles = ProcessedDataFileNames.listDomainFiles(processedDataPathBase, untilBatch);
+        var domainFiles = inputData.listDomainFiles();
         for (var file : domainFiles) {
             domainNamesAll.addAll(DomainRecordParquetFileReader.getDomainNames(file));
         }
 
-        var linkFiles = ProcessedDataFileNames.listDomainLinkFiles(processedDataPathBase, untilBatch);
+        var linkFiles = inputData.listDomainLinkFiles();
         for (var file : linkFiles) {
             domainNamesAll.addAll(DomainLinkRecordParquetFileReader.getDestDomainNames(file));
         }

@@ -7,6 +7,7 @@ import nu.marginalia.io.processed.DocumentRecordParquetFileReader;
 import nu.marginalia.io.processed.ProcessedDataFileNames;
 import nu.marginalia.linkdb.LinkdbWriter;
 import nu.marginalia.linkdb.model.LdbUrlDetail;
+import nu.marginalia.loading.LoaderInputData;
 import nu.marginalia.loading.domains.DomainIdRegistry;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.id.UrlIdCodec;
@@ -35,11 +36,10 @@ public class DocumentLoaderService {
     public boolean loadDocuments(
                              DomainIdRegistry domainIdRegistry,
                              ProcessHeartbeat processHeartbeat,
-                             Path processedDataPathBase,
-                             int untilBatch)
+                             LoaderInputData inputData)
             throws IOException, SQLException
     {
-        var documentFiles = ProcessedDataFileNames.listDocumentFiles(processedDataPathBase, untilBatch);
+        var documentFiles = inputData.listDocumentFiles();
 
         try (var taskHeartbeat = processHeartbeat.createAdHocTaskHeartbeat("DOCUMENTS")) {
 

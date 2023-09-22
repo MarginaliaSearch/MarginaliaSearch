@@ -5,6 +5,7 @@ import nu.marginalia.io.processed.DomainLinkRecordParquetFileWriter;
 import nu.marginalia.io.processed.DomainRecordParquetFileWriter;
 import nu.marginalia.io.processed.ProcessedDataFileNames;
 import nu.marginalia.loader.DbTestUtil;
+import nu.marginalia.loading.LoaderInputData;
 import nu.marginalia.model.processed.DomainLinkRecord;
 import nu.marginalia.model.processed.DomainRecord;
 import nu.marginalia.process.control.ProcessAdHocTaskHeartbeat;
@@ -92,7 +93,7 @@ class DomainLoaderServiceTest {
         }
         // Read them
         var domainService = new DomainLoaderService(null);
-        var domainNames = domainService.readDomainNames(workDir, 2);
+        var domainNames = domainService.readDomainNames(new LoaderInputData(workDir, 2));
 
         // Verify
         Set<String> expectedDomains = Stream.of(domains1, domains2, linkDomains)

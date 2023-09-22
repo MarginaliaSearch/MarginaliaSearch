@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.io.processed.DomainLinkRecordParquetFileReader;
 import nu.marginalia.io.processed.ProcessedDataFileNames;
+import nu.marginalia.loading.LoaderInputData;
 import nu.marginalia.loading.domains.DomainIdRegistry;
 import nu.marginalia.model.processed.DomainLinkRecord;
 import nu.marginalia.process.control.ProcessHeartbeat;
@@ -30,13 +31,12 @@ public class DomainLinksLoaderService {
 
     public boolean loadLinks(DomainIdRegistry domainIdRegistry,
                              ProcessHeartbeat heartbeat,
-                             Path processedDataPathBase,
-                             int untilBatch) throws IOException, SQLException {
+                             LoaderInputData inputData) throws IOException, SQLException {
 
         dropLinkData();
 
         try (var task = heartbeat.createAdHocTaskHeartbeat("LINKS")) {
-            var linkFiles = ProcessedDataFileNames.listDomainLinkFiles(processedDataPathBase, untilBatch);
+            var linkFiles = inputData.listDomainLinkFiles();
 
             int processed = 0;
 

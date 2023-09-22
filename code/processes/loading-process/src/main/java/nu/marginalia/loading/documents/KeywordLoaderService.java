@@ -6,6 +6,7 @@ import nu.marginalia.io.processed.DocumentRecordParquetFileReader;
 import nu.marginalia.io.processed.ProcessedDataFileNames;
 import nu.marginalia.keyword.model.DocumentKeywords;
 import nu.marginalia.loading.LoaderIndexJournalWriter;
+import nu.marginalia.loading.LoaderInputData;
 import nu.marginalia.loading.domains.DomainIdRegistry;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.processed.DocumentRecordKeywordsProjection;
@@ -28,11 +29,10 @@ public class KeywordLoaderService {
 
     public boolean loadKeywords(DomainIdRegistry domainIdRegistry,
                              ProcessHeartbeat heartbeat,
-                             Path processedDataPathBase,
-                             int untilBatch) throws IOException {
+                             LoaderInputData inputData) throws IOException {
         try (var task = heartbeat.createAdHocTaskHeartbeat("KEYWORDS")) {
 
-            var documentFiles = ProcessedDataFileNames.listDocumentFiles(processedDataPathBase, untilBatch);
+            var documentFiles = inputData.listDocumentFiles();
             int processed = 0;
 
             for (var file : documentFiles) {

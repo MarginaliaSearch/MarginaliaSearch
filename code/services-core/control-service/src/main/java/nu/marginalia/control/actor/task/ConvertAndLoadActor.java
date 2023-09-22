@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 
 @Singleton
 public class ConvertAndLoadActor extends AbstractActorPrototype {
@@ -175,7 +176,7 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
                     """)
     public Message load(Message message) throws Exception {
         if (message.loaderMsgId <= 0) {
-            var request = new LoadRequest(message.processedStorageId);
+            var request = new LoadRequest(List.of(message.processedStorageId));
             long id = mqLoaderOutbox.sendAsync(LoadRequest.class.getSimpleName(), gson.toJson(request));
 
             transition(LOAD, message.withLoaderMsgId(id));

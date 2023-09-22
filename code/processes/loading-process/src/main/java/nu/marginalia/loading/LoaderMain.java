@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import lombok.Getter;
 import lombok.SneakyThrows;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.linkdb.LinkdbWriter;
@@ -25,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -96,24 +98,17 @@ public class LoaderMain {
 
     @SneakyThrows
     void run(LoadRequest instructions) {
-        var plan = instructions.getPlan();
-        var processLogFile = plan.process.getLogFile();
+        LoaderInputData inputData = instructions.getInputData();
 
-        Path inputDataDir = plan.process.getDir();
-        int validBatchCount = BatchingWorkLogInspector.getValidBatches(processLogFile);
-
-        DomainIdRegistry domainIdRegistry =
-                domainService.getOrCreateDomainIds(
-                        inputDataDir,
-                        validBatchCount);
+        DomainIdRegistry domainIdRegistry = domainService.getOrCreateDomainIds(inputData);
 
         try {
             var results = ForkJoinPool.commonPool()
                     .invokeAll(
                         List.of(
-                            () -> linksService.loadLinks(domainIdRegistry, heartbeat, inputDataDir, validBatchCount),
-                            () -> keywordLoaderService.loadKeywords(domainIdRegistry, heartbeat, inputDataDir, validBatchCount),
-                            () -> documentLoaderService.loadDocuments(domainIdRegistry, heartbeat, inputDataDir, validBatchCount)
+                            () -> linksService.loadLinks(domainIdRegistry, heartbeat, inputData),
+                            () -> keywordLoaderService.loadKeywords(domainIdRegistry, heartbeat, inputData),
+                            () -> documentLoaderService.loadDocuments(domainIdRegistry, heartbeat, inputData)
                         )
             );
 
@@ -139,18 +134,15 @@ public class LoaderMain {
     }
 
     private static class LoadRequest {
-        private final CrawlPlan plan;
+        @Getter
+        private final LoaderInputData inputData;
         private final MqMessage message;
         private final MqSingleShotInbox inbox;
 
-        LoadRequest(CrawlPlan plan, MqMessage message, MqSingleShotInbox inbox) {
-            this.plan = plan;
+        LoadRequest(LoaderInputData inputData, MqMessage message, MqSingleShotInbox inbox) {
+            this.inputData = inputData;
             this.message = message;
             this.inbox = inbox;
-        }
-
-        public CrawlPlan getPlan() {
-            return plan;
         }
 
         public void ok() {
@@ -159,7 +151,6 @@ public class LoaderMain {
         public void err() {
             inbox.sendResponse(message, MqInboxResponse.err());
         }
-
     }
 
     private LoadRequest fetchInstructions() throws Exception {
@@ -177,11 +168,12 @@ public class LoaderMain {
 
         var request = gson.fromJson(msg.payload(), nu.marginalia.mqapi.loading.LoadRequest.class);
 
-        var processData = fileStorageService.getStorage(request.processedDataStorage);
+        List<Path> inputSources = new ArrayList<>();
+        for (var storageId : request.inputProcessDataStorageIds) {
+            inputSources.add(fileStorageService.getStorage(storageId).asPath());
+        }
 
-        var plan = new CrawlPlan(null, null,  new CrawlPlan.WorkDir(processData.path(), "processor.log"));
-
-        return new LoadRequest(plan, msg, inbox);
+        return new LoadRequest(new LoaderInputData(inputSources), msg, inbox);
     }
 
     private Optional<MqMessage> getMessage(MqSingleShotInbox inbox, String expectedFunction) throws SQLException, InterruptedException {
