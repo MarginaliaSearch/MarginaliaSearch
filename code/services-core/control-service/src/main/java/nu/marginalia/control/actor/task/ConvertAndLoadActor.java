@@ -197,7 +197,7 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
                     Create a backup snapshot of the new data
                     """)
     public void createBackup(Message message) throws SQLException, IOException {
-        backupService.createBackupFromStaging(message.processedStorageId);
+        backupService.createBackupFromStaging(List.of(message.processedStorageId));
     }
 
     @ActorState(
