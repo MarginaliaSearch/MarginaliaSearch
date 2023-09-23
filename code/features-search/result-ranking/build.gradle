@@ -1,15 +1,12 @@
 plugins {
     id 'java'
-    id "io.freefair.lombok" version "8.2.2"
-
     id "de.undercouch.download" version "5.1.0"
-
     id 'jvm-test-suite'
 }
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(20))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
@@ -17,9 +14,6 @@ dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:service')
     implementation project(':code:api:index-api')
-
-    implementation libs.lombok
-    annotationProcessor libs.lombok
 
     implementation libs.bundles.slf4j
     implementation libs.guice

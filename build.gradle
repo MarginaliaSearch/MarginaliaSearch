@@ -1,6 +1,8 @@
 plugins {
     id 'java'
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.0"
+    id "io.freefair.lombok" version "8.3"
+    id "me.champeau.jmh" version "0.6.6"
 }
 
 group 'marginalia'
@@ -8,6 +10,30 @@ version 'SNAPSHOT'
 
 compileJava.options.encoding = "UTF-8"
 compileTestJava.options.encoding = "UTF-8"
+
+// Enable preview features for the entire project
+subprojects.forEach {it ->
+    it.tasks.withType(JavaCompile).configureEach {
+        options.compilerArgs += ['--enable-preview']
+    }
+    it.tasks.withType(Test).configureEach {
+        jvmArgs += ['--enable-preview']
+    }
+}
+
+allprojects {
+    apply plugin: 'java'
+    apply plugin: 'io.freefair.lombok'
+
+    dependencies {
+        implementation libs.lombok
+        testImplementation libs.lombok
+        annotationProcessor libs.lombok
+
+        lombok libs.lombok // prevent plugin from downgrading the version to something incompatible with '19
+    }
+
+}
 
 tasks.register('dist', Copy) {
     from subprojects.collect { it.tasks.withType(Tar) }
@@ -61,6 +87,6 @@ idea {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(20))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }

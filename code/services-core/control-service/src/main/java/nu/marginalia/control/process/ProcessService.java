@@ -132,7 +132,7 @@ public class ProcessService {
         }
 
         opts.add(env2str("WMSA_HOME", WMSA_HOME));
-        opts.add(env2str("JAVA_OPTS", "")); // We explicitly empty this to avoid inheriting the parent process' JAVA_OPTS
+        opts.add(env2str("JAVA_OPTS", "--enable-preview")); //
 
         for (String envKey : propagatedEnvironmentVariables) {
             String envValue = System.getenv(envKey);

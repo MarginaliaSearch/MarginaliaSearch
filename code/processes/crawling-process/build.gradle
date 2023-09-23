@@ -1,13 +1,13 @@
 plugins {
     id 'java'
-    id "io.freefair.lombok" version "8.2.2"
+
     id 'application'
     id 'jvm-test-suite'
 }
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(20))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
@@ -40,8 +40,6 @@ dependencies {
     implementation project(':code:features-crawl:crawl-blocklist')
     implementation project(':code:features-crawl:link-parser')
 
-    implementation libs.lombok
-    annotationProcessor libs.lombok
     implementation libs.bundles.slf4j
 
     implementation libs.notnull

@@ -1,7 +1,7 @@
 ext {
-    dockerImage='openjdk:20-slim'
-    serviceJvmOpts='-Dservice-host=0.0.0.0 -ea ${wmsa_jvm_param} -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=4000 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false'
-    serviceToolOpts='-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5000'
+    dockerImage='openjdk:21-slim'
+    serviceJvmOpts='--enable-preview -ea ${wmsa_jvm_param} -Dservice-host=0.0.0.0  -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=4000 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false'
+    serviceToolOpts='--enable-preview -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5000'
 }
 
 tasks.register('dockerFile') {

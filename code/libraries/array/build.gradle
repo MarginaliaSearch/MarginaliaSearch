@@ -5,15 +5,13 @@ plugins {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(20))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
 dependencies {
     implementation project(':third-party:uppend')
 
-    implementation libs.lombok
-    annotationProcessor libs.lombok
     implementation libs.bundles.slf4j
 
     implementation libs.notnull
@@ -27,6 +25,17 @@ dependencies {
     testImplementation libs.mockito
 }
 
+jmh {
+    jvmArgs = [ "--enable-preview" ]
+}
+tasks.withType(me.champeau.jmh.WithJavaToolchain).configureEach {
+    javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    })
+}
+tasks.withType(me.champeau.jmh.JmhBytecodeGeneratorTask).configureEach {
+    jvmArgs = ["--enable-preview"]
+}
 test {
     useJUnitPlatform()
 }

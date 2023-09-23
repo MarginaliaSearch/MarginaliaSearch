@@ -1,13 +1,13 @@
 plugins {
     id 'java'
-    id "io.freefair.lombok" version "8.2.2"
+
     id 'jvm-test-suite'
     id "org.flywaydb.flyway" version "8.2.0"
 }
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(20))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
@@ -18,8 +18,6 @@ configurations {
 dependencies {
     implementation project(':code:common:model')
 
-    implementation libs.lombok
-    annotationProcessor libs.lombok
     implementation libs.bundles.slf4j
 
     implementation libs.guice

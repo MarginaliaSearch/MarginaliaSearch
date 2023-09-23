@@ -24,7 +24,7 @@ public class ConfigurationModule extends AbstractModule {
 
         int basePort = descriptors.forId(id).port;
         int prometheusPort = basePort + 1000;
-        String host = Objects.requireNonNull(System.getProperty("service-host", "127.0.0.1"));
+        String host = System.getProperty("service-host", "127.0.0.1");
         var configObject = new ServiceConfiguration(id, 0, host, basePort, prometheusPort, UUID.randomUUID());
 
         bind(ServiceConfiguration.class).toInstance(configObject);

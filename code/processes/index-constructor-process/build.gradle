@@ -1,13 +1,13 @@
 plugins {
     id 'java'
-    id "io.freefair.lombok" version "8.2.2"
+
     id 'application'
     id 'jvm-test-suite'
 }
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(20))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
@@ -30,9 +30,6 @@ dependencies {
     implementation project(':code:features-index:index-reverse')
     implementation project(':code:features-index:index-journal')
     implementation project(':code:features-index:domain-ranking')
-
-    implementation libs.lombok
-    annotationProcessor libs.lombok
 
     implementation libs.bundles.slf4j
     implementation libs.guice

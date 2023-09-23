@@ -92,8 +92,8 @@ public class ForwardIndexConverter {
             docFileData.force();
             docsFileId.force();
 
-            docFileData.advice(NativeIO.Advice.DontNeed);
-            docsFileId.advice(NativeIO.Advice.DontNeed);
+            docFileData.close();
+            docsFileId.close();
 
             progress.progress(TaskSteps.FINISHED);
         } catch (IOException ex) {

@@ -1,19 +1,17 @@
 plugins {
     id 'java'
-    id "io.freefair.lombok" version "8.2.2"
+
     id 'jvm-test-suite'
 }
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(20))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
 dependencies {
     implementation libs.notnull
-    implementation libs.lombok
-    annotationProcessor libs.lombok
 
     implementation libs.bundles.slf4j
     testImplementation libs.bundles.slf4j.test

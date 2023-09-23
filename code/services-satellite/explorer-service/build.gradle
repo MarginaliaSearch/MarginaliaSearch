@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id "io.freefair.lombok" version "8.2.2"
+
     id 'application'
     id 'com.palantir.docker' version '0.35.0'
     id 'jvm-test-suite'
@@ -17,7 +17,7 @@ apply from: "$rootProject.projectDir/docker-service.gradle"
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(20))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 dependencies {
@@ -29,9 +29,6 @@ dependencies {
 
     implementation project(':code:features-search:random-websites')
 
-
-    implementation libs.lombok
-    annotationProcessor libs.lombok
     implementation libs.bundles.slf4j
 
     implementation libs.prometheus

@@ -12,7 +12,8 @@ or podman. These are a bit of a pain to install, but if you follow
 [this guide](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository) 
 you're on the right track.
 
-The system requires JDK20+.
+The system requires JDK21+, and 
+uses preview features.
 
 ## Set up
 To go from a clean check out of the git repo to a running search engine,
