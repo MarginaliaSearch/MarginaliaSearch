@@ -64,4 +64,5 @@ public interface IntArray extends IntArrayBase, IntArrayTransformations, IntArra
     void advice(NativeIO.Advice advice) throws IOException;
     void advice(NativeIO.Advice advice, long start, long end) throws IOException;
 
+    default void close() { }
 }

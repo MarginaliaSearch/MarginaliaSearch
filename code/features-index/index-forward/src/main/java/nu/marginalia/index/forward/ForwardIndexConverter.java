@@ -1,7 +1,7 @@
 package nu.marginalia.index.forward;
 
-import com.upserve.uppend.blobs.NativeIO;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.model.id.UrlIdCodec;
@@ -71,7 +71,7 @@ public class ForwardIndexConverter {
 
             // docIdToIdx -> file offset for id
 
-            LongArray docFileData = LongArray.mmapForWriting(outputFileDocsData, ForwardIndexParameters.ENTRY_SIZE * docsFileId.size());
+            LongArray docFileData = LongArrayFactory.mmapForWritingConfined(outputFileDocsData, ForwardIndexParameters.ENTRY_SIZE * docsFileId.size());
 
             var pointer = journalReader.newPointer();
             while (pointer.nextDocument()) {
@@ -106,7 +106,7 @@ public class ForwardIndexConverter {
         Roaring64Bitmap rbm = new Roaring64Bitmap();
         journalReader.forEachDocId(rbm::add);
 
-        LongArray ret = LongArray.mmapForWriting(outputFileDocs, rbm.getIntCardinality());
+        LongArray ret = LongArrayFactory.mmapForWritingConfined(outputFileDocs, rbm.getIntCardinality());
         rbm.forEach(new LongConsumer() {
             int offset;
             @Override

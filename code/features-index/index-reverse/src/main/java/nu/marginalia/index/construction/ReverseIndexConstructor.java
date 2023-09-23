@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class ReverseIndexConstructor {
@@ -37,7 +38,7 @@ public class ReverseIndexConstructor {
         }
 
         try (var heartbeat = processHeartbeat.createProcessTaskHeartbeat(CreateReverseIndexSteps.class, "createReverseIndex")) {
-            List<ReversePreindex> preindexes = new ArrayList<>();
+            List<ReversePreindexReference> preindexes = new ArrayList<>();
 
             heartbeat.progress(CreateReverseIndexSteps.CREATE_PREINDEXES);
 
@@ -47,28 +48,38 @@ public class ReverseIndexConstructor {
 
                     preindexHeartbeat.progress(input.toFile().getName(), i, inputs.size());
 
-                    preindexes.add(ReversePreindex.constructPreindex(readerSource.construct(input), docIdRewriter, tmpDir));
+                    preindexes.add(
+                        ReversePreindex
+                            .constructPreindex(readerSource.construct(input), docIdRewriter, tmpDir)
+                            .closeToReference()
+                    );
                 }
 
                 preindexHeartbeat.progress("FINISHED", inputs.size(), inputs.size());
             }
 
             heartbeat.progress(CreateReverseIndexSteps.MERGE_PREINDEXES);
-            ReversePreindex finalPreindex;
+            ReversePreindex finalPreindex = null;
 
             try (var mergeHeartbeat = processHeartbeat.createAdHocTaskHeartbeat("mergePreindexes")) {
-                finalPreindex = mergePreindexes(tmpDir, mergeHeartbeat, preindexes);
+                finalPreindex = mergePreindexes(tmpDir, mergeHeartbeat, preindexes)
+                        .open();
+
+                heartbeat.progress(CreateReverseIndexSteps.FINALIZE);
+                finalPreindex.finalizeIndex(outputFileDocs, outputFileWords);
+            }
+            finally {
+                if (null != finalPreindex)
+                    finalPreindex.delete();
             }
 
-            heartbeat.progress(CreateReverseIndexSteps.FINALIZE);
-            finalPreindex.finalizeIndex(outputFileDocs, outputFileWords);
-
             heartbeat.progress(CreateReverseIndexSteps.FINISHED);
-            finalPreindex.delete();
         }
     }
 
-    private static ReversePreindex mergePreindexes(Path workDir, ProcessAdHocTaskHeartbeat mergeHeartbeat, List<ReversePreindex> preindexes) throws IOException {
+    private static ReversePreindexReference mergePreindexes(Path workDir,
+                                                   ProcessAdHocTaskHeartbeat mergeHeartbeat,
+                                                   List<ReversePreindexReference> preindexes) throws IOException {
         assert !preindexes.isEmpty();
 
         if (preindexes.size() == 1) {
@@ -76,40 +87,42 @@ public class ReverseIndexConstructor {
             return preindexes.get(0);
         }
 
-        List<ReversePreindex> toMerge = new ArrayList<>(preindexes);
-        List<ReversePreindex> merged = new ArrayList<>();
+        LinkedList<ReversePreindexReference> toMerge = new LinkedList<>(preindexes);
+        List<ReversePreindexReference> mergedItems = new ArrayList<>(preindexes.size() / 2);
 
         int pass = 0;
-        while (toMerge.size() != 1) {
-            String stage = String.format("PASS[%d]: %d -> %d", ++pass,
-                    toMerge.size(),
-                    toMerge.size()/2 + (toMerge.size() % 2)
-            );
+        while (toMerge.size() > 1) {
+            String stage = String.format("PASS[%d]: %d -> %d", ++pass, toMerge.size(), toMerge.size()/2 + (toMerge.size() % 2));
 
-            for (int i = 0; i + 1 < toMerge.size(); i+=2) {
-                mergeHeartbeat.progress(stage, i/2, toMerge.size()/2);
+            int totalToMergeCount = toMerge.size()/2;
+            int toMergeProgress = 0;
 
-                var left = toMerge.get(i);
-                var right = toMerge.get(i+1);
+            while (toMerge.size() >= 2) {
+                mergeHeartbeat.progress(stage, toMergeProgress++, totalToMergeCount);
 
-                merged.add(ReversePreindex.merge(workDir, left, right));
+                var left = toMerge.removeFirst().open();
+                var right = toMerge.removeFirst().open();
+
+                mergedItems.add(
+                    ReversePreindex
+                            .merge(workDir, left, right)
+                            .closeToReference()
+                );
 
                 left.delete();
                 right.delete();
             }
 
-            if ((toMerge.size() % 2) != 0) {
-                merged.add(toMerge.get(toMerge.size()-1));
-            }
-
-            toMerge.clear();
-            toMerge.addAll(merged);
-            merged.clear();
+            // Pour the merged items back in the toMerge queue
+            // (note, toMerge may still have a single item in it,
+            // in the case where it had an odd population)
+            toMerge.addAll(mergedItems);
+            mergedItems.clear();
         }
 
         mergeHeartbeat.progress("FINISHED", 1, 1);
 
-        return toMerge.get(0);
+        return toMerge.getFirst();
     }
 
 }

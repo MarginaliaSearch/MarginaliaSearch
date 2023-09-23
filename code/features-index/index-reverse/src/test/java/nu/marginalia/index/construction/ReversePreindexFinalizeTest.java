@@ -2,6 +2,7 @@
 package nu.marginalia.index.construction;
 
 import nu.marginalia.array.LongArray;
+import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.array.algo.SortingContext;
 import nu.marginalia.btree.BTreeReader;
 import nu.marginalia.btree.model.BTreeHeader;
@@ -69,8 +70,8 @@ class ReversePreindexFinalizeTest {
         System.out.println(Files.size(wordsFile));
         System.out.println(Files.size(docsFile));
 
-        var docsArray = LongArray.mmapRead(docsFile);
-        var wordsArray = LongArray.mmapRead(wordsFile);
+        var docsArray = LongArrayFactory.mmapForReadingConfined(docsFile);
+        var wordsArray = LongArrayFactory.mmapForReadingConfined(wordsFile);
 
         var docsHeader = BTreeReader.readHeader(docsArray, 0);
         var wordsHeader = BTreeReader.readHeader(wordsArray, 0);

@@ -52,6 +52,11 @@ public class ShiftedLongArray implements LongArray {
     }
 
     @Override
+    public void close() {
+        delegate.close();
+    }
+
+    @Override
     public void get(long start, LongBuffer buffer) {
         delegate.get(shift + start, buffer);
     }

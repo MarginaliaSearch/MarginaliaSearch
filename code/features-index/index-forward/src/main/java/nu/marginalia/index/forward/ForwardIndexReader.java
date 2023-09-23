@@ -3,6 +3,7 @@ package nu.marginalia.index.forward;
 import com.upserve.uppend.blobs.NativeIO;
 import gnu.trove.map.hash.TLongIntHashMap;
 import nu.marginalia.array.LongArray;
+import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.model.id.UrlIdCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +53,7 @@ public class ForwardIndexReader {
     }
 
     private static TLongIntHashMap loadIds(Path idsFile) throws IOException {
-        var idsArray = LongArray.mmapRead(idsFile);
+        var idsArray = LongArrayFactory.mmapForReadingShared(idsFile);
 
         var ids = new TLongIntHashMap((int) idsArray.size(), 0.5f, -1, -1);
 
@@ -63,7 +64,7 @@ public class ForwardIndexReader {
     }
 
     private static LongArray loadData(Path dataFile) throws IOException {
-        var data = LongArray.mmapRead(dataFile);
+        var data = LongArrayFactory.mmapForReadingShared(dataFile);
 
         // Total data is small, try to keep it in RAM for speed
         data.advice(NativeIO.Advice.WillNeed);

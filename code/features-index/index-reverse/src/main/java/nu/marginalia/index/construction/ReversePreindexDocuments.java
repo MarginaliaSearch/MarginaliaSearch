@@ -2,6 +2,7 @@ package nu.marginalia.index.construction;
 
 import lombok.SneakyThrows;
 import nu.marginalia.array.LongArray;
+import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +20,7 @@ import java.util.concurrent.TimeUnit;
  * the associated ReversePreindexWordSegments data
  */
 public class ReversePreindexDocuments {
-    private final Path file;
+    final Path file;
     public  final LongArray documents;
     private static final int RECORD_SIZE_LONGS = 2;
     private static final Logger logger= LoggerFactory.getLogger(ReversePreindexDocuments.class);
@@ -39,7 +40,7 @@ public class ReversePreindexDocuments {
         logger.info("Transferring data");
         createUnsortedDocsFile(docsFile, reader, segments, docIdRewriter);
 
-        LongArray docsFileMap = LongArray.mmapForModifying(docsFile);
+        LongArray docsFileMap = LongArrayFactory.mmapForModifyingShared(docsFile);
         logger.info("Sorting data");
         sortDocsFile(docsFileMap, segments);
 
@@ -64,26 +65,28 @@ public class ReversePreindexDocuments {
                                                ReversePreindexWordSegments segments,
                                                DocIdRewriter docIdRewriter) throws IOException {
         long fileSize = RECORD_SIZE_LONGS * segments.totalSize();
-        LongArray outArray = LongArray.mmapForWriting(docsFile, fileSize);
 
-        var offsetMap = segments.asMap(RECORD_SIZE_LONGS);
-        offsetMap.defaultReturnValue(0);
+        try (LongArray outArray = LongArrayFactory.onHeapConfined(fileSize)) {
 
-        var pointer = reader.newPointer();
-        while (pointer.nextDocument()) {
-            long rankEncodedId = docIdRewriter.rewriteDocId(pointer.documentId());
-            while (pointer.nextRecord()) {
-                long wordId = pointer.wordId();
-                long wordMeta = pointer.wordMeta();
+            var offsetMap = segments.asMap(RECORD_SIZE_LONGS);
+            offsetMap.defaultReturnValue(0);
 
-                long offset = offsetMap.addTo(wordId, RECORD_SIZE_LONGS);
+            var pointer = reader.newPointer();
+            while (pointer.nextDocument()) {
+                long rankEncodedId = docIdRewriter.rewriteDocId(pointer.documentId());
+                while (pointer.nextRecord()) {
+                    long wordId = pointer.wordId();
+                    long wordMeta = pointer.wordMeta();
 
-                outArray.set(offset + 0, rankEncodedId);
-                outArray.set(offset + 1, wordMeta);
+                    long offset = offsetMap.addTo(wordId, RECORD_SIZE_LONGS);
+
+                    outArray.set(offset + 0, rankEncodedId);
+                    outArray.set(offset + 1, wordMeta);
+                }
             }
-        }
 
-        outArray.force();
+            outArray.write(docsFile);
+        }
     }
 
     @SneakyThrows
@@ -116,5 +119,10 @@ public class ReversePreindexDocuments {
 
     public void delete() throws IOException {
         Files.delete(this.file);
+        documents.close();
+    }
+
+    public void close() {
+        documents.close();
     }
 }

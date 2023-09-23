@@ -7,66 +7,60 @@ import nu.marginalia.array.LongArray;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
-import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-public class LongArrayPage implements PartitionPage, LongArray {
+public class SegmentLongArray implements PartitionPage, LongArray {
 
-    final LongBuffer longBuffer;
     @Nullable
     private final Arena arena;
-    final ByteBuffer byteBuffer;
+    private final MemorySegment segment;
     private boolean closed;
 
-    LongArrayPage(ByteBuffer byteBuffer,
-                  @Nullable Arena arena) {
-        this.byteBuffer = byteBuffer;
-        this.longBuffer = byteBuffer.asLongBuffer();
+    SegmentLongArray(MemorySegment segment,
+                     @Nullable Arena arena) {
+        this.segment = segment;
         this.arena = arena;
     }
 
-    public static LongArrayPage onHeap(int size) {
-        var arena = Arena.ofShared();
-        return new LongArrayPage(arena.allocate((long) WORD_SIZE*size, 8).asByteBuffer(), arena);
+    public static SegmentLongArray onHeap(Arena arena, long size) {
+        return new SegmentLongArray(arena.allocate(WORD_SIZE*size, 8), arena);
     }
 
-    public static LongArrayPage fromMmapReadOnly(Path file, long offset, int size) throws IOException {
-        var arena = Arena.ofShared();
-
-        return new LongArrayPage(
+    public static SegmentLongArray fromMmapReadOnly(Arena arena, Path file, long offset, long size) throws IOException {
+        return new SegmentLongArray(
                 mmapFile(arena, file, offset, size, FileChannel.MapMode.READ_ONLY, StandardOpenOption.READ),
                 arena);
     }
 
-    public static LongArrayPage fromMmapReadWrite(Path file, long offset, int size) throws IOException {
-        var arena = Arena.ofShared();
+    public static SegmentLongArray fromMmapReadWrite(Arena arena, Path file, long offset, long size) throws IOException {
 
-        return new LongArrayPage(
+        return new SegmentLongArray(
                 mmapFile(arena, file, offset, size, FileChannel.MapMode.READ_WRITE,
                         StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE),
                 arena);
     }
 
-    private static ByteBuffer mmapFile(Arena arena,
+    private static MemorySegment mmapFile(Arena arena,
                                        Path file,
                                        long offset,
-                                       int size,
+                                       long size,
                                        FileChannel.MapMode mode,
                                        OpenOption... openOptions) throws IOException
     {
         try (var channel = (FileChannel) Files.newByteChannel(file, openOptions)) {
 
             return channel.map(mode,
-                            WORD_SIZE*offset,
-                            (long) size*WORD_SIZE,
-                            arena)
-                    .asByteBuffer();
+                            WORD_SIZE * offset,
+                            WORD_SIZE * size,
+                            arena);
         }
         catch (IOException ex) {
             throw new IOException("Failed to map file " + file + " (" + offset + ":" + size + ")", ex);
@@ -76,50 +70,48 @@ public class LongArrayPage implements PartitionPage, LongArray {
     @Override
     public long get(long at) {
         try {
-            return longBuffer.get((int) at);
+            return segment.getAtIndex(ValueLayout.JAVA_LONG, at);
         }
         catch (IndexOutOfBoundsException ex) {
-            throw new IndexOutOfBoundsException("@" + at + "(" + 0 + ":" + longBuffer.capacity() + ")");
+            throw new IndexOutOfBoundsException("@" + at + "(" + 0 + ":" + segment.byteSize()/8 + ")");
         }
     }
 
     @Override
     public void get(long start, long end, long[] buffer) {
-        longBuffer.get((int) start, buffer, 0, (int) (end - start));
-    }
-
-    @Override
-    public void set(long at, long val) {
-        longBuffer.put((int) at, val);
-    }
-
-    @Override
-    public void set(long start, long end, LongBuffer buffer, int bufferStart) {
-        longBuffer.put((int) start, buffer, bufferStart, (int) (end-start));
-    }
-
-    @Override
-    public synchronized void close() {
-        if (arena != null) {
-            if (!closed) {
-                arena.close();
-                closed = true;
-            }
+        for (int i = 0; i < end - start; i++) {
+            buffer[i] = segment.getAtIndex(ValueLayout.JAVA_LONG, start + i);
         }
     }
 
     @Override
-    public long size() {
-        return longBuffer.capacity();
+    public void set(long at, long val) {
+        segment.setAtIndex(ValueLayout.JAVA_LONG, at, val);
     }
 
-    public void increment(int at) {
-        set(at, get(at) + 1);
+    @Override
+    public void set(long start, long end, LongBuffer buffer, int bufferStart) {
+        for (int i = 0; i < end - start; i++) {
+            set(start + i, buffer.get(bufferStart + i));
+        }
+    }
+
+    @Override
+    public synchronized void close() {
+        if (arena != null && !closed) {
+            arena.close();
+        }
+        closed = true;
+    }
+
+    @Override
+    public long size() {
+        return segment.byteSize() / 8;
     }
 
     @Override
     public ByteBuffer getByteBuffer() {
-        return byteBuffer;
+        return segment.asByteBuffer();
     }
 
     @Override
@@ -131,10 +123,11 @@ public class LongArrayPage implements PartitionPage, LongArray {
 
     @Override
     public void force() {
-        if (byteBuffer instanceof MappedByteBuffer mb) {
-            mb.force();
+        if (segment.isMapped()) {
+            segment.force();
         }
     }
+
     public ArrayRangeReference<LongArray> directRangeIfPossible(long start, long end) {
         return new ArrayRangeReference<>(this, start, end);
     }
@@ -142,25 +135,25 @@ public class LongArrayPage implements PartitionPage, LongArray {
     @Override
     public void transferFrom(FileChannel source, long sourceStart, long arrayStart, long arrayEnd) throws IOException {
 
-        int index = (int) (arrayStart * WORD_SIZE);
-        int length = (int) ((arrayEnd - arrayStart) * WORD_SIZE);
+        long index = arrayStart * WORD_SIZE;
+        long length = (arrayEnd - arrayStart) * WORD_SIZE;
 
-        var slice = byteBuffer.slice(index, length);
+        var bufferSlice = segment.asSlice(index, length).asByteBuffer();
 
         long startPos = sourceStart * WORD_SIZE;
-        while (slice.position() < slice.capacity()) {
-            source.read(slice, startPos + slice.position());
+        while (bufferSlice.position() < bufferSlice.capacity()) {
+            source.read(bufferSlice, startPos + bufferSlice.position());
         }
     }
 
     @Override
     public void advice(NativeIO.Advice advice) throws IOException {
-        NativeIO.madvise((MappedByteBuffer) byteBuffer, advice);
+//        NativeIO.madvise((MappedByteBuffer) byteBuffer, advice);
     }
 
     @Override
     public void advice(NativeIO.Advice advice, long start, long end) throws IOException {
-        NativeIO.madviseRange((MappedByteBuffer) byteBuffer, advice, (int) start, (int) (end-start));
+//        NativeIO.madviseRange((MappedByteBuffer) byteBuffer, advice, (int) start, (int) (end-start));
     }
 
 }

@@ -61,4 +61,9 @@ public class ReferenceImplLongArrayDelegate implements LongArray {
     public void advice(NativeIO.Advice advice, long start, long end) throws IOException {
         delegate.advice(advice, start, end);
     }
+
+    @Override
+    public void close() {
+        delegate.close();
+    }
 }

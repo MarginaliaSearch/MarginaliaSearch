@@ -1,6 +1,7 @@
 package nu.marginalia.array.algo;
 
 import nu.marginalia.array.LongArray;
+import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.array.buffer.LongQueryBuffer;
 import nu.marginalia.array.page.PagingLongArray;
 import nu.marginalia.array.scheme.PowerOf2PartitioningScheme;
@@ -14,6 +15,7 @@ class LongArraySearchTest {
 
     LongArray basicArray = LongArray.allocate(1024);
     LongArray pagingArray = PagingLongArray.newOnHeap(new PowerOf2PartitioningScheme(64), 1024);
+    LongArray segmentArray = LongArrayFactory.onHeapConfined(1024);
 
     LongArray shiftedArray = LongArray.allocate(1054).range(30, 1054);
 
@@ -23,6 +25,7 @@ class LongArraySearchTest {
             basicArray.set(i, 3L*i);
             pagingArray.set(i, 3L*i);
             shiftedArray.set(i, 3L*i);
+            segmentArray.set(i, 3L*i);
         }
     }
 
@@ -31,6 +34,7 @@ class LongArraySearchTest {
         linearSearchTester(basicArray);
         linearSearchTester(pagingArray);
         linearSearchTester(shiftedArray);
+        linearSearchTester(segmentArray);
     }
 
     @Test
@@ -38,6 +42,7 @@ class LongArraySearchTest {
         binarySearchTester(basicArray);
         binarySearchTester(pagingArray);
         binarySearchTester(shiftedArray);
+        binarySearchTester(segmentArray);
     }
 
     @Test
@@ -45,6 +50,7 @@ class LongArraySearchTest {
         binarySearchUpperBoundTester(basicArray);
         binarySearchUpperBoundTester(pagingArray);
         binarySearchUpperBoundTester(shiftedArray);
+        binarySearchUpperBoundTester(segmentArray);
     }
 
     @Test
@@ -52,6 +58,7 @@ class LongArraySearchTest {
         linearSearchUpperBoundTester(basicArray);
         linearSearchUpperBoundTester(pagingArray);
         linearSearchUpperBoundTester(shiftedArray);
+        linearSearchUpperBoundTester(segmentArray);
     }
 
     void linearSearchTester(LongArray array) {

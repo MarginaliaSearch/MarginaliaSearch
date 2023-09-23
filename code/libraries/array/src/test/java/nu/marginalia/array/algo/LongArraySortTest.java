@@ -2,6 +2,7 @@ package nu.marginalia.array.algo;
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import nu.marginalia.array.LongArray;
+import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.array.page.LongArrayPage;
 import nu.marginalia.array.page.PagingLongArray;
 import nu.marginalia.array.scheme.PowerOf2PartitioningScheme;
@@ -25,6 +26,7 @@ class LongArraySortTest {
     LongArray basic;
     LongArray paged;
     LongArray shifted;
+    LongArray segment;
 
     LongOpenHashSet valueSet;
 
@@ -35,6 +37,7 @@ class LongArraySortTest {
         basic = LongArrayPage.onHeap(size);
         paged = PagingLongArray.newOnHeap(new PowerOf2PartitioningScheme(32), size);
         shifted = LongArrayPage.onHeap(size + 30).shifted(30);
+        segment = LongArrayFactory.onHeapConfined(size + 30).shifted(30);
 
         valueSet = new LongOpenHashSet();
 
@@ -48,10 +51,12 @@ class LongArraySortTest {
         basic.set(0, values);
         paged.set(0, values);
         shifted.set(0, values);
+        segment.set(0, values);
 
         basic.transformEach(0, size, (i, old) -> values[(int) i]);
         paged.transformEach(0, size, (i, old) -> values[(int) i]);
         shifted.transformEach(0, size, (i, old) -> values[(int) i]);
+        segment.transformEach(0, size, (i, old) -> values[(int) i]);
     }
 
 
@@ -145,9 +150,13 @@ class LongArraySortTest {
         shifted.insertionSort(0, size);
         assertTrue(shifted.isSorted(0, 128));
 
+        segment.insertionSort(0, size);
+        assertTrue(segment.isSorted(0, 128));
+
         verifyValuesPresent(basic);
         verifyValuesPresent(paged);
         verifyValuesPresent(shifted);
+        verifyValuesPresent(segment);
     }
 
     @Test
@@ -161,10 +170,14 @@ class LongArraySortTest {
         shifted.quickSort(0, size);
         assertTrue(shifted.isSorted(0, size));
 
+        segment.quickSort(0, size);
+        assertTrue(segment.isSorted(0, size));
+
 
         verifyValuesPresent(basic);
         verifyValuesPresent(paged);
         verifyValuesPresent(shifted);
+        verifyValuesPresent(segment);
 
     }
 
@@ -179,9 +192,13 @@ class LongArraySortTest {
         shifted.mergeSort(0, size, Path.of("/tmp"));
         assertTrue(shifted.isSorted(0, size));
 
+        segment.mergeSort(0, size, Path.of("/tmp"));
+        assertTrue(segment.isSorted(0, size));
+
         verifyValuesPresent(basic);
         verifyValuesPresent(paged);
         verifyValuesPresent(shifted);
+        verifyValuesPresent(segment);
     }
 
     @Test

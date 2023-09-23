@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import nu.marginalia.array.LongArray;
+import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.array.algo.SortingContext;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
 
@@ -20,8 +21,8 @@ public class ReversePreindexWordSegments {
     public final LongArray wordIds;
     public final LongArray counts;
 
-    private final Path wordsFile;
-    private final Path countsFile;
+    final Path wordsFile;
+    final Path countsFile;
 
     public ReversePreindexWordSegments(LongArray wordIds,
                                        LongArray counts,
@@ -59,8 +60,8 @@ public class ReversePreindexWordSegments {
         countsMap.defaultReturnValue(0);
         reader.forEachWordId(wordId -> countsMap.addTo(wordId, 1));
 
-        LongArray words = LongArray.mmapForWriting(wordIdsFile, countsMap.size());
-        LongArray counts = LongArray.mmapForWriting(countsFile, countsMap.size());
+        LongArray words = LongArrayFactory.mmapForWritingConfined(wordIdsFile, countsMap.size());
+        LongArray counts = LongArrayFactory.mmapForWritingConfined(countsFile, countsMap.size());
 
         // Create the words file by iterating over the map and inserting them into
         // the words file in whatever bizarro hash table order they appear in
@@ -95,11 +96,19 @@ public class ReversePreindexWordSegments {
     public void delete() throws IOException {
         Files.delete(countsFile);
         Files.delete(wordsFile);
+
+        counts.close();
+        wordIds.close();
     }
 
     public void force() {
         counts.force();
         wordIds.force();
+    }
+
+    public void close() {
+        wordIds.close();
+        counts.close();
     }
 
     public class SegmentIterator {

@@ -104,4 +104,10 @@ public class AbstractPagingArray<T extends BulkTransferArray<B>, B> {
             bufferStart += eOff - sOff;
         }
     }
+
+    public void close() {
+        for (var page : pages) {
+            page.close();
+        }
+    }
 }

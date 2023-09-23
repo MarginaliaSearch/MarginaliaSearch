@@ -2,6 +2,7 @@ package nu.marginalia.array.algo;
 
 import com.google.common.collect.Sets;
 import nu.marginalia.array.LongArray;
+import nu.marginalia.array.LongArrayFactory;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -16,13 +17,13 @@ class TwoArrayOperationsTest {
 
     @Test
     void mergeArrays() {
-        LongArray a = LongArray.allocate(10);
-        LongArray b = LongArray.allocate(15);
+        LongArray a = LongArrayFactory.onHeapShared(10);
+        LongArray b = LongArrayFactory.onHeapShared(15);
 
         a.set(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
         b.set(0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30);
 
-        LongArray out = LongArray.allocate(TwoArrayOperations.countDistinctElements(a, b, 0, 10, 0, 15));
+        LongArray out = LongArrayFactory.onHeapShared(TwoArrayOperations.countDistinctElements(a, b, 0, 10, 0, 15));
         TwoArrayOperations.mergeArrays(out, a, b, 0, out.size(), 0, 10, 0, 15);
 
         long[] values = new long[15];
@@ -33,8 +34,8 @@ class TwoArrayOperationsTest {
 
     @Test
     void countDistinctElements() {
-        LongArray a = LongArray.allocate(10);
-        LongArray b = LongArray.allocate(15);
+        LongArray a = LongArrayFactory.onHeapShared(10);
+        LongArray b = LongArrayFactory.onHeapShared(15);
 
         long[] aVals = new long[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
         long[] bVals = new long[] { 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30 };
@@ -72,8 +73,8 @@ class TwoArrayOperationsTest {
         long[] aVals = new long[] { 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10 };
         long[] bVals = new long[] { 2, 1, 4, 2, 6, 3, 8, 4, 10, 5, 12, 6, 14, 7, 16, 8, 18, 9, 20, 10, 22, 11, 24, 12, 26, 13, 28, 14, 30, 15 };
 
-        LongArray a = LongArray.allocate(20);
-        LongArray b = LongArray.allocate(30);
+        LongArray a = LongArrayFactory.onHeapShared(20);
+        LongArray b = LongArrayFactory.onHeapShared(30);
 
         a.set(0, aVals);
         b.set(0, bVals);
@@ -105,9 +106,9 @@ class TwoArrayOperationsTest {
 
     @Test
     public void testCountMerge() {
-        LongArray a = LongArray.allocate(1024);
-        LongArray b = LongArray.allocate(512);
-        LongArray c = LongArray.allocate(1024 + 512);
+        LongArray a = LongArrayFactory.onHeapShared(1024);
+        LongArray b = LongArrayFactory.onHeapShared(512);
+        LongArray c = LongArrayFactory.onHeapShared(1024 + 512);
         a.transformEach(0, 1024, (i, v) -> 4 * i);
         b.transformEach(0, 512, (i, v) -> 3 * i);
 
@@ -122,9 +123,9 @@ class TwoArrayOperationsTest {
 
     @Test
     public void mergeArrays2() {
-        LongArray left = LongArray.allocate(4);
-        LongArray right = LongArray.allocate(2);
-        LongArray out = LongArray.allocate(4);
+        LongArray left = LongArrayFactory.onHeapShared(4);
+        LongArray right = LongArrayFactory.onHeapShared(2);
+        LongArray out = LongArrayFactory.onHeapShared(4);
         left.set(0, 40, 3, 41, 4);
         right.set(0, 40, 5);
 

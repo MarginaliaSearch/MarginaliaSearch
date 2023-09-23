@@ -30,6 +30,10 @@ public class SimulatedNaiveArray implements LongArray {
     public void force() {}
 
     @Override
+    public void close() {
+    }
+
+    @Override
     public void advice(NativeIO.Advice advice) throws IOException {}
 
     @Override

@@ -1,6 +1,7 @@
 package nu.marginalia.index.construction;
 
 import nu.marginalia.array.LongArray;
+import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.btree.BTreeWriter;
 import nu.marginalia.index.ReverseIndexParameters;
 import nu.marginalia.index.journal.reader.IndexJournalReader;
@@ -54,6 +55,20 @@ public class ReversePreindex {
         return new ReversePreindex(segments, docs);
     }
 
+    /**  Close the associated memory mapped areas and return
+     * a dehydrated version of this object that can be re-opened
+     * later.
+     */
+    public ReversePreindexReference closeToReference() {
+        try {
+            return new ReversePreindexReference(segments, documents);
+        }
+        finally {
+            segments.close();
+            documents.close();
+        }
+    }
+
     /** Transform the preindex into a reverse index */
     public void finalizeIndex(Path outputFileDocs, Path outputFileWords) throws IOException {
         var offsets = segments.counts;
@@ -67,7 +82,7 @@ public class ReversePreindex {
         offsets.fold(0, 0, offsets.size(), sizeEstimator);
 
         // Write the docs file
-        LongArray finalDocs = LongArray.mmapForWriting(outputFileDocs, sizeEstimator.size);
+        LongArray finalDocs = LongArrayFactory.mmapForWritingConfined(outputFileDocs, sizeEstimator.size);
         try (var intermediateDocChannel = documents.createDocumentsFileChannel()) {
             offsets.transformEachIO(0, offsets.size(),
                     new ReverseIndexBTreeTransformer(finalDocs, 2,
@@ -84,7 +99,7 @@ public class ReversePreindex {
         long wordsSize = ReverseIndexParameters.wordsBTreeContext.calculateSize((int) offsets.size());
 
         // Construct the tree
-        LongArray wordsArray = LongArray.mmapForWriting(outputFileWords, wordsSize);
+        LongArray wordsArray = LongArrayFactory.mmapForWritingConfined(outputFileWords, wordsSize);
 
         new BTreeWriter(wordsArray, ReverseIndexParameters.wordsBTreeContext)
             .write(0, (int) offsets.size(), mapRegion -> {
@@ -95,7 +110,9 @@ public class ReversePreindex {
         });
 
         finalDocs.force();
+        finalDocs.close();
         wordsArray.force();
+        wordsArray.close();
 
     }
 
@@ -118,7 +135,7 @@ public class ReversePreindex {
 
         Path docsFile = Files.createTempFile(destDir, "docs", ".dat");
 
-        LongArray mergedDocuments = LongArray.mmapForWriting(docsFile, 2 * (left.documents.size() + right.documents.size()));
+        LongArray mergedDocuments = LongArrayFactory.mmapForWritingConfined(docsFile, 2 * (left.documents.size() + right.documents.size()));
 
         leftIter.next();
         rightIter.next();
@@ -194,14 +211,14 @@ public class ReversePreindex {
                 0,  left.wordIds.size(),
                 0,  right.wordIds.size());
 
-        LongArray wordIdsFile = LongArray.mmapForWriting(segmentWordsFile, segmentsSize);
+        LongArray wordIdsFile = LongArrayFactory.mmapForWritingConfined(segmentWordsFile, segmentsSize);
 
         mergeArrays(wordIdsFile, left.wordIds, right.wordIds,
                 0, wordIdsFile.size(),
                 0, left.wordIds.size(),
                 0, right.wordIds.size());
 
-        LongArray counts = LongArray.mmapForWriting(segmentCountsFile, segmentsSize);
+        LongArray counts = LongArrayFactory.mmapForWritingConfined(segmentCountsFile, segmentsSize);
 
         return new ReversePreindexWordSegments(wordIdsFile, counts, segmentWordsFile, segmentCountsFile);
     }
@@ -218,7 +235,9 @@ public class ReversePreindex {
             bc.truncate(sizeLongs * 8);
         }
         long afterSize = mergedDocuments.size();
-        mergedDocuments = LongArray.mmapForWriting(docsFile, sizeLongs);
+        mergedDocuments.close();
+
+        mergedDocuments = LongArrayFactory.mmapForWritingConfined(docsFile, sizeLongs);
 
         if (beforeSize != afterSize) {
             logger.info("Shrunk {} from {}b to {}b", docsFile, beforeSize, afterSize);

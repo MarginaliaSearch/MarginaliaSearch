@@ -1,6 +1,7 @@
 package nu.marginalia.index;
 
 import nu.marginalia.array.LongArray;
+import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.btree.BTreeReader;
 import nu.marginalia.index.query.EmptyEntrySource;
 import nu.marginalia.index.query.EntrySource;
@@ -36,8 +37,8 @@ public class ReverseIndexReader {
 
         logger.info("Switching reverse index");
 
-        this.words = LongArray.mmapRead(words);
-        this.documents = LongArray.mmapRead(documents);
+        this.words = LongArrayFactory.mmapForReadingShared(words);
+        this.documents = LongArrayFactory.mmapForReadingShared  (documents);
 
         wordsBTreeReader = new BTreeReader(this.words, ReverseIndexParameters.wordsBTreeContext, 0);
         wordsDataOffset = wordsBTreeReader.getHeader().dataOffsetLongs();

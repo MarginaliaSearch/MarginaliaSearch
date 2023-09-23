@@ -15,7 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 
-public interface LongArray extends LongArrayBase, LongArrayTransformations, LongArraySearch, LongArraySort {
+public interface LongArray extends LongArrayBase, LongArrayTransformations, LongArraySearch, LongArraySort, AutoCloseable {
     int WORD_SIZE = 8;
 
     ArrayPartitioningScheme DEFAULT_PARTITIONING_SCHEME
@@ -70,6 +70,7 @@ public interface LongArray extends LongArrayBase, LongArrayTransformations, Long
     ArrayRangeReference<LongArray> directRangeIfPossible(long start, long end);
 
     void force();
+    void close();
 
     void advice(NativeIO.Advice advice) throws IOException;
     void advice(NativeIO.Advice advice, long start, long end) throws IOException;

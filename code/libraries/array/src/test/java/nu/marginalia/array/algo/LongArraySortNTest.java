@@ -3,6 +3,7 @@ package nu.marginalia.array.algo;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import nu.marginalia.array.LongArray;
+import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.array.page.LongArrayPage;
 import nu.marginalia.array.page.PagingLongArray;
 import nu.marginalia.array.scheme.PowerOf2PartitioningScheme;
@@ -26,6 +27,7 @@ class LongArraySortNTest {
     LongArray basic;
     LongArray paged;
     LongArray shifted;
+    LongArray segment;
 
     Long2ObjectOpenHashMap<LongOpenHashSet> dataAsPairs;
 
@@ -36,6 +38,7 @@ class LongArraySortNTest {
         basic = LongArrayPage.onHeap(size);
         paged = PagingLongArray.newOnHeap(new PowerOf2PartitioningScheme(32), size);
         shifted = LongArrayPage.onHeap(size + 30).shifted(30);
+        segment = LongArrayFactory.onHeapShared(size + 30).shifted(30);
 
         var random = new Random();
         long[] values = new long[size];
@@ -49,6 +52,7 @@ class LongArraySortNTest {
         basic.set(0, values);
         paged.set(0, values);
         shifted.set(0, values);
+        segment.set(0, values);
 
         dataAsPairs = asPairs(basic);
     }
@@ -140,9 +144,13 @@ class LongArraySortNTest {
         shifted.insertionSortN(2, 0, size);
         assertTrue(shifted.isSortedN(2, 0, size));
 
+        segment.insertionSortN(2, 0, size);
+        assertTrue(segment.isSortedN(2, 0, size));
+
         compare(basic, dataAsPairs);
         compare(paged, dataAsPairs);
         compare(shifted, dataAsPairs);
+        compare(segment, dataAsPairs);
     }
 
     @Test
@@ -156,9 +164,13 @@ class LongArraySortNTest {
         shifted.quickSortN(2, 0, size);
         assertTrue(shifted.isSortedN(2, 0, size));
 
+        segment.quickSortN(2, 0, size);
+        assertTrue(segment.isSortedN(2, 0, size));
+
         compare(basic, dataAsPairs);
         compare(paged, dataAsPairs);
         compare(shifted, dataAsPairs);
+        compare(segment, dataAsPairs);
     }
 
     @Test
@@ -173,9 +185,13 @@ class LongArraySortNTest {
         shifted.mergeSortN(2, 0, size, Path.of("/tmp"));
         assertTrue(shifted.isSortedN(2, 0, size));
 
+        segment.mergeSortN(2, 0, size, Path.of("/tmp"));
+        assertTrue(segment.isSortedN(2, 0, size));
+
         compare(basic, dataAsPairs);
         compare(paged, dataAsPairs);
         compare(shifted, dataAsPairs);
+        compare(segment, dataAsPairs);
     }
 
     private Long2ObjectOpenHashMap<LongOpenHashSet> asPairs(LongArray array) {
