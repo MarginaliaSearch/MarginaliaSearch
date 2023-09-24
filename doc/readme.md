@@ -6,7 +6,10 @@ Start in [📁 ../code/](../code/) and poke around.
 ## Operations
 
 * [System Properties](system-properties.md) - JVM property flags
+
+## How-To 
 * [Sideloading How-To](sideloading-howto.md) - How to sideload various data sets
+* [Parquet How-To](parquet-howto.md) - Useful tips in working with Parquet files
 
 ## Set-up
 
