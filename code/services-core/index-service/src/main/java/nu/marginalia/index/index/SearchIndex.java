@@ -35,16 +35,13 @@ public class SearchIndex {
 
     @NotNull
     private final IndexServicesFactory servicesFactory;
-    private final IndexSearchSetsService searchSetsService;
 
     private final ServiceEventLog eventLog;
 
     @Inject
     public SearchIndex(@NotNull IndexServicesFactory servicesFactory,
-                       IndexSearchSetsService searchSetsService,
                        ServiceEventLog eventLog) {
         this.servicesFactory = servicesFactory;
-        this.searchSetsService = searchSetsService;
         this.eventLog = eventLog;
     }
 
