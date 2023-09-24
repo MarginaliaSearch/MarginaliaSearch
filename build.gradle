@@ -16,6 +16,9 @@ subprojects.forEach {it ->
     it.tasks.withType(JavaCompile).configureEach {
         options.compilerArgs += ['--enable-preview']
     }
+    it.tasks.withType(JavaExec).configureEach {
+        jvmArgs += ['--enable-preview']
+    }
     it.tasks.withType(Test).configureEach {
         jvmArgs += ['--enable-preview']
     }
