@@ -6,7 +6,7 @@ import nu.marginalia.converting.sideload.dirtree.DirtreeSideloaderFactory;
 import nu.marginalia.converting.sideload.encyclopedia.EncyclopediaMarginaliaNuSideloader;
 import nu.marginalia.converting.sideload.stackexchange.StackexchangeSideloader;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
-import nu.marginalia.language.sentence.SentenceExtractor;
+import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,19 +17,19 @@ import java.util.Collection;
 public class SideloadSourceFactory {
     private final Gson gson;
     private final SideloaderProcessing sideloaderProcessing;
-    private final SentenceExtractor sentenceExtractor;
+    private final ThreadLocalSentenceExtractorProvider sentenceExtractorProvider;
     private final DocumentKeywordExtractor documentKeywordExtractor;
     private final DirtreeSideloaderFactory dirtreeSideloaderFactory;
 
     @Inject
     public SideloadSourceFactory(Gson gson,
                                  SideloaderProcessing sideloaderProcessing,
-                                 SentenceExtractor sentenceExtractor,
+                                 ThreadLocalSentenceExtractorProvider sentenceExtractorProvider,
                                  DocumentKeywordExtractor documentKeywordExtractor,
                                  DirtreeSideloaderFactory dirtreeSideloaderFactory) {
         this.gson = gson;
         this.sideloaderProcessing = sideloaderProcessing;
-        this.sentenceExtractor = sentenceExtractor;
+        this.sentenceExtractorProvider = sentenceExtractorProvider;
         this.documentKeywordExtractor = documentKeywordExtractor;
         this.dirtreeSideloaderFactory = dirtreeSideloaderFactory;
     }
@@ -48,7 +48,7 @@ public class SideloadSourceFactory {
             return dirs
                 .filter(Files::isRegularFile)
                 .filter(f -> f.toFile().getName().endsWith(".db"))
-                .map(dbFile -> new StackexchangeSideloader(dbFile, sentenceExtractor, documentKeywordExtractor))
+                .map(dbFile -> new StackexchangeSideloader(dbFile, sentenceExtractorProvider, documentKeywordExtractor))
                 .toList();
         }
     }

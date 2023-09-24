@@ -8,7 +8,6 @@ import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.UrlIndexingState;
 import nu.marginalia.model.idx.WordFlags;
-import nu.marginalia.model.idx.WordMetadata;
 
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
@@ -23,7 +22,10 @@ public class SideloaderProcessing {
         this.htmlProcessorPlugin = htmlProcessorPlugin;
     }
 
-    public ProcessedDocument processDocument(String url, String body, List<String> extraKeywords, int size) throws URISyntaxException {
+    public ProcessedDocument processDocument(String url,
+                                             String body,
+                                             List<String> extraKeywords,
+                                             int size) throws URISyntaxException {
         var crawledDoc = new CrawledDocument(
                 "encyclopedia.marginalia.nu",
                 url,

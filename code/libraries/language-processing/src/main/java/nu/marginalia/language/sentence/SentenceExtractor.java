@@ -22,6 +22,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
+/**  This class still isn't thread safe!!  If you use it concurrently, it won't throw exceptions,
+ * it will just haunt your code and cause unpredictable mysterious errors.
+ *
+ * Use {@link ThreadLocalSentenceExtractorProvider} instead to avoid falling into the twilight zone!
+ */
 public class SentenceExtractor {
 
     private SentenceDetectorME sentenceDetector;

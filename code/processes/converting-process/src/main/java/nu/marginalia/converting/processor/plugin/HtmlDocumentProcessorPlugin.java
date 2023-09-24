@@ -10,6 +10,7 @@ import nu.marginalia.converting.processor.logic.links.FileLinks;
 import nu.marginalia.converting.processor.logic.links.LinkProcessor;
 import nu.marginalia.converting.processor.plugin.specialization.*;
 import nu.marginalia.language.model.DocumentLanguageData;
+import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.crawling.model.CrawledDocument;
@@ -44,7 +45,6 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final double minDocumentQuality;
 
-    private final SentenceExtractor sentenceExtractor;
     private final FeatureExtractor featureExtractor;
     private final TitleExtractor titleExtractor;
     private final DocumentKeywordExtractor keywordExtractor;
@@ -59,6 +59,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     private static final LinkParser linkParser = new LinkParser();
     private static final FeedExtractor feedExtractor = new FeedExtractor(linkParser);
 
+    private final ThreadLocalSentenceExtractorProvider sentenceExtractorProvider;
     private final HtmlProcessorSpecializations htmlProcessorSpecializations;
 
     @Inject
@@ -73,13 +74,13 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
             DocumentLengthLogic documentLengthLogic,
             MetaRobotsTag metaRobotsTag,
             DocumentGeneratorExtractor documentGeneratorExtractor,
+            ThreadLocalSentenceExtractorProvider sentenceExtractorProvider,
             HtmlProcessorSpecializations specializations)
     {
         super(languageFilter);
 
         this.documentLengthLogic = documentLengthLogic;
         this.minDocumentQuality = minDocumentQuality;
-        this.sentenceExtractor = sentenceExtractor;
         this.featureExtractor = featureExtractor;
 
         this.titleExtractor = titleExtractor;
@@ -88,6 +89,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
         this.metaRobotsTag = metaRobotsTag;
 
         this.documentGeneratorExtractor = documentGeneratorExtractor;
+        this.sentenceExtractorProvider = sentenceExtractorProvider;
         this.htmlProcessorSpecializations = specializations;
     }
 
@@ -122,7 +124,8 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
             throw new DisqualifiedException(DisqualificationReason.IRRELEVANT);
         }
 
-        DocumentLanguageData dld = sentenceExtractor.extractSentences(specialization.prune(doc));
+        DocumentLanguageData dld =
+                sentenceExtractorProvider.get().extractSentences(specialization.prune(doc));
 
         checkDocumentLanguage(dld);
 

@@ -5,7 +5,7 @@ import nu.marginalia.converting.model.*;
 import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.integration.stackexchange.sqlite.StackExchangePostsDb;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
-import nu.marginalia.language.sentence.SentenceExtractor;
+import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
@@ -29,7 +29,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 public class StackexchangeSideloader implements SideloadSource {
-    private final SentenceExtractor sentenceExtractor;
+    private final ThreadLocalSentenceExtractorProvider sentenceExtractorProvider;
     private final DocumentKeywordExtractor keywordExtractor;
     private final String domainName;
 
@@ -37,12 +37,12 @@ public class StackexchangeSideloader implements SideloadSource {
 
     @SneakyThrows
     public StackexchangeSideloader(Path pathToDbFile,
-                                   SentenceExtractor sentenceExtractor,
+                                   ThreadLocalSentenceExtractorProvider sentenceExtractorProvider,
                                    DocumentKeywordExtractor keywordExtractor
     ) {
         this.dbFile = pathToDbFile;
         this.domainName = StackExchangePostsDb.getDomainName(pathToDbFile);
-        this.sentenceExtractor = sentenceExtractor;
+        this.sentenceExtractorProvider = sentenceExtractorProvider;
         this.keywordExtractor = keywordExtractor;
     }
 
@@ -109,7 +109,7 @@ public class StackexchangeSideloader implements SideloadSource {
 
             var url = new EdgeUrl(fullUrl);
             var doc = Jsoup.parse(fullHtml.toString());
-            var dld = sentenceExtractor.extractSentences(doc);
+            var dld = sentenceExtractorProvider.get().extractSentences(doc);
 
             ret.url = url;
             ret.words = keywordExtractor.extractKeywords(dld, url);
