@@ -29,7 +29,7 @@ class IndexResultDomainDeduplicatorTest {
     }
 
     SearchResultItem forId(int domain, int ordinal) {
-        return new SearchResultItem(UrlIdCodec.encodeId(domain, ordinal));
+        return new SearchResultItem(UrlIdCodec.encodeId(domain, ordinal), 4);
     }
 
 }

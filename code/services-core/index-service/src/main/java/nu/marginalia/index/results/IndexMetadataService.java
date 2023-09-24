@@ -115,14 +115,8 @@ public class IndexMetadataService {
             termdocToMeta = new Long2ObjectArrayMap<>(termIdsList.length);
 
             for (long termId : termIdsList) {
-                var mapForTerm = new Long2LongOpenHashMap(docIdsAll.length);
-
                 var metadata = index.getTermMetadata(termId, docIdsAll);
-                for (int i = 0; i < docIdsAll.length; i++) {
-                    mapForTerm.put(docIdsAll[i], metadata[i]);
-                }
-
-                termdocToMeta.put(termId, mapForTerm);
+                termdocToMeta.put(termId, new Long2LongOpenHashMap(docIdsAll, metadata));
             }
         }
 
@@ -138,6 +132,7 @@ public class IndexMetadataService {
 
             for (var coherenceSet : coherences.words()) {
                 long overlap = 0xFF_FFFF_FFFF_FFFFL;
+
                 for (var word : coherenceSet) {
                     long positions = WordMetadata.decodePositions(getTermMetadata(word, docId));
                     overlap &= positions;

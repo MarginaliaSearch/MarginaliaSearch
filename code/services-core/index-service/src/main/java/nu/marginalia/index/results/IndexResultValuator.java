@@ -70,7 +70,8 @@ public class IndexResultValuator {
         boolean anyAllSynthetic = false;
         int maxPositionsSet = 0;
 
-        SearchResultItem searchResult = new SearchResultItem(id);
+        SearchResultItem searchResult = new SearchResultItem(id,
+                searchTermVariants.stream().mapToInt(List::size).sum());
 
         for (int querySetId = 0;
              querySetId < searchTermVariants.size();
