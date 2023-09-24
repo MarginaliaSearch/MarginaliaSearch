@@ -159,8 +159,11 @@ public class IndexQueryService {
      * <br>
      * Then the results are combined.
      * */
+    private final ThreadLocal<TLongArrayList> resultsArrayListPool = ThreadLocal.withInitial(TLongArrayList::new);
     private TLongList evaluateSubqueries(SearchParameters params) {
-        final TLongArrayList results = new TLongArrayList(params.fetchSize);
+        final TLongArrayList results = resultsArrayListPool.get();
+        results.resetQuick();
+        results.ensureCapacity(params.fetchSize);
 
         // These queries are various term combinations
         for (var subquery : params.subqueries) {
