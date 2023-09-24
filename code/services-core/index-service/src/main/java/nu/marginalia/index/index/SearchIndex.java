@@ -77,7 +77,11 @@ public class SearchIndex {
         try {
             lock.lock();
 
+            if (indexReader != null)
+                indexReader.close();
+
             servicesFactory.switchFiles();
+
             indexReader = servicesFactory.getSearchIndexReader();
 
             eventLog.logEvent("INDEX-SWITCH-OK", "");

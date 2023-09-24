@@ -100,4 +100,9 @@ public class ForwardIndexReader {
     public int totalDocCount() {
         return idToOffset.size();
     }
+
+    public void close() {
+        if (data != null)
+            data.close();
+    }
 }

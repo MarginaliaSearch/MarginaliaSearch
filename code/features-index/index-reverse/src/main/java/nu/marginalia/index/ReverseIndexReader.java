@@ -24,8 +24,6 @@ public class ReverseIndexReader {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final BTreeReader wordsBTreeReader;
 
-
-
     public ReverseIndexReader(Path words, Path documents) throws IOException {
         if (!Files.exists(words) || !Files.exists(documents)) {
             this.words = null;
@@ -122,4 +120,11 @@ public class ReverseIndexReader {
         return true;
     }
 
+    public void close() {
+        if (documents != null)
+            documents.close();
+
+        if (words != null)
+            words.close();
+    }
 }

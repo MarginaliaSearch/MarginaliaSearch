@@ -66,4 +66,10 @@ public class SearchIndexReader {
     public int getHtmlFeatures(long docId) {
         return forwardIndexReader.getHtmlFeatures(docId);
     }
+
+    public void close() {
+        forwardIndexReader.close();
+        reverseIndexFullReader.close();
+        reverseIndexPriorityReader.close();
+    }
 }
