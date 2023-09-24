@@ -24,6 +24,8 @@ import nu.marginalia.index.query.IndexQuery;
 import nu.marginalia.index.results.IndexResultDomainDeduplicator;
 import nu.marginalia.index.svc.searchset.SmallSearchSet;
 import nu.marginalia.model.gson.GsonFactory;
+import nu.marginalia.model.idx.DocumentMetadata;
+import nu.marginalia.model.idx.WordMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -70,6 +72,29 @@ public class IndexQueryService {
         this.searchSetsService = searchSetsService;
         this.metadataService = metadataService;
         this.searchTermsSvc = searchTerms;
+    }
+    public DocumentMetadata debugEndpointDocMetadata(Request request, Response response) {
+        String docId =  request.queryParams("docId");
+        response.type("application/json");
+
+        return new DocumentMetadata(index.getDocumentMetadata(Long.parseLong(docId)));
+    }
+
+    public WordMetadata debugEndpointWordMetadata(Request request, Response response) {
+        String word =  request.queryParams("word");
+        String docId =  request.queryParams("docId");
+        response.type("application/json");
+
+        return new WordMetadata(index.getTermMetadata(
+                searchTermsSvc.getWordId(word),
+                new long[] { Long.parseLong(docId) }
+        )[0]);
+    }
+    public String debugEndpointWordEncoding(Request request, Response response) {
+        String word =  request.queryParams("word");
+        response.type("application/json");
+
+        return Long.toHexString(searchTermsSvc.getWordId(word));
     }
 
     public Object search(Request request, Response response) {

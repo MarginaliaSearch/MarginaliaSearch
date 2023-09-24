@@ -60,6 +60,10 @@ public class IndexService extends Service {
 
         Spark.post("/search/", indexQueryService::search, gson::toJson);
 
+        Spark.get("/public/debug/docmeta", indexQueryService::debugEndpointDocMetadata, gson::toJson);
+        Spark.get("/public/debug/wordmeta", indexQueryService::debugEndpointWordMetadata, gson::toJson);
+        Spark.get("/public/debug/word", indexQueryService::debugEndpointWordEncoding, gson::toJson);
+
         Spark.post("/ops/repartition", opsService::repartitionEndpoint);
         Spark.post("/ops/reindex", opsService::reindexEndpoint);
 
