@@ -40,6 +40,7 @@ public class UrlDetails {
     public String positions;
     public SearchResultItem resultItem;
     public List<SearchResultKeywordScore> keywordScores;
+    public long combinedId;
 
     public boolean hasMoreResults() {
         return resultsFromSameDomain > 1;

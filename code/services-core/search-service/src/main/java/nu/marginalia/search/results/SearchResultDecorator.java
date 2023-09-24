@@ -64,7 +64,8 @@ public class SearchResultDecorator {
                     1, // resultsFromSameDomain
                     "", // positions
                     null, // result item
-                    null // keyword scores
+                    null, // keyword scores
+                    0L
                     ));
         }
 
@@ -87,6 +88,7 @@ public class SearchResultDecorator {
             }
 
             details.rankingId = rankingId;
+            details.combinedId = resultItem.getCombinedId();
 
             details.resultsFromSameDomain = resultItem.resultsFromDomain;
             details.termScore = calculateTermScore(resultItem, details, resultSet.rankingContext);

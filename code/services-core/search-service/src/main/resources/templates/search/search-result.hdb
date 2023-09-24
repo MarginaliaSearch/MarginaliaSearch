@@ -1,5 +1,5 @@
   <!-- RankingID: {{rankingId}}
-       ID: {{id}}
+       ID: {{id}} - {{combinedId}}
        Ranking: {{ranking}}
        TermScore: {{termScore}}
        Quality: {{urlQuality}}
