@@ -14,7 +14,7 @@ import java.util.Set;
 public record WordMetadata(long positions,
                            byte flags) {
 
-    // Bottom 16 bits are used for flags
+    // Bottom 8 bits are used for flags
 
     public static final long FLAGS_MASK = 0xFFL;
 
@@ -42,7 +42,7 @@ public record WordMetadata(long positions,
 
     private static byte encodeFlags(Set<WordFlags> flags) {
         byte ret = 0;
-        for (var flag : flags) { ret |= flag.asBit(); }
+        for (var flag : flags) { ret |= (byte) flag.asBit(); }
         return ret;
     }
 
