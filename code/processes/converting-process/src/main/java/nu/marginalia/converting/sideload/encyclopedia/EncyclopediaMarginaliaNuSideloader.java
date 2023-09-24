@@ -119,6 +119,24 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
         };
     }
 
+    ProcessedDocument processJust(String url) throws SQLException, IOException, URISyntaxException, DisqualifiedException {
+        var stmt = connection.prepareStatement("""
+                SELECT url,title,html FROM articles
+                WHERE url=?
+                """);
+        stmt.setFetchSize(100);
+        stmt.setString(1, url);
+
+        var rs = stmt.executeQuery();
+        if (rs.next()) {
+            var articleParts = fromCompressedJson(rs.getBytes("html"), ArticleParts.class);
+            String title = rs.getString("title");
+
+            return convertDocument(articleParts.parts, title, URLEncoder.encode(rs.getString("url"), StandardCharsets.UTF_8));
+        }
+        return null;
+    }
+
     private ProcessedDocument convertDocument(List<String> parts, String title, String url) throws URISyntaxException, DisqualifiedException {
         String fullUrl = "https://encyclopedia.marginalia.nu/article/"+url;
 

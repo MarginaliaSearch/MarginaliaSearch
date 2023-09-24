@@ -13,7 +13,10 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 class DocumentKeywordExtractorTest {
 
@@ -72,6 +75,40 @@ class DocumentKeywordExtractorTest {
         // -
         System.out.println(new WordMetadata(1198298103937L));
         System.out.println(new WordMetadata(1103808168065L));
+    }
+
+    @Test
+    public void testMadonna() throws IOException, URISyntaxException {
+        var resource = Objects.requireNonNull(ClassLoader.getSystemResourceAsStream("test-data/madonna.html"),
+                "Could not load word frequency table");
+        String html = new String(resource.readAllBytes(), Charset.defaultCharset());
+        var doc = Jsoup.parse(html);
+        doc.filter(new DomPruningFilter(0.5));
+
+        var keywords = extractor.extractKeywords(
+                se.extractSentences(doc),
+                new EdgeUrl("https://encyclopedia.marginalia.nu/article/Don't_Tell_Me_(Madonna_song)")
+        );
+
+        var keywordsBuilt = keywords.build();
+        var ptr = keywordsBuilt.newPointer();
+
+        Map<String, WordMetadata> dirtyAndBlues = new HashMap<>();
+
+        while (ptr.advancePointer()) {
+            if (Set.of("dirty", "blues").contains(ptr.getKeyword())) {
+                Assertions.assertNull(
+                        dirtyAndBlues.put(ptr.getKeyword(), new WordMetadata(ptr.getMetadata()))
+                );
+            }
+        }
+
+        Assertions.assertTrue(dirtyAndBlues.containsKey("dirty"));
+        Assertions.assertTrue(dirtyAndBlues.containsKey("blues"));
+        Assertions.assertNotEquals(
+                dirtyAndBlues.get("dirty"),
+                dirtyAndBlues.get("blues")
+                );
     }
 
     @Test
