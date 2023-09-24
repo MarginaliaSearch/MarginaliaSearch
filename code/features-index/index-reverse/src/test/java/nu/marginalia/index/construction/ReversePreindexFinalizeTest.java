@@ -107,8 +107,8 @@ class ReversePreindexFinalizeTest {
         System.out.println(Files.size(wordsFile));
         System.out.println(Files.size(docsFile));
 
-        var docsArray = LongArray.mmapRead(docsFile);
-        var wordsArray = LongArray.mmapRead(wordsFile);
+        var docsArray = LongArrayFactory.mmapForReadingConfined(docsFile);
+        var wordsArray = LongArrayFactory.mmapForReadingConfined(wordsFile);
 
 
         var wordsHeader = BTreeReader.readHeader(wordsArray, 0);

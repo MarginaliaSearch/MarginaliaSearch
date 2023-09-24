@@ -12,7 +12,7 @@ import static java.lang.Math.min;
 public class BTreeReader {
 
     private final LongArray index;
-    private final ShiftedLongArray data;
+    private final LongArray data;
 
     public final BTreeContext ctx;
     private final BTreeHeader header;
@@ -148,7 +148,7 @@ public class BTreeReader {
         long searchStart = 0;
         for (int i = 0; i < keys.length; i++) {
             long key = keys[i];
-            searchStart = data.binarySearchN(ctx.entrySize, key, searchStart, data.size);
+            searchStart = data.binarySearchN(ctx.entrySize, key, searchStart, data.size());
             if (searchStart < 0) {
                 searchStart = LongArraySearch.decodeSearchMiss(searchStart);
             }
@@ -273,7 +273,7 @@ public class BTreeReader {
 
                     long searchEnd = dataOffset + (int) min(remainingTotal, remainingBlock);
 
-                    data.range(dataOffset, searchEnd).retainN(buffer, ctx.entrySize, boundary);
+                    data.retainN(buffer, ctx.entrySize, boundary, dataOffset, searchEnd);
                 }
             }
             else {
@@ -297,7 +297,7 @@ public class BTreeReader {
 
                     long searchEnd = dataOffset + (int) min(remainingTotal, remainingBlock);
 
-                    data.range(dataOffset, searchEnd).rejectN(buffer, ctx.entrySize, boundary);
+                    data.rejectN(buffer, ctx.entrySize, boundary, dataOffset, searchEnd);
                 }
             }
             else {

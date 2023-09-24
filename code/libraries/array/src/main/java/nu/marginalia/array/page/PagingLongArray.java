@@ -547,7 +547,7 @@ public class PagingLongArray extends AbstractPagingArray<LongArrayPage, LongBuff
         return pages[partitioningScheme.getPage(forOffset)];
     }
 
-    public ShiftedLongArray range(long start, long end) {
+    public LongArray range(long start, long end) {
         if (partitioningScheme.isSamePage(start, end)) {
             return pages[partitioningScheme.getPage(start)]
                     .range(partitioningScheme.getOffset(start),

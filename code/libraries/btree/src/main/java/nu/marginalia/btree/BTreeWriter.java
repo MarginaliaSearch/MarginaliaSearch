@@ -41,7 +41,7 @@ public class BTreeWriter {
             throw new IllegalStateException("Dog ear was not overwritten: " + header);
         }
 
-        assert slice.isSortedN(ctx.entrySize) : "Provided data was not sorted";
+        assert slice.isSortedN(ctx.entrySize, 0, (long) numEntries * ctx.entrySize) : "Provided data was not sorted";
 
         if (header.layers() >= 1) { // Omit layer if data fits within a single block
             writeIndex(header);
@@ -56,7 +56,7 @@ public class BTreeWriter {
         map.set(offset+2, header.dataOffsetLongs());
     }
 
-    private BTreeDogEar createDogEar(BTreeContext ctx, BTreeHeader header, ShiftedLongArray slice) {
+    private BTreeDogEar createDogEar(BTreeContext ctx, BTreeHeader header, LongArray slice) {
         if (BTreeWriter.class.desiredAssertionStatus()) {
             return BTreeDogEar.create(ctx, header, slice);
         }

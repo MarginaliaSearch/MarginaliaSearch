@@ -59,10 +59,10 @@ public interface LongArray extends LongArrayBase, LongArrayTransformations, Long
         return PagingLongArray.mapFileReadWrite(DEFAULT_PARTITIONING_SCHEME, path, size);
     }
 
-    default ShiftedLongArray shifted(long offset) {
+    default LongArray shifted(long offset) {
         return new ShiftedLongArray(offset, this);
     }
-    default ShiftedLongArray range(long start, long end) {
+    default LongArray range(long start, long end) {
         return new ShiftedLongArray(start, end, this);
     }
 
