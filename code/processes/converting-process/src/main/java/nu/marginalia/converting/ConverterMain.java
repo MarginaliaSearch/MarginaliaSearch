@@ -93,9 +93,9 @@ public class ConverterMain {
 
             int i = 0;
             for (var sideloadSource : sideloadSources) {
-                logger.info("Sideloading {}", sideloadSource.getDomain());
+                logger.info("Sideloading {}", sideloadSource.domainName());
 
-                taskHeartbeat.progress(sideloadSource.getDomain().toString(), i++, sideloadSources.size());
+                taskHeartbeat.progress(sideloadSource.domainName(), i++, sideloadSources.size());
 
                 writer.write(sideloadSource);
             }

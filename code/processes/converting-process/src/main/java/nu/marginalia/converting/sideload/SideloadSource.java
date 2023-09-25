@@ -9,4 +9,8 @@ import java.util.Iterator;
 public interface SideloadSource {
     ProcessedDomain getDomain();
     Iterator<ProcessedDocument> getDocumentsStream();
+
+    default String domainName() {
+        return getDomain().domain.toString();
+    }
 }
