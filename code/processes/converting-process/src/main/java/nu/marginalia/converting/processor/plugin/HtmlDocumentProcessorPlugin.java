@@ -66,7 +66,6 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     public HtmlDocumentProcessorPlugin(
             @Named("min-document-quality") Double minDocumentQuality,
             LanguageFilter languageFilter,
-            SentenceExtractor sentenceExtractor,
             FeatureExtractor featureExtractor,
             TitleExtractor titleExtractor,
             DocumentKeywordExtractor keywordExtractor,

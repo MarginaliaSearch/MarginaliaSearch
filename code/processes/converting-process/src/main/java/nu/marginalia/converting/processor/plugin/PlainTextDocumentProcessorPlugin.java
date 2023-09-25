@@ -6,7 +6,7 @@ import nu.marginalia.converting.language.LanguageFilter;
 import nu.marginalia.converting.processor.logic.DocumentLengthLogic;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
-import nu.marginalia.language.sentence.SentenceExtractor;
+import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
 import nu.marginalia.model.html.HtmlStandard;
 import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
@@ -30,24 +30,24 @@ import java.util.List;
 public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin {
 
     private final int maxTitleLength;
-    private final SentenceExtractor sentenceExtractor;
     private final DocumentKeywordExtractor keywordExtractor;
     private final PlainTextLogic plainTextLogic = new PlainTextLogic();
+    private final ThreadLocalSentenceExtractorProvider sentenceExtractorProvider;
     private final DocumentLengthLogic documentLengthLogic;
 
 
     @Inject
     public PlainTextDocumentProcessorPlugin(@Named("max-title-length") Integer maxTitleLength,
                                             LanguageFilter languageFilter,
-                                            SentenceExtractor sentenceExtractor,
+                                            ThreadLocalSentenceExtractorProvider sentenceExtractorProvider,
                                             DocumentKeywordExtractor keywordExtractor,
                                             DocumentLengthLogic documentLengthLogic
                                             )
     {
         super(languageFilter);
+        this.sentenceExtractorProvider = sentenceExtractorProvider;
         this.documentLengthLogic = documentLengthLogic;
         this.maxTitleLength = maxTitleLength;
-        this.sentenceExtractor = sentenceExtractor;
         this.keywordExtractor = keywordExtractor;
     }
 
@@ -68,7 +68,7 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
 
         final EdgeUrl url = new EdgeUrl(crawledDocument.url);
 
-        var dld = sentenceExtractor.extractSentences(documentBody, "");
+        var dld = sentenceExtractorProvider.get().extractSentences(documentBody, "");
 
         checkDocumentLanguage(dld);
 
