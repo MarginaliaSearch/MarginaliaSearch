@@ -132,7 +132,7 @@ public class StackexchangeSideloader implements SideloadSource {
             ret.details.features = EnumSet.noneOf(HtmlFeature.class);
             ret.details.generator = GeneratorType.DOCS;
             ret.details.title = StringUtils.truncate(post.title(), 128);
-            ret.details.description = StringUtils.truncate(doc.body().text(), 512);
+            ret.details.description = StringUtils.truncate(doc.body().text(), 255);
             ret.details.length = 128;
 
             ret.details.standard = HtmlStandard.HTML5;
