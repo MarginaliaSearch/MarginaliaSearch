@@ -105,9 +105,11 @@ public class KeywordExtractor {
 
 
     public WordSpan[] getKeywordsFromSentence(DocumentSentence sentence) {
-        var existingKeywords = sentence.keywords.get();
-        if (existingKeywords != null)
-            return existingKeywords;
+        if (sentence.keywords != null) {
+            var maybeRet = sentence.keywords.get();
+            if (maybeRet != null)
+                return maybeRet;
+        }
 
         List<WordSpan> spans = new ArrayList<>(2 * sentence.length());
 
