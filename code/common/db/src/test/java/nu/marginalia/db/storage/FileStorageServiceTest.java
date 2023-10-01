@@ -53,6 +53,11 @@ public class FileStorageServiceTest {
 
     @BeforeEach
     public void setupEach() {
+        // clean up any file storage overrides
+        for (FileStorageType type : FileStorageType.values()) {
+            System.setProperty(type.overrideName(), "");
+        }
+
         fileStorageService = new FileStorageService(dataSource);
     }
 
@@ -92,6 +97,13 @@ public class FileStorageServiceTest {
 
     }
 
+    @Test
+    public void testOverride() throws SQLException {
+        System.setProperty(FileStorageType.BACKUP.overrideName(), "/tmp");
+        System.out.println(FileStorageType.BACKUP.overrideName());
+        fileStorageService = new FileStorageService(dataSource);
+        Assertions.assertEquals(Path.of("/tmp"), fileStorageService.getStorageByType(FileStorageType.BACKUP).asPath());
+    }
     @Test
     public void testCreateBase() throws SQLException, FileNotFoundException {
         String name = "test-" + UUID.randomUUID();

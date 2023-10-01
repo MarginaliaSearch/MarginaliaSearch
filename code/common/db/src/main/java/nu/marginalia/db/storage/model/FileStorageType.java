@@ -10,5 +10,9 @@ public enum FileStorageType {
     INDEX_LIVE,
     BACKUP,
     EXPORT,
-    SEARCH_SETS
+    SEARCH_SETS;
+
+    public String overrideName() {
+        return "FS_OVERRIDE:"+name();
+    }
 }

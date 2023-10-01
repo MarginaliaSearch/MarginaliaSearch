@@ -21,6 +21,29 @@ public record FileStorage(
         String path,
         String description)
 {
+
+    /** It is sometimes desirable to be able to create an override that isn't
+     * backed by the database.  This constructor permits this.
+     */
+    public static FileStorage createOverrideStorage(FileStorageType type, String override) {
+        var mockBase = new FileStorageBase(
+                new FileStorageBaseId(-1),
+                FileStorageBaseType.SSD_INDEX,
+                "OVERRIDE:" + type.name(),
+                "INVALIDINVALIDINVALID",
+                false
+        );
+
+        return new FileStorage(
+                new FileStorageId(-1),
+                mockBase,
+                type,
+                LocalDateTime.now(),
+                override,
+                "OVERRIDE:" + type.name()
+        );
+    }
+
     public Path asPath() {
         return Path.of(path);
     }

@@ -28,9 +28,20 @@ public class FileStorageService {
     private final Logger logger = LoggerFactory.getLogger(FileStorageService.class);
 
     private static final DateTimeFormatter dirNameDatePattern = DateTimeFormatter.ofPattern("__uu-MM-dd'T'HH_mm_ss.SSS"); // filesystem safe ISO8601
+
     @Inject
     public FileStorageService(HikariDataSource dataSource) {
         this.dataSource = dataSource;
+
+        for (var type : FileStorageType.values()) {
+            String overrideProperty = System.getProperty(type.overrideName());
+
+            if (overrideProperty == null || overrideProperty.isBlank())
+                continue;
+
+            logger.info("FileStorage override present: {} -> {}", type,
+                    FileStorage.createOverrideStorage(type, overrideProperty).asPath());
+        }
     }
 
     public Optional<FileStorage> findFileStorageToDelete() {
@@ -332,6 +343,20 @@ public class FileStorageService {
     }
 
     public FileStorage getStorageByType(FileStorageType type) throws SQLException {
+        String override = System.getProperty(type.overrideName());
+
+        if (override != null) {
+            // It is sometimes desirable to be able to override the
+            // configured location of a FileStorage when running a process
+            //
+
+            if (!Files.isDirectory(Path.of(override))) {
+                throw new IllegalStateException("FileStorageType " + type.name() + " was overridden, but location '" + override + "' does not exist!");
+            }
+
+            return FileStorage.createOverrideStorage(type, override);
+        }
+
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
                      SELECT PATH, DESCRIPTION, ID, BASE_ID, CREATE_DATE
