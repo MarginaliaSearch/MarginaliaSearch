@@ -12,7 +12,7 @@ function download_model {
 
   if [ ! -f $model ]; then
     echo "** Downloading $url"
-    wget -O $model $url
+    curl -s -o $model $url
   fi
 }
 
