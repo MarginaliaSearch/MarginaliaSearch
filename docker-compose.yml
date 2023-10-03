@@ -86,7 +86,7 @@ services:
     depends_on:
       - mariadb
   mariadb:
-    image: "mariadb/server:10.3"
+    image: "mariadb:lts"
     container_name: "mariadb"
     env_file: "run/env/mariadb.env"
     command: ['mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
