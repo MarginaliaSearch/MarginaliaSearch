@@ -60,13 +60,4 @@ dependencies {
     testImplementation 'org.testcontainers:junit-jupiter:1.17.4'
 }
 
-test {
-    useJUnitPlatform()
-}
-
-task fastTests(type: Test) {
-    useJUnitPlatform {
-        excludeTags "slow"
-    }
-}
 

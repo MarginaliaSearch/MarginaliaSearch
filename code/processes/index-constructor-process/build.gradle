@@ -43,12 +43,3 @@ dependencies {
     testImplementation project(':code:processes:test-data')
 }
 
-test {
-    useJUnitPlatform()
-}
-
-task fastTests(type: Test) {
-    useJUnitPlatform {
-        excludeTags "slow"
-    }
-}

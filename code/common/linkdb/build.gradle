@@ -38,17 +38,3 @@ dependencies {
     testImplementation 'org.testcontainers:junit-jupiter:1.17.4'
 }
 
-
-test {
-    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
-    maxHeapSize = "8G"
-    useJUnitPlatform()
-}
-
-task fastTests(type: Test) {
-    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
-    maxHeapSize = "8G"
-    useJUnitPlatform {
-        excludeTags "slow"
-    }
-}

@@ -36,6 +36,18 @@ allprojects {
         lombok libs.lombok // prevent plugin from downgrading the version to something incompatible with '19
     }
 
+    test {
+        maxHeapSize = "8G"
+        useJUnitPlatform()
+    }
+
+    tasks.register('fastTests', Test) {
+        maxHeapSize = "8G"
+        useJUnitPlatform {
+            excludeTags "slow"
+        }
+    }
+
 }
 
 tasks.register('dist', Copy) {

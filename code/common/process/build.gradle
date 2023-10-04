@@ -27,17 +27,3 @@ dependencies {
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
 }
-
-test {
-    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
-    maxHeapSize = "8G"
-    useJUnitPlatform()
-}
-
-task fastTests(type: Test) {
-    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
-    maxHeapSize = "8G"
-    useJUnitPlatform {
-        excludeTags "slow"
-    }
-}

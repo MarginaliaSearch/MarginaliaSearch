@@ -37,12 +37,3 @@ dependencies {
 
 }
 
-test {
-    useJUnitPlatform()
-}
-
-task fastTests(type: Test) {
-    useJUnitPlatform {
-        excludeTags "slow"
-    }
-}

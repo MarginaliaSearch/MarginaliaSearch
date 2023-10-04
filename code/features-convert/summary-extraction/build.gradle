@@ -35,13 +35,3 @@ dependencies {
     testImplementation project(':code:common:model')
 }
 
-test {
-    maxHeapSize = "8G"
-    useJUnitPlatform()
-}
-
-task fastTests(type: Test) {
-    useJUnitPlatform {
-        excludeTags "slow"
-    }
-}

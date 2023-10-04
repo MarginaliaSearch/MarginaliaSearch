@@ -35,14 +35,3 @@ dependencies {
     testImplementation libs.mockito
     testImplementation project(':code:processes:converting-process')
 }
-
-test {
-    maxHeapSize = "8G"
-    useJUnitPlatform()
-}
-
-task fastTests(type: Test) {
-    useJUnitPlatform {
-        excludeTags "slow"
-    }
-}

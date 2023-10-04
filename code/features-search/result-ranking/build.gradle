@@ -28,13 +28,3 @@ dependencies {
     testImplementation project(':code:libraries:braille-block-punch-cards')
 }
 
-
-test {
-    useJUnitPlatform()
-}
-
-task fastTests(type: Test) {
-    useJUnitPlatform {
-        excludeTags "slow"
-    }
-}

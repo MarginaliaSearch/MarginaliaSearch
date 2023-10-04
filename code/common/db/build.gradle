@@ -52,17 +52,3 @@ flyway {
     locations = ['filesystem:src/main/resources/db/migration']
 }
 
-
-test {
-    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
-    maxHeapSize = "8G"
-    useJUnitPlatform()
-}
-
-task fastTests(type: Test) {
-    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
-    maxHeapSize = "8G"
-    useJUnitPlatform {
-        excludeTags "slow"
-    }
-}

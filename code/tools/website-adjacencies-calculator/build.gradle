@@ -39,17 +39,3 @@ configurations {
     e2eTestImplementation.extendsFrom(testImplementation)
 
 }
-
-test {
-    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
-    maxHeapSize = "8G"
-    useJUnitPlatform()
-}
-
-task fastTests(type: Test) {
-    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
-    maxHeapSize = "8G"
-    useJUnitPlatform {
-        excludeTags "slow"
-    }
-}

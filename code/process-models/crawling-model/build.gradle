@@ -34,13 +34,3 @@ dependencies {
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
 }
-
-test {
-    useJUnitPlatform()
-}
-
-task fastTests(type: Test) {
-    useJUnitPlatform {
-        excludeTags "slow"
-    }
-}

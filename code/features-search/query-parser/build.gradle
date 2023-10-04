@@ -32,15 +32,3 @@ dependencies {
     testImplementation libs.mockito
 }
 
-test {
-    maxHeapSize = "8G"
-    useJUnitPlatform()
-}
-
-task fastTests(type: Test) {
-    maxHeapSize = "8G"
-    useJUnitPlatform {
-        excludeTags "slow"
-    }
-}
-

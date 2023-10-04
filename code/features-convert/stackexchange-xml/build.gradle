@@ -15,6 +15,7 @@ dependencies {
 
     implementation 'org.tukaani:xz:1.8'
     implementation project(':code:libraries:blocking-thread-pool')
+    implementation project(':code:common:model')
     implementation libs.notnull
 
     implementation libs.jsoup

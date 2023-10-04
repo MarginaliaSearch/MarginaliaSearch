@@ -96,14 +96,3 @@ dependencies {
     testImplementation project(':code:processes:test-data')
     testImplementation project(':code:processes:crawling-process')
 }
-
-test {
-    maxHeapSize = "8G"
-    useJUnitPlatform()
-}
-
-task fastTests(type: Test) {
-    useJUnitPlatform {
-        excludeTags "slow"
-    }
-}
