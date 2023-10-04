@@ -152,15 +152,23 @@ public class SegmentLongArray implements PartitionPage, LongArray {
     @Override
     public void transferFrom(FileChannel source, long sourceStart, long arrayStart, long arrayEnd) throws IOException {
 
-        long index = arrayStart * JAVA_LONG.byteSize();
-        long length = (arrayEnd - arrayStart) * JAVA_LONG.byteSize();
+        final int stride = 1024*1204*128; // Copy 1 GB at a time 'cause byte buffers are 'a byte buffering
 
-        var bufferSlice = segment.asSlice(index, length).asByteBuffer();
+        long ss = sourceStart;
+        for (long as = arrayStart; as < arrayEnd; as += stride, ss += stride) {
+            long ae = Math.min(as + stride, arrayEnd);
 
-        long startPos = sourceStart * JAVA_LONG.byteSize();
-        while (bufferSlice.position() < bufferSlice.capacity()) {
-            source.read(bufferSlice, startPos + bufferSlice.position());
+            long index = as * JAVA_LONG.byteSize();
+            long length = (ae - as) * JAVA_LONG.byteSize();
+
+            var bufferSlice = segment.asSlice(index, length).asByteBuffer();
+
+            long startPos = ss * JAVA_LONG.byteSize();
+            while (bufferSlice.position() < bufferSlice.capacity()) {
+                source.read(bufferSlice, startPos + bufferSlice.position());
+            }
         }
+
     }
 
     @Override
