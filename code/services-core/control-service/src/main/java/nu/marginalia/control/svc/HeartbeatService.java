@@ -56,7 +56,7 @@ public class HeartbeatService {
         List<TaskHeartbeat> heartbeats = new ArrayList<>();
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                    SELECT TASK_NAME, TASK_BASE, SERVICE_INSTANCE,  STATUS, STAGE_NAME, PROGRESS, TIMESTAMPDIFF(MICROSECOND, TASK_HEARTBEAT.HEARTBEAT_TIME, CURRENT_TIMESTAMP(6)) AS TSDIFF
+                    SELECT TASK_NAME, TASK_BASE, INSTANCE, SERVICE_INSTANCE,  STATUS, STAGE_NAME, PROGRESS, TIMESTAMPDIFF(MICROSECOND, TASK_HEARTBEAT.HEARTBEAT_TIME, CURRENT_TIMESTAMP(6)) AS TSDIFF
                     FROM TASK_HEARTBEAT
                      """)) {
             var rs = stmt.executeQuery();
@@ -65,6 +65,7 @@ public class HeartbeatService {
                 heartbeats.add(new TaskHeartbeat(
                         rs.getString("TASK_NAME"),
                         rs.getString("TASK_BASE"),
+                        rs.getString("INSTANCE"),
                         rs.getString("SERVICE_INSTANCE"),
                         rs.getLong("TSDIFF") / 1000.,
                         progress < 0 ? null : progress,
@@ -83,10 +84,10 @@ public class HeartbeatService {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
                      DELETE FROM TASK_HEARTBEAT
-                      WHERE SERVICE_INSTANCE = ?
+                     WHERE INSTANCE = ?
                      """)) {
 
-            stmt.setString(1, heartbeat.serviceUuuidFull());
+            stmt.setString(1, heartbeat.instanceUuidFull());
             stmt.executeUpdate();
         }
         catch (SQLException ex) {

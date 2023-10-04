@@ -4,6 +4,7 @@ package nu.marginalia.control.model;
 public record TaskHeartbeat(
         String taskName,
         String taskBase,
+        String instanceUuidFull,
         String serviceUuuidFull,
         double lastSeenMillis,
         Integer progress,
