@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import lombok.SneakyThrows;
 import nu.marginalia.LanguageModels;
 import nu.marginalia.array.LongArray;
+import nu.marginalia.array.LongArrayFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -40,18 +41,19 @@ public class TermFrequencyDict {
     }
 
     private static Long2IntOpenHashMap load(Path file) throws IOException {
-        LongArray array = LongArray.mmapRead(file);
+        try (LongArray array = LongArrayFactory.mmapForReadingConfined(file)) {
 
-        int size = (int) Files.size(file)/16;
-        var ret = new Long2IntOpenHashMap(size, 0.5f);
+            int size = (int) Files.size(file) / 16;
+            var ret = new Long2IntOpenHashMap(size, 0.5f);
 
-        ret.defaultReturnValue(0);
+            ret.defaultReturnValue(0);
 
-        for (int i = 0; i < size; i++) {
-            ret.put(array.get(2*i), (int) array.get(2*i + 1));
+            for (int i = 0; i < size; i++) {
+                ret.put(array.get(2 * i), (int) array.get(2 * i + 1));
+            }
+
+            return ret;
         }
-
-        return ret;
     }
 
     /** Total number of documents in the corpus */
