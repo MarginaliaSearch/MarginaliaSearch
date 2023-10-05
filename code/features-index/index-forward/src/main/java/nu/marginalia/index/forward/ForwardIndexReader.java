@@ -53,14 +53,14 @@ public class ForwardIndexReader {
     }
 
     private static TLongIntHashMap loadIds(Path idsFile) throws IOException {
-        var idsArray = LongArrayFactory.mmapForReadingShared(idsFile);
+        try (var idsArray = LongArrayFactory.mmapForReadingShared(idsFile)) {
+            var ids = new TLongIntHashMap((int) idsArray.size(), 0.5f, -1, -1);
+            // This hash table should be of the same size as the number of documents, so typically less than 1 Gb
+            idsArray.forEach(0, idsArray.size(), (pos, val) -> ids.put(val, (int) pos));
+            return ids;
+        }
 
-        var ids = new TLongIntHashMap((int) idsArray.size(), 0.5f, -1, -1);
 
-        // This hash table should be of the same size as the number of documents, so typically less than 1 Gb
-        idsArray.forEach(0, idsArray.size(), (pos, val) -> ids.put(val, (int) pos));
-
-        return ids;
     }
 
     private static LongArray loadData(Path dataFile) throws IOException {
