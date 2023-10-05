@@ -9,8 +9,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ReverseIndexConstructor {
 
@@ -43,17 +43,21 @@ public class ReverseIndexConstructor {
             heartbeat.progress(CreateReverseIndexSteps.CREATE_PREINDEXES);
 
             try (var preindexHeartbeat = processHeartbeat.createAdHocTaskHeartbeat("constructPreindexes")) {
-                for (int i = 0; i < inputs.size(); i++) {
-                    var input = inputs.get(i);
 
-                    preindexHeartbeat.progress(input.toFile().getName(), i, inputs.size());
-
-                    preindexes.add(
-                        ReversePreindex
-                            .constructPreindex(readerSource.construct(input), docIdRewriter, tmpDir)
-                            .closeToReference()
-                    );
-                }
+                AtomicInteger progress = new AtomicInteger(0);
+                inputs.parallelStream().map(input ->
+                        {
+                            try {
+                                return ReversePreindex
+                                        .constructPreindex(readerSource.construct(input), docIdRewriter, tmpDir)
+                                        .closeToReference();
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                ).peek(i -> {
+                    preindexHeartbeat.progress("PREINDEX", progress.incrementAndGet(), inputs.size());
+                }).forEach(preindexes::add);
 
                 preindexHeartbeat.progress("FINISHED", inputs.size(), inputs.size());
             }
@@ -87,42 +91,24 @@ public class ReverseIndexConstructor {
             return preindexes.get(0);
         }
 
-        LinkedList<ReversePreindexReference> toMerge = new LinkedList<>(preindexes);
-        List<ReversePreindexReference> mergedItems = new ArrayList<>(preindexes.size() / 2);
+        return preindexes.parallelStream().reduce((l, r) -> {
+            try {
+                var left = l.open();
+                var right = r.open();
 
-        int pass = 0;
-        while (toMerge.size() > 1) {
-            String stage = String.format("PASS[%d]: %d -> %d", ++pass, toMerge.size(), toMerge.size()/2 + (toMerge.size() % 2));
-
-            int totalToMergeCount = toMerge.size()/2;
-            int toMergeProgress = 0;
-
-            while (toMerge.size() >= 2) {
-                mergeHeartbeat.progress(stage, toMergeProgress++, totalToMergeCount);
-
-                var left = toMerge.removeFirst().open();
-                var right = toMerge.removeFirst().open();
-
-                mergedItems.add(
-                    ReversePreindex
-                            .merge(workDir, left, right)
-                            .closeToReference()
-                );
+                var ret = ReversePreindex
+                        .merge(workDir, left, right)
+                        .closeToReference();
 
                 left.delete();
                 right.delete();
+
+                return ret;
             }
-
-            // Pour the merged items back in the toMerge queue
-            // (note, toMerge may still have a single item in it,
-            // in the case where it had an odd population)
-            toMerge.addAll(mergedItems);
-            mergedItems.clear();
-        }
-
-        mergeHeartbeat.progress("FINISHED", 1, 1);
-
-        return toMerge.getFirst();
+            catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        }).orElseThrow(IllegalStateException::new);
     }
 
 }
