@@ -21,8 +21,16 @@ public class IndexJournalReadEntry {
     }
 
 
-    static final byte[] bytes = new byte[8*65536];
-    static final LongBuffer longBuffer = ByteBuffer.wrap(bytes).asLongBuffer();
+    record WorkArea(byte[] bytes, LongBuffer buffer) {
+        WorkArea(byte[] bytes) {
+            this(bytes, ByteBuffer.wrap(bytes).asLongBuffer());
+        }
+        WorkArea() {
+            this(new byte[8*65536]);
+        }
+    }
+
+    static ThreadLocal<WorkArea> pool = ThreadLocal.withInitial(WorkArea::new);
 
     public static IndexJournalReadEntry read(DataInputStream inputStream) throws IOException {
 
@@ -36,12 +44,14 @@ public class IndexJournalReadEntry {
                 docId,
                 meta);
 
-        inputStream.readFully(bytes, 0, 8*header.entrySize());
+        var workArea = pool.get();
+        inputStream.readFully(workArea.bytes, 0, 8 * header.entrySize());
 
         long[] out = new long[header.entrySize()];
-        longBuffer.get(0, out, 0, out.length);
+        workArea.buffer.get(0, out, 0, out.length);
 
         return new IndexJournalReadEntry(header, out);
+
     }
 
     public long docId() {
