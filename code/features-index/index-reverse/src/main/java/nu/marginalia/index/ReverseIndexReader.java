@@ -71,6 +71,35 @@ public class ReverseIndexReader {
         }
         if (!failed2)
             logger.info("Passed test 2");
+
+        boolean failed3 = false;
+        for (long i = 0; i < wordsDataRange.size(); i+=2) {
+            if (wordOffset(wordsDataRange.get(i)) < 0) {
+                failed3 = true;
+                logger.error("Failed test 3");
+                break;
+            }
+        }
+        if (!failed3) {
+            logger.info("Passed test 3");
+        }
+
+        boolean failed4 = false;
+        outer:
+        for (long i = 1; i < wordsDataRange.size(); i+=2) {
+            var docsBTreeReader = new BTreeReader(this.documents, ReverseIndexParameters.docsBTreeContext, wordsDataRange.get(i));
+            var header = docsBTreeReader.getHeader();
+            var docRange = documents.range(header.dataOffsetLongs(), header.dataOffsetLongs() + header.numEntries() * 2L);
+            for (int j = 0; j < docRange.size(); j+=2) {
+                if (docsBTreeReader.findEntry(docRange.get(j)) < 0) {
+                    logger.info("Failed test 4");
+                    break outer;
+                }
+            }
+        }
+        if (!failed4) {
+            logger.info("Passed test 4");
+        }
     }
 
 
