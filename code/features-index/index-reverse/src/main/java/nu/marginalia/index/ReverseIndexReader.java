@@ -50,10 +50,10 @@ public class ReverseIndexReader {
     private void selfTest() {
         logger.info("Running self test program");
 
-        long wordsDataSize = words.size() - wordsDataOffset;
+        long wordsDataSize = wordsBTreeReader.getHeader().numEntries() * 2L;
 
-        var wordsDataRange = words.range(wordsDataOffset, wordsDataSize);
-        if (!wordsDataRange.isSortedN(2, 0, wordsDataRange.size()))
+        var wordsDataRange = words.range(wordsDataOffset, wordsDataOffset + wordsDataSize);
+        if (!wordsDataRange.isSortedN(2, 0, wordsDataSize))
             logger.error("Failed test 1: Words data is not sorted");
         else
             logger.info("Passed test 1");
@@ -63,7 +63,7 @@ public class ReverseIndexReader {
             var docsBTreeReader = new BTreeReader(this.documents, ReverseIndexParameters.docsBTreeContext, wordsDataRange.get(i));
             var header = docsBTreeReader.getHeader();
             var docRange = documents.range(header.dataOffsetLongs(), header.dataOffsetLongs() + header.numEntries() * 2L);
-            if (!docRange.isSortedN(2, 0, docRange.size())) {
+            if (!docRange.isSortedN(2, 0, header.numEntries() * 2L)) {
                 logger.error("Failed test 2: numEntries={}, offset={}", header.numEntries(), header.dataOffsetLongs());
                 failed2 = true;
                 break;
