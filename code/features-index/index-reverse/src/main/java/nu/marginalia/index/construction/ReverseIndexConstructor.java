@@ -1,6 +1,6 @@
 package nu.marginalia.index.construction;
 
-import nu.marginalia.process.control.ProcessAdHocTaskHeartbeat;
+import lombok.SneakyThrows;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginallia.index.journal.IndexJournalFileNames;
 import org.slf4j.Logger;
@@ -8,8 +8,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ReverseIndexConstructor {
@@ -17,19 +15,30 @@ public class ReverseIndexConstructor {
     private static final Logger logger = LoggerFactory.getLogger(ReverseIndexConstructor.class);
 
     public enum CreateReverseIndexSteps {
-        CREATE_PREINDEXES,
-        MERGE_PREINDEXES,
+        CONSTRUCT,
         FINALIZE,
         FINISHED
     }
-    public static void createReverseIndex(
-                                    ProcessHeartbeat processHeartbeat,
-                                    JournalReaderSource readerSource,
-                                    Path sourceBaseDir,
-                                    DocIdRewriter docIdRewriter,
-                                    Path tmpDir,
-                                    Path outputFileDocs,
-                                    Path outputFileWords) throws IOException
+
+    private final Path outputFileDocs;
+    private final Path outputFileWords;
+    private final JournalReaderSource readerSource;
+    private final DocIdRewriter docIdRewriter;
+    private final Path tmpDir;
+
+    public ReverseIndexConstructor(Path outputFileDocs,
+                                   Path outputFileWords,
+                                   JournalReaderSource readerSource,
+                                   DocIdRewriter docIdRewriter,
+                                   Path tmpDir) {
+        this.outputFileDocs = outputFileDocs;
+        this.outputFileWords = outputFileWords;
+        this.readerSource = readerSource;
+        this.docIdRewriter = docIdRewriter;
+        this.tmpDir = tmpDir;
+    }
+
+    public void createReverseIndex(ProcessHeartbeat processHeartbeat, Path sourceBaseDir) throws IOException
     {
         var inputs = IndexJournalFileNames.findJournalFiles(sourceBaseDir);
         if (inputs.isEmpty()) {
@@ -38,77 +47,57 @@ public class ReverseIndexConstructor {
         }
 
         try (var heartbeat = processHeartbeat.createProcessTaskHeartbeat(CreateReverseIndexSteps.class, "createReverseIndex")) {
-            List<ReversePreindexReference> preindexes = new ArrayList<>();
 
-            heartbeat.progress(CreateReverseIndexSteps.CREATE_PREINDEXES);
+            heartbeat.progress(CreateReverseIndexSteps.CONSTRUCT);
 
             try (var preindexHeartbeat = processHeartbeat.createAdHocTaskHeartbeat("constructPreindexes")) {
 
                 AtomicInteger progress = new AtomicInteger(0);
-                inputs.parallelStream().map(input ->
-                        {
-                            try {
-                                return ReversePreindex
-                                        .constructPreindex(readerSource.construct(input), docIdRewriter, tmpDir)
-                                        .closeToReference();
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
-                ).peek(i -> {
-                    preindexHeartbeat.progress("PREINDEX", progress.incrementAndGet(), inputs.size());
-                }).forEach(preindexes::add);
-
-                preindexHeartbeat.progress("FINISHED", inputs.size(), inputs.size());
+                inputs
+                    .parallelStream()
+                    .map(this::construct)
+                    .peek(i -> preindexHeartbeat.progress("CONSTRUCT", progress.incrementAndGet(), inputs.size()))
+                    .reduce(this::merge)
+                    .ifPresent((index) -> {
+                        heartbeat.progress(CreateReverseIndexSteps.FINALIZE);
+                        finalizeIndex(index);
+                        heartbeat.progress(CreateReverseIndexSteps.FINISHED);
+                    });
             }
-
-            heartbeat.progress(CreateReverseIndexSteps.MERGE_PREINDEXES);
-            ReversePreindex finalPreindex = null;
-
-            try (var mergeHeartbeat = processHeartbeat.createAdHocTaskHeartbeat("mergePreindexes")) {
-                finalPreindex = mergePreindexes(tmpDir, mergeHeartbeat, preindexes)
-                        .open();
-
-                heartbeat.progress(CreateReverseIndexSteps.FINALIZE);
-                finalPreindex.finalizeIndex(outputFileDocs, outputFileWords);
-            }
-            finally {
-                if (null != finalPreindex)
-                    finalPreindex.delete();
-            }
-
             heartbeat.progress(CreateReverseIndexSteps.FINISHED);
         }
     }
 
-    private static ReversePreindexReference mergePreindexes(Path workDir,
-                                                   ProcessAdHocTaskHeartbeat mergeHeartbeat,
-                                                   List<ReversePreindexReference> preindexes) throws IOException {
-        assert !preindexes.isEmpty();
+    @SneakyThrows
+    private ReversePreindexReference construct(Path input) {
+        return ReversePreindex
+                .constructPreindex(readerSource.construct(input), docIdRewriter, tmpDir)
+                .closeToReference();
+    }
 
-        if (preindexes.size() == 1) {
-            logger.info("Single preindex, no merge necessary");
-            return preindexes.get(0);
+    @SneakyThrows
+    private ReversePreindexReference merge(ReversePreindexReference leftR, ReversePreindexReference rightR) {
+
+        var left = leftR.open();
+        var right = rightR.open();
+
+        try {
+            return ReversePreindex.merge(tmpDir, left, right).closeToReference();
+        }
+        finally {
+            left.delete();
+            right.delete();
         }
 
-        return preindexes.parallelStream().reduce((l, r) -> {
-            try {
-                var left = l.open();
-                var right = r.open();
 
-                var ret = ReversePreindex
-                        .merge(workDir, left, right)
-                        .closeToReference();
-
-                left.delete();
-                right.delete();
-
-                return ret;
-            }
-            catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
-        }).orElseThrow(IllegalStateException::new);
     }
+
+    @SneakyThrows
+    private void finalizeIndex(ReversePreindexReference finalPR) {
+        var finalP = finalPR.open();
+        finalP.finalizeIndex(outputFileDocs, outputFileWords);
+        finalP.delete();
+    }
+
 
 }
