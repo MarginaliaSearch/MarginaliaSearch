@@ -134,7 +134,7 @@ public class SegmentLongArray implements PartitionPage, LongArray {
     @Override
     public void write(Path filename) throws IOException {
         try (var arena = Arena.ofConfined()) {
-            var destSegment = SegmentLongArray.fromMmapReadWrite(arena, filename, 0, size() * 8);
+            var destSegment = SegmentLongArray.fromMmapReadWrite(arena, filename, 0, segment.byteSize());
 
             destSegment.segment.copyFrom(segment);
             destSegment.force();
