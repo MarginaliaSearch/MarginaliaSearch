@@ -12,106 +12,13 @@ public class TwoArrayOperations {
     /**
      * Merge two sorted arrays into a third array, removing duplicates.
      */
-    public static long mergeArrays(LongArray out, LongArray a, LongArray b, long outStart, long outEnd, long aStart, long aEnd, long bStart, long bEnd) {
-
+    public static long mergeArrays(LongArray out, LongArray a, LongArray b, long outStart, long aStart, long aEnd, long bStart, long bEnd) {
         // Ensure that the arrays are sorted and that the output array is large enough
         if (TwoArrayOperations.class.desiredAssertionStatus()) {
             assert (a.isSorted(aStart, aEnd));
             assert (b.isSorted(bStart, bEnd));
-            assert ((outEnd - outStart) >= countDistinctElements(a, b, aStart, aEnd, bStart, bEnd));
         }
 
-        // Try to get direct access to the arrays if possible, this an order of magnitude faster
-        var directRangeA = a.directRangeIfPossible(aStart, aEnd);
-        var directRangeB = b.directRangeIfPossible(bStart, bEnd);
-        var directRangeOut = out.directRangeIfPossible(outStart, outEnd);
-
-        return mergeArraysDirect(directRangeOut.array(), directRangeA.array(), directRangeB.array(),
-                directRangeOut.start(), directRangeA.start(), directRangeA.end(), directRangeB.start(), directRangeB.end());
-    }
-
-    /**
-     * Merge two sorted arrays into a third array, removing duplicates.
-     * <p>
-     * The operation is performed with a step size of 2. For each pair of values,
-     * only the first is considered to signify a key. The second value is retained along
-     * with the first.  In the case of a duplicate, the value associated with array 'a'
-     * is retained, the other is discarded.
-     *
-     */
-    public static void mergeArrays2(LongArray out, LongArray a, LongArray b,
-                                    long outStart, long outEnd,
-                                    long aStart, long aEnd,
-                                    long bStart, long bEnd)
-    {
-        // Ensure that the arrays are sorted and that the output array is large enough
-        if (TwoArrayOperations.class.desiredAssertionStatus()) {
-            assert (a.isSortedN(2, aStart, aEnd));
-            assert (b.isSortedN(2, bStart, bEnd));
-            assert ((outEnd - outStart) == 2 * countDistinctElementsN(2, a, b, aStart, aEnd, bStart, bEnd));
-        }
-
-        // Try to get direct access to the arrays if possible, this an order of magnitude faster
-        var directRangeA = a.directRangeIfPossible(aStart, aEnd);
-        var directRangeB = b.directRangeIfPossible(bStart, bEnd);
-        var directRangeOut = out.directRangeIfPossible(outStart, outEnd);
-
-        mergeArraysDirect2(directRangeOut.array(), directRangeA.array(), directRangeB.array(),
-                           directRangeOut.start(),
-                           directRangeA.start(), directRangeA.end(),
-                           directRangeB.start(), directRangeB.end());
-    }
-
-    /** For each value in the source array, merge it with the corresponding value in the destination array.
-     *
-     */
-    public static void mergeArrayValues(LongArray dest, LongArray source, LongBinaryOperator mergeFunction, long destStart, long destEnd, long sourceStart, long sourceEnd) {
-
-        if (TwoArrayOperations.class.desiredAssertionStatus()) {
-            assert (dest.isSortedN(2, destStart, destEnd));
-            assert (source.isSortedN(2, sourceStart, sourceEnd));
-        }
-
-        // Try to get direct access to the arrays if possible, this an order of magnitude faster
-        var destRange = dest.directRangeIfPossible(destStart, destEnd);
-        var sourceRange = source.directRangeIfPossible(sourceStart, sourceEnd);
-
-        mergeArrayValuesDirect(
-                destRange.array(), sourceRange.array(),
-                mergeFunction,
-                destRange.start(), destRange.end(),
-                sourceRange.start(), sourceRange.end());
-    }
-
-    private static void mergeArrayValuesDirect(LongArray dest, LongArray source, LongBinaryOperator mergeFunction, long destStart, long destEnd, long sourceStart, long sourceEnd) {
-
-        long destPos = destStart;
-        long sourcePos = sourceStart;
-
-        while (destPos < destEnd && sourcePos < sourceEnd) {
-            long destVal = dest.get(destPos);
-            long sourceVal = source.get(sourcePos);
-
-            if (destVal < sourceVal) {
-                destPos += 2;
-            } else if (sourceVal < destVal) {
-                sourcePos += 2;
-            } else {
-                long mergedVal = mergeFunction.applyAsLong(dest.get(destPos + 1), source.get(sourcePos + 1));
-                dest.set(destPos + 1, mergedVal);
-
-                destPos += 2;
-                sourcePos += 2;
-            }
-        }
-
-    }
-
-    private static long mergeArraysDirect(LongArray out,
-                                          LongArray a, LongArray b,
-                                          long outStart,
-                                          long aStart, long aEnd,
-                                          long bStart, long bEnd) {
         long aPos = aStart;
         long bPos = bStart;
         long outPos = outStart;
@@ -166,11 +73,24 @@ public class TwoArrayOperations {
     }
 
     /**
-     * Merge two sorted arrays into a third array, step size 2, removing duplicates.
+     * Merge two sorted arrays into a third array, removing duplicates.
      * <p>
-     * It will prefer the first array if there are duplicates.
+     * The operation is performed with a step size of 2. For each pair of values,
+     * only the first is considered to signify a key. The second value is retained along
+     * with the first.  In the case of a duplicate, the value associated with array 'a'
+     * is retained, the other is discarded.
+     *
      */
-    private static void mergeArraysDirect2(LongArray out, LongArray a, LongArray b, long outStart, long aStart, long aEnd, long bStart, long bEnd) {
+    public static long mergeArrays2(LongArray out, LongArray a, LongArray b,
+                                    long outStart,
+                                    long aStart, long aEnd,
+                                    long bStart, long bEnd)
+    {
+        if (TwoArrayOperations.class.desiredAssertionStatus()) {
+            assert (a.isSortedN(2, aStart, aEnd));
+            assert (b.isSortedN(2, bStart, bEnd));
+        }
+
         long aPos = aStart;
         long bPos = bStart;
         long outPos = outStart;
@@ -232,9 +152,9 @@ public class TwoArrayOperations {
                 lastValue = val;
             }
         }
+
+        return outPos - outStart;
     }
-
-
 
     /**
      * Count the number of distinct elements in two sorted arrays.

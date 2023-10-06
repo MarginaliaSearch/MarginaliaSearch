@@ -214,7 +214,7 @@ public class ReversePreindex {
         LongArray wordIdsFile = LongArrayFactory.mmapForWritingConfined(segmentWordsFile, segmentsSize);
 
         mergeArrays(wordIdsFile, left.wordIds, right.wordIds,
-                0, wordIdsFile.size(),
+                0,
                 0, left.wordIds.size(),
                 0, right.wordIds.size());
 
@@ -256,20 +256,14 @@ public class ReversePreindex {
                                       LongArray dest,
                                       ReversePreindexWordSegments.SegmentConstructionIterator destIter)
     {
-        long distinct = countDistinctElementsN(2,
-                left.documents,
-                right.documents,
-                leftIter.startOffset, leftIter.endOffset,
-                rightIter.startOffset, rightIter.endOffset);
-
-        mergeArrays2(dest,
+        long segSize = mergeArrays2(dest,
                 left.documents,
                 right.documents,
                 destIter.startOffset,
-                destIter.startOffset + 2*distinct,
                 leftIter.startOffset, leftIter.endOffset,
                 rightIter.startOffset, rightIter.endOffset);
 
+        long distinct = segSize / 2;
         destIter.putNext(distinct);
         leftIter.next();
         rightIter.next();
