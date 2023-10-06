@@ -107,8 +107,6 @@ public class ReversePreindexDocuments {
         }
 
         sortingWorkers.shutdown();
-        logger.info("Awaiting shutdown");
-
         while (!sortingWorkers.awaitTermination(1, TimeUnit.HOURS));
 
         sortingWorkers.close();
