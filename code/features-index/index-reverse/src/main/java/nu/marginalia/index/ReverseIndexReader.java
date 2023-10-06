@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.Executors;
 
 public class ReverseIndexReader {
     private final LongArray words;
@@ -40,6 +41,36 @@ public class ReverseIndexReader {
 
         wordsBTreeReader = new BTreeReader(this.words, ReverseIndexParameters.wordsBTreeContext, 0);
         wordsDataOffset = wordsBTreeReader.getHeader().dataOffsetLongs();
+
+        if (getClass().desiredAssertionStatus()) {
+            Executors.newSingleThreadExecutor().execute(this::selfTest);
+        }
+    }
+
+    private void selfTest() {
+        logger.info("Running self test program");
+
+        long wordsDataSize = words.size() - wordsDataOffset;
+
+        var wordsDataRange = words.range(wordsDataOffset, wordsDataSize);
+        if (!wordsDataRange.isSortedN(2, 0, wordsDataRange.size()))
+            logger.error("Failed test 1: Words data is not sorted");
+        else
+            logger.info("Passed test 1");
+
+        boolean failed2 = false;
+        for (int i = 1; i < wordsDataRange.size(); i+=2) {
+            var docsBTreeReader = new BTreeReader(this.documents, ReverseIndexParameters.docsBTreeContext, wordsDataRange.get(i));
+            var header = docsBTreeReader.getHeader();
+            var docRange = documents.range(header.dataOffsetLongs(), header.dataOffsetLongs() + header.numEntries() * 2L);
+            if (!docRange.isSortedN(2, 0, docRange.size())) {
+                logger.error("Failed test 2: numEntries={}, offset={}", header.numEntries(), header.dataOffsetLongs());
+                failed2 = true;
+                break;
+            }
+        }
+        if (!failed2)
+            logger.info("Passed test 2");
     }
 
 
