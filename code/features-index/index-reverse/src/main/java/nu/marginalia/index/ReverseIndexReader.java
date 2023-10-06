@@ -59,7 +59,7 @@ public class ReverseIndexReader {
             logger.info("Passed test 1");
 
         boolean failed2 = false;
-        for (int i = 1; i < wordsDataRange.size(); i+=2) {
+        for (long i = 1; i < wordsDataRange.size(); i+=2) {
             var docsBTreeReader = new BTreeReader(this.documents, ReverseIndexParameters.docsBTreeContext, wordsDataRange.get(i));
             var header = docsBTreeReader.getHeader();
             var docRange = documents.range(header.dataOffsetLongs(), header.dataOffsetLongs() + header.numEntries() * 2L);
