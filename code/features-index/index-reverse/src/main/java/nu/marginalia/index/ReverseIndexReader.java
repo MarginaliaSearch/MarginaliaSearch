@@ -76,7 +76,15 @@ public class ReverseIndexReader {
         for (long i = 0; i < wordsDataRange.size(); i+=2) {
             if (wordOffset(wordsDataRange.get(i)) < 0) {
                 failed3 = true;
+
                 logger.error("Failed test 3");
+                if (wordsBTreeReader.findEntry(wordsDataRange.get(i)) < 0) {
+                    logger.error("Scenario A");
+                }
+                else {
+                    logger.error("Scenario B");
+                }
+
                 break;
             }
         }
