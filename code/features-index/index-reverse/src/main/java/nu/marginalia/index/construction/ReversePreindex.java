@@ -47,11 +47,8 @@ public class ReversePreindex {
         Path segmentCountsFile = Files.createTempFile(destDir, "segment_counts", ".dat");
         Path docsFile = Files.createTempFile(destDir, "docs", ".dat");
 
-        logger.info("Segmenting");
         var segments = ReversePreindexWordSegments.construct(reader, segmentWordsFile, segmentCountsFile);
-        logger.info("Mapping docs");
         var docs = ReversePreindexDocuments.construct(docsFile, reader, docIdRewriter, segments);
-        logger.info("Done");
         return new ReversePreindex(segments, docs);
     }
 
@@ -64,6 +61,8 @@ public class ReversePreindex {
             return new ReversePreindexReference(segments, documents);
         }
         finally {
+            segments.force();
+            documents.force();
             segments.close();
             documents.close();
         }

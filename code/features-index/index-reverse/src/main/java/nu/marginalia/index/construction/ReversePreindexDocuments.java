@@ -36,12 +36,9 @@ public class ReversePreindexDocuments {
             DocIdRewriter docIdRewriter,
             ReversePreindexWordSegments segments) throws IOException {
 
-
-        logger.info("Transferring data");
         createUnsortedDocsFile(docsFile, reader, segments, docIdRewriter);
 
         LongArray docsFileMap = LongArrayFactory.mmapForModifyingShared(docsFile);
-        logger.info("Sorting data");
         sortDocsFile(docsFileMap, segments);
 
         return new ReversePreindexDocuments(docsFileMap, docsFile);
@@ -124,5 +121,9 @@ public class ReversePreindexDocuments {
 
     public void close() {
         documents.close();
+    }
+
+    public void force() {
+        documents.force();
     }
 }
