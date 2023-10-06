@@ -55,8 +55,10 @@ public class ReverseIndexConstructor {
                 AtomicInteger progress = new AtomicInteger(0);
                 inputs
                     .parallelStream()
-                    .map(this::construct)
-                    .peek(i -> preindexHeartbeat.progress("CONSTRUCT", progress.incrementAndGet(), inputs.size()))
+                    .map(in -> {
+                        preindexHeartbeat.progress("PREINDEX/MERGE", progress.incrementAndGet(), inputs.size());
+                        return construct(in);
+                    })
                     .reduce(this::merge)
                     .ifPresent((index) -> {
                         heartbeat.progress(CreateReverseIndexSteps.FINALIZE);
