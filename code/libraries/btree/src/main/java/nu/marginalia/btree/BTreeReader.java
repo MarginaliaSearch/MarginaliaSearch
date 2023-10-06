@@ -27,6 +27,7 @@ public class BTreeReader {
         index = file.range(header.indexOffsetLongs(), header.dataOffsetLongs());
         data = file.range(header.dataOffsetLongs(), header.dataOffsetLongs() + dataBlockEnd);
 
+        assert file.size() >= header.dataOffsetLongs() + dataBlockEnd;
     }
 
     LongArray data() {
@@ -98,13 +99,15 @@ public class BTreeReader {
      * @return file offset of entry matching keyRaw, negative if absent
      */
     public long findEntry(final long key) {
+        return data.binarySearchN(2, key, 0, dataBlockEnd);
+        /*
         BTreePointer ip = new BTreePointer(header);
 
         while (!ip.isDataLayer())
             if (!ip.walkToChild(key))
                 return -1;
 
-        return ip.findData(key);
+        return ip.findData(key);*/
     }
 
     public void readData(long[] buf, int n, long pos) {
