@@ -47,11 +47,8 @@ public class ReversePreindex {
         Path segmentCountsFile = Files.createTempFile(destDir, "segment_counts", ".dat");
         Path docsFile = Files.createTempFile(destDir, "docs", ".dat");
 
-        logger.info("Segmenting");
         var segments = ReversePreindexWordSegments.construct(reader, segmentWordsFile, segmentCountsFile);
-        logger.info("Mapping docs");
         var docs = ReversePreindexDocuments.construct(docsFile, reader, docIdRewriter, segments);
-        logger.info("Done");
         return new ReversePreindex(segments, docs);
     }
 
@@ -64,6 +61,8 @@ public class ReversePreindex {
             return new ReversePreindexReference(segments, documents);
         }
         finally {
+            segments.force();
+            documents.force();
             segments.close();
             documents.close();
         }
@@ -94,6 +93,9 @@ public class ReversePreindex {
         LongArray wordIds = segments.wordIds;
 
         assert offsets.size() == wordIds.size() : "Offsets and word-ids of different size";
+        if (offsets.size() > Integer.MAX_VALUE) {
+            throw new IllegalStateException("offsets.size() too big!");
+        }
 
         // Estimate the size of the words index data
         long wordsSize = ReverseIndexParameters.wordsBTreeContext.calculateSize((int) offsets.size());
@@ -214,7 +216,7 @@ public class ReversePreindex {
         LongArray wordIdsFile = LongArrayFactory.mmapForWritingConfined(segmentWordsFile, segmentsSize);
 
         mergeArrays(wordIdsFile, left.wordIds, right.wordIds,
-                0, wordIdsFile.size(),
+                0,
                 0, left.wordIds.size(),
                 0, right.wordIds.size());
 
@@ -256,20 +258,14 @@ public class ReversePreindex {
                                       LongArray dest,
                                       ReversePreindexWordSegments.SegmentConstructionIterator destIter)
     {
-        long distinct = countDistinctElementsN(2,
-                left.documents,
-                right.documents,
-                leftIter.startOffset, leftIter.endOffset,
-                rightIter.startOffset, rightIter.endOffset);
-
-        mergeArrays2(dest,
+        long segSize = mergeArrays2(dest,
                 left.documents,
                 right.documents,
                 destIter.startOffset,
-                destIter.startOffset + 2*distinct,
                 leftIter.startOffset, leftIter.endOffset,
                 rightIter.startOffset, rightIter.endOffset);
 
+        long distinct = segSize / 2;
         destIter.putNext(distinct);
         leftIter.next();
         rightIter.next();

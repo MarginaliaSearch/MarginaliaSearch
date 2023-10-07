@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.Executors;
 
 public class ReverseIndexReader {
     private final LongArray words;
@@ -40,6 +41,73 @@ public class ReverseIndexReader {
 
         wordsBTreeReader = new BTreeReader(this.words, ReverseIndexParameters.wordsBTreeContext, 0);
         wordsDataOffset = wordsBTreeReader.getHeader().dataOffsetLongs();
+
+        if (getClass().desiredAssertionStatus()) {
+            Executors.newSingleThreadExecutor().execute(this::selfTest);
+        }
+    }
+
+    private void selfTest() {
+        logger.info("Running self test program");
+
+        long wordsDataSize = wordsBTreeReader.getHeader().numEntries() * 2L;
+
+        var wordsDataRange = words.range(wordsDataOffset, wordsDataOffset + wordsDataSize);
+        if (!wordsDataRange.isSortedN(2, 0, wordsDataSize))
+            logger.error("Failed test 1: Words data is not sorted");
+        else
+            logger.info("Passed test 1");
+
+        boolean failed2 = false;
+        for (long i = 1; i < wordsDataRange.size(); i+=2) {
+            var docsBTreeReader = new BTreeReader(this.documents, ReverseIndexParameters.docsBTreeContext, wordsDataRange.get(i));
+            var header = docsBTreeReader.getHeader();
+            var docRange = documents.range(header.dataOffsetLongs(), header.dataOffsetLongs() + header.numEntries() * 2L);
+            if (!docRange.isSortedN(2, 0, header.numEntries() * 2L)) {
+                logger.error("Failed test 2: numEntries={}, offset={}", header.numEntries(), header.dataOffsetLongs());
+                failed2 = true;
+                break;
+            }
+        }
+        if (!failed2)
+            logger.info("Passed test 2");
+
+        boolean failed3 = false;
+        for (long i = 0; i < wordsDataRange.size(); i+=2) {
+            if (wordOffset(wordsDataRange.get(i)) < 0) {
+                failed3 = true;
+
+                logger.error("Failed test 3");
+                if (wordsBTreeReader.findEntry(wordsDataRange.get(i)) < 0) {
+                    logger.error("Scenario A");
+                }
+                else {
+                    logger.error("Scenario B");
+                }
+
+                break;
+            }
+        }
+        if (!failed3) {
+            logger.info("Passed test 3");
+        }
+
+        boolean failed4 = false;
+        outer:
+        for (long i = 1; i < wordsDataRange.size(); i+=2) {
+            var docsBTreeReader = new BTreeReader(this.documents, ReverseIndexParameters.docsBTreeContext, wordsDataRange.get(i));
+            var header = docsBTreeReader.getHeader();
+            var docRange = documents.range(header.dataOffsetLongs(), header.dataOffsetLongs() + header.numEntries() * 2L);
+            for (int j = 0; j < docRange.size(); j+=2) {
+                if (docsBTreeReader.findEntry(docRange.get(j)) < 0) {
+                    logger.info("Failed test 4");
+                    break outer;
+                }
+            }
+        }
+        if (!failed4) {
+            logger.info("Passed test 4");
+        }
     }
 
 
@@ -98,6 +166,7 @@ public class ReverseIndexReader {
         long offset = wordOffset(wordId);
 
         if (offset < 0) {
+            logger.warn("Missing offset for word {}", wordId);
             return new long[docIds.length];
         }
 

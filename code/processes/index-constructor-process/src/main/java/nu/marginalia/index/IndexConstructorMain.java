@@ -104,15 +104,11 @@ public class IndexConstructorMain {
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
 
-        ReverseIndexConstructor.
-                createReverseIndex(
-                        heartbeat,
-                        IndexJournalReader::singleFile,
-                        indexStaging.asPath(),
-                        this::addRankToIdEncoding,
-                        tmpDir,
-                        outputFileDocs,
-                        outputFileWords);
+        new ReverseIndexConstructor(outputFileDocs, outputFileWords,
+                IndexJournalReader::singleFile,
+                this::addRankToIdEncoding, tmpDir)
+                    .createReverseIndex(heartbeat, indexStaging.asPath());
+
     }
 
     private void createPrioReverseIndex() throws SQLException, IOException {
@@ -130,13 +126,10 @@ public class IndexConstructorMain {
         // important to the document.  This filter will act on the encoded {@see WordMetadata}
         LongPredicate wordMetaFilter = getPriorityIndexWordMetaFilter();
 
-        ReverseIndexConstructor.
-            createReverseIndex(heartbeat,
-                    (path) -> IndexJournalReader
-                            .singleFile(path)
-                            .filtering(wordMetaFilter),
-                    indexStaging.asPath(),
-                    this::addRankToIdEncoding, tmpDir, outputFileDocs, outputFileWords);
+        new ReverseIndexConstructor(outputFileDocs, outputFileWords,
+                (path) -> IndexJournalReader.singleFile(path).filtering(wordMetaFilter),
+                this::addRankToIdEncoding, tmpDir)
+                .createReverseIndex(heartbeat, indexStaging.asPath());
     }
 
     private static LongPredicate getPriorityIndexWordMetaFilter() {

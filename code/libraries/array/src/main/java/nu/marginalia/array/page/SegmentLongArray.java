@@ -133,8 +133,11 @@ public class SegmentLongArray implements PartitionPage, LongArray {
 
     @Override
     public void write(Path filename) throws IOException {
-        try (var channel = (FileChannel) Files.newByteChannel(filename, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
-            write(channel);
+        try (var arena = Arena.ofConfined()) {
+            var destSegment = SegmentLongArray.fromMmapReadWrite(arena, filename, 0, segment.byteSize());
+
+            destSegment.segment.copyFrom(segment);
+            destSegment.force();
         }
     }
 

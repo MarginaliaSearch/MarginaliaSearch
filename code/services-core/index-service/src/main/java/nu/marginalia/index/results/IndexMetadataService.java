@@ -13,15 +13,17 @@ import nu.marginalia.index.index.SearchIndex;
 import nu.marginalia.index.svc.SearchTermsService;
 import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.ranking.ResultValuator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.OptionalInt;
 
 public class IndexMetadataService {
     private final SearchIndex index;
     private final SearchTermsService searchTermsService;
     private final ResultValuator searchResultValuator;
+    private static final Logger logger = LoggerFactory.getLogger(IndexMetadataService.class);
 
     @Inject
     public IndexMetadataService(SearchIndex index,
@@ -123,8 +125,10 @@ public class IndexMetadataService {
         public long getTermMetadata(long termId, long docId) {
             var docsForTerm = termdocToMeta.get(termId);
             if (docsForTerm == null) {
+                logger.warn("Missing meta for term {}", termId);
                 return 0;
             }
+
             return docsForTerm.getOrDefault(docId, 0);
         }
 

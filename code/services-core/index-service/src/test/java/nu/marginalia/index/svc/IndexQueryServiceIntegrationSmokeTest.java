@@ -221,9 +221,8 @@ public class IndexQueryServiceIntegrationSmokeTest {
         Path tmpDir = indexStaging.asPath().resolve("tmp");
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-
-        ReverseIndexConstructor.
-                createReverseIndex(new FakeProcessHeartbeat(), IndexJournalReader::singleFile, indexStaging.asPath(), DocIdRewriter.identity(), tmpDir, outputFileDocs, outputFileWords);
+        new ReverseIndexConstructor(outputFileDocs, outputFileWords, IndexJournalReader::singleFile, DocIdRewriter.identity(), tmpDir)
+                .createReverseIndex(new FakeProcessHeartbeat(), indexStaging.asPath());
     }
 
     private void createPrioReverseIndex() throws SQLException, IOException {
@@ -237,8 +236,8 @@ public class IndexQueryServiceIntegrationSmokeTest {
         Path tmpDir = indexStaging.asPath().resolve("tmp");
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
-        ReverseIndexConstructor.
-                createReverseIndex(new FakeProcessHeartbeat(), IndexJournalReader::singleFile, indexStaging.asPath(), DocIdRewriter.identity(), tmpDir, outputFileDocs, outputFileWords);
+        new ReverseIndexConstructor(outputFileDocs, outputFileWords, IndexJournalReader::singleFile, DocIdRewriter.identity(), tmpDir)
+                .createReverseIndex(new FakeProcessHeartbeat(), indexStaging.asPath());
     }
 
     private void createForwardIndex() throws SQLException, IOException {
