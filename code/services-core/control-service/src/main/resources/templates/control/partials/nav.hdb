@@ -4,6 +4,7 @@
         <li>Manage</li>
         <li><a href="/api-keys" title="Create or remove API keys">API Keys</a></li>
         <li><a href="/blacklist" title="Add or remove website sanctions">Blacklist</a></li>
+        <li><a href="/search-to-ban" title="Search function for easy blacklisting">Blacklist Search</a></li>
         <li><a href="/complaints" title="View and act on user complaints">Complaints</a></li>
         <li><a href="/review-random-domains" title="Review random domains list">Random Exploration</a></li>
         <li>System</li>

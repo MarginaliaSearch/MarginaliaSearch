@@ -45,6 +45,7 @@ dependencies {
     implementation libs.notnull
     implementation libs.guice
     implementation libs.zstd
+    implementation libs.rxjava
 
     implementation libs.trove
     implementation libs.spark
