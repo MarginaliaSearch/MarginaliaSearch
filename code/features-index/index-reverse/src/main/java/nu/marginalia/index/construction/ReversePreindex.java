@@ -93,6 +93,9 @@ public class ReversePreindex {
         LongArray wordIds = segments.wordIds;
 
         assert offsets.size() == wordIds.size() : "Offsets and word-ids of different size";
+        if (offsets.size() > Integer.MAX_VALUE) {
+            throw new IllegalStateException("offsets.size() too big!");
+        }
 
         // Estimate the size of the words index data
         long wordsSize = ReverseIndexParameters.wordsBTreeContext.calculateSize((int) offsets.size());

@@ -1,9 +1,11 @@
 package nu.marginalia.btree;
 
 import nu.marginalia.array.LongArray;
+import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.btree.model.BTreeBlockSize;
 import nu.marginalia.btree.model.BTreeContext;
 import nu.marginalia.btree.model.BTreeHeader;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -132,6 +134,31 @@ class BTreeWriterTest {
         }
     }
 
+    @Test
+    @Disabled // This test creates a 16 GB file in tmp
+    public void veryLargeBTreeTest() throws IOException {
+        var wordsBTreeContext = new BTreeContext(5, 2, BTreeBlockSize.BS_2048);
+        Path file = Path.of("/tmp/large.dat");
+        try (var la = LongArrayFactory.mmapForWritingConfined(file, wordsBTreeContext.calculateSize(1024*1024*1024))) {
+            new BTreeWriter(la, wordsBTreeContext)
+                    .write(0, 1024*1024*1024, wc -> {
+                        for (long i = 0; i < 1024*1024*1024; i++) {
+                            wc.set(2*i, i);
+                            wc.set(2*i + 1, -i);
+                        }
+                    });
+            System.out.println("Wrote");
+            var reader = new BTreeReader(la, wordsBTreeContext, 0);
+
+            for (int i = 0; i < 1204*1204*1024; i++) {
+                long offset = reader.findEntry(i);
+                assertEquals(2L*i, offset);
+            }
+        }
+        finally {
+            Files.delete(file);
+        }
+    }
 
     @Test
     public void testWriteEqualityNotMasked() throws IOException {

@@ -53,14 +53,15 @@ public class ForwardIndexReader {
     }
 
     private static TLongIntHashMap loadIds(Path idsFile) throws IOException {
-        var idsArray = LongArrayFactory.mmapForReadingShared(idsFile);
+        try (var idsArray = LongArrayFactory.mmapForReadingShared(idsFile)) {
+            assert idsArray.size() < Integer.MAX_VALUE;
 
-        var ids = new TLongIntHashMap((int) idsArray.size(), 0.5f, -1, -1);
+            var ids = new TLongIntHashMap((int) idsArray.size(), 0.5f, -1, -1);
+            // This hash table should be of the same size as the number of documents, so typically less than 1 Gb
+            idsArray.forEach(0, idsArray.size(), (pos, val) -> ids.put(val, (int) pos));
 
-        // This hash table should be of the same size as the number of documents, so typically less than 1 Gb
-        idsArray.forEach(0, idsArray.size(), (pos, val) -> ids.put(val, (int) pos));
-
-        return ids;
+            return ids;
+        }
     }
 
     private static LongArray loadData(Path dataFile) throws IOException {
@@ -92,6 +93,13 @@ public class ForwardIndexReader {
 
     private int idxForDoc(long docId) {
         assert UrlIdCodec.getRank(docId) == 0 : "Forward Index Reader fed dirty reverse index id";
+
+        if (getClass().desiredAssertionStatus()) {
+            long offset = idToOffset.get(docId);
+            if (offset < 0) { // Ideally we'd always check this, but this is a very hot method
+                logger.warn("Could not find offset for doc {}", docId);
+            }
+        }
 
         return idToOffset.get(docId);
     }
