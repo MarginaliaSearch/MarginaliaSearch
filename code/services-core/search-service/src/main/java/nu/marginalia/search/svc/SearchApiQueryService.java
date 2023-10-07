@@ -3,6 +3,7 @@ package nu.marginalia.search.svc;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
+import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.index.client.model.results.SearchResultKeywordScore;
 import nu.marginalia.search.client.model.ApiSearchResultQueryDetails;
 import nu.marginalia.model.idx.WordMetadata;
@@ -24,10 +25,15 @@ import java.util.stream.Collectors;
 
 public class SearchApiQueryService {
     private SearchOperator searchOperator;
+    private final DomainBlacklist blacklist;
 
     @Inject
-    public SearchApiQueryService(SearchOperator searchOperator) {
+    public SearchApiQueryService(
+            SearchOperator searchOperator,
+            DomainBlacklist blacklist
+            ) {
         this.searchOperator = searchOperator;
+        this.blacklist = blacklist;
     }
 
     @SneakyThrows
@@ -57,6 +63,8 @@ public class SearchApiQueryService {
         final String humanQuery = queryParam.trim();
 
         var results = searchOperator.doApiSearch(ctx, new UserSearchParameters(humanQuery, profile, SearchJsParameter.DEFAULT));
+
+        results.removeIf(details -> blacklist.isBlacklisted(details.domainId));
 
         return new ApiSearchResults("RESTRICTED", humanQuery, results.stream().map(this::convert).limit(limit).collect(Collectors.toList()));
     }
