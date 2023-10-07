@@ -25,7 +25,7 @@
     <table>
     {{#each results}}
         <tr><td><input type="checkbox" name="{{url}}"><td>{{title}}</td></tr>
-        <tr><td colspan="2"><a href="{{url}}>{{url}}</a></td></tr>
+        <tr><td colspan="2"><a href="{{url}}">{{url}}</a></td></tr>
         <tr><td colspan="2">{{description}}</td></tr>
         <tr><td colspan="2">&nbsp;</td></tr>
     {{/each}}
