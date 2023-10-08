@@ -33,6 +33,7 @@ dependencies {
     implementation project(':code:libraries:term-frequency-dict')
 
     implementation project(':code:api:assistant-api')
+    implementation project(':code:api:query-api')
     implementation project(':code:api:index-api')
     implementation project(':code:api:search-api')
     implementation project(':code:common:service-discovery')

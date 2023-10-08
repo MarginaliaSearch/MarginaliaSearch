@@ -2,16 +2,13 @@ package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.index.client.IndexClient;
 import nu.marginalia.index.client.model.query.SearchSpecification;
 import nu.marginalia.index.client.model.results.DecoratedSearchResultItem;
-import nu.marginalia.index.client.model.results.SearchResultSet;
-import nu.marginalia.search.model.PageScoreAdjustment;
+import nu.marginalia.query.client.QueryClient;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.results.SearchResultDecorator;
 import nu.marginalia.search.results.UrlDeduplicator;
 import nu.marginalia.client.Context;
-import nu.marginalia.search.query.model.SearchQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -24,17 +21,17 @@ import java.util.regex.Pattern;
 public class SearchQueryIndexService {
     private final SearchResultDecorator resultDecorator;
     private final Comparator<UrlDetails> resultListComparator;
-    private final IndexClient indexClient;
+    private final QueryClient queryClient;
     private final SearchQueryCountService searchVisitorCount;
     private final Marker queryMarker = MarkerFactory.getMarker("QUERY");
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
     public SearchQueryIndexService(SearchResultDecorator resultDecorator,
-                                   IndexClient indexClient,
+                                   QueryClient queryClient,
                                    SearchQueryCountService searchVisitorCount) {
         this.resultDecorator = resultDecorator;
-        this.indexClient = indexClient;
+        this.queryClient = queryClient;
         this.searchVisitorCount = searchVisitorCount;
 
         resultListComparator = Comparator.comparing(UrlDetails::getTermScore)
@@ -45,7 +42,7 @@ public class SearchQueryIndexService {
 
     public List<UrlDetails> executeQuery(Context ctx, SearchSpecification specs) {
         // Send the query
-        final var queryResponse = indexClient.query(ctx, specs);
+        final var queryResponse = queryClient.delegate(ctx, specs);
 
         // Remove duplicates and other chaff
         final var results = limitAndDeduplicateResults(specs, queryResponse.results);
