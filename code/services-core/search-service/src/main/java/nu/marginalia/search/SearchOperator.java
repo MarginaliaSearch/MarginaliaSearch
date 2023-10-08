@@ -66,7 +66,7 @@ public class SearchOperator {
 
         logger.info(queryMarker, "Human terms (API): {}", Strings.join(processedQuery.searchTermsHuman, ','));
 
-        return searchQueryService.executeQuery(ctx, processedQuery);
+        return searchQueryService.executeQuery(ctx, processedQuery.specs);
     }
 
     public DecoratedSearchResults doSearch(Context ctx, UserSearchParameters params) {
@@ -76,7 +76,7 @@ public class SearchOperator {
 
         logger.info(queryMarker, "Human terms: {}", Strings.join(processedQuery.searchTermsHuman, ','));
 
-        List<UrlDetails> queryResults = searchQueryService.executeQuery(ctx, processedQuery);
+        List<UrlDetails> queryResults = searchQueryService.executeQuery(ctx, processedQuery.specs);
 
         logger.info(queryMarker, "Search Result Count: {}", queryResults.size());
 

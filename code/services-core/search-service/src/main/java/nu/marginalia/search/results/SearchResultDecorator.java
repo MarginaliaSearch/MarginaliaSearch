@@ -3,6 +3,7 @@ package nu.marginalia.search.results;
 import it.unimi.dsi.fastutil.ints.Int2LongArrayMap;
 import lombok.SneakyThrows;
 import nu.marginalia.bbpc.BrailleBlockPunchCards;
+import nu.marginalia.index.client.model.results.DecoratedSearchResultItem;
 import nu.marginalia.index.client.model.results.SearchResultItem;
 import nu.marginalia.index.client.model.results.SearchResultSet;
 import nu.marginalia.model.crawl.DomainIndexingState;
@@ -18,9 +19,9 @@ public class SearchResultDecorator {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @SneakyThrows
-    public List<UrlDetails> getAllUrlDetails(SearchResultSet resultSet) {
+    public List<UrlDetails> getAllUrlDetails(List<DecoratedSearchResultItem> resultSet) {
         List<UrlDetails> ret = new ArrayList<>(resultSet.size());
-        for (var detail : resultSet.results) {
+        for (var detail : resultSet) {
             ret.add(new UrlDetails(
                     detail.documentId(),
                     detail.domainId(),

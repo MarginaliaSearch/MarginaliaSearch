@@ -64,7 +64,7 @@ public class SiteListCommand implements SearchCommandInterface {
         int domainId = -1;
         if (null != domain) {
             var dumbQuery = queryFactory.createQuery(SearchProfile.CORPO, 100, 100, "site:"+domain);
-            resultSet = searchQueryIndexService.executeQuery(ctx, dumbQuery);
+            resultSet = searchQueryIndexService.executeQuery(ctx, dumbQuery.specs);
             var maybeId = domainQueries.tryGetDomainId(domain);
             if (maybeId.isPresent()) {
                 domainId = maybeId.getAsInt();

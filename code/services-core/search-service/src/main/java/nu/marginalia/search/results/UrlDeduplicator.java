@@ -4,10 +4,13 @@ import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.hash.TObjectIntHashMap;
 import gnu.trove.set.hash.TIntHashSet;
+import nu.marginalia.index.client.model.results.DecoratedSearchResultItem;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.lsh.EasyLSH;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Objects;
 
 public class UrlDeduplicator {
     private final int LSH_SIMILARITY_THRESHOLD = 2;
@@ -22,7 +25,7 @@ public class UrlDeduplicator {
         this.resultsPerKey = resultsPerKey;
     }
 
-    public synchronized boolean shouldRemove(UrlDetails details) {
+    public synchronized boolean shouldRemove(DecoratedSearchResultItem details) {
         if (!deduplicateOnSuperficialHash(details))
             return true;
         if (!deduplicateOnLSH(details))
@@ -33,11 +36,11 @@ public class UrlDeduplicator {
         return false;
     }
 
-    private boolean deduplicateOnSuperficialHash(UrlDetails details) {
-        return seenSuperficialhashes.add(details.getSuperficialHash());
+    private boolean deduplicateOnSuperficialHash(DecoratedSearchResultItem details) {
+        return seenSuperficialhashes.add(Objects.hash(details.url.path, details.title));
     }
 
-    private boolean deduplicateOnLSH(UrlDetails details) {
+    private boolean deduplicateOnLSH(DecoratedSearchResultItem details) {
         long thisHash = details.dataHash;
 
         if (0 == thisHash)
@@ -53,16 +56,9 @@ public class UrlDeduplicator {
 
     }
 
-    private boolean limitResultsPerDomain(UrlDetails details) {
+    private boolean limitResultsPerDomain(DecoratedSearchResultItem details) {
         final var domain = details.getUrl().getDomain();
-        final String key;
-
-        if (!details.isSpecialDomain()) {
-            key = domain.getLongDomainKey();
-        }
-        else {
-            key = domain.getDomainKey();
-        }
+        final String key = domain.getDomainKey();
 
         return keyCount.adjustOrPutValue(key, 1, 1) < resultsPerKey;
     }

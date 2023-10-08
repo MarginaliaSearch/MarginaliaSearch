@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.index.client.IndexClient;
 import nu.marginalia.index.client.model.query.SearchSpecification;
+import nu.marginalia.index.client.model.results.DecoratedSearchResultItem;
 import nu.marginalia.index.client.model.results.SearchResultSet;
 import nu.marginalia.search.model.PageScoreAdjustment;
 import nu.marginalia.search.model.UrlDetails;
@@ -42,9 +43,12 @@ public class SearchQueryIndexService {
 
     }
 
-    public List<UrlDetails> executeQuery(Context ctx, SearchQuery processedQuery) {
+    public List<UrlDetails> executeQuery(Context ctx, SearchSpecification specs) {
         // Send the query
-        final SearchResultSet results = indexClient.query(ctx, processedQuery.specs);
+        final var queryResponse = indexClient.query(ctx, specs);
+
+        // Remove duplicates and other chaff
+        final var results = limitAndDeduplicateResults(specs, queryResponse.results);
 
         // Update the query count (this is what you see on the front page)
         searchVisitorCount.registerQuery();
@@ -53,14 +57,14 @@ public class SearchQueryIndexService {
         List<UrlDetails> urlDetails = resultDecorator.getAllUrlDetails(results);
         urlDetails.sort(resultListComparator);
 
-        return limitAndDeduplicateResults(processedQuery, urlDetails);
+        return urlDetails;
     }
 
-    private List<UrlDetails> limitAndDeduplicateResults(SearchQuery processedQuery, List<UrlDetails> decoratedResults) {
-        var limits = processedQuery.specs.queryLimits;
+    private List<DecoratedSearchResultItem> limitAndDeduplicateResults(SearchSpecification specs, List<DecoratedSearchResultItem> decoratedResults) {
+        var limits = specs.queryLimits;
 
         UrlDeduplicator deduplicator = new UrlDeduplicator(limits.resultsByDomain());
-        List<UrlDetails> retList = new ArrayList<>(limits.resultsTotal());
+        List<DecoratedSearchResultItem> retList = new ArrayList<>(limits.resultsTotal());
 
         int dedupCount = 0;
         for (var item : decoratedResults) {

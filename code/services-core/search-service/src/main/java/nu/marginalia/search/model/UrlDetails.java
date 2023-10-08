@@ -9,7 +9,6 @@ import nu.marginalia.model.crawl.HtmlFeature;
 
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.StringJoiner;
 
 @AllArgsConstructor @NoArgsConstructor @With @Getter @ToString
@@ -98,14 +97,6 @@ public class UrlDetails {
         return getFeatureScore()*Math.sqrt(1+rankingId)/Math.max(1E-10, lengthAdjustment *(0.7+0.3*Math.exp(urlQualityAdjustment.getScore())));
     }
 
-    public int getSuperficialHash() {
-        return Objects.hash(url.path, title);
-    }
-    public String getSuperficialHashStr() {
-        return String.format("%8X", getSuperficialHash());
-    }
-
-
     public String getGeminiLink() {
         return url.proto + "://" + url.domain.toString() + url.path.replace(" ", "%20").replace("\"", "%22");
     }
@@ -173,9 +164,6 @@ public class UrlDetails {
     }
     public boolean isAds() { return HtmlFeature.hasFeature(features, HtmlFeature.TRACKING_ADTECH); }
 
-    public boolean isSpecialDomain() {
-        return domainState == DomainIndexingState.SPECIAL;
-    }
     public int getLogRank() { return (int) Math.round(Math.min(Math.log(1+rankingId),10)); }
 
     public int getMatchRank() {
