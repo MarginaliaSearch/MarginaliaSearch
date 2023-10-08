@@ -54,6 +54,16 @@ services:
       - "127.0.0.1:7004:4000"
     depends_on:
       - mariadb
+  query-service:
+    <<: *service
+    image: "marginalia.nu/query-service"
+    container_name: "query-service"
+    ports:
+      - "127.0.0.1:5022:5022"
+      - "127.0.0.1:4022:5000"
+      - "127.0.0.1:7022:4000"
+    depends_on:
+      - mariadb
   dating-service:
     <<: *service
     image: "marginalia.nu/dating-service"
