@@ -8,8 +8,7 @@ import java.util.List;
 
 @AllArgsConstructor @Getter @ToString
 public class SearchResultSet {
-    public List<SearchResultItem> results;
-    public ResultRankingContext rankingContext;
+    public List<DecoratedSearchResultItem> results;
     public int size() {
         return results.size();
     }

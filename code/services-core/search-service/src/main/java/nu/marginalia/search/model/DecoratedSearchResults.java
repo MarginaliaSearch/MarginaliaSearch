@@ -3,7 +3,6 @@ package nu.marginalia.search.model;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import nu.marginalia.browse.model.BrowseResult;
 import nu.marginalia.search.query.model.UserSearchParameters;
 
 import java.util.List;

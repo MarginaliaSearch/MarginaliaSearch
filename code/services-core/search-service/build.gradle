@@ -25,7 +25,6 @@ dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:service')
     implementation project(':code:common:config')
-    implementation project(':code:common:linkdb')
     implementation project(':code:features-index:index-query')
 
     implementation project(':code:libraries:easy-lsh')

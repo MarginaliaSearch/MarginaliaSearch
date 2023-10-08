@@ -6,15 +6,11 @@ import lombok.SneakyThrows;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.client.Context;
 import nu.marginalia.db.storage.FileStorageService;
-import nu.marginalia.db.storage.model.FileStorageType;
-import nu.marginalia.linkdb.LinkdbReader;
 import nu.marginalia.model.gson.GsonFactory;
-import nu.marginalia.search.client.SearchMqEndpoints;
 import nu.marginalia.search.svc.SearchFrontPageService;
 import nu.marginalia.search.svc.*;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.server.*;
-import nu.marginalia.service.server.mq.MqNotification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -23,15 +19,12 @@ import spark.Spark;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 public class SearchService extends Service {
 
     private final WebsiteUrl websiteUrl;
     private final StaticResources staticResources;
     private final FileStorageService fileStorageService;
-    private final LinkdbReader linkdbReader;
 
     private static final Logger logger = LoggerFactory.getLogger(SearchService.class);
     private final ServiceEventLog eventLog;
@@ -47,8 +40,7 @@ public class SearchService extends Service {
                          SearchFlagSiteService flagSiteService,
                          SearchQueryService searchQueryService,
                          SearchApiQueryService apiQueryService,
-                         FileStorageService fileStorageService,
-                         LinkdbReader linkdbReader
+                         FileStorageService fileStorageService
                              ) {
         super(params);
 
@@ -56,7 +48,6 @@ public class SearchService extends Service {
         this.websiteUrl = websiteUrl;
         this.staticResources = staticResources;
         this.fileStorageService = fileStorageService;
-        this.linkdbReader = linkdbReader;
 
         Spark.staticFiles.expireTime(600);
 
@@ -85,21 +76,6 @@ public class SearchService extends Service {
         });
 
         Spark.awaitInitialization();
-    }
-
-    @SneakyThrows
-    @MqNotification(endpoint = SearchMqEndpoints.SWITCH_LINKDB)
-    public void switchLinkdb(String unusedArg) {
-        logger.info("Switching link database");
-
-        Path newPath = fileStorageService.getStorageByType(FileStorageType.LINKDB_STAGING)
-                .asPath()
-                .resolve("links.db");
-
-        if (Files.exists(newPath)) {
-            eventLog.logEvent("SEARCH-SWITCH-LINKDB", "");
-            linkdbReader.switchInput(newPath);
-        }
     }
 
     private Object serveStatic(Request request, Response response) {

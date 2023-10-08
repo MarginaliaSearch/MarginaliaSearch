@@ -2,6 +2,7 @@ package nu.marginalia.index.svc;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
+import lombok.SneakyThrows;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.db.storage.model.FileStorage;
 import nu.marginalia.db.storage.model.FileStorageType;
@@ -25,6 +26,10 @@ import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
+import nu.marginalia.linkdb.LinkdbReader;
+import nu.marginalia.linkdb.LinkdbWriter;
+import nu.marginalia.linkdb.model.LdbUrlDetail;
+import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.model.idx.WordFlags;
@@ -79,6 +84,9 @@ public class IndexQueryServiceIntegrationSmokeTest {
     DomainRankings domainRankings;
 
     @Inject
+    LinkdbReader linkdbReader;
+
+    @Inject
     ProcessHeartbeat processHeartbeat;
 
     @BeforeEach
@@ -99,9 +107,12 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
     @Test
     public void willItBlend() throws Exception {
+        var linkdbWriter = new LinkdbWriter(testModule.workDir.resolve("linkdb.dat"));
         for (int i = 1; i < 512; i++) {
-            loadData(i);
+            loadData(linkdbWriter, i);
         }
+        linkdbWriter.close();
+        linkdbReader.reconnect();
 
         indexJournalWriter.close();
         constructIndex();
@@ -126,7 +137,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
         long[] ids = IntStream.of(idxes).mapToLong(this::fullId).toArray();
         long[] actual = rsp.results
                 .stream()
-                .mapToLong(SearchResultItem::getDocumentId)
+                .mapToLong(i -> i.rawIndexResult.getDocumentId())
                 .toArray();
 
         Assertions.assertArrayEquals(ids, actual);
@@ -134,10 +145,13 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
     @Test
     public void testDomainQuery() throws Exception {
-        for (int i = 1; i < 512; i++) {
-            loadDataWithDomain(i/100, i);
-        }
 
+        var linkdbWriter = new LinkdbWriter(testModule.workDir.resolve("linkdb.dat"));
+        for (int i = 1; i < 512; i++) {
+            loadDataWithDomain(linkdbWriter, i/100, i);
+        }
+        linkdbWriter.close();
+        linkdbReader.reconnect();
 
         indexJournalWriter.close();
         constructIndex();
@@ -158,16 +172,19 @@ public class IndexQueryServiceIntegrationSmokeTest {
                                 Collections.emptyList()))).build());
         int[] idxes = new int[] {  210, 270 };
         long[] ids = IntStream.of(idxes).mapToLong(id -> UrlIdCodec.encodeId(id/100, id)).toArray();
-        long[] actual = rsp.results.stream().mapToLong(SearchResultItem::getDocumentId).toArray();
+        long[] actual = rsp.results.stream().mapToLong(i -> i.rawIndexResult.getDocumentId()).toArray();
 
         Assertions.assertArrayEquals(ids, actual);
     }
 
     @Test
     public void testYearQuery() throws Exception {
+        var linkdbWriter = new LinkdbWriter(testModule.workDir.resolve("linkdb.dat"));
         for (int i = 1; i < 512; i++) {
-            loadData(i);
+            loadData(linkdbWriter, i);
         }
+        linkdbWriter.close();
+        linkdbReader.reconnect();
 
         indexJournalWriter.close();
         constructIndex();
@@ -192,7 +209,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
         Set<Integer> years = new HashSet<>();
 
         for (var res : rsp.results) {
-            for (var score : res.getKeywordScores()) {
+            for (var score : res.rawIndexResult.getKeywordScores()) {
                 years.add(DocumentMetadata.decodeYear(score.encodedDocMetadata()));
             }
         }
@@ -263,7 +280,8 @@ public class IndexQueryServiceIntegrationSmokeTest {
     }
 
     MurmurHash3_128 hasher = new MurmurHash3_128();
-    public void loadData(int id) {
+    @SneakyThrows
+    public void loadData(LinkdbWriter ldbw, int id) {
         int[] factors = IntStream
                 .rangeClosed(1, id)
                 .filter(v -> (id % v) == 0)
@@ -273,24 +291,37 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
         var header = new IndexJournalEntryHeader(factors.length, 0, fullId, new DocumentMetadata(0, 0, 0, 0, id % 5, id, id % 20, (byte) 0).encode());
 
-        long[] data = new long[factors.length*2];
+        long[] data = new long[factors.length * 2];
         for (int i = 0; i < factors.length; i++) {
-            data[2*i] = hasher.hashNearlyASCII(Integer.toString(factors[i]));
-            data[2*i + 1] = new WordMetadata(i, EnumSet.of(WordFlags.Title)).encode();
+            data[2 * i] = hasher.hashNearlyASCII(Integer.toString(factors[i]));
+            data[2 * i + 1] = new WordMetadata(i, EnumSet.of(WordFlags.Title)).encode();
         }
+
+        ldbw.add(new LdbUrlDetail(
+                fullId, new EdgeUrl("https://www.example.com/"+id),
+                "test", "test", 0., "HTML5", 0, null, 0, 10
+        ));
 
         indexJournalWriter.put(header, new IndexJournalEntryData(data));
     }
 
-    public void loadDataWithDomain(int domain, int id) {
+    @SneakyThrows
+    public void loadDataWithDomain(LinkdbWriter ldbw, int domain, int id) {
         int[] factors = IntStream.rangeClosed(1, id).filter(v -> (id % v) == 0).toArray();
-        var header = new IndexJournalEntryHeader(factors.length, 0, UrlIdCodec.encodeId(domain, id), DocumentMetadata.defaultValue());
+        long fullId = UrlIdCodec.encodeId(domain, id);
+        var header = new IndexJournalEntryHeader(factors.length, 0, fullId, DocumentMetadata.defaultValue());
 
         long[] data = new long[factors.length*2];
         for (int i = 0; i < factors.length; i++) {
             data[2*i] = hasher.hashNearlyASCII(Integer.toString(factors[i]));
             data[2*i + 1] = new WordMetadata(i, EnumSet.of(WordFlags.Title)).encode();
         }
+
+        ldbw.add(new LdbUrlDetail(
+                fullId, new EdgeUrl("https://www.example.com/"+id),
+                "test", "test", 0., "HTML5", 0, null, 0, 10
+        ));
+
 
         indexJournalWriter.put(header, new IndexJournalEntryData(data));
     }

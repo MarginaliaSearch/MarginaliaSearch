@@ -62,6 +62,15 @@ public class LinkdbReader {
         connection = createConnection();
     }
 
+    /** Re-establishes the connection, useful in tests and not
+     * much else */
+    public void reconnect() throws SQLException {
+        if (connection != null)
+            connection.close();
+
+        connection = createConnection();
+    }
+
     public List<String> getUrlsFromDomain(int domainId) throws SQLException {
         if (connection == null ||
                 connection.isClosed())

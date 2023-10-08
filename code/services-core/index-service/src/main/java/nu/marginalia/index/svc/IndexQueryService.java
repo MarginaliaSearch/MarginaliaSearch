@@ -8,6 +8,7 @@ import gnu.trove.list.array.TLongArrayList;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import io.prometheus.client.Histogram;
+import lombok.SneakyThrows;
 import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.index.client.model.results.ResultRankingParameters;
 import nu.marginalia.index.client.model.results.SearchResultItem;
@@ -18,6 +19,7 @@ import nu.marginalia.index.index.SearchIndex;
 import nu.marginalia.index.index.SearchIndexSearchTerms;
 import nu.marginalia.index.query.IndexQueryPriority;
 import nu.marginalia.index.results.IndexMetadataService;
+import nu.marginalia.index.results.IndexResultDecorator;
 import nu.marginalia.index.searchset.SearchSet;
 import nu.marginalia.index.results.IndexResultValuator;
 import nu.marginalia.index.query.IndexQuery;
@@ -35,6 +37,7 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
+import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -55,6 +58,7 @@ public class IndexQueryService {
     private final Gson gson = GsonFactory.get();
 
     private final SearchIndex index;
+    private final IndexResultDecorator resultDecorator;
     private final IndexSearchSetsService searchSetsService;
 
     private final IndexMetadataService metadataService;
@@ -64,15 +68,19 @@ public class IndexQueryService {
     @Inject
     public IndexQueryService(IndexQueryExecutor queryExecutor,
                              SearchIndex index,
+                             IndexResultDecorator resultDecorator,
                              IndexSearchSetsService searchSetsService,
                              IndexMetadataService metadataService,
-                             SearchTermsService searchTerms) {
+                             SearchTermsService searchTerms)
+    {
         this.queryExecutor = queryExecutor;
         this.index = index;
+        this.resultDecorator = resultDecorator;
         this.searchSetsService = searchSetsService;
         this.metadataService = metadataService;
         this.searchTermsSvc = searchTerms;
     }
+
     public DocumentMetadata debugEndpointDocMetadata(Request request, Response response) {
         String docId =  request.queryParams("docId");
         response.type("application/json");
@@ -90,6 +98,7 @@ public class IndexQueryService {
                 new long[] { Long.parseLong(docId) }
         )[0]);
     }
+
     public String debugEndpointWordEncoding(Request request, Response response) {
         String word =  request.queryParams("word");
         response.type("application/json");
@@ -134,6 +143,7 @@ public class IndexQueryService {
     }
 
     // exists for test access
+    @SneakyThrows
     SearchResultSet justQuery(SearchSpecification specsSet) {
         return executeSearch(new SearchParameters(specsSet, getSearchSet(specsSet)));
     }
@@ -147,7 +157,7 @@ public class IndexQueryService {
         return searchSetsService.getSearchSetByName(specsSet.searchSetIdentifier);
     }
 
-    private SearchResultSet executeSearch(SearchParameters params) {
+    private SearchResultSet executeSearch(SearchParameters params) throws SQLException {
 
         var rankingContext = createRankingContext(params.rankingParams, params.subqueries);
 
@@ -160,7 +170,7 @@ public class IndexQueryService {
 
         var bestResults = selectBestResults(params, resultItems);
 
-        return new SearchResultSet(bestResults, rankingContext);
+        return new SearchResultSet(resultDecorator.decorateAndRerank(bestResults, rankingContext));
     }
 
     /* This is used in result ranking, and is also routed back up the search service in order to recalculate BM-25
@@ -185,6 +195,7 @@ public class IndexQueryService {
      * Then the results are combined.
      * */
     private final ThreadLocal<TLongArrayList> resultsArrayListPool = ThreadLocal.withInitial(TLongArrayList::new);
+
     private TLongList evaluateSubqueries(SearchParameters params) {
         final TLongArrayList results = resultsArrayListPool.get();
         results.resetQuick();
