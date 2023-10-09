@@ -1,4 +1,4 @@
-package nu.marginalia.search.client.model;
+package nu.marginalia.api.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

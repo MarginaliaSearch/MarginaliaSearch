@@ -11,7 +11,7 @@
     <h1>Search to Ban</h1>
     <form action="/search-to-ban">
         <label for="q">Search Query</label><br>
-        <input type="text" value="{{query}}" name="q" id="q" /> <input type="submit" value="Search" />
+        <input type="text" value="{{specs.humanQuery}}" name="q" id="q" /> <input type="submit" value="Search" />
     </form>
     {{#unless results}}
     <p>This utility lets you use the search engine to find spammy results, and ban them
@@ -21,7 +21,7 @@
     <hr>
     <form action="/search-to-ban" method="post">
     <input type="submit" value="Blacklist Selected Domains">
-    <input type="hidden" name="query" text="{{query}}" />
+    <input type="hidden" name="query" value="{{specs.humanQuery}}" />
     <table>
     {{#each results}}
         <tr><td><input type="checkbox" name="{{url}}"><td>{{title}}</td></tr>

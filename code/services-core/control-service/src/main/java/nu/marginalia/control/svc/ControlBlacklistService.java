@@ -4,6 +4,8 @@ import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.control.model.BlacklistedDomainModel;
 import nu.marginalia.model.EdgeDomain;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -12,6 +14,7 @@ import java.util.List;
 public class ControlBlacklistService {
 
     private final HikariDataSource dataSource;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
     public ControlBlacklistService(HikariDataSource dataSource) {
@@ -19,6 +22,8 @@ public class ControlBlacklistService {
     }
 
     public void addToBlacklist(EdgeDomain domain, String comment) {
+        logger.info("Blacklisting {} -- {}", domain, comment);
+
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
                      INSERT IGNORE INTO EC_DOMAIN_BLACKLIST (URL_DOMAIN, COMMENT) VALUES (?, ?)
@@ -33,6 +38,8 @@ public class ControlBlacklistService {
     }
 
     public void removeFromBlacklist(EdgeDomain domain) {
+        logger.info("Un-blacklisting {}", domain);
+
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
                      DELETE FROM EC_DOMAIN_BLACKLIST WHERE URL_DOMAIN=?

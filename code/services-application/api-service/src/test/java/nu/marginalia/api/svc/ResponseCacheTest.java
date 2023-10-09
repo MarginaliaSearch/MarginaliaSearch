@@ -1,7 +1,6 @@
 package nu.marginalia.api.svc;
 
-import nu.marginalia.api.model.ApiLicense;
-import nu.marginalia.search.client.model.ApiSearchResults;
+import nu.marginalia.api.model.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

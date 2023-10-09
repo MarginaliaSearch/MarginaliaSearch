@@ -61,18 +61,6 @@ public class SearchOperator {
         this.searchUnitConversionService = searchUnitConversionService;
     }
 
-    public List<UrlDetails> doApiSearch(Context ctx,
-                                        UserSearchParameters params) {
-
-        // TODO: This shouldn't route through search-service!
-        var queryParams = paramFactory.forRegularSearch(params);
-        var queryResponse = queryClient.search(ctx, queryParams);
-
-        logger.info(queryMarker, "Human terms (API): {}", Strings.join(queryResponse.searchTermsHuman(), ','));
-
-        return searchQueryService.getResultsFromQuery(queryResponse);
-    }
-
     public List<UrlDetails> doSiteSearch(Context ctx,
                                         String domain) {
 

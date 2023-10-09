@@ -3,7 +3,6 @@ package nu.marginalia.control;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import gnu.trove.list.array.TIntArrayList;
-import nu.marginalia.client.Context;
 import nu.marginalia.client.ServiceMonitors;
 import nu.marginalia.control.actor.Actor;
 import nu.marginalia.control.model.*;
@@ -11,11 +10,9 @@ import nu.marginalia.control.svc.*;
 import nu.marginalia.db.storage.model.FileStorageId;
 import nu.marginalia.db.storage.model.FileStorageType;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.screenshot.ScreenshotService;
-import nu.marginalia.search.client.SearchClient;
 import nu.marginalia.service.server.*;
 import org.eclipse.jetty.util.StringUtil;
 import org.slf4j.Logger;
@@ -40,8 +37,8 @@ public class ControlService extends Service {
     private final ApiKeyService apiKeyService;
     private final DomainComplaintService domainComplaintService;
     private final ControlBlacklistService blacklistService;
+    private final SearchToBanService searchToBanService;
     private final RandomExplorationService randomExplorationService;
-    private final SearchClient searchClient;
     private final ControlActorService controlActorService;
     private final StaticResources staticResources;
     private final MessageQueueService messageQueueService;
@@ -63,8 +60,8 @@ public class ControlService extends Service {
                           ControlBlacklistService blacklistService,
                           ControlActionsService controlActionsService,
                           ScreenshotService screenshotService,
-                          RandomExplorationService randomExplorationService,
-                          SearchClient searchClient
+                          SearchToBanService searchToBanService,
+                          RandomExplorationService randomExplorationService
                       ) throws IOException {
 
         super(params);
@@ -74,8 +71,8 @@ public class ControlService extends Service {
         this.apiKeyService = apiKeyService;
         this.domainComplaintService = domainComplaintService;
         this.blacklistService = blacklistService;
+        this.searchToBanService = searchToBanService;
         this.randomExplorationService = randomExplorationService;
-        this.searchClient = searchClient;
 
         var indexRenderer = rendererFactory.renderer("control/index");
         var eventsRenderer = rendererFactory.renderer("control/events");
@@ -176,8 +173,8 @@ public class ControlService extends Service {
         Spark.get("/public/blacklist", this::blacklistModel, blacklistRenderer::render);
         Spark.post("/public/blacklist", this::updateBlacklist, redirectToBlacklist);
 
-        Spark.get("/public/search-to-ban", this::searchToBanModel, searchToBanRenderer::render);
-        Spark.post("/public/search-to-ban", this::searchToBanModel, searchToBanRenderer::render);
+        Spark.get("/public/search-to-ban", searchToBanService::handle, searchToBanRenderer::render);
+        Spark.post("/public/search-to-ban", searchToBanService::handle, searchToBanRenderer::render);
 
         // API Keys
 
@@ -250,37 +247,6 @@ public class ControlService extends Service {
 
     private Object blacklistModel(Request request, Response response) {
         return Map.of("blacklist", blacklistService.lastNAdditions(100));
-    }
-
-    private Object searchToBanModel(Request request, Response response) {
-        String q = request.queryParams("q");
-
-        if (Objects.equals(request.requestMethod(), "POST")) {
-            request.params().forEach((k,v) -> System.out.println(k + " -- " + v));
-            List<String> bannedUrls = new ArrayList<>();
-
-            String query = request.queryParams("query");
-            for (var param : request.queryParams()) {
-                if ("query".equals(param)) {
-                    continue;
-                }
-                EdgeUrl.parse(param).ifPresent(url ->
-                        blacklistService.addToBlacklist(url.domain, query)
-                );
-                bannedUrls.add(param);
-            }
-
-            request.queryParams().forEach(System.out::println);
-            q = query;
-        }
-
-        if (q == null || q.isBlank()) {
-            return Map.of();
-        } else {
-            return searchClient
-                    .query(Context.fromRequest(request), q, 200, 5)
-                    .blockingFirst();
-        }
     }
 
     private Object updateBlacklist(Request request, Response response) {

@@ -24,10 +24,8 @@ public class SearchService extends Service {
 
     private final WebsiteUrl websiteUrl;
     private final StaticResources staticResources;
-    private final FileStorageService fileStorageService;
 
     private static final Logger logger = LoggerFactory.getLogger(SearchService.class);
-    private final ServiceEventLog eventLog;
 
     @SneakyThrows
     @Inject
@@ -38,16 +36,12 @@ public class SearchService extends Service {
                          SearchErrorPageService errorPageService,
                          SearchAddToCrawlQueueService addToCrawlQueueService,
                          SearchFlagSiteService flagSiteService,
-                         SearchQueryService searchQueryService,
-                         SearchApiQueryService apiQueryService,
-                         FileStorageService fileStorageService
+                         SearchQueryService searchQueryService
                              ) {
         super(params);
 
-        this.eventLog = params.eventLog;
         this.websiteUrl = websiteUrl;
         this.staticResources = staticResources;
-        this.fileStorageService = fileStorageService;
 
         Spark.staticFiles.expireTime(600);
 
@@ -55,7 +49,6 @@ public class SearchService extends Service {
 
         Gson gson = GsonFactory.get();
 
-        Spark.get("/api/search", apiQueryService::apiSearch, gson::toJson);
         Spark.get("/public/search", searchQueryService::pathSearch);
         Spark.get("/public/site-search/:site/*", this::siteSearchRedir);
         Spark.get("/public/", frontPageService::render);

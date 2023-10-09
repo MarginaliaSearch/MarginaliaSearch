@@ -3,13 +3,13 @@ package nu.marginalia.api;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import nu.marginalia.api.model.ApiLicense;
+import nu.marginalia.api.model.ApiSearchResults;
 import nu.marginalia.api.svc.LicenseService;
 import nu.marginalia.api.svc.RateLimiterService;
 import nu.marginalia.api.svc.ResponseCache;
 import nu.marginalia.client.Context;
 import nu.marginalia.model.gson.GsonFactory;
-import nu.marginalia.search.client.SearchClient;
-import nu.marginalia.search.client.model.ApiSearchResults;
+import nu.marginalia.query.client.QueryClient;
 import nu.marginalia.service.server.*;
 import nu.marginalia.service.server.mq.MqNotification;
 import org.slf4j.Logger;
@@ -24,29 +24,32 @@ public class ApiService extends Service {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Gson gson = GsonFactory.get();
-    private final SearchClient searchClient;
+    private final QueryClient queryClient;
 
     private final ResponseCache responseCache;
     private final LicenseService licenseService;
     private final RateLimiterService rateLimiterService;
+    private final ApiSearchOperator searchOperator;
 
     // Marker for filtering out sensitive content from the persistent logs
     private final Marker queryMarker = MarkerFactory.getMarker("QUERY");
 
     @Inject
     public ApiService(BaseServiceParams params,
-                      SearchClient searchClient,
+                      QueryClient queryClient,
                       ResponseCache responseCache,
                       LicenseService licenseService,
-                      RateLimiterService rateLimiterService
+                      RateLimiterService rateLimiterService,
+                      ApiSearchOperator searchOperator
                       ) {
 
         super(params);
 
-        this.searchClient = searchClient;
+        this.queryClient = queryClient;
         this.responseCache = responseCache;
         this.licenseService = licenseService;
         this.rateLimiterService = rateLimiterService;
+        this.searchOperator = searchOperator;
 
         Spark.get("/public/api/", (rq, rsp) -> {
             rsp.redirect("https://memex.marginalia.nu/projects/edge/api.gmi");
@@ -102,8 +105,9 @@ public class ApiService extends Service {
 
         logger.info(queryMarker, "{} Search {}", license.key, query);
 
-        return searchClient.query(Context.fromRequest(request), query, count, index)
-                .blockingFirst().withLicense(license.getLicense());
+        return searchOperator
+                .query(Context.fromRequest(request), query, count, index)
+                .withLicense(license.getLicense());
     }
 
     private int intParam(Request request, String name, int defaultValue) {

@@ -23,4 +23,19 @@ public record QueryParams(
         SearchSetIdentifier identifier
 )
 {
+    public QueryParams(String query, QueryLimits limits, SearchSetIdentifier identifier) {
+        this(query, null,
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                SpecificationLimit.none(),
+                SpecificationLimit.none(),
+                SpecificationLimit.none(),
+                SpecificationLimit.none(),
+                List.of(),
+                limits,
+                identifier
+                );
+    }
 }
