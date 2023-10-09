@@ -18,11 +18,11 @@ A map of the most important components and how they relate can be found below.
 * * [query](services-core/query-service)
 * * [index](services-core/index-service)
 * * [assistant](services-core/assistant-service)
-* [satellite services](services-satellite/) "microservices", stateless providing additional functionality.
-* * [api](services-satellite/api-service)  - public API
+* [application services](services-application/) "microservices", stateless providing additional functionality and making an application out of the search engine.
+* * [api](services-application/api-service)  - public API
 * * [search](services-core/search-service) - marginalia search application
-* * [dating](services-satellite/dating-service)  - [https://explore.marginalia.nu/](https://explore.marginalia.nu/)
-* * [explorer](services-satellite/explorer-service)  - [https://explore2.marginalia.nu/](https://explore2.marginalia.nu/)
+* * [dating](services-application/dating-service)  - [https://explore.marginalia.nu/](https://explore.marginalia.nu/)
+* * [explorer](services-application/explorer-service)  - [https://explore2.marginalia.nu/](https://explore2.marginalia.nu/)
 * an [internal API](api/)
 
 ### Processes
