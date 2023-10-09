@@ -73,7 +73,7 @@ public class QueryService extends Service {
     }
 
     private SearchResultSet executeQuery(Context ctx, SearchSpecification query) {
-        return indexClient.query(ctx, query);
+        return indexClient.query(ctx, 0, query);
     }
 
     private boolean isBlacklisted(DecoratedSearchResultItem item) {

@@ -26,7 +26,7 @@ public class AssistantClient extends AbstractDynamicClient {
 
     public Observable<DictionaryResponse> dictionaryLookup(Context ctx, String word) {
         try {
-            return super.get(ctx, "/dictionary/" + URLEncoder.encode(word, StandardCharsets.UTF_8), DictionaryResponse.class);
+            return super.get(ctx, 0, "/dictionary/" + URLEncoder.encode(word, StandardCharsets.UTF_8), DictionaryResponse.class);
         }
         catch (RouteNotConfiguredException ex) {
             return Observable.empty();
@@ -36,7 +36,7 @@ public class AssistantClient extends AbstractDynamicClient {
     @SuppressWarnings("unchecked")
     public Observable<List<String>> spellCheck(Context ctx, String word) {
         try {
-            return (Observable<List<String>>) (Object) super.get(ctx, "/spell-check/" +  URLEncoder.encode(word, StandardCharsets.UTF_8), List.class);
+            return (Observable<List<String>>) (Object) super.get(ctx, 0, "/spell-check/" +  URLEncoder.encode(word, StandardCharsets.UTF_8), List.class);
         }
         catch (RouteNotConfiguredException ex) {
             return Observable.empty();
@@ -44,7 +44,7 @@ public class AssistantClient extends AbstractDynamicClient {
     }
     public Observable<String> unitConversion(Context ctx, String value, String from, String to) {
         try {
-            return super.get(ctx, "/unit-conversion?value=" + value + "&from=" + from + "&to=" + to);
+            return super.get(ctx, 0, "/unit-conversion?value=" + value + "&from=" + from + "&to=" + to);
         }
         catch (RouteNotConfiguredException ex) {
             return Observable.empty();
@@ -53,7 +53,7 @@ public class AssistantClient extends AbstractDynamicClient {
 
     public Observable<String> evalMath(Context ctx, String expression) {
         try {
-            return super.get(ctx, "/eval-expression?value=" +  URLEncoder.encode(expression, StandardCharsets.UTF_8));
+            return super.get(ctx, 0, "/eval-expression?value=" +  URLEncoder.encode(expression, StandardCharsets.UTF_8));
         }
         catch (RouteNotConfiguredException ex) {
             return Observable.empty();

@@ -3,7 +3,6 @@ package nu.marginalia.query.client;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.prometheus.client.Summary;
-import io.reactivex.rxjava3.core.Observable;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.client.AbstractDynamicClient;
 import nu.marginalia.client.Context;
@@ -49,13 +48,13 @@ public class QueryClient extends AbstractDynamicClient {
     @CheckReturnValue
     public SearchResultSet delegate(Context ctx, SearchSpecification specs) {
         return wmsa_search_index_api_delegate_time.time(
-                () -> this.postGet(ctx, "/delegate/", specs, SearchResultSet.class).blockingFirst()
+                () -> this.postGet(ctx, 0, "/delegate/", specs, SearchResultSet.class).blockingFirst()
         );
     }
     @CheckReturnValue
     public QueryResponse search(Context ctx, QueryParams params) {
         return wmsa_search_index_api_search_time.time(
-                () -> this.postGet(ctx, "/search/", params, QueryResponse.class).blockingFirst()
+                () -> this.postGet(ctx, 0, "/search/", params, QueryResponse.class).blockingFirst()
         );
     }
     public MqOutbox outbox() {

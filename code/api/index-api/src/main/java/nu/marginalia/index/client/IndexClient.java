@@ -27,7 +27,8 @@ public class IndexClient extends AbstractDynamicClient {
 
     @Inject
     public IndexClient(ServiceDescriptors descriptors,
-                       MessageQueueFactory messageQueueFactory) {
+                       MessageQueueFactory messageQueueFactory)
+    {
         super(descriptors.forId(ServiceId.Index), WmsaHome.getHostsFile(), GsonFactory::get);
 
         String inboxName = ServiceId.Index.name + ":" + "0";
@@ -44,16 +45,16 @@ public class IndexClient extends AbstractDynamicClient {
     }
 
     @CheckReturnValue
-    public SearchResultSet query(Context ctx, SearchSpecification specs) {
+    public SearchResultSet query(Context ctx, int node, SearchSpecification specs) {
         return wmsa_search_index_api_time.time(
-                () -> this.postGet(ctx, "/search/", specs, SearchResultSet.class).blockingFirst()
+                () -> this.postGet(ctx, node,"/search/", specs, SearchResultSet.class).blockingFirst()
         );
     }
 
 
     @CheckReturnValue
-    public Observable<Boolean> isBlocked(Context ctx) {
-        return super.get(ctx, "/is-blocked", Boolean.class);
+    public Observable<Boolean> isBlocked(Context ctx, int node) {
+        return super.get(ctx, node, "/is-blocked", Boolean.class);
     }
 
 }

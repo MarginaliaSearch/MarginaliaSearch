@@ -5,6 +5,7 @@ import io.reactivex.rxjava3.core.Observable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.SneakyThrows;
+import nu.marginalia.client.model.ClientRoute;
 import org.junit.jupiter.api.*;
 import spark.Request;
 import spark.Response;
@@ -33,7 +34,7 @@ public class AbstractClientTest {
         int port = new Random().nextInt(6000, 10000);
         testServer = new TestServer(port);
 
-        client = new AbstractClient("localhost", port, 1, Gson::new) {
+        client = new AbstractClient(new ClientRoute("localhost", port), 1, Gson::new) {
             @Override
             public AbortingScheduler scheduler() {
                 return new AbortingScheduler(name());
@@ -79,47 +80,47 @@ public class AbstractClientTest {
     public void testGetTimeout() {
         testServer.get(this::timeout);
 
-        assertError(client.get(Context.internal(), "/get"));
+        assertError(client.get(Context.internal(), 0, "/get"));
     }
 
     @Test
     public void testPostTimeout() {
         testServer.post(this::timeout);
 
-        assertError(client.post(Context.internal(), "/post", "test"));
+        assertError(client.post(Context.internal(), 0, "/post", "test"));
     }
 
     @Test
     public void testDeleteTimeout() {
         testServer.delete(this::timeout);
 
-        assertError(client.delete(Context.internal(), "/post"));
+        assertError(client.delete(Context.internal(), 0,"/post"));
     }
 
     @Test
     public void testPost404() {
         testServer.post(this::error404);
 
-        assertError(client.post(Context.internal(), "/post", "test"));
+        assertError(client.post(Context.internal(), 0,"/post", "test"));
     }
     @Test
     public void testGet404() {
         testServer.get(this::error404);
 
-        assertError(client.get(Context.internal(), "/get"));
+        assertError(client.get(Context.internal(), 0,"/get"));
     }
     @Test
     public void testDelete404() {
         testServer.delete(this::error404);
 
-        assertError(client.delete(Context.internal(), "/delete"));
+        assertError(client.delete(Context.internal(),0, "/delete"));
     }
 
     @Test
     public void testGet() {
         testServer.get((req, rsp) -> "Hello World");
 
-        assertEquals("Hello World", client.get(Context.internal(), "/get").blockingFirst());
+        assertEquals("Hello World", client.get(Context.internal(), 0,"/get").blockingFirst());
     }
 
     @Test
@@ -138,7 +139,7 @@ public class AbstractClientTest {
     public void testGetJson() {
         testServer.get((req, rsp) -> new DummyObject(5, "23"), new Gson()::toJson);
 
-        assertEquals(client.get(Context.internal(), "/get", DummyObject.class).blockingFirst(),
+        assertEquals(client.get(Context.internal(), 0,"/get", DummyObject.class).blockingFirst(),
                 new DummyObject(5, "23"));
     }
 
@@ -147,7 +148,7 @@ public class AbstractClientTest {
     public void testDelete() {
         testServer.delete((req, rsp) -> "Hello World");
 
-        assertTrue(client.delete(Context.internal(), "/delete").blockingFirst().isGood());
+        assertTrue(client.delete(Context.internal(), 0,"/delete").blockingFirst().isGood());
     }
 
 
@@ -159,7 +160,7 @@ public class AbstractClientTest {
             return "ok";
         });
 
-        client.post(Context.internal(), "/post", new DummyObject(5, "23")).blockingSubscribe();
+        client.post(Context.internal(),0, "/post", new DummyObject(5, "23")).blockingSubscribe();
         assertEquals(1, inbox.size());
         assertEquals(new DummyObject(5, "23"), inbox.get(0));
     }
@@ -172,7 +173,7 @@ public class AbstractClientTest {
             return new DummyObject(1, "ret");
         }, gson::toJson);
 
-        var ret = client.postGet(Context.internal(), "/post", new DummyObject(5, "23"), DummyObject.class).blockingFirst();
+        var ret = client.postGet(Context.internal(), 0,"/post", new DummyObject(5, "23"), DummyObject.class).blockingFirst();
         assertEquals(1, inbox.size());
         assertEquals(new DummyObject(5, "23"), inbox.get(0));
         assertEquals(new DummyObject(1, "ret"), ret);
