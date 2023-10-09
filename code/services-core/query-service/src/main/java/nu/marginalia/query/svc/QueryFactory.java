@@ -27,12 +27,10 @@ import java.util.List;
 
 @Singleton
 public class QueryFactory {
-
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private static final int RETAIN_QUERY_VARIANT_COUNT = 5;
     private final ThreadLocal<QueryVariants> queryVariants;
-
     private final QueryParser queryParser = new QueryParser();
 
 
@@ -44,9 +42,6 @@ public class QueryFactory {
         this.queryVariants = ThreadLocal.withInitial(() -> new QueryVariants(lm ,dict, nGramBloomFilter, englishDictionary));
     }
 
-    public QueryParser getParser() {
-        return new QueryParser();
-    }
 
     public QueryPermutation getQueryPermutation() {
         return new QueryPermutation(queryVariants.get());
@@ -152,9 +147,6 @@ public class QueryFactory {
 
         return new ProcessedQuery(specs, searchTermsHuman, domain);
     }
-
-
-
 
     private String normalizeDomainName(String str) {
         return str.toLowerCase();

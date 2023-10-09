@@ -2,7 +2,6 @@ package nu.marginalia.query.svc;
 
 import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.language.WordPatterns;
-import nu.marginalia.query.model.QueryParams;
 import nu.marginalia.query_parser.token.Token;
 import nu.marginalia.query_parser.token.TokenVisitor;
 

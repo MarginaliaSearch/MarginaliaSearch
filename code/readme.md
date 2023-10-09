@@ -14,12 +14,13 @@ A map of the most important components and how they relate can be found below.
 
 ### Services
 * [core services](services-core/) "macroservices", stateful, memory hungry doing heavy lifting.
-* * [control-service](services-core/control-service)  
-* * [search](services-core/search-service)
+* * [control-service](services-core/control-service)
+* * [query](services-core/query-service)
 * * [index](services-core/index-service)
 * * [assistant](services-core/assistant-service)
 * [satellite services](services-satellite/) "microservices", stateless providing additional functionality.
 * * [api](services-satellite/api-service)  - public API
+* * [search](services-core/search-service) - marginalia search application
 * * [dating](services-satellite/dating-service)  - [https://explore.marginalia.nu/](https://explore.marginalia.nu/)
 * * [explorer](services-satellite/explorer-service)  - [https://explore2.marginalia.nu/](https://explore2.marginalia.nu/)
 * an [internal API](api/)
