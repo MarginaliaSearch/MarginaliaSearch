@@ -14,7 +14,7 @@ A map of the most important components and how they relate can be found below.
 
 ### Services
 * [core services](services-core/) "macroservices", stateful, memory hungry doing heavy lifting.
-* * [control-service](services-core/control-service)
+* * [control](services-core/control-service)
 * * [query](services-core/query-service)
 * * [index](services-core/index-service)
 * * [assistant](services-core/assistant-service)
