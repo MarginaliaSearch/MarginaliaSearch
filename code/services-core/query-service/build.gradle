@@ -1,0 +1,54 @@
+plugins {
+    id 'java'
+
+    id 'com.palantir.docker' version '0.35.0'
+    id 'application'
+    id 'jvm-test-suite'
+}
+
+application {
+    mainClass = 'nu.marginalia.query.QueryMain'
+    applicationName = 'query-service'
+}
+
+tasks.distZip.enabled = false
+
+apply from: "$rootProject.projectDir/docker-service.gradle"
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+dependencies {
+    implementation project(':code:common:config')
+    implementation project(':code:common:model')
+    implementation project(':code:common:db')
+    implementation project(':code:common:service')
+    implementation project(':code:common:service-client')
+    implementation project(':code:api:index-api')
+    implementation project(':code:api:query-api')
+    implementation project(':code:common:service-discovery')
+    implementation project(':code:features-qs:query-parser')
+    implementation project(':code:features-index:index-query')
+    implementation project(':code:libraries:language-processing')
+    implementation project(':code:libraries:term-frequency-dict')
+
+    implementation libs.bundles.slf4j
+
+    implementation libs.spark
+    implementation libs.gson
+    implementation libs.prometheus
+    implementation libs.notnull
+    implementation libs.guice
+    implementation libs.protobuf
+    implementation libs.rxjava
+    implementation libs.bundles.mariadb
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+
+}
+

@@ -6,6 +6,7 @@ import nu.marginalia.db.storage.model.FileStorage;
 import nu.marginalia.db.storage.model.FileStorageType;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.index.journal.writer.IndexJournalWriterPagingImpl;
+import nu.marginalia.linkdb.LinkdbReader;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.ranking.DomainRankings;
@@ -16,6 +17,7 @@ import nu.marginalia.service.control.*;
 import nu.marginalia.service.id.ServiceId;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.mockito.Mockito;
+import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -56,6 +58,8 @@ public class IndexQueryServiceIntegrationTestModule extends AbstractModule {
             when(fileStorageServiceMock.getStorageByType(FileStorageType.SEARCH_SETS)).thenReturn(new FileStorage(null, null, null, LocalDateTime.now(), fastDir.toString(), null));
             when(fileStorageServiceMock.getStorageByType(FileStorageType.INDEX_LIVE)).thenReturn(new FileStorage(null, null, null, LocalDateTime.now(), fastDir.toString(), null));
             when(fileStorageServiceMock.getStorageByType(FileStorageType.INDEX_STAGING)).thenReturn(new FileStorage(null, null, null, LocalDateTime.now(), slowDir.toString(), null));
+
+            bind(LinkdbReader.class).toInstance(new LinkdbReader(workDir.resolve("linkdb.dat")));
 
             bind(FileStorageService.class).toInstance(fileStorageServiceMock);
 

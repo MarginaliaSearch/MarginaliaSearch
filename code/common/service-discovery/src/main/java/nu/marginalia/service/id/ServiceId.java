@@ -6,6 +6,7 @@ public enum ServiceId {
     Api("api-service"),
     Search("search-service"),
     Index("index-service"),
+    Query("query-service"),
 
     Control("control-service"),
 

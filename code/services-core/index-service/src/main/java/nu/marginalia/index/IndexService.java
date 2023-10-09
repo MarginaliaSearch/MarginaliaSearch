@@ -3,11 +3,15 @@ package nu.marginalia.index;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import lombok.SneakyThrows;
+import nu.marginalia.db.storage.FileStorageService;
+import nu.marginalia.db.storage.model.FileStorageType;
 import nu.marginalia.index.client.IndexMqEndpoints;
 import nu.marginalia.index.index.SearchIndex;
 import nu.marginalia.index.svc.IndexOpsService;
 import nu.marginalia.index.svc.IndexQueryService;
 import nu.marginalia.index.svc.IndexSearchSetsService;
+import nu.marginalia.linkdb.LinkdbReader;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.server.*;
@@ -20,6 +24,8 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
 import static spark.Spark.get;
@@ -31,9 +37,9 @@ public class IndexService extends Service {
     private final Initialization init;
     private final IndexOpsService opsService;
     private final SearchIndex searchIndex;
+    private final FileStorageService fileStorageService;
+    private final LinkdbReader linkdbReader;
 
-    private final IndexServicesFactory servicesFactory;
-    private final IndexSearchSetsService searchSetsService;
     private final ServiceEventLog eventLog;
 
 
@@ -42,16 +48,16 @@ public class IndexService extends Service {
                         IndexOpsService opsService,
                         IndexQueryService indexQueryService,
                         SearchIndex searchIndex,
-                        IndexServicesFactory servicesFactory,
-                        IndexSearchSetsService searchSetsService,
+                        FileStorageService fileStorageService,
+                        LinkdbReader linkdbReader,
                         ServiceEventLog eventLog)
     {
         super(params);
 
         this.opsService = opsService;
         this.searchIndex = searchIndex;
-        this.servicesFactory = servicesFactory;
-        this.searchSetsService = searchSetsService;
+        this.fileStorageService = fileStorageService;
+        this.linkdbReader = linkdbReader;
         this.eventLog = eventLog;
 
         final Gson gson = GsonFactory.get();
@@ -86,6 +92,21 @@ public class IndexService extends Service {
         return "ok";
     }
 
+    @SneakyThrows
+    @MqNotification(endpoint = IndexMqEndpoints.SWITCH_LINKDB)
+    public void switchLinkdb(String unusedArg) {
+        logger.info("Switching link database");
+
+        Path newPath = fileStorageService.getStorageByType(FileStorageType.LINKDB_STAGING)
+                .asPath()
+                .resolve("links.db");
+
+        if (Files.exists(newPath)) {
+            eventLog.logEvent("INDEX-SWITCH-LINKDB", "");
+            linkdbReader.switchInput(newPath);
+        }
+    }
+
     @MqNotification(endpoint = IndexMqEndpoints.SWITCH_INDEX)
     public String switchIndex(String message) throws Exception {
         if (!opsService.switchIndex()) {
@@ -94,6 +115,7 @@ public class IndexService extends Service {
 
         return "ok";
     }
+
     @MqRequest(endpoint = IndexMqEndpoints.INDEX_IS_BLOCKED)
     public String isBlocked(String message) throws Exception {
         return Boolean.valueOf(opsService.isBusy()).toString();

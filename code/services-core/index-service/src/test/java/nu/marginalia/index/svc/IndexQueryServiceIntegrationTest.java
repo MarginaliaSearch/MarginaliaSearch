@@ -24,6 +24,10 @@ import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
+import nu.marginalia.linkdb.LinkdbReader;
+import nu.marginalia.linkdb.LinkdbWriter;
+import nu.marginalia.linkdb.model.LdbUrlDetail;
+import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.DocumentFlags;
@@ -43,6 +47,7 @@ import spark.Spark;
 
 import javax.annotation.CheckReturnValue;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
@@ -79,6 +84,8 @@ public class IndexQueryServiceIntegrationTest {
 
     @Inject
     ProcessHeartbeat processHeartbeat;
+    @Inject
+    LinkdbReader linkdbReader;
 
     @BeforeEach
     public void setUp() throws IOException {
@@ -373,7 +380,7 @@ public class IndexQueryServiceIntegrationTest {
         System.out.println(rsp);
 
         for (var result : rsp.results) {
-            long docId = result.getDocumentId();
+            long docId = result.rawIndexResult.getDocumentId();
             actual.add(new MockDataDocument(UrlIdCodec.getDomainId(docId), UrlIdCodec.getDocumentOrdinal(docId)));
         }
 
@@ -409,7 +416,7 @@ public class IndexQueryServiceIntegrationTest {
 
         assertEquals(1, rsp.results.size());
         assertEquals(d(1,1).docId(),
-                rsp.results.get(0).getDocumentId());
+                rsp.results.get(0).rawIndexResult.getDocumentId());
     }
 
     SearchSpecification basicQuery(Function<SearchSpecification.SearchSpecificationBuilder, SearchSpecification.SearchSpecificationBuilder> mutator)
@@ -545,7 +552,7 @@ public class IndexQueryServiceIntegrationTest {
             return this;
         }
 
-        void load() throws IOException, SQLException {
+        void load() throws IOException, SQLException, URISyntaxException {
             allData.forEach((doc, words) -> {
 
                 var meta = metaByDoc.get(doc);
@@ -565,8 +572,26 @@ public class IndexQueryServiceIntegrationTest {
                 indexJournalWriter.put(header, entry);
             });
 
+            var linkdbWriter = new LinkdbWriter(testModule.workDir.resolve("linkdb.dat"));
+            for (Long key : allData.keySet()) {
+                linkdbWriter.add(new LdbUrlDetail(
+                        key,
+                        new EdgeUrl("https://www.example.com"),
+                        "test",
+                        "test",
+                        0.,
+                        "HTML5",
+                        0,
+                        null,
+                        0,
+                        5
+                ));
+            }
+            linkdbWriter.close();
+
             indexJournalWriter.close();
             constructIndex();
+            linkdbReader.reconnect();
             searchIndex.switchIndex();
         }
     }

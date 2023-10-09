@@ -26,8 +26,6 @@ import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.actor.prototype.AbstractActorPrototype;
 import nu.marginalia.actor.state.ActorState;
 import nu.marginalia.actor.state.ActorResumeBehavior;
-import nu.marginalia.search.client.SearchClient;
-import nu.marginalia.search.client.SearchMqEndpoints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +55,6 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
     private final MqOutbox mqLoaderOutbox;
     private final MqOutbox mqIndexConstructorOutbox;
     private final MqOutbox indexOutbox;
-    private final MqOutbox searchOutbox;
     private final FileStorageService storageService;
     private final BackupService backupService;
     private final Gson gson;
@@ -83,7 +80,6 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
                                ProcessOutboxes processOutboxes,
                                FileStorageService storageService,
                                IndexClient indexClient,
-                               SearchClient searchClient,
                                BackupService backupService,
                                Gson gson
                                    )
@@ -91,7 +87,6 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
         super(stateFactory);
         this.processWatcher = processWatcher;
         this.indexOutbox = indexClient.outbox();
-        this.searchOutbox = searchClient.outbox();
         this.mqConverterOutbox = processOutboxes.getConverterOutbox();
         this.mqLoaderOutbox = processOutboxes.getLoaderOutbox();
         this.mqIndexConstructorOutbox = processOutboxes.getIndexConstructorOutbox();
@@ -287,14 +282,14 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
             next = END,
             resume = ActorResumeBehavior.RETRY,
             description = """
-                    Move the new lexicon into place, instruct the search service to
-                    switch to the new linkdb, and the index service to switch over to the new index.
+                    Move the new lexicon into place, instruct the index service to
+                    switch to the new linkdb, and the new index.
                     """
     )
     public void switchOver(Long id) throws Exception {
-        // Notify services to switch over
-        searchOutbox.sendNotice(SearchMqEndpoints.SWITCH_LINKDB, ":-)");
+        // Notify index to switch over
         indexOutbox.sendNotice(IndexMqEndpoints.SWITCH_INDEX, ":^D");
+        indexOutbox.sendNotice(IndexMqEndpoints.SWITCH_LINKDB, ":-)");
     }
 
 }

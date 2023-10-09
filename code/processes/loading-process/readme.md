@@ -7,4 +7,3 @@ the index-service.
 ## Central Classes
 
 * [LoaderMain](src/main/java/nu/marginalia/loading/LoaderMain.java) main class.
-* [Loader](src/main/java/nu/marginalia/loading/loader/Loader.java) evaluates loading instructions. 

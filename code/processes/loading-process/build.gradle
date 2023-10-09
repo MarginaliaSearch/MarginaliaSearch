@@ -32,7 +32,7 @@ dependencies {
     implementation project(':code:libraries:message-queue')
     implementation project(':code:libraries:language-processing')
     implementation project(':third-party:commons-codec')
-    testImplementation project(':code:services-core:search-service')
+    testImplementation project(':code:services-application:search-service')
 
     implementation project(':code:process-models:crawling-model')
     implementation project(':code:process-models:processed-data')

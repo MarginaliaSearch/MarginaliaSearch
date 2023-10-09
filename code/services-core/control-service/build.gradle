@@ -32,11 +32,12 @@ dependencies {
     implementation project(':code:libraries:message-queue')
     implementation project(':code:common:service-discovery')
     implementation project(':code:common:service-client')
-    implementation project(':code:api:search-api')
     implementation project(':code:api:index-api')
+    implementation project(':code:api:query-api')
     implementation project(':code:api:process-mqapi')
     implementation project(':code:features-search:screenshots')
     implementation project(':code:features-index:index-journal')
+    implementation project(':code:features-index:index-query')
     implementation project(':code:process-models:crawl-spec')
 
     implementation libs.bundles.slf4j

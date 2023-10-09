@@ -7,7 +7,6 @@ Contains models shared by the [crawling-process](../../processes/crawling-proces
 
 * [CrawledDocument](src/main/java/nu/marginalia/crawling/model/CrawledDocument.java)
 * [CrawledDomain](src/main/java/nu/marginalia/crawling/model/CrawledDomain.java)
-* [CrawlingSpecification](src/main/java/nu/marginalia/crawling/model/spec/CrawlingSpecification.java)
 
 ### Serialization
 * [CrawledDomainReader](src/main/java/nu/marginalia/crawling/io/CrawledDomainReader.java)

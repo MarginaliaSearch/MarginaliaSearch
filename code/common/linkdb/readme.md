@@ -8,4 +8,4 @@ this information take effect in production immediately, even before
 the information was searchable.
 
 It is constructed by the [loading-process](../../processes/loading-process), and consumed 
-by the [search-service](../../services-core/search-service).
+by the [index-service](../../services-core/index-service).
