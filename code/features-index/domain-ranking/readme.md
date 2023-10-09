@@ -17,7 +17,7 @@ Contains domain ranking algorithms.
 
 ## See Also
 
-* [features-search/result-ranking](../../features-search/result-ranking) - Ranks search results
+* [result-ranking](../result-ranking) - Ranks search results
 
 ## Useful Resources
 

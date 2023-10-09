@@ -26,8 +26,8 @@ include 'code:libraries:message-queue'
 
 include 'code:features-search:screenshots'
 include 'code:features-search:random-websites'
-include 'code:features-search:query-parser'
-include 'code:features-search:result-ranking'
+include 'code:features-qs:query-parser'
+include 'code:features-index:result-ranking'
 
 include 'code:features-convert:adblock'
 include 'code:features-convert:stackexchange-xml'

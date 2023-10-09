@@ -20,7 +20,7 @@ A map of the most important components and how they relate can be found below.
 * * [assistant](services-core/assistant-service)
 * [application services](services-application/) "microservices", stateless providing additional functionality and making an application out of the search engine.
 * * [api](services-application/api-service)  - public API
-* * [search](services-core/search-service) - marginalia search application
+* * [search](services-application/search-service) - marginalia search application
 * * [dating](services-application/dating-service)  - [https://explore.marginalia.nu/](https://explore.marginalia.nu/)
 * * [explorer](services-application/explorer-service)  - [https://explore2.marginalia.nu/](https://explore2.marginalia.nu/)
 * an [internal API](api/)

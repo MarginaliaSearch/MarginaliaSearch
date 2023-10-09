@@ -11,5 +11,5 @@ to that format.
 ## See Also
 
 * [api/query-api](../../api/query-api)
-* [features-search/query-parser](../../features-search/query-parser)
+* [features-qs/query-parser](../../features-qs/query-parser)
 * [features-index/index-query](../../features-index/index-query)

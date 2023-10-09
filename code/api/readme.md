@@ -3,7 +3,7 @@
 ## Core Services
 
 * [assistant-api](assistant-api/)
-* [search-api](search-api/)
+* [query-api](query-api/)
 * [index-api](index-api/)
 
 These are clients for the [core services](../services-core/), along with what models
@@ -20,4 +20,4 @@ requests can be sent.
 [process-mqapi](process-mqapi/) defines requests and inboxes for the message queue based API used 
 for interacting with processes.   
 
-See [libraries/message-queue](../libraries/message-queue) and [services-application/control-service](../services-application/control-service). 
+See [libraries/message-queue](../libraries/message-queue) and [services-application/control-service](../services-core/control-service). 

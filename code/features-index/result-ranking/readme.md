@@ -11,4 +11,4 @@ results higher.
 
 ## See Also
 
-* [features-index/domain-ranking](../../features-index/domain-ranking) - Ranks domains
+* [features-index/domain-ranking](../domain-ranking) - Ranks domains

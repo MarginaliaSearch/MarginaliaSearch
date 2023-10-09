@@ -14,11 +14,11 @@ These indices rely heavily on the [libraries/btree](../libraries/btree) and [lib
 
 ## Algorithms
 
-* [domain-ranking](domain-ranking/) contains ranking algorithms.
+* [domain-ranking](domain-ranking/) contains domain ranking algorithms.
+* [result-ranking](result-ranking/) contains logic for ranking search results by relevance.
 
 # Libraries
 
 * [index-query](index-query/) contains structures for evaluating search queries.
 * [index-journal](index-journal/) contains tools for writing and reading index data.
-* [lexicon](lexicon/) contains a mapping between words' string representation and an unique integer identifier.
 

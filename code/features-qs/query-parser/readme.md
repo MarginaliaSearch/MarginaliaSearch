@@ -1,6 +1,6 @@
 # Query Parser
 
-End-user search query parsing tools used by the [search-service](../../services-core/search-service).
+End-user search query parsing tools used by the [query-service](../../services-core/query-service).
 
 ## Central Classes
 

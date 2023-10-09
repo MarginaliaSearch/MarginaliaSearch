@@ -20,8 +20,6 @@ appropriate services.
 * [CommandEvaluator](src/main/java/nu/marginalia/search/command/CommandEvaluator.java) interprets a user query and acts
 upon it, dealing with special operations like `browse:` or `site:`.
 
-* [QueryFactory](src/main/java/nu/marginalia/search/query/QueryFactory.java) parses a search query into a machine readable query specification.
-
 * [SearchQueryIndexService](src/main/java/nu/marginalia/search/svc/SearchQueryIndexService.java) passes a parsed search query to the index service, and
 then decorates the search results so that they can be rendered.
 

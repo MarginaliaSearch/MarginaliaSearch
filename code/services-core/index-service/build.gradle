@@ -37,7 +37,7 @@ dependencies {
     implementation project(':code:features-index:index-forward')
     implementation project(':code:features-index:index-reverse')
     implementation project(':code:features-index:domain-ranking')
-    implementation project(':code:features-search:result-ranking')
+    implementation project(':code:features-index:result-ranking')
     implementation project(':third-party:commons-codec')
     testImplementation project(path: ':code:services-core:control-service')
     testImplementation project(':code:common:process')

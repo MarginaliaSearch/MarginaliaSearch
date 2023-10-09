@@ -8,7 +8,7 @@ into per-domain snapshots.
 * [CrawlerMain](src/main/java/nu/marginalia/crawl/CrawlerMain.java) orchestrates the crawling.
 * [CrawlerRetreiver](src/main/java/nu/marginalia/crawl/retreival/CrawlerRetreiver.java)
   visits known addresses from a domain and downloads each document.
-* [HttpFetcher](src/main/java/nu/marginalia/crawl/retreival/HttpFetcher.java)
+* [HttpFetcher](src/main/java/nu/marginalia/crawl/retreival/fetcher/HttpFetcherImpl.java)
   fetches a URL.
 
 ## See Also
