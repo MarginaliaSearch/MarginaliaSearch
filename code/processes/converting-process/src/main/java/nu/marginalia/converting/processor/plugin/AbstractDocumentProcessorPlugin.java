@@ -52,6 +52,10 @@ public abstract class AbstractDocumentProcessorPlugin {
             add("site", url.domain.domain);
             add("tld", url.domain.getTld());
 
+            if (url.path.startsWith("/~")) {
+                add("special", "tilde");
+            }
+
             return this;
         }
 
