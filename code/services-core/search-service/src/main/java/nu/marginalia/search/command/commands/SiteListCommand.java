@@ -3,12 +3,12 @@ package nu.marginalia.search.command.commands;
 import com.google.inject.Inject;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.search.SearchOperator;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.command.SearchCommandInterface;
 import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.search.model.DomainInformation;
 import nu.marginalia.search.model.SearchProfile;
-import nu.marginalia.search.query.QueryFactory;
 import nu.marginalia.search.siteinfo.DomainInformationService;
 import nu.marginalia.search.svc.SearchQueryIndexService;
 import nu.marginalia.client.Context;
@@ -25,9 +25,9 @@ import java.util.regex.Pattern;
 
 public class SiteListCommand implements SearchCommandInterface {
     private final DbDomainQueries domainQueries;
-    private final QueryFactory queryFactory;
     private final DomainInformationService domainInformationService;
     private final SearchQueryIndexService searchQueryIndexService;
+    private final SearchOperator searchOperator;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final MustacheRenderer<DomainInformation> siteInfoRenderer;
@@ -38,16 +38,16 @@ public class SiteListCommand implements SearchCommandInterface {
     public SiteListCommand(
             DomainInformationService domainInformationService,
             DbDomainQueries domainQueries,
-            QueryFactory queryFactory, RendererFactory rendererFactory,
-            SearchQueryIndexService searchQueryIndexService)
+            RendererFactory rendererFactory,
+            SearchQueryIndexService searchQueryIndexService, SearchOperator searchOperator)
             throws IOException
     {
         this.domainQueries = domainQueries;
         this.domainInformationService = domainInformationService;
-        this.queryFactory = queryFactory;
 
         siteInfoRenderer = rendererFactory.renderer("search/site-info");
         this.searchQueryIndexService = searchQueryIndexService;
+        this.searchOperator = searchOperator;
     }
 
     @Override
@@ -63,8 +63,8 @@ public class SiteListCommand implements SearchCommandInterface {
         Path screenshotPath = null;
         int domainId = -1;
         if (null != domain) {
-            var dumbQuery = queryFactory.createQuery(SearchProfile.CORPO, 100, 100, "site:"+domain);
-            resultSet = searchQueryIndexService.executeQuery(ctx, dumbQuery.specs);
+            resultSet = searchOperator.doSiteSearch(ctx, domain.toString());
+
             var maybeId = domainQueries.tryGetDomainId(domain);
             if (maybeId.isPresent()) {
                 domainId = maybeId.getAsInt();

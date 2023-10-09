@@ -1,4 +1,4 @@
-package nu.marginalia.search.query;
+package nu.marginalia.query.svc;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -6,34 +6,29 @@ import nu.marginalia.LanguageModels;
 import nu.marginalia.index.client.model.query.SearchSpecification;
 import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.index.client.model.results.ResultRankingParameters;
-import nu.marginalia.index.query.limit.QueryLimits;
-import nu.marginalia.index.query.limit.QueryStrategy;
-import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.language.EnglishDictionary;
+import nu.marginalia.language.WordPatterns;
 import nu.marginalia.ngrams.NGramBloomFilter;
-import nu.marginalia.term_frequency_dict.TermFrequencyDict;
+import nu.marginalia.query.model.QueryParams;
+import nu.marginalia.query.model.ProcessedQuery;
 import nu.marginalia.query_parser.QueryParser;
 import nu.marginalia.query_parser.QueryPermutation;
 import nu.marginalia.query_parser.QueryVariants;
 import nu.marginalia.query_parser.token.Token;
 import nu.marginalia.query_parser.token.TokenType;
-import nu.marginalia.search.db.DbNearDomainsQuery;
-import nu.marginalia.search.model.SearchProfile;
-import nu.marginalia.search.query.model.SearchQuery;
-import nu.marginalia.search.query.model.UserSearchParameters;
-import nu.marginalia.language.WordPatterns;
-import org.eclipse.jetty.http.HttpStatus;
+import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Spark;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 @Singleton
 public class QueryFactory {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final DbNearDomainsQuery dbNearDomainsQuery;
 
     private static final int RETAIN_QUERY_VARIANT_COUNT = 5;
     private final ThreadLocal<QueryVariants> queryVariants;
@@ -45,10 +40,7 @@ public class QueryFactory {
     public QueryFactory(LanguageModels lm,
                         TermFrequencyDict dict,
                         EnglishDictionary englishDictionary,
-                        NGramBloomFilter nGramBloomFilter,
-                        DbNearDomainsQuery dbNearDomainsQuery) {
-        this.dbNearDomainsQuery = dbNearDomainsQuery;
-
+                        NGramBloomFilter nGramBloomFilter) {
         this.queryVariants = ThreadLocal.withInitial(() -> new QueryVariants(lm ,dict, nGramBloomFilter, englishDictionary));
     }
 
@@ -60,7 +52,7 @@ public class QueryFactory {
         return new QueryPermutation(queryVariants.get());
     }
 
-    public SearchQuery createQuery(UserSearchParameters params) {
+    public ProcessedQuery createQuery(QueryParams params) {
         final var processedQuery =  createQuery(getQueryPermutation(), params);
         final List<SearchSubquery> subqueries = processedQuery.specs.subqueries;
 
@@ -72,59 +64,25 @@ public class QueryFactory {
         return processedQuery;
     }
 
-    public SearchQuery createQuery(SearchProfile profile,
-                                               int limitPerDomain,
-                                               int limitTotal,
-                                               String... termsInclude)
-    {
-        List<SearchSubquery> sqs = new ArrayList<>();
-
-        sqs.add(new SearchSubquery(
-                Arrays.asList(termsInclude),
-                Collections.emptyList(),
-                Collections.emptyList(),
-                Collections.emptyList(),
-                Collections.emptyList()));
-
-        var specs = SearchSpecification.builder()
-                .subqueries(sqs)
-                .domains(Collections.emptyList())
-                .searchSetIdentifier(profile.searchSetIdentifier)
-                .queryLimits(new QueryLimits(limitPerDomain, limitTotal, 250, 8192))
-                .humanQuery("")
-                .year(SpecificationLimit.none())
-                .size(SpecificationLimit.none())
-                .rank(SpecificationLimit.none())
-                .rankingParams(ResultRankingParameters.sensibleDefaults())
-                .quality(SpecificationLimit.none())
-                .queryStrategy(QueryStrategy.AUTO)
-                .build();
-
-        return new SearchQuery(specs);
-    }
-
     private void trimArray(List<?> arr, int maxSize) {
         if (arr.size() > maxSize) {
             arr.subList(0, arr.size() - maxSize).clear();
         }
     }
 
-    public SearchQuery createQuery(QueryPermutation queryPermutation,
-                                   UserSearchParameters params)
+    public ProcessedQuery createQuery(QueryPermutation queryPermutation,
+                                      QueryParams params)
     {
         final var query = params.humanQuery();
-        final var profile = params.profile();
 
         if (query.length() > 1000) {
-            Spark.halt(HttpStatus.BAD_REQUEST_400, "That's too much, man");
+            throw new IllegalArgumentException("Query too long");
         }
 
         List<String> searchTermsHuman = new ArrayList<>();
         List<String> problems = new ArrayList<>();
 
-
-        String near = null,
-               domain = null;
+        String domain = null;
 
         var basicQuery = queryParser.parse(query);
 
@@ -134,7 +92,7 @@ public class QueryFactory {
         }
 
 
-        QueryLimitsAccumulator qualityLimits = new QueryLimitsAccumulator(profile);
+        QueryLimitsAccumulator qualityLimits = new QueryLimitsAccumulator(params);
 
         for (Token t : basicQuery) {
             if (t.type == TokenType.QUOT_TERM || t.type == TokenType.LITERAL_TERM) {
@@ -153,50 +111,46 @@ public class QueryFactory {
         List<SearchSubquery> subqueries = new ArrayList<>();
 
         for (var parts : queryPermutations) {
-            QuerySearchTermsAccumulator termsAccumulator = new QuerySearchTermsAccumulator(profile, parts);
+            QuerySearchTermsAccumulator termsAccumulator = new QuerySearchTermsAccumulator(parts);
 
             SearchSubquery subquery = termsAccumulator.createSubquery();
 
-            near = termsAccumulator.near;
             domain = termsAccumulator.domain;
-
-            params.profile().addTacitTerms(subquery);
-            params.jsSetting().addTacitTerms(subquery);
 
             subqueries.add(subquery);
         }
 
-        List<Integer> domains = Collections.emptyList();
+        List<Integer> domainIds = params.domainIds();
 
-        if (near != null) {
-            if (domain == null) {
-                domains = dbNearDomainsQuery.getRelatedDomains(near, problems::add);
-            }
-        }
-
-        int domainLimit;
+        var limits = params.limits();
+        // Disable limits on number of results per domain if we're searching with a site:-type term
         if (domain != null) {
-            domainLimit = 1000;
-        } else {
-            domainLimit = 2;
+            limits = limits.forSingleDomain();
         }
 
         var specsBuilder = SearchSpecification.builder()
                 .subqueries(subqueries)
-                .queryLimits(new QueryLimits(domainLimit, 100, 250, 4096))
                 .humanQuery(query)
                 .quality(qualityLimits.qualityLimit)
                 .year(qualityLimits.year)
                 .size(qualityLimits.size)
                 .rank(qualityLimits.rank)
-                .domains(domains)
+                .domains(domainIds)
+                .queryLimits(limits)
+                .searchSetIdentifier(params.identifier())
                 .rankingParams(ResultRankingParameters.sensibleDefaults())
-                .queryStrategy(qualityLimits.queryStrategy)
-                .searchSetIdentifier(profile.searchSetIdentifier);
+                .queryStrategy(qualityLimits.queryStrategy);
 
         SearchSpecification specs = specsBuilder.build();
 
-        return new SearchQuery(specs, searchTermsHuman, domain);
+        for (var sq : specs.subqueries) {
+            sq.searchTermsAdvice.addAll(params.tacitAdvice());
+            sq.searchTermsPriority.addAll(params.tacitPriority());
+            sq.searchTermsInclude.addAll(params.tacitIncludes());
+            sq.searchTermsExclude.addAll(params.tacitExcludes());
+        }
+
+        return new ProcessedQuery(specs, searchTermsHuman, domain);
     }
 
 

@@ -7,12 +7,12 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import nu.marginalia.assistant.client.AssistantClient;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.db.DbDomainQueries;
+import nu.marginalia.query.client.QueryClient;
+import nu.marginalia.query.model.QueryResponse;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.client.Context;
 import nu.marginalia.search.model.DecoratedSearchResults;
-import nu.marginalia.search.query.QueryFactory;
-import nu.marginalia.search.query.model.SearchQuery;
-import nu.marginalia.search.query.model.UserSearchParameters;
+import nu.marginalia.search.model.UserSearchParameters;
 import nu.marginalia.search.svc.SearchQueryIndexService;
 import nu.marginalia.search.svc.SearchUnitConversionService;
 import org.apache.logging.log4j.util.Strings;
@@ -37,58 +37,71 @@ public class SearchOperator {
 
     private final AssistantClient assistantClient;
     private final DbDomainQueries domainQueries;
-    private final QueryFactory queryFactory;
-
+    private final QueryClient queryClient;
     private final SearchQueryIndexService searchQueryService;
+    private final SearchQueryParamFactory paramFactory;
     private final SearchUnitConversionService searchUnitConversionService;
 
 
     @Inject
     public SearchOperator(AssistantClient assistantClient,
                           DbDomainQueries domainQueries,
-                          QueryFactory queryFactory,
+                          QueryClient queryClient,
                           SearchQueryIndexService searchQueryService,
-                          SearchUnitConversionService searchUnitConversionService) {
+                          SearchQueryParamFactory paramFactory,
+                          SearchUnitConversionService searchUnitConversionService)
+    {
 
         this.assistantClient = assistantClient;
         this.domainQueries = domainQueries;
-        this.queryFactory = queryFactory;
+        this.queryClient = queryClient;
 
         this.searchQueryService = searchQueryService;
+        this.paramFactory = paramFactory;
         this.searchUnitConversionService = searchUnitConversionService;
     }
 
     public List<UrlDetails> doApiSearch(Context ctx,
                                         UserSearchParameters params) {
 
+        // TODO: This shouldn't route through search-service!
+        var queryParams = paramFactory.forRegularSearch(params);
+        var queryResponse = queryClient.search(ctx, queryParams);
 
-        SearchQuery processedQuery = queryFactory.createQuery(params);
+        logger.info(queryMarker, "Human terms (API): {}", Strings.join(queryResponse.searchTermsHuman(), ','));
 
-        logger.info(queryMarker, "Human terms (API): {}", Strings.join(processedQuery.searchTermsHuman, ','));
-
-        return searchQueryService.executeQuery(ctx, processedQuery.specs);
+        return searchQueryService.getResultsFromQuery(queryResponse);
     }
 
-    public DecoratedSearchResults doSearch(Context ctx, UserSearchParameters params) {
+    public List<UrlDetails> doSiteSearch(Context ctx,
+                                        String domain) {
 
-        Future<String> eval = searchUnitConversionService.tryEval(ctx, params.humanQuery());
-        SearchQuery processedQuery = queryFactory.createQuery(params);
+        var queryParams = paramFactory.forSiteSearch(domain);
+        var queryResponse = queryClient.search(ctx, queryParams);
 
-        logger.info(queryMarker, "Human terms: {}", Strings.join(processedQuery.searchTermsHuman, ','));
+        return searchQueryService.getResultsFromQuery(queryResponse);
+    }
 
-        List<UrlDetails> queryResults = searchQueryService.executeQuery(ctx, processedQuery.specs);
+    public DecoratedSearchResults doSearch(Context ctx, UserSearchParameters userParams) {
 
+        Future<String> eval = searchUnitConversionService.tryEval(ctx, userParams.humanQuery());
+        var queryParams = paramFactory.forRegularSearch(userParams);
+        var queryResponse = queryClient.search(ctx, queryParams);
+
+        List<UrlDetails> queryResults = searchQueryService.getResultsFromQuery(queryResponse);
+
+        logger.info(queryMarker, "Human terms: {}", Strings.join(queryResponse.searchTermsHuman(), ','));
         logger.info(queryMarker, "Search Result Count: {}", queryResults.size());
 
         String evalResult = getFutureOrDefault(eval, "");
 
         return DecoratedSearchResults.builder()
-                .params(params)
-                .problems(getProblems(ctx, evalResult, queryResults, processedQuery))
+                .params(userParams)
+                .problems(getProblems(ctx, evalResult, queryResults, queryResponse))
                 .evalResult(evalResult)
                 .results(queryResults)
-                .focusDomain(processedQuery.domain)
-                .focusDomainId(getDomainId(processedQuery.domain))
+                .focusDomain(queryResponse.domain())
+                .focusDomainId(getDomainId(queryResponse.domain()))
                 .build();
     }
 
@@ -113,20 +126,20 @@ public class SearchOperator {
         return domainQueries.tryGetDomainId(new EdgeDomain(domain)).orElse(-1);
     }
 
-    private List<String> getProblems(Context ctx, String evalResult, List<UrlDetails> queryResults, SearchQuery processedQuery) {
-        final List<String> problems = new ArrayList<>(processedQuery.problems);
-        boolean siteSearch = processedQuery.domain != null;
+    private List<String> getProblems(Context ctx, String evalResult, List<UrlDetails> queryResults, QueryResponse response) {
+        final List<String> problems = new ArrayList<>(response.problems());
+        boolean siteSearch = response.domain() != null;
 
         if (!siteSearch) {
             if (queryResults.size() <= 5 && null == evalResult) {
-                spellCheckTerms(ctx, processedQuery).forEach(problems::add);
+                spellCheckTerms(ctx, response).forEach(problems::add);
             }
 
             if (queryResults.size() <= 5) {
                 problems.add("Try rephrasing the query, changing the word order or using synonyms to get different results. <a href=\"https://memex.marginalia.nu/projects/edge/search-tips.gmi\">Tips</a>.");
             }
 
-            Set<String> representativeKeywords = processedQuery.getAllKeywords();
+            Set<String> representativeKeywords = response.getAllKeywords();
             if (representativeKeywords.size()>1 && (representativeKeywords.contains("definition") || representativeKeywords.contains("define") || representativeKeywords.contains("meaning")))
             {
                 problems.add("Tip: Try using a query that looks like <tt>define:word</tt> if you want a dictionary definition");
@@ -137,8 +150,8 @@ public class SearchOperator {
     }
 
 
-    private Iterable<String> spellCheckTerms(Context ctx, SearchQuery disjointedQuery) {
-        return Observable.fromIterable(disjointedQuery.searchTermsHuman)
+    private Iterable<String> spellCheckTerms(Context ctx, QueryResponse response) {
+        return Observable.fromIterable(response.searchTermsHuman())
                 .subscribeOn(Schedulers.io())
                 .flatMap(term -> assistantClient.spellCheck(ctx, term)
                         .onErrorReturn(e -> Collections.emptyList())

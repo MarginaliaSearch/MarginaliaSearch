@@ -1,14 +1,15 @@
-package nu.marginalia.search.query;
+package nu.marginalia.query.svc;
 
 import nu.marginalia.WmsaHome;
+import nu.marginalia.index.client.model.query.SearchSetIdentifier;
+import nu.marginalia.index.client.model.query.SearchSpecification;
+import nu.marginalia.index.query.limit.QueryLimits;
+import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.index.query.limit.SpecificationLimitType;
 import nu.marginalia.language.EnglishDictionary;
-import nu.marginalia.index.client.model.query.SearchSpecification;
 import nu.marginalia.ngrams.NGramBloomFilter;
+import nu.marginalia.query.model.QueryParams;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
-import nu.marginalia.search.command.SearchJsParameter;
-import nu.marginalia.search.model.SearchProfile;
-import nu.marginalia.search.query.model.UserSearchParameters;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -30,15 +31,24 @@ public class QueryFactoryTest {
         queryFactory = new QueryFactory(lm,
                 tfd,
                 new EnglishDictionary(tfd),
-                new NGramBloomFilter(lm),
-                null
+                new NGramBloomFilter(lm)
         );
     }
 
     public SearchSpecification parseAndGetSpecs(String query) {
         return queryFactory.createQuery(
-                new UserSearchParameters(query, SearchProfile.CORPO, SearchJsParameter.DEFAULT)
-        ).specs;
+                new QueryParams(query, null,
+                        List.of(),
+                        List.of(),
+                        List.of(),
+                        List.of(),
+                        SpecificationLimit.none(),
+                        SpecificationLimit.none(),
+                        SpecificationLimit.none(),
+                        SpecificationLimit.none(),
+                        null,
+                        new QueryLimits(100, 100, 100, 100),
+                        SearchSetIdentifier.BLOGS)).specs;
     }
 
     @Test

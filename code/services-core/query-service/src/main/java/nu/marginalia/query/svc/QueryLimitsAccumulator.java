@@ -1,10 +1,10 @@
-package nu.marginalia.search.query;
+package nu.marginalia.query.svc;
 
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
+import nu.marginalia.query.model.QueryParams;
 import nu.marginalia.query_parser.token.Token;
 import nu.marginalia.query_parser.token.TokenVisitor;
-import nu.marginalia.search.model.SearchProfile;
 
 public class QueryLimitsAccumulator implements TokenVisitor {
     public SpecificationLimit qualityLimit;
@@ -14,11 +14,11 @@ public class QueryLimitsAccumulator implements TokenVisitor {
 
     public QueryStrategy queryStrategy = QueryStrategy.AUTO;
 
-    public QueryLimitsAccumulator(SearchProfile profile) {
-        qualityLimit = profile.getQualityLimit();
-        year = profile.getYearLimit();
-        size = profile.getSizeLimit();
-        rank = SpecificationLimit.none();
+    public QueryLimitsAccumulator(QueryParams params) {
+        qualityLimit = params.quality();
+        year = params.year();
+        size = params.size();
+        rank = params.rank();
     }
 
     private SpecificationLimit parseSpecificationLimit(String str) {
@@ -89,7 +89,4 @@ public class QueryLimitsAccumulator implements TokenVisitor {
 
     @Override
     public void onAdviceTerm(Token token) {}
-
-    @Override
-    public void onNearTerm(Token token) {}
 }

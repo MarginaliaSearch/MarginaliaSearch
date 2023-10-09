@@ -12,6 +12,8 @@ import nu.marginalia.index.client.model.results.SearchResultSet;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.outbox.MqOutbox;
+import nu.marginalia.query.model.QueryParams;
+import nu.marginalia.query.model.QueryResponse;
 import nu.marginalia.service.descriptor.ServiceDescriptors;
 import nu.marginalia.service.id.ServiceId;
 import org.slf4j.Logger;
@@ -24,6 +26,7 @@ import java.util.UUID;
 public class QueryClient extends AbstractDynamicClient {
 
     private static final Summary wmsa_search_index_api_delegate_time = Summary.build().name("wmsa_search_index_api_delegate_time").help("-").register();
+    private static final Summary wmsa_search_index_api_search_time = Summary.build().name("wmsa_search_index_api_search_time").help("-").register();
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -47,6 +50,12 @@ public class QueryClient extends AbstractDynamicClient {
     public SearchResultSet delegate(Context ctx, SearchSpecification specs) {
         return wmsa_search_index_api_delegate_time.time(
                 () -> this.postGet(ctx, "/delegate/", specs, SearchResultSet.class).blockingFirst()
+        );
+    }
+    @CheckReturnValue
+    public QueryResponse search(Context ctx, QueryParams params) {
+        return wmsa_search_index_api_search_time.time(
+                () -> this.postGet(ctx, "/search/", params, QueryResponse.class).blockingFirst()
         );
     }
     public MqOutbox outbox() {

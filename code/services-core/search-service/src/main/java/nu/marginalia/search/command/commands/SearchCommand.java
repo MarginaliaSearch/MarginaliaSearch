@@ -8,7 +8,7 @@ import nu.marginalia.search.command.SearchCommandInterface;
 import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.search.model.DecoratedSearchResults;
 import nu.marginalia.search.model.UrlDetails;
-import nu.marginalia.search.query.model.UserSearchParameters;
+import nu.marginalia.search.model.UserSearchParameters;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 

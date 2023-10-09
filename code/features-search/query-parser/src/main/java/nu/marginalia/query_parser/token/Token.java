@@ -36,7 +36,6 @@ public class Token {
             case EXCLUDE_TERM: visitor.onExcludeTerm(this); break;
             case PRIORTY_TERM: visitor.onPriorityTerm(this); break;
             case ADVICE_TERM: visitor.onAdviceTerm(this); break;
-            case NEAR_TERM: visitor.onNearTerm(this); break;
             case LITERAL_TERM: visitor.onLiteralTerm(this); break;
 
             case YEAR_TERM: visitor.onYearTerm(this); break;

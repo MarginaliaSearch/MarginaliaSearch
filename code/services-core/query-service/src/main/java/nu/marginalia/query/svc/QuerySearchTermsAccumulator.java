@@ -1,10 +1,10 @@
-package nu.marginalia.search.query;
+package nu.marginalia.query.svc;
 
 import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.language.WordPatterns;
+import nu.marginalia.query.model.QueryParams;
 import nu.marginalia.query_parser.token.Token;
 import nu.marginalia.query_parser.token.TokenVisitor;
-import nu.marginalia.search.model.SearchProfile;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,16 +18,13 @@ public class QuerySearchTermsAccumulator implements TokenVisitor {
     public List<String> searchTermsPriority = new ArrayList<>();
     public List<List<String>> searchTermCoherences = new ArrayList<>();
 
-    public String near;
     public String domain;
 
     public SearchSubquery createSubquery() {
         return new SearchSubquery(searchTermsInclude, searchTermsExclude, searchTermsAdvice, searchTermsPriority, searchTermCoherences);
     }
 
-    public QuerySearchTermsAccumulator(SearchProfile profile, List<Token> parts) {
-        near = profile.getNearDomain();
-
+    public QuerySearchTermsAccumulator(List<Token> parts) {
         for (Token t : parts) {
             t.visit(this);
         }
@@ -98,11 +95,6 @@ public class QuerySearchTermsAccumulator implements TokenVisitor {
         if (token.str.toLowerCase().startsWith("site:")) {
             domain = token.str.substring("site:".length());
         }
-    }
-
-    @Override
-    public void onNearTerm(Token token) {
-        near = token.str;
     }
 
     @Override

@@ -6,8 +6,6 @@ public interface TokenVisitor {
     void onExcludeTerm(Token token);
     void onPriorityTerm(Token token);
     void onAdviceTerm(Token token);
-    void onNearTerm(Token token);
-
     void onYearTerm(Token token);
     void onSizeTerm(Token token);
     void onRankTerm(Token token);

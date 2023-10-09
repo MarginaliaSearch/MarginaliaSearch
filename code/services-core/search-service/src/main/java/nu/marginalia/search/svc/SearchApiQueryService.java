@@ -14,7 +14,7 @@ import nu.marginalia.search.client.model.ApiSearchResults;
 import nu.marginalia.search.model.SearchProfile;
 import nu.marginalia.client.Context;
 import nu.marginalia.search.command.SearchJsParameter;
-import nu.marginalia.search.query.model.UserSearchParameters;
+import nu.marginalia.search.model.UserSearchParameters;
 import spark.Request;
 import spark.Response;
 

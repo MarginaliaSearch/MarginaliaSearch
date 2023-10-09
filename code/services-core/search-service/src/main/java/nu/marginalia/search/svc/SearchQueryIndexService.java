@@ -5,6 +5,8 @@ import com.google.inject.Singleton;
 import nu.marginalia.index.client.model.query.SearchSpecification;
 import nu.marginalia.index.client.model.results.DecoratedSearchResultItem;
 import nu.marginalia.query.client.QueryClient;
+import nu.marginalia.query.model.QueryParams;
+import nu.marginalia.query.model.QueryResponse;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.results.SearchResultDecorator;
 import nu.marginalia.search.results.UrlDeduplicator;
@@ -15,7 +17,6 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
 import java.util.*;
-import java.util.regex.Pattern;
 
 @Singleton
 public class SearchQueryIndexService {
@@ -40,12 +41,9 @@ public class SearchQueryIndexService {
 
     }
 
-    public List<UrlDetails> executeQuery(Context ctx, SearchSpecification specs) {
-        // Send the query
-        final var queryResponse = queryClient.delegate(ctx, specs);
-
+    public List<UrlDetails> getResultsFromQuery(QueryResponse queryResponse) {
         // Remove duplicates and other chaff
-        final var results = limitAndDeduplicateResults(specs, queryResponse.results);
+        final var results = limitAndDeduplicateResults(queryResponse.specs(), queryResponse.results());
 
         // Update the query count (this is what you see on the front page)
         searchVisitorCount.registerQuery();
