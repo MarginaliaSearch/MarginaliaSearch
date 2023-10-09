@@ -79,6 +79,8 @@ public class ApiService extends Service {
 
         var license = licenseService.getLicense(request.params("key"));
 
+        response.type("application/json");
+
         var cachedResponse = responseCache.getResults(license, args[0], request.queryString());
         if (cachedResponse.isPresent()) {
             return cachedResponse.get();
@@ -90,7 +92,6 @@ public class ApiService extends Service {
         // We set content type late because in the case of error, we don't want to tell the client
         // that the error message  is JSON when it is plain text.
 
-        response.type("application/json");
 
         return result;
     }

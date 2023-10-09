@@ -58,7 +58,7 @@ public class QueryService extends Service {
                 query.specs,
                 rsp.results,
                 query.searchTermsHuman,
-                List.of(),
+                List.of(), // no problems
                 query.domain
         );
     }
