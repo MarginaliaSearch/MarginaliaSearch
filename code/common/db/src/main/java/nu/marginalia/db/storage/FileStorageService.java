@@ -1,5 +1,6 @@
 package nu.marginalia.db.storage;
 
+import com.google.inject.name.Named;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import nu.marginalia.db.storage.model.*;
@@ -25,24 +26,10 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class FileStorageService {
     private final HikariDataSource dataSource;
+    private final int node;
     private final Logger logger = LoggerFactory.getLogger(FileStorageService.class);
 
     private static final DateTimeFormatter dirNameDatePattern = DateTimeFormatter.ofPattern("__uu-MM-dd'T'HH_mm_ss.SSS"); // filesystem safe ISO8601
-
-    @Inject
-    public FileStorageService(HikariDataSource dataSource) {
-        this.dataSource = dataSource;
-
-        for (var type : FileStorageType.values()) {
-            String overrideProperty = System.getProperty(type.overrideName());
-
-            if (overrideProperty == null || overrideProperty.isBlank())
-                continue;
-
-            logger.info("FileStorage override present: {} -> {}", type,
-                    FileStorage.createOverrideStorage(type, overrideProperty).asPath());
-        }
-    }
 
     public Optional<FileStorage> findFileStorageToDelete() {
         try (var conn = dataSource.getConnection();
@@ -57,6 +44,22 @@ public class FileStorageService {
             return Optional.empty();
         }
         return Optional.empty();
+    }
+
+    @Inject
+    public FileStorageService(HikariDataSource dataSource, @Named("wmsa-system-node") Integer node) {
+        this.dataSource = dataSource;
+        this.node = node;
+
+        for (var type : FileStorageType.values()) {
+            String overrideProperty = System.getProperty(type.overrideName());
+
+            if (overrideProperty == null || overrideProperty.isBlank())
+                continue;
+
+            logger.info("FileStorage override present: {} -> {}", type,
+                    FileStorage.createOverrideStorage(type, overrideProperty).asPath());
+        }
     }
 
     /** @return the storage base with the given id, or null if it does not exist */
@@ -173,9 +176,10 @@ public class FileStorageService {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
                      SELECT ID, NAME, PATH, TYPE, PERMIT_TEMP
-                     FROM FILE_STORAGE_BASE WHERE TYPE = ?
+                     FROM FILE_STORAGE_BASE WHERE TYPE = ? AND NODE = ?
                      """)) {
             stmt.setString(1, type.name());
+            stmt.setInt(2, node);
             try (var rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return new FileStorageBase(
@@ -199,13 +203,14 @@ public class FileStorageService {
 
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                     INSERT INTO FILE_STORAGE_BASE(NAME, PATH, TYPE, PERMIT_TEMP)
-                     VALUES (?, ?, ?, ?)
+                     INSERT INTO FILE_STORAGE_BASE(NAME, PATH, TYPE, PERMIT_TEMP, NODE)
+                     VALUES (?, ?, ?, ?, ?)
                      """)) {
             stmt.setString(1, name);
             stmt.setString(2, path.toString());
             stmt.setString(3, type.name());
             stmt.setBoolean(4, permitTemp);
+            stmt.setInt(5, node);
 
             int update = stmt.executeUpdate();
             if (update < 0) {
@@ -360,9 +365,10 @@ public class FileStorageService {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
                      SELECT PATH, DESCRIPTION, ID, BASE_ID, CREATE_DATE
-                     FROM FILE_STORAGE_VIEW WHERE TYPE = ?
+                     FROM FILE_STORAGE_VIEW WHERE TYPE = ? AND NODE = ?
                      """)) {
             stmt.setString(1, type.name());
+            stmt.setInt(2, node);
 
             long storageId;
             long baseId;

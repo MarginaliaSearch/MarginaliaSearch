@@ -117,6 +117,7 @@ public class ProcessService {
      * along with WMSA_HOME, but it has special logic */
     private final List<String> propagatedEnvironmentVariables = List.of(
             "JAVA_HOME",
+            "WMSA_SERVICE_NODE",
             "CONVERTER_PROCESS_OPTS",
             "LOADER_PROCESS_OPTS",
             "INDEX_CONSTRUCTION_PROCESS_OPTS",

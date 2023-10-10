@@ -3,6 +3,7 @@ package nu.marginalia.index;
 import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
+import nu.marginalia.ProcessConfigurationModule;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.db.storage.model.FileStorage;
 import nu.marginalia.db.storage.model.FileStorageType;
@@ -49,6 +50,7 @@ public class IndexConstructorMain {
 
         var main = Guice.createInjector(
                 new IndexConstructorModule(),
+                new ProcessConfigurationModule("index-constructor"),
                 new DatabaseModule())
                 .getInstance(IndexConstructorMain.class);
 

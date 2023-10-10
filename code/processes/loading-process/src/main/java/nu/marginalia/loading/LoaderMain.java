@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import lombok.Getter;
 import lombok.SneakyThrows;
+import nu.marginalia.ProcessConfigurationModule;
 import nu.marginalia.db.storage.FileStorageService;
 import nu.marginalia.linkdb.LinkdbWriter;
 import nu.marginalia.loading.documents.DocumentLoaderService;
@@ -54,6 +55,7 @@ public class LoaderMain {
         new org.mariadb.jdbc.Driver();
 
         Injector injector = Guice.createInjector(
+                new ProcessConfigurationModule("loader"),
                 new LoaderModule(),
                 new DatabaseModule()
         );

@@ -6,7 +6,7 @@ import com.google.inject.Injector;
 import nu.marginalia.service.MainClass;
 import nu.marginalia.service.SearchServiceDescriptors;
 import nu.marginalia.service.id.ServiceId;
-import nu.marginalia.service.module.ConfigurationModule;
+import nu.marginalia.service.module.ServiceConfigurationModule;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.service.server.Initialization;
 import spark.Spark;
@@ -25,7 +25,7 @@ public class ExplorerMain extends MainClass {
         Spark.staticFileLocation("/static/explore/");
 
         Injector injector = Guice.createInjector(
-                new ConfigurationModule(SearchServiceDescriptors.descriptors, ServiceId.Explorer),
+                new ServiceConfigurationModule(SearchServiceDescriptors.descriptors, ServiceId.Explorer),
                 new DatabaseModule()
         );
 

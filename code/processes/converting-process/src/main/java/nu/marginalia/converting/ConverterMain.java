@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import nu.marginalia.ProcessConfigurationModule;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.converting.sideload.SideloadSourceFactory;
@@ -25,7 +26,6 @@ import nu.marginalia.converting.processor.DomainProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -49,6 +49,7 @@ public class ConverterMain {
     public static void main(String... args) throws Exception {
         Injector injector = Guice.createInjector(
                 new ConverterModule(),
+                new ProcessConfigurationModule("converter"),
                 new DatabaseModule()
         );
 

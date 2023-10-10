@@ -11,13 +11,16 @@ import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
@@ -48,6 +51,29 @@ public class FileStorageServiceTest {
         config.setPassword("wmsa");
 
         dataSource = new HikariDataSource(config);
+
+        // apply migrations
+
+        List<String> migrations = List.of("db/migration/V23_11_0_000__file_storage_node.sql");
+        for (String migration : migrations) {
+            try (var resource = Objects.requireNonNull(ClassLoader.getSystemResourceAsStream(migration),
+                    "Could not load migration script " + migration);
+                 var conn = dataSource.getConnection();
+                 var stmt = conn.createStatement()
+            ) {
+                String script = new String(resource.readAllBytes());
+                String[] cmds = script.split("\\s*;\\s*");
+                for (String cmd : cmds) {
+                    if (cmd.isBlank())
+                        continue;
+                    System.out.println(cmd);
+                    stmt.executeUpdate(cmd);
+                }
+            }
+            catch (IOException|SQLException ex) {
+
+            }
+        }
     }
 
 
@@ -58,7 +84,7 @@ public class FileStorageServiceTest {
             System.setProperty(type.overrideName(), "");
         }
 
-        fileStorageService = new FileStorageService(dataSource);
+        fileStorageService = new FileStorageService(dataSource, 0);
     }
 
     @AfterEach
@@ -101,14 +127,14 @@ public class FileStorageServiceTest {
     public void testOverride() throws SQLException {
         System.setProperty(FileStorageType.BACKUP.overrideName(), "/tmp");
         System.out.println(FileStorageType.BACKUP.overrideName());
-        fileStorageService = new FileStorageService(dataSource);
+        fileStorageService = new FileStorageService(dataSource, 0);
         Assertions.assertEquals(Path.of("/tmp"), fileStorageService.getStorageByType(FileStorageType.BACKUP).asPath());
     }
     @Test
     public void testCreateBase() throws SQLException, FileNotFoundException {
         String name = "test-" + UUID.randomUUID();
 
-        var storage = new FileStorageService(dataSource);
+        var storage = new FileStorageService(dataSource, 0);
         var base = storage.createStorageBase(name, createTempDir(), FileStorageBaseType.SLOW, false);
 
         Assertions.assertEquals(name, base.name());
@@ -119,7 +145,7 @@ public class FileStorageServiceTest {
     public void testAllocateTempInNonPermitted() throws SQLException, FileNotFoundException {
         String name = "test-" + UUID.randomUUID();
 
-        var storage = new FileStorageService(dataSource);
+        var storage = new FileStorageService(dataSource, 0);
 
         var base = storage.createStorageBase(name, createTempDir(), FileStorageBaseType.SLOW, false);
 
@@ -138,7 +164,7 @@ public class FileStorageServiceTest {
     public void testAllocatePermanentInNonPermitted() throws SQLException, IOException {
         String name = "test-" + UUID.randomUUID();
 
-        var storage = new FileStorageService(dataSource);
+        var storage = new FileStorageService(dataSource, 0);
 
         var base = storage.createStorageBase(name, createTempDir(), FileStorageBaseType.SLOW, false);
 
@@ -153,7 +179,7 @@ public class FileStorageServiceTest {
     public void testAllocateTempInPermitted() throws IOException, SQLException {
         String name = "test-" + UUID.randomUUID();
 
-        var storage = new FileStorageService(dataSource);
+        var storage = new FileStorageService(dataSource, 0);
 
         var base = storage.createStorageBase(name, createTempDir(), FileStorageBaseType.SLOW, true);
         var fileStorage = storage.allocateTemporaryStorage(base, FileStorageType.CRAWL_DATA, "xyz", "thisShouldSucceed");

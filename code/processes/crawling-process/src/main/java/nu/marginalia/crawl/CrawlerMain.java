@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import nu.marginalia.ProcessConfigurationModule;
 import nu.marginalia.UserAgent;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
@@ -99,6 +100,7 @@ public class CrawlerMain {
 
         Injector injector = Guice.createInjector(
                 new CrawlerModule(),
+                new ProcessConfigurationModule("crawler"),
                 new DatabaseModule()
         );
         var crawler = injector.getInstance(CrawlerMain.class);

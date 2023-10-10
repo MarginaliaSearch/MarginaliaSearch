@@ -1,17 +1,18 @@
 package nu.marginalia.service.module;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
 import nu.marginalia.service.descriptor.ServiceDescriptors;
 import nu.marginalia.service.id.ServiceId;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public class ConfigurationModule extends AbstractModule {
+public class ServiceConfigurationModule extends AbstractModule {
     private final ServiceDescriptors descriptors;
     private final ServiceId id;
 
-    public ConfigurationModule(ServiceDescriptors descriptors, ServiceId id) {
+    public ServiceConfigurationModule(ServiceDescriptors descriptors, ServiceId id) {
         this.descriptors = descriptors;
         this.id = id;
     }
@@ -19,14 +20,17 @@ public class ConfigurationModule extends AbstractModule {
     public void configure() {
         bind(ServiceDescriptors.class).toInstance(descriptors);
 
+        int node = getNode();
+
         var configObject = new ServiceConfiguration(id,
-                getNode(),
+                node,
                 getHost(),
                 getBasePort(),
                 getPrometheusPort(),
                 UUID.randomUUID()
         );
 
+        bind(Integer.class).annotatedWith(Names.named("wmsa-system-node")).toInstance(node);
         bind(ServiceConfiguration.class).toInstance(configObject);
     }
 

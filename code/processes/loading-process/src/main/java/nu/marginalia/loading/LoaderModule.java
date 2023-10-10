@@ -30,7 +30,6 @@ public class LoaderModule extends AbstractModule {
 
     public void configure() {
         bind(ServiceDescriptors.class).toInstance(SearchServiceDescriptors.descriptors);
-        bind(ProcessConfiguration.class).toInstance(new ProcessConfiguration("loader", 0, UUID.randomUUID()));
 
         bind(Gson.class).toProvider(this::createGson);
         bind(Path.class).annotatedWith(Names.named("local-index-path")).toInstance(Path.of(System.getProperty("local-index-path", "/vol")));
