@@ -10,6 +10,8 @@ import nu.marginalia.control.node.model.*;
 import nu.marginalia.control.sys.model.EventLogEntry;
 import nu.marginalia.control.sys.svc.EventLogService;
 import nu.marginalia.control.sys.svc.HeartbeatService;
+import nu.marginalia.nodecfg.NodeConfigurationService;
+import nu.marginalia.nodecfg.model.NodeConfiguration;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.executor.client.ExecutorClient;
 import nu.marginalia.executor.model.crawl.RecrawlParameters;
@@ -37,6 +39,7 @@ public class ControlNodeService {
     private final ExecutorClient executorClient;
     private final HikariDataSource dataSource;
     private final ServiceMonitors monitors;
+    private final NodeConfigurationService nodeConfigurationService;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -48,7 +51,7 @@ public class ControlNodeService {
             HeartbeatService heartbeatService,
             ExecutorClient executorClient,
             HikariDataSource dataSource,
-            ServiceMonitors monitors)
+            ServiceMonitors monitors, NodeConfigurationService nodeConfigurationService)
     {
         this.fileStorageService = fileStorageService;
         this.rendererFactory = rendererFactory;
@@ -57,6 +60,7 @@ public class ControlNodeService {
         this.executorClient = executorClient;
         this.dataSource = dataSource;
         this.monitors = monitors;
+        this.nodeConfigurationService = nodeConfigurationService;
     }
 
     public void register() throws IOException {
@@ -82,7 +86,9 @@ public class ControlNodeService {
         Spark.post("/public/nodes/:id/storage/new-specs", this::createNewSpecsAction);
 
         Spark.get("/public/nodes/:id/storage/:view", this::nodeStorageListModel, storageListRenderer::render);
+
         Spark.get("/public/nodes/:id/configuration", this::nodeConfigModel, configRenderer::render);
+        Spark.post("/public/nodes/:id/configuration", this::updateConfigModel, configRenderer::render);
 
         Spark.post("/public/nodes/:id/storage/recrawl-auto", this::triggerAutoRecrawl);
         Spark.post("/public/nodes/:id/storage/process-auto", this::triggerAutoProcess);
@@ -284,11 +290,45 @@ public class ControlNodeService {
                 "storage", storage);
     }
 
-    private Object nodeConfigModel(Request request, Response response) {
+    private Object nodeConfigModel(Request request, Response response) throws SQLException {
         int nodeId = Integer.parseInt(request.params("id"));
+
+        Map<String, Path> storage = new HashMap<>();
+
+        for (var baseType : List.of(FileStorageBaseType.CURRENT, FileStorageBaseType.WORK, FileStorageBaseType.BACKUP, FileStorageBaseType.STORAGE)) {
+            Optional.ofNullable(fileStorageService.getStorageBase(baseType, nodeId))
+                    .map(FileStorageBase::asPath)
+                    .ifPresent(path -> storage.put(baseType.toString().toLowerCase(), path));
+        }
+
         return Map.of(
-                "node", new IndexNode(nodeId)
-        );
+                "node", new IndexNode(nodeId),
+                "config", Objects.requireNonNull(nodeConfigurationService.get(nodeId), "Failed to fetch configuration"),
+                "storage", storage);
+    }
+
+    private Object updateConfigModel(Request request, Response response) throws SQLException {
+        int nodeId = Integer.parseInt(request.params("id"));
+        String act = request.queryParams("act");
+
+        if ("config".equals(act)) {
+            var newConfig = new NodeConfiguration(
+                    nodeId,
+                    request.queryParams("description"),
+                    "on".equalsIgnoreCase(request.queryParams("acceptQueries")),
+                    "on".equalsIgnoreCase(request.queryParams("disabled"))
+            );
+
+            nodeConfigurationService.save(newConfig);
+        }
+        else if ("storage".equals(act)) {
+            throw new UnsupportedOperationException();
+        }
+        else {
+            Spark.halt(400);
+        }
+
+        return nodeConfigModel(request, response);
     }
 
     private Object nodeOverviewModel(Request request, Response response) throws SQLException {

@@ -1,5 +1,6 @@
 package nu.marginalia.nodecfg;
 
+import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.nodecfg.model.NodeConfiguration;
 
@@ -11,6 +12,7 @@ public class NodeConfigurationService {
 
     private final HikariDataSource dataSource;
 
+    @Inject
     public NodeConfigurationService(HikariDataSource dataSource) {
         this.dataSource = dataSource;
     }
@@ -48,7 +50,9 @@ public class NodeConfigurationService {
                      FROM NODE_CONFIGURATION
                      """)) {
             var rs = qs.executeQuery();
+
             List<NodeConfiguration> ret = new ArrayList<>();
+
             while (rs.next()) {
                 ret.add(new NodeConfiguration(
                         rs.getInt("ID"),
