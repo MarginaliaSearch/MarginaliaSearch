@@ -21,6 +21,7 @@
 				<li class="nav-item dropdown">
 					<a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button"  aria-expanded="false">System</a>
 					<ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/nodes" title="View and configure index nodes">Nodes</a></li>
                         <li><a class="dropdown-item" href="/events" title="View the event log">Events</a></li>
 						<li><a class="dropdown-item" href="/message-queue" title="View or manipulate the system message queue">Message Queue</a></li>
 					</ul>

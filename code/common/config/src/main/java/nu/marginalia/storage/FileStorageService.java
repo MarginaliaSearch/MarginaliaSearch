@@ -215,10 +215,10 @@ public class FileStorageService {
         return null;
     }
     public FileStorageBase createStorageBase(String name, Path path, FileStorageBaseType type) throws SQLException, FileNotFoundException {
+        return createStorageBase(name, path, node, type);
+    }
 
-        if (!Files.exists(path)) {
-            throw new FileNotFoundException("Storage base path does not exist: " + path);
-        }
+    public FileStorageBase createStorageBase(String name, Path path, int node, FileStorageBaseType type) throws SQLException, FileNotFoundException {
 
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
@@ -238,7 +238,6 @@ public class FileStorageService {
 
         return getStorageBase(type);
     }
-
     @SneakyThrows
     private Path allocateDirectory(Path basePath, String prefix) throws IOException {
         LocalDateTime now = LocalDateTime.now();

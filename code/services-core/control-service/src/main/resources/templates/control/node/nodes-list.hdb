@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+{{> control/partials/head-includes }}
+<head><title>Control Service</title></head>
+<body>
+{{> control/partials/nav}}
+
+<div class="container">
+    <h1 class="my-5">Index Nodes</h1>
+
+    {{#unless nodes}}
+        It appears no nodes have been configured!  This is necessary before any index or executor services
+        can be started.  At least a single node needs to be configured to serve search queries.
+    {{/unless}}
+
+    {{#if nodes}}
+    <table class="table">
+        <tr>
+            <th>Node ID</th>
+            <th>Description</th>
+            <th>Accept Queries</th>
+        </tr>
+        {{#each nodes}}
+        <tr>
+            <td><a href="/nodes/{{node}}">node-{{node}}</a></td>
+            <td>{{description}}</td>
+            <td>{{acceptQueries}}</td>
+        </tr>
+        {{/each}}
+    {{/if}}
+    </table>
+
+
+    <div class="m-3 p-3 border">
+        <h2>Add Node</h2>
+        <form method="post">
+            <div class="mb-3">
+                <label for="name" class="form-label">ID</label>
+                <input class="form-control" type="text" name="id" id="id" value="{{nextNodeId}}" disabled aria-disabled="true" />
+            </div>
+
+            <div class="mb-3">
+                <label for="name" class="form-label">Description</label>
+                <input class="form-control" type="text" name="description" id="description" />
+            </div>
+
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" role="switch" name="acceptQueries">
+                <label class="form-check-label" for="acceptQueries">Accept queries</label>
+
+                <div class="form-text">Sets whether queries will be routed to this node.  This can be modified later.</div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Create</button>
+        </form>
+    </div>
+    </table>
+</div>
+
+</body>
+{{> control/partials/foot-includes }}
+</html>

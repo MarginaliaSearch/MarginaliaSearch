@@ -25,6 +25,7 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -64,6 +65,7 @@ public class ControlNodeService {
     }
 
     public void register() throws IOException {
+        var nodeListRenderer = rendererFactory.renderer("control/node/nodes-list");
         var overviewRenderer = rendererFactory.renderer("control/node/node-overview");
         var actionsRenderer = rendererFactory.renderer("control/node/node-actions");
         var actorsRenderer = rendererFactory.renderer("control/node/node-actors");
@@ -74,6 +76,8 @@ public class ControlNodeService {
 
         var newSpecsFormRenderer = rendererFactory.renderer("control/node/node-new-specs-form");
 
+        Spark.get("/public/nodes", this::nodeListModel, nodeListRenderer::render);
+        Spark.post("/public/nodes", this::createNode);
         Spark.get("/public/nodes/:id", this::nodeOverviewModel, overviewRenderer::render);
         Spark.get("/public/nodes/:id/", this::nodeOverviewModel, overviewRenderer::render);
         Spark.get("/public/nodes/:id/actors", this::nodeActorsModel, actorsRenderer::render);
@@ -102,6 +106,27 @@ public class ControlNodeService {
 
     }
 
+    private Object createNode(Request request, Response response) throws SQLException, FileNotFoundException {
+        var newConfig = nodeConfigurationService.create(request.queryParams("description"), "on".equalsIgnoreCase(request.queryParams("acceptQueries")));
+        int id = newConfig.node();
+
+        fileStorageService.createStorageBase("Index Data", Path.of("/idx"), id, FileStorageBaseType.CURRENT);
+        fileStorageService.createStorageBase("Index Backups", Path.of("/backup"), id, FileStorageBaseType.BACKUP);
+        fileStorageService.createStorageBase("Crawl Data", Path.of("/storage"), id, FileStorageBaseType.STORAGE);
+        fileStorageService.createStorageBase("Work Area", Path.of("/work"), id, FileStorageBaseType.WORK);
+
+        return redirectToOverview(id);
+    }
+
+    private Object nodeListModel(Request request, Response response) throws SQLException {
+        var configs = nodeConfigurationService.getAll();
+
+        int nextId = configs.stream().mapToInt(NodeConfiguration::node).map(i -> i+1).max().orElse(1);
+
+        return Map.of("nodes", nodeConfigurationService.getAll(),
+                      "nextNodeId", nextId);
+    }
+
     private Object triggerCrawl(Request request, Response response) throws Exception {
         int nodeId = Integer.parseInt(request.params("id"));
 
@@ -117,10 +142,14 @@ public class ControlNodeService {
 
         return redirectToOverview(request);
     }
+    @SneakyThrows
+    public String redirectToOverview(int nodeId) {
+        return new Redirects.HtmlRedirect("/nodes/"+nodeId).render(null);
+    }
 
     @SneakyThrows
     public String redirectToOverview(Request request) {
-        return new Redirects.HtmlRedirect("/nodes/"+request.params("id")).render(null);
+        return redirectToOverview(Integer.parseInt(request.params("id")));
     }
 
     private Object createNewSpecsAction(Request request, Response response) {
