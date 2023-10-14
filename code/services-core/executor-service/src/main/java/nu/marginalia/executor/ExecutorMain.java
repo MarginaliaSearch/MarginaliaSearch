@@ -9,6 +9,7 @@ import nu.marginalia.service.id.ServiceId;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.service.module.ServiceConfigurationModule;
 import nu.marginalia.service.server.Initialization;
+import nu.marginalia.service.server.NodeStatusWatcher;
 
 public class ExecutorMain extends MainClass  {
     private final ExecutorSvc service;
@@ -26,6 +27,7 @@ public class ExecutorMain extends MainClass  {
                 new DatabaseModule(),
                 new ServiceConfigurationModule(SearchServiceDescriptors.descriptors, ServiceId.Executor)
         );
+        injector.getInstance(NodeStatusWatcher.class);
 
         injector.getInstance(ExecutorMain.class);
         injector.getInstance(Initialization.class).setReady();
