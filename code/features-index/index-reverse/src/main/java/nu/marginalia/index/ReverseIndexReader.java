@@ -37,13 +37,15 @@ public class ReverseIndexReader {
         logger.info("Switching reverse index");
 
         this.words = LongArrayFactory.mmapForReadingShared(words);
-        this.documents = LongArrayFactory.mmapForReadingShared  (documents);
+        this.documents = LongArrayFactory.mmapForReadingShared(documents);
 
         wordsBTreeReader = new BTreeReader(this.words, ReverseIndexParameters.wordsBTreeContext, 0);
         wordsDataOffset = wordsBTreeReader.getHeader().dataOffsetLongs();
 
         if (getClass().desiredAssertionStatus()) {
-            Executors.newSingleThreadExecutor().execute(this::selfTest);
+            if (Boolean.getBoolean("index-self-test")) {
+                Executors.newSingleThreadExecutor().execute(this::selfTest);
+            }
         }
     }
 
