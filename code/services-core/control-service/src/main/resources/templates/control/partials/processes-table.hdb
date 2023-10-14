@@ -1,7 +1,7 @@
 
-<h1>Processes</h1>
+<h2>Processes</h2>
 
-<table id="processes">
+<table id="processes" class="table">
     <tr>
         <th>Process ID</th>
         <th>UUID</th>
@@ -27,8 +27,8 @@
     {{/unless}}
 </table>
 
-<h1>Jobs</h1>
-<table id="jobs">
+<h2>Jobs</h2>
+<table id="jobs" class="table">
     <tr>
         <th>Process ID</th>
         <th>Status</th>

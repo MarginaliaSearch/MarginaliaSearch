@@ -14,11 +14,10 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class ServiceMonitors {
     private final HikariDataSource dataSource;
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private static final Logger logger = LoggerFactory.getLogger(ServiceMonitors.class);
 
-    private final Set<String> runningServices = new HashSet<>();
+    private final Set<ServiceNode> runningServices = new HashSet<>();
     private final Set<Runnable> callbacks = new HashSet<>();
-
 
     private final int heartbeatInterval = Integer.getInteger("mcp.heartbeat.interval", 5);
 
@@ -80,14 +79,14 @@ public class ServiceMonitors {
     private boolean updateRunningServices() {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                    SELECT SERVICE_BASE, TIMESTAMPDIFF(SECOND, HEARTBEAT_TIME, CURRENT_TIMESTAMP(6))
+                    SELECT SERVICE_NAME, TIMESTAMPDIFF(SECOND, HEARTBEAT_TIME, CURRENT_TIMESTAMP(6))
                     FROM SERVICE_HEARTBEAT
                     WHERE ALIVE=1
                     """)) {
             try (var rs = stmt.executeQuery()) {
-                Set<String> newRunningServices = new HashSet<>(10);
+                Set<ServiceNode> newRunningServices = new HashSet<>(10);
                 while (rs.next()) {
-                    String svc = rs.getString(1);
+                    ServiceNode svc = ServiceNode.parse(rs.getString(1));
                     int dtime = rs.getInt(2);
                     if (dtime < 2.5 * heartbeatInterval) {
                         newRunningServices.add(svc);
@@ -113,21 +112,37 @@ public class ServiceMonitors {
         return false;
     }
 
-    public boolean isServiceUp(ServiceId serviceId) {
+    public boolean isServiceUp(ServiceId serviceId, int node) {
         synchronized (runningServices) {
-            return runningServices.contains(serviceId.name);
+            return runningServices.contains(new ServiceNode(serviceId.name, node));
         }
     }
 
-    public List<ServiceId> getRunningServices() {
-        List<ServiceId> ret = new ArrayList<>(ServiceId.values().length);
+    public List<ServiceNode> getRunningServices() {
+        List<ServiceNode> ret = new ArrayList<>(ServiceId.values().length);
 
         synchronized (runningServices) {
-            for (var runningService : runningServices) {
-                ret.add(ServiceId.byName(runningService));
-            }
+            ret.addAll(runningServices);
         }
 
         return ret;
+    }
+
+    public record ServiceNode(String service, int node) {
+        public static ServiceNode parse(String serviceName) {
+
+            if (serviceName.contains(":")) {
+                String[] parts = serviceName.split(":", 2);
+                try {
+                    return new ServiceNode(parts[0], Integer.parseInt(parts[1]));
+                }
+                catch (NumberFormatException ex) {
+                    logger.warn("Failed to parse serviceName '" + serviceName + "'", ex);
+                    //fallthrough
+                }
+            }
+
+            return new ServiceNode(serviceName, -1);
+        }
     }
 }

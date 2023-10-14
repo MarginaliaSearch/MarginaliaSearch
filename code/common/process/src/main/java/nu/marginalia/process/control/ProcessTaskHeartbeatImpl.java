@@ -19,6 +19,8 @@ public class ProcessTaskHeartbeatImpl<T extends Enum<T>> implements AutoCloseabl
     private final Logger logger = LoggerFactory.getLogger(ProcessTaskHeartbeatImpl.class);
     private final String taskName;
     private final String taskBase;
+    private final int node;
+
     private final String instanceUUID;
     private final HikariDataSource dataSource;
 
@@ -39,6 +41,7 @@ public class ProcessTaskHeartbeatImpl<T extends Enum<T>> implements AutoCloseabl
     {
         this.taskName = configuration.processName() + "." + taskName + ":" + configuration.node();
         this.taskBase = configuration.processName() + "." + taskName;
+        this.node = configuration.node();
         this.dataSource = dataSource;
 
         this.instanceUUID = UUID.randomUUID().toString();
@@ -115,8 +118,8 @@ public class ProcessTaskHeartbeatImpl<T extends Enum<T>> implements AutoCloseabl
         try (var connection = dataSource.getConnection()) {
             try (var stmt = connection.prepareStatement(
                     """
-                        INSERT INTO TASK_HEARTBEAT (TASK_NAME, TASK_BASE, INSTANCE, SERVICE_INSTANCE, HEARTBEAT_TIME, STATUS)
-                        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP(6), 'STARTING')
+                        INSERT INTO TASK_HEARTBEAT (TASK_NAME, TASK_BASE, NODE, INSTANCE, SERVICE_INSTANCE, HEARTBEAT_TIME, STATUS)
+                        VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP(6), 'STARTING')
                         ON DUPLICATE KEY UPDATE
                             INSTANCE = ?,
                             SERVICE_INSTANCE = ?,
@@ -127,10 +130,11 @@ public class ProcessTaskHeartbeatImpl<T extends Enum<T>> implements AutoCloseabl
             {
                 stmt.setString(1, taskName);
                 stmt.setString(2, taskBase);
-                stmt.setString(3, instanceUUID);
-                stmt.setString(4, serviceInstanceUUID);
-                stmt.setString(5, instanceUUID);
-                stmt.setString(6, serviceInstanceUUID);
+                stmt.setInt(3, node);
+                stmt.setString(4, instanceUUID);
+                stmt.setString(5, serviceInstanceUUID);
+                stmt.setString(6, instanceUUID);
+                stmt.setString(7, serviceInstanceUUID);
                 stmt.executeUpdate();
             }
         }

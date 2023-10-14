@@ -1,5 +1,5 @@
-<h1>Actors</h1>
-<table id="actors">
+<h2>Actors</h2>
+<table id="actors" class="table">
     <tr>
         <th>Actor</th>
         <th>State</th>
@@ -7,12 +7,12 @@
     </tr>
     {{#each actors}}
     <tr>
-        <td title="{{actorDescription}}"><a href="/actors/{{name}}">{{name}}</a></td>
+        <td title="{{actorDescription}}">{{name}}</td>
         <td title="{{stateDescription}}">{{stateIcon}}&nbsp;{{state}}</td>
         <td>
             {{#unless terminal}}
                 <form id="toggle-{{name}}"
-                    action="/fsms/{{name}}/stop"
+                    action="fsms/{{name}}/stop"
                     method="post"
                     onsubmit="return toggleActorSwitch('{{name}}')">
                     <input
@@ -26,7 +26,7 @@
             {{/unless}}
             {{#if terminal}}
                 <form id="toggle-{{name}}"
-                    action="/fsms/{{name}}/start"
+                    action="fsms/{{name}}/start"
                     method="post"
                     onsubmit="return toggleActorSwitch('{{name}}')">
                     <input
@@ -66,4 +66,5 @@
 
         return false;
     }
+
 </script>

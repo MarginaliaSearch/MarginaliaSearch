@@ -84,8 +84,12 @@ public class CrawlSpecGenerator {
         static DomainSource fromFile(Path file) {
             return () -> {
                 var lines = Files.readAllLines(file);
-                lines.replaceAll(s -> s.trim().toLowerCase());
-                lines.removeIf(line -> line.isBlank() || line.startsWith("#"));
+                lines.replaceAll(s ->
+                        s.split("#", 2)[0]
+                         .trim()
+                         .toLowerCase()
+                );
+                lines.removeIf(String::isBlank);
                 return lines;
             };
         }

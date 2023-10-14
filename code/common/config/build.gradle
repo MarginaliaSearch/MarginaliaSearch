@@ -14,4 +14,22 @@ java {
 dependencies {
     implementation project(':code:common:service-discovery')
     implementation project(':code:common:service-client')
+    implementation project(':code:common:db')
+    implementation project(':code:common:model')
+
+    implementation libs.bundles.slf4j
+    implementation libs.bundles.mariadb
+    implementation libs.mockito
+    implementation libs.guice
+    implementation libs.gson
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+
+
+
+    testImplementation platform('org.testcontainers:testcontainers-bom:1.17.4')
+    testImplementation 'org.testcontainers:mariadb:1.17.4'
+    testImplementation 'org.testcontainers:junit-jupiter:1.17.4'
+
 }

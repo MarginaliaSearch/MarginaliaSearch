@@ -2,8 +2,8 @@ package nu.marginalia.index;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.db.storage.FileStorageService;
-import nu.marginalia.db.storage.model.FileStorageType;
+import nu.marginalia.IndexLocations;
+import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.index.forward.ForwardIndexFileNames;
 import nu.marginalia.index.forward.ForwardIndexReader;
 import nu.marginalia.index.index.SearchIndexReader;
@@ -19,9 +19,9 @@ import java.sql.SQLException;
 
 @Singleton
 public class IndexServicesFactory {
-    private final Path liveStorage;
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Path searchSetsBase;
+    private final FileStorageService fileStorageService;
+    private final Path liveStorage;
 
     @Inject
     public IndexServicesFactory(
@@ -29,13 +29,12 @@ public class IndexServicesFactory {
             FileStorageService fileStorageService
             ) throws SQLException {
 
-        liveStorage = fileStorageService.getStorageByType(FileStorageType.INDEX_LIVE).asPath();
-        searchSetsBase = fileStorageService.getStorageByType(FileStorageType.SEARCH_SETS).asPath();
-
+        this.fileStorageService = fileStorageService;
+        this.liveStorage = IndexLocations.getCurrentIndex(fileStorageService);
     }
 
     public Path getSearchSetsBase() {
-        return searchSetsBase;
+        return IndexLocations.getSearchSetsPath(fileStorageService);
     }
 
     public ReverseIndexReader getReverseIndexReader() throws IOException {

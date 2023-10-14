@@ -30,12 +30,14 @@ public class MqOutbox {
 
     public MqOutbox(MqPersistence persistence,
                     String inboxName,
+                    int inboxNode,
                     String outboxName,
+                    int outboxNode,
                     UUID instanceUUID) {
         this.persistence = persistence;
 
-        this.inboxName = inboxName;
-        this.replyInboxName = outboxName + "//" + inboxName;
+        this.inboxName = inboxName + ":" + inboxNode;
+        this.replyInboxName = String.format("%s:%d//%s:%d", outboxName, outboxNode, inboxName, inboxNode);
         this.instanceUUID = instanceUUID.toString();
 
         pollThread = new Thread(this::poll, "mq-outbox-poll-thread:" + inboxName);

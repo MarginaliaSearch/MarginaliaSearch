@@ -12,7 +12,11 @@ public class ServiceDescriptor {
         this.name = id.name;
         this.port = port;
     }
-
+    public ServiceDescriptor(ServiceId id, String host, int port) {
+        this.id = id;
+        this.name = host;
+        this.port = port;
+    }
     public String toString() {
         return name;
     }

@@ -1,0 +1,21 @@
+{{#with nodes}}
+<h2>Nodes</h2>
+<table class="table">
+    <tr>
+        <th>Node</th><th>Index</th><th>Executor</th>
+    </tr>
+    {{#each .}}
+        <tr>
+            <td>
+                <a href="/nodes/{{node.id}}">node-{{node.id}}</a>
+            </td>
+
+            {{#if indexServiceOnline}}<td>Online</td>{{/if}}
+            {{#unless indexServiceOnline}}<td class="table-danger">Offline</td>{{/unless}}
+
+            {{#if executorServiceOnline}}<td>Online</td>{{/if}}
+            {{#unless executorServiceOnline}}<td class="table-warning">Offline</td>{{/unless}}
+        </tr>
+    {{/each}}
+</table>
+{{/with}}

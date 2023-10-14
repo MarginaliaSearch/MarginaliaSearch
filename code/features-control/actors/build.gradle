@@ -1,0 +1,41 @@
+
+plugins {
+    id 'java'
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+dependencies {
+
+    implementation project(':code:libraries:message-queue')
+    implementation project(':code:common:service')
+    implementation project(':code:common:process')
+    implementation project(':code:common:model')
+    implementation project(':code:common:service-client')
+    implementation project(':code:common:db')
+    implementation project(':code:common:config')
+    implementation project(':code:api:process-mqapi')
+    implementation project(':code:api:index-api')
+    implementation project(':code:features-control:process-execution')
+    implementation project(':code:features-index:index-journal')
+    implementation project(':code:process-models:crawl-spec')
+
+    implementation libs.bundles.slf4j
+    implementation libs.guice
+    implementation libs.notnull
+    implementation libs.spark
+    implementation libs.jsoup
+    implementation libs.zstd
+    implementation libs.bundles.mariadb
+    implementation libs.commons.io
+    implementation libs.bundles.gson
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+}

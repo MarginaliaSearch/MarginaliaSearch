@@ -3,10 +3,10 @@ package nu.marginalia.index;
 import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
+import nu.marginalia.IndexLocations;
+import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.ProcessConfigurationModule;
-import nu.marginalia.db.storage.FileStorageService;
-import nu.marginalia.db.storage.model.FileStorage;
-import nu.marginalia.db.storage.model.FileStorageType;
+import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.index.construction.ReverseIndexConstructor;
 import nu.marginalia.index.forward.ForwardIndexConverter;
 import nu.marginalia.index.forward.ForwardIndexFileNames;
@@ -43,6 +43,8 @@ public class IndexConstructorMain {
     private final ProcessHeartbeatImpl heartbeat;
     private final MessageQueueFactory messageQueueFactory;
     private final DomainRankings domainRankings;
+    private final int node;
+
     private static final Logger logger = LoggerFactory.getLogger(IndexConstructorMain.class);
     private final Gson gson = GsonFactory.get();
     public static void main(String[] args) throws Exception {
@@ -74,12 +76,14 @@ public class IndexConstructorMain {
     public IndexConstructorMain(FileStorageService fileStorageService,
                                 ProcessHeartbeatImpl heartbeat,
                                 MessageQueueFactory messageQueueFactory,
+                                ProcessConfiguration processConfiguration,
                                 DomainRankings domainRankings) {
 
         this.fileStorageService = fileStorageService;
         this.heartbeat = heartbeat;
         this.messageQueueFactory = messageQueueFactory;
         this.domainRankings = domainRankings;
+        this.node = processConfiguration.node();
     }
 
     private void run(CreateIndexInstructions instructions) throws SQLException, IOException {
@@ -96,33 +100,27 @@ public class IndexConstructorMain {
 
     private void createFullReverseIndex() throws SQLException, IOException {
 
-        FileStorage indexLive = fileStorageService.getStorageByType(FileStorageType.INDEX_LIVE);
-        FileStorage indexStaging = fileStorageService.getStorageByType(FileStorageType.INDEX_STAGING);
+        Path outputFileDocs = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.DOCS, ReverseIndexFullFileNames.FileVersion.NEXT);
+        Path outputFileWords = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.WORDS, ReverseIndexFullFileNames.FileVersion.NEXT);
+        Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
+        Path tmpDir = workDir.resolve("tmp");
 
-        Path outputFileDocs = ReverseIndexFullFileNames.resolve(indexLive.asPath(), ReverseIndexFullFileNames.FileIdentifier.DOCS, ReverseIndexFullFileNames.FileVersion.NEXT);
-        Path outputFileWords = ReverseIndexFullFileNames.resolve(indexLive.asPath(), ReverseIndexFullFileNames.FileIdentifier.WORDS, ReverseIndexFullFileNames.FileVersion.NEXT);
-
-        Path tmpDir = indexStaging.asPath().resolve("tmp");
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
 
         new ReverseIndexConstructor(outputFileDocs, outputFileWords,
                 IndexJournalReader::singleFile,
                 this::addRankToIdEncoding, tmpDir)
-                    .createReverseIndex(heartbeat, indexStaging.asPath());
+                    .createReverseIndex(heartbeat, workDir);
 
     }
 
     private void createPrioReverseIndex() throws SQLException, IOException {
 
-        FileStorage indexLive = fileStorageService.getStorageByType(FileStorageType.INDEX_LIVE);
-        FileStorage indexStaging = fileStorageService.getStorageByType(FileStorageType.INDEX_STAGING);
-
-        Path outputFileDocs = ReverseIndexPrioFileNames.resolve(indexLive.asPath(), ReverseIndexPrioFileNames.FileIdentifier.DOCS, ReverseIndexPrioFileNames.FileVersion.NEXT);
-        Path outputFileWords = ReverseIndexPrioFileNames.resolve(indexLive.asPath(), ReverseIndexPrioFileNames.FileIdentifier.WORDS, ReverseIndexPrioFileNames.FileVersion.NEXT);
-
-        Path tmpDir = indexStaging.asPath().resolve("tmp");
-        if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
+        Path outputFileDocs = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.DOCS, ReverseIndexFullFileNames.FileVersion.NEXT);
+        Path outputFileWords = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.WORDS, ReverseIndexFullFileNames.FileVersion.NEXT);
+        Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
+        Path tmpDir = workDir.resolve("tmp");
 
         // The priority index only includes words that have bits indicating they are
         // important to the document.  This filter will act on the encoded {@see WordMetadata}
@@ -131,7 +129,7 @@ public class IndexConstructorMain {
         new ReverseIndexConstructor(outputFileDocs, outputFileWords,
                 (path) -> IndexJournalReader.singleFile(path).filtering(wordMetaFilter),
                 this::addRankToIdEncoding, tmpDir)
-                .createReverseIndex(heartbeat, indexStaging.asPath());
+                .createReverseIndex(heartbeat, workDir);
     }
 
     private static LongPredicate getPriorityIndexWordMetaFilter() {
@@ -149,16 +147,14 @@ public class IndexConstructorMain {
         return r -> WordMetadata.hasAnyFlags(r, highPriorityFlags);
     }
 
-    private void createForwardIndex() throws SQLException, IOException {
+    private void createForwardIndex() throws IOException {
 
-        FileStorage indexLive = fileStorageService.getStorageByType(FileStorageType.INDEX_LIVE);
-        FileStorage indexStaging = fileStorageService.getStorageByType(FileStorageType.INDEX_STAGING);
-
-        Path outputFileDocsId = ForwardIndexFileNames.resolve(indexLive.asPath(), ForwardIndexFileNames.FileIdentifier.DOC_ID, ForwardIndexFileNames.FileVersion.NEXT);
-        Path outputFileDocsData = ForwardIndexFileNames.resolve(indexLive.asPath(), ForwardIndexFileNames.FileIdentifier.DOC_DATA, ForwardIndexFileNames.FileVersion.NEXT);
+        Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
+        Path outputFileDocsId = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.DOC_ID, ForwardIndexFileNames.FileVersion.NEXT);
+        Path outputFileDocsData = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.DOC_DATA, ForwardIndexFileNames.FileVersion.NEXT);
 
         ForwardIndexConverter converter = new ForwardIndexConverter(heartbeat,
-                IndexJournalReader.paging(indexStaging.asPath()),
+                IndexJournalReader.paging(workDir),
                 outputFileDocsId,
                 outputFileDocsData,
                 domainRankings
@@ -198,7 +194,7 @@ public class IndexConstructorMain {
 
     private CreateIndexInstructions fetchInstructions() throws Exception {
 
-        var inbox = messageQueueFactory.createSingleShotInbox(INDEX_CONSTRUCTOR_INBOX, UUID.randomUUID());
+        var inbox = messageQueueFactory.createSingleShotInbox(INDEX_CONSTRUCTOR_INBOX, node, UUID.randomUUID());
 
         logger.info("Waiting for instructions");
         var msgOpt = getMessage(inbox, CreateIndexRequest.class.getSimpleName());

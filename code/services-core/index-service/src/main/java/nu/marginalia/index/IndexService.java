@@ -4,13 +4,12 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import lombok.SneakyThrows;
-import nu.marginalia.db.storage.FileStorageService;
-import nu.marginalia.db.storage.model.FileStorageType;
+import nu.marginalia.IndexLocations;
+import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.index.client.IndexMqEndpoints;
 import nu.marginalia.index.index.SearchIndex;
 import nu.marginalia.index.svc.IndexOpsService;
 import nu.marginalia.index.svc.IndexQueryService;
-import nu.marginalia.index.svc.IndexSearchSetsService;
 import nu.marginalia.linkdb.LinkdbReader;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.service.control.ServiceEventLog;
@@ -97,8 +96,8 @@ public class IndexService extends Service {
     public void switchLinkdb(String unusedArg) {
         logger.info("Switching link database");
 
-        Path newPath = fileStorageService.getStorageByType(FileStorageType.LINKDB_STAGING)
-                .asPath()
+        Path newPath = IndexLocations
+                .getLinkdbWritePath(fileStorageService)
                 .resolve("links.db");
 
         if (Files.exists(newPath)) {

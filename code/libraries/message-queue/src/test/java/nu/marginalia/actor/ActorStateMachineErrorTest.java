@@ -88,14 +88,14 @@ public class ActorStateMachineErrorTest {
     @Test
     public void smResumeResumableFromNew() throws Exception {
         var stateFactory = new ActorStateFactory(new GsonBuilder().create());
-        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ErrorHurdles(stateFactory));
+        var sm = new ActorStateMachine(messageQueueFactory, inboxId, 0, UUID.randomUUID(), new ErrorHurdles(stateFactory));
 
         sm.init();
 
         sm.join(2, TimeUnit.SECONDS);
         sm.stop();
 
-        List<String> states = MqTestUtil.getMessages(dataSource, inboxId)
+        List<String> states = MqTestUtil.getMessages(dataSource, inboxId, 0)
                 .stream()
                 .peek(System.out::println)
                 .map(MqMessageRow::function)

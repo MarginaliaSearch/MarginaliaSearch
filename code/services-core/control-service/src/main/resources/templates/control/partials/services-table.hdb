@@ -1,5 +1,5 @@
 <h1>Services</h1>
-<table id="services">
+<table id="services" class="table">
     <tr>
         <th>Service ID</th>
         <th>UUID</th>

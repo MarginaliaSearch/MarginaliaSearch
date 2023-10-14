@@ -49,13 +49,14 @@ public class SimpleBlockingThreadPool {
 
     public void shutDownNow()  {
         this.shutDown = true;
+        tasks.clear();
         for (Thread worker : workers) {
             worker.interrupt();
         }
     }
 
     private void worker() {
-        while (!shutDown) {
+        while (!tasks.isEmpty() || !shutDown) {
             try {
                 Task task = tasks.poll(1, TimeUnit.SECONDS);
                 if (task == null) {
@@ -89,6 +90,14 @@ public class SimpleBlockingThreadPool {
         final long start = System.currentTimeMillis();
         final long deadline = start + timeUnit.toMillis(i);
 
+        // Drain the queue
+        while (!tasks.isEmpty()) {
+            long timeRemaining = deadline - System.currentTimeMillis();
+            if (timeRemaining <= 0)
+                return false;
+        }
+
+        // Wait for termination
         for (var thread : workers) {
             if (!thread.isAlive())
                 continue;

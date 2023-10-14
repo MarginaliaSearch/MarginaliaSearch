@@ -4,13 +4,14 @@ import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.ProcessConfigurationModule;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.converting.sideload.SideloadSourceFactory;
 import nu.marginalia.converting.writer.ConverterBatchWriter;
 import nu.marginalia.converting.writer.ConverterWriter;
-import nu.marginalia.db.storage.FileStorageService;
+import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.inbox.MqInboxResponse;
@@ -46,6 +47,8 @@ public class ConverterMain {
     private final FileStorageService fileStorageService;
     private final SideloadSourceFactory sideloadSourceFactory;
 
+    private final int node;
+
     public static void main(String... args) throws Exception {
         Injector injector = Guice.createInjector(
                 new ConverterModule(),
@@ -73,7 +76,8 @@ public class ConverterMain {
             ProcessHeartbeatImpl heartbeat,
             MessageQueueFactory messageQueueFactory,
             FileStorageService fileStorageService,
-            SideloadSourceFactory sideloadSourceFactory
+            SideloadSourceFactory sideloadSourceFactory,
+            ProcessConfiguration processConfiguration
             )
     {
         this.processor = processor;
@@ -82,6 +86,7 @@ public class ConverterMain {
         this.messageQueueFactory = messageQueueFactory;
         this.fileStorageService = fileStorageService;
         this.sideloadSourceFactory = sideloadSourceFactory;
+        this.node = processConfiguration.node();
 
         heartbeat.start();
     }
@@ -214,7 +219,7 @@ public class ConverterMain {
 
     private ConvertRequest fetchInstructions() throws Exception {
 
-        var inbox = messageQueueFactory.createSingleShotInbox(CONVERTER_INBOX, UUID.randomUUID());
+        var inbox = messageQueueFactory.createSingleShotInbox(CONVERTER_INBOX, node, UUID.randomUUID());
 
         var msgOpt = getMessage(inbox, nu.marginalia.mqapi.converting.ConvertRequest.class.getSimpleName());
         var msg = msgOpt.orElseThrow(() -> new RuntimeException("No message received"));

@@ -1,11 +1,13 @@
 package nu.marginalia.mqapi.crawling;
 
 import lombok.AllArgsConstructor;
-import nu.marginalia.db.storage.model.FileStorageId;
+import nu.marginalia.storage.model.FileStorageId;
+
+import java.util.List;
 
 /** A request to start a crawl */
 @AllArgsConstructor
 public class CrawlRequest {
-    public FileStorageId specStorage;
+    public List<FileStorageId> specStorage;
     public FileStorageId crawlStorage;
 }

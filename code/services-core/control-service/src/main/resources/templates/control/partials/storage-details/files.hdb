@@ -1,0 +1,17 @@
+{{#if files}}
+<h1>Contents </h1>
+<table class="table">
+    <tr>
+        <th>File Name</th>
+        <th>Last Mod</th>
+        <th>Size</th>
+    </tr>
+    {{#each files}}
+        <tr>
+            <td> {{filename}} </td>
+            <td>{{mTime}}</td>
+            <td>{{size}}</td>
+        </tr>
+    {{/each}}
+</table>
+{{/if}}

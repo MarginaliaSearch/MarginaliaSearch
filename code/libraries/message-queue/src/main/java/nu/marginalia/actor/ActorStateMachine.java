@@ -44,14 +44,15 @@ public class ActorStateMachine {
     private final boolean isDirectlyInitializable;
 
     public ActorStateMachine(MessageQueueFactory messageQueueFactory,
-                             String queueName,
+                             String fsmName,
+                             int node,
                              UUID instanceUUID,
                              ActorPrototype statePrototype)
     {
-        this.queueName = queueName;
+        this.queueName = fsmName;
 
-        smInbox = messageQueueFactory.createSynchronousInbox(queueName, instanceUUID);
-        smOutbox = messageQueueFactory.createOutbox(queueName, queueName+"//out", instanceUUID);
+        smInbox = messageQueueFactory.createSynchronousInbox(queueName, node, instanceUUID);
+        smOutbox = messageQueueFactory.createOutbox(queueName, node, queueName+"//out", node, instanceUUID);
 
         smInbox.subscribe(new StateEventSubscription());
 

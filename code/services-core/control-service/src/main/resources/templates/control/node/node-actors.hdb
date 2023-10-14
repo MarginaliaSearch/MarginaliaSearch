@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+{{> control/partials/head-includes }}
+<head><title>Control Service: Node {{node.id}}</title></head>
+<body>
+{{> control/partials/nav}}
+
+<div class="container">
+    <h1 class="my-5">Index Node {{node.id}}</h1>
+
+    <nav class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link" href="/nodes/{{node.id}}/">Overview</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/nodes/{{node.id}}/actions">Actions</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active" href="/nodes/{{node.id}}/actors">Actors</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/nodes/{{node.id}}/storage/">Storage</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/nodes/{{node.id}}/configuration">Configuration</a>
+        </li>
+
+    </nav>
+
+    <div class="mt-2">
+        {{> control/partials/actors-table }}
+    </div>
+
+</div>
+
+</body>
+{{> control/partials/foot-includes }}
+<script>
+    window.setInterval(() => {
+        refresh(["actors"]);
+    }, 2000);
+</script>
+</html>

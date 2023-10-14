@@ -2,6 +2,7 @@ package nu.marginalia.index.client;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import io.prometheus.client.Summary;
 import io.reactivex.rxjava3.core.Observable;
 import nu.marginalia.WmsaHome;
@@ -23,22 +24,20 @@ public class IndexClient extends AbstractDynamicClient {
 
     private static final Summary wmsa_search_index_api_time = Summary.build().name("wmsa_search_index_api_time").help("-").register();
 
-    private final MqOutbox outbox;
+    MqOutbox outbox;
 
     @Inject
     public IndexClient(ServiceDescriptors descriptors,
-                       MessageQueueFactory messageQueueFactory)
+                       MessageQueueFactory messageQueueFactory,
+                       @Named("wmsa-system-node") Integer nodeId)
     {
         super(descriptors.forId(ServiceId.Index), WmsaHome.getHostsFile(), GsonFactory::get);
 
-        String inboxName = ServiceId.Index.name + ":" + "0";
-        String outboxName = System.getProperty("service-name", UUID.randomUUID().toString());
-
-        outbox = messageQueueFactory.createOutbox(inboxName, outboxName, UUID.randomUUID());
-
+        String inboxName = ServiceId.Index.name;
+        String outboxName = System.getProperty("service-name:"+nodeId, UUID.randomUUID().toString());
+        outbox = messageQueueFactory.createOutbox(inboxName, nodeId, outboxName, nodeId, UUID.randomUUID());
         setTimeout(30);
     }
-
 
     public MqOutbox outbox() {
         return outbox;

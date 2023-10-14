@@ -20,25 +20,25 @@ public class MessageQueueFactory {
         this.persistence = persistence;
     }
 
-    public MqSingleShotInbox createSingleShotInbox(String inboxName, UUID instanceUUID)
+    public MqSingleShotInbox createSingleShotInbox(String inboxName, int node, UUID instanceUUID)
     {
-        return new MqSingleShotInbox(persistence, inboxName, instanceUUID);
+        return new MqSingleShotInbox(persistence, inboxName + ":" + node, instanceUUID);
     }
 
 
-    public MqAsynchronousInbox createAsynchronousInbox(String inboxName, UUID instanceUUID)
+    public MqAsynchronousInbox createAsynchronousInbox(String inboxName, int node, UUID instanceUUID)
     {
-        return new MqAsynchronousInbox(persistence, inboxName, instanceUUID);
+        return new MqAsynchronousInbox(persistence, inboxName + ":" + node, instanceUUID);
     }
 
-    public MqSynchronousInbox createSynchronousInbox(String inboxName, UUID instanceUUID)
+    public MqSynchronousInbox createSynchronousInbox(String inboxName, int node, UUID instanceUUID)
     {
-        return new MqSynchronousInbox(persistence, inboxName, instanceUUID);
+        return new MqSynchronousInbox(persistence, inboxName + ":" + node, instanceUUID);
     }
 
 
-    public MqOutbox createOutbox(String inboxName, String outboxName, UUID instanceUUID)
+    public MqOutbox createOutbox(String inboxName, int inboxNode,  String outboxName, int outboxNode, UUID instanceUUID)
     {
-        return new MqOutbox(persistence, inboxName, outboxName, instanceUUID);
+        return new MqOutbox(persistence, inboxName, inboxNode, outboxName, outboxNode, instanceUUID);
     }
 }

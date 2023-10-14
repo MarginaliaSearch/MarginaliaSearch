@@ -93,7 +93,7 @@ public class ActorStateMachineTest {
         var graph = new TestPrototypeActor(stateFactory);
 
 
-        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), graph);
+        var sm = new ActorStateMachine(messageQueueFactory, inboxId, 0, UUID.randomUUID(), graph);
         sm.registerStates(graph);
 
         sm.init();
@@ -101,14 +101,14 @@ public class ActorStateMachineTest {
         sm.join(2, TimeUnit.SECONDS);
         sm.stop();
 
-        MqTestUtil.getMessages(dataSource, inboxId).forEach(System.out::println);
+        MqTestUtil.getMessages(dataSource, inboxId, 0).forEach(System.out::println);
 
     }
 
     @Test
     public void testStartStopStartStop() throws Exception {
         var stateFactory = new ActorStateFactory(new GsonBuilder().create());
-        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new TestPrototypeActor(stateFactory));
+        var sm = new ActorStateMachine(messageQueueFactory, inboxId, 0, UUID.randomUUID(), new TestPrototypeActor(stateFactory));
 
         sm.init();
 
@@ -117,11 +117,11 @@ public class ActorStateMachineTest {
 
         System.out.println("-------------------- ");
 
-        var sm2 = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new TestPrototypeActor(stateFactory));
+        var sm2 = new ActorStateMachine(messageQueueFactory, inboxId, 0, UUID.randomUUID(), new TestPrototypeActor(stateFactory));
         sm2.join(2, TimeUnit.SECONDS);
         sm2.stop();
 
-        MqTestUtil.getMessages(dataSource, inboxId).forEach(System.out::println);
+        MqTestUtil.getMessages(dataSource, inboxId, 0).forEach(System.out::println);
     }
 
     @Test
@@ -134,14 +134,14 @@ public class ActorStateMachineTest {
         persistence.sendNewMessage(inboxId,  null, null, "INITIAL", "", null);
         persistence.sendNewMessage(inboxId,  null, null, "INITIAL", "", null);
 
-        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new TestPrototypeActor(stateFactory));
+        var sm = new ActorStateMachine(messageQueueFactory, inboxId, 0, UUID.randomUUID(), new TestPrototypeActor(stateFactory));
 
         Thread.sleep(50);
 
         sm.join(2, TimeUnit.SECONDS);
         sm.stop();
 
-        MqTestUtil.getMessages(dataSource, inboxId).forEach(System.out::println);
+        MqTestUtil.getMessages(dataSource, inboxId, 0).forEach(System.out::println);
     }
 
 }

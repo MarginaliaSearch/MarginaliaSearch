@@ -24,7 +24,7 @@ import java.util.List;
 
 @Singleton
 public class LinkdbReader {
-    private Path dbFile;
+    private final Path dbFile;
     private volatile Connection connection;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -34,13 +34,7 @@ public class LinkdbReader {
         this.dbFile = dbFile;
 
         if (Files.exists(dbFile)) {
-            try {
-                connection = createConnection();
-            }
-            catch (SQLException ex) {
-                connection = null;
-                logger.error("Failed to load linkdb file", ex);
-            }
+            connection = createConnection();
         }
         else {
             logger.warn("No linkdb file {}", dbFile);
@@ -48,14 +42,27 @@ public class LinkdbReader {
     }
 
     private Connection createConnection() throws SQLException {
-        String connStr = "jdbc:sqlite:" + dbFile.toString();
-        return DriverManager.getConnection(connStr);
+        try {
+            String connStr = "jdbc:sqlite:" + dbFile.toString();
+            return DriverManager.getConnection(connStr);
+        }
+        catch (SQLException ex) {
+            logger.error("Failed to connect to link database " + dbFile, ex);
+            return null;
+        }
     }
 
     public void switchInput(Path newDbFile) throws IOException, SQLException {
+        if (!Files.isRegularFile(newDbFile)) {
+            logger.error("Source is not a file, refusing switch-over {}", newDbFile);
+            return;
+        }
+
         if (connection != null) {
             connection.close();
         }
+
+        logger.info("Moving {} to {}", newDbFile, dbFile);
 
         Files.move(newDbFile, dbFile, StandardCopyOption.REPLACE_EXISTING);
 

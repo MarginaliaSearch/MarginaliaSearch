@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+<head>
+<title>Message Queue | New Message</title>
+{{> control/partials/head-includes }}
+</head>
+<body>
+{{> control/partials/nav}}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/message-queue">Message Queue</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Create Message</li>
+    </ol>
+</nav>
+
+<div class="container">
+<h1>Create Message</h1>
+<form method="post" action="/message-queue/">
+    <table>
+        <tr>
+            <th>Field</th>
+            <th>Value</th>
+        </tr>
+        <tr>
+            <td><label for="recipientInbox">recipientInbox</label></td>
+            <td><input type="text" id="recipientInbox" name="recipientInbox" value="{{recipientInbox}}"></td>
+        </tr>
+        <tr>
+            <td><label for="senderInbox">senderInbox</label></td>
+            <td><input type="text" id="senderInbox" name="senderInbox" value="{{senderInbox}}"></td>
+        </tr>
+        <tr>
+            <td><label for="relatedId">relatedId</label></td>
+            <td><input type="text" id="relatedId" name="relatedId" value="{{relatedId}}"></td>
+        </tr>
+        <tr>
+            <td><label for="function">function</label></td>
+            <td><input type="text" id="function" name="function" value="{{function}}"></td>
+        </tr>
+        <tr>
+            <td><label for="payload">payload</label></td>
+            <td><textarea rows="6" cols="40" id="payload" name="payload">{{payload}}</textarea></td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <input type="submit" value="Create">
+            </td>
+        </tr>
+    </table>
+</form>
+</div>
+</body>
+{{> control/partials/foot-includes }}
+</html>

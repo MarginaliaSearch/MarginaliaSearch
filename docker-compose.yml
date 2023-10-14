@@ -24,6 +24,8 @@ services:
       - "127.0.0.1:5021:5021/tcp"
       - "127.0.0.1:4021:5000"
       - "127.0.0.1:7021:4000"
+    environment:
+      - "WMSA_SERVICE_NODE=0"
   search-service:
     <<: *service
     image: "marginalia.nu/search-service"
@@ -64,6 +66,18 @@ services:
       - "127.0.0.1:7022:4000"
     depends_on:
       - mariadb
+  executor-service:
+    <<: *service
+    image: "marginalia.nu/executor-service"
+    container_name: "executor-service"
+    ports:
+      - "127.0.0.1:5024:5024"
+      - "127.0.0.1:4024:5000"
+      - "127.0.0.1:7024:4000"
+    depends_on:
+      - mariadb
+    environment:
+      - "WMSA_SERVICE_NODE=0"
   dating-service:
     <<: *service
     image: "marginalia.nu/dating-service"
@@ -93,8 +107,6 @@ services:
       - "127.0.0.1:4090:5000"
       - "127.0.0.1:7090:4000"
       - "127.0.0.1:7099:4001"
-    environment:
-    - "WMSA_SERVICE_NODE=0"
     depends_on:
       - mariadb
   mariadb:

@@ -1,0 +1,149 @@
+<!doctype html>
+<html>
+{{> control/partials/head-includes }}
+<head><title>Control Service: Node {{node.id}}</title></head>
+<body>
+{{> control/partials/nav}}
+
+
+<div class="container">
+    <h1 class="my-5">Index Node {{node.id}}</h1>
+
+    <nav class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link" href="/nodes/{{node.id}}/">Overview</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/nodes/{{node.id}}/actions">Actions</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/nodes/{{node.id}}/actors">Actors</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="/nodes/{{node.id}}/storage/">Storage</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/nodes/{{node.id}}/configuration">Configuration</a>
+        </li>
+
+    </nav>
+
+    <div class="container">
+        <nav class="nav nav-pills py-5">
+            <li class="nav-item">
+                <a href="conf" {{#unless view.conf}}class="nav-link"{{/unless}} {{#if view.conf}}aria-current="page" class="active nav-link"{{/if}}>Base Config</a>
+            </li>
+            <li class="nav-item">
+                <a href="specs" {{#unless view.specs}}class="nav-link"{{/unless}} {{#if view.specs}}aria-current="page" class="active nav-link"{{/if}}>Specs</a>
+            </li>
+            <li class="nav-item">
+                <a href="crawl" {{#unless view.crawl}}class="nav-link"{{/unless}}  {{#if view.crawl}}aria-current="page" class="active nav-link"{{/if}}>Crawl Data</a>
+            </li>
+            <li class="nav-item">
+                <a href="processed" {{#unless view.processed}}class="nav-link"{{/unless}} {{#if view.processed}}aria-current="page" class="active nav-link"{{/if}}>Processed Data</a>
+            </li>
+            <li class="nav-item">
+                <a href="backup" {{#unless view.backup}}class="nav-link"{{/unless}}   {{#if view.backup}}aria-current="page" class="active nav-link"{{/if}}>Backups</a>
+            </li>
+        </nav>
+
+
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            {{#if view.specs}}
+                <a role="button" class="btn btn-primary me-md-2" type="button"
+                   href="new-specs"
+                >New Spec</a>
+            {{/if}}
+            {{#if view.processed}}
+                <form method="post" action="load-selected">
+                    <button class="btn btn-primary me-md-2"
+                            onclick="return confirm('Confirm loading of the currently ACTIVE processed data set(s)');"
+                            type="submit">Trigger Load</button>
+                </form>
+            {{/if}}
+            {{#if view.crawl}}
+                <form method="post" action="recrawl-auto">
+                    <button
+                       class="btn btn-primary me-md-2"
+                       onclick="return confirm('Confirm recrawl of the current ACTIVE crawl set using the current ACTIVE specs set(s).');"
+                       type="submit">
+                        Trigger Recrawl</button>
+                </form>
+                <form method="post" action="process-auto">
+                    <button
+                            class="btn btn-primary me-md-2"
+                            onclick="return confirm('Confirm processing of the current ACTIVE crawl set.');"
+                            type="submit">
+                        Trigger Processing</button>
+                </form>
+            {{/if}}
+        </div>
+
+        <table class="table">
+            {{#each storage}}
+                <tr>
+                    <th>Type</th>
+                    <th>Name</th>
+                    <th colspan="2">Path</th>
+                </tr>
+                <tr>
+                    <td>{{base.type}}</td>
+                    <td>{{base.name}}</td>
+                    <td colspan="2">{{base.path}}</td>
+                </tr>
+                <tr>
+                    <th>Created</th>
+                    <th>State</th>
+                    <th>Path</th>
+                    <th>Description</th>
+                </tr>
+                {{#each storage}}
+                    <tr>
+                        <td title="{{timestampFull}}">{{timestamp}}</td>
+                        <td>
+                            {{#unless storage.active}}
+                                <div class="form-check form-switch">
+                                    <label class="form-check-label" for="flexSwitchCheckDefault">Archived</label>
+                                    <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault"  onclick="setActive({{storage.id}})">
+                                </div>
+                            {{/unless}}
+
+                            {{#if storage.active}}
+                                <div class="form-check form-switch">
+                                    <label class="form-check-label" for="flexSwitchCheckDefault">Active</label>
+                                    <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault" checked onclick="setArchived({{storage.id}})">
+                                </div>
+                            {{/if}}
+                        </td>
+                        <td><a href="details?fid={{storage.id}}">{{relPath}}</a></td>
+                        <td>{{storage.description}}</td>
+                    </tr>
+                {{/each}}
+            {{/each}}
+        </table>
+        <script language="javascript">
+            function setActive(fileId) {
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", "/nodes/{{node.id}}/storage/"+fileId+"/enable");
+        xhr.onload = () => {
+            window.location.href=window.location.href;
+        }
+        xhr.send();
+    }
+    function setArchived(fileId) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/nodes/{{node.id}}/storage/"+fileId+"/disable");
+        xhr.onload = () => {
+            window.location.href=window.location.href;
+        }
+        xhr.send();
+    }
+        </script>
+    </div>
+
+
+
+    </div>
+</body>
+{{> control/partials/foot-includes }}
+</html>

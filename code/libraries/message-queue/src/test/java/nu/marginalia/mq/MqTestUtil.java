@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MqTestUtil {
-    public static List<MqMessageRow> getMessages(HikariDataSource dataSource, String inbox) {
+    public static List<MqMessageRow> getMessages(HikariDataSource dataSource, String inbox, int node) {
         List<MqMessageRow> messages = new ArrayList<>();
 
         try (var conn = dataSource.getConnection();
@@ -24,7 +24,7 @@ public class MqTestUtil {
                 WHERE RECIPIENT_INBOX = ?
                  """))
         {
-            stmt.setString(1, inbox);
+            stmt.setString(1, inbox+":"+node);
             var rsp = stmt.executeQuery();
             while (rsp.next()) {
                 messages.add(new MqMessageRow(

@@ -18,6 +18,7 @@ public class ServiceHeartbeatImpl implements ServiceHeartbeat {
     private final Logger logger = LoggerFactory.getLogger(ServiceHeartbeatImpl.class);
     private final String serviceName;
     private final String serviceBase;
+    private final int node;
     private final String instanceUUID;
     private final ServiceConfiguration configuration;
     private final ServiceEventLog eventLog;
@@ -36,6 +37,7 @@ public class ServiceHeartbeatImpl implements ServiceHeartbeat {
     {
         this.serviceName = configuration.serviceName() + ":" + configuration.node();
         this.serviceBase = configuration.serviceName();
+        this.node = configuration.node();
         this.configuration = configuration;
         this.eventLog = eventLog;
         this.dataSource = dataSource;
@@ -105,8 +107,8 @@ public class ServiceHeartbeatImpl implements ServiceHeartbeat {
         try (var connection = dataSource.getConnection()) {
             try (var stmt = connection.prepareStatement(
                     """
-                        INSERT INTO SERVICE_HEARTBEAT (SERVICE_NAME, SERVICE_BASE, INSTANCE, HEARTBEAT_TIME, ALIVE)
-                        VALUES (?, ?, ?, CURRENT_TIMESTAMP(6), 1)
+                        INSERT INTO SERVICE_HEARTBEAT (SERVICE_NAME, SERVICE_BASE, NODE, INSTANCE, HEARTBEAT_TIME, ALIVE)
+                        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP(6), 1)
                         ON DUPLICATE KEY UPDATE
                             INSTANCE = ?,
                             HEARTBEAT_TIME = CURRENT_TIMESTAMP(6),
@@ -116,8 +118,9 @@ public class ServiceHeartbeatImpl implements ServiceHeartbeat {
             {
                 stmt.setString(1, serviceName);
                 stmt.setString(2, serviceBase);
-                stmt.setString(3, instanceUUID);
+                stmt.setInt(3, node);
                 stmt.setString(4, instanceUUID);
+                stmt.setString(5, instanceUUID);
                 stmt.executeUpdate();
             }
         }

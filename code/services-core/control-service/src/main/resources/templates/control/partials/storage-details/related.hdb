@@ -1,0 +1,17 @@
+{{#if related}}
+<h2>Related</h2>
+<table class="table">
+    <tr>
+        <th>Type</th>
+        <th>Path</th>
+        <th>Details</th>
+    </tr>
+    {{#each related}}
+        <tr>
+            <td>{{type}}</td>
+            <td><a href="?fid={{id}}">{{path}}</a></td>
+            <td>{{description}}</td>
+        </tr>
+    {{/each}}
+</table>
+{{/if}}

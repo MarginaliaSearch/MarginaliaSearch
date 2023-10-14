@@ -87,14 +87,14 @@ public class ActorStateMachineResumeTest {
     public void smResumeResumableFromNew() throws Exception {
         var stateFactory = new ActorStateFactory(new GsonBuilder().create());
 
+        sendMessage(inboxId, 0, "RESUMABLE");
 
-        persistence.sendNewMessage(inboxId,  null, -1L, "RESUMABLE", "", null);
-        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsPrototypeActor(stateFactory));
+        var sm = new ActorStateMachine(messageQueueFactory, inboxId, 0, UUID.randomUUID(), new ResumeTrialsPrototypeActor(stateFactory));
 
         sm.join(2, TimeUnit.SECONDS);
         sm.stop();
 
-        List<String> states = MqTestUtil.getMessages(dataSource, inboxId)
+        List<String> states = MqTestUtil.getMessages(dataSource, inboxId, 0)
                 .stream()
                 .peek(System.out::println)
                 .map(MqMessageRow::function)
@@ -103,19 +103,23 @@ public class ActorStateMachineResumeTest {
         assertEquals(List.of("RESUMABLE", "NON-RESUMABLE", "OK", "END"), states);
     }
 
+    private long sendMessage(String inboxId, int node, String function) throws Exception {
+        return persistence.sendNewMessage(inboxId+":"+node,  null, -1L, function, "", null);
+    }
+
     @Test
     public void smResumeFromAck() throws Exception {
         var stateFactory = new ActorStateFactory(new GsonBuilder().create());
 
-        long id = persistence.sendNewMessage(inboxId,  null, -1L, "RESUMABLE", "", null);
+        long id = sendMessage(inboxId, 0, "RESUMABLE");
         persistence.updateMessageState(id, MqMessageState.ACK);
 
-        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsPrototypeActor(stateFactory));
+        var sm = new ActorStateMachine(messageQueueFactory, inboxId, 0, UUID.randomUUID(), new ResumeTrialsPrototypeActor(stateFactory));
 
         sm.join(4, TimeUnit.SECONDS);
         sm.stop();
 
-        List<String> states = MqTestUtil.getMessages(dataSource, inboxId)
+        List<String> states = MqTestUtil.getMessages(dataSource, inboxId, 0)
                 .stream()
                 .peek(System.out::println)
                 .map(MqMessageRow::function)
@@ -129,15 +133,14 @@ public class ActorStateMachineResumeTest {
     public void smResumeNonResumableFromNew() throws Exception {
         var stateFactory = new ActorStateFactory(new GsonBuilder().create());
 
+        sendMessage(inboxId, 0, "NON-RESUMABLE");
 
-        persistence.sendNewMessage(inboxId,  null, -1L, "NON-RESUMABLE", "", null);
-
-        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsPrototypeActor(stateFactory));
+        var sm = new ActorStateMachine(messageQueueFactory, inboxId, 0, UUID.randomUUID(), new ResumeTrialsPrototypeActor(stateFactory));
 
         sm.join(2, TimeUnit.SECONDS);
         sm.stop();
 
-        List<String> states = MqTestUtil.getMessages(dataSource, inboxId)
+        List<String> states = MqTestUtil.getMessages(dataSource, inboxId, 0)
                 .stream()
                 .peek(System.out::println)
                 .map(MqMessageRow::function)
@@ -151,15 +154,15 @@ public class ActorStateMachineResumeTest {
         var stateFactory = new ActorStateFactory(new GsonBuilder().create());
 
 
-        long id = persistence.sendNewMessage(inboxId,  null, null, "NON-RESUMABLE", "", null);
+        long id = sendMessage(inboxId, 0, "NON-RESUMABLE");
         persistence.updateMessageState(id, MqMessageState.ACK);
 
-        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsPrototypeActor(stateFactory));
+        var sm = new ActorStateMachine(messageQueueFactory, inboxId, 0, UUID.randomUUID(), new ResumeTrialsPrototypeActor(stateFactory));
 
         sm.join(2, TimeUnit.SECONDS);
         sm.stop();
 
-        List<String> states = MqTestUtil.getMessages(dataSource, inboxId)
+        List<String> states = MqTestUtil.getMessages(dataSource, inboxId, 0)
                 .stream()
                 .peek(System.out::println)
                 .map(MqMessageRow::function)
@@ -172,13 +175,12 @@ public class ActorStateMachineResumeTest {
     public void smResumeEmptyQueue() throws Exception {
         var stateFactory = new ActorStateFactory(new GsonBuilder().create());
 
-
-        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), new ResumeTrialsPrototypeActor(stateFactory));
+        var sm = new ActorStateMachine(messageQueueFactory, inboxId, 0, UUID.randomUUID(), new ResumeTrialsPrototypeActor(stateFactory));
 
         sm.join(2, TimeUnit.SECONDS);
         sm.stop();
 
-        List<String> states = MqTestUtil.getMessages(dataSource, inboxId)
+        List<String> states = MqTestUtil.getMessages(dataSource, inboxId, 0)
                 .stream()
                 .peek(System.out::println)
                 .map(MqMessageRow::function)

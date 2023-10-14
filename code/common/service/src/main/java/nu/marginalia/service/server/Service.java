@@ -47,11 +47,11 @@ public class Service {
         this.initialization = params.initialization;
         var config = params.configuration;
 
-        String inboxName = config.serviceName() + ":" + config.node();
+        String inboxName = config.serviceName();
         logger.info("Inbox name: {}", inboxName);
 
         var mqInboxFactory = params.messageQueueInboxFactory;
-        messageQueueInbox = mqInboxFactory.createAsynchronousInbox(inboxName, config.instanceUuid());
+        messageQueueInbox = mqInboxFactory.createAsynchronousInbox(inboxName, config.node(), config.instanceUuid());
         messageQueueInbox.subscribe(new ServiceMqSubscription(this));
 
         serviceName = System.getProperty("service-name");

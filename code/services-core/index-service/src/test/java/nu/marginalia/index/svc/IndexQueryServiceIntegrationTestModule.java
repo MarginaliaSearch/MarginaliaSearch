@@ -1,9 +1,10 @@
 package nu.marginalia.index.svc;
 
 import com.google.inject.AbstractModule;
-import nu.marginalia.db.storage.FileStorageService;
-import nu.marginalia.db.storage.model.FileStorage;
-import nu.marginalia.db.storage.model.FileStorageType;
+import nu.marginalia.IndexLocations;
+import nu.marginalia.storage.FileStorageService;
+import nu.marginalia.storage.model.FileStorageBase;
+import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.index.journal.writer.IndexJournalWriterPagingImpl;
 import nu.marginalia.linkdb.LinkdbReader;
@@ -17,13 +18,11 @@ import nu.marginalia.service.control.*;
 import nu.marginalia.service.id.ServiceId;
 import nu.marginalia.service.module.ServiceConfiguration;
 import org.mockito.Mockito;
-import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.util.Random;
 import java.util.UUID;
 
@@ -54,12 +53,14 @@ public class IndexQueryServiceIntegrationTestModule extends AbstractModule {
 
         try {
             var fileStorageServiceMock = Mockito.mock(FileStorageService.class);
+            Mockito.when(fileStorageServiceMock.getStorageBase(FileStorageBaseType.WORK)).thenReturn(new FileStorageBase(null, null, null, slowDir.toString()));
+            Mockito.when(fileStorageServiceMock.getStorageBase(FileStorageBaseType.CURRENT)).thenReturn(new FileStorageBase(null, null, null, fastDir.toString()));
+            Mockito.when(fileStorageServiceMock.getStorageBase(FileStorageBaseType.STORAGE)).thenReturn(new FileStorageBase(null, null, null, fastDir.toString()));
 
-            when(fileStorageServiceMock.getStorageByType(FileStorageType.SEARCH_SETS)).thenReturn(new FileStorage(null, null, null, LocalDateTime.now(), fastDir.toString(), null));
-            when(fileStorageServiceMock.getStorageByType(FileStorageType.INDEX_LIVE)).thenReturn(new FileStorage(null, null, null, LocalDateTime.now(), fastDir.toString(), null));
-            when(fileStorageServiceMock.getStorageByType(FileStorageType.INDEX_STAGING)).thenReturn(new FileStorage(null, null, null, LocalDateTime.now(), slowDir.toString(), null));
-
-            bind(LinkdbReader.class).toInstance(new LinkdbReader(workDir.resolve("linkdb.dat")));
+            bind(LinkdbReader.class).toInstance(new LinkdbReader(
+                    IndexLocations.getLinkdbLivePath(fileStorageServiceMock)
+                            .resolve("links.db")
+            ));
 
             bind(FileStorageService.class).toInstance(fileStorageServiceMock);
 
@@ -73,7 +74,9 @@ public class IndexQueryServiceIntegrationTestModule extends AbstractModule {
 
             bind(ServiceEventLog.class).toInstance(Mockito.mock(ServiceEventLog.class));
 
-            bind(IndexJournalWriter.class).toInstance(new IndexJournalWriterPagingImpl(slowDir));
+            bind(IndexJournalWriter.class).toInstance(new IndexJournalWriterPagingImpl(
+                    IndexLocations.getIndexConstructionArea(fileStorageServiceMock)
+            ));
 
             bind(ServiceConfiguration.class).toInstance(new ServiceConfiguration(
                     ServiceId.Index,

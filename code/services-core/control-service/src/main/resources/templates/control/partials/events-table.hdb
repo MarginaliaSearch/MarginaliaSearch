@@ -1,6 +1,6 @@
-<h1>Events</h1>
+<h1 class="my-5">Events</h1>
 
-<table id="events">
+<table id="events" class="table">
     <tr>
         <th>Service Name</th>
         <th>Instance</th>

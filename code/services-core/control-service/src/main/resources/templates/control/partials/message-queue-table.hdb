@@ -1,6 +1,6 @@
-<h1>Message Queue</h1>
+<h1 class="my-5">Message Queue</h1>
 
-<table id="queue" class="table-rh-2">
+<table id="queue" class="table table-rh-2">
     <thead>
     <tr>
         <th>State<br>TTL</th>

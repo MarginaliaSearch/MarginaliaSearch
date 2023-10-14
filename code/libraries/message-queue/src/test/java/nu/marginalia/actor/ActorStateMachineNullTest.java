@@ -86,7 +86,7 @@ public class ActorStateMachineNullTest {
         var graph = new TestPrototypeActor(stateFactory);
 
 
-        var sm = new ActorStateMachine(messageQueueFactory, inboxId, UUID.randomUUID(), graph);
+        var sm = new ActorStateMachine(messageQueueFactory, inboxId, 0, UUID.randomUUID(), graph);
         sm.registerStates(graph);
 
         sm.init();
@@ -94,7 +94,7 @@ public class ActorStateMachineNullTest {
         sm.join(2, TimeUnit.SECONDS);
         sm.stop();
 
-        MqTestUtil.getMessages(dataSource, inboxId).forEach(System.out::println);
+        MqTestUtil.getMessages(dataSource, inboxId, 0).forEach(System.out::println);
 
     }
 

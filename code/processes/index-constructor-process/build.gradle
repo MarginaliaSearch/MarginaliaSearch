@@ -23,6 +23,7 @@ dependencies {
     implementation project(':code:common:process')
     implementation project(':code:common:service')
     implementation project(':code:common:db')
+    implementation project(':code:common:config')
     implementation project(':code:common:model')
     implementation project(':code:libraries:message-queue')
 
@@ -30,6 +31,8 @@ dependencies {
     implementation project(':code:features-index:index-reverse')
     implementation project(':code:features-index:index-journal')
     implementation project(':code:features-index:domain-ranking')
+
+    implementation project(':code:services-core:index-service')
 
     implementation libs.bundles.slf4j
     implementation libs.guice

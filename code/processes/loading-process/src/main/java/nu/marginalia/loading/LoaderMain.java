@@ -6,8 +6,9 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import lombok.Getter;
 import lombok.SneakyThrows;
+import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.ProcessConfigurationModule;
-import nu.marginalia.db.storage.FileStorageService;
+import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.linkdb.LinkdbWriter;
 import nu.marginalia.loading.documents.DocumentLoaderService;
 import nu.marginalia.loading.documents.KeywordLoaderService;
@@ -16,11 +17,10 @@ import nu.marginalia.loading.domains.DomainLoaderService;
 import nu.marginalia.loading.links.DomainLinksLoaderService;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
+import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.inbox.MqInboxResponse;
 import nu.marginalia.mq.inbox.MqSingleShotInbox;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
-import nu.marginalia.worklog.BatchingWorkLogInspector;
-import plan.CrawlPlan;
 import nu.marginalia.service.module.DatabaseModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +49,7 @@ public class LoaderMain {
     private final DomainLinksLoaderService linksService;
     private final KeywordLoaderService keywordLoaderService;
     private final DocumentLoaderService documentLoaderService;
+    private final int node;
     private final Gson gson;
 
     public static void main(String... args) throws Exception {
@@ -81,9 +82,10 @@ public class LoaderMain {
                       DomainLinksLoaderService linksService,
                       KeywordLoaderService keywordLoaderService,
                       DocumentLoaderService documentLoaderService,
+                      ProcessConfiguration processConfiguration,
                       Gson gson
                       ) {
-
+        this.node = processConfiguration.node();
         this.heartbeat = heartbeat;
         this.messageQueueFactory = messageQueueFactory;
         this.fileStorageService = fileStorageService;
@@ -157,7 +159,7 @@ public class LoaderMain {
 
     private LoadRequest fetchInstructions() throws Exception {
 
-        var inbox = messageQueueFactory.createSingleShotInbox(LOADER_INBOX, UUID.randomUUID());
+        var inbox = messageQueueFactory.createSingleShotInbox(LOADER_INBOX, node, UUID.randomUUID());
 
         var msgOpt = getMessage(inbox, nu.marginalia.mqapi.loading.LoadRequest.class.getSimpleName());
         if (msgOpt.isEmpty())
@@ -168,14 +170,20 @@ public class LoaderMain {
             throw new RuntimeException("Unexpected message in inbox: " + msg);
         }
 
-        var request = gson.fromJson(msg.payload(), nu.marginalia.mqapi.loading.LoadRequest.class);
+        try {
+            var request = gson.fromJson(msg.payload(), nu.marginalia.mqapi.loading.LoadRequest.class);
 
-        List<Path> inputSources = new ArrayList<>();
-        for (var storageId : request.inputProcessDataStorageIds) {
-            inputSources.add(fileStorageService.getStorage(storageId).asPath());
+            List<Path> inputSources = new ArrayList<>();
+            for (var storageId : request.inputProcessDataStorageIds) {
+                inputSources.add(fileStorageService.getStorage(storageId).asPath());
+            }
+
+            return new LoadRequest(new LoaderInputData(inputSources), msg, inbox);
         }
-
-        return new LoadRequest(new LoaderInputData(inputSources), msg, inbox);
+        catch (Exception ex) {
+            inbox.sendResponse(msg, new MqInboxResponse("FAILED", MqMessageState.ERR));
+            throw ex;
+        }
     }
 
     private Optional<MqMessage> getMessage(MqSingleShotInbox inbox, String expectedFunction) throws SQLException, InterruptedException {

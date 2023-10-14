@@ -29,19 +29,11 @@ public class QueryClient extends AbstractDynamicClient {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final MqOutbox outbox;
-
     @Inject
     public QueryClient(ServiceDescriptors descriptors,
                        MessageQueueFactory messageQueueFactory) {
 
         super(descriptors.forId(ServiceId.Query), WmsaHome.getHostsFile(), GsonFactory::get);
-
-        String inboxName = ServiceId.Query.name + ":" + "0";
-        String outboxName = System.getProperty("service-name", UUID.randomUUID().toString());
-
-        outbox = messageQueueFactory.createOutbox(inboxName, outboxName, UUID.randomUUID());
-
     }
 
     /** Delegate an Index API style query directly to the index service */
@@ -56,9 +48,6 @@ public class QueryClient extends AbstractDynamicClient {
         return wmsa_search_index_api_search_time.time(
                 () -> this.postGet(ctx, 0, "/search/", params, QueryResponse.class).blockingFirst()
         );
-    }
-    public MqOutbox outbox() {
-        return outbox;
     }
 
 }
