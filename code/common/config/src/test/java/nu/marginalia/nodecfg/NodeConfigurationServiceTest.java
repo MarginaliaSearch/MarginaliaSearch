@@ -30,7 +30,7 @@ public class NodeConfigurationServiceTest {
             .withDatabaseName("WMSA_prod")
             .withUsername("wmsa")
             .withPassword("wmsa")
-            .withInitScript("db/migration/V23_11_0_005__node_config.sql")
+            .withInitScript("db/migration/V23_11_0_003__node_configuration.sql")
             .withNetworkAliases("mariadb");
 
     static HikariDataSource dataSource;
