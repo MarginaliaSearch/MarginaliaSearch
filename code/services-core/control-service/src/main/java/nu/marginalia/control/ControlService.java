@@ -34,7 +34,6 @@ public class ControlService extends Service {
     private final HeartbeatService heartbeatService;
     private final EventLogService eventLogService;
     private final ControlNodeService controlNodeService;
-    private final ControlActorService controlActorService;
     private final StaticResources staticResources;
     private final MessageQueueService messageQueueService;
 
@@ -85,12 +84,9 @@ public class ControlService extends Service {
 
         var indexRenderer = rendererFactory.renderer("control/index");
         var eventsRenderer = rendererFactory.renderer("control/sys/events");
-        var servicesRenderer = rendererFactory.renderer("control/sys/services");
         var serviceByIdRenderer = rendererFactory.renderer("control/sys/service-by-id");
 
         var actionsViewRenderer = rendererFactory.renderer("control/actions");
-
-        this.controlActorService = controlActorService;
 
         this.staticResources = staticResources;
         this.messageQueueService = messageQueueService;
@@ -104,7 +100,6 @@ public class ControlService extends Service {
 
         Spark.get("/public/actions", (req,rs) -> new Object() , actionsViewRenderer::render);
         Spark.get("/public/events", eventLogService::eventsListModel , eventsRenderer::render);
-        Spark.get("/public/services", this::servicesModel, servicesRenderer::render);
         Spark.get("/public/services/:id", this::serviceModel, serviceByIdRenderer::render);
 
         // Needed to be able to show website screenshots
@@ -142,7 +137,6 @@ public class ControlService extends Service {
         super.logResponse(request, response);
     }
 
-
     private Object serviceModel(Request request, Response response) {
         String serviceName = request.params("id");
 
@@ -152,10 +146,6 @@ public class ControlService extends Service {
                 "events", eventLogService.getLastEntriesForService(serviceName, Long.MAX_VALUE, 20));
     }
 
-    private Object servicesModel(Request request, Response response) {
-        return Map.of("services", heartbeatService.getServiceHeartbeats(),
-                      "events", eventLogService.getLastEntries(Long.MAX_VALUE, 20));
-    }
 
     private Object serveStatic(Request request, Response response) {
         String resource = request.params("resource");
