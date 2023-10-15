@@ -186,7 +186,7 @@ class TestModule extends AbstractModule  {
     @Provides
     public ServiceDescriptors getServiceDescriptors() {
         return new ServiceDescriptors(
-                List.of(new ServiceDescriptor(ServiceId.Executor, "127.0.0.1", ExecutorSvcApiIntegrationTest.port))
+                List.of(new ServiceDescriptor(ServiceId.Executor, "127.0.0.1"))
         );
     }
 

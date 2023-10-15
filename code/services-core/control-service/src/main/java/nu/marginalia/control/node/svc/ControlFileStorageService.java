@@ -19,7 +19,7 @@ import java.sql.SQLException;
 @Singleton
 public class ControlFileStorageService {
     private final FileStorageService fileStorageService;
-    private Logger logger = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
     public ControlFileStorageService( FileStorageService fileStorageService)

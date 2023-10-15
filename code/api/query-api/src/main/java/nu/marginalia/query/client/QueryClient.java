@@ -30,10 +30,9 @@ public class QueryClient extends AbstractDynamicClient {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
-    public QueryClient(ServiceDescriptors descriptors,
-                       MessageQueueFactory messageQueueFactory) {
+    public QueryClient(ServiceDescriptors descriptors) {
 
-        super(descriptors.forId(ServiceId.Query), WmsaHome.getHostsFile(), GsonFactory::get);
+        super(descriptors.forId(ServiceId.Query), GsonFactory::get);
     }
 
     /** Delegate an Index API style query directly to the index service */

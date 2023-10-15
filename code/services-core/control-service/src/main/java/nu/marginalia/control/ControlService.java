@@ -157,26 +157,6 @@ public class ControlService extends Service {
                       "events", eventLogService.getLastEntries(Long.MAX_VALUE, 20));
     }
 
-    private Object processesModel(Request request, Response response) {
-        var processes = heartbeatService.getProcessHeartbeats();
-        var jobs = heartbeatService.getTaskHeartbeats();
-
-        return Map.of("processes", processes,
-                      "jobs", jobs,
-                      "actors", controlActorService.getActorStates(request),
-                      "messages", messageQueueService.getLastEntries(20));
-    }
-
-//    private Object actorDetailsModel(Request request, Response response) {
-//        final Actor actor = Actor.valueOf(request.params("fsm").toUpperCase());
-//        final String inbox = actor.id();
-//
-//        return Map.of(
-//                "actor", actor,
-//                "state-graph", controlActorService.getActorStateGraph(actor),
-//                "messages", messageQueueService.getLastEntriesForInbox(inbox, 20));
-//    }
-
     private Object serveStatic(Request request, Response response) {
         String resource = request.params("resource");
 

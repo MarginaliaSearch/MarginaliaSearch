@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import io.prometheus.client.Summary;
 import io.reactivex.rxjava3.core.Observable;
-import nu.marginalia.WmsaHome;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import nu.marginalia.client.AbstractDynamicClient;
 import nu.marginalia.client.Context;
 import nu.marginalia.index.client.model.query.SearchSpecification;
@@ -15,6 +15,7 @@ import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.service.descriptor.ServiceDescriptors;
 import nu.marginalia.service.id.ServiceId;
+import java.util.List;
 
 import javax.annotation.CheckReturnValue;
 import java.util.UUID;
@@ -31,7 +32,7 @@ public class IndexClient extends AbstractDynamicClient {
                        MessageQueueFactory messageQueueFactory,
                        @Named("wmsa-system-node") Integer nodeId)
     {
-        super(descriptors.forId(ServiceId.Index), WmsaHome.getHostsFile(), GsonFactory::get);
+        super(descriptors.forId(ServiceId.Index), GsonFactory::get);
 
         String inboxName = ServiceId.Index.name;
         String outboxName = System.getProperty("service-name:"+nodeId, UUID.randomUUID().toString());
@@ -48,6 +49,15 @@ public class IndexClient extends AbstractDynamicClient {
         return wmsa_search_index_api_time.time(
                 () -> this.postGet(ctx, node,"/search/", specs, SearchResultSet.class).blockingFirst()
         );
+    }
+
+    @CheckReturnValue
+    public SearchResultSet query(Context ctx, List<Integer> nodes, SearchSpecification specs) {
+        return Observable.fromIterable(nodes)
+                .subscribeOn(Schedulers.io())
+                .concatMap(node -> this.postGet(ctx, node,"/search/", specs, SearchResultSet.class))
+                .reduce(SearchResultSet::combine)
+                .blockingGet();
     }
 
 

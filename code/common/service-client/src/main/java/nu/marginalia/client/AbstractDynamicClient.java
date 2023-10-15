@@ -1,25 +1,20 @@
 package nu.marginalia.client;
 
 import com.google.gson.Gson;
-import io.reactivex.rxjava3.core.Observable;
-import lombok.SneakyThrows;
-import nu.marginalia.client.model.ClientRoute;
+import nu.marginalia.client.route.RouteProvider;
+import nu.marginalia.client.route.ServiceRoute;
 import nu.marginalia.service.descriptor.ServiceDescriptor;
-import nu.marginalia.service.descriptor.HostsFile;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.function.Supplier;
 
 public class AbstractDynamicClient extends AbstractClient {
     private final ServiceDescriptor service;
-    private final Logger logger = LoggerFactory.getLogger(getClass());
     private final AbortingScheduler scheduler;
 
-    public AbstractDynamicClient(@Nonnull ServiceDescriptor service, HostsFile hosts, Supplier<Gson> gsonProvider) {
+    public AbstractDynamicClient(@Nonnull ServiceDescriptor service, Supplier<Gson> gsonProvider) {
         super(
-                new ClientRoute(hosts.getHost(service), service.port),
+                service,
                 10,
                 gsonProvider
         );

@@ -4,6 +4,9 @@ import com.google.inject.Inject;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.client.AbstractDynamicClient;
 import nu.marginalia.client.Context;
+import nu.marginalia.client.route.RouteProvider;
+import nu.marginalia.client.route.ServiceRoute;
+import nu.marginalia.service.descriptor.ServiceDescriptor;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.executor.model.ActorRunStates;
 import nu.marginalia.executor.model.crawl.RecrawlParameters;
@@ -20,7 +23,7 @@ import java.util.List;
 public class ExecutorClient extends AbstractDynamicClient {
     @Inject
     public ExecutorClient(ServiceDescriptors descriptors) {
-        super(descriptors.forId(ServiceId.Executor), WmsaHome.getHostsFile(), GsonFactory::get);
+        super(descriptors.forId(ServiceId.Executor), GsonFactory::get);
     }
 
     public void startFsm(Context ctx, int node, String actorName) {

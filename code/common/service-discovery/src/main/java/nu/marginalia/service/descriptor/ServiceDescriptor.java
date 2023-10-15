@@ -5,18 +5,24 @@ import nu.marginalia.service.id.ServiceId;
 public class ServiceDescriptor {
     public final ServiceId id;
     public final String name;
-    public final int port;
 
-    public ServiceDescriptor(ServiceId id, int port) {
+    public ServiceDescriptor(ServiceId id) {
         this.id = id;
         this.name = id.name;
-        this.port = port;
     }
-    public ServiceDescriptor(ServiceId id, String host, int port) {
+
+    public ServiceDescriptor(ServiceId id, String host) {
         this.id = id;
         this.name = host;
-        this.port = port;
     }
+
+    public String getHostName(int node) {
+        if (node > 0)
+            return name + "-" + node;
+
+        return name;
+    }
+
     public String toString() {
         return name;
     }

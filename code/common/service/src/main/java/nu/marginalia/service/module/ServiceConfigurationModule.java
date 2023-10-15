@@ -41,7 +41,7 @@ public class ServiceConfigurationModule extends AbstractModule {
             return Integer.parseInt(port);
         }
 
-        return descriptors.forId(id).port;
+        return 80;
     }
 
     private int getPrometheusPort() {
@@ -51,7 +51,7 @@ public class ServiceConfigurationModule extends AbstractModule {
             return Integer.parseInt(prometheusPortEnv);
         }
 
-        return descriptors.forId(id).port + 1000;
+        return 7000;
     }
 
     private int getNode() {

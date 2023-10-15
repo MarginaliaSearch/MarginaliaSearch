@@ -2,113 +2,74 @@ x-svc: &service
   env_file:
     - "run/env/service.env"
   volumes:
-    - vol:/vol
-    - backup:/backup
     - conf:/wmsa/conf:ro
     - model:/wmsa/model
     - data:/wmsa/data
-    - dist:/dist
-    - samples:/samples
     - logs:/var/log/wmsa
+    - dist:/dist
   networks:
     - wmsa
   depends_on:
     - mariadb
 
+x-p1: &partition-1
+  env_file:
+    - "run/env/service.env"
+  volumes:
+    - conf:/wmsa/conf:ro
+    - model:/wmsa/model
+    - data:/wmsa/data
+    - logs:/var/log/wmsa
+    - dist:/dist
+    - index:/idx
+    - work:/work
+    - backup:/backup
+    - samples:/storage
+  networks:
+    - wmsa
+  depends_on:
+    - mariadb
+  environment:
+    - "WMSA_SERVICE_NODE=1"
+
 services:
-  index-service:
-    <<: *service
+  index-service-1:
+    <<: *partition-1
     image: "marginalia.nu/index-service"
-    container_name: "index-service"
-    ports:
-      - "127.0.0.1:5021:5021/tcp"
-      - "127.0.0.1:4021:5000"
-      - "127.0.0.1:7021:4000"
-    environment:
-      - "WMSA_SERVICE_NODE=0"
+    container_name: "index-service-1"
+  executor-service-1:
+    <<: *partition-1
+    image: "marginalia.nu/executor-service"
+    container_name: "executor-service-1"
   search-service:
     <<: *service
     image: "marginalia.nu/search-service"
     container_name: "search-service"
-    ports:
-      - "127.0.0.1:5023:5023"
-      - "127.0.0.1:4023:5000"
-      - "127.0.0.1:7023:4000"
-    depends_on:
-      - index-service
   assistant-service:
     <<: *service
     image: "marginalia.nu/assistant-service"
     container_name: "assistant-service"
-    ports:
-      - "127.0.0.1:5025:5025"
-      - "127.0.0.1:4025:5000"
-      - "127.0.0.1:7025:4000"
-    depends_on:
-      - mariadb
   api-service:
     <<: *service
     image: "marginalia.nu/api-service"
     container_name: "api-service"
-    ports:
-      - "127.0.0.1:5004:5004"
-      - "127.0.0.1:4004:5000"
-      - "127.0.0.1:7004:4000"
-    depends_on:
-      - mariadb
   query-service:
     <<: *service
     image: "marginalia.nu/query-service"
     container_name: "query-service"
-    ports:
-      - "127.0.0.1:5022:5022"
-      - "127.0.0.1:4022:5000"
-      - "127.0.0.1:7022:4000"
-    depends_on:
-      - mariadb
-  executor-service:
-    <<: *service
-    image: "marginalia.nu/executor-service"
-    container_name: "executor-service"
-    ports:
-      - "127.0.0.1:5024:5024"
-      - "127.0.0.1:4024:5000"
-      - "127.0.0.1:7024:4000"
-    depends_on:
-      - mariadb
-    environment:
-      - "WMSA_SERVICE_NODE=0"
   dating-service:
     <<: *service
     image: "marginalia.nu/dating-service"
     container_name: "dating-service"
-    ports:
-      - "127.0.0.1:5070:5070"
-      - "127.0.0.1:4070:5000"
-      - "127.0.0.1:7070:4000"
-    depends_on:
-      - mariadb
   explorer-service:
     <<: *service
     image: "marginalia.nu/explorer-service"
     container_name: "explorer-service"
-    ports:
-      - "127.0.0.1:5071:5071"
-      - "127.0.0.1:4071:5000"
-      - "127.0.0.1:7071:4000"
-    depends_on:
-      - mariadb
   control-service:
     <<: *service
     image: "marginalia.nu/control-service"
     container_name: "control-service"
-    ports:
-      - "127.0.0.1:5090:5090"
-      - "127.0.0.1:4090:5000"
-      - "127.0.0.1:7090:4000"
-      - "127.0.0.1:7099:4001"
-    depends_on:
-      - mariadb
+
   mariadb:
     image: "mariadb:lts"
     container_name: "mariadb"
@@ -143,12 +104,18 @@ volumes:
       type: none
       o: bind
       device: run/db
-  vol:
+  index:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: run/vol
+      device: run/index
+  work:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: run/work
   backup:
     driver: local
     driver_opts:

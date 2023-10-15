@@ -33,8 +33,15 @@ public class FileStorageService {
     public Optional<FileStorage> findFileStorageToDelete() {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                SELECT ID FROM FILE_STORAGE WHERE STATE='DELETE' LIMIT 1
+                SELECT FILE_STORAGE.ID FROM FILE_STORAGE
+                INNER JOIN FILE_STORAGE_BASE ON BASE_ID=FILE_STORAGE_BASE.ID
+                WHERE STATE='DELETE'
+                AND NODE = ?
+                LIMIT 1
                 """)) {
+
+            stmt.setInt(1, node);
+
             var rs = stmt.executeQuery();
             if (rs.next()) {
                 return Optional.of(getStorage(new FileStorageId(rs.getLong(1))));
@@ -106,9 +113,16 @@ public class FileStorageService {
 
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                SELECT PATH FROM FILE_STORAGE WHERE BASE_ID = ?
+                SELECT FILE_STORAGE.PATH
+                FROM FILE_STORAGE INNER JOIN FILE_STORAGE_BASE
+                ON BASE_ID = FILE_STORAGE_BASE.ID
+                WHERE BASE_ID = ?
+                AND NODE = ?
                 """)) {
+
             stmt.setLong(1, base.id().id());
+            stmt.setInt(2, node);
+
             var rs = stmt.executeQuery();
             while (rs.next()) {
                 ignoredPaths.add(rs.getString(1));
@@ -494,7 +508,10 @@ public class FileStorageService {
              var stmt = conn.prepareStatement("""
                      SELECT PATH, STATE, TYPE, DESCRIPTION, CREATE_DATE, ID, BASE_ID
                      FROM FILE_STORAGE_VIEW
+                     WHERE NODE=?
                      """)) {
+
+            stmt.setInt(1, node);
 
             long storageId;
             long baseId;
@@ -510,7 +527,15 @@ public class FileStorageService {
                     storageId = rs.getLong("ID");
                     path = rs.getString("PATH");
                     state = rs.getString("STATE");
-                    type = FileStorageType.valueOf(rs.getString("TYPE"));
+
+                    try {
+                        type = FileStorageType.valueOf(rs.getString("TYPE"));
+                    }
+                    catch (IllegalArgumentException ex) {
+                        logger.warn("Illegal file storage type {} in db", rs.getString("TYPE"));
+                        continue;
+                    }
+
                     description = rs.getString("DESCRIPTION");
                     createDateTime = rs.getTimestamp("CREATE_DATE").toLocalDateTime();
                     var base = getStorageBase(new FileStorageBaseId(baseId));

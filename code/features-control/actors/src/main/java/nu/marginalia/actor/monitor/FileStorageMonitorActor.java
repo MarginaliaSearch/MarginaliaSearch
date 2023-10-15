@@ -74,7 +74,7 @@ public class FileStorageMonitorActor extends AbstractActorPrototype {
                 transition(REMOVE_STALE, missing.get().id());
             }
 
-            fileStorageService.synchronizeStorageManifests(fileStorageService.getStorageBase(FileStorageBaseType.WORK));
+            fileStorageService.synchronizeStorageManifests(fileStorageService.getStorageBase(FileStorageBaseType.STORAGE));
 
             TimeUnit.SECONDS.sleep(10);
         }

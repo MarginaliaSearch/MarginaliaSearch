@@ -1,4 +1,9 @@
 package nu.marginalia.control.node.model;
 
-public record IndexNodeStatus(IndexNode node, boolean indexServiceOnline, boolean executorServiceOnline) {
+import nu.marginalia.nodecfg.model.NodeConfiguration;
+
+public record IndexNodeStatus(NodeConfiguration configuration, boolean indexServiceOnline, boolean executorServiceOnline) {
+    public int id() {
+        return configuration.node();
+    }
 }

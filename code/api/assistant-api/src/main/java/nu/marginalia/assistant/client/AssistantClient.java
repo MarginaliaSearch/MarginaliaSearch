@@ -21,7 +21,7 @@ public class AssistantClient extends AbstractDynamicClient {
 
     @Inject
     public AssistantClient(ServiceDescriptors descriptors) {
-        super(descriptors.forId(ServiceId.Assistant), WmsaHome.getHostsFile(), GsonFactory::get);
+        super(descriptors.forId(ServiceId.Assistant), GsonFactory::get);
     }
 
     public Observable<DictionaryResponse> dictionaryLookup(Context ctx, String word) {

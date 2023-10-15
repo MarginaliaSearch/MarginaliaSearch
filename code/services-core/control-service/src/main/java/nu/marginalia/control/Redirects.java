@@ -3,7 +3,6 @@ package nu.marginalia.control;
 import spark.ResponseTransformer;
 
 public class Redirects {
-    public static final HtmlRedirect redirectToServices = new HtmlRedirect("/services");
     public static final HtmlRedirect redirectToActors = new HtmlRedirect("/actors");
     public static final HtmlRedirect redirectToApiKeys = new HtmlRedirect("/api-keys");
     public static final HtmlRedirect redirectToStorage = new HtmlRedirect("/storage");
@@ -15,7 +14,7 @@ public class Redirects {
         private final String html;
 
         /** Because Spark doesn't have a redirect method that works with relative URLs
-         * (without explicitly providing the external address),we use HTML and let the
+         * (without explicitly providing the external address), we use HTML and let the
          * browser resolve the relative redirect instead */
         public HtmlRedirect(String destination) {
             this.html = """

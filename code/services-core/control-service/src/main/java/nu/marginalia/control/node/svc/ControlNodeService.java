@@ -127,7 +127,7 @@ public class ControlNodeService {
                       "nextNodeId", nextId);
     }
 
-    private Object triggerCrawl(Request request, Response response) throws Exception {
+    private Object triggerCrawl(Request request, Response response) {
         int nodeId = Integer.parseInt(request.params("id"));
 
         executorClient.triggerCrawl(Context.fromRequest(request), nodeId, request.params("fid"));
@@ -135,7 +135,7 @@ public class ControlNodeService {
         return redirectToOverview(request);
     }
 
-    private Object triggerRestoreBackup(Request request, Response response) throws Exception {
+    private Object triggerRestoreBackup(Request request, Response response) {
         int nodeId = Integer.parseInt(request.params("id"));
 
         executorClient.restoreBackup(Context.fromRequest(request), nodeId, request.params("fid"));
@@ -362,9 +362,10 @@ public class ControlNodeService {
 
     private Object nodeOverviewModel(Request request, Response response) throws SQLException {
         int nodeId = Integer.parseInt(request.params("id"));
+        var config = nodeConfigurationService.get(nodeId);
         return Map.of(
                 "node", new IndexNode(nodeId),
-                "status", getStatus(new IndexNode(nodeId)),
+                "status", getStatus(config),
                 "events", getEvents(nodeId),
                 "processes", heartbeatService.getProcessHeartbeatsForNode(nodeId),
                 "jobs", heartbeatService.getTaskHeartbeatsForNode(nodeId)
@@ -394,29 +395,21 @@ public class ControlNodeService {
         return events;
     }
 
-    public List<IndexNode> getConfiguredNodes() {
-        return fileStorageService
-                .getConfiguredNodes()
-                .stream()
-                .sorted()
-                .map(IndexNode::new)
-                .toList();
-    }
-
+    @SneakyThrows
     public List<IndexNodeStatus> getNodeStatusList() {
-        return fileStorageService
-                .getConfiguredNodes()
+        return nodeConfigurationService
+                .getAll()
                 .stream()
-                .sorted()
-                .map(IndexNode::new)
+                .sorted(Comparator.comparing(NodeConfiguration::node))
                 .map(this::getStatus)
                 .toList();
     }
 
-    IndexNodeStatus getStatus(IndexNode node) {
-        return new IndexNodeStatus(node,
-                monitors.isServiceUp(ServiceId.Index, node.id()),
-                monitors.isServiceUp(ServiceId.Executor, node.id())
+    @SneakyThrows
+    public IndexNodeStatus getStatus(NodeConfiguration config) {
+        return new IndexNodeStatus(config,
+                monitors.isServiceUp(ServiceId.Index, config.node()),
+                monitors.isServiceUp(ServiceId.Executor, config.node())
         );
     }
 

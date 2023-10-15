@@ -5,7 +5,7 @@ import io.reactivex.rxjava3.core.Observable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.SneakyThrows;
-import nu.marginalia.client.model.ClientRoute;
+import nu.marginalia.client.route.ServiceRoute;
 import org.junit.jupiter.api.*;
 import spark.Request;
 import spark.Response;
@@ -34,7 +34,7 @@ public class AbstractClientTest {
         int port = new Random().nextInt(6000, 10000);
         testServer = new TestServer(port);
 
-        client = new AbstractClient(new ClientRoute("localhost", port), 1, Gson::new) {
+        client = new AbstractClient(n -> new ServiceRoute("localhost", port), 1, Gson::new) {
             @Override
             public AbortingScheduler scheduler() {
                 return new AbortingScheduler(name());
