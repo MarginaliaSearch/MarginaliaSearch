@@ -3,15 +3,24 @@
 <head>
     <title>Control Service</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="/style.css" />
+    {{> control/partials/head-includes }}
 </head>
 <body>
 {{> control/partials/nav}}
-<section>
-    <h1>Search to Ban</h1>
+<div class="container">
+    <h1 class="my-5">Search to Ban</h1>
     <form action="/search-to-ban">
-        <label for="q">Search Query</label><br>
-        <input type="text" value="{{specs.humanQuery}}" name="q" id="q" /> <input type="submit" value="Search" />
+        <div class="mb-3">
+            <label for="q" class="form-label">Search Query</label><br>
+            <div class="row">
+                <div class="col">
+                    <input type="text" class="form-control" value="{{specs.humanQuery}}" name="q" id="q" />
+                </div>
+                <div class="col">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+            </div>
+        </div>
     </form>
     {{#unless results}}
     <p>This utility lets you use the search engine to find spammy results, and ban them
@@ -20,18 +29,20 @@
     {{#if results}}
     <hr>
     <form action="/search-to-ban" method="post">
-    <input type="submit" value="Blacklist Selected Domains">
+    <div class="my-5">
+        <button type="submit" class="btn btn-danger">Blacklist Selected Domains</button>
+    </div>
     <input type="hidden" name="query" value="{{specs.humanQuery}}" />
-    <table>
+    <table class="table">
     {{#each results}}
-        <tr><td><input type="checkbox" name="{{url}}"><td>{{title}}</td></tr>
+        <tr><td><input type="checkbox" name="{{url}}"><th>{{title}}</th></tr>
         <tr><td colspan="2"><a href="{{url}}">{{url}}</a></td></tr>
         <tr><td colspan="2">{{description}}</td></tr>
-        <tr><td colspan="2">&nbsp;</td></tr>
     {{/each}}
     </table>
     {{/if}}
     </form>
-</section>
+</div>
 </body>
+{{> control/partials/foot-includes }}
 </html>

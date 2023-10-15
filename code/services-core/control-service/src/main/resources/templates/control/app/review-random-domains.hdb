@@ -2,15 +2,14 @@
 <html>
 <head>
     <title>Control Service</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="/style.css" />
+    {{> control/partials/head-includes }}
 </head>
 <body>
 {{> control/partials/nav}}
-<section>
-    <h1>Domain Review</h1>
+<div class="container">
+    <h1 class="my-5">Domain Review</h1>
     <form method="POST" action="/review-random-domains">
-    <table>
+    <table class="table">
         <tr>
             <th>Action</th><th>Domain Name</th><th>Screenshot</th>
         </tr>
@@ -28,9 +27,11 @@
         </tr>
         {{/each}}
         <tr>
-            <td colspan="3"><input type="Submit" value="Process"></td>
+            <td colspan="3"><button type="submit" class="btn btn-primary">Process</button></td>
         </tr>
     </table>
         <input type="hidden" name="after" value="{{after}}" />
     </form>
-</section>
+</div>
+
+{{> control/partials/foot-includes }}

@@ -11,7 +11,7 @@
     </tr>
     {{#each processes}}
     <tr class="{{#if isMissing}}missing{{/if}}">
-        <td><a href="/message-queue?inbox={{processId}}">{{displayName}}</a></td>
+        <td>{{displayName}}</td>
         <td title="{{uuidFull}}">
             <span style="background-color: {{uuidColor}}" class="uuidPip">&nbsp;</span><span style="background-color: {{uuidColor2}}" class="uuidPip">&nbsp;</span>{{uuid}}
         </td>
