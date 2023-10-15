@@ -2,22 +2,34 @@ package nu.marginalia.executor;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import lombok.SneakyThrows;
 import nu.marginalia.actor.ActorApi;
 import nu.marginalia.actor.ActorControlService;
 import nu.marginalia.actor.state.ActorState;
 import nu.marginalia.actor.state.ActorStateInstance;
 import nu.marginalia.executor.model.ActorRunState;
 import nu.marginalia.executor.model.ActorRunStates;
+import nu.marginalia.executor.storage.FileStorageContent;
+import nu.marginalia.executor.storage.FileStorageFile;
 import nu.marginalia.executor.svc.BackupService;
 import nu.marginalia.executor.svc.ProcessingService;
 import nu.marginalia.executor.svc.SideloadService;
 import nu.marginalia.service.server.BaseServiceParams;
 import nu.marginalia.service.server.Service;
+import nu.marginalia.storage.FileStorageService;
+import nu.marginalia.storage.model.FileStorageId;
 import spark.Request;
 import spark.Response;
 import spark.Spark;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.sql.SQLException;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,6 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ExecutorSvc extends Service {
     private final BaseServiceParams params;
     private final ActorControlService actorControlService;
+    private final FileStorageService fileStorageService;
 
     @Inject
     public ExecutorSvc(BaseServiceParams params,
@@ -32,11 +45,13 @@ public class ExecutorSvc extends Service {
                        ProcessingService processingService,
                        SideloadService sideloadService,
                        BackupService backupService,
+                       FileStorageService fileStorageService,
                        Gson gson,
                        ActorApi actorApi) {
         super(params);
         this.params = params;
         this.actorControlService = actorControlService;
+        this.fileStorageService = fileStorageService;
 
         Spark.post("/actor/:id/start", actorApi::startActor);
         Spark.post("/actor/:id/start/:state", actorApi::startActorFromState);
@@ -57,7 +72,34 @@ public class ExecutorSvc extends Service {
         Spark.post("/sideload/encyclopedia", sideloadService::sideloadEncyclopedia);
 
         Spark.post("/backup/:fid/restore", backupService::restore);
+        Spark.get("/storage/:fid", this::listFiles, gson::toJson);
 
+    }
+
+    private FileStorageContent listFiles(Request request, Response response) throws SQLException, IOException {
+        FileStorageId fileStorageId = FileStorageId.parse(request.params("fid"));
+
+        var storage = fileStorageService.getStorage(fileStorageId);
+
+        List<FileStorageFile> files;
+
+        try (var fs = Files.list(storage.asPath())) {
+            files = fs.filter(Files::isRegularFile)
+                    .map(this::createFileModel)
+                    .sorted(Comparator.comparing(FileStorageFile::name))
+                    .toList();
+        }
+
+        return new FileStorageContent(files);
+    }
+
+    @SneakyThrows
+    private FileStorageFile createFileModel(Path path) {
+        return new FileStorageFile(
+                path.toFile().getName(),
+                Files.size(path),
+                Files.getLastModifiedTime(path).toInstant().toString()
+                );
     }
 
 

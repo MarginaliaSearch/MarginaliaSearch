@@ -303,8 +303,8 @@ public class ControlNodeService {
 
     private Object nodeStorageDetailsModel(Request request, Response response) throws SQLException {
         int nodeId = Integer.parseInt(request.params("id"));
+        var storage = getFileStorageWithRelatedEntries(Context.fromRequest(request), nodeId, FileStorageId.parse(request.queryParams("fid")));
 
-        var storage = getFileStorageWithRelatedEntries(FileStorageId.parse(request.queryParams("fid")));
         String view = switch(storage.type()) {
             case BACKUP -> "backup";
             case CRAWL_DATA -> "crawl";
@@ -460,48 +460,37 @@ public class ControlNodeService {
     }
 
 
-    public FileStorageWithRelatedEntries getFileStorageWithRelatedEntries(FileStorageId id) throws SQLException {
-        var storage = fileStorageService.getStorage(id);
-        var related = getRelatedEntries(id);
+    public FileStorageWithRelatedEntries getFileStorageWithRelatedEntries(
+            Context context,
+            int node,
+            FileStorageId fileId
+    ) throws SQLException {
+        var storage = fileStorageService.getStorage(fileId);
+        var related = getRelatedEntries(fileId);
 
         List<FileStorageFileModel> files = new ArrayList<>();
 
-        try (var filesStream = Files.list(storage.asPath())) {
-            filesStream
-                    .filter(Files::isRegularFile)
-                    .map(this::createFileModel)
-                    .sorted(Comparator.comparing(FileStorageFileModel::filename))
-                    .forEach(files::add);
-        }
-        catch (IOException ex) {
-            logger.error("Failed to list files in storage", ex);
+        for (var execFile : executorClient.listFileStorage(context, node, fileId).files()) {
+            files.add(new FileStorageFileModel(
+                    execFile.name(),
+                    execFile.modTime(),
+                    sizeString(execFile.size())
+            ));
         }
 
         return new FileStorageWithRelatedEntries(new FileStorageWithActions(storage), related, files);
     }
 
-    private FileStorageFileModel createFileModel(Path p) {
-        try {
-            String mTime = Files.getLastModifiedTime(p).toInstant().toString();
-            String size;
-            if (Files.isDirectory(p)) {
-                size = "-";
-            }
-            else {
-                long sizeBytes = Files.size(p);
+    private String sizeString(long sizeBytes) {
+        String size;
 
-                if (sizeBytes < 1024) size = sizeBytes + " B";
-                else if (sizeBytes < 1024 * 1024) size = sizeBytes / 1024 + " KB";
-                else if (sizeBytes < 1024 * 1024 * 1024) size = sizeBytes / (1024 * 1024) + " MB";
-                else size = sizeBytes / (1024 * 1024 * 1024) + " GB";
-            }
-
-            return new FileStorageFileModel(p.toFile().getName(), mTime, size);
-        }
-        catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
+        if (sizeBytes < 1024) size = sizeBytes + " B";
+        else if (sizeBytes < 1024 * 1024) size = sizeBytes / 1024 + " KB";
+        else if (sizeBytes < 1024 * 1024 * 1024) size = sizeBytes / (1024 * 1024) + " MB";
+        else size = sizeBytes / (1024 * 1024 * 1024) + " GB";
+        return size;
     }
+
     private List<FileStorage> getRelatedEntries(FileStorageId id) {
         List<FileStorage> ret = new ArrayList<>();
         try (var conn = dataSource.getConnection();

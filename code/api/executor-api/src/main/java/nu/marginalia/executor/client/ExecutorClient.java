@@ -6,6 +6,7 @@ import nu.marginalia.client.AbstractDynamicClient;
 import nu.marginalia.client.Context;
 import nu.marginalia.client.route.RouteProvider;
 import nu.marginalia.client.route.ServiceRoute;
+import nu.marginalia.executor.storage.FileStorageContent;
 import nu.marginalia.service.descriptor.ServiceDescriptor;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.executor.model.ActorRunStates;
@@ -69,7 +70,7 @@ public class ExecutorClient extends AbstractDynamicClient {
 
     public void exportData(Context ctx) {
 //        post(ctx, node, "/process/adjacency-calculation/", "").blockingSubscribe();
-        // FIXME
+        // FIXME this shouldn't be done in the executor
     }
 
     public void sideloadEncyclopedia(Context ctx, int node, Path sourcePath) {
@@ -108,4 +109,9 @@ public class ExecutorClient extends AbstractDynamicClient {
     public ActorRunStates getActorStates(Context context, int node) {
         return get(context, node, "/actor", ActorRunStates.class).blockingFirst();
     }
+
+    public FileStorageContent listFileStorage(Context context, int node, FileStorageId fileId) {
+        return get(context, node, "/storage/"+fileId.id(), FileStorageContent.class).blockingFirst();
+    }
+
 }
