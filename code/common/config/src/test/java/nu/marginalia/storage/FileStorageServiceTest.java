@@ -133,7 +133,7 @@ public class FileStorageServiceTest {
         Assertions.assertEquals(Path.of("/tmp"), fileStorageService.getStorageByType(FileStorageType.BACKUP).asPath());
     }
     @Test
-    public void testCreateBase() throws SQLException, FileNotFoundException {
+    public void testCreateBase() throws SQLException {
         String name = "test-" + UUID.randomUUID();
 
         var storage = new FileStorageService(dataSource, 0);
@@ -144,27 +144,12 @@ public class FileStorageServiceTest {
     }
 
     @Test
-    public void testAllocatePermanent() throws SQLException, IOException {
-        String name = "test-" + UUID.randomUUID();
-
-        var storage = new FileStorageService(dataSource, 0);
-
-        var base = storage.createStorageBase(name, createTempDir(), FileStorageBaseType.WORK);
-
-        var created = storage.allocatePermanentStorage(base, "xyz", FileStorageType.CRAWL_DATA, "thisShouldSucceed");
-        tempDirs.add(created.asPath());
-
-        var actual = storage.getStorage(created.id());
-        Assertions.assertEquals(created, actual);
-    }
-
-    @Test
     public void testAllocateTemp() throws IOException, SQLException {
         String name = "test-" + UUID.randomUUID();
 
         var storage = new FileStorageService(dataSource, 0);
 
-        var base = storage.createStorageBase(name, createTempDir(), FileStorageBaseType.WORK);
+        var base = storage.createStorageBase(name, createTempDir(), FileStorageBaseType.STORAGE);
         var fileStorage = storage.allocateTemporaryStorage(base, FileStorageType.CRAWL_DATA, "xyz", "thisShouldSucceed");
         System.out.println("Allocated " + fileStorage.asPath());
         Assertions.assertTrue(Files.exists(fileStorage.asPath()));

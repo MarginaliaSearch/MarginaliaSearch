@@ -69,7 +69,6 @@ public class ExportDataActor extends AbstractActorPrototype {
                     Find EXPORT storage area, then transition to EXPORT-BLACKLIST.
                     """)
     public Message init(Integer i) throws Exception {
-
         var storage = storageService.getStorageByType(FileStorageType.EXPORT);
         if (storage == null) error("Bad storage id");
 

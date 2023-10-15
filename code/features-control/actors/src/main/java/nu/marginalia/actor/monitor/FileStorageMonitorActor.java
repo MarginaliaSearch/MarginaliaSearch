@@ -2,10 +2,12 @@ package nu.marginalia.actor.monitor;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.actor.ActorStateFactory;
 import nu.marginalia.actor.prototype.AbstractActorPrototype;
 import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorState;
+import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorage;
 import nu.marginalia.storage.model.FileStorageBaseType;
@@ -32,7 +34,10 @@ public class FileStorageMonitorActor extends AbstractActorPrototype {
     private static final String PURGE = "PURGE";
     private static final String REMOVE_STALE = "REMOVE-STALE";
     private static final String END = "END";
+
+    private final HikariDataSource dataSource;
     private final FileStorageService fileStorageService;
+    private final int node;
 
     @Override
     public String describe() {
@@ -42,9 +47,13 @@ public class FileStorageMonitorActor extends AbstractActorPrototype {
 
     @Inject
     public FileStorageMonitorActor(ActorStateFactory stateFactory,
+                                   HikariDataSource dataSource,
+                                   ServiceConfiguration serviceConfiguration,
                                    FileStorageService fileStorageService) {
         super(stateFactory);
+        this.dataSource = dataSource;
         this.fileStorageService = fileStorageService;
+        this.node = serviceConfiguration.node();
     }
 
     @ActorState(name = INITIAL, next = MONITOR)
@@ -62,7 +71,7 @@ public class FileStorageMonitorActor extends AbstractActorPrototype {
     public void monitor() throws Exception {
 
         for (;;) {
-            Optional<FileStorage> toDeleteOpt = fileStorageService.findFileStorageToDelete();
+            Optional<FileStorage> toDeleteOpt = findFileStorageToDelete();
 
             if (toDeleteOpt.isPresent()) {
                 transition(PURGE, toDeleteOpt.get().id());
@@ -96,7 +105,7 @@ public class FileStorageMonitorActor extends AbstractActorPrototype {
             FileUtils.deleteDirectory(path.toFile());
         }
 
-        fileStorageService.removeFileStorage(storage.id());
+        fileStorageService.deregisterFileStorage(storage.id());
     }
 
     @ActorState(
@@ -108,6 +117,33 @@ public class FileStorageMonitorActor extends AbstractActorPrototype {
                         """
     )
     public void removeStale(FileStorageId id) throws SQLException {
-        fileStorageService.removeFileStorage(id);
+        fileStorageService.deregisterFileStorage(id);
     }
+
+
+    public Optional<FileStorage> findFileStorageToDelete() {
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("""
+                SELECT FILE_STORAGE.ID FROM FILE_STORAGE
+                INNER JOIN FILE_STORAGE_BASE ON BASE_ID=FILE_STORAGE_BASE.ID
+                WHERE STATE='DELETE'
+                AND NODE = ?
+                LIMIT 1
+                """)) {
+
+            stmt.setInt(1, node);
+
+            var rs = stmt.executeQuery();
+            if (rs.next()) {
+                var id = new FileStorageId(rs.getLong("ID"));
+                return Optional.of(fileStorageService.getStorage(id));
+            }
+
+        } catch (SQLException e) {
+            logger.warn("SQL error", e);
+        }
+
+        return Optional.empty();
+    }
+
 }

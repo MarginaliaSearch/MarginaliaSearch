@@ -21,4 +21,5 @@ public record FileStorageBase(FileStorageBaseId id,
     public boolean isValid() {
         return id.id() >= 0;
     }
+
 }

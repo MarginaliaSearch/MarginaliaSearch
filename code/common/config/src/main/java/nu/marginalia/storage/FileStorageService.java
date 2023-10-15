@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -30,46 +29,6 @@ public class FileStorageService {
 
     private static final DateTimeFormatter dirNameDatePattern = DateTimeFormatter.ofPattern("__uu-MM-dd'T'HH_mm_ss.SSS"); // filesystem safe ISO8601
 
-    public Optional<FileStorage> findFileStorageToDelete() {
-        try (var conn = dataSource.getConnection();
-             var stmt = conn.prepareStatement("""
-                SELECT FILE_STORAGE.ID FROM FILE_STORAGE
-                INNER JOIN FILE_STORAGE_BASE ON BASE_ID=FILE_STORAGE_BASE.ID
-                WHERE STATE='DELETE'
-                AND NODE = ?
-                LIMIT 1
-                """)) {
-
-            stmt.setInt(1, node);
-
-            var rs = stmt.executeQuery();
-            if (rs.next()) {
-                return Optional.of(getStorage(new FileStorageId(rs.getLong(1))));
-            }
-        } catch (SQLException e) {
-            return Optional.empty();
-        }
-        return Optional.empty();
-    }
-
-    public Set<Integer> getConfiguredNodes() {
-        Set<Integer> ret = new HashSet<>();
-
-        try (var conn = dataSource.getConnection();
-             var stmt = conn.prepareStatement("""
-                SELECT DISTINCT(NODE) FROM FILE_STORAGE_BASE
-                """)) {
-            var rs = stmt.executeQuery();
-            while (rs.next()) {
-                ret.add(rs.getInt(1));
-            }
-        } catch (SQLException e) {
-            logger.warn("SQL error getting nodes", e);
-        }
-
-        return ret;
-    }
-
     @Inject
     public FileStorageService(HikariDataSource dataSource, @Named("wmsa-system-node") Integer node) {
         this.dataSource = dataSource;
@@ -87,13 +46,13 @@ public class FileStorageService {
     }
 
     /** @return the storage base with the given id, or null if it does not exist */
-    public FileStorageBase getStorageBase(FileStorageBaseId type) throws SQLException  {
+    public FileStorageBase getStorageBase(FileStorageBaseId id) throws SQLException  {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
                      SELECT ID, NAME, PATH, TYPE
                      FROM FILE_STORAGE_BASE WHERE ID = ?
                      """)) {
-            stmt.setLong(1, type.id());
+            stmt.setLong(1, id.id());
             try (var rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return new FileStorageBase(
@@ -187,21 +146,6 @@ public class FileStorageService {
         }
     }
 
-    public List<FileStorage> getTargetFromStorage(FileStorage storage) throws SQLException {
-        try (var conn = dataSource.getConnection();
-             var stmt = conn.prepareStatement("""
-                     SELECT TARGET_ID FROM FILE_STORAGE_RELATION WHERE SOURCE_ID = ?
-                     """)) {
-            stmt.setLong(1, storage.id().id());
-            var rs = stmt.executeQuery();
-            List<FileStorage> ret = new ArrayList<>();
-            while (rs.next()) {
-                ret.add(getStorage(new FileStorageId(rs.getLong(1))));
-            }
-            return ret;
-        }
-    }
-
     /** @return the storage base with the given type, or null if it does not exist */
     public FileStorageBase getStorageBase(FileStorageBaseType type) throws SQLException {
         return getStorageBase(type, node);
@@ -228,11 +172,12 @@ public class FileStorageService {
         }
         return null;
     }
-    public FileStorageBase createStorageBase(String name, Path path, FileStorageBaseType type) throws SQLException, FileNotFoundException {
+
+    public FileStorageBase createStorageBase(String name, Path path, FileStorageBaseType type) throws SQLException {
         return createStorageBase(name, path, node, type);
     }
 
-    public FileStorageBase createStorageBase(String name, Path path, int node, FileStorageBaseType type) throws SQLException, FileNotFoundException {
+    public FileStorageBase createStorageBase(String name, Path path, int node, FileStorageBaseType type) throws SQLException {
 
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
@@ -252,6 +197,7 @@ public class FileStorageService {
 
         return getStorageBase(type);
     }
+
     @SneakyThrows
     private Path allocateDirectory(Path basePath, String prefix) throws IOException {
         LocalDateTime now = LocalDateTime.now();
@@ -275,12 +221,15 @@ public class FileStorageService {
         return maybePath;
     }
 
-    /** Allocate a temporary storage of the given type if temporary allocation is permitted */
+    /** Allocate a temporary storage of the given type */
     public FileStorage allocateTemporaryStorage(FileStorageBase base,
                                                 FileStorageType type,
                                                 String prefix,
                                                 String description) throws IOException, SQLException
     {
+        if (!base.type().permitsStorageType(type))
+            throw new RuntimeException("Attempting to allocate storage of type " + type + " in base of type " + base.type());
+
         Path newDir = allocateDirectory(base.asPath(), prefix);
 
         String relDir = base.asPath().relativize(newDir).normalize().toString();
@@ -324,60 +273,6 @@ public class FileStorageService {
         throw new SQLException("Failed to insert storage");
     }
 
-
-    /** Allocate permanent storage in base */
-    public FileStorage allocatePermanentStorage(FileStorageBase base,
-                                                String relativePath,
-                                                FileStorageType type,
-                                                String description) throws IOException, SQLException
-    {
-
-        Path newDir = base.asPath().resolve(relativePath);
-
-        if (Files.exists(newDir)) {
-            throw new IllegalArgumentException("Storage already exists: " + newDir);
-        }
-
-        Files.createDirectory(newDir, PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
-
-        try (var conn = dataSource.getConnection();
-             var update = conn.prepareStatement("""
-                INSERT INTO FILE_STORAGE(PATH, TYPE, DESCRIPTION, BASE_ID)
-                VALUES (?, ?, ?, ?)
-                """);
-             var query = conn.prepareStatement("""
-                SELECT ID
-                FROM FILE_STORAGE WHERE PATH = ? AND BASE_ID = ?
-                """)
-        ) {
-            update.setString(1, relativePath);
-            update.setString(2, type.name());
-            update.setString(3, description);
-            update.setLong(4, base.id().id());
-
-            if (update.executeUpdate() < 1)
-                throw new SQLException("Failed to insert storage");
-
-            query.setString(1, relativePath);
-            query.setLong(2, base.id().id());
-            var rs = query.executeQuery();
-
-            if (rs.next()) {
-                return new FileStorage(
-                        new FileStorageId(rs.getLong("ID")),
-                        base,
-                        type,
-                        LocalDateTime.now(),
-                        newDir.toString(),
-                        "",
-                        description
-                );
-            }
-
-        }
-
-        throw new SQLException("Failed to insert storage");
-    }
 
     public FileStorage getStorageByType(FileStorageType type) throws SQLException {
         String override = System.getProperty(type.overrideName());
@@ -492,7 +387,7 @@ public class FileStorageService {
         }
     }
 
-    public void removeFileStorage(FileStorageId id) throws SQLException {
+    public void deregisterFileStorage(FileStorageId id) throws SQLException {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
                      DELETE FROM FILE_STORAGE WHERE ID = ?
