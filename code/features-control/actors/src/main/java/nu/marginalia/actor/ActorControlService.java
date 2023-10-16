@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.SneakyThrows;
 import nu.marginalia.actor.monitor.*;
+import nu.marginalia.actor.proc.*;
 import nu.marginalia.actor.prototype.AbstractActorPrototype;
 import nu.marginalia.actor.state.ActorStateInstance;
 import nu.marginalia.actor.task.*;
@@ -29,7 +30,6 @@ public class ActorControlService {
     private final int node;
     @Inject
     public ActorControlService(MessageQueueFactory messageQueueFactory,
-                               GsonFactory gsonFactory,
                                BaseServiceParams baseServiceParams,
                                ConvertActor convertActor,
                                ConvertAndLoadActor convertAndLoadActor,
@@ -50,7 +50,7 @@ public class ActorControlService {
                             ) {
         this.messageQueueFactory = messageQueueFactory;
         this.eventLog = baseServiceParams.eventLog;
-        this.gson = gsonFactory.get();
+        this.gson = GsonFactory.get();
         this.node = baseServiceParams.configuration.node();
 
         register(Actor.CRAWL, crawlActor);
@@ -59,13 +59,14 @@ public class ActorControlService {
         register(Actor.RESTORE_BACKUP, restoreBackupActor);
         register(Actor.CONVERT_AND_LOAD, convertAndLoadActor);
 
-        register(Actor.INDEX_CONSTRUCTOR_MONITOR, indexConstructorMonitorActor);
-        register(Actor.CONVERTER_MONITOR, converterMonitorFSM);
-        register(Actor.LOADER_MONITOR, loaderMonitor);
-        register(Actor.CRAWLER_MONITOR, crawlerMonitorActor);
-        register(Actor.MESSAGE_QUEUE_MONITOR, messageQueueMonitor);
-        register(Actor.PROCESS_LIVENESS_MONITOR, processMonitorFSM);
-        register(Actor.FILE_STORAGE_MONITOR, fileStorageMonitorActor);
+        register(Actor.PROC_INDEX_CONSTRUCTOR_SPAWNER, indexConstructorMonitorActor);
+        register(Actor.PROC_CONVERTER_SPAWNER, converterMonitorFSM);
+        register(Actor.PROC_LOADER_SPAWNER, loaderMonitor);
+        register(Actor.PROC_CRAWLER_SPAWNER, crawlerMonitorActor);
+
+        register(Actor.MONITOR_MESSAGE_QUEUE, messageQueueMonitor);
+        register(Actor.MONITOR_PROCESS_LIVENESS, processMonitorFSM);
+        register(Actor.MONITOR_FILE_STORAGE, fileStorageMonitorActor);
 
         register(Actor.ADJACENCY_CALCULATION, triggerAdjacencyCalculationActor);
         register(Actor.CRAWL_JOB_EXTRACTOR, crawlJobExtractorActor);

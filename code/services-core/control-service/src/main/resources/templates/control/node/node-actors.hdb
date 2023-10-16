@@ -37,6 +37,26 @@
         {{> control/partials/actors-table }}
     </div>
 
+    <div class="m-3 p-3 border bg-light">
+        <h3 class="my-3">Actors</h3>
+        <p>
+            Actors are programs that primarily run within the executor services that keep their state on the
+            <a href="/message-queue">message queue</a>.
+        </p>
+        <h4 class="my-3">Monitors</h4>
+        <em>MONITOR_</em> actors perform maintenance duties, clean up stale events and heartbeats,
+            that sort of thing, typically waking up once a minute or so to perform some task.
+        <h4 class="my-3">Process Spawners</h4>
+        <em>PROC_..._SPAWNER</em> actors launch and observe independent processes, such as the crawler or loader.
+        They eavesdrop on the message queue for message to their corresponding process, and when such a message is detected,
+        the process is launched.  Turning off these actors will terminate the associated process and set their instructions
+        messages to status dead, ensuring they will not re-spawn automatically.
+        <h4 class="my-3">Programs</h4>
+        There are other actors that act to orchestrate processing flows in the system.  They enable long-running tasks
+        such as crawling to survive a system shutdown or some form of error.
+        </p>
+
+    </div>
 </div>
 
 </body>

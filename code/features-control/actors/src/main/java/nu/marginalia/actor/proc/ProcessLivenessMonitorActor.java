@@ -1,4 +1,4 @@
-package nu.marginalia.actor.monitor;
+package nu.marginalia.actor.proc;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
