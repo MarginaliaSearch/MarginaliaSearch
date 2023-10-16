@@ -15,10 +15,6 @@ public class RouteProvider {
         return new ServiceRoute(descriptor.getHostName(node), defaultPort);
     }
 
-    public static RouteProvider fromService(ServiceDescriptor serviceDescriptor) {
-        return new RouteProvider(serviceDescriptor);
-    }
-
     // Access exists for testing
     public static void setDefaultPort(int port) {
         defaultPort = port;
