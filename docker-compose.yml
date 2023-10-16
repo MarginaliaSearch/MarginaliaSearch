@@ -21,16 +21,35 @@ x-p1: &partition-1
     - data:/wmsa/data
     - logs:/var/log/wmsa
     - dist:/dist
-    - index:/idx
-    - work:/work
-    - backup:/backup
-    - samples:/storage
+    - index-1:/idx
+    - work-1:/work
+    - backup-1:/backup
+    - samples-1:/storage
   networks:
     - wmsa
   depends_on:
     - mariadb
   environment:
     - "WMSA_SERVICE_NODE=1"
+x-p2: &partition-2
+  env_file:
+    - "run/env/service.env"
+  volumes:
+    - conf:/wmsa/conf:ro
+    - model:/wmsa/model
+    - data:/wmsa/data
+    - logs:/var/log/wmsa
+    - dist:/dist
+    - index-2:/idx
+    - work-2:/work
+    - backup-2:/backup
+    - samples-2:/storage
+  networks:
+    - wmsa
+  depends_on:
+    - mariadb
+  environment:
+    - "WMSA_SERVICE_NODE=2"
 
 services:
   index-service-1:
@@ -41,6 +60,14 @@ services:
     <<: *partition-1
     image: "marginalia.nu/executor-service"
     container_name: "executor-service-1"
+  index-service-2:
+    <<: *partition-2
+    image: "marginalia.nu/index-service"
+    container_name: "index-service-2"
+  executor-service-2:
+    <<: *partition-2
+    image: "marginalia.nu/executor-service"
+    container_name: "executor-service-2"
   search-service:
     <<: *service
     image: "marginalia.nu/search-service"
@@ -104,24 +131,6 @@ volumes:
       type: none
       o: bind
       device: run/db
-  index:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: run/index
-  work:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: run/work
-  backup:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: run/backup
   logs:
     driver: local
     driver_opts:
@@ -152,9 +161,51 @@ volumes:
       type: none
       o: bind
       device: run/dist
-  samples:
+  samples-1:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: run/samples
+      device: run/node-1/samples
+  index-1:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: run/node-1/index
+  work-1:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: run/node-1/work
+  backup-1:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: run/node-1/backup
+  samples-2:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: run/node-2/samples
+  index-2:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: run/node-2/index
+  work-2:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: run/node-2/work
+  backup-2:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: run/node-2/backup
