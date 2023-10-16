@@ -8,6 +8,7 @@ import nu.marginalia.actor.Actor;
 import nu.marginalia.actor.ActorControlService;
 import nu.marginalia.actor.task.CrawlJobExtractorActor;
 import nu.marginalia.client.Context;
+import nu.marginalia.client.route.RouteProvider;
 import nu.marginalia.control.process.ProcessOutboxes;
 import nu.marginalia.control.process.ProcessService;
 import nu.marginalia.storage.FileStorageService;
@@ -44,9 +45,15 @@ public class ExecutorSvcApiIntegrationTest {
 
     @BeforeAll
     public static void setUpAll() {
+        RouteProvider.setDefaultPort(port);
         var injector = Guice.createInjector(new TestModule());
         testInstances = injector.getInstance(TestInstances.class);
         injector.getInstance(Initialization.class).setReady();
+    }
+
+    @AfterAll
+    public static void tearDownAll() {
+        RouteProvider.resetDefaultPort();
     }
 
     @BeforeEach

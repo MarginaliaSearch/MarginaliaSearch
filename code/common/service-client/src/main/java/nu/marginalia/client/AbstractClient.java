@@ -43,7 +43,7 @@ public abstract class AbstractClient implements AutoCloseable {
     }
 
     public AbstractClient(ServiceDescriptor service, int timeout, Supplier<Gson> gsonProvider) {
-        this(RouteProvider.fromService(service), timeout, gsonProvider);
+        this(new RouteProvider(service), timeout, gsonProvider);
     }
 
     public AbstractClient(RouteProvider routeProvider,
