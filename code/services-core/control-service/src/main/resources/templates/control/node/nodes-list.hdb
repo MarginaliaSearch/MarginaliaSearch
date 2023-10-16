@@ -27,34 +27,17 @@
             <td>{{acceptQueries}}</td>
         </tr>
         {{/each}}
-    {{/if}}
     </table>
 
-
-    <div class="m-3 p-3 border">
-        <h2>Add Node</h2>
-        <form method="post">
-            <div class="mb-3">
-                <label for="name" class="form-label">ID</label>
-                <input class="form-control" type="text" name="id" id="id" value="{{nextNodeId}}" disabled aria-disabled="true" />
-            </div>
-
-            <div class="mb-3">
-                <label for="name" class="form-label">Description</label>
-                <input class="form-control" type="text" name="description" id="description" />
-            </div>
-
-            <div class="form-check form-switch mb-3">
-                <input class="form-check-input" type="checkbox" role="switch" name="acceptQueries">
-                <label class="form-check-label" for="acceptQueries">Accept queries</label>
-
-                <div class="form-text">Sets whether queries will be routed to this node.  This can be modified later.</div>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Create</button>
-        </form>
+    <div class="m-5 p-5 border bg-light">
+        <h2 class="my-3">Index Nodes</h2>
+        <p>
+            Index nodes are processing units.  The search engine requires at least one, but more can be added
+            to spread the system load across multiple physical disks or even multiple servers.
+        </p>
     </div>
-    </table>
+    {{/if}}
+
 </div>
 
 </body>

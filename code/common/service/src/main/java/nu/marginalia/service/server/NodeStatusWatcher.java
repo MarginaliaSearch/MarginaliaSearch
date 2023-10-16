@@ -2,10 +2,14 @@ package nu.marginalia.service.server;
 
 import com.google.inject.name.Named;
 import jakarta.inject.Inject;
+import lombok.SneakyThrows;
 import nu.marginalia.nodecfg.NodeConfigurationService;
+import nu.marginalia.storage.FileStorageService;
+import nu.marginalia.storage.model.FileStorageBaseType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Path;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
@@ -23,18 +27,22 @@ public class NodeStatusWatcher {
     private static final Logger logger = LoggerFactory.getLogger(NodeStatusWatcher.class);
 
     private final NodeConfigurationService configurationService;
+    private final FileStorageService fileStorageService;
     private final int nodeId;
 
     private final Duration pollDuration = Duration.ofSeconds(15);
 
     @Inject
     public NodeStatusWatcher(NodeConfigurationService configurationService,
-                             @Named("wmsa-system-node") Integer nodeId) throws InterruptedException {
+                             FileStorageService fileStorageService, @Named("wmsa-system-node") Integer nodeId) {
         this.configurationService = configurationService;
+        this.fileStorageService = fileStorageService;
 
         this.nodeId = nodeId;
 
-        awaitConfiguration();
+        if (!isConfigured()) {
+           setupNode();
+        }
 
 
         var watcherThread = new Thread(this::watcher, "node watcher");
@@ -42,29 +50,28 @@ public class NodeStatusWatcher {
         watcherThread.start();
     }
 
-    /** Wait for the presence of an enabled NodeConfiguration before permitting the service to start */
-    private void awaitConfiguration() throws InterruptedException {
-
-        boolean complained = false;
-
-        for (;;) {
-            try {
-                var config = configurationService.get(nodeId);
-                if (null != config && !config.disabled()) {
-                    return;
-                }
-                else if (!complained) {
-                    logger.info("Waiting for node configuration, id = {}", nodeId);
-                    complained = true;
-                }
-            }
-            catch (SQLException ex) {
-                logger.error("Error updating node status", ex);
-            }
-
-            TimeUnit.SECONDS.sleep(pollDuration.toSeconds());
+    private void setupNode() {
+        try {
+            configurationService.create(nodeId, "Node " + nodeId, nodeId == 1);
+            fileStorageService.createStorageBase("Index Data", Path.of("/idx"), nodeId, FileStorageBaseType.CURRENT);
+            fileStorageService.createStorageBase("Index Backups", Path.of("/backup"), nodeId, FileStorageBaseType.BACKUP);
+            fileStorageService.createStorageBase("Crawl Data", Path.of("/storage"), nodeId, FileStorageBaseType.STORAGE);
+            fileStorageService.createStorageBase("Work Area", Path.of("/work"), nodeId, FileStorageBaseType.WORK);
         }
+        catch (IllegalStateException ex) {
+            // There is a slight chance of a race condition between the index and executor services both trying to run this,
+            // at the same time.  Thanks to ACID, only one of them will succeed in creating the node, and the other will throw
+            // IllegalStateException.  This is fine!
+        }
+        catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
 
+    @SneakyThrows
+    private boolean isConfigured() {
+        var configuration = configurationService.get(nodeId);
+        return configuration != null;
     }
 
     /** Look for changes in the configuration and kill the service if the corresponding

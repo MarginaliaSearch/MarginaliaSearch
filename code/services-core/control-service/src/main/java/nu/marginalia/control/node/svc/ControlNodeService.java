@@ -77,7 +77,6 @@ public class ControlNodeService {
         var newSpecsFormRenderer = rendererFactory.renderer("control/node/node-new-specs-form");
 
         Spark.get("/public/nodes", this::nodeListModel, nodeListRenderer::render);
-        Spark.post("/public/nodes", this::createNode);
         Spark.get("/public/nodes/:id", this::nodeOverviewModel, overviewRenderer::render);
         Spark.get("/public/nodes/:id/", this::nodeOverviewModel, overviewRenderer::render);
         Spark.get("/public/nodes/:id/actors", this::nodeActorsModel, actorsRenderer::render);
@@ -104,18 +103,6 @@ public class ControlNodeService {
         Spark.post("/public/nodes/:id/storage/:fid/enable", this::enableFileStorage);
         Spark.post("/public/nodes/:id/storage/:fid/disable", this::disableFileStorage);
 
-    }
-
-    private Object createNode(Request request, Response response) throws SQLException, FileNotFoundException {
-        var newConfig = nodeConfigurationService.create(request.queryParams("description"), "on".equalsIgnoreCase(request.queryParams("acceptQueries")));
-        int id = newConfig.node();
-
-        fileStorageService.createStorageBase("Index Data", Path.of("/idx"), id, FileStorageBaseType.CURRENT);
-        fileStorageService.createStorageBase("Index Backups", Path.of("/backup"), id, FileStorageBaseType.BACKUP);
-        fileStorageService.createStorageBase("Crawl Data", Path.of("/storage"), id, FileStorageBaseType.STORAGE);
-        fileStorageService.createStorageBase("Work Area", Path.of("/work"), id, FileStorageBaseType.WORK);
-
-        return redirectToOverview(id);
     }
 
     private Object nodeListModel(Request request, Response response) throws SQLException {

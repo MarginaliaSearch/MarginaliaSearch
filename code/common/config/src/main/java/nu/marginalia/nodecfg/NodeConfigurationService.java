@@ -17,29 +17,22 @@ public class NodeConfigurationService {
         this.dataSource = dataSource;
     }
 
-    public NodeConfiguration create(String description, boolean acceptQueries) throws SQLException {
+    public NodeConfiguration create(int id, String description, boolean acceptQueries) throws SQLException {
         try (var conn = dataSource.getConnection();
              var is = conn.prepareStatement("""
-                     INSERT INTO NODE_CONFIGURATION(DESCRIPTION, ACCEPT_QUERIES) VALUES(?, ?)
-                     """);
-             var qs = conn.prepareStatement("""
-                     SELECT LAST_INSERT_ID()
-                     """))
+                     INSERT INTO NODE_CONFIGURATION(ID, DESCRIPTION, ACCEPT_QUERIES) VALUES(?, ?, ?)
+                     """)
+        )
         {
-            is.setString(1, description);
-            is.setBoolean(2, acceptQueries);
+            is.setInt(1, id);
+            is.setString(2, description);
+            is.setBoolean(3, acceptQueries);
 
             if (is.executeUpdate() <= 0) {
                 throw new IllegalStateException("Failed to insert configuration");
             }
 
-            var rs = qs.executeQuery();
-
-            if (rs.next()) {
-                return get(rs.getInt(1));
-            }
-
-            throw new AssertionError("No LAST_INSERT_ID()");
+            return get(id);
         }
     }
 
