@@ -7,7 +7,7 @@ import nu.marginalia.actor.prototype.AbstractActorPrototype;
 import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorState;
 import nu.marginalia.actor.state.ActorTerminalState;
-import nu.marginalia.control.process.ProcessService;
+import nu.marginalia.process.ProcessService;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.service.module.ServiceConfiguration;

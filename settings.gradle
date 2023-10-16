@@ -30,9 +30,6 @@ include 'code:features-search:random-websites'
 include 'code:features-qs:query-parser'
 include 'code:features-index:result-ranking'
 
-include 'code:features-control:process-execution'
-include 'code:features-control:actors'
-
 include 'code:features-convert:adblock'
 include 'code:features-convert:stackexchange-xml'
 include 'code:features-convert:pubdate'

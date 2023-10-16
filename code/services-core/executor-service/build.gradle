@@ -25,16 +25,20 @@ dependencies {
     implementation project(':code:common:config')
     implementation project(':code:common:model')
     implementation project(':code:common:db')
+
     implementation project(':code:common:service')
     implementation project(':code:common:service-client')
-    implementation project(':code:api:index-api')
-    implementation project(':code:api:query-api')
-    implementation project(':code:api:executor-api')
     implementation project(':code:common:service-discovery')
+
     implementation project(':code:libraries:message-queue')
 
-    implementation project(':code:features-control:process-execution')
-    implementation project(':code:features-control:actors')
+    implementation project(':code:process-models:crawl-spec')
+    implementation project(':code:features-index:index-journal')
+
+    implementation project(':code:api:index-api')
+    implementation project(':code:api:query-api')
+    implementation project(':code:api:process-mqapi')
+    implementation project(':code:api:executor-api')
 
     implementation libs.bundles.slf4j
 
@@ -45,6 +49,8 @@ dependencies {
     implementation libs.guice
     implementation libs.protobuf
     implementation libs.rxjava
+    implementation libs.zstd
+    implementation libs.commons.io
     implementation libs.bundles.mariadb
 
     testImplementation libs.bundles.slf4j.test

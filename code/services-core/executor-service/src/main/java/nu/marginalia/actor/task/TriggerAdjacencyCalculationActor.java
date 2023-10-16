@@ -6,7 +6,7 @@ import nu.marginalia.actor.ActorStateFactory;
 import nu.marginalia.actor.prototype.AbstractActorPrototype;
 import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorState;
-import nu.marginalia.control.process.ProcessService;
+import nu.marginalia.process.ProcessService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

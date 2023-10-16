@@ -7,7 +7,7 @@ import nu.marginalia.actor.ActorStateFactory;
 import nu.marginalia.actor.prototype.AbstractActorPrototype;
 import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorState;
-import nu.marginalia.control.process.ProcessService;
+import nu.marginalia.process.ProcessService;
 import nu.marginalia.service.control.ServiceEventLog;
 
 import java.sql.SQLException;

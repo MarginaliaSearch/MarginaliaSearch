@@ -3,7 +3,7 @@ package nu.marginalia.actor.task;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.actor.prototype.AbstractActorPrototype;
-import nu.marginalia.control.process.ProcessService;
+import nu.marginalia.process.ProcessService;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.outbox.MqOutbox;
 
