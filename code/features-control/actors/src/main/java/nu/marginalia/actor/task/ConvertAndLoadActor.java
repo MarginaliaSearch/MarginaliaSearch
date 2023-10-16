@@ -126,7 +126,7 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
 
         var toProcess = storageService.getStorage(message.crawlStorageId);
 
-        var base = storageService.getStorageBase(FileStorageBaseType.WORK);
+        var base = storageService.getStorageBase(FileStorageBaseType.STORAGE);
         var processedArea = storageService.allocateTemporaryStorage(base, FileStorageType.PROCESSED_DATA, "processed-data",
                 "Processed Data; " + toProcess.description());
 

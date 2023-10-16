@@ -65,7 +65,7 @@ public class CrawlJobExtractorActor extends AbstractActorPrototype {
             error("This actor requires a CrawlJobExtractorArgumentsWithURL argument");
         }
 
-        var base = fileStorageService.getStorageBase(FileStorageBaseType.WORK);
+        var base = fileStorageService.getStorageBase(FileStorageBaseType.STORAGE);
         var storage = fileStorageService.allocateTemporaryStorage(base, FileStorageType.CRAWL_SPEC, "crawl-spec", arg.description());
 
         Path urlsTxt = storage.asPath().resolve("urls.txt");
@@ -102,7 +102,7 @@ public class CrawlJobExtractorActor extends AbstractActorPrototype {
             error("This actor requires a CrawlJobExtractorArguments argument");
         }
 
-        var base = fileStorageService.getStorageBase(FileStorageBaseType.WORK);
+        var base = fileStorageService.getStorageBase(FileStorageBaseType.STORAGE);
         var storage = fileStorageService.allocateTemporaryStorage(base, FileStorageType.CRAWL_SPEC, "crawl-spec", arg.description());
 
         final Path path = CrawlSpecFileNames.resolve(storage);

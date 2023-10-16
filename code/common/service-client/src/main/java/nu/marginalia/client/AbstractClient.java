@@ -10,7 +10,6 @@ import nu.marginalia.client.exception.LocalException;
 import nu.marginalia.client.exception.NetworkException;
 import nu.marginalia.client.exception.RemoteException;
 import nu.marginalia.client.exception.RouteNotConfiguredException;
-import nu.marginalia.client.route.ServiceRoute;
 import nu.marginalia.client.route.RouteProvider;
 import nu.marginalia.client.route.ServiceRoutes;
 import nu.marginalia.service.descriptor.ServiceDescriptor;
@@ -20,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.ConnectException;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 

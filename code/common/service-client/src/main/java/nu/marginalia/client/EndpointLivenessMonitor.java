@@ -31,6 +31,7 @@ public class EndpointLivenessMonitor {
     @SneakyThrows
     public void run() {
         Thread.sleep(100); // Wait for initialization
+
         try {
             while (!Thread.interrupted()) {
                 if (updateLivenessMap()) {

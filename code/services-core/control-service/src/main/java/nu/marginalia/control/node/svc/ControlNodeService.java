@@ -156,12 +156,13 @@ public class ControlNodeService {
         final String description = request.queryParams("description");
         final String url = request.queryParams("url");
         final String source = request.queryParams("source");
+        int nodeId = Integer.parseInt(request.params("id"));
 
         if ("db".equals(source)) {
-            executorClient.createCrawlSpecFromDb(Context.fromRequest(request), 0, description);
+            executorClient.createCrawlSpecFromDb(Context.fromRequest(request), nodeId, description);
         }
         else if ("download".equals(source)) {
-            executorClient.createCrawlSpecFromDownload(Context.fromRequest(request), 0, description, url);
+            executorClient.createCrawlSpecFromDownload(Context.fromRequest(request), nodeId, description, url);
         }
         else {
             throw new IllegalArgumentException("Unknown source: " + source);

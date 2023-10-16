@@ -6,7 +6,7 @@
 {{> control/partials/nav}}
 
 <div class="container">
-    <h1 class="my-5">Index Nodes</h1>
+    <h1 class="my-3">Nodes</h1>
 
     {{#unless nodes}}
         It appears no nodes have been configured!  This is necessary before any index or executor services

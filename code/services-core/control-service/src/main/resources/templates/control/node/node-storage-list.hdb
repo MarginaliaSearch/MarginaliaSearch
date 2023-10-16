@@ -7,7 +7,13 @@
 
 
 <div class="container">
-    <h1 class="my-5">Index Node {{node.id}}</h1>
+
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/nodes">nodes</a></li>
+            <li class="breadcrumb-item">node-{{node.id}}</li>
+        </ol>
+    </nav>
 
     <nav class="nav nav-tabs">
         <li class="nav-item">
@@ -139,10 +145,60 @@
         xhr.send();
     }
         </script>
+
+        {{#if view.specs}}
+            <div class="m-3 p-3 border bg-light">
+            <h3 class="my-3">About Specs</h3>
+            <p>Crawl specifications are set of domains to be crawled. A specification is necessary for the crawler
+                to understand which domains to visit.</p>
+            <p>Setting a spec as active means it will be used in <em>recrawls</em>. A fresh crawl can be triggered
+                from within the details view of a specification.</p>
+            </div>
+        {{/if}}
+        {{#if view.crawl}}
+            <div class="m-3 p-3 border bg-light">
+                <h3 class="my-3">About Crawls</h3>
+                <p>Crawl data is the downloaded and compressed raw HTML of a website.</p>
+                <p>To start a new crawl, first a <em>crawl specification</em> must be created.</p>
+                <p>Unlike other data sets, only a single crawl set may be <em>ACTIVE</em> at any given time.</p>
+                <h4 class="my-3">Recrawl</h4>
+                <p>A set of existing crawl data can be <em>recrawled</em> and amended with new domains
+                    and a fresh look at the existing domains.  This is an operation that uses the currently <em>ACTIVE</em>
+                    crawl data and crawl set(s).
+                </p>
+                <h4 class="my-3">Processing</h4>
+                <p>
+                    Before the data can be loaded into the search engine, it needs to be processed.  The process operation
+                    uses the currently <em>ACTIVE</em> crawl set.
+                </p>
+            </div>
+        {{/if}}
+        {{#if view.processed}}
+        <div class="m-3 p-3 border bg-light">
+            <h3 class="my-3">Processed Data</h3>
+            <p>
+            Processed data is HTML that has been analyzed and had its properties and keywords extracted. If one or more
+            processed data sets is <em>ACTIVE</em>, it can be Loaded into the system to make it searchable.  Loading processed
+            data also creates a backup of the Index Journal and Link Database that can be quickly restored in the event
+            of a problem.
+            </p>
+            <p>
+                Processed data may come from crawl data, but it may also be sideloaded into the system from e.g.
+                stackexchange data dumps through the Node Actions view.
+            </p>
+        </div>
+        {{/if}}
+        {{#if view.backup}}
+        <div class="m-3 p-3 border bg-light">
+            <h3 class="my-3">Backups</h3>
+            <p>
+                Backups are snapshots of the Index Journal and Link Database immediately before a searchable index
+                is constructed.  They are relatively quick to restore and allow you to roll back a problematic deployment
+                or recover from disk failures (assuming they are on a different drive).
+            </p>
+        </div>
+        {{/if}}
     </div>
-
-
-
     </div>
 </body>
 {{> control/partials/foot-includes }}

@@ -92,7 +92,7 @@ public class ConvertActor extends AbstractActorPrototype {
         // Create processed data area
 
         var toProcess = storageService.getStorage(sourceStorageId);
-        var base = storageService.getStorageBase(FileStorageBaseType.WORK);
+        var base = storageService.getStorageBase(FileStorageBaseType.STORAGE);
         var processedArea = storageService.allocateTemporaryStorage(base,
                 FileStorageType.PROCESSED_DATA, "processed-data",
                 "Processed Data; " + toProcess.description());
@@ -125,7 +125,7 @@ public class ConvertActor extends AbstractActorPrototype {
 
         String fileName = sourcePath.toFile().getName();
 
-        var base = storageService.getStorageBase(FileStorageBaseType.WORK);
+        var base = storageService.getStorageBase(FileStorageBaseType.STORAGE);
         var processedArea = storageService.allocateTemporaryStorage(base,
                 FileStorageType.PROCESSED_DATA, "processed-data",
                 "Processed Encylopedia Data; " + fileName);
@@ -157,7 +157,7 @@ public class ConvertActor extends AbstractActorPrototype {
 
         String fileName = sourcePath.toFile().getName();
 
-        var base = storageService.getStorageBase(FileStorageBaseType.WORK);
+        var base = storageService.getStorageBase(FileStorageBaseType.STORAGE);
         var processedArea = storageService.allocateTemporaryStorage(base,
                 FileStorageType.PROCESSED_DATA, "processed-data",
                 "Processed Dirtree Data; " + fileName);
@@ -188,7 +188,7 @@ public class ConvertActor extends AbstractActorPrototype {
 
         String fileName = sourcePath.toFile().getName();
 
-        var base = storageService.getStorageBase(FileStorageBaseType.WORK);
+        var base = storageService.getStorageBase(FileStorageBaseType.STORAGE);
         var processedArea = storageService.allocateTemporaryStorage(base,
                 FileStorageType.PROCESSED_DATA, "processed-data",
                 "Processed Stackexchange Data; " + fileName);

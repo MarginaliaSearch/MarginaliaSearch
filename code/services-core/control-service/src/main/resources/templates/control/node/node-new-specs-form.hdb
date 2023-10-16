@@ -6,7 +6,13 @@
 {{> control/partials/nav}}
 
 <div class="container">
-    <h1 class="my-5">Index Node {{node.id}}</h1>
+
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/nodes">nodes</a></li>
+            <li class="breadcrumb-item">node-{{node.id}}</li>
+        </ol>
+    </nav>
 
     <nav class="nav nav-tabs">
         <li class="nav-item">

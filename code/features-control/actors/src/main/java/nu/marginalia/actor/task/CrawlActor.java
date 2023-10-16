@@ -98,7 +98,7 @@ public class CrawlActor extends AbstractActorPrototype {
 
         var toCrawl = storageService.getStorage(message.crawlSpecId);
 
-        var base = storageService.getStorageBase(FileStorageBaseType.WORK);
+        var base = storageService.getStorageBase(FileStorageBaseType.STORAGE);
         var dataArea = storageService.allocateTemporaryStorage(
                 base,
                 FileStorageType.CRAWL_DATA,
