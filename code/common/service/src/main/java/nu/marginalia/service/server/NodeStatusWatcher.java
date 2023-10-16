@@ -3,6 +3,7 @@ package nu.marginalia.service.server;
 import com.google.inject.name.Named;
 import jakarta.inject.Inject;
 import lombok.SneakyThrows;
+import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageBaseType;
@@ -28,15 +29,19 @@ public class NodeStatusWatcher {
 
     private final NodeConfigurationService configurationService;
     private final FileStorageService fileStorageService;
+    private final MqPersistence persistence;
     private final int nodeId;
 
     private final Duration pollDuration = Duration.ofSeconds(15);
 
     @Inject
     public NodeStatusWatcher(NodeConfigurationService configurationService,
-                             FileStorageService fileStorageService, @Named("wmsa-system-node") Integer nodeId) {
+                             FileStorageService fileStorageService,
+                             MqPersistence persistence,
+                             @Named("wmsa-system-node") Integer nodeId) {
         this.configurationService = configurationService;
         this.fileStorageService = fileStorageService;
+        this.persistence = persistence;
 
         this.nodeId = nodeId;
 
@@ -57,13 +62,20 @@ public class NodeStatusWatcher {
             fileStorageService.createStorageBase("Index Backups", Path.of("/backup"), nodeId, FileStorageBaseType.BACKUP);
             fileStorageService.createStorageBase("Crawl Data", Path.of("/storage"), nodeId, FileStorageBaseType.STORAGE);
             fileStorageService.createStorageBase("Work Area", Path.of("/work"), nodeId, FileStorageBaseType.WORK);
+
+            persistence.sendNewMessage("executor-service:"+nodeId,
+                    null,
+                    null,
+                    "FIRST-BOOT",
+                    "",
+                    null);
         }
         catch (IllegalStateException ex) {
             // There is a slight chance of a race condition between the index and executor services both trying to run this,
             // at the same time.  Thanks to ACID, only one of them will succeed in creating the node, and the other will throw
             // IllegalStateException.  This is fine!
         }
-        catch (SQLException ex) {
+        catch (Exception ex) {
             throw new RuntimeException(ex);
         }
     }

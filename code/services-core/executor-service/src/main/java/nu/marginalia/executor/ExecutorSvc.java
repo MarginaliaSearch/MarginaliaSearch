@@ -3,6 +3,7 @@ package nu.marginalia.executor;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
+import nu.marginalia.actor.Actor;
 import nu.marginalia.actor.ActorApi;
 import nu.marginalia.actor.ActorControlService;
 import nu.marginalia.actor.state.ActorState;
@@ -16,8 +17,11 @@ import nu.marginalia.executor.svc.ProcessingService;
 import nu.marginalia.executor.svc.SideloadService;
 import nu.marginalia.service.server.BaseServiceParams;
 import nu.marginalia.service.server.Service;
+import nu.marginalia.service.server.mq.MqNotification;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 import spark.Spark;
@@ -38,6 +42,8 @@ public class ExecutorSvc extends Service {
     private final BaseServiceParams params;
     private final ActorControlService actorControlService;
     private final FileStorageService fileStorageService;
+
+    private static final Logger logger = LoggerFactory.getLogger(ExecutorSvc.class);
 
     @Inject
     public ExecutorSvc(BaseServiceParams params,
@@ -75,6 +81,19 @@ public class ExecutorSvc extends Service {
         Spark.get("/storage/:fid", this::listFiles, gson::toJson);
 
     }
+
+    @MqNotification(endpoint="FIRST-BOOT")
+    public void setUpDefaultActors(String message) throws Exception {
+        logger.info("Initializing default actors");
+        actorControlService.start(Actor.MONITOR_PROCESS_LIVENESS);
+        actorControlService.start(Actor.MONITOR_FILE_STORAGE);
+        actorControlService.start(Actor.MONITOR_MESSAGE_QUEUE);
+        actorControlService.start(Actor.PROC_CONVERTER_SPAWNER);
+        actorControlService.start(Actor.PROC_CRAWLER_SPAWNER);
+        actorControlService.start(Actor.PROC_INDEX_CONSTRUCTOR_SPAWNER);
+        actorControlService.start(Actor.PROC_LOADER_SPAWNER);
+    }
+
 
     private FileStorageContent listFiles(Request request, Response response) throws SQLException, IOException {
         FileStorageId fileStorageId = FileStorageId.parse(request.params("fid"));
