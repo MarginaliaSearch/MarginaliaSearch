@@ -50,37 +50,6 @@ allprojects {
 
 }
 
-tasks.register('dist', Copy) {
-    from subprojects.collect { it.tasks.withType(Tar) }
-    into "$buildDir/dist"
-
-    // For local development, each processes that are to be triggerable
-    // from the control-service need to go here to end up somewhere the
-    // control-service can find them
-
-    doLast {
-        copy {
-            from tarTree("$buildDir/dist/converter-process.tar")
-            into "$projectDir/run/dist/"
-        }
-        copy {
-            from tarTree("$buildDir/dist/crawler-process.tar")
-            into "$projectDir/run/dist/"
-        }
-        copy {
-            from tarTree("$buildDir/dist/loader-process.tar")
-            into "$projectDir/run/dist/"
-        }
-        copy {
-            from tarTree("$buildDir/dist/website-adjacencies-calculator.tar")
-            into "$projectDir/run/dist/"
-        }
-        copy {
-            from tarTree("$buildDir/dist/index-construction-process.tar")
-            into "$projectDir/run/dist/"
-        }
-    }
-}
 idea {
     module {
         // Exclude these directories from being indexed by IntelliJ
@@ -98,7 +67,6 @@ idea {
         excludeDirs.add(file("$projectDir/run/test-data"))
     }
 }
-
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(21))

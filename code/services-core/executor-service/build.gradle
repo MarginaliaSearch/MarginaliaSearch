@@ -13,7 +13,7 @@ application {
 
 tasks.distZip.enabled = false
 
-apply from: "$rootProject.projectDir/docker-service.gradle"
+apply from: "$rootProject.projectDir/docker-service-with-dist.gradle"
 
 java {
     toolchain {
@@ -64,4 +64,3 @@ dependencies {
 
 
 }
-

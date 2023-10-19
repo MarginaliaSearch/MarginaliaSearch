@@ -4,17 +4,18 @@ plugins {
     id 'application'
     id 'jvm-test-suite'
 }
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
 
 application {
     mainClass = 'nu.marginalia.adjacencies.WebsiteAdjacenciesCalculator'
     applicationName = 'website-adjacencies-calculator'
 }
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
-}
+tasks.distZip.enabled = false
 
 dependencies {
     implementation project(':code:common:model')
@@ -33,9 +34,4 @@ dependencies {
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
-}
-
-configurations {
-    e2eTestImplementation.extendsFrom(testImplementation)
-
 }
