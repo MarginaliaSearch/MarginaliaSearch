@@ -163,6 +163,14 @@ public class DomainTypes {
         }
     }
 
+    public List<String> downloadList(Type type) throws IOException {
+        var url = getUrlForSelection(type);
+        if (url.isBlank())
+            return List.of();
+        return downloadDomainsList(url);
+    }
+
+
     private List<String> downloadDomainsList(String source) throws IOException {
         if (source.isBlank())
             return List.of();

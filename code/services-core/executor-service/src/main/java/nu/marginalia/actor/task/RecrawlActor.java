@@ -18,6 +18,7 @@ import nu.marginalia.storage.model.FileStorageType;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.mqapi.crawling.CrawlRequest;
+import nu.marginalia.svc.DomainListRefreshService;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Files;
@@ -33,6 +34,7 @@ public class RecrawlActor extends AbstractActorPrototype {
     public static final String END = "END";
     private final MqOutbox mqCrawlerOutbox;
     private final FileStorageService storageService;
+    private final DomainListRefreshService refreshService;
     private final Gson gson;
     private final ActorProcessWatcher processWatcher;
 
@@ -62,6 +64,7 @@ public class RecrawlActor extends AbstractActorPrototype {
                         ActorProcessWatcher processWatcher,
                         ProcessOutboxes processOutboxes,
                         FileStorageService storageService,
+                        DomainListRefreshService refreshService,
                         Gson gson
                                    )
     {
@@ -69,6 +72,7 @@ public class RecrawlActor extends AbstractActorPrototype {
         this.processWatcher = processWatcher;
         this.mqCrawlerOutbox = processOutboxes.getCrawlerOutbox();
         this.storageService = storageService;
+        this.refreshService = refreshService;
         this.gson = gson;
     }
 
@@ -88,6 +92,8 @@ public class RecrawlActor extends AbstractActorPrototype {
         if (crawlStorage.type() != FileStorageType.CRAWL_DATA) error("Bad storage type " + crawlStorage.type());
 
         Files.deleteIfExists(crawlStorage.asPath().resolve("crawler.log"));
+
+        refreshService.synchronizeDomainList();
 
         return recrawlMessage;
     }
