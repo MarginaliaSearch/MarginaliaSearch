@@ -13,17 +13,14 @@ import nu.marginalia.actor.state.ActorState;
 import nu.marginalia.process.ProcessOutboxes;
 import nu.marginalia.process.ProcessService;
 import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.storage.model.FileStorage;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageType;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.mqapi.crawling.CrawlRequest;
+import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Files;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Optional;
 
 @Singleton
 public class RecrawlActor extends AbstractActorPrototype {
@@ -42,8 +39,12 @@ public class RecrawlActor extends AbstractActorPrototype {
 
     @AllArgsConstructor @With @NoArgsConstructor
     public static class RecrawlMessage {
-        public List<FileStorageId> crawlSpecId = null;
-        public FileStorageId crawlStorageId = null;
+        /** The storage where the crawl data will be stored.  If this contains existing crawl
+         * data, it will be consulted for e.g. e-tag comparisons.
+        */
+        @NotNull
+        public FileStorageId crawlStorageId;
+
         public long crawlerMsgId = 0L;
     };
 
@@ -52,8 +53,8 @@ public class RecrawlActor extends AbstractActorPrototype {
         return "Run the crawler with the given crawl spec using previous crawl data for a reference";
     }
 
-    public static RecrawlMessage recrawlFromCrawlDataAndCralSpec(FileStorageId crawlData, List<FileStorageId> crawlSpec) {
-        return new RecrawlMessage(crawlSpec, crawlData, 0L);
+    public static RecrawlMessage recrawlFromCrawlDataAndCrawlSpec(FileStorageId crawlData) {
+        return new RecrawlMessage(crawlData, 0L);
     }
 
     @Inject
@@ -83,28 +84,12 @@ public class RecrawlActor extends AbstractActorPrototype {
 
         var crawlStorage = storageService.getStorage(recrawlMessage.crawlStorageId);
 
-        for (var specs : recrawlMessage.crawlSpecId) {
-            FileStorage specStorage = storageService.getStorage(specs);
-
-            if (specStorage == null) error("Bad storage id");
-            if (specStorage.type() != FileStorageType.CRAWL_SPEC) error("Bad storage type " + specStorage.type());
-        }
-
-
         if (crawlStorage == null) error("Bad storage id");
         if (crawlStorage.type() != FileStorageType.CRAWL_DATA) error("Bad storage type " + crawlStorage.type());
 
         Files.deleteIfExists(crawlStorage.asPath().resolve("crawler.log"));
 
-        return recrawlMessage
-                .withCrawlSpecId(recrawlMessage.crawlSpecId);
-    }
-
-    private Optional<FileStorage> getSpec(FileStorage crawlStorage) throws SQLException {
-        return storageService.getSourceFromStorage(crawlStorage)
-                .stream()
-                .filter(storage -> storage.type().equals(FileStorageType.CRAWL_SPEC))
-                .findFirst();
+        return recrawlMessage;
     }
 
     @ActorState(name = CRAWL,
@@ -117,7 +102,7 @@ public class RecrawlActor extends AbstractActorPrototype {
     public RecrawlMessage crawl(RecrawlMessage recrawlMessage) throws Exception {
         // Pre-send crawl request
 
-        var request = new CrawlRequest(recrawlMessage.crawlSpecId, recrawlMessage.crawlStorageId);
+        var request = new CrawlRequest(null, recrawlMessage.crawlStorageId);
         long id = mqCrawlerOutbox.sendAsync(CrawlRequest.class.getSimpleName(), gson.toJson(request));
 
         return recrawlMessage.withCrawlerMsgId(id);

@@ -5,7 +5,6 @@ import com.google.inject.Inject;
 import nu.marginalia.client.ServiceMonitors;
 import nu.marginalia.control.app.svc.*;
 import nu.marginalia.control.node.svc.ControlNodeActionsService;
-import nu.marginalia.control.node.svc.ControlActorService;
 import nu.marginalia.control.node.svc.ControlFileStorageService;
 import nu.marginalia.control.node.svc.ControlNodeService;
 import nu.marginalia.control.sys.svc.ControlSysActionsService;
@@ -44,7 +43,6 @@ public class ControlService extends Service {
                           HeartbeatService heartbeatService,
                           EventLogService eventLogService,
                           RendererFactory rendererFactory,
-                          ControlActorService controlActorService,
                           StaticResources staticResources,
                           MessageQueueService messageQueueService,
                           ControlFileStorageService controlFileStorageService,
@@ -71,7 +69,6 @@ public class ControlService extends Service {
 
         // node
         controlFileStorageService.register();
-        controlActorService.register();
         nodeActionsService.register();
         controlNodeService.register();
 

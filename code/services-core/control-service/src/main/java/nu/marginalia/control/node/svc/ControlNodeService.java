@@ -14,7 +14,6 @@ import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.nodecfg.model.NodeConfiguration;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.executor.client.ExecutorClient;
-import nu.marginalia.executor.model.crawl.RecrawlParameters;
 import nu.marginalia.executor.model.load.LoadParameters;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.service.id.ServiceId;
@@ -25,9 +24,7 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.*;
@@ -102,6 +99,7 @@ public class ControlNodeService {
         Spark.post("/public/nodes/:id/storage/:fid/delete", this::deleteFileStorage);
         Spark.post("/public/nodes/:id/storage/:fid/enable", this::enableFileStorage);
         Spark.post("/public/nodes/:id/storage/:fid/disable", this::disableFileStorage);
+        Spark.get("/public/nodes/:id/storage/:fid/transfer", this::downloadFileFromStorage);
 
     }
 
@@ -145,10 +143,7 @@ public class ControlNodeService {
         final String source = request.queryParams("source");
         int nodeId = Integer.parseInt(request.params("id"));
 
-        if ("db".equals(source)) {
-            executorClient.createCrawlSpecFromDb(Context.fromRequest(request), nodeId, description);
-        }
-        else if ("download".equals(source)) {
+        if ("download".equals(source)) {
             executorClient.createCrawlSpecFromDownload(Context.fromRequest(request), nodeId, description, url);
         }
         else {
@@ -174,11 +169,9 @@ public class ControlNodeService {
         if (toCrawl.size() != 1)
             throw new IllegalStateException();
 
-        var specs = fileStorageService.getActiveFileStorages(nodeId, FileStorageType.CRAWL_SPEC);
-
         executorClient.triggerRecrawl(Context.fromRequest(request),
                 nodeId,
-                new RecrawlParameters(toCrawl.get(0), specs));
+                toCrawl.get(0));
 
         return redirectToOverview(request);
     }
@@ -358,6 +351,24 @@ public class ControlNodeService {
                 "processes", heartbeatService.getProcessHeartbeatsForNode(nodeId),
                 "jobs", heartbeatService.getTaskHeartbeatsForNode(nodeId)
                 );
+    }
+
+    public Object downloadFileFromStorage(Request request, Response response) throws IOException {
+        int nodeId = Integer.parseInt(request.params("id"));
+        var fileStorageId = FileStorageId.parse(request.params("fid"));
+
+        String path = request.queryParams("path");
+
+        response.header("content-disposition", "attachment; filename=\""+path+"\"");
+
+        if (path.endsWith(".txt") || path.endsWith(".log"))
+            response.type("text/plain");
+        else
+            response.type("application/octet-stream");
+
+        executorClient.transferFile(Context.fromRequest(request), nodeId, fileStorageId, path, response.raw().getOutputStream());
+
+        return "";
     }
 
     private Object getStorageBaseList(int nodeId) throws SQLException {

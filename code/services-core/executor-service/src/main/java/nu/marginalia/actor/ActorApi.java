@@ -10,15 +10,15 @@ import spark.Spark;
 
 @Singleton
 public class ActorApi {
-    private final ActorControlService actors;
+    private final ExecutorActorControlService actors;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     @Inject
-    public ActorApi(ActorControlService actors) {
+    public ActorApi(ExecutorActorControlService actors) {
         this.actors = actors;
     }
 
     public Object startActorFromState(Request request, Response response) throws Exception {
-        Actor actor = translateActor(request.params("id"));
+        ExecutorActor actor = translateActor(request.params("id"));
         String state = request.params("state");
 
         actors.startFromJSON(actor, state, request.body());
@@ -27,7 +27,7 @@ public class ActorApi {
     }
 
     public Object startActor(Request request, Response response) throws Exception {
-        Actor actor = translateActor(request.params("id"));
+        ExecutorActor actor = translateActor(request.params("id"));
 
         actors.startJSON(actor, request.body());
 
@@ -35,16 +35,16 @@ public class ActorApi {
     }
 
     public Object stopActor(Request request, Response response) {
-        Actor actor = translateActor(request.params("id"));
+        ExecutorActor actor = translateActor(request.params("id"));
 
         actors.stop(actor);
 
         return "OK";
     }
 
-    public Actor translateActor(String name) {
+    public ExecutorActor translateActor(String name) {
         try {
-            return Actor.valueOf(name.toUpperCase());
+            return ExecutorActor.valueOf(name.toUpperCase());
         }
         catch (IllegalArgumentException ex) {
             logger.error("Unknown actor {}", name);

@@ -123,6 +123,7 @@ public class ConverterMain {
 
             int totalDomains = plan.countCrawledDomains();
             AtomicInteger processedDomains = new AtomicInteger(0);
+            logger.info("Processing {} domains", totalDomains);
 
             // Advance the progress bar to the current position if this is a resumption
             processedDomains.set(batchingWorkLog.size());
@@ -137,6 +138,9 @@ public class ConverterMain {
                     heartbeat.setProgress(processedDomains.incrementAndGet() / (double) totalDomains);
                 });
             }
+
+            // Grace period in case we're loading like 1 item
+            Thread.sleep(100);
 
             pool.shutDown();
             do {

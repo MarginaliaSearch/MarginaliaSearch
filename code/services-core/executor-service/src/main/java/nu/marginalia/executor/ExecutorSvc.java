@@ -2,24 +2,22 @@ package nu.marginalia.executor;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
-import lombok.SneakyThrows;
-import nu.marginalia.actor.Actor;
+import nu.marginalia.actor.ExecutorActor;
 import nu.marginalia.actor.ActorApi;
-import nu.marginalia.actor.ActorControlService;
+import nu.marginalia.actor.ExecutorActorControlService;
 import nu.marginalia.actor.state.ActorState;
 import nu.marginalia.actor.state.ActorStateInstance;
 import nu.marginalia.executor.model.ActorRunState;
 import nu.marginalia.executor.model.ActorRunStates;
-import nu.marginalia.executor.storage.FileStorageContent;
-import nu.marginalia.executor.storage.FileStorageFile;
 import nu.marginalia.executor.svc.BackupService;
 import nu.marginalia.executor.svc.ProcessingService;
 import nu.marginalia.executor.svc.SideloadService;
+import nu.marginalia.executor.svc.TransferService;
 import nu.marginalia.service.server.BaseServiceParams;
 import nu.marginalia.service.server.Service;
 import nu.marginalia.service.server.mq.MqNotification;
+import nu.marginalia.service.server.mq.MqRequest;
 import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.storage.model.FileStorageId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -27,37 +25,35 @@ import spark.Response;
 import spark.Spark;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.SQLException;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 // Weird name for this one to not have clashes with java.util.concurrent.ExecutorService
 public class ExecutorSvc extends Service {
     private final BaseServiceParams params;
-    private final ActorControlService actorControlService;
+    private final ExecutorActorControlService actorControlService;
     private final FileStorageService fileStorageService;
+    private final TransferService transferService;
 
     private static final Logger logger = LoggerFactory.getLogger(ExecutorSvc.class);
 
     @Inject
     public ExecutorSvc(BaseServiceParams params,
-                       ActorControlService actorControlService,
+                       ExecutorActorControlService actorControlService,
                        ProcessingService processingService,
                        SideloadService sideloadService,
                        BackupService backupService,
                        FileStorageService fileStorageService,
                        Gson gson,
+                       TransferService transferService,
                        ActorApi actorApi) {
         super(params);
         this.params = params;
         this.actorControlService = actorControlService;
         this.fileStorageService = fileStorageService;
+        this.transferService = transferService;
 
         Spark.post("/actor/:id/start", actorApi::startActor);
         Spark.post("/actor/:id/start/:state", actorApi::startActorFromState);
@@ -68,7 +64,6 @@ public class ExecutorSvc extends Service {
         Spark.post("/process/recrawl", processingService::startRecrawl);
         Spark.post("/process/convert/:fid", processingService::startConversion);
         Spark.post("/process/convert-load/:fid", processingService::startConvertLoad);
-        Spark.post("/process/crawl-spec/from-db", processingService::createCrawlSpecFromDb);
         Spark.post("/process/crawl-spec/from-download", processingService::createCrawlSpecFromDownload);
         Spark.post("/process/load", processingService::startLoad);
         Spark.post("/process/adjacency-calculation", processingService::startAdjacencyCalculation);
@@ -78,47 +73,30 @@ public class ExecutorSvc extends Service {
         Spark.post("/sideload/encyclopedia", sideloadService::sideloadEncyclopedia);
 
         Spark.post("/backup/:fid/restore", backupService::restore);
-        Spark.get("/storage/:fid", this::listFiles, gson::toJson);
+        Spark.get("/storage/:fid", transferService::listFiles, gson::toJson);
 
+        Spark.get("/transfer/file/:fid", transferService::transferFile);
+
+        Spark.get("/transfer/spec", transferService::getTransferSpec, gson::toJson);
+        Spark.post("/transfer/yield", transferService::yieldDomain);
     }
 
     @MqNotification(endpoint="FIRST-BOOT")
     public void setUpDefaultActors(String message) throws Exception {
         logger.info("Initializing default actors");
-        actorControlService.start(Actor.MONITOR_PROCESS_LIVENESS);
-        actorControlService.start(Actor.MONITOR_FILE_STORAGE);
-        actorControlService.start(Actor.MONITOR_MESSAGE_QUEUE);
-        actorControlService.start(Actor.PROC_CONVERTER_SPAWNER);
-        actorControlService.start(Actor.PROC_CRAWLER_SPAWNER);
-        actorControlService.start(Actor.PROC_INDEX_CONSTRUCTOR_SPAWNER);
-        actorControlService.start(Actor.PROC_LOADER_SPAWNER);
+        actorControlService.start(ExecutorActor.MONITOR_PROCESS_LIVENESS);
+        actorControlService.start(ExecutorActor.MONITOR_FILE_STORAGE);
+        actorControlService.start(ExecutorActor.MONITOR_MESSAGE_QUEUE);
+        actorControlService.start(ExecutorActor.PROC_CONVERTER_SPAWNER);
+        actorControlService.start(ExecutorActor.PROC_CRAWLER_SPAWNER);
+        actorControlService.start(ExecutorActor.PROC_INDEX_CONSTRUCTOR_SPAWNER);
+        actorControlService.start(ExecutorActor.PROC_LOADER_SPAWNER);
     }
+    @MqRequest(endpoint="PRUNE-CRAWL-DATA")
+    public String pruneCrawlData(String message) throws SQLException, IOException {
+        transferService.pruneCrawlDataMqEndpoint();
 
-
-    private FileStorageContent listFiles(Request request, Response response) throws SQLException, IOException {
-        FileStorageId fileStorageId = FileStorageId.parse(request.params("fid"));
-
-        var storage = fileStorageService.getStorage(fileStorageId);
-
-        List<FileStorageFile> files;
-
-        try (var fs = Files.list(storage.asPath())) {
-            files = fs.filter(Files::isRegularFile)
-                    .map(this::createFileModel)
-                    .sorted(Comparator.comparing(FileStorageFile::name))
-                    .toList();
-        }
-
-        return new FileStorageContent(files);
-    }
-
-    @SneakyThrows
-    private FileStorageFile createFileModel(Path path) {
-        return new FileStorageFile(
-                path.toFile().getName(),
-                Files.size(path),
-                Files.getLastModifiedTime(path).toInstant().toString()
-                );
+        return "OK";
     }
 
 

@@ -2,58 +2,54 @@ package nu.marginalia.executor.svc;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
-import nu.marginalia.actor.Actor;
-import nu.marginalia.actor.ActorControlService;
+import nu.marginalia.actor.ExecutorActor;
+import nu.marginalia.actor.ExecutorActorControlService;
 import nu.marginalia.actor.task.ConvertActor;
 import nu.marginalia.actor.task.ConvertAndLoadActor;
 import nu.marginalia.actor.task.CrawlJobExtractorActor;
 import nu.marginalia.actor.task.RecrawlActor;
 import nu.marginalia.storage.model.FileStorageId;
-import nu.marginalia.executor.model.crawl.RecrawlParameters;
 import nu.marginalia.executor.model.load.LoadParameters;
 import spark.Request;
 import spark.Response;
 
 public class ProcessingService {
-    private final ActorControlService actorControlService;
+    private final ExecutorActorControlService actorControlService;
     private final Gson gson;
 
     @Inject
-    public ProcessingService(ActorControlService actorControlService,
+    public ProcessingService(ExecutorActorControlService actorControlService,
                              Gson gson) {
         this.actorControlService = actorControlService;
         this.gson = gson;
     }
 
     public Object startRecrawl(Request request, Response response) throws Exception {
-        var params = gson.fromJson(request.body(), RecrawlParameters.class);
+        var crawlId = gson.fromJson(request.body(), FileStorageId.class);
 
         actorControlService.start(
-                Actor.RECRAWL,
-                RecrawlActor.recrawlFromCrawlDataAndCralSpec(
-                        params.crawlDataId(),
-                        params.crawlSpecIds()
-                )
+                ExecutorActor.RECRAWL,
+                RecrawlActor.recrawlFromCrawlDataAndCrawlSpec(crawlId)
         );
 
         return "";
     }
 
     public Object startCrawl(Request request, Response response) throws Exception {
-        actorControlService.start(Actor.CRAWL, FileStorageId.parse(request.params("fid")));
+        actorControlService.start(ExecutorActor.CRAWL, FileStorageId.parse(request.params("fid")));
 
         return "";
     }
 
     public Object startConversion(Request request, Response response) throws Exception {
-        actorControlService.startFrom(Actor.CONVERT, ConvertActor.CONVERT, FileStorageId.parse(request.params("fid")));
+        actorControlService.startFrom(ExecutorActor.CONVERT, ConvertActor.CONVERT, FileStorageId.parse(request.params("fid")));
 
         return "";
     }
 
     public Object startConvertLoad(Request request, Response response) throws Exception {
         actorControlService.start(
-                Actor.CONVERT_AND_LOAD,
+                ExecutorActor.CONVERT_AND_LOAD,
                 FileStorageId.parse(request.params("fid"))
         );
         return "";
@@ -65,7 +61,7 @@ public class ProcessingService {
 
         // Start the FSM from the intermediate state that triggers the load
         actorControlService.startFrom(
-                Actor.CONVERT_AND_LOAD,
+                ExecutorActor.CONVERT_AND_LOAD,
                 ConvertAndLoadActor.LOAD,
                 new ConvertAndLoadActor.Message(null, params.ids(),
                         0L,
@@ -76,20 +72,12 @@ public class ProcessingService {
     }
 
     public Object startAdjacencyCalculation(Request request, Response response) throws Exception {
-        actorControlService.start(Actor.ADJACENCY_CALCULATION);
-        return "";
-    }
-
-    public Object createCrawlSpecFromDb(Request request, Response response) throws Exception {
-        actorControlService.startFrom(Actor.CRAWL_JOB_EXTRACTOR, CrawlJobExtractorActor.CREATE_FROM_DB,
-                new CrawlJobExtractorActor.CrawlJobExtractorArguments(
-                        request.queryParamOrDefault("description", ""))
-                );
+        actorControlService.start(ExecutorActor.ADJACENCY_CALCULATION);
         return "";
     }
 
     public Object createCrawlSpecFromDownload(Request request, Response response) throws Exception {
-        actorControlService.startFrom(Actor.CRAWL_JOB_EXTRACTOR, CrawlJobExtractorActor.CREATE_FROM_LINK,
+        actorControlService.startFrom(ExecutorActor.CRAWL_JOB_EXTRACTOR, CrawlJobExtractorActor.CREATE_FROM_LINK,
                 new CrawlJobExtractorActor.CrawlJobExtractorArgumentsWithURL(
                         request.queryParamOrDefault("description", ""),
                         request.queryParamOrDefault("url", ""))

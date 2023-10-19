@@ -14,6 +14,7 @@ import java.util.OptionalInt;
  */
 public class DbDomainStatsExportMultitool implements AutoCloseable {
     private final Connection connection;
+    private final int nodeId;
     private final PreparedStatement knownUrlsQuery;
     private final PreparedStatement visitedUrlsQuery;
     private final PreparedStatement goodUrlsQuery;
@@ -23,8 +24,9 @@ public class DbDomainStatsExportMultitool implements AutoCloseable {
     private final PreparedStatement crawlQueueDomains;
     private final PreparedStatement indexedDomainsQuery;
 
-    public DbDomainStatsExportMultitool(HikariDataSource dataSource) throws SQLException {
+    public DbDomainStatsExportMultitool(HikariDataSource dataSource, int nodeId) throws SQLException {
         this.connection = dataSource.getConnection();
+        this.nodeId = nodeId;
 
         knownUrlsQuery = connection.prepareStatement("""
                 SELECT KNOWN_URLS
@@ -64,21 +66,14 @@ public class DbDomainStatsExportMultitool implements AutoCloseable {
                 """);
     }
 
-    public OptionalInt getKnownUrls(String domainName) throws SQLException  {
-        return executeNameToIntQuery(domainName, knownUrlsQuery);
-    }
     public OptionalInt getVisitedUrls(String domainName) throws SQLException {
         return executeNameToIntQuery(domainName, visitedUrlsQuery);
     }
-    public OptionalInt getGoodUrls(String domainName) throws SQLException {
-        return executeNameToIntQuery(domainName, goodUrlsQuery);
-    }
+
     public OptionalInt getDomainId(String domainName) throws SQLException {
         return executeNameToIntQuery(domainName, domainNameToId);
     }
-    public List<String> getAllDomains() throws SQLException {
-        return executeListQuery(allDomainsQuery, 100_000);
-    }
+
     public List<String> getCrawlQueueDomains() throws SQLException {
         return executeListQuery(crawlQueueDomains, 100);
     }

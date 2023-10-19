@@ -488,6 +488,10 @@ public class FileStorageService {
         }
     }
 
+    public List<FileStorageId> getActiveFileStorages(FileStorageType type) throws SQLException {
+        return getActiveFileStorages(node, type);
+    }
+
     public List<FileStorageId> getActiveFileStorages(int nodeId, FileStorageType type) throws SQLException
     {
 

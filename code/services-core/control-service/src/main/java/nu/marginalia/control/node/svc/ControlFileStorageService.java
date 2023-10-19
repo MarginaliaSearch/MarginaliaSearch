@@ -2,7 +2,9 @@ package nu.marginalia.control.node.svc;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.client.Context;
 import nu.marginalia.control.Redirects;
+import nu.marginalia.executor.client.ExecutorClient;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
 import org.slf4j.Logger;
@@ -19,16 +21,17 @@ import java.sql.SQLException;
 @Singleton
 public class ControlFileStorageService {
     private final FileStorageService fileStorageService;
+    private final ExecutorClient executorClient;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
-    public ControlFileStorageService( FileStorageService fileStorageService)
+    public ControlFileStorageService(FileStorageService fileStorageService, ExecutorClient executorClient)
     {
         this.fileStorageService = fileStorageService;
+        this.executorClient = executorClient;
     }
 
     public void register() throws IOException {
-        Spark.get("/public/storage/:id/file", this::downloadFileFromStorage);
         Spark.post("/public/storage/:fid/delete", this::flagFileForDeletionRequest, Redirects.redirectToStorage);
 
     }
@@ -39,29 +42,5 @@ public class ControlFileStorageService {
         return "";
     }
 
-    public Object downloadFileFromStorage(Request request, Response response) throws SQLException {
-        var fileStorageId = FileStorageId.parse(request.params("id"));
-        String filename = request.queryParams("name");
 
-        Path root = fileStorageService.getStorage(fileStorageId).asPath();
-        Path filePath = root.resolve(filename).normalize();
-
-        if (!filePath.startsWith(root)) {
-            response.status(403);
-            return "";
-        }
-
-        if (filePath.endsWith(".txt") || filePath.endsWith(".log")) response.type("text/plain");
-        else response.type("application/octet-stream");
-
-        try (var is = Files.newInputStream(filePath)) {
-            is.transferTo(response.raw().getOutputStream());
-        }
-        catch (IOException ex) {
-            logger.error("Failed to download file", ex);
-            throw new RuntimeException(ex);
-        }
-
-        return "";
-    }
 }

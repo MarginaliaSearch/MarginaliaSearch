@@ -5,7 +5,7 @@ import nu.marginalia.actor.ActorStateFactory;
 import nu.marginalia.actor.prototype.AbstractActorPrototype;
 import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorState;
-import nu.marginalia.actor.Actor;
+import nu.marginalia.actor.ExecutorActor;
 import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.svc.BackupService;
 import nu.marginalia.storage.model.FileStorageId;
@@ -43,7 +43,7 @@ public class RestoreBackupActor extends AbstractActorPrototype  {
         backupService.restoreBackup(id);
 
         mqPersistence.sendNewMessage(
-                Actor.CONVERT_AND_LOAD.id() + ":" + node,
+                ExecutorActor.CONVERT_AND_LOAD.id() + ":" + node,
                 null,
                 null,
                 ConvertAndLoadActor.REPARTITION,

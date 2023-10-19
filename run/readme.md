@@ -66,7 +66,7 @@ data from https://downloads.marginalia.nu/ and extract it to the correct locatio
 The system will pick the data up automatically.
 
 ```shell
-$ run/download-samples l
+$ run/download-samples.sh l
 ```
 
 Four sets are available:

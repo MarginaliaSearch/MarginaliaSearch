@@ -17,7 +17,9 @@ import okhttp3.*;
 import org.apache.logging.log4j.ThreadContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import spark.utils.IOUtils;
 
+import java.io.OutputStream;
 import java.net.ConnectException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -231,6 +233,23 @@ public abstract class AbstractClient implements AutoCloseable {
                 .doFinally(() -> ThreadContext.remove("outbound-request"));
     }
 
+    protected synchronized Observable<Integer> get(Context ctx, int node, String endpoint, OutputStream outputStream) {
+        ensureAlive(node);
+
+        var req = ctx.paint(new Request.Builder()).url(serviceRoutes.get(node) + endpoint).get().build();
+
+        return Observable.just(client.newCall(req))
+                .subscribeOn(scheduler().get())
+                .map(this::logInbound)
+                .map(Call::execute)
+                .map(this::logOutbound)
+                .map(rsp -> validateResponseStatus(rsp, req, 200))
+                .map(rsp -> copyToOutputStream(rsp, outputStream))
+                .retryWhen(this::retryHandler)
+                .timeout(timeout, TimeUnit.SECONDS)
+                .doFinally(() -> ThreadContext.remove("outbound-request"));
+    }
+
     @SuppressWarnings("unchecked")
     protected synchronized Observable<String> get(Context ctx, int node, String endpoint) {
         ensureAlive(node);
@@ -351,6 +370,13 @@ public abstract class AbstractClient implements AutoCloseable {
         }
     }
 
+
+    @SneakyThrows
+    private Integer copyToOutputStream(Response response, OutputStream outputStream) {
+        try (response) {
+            return IOUtils.copy(response.body().byteStream(), outputStream);
+        }
+    }
 
     @SneakyThrows
     private <T> T getEntity(Response response, Class<T> clazz) {

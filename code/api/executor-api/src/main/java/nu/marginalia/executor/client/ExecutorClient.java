@@ -4,18 +4,21 @@ import com.google.inject.Inject;
 import nu.marginalia.client.AbstractDynamicClient;
 import nu.marginalia.client.Context;
 import nu.marginalia.executor.model.ActorRunStates;
-import nu.marginalia.executor.model.crawl.RecrawlParameters;
 import nu.marginalia.executor.model.load.LoadParameters;
+import nu.marginalia.executor.model.transfer.TransferItem;
+import nu.marginalia.executor.model.transfer.TransferSpec;
 import nu.marginalia.executor.storage.FileStorageContent;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.service.descriptor.ServiceDescriptors;
 import nu.marginalia.service.id.ServiceId;
 import nu.marginalia.storage.model.FileStorageId;
 
+import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class ExecutorClient extends AbstractDynamicClient {
     @Inject
@@ -35,8 +38,8 @@ public class ExecutorClient extends AbstractDynamicClient {
         post(ctx, node, "/process/crawl/" + fid, "").blockingSubscribe();
     }
 
-    public void triggerRecrawl(Context ctx, int node, RecrawlParameters parameters) {
-        post(ctx, node, "/process/recrawl", parameters).blockingSubscribe();
+    public void triggerRecrawl(Context ctx, int node, FileStorageId fid) {
+        post(ctx, node, "/process/recrawl", fid).blockingSubscribe();
     }
 
     public void triggerConvert(Context ctx, int node, FileStorageId fid) {
@@ -88,11 +91,6 @@ public class ExecutorClient extends AbstractDynamicClient {
                 "").blockingSubscribe();
     }
 
-    public void createCrawlSpecFromDb(Context context, int node, String description) {
-        post(context, node, "/process/crawl-spec/from-db?description="+URLEncoder.encode(description, StandardCharsets.UTF_8), "")
-            .blockingSubscribe();
-    }
-
     public void createCrawlSpecFromDownload(Context context, int node, String description, String url) {
         post(context, node, "/process/crawl-spec/from-download?description="+URLEncoder.encode(description, StandardCharsets.UTF_8)+"&url="+URLEncoder.encode(url, StandardCharsets.UTF_8), "")
                 .blockingSubscribe();
@@ -110,4 +108,21 @@ public class ExecutorClient extends AbstractDynamicClient {
         return get(context, node, "/storage/"+fileId.id(), FileStorageContent.class).blockingFirst();
     }
 
+    public void transferFile(Context context, int node, FileStorageId fileId, String path, OutputStream destOutputStream) {
+        String endpoint = "/transfer/file/%d?path=%s".formatted(fileId.id(), URLEncoder.encode(path, StandardCharsets.UTF_8));
+
+        get(context, node, endpoint,
+                destOutputStream)
+                .blockingSubscribe();
+    }
+
+    public TransferSpec getTransferSpec(Context context, int node, int count) {
+        return get(context, node, "/transfer/spec?count="+count, TransferSpec.class)
+                .timeout(30, TimeUnit.MINUTES)
+                .blockingFirst();
+    }
+
+    public void yieldDomain(Context context, int node, TransferItem item) {
+        post(context, node, "/transfer/yield", item).blockingSubscribe();
+    }
 }

@@ -1,6 +1,9 @@
 package nu.marginalia.loading.links;
 
 import com.google.common.collect.Lists;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.io.processed.DomainLinkRecordParquetFileWriter;
 import nu.marginalia.io.processed.DomainRecordParquetFileWriter;
 import nu.marginalia.io.processed.ProcessedDataFileNames;
@@ -11,7 +14,6 @@ import nu.marginalia.model.processed.DomainLinkRecord;
 import nu.marginalia.model.processed.DomainRecord;
 import nu.marginalia.process.control.ProcessAdHocTaskHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeat;
-import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -43,8 +45,38 @@ class DomainLinksLoaderServiceTest {
             .withInitScript("db/migration/V23_06_0_000__base.sql")
             .withNetworkAliases("mariadb");
 
+    HikariDataSource dataSource;
+
     @BeforeEach
     public void setUp() {
+
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(mariaDBContainer.getJdbcUrl());
+        config.setUsername("wmsa");
+        config.setPassword("wmsa");
+
+        dataSource = new HikariDataSource(config);
+
+        List<String> migrations = List.of("db/migration/V23_11_0_007__domain_node_affinity.sql");
+        for (String migration : migrations) {
+            try (var resource = Objects.requireNonNull(ClassLoader.getSystemResourceAsStream(migration),
+                    "Could not load migration script " + migration);
+                 var conn = dataSource.getConnection();
+                 var stmt = conn.createStatement()
+            ) {
+                String script = new String(resource.readAllBytes());
+                String[] cmds = script.split("\\s*;\\s*");
+                for (String cmd : cmds) {
+                    if (cmd.isBlank())
+                        continue;
+                    System.out.println(cmd);
+                    stmt.executeUpdate(cmd);
+                }
+            } catch (IOException | SQLException ex) {
+
+            }
+        }
+
         heartbeat = Mockito.mock(ProcessHeartbeat.class);
 
         Mockito.when(heartbeat.createAdHocTaskHeartbeat(Mockito.anyString())).thenReturn(
@@ -59,6 +91,7 @@ class DomainLinksLoaderServiceTest {
         }
 
         toDelete.clear();
+        dataSource.close();
     }
 
     @Test
@@ -99,7 +132,7 @@ class DomainLinksLoaderServiceTest {
                      SELECT SOURCE_DOMAIN_ID, DEST_DOMAIN_ID FROM EC_DOMAIN_LINK
                      """)
         ) {
-            var domainService = new DomainLoaderService(dataSource);
+            var domainService = new DomainLoaderService(dataSource, new ProcessConfiguration("test", 1, UUID.randomUUID()));
             var input = new LoaderInputData(workDir, 2);
             var domainRegistry = domainService.getOrCreateDomainIds(input);
 

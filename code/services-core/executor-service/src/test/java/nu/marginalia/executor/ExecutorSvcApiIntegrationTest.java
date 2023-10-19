@@ -4,8 +4,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
-import nu.marginalia.actor.Actor;
-import nu.marginalia.actor.ActorControlService;
+import nu.marginalia.actor.ExecutorActor;
+import nu.marginalia.actor.ExecutorActorControlService;
 import nu.marginalia.actor.task.CrawlJobExtractorActor;
 import nu.marginalia.client.Context;
 import nu.marginalia.client.route.RouteProvider;
@@ -14,7 +14,6 @@ import nu.marginalia.process.ProcessService;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.executor.client.ExecutorClient;
-import nu.marginalia.executor.model.crawl.RecrawlParameters;
 import nu.marginalia.index.client.IndexClient;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.inbox.MqAsynchronousInbox;
@@ -69,43 +68,43 @@ public class ExecutorSvcApiIntegrationTest {
     @Test
     public void startStartActor() throws Exception {
         testInstances.client.startFsm(Context.internal(), 0, "crawl");
-        Mockito.verify(testInstances.actorControlService).startJSON(Actor.CRAWL, "\"\"");
+        Mockito.verify(testInstances.actorControlService).startJSON(ExecutorActor.CRAWL, "\"\"");
     }
 
     @Test
     public void startStopActor() {
         testInstances.client.stopFsm(Context.internal(), 0, "crawl");
 
-        Mockito.verify(testInstances.actorControlService).stop(Actor.CRAWL);
+        Mockito.verify(testInstances.actorControlService).stop(ExecutorActor.CRAWL);
     }
 
     @Test
     public void triggerCrawl() throws Exception {
         testInstances.client.triggerCrawl(Context.internal(), 0, "1");
 
-        Mockito.verify(testInstances.actorControlService).start(eq(Actor.CRAWL), any());
+        Mockito.verify(testInstances.actorControlService).start(eq(ExecutorActor.CRAWL), any());
     }
 
     @Test
     public void triggerRecrawl() throws Exception {
         testInstances.client.triggerRecrawl(Context.internal(), 0,
-                new RecrawlParameters(new FileStorageId(0), List.of()));
+                new FileStorageId(0));
 
-        Mockito.verify(testInstances.actorControlService).start(eq(Actor.RECRAWL), any());
+        Mockito.verify(testInstances.actorControlService).start(eq(ExecutorActor.RECRAWL), any());
     }
 
     @Test
     public void triggerConvert() throws Exception {
         testInstances.client.triggerConvert(Context.internal(), 0, "1");
 
-        Mockito.verify(testInstances.actorControlService).startFrom(eq(Actor.CONVERT), eq("CONVERT"), any());
+        Mockito.verify(testInstances.actorControlService).startFrom(eq(ExecutorActor.CONVERT), eq("CONVERT"), any());
     }
 
     @Test
     public void triggerProcessAndLoad() throws Exception {
         testInstances.client.triggerProcessAndLoad(Context.internal(), 0, "1");
 
-        Mockito.verify(testInstances.actorControlService).start(eq(Actor.CONVERT_AND_LOAD), any());
+        Mockito.verify(testInstances.actorControlService).start(eq(ExecutorActor.CONVERT_AND_LOAD), any());
     }
 
     @Test
@@ -113,7 +112,7 @@ public class ExecutorSvcApiIntegrationTest {
         testInstances.client.loadProcessedData(Context.internal(), 0, "1");
 
         Mockito.verify(testInstances.actorControlService).startFrom(
-                eq(Actor.CONVERT_AND_LOAD),
+                eq(ExecutorActor.CONVERT_AND_LOAD),
                 eq("LOAD"),
                 any());
     }
@@ -122,45 +121,39 @@ public class ExecutorSvcApiIntegrationTest {
     public void calculateAdjacencies() throws Exception {
         testInstances.client.calculateAdjacencies(Context.internal(), 0);
 
-        Mockito.verify(testInstances.actorControlService).start(eq(Actor.ADJACENCY_CALCULATION));
+        Mockito.verify(testInstances.actorControlService).start(eq(ExecutorActor.ADJACENCY_CALCULATION));
     }
 
     @Test
     public void sideloadDirtree() throws Exception {
         testInstances.client.sideloadDirtree(Context.internal(), 0, Path.of("/tmp/test"));
 
-        Mockito.verify(testInstances.actorControlService).startFrom(eq(Actor.CONVERT), eq("CONVERT_DIRTREE"), eq("/tmp/test"));
+        Mockito.verify(testInstances.actorControlService).startFrom(eq(ExecutorActor.CONVERT), eq("CONVERT_DIRTREE"), eq("/tmp/test"));
     }
     @Test
     public void sideloadEncyclopedia() throws Exception {
         testInstances.client.sideloadEncyclopedia(Context.internal(), 0, Path.of("/tmp/test"));
 
-        Mockito.verify(testInstances.actorControlService).startFrom(eq(Actor.CONVERT), eq("CONVERT_ENCYCLOPEDIA"), eq("/tmp/test"));
+        Mockito.verify(testInstances.actorControlService).startFrom(eq(ExecutorActor.CONVERT), eq("CONVERT_ENCYCLOPEDIA"), eq("/tmp/test"));
     }
     @Test
     public void sideloadStackexchange() throws Exception {
         testInstances.client.sideloadStackexchange(Context.internal(), 0, Path.of("/tmp/test"));
 
-        Mockito.verify(testInstances.actorControlService).startFrom(eq(Actor.CONVERT), eq("CONVERT_STACKEXCHANGE"), eq("/tmp/test"));
-    }
-
-    @Test
-    public void testCreateCrawlSpecFromDb() throws Exception {
-        testInstances.client.createCrawlSpecFromDb(Context.internal(), 0, "Lorem Ipsum");
-        Mockito.verify(testInstances.actorControlService).startFrom(eq(Actor.CRAWL_JOB_EXTRACTOR), eq("CREATE_FROM_DB"), eq(new CrawlJobExtractorActor.CrawlJobExtractorArguments("Lorem Ipsum")));
+        Mockito.verify(testInstances.actorControlService).startFrom(eq(ExecutorActor.CONVERT), eq("CONVERT_STACKEXCHANGE"), eq("/tmp/test"));
     }
 
     @Test
     public void testCreateCrawlSpecFromUrl() throws Exception {
         testInstances.client.createCrawlSpecFromDownload(Context.internal(), 0, "Lorem Ipsum", "http://www.example.com");
-        Mockito.verify(testInstances.actorControlService).startFrom(eq(Actor.CRAWL_JOB_EXTRACTOR), eq("CREATE_FROM_LINK"), eq(new CrawlJobExtractorActor.CrawlJobExtractorArgumentsWithURL("Lorem Ipsum", "http://www.example.com")));
+        Mockito.verify(testInstances.actorControlService).startFrom(eq(ExecutorActor.CRAWL_JOB_EXTRACTOR), eq("CREATE_FROM_LINK"), eq(new CrawlJobExtractorActor.CrawlJobExtractorArgumentsWithURL("Lorem Ipsum", "http://www.example.com")));
     }
 
     @Test
     public void backupRestore() throws Exception {
         testInstances.client.restoreBackup(Context.internal(), 0, "1");
 
-        Mockito.verify(testInstances.actorControlService).startFrom(eq(Actor.RESTORE_BACKUP), eq("RESTORE"), eq(new FileStorageId(1)));
+        Mockito.verify(testInstances.actorControlService).startFrom(eq(ExecutorActor.RESTORE_BACKUP), eq("RESTORE"), eq(new FileStorageId(1)));
     }
 }
 
@@ -170,14 +163,14 @@ class TestInstances {
     @Inject
     ExecutorClient client;
     @Inject
-    ActorControlService actorControlService;
+    ExecutorActorControlService actorControlService;
 }
 class TestModule extends AbstractModule  {
 
     @Override
     public void configure() {
         System.setProperty("service-name", "test");
-        bind(ActorControlService.class).toInstance(Mockito.mock(ActorControlService.class));
+        bind(ExecutorActorControlService.class).toInstance(Mockito.mock(ExecutorActorControlService.class));
         bind(FileStorageService.class).toInstance(Mockito.mock(FileStorageService.class));
         bind(ProcessService.class).toInstance(Mockito.mock(ProcessService.class));
         bind(ServiceEventLog.class).toInstance(Mockito.mock(ServiceEventLog.class));

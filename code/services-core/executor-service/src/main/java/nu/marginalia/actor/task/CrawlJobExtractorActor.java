@@ -9,6 +9,7 @@ import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorState;
 import nu.marginalia.crawlspec.CrawlSpecFileNames;
 import nu.marginalia.db.DbDomainStatsExportMultitool;
+import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.storage.model.FileStorageType;
@@ -28,20 +29,15 @@ public class CrawlJobExtractorActor extends AbstractActorPrototype {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     // STATES
 
-    public static final String CREATE_FROM_DB = "CREATE_FROM_DB";
     public static final String CREATE_FROM_LINK = "CREATE_FROM_LINK";
     public static final String END = "END";
     private final FileStorageService fileStorageService;
-    private final HikariDataSource dataSource;
-
     @Inject
     public CrawlJobExtractorActor(ActorStateFactory stateFactory,
-                                  FileStorageService fileStorageService,
-                                  HikariDataSource dataSource
+                                  FileStorageService fileStorageService
                                   ) {
         super(stateFactory);
         this.fileStorageService = fileStorageService;
-        this.dataSource = dataSource;
     }
 
     public record CrawlJobExtractorArguments(String description) { }
@@ -88,37 +84,6 @@ public class CrawlJobExtractorActor extends AbstractActorPrototype {
                 KnownUrlsCountSource.fixed(200),
                 KnownUrlsListSource.justIndex()
         );
-    }
-
-
-    @ActorState(name = CREATE_FROM_DB, next = END,
-                resume = ActorResumeBehavior.ERROR,
-                description = """
-                        Spawns a CrawlJobExtractor process that loads data from the link database, and wait for it to finish.
-                        """
-    )
-    public void createFromDB(CrawlJobExtractorArguments arg) throws Exception {
-        if (arg == null) {
-            error("This actor requires a CrawlJobExtractorArguments argument");
-        }
-
-        var base = fileStorageService.getStorageBase(FileStorageBaseType.STORAGE);
-        var storage = fileStorageService.allocateTemporaryStorage(base, FileStorageType.CRAWL_SPEC, "crawl-spec", arg.description());
-
-        final Path path = CrawlSpecFileNames.resolve(storage);
-
-        try (var dbTools = new DbDomainStatsExportMultitool(dataSource)) {
-            generateCrawlSpec(
-                    path,
-                    DomainSource.combined(
-                            DomainSource.knownUrlsFromDb(dbTools),
-                            DomainSource.fromCrawlQueue(dbTools)
-                    ),
-                    KnownUrlsCountSource.fromDb(dbTools, 200),
-                    KnownUrlsListSource.justIndex() // TODO: hook in linkdb maybe?
-            );
-        }
-
     }
 
 }

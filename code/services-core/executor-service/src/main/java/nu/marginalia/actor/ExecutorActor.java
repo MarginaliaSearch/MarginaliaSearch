@@ -1,6 +1,6 @@
 package nu.marginalia.actor;
 
-public enum Actor {
+public enum ExecutorActor {
     CRAWL,
     RECRAWL,
     CONVERT_AND_LOAD,
@@ -16,6 +16,7 @@ public enum Actor {
     TRUNCATE_LINK_DATABASE,
     PROC_INDEX_CONSTRUCTOR_SPAWNER,
     CONVERT,
+    TRANSFER_DOMAINS,
     RESTORE_BACKUP;
 
     public String id() {

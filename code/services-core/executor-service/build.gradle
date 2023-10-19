@@ -24,6 +24,7 @@ java {
 dependencies {
     implementation project(':code:common:config')
     implementation project(':code:common:model')
+    implementation project(':code:common:process')
     implementation project(':code:common:db')
 
     implementation project(':code:common:service')

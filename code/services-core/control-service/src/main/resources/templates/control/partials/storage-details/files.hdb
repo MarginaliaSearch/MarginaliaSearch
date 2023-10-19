@@ -8,7 +8,9 @@
     </tr>
     {{#each files}}
         <tr>
-            <td> {{filename}} </td>
+            <td>
+                <a href="/nodes/{{node.id}}/storage/{{self.storage.id}}/transfer?path={{filename}}">{{filename}}</a>
+            </td>
             <td>{{mTime}}</td>
             <td>{{size}}</td>
         </tr>

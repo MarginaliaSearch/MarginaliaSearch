@@ -1,6 +1,8 @@
 package nu.marginalia.loading.domains;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.io.processed.DomainLinkRecordParquetFileWriter;
 import nu.marginalia.io.processed.DomainRecordParquetFileWriter;
 import nu.marginalia.io.processed.ProcessedDataFileNames;
@@ -57,6 +59,7 @@ class DomainLoaderServiceTest {
 
         toDelete.clear();
     }
+
     @Test
     void readDomainNames() throws IOException {
         Path workDir = Files.createTempDirectory(getClass().getSimpleName());
@@ -92,43 +95,14 @@ class DomainLoaderServiceTest {
             }
         }
         // Read them
-        var domainService = new DomainLoaderService(null);
-        var domainNames = domainService.readDomainNames(new LoaderInputData(workDir, 2));
+        var domainService = new DomainLoaderService(null, new ProcessConfiguration("test", 1, UUID.randomUUID()));
 
         // Verify
-        Set<String> expectedDomains = Stream.of(domains1, domains2, linkDomains)
-                .flatMap(List::stream)
-                .collect(Collectors.toSet());
-        assertEquals(expectedDomains, domainNames);
-    }
+        Set<String> expectedDomains1 = Sets.union(new HashSet<>(domains1), new HashSet<>(domains2));
+        assertEquals(expectedDomains1, domainService.readSetDomainNames(new LoaderInputData(workDir, 2)));
 
-    @Test
-    void getDatabaseIds() {
-        try (var dataSource = DbTestUtil.getConnection(mariaDBContainer.getJdbcUrl())) {
-            var domainService = new DomainLoaderService(dataSource);
-
-            for (int i = 0; i < 2; i++) {
-                // run the test case twice to cover both the insert and query cases
-                System.out.println("Case " + i);
-
-                var domains = List.of("memex.marginalia.nu", "www.marginalia.nu", "search.marginalia.nu", "wiby.me");
-                var data = domainService.getDatabaseIds(domains);
-
-                Map<String, Integer> ids = new HashMap<>();
-
-                for (String domain : domains) {
-                    ids.put(domain, data.getDomainId(domain));
-                }
-
-                // Verify we got 4 domain IDs for the provided inputs
-                var entries = new HashSet<>(ids.values());
-                assertEquals(4, entries.size());
-                assertEquals(Set.of(1,2,3,4), entries); // this may be fragile?
-            }
-
-        } catch (SQLException e) {
-            Assertions.fail(e);
-        }
+        Set<String> expectedDomains2 = new HashSet<>(linkDomains);
+        assertEquals(expectedDomains2, domainService.readReferencedDomainNames(new LoaderInputData(workDir, 2)));
     }
 
     private DomainRecord dr(String domainName) {

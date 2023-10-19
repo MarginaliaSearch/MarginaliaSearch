@@ -10,10 +10,12 @@ import nu.marginalia.UserAgent;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
+import nu.marginalia.crawl.spec.CrawlSpecProvider;
+import nu.marginalia.crawl.spec.DbCrawlSpecProvider;
+import nu.marginalia.crawl.spec.ParquetCrawlSpecProvider;
 import nu.marginalia.crawling.io.CrawledDomainReader;
 import nu.marginalia.crawlspec.CrawlSpecFileNames;
 import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.io.crawlspec.CrawlSpecRecordParquetFileReader;
 import nu.marginalia.model.crawlspec.CrawlSpecRecord;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
@@ -53,6 +55,7 @@ public class CrawlerMain {
     private final UserAgent userAgent;
     private final MessageQueueFactory messageQueueFactory;
     private final FileStorageService fileStorageService;
+    private final DbCrawlSpecProvider dbCrawlSpecProvider;
     private final Gson gson;
     private final int node;
     private final SimpleBlockingThreadPool pool;
@@ -72,11 +75,13 @@ public class CrawlerMain {
                        MessageQueueFactory messageQueueFactory,
                        FileStorageService fileStorageService,
                        ProcessConfiguration processConfiguration,
+                       DbCrawlSpecProvider dbCrawlSpecProvider,
                        Gson gson) {
         this.heartbeat = heartbeat;
         this.userAgent = userAgent;
         this.messageQueueFactory = messageQueueFactory;
         this.fileStorageService = fileStorageService;
+        this.dbCrawlSpecProvider = dbCrawlSpecProvider;
         this.gson = gson;
         this.node = processConfiguration.node();
 
@@ -109,7 +114,7 @@ public class CrawlerMain {
 
         var instructions = crawler.fetchInstructions();
         try {
-            crawler.run(instructions.crawlSpec, instructions.outputDir);
+            crawler.run(instructions.specProvider, instructions.outputDir);
             instructions.ok();
         }
         catch (Exception ex) {
@@ -123,30 +128,24 @@ public class CrawlerMain {
         System.exit(0);
     }
 
-    public void run(List<Path> crawlSpec, Path outputDir) throws InterruptedException, IOException {
+    public void run(CrawlSpecProvider specProvider, Path outputDir) throws InterruptedException, IOException {
 
         heartbeat.start();
         try (WorkLog workLog = new WorkLog(outputDir.resolve("crawler.log"))) {
             // First a validation run to ensure the file is all good to parse
             logger.info("Validating JSON");
 
-            int taskCount = 0;
-            for (var specs : crawlSpec) {
-                taskCount += CrawlSpecRecordParquetFileReader.count(specs);
-            }
-            totalTasks = taskCount;
+            totalTasks = specProvider.totalCount();
 
-            logger.info("Queued {} crawl tasks, let's go", taskCount);
+            logger.info("Queued {} crawl tasks, let's go", totalTasks);
 
-            for (var specs : crawlSpec) {
-                try (var specStream = CrawlSpecRecordParquetFileReader.stream(specs)) {
-                    specStream
-                            .takeWhile((e) -> abortMonitor.isAlive())
-                            .filter(e -> !workLog.isJobFinished(e.domain))
-                            .filter(e -> processingIds.put(e.domain, "") == null)
-                            .map(e -> new CrawlTask(e, outputDir, workLog))
-                            .forEach(pool::submitQuietly);
-                }
+            try (var specStream = specProvider.stream()) {
+                specStream
+                        .takeWhile((e) -> abortMonitor.isAlive())
+                        .filter(e -> !workLog.isJobFinished(e.domain))
+                        .filter(e -> processingIds.put(e.domain, "") == null)
+                        .map(e -> new CrawlTask(e, outputDir, workLog))
+                        .forEach(pool::submitQuietly);
             }
 
             logger.info("Shutting down the pool, waiting for tasks to complete...");
@@ -155,6 +154,9 @@ public class CrawlerMain {
             do {
                 System.out.println("Waiting for pool to terminate... " + pool.getActiveCount() + " remaining");
             } while (!pool.awaitTermination(60, TimeUnit.SECONDS));
+        }
+        catch (Exception ex) {
+
         }
         finally {
             heartbeat.shutDown();
@@ -227,15 +229,15 @@ public class CrawlerMain {
 
 
     private static class CrawlRequest {
-        private final List<Path> crawlSpec;
+        private final CrawlSpecProvider specProvider;
         private final Path outputDir;
         private final MqMessage message;
         private final MqSingleShotInbox inbox;
 
-        CrawlRequest(List<Path> crawlSpec, Path outputDir, MqMessage message, MqSingleShotInbox inbox) {
+        CrawlRequest(CrawlSpecProvider specProvider, Path outputDir, MqMessage message, MqSingleShotInbox inbox) {
             this.message = message;
             this.inbox = inbox;
-            this.crawlSpec = crawlSpec;
+            this.specProvider = specProvider;
             this.outputDir = outputDir;
         }
 
@@ -259,11 +261,20 @@ public class CrawlerMain {
 
         var request = gson.fromJson(msg.payload(), nu.marginalia.mqapi.crawling.CrawlRequest.class);
 
-        var specData = fileStorageService.getStorage(request.specStorage);
+        CrawlSpecProvider specProvider;
+
+        if (request.specStorage != null) {
+            var specData = fileStorageService.getStorage(request.specStorage);
+            specProvider = new ParquetCrawlSpecProvider(CrawlSpecFileNames.resolve(specData));
+        }
+        else {
+            specProvider = dbCrawlSpecProvider;
+        }
+
         var crawlData = fileStorageService.getStorage(request.crawlStorage);
 
         return new CrawlRequest(
-                CrawlSpecFileNames.resolve(specData),
+                specProvider,
                 crawlData.asPath(),
                 msg,
                 inbox);

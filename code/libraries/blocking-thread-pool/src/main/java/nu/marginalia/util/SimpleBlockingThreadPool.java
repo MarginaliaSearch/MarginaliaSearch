@@ -56,7 +56,7 @@ public class SimpleBlockingThreadPool {
     }
 
     private void worker() {
-        while (!tasks.isEmpty() || !shutDown) {
+        while (!(tasks.isEmpty() && shutDown)) {
             try {
                 Task task = tasks.poll(1, TimeUnit.SECONDS);
                 if (task == null) {
@@ -89,13 +89,6 @@ public class SimpleBlockingThreadPool {
     public boolean awaitTermination(int i, TimeUnit timeUnit) throws InterruptedException {
         final long start = System.currentTimeMillis();
         final long deadline = start + timeUnit.toMillis(i);
-
-        // Drain the queue
-        while (!tasks.isEmpty()) {
-            long timeRemaining = deadline - System.currentTimeMillis();
-            if (timeRemaining <= 0)
-                return false;
-        }
 
         // Wait for termination
         for (var thread : workers) {
