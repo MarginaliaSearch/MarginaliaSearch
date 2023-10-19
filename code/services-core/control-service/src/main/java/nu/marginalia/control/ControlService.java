@@ -7,10 +7,7 @@ import nu.marginalia.control.app.svc.*;
 import nu.marginalia.control.node.svc.ControlNodeActionsService;
 import nu.marginalia.control.node.svc.ControlFileStorageService;
 import nu.marginalia.control.node.svc.ControlNodeService;
-import nu.marginalia.control.sys.svc.ControlSysActionsService;
-import nu.marginalia.control.sys.svc.EventLogService;
-import nu.marginalia.control.sys.svc.HeartbeatService;
-import nu.marginalia.control.sys.svc.MessageQueueService;
+import nu.marginalia.control.sys.svc.*;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.screenshot.ScreenshotService;
@@ -54,6 +51,7 @@ public class ControlService extends Service {
                           ScreenshotService screenshotService,
                           SearchToBanService searchToBanService,
                           RandomExplorationService randomExplorationService,
+                          DataSetsService dataSetsService,
                           ControlNodeService controlNodeService
                       ) throws IOException {
 
@@ -66,6 +64,7 @@ public class ControlService extends Service {
         // sys
         messageQueueService.register();
         sysActionsService.register();
+        dataSetsService.register();
 
         // node
         controlFileStorageService.register();

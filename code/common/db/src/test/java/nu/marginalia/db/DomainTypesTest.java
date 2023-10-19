@@ -62,4 +62,11 @@ public class DomainTypesTest {
         assertEquals(Set.of(), Sets.symmetricDifference(expectedDomains, downloadedDomains));
     }
 
+    @Test
+    public void configure() throws SQLException {
+        assertEquals("", domainTypes.getUrlForSelection(DomainTypes.Type.CRAWL));
+        domainTypes.updateUrlForSelection(DomainTypes.Type.CRAWL, "test");
+        assertEquals("test", domainTypes.getUrlForSelection(DomainTypes.Type.CRAWL));
+    }
+
 }
