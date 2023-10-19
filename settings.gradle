@@ -79,6 +79,7 @@ include 'code:tools:website-adjacencies-calculator'
 include 'code:tools:screenshot-capture-tool'
 include 'code:tools:load-test'
 include 'code:tools:stackexchange-converter'
+include 'code:tools:crawl-data-unfcker'
 
 include 'third-party:porterstemmer'
 include 'third-party:xz'
