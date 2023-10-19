@@ -39,9 +39,6 @@
                 <a href="conf" {{#unless view.conf}}class="nav-link"{{/unless}} {{#if view.conf}}aria-current="page" class="active nav-link"{{/if}}>Base Config</a>
             </li>
             <li class="nav-item">
-                <a href="specs" {{#unless view.specs}}class="nav-link"{{/unless}} {{#if view.specs}}aria-current="page" class="active nav-link"{{/if}}>Specs</a>
-            </li>
-            <li class="nav-item">
                 <a href="crawl" {{#unless view.crawl}}class="nav-link"{{/unless}}  {{#if view.crawl}}aria-current="page" class="active nav-link"{{/if}}>Crawl Data</a>
             </li>
             <li class="nav-item">
@@ -49,6 +46,9 @@
             </li>
             <li class="nav-item">
                 <a href="backup" {{#unless view.backup}}class="nav-link"{{/unless}}   {{#if view.backup}}aria-current="page" class="active nav-link"{{/if}}>Backups</a>
+            </li>
+            <li class="nav-item">
+                <a href="specs" {{#unless view.specs}}class="nav-link"{{/unless}} {{#if view.specs}}aria-current="page" class="active nav-link"{{/if}}>Specs</a>
             </li>
         </nav>
 

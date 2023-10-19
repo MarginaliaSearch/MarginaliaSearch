@@ -140,15 +140,9 @@ public class ControlNodeService {
     private Object createNewSpecsAction(Request request, Response response) {
         final String description = request.queryParams("description");
         final String url = request.queryParams("url");
-        final String source = request.queryParams("source");
         int nodeId = Integer.parseInt(request.params("id"));
 
-        if ("download".equals(source)) {
-            executorClient.createCrawlSpecFromDownload(Context.fromRequest(request), nodeId, description, url);
-        }
-        else {
-            throw new IllegalArgumentException("Unknown source: " + source);
-        }
+        executorClient.createCrawlSpecFromDownload(Context.fromRequest(request), nodeId, description, url);
 
         return redirectToOverview(request);
     }

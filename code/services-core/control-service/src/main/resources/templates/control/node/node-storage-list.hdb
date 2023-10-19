@@ -40,9 +40,6 @@
                 <a href="conf" {{#unless view.conf}}class="nav-link"{{/unless}} {{#if view.conf}}aria-current="page" class="active nav-link"{{/if}}>Base Config</a>
             </li>
             <li class="nav-item">
-                <a href="specs" {{#unless view.specs}}class="nav-link"{{/unless}} {{#if view.specs}}aria-current="page" class="active nav-link"{{/if}}>Specs</a>
-            </li>
-            <li class="nav-item">
                 <a href="crawl" {{#unless view.crawl}}class="nav-link"{{/unless}}  {{#if view.crawl}}aria-current="page" class="active nav-link"{{/if}}>Crawl Data</a>
             </li>
             <li class="nav-item">
@@ -50,6 +47,9 @@
             </li>
             <li class="nav-item">
                 <a href="backup" {{#unless view.backup}}class="nav-link"{{/unless}}   {{#if view.backup}}aria-current="page" class="active nav-link"{{/if}}>Backups</a>
+            </li>
+            <li class="nav-item">
+                <a href="specs" {{#unless view.specs}}class="nav-link"{{/unless}} {{#if view.specs}}aria-current="page" class="active nav-link"{{/if}}>Specs</a>
             </li>
         </nav>
 
@@ -149,22 +149,23 @@
         {{#if view.specs}}
             <div class="m-3 p-3 border bg-light">
             <h3 class="my-3">About Specs</h3>
-            <p>Crawl specifications are set of domains to be crawled. A specification is necessary for the crawler
-                to understand which domains to visit.</p>
-            <p>Setting a spec as active means it will be used in <em>recrawls</em>. A fresh crawl can be triggered
-                from within the details view of a specification.</p>
+            <p>Crawl specifications are set of domains to be crawled.  Normally the crawler uses the domain database
+               to find domains to crawl, but sometimes, when bootstrapping a system or during testing, it's useful
+               to be able to specify which domains to crawl with more control.
+            </p>
+            <p>The <em>ACTIVE</em> status does nothing for crawl specs.</p>
             </div>
         {{/if}}
         {{#if view.crawl}}
             <div class="m-3 p-3 border bg-light">
                 <h3 class="my-3">About Crawls</h3>
                 <p>Crawl data is the downloaded and compressed raw HTML of a website.</p>
-                <p>To start a new crawl, first a <em>crawl specification</em> must be created.</p>
+                <p>A new crawl may be bootstrappped from a Crawl Set</p>
                 <p>Unlike other data sets, only a single crawl set may be <em>ACTIVE</em> at any given time.</p>
                 <h4 class="my-3">Recrawl</h4>
                 <p>A set of existing crawl data can be <em>recrawled</em> and amended with new domains
                     and a fresh look at the existing domains.  This is an operation that uses the currently <em>ACTIVE</em>
-                    crawl data and crawl set(s).
+                    crawl data.
                 </p>
                 <h4 class="my-3">Processing</h4>
                 <p>
