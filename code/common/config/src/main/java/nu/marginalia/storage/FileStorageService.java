@@ -491,6 +491,17 @@ public class FileStorageService {
     public List<FileStorageId> getActiveFileStorages(FileStorageType type) throws SQLException {
         return getActiveFileStorages(node, type);
     }
+    public Optional<FileStorageId> getOnlyActiveFileStorage(FileStorageType type) throws SQLException {
+        return getOnlyActiveFileStorage(node, type);
+    }
+
+    public Optional<FileStorageId> getOnlyActiveFileStorage(int nodeId, FileStorageType type) throws SQLException {
+        var storages = getActiveFileStorages(nodeId, type);
+        if (storages.size() > 1) {
+            throw new IllegalStateException("Expected [0,1] instances of FileStorage with type " + type + ", found " + storages.size());
+        }
+        return storages.stream().findFirst();
+    }
 
     public List<FileStorageId> getActiveFileStorages(int nodeId, FileStorageType type) throws SQLException
     {

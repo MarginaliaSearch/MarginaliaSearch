@@ -159,13 +159,13 @@ public class ControlNodeService {
     private Object triggerAutoRecrawl(Request request, Response response) throws SQLException {
         int nodeId = Integer.parseInt(request.params("id"));
 
-        var toCrawl = fileStorageService.getActiveFileStorages(nodeId, FileStorageType.CRAWL_DATA);
-        if (toCrawl.size() != 1)
-            throw new IllegalStateException();
+        var toCrawl = fileStorageService.getOnlyActiveFileStorage(nodeId, FileStorageType.CRAWL_DATA);
 
-        executorClient.triggerRecrawl(Context.fromRequest(request),
+        executorClient.triggerRecrawl(
+                Context.fromRequest(request),
                 nodeId,
-                toCrawl.get(0));
+                toCrawl.orElseThrow(AssertionError::new)
+        );
 
         return redirectToOverview(request);
     }
@@ -173,13 +173,11 @@ public class ControlNodeService {
     private Object triggerAutoProcess(Request request, Response response) throws SQLException {
         int nodeId = Integer.parseInt(request.params("id"));
 
-        var toConvert = fileStorageService.getActiveFileStorages(nodeId, FileStorageType.CRAWL_DATA);
-        if (toConvert.size() != 1)
-            throw new IllegalStateException();
+        var toConvert = fileStorageService.getOnlyActiveFileStorage(nodeId, FileStorageType.CRAWL_DATA);
 
         executorClient.triggerConvert(Context.fromRequest(request),
                 nodeId,
-                toConvert.get(0));
+                toConvert.orElseThrow(AssertionError::new));
 
         return redirectToOverview(request);
     }
@@ -187,11 +185,11 @@ public class ControlNodeService {
     private Object triggerLoadSelected(Request request, Response response) throws SQLException {
         int nodeId = Integer.parseInt(request.params("id"));
 
-        var toLoad = fileStorageService.getActiveFileStorages(nodeId, FileStorageType.PROCESSED_DATA);
+        var toLoadStorages = fileStorageService.getActiveFileStorages(nodeId, FileStorageType.PROCESSED_DATA);
 
         executorClient.loadProcessedData(Context.fromRequest(request),
                 nodeId,
-                new LoadParameters(toLoad)
+                new LoadParameters(toLoadStorages)
         );
 
         return redirectToOverview(request);

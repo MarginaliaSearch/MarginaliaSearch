@@ -20,21 +20,14 @@ import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageBaseType;
-import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.util.UUID;
-import java.util.zip.GZIPOutputStream;
 
 @Singleton
 public class TransferDomainsActor extends AbstractActorPrototype {
@@ -89,7 +82,7 @@ public class TransferDomainsActor extends AbstractActorPrototype {
                     Ensure preconditions are met
                     """)
     public Message init(Message message) throws Exception {
-        var storages = storageService.getActiveFileStorages(FileStorageType.CRAWL_DATA);
+        var storages = storageService.getOnlyActiveFileStorage(FileStorageType.CRAWL_DATA);
 
         // Ensure crawl data exists to receive into
         if (storages.isEmpty()) {
@@ -100,7 +93,6 @@ public class TransferDomainsActor extends AbstractActorPrototype {
                     "Crawl Data"
             );
             storageService.enableFileStorage(storage.id());
-
         }
 
         return message;
@@ -114,7 +106,10 @@ public class TransferDomainsActor extends AbstractActorPrototype {
                         """
     )
     public Message transferData(Message message) throws Exception {
-        var storageId = storageService.getActiveFileStorages(FileStorageType.CRAWL_DATA).get(0);
+        var storageId = storageService
+                .getOnlyActiveFileStorage(FileStorageType.CRAWL_DATA)
+                .orElseThrow(AssertionError::new); // This Shouldn't Happen (tm)
+
         var storage = storageService.getStorage(storageId);
 
         var spec = executorClient.getTransferSpec(Context.internal(), message.sourceNode, message.count);
