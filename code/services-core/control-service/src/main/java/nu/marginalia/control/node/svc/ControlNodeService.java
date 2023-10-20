@@ -175,7 +175,7 @@ public class ControlNodeService {
 
         var toConvert = fileStorageService.getOnlyActiveFileStorage(nodeId, FileStorageType.CRAWL_DATA);
 
-        executorClient.triggerConvert(Context.fromRequest(request),
+        executorClient.triggerConvertAndLoad(Context.fromRequest(request),
                 nodeId,
                 toConvert.orElseThrow(AssertionError::new));
 

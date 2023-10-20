@@ -325,7 +325,7 @@ public class FileStorageService {
                         type,
                         createDateTime,
                         path,
-                        state,
+                        FileStorageState.parse(state),
                         description
                 );
             }
@@ -380,7 +380,7 @@ public class FileStorageService {
                         type,
                         createDateTime,
                         path,
-                        state,
+                        FileStorageState.parse(state),
                         description
                 );
             }
@@ -441,7 +441,7 @@ public class FileStorageService {
                             type,
                             createDateTime,
                             path,
-                            state,
+                            FileStorageState.parse(state),
                             description
                     ));
                 }
@@ -454,20 +454,21 @@ public class FileStorageService {
     }
 
     public void flagFileForDeletion(FileStorageId id) throws SQLException {
-        setFileStorageState(id, "DELETE");
+        setFileStorageState(id, FileStorageState.DELETE);
     }
 
     public void enableFileStorage(FileStorageId id) throws SQLException {
-        setFileStorageState(id, "ACTIVE");
+        setFileStorageState(id, FileStorageState.ACTIVE);
     }
     public void disableFileStorage(FileStorageId id) throws SQLException {
-        setFileStorageState(id, "");
+        setFileStorageState(id, FileStorageState.UNSET);
     }
 
-    private void setFileStorageState(FileStorageId id, String state) throws SQLException {
+    public void setFileStorageState(FileStorageId id, FileStorageState state) throws SQLException {
         try (var conn = dataSource.getConnection();
              var flagStmt = conn.prepareStatement("UPDATE FILE_STORAGE SET STATE = ? WHERE ID = ?")) {
-            flagStmt.setString(1, state);
+            String value = state == FileStorageState.UNSET ? "" : state.name();
+            flagStmt.setString(1, value);
             flagStmt.setLong(2, id.id());
             flagStmt.executeUpdate();
         }
@@ -480,6 +481,7 @@ public class FileStorageService {
                 INNER JOIN FILE_STORAGE_BASE ON BASE_ID=FILE_STORAGE_BASE.ID
                 SET FILE_STORAGE.STATE = ''
                 WHERE FILE_STORAGE.TYPE = ?
+                AND FILE_STORAGE.TYPE = 'ACTIVE'
                 AND FILE_STORAGE_BASE.NODE=?
                 """)) {
             flagStmt.setString(1, type.name());

@@ -17,7 +17,6 @@ import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class ExecutorClient extends AbstractDynamicClient {
@@ -45,18 +44,9 @@ public class ExecutorClient extends AbstractDynamicClient {
     public void triggerConvert(Context ctx, int node, FileStorageId fid) {
         post(ctx, node, "/process/convert/" + fid.id(), "").blockingSubscribe();
     }
-    @Deprecated
-    public void triggerConvert(Context ctx, int node, String fid) {
-        post(ctx, node, "/process/convert/" + fid, "").blockingSubscribe();
-    }
 
-    public void triggerProcessAndLoad(Context ctx, int node, String fid) {
-        post(ctx, node, "/process/convert-load/" + fid, "").blockingSubscribe();
-    }
-
-    @Deprecated
-    public void loadProcessedData(Context ctx, int node, String fid) {
-        loadProcessedData(ctx, node, new LoadParameters(List.of(new FileStorageId(Long.parseLong(fid)))));
+    public void triggerConvertAndLoad(Context ctx, int node, FileStorageId fid) {
+        post(ctx, node, "/process/convert-load/" + fid.id(), "").blockingSubscribe();
     }
 
     public void loadProcessedData(Context ctx, int node, LoadParameters ids) {

@@ -42,7 +42,9 @@ public class ProcessingService {
     }
 
     public Object startConversion(Request request, Response response) throws Exception {
-        actorControlService.startFrom(ExecutorActor.CONVERT, ConvertActor.CONVERT, FileStorageId.parse(request.params("fid")));
+        actorControlService.startFrom(ExecutorActor.CONVERT,
+                ConvertActor.CONVERT,
+                FileStorageId.parse(request.params("fid")));
 
         return "";
     }

@@ -15,6 +15,7 @@ import nu.marginalia.process.ProcessService;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.storage.model.FileStorageId;
+import nu.marginalia.storage.model.FileStorageState;
 import nu.marginalia.storage.model.FileStorageType;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.outbox.MqOutbox;
@@ -97,6 +98,7 @@ public class ConvertActor extends AbstractActorPrototype {
                 FileStorageType.PROCESSED_DATA, "processed-data",
                 "Processed Data; " + toProcess.description());
 
+        storageService.setFileStorageState(processedArea.id(), FileStorageState.EPHEMERAL);
         storageService.relateFileStorages(toProcess.id(), processedArea.id());
 
         // Pre-send convert request

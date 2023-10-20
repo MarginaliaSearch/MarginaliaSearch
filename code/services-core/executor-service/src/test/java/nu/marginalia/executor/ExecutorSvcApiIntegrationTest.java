@@ -93,28 +93,12 @@ public class ExecutorSvcApiIntegrationTest {
         Mockito.verify(testInstances.actorControlService).start(eq(ExecutorActor.RECRAWL), any());
     }
 
-    @Test
-    public void triggerConvert() throws Exception {
-        testInstances.client.triggerConvert(Context.internal(), 0, "1");
-
-        Mockito.verify(testInstances.actorControlService).startFrom(eq(ExecutorActor.CONVERT), eq("CONVERT"), any());
-    }
 
     @Test
     public void triggerProcessAndLoad() throws Exception {
-        testInstances.client.triggerProcessAndLoad(Context.internal(), 0, "1");
+        testInstances.client.triggerConvertAndLoad(Context.internal(), 0, FileStorageId.of(1));
 
         Mockito.verify(testInstances.actorControlService).start(eq(ExecutorActor.CONVERT_AND_LOAD), any());
-    }
-
-    @Test
-    public void loadProcessedData() throws Exception {
-        testInstances.client.loadProcessedData(Context.internal(), 0, "1");
-
-        Mockito.verify(testInstances.actorControlService).startFrom(
-                eq(ExecutorActor.CONVERT_AND_LOAD),
-                eq("LOAD"),
-                any());
     }
 
     @Test

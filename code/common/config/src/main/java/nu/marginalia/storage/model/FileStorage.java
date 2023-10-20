@@ -13,13 +13,13 @@ import java.util.Objects;
  * @param path the full path of the storage on disk
  * @param description a description of the storage
  */
-public record FileStorage(
+public record FileStorage (
         FileStorageId id,
         FileStorageBase base,
         FileStorageType type,
         LocalDateTime createDateTime,
         String path,
-        String state,
+        FileStorageState state,
         String description)
 {
 
@@ -40,7 +40,7 @@ public record FileStorage(
                 type,
                 LocalDateTime.now(),
                 override,
-                "OVERRIDE",
+                FileStorageState.EPHEMERAL,
                 "OVERRIDE:" + type.name()
         );
     }
@@ -50,7 +50,7 @@ public record FileStorage(
     }
 
     public boolean isActive() {
-        return "ACTIVE".equals(state);
+        return FileStorageState.ACTIVE.equals(state);
     }
     @Override
     public boolean equals(Object o) {

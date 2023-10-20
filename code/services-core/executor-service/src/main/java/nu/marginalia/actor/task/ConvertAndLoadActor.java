@@ -10,8 +10,11 @@ import nu.marginalia.actor.ActorStateFactory;
 import nu.marginalia.actor.prototype.AbstractActorPrototype;
 import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorState;
+import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.process.ProcessOutboxes;
 import nu.marginalia.process.ProcessService;
+import nu.marginalia.service.module.ServiceConfiguration;
+import nu.marginalia.storage.model.FileStorageState;
 import nu.marginalia.svc.BackupService;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageBaseType;
@@ -58,6 +61,9 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
     private final FileStorageService storageService;
     private final BackupService backupService;
     private final Gson gson;
+    private final NodeConfigurationService nodeConfigurationService;
+
+    private final int nodeId;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
 
@@ -81,7 +87,9 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
                                FileStorageService storageService,
                                IndexClient indexClient,
                                BackupService backupService,
-                               Gson gson
+                               Gson gson,
+                               NodeConfigurationService nodeConfigurationService,
+                               ServiceConfiguration serviceConfiguration
                                    )
     {
         super(stateFactory);
@@ -93,6 +101,9 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
         this.storageService = storageService;
         this.backupService = backupService;
         this.gson = gson;
+        this.nodeConfigurationService = nodeConfigurationService;
+
+        this.nodeId = serviceConfiguration.node();
     }
 
     @ActorState(name = INITIAL,
@@ -130,6 +141,7 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
         var processedArea = storageService.allocateTemporaryStorage(base, FileStorageType.PROCESSED_DATA, "processed-data",
                 "Processed Data; " + toProcess.description());
 
+        storageService.setFileStorageState(processedArea.id(), FileStorageState.EPHEMERAL);
         storageService.relateFileStorages(toProcess.id(), processedArea.id());
 
         // Pre-send convert request
@@ -178,10 +190,29 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
         }
         var rsp = processWatcher.waitResponse(mqLoaderOutbox, ProcessService.ProcessId.LOADER, message.loaderMsgId);
 
-        if (rsp.state() != MqMessageState.OK)
+        if (rsp.state() != MqMessageState.OK) {
             error("Loader failed");
-
+        } else {
+            cleanProcessedStorage(message.processedStorageId);
+        }
         return message;
+    }
+
+    private void cleanProcessedStorage(List<FileStorageId> processedStorageId) {
+        try {
+            var config = nodeConfigurationService.get(nodeId);
+            if (!config.autoClean())
+                return;
+
+            for (var id : processedStorageId) {
+                if (FileStorageState.EPHEMERAL.equals(storageService.getStorage(id).state())) {
+                    storageService.flagFileForDeletion(id);
+                }
+            }
+        }
+        catch (SQLException ex) {
+            logger.error("Error in clean-up", ex);
+        }
     }
 
     @ActorState(
