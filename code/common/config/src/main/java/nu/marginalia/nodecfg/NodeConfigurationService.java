@@ -39,7 +39,7 @@ public class NodeConfigurationService {
     public List<NodeConfiguration> getAll() throws SQLException {
         try (var conn = dataSource.getConnection();
              var qs = conn.prepareStatement("""
-                     SELECT ID, DESCRIPTION, ACCEPT_QUERIES, DISABLED
+                     SELECT ID, DESCRIPTION, ACCEPT_QUERIES, AUTO_CLEAN, PRECESSION, DISABLED
                      FROM NODE_CONFIGURATION
                      """)) {
             var rs = qs.executeQuery();
@@ -51,6 +51,8 @@ public class NodeConfigurationService {
                         rs.getInt("ID"),
                         rs.getString("DESCRIPTION"),
                         rs.getBoolean("ACCEPT_QUERIES"),
+                        rs.getBoolean("AUTO_CLEAN"),
+                        rs.getBoolean("PRECESSION"),
                         rs.getBoolean("DISABLED")
                 ));
             }
@@ -61,7 +63,7 @@ public class NodeConfigurationService {
     public NodeConfiguration get(int nodeId) throws SQLException {
         try (var conn = dataSource.getConnection();
              var qs = conn.prepareStatement("""
-                     SELECT ID, DESCRIPTION, ACCEPT_QUERIES, DISABLED
+                     SELECT ID, DESCRIPTION, ACCEPT_QUERIES, AUTO_CLEAN, PRECESSION, DISABLED
                      FROM NODE_CONFIGURATION
                      WHERE ID=?
                      """)) {
@@ -72,6 +74,8 @@ public class NodeConfigurationService {
                         rs.getInt("ID"),
                         rs.getString("DESCRIPTION"),
                         rs.getBoolean("ACCEPT_QUERIES"),
+                        rs.getBoolean("AUTO_CLEAN"),
+                        rs.getBoolean("PRECESSION"),
                         rs.getBoolean("DISABLED")
                 );
             }
@@ -84,14 +88,16 @@ public class NodeConfigurationService {
         try (var conn = dataSource.getConnection();
              var us = conn.prepareStatement("""
                      UPDATE NODE_CONFIGURATION
-                     SET DESCRIPTION=?, ACCEPT_QUERIES=?, DISABLED=?
+                     SET DESCRIPTION=?, ACCEPT_QUERIES=?,  AUTO_CLEAN=?, PRECESSION=?, DISABLED=?
                      WHERE ID=?
                      """))
         {
             us.setString(1, config.description());
             us.setBoolean(2, config.acceptQueries());
-            us.setBoolean(3, config.disabled());
-            us.setInt(4, config.node());
+            us.setBoolean(3, config.autoClean());
+            us.setBoolean(4, config.includeInPrecession());
+            us.setBoolean(5, config.disabled());
+            us.setInt(6, config.node());
 
             if (us.executeUpdate() <= 0)
                 throw new IllegalStateException("Failed to update configuration");

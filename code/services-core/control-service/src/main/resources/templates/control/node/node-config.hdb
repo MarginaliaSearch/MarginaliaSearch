@@ -52,6 +52,22 @@
                 <div class="form-text">Sets whether queries will be routed to this node</div>
             </div>
 
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" name="autoClean" {{#if config.autoClean}}checked{{/if}}>
+                <label class="form-check-label" for="autoClean">Clean Automatically</label>
+
+                <div class="form-text">If true, the system will automatically purge intermediate stages of data processing.
+                                       This should probably be on in production and probably off in testing.
+                </div>
+            </div>
+
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" name="includeInPrecession" {{#if config.includeInPrecession}}checked{{/if}}>
+                <label class="form-check-label" for="includeInPrecession">Include in crawling precession</label>
+
+                <div class="form-text">If true, this node will be included in the crawling precession.</div>
+            </div>
+
             <div class="form-check form-switch mb-3">
                 <input class="form-check-input" type="checkbox" role="switch" name="disabled" {{#if config.disabled}}checked{{/if}}>
                 <label class="form-check-label" for="disabled">Disabled</label>
