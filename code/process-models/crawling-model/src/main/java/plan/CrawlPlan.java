@@ -7,6 +7,7 @@ import nu.marginalia.crawling.io.CrawledDomainReader;
 import nu.marginalia.crawling.io.SerializableCrawlDataStream;
 import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.process.log.WorkLog;
+import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +24,7 @@ public class CrawlPlan {
     public WorkDir crawl;
     public WorkDir process;
 
-    private static String rootDirRewrite = System.getProperty("crawl.rootDirRewrite");
+    private final static String rootDirRewrite = System.getProperty("crawl.rootDirRewrite");
 
     public Path getJobSpec() {
         return Path.of(rewrite(jobSpec));
@@ -52,23 +53,17 @@ public class CrawlPlan {
     }
 
     public Path getCrawledFilePath(String fileName) {
+        int sp = fileName.lastIndexOf('/');
+
+        // Normalize the filename
+        if (sp >= 0 && sp + 1< fileName.length())
+            fileName = fileName.substring(sp + 1);
+        if (fileName.length() < 4)
+            fileName = Strings.repeat("0", 4 - fileName.length()) + fileName;
+
         String sp1 = fileName.substring(0, 2);
         String sp2 = fileName.substring(2, 4);
         return crawl.getDir().resolve(sp1).resolve(sp2).resolve(fileName);
-    }
-
-    public Path getProcessedFilePath(String fileName) {
-        String sp1 = fileName.substring(0, 2);
-        String sp2 = fileName.substring(2, 4);
-        return process.getDir().resolve(sp1).resolve(sp2).resolve(fileName);
-    }
-
-    public WorkLog createCrawlWorkLog() throws IOException {
-        return new WorkLog(crawl.getLogFile());
-    }
-
-    public WorkLog createProcessWorkLog() throws IOException {
-        return new WorkLog(process.getLogFile());
     }
 
     public int countCrawledDomains() {
@@ -92,26 +87,6 @@ public class CrawlPlan {
                     return reader.readOptionally(path);
                 });
     }
-
-    public Iterable<CrawledDomain> domainsIterable(Predicate<String> idPredicate) {
-        final CrawledDomainReader reader = new CrawledDomainReader();
-
-        return WorkLog.iterableMap(crawl.getLogFile(),
-                entry -> {
-                    if (!idPredicate.test(entry.id())) {
-                        return Optional.empty();
-                    }
-
-                    var path = getCrawledFilePath(entry.path());
-
-                    if (!Files.exists(path)) {
-                        logger.warn("File not found: {}", path);
-                        return Optional.empty();
-                    }
-                    return reader.readOptionally(path);
-                });
-    }
-
 
     public Iterable<SerializableCrawlDataStream> crawlDataIterable(Predicate<String> idPredicate) {
         final CrawledDomainReader reader = new CrawledDomainReader();
