@@ -112,7 +112,8 @@ public class LoaderMain {
                         List.of(
                             () -> linksService.loadLinks(domainIdRegistry, heartbeat, inputData),
                             () -> keywordLoaderService.loadKeywords(domainIdRegistry, heartbeat, inputData),
-                            () -> documentLoaderService.loadDocuments(domainIdRegistry, heartbeat, inputData)
+                            () -> documentLoaderService.loadDocuments(domainIdRegistry, heartbeat, inputData),
+                            () -> domainService.loadDomainMetadata(domainIdRegistry, heartbeat, inputData)
                         )
             );
 

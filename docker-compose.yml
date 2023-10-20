@@ -6,7 +6,6 @@ x-svc: &service
     - model:/wmsa/model
     - data:/wmsa/data
     - logs:/var/log/wmsa
-    - dist:/dist
   networks:
     - wmsa
   depends_on:
@@ -20,7 +19,6 @@ x-p1: &partition-1
     - model:/wmsa/model
     - data:/wmsa/data
     - logs:/var/log/wmsa
-    - dist:/dist
     - index-1:/idx
     - work-1:/work
     - backup-1:/backup
@@ -39,7 +37,6 @@ x-p2: &partition-2
     - model:/wmsa/model
     - data:/wmsa/data
     - logs:/var/log/wmsa
-    - dist:/dist
     - index-2:/idx
     - work-2:/work
     - backup-2:/backup
@@ -155,12 +152,6 @@ volumes:
       type: none
       o: bind
       device: run/data
-  dist:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: run/dist
   samples-1:
     driver: local
     driver_opts:
