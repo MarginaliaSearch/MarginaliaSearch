@@ -40,7 +40,7 @@ public record FileStorage (
                 type,
                 LocalDateTime.now(),
                 override,
-                FileStorageState.EPHEMERAL,
+                FileStorageState.UNSET,
                 "OVERRIDE:" + type.name()
         );
     }
@@ -51,6 +51,15 @@ public record FileStorage (
 
     public boolean isActive() {
         return FileStorageState.ACTIVE.equals(state);
+    }
+    public boolean isNoState() {
+        return FileStorageState.UNSET.equals(state);
+    }
+    public boolean isDelete() {
+        return FileStorageState.DELETE.equals(state);
+    }
+    public boolean isNew() {
+        return FileStorageState.NEW.equals(state);
     }
     @Override
     public boolean equals(Object o) {

@@ -101,8 +101,22 @@ public class ControlNodeService {
         Spark.post("/public/nodes/:id/storage/:fid/disable", this::disableFileStorage);
         Spark.get("/public/nodes/:id/storage/:fid/transfer", this::downloadFileFromStorage);
 
+
+        Spark.post("/public/nodes/:id/fsms/:fsm/start", this::startFsm);
+        Spark.post("/public/nodes/:id/fsms/:fsm/stop", this::stopFsm);
     }
 
+    public Object startFsm(Request req, Response rsp) throws Exception {
+        executorClient.startFsm(Context.fromRequest(req), Integer.parseInt(req.params("node")), req.params("fsm").toUpperCase());
+
+        return redirectToOverview(req);
+    }
+
+    public Object stopFsm(Request req, Response rsp) throws Exception {
+        executorClient.stopFsm(Context.fromRequest(req), Integer.parseInt(req.params("node")), req.params("fsm").toUpperCase());
+
+        return redirectToOverview(req);
+    }
     private Object nodeListModel(Request request, Response response) throws SQLException {
         var configs = nodeConfigurationService.getAll();
 

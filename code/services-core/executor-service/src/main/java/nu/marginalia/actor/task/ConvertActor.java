@@ -55,6 +55,8 @@ public class ConvertActor extends AbstractActorPrototype {
         public long loaderMsgId = 0L;
     };
 
+    public record WaitInstructions(long msgId, FileStorageId dest) { }
+
     @Override
     public String describe() {
         return "Convert a set of crawl data into a format suitable for loading into the database.";
@@ -98,8 +100,8 @@ public class ConvertActor extends AbstractActorPrototype {
                 FileStorageType.PROCESSED_DATA, "processed-data",
                 "Processed Data; " + toProcess.description());
 
-        storageService.setFileStorageState(processedArea.id(), FileStorageState.EPHEMERAL);
         storageService.relateFileStorages(toProcess.id(), processedArea.id());
+        storageService.setFileStorageState(processedArea.id(), FileStorageState.NEW);
 
         // Pre-send convert request
         var request = new ConvertRequest(ConvertAction.ConvertCrawlData,
@@ -131,6 +133,8 @@ public class ConvertActor extends AbstractActorPrototype {
         var processedArea = storageService.allocateTemporaryStorage(base,
                 FileStorageType.PROCESSED_DATA, "processed-data",
                 "Processed Encylopedia Data; " + fileName);
+
+        storageService.setFileStorageState(processedArea.id(), FileStorageState.NEW);
 
         // Pre-send convert request
         var request = new ConvertRequest(ConvertAction.SideloadEncyclopedia,
@@ -164,6 +168,8 @@ public class ConvertActor extends AbstractActorPrototype {
                 FileStorageType.PROCESSED_DATA, "processed-data",
                 "Processed Dirtree Data; " + fileName);
 
+        storageService.setFileStorageState(processedArea.id(), FileStorageState.NEW);
+
         // Pre-send convert request
         var request = new ConvertRequest(ConvertAction.SideloadDirtree,
                 sourcePath.toString(),
@@ -195,6 +201,8 @@ public class ConvertActor extends AbstractActorPrototype {
                 FileStorageType.PROCESSED_DATA, "processed-data",
                 "Processed Stackexchange Data; " + fileName);
 
+        storageService.setFileStorageState(processedArea.id(), FileStorageState.NEW);
+
         // Pre-send convert request
         var request = new ConvertRequest(ConvertAction.SideloadStackexchange,
                 sourcePath.toString(),
@@ -212,11 +220,14 @@ public class ConvertActor extends AbstractActorPrototype {
                     Wait for the converter to finish processing the data.
                     """
     )
-    public void convertWait(Long msgId) throws Exception {
-        var rsp = processWatcher.waitResponse(mqConverterOutbox, ProcessService.ProcessId.CONVERTER, msgId);
+    public void convertWait(WaitInstructions instructions) throws Exception {
+        var rsp = processWatcher.waitResponse(mqConverterOutbox, ProcessService.ProcessId.CONVERTER, instructions.msgId());
 
-        if (rsp.state() != MqMessageState.OK)
+        if (rsp.state() != MqMessageState.OK) {
             error("Converter failed");
+        }
+
+        storageService.setFileStorageState(instructions.dest, FileStorageState.UNSET);
     }
 
 

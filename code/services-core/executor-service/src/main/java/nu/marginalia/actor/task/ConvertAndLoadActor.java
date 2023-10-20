@@ -141,7 +141,7 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
         var processedArea = storageService.allocateTemporaryStorage(base, FileStorageType.PROCESSED_DATA, "processed-data",
                 "Processed Data; " + toProcess.description());
 
-        storageService.setFileStorageState(processedArea.id(), FileStorageState.EPHEMERAL);
+        storageService.setFileStorageState(processedArea.id(), FileStorageState.NEW);
         storageService.relateFileStorages(toProcess.id(), processedArea.id());
 
         // Pre-send convert request
@@ -201,12 +201,15 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
     private void cleanProcessedStorage(List<FileStorageId> processedStorageId) {
         try {
             var config = nodeConfigurationService.get(nodeId);
-            if (!config.autoClean())
-                return;
 
             for (var id : processedStorageId) {
-                if (FileStorageState.EPHEMERAL.equals(storageService.getStorage(id).state())) {
-                    storageService.flagFileForDeletion(id);
+                if (FileStorageState.NEW.equals(storageService.getStorage(id).state())) {
+                    if (config.autoClean()) {
+                        storageService.flagFileForDeletion(id);
+                    }
+                    else {
+                        storageService.setFileStorageState(id, FileStorageState.UNSET);
+                    }
                 }
             }
         }

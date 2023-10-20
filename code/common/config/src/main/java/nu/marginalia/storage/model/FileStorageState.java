@@ -4,8 +4,7 @@ public enum FileStorageState {
     UNSET,
     NEW,
     ACTIVE,
-    DELETE,
-    EPHEMERAL;
+    DELETE;
 
     public static FileStorageState parse(String value) {
         if ("".equals(value)) {

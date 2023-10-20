@@ -107,12 +107,20 @@
                     <tr>
                         <td title="{{timestampFull}}">{{timestamp}}</td>
                         <td>
-                            {{#unless storage.active}}
+                            {{#if storage.delete}}
+                                <span title="This item will be deleted">DELETING</span>
+                            {{/if}}
+
+                            {{#if storage.new}}
+                                <span title="This item is being created">NEW</span>
+                            {{/if}}
+
+                            {{#if storage.noState}}
                                 <div class="form-check form-switch">
                                     <label class="form-check-label" for="flexSwitchCheckDefault">Archived</label>
                                     <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault"  onclick="setActive({{storage.id}})">
                                 </div>
-                            {{/unless}}
+                            {{/if}}
 
                             {{#if storage.active}}
                                 <div class="form-check form-switch">
