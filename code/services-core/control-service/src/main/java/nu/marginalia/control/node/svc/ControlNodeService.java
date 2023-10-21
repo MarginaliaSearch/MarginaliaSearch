@@ -107,13 +107,13 @@ public class ControlNodeService {
     }
 
     public Object startFsm(Request req, Response rsp) throws Exception {
-        executorClient.startFsm(Context.fromRequest(req), Integer.parseInt(req.params("node")), req.params("fsm").toUpperCase());
+        executorClient.startFsm(Context.fromRequest(req), Integer.parseInt(req.params("id")), req.params("fsm").toUpperCase());
 
         return redirectToOverview(req);
     }
 
     public Object stopFsm(Request req, Response rsp) throws Exception {
-        executorClient.stopFsm(Context.fromRequest(req), Integer.parseInt(req.params("node")), req.params("fsm").toUpperCase());
+        executorClient.stopFsm(Context.fromRequest(req), Integer.parseInt(req.params("id")), req.params("fsm").toUpperCase());
 
         return redirectToOverview(req);
     }
