@@ -33,6 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 // Weird name for this one to not have clashes with java.util.concurrent.ExecutorService
 public class ExecutorSvc extends Service {
     private final BaseServiceParams params;
+    private final Gson gson;
     private final ExecutorActorControlService actorControlService;
     private final FileStorageService fileStorageService;
     private final TransferService transferService;
@@ -51,6 +52,7 @@ public class ExecutorSvc extends Service {
                        ActorApi actorApi) {
         super(params);
         this.params = params;
+        this.gson = gson;
         this.actorControlService = actorControlService;
         this.fileStorageService = fileStorageService;
         this.transferService = transferService;
@@ -92,9 +94,26 @@ public class ExecutorSvc extends Service {
         actorControlService.start(ExecutorActor.PROC_INDEX_CONSTRUCTOR_SPAWNER);
         actorControlService.start(ExecutorActor.PROC_LOADER_SPAWNER);
     }
+
+    @MqRequest(endpoint="TRANSFER-DOMAINS")
+    public String transferDomains(String message) throws Exception {
+
+        var spec = gson.fromJson(message, TransferService.TransferReq.class);
+
+        synchronized (this) {
+            transferService.transferMqEndpoint(spec.sourceNode(), spec.count());
+        }
+
+        return "OK";
+    }
+
+
     @MqRequest(endpoint="PRUNE-CRAWL-DATA")
     public String pruneCrawlData(String message) throws SQLException, IOException {
-        transferService.pruneCrawlDataMqEndpoint();
+
+        synchronized (this) { // would not be great if this ran in parallel with itself
+            transferService.pruneCrawlDataMqEndpoint();
+        }
 
         return "OK";
     }

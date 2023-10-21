@@ -6,6 +6,9 @@ import nu.marginalia.actor.ActorStateFactory;
 import nu.marginalia.actor.prototype.AbstractActorPrototype;
 import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorState;
+import nu.marginalia.model.gson.GsonFactory;
+import nu.marginalia.mq.MqMessageState;
+import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.nodecfg.model.NodeConfiguration;
@@ -13,18 +16,22 @@ import org.jetbrains.annotations.NotNull;
 
 import java.sql.SQLException;
 import java.util.*;
+import com.google.gson.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RebalanceActor  extends AbstractActorPrototype {
     // States
 
     public static final String INIT = "INIT";
-    public static final String CALCULATE_TRANSACTIONS = "CALCULATE_TRANSACTIONS";
     public static final String END = "END";
+
+    private static final Logger logger = LoggerFactory.getLogger(RebalanceActor.class);
 
     private final NodeConfigurationService nodeConfigurationService;
     private final MqPersistence mqPersistence;
     private final HikariDataSource dataSource;
-
+    private final Gson gson = GsonFactory.get();
     @Override
     public String describe() {
         return "Rebalances crawl data among the nodes";
@@ -41,16 +48,10 @@ public class RebalanceActor  extends AbstractActorPrototype {
         this.dataSource = dataSource;
     }
 
-    @ActorState(name= INIT, next = CALCULATE_TRANSACTIONS, resume = ActorResumeBehavior.ERROR,
-                description = "Fetches the number of domains assigned to each eligible processing node")
-    public List<Pop> getPopulations() throws Exception {
-        return getNodePopulations();
-    }
-
-    @ActorState(name= CALCULATE_TRANSACTIONS, next = END, resume = ActorResumeBehavior.ERROR,
-            description = "Calculates how many domains to re-assign between the processing nodes"
-    )
-    public List<Give> calculateTransactions(List<Pop> populations) {
+    @ActorState(name= INIT, next = END, resume = ActorResumeBehavior.ERROR,
+                description = "Rebalance!")
+    public void doIt() throws Exception {
+        var populations = getNodePopulations();
 
         if (populations.size() <= 1) {
             transition(END);
@@ -91,7 +92,16 @@ public class RebalanceActor  extends AbstractActorPrototype {
             }
         }
 
-        return actions;
+        for (var action : actions) {
+            var outbox = new MqOutbox(mqPersistence, "executor-service", action.dest, getClass().getSimpleName(), 0, UUID.randomUUID());
+            var msg = outbox.send("TRANSFER-DOMAINS",
+                    gson.toJson(Map.of("sourceNode", action.donor, "count", action.c)));
+            if (msg.state() != MqMessageState.OK) {
+                logger.error("ERROR! {}", msg);
+            }
+            outbox.stop();
+        }
+
     }
 
     private List<Pop> getNodePopulations() throws SQLException {
@@ -163,6 +173,8 @@ public class RebalanceActor  extends AbstractActorPrototype {
         }
     }
 
+    public record Populations(List<Pop> pops) {
+    }
     public record Pop(int node, int count) {
 
     }

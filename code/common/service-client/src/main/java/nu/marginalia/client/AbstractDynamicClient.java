@@ -15,7 +15,7 @@ public class AbstractDynamicClient extends AbstractClient {
     public AbstractDynamicClient(@Nonnull ServiceDescriptor service, Supplier<Gson> gsonProvider) {
         super(
                 service,
-                10,
+                10000,
                 gsonProvider
         );
 

@@ -8,35 +8,18 @@ import lombok.NoArgsConstructor;
 import lombok.With;
 import nu.marginalia.actor.ActorStateFactory;
 import nu.marginalia.actor.prototype.AbstractActorPrototype;
-import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorState;
-import nu.marginalia.client.Context;
 import nu.marginalia.executor.client.ExecutorClient;
-import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.mq.persistence.MqPersistence;
-import nu.marginalia.mqapi.ProcessInboxNames;
-import nu.marginalia.process.ProcessOutboxes;
-import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.storage.model.FileStorageBaseType;
-import nu.marginalia.storage.model.FileStorageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.UUID;
-
 @Singleton
 public class TransferDomainsActor extends AbstractActorPrototype {
-
-
     // STATES
     public static final String INITIAL = "INITIAL";
-    public static final String TRANSFER_DOMAINS = "TRANSFER-DOMAINS";
-    public static final String UPDATE_DONOR_LOG = "UPDATE_DONOR_LOG";
 
     public static final String END = "END";
     private final FileStorageService storageService;
@@ -77,101 +60,13 @@ public class TransferDomainsActor extends AbstractActorPrototype {
     }
 
     @ActorState(name = INITIAL,
-                next = TRANSFER_DOMAINS,
+                next = END,
                 description = """
-                    Ensure preconditions are met
+                    Transfer the domains
                     """)
-    public Message init(Message message) throws Exception {
-        var storages = storageService.getOnlyActiveFileStorage(FileStorageType.CRAWL_DATA);
+    public void init(Message message) throws Exception {
 
-        // Ensure crawl data exists to receive into
-        if (storages.isEmpty()) {
-            var storage = storageService.allocateTemporaryStorage(
-                    storageService.getStorageBase(FileStorageBaseType.STORAGE),
-                    FileStorageType.CRAWL_DATA,
-                    "crawl-data",
-                    "Crawl Data"
-            );
-            storageService.enableFileStorage(storage.id());
-        }
-
-        return message;
     }
 
-    @ActorState(name = TRANSFER_DOMAINS,
-                next = UPDATE_DONOR_LOG,
-                resume = ActorResumeBehavior.ERROR,
-                description = """
-                        Do the needful
-                        """
-    )
-    public Message transferData(Message message) throws Exception {
-        var storageId = storageService
-                .getOnlyActiveFileStorage(FileStorageType.CRAWL_DATA)
-                .orElseThrow(AssertionError::new); // This Shouldn't Happen (tm)
 
-        var storage = storageService.getStorage(storageId);
-
-        var spec = executorClient.getTransferSpec(Context.internal(), message.sourceNode, message.count);
-        if (spec.size() == 0) {
-            transition("END", "NOTHING TO TRANSFER");
-        }
-
-        Path basePath = storage.asPath();
-        try (var workLog = new WorkLog(basePath.resolve("crawler.log"));
-             var conn = dataSource.getConnection();
-             var stmt = conn.prepareStatement("UPDATE EC_DOMAIN SET NODE_AFFINITY=? WHERE ID=?");
-        ) {
-            for (var item : spec.items()) {
-                logger.info("{}", item);
-                logger.info("Transferring {}", item.domainName());
-
-                Path dest = basePath.resolve(item.path());
-                Files.createDirectories(dest.getParent());
-                try (var fileStream = Files.newOutputStream(dest)) {
-                    executorClient.transferFile(Context.internal(),
-                            message.sourceNode,
-                            item.fileStorageId(),
-                            item.path(),
-                            fileStream);
-
-                    stmt.setInt(1, nodeId);
-                    stmt.setInt(2, item.domainId());
-                    stmt.executeUpdate();
-
-                    executorClient.yieldDomain(Context.internal(), message.sourceNode, item);
-                    workLog.setJobToFinished(item.domainName(), item.path(), 1);
-                }
-                catch (IOException ex) {
-                    Files.deleteIfExists(dest);
-                    error(ex);
-                }
-                catch (Exception ex) {
-                    error(ex);
-                }
-            }
-        }
-
-        return message;
-    }
-
-    @ActorState(name = UPDATE_DONOR_LOG,
-            next = END,
-            resume = ActorResumeBehavior.ERROR,
-            description = """
-                        Do the needful
-                        """
-    )
-    public void updateDonorLog(Message message) throws InterruptedException {
-        var outbox = new MqOutbox(persistence, executorServiceName, message.sourceNode,
-                getClass().getSimpleName(), nodeId, UUID.randomUUID());
-
-        try {
-            outbox.send("PRUNE-CRAWL-DATA", ":-)");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            outbox.stop();
-        }
-    }
 }

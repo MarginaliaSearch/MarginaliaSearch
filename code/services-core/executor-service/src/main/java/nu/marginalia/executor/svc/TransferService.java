@@ -4,13 +4,18 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
+import nu.marginalia.client.Context;
+import nu.marginalia.executor.client.ExecutorClient;
 import nu.marginalia.executor.model.transfer.TransferItem;
 import nu.marginalia.executor.model.transfer.TransferSpec;
 import nu.marginalia.executor.storage.FileStorageContent;
 import nu.marginalia.executor.storage.FileStorageFile;
+import nu.marginalia.mq.outbox.MqOutbox;
+import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.storage.FileStorageService;
+import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageType;
 import org.apache.commons.io.FileUtils;
@@ -27,11 +32,15 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 public class TransferService {
     private final Gson gson;
     private final FileStorageService fileStorageService;
     private final HikariDataSource dataSource;
+    private final ExecutorClient executorClient;
+    private final MqPersistence persistence;
+    private final String executorServiceName;
     private final int nodeId;
 
     private static final Logger logger = LoggerFactory.getLogger(TransferService.class);
@@ -40,12 +49,15 @@ public class TransferService {
             Gson gson,
             FileStorageService fileStorageService,
             HikariDataSource dataSource,
-            ServiceConfiguration config)
+            ExecutorClient executorClient, MqPersistence persistence, ServiceConfiguration config)
     {
         this.gson = gson;
         this.fileStorageService = fileStorageService;
         this.dataSource = dataSource;
+        this.executorClient = executorClient;
+        this.persistence = persistence;
         this.nodeId = config.node();
+        this.executorServiceName = config.serviceName();
     }
 
     public Object transferFile(Request request, Response response) throws SQLException, IOException {
@@ -169,4 +181,78 @@ public class TransferService {
 
         Files.move(newCrawlLogPath, oldCrawlLogPath, StandardCopyOption.REPLACE_EXISTING);
     }
+
+    public void transferMqEndpoint(int sourceNode, int count) throws Exception {
+        var storages = fileStorageService.getOnlyActiveFileStorage(FileStorageType.CRAWL_DATA);
+
+        // Ensure crawl data exists to receive into
+        if (storages.isEmpty()) {
+            var storage = fileStorageService.allocateTemporaryStorage(
+                    fileStorageService.getStorageBase(FileStorageBaseType.STORAGE),
+                    FileStorageType.CRAWL_DATA,
+                    "crawl-data",
+                    "Crawl Data"
+            );
+            fileStorageService.enableFileStorage(storage.id());
+        }
+
+        var storageId = fileStorageService
+                .getOnlyActiveFileStorage(FileStorageType.CRAWL_DATA)
+                .orElseThrow(AssertionError::new); // This Shouldn't Happen (tm)
+
+        var storage = fileStorageService.getStorage(storageId);
+
+        var spec = executorClient.getTransferSpec(Context.internal(), sourceNode, count);
+        if (spec.size() == 0) {
+            return;
+        }
+
+        Path basePath = storage.asPath();
+        try (var workLog = new WorkLog(basePath.resolve("crawler.log"));
+             var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("UPDATE EC_DOMAIN SET NODE_AFFINITY=? WHERE ID=?");
+        ) {
+            for (var item : spec.items()) {
+                logger.info("{}", item);
+                logger.info("Transferring {}", item.domainName());
+
+                Path dest = basePath.resolve(item.path());
+                Files.createDirectories(dest.getParent());
+                try (var fileStream = Files.newOutputStream(dest)) {
+                    executorClient.transferFile(Context.internal(),
+                            sourceNode,
+                            item.fileStorageId(),
+                            item.path(),
+                            fileStream);
+
+                    stmt.setInt(1, nodeId);
+                    stmt.setInt(2, item.domainId());
+                    stmt.executeUpdate();
+
+                    executorClient.yieldDomain(Context.internal(), sourceNode, item);
+                    workLog.setJobToFinished(item.domainName(), item.path(), 1);
+                }
+                catch (IOException ex) {
+                    Files.deleteIfExists(dest);
+                    throw new RuntimeException(ex);
+                }
+                catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        }
+
+        var outbox = new MqOutbox(persistence, executorServiceName, sourceNode,
+                getClass().getSimpleName(), nodeId, UUID.randomUUID());
+
+        try {
+            outbox.send("PRUNE-CRAWL-DATA", ":-)");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            outbox.stop();
+        }
+    }
+
+    public record TransferReq(int sourceNode, int count) { }
 }
