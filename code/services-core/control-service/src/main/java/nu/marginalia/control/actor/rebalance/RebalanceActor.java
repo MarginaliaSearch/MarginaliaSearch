@@ -43,32 +43,32 @@ public class RebalanceActor  extends AbstractActorPrototype {
 
     @ActorState(name= INIT, next = CALCULATE_TRANSACTIONS, resume = ActorResumeBehavior.ERROR,
                 description = "Fetches the number of domains assigned to each eligible processing node")
-    public Map<Integer, Integer> getPopulations() throws Exception {
+    public List<Pop> getPopulations() throws Exception {
         return getNodePopulations();
     }
 
     @ActorState(name= CALCULATE_TRANSACTIONS, next = END, resume = ActorResumeBehavior.ERROR,
             description = "Calculates how many domains to re-assign between the processing nodes"
     )
-    public List<Give> calculateTransactions(Map<Integer, Integer> populations) {
+    public List<Give> calculateTransactions(List<Pop> populations) {
 
         if (populations.size() <= 1) {
             transition(END);
         }
 
-        int average = (int) populations.values().stream().mapToInt(Integer::valueOf).average().orElse(0);
+        int average = (int) populations.stream().mapToInt(pop -> pop.count).average().orElse(0);
         int tolerance = average / 10;
 
         PriorityQueue<Sur> surplusList = new PriorityQueue<>();
         PriorityQueue<Def> deficitList = new PriorityQueue<>();
 
-        populations.forEach((node, count) -> {
-            int delta = count - average;
+        populations.forEach(pop -> {
+            int delta = pop.count - average;
             if (delta - tolerance > 0) {
-                surplusList.add(new Sur(node, delta));
+                surplusList.add(new Sur(pop.node, delta));
             }
             else if (delta + tolerance < 0) {
-                deficitList.add(new Def(node, -delta));
+                deficitList.add(new Def(pop.node, -delta));
             }
         });
 
@@ -94,7 +94,7 @@ public class RebalanceActor  extends AbstractActorPrototype {
         return actions;
     }
 
-    private Map<Integer, Integer> getNodePopulations() throws SQLException {
+    private List<Pop> getNodePopulations() throws SQLException {
         Map<Integer, Integer> ret = new HashMap<>();
 
         try (var conn = dataSource.getConnection();
@@ -118,7 +118,7 @@ public class RebalanceActor  extends AbstractActorPrototype {
             }
         }
 
-        return ret;
+        return ret.entrySet().stream().map(e -> new Pop(e.getKey(), e.getValue())).toList();
     }
 
     private boolean isNodeExcluded(NodeConfiguration node) {
@@ -163,6 +163,9 @@ public class RebalanceActor  extends AbstractActorPrototype {
         }
     }
 
+    public record Pop(int node, int count) {
+
+    }
     public record Give(int donor, int dest, int c) {
 
     }
