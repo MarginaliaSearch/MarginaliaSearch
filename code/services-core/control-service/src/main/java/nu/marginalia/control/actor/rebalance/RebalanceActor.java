@@ -101,8 +101,8 @@ public class RebalanceActor  extends AbstractActorPrototype {
              var query = conn.prepareStatement("""
                      SELECT NODE_AFFINITY, COUNT(*)
                      FROM EC_DOMAIN
-                     GROUP BY NODE_AFFINITY
                      WHERE NODE_AFFINITY > 0
+                     GROUP BY NODE_AFFINITY
                      """)) {
             var rs = query.executeQuery();
             while (rs.next()) {
