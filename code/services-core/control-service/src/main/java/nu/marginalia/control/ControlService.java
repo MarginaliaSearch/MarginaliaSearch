@@ -3,6 +3,7 @@ package nu.marginalia.control;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import nu.marginalia.client.ServiceMonitors;
+import nu.marginalia.control.actor.ControlActorService;
 import nu.marginalia.control.app.svc.*;
 import nu.marginalia.control.node.svc.ControlNodeActionsService;
 import nu.marginalia.control.node.svc.ControlFileStorageService;
@@ -52,7 +53,8 @@ public class ControlService extends Service {
                           SearchToBanService searchToBanService,
                           RandomExplorationService randomExplorationService,
                           DataSetsService dataSetsService,
-                          ControlNodeService controlNodeService
+                          ControlNodeService controlNodeService,
+                          ControlActorService controlActorService
                       ) throws IOException {
 
         super(params);
