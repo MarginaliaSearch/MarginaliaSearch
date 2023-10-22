@@ -18,26 +18,6 @@ public record MessageQueueEntry (
     public boolean hasRelatedMessage() {
         return relatedId > 0;
     }
-    public String ownerInstance() {
-        if (ownerInstanceFull == null) {
-            return "";
-        }
-
-        return ownerInstanceFull.substring(0, 8);
-    }
-    public String ownerInstanceColor() {
-        if (ownerInstanceFull == null) {
-            return "#000000";
-        }
-        return '#' + ownerInstanceFull.substring(0, 6);
-    }
-    public String ownerInstanceColor2() {
-        if (ownerInstanceFull == null) {
-            return "#000000";
-        }
-
-        return '#' + ownerInstanceFull.substring(25, 31);
-    }
 
     public String stateCode() {
         if (state == null) {

@@ -12,9 +12,7 @@
     {{#each processes}}
     <tr class="{{#if isMissing}}missing{{/if}}">
         <td>{{displayName}}</td>
-        <td title="{{uuidFull}}">
-            <span style="background-color: {{uuidColor}}" class="uuidPip">&nbsp;</span><span style="background-color: {{uuidColor2}}" class="uuidPip">&nbsp;</span>{{uuid}}
-        </td>
+        <td>{{{readableUUID uuidFull}}}</td>
         <td>{{status}}</td>
         <td style="{{progressStyle}}">{{#if progress}}{{progress}}%{{/if}}</td>
         <td>{{#unless isStopped}}{{lastSeenMillis}}{{/unless}}</td>

@@ -26,6 +26,21 @@ public class MustacheRenderer<T> {
         var handlebars = new Handlebars(loader);
         handlebars.registerHelpers(ConditionalHelpers.class);
         handlebars.registerHelper("md", new MarkdownHelper());
+        handlebars.registerHelper("readableUUID", (context, options) -> {
+            if (context == null) return "";
+            String instance = context.toString();
+            if (instance.length() < 31) return "";
+
+            String color1 = "#"+instance.substring(0, 6);
+            String color2 = "#"+instance.substring(25, 31);
+            String shortName = instance.substring(0, 8);
+
+            String ret = "<span title=\"%s\">".formatted(instance) +
+                    "<span style=\"background-color: %s\" class=\"uuidPip\">&nbsp;</span>".formatted(color1) +
+                    "<span style=\"background-color: %s\" class=\"uuidPip\">&nbsp;</span>".formatted(color2) +
+                    "&nbsp;" + shortName + "</span>";
+            return ret;
+        });
 
         try {
             template = handlebars.compile(templateFile);

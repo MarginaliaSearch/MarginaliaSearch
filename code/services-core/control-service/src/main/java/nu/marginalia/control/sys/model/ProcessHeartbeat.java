@@ -9,15 +9,6 @@ public record ProcessHeartbeat(
         Integer progress,
         String status
 ) {
-    public String uuid() {
-        return uuidFull.substring(0, 8);
-    }
-    public String uuidColor() {
-        return '#' + uuidFull.substring(0, 6);
-    }
-    public String uuidColor2() {
-        return '#' + uuidFull.substring(25, 31);
-    }
     public boolean isMissing() {
         return lastSeenMillis > 10000;
     }
