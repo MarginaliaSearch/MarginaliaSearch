@@ -114,7 +114,7 @@ public class ConverterMain {
 
     public void convert(CrawlPlan plan) throws Exception {
 
-        final int maxPoolSize = Runtime.getRuntime().availableProcessors();
+        final int maxPoolSize = Math.clamp(Runtime.getRuntime().availableProcessors() - 2, 1, 32);
 
         try (BatchingWorkLog batchingWorkLog = new BatchingWorkLogImpl(plan.process.getLogFile());
              ConverterWriter converterWriter = new ConverterWriter(batchingWorkLog, plan.process.getDir()))
