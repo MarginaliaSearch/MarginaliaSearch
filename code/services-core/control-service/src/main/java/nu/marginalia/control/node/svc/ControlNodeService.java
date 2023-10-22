@@ -96,12 +96,6 @@ public class ControlNodeService {
         Spark.post("/public/nodes/:id/storage/crawl/:fid", this::triggerCrawl);
         Spark.post("/public/nodes/:id/storage/backup-restore/:fid", this::triggerRestoreBackup);
 
-        Spark.post("/public/nodes/:id/storage/:fid/delete", this::deleteFileStorage);
-        Spark.post("/public/nodes/:id/storage/:fid/enable", this::enableFileStorage);
-        Spark.post("/public/nodes/:id/storage/:fid/disable", this::disableFileStorage);
-        Spark.get("/public/nodes/:id/storage/:fid/transfer", this::downloadFileFromStorage);
-
-
         Spark.post("/public/nodes/:id/fsms/:fsm/start", this::startFsm);
         Spark.post("/public/nodes/:id/fsms/:fsm/stop", this::stopFsm);
     }
@@ -141,6 +135,7 @@ public class ControlNodeService {
 
         return redirectToOverview(request);
     }
+
     @SneakyThrows
     public String redirectToOverview(int nodeId) {
         return new Redirects.HtmlRedirect("/nodes/"+nodeId).render(null);
@@ -209,37 +204,6 @@ public class ControlNodeService {
         return redirectToOverview(request);
     }
 
-    private Object deleteFileStorage(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
-        int fileId = Integer.parseInt(request.params("fid"));
-
-        fileStorageService.flagFileForDeletion(new FileStorageId(fileId));
-
-        return redirectToOverview(request);
-    }
-
-    private Object enableFileStorage(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
-        FileStorageId fileId = new FileStorageId(Integer.parseInt(request.params("fid")));
-
-        var storage = fileStorageService.getStorage(fileId);
-        if (storage.type() == FileStorageType.CRAWL_DATA) {
-            fileStorageService.disableFileStorageOfType(nodeId, storage.type());
-        }
-
-        fileStorageService.enableFileStorage(fileId);
-
-        return "";
-    }
-
-    private Object disableFileStorage(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
-        int fileId = Integer.parseInt(request.params("fid"));
-
-        fileStorageService.disableFileStorage(new FileStorageId(fileId));
-
-        return "";
-    }
 
     private Object nodeActorsModel(Request request, Response response) {
         int nodeId = Integer.parseInt(request.params("id"));
@@ -359,24 +323,6 @@ public class ControlNodeService {
                 "processes", heartbeatService.getProcessHeartbeatsForNode(nodeId),
                 "jobs", heartbeatService.getTaskHeartbeatsForNode(nodeId)
                 );
-    }
-
-    public Object downloadFileFromStorage(Request request, Response response) throws IOException {
-        int nodeId = Integer.parseInt(request.params("id"));
-        var fileStorageId = FileStorageId.parse(request.params("fid"));
-
-        String path = request.queryParams("path");
-
-        response.header("content-disposition", "attachment; filename=\""+path+"\"");
-
-        if (path.endsWith(".txt") || path.endsWith(".log"))
-            response.type("text/plain");
-        else
-            response.type("application/octet-stream");
-
-        executorClient.transferFile(Context.fromRequest(request), nodeId, fileStorageId, path, response.raw().getOutputStream());
-
-        return "";
     }
 
     private Object getStorageBaseList(int nodeId) throws SQLException {
