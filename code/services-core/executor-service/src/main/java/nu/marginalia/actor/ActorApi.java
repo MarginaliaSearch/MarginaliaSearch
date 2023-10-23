@@ -29,7 +29,7 @@ public class ActorApi {
     public Object startActor(Request request, Response response) throws Exception {
         ExecutorActor actor = translateActor(request.params("id"));
 
-        actors.startJSON(actor, request.body());
+        actors.start(actor);
 
         return "";
     }

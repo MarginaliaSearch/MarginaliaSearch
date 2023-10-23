@@ -1,12 +1,13 @@
 package nu.marginalia.actor.monitor;
 
+import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.actor.ActorStateFactory;
-import nu.marginalia.actor.prototype.AbstractActorPrototype;
+import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorResumeBehavior;
-import nu.marginalia.actor.state.ActorState;
+import nu.marginalia.actor.state.ActorStep;
+import nu.marginalia.actor.state.Resume;
 import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorage;
@@ -24,20 +25,64 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
-public class FileStorageMonitorActor extends AbstractActorPrototype {
+public class FileStorageMonitorActor extends RecordActorPrototype {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    // STATES
-
-    private static final String INITIAL = "INITIAL";
-    private static final String MONITOR = "MONITOR";
-    private static final String PURGE = "PURGE";
-    private static final String REMOVE_STALE = "REMOVE-STALE";
-    private static final String END = "END";
 
     private final HikariDataSource dataSource;
     private final FileStorageService fileStorageService;
     private final int node;
+
+    public record Initial() implements ActorStep {}
+    @Resume(behavior=ActorResumeBehavior.RETRY)
+    public record Monitor() implements ActorStep {}
+    @Resume(behavior=ActorResumeBehavior.RESTART)
+    public record Purge(FileStorageId id) implements ActorStep {}
+    @Resume(behavior=ActorResumeBehavior.RESTART)
+    public record RemoveStale(FileStorageId id) implements ActorStep {}
+    @Override
+    public ActorStep transition(ActorStep self) throws Exception {
+        return switch (self) {
+            case Initial i -> new Monitor();
+            case Purge (FileStorageId id) -> {
+                var storage = fileStorageService.getStorage(id);
+                logger.info("Deleting {} ", storage.path());
+                Path path = storage.asPath();
+
+                if (Files.exists(path)) {
+                    FileUtils.deleteDirectory(path.toFile());
+                }
+
+                fileStorageService.deregisterFileStorage(storage.id());
+                yield new Monitor();
+            }
+            case RemoveStale(FileStorageId id) -> {
+                fileStorageService.deregisterFileStorage(id);
+                yield new Monitor();
+            }
+            case Monitor m -> {
+                for (;;) {
+                    Optional<FileStorage> toDeleteOpt = findFileStorageToDelete();
+
+                    if (toDeleteOpt.isPresent()) {
+                        yield new Purge(toDeleteOpt.get().id());
+                    }
+
+                    List<FileStorage> allStorageItems = fileStorageService.getEachFileStorage();
+                    var missing = allStorageItems.stream().filter(storage -> !Files.exists(storage.asPath())).findAny();
+                    if (missing.isPresent()) {
+                        yield new RemoveStale(missing.get().id());
+                    }
+
+                    fileStorageService.synchronizeStorageManifests(fileStorageService.getStorageBase(FileStorageBaseType.STORAGE));
+                    fileStorageService.synchronizeStorageManifests(fileStorageService.getStorageBase(FileStorageBaseType.BACKUP));
+
+                    TimeUnit.SECONDS.sleep(10);
+                }
+            }
+            default -> new Error();
+        };
+    }
 
     @Override
     public String describe() {
@@ -46,81 +91,15 @@ public class FileStorageMonitorActor extends AbstractActorPrototype {
     }
 
     @Inject
-    public FileStorageMonitorActor(ActorStateFactory stateFactory,
+    public FileStorageMonitorActor(Gson gson,
                                    HikariDataSource dataSource,
                                    ServiceConfiguration serviceConfiguration,
                                    FileStorageService fileStorageService) {
-        super(stateFactory);
+        super(gson);
         this.dataSource = dataSource;
         this.fileStorageService = fileStorageService;
         this.node = serviceConfiguration.node();
     }
-
-    @ActorState(name = INITIAL, next = MONITOR)
-    public void init() {
-    }
-
-    @ActorState(name = MONITOR,
-            next = PURGE,
-            resume = ActorResumeBehavior.RETRY,
-            transitions = { PURGE, REMOVE_STALE },
-            description = """
-                    Monitor the file storage and trigger at transition to PURGE if any file storage area
-                    has been marked for deletion.
-                    """)
-    public void monitor() throws Exception {
-
-        for (;;) {
-            Optional<FileStorage> toDeleteOpt = findFileStorageToDelete();
-
-            if (toDeleteOpt.isPresent()) {
-                transition(PURGE, toDeleteOpt.get().id());
-            }
-
-            List<FileStorage> allStorageItems = fileStorageService.getEachFileStorage();
-            var missing = allStorageItems.stream().filter(storage -> !Files.exists(storage.asPath())).findAny();
-            if (missing.isPresent()) {
-                transition(REMOVE_STALE, missing.get().id());
-            }
-
-            fileStorageService.synchronizeStorageManifests(fileStorageService.getStorageBase(FileStorageBaseType.STORAGE));
-            fileStorageService.synchronizeStorageManifests(fileStorageService.getStorageBase(FileStorageBaseType.BACKUP));
-
-            TimeUnit.SECONDS.sleep(10);
-        }
-    }
-
-    @ActorState(name = PURGE,
-                next = MONITOR,
-                resume = ActorResumeBehavior.RETRY,
-                description = """
-                        Purge the file storage area and transition back to MONITOR.
-                        """
-    )
-    public void purge(FileStorageId id) throws Exception {
-        var storage = fileStorageService.getStorage(id);
-        logger.info("Deleting {} ", storage.path());
-        Path path = storage.asPath();
-
-        if (Files.exists(path)) {
-            FileUtils.deleteDirectory(path.toFile());
-        }
-
-        fileStorageService.deregisterFileStorage(storage.id());
-    }
-
-    @ActorState(
-            name = REMOVE_STALE,
-            next = MONITOR,
-            resume = ActorResumeBehavior.RETRY,
-            description = """
-                        Remove file storage from the database if it doesn't exist on disk.
-                        """
-    )
-    public void removeStale(FileStorageId id) throws SQLException {
-        fileStorageService.deregisterFileStorage(id);
-    }
-
 
     public Optional<FileStorage> findFileStorageToDelete() {
         try (var conn = dataSource.getConnection();

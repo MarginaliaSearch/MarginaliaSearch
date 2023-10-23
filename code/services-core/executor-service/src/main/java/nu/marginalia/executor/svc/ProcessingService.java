@@ -4,10 +4,7 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 import nu.marginalia.actor.ExecutorActor;
 import nu.marginalia.actor.ExecutorActorControlService;
-import nu.marginalia.actor.task.ConvertActor;
-import nu.marginalia.actor.task.ConvertAndLoadActor;
-import nu.marginalia.actor.task.CrawlJobExtractorActor;
-import nu.marginalia.actor.task.RecrawlActor;
+import nu.marginalia.actor.task.*;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.executor.model.load.LoadParameters;
 import spark.Request;
@@ -27,33 +24,34 @@ public class ProcessingService {
     public Object startRecrawl(Request request, Response response) throws Exception {
         var crawlId = gson.fromJson(request.body(), FileStorageId.class);
 
-        actorControlService.start(
+        actorControlService.startFrom(
                 ExecutorActor.RECRAWL,
-                RecrawlActor.recrawlFromCrawlDataAndCrawlSpec(crawlId)
+                new RecrawlActor.Initial(crawlId)
         );
 
         return "";
     }
 
     public Object startCrawl(Request request, Response response) throws Exception {
-        actorControlService.start(ExecutorActor.CRAWL, FileStorageId.parse(request.params("fid")));
+        actorControlService.startFrom(ExecutorActor.CRAWL,
+                new CrawlActor.Initial(FileStorageId.parse(request.params("fid"))));
 
         return "";
     }
 
     public Object startConversion(Request request, Response response) throws Exception {
         actorControlService.startFrom(ExecutorActor.CONVERT,
-                ConvertActor.CONVERT,
-                FileStorageId.parse(request.params("fid")));
+                new ConvertActor.Convert(FileStorageId.parse(request.params("fid"))));
 
         return "";
     }
 
     public Object startConvertLoad(Request request, Response response) throws Exception {
-        actorControlService.start(
+        actorControlService.startFrom(
                 ExecutorActor.CONVERT_AND_LOAD,
-                FileStorageId.parse(request.params("fid"))
+                new ConvertAndLoadActor.Initial(FileStorageId.parse(request.params("fid")))
         );
+
         return "";
     }
 
@@ -64,10 +62,7 @@ public class ProcessingService {
         // Start the FSM from the intermediate state that triggers the load
         actorControlService.startFrom(
                 ExecutorActor.CONVERT_AND_LOAD,
-                ConvertAndLoadActor.LOAD,
-                new ConvertAndLoadActor.Message(null, params.ids(),
-                        0L,
-                        0L)
+                new ConvertAndLoadActor.Load(params.ids())
         );
 
         return "";
@@ -79,8 +74,8 @@ public class ProcessingService {
     }
 
     public Object createCrawlSpecFromDownload(Request request, Response response) throws Exception {
-        actorControlService.startFrom(ExecutorActor.CRAWL_JOB_EXTRACTOR, CrawlJobExtractorActor.CREATE_FROM_LINK,
-                new CrawlJobExtractorActor.CrawlJobExtractorArgumentsWithURL(
+        actorControlService.startFrom(ExecutorActor.CRAWL_JOB_EXTRACTOR,
+                new CrawlJobExtractorActor.CreateFromUrl(
                         request.queryParamOrDefault("description", ""),
                         request.queryParamOrDefault("url", ""))
         );

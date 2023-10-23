@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.SneakyThrows;
 import nu.marginalia.actor.ActorStateMachine;
-import nu.marginalia.actor.prototype.AbstractActorPrototype;
+import nu.marginalia.actor.prototype.ActorPrototype;
 import nu.marginalia.actor.state.ActorStateInstance;
 import nu.marginalia.control.actor.rebalance.RebalanceActor;
 import nu.marginalia.model.gson.GsonFactory;
@@ -25,7 +25,7 @@ public class ControlActorService {
     private final Gson gson;
     private final MessageQueueFactory messageQueueFactory;
     public Map<ControlActor, ActorStateMachine> stateMachines = new HashMap<>();
-    public Map<ControlActor, AbstractActorPrototype> actorDefinitions = new HashMap<>();
+    public Map<ControlActor, ActorPrototype> actorDefinitions = new HashMap<>();
     private final int node;
     @Inject
     public ControlActorService(MessageQueueFactory messageQueueFactory,
@@ -37,10 +37,10 @@ public class ControlActorService {
         this.gson = GsonFactory.get();
         this.node = baseServiceParams.configuration.node();
 
-        register(ControlActor.REBALANCE, rebalanceActor);
+//        register(ControlActor.REBALANCE, rebalanceActor);
     }
 
-    private void register(ControlActor process, AbstractActorPrototype graph) {
+    private void register(ControlActor process, ActorPrototype graph) {
         var sm = new ActorStateMachine(messageQueueFactory, process.id(), node, UUID.randomUUID(), graph);
         sm.listen((function, param) -> logStateChange(process, function));
 
@@ -104,7 +104,7 @@ public class ControlActorService {
         return actorDefinitions.get(actor).isDirectlyInitializable();
     }
 
-    public AbstractActorPrototype getActorDefinition(ControlActor actor) {
+    public ActorPrototype getActorDefinition(ControlActor actor) {
         return actorDefinitions.get(actor);
     }
 

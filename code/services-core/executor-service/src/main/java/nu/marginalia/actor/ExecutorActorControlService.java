@@ -6,8 +6,10 @@ import com.google.inject.Singleton;
 import lombok.SneakyThrows;
 import nu.marginalia.actor.monitor.*;
 import nu.marginalia.actor.proc.*;
-import nu.marginalia.actor.prototype.AbstractActorPrototype;
+import nu.marginalia.actor.prototype.ActorPrototype;
+import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorStateInstance;
+import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.task.*;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.mq.MessageQueueFactory;
@@ -26,7 +28,7 @@ public class ExecutorActorControlService {
     private final Gson gson;
     private final MessageQueueFactory messageQueueFactory;
     public Map<ExecutorActor, ActorStateMachine> stateMachines = new HashMap<>();
-    public Map<ExecutorActor, AbstractActorPrototype> actorDefinitions = new HashMap<>();
+    public Map<ExecutorActor, ActorPrototype> actorDefinitions = new HashMap<>();
     private final int node;
     @Inject
     public ExecutorActorControlService(MessageQueueFactory messageQueueFactory,
@@ -45,9 +47,7 @@ public class ExecutorActorControlService {
                                        IndexConstructorMonitorActor indexConstructorMonitorActor,
                                        TriggerAdjacencyCalculationActor triggerAdjacencyCalculationActor,
                                        CrawlJobExtractorActor crawlJobExtractorActor,
-                                       ExportDataActor exportDataActor,
-                                       TruncateLinkDatabase truncateLinkDatabase,
-                                       TransferDomainsActor transferDomainsActor
+                                       ExportDataActor exportDataActor
                             ) {
         this.messageQueueFactory = messageQueueFactory;
         this.eventLog = baseServiceParams.eventLog;
@@ -72,26 +72,24 @@ public class ExecutorActorControlService {
         register(ExecutorActor.ADJACENCY_CALCULATION, triggerAdjacencyCalculationActor);
         register(ExecutorActor.CRAWL_JOB_EXTRACTOR, crawlJobExtractorActor);
         register(ExecutorActor.EXPORT_DATA, exportDataActor);
-        register(ExecutorActor.TRUNCATE_LINK_DATABASE, truncateLinkDatabase);
-        register(ExecutorActor.TRANSFER_DOMAINS, transferDomainsActor);
     }
 
-    private void register(ExecutorActor process, AbstractActorPrototype graph) {
+    private void register(ExecutorActor process, ActorPrototype graph) {
         var sm = new ActorStateMachine(messageQueueFactory, process.id(), node, UUID.randomUUID(), graph);
         sm.listen((function, param) -> logStateChange(process, function));
 
         stateMachines.put(process, sm);
         actorDefinitions.put(process, graph);
     }
+    private void register(ExecutorActor process, RecordActorPrototype graph) {
+        var sm = new ActorStateMachine(messageQueueFactory, process.id(), node, UUID.randomUUID(), graph);
+        sm.listen((function, param) -> logStateChange(process, function));
 
+        stateMachines.put(process, sm);
+        actorDefinitions.put(process, graph);
+    }
     private void logStateChange(ExecutorActor process, String state) {
         eventLog.logEvent("FSM-STATE-CHANGE", process.id() + " -> " + state);
-    }
-
-    public void startFrom(ExecutorActor process, String state) throws Exception {
-        eventLog.logEvent("FSM-START", process.id());
-
-        stateMachines.get(process).initFrom(state);
     }
 
     public void start(ExecutorActor process) throws Exception {
@@ -100,27 +98,42 @@ public class ExecutorActorControlService {
         stateMachines.get(process).init();
     }
 
-    public <T> void startFrom(ExecutorActor process, String state, Object arg) throws Exception {
+    public <T> void startFrom(ExecutorActor process, ActorStep step) throws Exception {
         eventLog.logEvent("FSM-START", process.id());
 
-        stateMachines.get(process).initFrom(state, gson.toJson(arg));
+        stateMachines.get(process).initFrom(
+                step.getClass().getSimpleName().toUpperCase(),
+                gson.toJson(step)
+        );
     }
 
     public <T> void startFromJSON(ExecutorActor process, String state, String json) throws Exception {
         eventLog.logEvent("FSM-START", process.id());
 
-        stateMachines.get(process).initFrom(state, json);
+        if (json.isBlank()) {
+            stateMachines.get(process).initFrom(state);
+        }
+        else {
+            stateMachines.get(process).initFrom(state, json);
+        }
     }
 
+    @Deprecated
     public <T> void start(ExecutorActor process, Object arg) throws Exception {
         eventLog.logEvent("FSM-START", process.id());
 
         stateMachines.get(process).init(gson.toJson(arg));
     }
+    @Deprecated
     public <T> void startJSON(ExecutorActor process, String json) throws Exception {
         eventLog.logEvent("FSM-START", process.id());
 
-        stateMachines.get(process).init(json);
+        if (json.isBlank()) {
+            stateMachines.get(process).init();
+        }
+        else {
+            stateMachines.get(process).init(json);
+        }
     }
     @SneakyThrows
     public void stop(ExecutorActor process) {
@@ -140,7 +153,7 @@ public class ExecutorActorControlService {
         return actorDefinitions.get(actor).isDirectlyInitializable();
     }
 
-    public AbstractActorPrototype getActorDefinition(ExecutorActor actor) {
+    public ActorPrototype getActorDefinition(ExecutorActor actor) {
         return actorDefinitions.get(actor);
     }
 

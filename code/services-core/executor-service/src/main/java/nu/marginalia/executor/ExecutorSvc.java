@@ -5,7 +5,6 @@ import com.google.inject.Inject;
 import nu.marginalia.actor.ExecutorActor;
 import nu.marginalia.actor.ActorApi;
 import nu.marginalia.actor.ExecutorActorControlService;
-import nu.marginalia.actor.state.ActorState;
 import nu.marginalia.actor.state.ActorStateInstance;
 import nu.marginalia.executor.model.ActorRunState;
 import nu.marginalia.executor.model.ActorRunStates;
@@ -27,7 +26,6 @@ import spark.Spark;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Comparator;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 // Weird name for this one to not have clashes with java.util.concurrent.ExecutorService
@@ -131,12 +129,7 @@ public class ExecutorSvc extends Service {
                     final String machineName = e.getKey().name();
                     final String stateName = state.name();
 
-                    final String stateDescription = actorStateDescriptions.computeIfAbsent(
-                            (machineName + "." + stateName),
-                            k -> Optional.ofNullable(stateGraph.declaredStates().get(stateName))
-                                    .map(ActorState::description)
-                                    .orElse("Description missing for " + stateName)
-                    );
+                    final String stateDescription = "";
 
                     final boolean terminal = state.isFinal();
                     final boolean canStart = actorControlService.isDirectlyInitializable(e.getKey()) && terminal;

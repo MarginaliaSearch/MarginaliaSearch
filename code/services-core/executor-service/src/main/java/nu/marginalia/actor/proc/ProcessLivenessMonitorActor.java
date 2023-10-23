@@ -1,14 +1,14 @@
 package nu.marginalia.actor.proc;
 
+import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.actor.ActorStateFactory;
-import nu.marginalia.actor.prototype.AbstractActorPrototype;
-import nu.marginalia.actor.state.ActorResumeBehavior;
-import nu.marginalia.actor.state.ActorState;
+import nu.marginalia.actor.prototype.RecordActorPrototype;
+import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.process.ProcessService;
 import nu.marginalia.service.control.ServiceEventLog;
+import nu.marginalia.service.module.ServiceConfiguration;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -16,24 +16,55 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
-public class ProcessLivenessMonitorActor extends AbstractActorPrototype {
+public class ProcessLivenessMonitorActor extends RecordActorPrototype {
 
-    // STATES
-
-    private static final String INITIAL = "INITIAL";
-    private static final String MONITOR = "MONITOR";
-    private static final String END = "END";
     private final ServiceEventLog eventLogService;
     private final ProcessService processService;
     private final HikariDataSource dataSource;
 
+    private final int node;
+    public record Initial() implements ActorStep {}
+    public record Monitor() implements ActorStep {}
+
+    @Override
+    public ActorStep transition(ActorStep self) throws Exception {
+        return switch (self) {
+            case Initial() -> new Monitor();
+            case Monitor() -> {
+                for (;;) {
+                    for (var heartbeat : getProcessHeartbeats()) {
+                        if (!heartbeat.isRunning()) continue;
+
+                        var processId = heartbeat.getProcessId();
+                        if (null == processId) continue;
+
+                        if (processService.isRunning(processId) && heartbeat.lastSeenMillis() < 10_000)
+                            continue;
+
+                        flagProcessAsStopped(heartbeat);
+                    }
+
+                    for (var heartbeat : getTaskHeartbeats()) {
+                        if (heartbeat.lastSeenMillis() < 10_000) continue;
+
+                        removeTaskHeartbeat(heartbeat);
+                    }
+
+                    TimeUnit.SECONDS.sleep(60);
+                }
+            }
+            default -> new Error();
+        };
+    }
 
     @Inject
-    public ProcessLivenessMonitorActor(ActorStateFactory stateFactory,
+    public ProcessLivenessMonitorActor(Gson gson,
                                        ServiceEventLog eventLogService,
+                                       ServiceConfiguration configuration,
                                        ProcessService processService,
                                        HikariDataSource dataSource) {
-        super(stateFactory);
+        super(gson);
+        this.node = configuration.node();
         this.eventLogService = eventLogService;
         this.processService = processService;
         this.dataSource = dataSource;
@@ -44,49 +75,6 @@ public class ProcessLivenessMonitorActor extends AbstractActorPrototype {
         return "Periodically check to ensure that the control service's view of running processes is agreement with the process heartbeats table.";
     }
 
-    @ActorState(name = INITIAL, next = MONITOR)
-    public void init() {
-    }
-
-    @ActorState(name = MONITOR, next = MONITOR, resume = ActorResumeBehavior.RETRY, description = """
-            Periodically check to ensure that the control service's view of
-            running processes is agreement with the process heartbeats table.
-             
-            If the process is not running, mark the process as stopped in the table.
-            """)
-    public void monitor() throws Exception {
-
-        for (;;) {
-            for (var heartbeat : getProcessHeartbeats()) {
-                if (!heartbeat.isRunning()) {
-                    continue;
-                }
-
-                var processId = heartbeat.getProcessId();
-                if (null == processId)
-                    continue;
-
-                if (processService.isRunning(processId) && heartbeat.lastSeenMillis() < 10_000) {
-                    continue;
-                }
-
-                flagProcessAsStopped(heartbeat);
-            }
-
-            for (var heartbeat : getTaskHeartbeats()) {
-                if (heartbeat.lastSeenMillis() < 10_000) {
-                    continue;
-                }
-
-                removeTaskHeartbeat(heartbeat);
-            }
-
-
-            TimeUnit.SECONDS.sleep(60);
-        }
-    }
-
-
     private List<ProcessHeartbeat> getProcessHeartbeats() {
         List<ProcessHeartbeat> heartbeats = new ArrayList<>();
 
@@ -95,8 +83,10 @@ public class ProcessLivenessMonitorActor extends AbstractActorPrototype {
                     SELECT PROCESS_NAME, PROCESS_BASE, INSTANCE, STATUS, PROGRESS,
                             TIMESTAMPDIFF(MICROSECOND, HEARTBEAT_TIME, CURRENT_TIMESTAMP(6)) AS TSDIFF
                     FROM PROCESS_HEARTBEAT
+                    WHERE NODE = ?
                      """)) {
 
+            stmt.setInt(1, node);
             var rs = stmt.executeQuery();
             while (rs.next()) {
                 int progress = rs.getInt("PROGRESS");
@@ -143,7 +133,9 @@ public class ProcessLivenessMonitorActor extends AbstractActorPrototype {
              var stmt = conn.prepareStatement("""
                     SELECT TASK_NAME, TASK_BASE, INSTANCE, SERVICE_INSTANCE,  STATUS, STAGE_NAME, PROGRESS, TIMESTAMPDIFF(MICROSECOND, TASK_HEARTBEAT.HEARTBEAT_TIME, CURRENT_TIMESTAMP(6)) AS TSDIFF
                     FROM TASK_HEARTBEAT
+                    WHERE NODE=?
                      """)) {
+            stmt.setInt(1, node);
             var rs = stmt.executeQuery();
             while (rs.next()) {
                 int progress = rs.getInt("PROGRESS");

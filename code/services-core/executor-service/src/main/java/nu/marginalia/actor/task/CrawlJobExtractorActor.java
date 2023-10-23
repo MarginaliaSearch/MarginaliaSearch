@@ -1,15 +1,11 @@
 package nu.marginalia.actor.task;
 
+import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.actor.ActorStateFactory;
-import nu.marginalia.actor.prototype.AbstractActorPrototype;
-import nu.marginalia.actor.state.ActorResumeBehavior;
-import nu.marginalia.actor.state.ActorState;
+import nu.marginalia.actor.prototype.RecordActorPrototype;
+import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.crawlspec.CrawlSpecFileNames;
-import nu.marginalia.db.DbDomainStatsExportMultitool;
-import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.storage.model.FileStorageType;
@@ -24,66 +20,58 @@ import java.nio.file.StandardOpenOption;
 import static nu.marginalia.crawlspec.CrawlSpecGenerator.*;
 
 @Singleton
-public class CrawlJobExtractorActor extends AbstractActorPrototype {
+public class CrawlJobExtractorActor extends RecordActorPrototype {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    // STATES
 
-    public static final String CREATE_FROM_LINK = "CREATE_FROM_LINK";
-    public static final String END = "END";
     private final FileStorageService fileStorageService;
     @Inject
-    public CrawlJobExtractorActor(ActorStateFactory stateFactory,
+    public CrawlJobExtractorActor(Gson gson,
                                   FileStorageService fileStorageService
                                   ) {
-        super(stateFactory);
+        super(gson);
         this.fileStorageService = fileStorageService;
     }
 
-    public record CrawlJobExtractorArguments(String description) { }
-    public record CrawlJobExtractorArgumentsWithURL(String description, String url) { }
+    public record CreateFromUrl(String description, String url) implements ActorStep {}
+
+    @Override
+    public ActorStep transition(ActorStep self) throws Exception {
+        return switch (self) {
+            case CreateFromUrl(String description, String url) -> {
+                var base = fileStorageService.getStorageBase(FileStorageBaseType.STORAGE);
+                var storage = fileStorageService.allocateTemporaryStorage(base, FileStorageType.CRAWL_SPEC, "crawl-spec", description);
+
+                Path urlsTxt = storage.asPath().resolve("urls.txt");
+
+                try (var os = Files.newOutputStream(urlsTxt, StandardOpenOption.CREATE_NEW);
+                     var is = new URL(url).openStream())
+                {
+                    is.transferTo(os);
+                }
+                catch (Exception ex) {
+                    fileStorageService.flagFileForDeletion(storage.id());
+                    yield new Error("Error downloading " + url);
+                }
+
+                final Path path = CrawlSpecFileNames.resolve(storage);
+
+                generateCrawlSpec(
+                        path,
+                        DomainSource.fromFile(urlsTxt),
+                        KnownUrlsCountSource.fixed(200),
+                        KnownUrlsListSource.justIndex()
+                );
+
+                yield new End();
+            }
+            default -> new Error();
+        };
+    }
 
     @Override
     public String describe() {
         return "Run the crawler job extractor process";
-    }
-
-    @ActorState(name = CREATE_FROM_LINK, next = END,
-            resume = ActorResumeBehavior.ERROR,
-            description = """
-                        Download a list of URLs as provided, 
-                        and then spawn a CrawlJobExtractor process, 
-                        then wait for it to finish.
-                        """
-    )
-    public void createFromFromLink(CrawlJobExtractorArgumentsWithURL arg) throws Exception {
-        if (arg == null) {
-            error("This actor requires a CrawlJobExtractorArgumentsWithURL argument");
-        }
-
-        var base = fileStorageService.getStorageBase(FileStorageBaseType.STORAGE);
-        var storage = fileStorageService.allocateTemporaryStorage(base, FileStorageType.CRAWL_SPEC, "crawl-spec", arg.description());
-
-        Path urlsTxt = storage.asPath().resolve("urls.txt");
-
-        try (var os = Files.newOutputStream(urlsTxt, StandardOpenOption.CREATE_NEW);
-             var is = new URL(arg.url()).openStream())
-        {
-            is.transferTo(os);
-        }
-        catch (Exception ex) {
-            fileStorageService.flagFileForDeletion(storage.id());
-            error("Error downloading " + arg.url());
-        }
-
-        final Path path = CrawlSpecFileNames.resolve(storage);
-
-        generateCrawlSpec(
-                path,
-                DomainSource.fromFile(urlsTxt),
-                KnownUrlsCountSource.fixed(200),
-                KnownUrlsListSource.justIndex()
-        );
     }
 
 }

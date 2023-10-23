@@ -6,10 +6,10 @@ import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.With;
-import nu.marginalia.actor.ActorStateFactory;
-import nu.marginalia.actor.prototype.AbstractActorPrototype;
+import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorResumeBehavior;
-import nu.marginalia.actor.state.ActorState;
+import nu.marginalia.actor.state.ActorStep;
+import nu.marginalia.actor.state.Resume;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.process.ProcessOutboxes;
 import nu.marginalia.process.ProcessService;
@@ -32,12 +32,11 @@ import nu.marginalia.mqapi.loading.LoadRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
 @Singleton
-public class ConvertAndLoadActor extends AbstractActorPrototype {
+public class ConvertAndLoadActor extends RecordActorPrototype {
 
     // STATES
 
@@ -75,24 +74,154 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
         public long loaderMsgId = 0L;
     };
 
+    public record Initial(FileStorageId fid) implements ActorStep {};
+
+    @Resume(behavior = ActorResumeBehavior.RETRY)
+    public record Convert(FileStorageId crawlId, FileStorageId  processedId, long msgId) implements ActorStep {
+        public Convert(FileStorageId crawlId, FileStorageId  processedId) { this(crawlId, processedId, -1); }
+    }
+    @Resume(behavior = ActorResumeBehavior.RETRY)
+    public record Load(List<FileStorageId> processedId, long msgId) implements ActorStep {
+        public Load(List<FileStorageId> processedId) { this(processedId, -1); }
+    };
+    @Resume(behavior = ActorResumeBehavior.RETRY)
+    public record Backup(List<FileStorageId> processedIds) implements ActorStep { }
+    @Resume(behavior = ActorResumeBehavior.RETRY)
+    public record Repartition(long id) implements ActorStep { public Repartition() { this(-1); } }
+    @Resume(behavior = ActorResumeBehavior.RETRY)
+    public record ReindexFwd(long id) implements ActorStep {  public ReindexFwd() { this(-1); } }
+    @Resume(behavior = ActorResumeBehavior.RETRY)
+    public record ReindexFull(long id) implements ActorStep {  public ReindexFull() { this(-1); } }
+    @Resume(behavior = ActorResumeBehavior.RETRY)
+    public record ReindexPrio(long id) implements ActorStep {  public ReindexPrio() { this(-1); } }
+    public record SwitchOver() implements ActorStep {}
+
+    @Override
+    public ActorStep transition(ActorStep self) throws Exception {
+        logger.info("{}", self);
+        return switch (self) {
+            case Initial(FileStorageId fid) -> {
+                var storage = storageService.getStorage(fid);
+
+                if (storage == null) yield new Error("Bad storage id");
+                if (storage.type() != FileStorageType.CRAWL_DATA) yield new Error("Bad storage type " + storage.type());
+
+
+                var base = storageService.getStorageBase(FileStorageBaseType.STORAGE);
+                var processedArea = storageService.allocateTemporaryStorage(base, FileStorageType.PROCESSED_DATA, "processed-data",
+                        "Processed Data; " + storage.description());
+
+                storageService.setFileStorageState(processedArea.id(), FileStorageState.NEW);
+                storageService.relateFileStorages(storage.id(), processedArea.id());
+
+                yield new Convert(fid, processedArea.id());
+            }
+            case Convert(FileStorageId crawlId, FileStorageId processedId, long msgId) when msgId < 0 -> {
+                var request = new ConvertRequest(ConvertAction.ConvertCrawlData,
+                        null,
+                        crawlId,
+                        processedId);
+                yield new Convert(crawlId, processedId,
+                        mqConverterOutbox.sendAsync(ConvertRequest.class.getSimpleName(), gson.toJson(request)));
+            }
+            case Convert(FileStorageId crawlId, FileStorageId processedId, long msgId) -> {
+                var rsp = processWatcher.waitResponse(mqConverterOutbox, ProcessService.ProcessId.CONVERTER, msgId);
+
+                if (rsp.state() != MqMessageState.OK)
+                    yield new Error("Converter failed");
+
+                yield new Load(List.of(processedId));
+            }
+            case Load(List<FileStorageId> processedIds, long msgId) when msgId < 0 -> {
+                var request = new LoadRequest(processedIds);
+                long id = mqLoaderOutbox.sendAsync(LoadRequest.class.getSimpleName(), gson.toJson(request));
+
+                yield new Load(processedIds, id);
+            }
+            case Load(List<FileStorageId> processedIds, long msgId) -> {
+                var rsp = processWatcher.waitResponse(mqLoaderOutbox, ProcessService.ProcessId.LOADER, msgId);
+
+                if (rsp.state() != MqMessageState.OK) {
+                    yield new Error("Loader failed");
+                } else {
+                    cleanProcessedStorage(processedIds);
+                }
+                yield new Backup(processedIds);
+            }
+            case Backup(List<FileStorageId> processedIds) -> {
+                backupService.createBackupFromStaging(processedIds);
+                yield new Repartition();
+            }
+            case Repartition(long id) when id < 0 ->
+                    new Repartition(indexOutbox.sendAsync(IndexMqEndpoints.INDEX_REPARTITION, ""));
+            case Repartition(long id) -> {
+                var rsp = indexOutbox.waitResponse(id);
+                if (rsp.state() != MqMessageState.OK) {
+                    yield new Error("Repartition failed");
+                }
+
+                yield new ReindexFwd();
+            }
+            case ReindexFwd(long id) when id < 0 -> new ReindexFwd(createIndex(IndexName.FORWARD));
+            case ReindexFwd(long id) -> {
+                var rsp = mqIndexConstructorOutbox.waitResponse(id);
+
+                if (rsp.state() != MqMessageState.OK)
+                    yield new Error("Repartition failed");
+                else
+                    yield new ReindexFull();
+            }
+            case ReindexFull(long id) when id < 0 -> new ReindexFull(createIndex(IndexName.REVERSE_FULL));
+            case ReindexFull(long id) -> {
+                var rsp = mqIndexConstructorOutbox.waitResponse(id);
+
+                if (rsp.state() != MqMessageState.OK)
+                    yield new Error("Repartition failed");
+                else
+                    yield new ReindexPrio();
+            }
+            case ReindexPrio(long id) when id < 0 -> new ReindexPrio(createIndex(IndexName.REVERSE_PRIO));
+            case ReindexPrio(long id) -> {
+                var rsp = mqIndexConstructorOutbox.waitResponse(id);
+
+                if (rsp.state() != MqMessageState.OK)
+                    yield new Error("Repartition failed");
+                else
+                    yield new SwitchOver();
+            }
+
+            case SwitchOver() -> {
+                indexOutbox.sendNotice(IndexMqEndpoints.SWITCH_INDEX, ":^D");
+                indexOutbox.sendNotice(IndexMqEndpoints.SWITCH_LINKDB, ":-)");
+                yield new End();
+            }
+
+            default -> new Error();
+        };
+    }
+
+    private long createIndex(IndexName index) throws Exception {
+        return mqIndexConstructorOutbox.sendAsync(CreateIndexRequest.class.getSimpleName(),
+                gson.toJson(new CreateIndexRequest(index)));
+    }
+
+
     @Override
     public String describe() {
         return "Process a set of crawl data and then load it into the database.";
     }
 
     @Inject
-    public ConvertAndLoadActor(ActorStateFactory stateFactory,
-                               ActorProcessWatcher processWatcher,
+    public ConvertAndLoadActor(ActorProcessWatcher processWatcher,
                                ProcessOutboxes processOutboxes,
                                FileStorageService storageService,
                                IndexClient indexClient,
                                BackupService backupService,
                                Gson gson,
                                NodeConfigurationService nodeConfigurationService,
-                               ServiceConfiguration serviceConfiguration
-                                   )
+                               ServiceConfiguration serviceConfiguration)
     {
-        super(stateFactory);
+        super(gson);
         this.processWatcher = processWatcher;
         this.indexOutbox = indexClient.outbox();
         this.mqConverterOutbox = processOutboxes.getConverterOutbox();
@@ -104,98 +233,6 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
         this.nodeConfigurationService = nodeConfigurationService;
 
         this.nodeId = serviceConfiguration.node();
-    }
-
-    @ActorState(name = INITIAL,
-                next = RECONVERT,
-                description = """
-                    Validate the input and transition to RECONVERT
-                    """)
-    public Message init(FileStorageId crawlStorageId) throws Exception {
-        if (null == crawlStorageId) {
-            error("This Actor requires a FileStorageId to be passed in as a parameter to INITIAL");
-        }
-
-        var storage = storageService.getStorage(crawlStorageId);
-
-        if (storage == null) error("Bad storage id");
-        if (storage.type() != FileStorageType.CRAWL_DATA) error("Bad storage type " + storage.type());
-
-        return new Message().withCrawlStorageId(crawlStorageId);
-    }
-
-    @ActorState(name = RECONVERT,
-                next = RECONVERT_WAIT,
-                resume = ActorResumeBehavior.ERROR,
-                description = """
-                        Allocate a storage area for the processed data,
-                        then send a convert request to the converter and transition to RECONVERT_WAIT.
-                        """
-    )
-    public Message reconvert(Message message) throws Exception {
-        // Create processed data area
-
-        var toProcess = storageService.getStorage(message.crawlStorageId);
-
-        var base = storageService.getStorageBase(FileStorageBaseType.STORAGE);
-        var processedArea = storageService.allocateTemporaryStorage(base, FileStorageType.PROCESSED_DATA, "processed-data",
-                "Processed Data; " + toProcess.description());
-
-        storageService.setFileStorageState(processedArea.id(), FileStorageState.NEW);
-        storageService.relateFileStorages(toProcess.id(), processedArea.id());
-
-        // Pre-send convert request
-        var request = new ConvertRequest(ConvertAction.ConvertCrawlData,
-                null,
-                message.crawlStorageId,
-                processedArea.id());
-        long id = mqConverterOutbox.sendAsync(ConvertRequest.class.getSimpleName(), gson.toJson(request));
-
-        return message
-                .withProcessedStorageId(List.of(processedArea.id()))
-                .withConverterMsgId(id);
-    }
-
-    @ActorState(
-            name = RECONVERT_WAIT,
-            next = LOAD,
-            resume = ActorResumeBehavior.RETRY,
-            description = """
-                    Wait for the converter to finish processing the data.
-                    """
-    )
-    public Message reconvertWait(Message message) throws Exception {
-        var rsp = processWatcher.waitResponse(mqConverterOutbox, ProcessService.ProcessId.CONVERTER, message.converterMsgId);
-
-        if (rsp.state() != MqMessageState.OK)
-            error("Converter failed");
-
-        return message;
-    }
-
-
-    @ActorState(
-            name = LOAD,
-            next = BACKUP,
-            resume = ActorResumeBehavior.RETRY,
-            description = """
-                    Instruct the loader to process the data
-                    """)
-    public Message load(Message message) throws Exception {
-        if (message.loaderMsgId <= 0) {
-            var request = new LoadRequest(message.processedStorageId);
-            long id = mqLoaderOutbox.sendAsync(LoadRequest.class.getSimpleName(), gson.toJson(request));
-
-            transition(LOAD, message.withLoaderMsgId(id));
-        }
-        var rsp = processWatcher.waitResponse(mqLoaderOutbox, ProcessService.ProcessId.LOADER, message.loaderMsgId);
-
-        if (rsp.state() != MqMessageState.OK) {
-            error("Loader failed");
-        } else {
-            cleanProcessedStorage(message.processedStorageId);
-        }
-        return message;
     }
 
     private void cleanProcessedStorage(List<FileStorageId> processedStorageId) {
@@ -216,114 +253,6 @@ public class ConvertAndLoadActor extends AbstractActorPrototype {
         catch (SQLException ex) {
             logger.error("Error in clean-up", ex);
         }
-    }
-
-    @ActorState(
-            name = BACKUP,
-            next = REPARTITION,
-            resume = ActorResumeBehavior.RETRY,
-            description = """
-                    Create a backup snapshot of the new data
-                    """)
-    public void createBackup(Message message) throws SQLException, IOException {
-        backupService.createBackupFromStaging(message.processedStorageId);
-    }
-
-    @ActorState(
-            name = REPARTITION,
-            next = REINDEX_FWD,
-            resume = ActorResumeBehavior.RETRY,
-            description = """
-                    Instruct the index-service to repartition.
-                    """
-    )
-    public void repartition(Long id) throws Exception {
-        if (id == null) {
-            transition(REPARTITION, indexOutbox.sendAsync(IndexMqEndpoints.INDEX_REPARTITION, ""));
-        }
-
-        var rsp = indexOutbox.waitResponse(id);
-        if (rsp.state() != MqMessageState.OK) {
-            error("Repartition failed");
-        }
-    }
-
-    @ActorState(
-            name = REINDEX_FWD,
-            next = REINDEX_FULL,
-            resume = ActorResumeBehavior.RETRY,
-            description = """
-                    Reconstruct the fwd index
-                    """
-    )
-    public void reindexFwd(Long id) throws Exception {
-        if (id == null) {
-            var request = new CreateIndexRequest(IndexName.FORWARD);
-            transition(REINDEX_FWD, mqIndexConstructorOutbox.sendAsync(CreateIndexRequest.class.getSimpleName(), gson.toJson(request)));
-        }
-
-        var rsp = mqIndexConstructorOutbox.waitResponse(id);
-
-        if (rsp.state() != MqMessageState.OK) {
-            error("Repartition failed");
-        }
-    }
-
-    @ActorState(
-            name = REINDEX_FULL,
-            next = REINDEX_PRIO,
-            resume = ActorResumeBehavior.RETRY,
-            description = """
-                    Reconstruct the reverse full index
-                    """
-    )
-    public void reindexFull(Long id) throws Exception {
-        if (id == null) {
-            var request = new CreateIndexRequest(IndexName.REVERSE_FULL);
-            transition(REINDEX_FULL, mqIndexConstructorOutbox.sendAsync(CreateIndexRequest.class.getSimpleName(), gson.toJson(request)));
-        }
-
-        var rsp = mqIndexConstructorOutbox.waitResponse(id);
-
-        if (rsp.state() != MqMessageState.OK) {
-            error("Repartition failed");
-        }
-    }
-
-    @ActorState(
-            name = REINDEX_PRIO,
-            next = SWITCH_OVER,
-            resume = ActorResumeBehavior.RETRY,
-            description = """
-                    Reconstruct the reverse prio index
-                    """
-    )
-    public void reindexPrio(Long id) throws Exception {
-        if (id == null) {
-            var request = new CreateIndexRequest(IndexName.REVERSE_PRIO);
-            transition(REINDEX_PRIO, mqIndexConstructorOutbox.sendAsync(CreateIndexRequest.class.getSimpleName(), gson.toJson(request)));
-        }
-
-        var rsp = mqIndexConstructorOutbox.waitResponse(id);
-
-        if (rsp.state() != MqMessageState.OK) {
-            error("Repartition failed");
-        }
-    }
-
-    @ActorState(
-            name = SWITCH_OVER,
-            next = END,
-            resume = ActorResumeBehavior.RETRY,
-            description = """
-                    Move the new lexicon into place, instruct the index service to
-                    switch to the new linkdb, and the new index.
-                    """
-    )
-    public void switchOver(Long id) throws Exception {
-        // Notify index to switch over
-        indexOutbox.sendNotice(IndexMqEndpoints.SWITCH_INDEX, ":^D");
-        indexOutbox.sendNotice(IndexMqEndpoints.SWITCH_LINKDB, ":-)");
     }
 
 }

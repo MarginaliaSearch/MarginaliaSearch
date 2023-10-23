@@ -18,7 +18,7 @@ public class BackupService {
 
     public Object restore(Request request, Response response) throws Exception {
         var fid = FileStorageId.parse(request.params("fid"));
-        actorControlService.startFrom(ExecutorActor.RESTORE_BACKUP, RestoreBackupActor.RESTORE, fid);
+        actorControlService.startFrom(ExecutorActor.RESTORE_BACKUP, new RestoreBackupActor.Restore(fid));
         return "";
     }
 }

@@ -1,26 +1,7 @@
 package nu.marginalia.control.actor.rebalance;
 
-import com.google.inject.Inject;
-import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.actor.ActorStateFactory;
-import nu.marginalia.actor.prototype.AbstractActorPrototype;
-import nu.marginalia.actor.state.ActorResumeBehavior;
-import nu.marginalia.actor.state.ActorState;
-import nu.marginalia.model.gson.GsonFactory;
-import nu.marginalia.mq.MqMessageState;
-import nu.marginalia.mq.outbox.MqOutbox;
-import nu.marginalia.mq.persistence.MqPersistence;
-import nu.marginalia.nodecfg.NodeConfigurationService;
-import nu.marginalia.nodecfg.model.NodeConfiguration;
-import org.jetbrains.annotations.NotNull;
-
-import java.sql.SQLException;
-import java.util.*;
-import com.google.gson.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-public class RebalanceActor  extends AbstractActorPrototype {
+public class RebalanceActor {
+    /**
     // States
 
     public static final String INIT = "INIT";
@@ -149,7 +130,7 @@ public class RebalanceActor  extends AbstractActorPrototype {
     //-- append to receiver crawler log
     //-- instruct donor to delete file
     //
-    //4. regenerate crawler logs based on present files on all donor nodes */
+    //4. regenerate crawler logs based on present files on all donor nodes * /
 
     public record Sur(int n, int c) implements Comparable<Sur> {
         @Override
@@ -180,5 +161,5 @@ public class RebalanceActor  extends AbstractActorPrototype {
     }
     public record Give(int donor, int dest, int c) {
 
-    }
+    } */
 }

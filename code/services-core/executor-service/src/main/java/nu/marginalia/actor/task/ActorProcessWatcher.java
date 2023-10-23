@@ -2,7 +2,7 @@ package nu.marginalia.actor.task;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.actor.prototype.AbstractActorPrototype;
+import nu.marginalia.actor.state.ActorControlFlowException;
 import nu.marginalia.process.ProcessService;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.outbox.MqOutbox;
@@ -29,11 +29,15 @@ public class ActorProcessWatcher {
      * When interrupted, the process is killed and the message is marked as dead.
      */
     public MqMessage waitResponse(MqOutbox outbox, ProcessService.ProcessId processId, long msgId)
-            throws AbstractActorPrototype.ControlFlowException, InterruptedException, SQLException
+            throws ActorControlFlowException, InterruptedException, SQLException
     {
+        synchronized (processId) {
+            // Wake up the process spawning actor
+            processId.notifyAll();
+        }
+
         if (!waitForProcess(processId, TimeUnit.SECONDS, 30)) {
-            throw new AbstractActorPrototype.ControlFlowException("ERROR",
-                    "Process " + processId + " did not launch");
+            throw new ActorControlFlowException("Process " + processId + " did not launch");
         }
 
         for (;;) {
@@ -52,8 +56,7 @@ public class ActorProcessWatcher {
             catch (TimeoutException ex) {
                 // Maybe the process died, wait a moment for it to restart
                 if (!waitForProcess(processId, TimeUnit.SECONDS, 30)) {
-                    throw new AbstractActorPrototype.ControlFlowException("ERROR",
-                            "Process " + processId + " died and did not re-launch");
+                    throw new ActorControlFlowException("Process " + processId + " died and did not re-launch");
                 }
             }
         }
