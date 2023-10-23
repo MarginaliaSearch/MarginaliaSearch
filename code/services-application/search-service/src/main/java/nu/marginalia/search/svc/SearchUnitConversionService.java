@@ -1,5 +1,6 @@
 package nu.marginalia.search.svc;
 
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import nu.marginalia.assistant.client.AssistantClient;
 import nu.marginalia.client.exception.RemoteException;
 import nu.marginalia.client.Context;
@@ -70,7 +71,7 @@ public class SearchUnitConversionService {
         logger.info("eval({})", expr);
 
         try {
-            return assistantClient.evalMath(context, expr).toFuture();
+            return assistantClient.evalMath(context, expr).subscribeOn(Schedulers.io()).toFuture();
         }
         catch (RemoteException ex) {
             return null;
