@@ -15,6 +15,8 @@ import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.service.descriptor.ServiceDescriptors;
 import nu.marginalia.service.id.ServiceId;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.CheckReturnValue;
@@ -54,8 +56,12 @@ public class IndexClient extends AbstractDynamicClient {
     @CheckReturnValue
     public SearchResultSet query(Context ctx, List<Integer> nodes, SearchSpecification specs) {
         return Observable.fromIterable(nodes)
-                .subscribeOn(Schedulers.io())
-                .concatMap(node -> this.postGet(ctx, node,"/search/", specs, SearchResultSet.class))
+                .concatMap(node -> this
+                        .postGet(ctx, node,"/search/", specs, SearchResultSet.class)
+                        .onErrorReturn(t -> new SearchResultSet()),
+                        nodes.size(),
+                        Schedulers.io()
+                )
                 .reduce(SearchResultSet::combine)
                 .blockingGet();
     }

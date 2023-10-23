@@ -10,6 +10,10 @@ import java.util.List;
 
 @AllArgsConstructor @Getter @ToString
 public class SearchResultSet {
+    public SearchResultSet() {
+        results = new ArrayList<>();
+    }
+
     public List<DecoratedSearchResultItem> results;
     public int size() {
         return results.size();
