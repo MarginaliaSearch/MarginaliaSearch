@@ -111,7 +111,9 @@ public class IndexConstructorMain {
         new ReverseIndexConstructor(outputFileDocs, outputFileWords,
                 IndexJournalReader::singleFile,
                 this::addRankToIdEncoding, tmpDir)
-                    .createReverseIndex(heartbeat, workDir);
+                    .createReverseIndex(heartbeat,
+                            "createReverseIndexFull",
+                            workDir);
 
     }
 
@@ -129,7 +131,9 @@ public class IndexConstructorMain {
         new ReverseIndexConstructor(outputFileDocs, outputFileWords,
                 (path) -> IndexJournalReader.singleFile(path).filtering(wordMetaFilter),
                 this::addRankToIdEncoding, tmpDir)
-                .createReverseIndex(heartbeat, workDir);
+                .createReverseIndex(heartbeat,
+                        "createReverseIndexPrio",
+                        workDir);
     }
 
     private static LongPredicate getPriorityIndexWordMetaFilter() {

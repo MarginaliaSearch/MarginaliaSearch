@@ -495,7 +495,7 @@ public class IndexQueryServiceIntegrationTest {
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
         new ReverseIndexConstructor(outputFileDocs, outputFileWords, IndexJournalReader::singleFile, DocIdRewriter.identity(), tmpDir)
-                .createReverseIndex(new FakeProcessHeartbeat(), workDir);
+                .createReverseIndex(new FakeProcessHeartbeat(), "name", workDir);
     }
 
     private void createPrioReverseIndex() throws SQLException, IOException {
@@ -508,7 +508,7 @@ public class IndexQueryServiceIntegrationTest {
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
         new ReverseIndexConstructor(outputFileDocs, outputFileWords, IndexJournalReader::singleFile, DocIdRewriter.identity(), tmpDir)
-                .createReverseIndex(new FakeProcessHeartbeat(), workDir);
+                .createReverseIndex(new FakeProcessHeartbeat(), "name", workDir);
     }
 
     private void createForwardIndex() throws SQLException, IOException {

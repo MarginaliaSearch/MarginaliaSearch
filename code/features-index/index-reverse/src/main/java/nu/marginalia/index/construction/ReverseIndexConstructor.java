@@ -38,7 +38,9 @@ public class ReverseIndexConstructor {
         this.tmpDir = tmpDir;
     }
 
-    public void createReverseIndex(ProcessHeartbeat processHeartbeat, Path sourceBaseDir) throws IOException
+    public void createReverseIndex(ProcessHeartbeat processHeartbeat,
+                                   String processName,
+                                   Path sourceBaseDir) throws IOException
     {
         var inputs = IndexJournalFileNames.findJournalFiles(sourceBaseDir);
         if (inputs.isEmpty()) {
@@ -46,7 +48,7 @@ public class ReverseIndexConstructor {
             return;
         }
 
-        try (var heartbeat = processHeartbeat.createProcessTaskHeartbeat(CreateReverseIndexSteps.class, "createReverseIndex")) {
+        try (var heartbeat = processHeartbeat.createProcessTaskHeartbeat(CreateReverseIndexSteps.class, processName)) {
 
             heartbeat.progress(CreateReverseIndexSteps.CONSTRUCT);
 
