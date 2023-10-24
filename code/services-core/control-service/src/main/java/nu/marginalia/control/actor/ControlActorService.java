@@ -7,6 +7,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.actor.ActorStateMachine;
 import nu.marginalia.actor.prototype.ActorPrototype;
 import nu.marginalia.actor.state.ActorStateInstance;
+import nu.marginalia.control.actor.monitor.MessageQueueMonitorActor;
 import nu.marginalia.control.actor.rebalance.RebalanceActor;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.mq.MessageQueueFactory;
@@ -30,6 +31,7 @@ public class ControlActorService {
     @Inject
     public ControlActorService(MessageQueueFactory messageQueueFactory,
                                BaseServiceParams baseServiceParams,
+                               MessageQueueMonitorActor messageQueueMonitor,
                                RebalanceActor rebalanceActor
     ) {
         this.messageQueueFactory = messageQueueFactory;
@@ -37,6 +39,8 @@ public class ControlActorService {
         this.gson = GsonFactory.get();
         this.node = baseServiceParams.configuration.node();
 
+
+        register(ControlActor.MONITOR_MESSAGE_QUEUE, messageQueueMonitor);
 //        register(ControlActor.REBALANCE, rebalanceActor);
     }
 

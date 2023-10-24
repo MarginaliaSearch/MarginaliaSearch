@@ -1,4 +1,4 @@
-package nu.marginalia.actor.monitor;
+package nu.marginalia.control.actor.monitor;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
@@ -46,8 +46,5 @@ public class MessageQueueMonitorActor extends RecordActorPrototype {
     public String describe() {
         return "Periodically run maintenance tasks on the message queue";
     }
-
-
-
 
 }

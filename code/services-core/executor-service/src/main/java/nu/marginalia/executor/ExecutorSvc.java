@@ -86,7 +86,6 @@ public class ExecutorSvc extends Service {
         logger.info("Initializing default actors");
         actorControlService.start(ExecutorActor.MONITOR_PROCESS_LIVENESS);
         actorControlService.start(ExecutorActor.MONITOR_FILE_STORAGE);
-        actorControlService.start(ExecutorActor.MONITOR_MESSAGE_QUEUE);
         actorControlService.start(ExecutorActor.PROC_CONVERTER_SPAWNER);
         actorControlService.start(ExecutorActor.PROC_CRAWLER_SPAWNER);
         actorControlService.start(ExecutorActor.PROC_INDEX_CONSTRUCTOR_SPAWNER);

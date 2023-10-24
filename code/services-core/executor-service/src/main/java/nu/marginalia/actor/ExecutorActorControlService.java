@@ -41,7 +41,6 @@ public class ExecutorActorControlService {
                                        ConverterMonitorActor converterMonitorFSM,
                                        CrawlerMonitorActor crawlerMonitorActor,
                                        LoaderMonitorActor loaderMonitor,
-                                       MessageQueueMonitorActor messageQueueMonitor,
                                        ProcessLivenessMonitorActor processMonitorFSM,
                                        FileStorageMonitorActor fileStorageMonitorActor,
                                        IndexConstructorMonitorActor indexConstructorMonitorActor,
@@ -65,7 +64,6 @@ public class ExecutorActorControlService {
         register(ExecutorActor.PROC_LOADER_SPAWNER, loaderMonitor);
         register(ExecutorActor.PROC_CRAWLER_SPAWNER, crawlerMonitorActor);
 
-        register(ExecutorActor.MONITOR_MESSAGE_QUEUE, messageQueueMonitor);
         register(ExecutorActor.MONITOR_PROCESS_LIVENESS, processMonitorFSM);
         register(ExecutorActor.MONITOR_FILE_STORAGE, fileStorageMonitorActor);
 
