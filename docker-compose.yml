@@ -65,35 +65,94 @@ services:
     <<: *partition-2
     image: "marginalia.nu/executor-service"
     container_name: "executor-service-2"
-  search-service:
-    <<: *service
-    image: "marginalia.nu/search-service"
-    container_name: "search-service"
-  assistant-service:
-    <<: *service
-    image: "marginalia.nu/assistant-service"
-    container_name: "assistant-service"
-  api-service:
-    <<: *service
-    image: "marginalia.nu/api-service"
-    container_name: "api-service"
   query-service:
     <<: *service
     image: "marginalia.nu/query-service"
     container_name: "query-service"
+  search-service:
+    <<: *service
+    image: "marginalia.nu/search-service"
+    container_name: "search-service"
+    expose:
+    - 80
+    labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.search-service.rule=PathPrefix(`/`)"
+    - "traefik.http.routers.search-service.entrypoints=search"
+    - "traefik.http.routers.search-service.middlewares=add-xpublic"
+    - "traefik.http.routers.search-service.middlewares=add-public"
+    - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
+    - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
+  assistant-service:
+    <<: *service
+    image: "marginalia.nu/assistant-service"
+    container_name: "assistant-service"
+    expose:
+      - 80
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.assistant-service.rule=PathPrefix(`/screenshot`)"
+      - "traefik.http.routers.assistant-service.entrypoints=search"
+      - "traefik.http.routers.assistant-service.middlewares=add-xpublic"
+      - "traefik.http.routers.assistant-service.middlewares=add-public"
+      - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
+      - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
+  api-service:
+    <<: *service
+    image: "marginalia.nu/api-service"
+    container_name: "api-service"
+    expose:
+    - "80"
+    labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.api-service.rule=PathPrefix(`/`)"
+    - "traefik.http.routers.api-service.entrypoints=api"
+    - "traefik.http.routers.api-service.middlewares=add-xpublic"
+    - "traefik.http.routers.api-service.middlewares=add-public"
+    - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
+    - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
   dating-service:
     <<: *service
     image: "marginalia.nu/dating-service"
     container_name: "dating-service"
+    expose:
+      - 80
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dating-service.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.dating-service.entrypoints=dating"
+      - "traefik.http.routers.dating-service.middlewares=add-xpublic"
+      - "traefik.http.routers.dating-service.middlewares=add-public"
+      - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
+      - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
   explorer-service:
     <<: *service
     image: "marginalia.nu/explorer-service"
     container_name: "explorer-service"
+    expose:
+    - 80
+    labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.explorer-service.rule=PathPrefix(`/`)"
+    - "traefik.http.routers.explorer-service.entrypoints=explore"
+    - "traefik.http.routers.explorer-service.middlewares=add-xpublic"
+    - "traefik.http.routers.explorer-service.middlewares=add-public"
+    - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
+    - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
   control-service:
     <<: *service
     image: "marginalia.nu/control-service"
     container_name: "control-service"
-
+    expose:
+    - 80
+    labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.control-service.rule=PathPrefix(`/`)"
+    - "traefik.http.routers.control-service.entrypoints=control"
+    - "traefik.http.routers.control-service.middlewares=add-xpublic"
+    - "traefik.http.routers.control-service.middlewares=add-public"
+    - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
+    - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
   mariadb:
     image: "mariadb:lts"
     container_name: "mariadb"
@@ -106,19 +165,30 @@ services:
       - "./code/common/db/src/main/resources/sql/current/:/docker-entrypoint-initdb.d/"
     networks:
       - wmsa
-  nginx-gw:
-    image: "nginx"
-    container_name: "nginx-gw"
+  traefik:
+    image: "traefik:v2.10"
+    container_name: "traefik"
+    command:
+      #- "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.search.address=:80"
+      - "--entrypoints.control.address=:81"
+      - "--entrypoints.api.address=:82"
+      - "--entrypoints.dating.address=:83"
+      - "--entrypoints.explore.address=:84"
     ports:
       - "127.0.0.1:8080:80"
       - "127.0.0.1:8081:81"
       - "127.0.0.1:8082:82"
+      - "127.0.0.1:8083:83"
+      - "127.0.0.1:8084:84"
+      - "127.0.0.1:8090:8080"
     volumes:
-      - "./run/nginx-site.conf:/etc/nginx/conf.d/default.conf"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
     networks:
       - wmsa
-    depends_on:
-      - search-service
 networks:
   wmsa:
 volumes:
