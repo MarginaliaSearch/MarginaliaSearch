@@ -14,6 +14,7 @@ public enum SearchProfile {
     CORPO("corpo", SearchSetIdentifier.NONE),
     YOLO("yolo", SearchSetIdentifier.NONE),
     VINTAGE("vintage", SearchSetIdentifier.NONE),
+    TILDE("tilde", SearchSetIdentifier.NONE),
     CORPO_CLEAN("corpo-clean",  SearchSetIdentifier.NONE),
     ACADEMIA("academia",  SearchSetIdentifier.ACADEMIA),
     PLAIN_TEXT("plain-text", SearchSetIdentifier.NONE),
@@ -56,6 +57,9 @@ public enum SearchProfile {
         if (this == VINTAGE) {
             subquery.searchTermsPriority.add("format:html123");
             subquery.searchTermsPriority.add("js:false");
+        }
+        if (this == TILDE) {
+            subquery.searchTermsAdvice.add("special:tilde");
         }
         if (this == PLAIN_TEXT) {
             subquery.searchTermsAdvice.add("format:plain");
