@@ -38,8 +38,6 @@ public class SearchCommand implements SearchCommandInterface {
 
         DecoratedSearchResults results = searchOperator.doSearch(ctx, params);
 
-        results.results.removeIf(this::isBlacklisted);
-
         return Optional.of(searchResultsRenderer.render(results));
     }
 
