@@ -8,13 +8,12 @@ import nu.marginalia.index.api.*;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.query.svc.NodeConfigurationWatcher;
 import nu.marginalia.query.svc.QueryFactory;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
 
@@ -22,7 +21,7 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
 
     private final Map<ServiceAndNode, ManagedChannel> channels
             = new ConcurrentHashMap<>();
-    private final Map<ServiceAndNode, IndexApiGrpc.IndexApiFutureStub> actorRpcApis
+    private final Map<ServiceAndNode, IndexApiGrpc.IndexApiBlockingStub> actorRpcApis
             = new ConcurrentHashMap<>();
 
     private ManagedChannel getChannel(ServiceAndNode serviceAndNode) {
@@ -33,9 +32,9 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
                         .build());
     }
 
-    public IndexApiGrpc.IndexApiFutureStub indexApi(int node) {
+    public IndexApiGrpc.IndexApiBlockingStub indexApi(int node) {
         return actorRpcApis.computeIfAbsent(new ServiceAndNode("index-service", node), n ->
-                IndexApiGrpc.newFutureStub(
+                IndexApiGrpc.newBlockingStub(
                         getChannel(n)
                 )
         );
@@ -85,62 +84,43 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
         }
     }
 
+    private final ExecutorService es = Executors.newVirtualThreadPerTaskExecutor();
+
     private List<RpcDecoratedResultItem> executeQueries(RpcIndexQuery indexRequest, int totalSize) throws InterruptedException
     {
+        List<Callable<List<RpcDecoratedResultItem>>> tasks = createTasks(indexRequest);
 
-        final List<RpcDecoratedResultItem> bestItems = new ArrayList<>(2 * totalSize);
+        return es.invokeAll(tasks).stream()
+                .filter(f -> f.state() == Future.State.SUCCESS)
+                .map(Future::resultNow)
+                .flatMap(List::stream)
+                .sorted(comparator)
+                .limit(totalSize)
+                .toList();
+    }
 
-        LinkedList<Future<RpcSearchResultSet>> resultSets = new LinkedList<>();
+    @NotNull
+    private List<Callable<List<RpcDecoratedResultItem>>> createTasks(RpcIndexQuery indexRequest) {
+        List<Callable<List<RpcDecoratedResultItem>>> tasks = new ArrayList<>();
+
         for (var node : nodeConfigurationWatcher.getQueryNodes()) {
-            resultSets.add(indexApi(node).query(indexRequest));
-        }
-
-        long start = System.currentTimeMillis();
-        long timeout = start + 500;
-
-        while (!resultSets.isEmpty() && System.currentTimeMillis() < timeout)
-        {
-            resultSets.removeIf(f -> switch(f.state()) {
-                case CANCELLED -> true;
-                case FAILED -> {
-                    logger.error("Error in query", f.exceptionNow());
-                    yield true;
+            tasks.add(() -> {
+                var responseIter = indexApi(node).query(indexRequest);
+                var ret = new ArrayList<RpcDecoratedResultItem>();
+                while (responseIter.hasNext()) {
+                    RpcDecoratedResultItem next = responseIter.next();
+                    if (isBlacklisted(next))
+                        continue;
+                    ret.add(next);
                 }
-                case SUCCESS -> {
-                    mergeResults(bestItems, f.resultNow(), totalSize);
-                    yield true;
-                }
-                case RUNNING -> false;
+                return ret;
             });
-
-            if (!resultSets.isEmpty()) {
-                // yield
-                TimeUnit.MILLISECONDS.sleep(1);
-            }
         }
-        return bestItems;
+        return tasks;
     }
 
     private static final Comparator<RpcDecoratedResultItem> comparator =
             Comparator.comparing(RpcDecoratedResultItem::getRankingScore);
-    private void mergeResults(List<RpcDecoratedResultItem> bestItems,
-                              RpcSearchResultSet result,
-                              int totalSize)
-    {
-        for (int i = 0; i < result.getItemsCount(); i++) {
-            var item = result.getItems(i);
-            if (isBlacklisted(item)) {
-                continue;
-            }
-            bestItems.add(result.getItems(i));
-        }
-
-        bestItems.sort(comparator);
-
-        if (bestItems.size() > totalSize) {
-            bestItems.subList(totalSize, bestItems.size()).clear();
-        }
-    }
 
     private boolean isBlacklisted(RpcDecoratedResultItem item) {
         return blacklist.isBlacklisted(UrlIdCodec.getDomainId(item.getRawItem().getCombinedId()));

@@ -8,7 +8,7 @@ service QueryApi {
   rpc query(RpcQsQuery) returns (RpcQsResponse) {}
 }
 service IndexApi {
-  rpc query(RpcIndexQuery) returns (RpcSearchResultSet) {}
+  rpc query(RpcIndexQuery) returns (stream RpcDecoratedResultItem) {}
 }
 
 message Empty {}

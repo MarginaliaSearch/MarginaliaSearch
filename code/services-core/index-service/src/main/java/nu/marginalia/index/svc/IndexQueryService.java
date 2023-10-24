@@ -150,13 +150,13 @@ public class IndexQueryService extends IndexApiImplBase {
     // GRPC endpoint
     @SneakyThrows
     public void query(nu.marginalia.index.api.RpcIndexQuery request,
-                      io.grpc.stub.StreamObserver<nu.marginalia.index.api.RpcSearchResultSet> responseObserver) {
+                      io.grpc.stub.StreamObserver<nu.marginalia.index.api.RpcDecoratedResultItem> responseObserver) {
 
         try {
             var params = new SearchParameters(request, getSearchSet(request));
 
             SearchResultSet results = executeSearch(params);
-            RpcSearchResultSet.Builder retBuilder = RpcSearchResultSet.newBuilder();
+            logger.info("Assembling result");
             for (var result : results.results) {
 
                 var rawResult = result.rawIndexResult;
@@ -191,9 +191,10 @@ public class IndexQueryService extends IndexApiImplBase {
                 if (result.pubYear != null) {
                     decoratedBuilder.setPubYear(result.pubYear);
                 }
-                retBuilder.addItems(decoratedBuilder.build());
+                responseObserver.onNext(decoratedBuilder.build());
             }
-            responseObserver.onNext(retBuilder.build());
+
+            logger.info("Finished");
             responseObserver.onCompleted();
         }
         catch (Exception ex) {
