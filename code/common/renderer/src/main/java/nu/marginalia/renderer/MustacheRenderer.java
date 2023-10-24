@@ -42,7 +42,7 @@ public class MustacheRenderer<T> {
             String shortName3 = instance.substring(4, 6);
             String shortName4 = instance.substring(6, 8);
 
-            String ret = "<span title=\"%s\">".formatted(instance) +
+            String ret = "<span title=\"%s\">".formatted(context.toString()) +
                     "<span style=\"text-shadow: 0 0 0.2ch %s; font-family: monospace;\">%s</span>".formatted(color1, shortName1) +
                     "<span style=\"text-shadow: 0 0 0.2ch %s; font-family: monospace;\">%s</span>".formatted(color2, shortName2) +
                     "<span style=\"text-shadow: 0 0 0.2ch %s; font-family: monospace;\">%s</span>".formatted(color3, shortName3) +
