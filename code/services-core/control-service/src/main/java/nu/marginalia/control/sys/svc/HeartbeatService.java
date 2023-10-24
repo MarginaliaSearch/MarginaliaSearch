@@ -58,6 +58,7 @@ public class HeartbeatService {
              var stmt = conn.prepareStatement("""
                     SELECT TASK_NAME, TASK_BASE, NODE, INSTANCE, SERVICE_INSTANCE,  STATUS, STAGE_NAME, PROGRESS, TIMESTAMPDIFF(MICROSECOND, TASK_HEARTBEAT.HEARTBEAT_TIME, CURRENT_TIMESTAMP(6)) AS TSDIFF
                     FROM TASK_HEARTBEAT
+                    WHERE STATUS = 'RUNNING'
                      """)) {
             var rs = stmt.executeQuery();
             while (rs.next()) {
@@ -88,6 +89,7 @@ public class HeartbeatService {
                     SELECT TASK_NAME, TASK_BASE, NODE, INSTANCE, SERVICE_INSTANCE,  STATUS, STAGE_NAME, PROGRESS, TIMESTAMPDIFF(MICROSECOND, TASK_HEARTBEAT.HEARTBEAT_TIME, CURRENT_TIMESTAMP(6)) AS TSDIFF
                     FROM TASK_HEARTBEAT
                     WHERE NODE=?
+                    AND STATUS='RUNNING'
                      """)) {
             stmt.setInt(1, node);
             var rs = stmt.executeQuery();
@@ -134,6 +136,7 @@ public class HeartbeatService {
                     SELECT PROCESS_NAME, PROCESS_BASE, NODE, INSTANCE, STATUS, PROGRESS,
                             TIMESTAMPDIFF(MICROSECOND, HEARTBEAT_TIME, CURRENT_TIMESTAMP(6)) AS TSDIFF
                     FROM PROCESS_HEARTBEAT
+                    WHERE STATUS = 'RUNNING'
                      """)) {
 
             var rs = stmt.executeQuery();
@@ -166,6 +169,7 @@ public class HeartbeatService {
                             TIMESTAMPDIFF(MICROSECOND, HEARTBEAT_TIME, CURRENT_TIMESTAMP(6)) AS TSDIFF
                     FROM PROCESS_HEARTBEAT
                     WHERE NODE=?
+                    AND STATUS='RUNNING'
                      """)) {
 
             stmt.setInt(1, node);
@@ -191,22 +195,4 @@ public class HeartbeatService {
         return heartbeats;
     }
 
-    public void flagProcessAsStopped(ProcessHeartbeat processHeartbeat) {
-        eventLogService.logEvent("PROCESS-MISSING", "Marking stale process heartbeat "
-                + processHeartbeat.processId() + " / " + processHeartbeat.uuidFull() + " as stopped");
-
-        try (var conn = dataSource.getConnection();
-             var stmt = conn.prepareStatement("""
-                     UPDATE PROCESS_HEARTBEAT
-                        SET STATUS = 'STOPPED'
-                      WHERE INSTANCE = ?
-                     """)) {
-
-            stmt.setString(1, processHeartbeat.uuidFull());
-            stmt.executeUpdate();
-        }
-        catch (SQLException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
 }

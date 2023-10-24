@@ -28,14 +28,14 @@
 <h2>Jobs</h2>
 <table id="jobs" class="table">
     <tr>
-        <th>Process ID</th>
+        <th>Job</th>
         <th>Status</th>
         <th>Progress</th>
         <th>Last Seen (ms)</th>
     </tr>
     {{#each jobs}}
     <tr class="{{#if isMissing}}missing{{/if}}">
-        <td>{{taskBase}}</td>
+        <td>{{taskName}}</td>
         <td>{{status}}</td>
         <td style="{{progressStyle}}">{{#if progress}}{{progress}}%{{/if}} {{stage}}</td>
         <td>{{#unless isStopped}}{{lastSeenMillis}}{{/unless}}</td>
