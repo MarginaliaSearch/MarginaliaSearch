@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.With;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,11 +34,11 @@ public class SearchSubquery {
     private double value = 0;
 
     public SearchSubquery() {
-        this.searchTermsInclude = List.of();
-        this.searchTermsExclude = List.of();
-        this.searchTermsAdvice = List.of();
-        this.searchTermsPriority = List.of();
-        this.searchTermCoherences = List.of();
+        this.searchTermsInclude = new ArrayList<>();
+        this.searchTermsExclude = new ArrayList<>();
+        this.searchTermsAdvice = new ArrayList<>();
+        this.searchTermsPriority = new ArrayList<>();
+        this.searchTermCoherences = new ArrayList<>();
     }
 
     public SearchSubquery(List<String> searchTermsInclude,
