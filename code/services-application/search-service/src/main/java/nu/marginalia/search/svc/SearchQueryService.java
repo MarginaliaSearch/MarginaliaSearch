@@ -18,7 +18,7 @@ import java.util.Optional;
 
 public class SearchQueryService {
 
-    private WebsiteUrl websiteUrl;
+    private final WebsiteUrl websiteUrl;
     private final SearchErrorPageService errorPageService;
     private final CommandEvaluator searchCommandEvaulator;
     private final Logger logger = LoggerFactory.getLogger(getClass());
