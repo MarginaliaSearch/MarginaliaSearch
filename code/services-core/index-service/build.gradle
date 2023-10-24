@@ -57,6 +57,7 @@ dependencies {
     implementation libs.trove
     implementation libs.fastutil
     implementation libs.bundles.gson
+    implementation libs.bundles.grpc
     implementation libs.bundles.mariadb
 
     testImplementation libs.bundles.slf4j.test

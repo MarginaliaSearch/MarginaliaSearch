@@ -1,0 +1,139 @@
+syntax="proto3";
+package actorapi;
+
+option java_package="nu.marginalia.index.api";
+option java_multiple_files=true;
+
+service QueryApi {
+  rpc query(RpcQsQuery) returns (RpcQsResponse) {}
+}
+service IndexApi {
+  rpc query(RpcIndexQuery) returns (RpcSearchResultSet) {}
+}
+
+message Empty {}
+
+message RpcQsQuery {
+  string humanQuery = 1;
+  string nearDomain = 2;
+  repeated string tacitIncludes = 3;
+  repeated string tacitExcludes = 4;
+  repeated string tacitPriority = 5;
+  repeated string tacitAdvice = 6;
+  RpcSpecLimit quality = 7;
+  RpcSpecLimit year = 8;
+  RpcSpecLimit size = 9;
+  RpcSpecLimit rank = 10;
+  repeated int32 domainIds = 11;
+  RpcQueryLimits queryLimits = 12;
+  string searchSetIdentifier = 13;
+}
+
+message RpcQsResponse {
+    RpcIndexQuery specs = 1;
+    repeated RpcDecoratedResultItem results = 2;
+    repeated string searchTermsHuman = 3;
+    repeated string problems = 4;
+    string domain = 5;
+}
+
+message RpcIndexQuery {
+  repeated RpcSubquery subqueries = 1;
+  repeated int32 domains = 2;
+  string searchSetIdentifier = 3;
+  string humanQuery = 4;
+  RpcSpecLimit quality = 5;
+  RpcSpecLimit year = 6;
+  RpcSpecLimit size = 7;
+  RpcSpecLimit rank = 8;
+  RpcQueryLimits queryLimits = 9;
+  string queryStrategy = 10;
+  RpcResultRankingParameters parameters = 11;
+}
+
+message RpcSpecLimit {
+  int32 value = 1;
+  TYPE type = 2;
+
+  enum TYPE {
+    NONE = 0;
+    EQUALS = 1;
+    LESS_THAN = 2;
+    GREATER_THAN = 3;
+  };
+}
+
+message RpcSearchResultSet {
+  repeated RpcDecoratedResultItem items = 1;
+}
+
+message RpcDecoratedResultItem {
+  RpcRawResultItem rawItem = 1;
+  string url = 2;
+  string title = 3;
+  string description = 4;
+  double urlQuality = 5;
+  string format = 6;
+  int32 features = 7;
+  int32 pubYear = 8;
+  int64 dataHash = 9;
+  int32 wordsTotal = 10;
+  double rankingScore = 11;
+}
+
+message RpcRawResultItem {
+  int64 combinedId = 1;
+  int32 resultsFromDomain = 2;
+  repeated RpcResultKeywordScore keywordScores = 3;
+}
+
+message RpcResultKeywordScore {
+  int32 subquery = 1;
+  string keyword = 2;
+  int64 encodedWordMetadata = 3;
+  int64 encodedDocMetadata = 4;
+  bool hasPriorityTerms = 5;
+  int32 htmlFeatures = 6;
+}
+
+message RpcQueryLimits {
+  int32 resultsByDomain = 1;
+  int32 resultsTotal = 2;
+  int32 timeoutMs = 3;
+  int32 fetchSize = 4;
+}
+
+message RpcResultRankingParameters {
+  double fullK = 1;
+  double fullB = 2;
+  double prioK = 3;
+  double prioB = 4;
+  int32 shortDocumentThreshold = 5;
+  double shortDocumentPenalty = 6;
+  double domainRankBonus = 7;
+  double qualityPenalty = 8;
+  int32 shortSentenceThreshold = 9;
+  double shortSentencePenalty = 10;
+  double bm25FullWeight = 11;
+  double bm25PrioWeight = 12;
+  double tcfWeight = 13;
+  TEMPORAL_BIAS temporalBias = 14;
+  double temporalBiasWeight = 15;
+
+  enum TEMPORAL_BIAS {
+      NONE = 0;
+      RECENT = 1;
+      OLD = 2;
+  }
+}
+message RpcSubquery {
+  repeated string include = 1;
+  repeated string exclude = 2;
+  repeated string advice = 3;
+  repeated string priority = 4;
+  repeated RpcCoherences coherences = 5;
+}
+
+message RpcCoherences {
+  repeated string coherences = 1;
+}

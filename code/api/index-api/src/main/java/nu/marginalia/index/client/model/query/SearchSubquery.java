@@ -1,6 +1,7 @@
 package nu.marginalia.index.client.model.query;
 
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.With;
 
@@ -10,6 +11,7 @@ import java.util.stream.Collectors;
 @Getter
 @AllArgsConstructor
 @With
+@EqualsAndHashCode
 public class SearchSubquery {
 
     /** These terms must be present in the document and are used in ranking*/
@@ -27,6 +29,7 @@ public class SearchSubquery {
     /** Terms that we require to be in the same sentence */
     public final List<List<String>> searchTermCoherences;
 
+    @Deprecated // why does this exist?
     private double value = 0;
 
     public SearchSubquery() {
@@ -49,6 +52,7 @@ public class SearchSubquery {
         this.searchTermCoherences = searchTermCoherences;
     }
 
+    @Deprecated // why does this exist?
     public SearchSubquery setValue(double value) {
         if (Double.isInfinite(value) || Double.isNaN(value)) {
             this.value = Double.MAX_VALUE;

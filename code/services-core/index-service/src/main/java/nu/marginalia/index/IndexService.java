@@ -2,6 +2,7 @@ package nu.marginalia.index;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import io.grpc.ServerBuilder;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import lombok.SneakyThrows;
 import nu.marginalia.IndexLocations;
@@ -23,6 +24,7 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
@@ -49,8 +51,7 @@ public class IndexService extends Service {
                         SearchIndex searchIndex,
                         FileStorageService fileStorageService,
                         LinkdbReader linkdbReader,
-                        ServiceEventLog eventLog)
-    {
+                        ServiceEventLog eventLog) throws IOException {
         super(params);
 
         this.opsService = opsService;
@@ -62,6 +63,11 @@ public class IndexService extends Service {
         final Gson gson = GsonFactory.get();
 
         this.init = params.initialization;
+
+        var grpcServer = ServerBuilder.forPort(params.configuration.port() + 1)
+                .addService(indexQueryService)
+                .build();
+        grpcServer.start();
 
         Spark.post("/search/", indexQueryService::search, gson::toJson);
 

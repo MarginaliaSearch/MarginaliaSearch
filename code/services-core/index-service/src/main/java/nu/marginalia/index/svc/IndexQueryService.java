@@ -9,6 +9,9 @@ import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import io.prometheus.client.Histogram;
 import lombok.SneakyThrows;
+import nu.marginalia.index.api.*;
+import nu.marginalia.index.api.IndexApiGrpc.IndexApiImplBase;
+import nu.marginalia.index.client.model.query.SearchSetIdentifier;
 import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.index.client.model.results.ResultRankingParameters;
 import nu.marginalia.index.client.model.results.SearchResultItem;
@@ -41,8 +44,10 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
+
 @Singleton
-public class IndexQueryService {
+public class IndexQueryService extends IndexApiImplBase {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -142,6 +147,61 @@ public class IndexQueryService {
         }
     }
 
+    // GRPC endpoint
+    @SneakyThrows
+    public void query(nu.marginalia.index.api.RpcIndexQuery request,
+                      io.grpc.stub.StreamObserver<nu.marginalia.index.api.RpcSearchResultSet> responseObserver) {
+
+        try {
+            var params = new SearchParameters(request, getSearchSet(request));
+
+            SearchResultSet results = executeSearch(params);
+            RpcSearchResultSet.Builder retBuilder = RpcSearchResultSet.newBuilder();
+            for (var result : results.results) {
+
+                var rawResult = result.rawIndexResult;
+
+                var rawItem = RpcRawResultItem.newBuilder();
+                rawItem.setCombinedId(rawResult.combinedId);
+                rawItem.setResultsFromDomain(rawResult.resultsFromDomain);
+
+                for (var score : rawResult.keywordScores) {
+                    rawItem.addKeywordScores(
+                            RpcResultKeywordScore.newBuilder()
+                                    .setEncodedDocMetadata(score.encodedDocMetadata())
+                                    .setEncodedWordMetadata(score.encodedWordMetadata())
+                                    .setKeyword(score.keyword)
+                                    .setHtmlFeatures(score.htmlFeatures())
+                                    .setHasPriorityTerms(score.hasPriorityTerms())
+                                    .setSubquery(score.subquery)
+                    );
+                }
+
+                var decoratedBuilder = RpcDecoratedResultItem.newBuilder()
+                        .setDataHash(result.dataHash)
+                        .setDescription(result.description)
+                        .setFeatures(result.features)
+                        .setFormat(result.format)
+                        .setRankingScore(result.rankingScore)
+                        .setTitle(result.title)
+                        .setUrl(result.url.toString())
+                        .setWordsTotal(result.wordsTotal)
+                        .setRawItem(rawItem);
+
+                if (result.pubYear != null) {
+                    decoratedBuilder.setPubYear(result.pubYear);
+                }
+                retBuilder.addItems(decoratedBuilder.build());
+            }
+            responseObserver.onNext(retBuilder.build());
+            responseObserver.onCompleted();
+        }
+        catch (Exception ex) {
+            logger.error("Error in handling request", ex);
+            responseObserver.onError(ex);
+        }
+    }
+
     // exists for test access
     @SneakyThrows
     SearchResultSet justQuery(SearchSpecification specsSet) {
@@ -156,7 +216,16 @@ public class IndexQueryService {
 
         return searchSetsService.getSearchSetByName(specsSet.searchSetIdentifier);
     }
+    private SearchSet getSearchSet(RpcIndexQuery request) {
 
+        if (request.getDomainsCount() > 0) {
+            return new SmallSearchSet(request.getDomainsList());
+        }
+
+        return searchSetsService.getSearchSetByName(
+                SearchSetIdentifier.valueOf(request.getSearchSetIdentifier())
+        );
+    }
     private SearchResultSet executeSearch(SearchParameters params) throws SQLException {
 
         var rankingContext = createRankingContext(params.rankingParams, params.subqueries);
