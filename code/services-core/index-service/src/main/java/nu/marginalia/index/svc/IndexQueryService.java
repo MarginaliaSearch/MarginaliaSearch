@@ -156,7 +156,6 @@ public class IndexQueryService extends IndexApiImplBase {
             var params = new SearchParameters(request, getSearchSet(request));
 
             SearchResultSet results = executeSearch(params);
-            logger.info("Assembling result");
             for (var result : results.results) {
 
                 var rawResult = result.rawIndexResult;
@@ -194,7 +193,6 @@ public class IndexQueryService extends IndexApiImplBase {
                 responseObserver.onNext(decoratedBuilder.build());
             }
 
-            logger.info("Finished");
             responseObserver.onCompleted();
         }
         catch (Exception ex) {
