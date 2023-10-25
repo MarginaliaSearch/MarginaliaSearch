@@ -39,6 +39,161 @@
                 <button class="accordion-button collapsed"
                         type="button"
                         data-bs-toggle="collapse"
+                        data-bs-target="#collapseTriggerCrawl"
+                        aria-expanded="false"
+                        aria-controls="collapseTriggerCrawl">
+                    Trigger Crawl
+                </button>
+            </h2>
+            <div id="collapseTriggerCrawl" class="accordion-collapse collapse p-3" data-bs-parent="#accordionActions">
+
+                {{#unless currentCrawlData}}
+                    No <a href="storage/crawl">crawl data</a> is currently set as active for this node.  A crawl is not possible.
+                {{/unless}}
+
+                {{#if currentCrawlData}}
+                    This will trigger a crawl on Node {{node.id}}.  This <a href="storage/crawl">crawl data</a> will be loaded:
+                <table class="table">
+                    <tr>
+                        <th>Date</th>
+                        <th>Path</th>
+                        <th>Description</th>
+                    </tr>
+                    {{#each currentCrawlData}}
+                    <tr>
+                        <td>{{date}}</td>
+                        <td><a href="storage/details?fid={{id}}">{{path}}</a></td>
+                        <td>{{description}}</td>
+                    </tr>
+                    {{/each}}
+                </table>
+                    <form method="post" action="storage/recrawl-auto">
+                        <button
+                                class="btn btn-primary me-md-2"
+                                onclick="return confirm('Confirm recrawl of the current ACTIVE crawl set on node {{node.id}}');"
+                                type="submit">
+                            Trigger Recrawl</button>
+                    </form>
+                {{/if}}
+
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseProcessCrawlData"
+                        aria-expanded="false"
+                        aria-controls="collapseProcessCrawlData">
+                    Process Crawl Data
+                </button>
+            </h2>
+            <div id="collapseProcessCrawlData" class="accordion-collapse collapse p-3" data-bs-parent="#accordionActions">
+
+                {{#unless currentCrawlData}}
+                    No <a href="storage/crawl">crawl data</a> is currently set as active for this node.  Processing is not possible.
+                {{/unless}}
+
+                {{#if currentCrawlData}}
+                    This will reprocess crawl data on Node {{node.id}}.  This <a href="storage/crawl">crawl data</a> will be loaded:
+                    <table class="table">
+                        <tr>
+                            <th>Date</th>
+                            <th>Path</th>
+                            <th>Description</th>
+                        </tr>
+
+                        {{#each currentCrawlData}}
+                        <tr>
+                            <td>{{date}}</td>
+                            <td><a href="storage/details?fid={{id}}">{{path}}</a></td>
+                            <td>{{description}}</td>
+                        </tr>
+                        {{/each}}
+                    </table>
+                    <form method="post" action="storage/process-auto">
+                        <button
+                                class="btn btn-primary me-md-2"
+                                onclick="return confirm('Confirm reprocessing of the current ACTIVE data on node {{node.id}}');"
+                                type="submit">
+                            Trigger Reprocessing</button>
+                    </form>
+                {{/if}}
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseLoadData"
+                        aria-expanded="false"
+                        aria-controls="collapseLoadData">
+                    Load Processed Data
+                </button>
+            </h2>
+            <div id="collapseLoadData" class="accordion-collapse collapse p-3" data-bs-parent="#accordionActions">
+
+                {{#unless currentProcessData}}
+                    No <a href="storage/processed">processed data</a> is currently set as active for this node.  Loading is not possible.
+                {{/unless}}
+
+                {{#if currentProcessData}}
+                    This will load processed data on Node {{node.id}}.  This <a href="storage/processed">processed data</a> will be loaded:
+                    <table class="table">
+                        <tr>
+                            <th>Date</th>
+                            <th>Path</th>
+                            <th>Description</th>
+                        </tr>
+
+                        {{#each currentProcessData}}
+                            <tr>
+                                <td>{{date}}</td>
+                                <td><a href="storage/details?fid={{id}}">{{path}}</a></td>
+                                <td>{{description}}</td>
+                            </tr>
+                        {{/each}}
+                    </table>
+                    <form method="post" action="storage/load-selected">
+                        <button
+                                class="btn btn-primary me-md-2"
+                                onclick="return confirm('Confirm loading of the current ACTIVE data on node {{node.id}}');"
+                                type="submit">
+                            Trigger Loading</button>
+                    </form>
+                {{/if}}
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseRepartition"
+                        aria-expanded="true"
+                        aria-controls="collapseRepartition">
+                    Repartition Index
+                </button>
+            </h2>
+            <div id="collapseRepartition" class="accordion-collapse collapse p-3" data-bs-parent="#accordionActions">
+                <p>This will recalculate the rankings and search sets for the index</p>
+
+                <form method="post" action="actions/repartition-index" onsubmit="return confirm('Confirm repartition')">
+                    <button type="submit" class="btn btn-primary">Trigger Repartitioning</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
                         data-bs-target="#collapseSideloadEncyclopedia"
                         aria-expanded="false"
                         aria-controls="collapseSideloadEncyclopedia">
@@ -133,110 +288,7 @@
                 </form>
             </div>
         </div>
-
-        <div class="accordion-item">
-            <h2 class="accordion-header">
-                <button class="accordion-button collapsed"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#collapseRepartition"
-                        aria-expanded="true"
-                        aria-controls="collapseRepartition">
-                    Repartition Index
-                </button>
-            </h2>
-            <div id="collapseRepartition" class="accordion-collapse collapse p-3" data-bs-parent="#accordionActions">
-                <p>This will recalculate the rankings and search sets for the index</p>
-
-                <form method="post" action="actions/repartition-index" onsubmit="return confirm('Confirm repartition')">
-                    <button type="submit" class="btn btn-primary">Trigger Repartitioning</button>
-                </form>
-            </div>
-        </div>
     </div>
-
-<!--    <table style="max-width: 80ch">-->
-<!--        <tr>-->
-<!--            <th>Action</th><th>Trigger</th>-->
-<!--        </tr>-->
-<!--        <tr>-->
-<!--            <td><b>Trigger Adjacency Calculation</b><p>-->
-<!--                This will trigger a recalculation of website similarities, which affects-->
-<!--                the rankings calculations.-->
-<!--            </td>-->
-<!--            <td>-->
-<!--                <form method="post" action="/actions/calculate-adjacencies" onsubmit="return confirm('Confirm adjacency recalculation')">-->
-<!--                    <input type="submit" value="Trigger Calculations">-->
-<!--                </form>-->
-<!--            </td>-->
-<!--        </tr>-->
-<!--        <tr>-->
-
-<!--        </tr>-->
-
-<!--        <tr>-->
-<!--            <td>-->
-<!--                <b>Reload Blogs List</b>-->
-<!--                <p>This will reload the list of blogs from its source.</p>-->
-<!--            </td>-->
-<!--            <td>-->
-<!--                <form method="post" action="/actions/reload-blogs-list" onsubmit="return confirm('Confirm reload blogs list')">-->
-<!--                    <input type="submit" value="Reload Blogs List">-->
-<!--                </form>-->
-<!--            </td>-->
-<!--        </tr>-->
-<!--        <tr>-->
-<!--            <td><b>Repartition Index</b><p>-->
-<!--                This will recalculate the rankings and search sets for the index.-->
-<!--            </td>-->
-<!--            <td>-->
-<!--                <form method="post" action="/actions/repartition-index" onsubmit="return confirm('Confirm repartition')">-->
-<!--                    <input type="submit" value="Trigger Repartitioning">-->
-<!--                </form>-->
-<!--            </td>-->
-<!--        </tr>-->
-<!--        <tr>-->
-<!--            <td><b>Flush <tt>api-service</tt> Caches</b><p>-->
-<!--                This will instruct the api-service to flush its caches,-->
-<!--                getting rid of any stale data.  This will be necessary after-->
-<!--                changes to the API licenses directly through the database.-->
-<!--            </td>-->
-<!--            <td>-->
-<!--                <form method="post" action="/actions/flush-api-caches" onsubmit="return confirm('Confirm flushing api chaches')">-->
-<!--                    <input type="submit" value="Flush API">-->
-<!--                </form>-->
-<!--            </td>-->
-<!--        </tr>-->
-<!--        <tr>-->
-<!--            <td><b>Trigger Data Exports</b><p>-->
-<!--                This exports the data from the database into a set of CSV files-->
-<!--            </td>-->
-<!--            <td>-->
-<!--                <form method="post" action="/actions/trigger-data-exports" onsubmit="return confirm('Confirm triggering of exports')">-->
-<!--                    <input type="submit" value="Export Data">-->
-<!--                </form>-->
-<!--            </td>-->
-<!--        </tr>-->
-<!--        <tr>-->
-<!--            <th colspan="2">-->
-<!--                WARNING -- Destructive Actions Below This Line-->
-<!--            </th>-->
-<!--        </tr>-->
-<!--        <tr>-->
-<!--            <td><b>Truncate Links Database.</b><p>-->
-<!--                <span style="color:red">This will drop all known URLs and domain links.</span><br>-->
-<!--                This action is not reversible.-->
-<!--            </td>-->
-<!--            <td>-->
-<!--                <form method="post" action="/actions/truncate-links-database" onsubmit="return confirm('Last chance, you are about to flush the link database')">-->
-<!--                    <label for="footgun-license">Type exactly "YES" to confirm</label><br>-->
-<!--                    <input id="footgun-license" name="footgun-license" value="NO">-->
-<!--                    <br><br>-->
-<!--                    <input type="submit" value="TRUNCATE TABLE ...">-->
-<!--                </form>-->
-<!--            </td>-->
-<!--        </tr>-->
-<!--    </table>-->
 </div>
 
 </body>

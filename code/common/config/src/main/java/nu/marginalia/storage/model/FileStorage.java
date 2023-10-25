@@ -2,6 +2,7 @@ package nu.marginalia.storage.model;
 
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
 /**
@@ -90,5 +91,9 @@ public record FileStorage (
         result = 31 * result + (path != null ? path.hashCode() : 0);
         result = 31 * result + (description != null ? description.hashCode() : 0);
         return result;
+    }
+
+    public String date() {
+        return createDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
     }
 }

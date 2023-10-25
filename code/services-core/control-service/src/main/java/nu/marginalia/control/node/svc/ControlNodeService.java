@@ -214,11 +214,15 @@ public class ControlNodeService {
         );
     }
 
-    private Object nodeActionsModel(Request request, Response response) {
+    private Object nodeActionsModel(Request request, Response response) throws SQLException {
         int nodeId = Integer.parseInt(request.params("id"));
 
         return Map.of(
-                "node", new IndexNode(nodeId)
+                "node", new IndexNode(nodeId),
+                "currentCrawlData",
+                        fileStorageService.getStorage(fileStorageService.getActiveFileStorages(nodeId, FileStorageType.CRAWL_DATA)),
+                "currentProcessData",
+                        fileStorageService.getStorage(fileStorageService.getActiveFileStorages(nodeId, FileStorageType.PROCESSED_DATA))
         );
     }
 

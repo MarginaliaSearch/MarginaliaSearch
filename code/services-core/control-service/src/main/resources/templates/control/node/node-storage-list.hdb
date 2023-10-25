@@ -53,38 +53,6 @@
             </li>
         </nav>
 
-
-        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-            {{#if view.specs}}
-                <a role="button" class="btn btn-primary me-md-2" type="button"
-                   href="new-specs"
-                >New Spec</a>
-            {{/if}}
-            {{#if view.processed}}
-                <form method="post" action="load-selected">
-                    <button class="btn btn-primary me-md-2"
-                            onclick="return confirm('Confirm loading of the currently ACTIVE processed data set(s)');"
-                            type="submit">Trigger Load</button>
-                </form>
-            {{/if}}
-            {{#if view.crawl}}
-                <form method="post" action="recrawl-auto">
-                    <button
-                       class="btn btn-primary me-md-2"
-                       onclick="return confirm('Confirm recrawl of the current ACTIVE crawl set using the current ACTIVE specs set(s).');"
-                       type="submit">
-                        Trigger Recrawl</button>
-                </form>
-                <form method="post" action="process-auto">
-                    <button
-                            class="btn btn-primary me-md-2"
-                            onclick="return confirm('Confirm processing of the current ACTIVE crawl set.');"
-                            type="submit">
-                        Trigger Processing</button>
-                </form>
-            {{/if}}
-        </div>
-
         <table class="table">
             {{#each storage}}
                 <tr>
