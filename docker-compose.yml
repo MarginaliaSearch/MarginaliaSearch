@@ -91,10 +91,14 @@ services:
       - 80
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.assistant-service.rule=PathPrefix(`/screenshot`)"
-      - "traefik.http.routers.assistant-service.entrypoints=search"
-      - "traefik.http.routers.assistant-service.middlewares=add-xpublic"
-      - "traefik.http.routers.assistant-service.middlewares=add-public"
+      - "traefik.http.routers.assistant-service-screenshot.rule=PathPrefix(`/screenshot`)"
+      - "traefik.http.routers.assistant-service-screenshot.entrypoints=search"
+      - "traefik.http.routers.assistant-service-screenshot.middlewares=add-xpublic"
+      - "traefik.http.routers.assistant-service-screenshot.middlewares=add-public"
+      - "traefik.http.routers.assistant-service-suggest.rule=PathPrefix(`/suggest`)"
+      - "traefik.http.routers.assistant-service-suggest.entrypoints=search"
+      - "traefik.http.routers.assistant-service-suggest.middlewares=add-xpublic"
+      - "traefik.http.routers.assistant-service-suggest.middlewares=add-public"
       - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
       - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
   api-service:
