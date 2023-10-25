@@ -30,6 +30,7 @@ public record FileStorage (
         var mockBase = new FileStorageBase(
                 new FileStorageBaseId(-1),
                 baseType,
+                -1,
                 "OVERRIDE:" + type.name(),
                 "INVALIDINVALIDINVALID"
         );
@@ -45,6 +46,9 @@ public record FileStorage (
         );
     }
 
+    public int node() {
+        return base.node();
+    }
     public Path asPath() {
         return Path.of(path);
     }

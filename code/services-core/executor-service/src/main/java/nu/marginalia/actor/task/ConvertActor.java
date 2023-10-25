@@ -30,7 +30,7 @@ public class ConvertActor extends RecordActorPrototype {
     private final Gson gson;
 
     public record Convert(FileStorageId fid) implements ActorStep {};
-    public record ConvertEncyclopedia(String source) implements ActorStep {};
+    public record ConvertEncyclopedia(String source, String baseUrl) implements ActorStep {};
     public record ConvertDirtree(String source) implements ActorStep {};
     public record ConvertStackexchange(String source) implements ActorStep {};
     @Resume(behavior = ActorResumeBehavior.RETRY)
@@ -50,15 +50,9 @@ public class ConvertActor extends RecordActorPrototype {
                 storageService.relateFileStorages(toProcess.id(), processedArea.id());
                 storageService.setFileStorageState(processedArea.id(), FileStorageState.NEW);
 
-                // Pre-send convert request
-                var request = new ConvertRequest(ConvertAction.ConvertCrawlData,
-                        null,
-                        fid,
-                        processedArea.id());
-
                 yield new ConvertWait(
                         processedArea.id(),
-                        mqConverterOutbox.sendAsync(ConvertRequest.class.getSimpleName(), gson.toJson(request))
+                        mqConverterOutbox.sendAsync(ConvertRequest.forCrawlData(fid, processedArea.id()))
                 );
             }
             case ConvertDirtree(String source) -> {
@@ -75,18 +69,12 @@ public class ConvertActor extends RecordActorPrototype {
 
                 storageService.setFileStorageState(processedArea.id(), FileStorageState.NEW);
 
-                // Pre-send convert request
-                var request = new ConvertRequest(ConvertAction.SideloadDirtree,
-                        sourcePath.toString(),
-                        null,
-                        processedArea.id());
-
                 yield new ConvertWait(
                         processedArea.id(),
-                        mqConverterOutbox.sendAsync(ConvertRequest.class.getSimpleName(), gson.toJson(request))
+                        mqConverterOutbox.sendAsync(ConvertRequest.forDirtree(sourcePath, processedArea.id()))
                 );
             }
-            case ConvertEncyclopedia(String source) -> {
+            case ConvertEncyclopedia(String source, String baseUrl) -> {
 
                 Path sourcePath = Path.of(source);
                 if (!Files.exists(sourcePath))
@@ -101,16 +89,9 @@ public class ConvertActor extends RecordActorPrototype {
 
                 storageService.setFileStorageState(processedArea.id(), FileStorageState.NEW);
 
-                // Pre-send convert request
-                var request = new ConvertRequest(ConvertAction.SideloadEncyclopedia,
-                        sourcePath.toString(),
-                        null,
-                        processedArea.id());
-
-
                 yield new ConvertWait(
                         processedArea.id(),
-                        mqConverterOutbox.sendAsync(ConvertRequest.class.getSimpleName(), gson.toJson(request))
+                        mqConverterOutbox.sendAsync(ConvertRequest.forEncyclopedia(sourcePath, baseUrl, processedArea.id()))
                 );
             }
             case ConvertStackexchange(String source) -> {
@@ -129,14 +110,10 @@ public class ConvertActor extends RecordActorPrototype {
                 storageService.setFileStorageState(processedArea.id(), FileStorageState.NEW);
 
                 // Pre-send convert request
-                var request = new ConvertRequest(ConvertAction.SideloadStackexchange,
-                        sourcePath.toString(),
-                        null,
-                        processedArea.id());
 
                 yield new ConvertWait(
                         processedArea.id(),
-                        mqConverterOutbox.sendAsync(ConvertRequest.class.getSimpleName(), gson.toJson(request))
+                        mqConverterOutbox.sendAsync(ConvertRequest.forStackexchange(sourcePath, processedArea.id()))
                 );
             }
             case ConvertWait(FileStorageId destFid, long msgId) -> {

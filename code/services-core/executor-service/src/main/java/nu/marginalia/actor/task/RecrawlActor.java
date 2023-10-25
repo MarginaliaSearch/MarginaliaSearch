@@ -46,8 +46,7 @@ public class RecrawlActor extends RecordActorPrototype {
 
                 refreshService.synchronizeDomainList();
 
-                var request = new CrawlRequest(null, fid);
-                long id = mqCrawlerOutbox.sendAsync(CrawlRequest.class.getSimpleName(), gson.toJson(request));
+                long id = mqCrawlerOutbox.sendAsync(new CrawlRequest(null, fid));
 
                 yield new Crawl(id);
             }

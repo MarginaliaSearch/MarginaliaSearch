@@ -55,12 +55,13 @@ public class ControlNodeActionsService {
             Spark.halt(404);
             return "No such file " + sourcePath;
         }
+        String baseUrl = request.queryParams("baseUrl");
 
         final int nodeId = Integer.parseInt(request.params("node"));
 
         eventLog.logEvent("USER-ACTION", "SIDELOAD ENCYCLOPEDIA " + nodeId);
 
-        executorClient.sideloadEncyclopedia(Context.fromRequest(request), nodeId, sourcePath);
+        executorClient.sideloadEncyclopedia(Context.fromRequest(request), nodeId, sourcePath, baseUrl);
 
         return "";
     }

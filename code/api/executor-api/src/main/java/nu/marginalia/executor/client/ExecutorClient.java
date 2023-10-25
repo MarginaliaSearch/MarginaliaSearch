@@ -62,9 +62,9 @@ public class ExecutorClient extends AbstractDynamicClient {
         // FIXME this shouldn't be done in the executor
     }
 
-    public void sideloadEncyclopedia(Context ctx, int node, Path sourcePath) {
+    public void sideloadEncyclopedia(Context ctx, int node, Path sourcePath, String baseUrl) {
         post(ctx, node,
-                "/sideload/encyclopedia?path="+ URLEncoder.encode(sourcePath.toString(), StandardCharsets.UTF_8),
+                "/sideload/encyclopedia?path="+ URLEncoder.encode(sourcePath.toString(), StandardCharsets.UTF_8) + "&baseUrl=" + URLEncoder.encode(baseUrl, StandardCharsets.UTF_8),
                 "").blockingSubscribe();
 
     }

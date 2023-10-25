@@ -244,7 +244,7 @@ public class ConverterMain {
             case SideloadEncyclopedia -> {
                 var processData = fileStorageService.getStorage(request.processedDataStorage);
 
-                yield new SideloadAction(sideloadSourceFactory.sideloadEncyclopediaMarginaliaNu(Path.of(request.inputSource)),
+                yield new SideloadAction(sideloadSourceFactory.sideloadEncyclopediaMarginaliaNu(Path.of(request.inputSource), request.baseUrl),
                         processData.asPath(),
                         msg, inbox);
             }

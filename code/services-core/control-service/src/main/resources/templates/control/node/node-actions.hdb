@@ -51,7 +51,13 @@
 
             <form method="post" action="actions/sideload-encyclopedia" onsubmit="return confirm('Confirm sideloading')">
                 <div class="my-3 py-3">
-                    <label for="source" class="form-label">articles.db location accessible from the node on the server</label>
+
+                    <label for="baseUrl" class="form-label">Base URL</label>
+                    <div class="col mb-3">
+                        <input id="baseUrl" name="baseUrl" class="form-control" value="https://en.wikipedia.org/wiki/">
+                    </div>
+
+                    <label for="source" class="form-label">Path to articles.db accessible from the node on the server</label>
 
                     <div class="row">
                         <div class="col">

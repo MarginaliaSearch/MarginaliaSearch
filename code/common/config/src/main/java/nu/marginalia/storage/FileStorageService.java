@@ -49,17 +49,18 @@ public class FileStorageService {
     public FileStorageBase getStorageBase(FileStorageBaseId id) throws SQLException  {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                     SELECT ID, NAME, PATH, TYPE
+                     SELECT ID, NAME, NODE, PATH, TYPE
                      FROM FILE_STORAGE_BASE WHERE ID = ?
                      """)) {
             stmt.setLong(1, id.id());
             try (var rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return new FileStorageBase(
-                            new FileStorageBaseId(rs.getLong(1)),
-                            FileStorageBaseType.valueOf(rs.getString(4)),
-                            rs.getString(2),
-                            rs.getString(3)
+                            new FileStorageBaseId(rs.getLong("ID")),
+                            FileStorageBaseType.valueOf(rs.getString("TYPE")),
+                            rs.getInt("NODE"),
+                            rs.getString("NAME"),
+                            rs.getString("PATH")
                     );
                 }
             }
@@ -154,7 +155,7 @@ public class FileStorageService {
     public FileStorageBase getStorageBase(FileStorageBaseType type, int node) throws SQLException {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
-                     SELECT ID, NAME, PATH, TYPE
+                     SELECT ID, NAME, NODE, PATH, TYPE
                      FROM FILE_STORAGE_BASE WHERE TYPE = ? AND NODE = ?
                      """)) {
             stmt.setString(1, type.name());
@@ -162,10 +163,11 @@ public class FileStorageService {
             try (var rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return new FileStorageBase(
-                            new FileStorageBaseId(rs.getLong(1)),
-                            FileStorageBaseType.valueOf(rs.getString(4)),
-                            rs.getString(2),
-                            rs.getString(3)
+                            new FileStorageBaseId(rs.getLong("ID")),
+                            FileStorageBaseType.valueOf(rs.getString("TYPE")),
+                            rs.getInt("NODE"),
+                            rs.getString("NAME"),
+                            rs.getString("PATH")
                     );
                 }
             }

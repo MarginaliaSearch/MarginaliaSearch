@@ -1,5 +1,6 @@
 package nu.marginalia.mq.outbox;
 
+import com.google.gson.Gson;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.persistence.MqPersistence;
@@ -25,7 +26,7 @@ public class MqOutbox {
     private final int pollIntervalMs = Integer.getInteger("mq.outbox.poll-interval-ms", 1000);
     private final int maxPollCount = Integer.getInteger("mq.outbox.max-poll-count", 10);
     private final Thread pollThread;
-
+    private final Gson gson;
     private volatile boolean run = true;
 
     public MqOutbox(MqPersistence persistence,
@@ -35,6 +36,7 @@ public class MqOutbox {
                     int outboxNode,
                     UUID instanceUUID) {
         this.persistence = persistence;
+        this.gson = persistence.getGson();
 
         this.inboxName = inboxName + ":" + inboxNode;
         this.replyInboxName = String.format("%s:%d//%s:%d", outboxName, outboxNode, inboxName, inboxNode);
@@ -97,6 +99,13 @@ public class MqOutbox {
         return waitResponse(id);
     }
 
+    /** Send a message and wait for a response */
+    public MqMessage send(Object object) throws Exception {
+        final long id = sendAsync(object);
+
+        return waitResponse(id);
+    }
+
     /** Send a message asynchronously, without waiting for a response.
      * <br>
      * Use waitResponse(id) or pollResponse(id) to fetch the response.  */
@@ -104,6 +113,15 @@ public class MqOutbox {
         return persistence.sendNewMessage(inboxName, replyInboxName, null, function, payload, null);
     }
 
+    /** Send a message asynchronously, without waiting for a response.
+     * <br>
+     * Use waitResponse(id) or pollResponse(id) to fetch the response.  */
+    public long sendAsync(Object request) throws Exception {
+        return persistence.sendNewMessage(inboxName, replyInboxName, null,
+                request.getClass().getSimpleName(),
+                gson.toJson(request),
+                null);
+    }
     /** Blocks until a response arrives for the given message id (possibly forever) */
     public MqMessage waitResponse(long id) throws Exception {
         synchronized (pendingResponses) {
@@ -156,13 +174,27 @@ public class MqOutbox {
         return Optional.ofNullable(response);
     }
 
-    public long sendNotice(String function, String payload) throws Exception {
-        return persistence.sendNewMessage(inboxName, null, null, function, payload, null);
-    }
+
+
     public long sendNotice(long relatedId, String function, String payload) throws Exception {
         return persistence.sendNewMessage(inboxName, null, relatedId, function, payload, null);
     }
+    public long sendNotice(String function, String payload) throws Exception {
+        return persistence.sendNewMessage(inboxName, null, null, function, payload, null);
+    }
 
+    public long sendNotice(long relatedId, Object object) throws Exception {
+        return persistence.sendNewMessage(inboxName, null, relatedId,
+                object.getClass().getSimpleName(),
+                gson.toJson(object),
+                null);
+    }
+    public long sendNotice(Object object) throws Exception {
+        return persistence.sendNewMessage(inboxName, null, null,
+                object.getClass().getSimpleName(),
+                gson.toJson(object),
+                null);
+    }
     public void flagAsBad(long id) throws SQLException {
         persistence.updateMessageState(id, MqMessageState.ERR);
     }

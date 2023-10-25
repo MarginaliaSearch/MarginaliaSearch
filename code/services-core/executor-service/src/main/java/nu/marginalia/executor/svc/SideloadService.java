@@ -21,7 +21,11 @@ public class SideloadService {
     }
 
     public Object sideloadEncyclopedia(Request request, Response response) throws Exception {
-        actorControlService.startFrom(ExecutorActor.CONVERT, new ConvertActor.ConvertEncyclopedia(request.queryParams("path")));
+        actorControlService.startFrom(ExecutorActor.CONVERT,
+                new ConvertActor.ConvertEncyclopedia(
+                        request.queryParams("path"),
+                        request.queryParams("baseUrl")
+                        ));
         return "";
     }
 

@@ -89,13 +89,15 @@
             {{#each storage}}
                 <tr>
                     <th>Type</th>
+                    <th>Node</th>
+                    <th>Path</th>
                     <th>Name</th>
-                    <th colspan="2">Path</th>
                 </tr>
                 <tr>
                     <td>{{base.type}}</td>
+                    <td>{{base.node}}</td>
+                    <td>{{base.path}}</td>
                     <td>{{base.name}}</td>
-                    <td colspan="2">{{base.path}}</td>
                 </tr>
                 <tr>
                     <th>Created</th>

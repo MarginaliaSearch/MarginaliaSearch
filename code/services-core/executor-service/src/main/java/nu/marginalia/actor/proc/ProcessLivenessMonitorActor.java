@@ -5,7 +5,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
+import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
+import nu.marginalia.actor.state.Resume;
 import nu.marginalia.process.ProcessService;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.module.ServiceConfiguration;
@@ -24,6 +26,7 @@ public class ProcessLivenessMonitorActor extends RecordActorPrototype {
 
     private final int node;
     public record Initial() implements ActorStep {}
+    @Resume(behavior = ActorResumeBehavior.RESTART)
     public record Monitor() implements ActorStep {}
 
     @Override

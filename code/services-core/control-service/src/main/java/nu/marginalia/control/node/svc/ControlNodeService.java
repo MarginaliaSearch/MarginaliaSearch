@@ -331,7 +331,7 @@ public class ControlNodeService {
         for (var type : FileStorageBaseType.values()) {
             var base = fileStorageService.getStorageBase(type, nodeId);
             bases.add(Objects.requireNonNullElseGet(base,
-                    () -> new FileStorageBase(new FileStorageBaseId(-1), type, "MISSING", "MISSING"))
+                    () -> new FileStorageBase(new FileStorageBaseId(-1), type, -1, "MISSING", "MISSING"))
             );
         }
 

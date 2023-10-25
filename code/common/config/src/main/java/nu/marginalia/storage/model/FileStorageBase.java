@@ -12,6 +12,7 @@ import java.nio.file.Path;
  */
 public record FileStorageBase(FileStorageBaseId id,
                               FileStorageBaseType type,
+                              int node,
                               String name,
                               String path
                               ) {

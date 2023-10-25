@@ -116,14 +116,8 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
 
                 yield new Convert(fid, processedArea.id());
             }
-            case Convert(FileStorageId crawlId, FileStorageId processedId, long msgId) when msgId < 0 -> {
-                var request = new ConvertRequest(ConvertAction.ConvertCrawlData,
-                        null,
-                        crawlId,
-                        processedId);
-                yield new Convert(crawlId, processedId,
-                        mqConverterOutbox.sendAsync(ConvertRequest.class.getSimpleName(), gson.toJson(request)));
-            }
+            case Convert(FileStorageId crawlId, FileStorageId processedId, long msgId) when msgId < 0 ->
+                    new Convert(crawlId, processedId, mqConverterOutbox.sendAsync(ConvertRequest.forCrawlData(crawlId, processedId)));
             case Convert(FileStorageId crawlId, FileStorageId processedId, long msgId) -> {
                 var rsp = processWatcher.waitResponse(mqConverterOutbox, ProcessService.ProcessId.CONVERTER, msgId);
 
@@ -133,8 +127,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
                 yield new Load(List.of(processedId));
             }
             case Load(List<FileStorageId> processedIds, long msgId) when msgId < 0 -> {
-                var request = new LoadRequest(processedIds);
-                long id = mqLoaderOutbox.sendAsync(LoadRequest.class.getSimpleName(), gson.toJson(request));
+                long id = mqLoaderOutbox.sendAsync(new LoadRequest(processedIds));
 
                 yield new Load(processedIds, id);
             }
@@ -201,8 +194,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
     }
 
     private long createIndex(IndexName index) throws Exception {
-        return mqIndexConstructorOutbox.sendAsync(CreateIndexRequest.class.getSimpleName(),
-                gson.toJson(new CreateIndexRequest(index)));
+        return mqIndexConstructorOutbox.sendAsync(new CreateIndexRequest(index));
     }
 
 

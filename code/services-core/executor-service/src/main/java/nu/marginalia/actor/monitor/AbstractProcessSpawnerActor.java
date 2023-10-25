@@ -36,6 +36,7 @@ public class AbstractProcessSpawnerActor extends RecordActorPrototype {
     public record Initial() implements ActorStep {}
     @Resume(behavior = ActorResumeBehavior.RETRY)
     public record Monitor(int errorAttempts) implements ActorStep {}
+    @Resume(behavior = ActorResumeBehavior.RESTART)
     public record Run(int attempts) implements ActorStep {}
     @Terminal
     public record Aborted() implements ActorStep {}

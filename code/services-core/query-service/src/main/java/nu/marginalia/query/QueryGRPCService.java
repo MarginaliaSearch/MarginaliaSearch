@@ -86,6 +86,9 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
 
     private final ExecutorService es = Executors.newVirtualThreadPerTaskExecutor();
 
+    private static final Comparator<RpcDecoratedResultItem> comparator =
+            Comparator.comparing(RpcDecoratedResultItem::getRankingScore);
+
     private List<RpcDecoratedResultItem> executeQueries(RpcIndexQuery indexRequest, int totalSize) throws InterruptedException
     {
         List<Callable<List<RpcDecoratedResultItem>>> tasks = createTasks(indexRequest);
@@ -119,8 +122,6 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
         return tasks;
     }
 
-    private static final Comparator<RpcDecoratedResultItem> comparator =
-            Comparator.comparing(RpcDecoratedResultItem::getRankingScore);
 
     private boolean isBlacklisted(RpcDecoratedResultItem item) {
         return blacklist.isBlacklisted(UrlIdCodec.getDomainId(item.getRawItem().getCombinedId()));
