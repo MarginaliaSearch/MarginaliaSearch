@@ -20,12 +20,12 @@ public class TriggerAdjacencyCalculationActor extends RecordActorPrototype {
     private final ProcessService processService;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    public record Initial() implements ActorStep {}
+    public record Run() implements ActorStep {}
 
     @Override
     public ActorStep transition(ActorStep self) throws Exception {
         return switch (self) {
-            case Initial() -> {
+            case Run() -> {
                 AtomicBoolean hasError = new AtomicBoolean(false);
                 var future = executor.submit(() -> {
                     try {
