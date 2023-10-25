@@ -55,7 +55,7 @@ public class DomainInformationService {
         int pagesIndexed = getPagesIndexed(domainId);
         int incomingLinks = getIncomingLinks(domainId);
         int outboundLinks = getOutboundLinks(domainId);
-
+        int nodeAffinity = getNodeAffinity(domainId);
         boolean inCrawlQueue = inCrawlQueue(domainId);
 
         double rank = Math.round(10000.0*(1.0-getRank(domainId)))/100;
@@ -75,10 +75,28 @@ public class DomainInformationService {
                 .state(state.desc)
                 .linkingDomains(linkingDomains)
                 .inCrawlQueue(inCrawlQueue)
+                .nodeAffinity(nodeAffinity)
                 .suggestForCrawling((pagesVisited == 0 && !inCrawlQueue))
                 .build();
 
         return Optional.of(di);
+    }
+
+    private int getNodeAffinity(int domainId) {
+        try (var connection = dataSource.getConnection()) {
+            try (var stmt = connection.prepareStatement("""
+                    SELECT NODE_AFFINITY FROM EC_DOMAIN WHERE ID=?
+                    """)) {
+                stmt.setInt(1, domainId);
+                var rs = stmt.executeQuery();
+                if (rs.next())
+                    return rs.getInt(1);
+            }
+        }
+        catch (SQLException ex) {
+            logger.error("SQL error", ex);
+        }
+        return -1;
     }
 
     @SneakyThrows

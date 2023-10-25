@@ -15,6 +15,7 @@
         <fieldset>
         <legend>Index</legend>
         State: {{state}}<br/>
+        Node Affinity: {{nodeAffinity}} </br>
         Pages Known: {{pagesKnown}} <br/>
         Pages Crawled: {{pagesFetched}} <br/>
         Pages Indexed: {{pagesIndexed}} <br/>
