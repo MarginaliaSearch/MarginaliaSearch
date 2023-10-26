@@ -119,7 +119,7 @@ public class ReverseIndexReader {
         long offset = wordOffset(wordId);
 
         if (offset < 0) {
-            logger.warn("Missing offset for word {}", wordId);
+            logger.debug("Missing offset for word {}", wordId);
             return new long[docIds.length];
         }
 
