@@ -30,10 +30,10 @@ public class BTreeReader {
         assert file.size() >= header.dataOffsetLongs() + dataBlockEnd;
     }
 
-    LongArray data() {
+    public LongArray data() {
         return data;
     }
-    LongArray index() {
+    public LongArray index() {
         return index;
     }
 
@@ -101,9 +101,11 @@ public class BTreeReader {
     public long findEntry(final long key) {
         BTreePointer ip = new BTreePointer(header);
 
-        while (!ip.isDataLayer())
-            if (!ip.walkToChild(key))
+        while (!ip.isDataLayer()) {
+            if (!ip.walkToChild(key)) {
                 return -1;
+            }
+        }
 
         return ip.findData(key);
     }
@@ -151,7 +153,7 @@ public class BTreeReader {
             long key = keys[i];
             searchStart = data.binarySearchN(ctx.entrySize, key, searchStart, data.size());
             if (searchStart < 0) {
-                searchStart = LongArraySearch.decodeSearchMiss(searchStart);
+                searchStart = LongArraySearch.decodeSearchMiss(ctx.entrySize, searchStart);
             }
             else {
                 ret[i] = data.get(searchStart + offset);

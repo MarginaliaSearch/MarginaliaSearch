@@ -1,12 +1,9 @@
 package nu.marginalia.array.algo;
 
 import nu.marginalia.array.IntArray;
-import nu.marginalia.array.page.IntArrayPage;
-import nu.marginalia.array.page.PagingIntArray;
 import nu.marginalia.array.scheme.PowerOf2PartitioningScheme;
 import nu.marginalia.util.test.TestUtil;
 import org.apache.commons.lang3.ArrayUtils;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -30,9 +27,9 @@ class IntArraySortTest {
 
     @BeforeEach
     public void setUp() {
-        basic = IntArrayPage.onHeap(size);
-        paged = PagingIntArray.newOnHeap(new PowerOf2PartitioningScheme(32), size);
-        shifted = IntArrayPage.onHeap(size + 30).shifted(30);
+        basic = IntArray.allocate(size);
+        paged = IntArray.allocate(size);
+        shifted = IntArray.allocate(size+30).shifted(30);
 
         var random = new Random();
         int[] values = new int[size];

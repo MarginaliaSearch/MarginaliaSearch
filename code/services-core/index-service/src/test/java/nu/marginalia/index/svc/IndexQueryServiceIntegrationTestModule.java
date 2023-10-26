@@ -53,9 +53,9 @@ public class IndexQueryServiceIntegrationTestModule extends AbstractModule {
 
         try {
             var fileStorageServiceMock = Mockito.mock(FileStorageService.class);
-            Mockito.when(fileStorageServiceMock.getStorageBase(FileStorageBaseType.WORK)).thenReturn(new FileStorageBase(null, null, null, slowDir.toString()));
-            Mockito.when(fileStorageServiceMock.getStorageBase(FileStorageBaseType.CURRENT)).thenReturn(new FileStorageBase(null, null, null, fastDir.toString()));
-            Mockito.when(fileStorageServiceMock.getStorageBase(FileStorageBaseType.STORAGE)).thenReturn(new FileStorageBase(null, null, null, fastDir.toString()));
+            Mockito.when(fileStorageServiceMock.getStorageBase(FileStorageBaseType.WORK)).thenReturn(new FileStorageBase(null, null, 0,null, slowDir.toString()));
+            Mockito.when(fileStorageServiceMock.getStorageBase(FileStorageBaseType.CURRENT)).thenReturn(new FileStorageBase(null, null, 0,null, fastDir.toString()));
+            Mockito.when(fileStorageServiceMock.getStorageBase(FileStorageBaseType.STORAGE)).thenReturn(new FileStorageBase(null, null, 0, null, fastDir.toString()));
 
             bind(LinkdbReader.class).toInstance(new LinkdbReader(
                     IndexLocations.getLinkdbLivePath(fileStorageServiceMock)

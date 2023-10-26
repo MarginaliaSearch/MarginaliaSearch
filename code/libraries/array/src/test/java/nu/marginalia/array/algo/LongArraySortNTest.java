@@ -4,8 +4,6 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
-import nu.marginalia.array.page.LongArrayPage;
-import nu.marginalia.array.page.PagingLongArray;
 import nu.marginalia.array.scheme.PowerOf2PartitioningScheme;
 import nu.marginalia.util.test.TestUtil;
 import org.apache.commons.lang3.ArrayUtils;
@@ -35,9 +33,9 @@ class LongArraySortNTest {
 
     @BeforeEach
     public void setUp() {
-        basic = LongArrayPage.onHeap(size);
-        paged = PagingLongArray.newOnHeap(new PowerOf2PartitioningScheme(32), size);
-        shifted = LongArrayPage.onHeap(size + 30).shifted(30);
+        basic = LongArray.allocate(size);
+        paged = LongArray.allocate(size);
+        shifted = LongArray.allocate(size+30).shifted(30);
         segment = LongArrayFactory.onHeapShared(size + 30).shifted(30);
 
         var random = new Random();

@@ -2,10 +2,12 @@ package nu.marginalia.array.algo;
 
 import nu.marginalia.array.IntArray;
 import nu.marginalia.array.buffer.IntQueryBuffer;
-import nu.marginalia.array.page.PagingIntArray;
+import nu.marginalia.array.page.SegmentIntArray;
 import nu.marginalia.array.scheme.PowerOf2PartitioningScheme;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.lang.foreign.Arena;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -13,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class IntArraySearchTest {
 
     IntArray basicArray = IntArray.allocate(1024);
-    IntArray pagingArray = PagingIntArray.newOnHeap(new PowerOf2PartitioningScheme(64), 1024);
+    IntArray pagingArray = SegmentIntArray.onHeap(Arena.global(), 1024);
 
     IntArray shiftedArray = IntArray.allocate(1054).range(30, 1054);
 
@@ -56,7 +58,7 @@ class IntArraySearchTest {
                 assertEquals(i, array.get(ret));
             }
             else {
-                long higher = LongArraySearch.decodeSearchMiss(ret);
+                long higher = LongArraySearch.decodeSearchMiss(1, ret);
                 if (i > 0 && higher < array.size()) {
                     assertTrue(array.get(higher) < i);
                 }
@@ -73,7 +75,7 @@ class IntArraySearchTest {
                 assertEquals(i, array.get(ret));
             }
             else {
-                long higher = LongArraySearch.decodeSearchMiss(ret);
+                long higher = LongArraySearch.decodeSearchMiss(1, ret);
                 if (i > 0 && higher+1 < array.size()) {
                     assertTrue(array.get(higher) < i);
                 }
