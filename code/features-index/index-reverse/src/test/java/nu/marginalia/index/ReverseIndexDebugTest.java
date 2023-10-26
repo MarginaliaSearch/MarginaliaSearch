@@ -2,6 +2,7 @@ package nu.marginalia.index;
 
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.btree.BTreeReader;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -11,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ReverseIndexDebugTest {
     @Test
+    @Disabled // this is a debugging utility
     public void debug() throws IOException {
         long problemWord = -7909917549851025932L;
         long problemDoc = 9079256848846028801L;
