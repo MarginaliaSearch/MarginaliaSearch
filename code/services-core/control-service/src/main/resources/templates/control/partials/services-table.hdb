@@ -3,13 +3,11 @@
     <tr>
         <th>Service ID</th>
         <th>UUID</th>
-        <th>Last Seen (ms)</th>
     </tr>
     {{#each services}}
-    <tr class="{{#if isMissing}}missing{{/if}} {{#unless alive}}terminated{{/unless}}">
+    <tr class="{{#if isMissing}}table-danger{{/if}}">
         <td><a href="/services/{{serviceId}}">{{serviceId}}</a></td>
         <td>{{{readableUUID uuidFull}}}</td>
-        <td>{{lastSeenMillis}}</td>
     </tr>
     {{/each}}
 </table>
