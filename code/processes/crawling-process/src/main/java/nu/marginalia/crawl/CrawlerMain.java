@@ -151,12 +151,20 @@ public class CrawlerMain {
             logger.info("Shutting down the pool, waiting for tasks to complete...");
 
             pool.shutDown();
-            do {
-                System.out.println("Waiting for pool to terminate... " + pool.getActiveCount() + " remaining");
-            } while (!pool.awaitTermination(60, TimeUnit.SECONDS));
+            int activePoolCount = pool.getActiveCount();
+
+            while (!pool.awaitTermination(5, TimeUnit.HOURS)) {
+                int newActivePoolCount = pool.getActiveCount();
+                if (activePoolCount == newActivePoolCount) {
+                    logger.warn("Aborting the last {} jobs of the crawl, taking too long", newActivePoolCount);
+                    pool.shutDownNow();
+                } else {
+                    activePoolCount = newActivePoolCount;
+                }
+            }
         }
         catch (Exception ex) {
-
+            logger.warn("Exception in crawler", ex);
         }
         finally {
             heartbeat.shutDown();
