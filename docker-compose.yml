@@ -9,7 +9,8 @@ x-svc: &service
   networks:
     - wmsa
   depends_on:
-    - mariadb
+    mariadb:
+        condition: service_healthy
 
 x-p1: &partition-1
   env_file:
@@ -44,7 +45,8 @@ x-p2: &partition-2
   networks:
     - wmsa
   depends_on:
-    - mariadb
+    mariadb:
+      condition: service_healthy
   environment:
     - "WMSA_SERVICE_NODE=2"
 
@@ -164,6 +166,12 @@ services:
     command: ['mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
     ports:
       - "127.0.0.1:3306:3306/tcp"
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u $$MARIADB_USER --password=$$MARIADB_PASSWORD
+      start_period: 5s
+      interval: 5s
+      timeout: 5s
+      retries: 60
     volumes:
       - db:/var/lib/mysql
       - "./code/common/db/src/main/resources/sql/current/:/docker-entrypoint-initdb.d/"
