@@ -60,7 +60,7 @@ public class IndexResultValuator {
 
         final long docId = UrlIdCodec.removeRank(id);
 
-        if (!termMetadataForDocuments.testCoherence(docId, searchTerms.coherences))
+        if (!termMetadataForDocuments.testCoherence(id, searchTerms.coherences))
             return null;
 
         long docMetadata = metadataService.getDocumentMetadata(docId);
