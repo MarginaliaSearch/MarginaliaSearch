@@ -54,11 +54,12 @@ public abstract class RecordActorPrototype implements ActorPrototype {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public List<ActorStateInstance> asStateList() {
 
         List<ActorStateInstance> steps = new ArrayList<>();
 
-        // Look for member classes that instantiate ActorStep in this class and all parent classes up until
+        // Look for member classes that implement ActorStep in this class and all parent classes up until
         // RecordActorPrototype
 
         for (Class<?> clazz = getClass();
@@ -68,48 +69,63 @@ public abstract class RecordActorPrototype implements ActorPrototype {
             for (var stepClass : clazz.getDeclaredClasses()) {
                 if (!ActorStep.class.isAssignableFrom(stepClass))
                     continue;
-                steps.add(new StepInstance((Class<? extends ActorStep>) stepClass));
+
+                steps.add(new StateInstance((Class<? extends ActorStep>) stepClass));
             }
         }
 
         return steps;
     }
 
-    private class StepInstance implements ActorStateInstance {
+    private class StateInstance implements ActorStateInstance {
         private final Class<? extends ActorStep> stepClass;
 
-        public StepInstance(Class<? extends ActorStep> stepClass) {
+        public StateInstance(Class<? extends ActorStep> stepClass) {
             this.stepClass = stepClass;
         }
+
         @Override
         public String name() {
-            return stepClass.getSimpleName().toUpperCase();
+            return functionName(stepClass);
         }
 
         @Override
         public ActorStateTransition next(String message) {
+            ActorStep nextState;
+
             try {
-                ActorStep dest;
-                if (null == message || message.isBlank()) {
-                    dest = stepClass.getDeclaredConstructor().newInstance();
-                } else {
-                    dest = gson.fromJson(message, stepClass);
-                }
-                dest = transition(dest);
-                return new ActorStateTransition(
-                        dest.getClass().getSimpleName().toUpperCase(),
-                        gson.toJson(dest)
-                );
+                var currentState = constructState(message);
+
+                nextState = transition(currentState);
             } catch (ActorControlFlowException cfe) {
-                return new ActorStateTransition(
-                        Error.class.getSimpleName(),
-                        gson.toJson(new Error(cfe.getMessage()))
-                );
+                // This exception allows custom error messages
+                nextState = new Error(cfe.getMessage());
             } catch (Exception ex) {
                 logger.error("Error in transition handler, decoding  {}:'{}'", stepClass.getSimpleName(), message);
                 logger.error("Exception was", ex);
 
-                return new ActorStateTransition("ERROR", ex.getMessage());
+                nextState = new Error(ex.getMessage());
+            }
+
+            return encodeTransition(nextState);
+        }
+
+        private ActorStateTransition encodeTransition(ActorStep nextState) {
+            return new ActorStateTransition(
+                    functionName(nextState.getClass()),
+                    gson.toJson(nextState)
+            );
+        }
+
+        private String functionName(Class<? extends ActorStep> functionClass) {
+            return functionClass.getSimpleName().toUpperCase();
+        }
+
+        private ActorStep constructState(String message) throws ReflectiveOperationException {
+            if (null == message || message.isBlank()) {
+                return stepClass.getDeclaredConstructor().newInstance();
+            } else {
+                return gson.fromJson(message, stepClass);
             }
         }
 
