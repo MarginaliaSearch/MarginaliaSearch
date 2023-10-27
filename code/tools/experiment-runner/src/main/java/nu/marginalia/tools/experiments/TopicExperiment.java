@@ -10,13 +10,14 @@ import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.tools.Experiment;
+import nu.marginalia.tools.LegacyExperiment;
 import nu.marginalia.topic.RecipeDetector;
 import nu.marginalia.topic.TextileCraftDetector;
 import nu.marginalia.topic.WoodworkingDetector;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
-public class TopicExperiment extends Experiment {
+public class TopicExperiment extends LegacyExperiment {
 
     RecipeDetector recipeDetector = new RecipeDetector();
     WoodworkingDetector woodworkingDetector = new WoodworkingDetector();

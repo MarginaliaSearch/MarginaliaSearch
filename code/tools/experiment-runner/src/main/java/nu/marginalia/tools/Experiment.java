@@ -1,7 +1,9 @@
 package nu.marginalia.tools;
 
+import nu.marginalia.crawling.io.SerializableCrawlDataStream;
 import nu.marginalia.crawling.model.CrawledDomain;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -14,21 +16,10 @@ public abstract class Experiment {
         }
     };
 
-    /** The experiment processes the domain here.
-     *
-     * @return true to continue, false to terminate.
-     */
-    public abstract boolean process(CrawledDomain domain);
+    public abstract boolean process(SerializableCrawlDataStream dataStream) throws IOException;
 
     /** Invoked after all domains are processed
      *
      */
     public void onFinish() {}
-
-    public boolean isInterested(String domainName) {
-        if (domains.isEmpty())
-            return true;
-
-        return domains.contains(domainName.toLowerCase());
-    }
 }

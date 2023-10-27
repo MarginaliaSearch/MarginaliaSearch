@@ -5,9 +5,10 @@ import nu.marginalia.converting.processor.DomainProcessor;
 import nu.marginalia.converting.processor.plugin.specialization.BlogSpecialization;
 import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.tools.Experiment;
+import nu.marginalia.tools.LegacyExperiment;
 import org.jsoup.Jsoup;
 
-public class DebugConverterExperiment extends Experiment {
+public class DebugConverterExperiment extends LegacyExperiment {
 
 
     private final DomainProcessor domainProcessor;

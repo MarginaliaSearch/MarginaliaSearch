@@ -10,6 +10,7 @@ import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.term_frequency_dict.TermFrequencyDict;
 import nu.marginalia.tools.Experiment;
+import nu.marginalia.tools.LegacyExperiment;
 import org.jsoup.Jsoup;
 
 import java.io.BufferedOutputStream;
@@ -19,7 +20,7 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class SentenceStatisticsExperiment extends Experiment {
+public class SentenceStatisticsExperiment extends LegacyExperiment {
 
     SentenceExtractor se = new SentenceExtractor(WmsaHome.getLanguageModels());
     DocumentKeywordExtractor documentKeywordExtractor = new DocumentKeywordExtractor(new TermFrequencyDict(WmsaHome.getLanguageModels()));
