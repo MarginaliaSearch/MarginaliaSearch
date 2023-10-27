@@ -54,7 +54,7 @@ class SubjectLikeKeywordsTest {
                 dld);
 
         Set<String> actual = keywords.getReps().stream().map(rep -> rep.word).collect(Collectors.toSet());
-        Set<String> expected = Set.of("caesar", "republic", "authoritarian_reforms", "senate", "pompey", "reforms", "government_of_the_republic");
+        Set<String> expected = Set.of("republic", "authoritarian_reforms", "political_alliance_that", "power_as_populares", "caesar", "reforms", "populares", "senate", "sole_power_after", "pompey", "civil_wars", "wars", "governmental_reforms", "government_of_the_republic");
 
         assertEquals(Collections.emptySet(), Sets.symmetricDifference(actual, expected));
     }
