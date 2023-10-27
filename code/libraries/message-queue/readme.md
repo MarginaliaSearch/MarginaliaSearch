@@ -26,57 +26,40 @@ The inbox implementations as well as the outbox can be constructed via the `Mess
 
 The MQSM is a finite state machine that is backed by the message queue used to implement an Actor style paradigm. 
 
-The machine itself is defined through a class that extends the 'AbstractActorPrototype'; with state transitions and
+The machine itself is defined through a class that extends the 'RecordActorPrototype'; with state transitions and
 names defined as implementations.
 
 Example:
 
 ```java
-class ExampleStateMachine extends AbstractActorPrototype {
-    
-    @ActorState(name = "INITIAL", next="GREET")
-    public void initial() {
-        return "World"; // passed to the next state
-    }
+class ExampleStateMachine extends RecordActorPrototype {
 
-    @ActorState(name = "GREET", next="COUNT-TO-FIVE")
-    public void greet(String name) {
-        System.out.println("Hello " + name);
-    }
+    public record Initial() implements ActorStep {}
+    public record Greet(String message) implements ActorStep {}
+    public record CountDown(int from) implements ActorStep {}
 
-    @ActorState(name = "COUNT-TO-FIVE", next="END")
-    public void countToFive(Integer value) {
-        // value is passed from the previous state, since greet didn't pass a value,
-        // null will be the default.
-        
-        if (null == value) {
-            // jumps to the current state with a value of 0
-            transition("COUNT-TO-FIVE", 0);
-        }
-
-
-        System.out.println(++value);
-        if (value < 5) {
-            // Loops the current state until value = 5
-            transition("COUNT-TO-FIVE", value);
-        }
-        
-        if (value > 5) {
-            // demonstrates an error condition
-            error("Illegal value");
-        }
-        
-        // Default transition is to END
-    }
-    
-    @ActorState(name="END")
-    public void end() {
-        System.out.println("Done");
+    @Override
+    public ActorStep transition(ActorStep self) {
+        return switch (self) {
+            case Initial i -> new Greet("World");
+            case Greet(String name) -> {
+                System.out.println("Hello " + name + "!");
+                yield new CountDown(5);
+            }
+            case CountDown (int from) -> {
+                if (from > 0) {
+                    System.out.println(from);
+                    yield new CountDown(from - 1);
+                }
+                yield new End();
+            }
+            default -> new Error();
+        };
     }
 }
 ```
 
-Each method should ideally be idempotent, or at least be able to handle being called multiple times.
+Each step should ideally be idempotent, or at least be able to handle being called multiple times.
 It can not be assumed that the states are invoked within the same process, or even on the same machine,
 on the same day, etc.
 
@@ -90,6 +73,7 @@ To create an ActorStateMachine from the above class, the following code can be u
 ActorStateMachine actorStateMachine = new ActorStateMachine(
         messageQueueFactory, 
         actorInboxName, 
+        node,
         actorInstanceUUID,
         new ExampleStateMachine());
 
