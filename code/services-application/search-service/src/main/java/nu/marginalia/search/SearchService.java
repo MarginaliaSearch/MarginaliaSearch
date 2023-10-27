@@ -1,11 +1,9 @@
 package nu.marginalia.search;
 
-import com.google.gson.Gson;
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.client.Context;
-import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.search.svc.SearchFrontPageService;
 import nu.marginalia.search.svc.*;
 import nu.marginalia.service.server.*;
@@ -44,8 +42,6 @@ public class SearchService extends Service {
         Spark.staticFiles.expireTime(600);
 
         Spark.get("/search", searchQueryService::pathSearch);
-
-        Gson gson = GsonFactory.get();
 
         Spark.get("/public/search", searchQueryService::pathSearch);
         Spark.get("/public/", frontPageService::render);
@@ -87,7 +83,5 @@ public class SearchService extends Service {
 
         return "";
     }
-
-
 
 }
