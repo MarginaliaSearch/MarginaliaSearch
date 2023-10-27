@@ -48,7 +48,6 @@ public class SearchService extends Service {
         Gson gson = GsonFactory.get();
 
         Spark.get("/public/search", searchQueryService::pathSearch);
-        Spark.get("/public/site-search/:site/*", this::siteSearchRedir);
         Spark.get("/public/", frontPageService::render);
         Spark.get("/public/news.xml", frontPageService::renderNewsFeed);
         Spark.get("/public/:resource", this::serveStatic);
@@ -57,9 +56,8 @@ public class SearchService extends Service {
 
         Spark.get("/public/site/flag-site/:domainId", flagSiteService::flagSiteForm);
         Spark.post("/public/site/flag-site/:domainId", flagSiteService::flagSiteAction);
-
-        Spark.get("/site-search/:site/*", this::siteSearchRedir);
-
+        Spark.get("/public/site-search/:site/*", this::siteSearchRedir);
+        Spark.get("/public/site/:site", this::siteSearchRedir);
 
         Spark.exception(Exception.class, (e,p,q) -> {
             logger.error("Error during processing", e);
@@ -77,14 +75,17 @@ public class SearchService extends Service {
 
     private Object siteSearchRedir(Request request, Response response) {
         final String site = request.params("site");
-        final String queryRaw = request.splat()[0];
+        final String searchTerms;
 
-        final String query = URLEncoder.encode(String.format("%s site:%s", queryRaw, site), StandardCharsets.UTF_8);
+        if (request.splat().length == 0) searchTerms = "";
+        else searchTerms = request.splat()[0];
+
+        final String query = URLEncoder.encode(String.format("%s site:%s", searchTerms, site), StandardCharsets.UTF_8).trim();
         final String profile = request.queryParamOrDefault("profile", "yolo");
 
         response.redirect(websiteUrl.withPath("search?query="+query+"&profile="+profile));
 
-        return null;
+        return "";
     }
 
 
