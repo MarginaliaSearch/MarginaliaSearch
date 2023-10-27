@@ -9,11 +9,9 @@ bootstrap this directory structure.
 While the system is designed to run bare metal in production,
 for local development, you're strongly encouraged to use docker
 or podman. These are a bit of a pain to install, but if you follow
-[this guide](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository) 
-you're on the right track.
+[this guide](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository) you're on the right track.
 
-The system requires JDK21+, and 
-uses preview features.
+The system requires JDK21+, and uses preview features.
 
 ## Set up
 To go from a clean check out of the git repo to a running search engine,
@@ -91,14 +89,12 @@ work on most machines.
 Bring the system online if it isn't (see step 4), then go to the operator's
 GUI (see step 5).  
 
-* Go to `Storage`
-* Go to `Crawl Data`
-* Find the data set you want to process and click `[Info]`
-* Click `[Process and load]`
+* Go to `Node 1 -> Storage -> Crawl Data`
+* Hit the toggle to set your crawl data to be active
+* Go to `Actions -> Process Crawl Data -> [Trigger Reprocessing]`
 
 This will take anywhere between a few minutes to a few hours depending on which
-data set you downloaded.  You can monitor the progress from the `Overview` tab
-under `Processes`.
+data set you downloaded.  You can monitor the progress from the `Overview` tab.
 
 First the CONVERTER is expected to run; this will process the data into a format 
 that can easily be inserted into the database and index.
