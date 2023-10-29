@@ -14,6 +14,7 @@
             </PatternLayout>
             <SizeBasedTriggeringPolicy size="10MB" />
             <Filters>
+                <MarkerFilter marker="PROCESS" onMatch="DENY" onMismatch="NEUTRAL" />
                 <MarkerFilter marker="QUERY" onMatch="DENY" onMismatch="NEUTRAL" />
                 <MarkerFilter marker="HTTP" onMatch="DENY" onMismatch="NEUTRAL" />
             </Filters>
