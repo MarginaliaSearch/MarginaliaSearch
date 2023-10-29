@@ -96,7 +96,7 @@
                     <form method="post" action="/nodes/{{node.id}}/storage/{{storage.id}}/delete" onsubmit="return confirm('Confirm deletion of {{storage.path}}')">
                         <tr>
                             <td>Delete this data</td>
-                            <td><button class="btn btn-primary" type="submit">Delete</button></td>
+                            <td><button class="btn btn-danger" type="submit">Delete</button></td>
                         </tr>
                     </form>
                 {{/if}}

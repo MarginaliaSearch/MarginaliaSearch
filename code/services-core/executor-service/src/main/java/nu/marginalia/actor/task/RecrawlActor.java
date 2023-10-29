@@ -25,7 +25,6 @@ public class RecrawlActor extends RecordActorPrototype {
     private final MqOutbox mqCrawlerOutbox;
     private final FileStorageService storageService;
     private final DomainListRefreshService refreshService;
-    private final Gson gson;
     private final ActorProcessWatcher processWatcher;
 
 
@@ -81,7 +80,6 @@ public class RecrawlActor extends RecordActorPrototype {
         this.mqCrawlerOutbox = processOutboxes.getCrawlerOutbox();
         this.storageService = storageService;
         this.refreshService = refreshService;
-        this.gson = gson;
     }
 
 }

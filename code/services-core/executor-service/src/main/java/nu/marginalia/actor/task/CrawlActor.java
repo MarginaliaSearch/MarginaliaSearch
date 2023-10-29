@@ -26,7 +26,6 @@ public class CrawlActor extends RecordActorPrototype {
 
     private final MqOutbox mqCrawlerOutbox;
     private final FileStorageService storageService;
-    private final Gson gson;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final ActorProcessWatcher processWatcher;
@@ -84,7 +83,6 @@ public class CrawlActor extends RecordActorPrototype {
         super(gson);
         this.mqCrawlerOutbox = processOutboxes.getCrawlerOutbox();
         this.storageService = storageService;
-        this.gson = gson;
         this.processWatcher = processWatcher;
     }
 

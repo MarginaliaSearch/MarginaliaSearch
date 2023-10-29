@@ -104,6 +104,13 @@
                     </tr>
                 {{/each}}
             {{/each}}
+            {{#unless storage}}
+                <tr>
+                    <td align="center" class="mb-3">
+                        There is nothing here!
+                    </td>
+                </tr>
+            {{/unless}}
         </table>
         <script language="javascript">
             function setActive(fileId) {
@@ -113,15 +120,15 @@
             window.location.href=window.location.href;
         }
         xhr.send();
-    }
-    function setArchived(fileId) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", "/nodes/{{node.id}}/storage/"+fileId+"/disable");
-        xhr.onload = () => {
-            window.location.href=window.location.href;
         }
-        xhr.send();
-    }
+        function setArchived(fileId) {
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/nodes/{{node.id}}/storage/"+fileId+"/disable");
+            xhr.onload = () => {
+                window.location.href=window.location.href;
+            }
+            xhr.send();
+        }
         </script>
 
         {{#if view.specs}}
@@ -132,6 +139,7 @@
                to be able to specify which domains to crawl with more control.
             </p>
             <p>The <em>ACTIVE</em> status does nothing for crawl specs.</p>
+            <p><a href="new-specs">Create New Crawl Spec</p>
             </div>
         {{/if}}
         {{#if view.crawl}}
