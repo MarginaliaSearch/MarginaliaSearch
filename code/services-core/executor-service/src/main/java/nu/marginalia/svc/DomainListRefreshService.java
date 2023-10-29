@@ -51,12 +51,11 @@ public class DomainListRefreshService {
 
             // Case 1: The domains are in the table, but have no affinity defined
             for (var domain : domainsAll) {
-                update.setString(1, domain.toLowerCase());
-                update.setInt(2, nodeId);
+                update.setInt(1, nodeId);
+                update.setString(2, domain.toLowerCase());
                 update.addBatch();
             }
             update.executeBatch();
-
 
             // Case 2: The domains are missing form the table
             for (var domain : domainsAll) {
@@ -69,6 +68,10 @@ public class DomainListRefreshService {
             insert.executeBatch();
 
             cleanCrawlQueue(conn);
+
+            if (!conn.getAutoCommit()) {
+                conn.commit();
+            }
         }
         catch (Exception ex) {
             logger.warn("Failed to insert domains", ex);
