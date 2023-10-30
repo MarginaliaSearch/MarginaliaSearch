@@ -227,9 +227,9 @@ public class CrawlerRetreiver {
                 continue;
 
 
-            if (recrawled > 10
+            if (recrawled > 5
              && retained > 0.9 * recrawled
-             && Math.random() < 0.75)
+             && Math.random() < 0.9)
             {
                 // Since it looks like most of these documents haven't changed,
                 // we'll load the documents directly; but we do this in a random
