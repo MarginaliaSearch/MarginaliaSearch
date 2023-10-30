@@ -149,7 +149,8 @@ public class CrawlerRetreiver {
 
         while (!crawlFrontier.isEmpty()
             && !crawlFrontier.isCrawlDepthReached()
-            && errorCount < MAX_ERRORS)
+            && errorCount < MAX_ERRORS
+            && !Thread.interrupted())
         {
             var top = crawlFrontier.takeNextUrl();
 
