@@ -16,7 +16,7 @@ public interface LongArraySearch extends LongArrayBase {
             if (val > key) break;
         }
 
-        return encodeSearchMiss(pos - 1);
+        return encodeSearchMiss(1, pos - 1);
     }
 
     default long linearSearchUpperBound(long key, long fromIndex, long toIndex) {
@@ -35,10 +35,10 @@ public interface LongArraySearch extends LongArrayBase {
             long val = get(pos);
 
             if (val == key) return pos;
-            if (val > key) return encodeSearchMiss(pos);
+            if (val > key) return encodeSearchMiss(sz, pos);
         }
 
-        return encodeSearchMiss(toIndex - sz);
+        return encodeSearchMiss(sz, toIndex - sz);
     }
 
     default long binarySearch(long key, long fromIndex, long toIndex) {
@@ -80,10 +80,10 @@ public interface LongArraySearch extends LongArrayBase {
             long val = get(fromIndex);
 
             if (val == key) return fromIndex;
-            if (val > key) return encodeSearchMiss(fromIndex);
+            if (val > key) return encodeSearchMiss(sz, fromIndex);
         }
 
-        return encodeSearchMiss(toIndex - sz);
+        return encodeSearchMiss(sz, toIndex - sz);
     }
 
 
@@ -253,11 +253,11 @@ public interface LongArraySearch extends LongArrayBase {
 
     }
 
-    static long encodeSearchMiss(long value) {
-        return -1 - value;
+    static long encodeSearchMiss(int entrySize, long value) {
+        return -entrySize - Math.max(0, value);
     }
 
-    static long decodeSearchMiss(long value) {
-        return -value - 1;
+    static long decodeSearchMiss(int entrySize, long value) {
+        return -value - entrySize;
     }
 }

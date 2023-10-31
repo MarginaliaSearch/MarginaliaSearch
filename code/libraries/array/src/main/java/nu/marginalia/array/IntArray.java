@@ -6,11 +6,13 @@ import nu.marginalia.array.algo.IntArraySearch;
 import nu.marginalia.array.algo.IntArraySort;
 import nu.marginalia.array.algo.IntArrayTransformations;
 import nu.marginalia.array.delegate.ShiftedIntArray;
-import nu.marginalia.array.page.IntArrayPage;
-import nu.marginalia.array.page.PagingIntArray;
+import nu.marginalia.array.delegate.ShiftedLongArray;
+import nu.marginalia.array.page.SegmentIntArray;
+import nu.marginalia.array.page.SegmentLongArray;
 import nu.marginalia.array.scheme.ArrayPartitioningScheme;
 
 import java.io.IOException;
+import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -23,35 +25,13 @@ public interface IntArray extends IntArrayBase, IntArrayTransformations, IntArra
     int MAX_CONTINUOUS_SIZE = Integer.MAX_VALUE/WORD_SIZE - 16;
 
     static IntArray allocate(long size) {
-        if (size < MAX_CONTINUOUS_SIZE) {
-            return IntArrayPage.onHeap((int) size);
-        }
-
-        return PagingIntArray.newOnHeap(DEFAULT_PARTITIONING_SCHEME, size);
+        return SegmentIntArray.onHeap(Arena.ofShared(), size);
     }
 
-    static IntArray mmapRead(Path path) throws IOException {
-        long sizeBytes = Files.size(path);
-
-        if (sizeBytes < MAX_CONTINUOUS_SIZE) {
-            return IntArrayPage.fromMmapReadOnly(path, 0, (int) sizeBytes / 4);
-        }
-
-        return PagingIntArray.mapFileReadOnly(DEFAULT_PARTITIONING_SCHEME, path);
-    }
-
-    static IntArray mmapForWriting(Path path) throws IOException {
-        return PagingIntArray.mapFileReadWrite(DEFAULT_PARTITIONING_SCHEME, path);
-    }
-
-    static IntArray mmapForWriting(Path path, long size) throws IOException {
-        return PagingIntArray.mapFileReadWrite(DEFAULT_PARTITIONING_SCHEME, path, size);
-    }
-
-    default ShiftedIntArray shifted(long offset) {
+    default IntArray shifted(long offset) {
         return new ShiftedIntArray(offset, this);
     }
-    default ShiftedIntArray range(long start, long end) {
+    default IntArray range(long start, long end) {
         return new ShiftedIntArray(start, end, this);
     }
 

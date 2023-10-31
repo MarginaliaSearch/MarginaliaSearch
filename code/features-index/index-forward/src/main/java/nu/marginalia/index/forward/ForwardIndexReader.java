@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.Executors;
 
 import static nu.marginalia.index.forward.ForwardIndexParameters.*;
 
@@ -52,6 +53,9 @@ public class ForwardIndexReader {
         data = loadData(dataFile);
     }
 
+    public void selfTest() {
+
+    }
     private static TLongIntHashMap loadIds(Path idsFile) throws IOException {
         try (var idsArray = LongArrayFactory.mmapForReadingShared(idsFile)) {
             assert idsArray.size() < Integer.MAX_VALUE;

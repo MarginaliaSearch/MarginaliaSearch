@@ -10,21 +10,19 @@ import nu.marginalia.client.exception.LocalException;
 import nu.marginalia.client.exception.NetworkException;
 import nu.marginalia.client.exception.RemoteException;
 import nu.marginalia.client.exception.RouteNotConfiguredException;
+import nu.marginalia.client.route.RouteProvider;
+import nu.marginalia.client.route.ServiceRoutes;
+import nu.marginalia.service.descriptor.ServiceDescriptor;
 import okhttp3.*;
-import org.apache.http.HttpHost;
 import org.apache.logging.log4j.ThreadContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import spark.utils.IOUtils;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.OutputStream;
 import java.net.ConnectException;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import java.util.zip.GZIPOutputStream;
 
 public abstract class AbstractClient implements AutoCloseable {
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -34,20 +32,23 @@ public abstract class AbstractClient implements AutoCloseable {
     private final OkHttpClient client;
 
     private boolean quiet;
-    private String serviceRoute;
+    final ServiceRoutes serviceRoutes;
     private int timeout;
 
-
-    private volatile boolean alive;
-    private final Thread livenessMonitor;
+    private final EndpointLivenessMonitor livenessMonitor;
 
     public void setTimeout(int timeout) {
         this.timeout = timeout;
     }
 
-    public AbstractClient(String host, int port, int timeout, Supplier<Gson> gsonProvider) {
-        logger.info("Creating client for {}[{}:{}]", getClass().getSimpleName(), host, port);
+    public AbstractClient(ServiceDescriptor service, int timeout, Supplier<Gson> gsonProvider) {
+        this(new RouteProvider(service), timeout, gsonProvider);
+    }
 
+    public AbstractClient(RouteProvider routeProvider,
+                          int timeout,
+                          Supplier<Gson> gsonProvider)
+    {
         this.gson = gsonProvider.get();
 
         this.timeout = timeout;
@@ -57,7 +58,8 @@ public abstract class AbstractClient implements AutoCloseable {
                 .retryOnConnectionFailure(true)
                 .followRedirects(true)
                 .build();
-        serviceRoute = new HttpHost(host, port).toURI();
+
+        serviceRoutes = new ServiceRoutes(routeProvider);
 
         RxJavaPlugins.setErrorHandler(e -> {
             if (e.getMessage() == null) {
@@ -67,52 +69,14 @@ public abstract class AbstractClient implements AutoCloseable {
                 logger.error("Error {}: {}", e.getClass().getSimpleName(), e.getMessage());
             }
         });
-        livenessMonitor = new Thread(this::monitorLiveness, host + "-monitor");
-        livenessMonitor.setDaemon(true);
-        livenessMonitor.start();
 
         logger.info("Finished creating client for {}", getClass().getSimpleName());
-    }
-
-    public void setServiceRoute(String hostname, int port) {
-        scheduler().abort();
-        serviceRoute = new HttpHost(hostname, port).toURI();
-    }
-
-    protected String getServiceRoute() {
-        return serviceRoute;
-    }
-
-    @SneakyThrows
-    private void monitorLiveness() {
-        Thread.sleep(100); // Wait for initialization
-        try {
-            for (; ; ) {
-                try {
-                    alive = isResponsive();
-                }
-                //
-                catch (Exception ex) {
-                    logger.warn("Oops", ex);
-                }
-                synchronized (livenessMonitor) {
-                    if (alive) {
-                        livenessMonitor.wait(1000);
-                    }
-                }
-                if (!alive) {
-                    Thread.sleep(100);
-                }
-            }
-        }
-        catch (InterruptedException ex) {
-            // nothing to see here
-        }
+        livenessMonitor = new EndpointLivenessMonitor(this);
     }
 
     @Override
     public void close() {
-        livenessMonitor.interrupt();
+        livenessMonitor.close();
         scheduler().close();
     }
 
@@ -124,25 +88,11 @@ public abstract class AbstractClient implements AutoCloseable {
 
     public abstract String name();
 
-    public synchronized boolean isResponsive() {
-        Context ctx = Context.internal("ping");
-        var req = ctx.paint(new Request.Builder()).url(serviceRoute + "/internal/ping").get().build();
-
-        return Observable.just(client.newCall(req))
-                .subscribeOn(scheduler().get())
-                .map(Call::execute)
-                .map(this::getResponseStatus)
-                .flatMap(line -> validateStatus(line, req).timeout(5000, TimeUnit.SECONDS).onErrorReturn(e -> 500))
-                .onErrorReturn(error -> 500)
-                .map(HttpStatusCode::new)
-                .map(HttpStatusCode::isGood)
-                .blockingFirst();
-    }
 
     public synchronized boolean isAccepting() {
         Context ctx = Context.internal("ready");
 
-        var req = ctx.paint(new Request.Builder()).url(serviceRoute + "/internal/ready").get().build();
+        var req = ctx.paint(new Request.Builder()).url(serviceRoutes.get(0) + "/internal/ready").get().build();
 
         return Observable.just(client.newCall(req))
                 .subscribeOn(scheduler().get())
@@ -156,14 +106,31 @@ public abstract class AbstractClient implements AutoCloseable {
                 .blockingFirst();
     }
 
-    @SneakyThrows
-    protected synchronized Observable<HttpStatusCode> post(Context ctx, String endpoint, Object data) {
+    public synchronized boolean isResponsive(int node) {
+        Context ctx = Context.internal("ping");
+        var req = ctx.paint(new Request.Builder()).url(serviceRoutes.get(node) + "/internal/ping").get().build();
+        return Observable.just(client.newCall(req))
+                .subscribeOn(scheduler().get())
+                .map(Call::execute)
+                .map(AbstractClient.this::getResponseStatus)
+                .flatMap(line -> validateStatus(line, req).timeout(5000, TimeUnit.SECONDS).onErrorReturn(e -> 500))
+                .onErrorReturn(error -> 500)
+                .map(HttpStatusCode::new)
+                .map(HttpStatusCode::isGood)
+                .blockingFirst();
+    }
 
-        ensureAlive();
+    @SneakyThrows
+    protected synchronized Observable<HttpStatusCode> post(Context ctx,
+                                                           int node,
+                                                           String endpoint,
+                                                           Object data) {
+
+        ensureAlive(node);
 
         RequestBody body = RequestBody.create(json(data), MediaType.parse("application/json; charset=utf-8"));
 
-        var req = ctx.paint(new Request.Builder()).url(serviceRoute + endpoint).post(body).build();
+        var req = ctx.paint(new Request.Builder()).url(serviceRoutes.get(node) + endpoint).post(body).build();
 
         return Observable
                 .just(client.newCall(req))
@@ -180,17 +147,17 @@ public abstract class AbstractClient implements AutoCloseable {
     }
 
     @SneakyThrows
-    protected synchronized Observable<HttpStatusCode> post(Context ctx, String endpoint, GeneratedMessageV3 data) {
+    protected synchronized Observable<HttpStatusCode> post(Context ctx, int node, String endpoint, GeneratedMessageV3 data) {
 
-        ensureAlive();
+        ensureAlive(node);
 
         RequestBody body = RequestBody.create(data.toByteArray(), MediaType.parse("application/protobuf"));
 
-        var req = ctx.paint(new Request.Builder()).url(serviceRoute + endpoint).post(body).build();
+        var req = ctx.paint(new Request.Builder()).url(serviceRoutes.get(node) + endpoint).post(body).build();
         var call = client.newCall(req);
 
         logInbound(call);
-        ThreadContext.put("outbound-request", serviceRoute + endpoint);
+        ThreadContext.put("outbound-request", serviceRoutes.get(node) + endpoint);
         try (var rsp = call.execute()) {
             logOutbound(rsp);
             int code = rsp.code();
@@ -204,12 +171,12 @@ public abstract class AbstractClient implements AutoCloseable {
 
 
     @SneakyThrows
-    protected synchronized <T> Observable<T> postGet(Context ctx, String endpoint, Object data, Class<T> returnType) {
+    protected synchronized <T> Observable<T> postGet(Context ctx, int node, String endpoint, Object data, Class<T> returnType) {
 
-        ensureAlive();
+        ensureAlive(node);
 
         RequestBody body = RequestBody.create(json(data), MediaType.parse("application/json"));
-        var req = ctx.paint(new Request.Builder()).url(serviceRoute + endpoint).post(body).build();
+        var req = ctx.paint(new Request.Builder()).url(serviceRoutes.get(node) + endpoint).post(body).build();
 
         return Observable.just(client.newCall(req))
                 .subscribeOn(scheduler().get())
@@ -223,18 +190,18 @@ public abstract class AbstractClient implements AutoCloseable {
                 .doFinally(() -> ThreadContext.remove("outbound-request"));
     }
 
-    protected synchronized Observable<HttpStatusCode> post(Context ctx, String endpoint, String data, MediaType mediaType) {
-        ensureAlive();
+    protected synchronized Observable<HttpStatusCode> post(Context ctx, int node, String endpoint, String data, MediaType mediaType) {
+        ensureAlive(node);
 
         var body = RequestBody.create(data, mediaType);
 
-        var req = ctx.paint(new Request.Builder()).url(serviceRoute + endpoint).post(body).build();
+        var req = ctx.paint(new Request.Builder()).url(serviceRoutes.get(node) + endpoint).post(body).build();
         var call = client.newCall(req);
 
 
         return Observable.just(call)
                 .map((c) -> {
-                    ThreadContext.put(CONTEXT_OUTBOUND_REQUEST, serviceRoute + endpoint);
+                    ThreadContext.put(CONTEXT_OUTBOUND_REQUEST, serviceRoutes.get(node) + endpoint);
                     return c;
                 })
                 .subscribeOn(scheduler().get())
@@ -249,10 +216,10 @@ public abstract class AbstractClient implements AutoCloseable {
                 .doFinally(() -> ThreadContext.remove("outbound-request"));
     }
 
-    protected synchronized <T> Observable<T> get(Context ctx, String endpoint, Class<T> type) {
-        ensureAlive();
+    protected synchronized <T> Observable<T> get(Context ctx, int node, String endpoint, Class<T> type) {
+        ensureAlive(node);
 
-        var req = ctx.paint(new Request.Builder()).url(serviceRoute + endpoint).get().build();
+        var req = ctx.paint(new Request.Builder()).url(serviceRoutes.get(node) + endpoint).get().build();
 
         return Observable.just(client.newCall(req))
                 .subscribeOn(scheduler().get())
@@ -266,11 +233,28 @@ public abstract class AbstractClient implements AutoCloseable {
                 .doFinally(() -> ThreadContext.remove("outbound-request"));
     }
 
-    @SuppressWarnings("unchecked")
-    protected synchronized Observable<String> get(Context ctx, String endpoint) {
-        ensureAlive();
+    protected synchronized Observable<Integer> get(Context ctx, int node, String endpoint, OutputStream outputStream) {
+        ensureAlive(node);
 
-        var req = ctx.paint(new Request.Builder()).url(serviceRoute + endpoint).get().build();
+        var req = ctx.paint(new Request.Builder()).url(serviceRoutes.get(node) + endpoint).get().build();
+
+        return Observable.just(client.newCall(req))
+                .subscribeOn(scheduler().get())
+                .map(this::logInbound)
+                .map(Call::execute)
+                .map(this::logOutbound)
+                .map(rsp -> validateResponseStatus(rsp, req, 200))
+                .map(rsp -> copyToOutputStream(rsp, outputStream))
+                .retryWhen(this::retryHandler)
+                .timeout(timeout, TimeUnit.SECONDS)
+                .doFinally(() -> ThreadContext.remove("outbound-request"));
+    }
+
+    @SuppressWarnings("unchecked")
+    protected synchronized Observable<String> get(Context ctx, int node, String endpoint) {
+        ensureAlive(node);
+
+        var req = ctx.paint(new Request.Builder()).url(serviceRoutes.get(node) + endpoint).get().build();
 
         return Observable.just(client.newCall(req))
                 .subscribeOn(scheduler().get())
@@ -284,10 +268,10 @@ public abstract class AbstractClient implements AutoCloseable {
                 .doFinally(() -> ThreadContext.remove("outbound-request"));
     }
 
-    protected synchronized Observable<HttpStatusCode> delete(Context ctx, String endpoint) {
-        ensureAlive();
+    protected synchronized Observable<HttpStatusCode> delete(Context ctx, int node, String endpoint) {
+        ensureAlive(node);
 
-        var req = ctx.paint(new Request.Builder()).url(serviceRoute + endpoint).delete().build();
+        var req = ctx.paint(new Request.Builder()).url(serviceRoutes.get(node) + endpoint).delete().build();
 
         return Observable.just(client.newCall(req))
                 .subscribeOn(scheduler().get())
@@ -314,12 +298,13 @@ public abstract class AbstractClient implements AutoCloseable {
     }
 
     @SneakyThrows
-    private void ensureAlive() {
-        if (!isAlive()) {
-            wait(2000);
-            if (!isAlive()) {
-                throw new RouteNotConfiguredException("Route not configured for " + name() + " -- tried " + serviceRoute);
-            }
+    private void ensureAlive(int node) {
+        if (!isAlive(node)) {
+            var route = serviceRoutes.get(node);
+
+            logger.error("Route not configured for {}:{}", name(), node);
+
+            throw new RouteNotConfiguredException("Route not configured for " + name() + ":" + node + " -- tried " + route);
         }
     }
 
@@ -331,6 +316,7 @@ public abstract class AbstractClient implements AutoCloseable {
     private Observable<Throwable> filterRetryableExceptions(Throwable error) throws Throwable {
 
         synchronized (livenessMonitor) {
+            // Signal to the liveness monitor that we may have an outage
             livenessMonitor.notifyAll();
         }
 
@@ -386,6 +372,13 @@ public abstract class AbstractClient implements AutoCloseable {
 
 
     @SneakyThrows
+    private Integer copyToOutputStream(Response response, OutputStream outputStream) {
+        try (response) {
+            return IOUtils.copy(response.body().byteStream(), outputStream);
+        }
+    }
+
+    @SneakyThrows
     private <T> T getEntity(Response response, Class<T> clazz) {
         try (response) {
             return gson.fromJson(response.body().charStream(), clazz);
@@ -402,8 +395,8 @@ public abstract class AbstractClient implements AutoCloseable {
 
     }
 
-    public boolean isAlive() {
-        return alive;
+    public boolean isAlive(int node) {
+        return livenessMonitor.isAlive(node);
     }
 
     private String json(Object o) {

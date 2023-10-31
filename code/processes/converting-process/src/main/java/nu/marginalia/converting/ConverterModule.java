@@ -8,8 +8,6 @@ import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.model.gson.GsonFactory;
 
-import java.util.UUID;
-
 public class ConverterModule extends AbstractModule {
 
     public ConverterModule() {
@@ -17,8 +15,6 @@ public class ConverterModule extends AbstractModule {
 
     public void configure() {
         bind(Gson.class).toInstance(createGson());
-
-        bind(ProcessConfiguration.class).toInstance(new ProcessConfiguration("converter", 0, UUID.randomUUID()));
 
         bind(Double.class).annotatedWith(Names.named("min-document-quality")).toInstance(-15.);
         bind(Integer.class).annotatedWith(Names.named("min-document-length")).toInstance(250);

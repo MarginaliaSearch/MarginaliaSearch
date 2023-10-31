@@ -2,14 +2,17 @@ package nu.marginalia.query;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import io.grpc.ServerBuilder;
 import nu.marginalia.client.Context;
 import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.index.client.IndexClient;
 import nu.marginalia.index.client.model.query.SearchSpecification;
 import nu.marginalia.index.client.model.results.DecoratedSearchResultItem;
 import nu.marginalia.index.client.model.results.SearchResultSet;
+import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.query.model.QueryParams;
 import nu.marginalia.query.model.QueryResponse;
+import nu.marginalia.query.svc.NodeConfigurationWatcher;
 import nu.marginalia.query.svc.QueryFactory;
 import nu.marginalia.service.server.BaseServiceParams;
 import nu.marginalia.service.server.Service;
@@ -17,11 +20,15 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class QueryService extends Service {
 
     private final IndexClient indexClient;
+    private final NodeConfigurationWatcher nodeWatcher;
     private final Gson gson;
     private final DomainBlacklist blacklist;
     private final QueryFactory queryFactory;
@@ -29,15 +36,22 @@ public class QueryService extends Service {
     @Inject
     public QueryService(BaseServiceParams params,
                         IndexClient indexClient,
+                        NodeConfigurationWatcher nodeWatcher,
+                        QueryGRPCService queryGRPCService,
                         Gson gson,
                         DomainBlacklist blacklist,
-                        QueryFactory queryFactory)
-    {
+                        QueryFactory queryFactory) throws IOException {
         super(params);
         this.indexClient = indexClient;
+        this.nodeWatcher = nodeWatcher;
         this.gson = gson;
         this.blacklist = blacklist;
         this.queryFactory = queryFactory;
+
+        var grpcServer = ServerBuilder.forPort(params.configuration.port() + 1)
+                .addService(queryGRPCService)
+                .build();
+        grpcServer.start();
 
         Spark.post("/delegate/", this::delegateToIndex, gson::toJson);
         Spark.post("/search/", this::search, gson::toJson);
@@ -73,7 +87,9 @@ public class QueryService extends Service {
     }
 
     private SearchResultSet executeQuery(Context ctx, SearchSpecification query) {
-        return indexClient.query(ctx, query);
+        var nodes = nodeWatcher.getQueryNodes();
+
+        return indexClient.query(ctx, nodes, query);
     }
 
     private boolean isBlacklisted(DecoratedSearchResultItem item) {

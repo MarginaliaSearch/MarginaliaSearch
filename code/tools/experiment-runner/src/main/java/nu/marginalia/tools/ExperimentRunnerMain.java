@@ -3,15 +3,18 @@ package nu.marginalia.tools;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import nu.marginalia.converting.ConverterModule;
+import nu.marginalia.crawling.io.CrawledDomainReader;
+import nu.marginalia.crawling.model.CrawledDocument;
+import nu.marginalia.crawling.model.CrawledDomain;
+import nu.marginalia.crawling.model.SerializableCrawlData;
+import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.tools.experiments.*;
 import plan.CrawlPlanLoader;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class ExperimentRunnerMain {
 
@@ -21,6 +24,7 @@ public class ExperimentRunnerMain {
             "topic", TopicExperiment.class,
             "sentence-statistics", SentenceStatisticsExperiment.class,
             "site-statistics", SiteStatisticsExperiment.class,
+            "export-atags", ExportExternalLinksExperiment.class,
             "debug-converter", DebugConverterExperiment.class
     );
 
@@ -35,8 +39,6 @@ public class ExperimentRunnerMain {
             return;
         }
 
-        var plan = new CrawlPlanLoader().load(Path.of(args[0]));
-
         Injector injector = Guice.createInjector(
                 new DatabaseModule(),
                 new ConverterModule()
@@ -46,18 +48,17 @@ public class ExperimentRunnerMain {
 
         experiment.args(Arrays.copyOfRange(args, 2, args.length));
 
-        // FIXME: This is broken
-
-//        Map<String, String> idToDomain = new HashMap<>();
-//        for (var spec : plan.crawlingSpecificationIterable()) {
-//            idToDomain.put(spec.id, spec.domain);
-//        }
-//
-//        for (var domain : plan.domainsIterable(id -> experiment.isInterested(idToDomain.get(id)))) {
-//            experiment.process(domain);
-//        }
-//
-//        experiment.onFinish();
-
+        Path basePath = Path.of(args[0]);
+        var reader = new CrawledDomainReader();
+        for (var item : WorkLog.iterable(basePath.resolve("crawler.log"))) {
+            Path crawlDataPath = basePath.resolve(item.relPath());
+            try (var stream = reader.createDataStream(crawlDataPath)) {
+                experiment.process(stream);
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+        experiment.onFinish();
     }
 }

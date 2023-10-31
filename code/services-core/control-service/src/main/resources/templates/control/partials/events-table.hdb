@@ -1,6 +1,6 @@
-<h1>Events</h1>
+<h1 class="my-5">Events</h1>
 
-<table id="events">
+<table id="events" class="table">
     <tr>
         <th>Service Name</th>
         <th>Instance</th>
@@ -31,10 +31,7 @@
     {{#each events}}
     <tr>
         <td>{{serviceName}}</td>
-        <td title="{{instanceFull}}">
-            <span style="background-color: {{instanceColor}}" class="uuidPip">&nbsp;</span><span style="background-color: {{instanceColor2}}" class="uuidPip">&nbsp;</span>
-            {{instance}}
-        </td>
+        <td>{{{readableUUID instanceFull}}}</td>
         <td title="{{eventDateTime}}">{{eventTime}}</td>
         <td>{{eventType}}</td>
         <td>{{eventMessage}}</td>

@@ -1,8 +1,7 @@
 package nu.marginalia.array.algo;
 
 import nu.marginalia.array.IntArray;
-import nu.marginalia.array.page.IntArrayPage;
-import nu.marginalia.array.page.PagingIntArray;
+import nu.marginalia.array.LongArray;
 import nu.marginalia.array.scheme.PowerOf2PartitioningScheme;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,9 +19,9 @@ class IntArrayTransformationsTest {
 
     @BeforeEach
     public void setUp() {
-        basic = IntArrayPage.onHeap(size);
-        paged = PagingIntArray.newOnHeap(new PowerOf2PartitioningScheme(32), size);
-        shifted = IntArrayPage.onHeap(size + 30).shifted(30);
+        basic = IntArray.allocate(size);
+        paged = IntArray.allocate(size);
+        shifted = IntArray.allocate(size+30).shifted(30);
 
         for (int i = 0; i < basic.size(); i++) {
             basic.set(i, 3*i);

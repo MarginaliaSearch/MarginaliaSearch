@@ -15,6 +15,7 @@ public class SearchQueryParamFactory {
         SearchSubquery prototype =  new SearchSubquery();
         var profile = userParams.profile();
         profile.addTacitTerms(prototype);
+        userParams.jsSetting().addTacitTerms(prototype);
 
         return new QueryParams(
                 userParams.humanQuery(),

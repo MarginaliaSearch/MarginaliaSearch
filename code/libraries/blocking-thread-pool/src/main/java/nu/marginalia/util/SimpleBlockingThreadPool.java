@@ -3,6 +3,7 @@ package nu.marginalia.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -47,15 +48,19 @@ public class SimpleBlockingThreadPool {
         this.shutDown = true;
     }
 
-    public void shutDownNow()  {
+    public void shutDownNow() throws InterruptedException {
         this.shutDown = true;
+        tasks.clear();
         for (Thread worker : workers) {
             worker.interrupt();
+        }
+        for (Thread worker : workers) {
+            worker.join(Duration.ofMinutes(5));
         }
     }
 
     private void worker() {
-        while (!shutDown) {
+        while (!(tasks.isEmpty() && shutDown)) {
             try {
                 Task task = tasks.poll(1, TimeUnit.SECONDS);
                 if (task == null) {
@@ -89,6 +94,7 @@ public class SimpleBlockingThreadPool {
         final long start = System.currentTimeMillis();
         final long deadline = start + timeUnit.toMillis(i);
 
+        // Wait for termination
         for (var thread : workers) {
             if (!thread.isAlive())
                 continue;

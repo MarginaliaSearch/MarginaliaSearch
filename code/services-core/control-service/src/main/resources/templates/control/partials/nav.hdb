@@ -1,18 +1,34 @@
-<nav>
-    <ul>
-        <li><a href="/" title="System overview">Overview</a></li>
-        <li>Manage</li>
-        <li><a href="/api-keys" title="Create or remove API keys">API Keys</a></li>
-        <li><a href="/blacklist" title="Add or remove website sanctions">Blacklist</a></li>
-        <li><a href="/search-to-ban" title="Search function for easy blacklisting">Blacklist Search</a></li>
-        <li><a href="/complaints" title="View and act on user complaints">Complaints</a></li>
-        <li><a href="/review-random-domains" title="Review random domains list">Random Exploration</a></li>
-        <li>System</li>
-        <li><a href="/actions" title="Trigger system actions">Actions</a></li>
-        <li><a href="/storage" title="View file storage, trigger crawling and processing">Storage</a></li>
-        <li><a href="/events" title="View the event log">Events</a></li>
-        <li>Plumbing</li>
-        <li><a href="/actors" title="View and toggle system actors">Actors</a></li>
-        <li><a href="/message-queue" title="View or manipulate the system message queue">Message Queue</a></li>
-    </ul>
+
+<nav class="navbar navbar-expand-lg bg-body-tertiary">
+	<div class="container-fluid">
+		<a class="navbar-brand" href="#">Control</a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		  </button>
+	    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+	        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+				<li class="nav-item"><a class="nav-link" href="/">Overview</a></li>
+				<li class="nav-item dropdown">
+					<a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button"  aria-expanded="false">Application</a>
+					<ul class="dropdown-menu">
+						<li><a class="dropdown-item" href="/api-keys" title="Create or remove API keys">API Keys</a></li>
+						<li><a class="dropdown-item" href="/blacklist" title="Add or remove website sanctions">Blacklist</a></li>
+						<li><a class="dropdown-item" href="/search-to-ban" title="Search function for easy blacklisting">Blacklist Search</a></li>
+						<li><a class="dropdown-item" href="/complaints" title="View and act on user complaints">Complaints</a></li>
+						<li><a class="dropdown-item" href="/review-random-domains" title="Review random domains list">Random Exploration</a></li>
+					</ul>
+				</li>
+				<li class="nav-item dropdown">
+					<a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button"  aria-expanded="false">System</a>
+					<ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/nodes" title="View and configure index nodes">Nodes</a></li>
+                        <li><a class="dropdown-item" href="/datasets" title="View and update the data sets">Datasets</a></li>
+                        <li><a class="dropdown-item" href="/events" title="View the event log">Events</a></li>
+						<li><a class="dropdown-item" href="/message-queue" title="View or manipulate the system message queue">Message Queue</a></li>
+					</ul>
+				</li>
+
+	        </ul>
+	    </div>
+	</div>
 </nav>

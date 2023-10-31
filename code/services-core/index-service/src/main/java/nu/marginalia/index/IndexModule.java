@@ -4,8 +4,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import nu.marginalia.db.storage.FileStorageService;
-import nu.marginalia.db.storage.model.FileStorageType;
+import nu.marginalia.storage.FileStorageService;
+import nu.marginalia.IndexLocations;
 import nu.marginalia.index.config.RankingSettings;
 import nu.marginalia.WmsaHome;
 
@@ -30,9 +30,6 @@ public class IndexModule extends AbstractModule {
     @Singleton
     @Named("linkdb-file")
     public Path linkdbPath(FileStorageService storageService) throws SQLException {
-        return storageService
-                .getStorageByType(FileStorageType.LINKDB_LIVE)
-                .asPath()
-                .resolve("links.db");
+        return IndexLocations.getLinkdbLivePath(storageService).resolve("links.db");
     }
 }

@@ -2,99 +2,163 @@ x-svc: &service
   env_file:
     - "run/env/service.env"
   volumes:
-    - vol:/vol
-    - backup:/backup
     - conf:/wmsa/conf:ro
     - model:/wmsa/model
     - data:/wmsa/data
-    - dist:/dist
-    - samples:/samples
     - logs:/var/log/wmsa
   networks:
     - wmsa
   depends_on:
+    mariadb:
+        condition: service_healthy
+
+x-p1: &partition-1
+  env_file:
+    - "run/env/service.env"
+  volumes:
+    - conf:/wmsa/conf:ro
+    - model:/wmsa/model
+    - data:/wmsa/data
+    - logs:/var/log/wmsa
+    - index-1:/idx
+    - work-1:/work
+    - backup-1:/backup
+    - samples-1:/storage
+  networks:
+    - wmsa
+  depends_on:
     - mariadb
+  environment:
+    - "WMSA_SERVICE_NODE=1"
+x-p2: &partition-2
+  env_file:
+    - "run/env/service.env"
+  volumes:
+    - conf:/wmsa/conf:ro
+    - model:/wmsa/model
+    - data:/wmsa/data
+    - logs:/var/log/wmsa
+    - index-2:/idx
+    - work-2:/work
+    - backup-2:/backup
+    - samples-2:/storage
+  networks:
+    - wmsa
+  depends_on:
+    mariadb:
+      condition: service_healthy
+  environment:
+    - "WMSA_SERVICE_NODE=2"
 
 services:
-  index-service:
-    <<: *service
+  index-service-1:
+    <<: *partition-1
     image: "marginalia.nu/index-service"
-    container_name: "index-service"
-    ports:
-      - "127.0.0.1:5021:5021/tcp"
-      - "127.0.0.1:4021:5000"
-      - "127.0.0.1:7021:4000"
-  search-service:
-    <<: *service
-    image: "marginalia.nu/search-service"
-    container_name: "search-service"
-    ports:
-      - "127.0.0.1:5023:5023"
-      - "127.0.0.1:4023:5000"
-      - "127.0.0.1:7023:4000"
-    depends_on:
-      - index-service
-  assistant-service:
-    <<: *service
-    image: "marginalia.nu/assistant-service"
-    container_name: "assistant-service"
-    ports:
-      - "127.0.0.1:5025:5025"
-      - "127.0.0.1:4025:5000"
-      - "127.0.0.1:7025:4000"
-    depends_on:
-      - mariadb
-  api-service:
-    <<: *service
-    image: "marginalia.nu/api-service"
-    container_name: "api-service"
-    ports:
-      - "127.0.0.1:5004:5004"
-      - "127.0.0.1:4004:5000"
-      - "127.0.0.1:7004:4000"
-    depends_on:
-      - mariadb
+    container_name: "index-service-1"
+  executor-service-1:
+    <<: *partition-1
+    image: "marginalia.nu/executor-service"
+    container_name: "executor-service-1"
+  index-service-2:
+    <<: *partition-2
+    image: "marginalia.nu/index-service"
+    container_name: "index-service-2"
+  executor-service-2:
+    <<: *partition-2
+    image: "marginalia.nu/executor-service"
+    container_name: "executor-service-2"
   query-service:
     <<: *service
     image: "marginalia.nu/query-service"
     container_name: "query-service"
-    ports:
-      - "127.0.0.1:5022:5022"
-      - "127.0.0.1:4022:5000"
-      - "127.0.0.1:7022:4000"
-    depends_on:
-      - mariadb
+  search-service:
+    <<: *service
+    image: "marginalia.nu/search-service"
+    container_name: "search-service"
+    expose:
+    - 80
+    labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.search-service.rule=PathPrefix(`/`)"
+    - "traefik.http.routers.search-service.entrypoints=search"
+    - "traefik.http.routers.search-service.middlewares=add-xpublic"
+    - "traefik.http.routers.search-service.middlewares=add-public"
+    - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
+    - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
+  assistant-service:
+    <<: *service
+    image: "marginalia.nu/assistant-service"
+    container_name: "assistant-service"
+    expose:
+      - 80
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.assistant-service-screenshot.rule=PathPrefix(`/screenshot`)"
+      - "traefik.http.routers.assistant-service-screenshot.entrypoints=search"
+      - "traefik.http.routers.assistant-service-screenshot.middlewares=add-xpublic"
+      - "traefik.http.routers.assistant-service-screenshot.middlewares=add-public"
+      - "traefik.http.routers.assistant-service-suggest.rule=PathPrefix(`/suggest`)"
+      - "traefik.http.routers.assistant-service-suggest.entrypoints=search"
+      - "traefik.http.routers.assistant-service-suggest.middlewares=add-xpublic"
+      - "traefik.http.routers.assistant-service-suggest.middlewares=add-public"
+      - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
+      - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
+  api-service:
+    <<: *service
+    image: "marginalia.nu/api-service"
+    container_name: "api-service"
+    expose:
+    - "80"
+    labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.api-service.rule=PathPrefix(`/`)"
+    - "traefik.http.routers.api-service.entrypoints=api"
+    - "traefik.http.routers.api-service.middlewares=add-xpublic"
+    - "traefik.http.routers.api-service.middlewares=add-public"
+    - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
+    - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
   dating-service:
     <<: *service
     image: "marginalia.nu/dating-service"
     container_name: "dating-service"
-    ports:
-      - "127.0.0.1:5070:5070"
-      - "127.0.0.1:4070:5000"
-      - "127.0.0.1:7070:4000"
-    depends_on:
-      - mariadb
+    expose:
+      - 80
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dating-service.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.dating-service.entrypoints=dating"
+      - "traefik.http.routers.dating-service.middlewares=add-xpublic"
+      - "traefik.http.routers.dating-service.middlewares=add-public"
+      - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
+      - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
   explorer-service:
     <<: *service
     image: "marginalia.nu/explorer-service"
     container_name: "explorer-service"
-    ports:
-      - "127.0.0.1:5071:5071"
-      - "127.0.0.1:4071:5000"
-      - "127.0.0.1:7071:4000"
-    depends_on:
-      - mariadb
+    expose:
+    - 80
+    labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.explorer-service.rule=PathPrefix(`/`)"
+    - "traefik.http.routers.explorer-service.entrypoints=explore"
+    - "traefik.http.routers.explorer-service.middlewares=add-xpublic"
+    - "traefik.http.routers.explorer-service.middlewares=add-public"
+    - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
+    - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
   control-service:
     <<: *service
     image: "marginalia.nu/control-service"
     container_name: "control-service"
-    ports:
-      - "127.0.0.1:5090:5090"
-      - "127.0.0.1:4090:5000"
-      - "127.0.0.1:7090:4000"
-      - "127.0.0.1:7099:4001"
-    depends_on:
-      - mariadb
+    expose:
+    - 80
+    labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.control-service.rule=PathPrefix(`/`)"
+    - "traefik.http.routers.control-service.entrypoints=control"
+    - "traefik.http.routers.control-service.middlewares=add-xpublic"
+    - "traefik.http.routers.control-service.middlewares=add-public"
+    - "traefik.http.middlewares.add-xpublic.headers.customrequestheaders.X-Public=1"
+    - "traefik.http.middlewares.add-public.addprefix.prefix=/public"
   mariadb:
     image: "mariadb:lts"
     container_name: "mariadb"
@@ -102,24 +166,41 @@ services:
     command: ['mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
     ports:
       - "127.0.0.1:3306:3306/tcp"
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u $$MARIADB_USER --password=$$MARIADB_PASSWORD
+      start_period: 5s
+      interval: 5s
+      timeout: 5s
+      retries: 60
     volumes:
       - db:/var/lib/mysql
       - "./code/common/db/src/main/resources/sql/current/:/docker-entrypoint-initdb.d/"
     networks:
       - wmsa
-  nginx-gw:
-    image: "nginx"
-    container_name: "nginx-gw"
+  traefik:
+    image: "traefik:v2.10"
+    container_name: "traefik"
+    command:
+      #- "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.search.address=:80"
+      - "--entrypoints.control.address=:81"
+      - "--entrypoints.api.address=:82"
+      - "--entrypoints.dating.address=:83"
+      - "--entrypoints.explore.address=:84"
     ports:
       - "127.0.0.1:8080:80"
       - "127.0.0.1:8081:81"
       - "127.0.0.1:8082:82"
+      - "127.0.0.1:8083:83"
+      - "127.0.0.1:8084:84"
+      - "127.0.0.1:8090:8080"
     volumes:
-      - "./run/nginx-site.conf:/etc/nginx/conf.d/default.conf"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
     networks:
       - wmsa
-    depends_on:
-      - search-service
 networks:
   wmsa:
 volumes:
@@ -129,18 +210,6 @@ volumes:
       type: none
       o: bind
       device: run/db
-  vol:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: run/vol
-  backup:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: run/backup
   logs:
     driver: local
     driver_opts:
@@ -165,15 +234,51 @@ volumes:
       type: none
       o: bind
       device: run/data
-  dist:
+  samples-1:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: run/dist
-  samples:
+      device: run/node-1/samples
+  index-1:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: run/samples
+      device: run/node-1/index
+  work-1:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: run/node-1/work
+  backup-1:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: run/node-1/backup
+  samples-2:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: run/node-2/samples
+  index-2:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: run/node-2/index
+  work-2:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: run/node-2/work
+  backup-2:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: run/node-2/backup

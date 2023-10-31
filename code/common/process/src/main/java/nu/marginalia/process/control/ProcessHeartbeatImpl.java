@@ -18,6 +18,7 @@ public class ProcessHeartbeatImpl implements ProcessHeartbeat {
     private final Logger logger = LoggerFactory.getLogger(ProcessHeartbeatImpl.class);
     private final String processName;
     private final String processBase;
+    private final int node;
     private final String instanceUUID;
     @org.jetbrains.annotations.NotNull
     private final ProcessConfiguration configuration;
@@ -37,6 +38,7 @@ public class ProcessHeartbeatImpl implements ProcessHeartbeat {
     {
         this.processName = configuration.processName() + ":" + configuration.node();
         this.processBase = configuration.processName();
+        this.node = configuration.node();
         this.configuration = configuration;
         this.dataSource = dataSource;
 
@@ -115,8 +117,8 @@ public class ProcessHeartbeatImpl implements ProcessHeartbeat {
         try (var connection = dataSource.getConnection()) {
             try (var stmt = connection.prepareStatement(
                     """
-                        INSERT INTO PROCESS_HEARTBEAT (PROCESS_NAME, PROCESS_BASE, INSTANCE, HEARTBEAT_TIME, STATUS)
-                        VALUES (?, ?, ?, CURRENT_TIMESTAMP(6), 'STARTING')
+                        INSERT INTO PROCESS_HEARTBEAT (PROCESS_NAME, PROCESS_BASE, NODE, INSTANCE, HEARTBEAT_TIME, STATUS)
+                        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP(6), 'STARTING')
                         ON DUPLICATE KEY UPDATE
                             INSTANCE = ?,
                             HEARTBEAT_TIME = CURRENT_TIMESTAMP(6),
@@ -126,8 +128,9 @@ public class ProcessHeartbeatImpl implements ProcessHeartbeat {
             {
                 stmt.setString(1, processName);
                 stmt.setString(2, processBase);
-                stmt.setString(3, instanceUUID);
+                stmt.setInt(3, node);
                 stmt.setString(4, instanceUUID);
+                stmt.setString(5, instanceUUID);
                 stmt.executeUpdate();
             }
         }

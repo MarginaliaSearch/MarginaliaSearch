@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Control Service</title>
+    {{> control/partials/head-includes }}
+</head>
+<body>
+{{> control/partials/nav}}
+<div class="container">
+    <h1 class="my-5">Blacklist</h1>
+
+    <p>
+        The blacklist is a list of sanctioned domains that will not be
+        crawled, indexed, or returned from the search results.
+    </p>
+
+    <div class="container">
+        <div class="row gx-5">
+            <div class="border p-2 m-2 col">
+                <h2>Add Sanction</h2>
+                <form method="post" action="/blacklist?act=add" onsubmit="return confirm('Confirm addition')">
+                    <div class="mb-3">
+                        <label for="add-domain" class="form-label">Domain: </label>
+                        <input type="text" id="add-domain" class="form-control" name="domain" placeholder="Domain" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="comment" class="form-label">Comment: </label>
+                        <input type="text" id="comment" name="comment" class="form-control" value="Manually Added" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add</button>
+                </form>
+            </div>
+            <div class="border p-2 m-2 col">
+                <h2>Remove Sanction</h2>
+                <form method="post" action="/blacklist?act=del">
+                    <div class="mb-3">
+                        <label for="rm-domain" class="form-label">Domain: </label>
+                        <input class="form-control" type="text" id="rm-domain" name="domain" placeholder="Domain" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Remove</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="mt-5">
+    <h1>Recent Additions</h1>
+    <table class="table">
+        <tr>
+            <th>Domain</th>
+            <th>Comment</th>
+        </tr>
+        {{#each blacklist}}
+        <tr>
+            <td>{{domain}}</td>
+            <td>{{comment}}</td>
+        </tr>
+        {{/each}}
+    </table>
+    </div>
+</div>
+
+</body>
+{{> control/partials/foot-includes }}
+</html>

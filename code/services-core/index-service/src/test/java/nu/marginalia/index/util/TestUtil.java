@@ -15,7 +15,7 @@ public class TestUtil {
                 if (files != null) {
                     Arrays.stream(files).map(File::toPath).forEach(TestUtil::clearTempDir);
                 }
-                System.out.println("Deleting " + path);
+                System.out.println("Deleting " + f);
                 f.delete();
             }
         }

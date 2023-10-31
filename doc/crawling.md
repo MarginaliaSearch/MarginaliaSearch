@@ -31,19 +31,19 @@ This can be done by editing the file `${WMSA_HOME}/conf/user-agent`.
 ## Setup
 
 Ensure that the system is running and go to https://localhost:8081.  See the documentation in [run/](../run/) for more information.
-By default the system is configured to store data in `run/samples`.  (!!!FIXME: How do you change this now?!!!)
+By default the system is configured to store data in `run/node-1/samples`. 
 
 
 ### Specifications
 
-A crawl specification file is a compressed JSON file with each domain name to crawl, as well as
-known URLs for each domain.  These are created in the `storage -> specifications` view in the operator's gui.
+While a running search engine can use the link database to figure out which websites to visit, a clean
+system does not know of any links.  To bootstrap a crawl, a crawl specification can be created.  
 
-To bootstrap the system, you need a list of known domains.  This is just a text file with one domain name per line,
-with blanklines and comments starting with `#` ignored.
+You need a list of known domains.  This is just a text file with one domain name per line,
+with blanklines and comments starting with `#` ignored.  Make it available over HTTP(S).
 
-Make it available over HTTP(S) and select `Download a list of domains from a URL` in the `Create New Specification`
-form.  Make sure to give this specification a good description, as it will follow you around for  a while.
+Go to ??? and select `Download a list of domains from a URL` in the `Create New Specification`
+form.  Make sure to give this specification a good description, as it will follow you around for a while.
 
 ## Crawling
 

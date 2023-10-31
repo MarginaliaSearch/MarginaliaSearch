@@ -7,8 +7,10 @@ import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.processor.DocumentProcessor;
 import nu.marginalia.converting.processor.DomainProcessor;
 import nu.marginalia.converting.processor.logic.dom.DomPruningFilter;
+import nu.marginalia.crawling.io.SerializableCrawlDataStream;
 import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.language.sentence.SentenceExtractor;
+import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.tools.Experiment;
 import nu.marginalia.topic.RecipeDetector;
@@ -30,13 +32,18 @@ public class SiteStatisticsExperiment extends Experiment {
     }
 
     @Override
-    public boolean process(CrawledDomain domain) {
-//        var ret = domainProcessor.process(domain);
-//
-//        ret.documents.stream()
-//                .filter(ProcessedDocument::isProcessedFully)
-//                .sorted(Comparator.comparing(doc -> doc.details.metadata.topology()))
-//                .forEach(doc -> System.out.println(doc.url + ":" + doc.details.metadata));
+    public boolean process(SerializableCrawlDataStream stream) {
+        var ret = domainProcessor.process(stream);
+
+        ret.documents.stream()
+                .filter(ProcessedDocument::isProcessedFully)
+                .sorted(Comparator.comparing(doc -> doc.details.metadata.topology()))
+                .flatMap(doc -> doc.details.feedLinks.stream())
+                .map(EdgeUrl::toString)
+                .min(Comparator.comparing(String::length))
+                .ifPresent(url -> {
+                    System.out.printf("\"%s\",\"%s\"\n", ret.domain, url);
+                });
 
         return true;
     }

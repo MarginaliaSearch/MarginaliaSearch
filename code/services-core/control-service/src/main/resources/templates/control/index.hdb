@@ -4,19 +4,22 @@
     <title>Control Service</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="/style.css" />
+    {{> control/partials/head-includes }}
 </head>
 <body>
   {{> control/partials/nav}}
-  <section>
-      {{> control/partials/services-table }}
+  <div class="container">
+      <h1 class="my-5">Overview</h1>
+      {{> control/partials/nodes-table }}
       {{> control/partials/processes-table}}
+      {{> control/partials/services-table }}
       {{> control/partials/events-table-summary }}
-  </section>
+  </div>
 </body>
-<script src="/refresh.js"></script>
+{{> control/partials/foot-includes }}
 <script>
-    window.setInterval(() => {
-        refresh(["processes", "jobs", "actors", "services", "events"]);
-    }, 2000);
+window.setInterval(() => {
+refresh(["processes", "services", "jobs", "events"]);
+}, 2000);
 </script>
 </html>

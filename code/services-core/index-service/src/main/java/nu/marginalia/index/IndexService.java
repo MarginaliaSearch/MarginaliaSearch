@@ -2,15 +2,15 @@ package nu.marginalia.index;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import io.grpc.ServerBuilder;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import lombok.SneakyThrows;
-import nu.marginalia.db.storage.FileStorageService;
-import nu.marginalia.db.storage.model.FileStorageType;
+import nu.marginalia.IndexLocations;
+import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.index.client.IndexMqEndpoints;
 import nu.marginalia.index.index.SearchIndex;
 import nu.marginalia.index.svc.IndexOpsService;
 import nu.marginalia.index.svc.IndexQueryService;
-import nu.marginalia.index.svc.IndexSearchSetsService;
 import nu.marginalia.linkdb.LinkdbReader;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.service.control.ServiceEventLog;
@@ -24,6 +24,7 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
@@ -50,8 +51,7 @@ public class IndexService extends Service {
                         SearchIndex searchIndex,
                         FileStorageService fileStorageService,
                         LinkdbReader linkdbReader,
-                        ServiceEventLog eventLog)
-    {
+                        ServiceEventLog eventLog) throws IOException {
         super(params);
 
         this.opsService = opsService;
@@ -63,6 +63,11 @@ public class IndexService extends Service {
         final Gson gson = GsonFactory.get();
 
         this.init = params.initialization;
+
+        var grpcServer = ServerBuilder.forPort(params.configuration.port() + 1)
+                .addService(indexQueryService)
+                .build();
+        grpcServer.start();
 
         Spark.post("/search/", indexQueryService::search, gson::toJson);
 
@@ -97,8 +102,8 @@ public class IndexService extends Service {
     public void switchLinkdb(String unusedArg) {
         logger.info("Switching link database");
 
-        Path newPath = fileStorageService.getStorageByType(FileStorageType.LINKDB_STAGING)
-                .asPath()
+        Path newPath = IndexLocations
+                .getLinkdbWritePath(fileStorageService)
                 .resolve("links.db");
 
         if (Files.exists(newPath)) {

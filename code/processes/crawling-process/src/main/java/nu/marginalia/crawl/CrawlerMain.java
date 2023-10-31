@@ -4,14 +4,18 @@ import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import nu.marginalia.ProcessConfiguration;
+import nu.marginalia.ProcessConfigurationModule;
 import nu.marginalia.UserAgent;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
+import nu.marginalia.crawl.spec.CrawlSpecProvider;
+import nu.marginalia.crawl.spec.DbCrawlSpecProvider;
+import nu.marginalia.crawl.spec.ParquetCrawlSpecProvider;
 import nu.marginalia.crawling.io.CrawledDomainReader;
 import nu.marginalia.crawlspec.CrawlSpecFileNames;
-import nu.marginalia.db.storage.FileStorageService;
-import nu.marginalia.io.crawlspec.CrawlSpecRecordParquetFileReader;
+import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.model.crawlspec.CrawlSpecRecord;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
@@ -42,8 +46,6 @@ import static nu.marginalia.mqapi.ProcessInboxNames.CRAWLER_INBOX;
 public class CrawlerMain {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private Path crawlDataDir;
-
     private final ProcessHeartbeatImpl heartbeat;
     private final ConnectionPool connectionPool = new ConnectionPool(5, 10, TimeUnit.SECONDS);
 
@@ -53,7 +55,9 @@ public class CrawlerMain {
     private final UserAgent userAgent;
     private final MessageQueueFactory messageQueueFactory;
     private final FileStorageService fileStorageService;
+    private final DbCrawlSpecProvider dbCrawlSpecProvider;
     private final Gson gson;
+    private final int node;
     private final SimpleBlockingThreadPool pool;
 
     private final Map<String, String> processingIds = new ConcurrentHashMap<>();
@@ -70,12 +74,16 @@ public class CrawlerMain {
                        ProcessHeartbeatImpl heartbeat,
                        MessageQueueFactory messageQueueFactory,
                        FileStorageService fileStorageService,
+                       ProcessConfiguration processConfiguration,
+                       DbCrawlSpecProvider dbCrawlSpecProvider,
                        Gson gson) {
         this.heartbeat = heartbeat;
         this.userAgent = userAgent;
         this.messageQueueFactory = messageQueueFactory;
         this.fileStorageService = fileStorageService;
+        this.dbCrawlSpecProvider = dbCrawlSpecProvider;
         this.gson = gson;
+        this.node = processConfiguration.node();
 
         // maybe need to set -Xss for JVM to deal with this?
         pool = new SimpleBlockingThreadPool("CrawlerPool", CrawlLimiter.maxPoolSize, 1);
@@ -99,13 +107,14 @@ public class CrawlerMain {
 
         Injector injector = Guice.createInjector(
                 new CrawlerModule(),
+                new ProcessConfigurationModule("crawler"),
                 new DatabaseModule()
         );
         var crawler = injector.getInstance(CrawlerMain.class);
 
         var instructions = crawler.fetchInstructions();
         try {
-            crawler.run(instructions.crawlSpec, instructions.outputDir);
+            crawler.run(instructions.specProvider, instructions.outputDir);
             instructions.ok();
         }
         catch (Exception ex) {
@@ -119,32 +128,43 @@ public class CrawlerMain {
         System.exit(0);
     }
 
-    public void run(Path crawlSpec, Path outputDir) throws InterruptedException, IOException {
+    public void run(CrawlSpecProvider specProvider, Path outputDir) throws InterruptedException, IOException {
 
         heartbeat.start();
         try (WorkLog workLog = new WorkLog(outputDir.resolve("crawler.log"))) {
             // First a validation run to ensure the file is all good to parse
             logger.info("Validating JSON");
 
-            totalTasks = CrawlSpecRecordParquetFileReader.count(crawlSpec);
+            totalTasks = specProvider.totalCount();
 
-            logger.info("Let's go");
+            logger.info("Queued {} crawl tasks, let's go", totalTasks);
 
-            try (var specStream = CrawlSpecRecordParquetFileReader.stream(crawlSpec)) {
+            try (var specStream = specProvider.stream()) {
                 specStream
                         .takeWhile((e) -> abortMonitor.isAlive())
-                        .filter(e -> workLog.isJobFinished(e.domain))
+                        .filter(e -> !workLog.isJobFinished(e.domain))
                         .filter(e -> processingIds.put(e.domain, "") == null)
-                        .map(e -> new CrawlTask(e, workLog))
+                        .map(e -> new CrawlTask(e, outputDir, workLog))
                         .forEach(pool::submitQuietly);
             }
 
             logger.info("Shutting down the pool, waiting for tasks to complete...");
 
             pool.shutDown();
-            do {
-                System.out.println("Waiting for pool to terminate... " + pool.getActiveCount() + " remaining");
-            } while (!pool.awaitTermination(60, TimeUnit.SECONDS));
+            int activePoolCount = pool.getActiveCount();
+
+            while (!pool.awaitTermination(5, TimeUnit.HOURS)) {
+                int newActivePoolCount = pool.getActiveCount();
+                if (activePoolCount == newActivePoolCount) {
+                    logger.warn("Aborting the last {} jobs of the crawl, taking too long", newActivePoolCount);
+                    pool.shutDownNow();
+                } else {
+                    activePoolCount = newActivePoolCount;
+                }
+            }
+        }
+        catch (Exception ex) {
+            logger.warn("Exception in crawler", ex);
         }
         finally {
             heartbeat.shutDown();
@@ -158,10 +178,14 @@ public class CrawlerMain {
         private final String domain;
         private final String id;
 
+        private final Path outputDir;
         private final WorkLog workLog;
 
-        CrawlTask(CrawlSpecRecord specification, WorkLog workLog) {
+        CrawlTask(CrawlSpecRecord specification,
+                  Path outputDir,
+                  WorkLog workLog) {
             this.specification = specification;
+            this.outputDir = outputDir;
             this.workLog = workLog;
 
             this.domain = specification.domain;
@@ -175,7 +199,7 @@ public class CrawlerMain {
 
             HttpFetcher fetcher = new HttpFetcherImpl(userAgent.uaString(), dispatcher, connectionPool);
 
-            try (CrawledDomainWriter writer = new CrawledDomainWriter(crawlDataDir, domain, id);
+            try (CrawledDomainWriter writer = new CrawledDomainWriter(outputDir, domain, id);
                  CrawlDataReference reference = getReference())
             {
                 Thread.currentThread().setName("crawling:" + specification.domain);
@@ -200,7 +224,7 @@ public class CrawlerMain {
 
         private CrawlDataReference getReference() {
             try {
-                var dataStream = reader.createDataStream(crawlDataDir, domain, id);
+                var dataStream = reader.createDataStream(outputDir, domain, id);
                 return new CrawlDataReference(dataStream);
             } catch (IOException e) {
                 logger.debug("Failed to read previous crawl data for {}", specification.domain);
@@ -213,15 +237,15 @@ public class CrawlerMain {
 
 
     private static class CrawlRequest {
-        private final Path crawlSpec;
+        private final CrawlSpecProvider specProvider;
         private final Path outputDir;
         private final MqMessage message;
         private final MqSingleShotInbox inbox;
 
-        CrawlRequest(Path crawlSpec, Path outputDir, MqMessage message, MqSingleShotInbox inbox) {
+        CrawlRequest(CrawlSpecProvider specProvider, Path outputDir, MqMessage message, MqSingleShotInbox inbox) {
             this.message = message;
             this.inbox = inbox;
-            this.crawlSpec = crawlSpec;
+            this.specProvider = specProvider;
             this.outputDir = outputDir;
         }
 
@@ -237,7 +261,7 @@ public class CrawlerMain {
 
     private CrawlRequest fetchInstructions() throws Exception {
 
-        var inbox = messageQueueFactory.createSingleShotInbox(CRAWLER_INBOX, UUID.randomUUID());
+        var inbox = messageQueueFactory.createSingleShotInbox(CRAWLER_INBOX, node, UUID.randomUUID());
 
         logger.info("Waiting for instructions");
         var msgOpt = getMessage(inbox, nu.marginalia.mqapi.crawling.CrawlRequest.class.getSimpleName());
@@ -245,11 +269,20 @@ public class CrawlerMain {
 
         var request = gson.fromJson(msg.payload(), nu.marginalia.mqapi.crawling.CrawlRequest.class);
 
-        var specData = fileStorageService.getStorage(request.specStorage);
+        CrawlSpecProvider specProvider;
+
+        if (request.specStorage != null) {
+            var specData = fileStorageService.getStorage(request.specStorage);
+            specProvider = new ParquetCrawlSpecProvider(CrawlSpecFileNames.resolve(specData));
+        }
+        else {
+            specProvider = dbCrawlSpecProvider;
+        }
+
         var crawlData = fileStorageService.getStorage(request.crawlStorage);
 
         return new CrawlRequest(
-                CrawlSpecFileNames.resolve(specData),
+                specProvider,
                 crawlData.asPath(),
                 msg,
                 inbox);

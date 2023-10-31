@@ -34,9 +34,9 @@ public class ActorStateMachine {
     private volatile ExpectedMessage expectedMessage = ExpectedMessage.anyUnrelated();
 
 
-    private final ActorStateInstance errorState = new ActorStateFactory.ErrorStateInstance();
-    private final ActorStateInstance finalState = new ActorStateFactory.FinalState();
-    private final ActorStateInstance resumingState = new ActorStateFactory.ResumingState();
+    private final ActorStateInstance errorState = new ErrorState();
+    private final ActorStateInstance finalState = new FinalState();
+    private final ActorStateInstance resumingState = new ResumingState();
 
     private final List<BiConsumer<String, String>> stateChangeListeners = new ArrayList<>();
     private final Map<String, ActorStateInstance> allStates = new HashMap<>();
@@ -44,34 +44,21 @@ public class ActorStateMachine {
     private final boolean isDirectlyInitializable;
 
     public ActorStateMachine(MessageQueueFactory messageQueueFactory,
-                             String queueName,
+                             String fsmName,
+                             int node,
                              UUID instanceUUID,
                              ActorPrototype statePrototype)
     {
-        this.queueName = queueName;
+        this.queueName = fsmName;
 
-        smInbox = messageQueueFactory.createSynchronousInbox(queueName, instanceUUID);
-        smOutbox = messageQueueFactory.createOutbox(queueName, queueName+"//out", instanceUUID);
+        smInbox = messageQueueFactory.createSynchronousInbox(queueName, node, instanceUUID);
+        smOutbox = messageQueueFactory.createOutbox(queueName, node, queueName+"//out", node, instanceUUID);
 
         smInbox.subscribe(new StateEventSubscription());
 
         registerStates(List.of(errorState, finalState, resumingState));
         registerStates(statePrototype);
         isDirectlyInitializable = statePrototype.isDirectlyInitializable();
-
-        statePrototype.declaredStates().forEach((name, declaredState) -> {
-            if (!allStates.containsKey(name)) {
-                throw new IllegalArgumentException("State " + name + " is not defined in the state graph");
-            }
-            if (!allStates.containsKey(declaredState.next())) {
-                throw new IllegalArgumentException("State " + declaredState.next() + " is not defined in the state graph");
-            }
-            for (var state : declaredState.transitions()) {
-                if (!allStates.containsKey(state)) {
-                    throw new IllegalArgumentException("State " + state + " is not defined in the state graph");
-                }
-            }
-        });
 
         resume();
 
@@ -216,7 +203,10 @@ public class ActorStateMachine {
                                MqMessage message)
     {
         try {
-            if (resumeState.resumeBehavior().equals(ActorResumeBehavior.ERROR)) {
+            if (resumeState == null) {
+                // This is primarily something that happens during migrations
+                smOutbox.sendNotice(expectedMessage.id, "ERROR", "Resumption from unknown ACK'ed state " + message.function());
+            } else if (resumeState.resumeBehavior().equals(ActorResumeBehavior.ERROR)) {
                 // The message is acknowledged, but the state does not support resuming
                 smOutbox.sendNotice(expectedMessage.id, "ERROR", "Illegal resumption from ACK'ed state " + message.function());
             }
@@ -367,6 +357,72 @@ public class ActorStateMachine {
                 // Rethrowing this will flag the message as an error in the message queue
                 throw new RuntimeException("Error in state change listener", ex);
             }
+        }
+    }
+
+    private static class ErrorState implements ActorStateInstance {
+        @Override
+        public String name() {
+            return "ERROR";
+        }
+
+        @Override
+        public ActorStateTransition next(String message) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public ActorResumeBehavior resumeBehavior() {
+            return ActorResumeBehavior.RETRY;
+        }
+
+        @Override
+        public boolean isFinal() {
+            return true;
+        }
+    }
+
+    private static class FinalState implements ActorStateInstance {
+        @Override
+        public String name() {
+            return "END";
+        }
+
+        @Override
+        public ActorStateTransition next(String message) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public ActorResumeBehavior resumeBehavior() {
+            return ActorResumeBehavior.RETRY;
+        }
+
+        @Override
+        public boolean isFinal() {
+            return true;
+        }
+    }
+
+    private static class ResumingState implements ActorStateInstance {
+        @Override
+        public String name() {
+            return "RESUMING";
+        }
+
+        @Override
+        public ActorStateTransition next(String message) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public ActorResumeBehavior resumeBehavior() {
+            return ActorResumeBehavior.RETRY;
+        }
+
+        @Override
+        public boolean isFinal() {
+            return false;
         }
     }
 }

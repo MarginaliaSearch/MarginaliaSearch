@@ -2,7 +2,6 @@ package nu.marginalia;
 
 
 import nu.marginalia.service.ServiceHomeNotConfiguredException;
-import nu.marginalia.service.descriptor.HostsFile;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -56,19 +55,6 @@ public class WmsaHome {
                 .toString();
     }
 
-    public static HostsFile getHostsFile() {
-        Path hostsFile = getHomePath().resolve("conf/hosts");
-        if (Files.isRegularFile(hostsFile)) {
-            try {
-                return new HostsFile(hostsFile);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to load hosts file " + hostsFile, e);
-            }
-        }
-        else {
-            return new HostsFile();
-        }
-    }
 
     public static Path getAdsDefinition() {
         return getHomePath().resolve("data").resolve("adblock.txt");

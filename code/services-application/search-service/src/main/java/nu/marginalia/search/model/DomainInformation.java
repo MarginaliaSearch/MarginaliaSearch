@@ -16,6 +16,7 @@ public class DomainInformation {
     int pagesIndexed;
     int incomingLinks;
     int outboundLinks;
+    int nodeAffinity;
     double ranking;
 
     boolean suggestForCrawling;

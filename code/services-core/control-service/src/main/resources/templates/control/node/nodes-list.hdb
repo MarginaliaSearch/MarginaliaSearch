@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+{{> control/partials/head-includes }}
+<head><title>Control Service</title></head>
+<body>
+{{> control/partials/nav}}
+
+<div class="container">
+    <h1 class="my-3">Nodes</h1>
+
+    {{#unless nodes}}
+        It appears no nodes have been configured!  This is necessary before any index or executor services
+        can be started.  At least a single node needs to be configured to serve search queries.
+    {{/unless}}
+
+    {{#if nodes}}
+    <table class="table">
+        <tr>
+            <th>Node ID</th>
+            <th>Description</th>
+            <th>Accept Queries</th>
+        </tr>
+        {{#each nodes}}
+        <tr>
+            <td><a href="/nodes/{{node}}">node-{{node}}</a></td>
+            <td>{{description}}</td>
+            <td>{{acceptQueries}}</td>
+        </tr>
+        {{/each}}
+    </table>
+
+    <div class="m-5 p-5 border bg-light">
+        <h2 class="my-3">Index Nodes</h2>
+        <p>
+            Index nodes are processing units.  The search engine requires at least one, but more can be added
+            to spread the system load across multiple physical disks or even multiple servers.
+        </p>
+    </div>
+    {{/if}}
+
+</div>
+
+</body>
+{{> control/partials/foot-includes }}
+</html>

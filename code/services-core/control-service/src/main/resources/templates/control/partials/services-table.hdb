@@ -1,18 +1,13 @@
 <h1>Services</h1>
-<table id="services">
+<table id="services" class="table">
     <tr>
         <th>Service ID</th>
         <th>UUID</th>
-        <th>Last Seen (ms)</th>
     </tr>
     {{#each services}}
-    <tr class="{{#if isMissing}}missing{{/if}} {{#unless alive}}terminated{{/unless}}">
+    <tr class="{{#if isMissing}}table-danger{{/if}}">
         <td><a href="/services/{{serviceId}}">{{serviceId}}</a></td>
-        <td title="{{uuidFull}}">
-            <span style="background-color: {{uuidColor}}" class="uuidPip">&nbsp;</span><span style="background-color: {{uuidColor2}}" class="uuidPip">&nbsp;</span>
-            {{uuid}}
-        </td>
-        <td>{{lastSeenMillis}}</td>
+        <td>{{{readableUUID uuidFull}}}</td>
     </tr>
     {{/each}}
 </table>

@@ -2,8 +2,10 @@ package nu.marginalia.index.client.model.results;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
-@Builder @AllArgsConstructor
+@Builder @AllArgsConstructor @ToString @EqualsAndHashCode
 public class ResultRankingParameters {
 
     /** Tuning for BM25 when applied to full document matches */

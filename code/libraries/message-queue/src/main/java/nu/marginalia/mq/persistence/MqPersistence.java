@@ -1,6 +1,7 @@
 package nu.marginalia.mq.persistence;
 
 import com.google.common.collect.Lists;
+import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
@@ -21,10 +22,16 @@ import static nu.marginalia.mq.MqMessageState.NEW;
 @Singleton
 public class MqPersistence {
     private final HikariDataSource dataSource;
+    private final Gson gson;
 
-    @Inject
     public MqPersistence(HikariDataSource dataSource) {
         this.dataSource = dataSource;
+        this.gson = null;
+    }
+    @Inject
+    public MqPersistence(HikariDataSource dataSource, Gson gson) {
+        this.dataSource = dataSource;
+        this.gson = gson;
     }
 
     /**
@@ -483,5 +490,9 @@ public class MqPersistence {
                 conn.commit();
             return ret;
         }
+    }
+
+    public Gson getGson() {
+        return gson;
     }
 }

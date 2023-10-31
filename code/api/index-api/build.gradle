@@ -1,7 +1,7 @@
 plugins {
     id 'java'
 
-
+    id "com.google.protobuf" version "0.9.4"
     id 'jvm-test-suite'
 }
 
@@ -10,7 +10,13 @@ java {
         languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
-
+sourceSets {
+    main {
+        proto {
+            srcDir 'src/main/protobuf'
+        }
+    }
+}
 dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:config')
@@ -26,10 +32,32 @@ dependencies {
     implementation libs.guice
     implementation libs.rxjava
     implementation libs.protobuf
-    implementation libs.bundles.gson
     implementation libs.fastutil
+    implementation libs.javax.annotation
+    implementation libs.bundles.gson
+    implementation libs.bundles.grpc
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
     testImplementation libs.mockito
 }
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.0.2"
+    }
+    plugins {
+        grpc {
+            artifact = 'io.grpc:protoc-gen-grpc-java:1.1.2'
+        }
+    }
+
+    generateProtoTasks {
+        all().each { task ->
+            task.plugins {
+                grpc {}
+            }
+        }
+    }
+}
+

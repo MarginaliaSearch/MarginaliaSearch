@@ -1,6 +1,6 @@
 # Index Service
 
-The index service knows which document contains which keywords. 
+The index service is a partitioned service that knows which document contains which keywords. 
 
 ![image](../../../doc/diagram/index-service-map.svg)
 

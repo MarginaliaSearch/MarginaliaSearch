@@ -2,8 +2,6 @@ package nu.marginalia.array.algo;
 
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
-import nu.marginalia.array.page.LongArrayPage;
-import nu.marginalia.array.page.PagingLongArray;
 import nu.marginalia.array.scheme.PowerOf2PartitioningScheme;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,16 +15,14 @@ class LongArrayTransformations2Test {
     LongArray basic;
     LongArray paged;
     LongArray shifted;
-    LongArray segment;
 
     final int size = 1026;
 
     @BeforeEach
     public void setUp() {
-        basic = LongArrayPage.onHeap(size);
-        paged = PagingLongArray.newOnHeap(new PowerOf2PartitioningScheme(32), size);
-        shifted = LongArrayPage.onHeap(size + 30).shifted(30);
-        segment = LongArrayFactory.onHeapShared(size);
+        basic = LongArray.allocate(size);
+        paged = LongArray.allocate(size);
+        shifted = LongArray.allocate(size+30).shifted(30);
 
         long[] vals = new long[size];
         for (int i = 0; i < vals.length; i++) {
@@ -35,21 +31,18 @@ class LongArrayTransformations2Test {
         basic.set(0, vals);
         paged.set(0, vals);
         shifted.set(0, vals);
-        segment.set(0, vals);
     }
     @Test
     void forEach() {
         foreachTester(basic);
         foreachTester(paged);
         foreachTester(shifted);
-        foreachTester(segment);
     }
     @Test
     void transformEach() {
         transformTester(basic);
         transformTester(paged);
         transformTester(shifted);
-        transformTester(segment);
     }
 
     @Test
@@ -57,7 +50,6 @@ class LongArrayTransformations2Test {
         transformTesterIO(basic);
         transformTesterIO(paged);
         transformTesterIO(shifted);
-        transformTesterIO(segment);
     }
 
     private void transformTester(LongArray array) {

@@ -80,6 +80,7 @@ class EncyclopediaMarginaliaNuSideloaderTest {
 
         var sideloader = new EncyclopediaMarginaliaNuSideloader(
                 pathToDbFile,
+                "https://en.wikipedia.org/wiki/",
                 GsonFactory.get(),
                 processing
         );

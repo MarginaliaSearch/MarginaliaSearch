@@ -1,5 +1,6 @@
 package nu.marginalia.service.descriptor;
 
+import nu.marginalia.service.SearchServiceDescriptors;
 import nu.marginalia.service.id.ServiceId;
 
 import java.util.LinkedHashMap;
@@ -7,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/** @see SearchServiceDescriptors */
 public class ServiceDescriptors {
     private final Map<ServiceId, ServiceDescriptor> descriptorsAll = new LinkedHashMap<>();
 

@@ -34,8 +34,8 @@ public class SideloadSourceFactory {
         this.dirtreeSideloaderFactory = dirtreeSideloaderFactory;
     }
 
-    public SideloadSource sideloadEncyclopediaMarginaliaNu(Path pathToDbFile) throws SQLException {
-        return new EncyclopediaMarginaliaNuSideloader(pathToDbFile, gson, sideloaderProcessing);
+    public SideloadSource sideloadEncyclopediaMarginaliaNu(Path pathToDbFile, String baseUrl) throws SQLException {
+        return new EncyclopediaMarginaliaNuSideloader(pathToDbFile, baseUrl, gson, sideloaderProcessing);
     }
 
     public Collection<? extends SideloadSource> sideloadDirtree(Path pathToYamlFile) throws IOException {

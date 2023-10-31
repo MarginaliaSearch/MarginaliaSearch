@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Control Service</title>
+    {{> control/partials/head-includes }}
+</head>
+<body>
+  {{> control/partials/nav}}
+  <div class="container">
+  <h1 class="my-5">Data Sets</h1>
+  <form method="POST">
+      <div class="mb-3">
+          <label for="blogs-input" class="form-label">Blogs</label>
+          <input type="text" class="form-control" name="blogs" id="blogs-input" value="{{blogs}}" />
+          <div class="form-text">Inclusion in this set will modify how a website is processed,
+                                 making stronger assumptions that it is a blog.
+          </div>
+      </div>
+      <div class="mb-3">
+          <label for="new-domains-input" class="form-label">New Domains</label>
+          <input type="text" class="form-control" name="crawl" id="new-domains-input" value="{{crawl}}" />
+          <div class="form-text">This data set will be pulled every new crawl and new domains in the list
+                                 will be crawled automatically.</div>
+      </div>
+      <button class="btn btn-primary" type="submit">Update</button>
+  </form>
+
+  <div class="border m-3 p-3 bg-light">
+      <h2 class="mb-3">About</h2>
+      <p>
+          Data sets are configurable URLs from which a file is downloaded containing domain names or URLs.
+      </p>
+      <p>
+          These files are plain text, blank lines are ignored, and support comments with <code>#</code>.
+      </p>
+  </div>
+
+  </div>
+</body>
+{{> control/partials/foot-includes }}
+</html>

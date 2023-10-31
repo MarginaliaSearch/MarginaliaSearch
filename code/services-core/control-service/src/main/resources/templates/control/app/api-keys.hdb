@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Control Service</title>
+    {{> control/partials/head-includes }}
+</head>
+<body>
+{{> control/partials/nav}}
+<div class="container">
+    <h1 class="my-5">API Keys</h1>
+    <table id="apikeys" class="table table-rh-2">
+        <tr>
+            <th colspan="3">Key</th>
+            <th>&nbsp;</th>
+        </tr>
+        <tr>
+            <th>License</th>
+            <th>Name</th>
+            <th>Contact</th>
+            <th>Rate</th>
+        </tr>
+    {{#each apikeys}}
+        <tr>
+            <td colspan="3">{{licenseKey}}</td>
+            <td>
+                <form method="post" action="/api-keys/{{licenseKey}}/delete" onsubmit="return confirm('Confirm deletion of {{licenseKey}}')">
+                    <input type="submit" value="Delete" />
+                </form>
+            </td>
+        </tr>
+        <tr>
+            <td>{{license}}</td>
+            <td>{{name}}</td>
+            <td>{{email}}</td>
+            <td>{{rate}}</td>
+        </tr>
+    {{/each}}
+    </table>
+
+    <div class="border p-2 m-2 bg-light">
+    <h2>Add New</h2>
+    <form action="/api-keys" method="post">
+      <div class="mb-3">
+        <label for="name" class="form-label">Name</label>
+        <input class="form-control" type="text" name="name" id="name" />
+      </div>
+      <div class="mb-3">
+        <label for="email" class="form-label">Contact Email</label>
+        <input class="form-control" type="text" name="email" id="email" />
+     </div>
+     <div class="mb-3">
+        <label for="license" class="form-label">License</label>
+        <input class="form-control" type="text" name="license" id="license" value="CC-BY-NC-SA 4.0" />
+     </div>
+     <div class="mb-3">
+        <label for="rate" class="form-label">Rate</label>
+        <input class="form-control" type="text" name="rate" id="rate" value="15" />
+     </div>
+     <button type="submit" class="btn btn-primary">Create</button>
+    </form>
+    </div>
+</div>
+</body>
+{{> control/partials/foot-includes }}
+</html>

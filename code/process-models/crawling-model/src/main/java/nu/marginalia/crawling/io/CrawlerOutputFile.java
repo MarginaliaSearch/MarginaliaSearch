@@ -1,5 +1,7 @@
 package nu.marginalia.crawling.io;
 
+import org.apache.logging.log4j.util.Strings;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,6 +20,10 @@ public class CrawlerOutputFile {
     /** Return the Path to a file for the given id and name, creating the prerequisite
      * directory structure as necessary. */
     public static Path createOutputPath(Path base, String id, String name) throws IOException {
+        if (id.length() < 4) {
+            id = Strings.repeat("0", 4 - id.length()) + id;
+        }
+
         String first = id.substring(0, 2);
         String second = id.substring(2, 4);
 

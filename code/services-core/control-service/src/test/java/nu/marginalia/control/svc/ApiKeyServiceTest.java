@@ -2,7 +2,8 @@ package nu.marginalia.control.svc;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.control.model.ApiKeyModel;
+import nu.marginalia.control.app.model.ApiKeyModel;
+import nu.marginalia.control.app.svc.ApiKeyService;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.parallel.Execution;
 import org.testcontainers.containers.MariaDBContainer;
@@ -55,7 +56,7 @@ public class ApiKeyServiceTest {
 
     @Test
     void getKeys() {
-        var apiKeyService = new ApiKeyService(dataSource);
+        var apiKeyService = new ApiKeyService(dataSource, null);
         apiKeyService.addApiKey("public domain", "bob dobbs", "bob@dobbstown.com", 30);
         apiKeyService.addApiKey("public domain", "connie dobbs", "cdobbs@dobbstown.com", 15);
 
@@ -66,7 +67,7 @@ public class ApiKeyServiceTest {
 
     @Test
     void addApiKey() {
-        var apiKeyService = new ApiKeyService(dataSource);
+        var apiKeyService = new ApiKeyService(dataSource, null);
         apiKeyService.addApiKey("public domain", "bob dobbs", "bob@dobbstown.com", 30);
 
         var keys = apiKeyService.getApiKeys();
@@ -85,7 +86,7 @@ public class ApiKeyServiceTest {
 
     @Test
     void deleteApiKey() {
-        var apiKeyService = new ApiKeyService(dataSource);
+        var apiKeyService = new ApiKeyService(dataSource, null);
         apiKeyService.addApiKey("public domain", "bob dobbs", "bob@dobbstown.com", 30);
 
         List<ApiKeyModel> keys = apiKeyService.getApiKeys();

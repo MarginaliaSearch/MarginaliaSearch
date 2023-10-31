@@ -61,9 +61,9 @@ public class AbstractPagingArray<T extends BulkTransferArray<B>, B> {
         if (ret >= 0) {
             return partitioningScheme.toRealIndex(page, (int) ret);
         } else {
-            ret = decodeSearchMiss(ret);
+            ret = decodeSearchMiss(1, ret);
             ret = partitioningScheme.toRealIndex(page, (int) ret);
-            return encodeSearchMiss(ret);
+            return encodeSearchMiss(1, ret);
         }
     }
 

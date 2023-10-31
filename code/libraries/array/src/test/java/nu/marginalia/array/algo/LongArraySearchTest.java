@@ -3,7 +3,7 @@ package nu.marginalia.array.algo;
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
 import nu.marginalia.array.buffer.LongQueryBuffer;
-import nu.marginalia.array.page.PagingLongArray;
+import nu.marginalia.array.page.SegmentLongArray;
 import nu.marginalia.array.scheme.PowerOf2PartitioningScheme;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,7 +14,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class LongArraySearchTest {
 
     LongArray basicArray = LongArray.allocate(1024);
-    LongArray pagingArray = PagingLongArray.newOnHeap(new PowerOf2PartitioningScheme(64), 1024);
     LongArray segmentArray = LongArrayFactory.onHeapConfined(1024);
 
     LongArray shiftedArray = LongArray.allocate(1054).range(30, 1054);
@@ -23,7 +22,6 @@ class LongArraySearchTest {
     public void setUp() {
         for (int i = 0; i < basicArray.size(); i++) {
             basicArray.set(i, 3L*i);
-            pagingArray.set(i, 3L*i);
             shiftedArray.set(i, 3L*i);
             segmentArray.set(i, 3L*i);
         }
@@ -32,7 +30,6 @@ class LongArraySearchTest {
     @Test
     void linearSearch() {
         linearSearchTester(basicArray);
-        linearSearchTester(pagingArray);
         linearSearchTester(shiftedArray);
         linearSearchTester(segmentArray);
     }
@@ -40,7 +37,6 @@ class LongArraySearchTest {
     @Test
     void binarySearch() {
         binarySearchTester(basicArray);
-        binarySearchTester(pagingArray);
         binarySearchTester(shiftedArray);
         binarySearchTester(segmentArray);
     }
@@ -48,7 +44,6 @@ class LongArraySearchTest {
     @Test
     void binarySearchUpperBound() {
         binarySearchUpperBoundTester(basicArray);
-        binarySearchUpperBoundTester(pagingArray);
         binarySearchUpperBoundTester(shiftedArray);
         binarySearchUpperBoundTester(segmentArray);
     }
@@ -56,9 +51,18 @@ class LongArraySearchTest {
     @Test
     void linearSearchUpperBound() {
         linearSearchUpperBoundTester(basicArray);
-        linearSearchUpperBoundTester(pagingArray);
         linearSearchUpperBoundTester(shiftedArray);
         linearSearchUpperBoundTester(segmentArray);
+    }
+
+    @Test
+    public void testEmptyRange() {
+        assertTrue(segmentArray.binarySearchN(2, 0, 0, 0) < 0);
+        assertTrue(segmentArray.linearSearchN(2, 0, 0, 0) < 0);
+        assertTrue(segmentArray.binarySearch(0, 0, 0) < 0);
+        assertTrue(segmentArray.linearSearch(0, 0, 0) < 0);
+
+        assertEquals(0, segmentArray.linearSearchUpperBound(0, 0, 0));
     }
 
     void linearSearchTester(LongArray array) {
@@ -70,7 +74,7 @@ class LongArraySearchTest {
                 assertEquals(i, array.get(ret));
             }
             else {
-                long higher = LongArraySearch.decodeSearchMiss(ret);
+                long higher = LongArraySearch.decodeSearchMiss(1, ret);
                 if (i > 0 && higher < array.size()) {
                     assertTrue(array.get(higher) < i);
                 }
@@ -87,7 +91,7 @@ class LongArraySearchTest {
                 assertEquals(i, array.get(ret));
             }
             else {
-                long higher = LongArraySearch.decodeSearchMiss(ret);
+                long higher = LongArraySearch.decodeSearchMiss(1, ret);
                 if (i > 0 && higher+1 < array.size()) {
                     assertTrue(array.get(higher) < i);
                 }

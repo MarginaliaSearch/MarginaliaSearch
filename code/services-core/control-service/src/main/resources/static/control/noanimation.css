@@ -1,0 +1,10 @@
+/* Remove eye-grating animation from bootstrap */
+
+*, ::before, ::after {
+    animation-delay: -1s !important;
+    animation-duration: 1s !important;
+    animation-iteration-count: 1 !important;
+    background-attachment: initial !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0s !important;
+}

@@ -54,7 +54,7 @@ public class MqOutboxTest {
 
     @Test
     public void testOpenClose() throws InterruptedException {
-        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, inboxId+"/reply", UUID.randomUUID());
+        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, 0, inboxId+"/reply", 0, UUID.randomUUID());
         outbox.stop();
     }
 
@@ -67,7 +67,7 @@ public class MqOutboxTest {
 
     @Test
     public void testOutboxTimeout() throws Exception {
-        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, inboxId+"/reply", UUID.randomUUID());
+        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, 0, inboxId+"/reply", 0, UUID.randomUUID());
         long id = outbox.sendAsync("test", "Hello World");
         try {
             outbox.waitResponse(id, 100, TimeUnit.MILLISECONDS);
@@ -84,11 +84,11 @@ public class MqOutboxTest {
     @Test
     public void testSingleShotInbox() throws Exception {
         // Send a message to the inbox
-        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId,inboxId+"/reply", UUID.randomUUID());
+        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, 0, inboxId+"/reply", 0, UUID.randomUUID());
         long id = outbox.sendAsync("test", "Hello World");
 
         // Create a single-shot inbox
-        var inbox = new MqSingleShotInbox(new MqPersistence(dataSource), inboxId, UUID.randomUUID());
+        var inbox = new MqSingleShotInbox(new MqPersistence(dataSource), inboxId+":0", UUID.randomUUID());
 
         // Wait for the message to arrive
         var message = inbox.waitForMessage(1, TimeUnit.SECONDS);
@@ -110,12 +110,12 @@ public class MqOutboxTest {
 
     @Test
     public void testSend() throws Exception {
-        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId,inboxId+"/reply", UUID.randomUUID());
+        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, 0, inboxId+"/reply", 0, UUID.randomUUID());
         Executors.newSingleThreadExecutor().submit(() -> outbox.send("test", "Hello World"));
 
         TimeUnit.MILLISECONDS.sleep(100);
 
-        var messages = MqTestUtil.getMessages(dataSource, inboxId);
+        var messages = MqTestUtil.getMessages(dataSource, inboxId, 0);
         assertEquals(1, messages.size());
         System.out.println(messages.get(0));
 
@@ -125,9 +125,9 @@ public class MqOutboxTest {
 
     @Test
     public void testSendAndRespondAsyncInbox() throws Exception {
-        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId,inboxId+"/reply", UUID.randomUUID());
+        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, 0, inboxId+"/reply", 0, UUID.randomUUID());
 
-        var inbox = new MqAsynchronousInbox(new MqPersistence(dataSource), inboxId, UUID.randomUUID());
+        var inbox = new MqAsynchronousInbox(new MqPersistence(dataSource), inboxId+":0", UUID.randomUUID());
         inbox.subscribe(justRespond("Alright then"));
         inbox.start();
 
@@ -136,7 +136,7 @@ public class MqOutboxTest {
         assertEquals(MqMessageState.OK, rsp.state());
         assertEquals("Alright then", rsp.payload());
 
-        var messages = MqTestUtil.getMessages(dataSource, inboxId);
+        var messages = MqTestUtil.getMessages(dataSource, inboxId, 0);
         assertEquals(1, messages.size());
         assertEquals(MqMessageState.OK, messages.get(0).state());
 
@@ -146,9 +146,9 @@ public class MqOutboxTest {
 
     @Test
     public void testSendAndRespondSyncInbox() throws Exception {
-        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId,inboxId+"/reply", UUID.randomUUID());
+        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, 0, inboxId+"/reply", 0, UUID.randomUUID());
 
-        var inbox = new MqSynchronousInbox(new MqPersistence(dataSource), inboxId, UUID.randomUUID());
+        var inbox = new MqSynchronousInbox(new MqPersistence(dataSource), inboxId+":0", UUID.randomUUID());
         inbox.subscribe(justRespond("Alright then"));
         inbox.start();
 
@@ -157,7 +157,7 @@ public class MqOutboxTest {
         assertEquals(MqMessageState.OK, rsp.state());
         assertEquals("Alright then", rsp.payload());
 
-        var messages = MqTestUtil.getMessages(dataSource, inboxId);
+        var messages = MqTestUtil.getMessages(dataSource, inboxId, 0);
         assertEquals(1, messages.size());
         assertEquals(MqMessageState.OK, messages.get(0).state());
 
@@ -167,9 +167,9 @@ public class MqOutboxTest {
 
     @Test
     public void testSendMultipleAsyncInbox() throws Exception {
-        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId,inboxId+"/reply", UUID.randomUUID());
+        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, 0, inboxId+"/reply", 0, UUID.randomUUID());
 
-        var inbox = new MqAsynchronousInbox(new MqPersistence(dataSource), inboxId, UUID.randomUUID());
+        var inbox = new MqAsynchronousInbox(new MqPersistence(dataSource), inboxId+":0", UUID.randomUUID());
         inbox.subscribe(echo());
         inbox.start();
 
@@ -189,7 +189,7 @@ public class MqOutboxTest {
         assertEquals(MqMessageState.OK, rsp4.state());
         assertEquals("four", rsp4.payload());
 
-        var messages = MqTestUtil.getMessages(dataSource, inboxId);
+        var messages = MqTestUtil.getMessages(dataSource, inboxId, 0);
         assertEquals(4, messages.size());
         for (var message : messages) {
             assertEquals(MqMessageState.OK, message.state());
@@ -201,9 +201,9 @@ public class MqOutboxTest {
 
     @Test
     public void testSendMultipleSyncInbox() throws Exception {
-        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId,inboxId+"/reply", UUID.randomUUID());
+        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, 0, inboxId+"/reply", 0, UUID.randomUUID());
 
-        var inbox = new MqSynchronousInbox(new MqPersistence(dataSource), inboxId, UUID.randomUUID());
+        var inbox = new MqSynchronousInbox(new MqPersistence(dataSource), inboxId+":0", UUID.randomUUID());
         inbox.subscribe(echo());
         inbox.start();
 
@@ -223,7 +223,7 @@ public class MqOutboxTest {
         assertEquals(MqMessageState.OK, rsp4.state());
         assertEquals("four", rsp4.payload());
 
-        var messages = MqTestUtil.getMessages(dataSource, inboxId);
+        var messages = MqTestUtil.getMessages(dataSource, inboxId, 0);
         assertEquals(4, messages.size());
         for (var message : messages) {
             assertEquals(MqMessageState.OK, message.state());
@@ -235,8 +235,8 @@ public class MqOutboxTest {
 
     @Test
     public void testSendAndRespondWithErrorHandlerAsyncInbox() throws Exception {
-        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId,inboxId+"/reply", UUID.randomUUID());
-        var inbox = new MqAsynchronousInbox(new MqPersistence(dataSource), inboxId, UUID.randomUUID());
+        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, 0, inboxId+"/reply", 0, UUID.randomUUID());
+        var inbox = new MqAsynchronousInbox(new MqPersistence(dataSource), inboxId+":0", UUID.randomUUID());
 
         inbox.start();
 
@@ -244,7 +244,7 @@ public class MqOutboxTest {
 
         assertEquals(MqMessageState.ERR, rsp.state());
 
-        var messages = MqTestUtil.getMessages(dataSource, inboxId);
+        var messages = MqTestUtil.getMessages(dataSource, inboxId, 0);
         assertEquals(1, messages.size());
         assertEquals(MqMessageState.ERR, messages.get(0).state());
 
@@ -254,8 +254,8 @@ public class MqOutboxTest {
 
     @Test
     public void testSendAndRespondWithErrorHandlerSyncInbox() throws Exception {
-        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId,inboxId+"/reply", UUID.randomUUID());
-        var inbox = new MqSynchronousInbox(new MqPersistence(dataSource), inboxId, UUID.randomUUID());
+        var outbox = new MqOutbox(new MqPersistence(dataSource), inboxId, 0, inboxId+"/reply", 0, UUID.randomUUID());
+        var inbox = new MqSynchronousInbox(new MqPersistence(dataSource), inboxId+":0", UUID.randomUUID());
 
         inbox.start();
 
@@ -263,7 +263,7 @@ public class MqOutboxTest {
 
         assertEquals(MqMessageState.ERR, rsp.state());
 
-        var messages = MqTestUtil.getMessages(dataSource, inboxId);
+        var messages = MqTestUtil.getMessages(dataSource, inboxId, 0);
         assertEquals(1, messages.size());
         assertEquals(MqMessageState.ERR, messages.get(0).state());
 

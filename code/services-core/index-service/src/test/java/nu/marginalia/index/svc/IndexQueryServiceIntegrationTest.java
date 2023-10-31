@@ -2,9 +2,8 @@ package nu.marginalia.index.svc;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
-import nu.marginalia.db.storage.FileStorageService;
-import nu.marginalia.db.storage.model.FileStorage;
-import nu.marginalia.db.storage.model.FileStorageType;
+import nu.marginalia.IndexLocations;
+import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.index.ReverseIndexFullFileNames;
 import nu.marginalia.index.ReverseIndexPrioFileNames;
@@ -488,44 +487,38 @@ public class IndexQueryServiceIntegrationTest {
 
     private void createFullReverseIndex() throws SQLException, IOException {
 
-        FileStorage indexLive = fileStorageService.getStorageByType(FileStorageType.INDEX_LIVE);
-        FileStorage indexStaging = fileStorageService.getStorageByType(FileStorageType.INDEX_STAGING);
+        Path outputFileDocs = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.DOCS, ReverseIndexFullFileNames.FileVersion.NEXT);
+        Path outputFileWords = ReverseIndexFullFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexFullFileNames.FileIdentifier.WORDS, ReverseIndexFullFileNames.FileVersion.NEXT);
+        Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
+        Path tmpDir = workDir.resolve("tmp");
 
-        Path outputFileDocs = ReverseIndexFullFileNames.resolve(indexLive.asPath(), ReverseIndexFullFileNames.FileIdentifier.DOCS, ReverseIndexFullFileNames.FileVersion.NEXT);
-        Path outputFileWords = ReverseIndexFullFileNames.resolve(indexLive.asPath(), ReverseIndexFullFileNames.FileIdentifier.WORDS, ReverseIndexFullFileNames.FileVersion.NEXT);
-
-        Path tmpDir = indexStaging.asPath().resolve("tmp");
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
         new ReverseIndexConstructor(outputFileDocs, outputFileWords, IndexJournalReader::singleFile, DocIdRewriter.identity(), tmpDir)
-                .createReverseIndex(new FakeProcessHeartbeat(), indexStaging.asPath());
+                .createReverseIndex(new FakeProcessHeartbeat(), "name", workDir);
     }
 
     private void createPrioReverseIndex() throws SQLException, IOException {
 
-        FileStorage indexLive = fileStorageService.getStorageByType(FileStorageType.INDEX_LIVE);
-        FileStorage indexStaging = fileStorageService.getStorageByType(FileStorageType.INDEX_STAGING);
+        Path outputFileDocs = ReverseIndexPrioFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexPrioFileNames.FileIdentifier.DOCS, ReverseIndexPrioFileNames.FileVersion.NEXT);
+        Path outputFileWords = ReverseIndexPrioFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ReverseIndexPrioFileNames.FileIdentifier.WORDS, ReverseIndexPrioFileNames.FileVersion.NEXT);
+        Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
+        Path tmpDir = workDir.resolve("tmp");
 
-        Path outputFileDocs = ReverseIndexPrioFileNames.resolve(indexLive.asPath(), ReverseIndexPrioFileNames.FileIdentifier.DOCS, ReverseIndexPrioFileNames.FileVersion.NEXT);
-        Path outputFileWords = ReverseIndexPrioFileNames.resolve(indexLive.asPath(), ReverseIndexPrioFileNames.FileIdentifier.WORDS, ReverseIndexPrioFileNames.FileVersion.NEXT);
-
-        Path tmpDir = indexStaging.asPath().resolve("tmp");
         if (!Files.isDirectory(tmpDir)) Files.createDirectories(tmpDir);
 
         new ReverseIndexConstructor(outputFileDocs, outputFileWords, IndexJournalReader::singleFile, DocIdRewriter.identity(), tmpDir)
-                .createReverseIndex(new FakeProcessHeartbeat(), indexStaging.asPath());
+                .createReverseIndex(new FakeProcessHeartbeat(), "name", workDir);
     }
 
     private void createForwardIndex() throws SQLException, IOException {
 
-        FileStorage indexLive = fileStorageService.getStorageByType(FileStorageType.INDEX_LIVE);
-        FileStorage indexStaging = fileStorageService.getStorageByType(FileStorageType.INDEX_STAGING);
-
-        Path outputFileDocsId = ForwardIndexFileNames.resolve(indexLive.asPath(), ForwardIndexFileNames.FileIdentifier.DOC_ID, ForwardIndexFileNames.FileVersion.NEXT);
-        Path outputFileDocsData = ForwardIndexFileNames.resolve(indexLive.asPath(), ForwardIndexFileNames.FileIdentifier.DOC_DATA, ForwardIndexFileNames.FileVersion.NEXT);
+        Path workDir = IndexLocations.getIndexConstructionArea(fileStorageService);
+        Path outputFileDocsId = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.DOC_ID, ForwardIndexFileNames.FileVersion.NEXT);
+        Path outputFileDocsData = ForwardIndexFileNames.resolve(IndexLocations.getCurrentIndex(fileStorageService), ForwardIndexFileNames.FileIdentifier.DOC_DATA, ForwardIndexFileNames.FileVersion.NEXT);
 
         ForwardIndexConverter converter = new ForwardIndexConverter(processHeartbeat,
-                IndexJournalReader.paging(indexStaging.asPath()),
+                IndexJournalReader.paging(workDir),
                 outputFileDocsId,
                 outputFileDocsData,
                 domainRankings
@@ -572,7 +565,9 @@ public class IndexQueryServiceIntegrationTest {
                 indexJournalWriter.put(header, entry);
             });
 
-            var linkdbWriter = new LinkdbWriter(testModule.workDir.resolve("linkdb.dat"));
+            var linkdbWriter = new LinkdbWriter(
+                    IndexLocations.getLinkdbLivePath(fileStorageService).resolve("links.db")
+            );
             for (Long key : allData.keySet()) {
                 linkdbWriter.add(new LdbUrlDetail(
                         key,

@@ -15,6 +15,7 @@
                 </optgroup>
                 <optgroup label="Vintage">
                     <option {{#eq profile "vintage"}}selected{{/eq}} value="vintage">Web 1.0</option>
+                    <option {{#eq profile "tilde"}}selected{{/eq}} value="tilde">~tilde/</option>
                     <option {{#eq profile "plain-text"}}selected{{/eq}} value="plain-text">Text Files</option>
                 </optgroup>
                 <optgroup label="Category">

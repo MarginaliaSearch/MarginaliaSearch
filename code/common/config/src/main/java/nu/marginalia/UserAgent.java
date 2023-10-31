@@ -1,5 +1,3 @@
 package nu.marginalia;
 
-public record UserAgent(String uaString) {
-
-}
+public record UserAgent(String uaString) {}

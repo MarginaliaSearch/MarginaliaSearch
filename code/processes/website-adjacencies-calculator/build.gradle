@@ -1,0 +1,37 @@
+plugins {
+    id 'java'
+
+    id 'application'
+    id 'jvm-test-suite'
+}
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+application {
+    mainClass = 'nu.marginalia.adjacencies.WebsiteAdjacenciesCalculator'
+    applicationName = 'website-adjacencies-calculator'
+}
+
+tasks.distZip.enabled = false
+
+dependencies {
+    implementation project(':code:common:model')
+    implementation project(':code:common:db')
+    implementation project(':code:common:process')
+    implementation project(':code:common:service')
+
+    implementation libs.bundles.slf4j
+
+    implementation libs.guice
+    implementation libs.roaringbitmap
+    implementation libs.trove
+    implementation libs.fastutil
+    implementation libs.bundles.mariadb
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+}

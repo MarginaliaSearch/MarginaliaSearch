@@ -1,7 +1,7 @@
 package nu.marginalia.mqapi.loading;
 
 import lombok.AllArgsConstructor;
-import nu.marginalia.db.storage.model.FileStorageId;
+import nu.marginalia.storage.model.FileStorageId;
 
 import java.util.List;
 

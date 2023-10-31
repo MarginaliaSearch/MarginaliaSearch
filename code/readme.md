@@ -17,6 +17,7 @@ A map of the most important components and how they relate can be found below.
 * * [control](services-core/control-service)
 * * [query](services-core/query-service)
 * * [index](services-core/index-service)
+* * [executor](services-core/executor-service)
 * * [assistant](services-core/assistant-service)
 * [application services](services-application/) "microservices", stateless providing additional functionality and making an application out of the search engine.
 * * [api](services-application/api-service)  - public API

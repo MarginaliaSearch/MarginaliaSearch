@@ -1,8 +1,8 @@
 package nu.marginalia.loading.loader;
 
-import nu.marginalia.db.storage.FileStorageService;
-import nu.marginalia.db.storage.model.FileStorage;
-import nu.marginalia.db.storage.model.FileStorageType;
+import nu.marginalia.storage.FileStorageService;
+import nu.marginalia.storage.model.FileStorageBase;
+import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.index.journal.reader.IndexJournalReaderSingleFile;
 import nu.marginalia.keyword.model.DocumentKeywords;
 import nu.marginalia.loading.LoaderIndexJournalWriter;
@@ -31,18 +31,19 @@ class LoaderIndexJournalWriterTest {
     public void setUp() throws IOException, SQLException {
         tempDir = Files.createTempDirectory(getClass().getSimpleName());
         FileStorageService storageService = Mockito.mock(FileStorageService.class);
-        Mockito.when(storageService.getStorageByType(FileStorageType.INDEX_STAGING)).
-                thenReturn(new FileStorage(null, null, null, null, tempDir.toString(),
-                        "test"));
+
+        Mockito.when(storageService.getStorageBase(FileStorageBaseType.CURRENT)).thenReturn(new FileStorageBase(null, null,  1,null, tempDir.toString()));
+
         writer = new LoaderIndexJournalWriter(storageService);
     }
 
     @AfterEach
     public void tearDown() throws Exception {
         writer.close();
-        List<Path> junk = Files.list(tempDir).toList();
+        List<Path> junk = Files.list(tempDir.resolve("iw")).toList();
         for (var item : junk)
             Files.delete(item);
+        Files.delete(tempDir.resolve("iw"));
         Files.delete(tempDir);
     }
 
@@ -60,7 +61,7 @@ class LoaderIndexJournalWriterTest {
 
         writer.close();
 
-        List<Path> journalFiles =IndexJournalFileNames.findJournalFiles(tempDir);
+        List<Path> journalFiles = IndexJournalFileNames.findJournalFiles(tempDir.resolve("iw"));
         assertEquals(1, journalFiles.size());
 
         var reader = new IndexJournalReaderSingleFile(journalFiles.get(0));

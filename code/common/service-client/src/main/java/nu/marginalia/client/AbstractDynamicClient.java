@@ -1,23 +1,23 @@
 package nu.marginalia.client;
 
 import com.google.gson.Gson;
-import io.reactivex.rxjava3.core.Observable;
-import lombok.SneakyThrows;
+import nu.marginalia.client.route.RouteProvider;
+import nu.marginalia.client.route.ServiceRoute;
 import nu.marginalia.service.descriptor.ServiceDescriptor;
-import nu.marginalia.service.descriptor.HostsFile;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.function.Supplier;
 
 public class AbstractDynamicClient extends AbstractClient {
     private final ServiceDescriptor service;
-    private final Logger logger = LoggerFactory.getLogger(getClass());
     private final AbortingScheduler scheduler;
 
-    public AbstractDynamicClient(@Nonnull ServiceDescriptor service, HostsFile hosts, Supplier<Gson> gsonProvider) {
-        super(hosts.getHost(service), service.port, 10, gsonProvider);
+    public AbstractDynamicClient(@Nonnull ServiceDescriptor service, Supplier<Gson> gsonProvider) {
+        super(
+                service,
+                10000,
+                gsonProvider
+        );
 
         this.service = service;
         this.scheduler = new AbortingScheduler(name());
@@ -30,14 +30,6 @@ public class AbstractDynamicClient extends AbstractClient {
 
     public ServiceDescriptor getService() {
         return service;
-    }
-
-    @SneakyThrows
-    public void blockingWait() {
-        logger.info("Waiting for route to {} ({})", service, getServiceRoute());
-        while (!isAlive()) {
-            Thread.sleep(1000);
-        }
     }
 
     @Override

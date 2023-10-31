@@ -23,6 +23,7 @@ public class DomainTypes {
 
     public enum Type {
         BLOG,
+        CRAWL,
         TEST
     };
 
@@ -33,6 +34,32 @@ public class DomainTypes {
     @Inject
     public DomainTypes(HikariDataSource dataSource) {
         this.dataSource = dataSource;
+    }
+
+    public String getUrlForSelection(Type type) {
+        try (var conn = dataSource.getConnection();
+             var qs = conn.prepareStatement("SELECT SOURCE FROM DOMAIN_SELECTION_TYPE WHERE NAME = ?"))
+        {
+            qs.setString(1, type.name());
+            var rs = qs.executeQuery();
+            if (rs.next()) {
+                return rs.getString("SOURCE");
+            }
+        }
+        catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        return "";
+    }
+
+    public void updateUrlForSelection(Type type, String newValue) throws SQLException {
+        try (var conn = dataSource.getConnection();
+             var us = conn.prepareStatement("REPLACE INTO DOMAIN_SELECTION_TYPE(NAME, SOURCE) VALUES (?, ?)")) {
+            us.setString(1, type.name());
+            us.setString(2, newValue);
+            us.executeUpdate();
+        }
     }
 
     /** Get all domains of a certain type, including domains that are not in the EC_DOMAIN table */
@@ -136,7 +163,18 @@ public class DomainTypes {
         }
     }
 
+    public List<String> downloadList(Type type) throws IOException {
+        var url = getUrlForSelection(type);
+        if (url.isBlank())
+            return List.of();
+        return downloadDomainsList(url);
+    }
+
+
     private List<String> downloadDomainsList(String source) throws IOException {
+        if (source.isBlank())
+            return List.of();
+
         List<String> ret = new ArrayList<>();
 
         logger.info("Downloading domain list from {}", source);

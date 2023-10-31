@@ -33,6 +33,8 @@ dependencies {
     implementation project(':code:processes:converting-process')
     implementation project(':code:process-models:crawling-model')
 
+    implementation project(':third-party:commons-codec')
+    implementation project(':code:features-crawl:link-parser')
     implementation project(':code:features-convert:adblock')
     implementation project(':code:features-convert:topic-detection')
     implementation project(':code:features-convert:keyword-extraction')

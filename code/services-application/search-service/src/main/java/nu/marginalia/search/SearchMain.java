@@ -6,7 +6,7 @@ import com.google.inject.Injector;
 import nu.marginalia.service.MainClass;
 import nu.marginalia.service.SearchServiceDescriptors;
 import nu.marginalia.service.id.ServiceId;
-import nu.marginalia.service.module.ConfigurationModule;
+import nu.marginalia.service.module.ServiceConfigurationModule;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.service.server.Initialization;
 import spark.Spark;
@@ -27,7 +27,7 @@ public class SearchMain extends MainClass {
 
         Injector injector = Guice.createInjector(
                 new SearchModule(),
-                new ConfigurationModule(SearchServiceDescriptors.descriptors, ServiceId.Search),
+                new ServiceConfigurationModule(SearchServiceDescriptors.descriptors, ServiceId.Search),
                 new DatabaseModule()
         );
 

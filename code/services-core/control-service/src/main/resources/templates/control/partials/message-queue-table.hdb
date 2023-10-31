@@ -1,6 +1,6 @@
-<h1>Message Queue</h1>
+<h1 class="my-5">Message Queue</h1>
 
-<table id="queue" class="table-rh-2">
+<table id="queue" class="table table-rh-2">
     <thead>
     <tr>
         <th>State<br>TTL</th>
@@ -27,9 +27,7 @@
         <td><a href="/message-queue/{{id}}">{{id}}</a></td>
         <td><a href="/message-queue?inbox={{recipientInbox}}">{{recipientInbox}}</a></td>
         <td>{{function}}</td>
-        <td title="{{ownerInstanceFull}}">
-            <span style="background-color: {{ownerInstanceColor}}" class="uuidPip">&nbsp;</span><span style="background-color: {{ownerInstanceColor2}}" class="uuidPip">&nbsp;</span>&nbsp;<a href="/message-queue?instance={{ownerInstanceFull}}">{{ownerInstance}}</a>
-        </td>
+        <td>{{{readableUUID ownerInstanceFull}}}</td>
         <td>{{createdTime}}</td>
     </tr>
     <tr>

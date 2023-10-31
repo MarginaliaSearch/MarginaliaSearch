@@ -5,10 +5,12 @@ import nu.marginalia.index.client.model.query.SearchSpecification;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 public record QueryParams(
         String humanQuery,
+        @Nullable
         String nearDomain,
         List<String> tacitIncludes,
         List<String> tacitExcludes,

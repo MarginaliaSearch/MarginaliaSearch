@@ -14,6 +14,7 @@ dependencies {
     implementation libs.bundles.slf4j
 
     implementation project(':third-party:parquet-floor')
+    implementation project(':code:common:config')
     implementation project(':code:common:db')
     implementation project(':code:common:linkdb')
 

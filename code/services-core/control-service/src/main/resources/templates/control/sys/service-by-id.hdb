@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Control Service</title>
+    {{> control/partials/head-includes }}
+</head>
+<body>
+  {{> control/partials/nav}}
+  <div class="container">
+  <h1>Services/{{id}}</h1>
+  {{> control/partials/events-table-summary }}
+  {{> control/partials/message-queue-table }}
+  </div>
+</body>
+{{> control/partials/head-includes }}
+</html>

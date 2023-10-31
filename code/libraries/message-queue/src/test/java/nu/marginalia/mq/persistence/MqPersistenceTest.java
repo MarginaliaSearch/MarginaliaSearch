@@ -54,13 +54,18 @@ public class MqPersistenceTest {
         dataSource.close();
     }
 
+    public long sendMessage(String recipient, String sender, String function, String payload, Duration ttl) throws Exception {
+        return persistence.sendNewMessage(recipient+":0", sender != null ? (sender+":0") : null, null, function, payload, ttl);
+    }
+
     @Test
     public void testReaper() throws Exception {
 
-        long id = persistence.sendNewMessage(recipientId, senderId, null, "function", "payload", Duration.ofSeconds(2));
+        sendMessage(recipientId, senderId, "function", "payload", Duration.ofSeconds(2));
+
         persistence.reapDeadMessages();
 
-        var messages = MqTestUtil.getMessages(dataSource, recipientId);
+        var messages = MqTestUtil.getMessages(dataSource, recipientId, 0);
         assertEquals(1, messages.size());
         assertEquals(MqMessageState.NEW, messages.get(0).state());
         System.out.println(messages);
@@ -69,7 +74,7 @@ public class MqPersistenceTest {
 
         persistence.reapDeadMessages();
 
-        messages = MqTestUtil.getMessages(dataSource, recipientId);
+        messages = MqTestUtil.getMessages(dataSource, recipientId, 0);
         assertEquals(1, messages.size());
         assertEquals(MqMessageState.DEAD, messages.get(0).state());
     }
@@ -77,9 +82,9 @@ public class MqPersistenceTest {
     @Test
     public void sendWithReplyAddress() throws Exception {
 
-        long id = persistence.sendNewMessage(recipientId, senderId, null, "function", "payload", Duration.ofSeconds(30));
+        long id = sendMessage(recipientId, senderId, "function", "payload", Duration.ofSeconds(30));
 
-        var messages = MqTestUtil.getMessages(dataSource, recipientId);
+        var messages = MqTestUtil.getMessages(dataSource, recipientId, 0);
         assertEquals(1, messages.size());
 
         var message = messages.get(0);
@@ -95,9 +100,9 @@ public class MqPersistenceTest {
     @Test
     public void sendNoReplyAddress() throws Exception {
 
-        long id = persistence.sendNewMessage(recipientId, null, null, "function", "payload", Duration.ofSeconds(30));
+        long id = sendMessage(recipientId, null, "function", "payload", Duration.ofSeconds(30));
 
-        var messages = MqTestUtil.getMessages(dataSource, recipientId);
+        var messages = MqTestUtil.getMessages(dataSource, recipientId, 0);
         assertEquals(1, messages.size());
 
         var message = messages.get(0);
@@ -114,11 +119,13 @@ public class MqPersistenceTest {
     @Test
     public void updateState() throws Exception {
 
-        long id = persistence.sendNewMessage(recipientId, senderId, null, "function", "payload", Duration.ofSeconds(30));
+
+        long id = sendMessage(recipientId, senderId, "function", "payload", Duration.ofSeconds(30));
+
         persistence.updateMessageState(id, MqMessageState.OK);
         System.out.println(id);
 
-        var messages = MqTestUtil.getMessages(dataSource, recipientId);
+        var messages = MqTestUtil.getMessages(dataSource, recipientId, 0);
         assertEquals(1, messages.size());
 
         var message = messages.get(0);
@@ -131,10 +138,10 @@ public class MqPersistenceTest {
 
     @Test
     public void testReply() throws Exception {
-        long request = persistence.sendNewMessage(recipientId, senderId, null, "function", "payload", Duration.ofSeconds(30));
+        long request = sendMessage(recipientId, senderId, "function", "payload", Duration.ofSeconds(30));
         long response = persistence.sendResponse(request,  MqMessageState.OK, "response");
 
-        var sentMessages = MqTestUtil.getMessages(dataSource, recipientId);
+        var sentMessages = MqTestUtil.getMessages(dataSource, recipientId, 0);
         System.out.println(sentMessages);
         assertEquals(1, sentMessages.size());
 
@@ -143,7 +150,7 @@ public class MqPersistenceTest {
         assertEquals(MqMessageState.OK, requestMessage.state());
 
 
-        var replies = MqTestUtil.getMessages(dataSource, senderId);
+        var replies = MqTestUtil.getMessages(dataSource, senderId, 0);
         System.out.println(replies);
         assertEquals(1, replies.size());
 
@@ -159,9 +166,9 @@ public class MqPersistenceTest {
         String instanceId = "BATMAN";
         long tick = 1234L;
 
-        long id = persistence.sendNewMessage(recipientId,  null, null, "function", "payload", Duration.ofSeconds(30));
+        long id = sendMessage(recipientId, null, "function", "payload", Duration.ofSeconds(30));
 
-        var messagesPollFirstTime = persistence.pollInbox(recipientId, instanceId , tick, 10);
+        var messagesPollFirstTime = persistence.pollInbox(recipientId+":0", instanceId , tick, 10);
 
         /** CHECK POLL RESULT */
         assertEquals(1, messagesPollFirstTime.size());
@@ -171,7 +178,7 @@ public class MqPersistenceTest {
         assertEquals("payload", firstPollMessage.payload());
 
         /** CHECK DB TABLE */
-        var messages = MqTestUtil.getMessages(dataSource, recipientId);
+        var messages = MqTestUtil.getMessages(dataSource, recipientId, 0);
         assertEquals(1, messages.size());
 
         var message = messages.get(0);
@@ -184,7 +191,7 @@ public class MqPersistenceTest {
         assertEquals(tick, message.ownerTick());
 
         /** VERIFY SECOND POLL IS EMPTY */
-        var messagePollSecondTime = persistence.pollInbox(recipientId, instanceId , 1, 10);
+        var messagePollSecondTime = persistence.pollInbox(recipientId+":0", instanceId , 1, 10);
         assertEquals(0, messagePollSecondTime.size());
     }
 }

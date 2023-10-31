@@ -4,12 +4,14 @@ import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import nu.marginalia.ProcessConfiguration;
+import nu.marginalia.ProcessConfigurationModule;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.converting.sideload.SideloadSourceFactory;
 import nu.marginalia.converting.writer.ConverterBatchWriter;
 import nu.marginalia.converting.writer.ConverterWriter;
-import nu.marginalia.db.storage.FileStorageService;
+import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.inbox.MqInboxResponse;
@@ -25,7 +27,6 @@ import nu.marginalia.converting.processor.DomainProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -46,9 +47,12 @@ public class ConverterMain {
     private final FileStorageService fileStorageService;
     private final SideloadSourceFactory sideloadSourceFactory;
 
+    private final int node;
+
     public static void main(String... args) throws Exception {
         Injector injector = Guice.createInjector(
                 new ConverterModule(),
+                new ProcessConfigurationModule("converter"),
                 new DatabaseModule()
         );
 
@@ -72,7 +76,8 @@ public class ConverterMain {
             ProcessHeartbeatImpl heartbeat,
             MessageQueueFactory messageQueueFactory,
             FileStorageService fileStorageService,
-            SideloadSourceFactory sideloadSourceFactory
+            SideloadSourceFactory sideloadSourceFactory,
+            ProcessConfiguration processConfiguration
             )
     {
         this.processor = processor;
@@ -81,6 +86,7 @@ public class ConverterMain {
         this.messageQueueFactory = messageQueueFactory;
         this.fileStorageService = fileStorageService;
         this.sideloadSourceFactory = sideloadSourceFactory;
+        this.node = processConfiguration.node();
 
         heartbeat.start();
     }
@@ -108,7 +114,7 @@ public class ConverterMain {
 
     public void convert(CrawlPlan plan) throws Exception {
 
-        final int maxPoolSize = Runtime.getRuntime().availableProcessors();
+        final int maxPoolSize = Math.clamp(Runtime.getRuntime().availableProcessors() - 2, 1, 32);
 
         try (BatchingWorkLog batchingWorkLog = new BatchingWorkLogImpl(plan.process.getLogFile());
              ConverterWriter converterWriter = new ConverterWriter(batchingWorkLog, plan.process.getDir()))
@@ -117,6 +123,7 @@ public class ConverterMain {
 
             int totalDomains = plan.countCrawledDomains();
             AtomicInteger processedDomains = new AtomicInteger(0);
+            logger.info("Processing {} domains", totalDomains);
 
             // Advance the progress bar to the current position if this is a resumption
             processedDomains.set(batchingWorkLog.size());
@@ -131,6 +138,9 @@ public class ConverterMain {
                     heartbeat.setProgress(processedDomains.incrementAndGet() / (double) totalDomains);
                 });
             }
+
+            // Grace period in case we're loading like 1 item
+            Thread.sleep(100);
 
             pool.shutDown();
             do {
@@ -213,7 +223,7 @@ public class ConverterMain {
 
     private ConvertRequest fetchInstructions() throws Exception {
 
-        var inbox = messageQueueFactory.createSingleShotInbox(CONVERTER_INBOX, UUID.randomUUID());
+        var inbox = messageQueueFactory.createSingleShotInbox(CONVERTER_INBOX, node, UUID.randomUUID());
 
         var msgOpt = getMessage(inbox, nu.marginalia.mqapi.converting.ConvertRequest.class.getSimpleName());
         var msg = msgOpt.orElseThrow(() -> new RuntimeException("No message received"));
@@ -234,7 +244,7 @@ public class ConverterMain {
             case SideloadEncyclopedia -> {
                 var processData = fileStorageService.getStorage(request.processedDataStorage);
 
-                yield new SideloadAction(sideloadSourceFactory.sideloadEncyclopediaMarginaliaNu(Path.of(request.inputSource)),
+                yield new SideloadAction(sideloadSourceFactory.sideloadEncyclopediaMarginaliaNu(Path.of(request.inputSource), request.baseUrl),
                         processData.asPath(),
                         msg, inbox);
             }

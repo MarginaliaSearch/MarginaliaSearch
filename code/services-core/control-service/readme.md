@@ -1,16 +1,21 @@
 # Control Service
 
-The control service provides an operator's user interface, and is responsible for orchestrating the various 
-processes of the system using Actors. 
+The control service provides an operator's user interface.  By default this interface is
+exposed on port 8081.  It does not offer any sort of access control or authentication.
 
-Actors within the control service will spawn processes when necessary, by 
-monitoring their message queue inboxes.
+The control service will itself execute tasks that affect the entire system, but delegate
+node-specific tasks to the corresponding [executor-service](../executor-service) via the
+[executor-api](../../api/executor-api).
+
+Conceptually the application is broken into three parts: 
+
+* Application specific tasks relate to the high level abstractions such as blacklisting and API keys 
+* System tasks relate to low level abstractions such as the message queue and event log.
+* Node tasks relate to index node specific tasks, such as crawling and indexing.
 
 ## Central Classes
 
 * [ControlService](src/main/java/nu/marginalia/control/ControlService.java)
-* [ControlActors](src/main/java/nu/marginalia/control/actor/ControlActors.java) - Class responsible for Actors' lifecycle
-* [ProcessService](src/main/java/nu/marginalia/control/process/ProcessService.java) - Class responsible for spawning Processes
 
 ## See Also
 

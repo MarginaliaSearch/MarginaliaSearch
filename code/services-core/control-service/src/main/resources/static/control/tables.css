@@ -1,0 +1,21 @@
+table.table-rh-2 tr:nth-of-type(4n+1) { background-color: #eee; }
+table.table-rh-2 tr:nth-of-type(4n+2) { background-color: #eee; }
+table.table-rh-2 tr:nth-of-type(4n+3) { background-color: unset; }
+table.table-rh-2 tr:nth-of-type(4n) { background-color: unset; }
+
+table.table-rh-2 tr:nth-of-type(4n) td,
+table.table-rh-2 tr:nth-of-type(4n) th { border-bottom: 1px solid #888; }
+table.table-rh-2 tr:nth-of-type(4n+2) td,
+table.table-rh-2 tr:nth-of-type(4n+2) th { border-bottom: 1px solid #888; }
+
+table.table-rh-3 tr:nth-of-type(6n+1) { background-color: #eee; }
+table.table-rh-3 tr:nth-of-type(6n+2) { background-color: #eee; }
+table.table-rh-3 tr:nth-of-type(6n+3) { background-color: #eee; }
+table.table-rh-3 tr:nth-of-type(6n+4) { background-color: unset; }
+table.table-rh-3 tr:nth-of-type(6n+5) { background-color: unset; }
+table.table-rh-3 tr:nth-of-type(6n) { background-color: unset; }
+
+table.table-rh-3 tr:nth-of-type(6n) td,
+table.table-rh-3 tr:nth-of-type(6n) th { border-bottom: 1px solid #888; }
+table.table-rh-3 tr:nth-of-type(6n+3) td,
+table.table-rh-3 tr:nth-of-type(6n+3) th { border-bottom: 1px solid #888; }

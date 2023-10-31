@@ -2,7 +2,6 @@ package nu.marginalia.crawlspec;
 
 import nu.marginalia.db.DbDomainStatsExportMultitool;
 import nu.marginalia.io.crawlspec.CrawlSpecRecordParquetFileWriter;
-import nu.marginalia.linkdb.LinkdbReader;
 import nu.marginalia.model.crawlspec.CrawlSpecRecord;
 
 import java.io.IOException;
@@ -84,8 +83,12 @@ public class CrawlSpecGenerator {
         static DomainSource fromFile(Path file) {
             return () -> {
                 var lines = Files.readAllLines(file);
-                lines.replaceAll(s -> s.trim().toLowerCase());
-                lines.removeIf(line -> line.isBlank() || line.startsWith("#"));
+                lines.replaceAll(s ->
+                        s.split("#", 2)[0]
+                         .trim()
+                         .toLowerCase()
+                );
+                lines.removeIf(String::isBlank);
                 return lines;
             };
         }
@@ -121,19 +124,6 @@ public class CrawlSpecGenerator {
                     "http://" + domainName + "/",
                     "https://" + domainName + "/"
             );
-        }
-
-        static KnownUrlsListSource fromLinkdb(DbDomainStatsExportMultitool dbData,
-                                              LinkdbReader linkdbReader)
-        {
-            return domainName -> {
-                var maybeId = dbData.getDomainId(domainName);
-                if (maybeId.isEmpty())
-                    return List.of();
-
-                return linkdbReader
-                        .getUrlsFromDomain(maybeId.getAsInt());
-            };
         }
     }
 }

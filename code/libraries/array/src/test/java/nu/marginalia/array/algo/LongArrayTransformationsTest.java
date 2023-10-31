@@ -2,8 +2,6 @@ package nu.marginalia.array.algo;
 
 import nu.marginalia.array.LongArray;
 import nu.marginalia.array.LongArrayFactory;
-import nu.marginalia.array.page.LongArrayPage;
-import nu.marginalia.array.page.PagingLongArray;
 import nu.marginalia.array.scheme.PowerOf2PartitioningScheme;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,20 +14,17 @@ class LongArrayTransformationsTest {
     LongArray basic;
     LongArray paged;
     LongArray shifted;
-    LongArray segment;
 
     final int size = 1026;
 
     @BeforeEach
     public void setUp() {
-        basic = LongArrayPage.onHeap(size);
-        segment = LongArrayFactory.onHeapConfined(size);
-        paged = PagingLongArray.newOnHeap(new PowerOf2PartitioningScheme(32), size);
-        shifted = LongArrayPage.onHeap(size + 30).shifted(30);
+        basic = LongArray.allocate(size);
+        paged = LongArray.allocate(size);
+        shifted = LongArray.allocate(size+30).shifted(30);
 
         for (int i = 0; i < basic.size(); i++) {
             basic.set(i, 3L*i);
-            segment.set(i, 3L*i);
             paged.set(i, 3L*i);
             shifted.set(i, 3L*i);
         }
@@ -40,7 +35,6 @@ class LongArrayTransformationsTest {
         transformTester(basic);
         transformTester(paged);
         transformTester(shifted);
-        transformTester(segment);
     }
 
     @Test
@@ -48,7 +42,6 @@ class LongArrayTransformationsTest {
         transformTesterIO(basic);
         transformTesterIO(paged);
         transformTesterIO(shifted);
-        transformTesterIO(segment);
     }
 
     @Test
@@ -56,7 +49,6 @@ class LongArrayTransformationsTest {
         assertEquals(3*(5+6+7+8+9), basic.fold(0, 5, 10, Long::sum));
         assertEquals(3*(5+6+7+8+9), paged.fold(0, 5, 10, Long::sum));
         assertEquals(3*(5+6+7+8+9), shifted.fold(0, 5, 10, Long::sum));
-        assertEquals(3*(5+6+7+8+9), segment.fold(0, 5, 10, Long::sum));
     }
 
     @Test
@@ -64,7 +56,6 @@ class LongArrayTransformationsTest {
         assertEquals(3*(5+6+7+8+9), basic.foldIO(0, 5, 10, Long::sum));
         assertEquals(3*(5+6+7+8+9), paged.foldIO(0, 5, 10, Long::sum));
         assertEquals(3*(5+6+7+8+9), shifted.foldIO(0, 5, 10, Long::sum));
-        assertEquals(3*(5+6+7+8+9), segment.foldIO(0, 5, 10, Long::sum));
     }
 
     private void transformTester(LongArray array) {

@@ -6,7 +6,7 @@ import com.google.inject.Injector;
 import nu.marginalia.service.MainClass;
 import nu.marginalia.service.SearchServiceDescriptors;
 import nu.marginalia.service.id.ServiceId;
-import nu.marginalia.service.module.ConfigurationModule;
+import nu.marginalia.service.module.ServiceConfigurationModule;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.service.server.Initialization;
 
@@ -22,7 +22,7 @@ public class ControlMain extends MainClass {
         Injector injector = Guice.createInjector(
                 new DatabaseModule(),
                 new ControlProcessModule(),
-                new ConfigurationModule(SearchServiceDescriptors.descriptors, ServiceId.Control));
+                new ServiceConfigurationModule(SearchServiceDescriptors.descriptors, ServiceId.Control));
 
         injector.getInstance(ControlMain.class);
         injector.getInstance(Initialization.class).setReady();

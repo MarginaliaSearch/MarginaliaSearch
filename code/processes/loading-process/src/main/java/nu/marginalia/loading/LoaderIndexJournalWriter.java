@@ -3,8 +3,8 @@ package nu.marginalia.loading;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.SneakyThrows;
-import nu.marginalia.db.storage.FileStorageService;
-import nu.marginalia.db.storage.model.FileStorageType;
+import nu.marginalia.IndexLocations;
+import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.index.journal.model.IndexJournalEntryData;
 import nu.marginalia.index.journal.model.IndexJournalEntryHeader;
@@ -34,14 +34,14 @@ public class LoaderIndexJournalWriter {
 
     @Inject
     public LoaderIndexJournalWriter(FileStorageService fileStorageService) throws IOException, SQLException {
-        var indexArea = fileStorageService.getStorageByType(FileStorageType.INDEX_STAGING);
+        var indexArea = IndexLocations.getIndexConstructionArea(fileStorageService);
 
-        var existingIndexFiles = IndexJournalFileNames.findJournalFiles(indexArea.asPath());
+        var existingIndexFiles = IndexJournalFileNames.findJournalFiles(indexArea);
         for (var existingFile : existingIndexFiles) {
             Files.delete(existingFile);
         }
 
-        indexWriter = new IndexJournalWriterPagingImpl(indexArea.asPath());
+        indexWriter = new IndexJournalWriterPagingImpl(indexArea);
     }
 
     public void putWords(long combinedId,

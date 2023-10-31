@@ -6,9 +6,10 @@ import com.google.inject.Injector;
 import nu.marginalia.service.MainClass;
 import nu.marginalia.service.SearchServiceDescriptors;
 import nu.marginalia.service.id.ServiceId;
-import nu.marginalia.service.module.ConfigurationModule;
+import nu.marginalia.service.module.ServiceConfigurationModule;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.service.server.Initialization;
+import nu.marginalia.service.server.NodeStatusWatcher;
 
 public class IndexMain extends MainClass {
     private final IndexService service;
@@ -22,11 +23,12 @@ public class IndexMain extends MainClass {
         init(ServiceId.Index, args);
 
         Injector injector = Guice.createInjector(
-                new IndexTablesModule(),
                 new IndexModule(),
                 new DatabaseModule(),
-                new ConfigurationModule(SearchServiceDescriptors.descriptors, ServiceId.Index)
+                new ServiceConfigurationModule(SearchServiceDescriptors.descriptors, ServiceId.Index)
         );
+
+        injector.getInstance(NodeStatusWatcher.class);
 
         injector.getInstance(IndexMain.class);
         injector.getInstance(Initialization.class).setReady();

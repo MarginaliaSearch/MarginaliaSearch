@@ -8,7 +8,7 @@ import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.converting.sideload.SideloaderProcessing;
-import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
 
 import java.io.ByteArrayInputStream;
@@ -35,12 +35,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoCloseable {
 
     private final Connection connection;
+    private final EdgeUrl baseUrl;
     private final Gson gson;
     private final SideloaderProcessing sideloaderProcessing;
 
     public EncyclopediaMarginaliaNuSideloader(Path pathToDbFile,
+                                              String baseUrl,
                                               Gson gson,
                                               SideloaderProcessing sideloaderProcessing) throws SQLException {
+        this.baseUrl = EdgeUrl.parse(baseUrl).orElseThrow(AssertionError::new);
         this.gson = gson;
         this.sideloaderProcessing = sideloaderProcessing;
         String sqliteDbString = "jdbc:sqlite:" + pathToDbFile.toString();
@@ -53,7 +56,7 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
     public ProcessedDomain getDomain() {
         var ret = new ProcessedDomain();
 
-        ret.domain = new EdgeDomain("encyclopedia.marginalia.nu");
+        ret.domain = baseUrl.getDomain();
         ret.ip = "0.0.0.0";
         ret.state = DomainIndexingState.ACTIVE;
 
@@ -138,7 +141,7 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
     }
 
     private ProcessedDocument convertDocument(List<String> parts, String title, String url) throws URISyntaxException, DisqualifiedException {
-        String fullUrl = "https://encyclopedia.marginalia.nu/article/"+url;
+        String fullUrl = baseUrl.toString() + url;
 
         StringBuilder fullHtml = new StringBuilder();
         fullHtml.append("<!DOCTYPE html><html><head><title>").append(title).append("</title></head><body>");
