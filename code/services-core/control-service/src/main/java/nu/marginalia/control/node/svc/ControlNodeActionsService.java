@@ -3,6 +3,7 @@ package nu.marginalia.control.node.svc;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.client.Context;
+import nu.marginalia.control.RedirectControl;
 import nu.marginalia.control.Redirects;
 import nu.marginalia.db.DomainTypes;
 import nu.marginalia.executor.client.ExecutorClient;
@@ -26,26 +27,37 @@ import java.util.UUID;
 public class ControlNodeActionsService {
 
     private final IndexClient indexClient;
+    private final RedirectControl redirectControl;
     private final ServiceEventLog eventLog;
     private final ExecutorClient executorClient;
 
     @Inject
     public ControlNodeActionsService(ExecutorClient executorClient,
                                      IndexClient indexClient,
+                                     RedirectControl redirectControl,
                                      ServiceEventLog eventLog)
     {
         this.executorClient = executorClient;
 
         this.indexClient = indexClient;
+        this.redirectControl = redirectControl;
         this.eventLog = eventLog;
 
     }
 
     public void register() {
-        Spark.post("/public/nodes/:node/actions/repartition-index", this::triggerRepartition, Redirects.redirectToActors);
-        Spark.post("/public/nodes/:node/actions/sideload-encyclopedia", this::sideloadEncyclopedia, Redirects.redirectToActors);
-        Spark.post("/public/nodes/:node/actions/sideload-dirtree", this::sideloadDirtree, Redirects.redirectToActors);
-        Spark.post("/public/nodes/:node/actions/sideload-stackexchange", this::sideloadStackexchange, Redirects.redirectToActors);
+        Spark.post("/public/nodes/:node/actions/repartition-index", this::triggerRepartition,
+                redirectControl.renderRedirectAcknowledgement("Repartitioning", "..")
+        );
+        Spark.post("/public/nodes/:node/actions/sideload-encyclopedia", this::sideloadEncyclopedia,
+                redirectControl.renderRedirectAcknowledgement("Sideloading", "..")
+        );
+        Spark.post("/public/nodes/:node/actions/sideload-dirtree", this::sideloadDirtree,
+                redirectControl.renderRedirectAcknowledgement("Sideloading", "..")
+        );
+        Spark.post("/public/nodes/:node/actions/sideload-stackexchange", this::sideloadStackexchange,
+                redirectControl.renderRedirectAcknowledgement("Sideloading", "..")
+        );
     }
 
     public Object sideloadEncyclopedia(Request request, Response response) throws Exception {

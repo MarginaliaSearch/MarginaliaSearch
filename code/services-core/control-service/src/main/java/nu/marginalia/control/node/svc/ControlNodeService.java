@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import nu.marginalia.client.Context;
 import nu.marginalia.client.ServiceMonitors;
+import nu.marginalia.control.RedirectControl;
 import nu.marginalia.control.Redirects;
 import nu.marginalia.control.node.model.*;
 import nu.marginalia.control.sys.model.EventLogEntry;
@@ -37,6 +38,7 @@ public class ControlNodeService {
     private final ExecutorClient executorClient;
     private final HikariDataSource dataSource;
     private final ServiceMonitors monitors;
+    private final RedirectControl redirectControl;
     private final NodeConfigurationService nodeConfigurationService;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -49,7 +51,9 @@ public class ControlNodeService {
             HeartbeatService heartbeatService,
             ExecutorClient executorClient,
             HikariDataSource dataSource,
-            ServiceMonitors monitors, NodeConfigurationService nodeConfigurationService)
+            ServiceMonitors monitors,
+            RedirectControl redirectControl,
+            NodeConfigurationService nodeConfigurationService)
     {
         this.fileStorageService = fileStorageService;
         this.rendererFactory = rendererFactory;
@@ -58,6 +62,7 @@ public class ControlNodeService {
         this.executorClient = executorClient;
         this.dataSource = dataSource;
         this.monitors = monitors;
+        this.redirectControl = redirectControl;
         this.nodeConfigurationService = nodeConfigurationService;
     }
 
@@ -83,18 +88,29 @@ public class ControlNodeService {
         Spark.get("/public/nodes/:id/storage/details", this::nodeStorageDetailsModel, storageDetailsRenderer::render);
 
         Spark.get("/public/nodes/:id/storage/new-specs", this::newSpecsModel, newSpecsFormRenderer::render);
-        Spark.post("/public/nodes/:id/storage/new-specs", this::createNewSpecsAction);
+        Spark.post("/public/nodes/:id/storage/new-specs", this::createNewSpecsAction,
+                redirectControl.renderRedirectAcknowledgement("Creating", ".")
+        );
 
         Spark.get("/public/nodes/:id/storage/:view", this::nodeStorageListModel, storageListRenderer::render);
 
         Spark.get("/public/nodes/:id/configuration", this::nodeConfigModel, configRenderer::render);
         Spark.post("/public/nodes/:id/configuration", this::updateConfigModel, configRenderer::render);
 
-        Spark.post("/public/nodes/:id/storage/recrawl-auto", this::triggerAutoRecrawl);
-        Spark.post("/public/nodes/:id/storage/process-auto", this::triggerAutoProcess);
-        Spark.post("/public/nodes/:id/storage/load-selected", this::triggerLoadSelected);
-        Spark.post("/public/nodes/:id/storage/crawl/:fid", this::triggerCrawl);
-        Spark.post("/public/nodes/:id/storage/backup-restore/:fid", this::triggerRestoreBackup);
+        Spark.post("/public/nodes/:id/storage/recrawl-auto", this::triggerAutoRecrawl,
+                redirectControl.renderRedirectAcknowledgement("Recrawling", ".."));
+        Spark.post("/public/nodes/:id/storage/process-auto", this::triggerAutoProcess,
+                redirectControl.renderRedirectAcknowledgement("Processing", "..")
+                );
+        Spark.post("/public/nodes/:id/storage/load-selected", this::triggerLoadSelected,
+                redirectControl.renderRedirectAcknowledgement("Loading", "..")
+                );
+        Spark.post("/public/nodes/:id/storage/crawl/:fid", this::triggerCrawl,
+                redirectControl.renderRedirectAcknowledgement("Crawling", "..")
+                );
+        Spark.post("/public/nodes/:id/storage/backup-restore/:fid", this::triggerRestoreBackup,
+                redirectControl.renderRedirectAcknowledgement("Restoring", "..")
+                );
 
         Spark.post("/public/nodes/:id/fsms/:fsm/start", this::startFsm);
         Spark.post("/public/nodes/:id/fsms/:fsm/stop", this::stopFsm);
@@ -125,7 +141,7 @@ public class ControlNodeService {
 
         executorClient.triggerCrawl(Context.fromRequest(request), nodeId, request.params("fid"));
 
-        return redirectToOverview(request);
+        return "";
     }
 
     private Object triggerRestoreBackup(Request request, Response response) {
@@ -133,7 +149,7 @@ public class ControlNodeService {
 
         executorClient.restoreBackup(Context.fromRequest(request), nodeId, request.params("fid"));
 
-        return redirectToOverview(request);
+        return "";
     }
 
     @SneakyThrows
@@ -153,7 +169,7 @@ public class ControlNodeService {
 
         executorClient.createCrawlSpecFromDownload(Context.fromRequest(request), nodeId, description, url);
 
-        return redirectToOverview(request);
+        return "";
     }
 
     private Object newSpecsModel(Request request, Response response) {
@@ -176,7 +192,7 @@ public class ControlNodeService {
                 toCrawl.orElseThrow(AssertionError::new)
         );
 
-        return redirectToOverview(request);
+        return "";
     }
 
     private Object triggerAutoProcess(Request request, Response response) throws SQLException {
@@ -188,7 +204,7 @@ public class ControlNodeService {
                 nodeId,
                 toConvert.orElseThrow(AssertionError::new));
 
-        return redirectToOverview(request);
+        return "";
     }
 
     private Object triggerLoadSelected(Request request, Response response) throws SQLException {
@@ -201,7 +217,7 @@ public class ControlNodeService {
                 new LoadParameters(toLoadStorages)
         );
 
-        return redirectToOverview(request);
+        return "";
     }
 
 

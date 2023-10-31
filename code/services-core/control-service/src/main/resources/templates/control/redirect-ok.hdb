@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Control Service</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/style.css" />
+    <meta http-equiv="refresh" content="1;URL='{{redirectUrl}}'" />
+    {{> control/partials/head-includes }}
+</head>
+<body>
+  {{> control/partials/nav}}
+  <div class="container">
+      <h1 class="my-5">{{message}}</h1>
+      <a href="{{redirectUrl}}">Click here if it doesn't work</a>
+  </div>
+</body>
+{{> control/partials/foot-includes }}
+</html>
