@@ -12,6 +12,9 @@ public record FileStorageWithActions(FileStorage storage) {
     public boolean isCrawlable() {
         return storage.type() == FileStorageType.CRAWL_SPEC;
     }
+    public boolean isAtagsExportable() {
+        return storage.type() == FileStorageType.CRAWL_DATA;
+    }
     public boolean isRecrawlable() {
         return storage.type() == FileStorageType.CRAWL_DATA;
     }

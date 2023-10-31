@@ -8,10 +8,7 @@ import nu.marginalia.actor.ExecutorActorControlService;
 import nu.marginalia.actor.state.ActorStateInstance;
 import nu.marginalia.executor.model.ActorRunState;
 import nu.marginalia.executor.model.ActorRunStates;
-import nu.marginalia.executor.svc.BackupService;
-import nu.marginalia.executor.svc.ProcessingService;
-import nu.marginalia.executor.svc.SideloadService;
-import nu.marginalia.executor.svc.TransferService;
+import nu.marginalia.executor.svc.*;
 import nu.marginalia.service.server.BaseServiceParams;
 import nu.marginalia.service.server.Service;
 import nu.marginalia.service.server.mq.MqNotification;
@@ -44,6 +41,7 @@ public class ExecutorSvc extends Service {
                        ProcessingService processingService,
                        SideloadService sideloadService,
                        BackupService backupService,
+                       ExportService exportService,
                        FileStorageService fileStorageService,
                        Gson gson,
                        TransferService transferService,
@@ -71,6 +69,9 @@ public class ExecutorSvc extends Service {
         Spark.post("/sideload/dirtree", sideloadService::sideloadDirtree);
         Spark.post("/sideload/stackexchange", sideloadService::sideloadStackexchange);
         Spark.post("/sideload/encyclopedia", sideloadService::sideloadEncyclopedia);
+
+        Spark.post("/export/atags", exportService::exportAtags);
+        Spark.post("/export/data", exportService::exportData);
 
         Spark.post("/backup/:fid/restore", backupService::restore);
         Spark.get("/storage/:fid", transferService::listFiles, gson::toJson);

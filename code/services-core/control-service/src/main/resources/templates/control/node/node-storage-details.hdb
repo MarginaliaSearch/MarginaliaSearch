@@ -67,6 +67,14 @@
                         </tr>
                     </form>
                 {{/if}}
+                {{#if isAtagsExportable}}
+                    <form method="post" action="/nodes/{{node.id}}/storage/{{storage.id}}/export-atags" onsubmit="return confirm('Confirm export of anchor tags from {{storage.path}}')">
+                        <tr>
+                            <td>Export anchor tags from this crawl data</td>
+                            <td><button class="btn btn-secondary" type="submit">Export</button></td>
+                        </tr>
+                    </form>
+                {{/if}}
                 {{#if isRestorable}}
                     <form method="post" action="/nodes/{{node.id}}/storage/backup-restore/{{storage.id}}" onsubmit="return confirm('Confirm restoring backup {{storage.path}}')">
                         <tr>

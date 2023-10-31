@@ -86,6 +86,13 @@ public class ExecutorClient extends AbstractDynamicClient {
                 .blockingSubscribe();
     }
 
+    public void exportAtags(Context ctx, int node, String fid) {
+        post(ctx, node, "/export/atags?fid="+fid, "").blockingSubscribe();
+    }
+    public void exportData(Context ctx, int node) {
+        post(ctx, node, "/export/data", "").blockingSubscribe();
+    }
+
     public void restoreBackup(Context context, int node, String fid) {
         post(context, node, "/backup/" + fid + "/restore", "").blockingSubscribe();
     }

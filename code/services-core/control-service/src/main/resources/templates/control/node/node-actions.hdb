@@ -288,6 +288,34 @@
                 </form>
             </div>
         </div>
+
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseExportData"
+                        aria-expanded="false"
+                        aria-controls="collapseExportData">
+                    Export Database Data
+                </button>
+            </h2>
+
+            <div id="collapseExportData" class="accordion-collapse collapse p-3" data-bs-parent="#accordionActions">
+                This will export database data: Domains, blacklist and domain links.
+
+                <form method="post" action="actions/export-data" onsubmit="return confirm('Confirm export')">
+                    <div class="my-3 py-3">
+                        <div class="row">
+                            <div class="col">
+                                <button type="submit" class="btn btn-primary">Export</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 

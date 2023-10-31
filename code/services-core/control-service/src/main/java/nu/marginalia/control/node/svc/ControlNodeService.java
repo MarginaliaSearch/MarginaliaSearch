@@ -111,9 +111,24 @@ public class ControlNodeService {
         Spark.post("/public/nodes/:id/storage/backup-restore/:fid", this::triggerRestoreBackup,
                 redirectControl.renderRedirectAcknowledgement("Restoring", "..")
                 );
-
+        Spark.post("/public/nodes/:id/actions/export-data", this::exportData,
+                redirectControl.renderRedirectAcknowledgement("Exporting", "../storage/exports")
+                );
+        Spark.post("/public/nodes/:id/storage/:fid/export-atags", this::exportAtags,
+                redirectControl.renderRedirectAcknowledgement("Exporting", "../../storage/exports")
+                );
         Spark.post("/public/nodes/:id/fsms/:fsm/start", this::startFsm);
         Spark.post("/public/nodes/:id/fsms/:fsm/stop", this::stopFsm);
+    }
+
+    private Object exportData(Request req, Response rsp) {
+        executorClient.exportData(Context.fromRequest(req), Integer.parseInt(req.params("id")));
+        return "";
+    }
+
+    private Object exportAtags(Request req, Response rsp) {
+        executorClient.exportAtags(Context.fromRequest(req), Integer.parseInt(req.params("id")), req.params("fid"));
+        return "";
     }
 
     public Object startFsm(Request req, Response rsp) throws Exception {
