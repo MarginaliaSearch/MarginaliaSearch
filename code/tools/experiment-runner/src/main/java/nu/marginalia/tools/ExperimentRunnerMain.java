@@ -24,6 +24,7 @@ public class ExperimentRunnerMain {
             "topic", TopicExperiment.class,
             "sentence-statistics", SentenceStatisticsExperiment.class,
             "site-statistics", SiteStatisticsExperiment.class,
+            "export-atags", ExportExternalLinksExperiment.class,
             "debug-converter", DebugConverterExperiment.class
     );
 
