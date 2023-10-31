@@ -10,6 +10,7 @@ import lombok.With;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.storage.FileStorageService;
+import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.storage.model.FileStorageId;
 import nu.marginalia.storage.model.FileStorageType;
 import org.slf4j.Logger;
@@ -21,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.time.LocalDateTime;
 import java.util.zip.GZIPOutputStream;
 
 @Singleton
@@ -47,7 +49,8 @@ public class ExportDataActor extends RecordActorPrototype {
     public ActorStep transition(ActorStep self) throws Exception {
         return switch(self) {
             case Export() -> {
-                var storage = storageService.getStorageByType(FileStorageType.EXPORT);
+                var storageBase = storageService.getStorageBase(FileStorageBaseType.STORAGE);
+                var storage = storageService.allocateTemporaryStorage(storageBase, FileStorageType.EXPORT, "db-export", "DB Exports " + LocalDateTime.now());
 
                 if (storage == null) yield new Error("Bad storage id");
                 yield new ExportBlacklist(storage.id());

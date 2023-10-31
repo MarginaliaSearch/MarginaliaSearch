@@ -11,7 +11,7 @@ public enum FileStorageBaseType {
     public boolean permitsStorageType(FileStorageType type) {
         return switch (this) {
             case BACKUP -> FileStorageType.BACKUP.equals(type);
-            case STORAGE -> EnumSet.of(FileStorageType.CRAWL_DATA, FileStorageType.PROCESSED_DATA, FileStorageType.CRAWL_SPEC).contains(type);
+            case STORAGE -> EnumSet.of(FileStorageType.EXPORT, FileStorageType.CRAWL_DATA, FileStorageType.PROCESSED_DATA, FileStorageType.CRAWL_SPEC).contains(type);
             default -> false;
         };
     }
