@@ -262,6 +262,7 @@ public class ControlNodeService {
             case "crawl" -> FileStorageType.CRAWL_DATA;
             case "processed" -> FileStorageType.PROCESSED_DATA;
             case "specs" -> FileStorageType.CRAWL_SPEC;
+            case "exports" -> FileStorageType.EXPORT;
             default -> throw new IllegalArgumentException(view);
         };
 
@@ -281,6 +282,7 @@ public class ControlNodeService {
             case CRAWL_DATA -> "crawl";
             case CRAWL_SPEC -> "specs";
             case PROCESSED_DATA -> "processed";
+            case EXPORT -> "exports";
             default -> throw new IllegalStateException(storage.type().toString());
         };
 
