@@ -31,11 +31,14 @@ dependencies {
     implementation project(':code:common:service-client')
     implementation project(':code:common:service-discovery')
 
+    implementation project(':third-party:commons-codec')
+
     implementation project(':code:libraries:message-queue')
 
     implementation project(':code:process-models:crawl-spec')
+    implementation project(':code:process-models:crawling-model')
+    implementation project(':code:features-crawl:link-parser')
     implementation project(':code:features-index:index-journal')
-
     implementation project(':code:api:index-api')
     implementation project(':code:api:query-api')
     implementation project(':code:api:process-mqapi')
@@ -48,9 +51,11 @@ dependencies {
     implementation libs.prometheus
     implementation libs.notnull
     implementation libs.guice
+    implementation libs.trove
     implementation libs.protobuf
     implementation libs.rxjava
     implementation libs.zstd
+    implementation libs.jsoup
     implementation libs.commons.io
     implementation libs.bundles.mariadb
 

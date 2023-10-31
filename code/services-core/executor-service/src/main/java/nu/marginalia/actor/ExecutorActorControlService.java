@@ -46,7 +46,8 @@ public class ExecutorActorControlService {
                                        IndexConstructorMonitorActor indexConstructorMonitorActor,
                                        TriggerAdjacencyCalculationActor triggerAdjacencyCalculationActor,
                                        CrawlJobExtractorActor crawlJobExtractorActor,
-                                       ExportDataActor exportDataActor
+                                       ExportDataActor exportDataActor,
+                                       ExportAtagsActor exportAtagsActor
                             ) {
         this.messageQueueFactory = messageQueueFactory;
         this.eventLog = baseServiceParams.eventLog;
@@ -70,6 +71,7 @@ public class ExecutorActorControlService {
         register(ExecutorActor.ADJACENCY_CALCULATION, triggerAdjacencyCalculationActor);
         register(ExecutorActor.CRAWL_JOB_EXTRACTOR, crawlJobExtractorActor);
         register(ExecutorActor.EXPORT_DATA, exportDataActor);
+        register(ExecutorActor.EXPORT_ATAGS, exportAtagsActor);
     }
 
     private void register(ExecutorActor process, ActorPrototype graph) {

@@ -36,11 +36,6 @@ public class ExportDataActor extends RecordActorPrototype {
     private final HikariDataSource dataSource;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    @AllArgsConstructor @With @NoArgsConstructor
-    public static class Message {
-        public FileStorageId storageId = null;
-    };
-
     public record Export() implements ActorStep {}
     public record ExportBlacklist(FileStorageId fid) implements ActorStep {}
     public record ExportDomains(FileStorageId fid) implements ActorStep {}
