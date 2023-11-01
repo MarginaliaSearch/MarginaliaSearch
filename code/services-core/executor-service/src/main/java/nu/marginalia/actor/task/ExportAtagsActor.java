@@ -10,6 +10,7 @@ import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.storage.model.*;
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorStep;
@@ -106,7 +107,7 @@ public class ExportAtagsActor extends RecordActorPrototype {
     }
 
     private boolean exportLinks(ATagCsvWriter exporter, SerializableCrawlDataStream stream) throws IOException, URISyntaxException {
-        final TLongHashSet hashes = new TLongHashSet();
+        ATagLinkFilter linkFilter = new ATagLinkFilter();
 
         while (stream.hasNext()) {
             if (!(stream.next() instanceof CrawledDocument doc))
@@ -119,19 +120,69 @@ public class ExportAtagsActor extends RecordActorPrototype {
 
             for (var atag : parsed.getElementsByTag("a")) {
                 String linkText = atag.text();
-                if (linkText.isBlank())
+
+                if (!linkFilter.isLinkTextEligible(linkText)) {
                     continue;
+                }
 
                 var linkOpt = linkParser.parseLinkPermissive(baseUrl, atag);
                 linkOpt
-                        .filter(url -> !Objects.equals(url.domain, baseUrl.domain))
-                        .filter(url -> hashes.add(hash.hashNearlyASCII(linkText) ^ hash.hashNearlyASCII(url.toString())))
+                        .filter(url -> linkFilter.isEligible(url, baseUrl, linkText))
                         .ifPresent(url -> exporter.accept(url, baseUrl.domain, linkText));
             }
         }
 
         return true;
     }
+
+    private static class ATagLinkFilter {
+        private final TLongHashSet hashes = new TLongHashSet();
+
+        private boolean isLinkTextEligible(String linkText) {
+            // Filter out the most obviously uninteresting anchor texts
+
+            if (linkText.isBlank())
+                return false;
+            if (linkText.startsWith("this"))
+                return false;
+            if (linkText.equalsIgnoreCase("here"))
+                return false;
+            if (linkText.equalsIgnoreCase("click here"))
+                return false;
+
+            if (!StringUtils.isAsciiPrintable(linkText))  // This also filters out newlines, a good thing!
+                return false;
+
+            return true;
+        }
+        private boolean isEligible(EdgeUrl url, EdgeUrl baseUrl, String linkText) {
+            if (!"http".equals(url.proto) && !"https".equals(url.proto))
+                return false;
+
+            // This is an artifact of the link parser typically
+            if ("example.com".equals(url.domain.domain))
+                return false;
+
+            if (linkText.contains(url.domain.toString()))
+                return false;
+            if (Objects.equals(url.domain, baseUrl.domain))
+                return false;
+
+            String urlString = url.toString();
+            if (!StringUtils.isAsciiPrintable(urlString)) { // This also filters out newlines, a good thing!
+                return false;
+            }
+
+            // Deduplicate by hash;  we've already checked that the strings are ASCII printable so we don't
+            // need to be concerned about using the fast ASCII hash
+            if (hashes.add(hash.hashLowerBytes(linkText) ^ hash.hashLowerBytes(urlString))) {
+                return false;
+            }
+
+            return true;
+        }
+    }
+
 
     private static class ATagCsvWriter {
         private final BufferedWriter writer;
@@ -141,17 +192,28 @@ public class ExportAtagsActor extends RecordActorPrototype {
         }
 
         @SneakyThrows
-        public void accept(EdgeUrl url, EdgeDomain domain, String linkText) {
+        public void accept(EdgeUrl url, EdgeDomain sourceDomain, String linkText) {
+            final String urlString = urlWithNoSchema(url);
+
             writer.write(String.format("\"%s\",\"%s\",\"%s\"\n",
-                    csvify(url),
-                    csvify(domain),
-                    csvify(linkText)));
+                    csvify(urlString),
+                    csvify(linkText),
+                    csvify(sourceDomain)));
+        }
+
+        private static String urlWithNoSchema(EdgeUrl url) {
+            StringBuilder sb = new StringBuilder();
+
+            sb.append(url.domain).append(url.path);
+
+            if (url.param != null)
+                sb.append('?').append(url.param);
+
+            return sb.toString();
         }
 
         private static String csvify(Object field) {
-            return field.toString()
-                    .replace("\"", "\"\"")
-                    .replace("\n", " ");
+            return field.toString().replace("\"", "\"\"");
         }
 
     }

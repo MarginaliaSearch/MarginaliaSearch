@@ -57,6 +57,7 @@ dependencies {
     implementation libs.zstd
     implementation libs.jsoup
     implementation libs.commons.io
+    implementation libs.commons.lang3
     implementation libs.bundles.mariadb
 
     testImplementation libs.bundles.slf4j.test
