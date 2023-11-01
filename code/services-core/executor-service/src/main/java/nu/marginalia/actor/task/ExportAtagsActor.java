@@ -8,7 +8,6 @@ import lombok.SneakyThrows;
 import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.storage.model.*;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;

@@ -1,0 +1,53 @@
+x-svc: &service
+  env_file:
+    - "run/env/service.env"
+  volumes:
+    - conf:/wmsa/conf:ro
+    - data:/wmsa/data
+    - logs:/var/log/wmsa
+  networks:
+    - wmsa
+services:
+  screenshot-capture-tool:
+    <<: *service
+    image: "marginalia.nu/screenshot-capture-tool"
+    container_name: "screenshot-capture-tool"
+    networks:
+    - wmsa
+    - headlesschrome
+    depends_on:
+    - browserless
+  browserless:
+    <<: *service
+    image: "browserless/chrome"
+    container_name: "headlesschrome"
+    env_file:
+    - "run/env/browserless.env"
+    ports:
+    - "3000:3000"
+    networks:
+      - wmsa
+      - headlesschrome
+
+networks:
+  wmsa:
+  headlesschrome:
+volumes:
+  logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: run/logs
+  conf:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: run/conf
+  data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: run/data

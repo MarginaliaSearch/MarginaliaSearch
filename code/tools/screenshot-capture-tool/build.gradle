@@ -3,6 +3,7 @@ plugins {
 
     id 'application'
     id 'jvm-test-suite'
+    id 'com.palantir.docker' version '0.35.0'
 }
 
 java {
@@ -15,6 +16,8 @@ application {
     mainClass = 'nu.marginalia.screenshot.ScreenshotCaptureToolMain'
     applicationName = 'screenshot-capture-tool'
 }
+
+apply from: "$rootProject.projectDir/docker-service.gradle"
 
 tasks.distZip.enabled = false
 
@@ -30,6 +33,7 @@ dependencies {
     implementation libs.commons.compress
     implementation libs.commons.io
     implementation libs.guice
+    implementation libs.gson
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
