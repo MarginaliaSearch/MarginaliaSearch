@@ -32,7 +32,8 @@ public class SearchFlagSiteService {
                     new CategoryItem("freebooting", "Reposting Stolen Content"),
                     new CategoryItem("broken", "Broken Website"),
                     new CategoryItem("shock", "Shocking/Offensive"),
-                    new CategoryItem("blacklist", "Review Blacklisting")
+                    new CategoryItem("blacklist", "Review Blacklisting"),
+                    new CategoryItem("no-random", "Remove from Random Exploration")
             );
 
     private final Map<String, CategoryItem> categoryItemMap =

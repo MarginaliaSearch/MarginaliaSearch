@@ -6,6 +6,7 @@ public enum DomainComplaintCategory {
     BROKEN("broken"),
     SHOCK("shock"),
     BLACKLIST("blacklist"),
+    REMOVE_EXPLORATION("no-random"),
     UNKNOWN("unknown");
 
     private final String categoryName;

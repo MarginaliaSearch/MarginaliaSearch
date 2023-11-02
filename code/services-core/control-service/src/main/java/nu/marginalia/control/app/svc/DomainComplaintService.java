@@ -2,6 +2,7 @@ package nu.marginalia.control.app.svc;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
+import lombok.SneakyThrows;
 import nu.marginalia.control.Redirects;
 import nu.marginalia.control.app.model.DomainComplaintCategory;
 import nu.marginalia.control.app.model.DomainComplaintModel;
@@ -27,16 +28,19 @@ public class DomainComplaintService {
     private final HikariDataSource dataSource;
     private final RendererFactory rendererFactory;
     private final ControlBlacklistService blacklistService;
+    private final RandomExplorationService randomExplorationService;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
     public DomainComplaintService(HikariDataSource dataSource,
                                   RendererFactory rendererFactory,
-                                  ControlBlacklistService blacklistService
+                                  ControlBlacklistService blacklistService,
+                                  RandomExplorationService randomExplorationService
     ) {
         this.dataSource = dataSource;
         this.rendererFactory = rendererFactory;
         this.blacklistService = blacklistService;
+        this.randomExplorationService = randomExplorationService;
     }
 
     public void register() throws IOException {
@@ -59,6 +63,7 @@ public class DomainComplaintService {
         return Map.of("complaintsNew", unreviewed, "complaintsReviewed", reviewed);
     }
 
+    @SneakyThrows
     private Object reviewComplaint(Request request, Response response) {
         var domain = new EdgeDomain(request.params("domain"));
         String action = request.queryParams("action");
@@ -68,13 +73,13 @@ public class DomainComplaintService {
         switch (action) {
             case "noop" -> reviewNoAction(domain);
             case "appeal" -> approveAppealBlacklisting(domain);
+            case "no-random" -> removeFromRandomDomains(domain);
             case "blacklist" -> blacklistDomain(domain);
             default -> throw new UnsupportedOperationException();
         }
 
         return "";
     }
-
 
     public List<DomainComplaintModel> getComplaints() {
         try (var conn = dataSource.getConnection();
@@ -107,6 +112,12 @@ public class DomainComplaintService {
     public void approveAppealBlacklisting(EdgeDomain domain) {
         blacklistService.removeFromBlacklist(domain);
         setDecision(domain, "APPROVED");
+    }
+
+    private void removeFromRandomDomains(EdgeDomain domain) throws SQLException {
+        randomExplorationService.removeDomain(domain);
+
+        setDecision(domain, "REMOVED-FROM-RANDOM");
     }
 
     public void blacklistDomain(EdgeDomain domain) {

@@ -43,6 +43,7 @@
                         {{/if}}
                         {{#unless appeal}}
                             <li><a class="dropdown-item" href="#"  onClick="handleComplaint('{{domain}}', 'blacklist')">Add Sanction</a></li>
+                            <li><a class="dropdown-item" href="#"  onClick="handleComplaint('{{domain}}', 'no-random')">Remove From Random Domains</a></li>
                         {{/unless}}
                         <li><a class="dropdown-item" href="#" onClick="handleComplaint('{{domain}}', 'noop')">Ignore</a></li>
                     </ul>

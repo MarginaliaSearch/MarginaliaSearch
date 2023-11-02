@@ -3,6 +3,7 @@ package nu.marginalia.control.app.svc;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import gnu.trove.list.array.TIntArrayList;
+import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.renderer.RendererFactory;
 import spark.Request;
 import spark.Response;
@@ -105,6 +106,20 @@ public class RandomExplorationService {
                 ret.add(new RandomDomainResult(rs.getInt(1), rs.getString(2)));
             }
             return ret;
+        }
+    }
+
+    public void removeDomain(EdgeDomain domain) throws SQLException {
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("""
+                DELETE EC_RANDOM_DOMAINS
+                FROM EC_RANDOM_DOMAINS
+                INNER JOIN EC_DOMAIN ON EC_DOMAIN.ID = EC_RANDOM_DOMAINS.DOMAIN_ID
+                WHERE EC_DOMAIN.DOMAIN_NAME = ?
+             """))
+        {
+            stmt.setString(1, domain.toString());
+            stmt.executeUpdate();
         }
     }
 
