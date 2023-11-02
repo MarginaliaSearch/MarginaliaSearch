@@ -94,7 +94,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.assistant-service-screenshot.rule=PathPrefix(`/screenshot`)"
-      - "traefik.http.routers.assistant-service-screenshot.entrypoints=search"
+      - "traefik.http.routers.assistant-service-screenshot.entrypoints=search,dating"
       - "traefik.http.routers.assistant-service-screenshot.middlewares=add-xpublic"
       - "traefik.http.routers.assistant-service-screenshot.middlewares=add-public"
       - "traefik.http.routers.assistant-service-suggest.rule=PathPrefix(`/suggest`)"
