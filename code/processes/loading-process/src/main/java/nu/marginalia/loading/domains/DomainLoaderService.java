@@ -45,23 +45,41 @@ public class DomainLoaderService {
         DomainIdRegistry ret = new DomainIdRegistry();
 
         try (var conn = dataSource.getConnection();
+             var existingDomainNamesQuery = conn.prepareStatement("""
+                     SELECT DOMAIN_NAME FROM EC_DOMAIN
+                     """);
              var selectStmt = conn.prepareStatement("""
                      SELECT ID, DOMAIN_NAME FROM EC_DOMAIN WHERE DOMAIN_NAME=?
                      """)
         ) {
+            Set<EdgeDomain> existingDomainNames = new HashSet<>();
+            var existingDomainNamesRs = existingDomainNamesQuery.executeQuery();
+            while (existingDomainNamesRs.next()) {
+                existingDomainNames.add(new EdgeDomain(existingDomainNamesRs.getString(1)));
+            }
 
             try (var inserter = new DomainInserter(conn, nodeId)) {
-                for (var domain : readSetDomainNames(inputData)) {
-                    inserter.accept(new EdgeDomain(domain));
-                    domainNamesAll.add(domain);
+                for (var domainName : readSetDomainNames(inputData)) {
+                    var domain = new EdgeDomain(domainName);
+                    if (existingDomainNames.contains(domain))
+                        continue;
+
+                    inserter.accept(domain);
+                    domainNamesAll.add(domainName);
                 }
             }
             try (var inserter = new DomainInserter(conn, -1)) {
-                for (var domain : readReferencedDomainNames(inputData)) {
-                    inserter.accept(new EdgeDomain(domain));
-                    domainNamesAll.add(domain);
+                for (var domainName : readReferencedDomainNames(inputData)) {
+                    var domain = new EdgeDomain(domainName);
+                    if (existingDomainNames.contains(domain))
+                        continue;
+
+                    inserter.accept(domain);
+                    domainNamesAll.add(domainName);
                 }
             }
+
+            existingDomainNames.clear();
 
             try (var updater = new DomainAffinityUpdater(conn, nodeId)) {
                 for (var domain : readSetDomainNames(inputData)) {
@@ -164,6 +182,7 @@ public class DomainLoaderService {
             statement.close();
         }
     }
+
     private static class DomainAffinityUpdater implements AutoCloseable {
         private final PreparedStatement statement;
         private final int nodeAffinity;
