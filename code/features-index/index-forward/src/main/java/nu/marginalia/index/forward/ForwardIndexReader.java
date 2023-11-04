@@ -53,9 +53,6 @@ public class ForwardIndexReader {
         data = loadData(dataFile);
     }
 
-    public void selfTest() {
-
-    }
     private static TLongIntHashMap loadIds(Path idsFile) throws IOException {
         try (var idsArray = LongArrayFactory.mmapForReadingShared(idsFile)) {
             assert idsArray.size() < Integer.MAX_VALUE;

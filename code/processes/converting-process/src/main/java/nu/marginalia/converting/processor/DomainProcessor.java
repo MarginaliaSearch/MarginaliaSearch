@@ -2,6 +2,9 @@ package nu.marginalia.converting.processor;
 
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
+import nu.marginalia.atags.AnchorTextKeywords;
+import nu.marginalia.atags.source.AnchorTagsSource;
+import nu.marginalia.atags.source.AnchorTagsSourceFactory;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.processor.logic.links.LinkGraph;
 import nu.marginalia.crawling.io.SerializableCrawlDataStream;
@@ -16,11 +19,14 @@ import nu.marginalia.model.crawl.HtmlFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.SQLException;
 import java.util.*;
 
 public class DomainProcessor {
     private final DocumentProcessor documentProcessor;
     private final SiteWords siteWords;
+    private final AnchorTagsSource anchorTagsSource;
+    private final AnchorTextKeywords anchorTextKeywords;
     private final LshDocumentDeduplicator documentDeduplicator;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -28,11 +34,15 @@ public class DomainProcessor {
     @Inject
     public DomainProcessor(DocumentProcessor documentProcessor,
                            SiteWords siteWords,
-                           LshDocumentDeduplicator documentDeduplicator)
+                           AnchorTagsSourceFactory anchorTagsSourceFactory,
+                           AnchorTextKeywords anchorTextKeywords,
+                           LshDocumentDeduplicator documentDeduplicator) throws SQLException
     {
         this.documentProcessor = documentProcessor;
         this.siteWords = siteWords;
+        this.anchorTextKeywords = anchorTextKeywords;
         this.documentDeduplicator = documentDeduplicator;
+        this.anchorTagsSource = anchorTagsSourceFactory.create();
     }
 
     @SneakyThrows
@@ -76,19 +86,26 @@ public class DomainProcessor {
 
         List<String> terms = new ArrayList<>();
         terms.add("ip:"+ip);
-        if (cookies)
+        if (cookies) {
             terms.add(HtmlFeature.COOKIES.getKeyword());
+        }
+
+        var atags = anchorTagsSource.getAnchorTags(ret.domain);
 
         for (var document : ret.documents) {
             if (document.details == null)
                 continue;
 
-            if (cookies)
+            if (cookies) {
                 document.details.features.add(HtmlFeature.COOKIES);
+            }
 
             document.words.addAllSyntheticTerms(terms);
-        }
 
+            document.words.addAnchorTerms(
+                    anchorTextKeywords.getAnchorTextKeywords(atags, document.url)
+            );
+        }
         documentDeduplicator.deduplicate(ret.documents);
         calculateStatistics(ret);
 

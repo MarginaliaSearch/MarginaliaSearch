@@ -146,6 +146,7 @@ public class IndexConstructorMain {
                         | WordFlags.UrlDomain.asBit()
                         | WordFlags.UrlPath.asBit()
                         | WordFlags.Site.asBit()
+                        | WordFlags.ExternalLink.asBit()
                         | WordFlags.SiteAdjacent.asBit();
 
         return r -> WordMetadata.hasAnyFlags(r, highPriorityFlags);

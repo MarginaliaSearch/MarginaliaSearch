@@ -2,7 +2,6 @@ package nu.marginalia.keyword.model;
 
 import it.unimi.dsi.fastutil.objects.Object2LongLinkedOpenHashMap;
 import lombok.Getter;
-import lombok.ToString;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.model.idx.WordMetadata;
 
@@ -76,6 +75,14 @@ public class DocumentKeywordsBuilder {
         newWords.forEach(word -> words.putIfAbsent(word, meta));
     }
 
+    public void addAnchorTerms(List<String> keywords) {
+        long meta = WordFlags.Title.asBit()
+                | WordFlags.ExternalLink.asBit()
+                | (1L << WordMetadata.POSITIONS_SHIFT);
+
+        keywords.forEach(word -> words.mergeLong(word, meta, (a, b) -> a|b));
+    }
+
     public List<String> getWordsWithAnyFlag(long flags) {
         List<String> ret = new ArrayList<>();
 
@@ -103,4 +110,5 @@ public class DocumentKeywordsBuilder {
         return sb.append(']').toString();
 
     }
+
 }

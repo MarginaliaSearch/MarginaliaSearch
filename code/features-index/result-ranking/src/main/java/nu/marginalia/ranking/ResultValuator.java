@@ -11,6 +11,9 @@ import nu.marginalia.ranking.factors.*;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +21,7 @@ import static java.lang.Math.min;
 
 @Singleton
 public class ResultValuator {
-    final static double scalingFactor = 250.;
+    final static double scalingFactor = 500.;
 
     private final Bm25Factor bm25Factor;
     private final TermCoherenceFactor termCoherenceFactor;
@@ -27,6 +30,8 @@ public class ResultValuator {
 
     private final ThreadLocal<ValuatorListPool<SearchResultKeywordScore>> listPool =
             ThreadLocal.withInitial(ValuatorListPool::new);
+
+    private static final Logger logger = LoggerFactory.getLogger(ResultValuator.class);
 
     @Inject
     public ResultValuator(Bm25Factor bm25Factor,
@@ -46,7 +51,6 @@ public class ResultValuator {
         var threadListPool = listPool.get();
         int sets = numberOfSets(scores);
 
-        double bestScore = 10;
 
         long documentMetadata = documentMetadata(scores);
         int features = htmlFeatures(scores);
@@ -56,7 +60,7 @@ public class ResultValuator {
         int asl = DocumentMetadata.decodeAvgSentenceLength(documentMetadata);
         int quality = DocumentMetadata.decodeQuality(documentMetadata);
         int size = DocumentMetadata.decodeSize(documentMetadata);
-        int flagsPenalty = flagsPenalty(features, documentMetadata & 0xFF, size, quality);
+        int flagsPenalty = flagsPenalty(features, documentMetadata & 0xFF, size);
         int topology = DocumentMetadata.decodeTopology(documentMetadata);
         int year = DocumentMetadata.decodeYear(documentMetadata);
 
@@ -85,7 +89,8 @@ public class ResultValuator {
                            + flagsPenalty
                            + priorityTermBonus.calculate(scores);
 
-        for (int set = 0; set <= sets; set++) {
+        double bestScore = 10;
+        for (int set = 0; set < sets; set++) {
             ResultKeywordSet keywordSet = createKeywordSet(threadListPool, scores, set);
 
             if (keywordSet.isEmpty() || keywordSet.hasNgram())
@@ -95,8 +100,7 @@ public class ResultValuator {
             final double bm25 = rankingParams.bm25FullWeight * bm25Factor.calculateBm25(rankingParams.fullParams, keywordSet, length, ctx);
             final double bm25p = rankingParams.bm25PrioWeight * bm25Factor.calculateBm25Prio(rankingParams.prioParams, keywordSet, ctx);
 
-            double nonNormalizedScore = bm25 + bm25p + tcf + overallPart;
-            double score = normalize(nonNormalizedScore, keywordSet.length());
+            double score = normalize(bm25 + bm25p + tcf + overallPart);
 
             bestScore = min(bestScore, score);
 
@@ -116,7 +120,7 @@ public class ResultValuator {
         }
     }
 
-    private int flagsPenalty(int featureFlags, long docFlags, int size, double quality) {
+    private int flagsPenalty(int featureFlags, long docFlags, int size) {
 
         // Short-circuit for index-service, which does not have the feature flags
         if (featureFlags == 0)
@@ -203,11 +207,11 @@ public class ResultValuator {
         return 1 + maxSet;
     }
 
-    public static double normalize(double value, int setSize) {
+    public static double normalize(double value) {
         if (value < 0)
             value = 0;
 
-        return Math.sqrt((1.0 + scalingFactor) / (1.0 + value / Math.max(1., setSize)));
+        return Math.sqrt((1.0 + scalingFactor) / (1.0 + value));
     }
 }
 

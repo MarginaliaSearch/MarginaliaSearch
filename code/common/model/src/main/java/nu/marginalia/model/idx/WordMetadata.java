@@ -12,14 +12,12 @@ import java.util.Set;
  * @param flags word flags (see {@link WordFlags})
  */
 public record WordMetadata(long positions,
-                           byte flags) {
+                           int flags) {
 
-    // Bottom 8 bits are used for flags
-
-    public static final long FLAGS_MASK = 0xFFL;
-
-    public static final int POSITIONS_SHIFT = 8;
-    public static final long POSITIONS_MASK = 0xFF_FFFF_FFFF_FFFFL;
+    public static final long FLAGS_MASK = (1L << WordFlags.values().length) - 1;
+    public static final int POSITIONS_COUNT = 64 - WordFlags.values().length;
+    public static final int POSITIONS_SHIFT = WordFlags.values().length;
+    public static final long POSITIONS_MASK = ~0L >>> POSITIONS_SHIFT;
 
 
 
@@ -30,7 +28,7 @@ public record WordMetadata(long positions,
     public WordMetadata(long value) {
         this(
                 ((value >>> POSITIONS_SHIFT) & POSITIONS_MASK),
-                (byte) (value & FLAGS_MASK)
+                (int)(value & FLAGS_MASK)
         );
     }
 
@@ -40,9 +38,9 @@ public record WordMetadata(long positions,
         this(positions, encodeFlags(flags));
     }
 
-    private static byte encodeFlags(Set<WordFlags> flags) {
-        byte ret = 0;
-        for (var flag : flags) { ret |= (byte) flag.asBit(); }
+    private static int encodeFlags(Set<WordFlags> flags) {
+        int ret = 0;
+        for (var flag : flags) { ret |= flag.asBit(); }
         return ret;
     }
 
@@ -69,7 +67,7 @@ public record WordMetadata(long positions,
     public long encode() {
         long ret = 0;
 
-        ret |= Byte.toUnsignedLong(flags);
+        ret |= Integer.toUnsignedLong(flags) & FLAGS_MASK;
         ret |= (positions & POSITIONS_MASK) << POSITIONS_SHIFT;
 
         return ret;

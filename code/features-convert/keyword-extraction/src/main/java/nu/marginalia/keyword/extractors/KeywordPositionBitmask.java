@@ -4,12 +4,13 @@ import com.google.inject.Inject;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import nu.marginalia.keyword.KeywordExtractor;
 import nu.marginalia.language.model.DocumentLanguageData;
+import nu.marginalia.model.idx.WordMetadata;
 
 /** Generates a position bitmask for each word in a document */
 public class KeywordPositionBitmask {
     private final Object2LongOpenHashMap<String> positionMask = new Object2LongOpenHashMap<>(10_000, 0.7f);
-    private final static int positionWidth = 56;
-    private final static long positionBitmask = (1L << positionWidth) - 1;
+    private final static int positionWidth = WordMetadata.POSITIONS_COUNT;
+    private final static long positionBitmask = WordMetadata.POSITIONS_MASK;
     private static final int unmodulatedPortion = 16;
 
     @Inject

@@ -77,7 +77,11 @@ public class WmsaHome {
                 home.resolve("model/lid.176.ftz"));
     }
 
+    public static Path getAtagsPath() {
+        return getHomePath().resolve("data/atags.parquet");
+    }
     private static final boolean debugMode = Boolean.getBoolean("wmsa-debug");
+
     public static boolean isDebug() {
         return debugMode;
     }

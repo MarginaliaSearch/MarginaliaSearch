@@ -43,6 +43,8 @@ public class Bm25Factor {
                 | WordFlags.SiteAdjacent.asBit()
                 | WordFlags.UrlPath.asBit()
                 | WordFlags.UrlDomain.asBit()
+                | WordFlags.ExternalLink.asBit()
+                | WordFlags.Title.asBit()
                 | WordFlags.Subjects.asBit();
 
         for (var keyword : keywordSet.keywords()) {
@@ -50,6 +52,7 @@ public class Bm25Factor {
 
             int freq = ctx.priorityFrequency(keyword.keyword);
 
+            // note we override b to zero for priority terms as they are independent of document length
             sum += invFreq(docCount, freq) * f(bm25Parameters.k(), 0, count, 0);
         }
 
