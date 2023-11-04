@@ -60,7 +60,7 @@ public class AnchorTagsImpl implements AnchorTagsSource {
     }
 
     @Override
-    public DomainLinks getAnchorTags(EdgeDomain domain) {
+    public synchronized DomainLinks getAnchorTags(EdgeDomain domain) {
         List<LinkWithText> links = new ArrayList<>();
 
         try (var ps = duckdbConnection.prepareStatement("""
