@@ -41,8 +41,6 @@ dependencies {
 
     implementation project(':code:features-search:screenshots')
     implementation project(':code:features-search:random-websites')
-    implementation project(':code:features-qs:query-parser')
-    implementation project(':code:features-index:result-ranking')
 
     implementation libs.bundles.slf4j
 
