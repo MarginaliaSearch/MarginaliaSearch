@@ -3,7 +3,6 @@ package nu.marginalia.db;
 import com.zaxxer.hikari.HikariDataSource;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
-import nu.marginalia.model.EdgeDomain;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 

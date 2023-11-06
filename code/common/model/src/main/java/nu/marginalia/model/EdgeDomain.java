@@ -57,7 +57,7 @@ public class EdgeDomain implements Serializable {
         }
     }
 
-    private static final Predicate<String> govListTest = Pattern.compile(".*\\.(ac|co|org|gov|edu|com)\\.[a-z]{2}").asMatchPredicate();
+    private static final Predicate<String> govListTest = Pattern.compile(".*\\.(id|ac|co|org|gov|edu|com)\\.[a-z]{2}").asMatchPredicate();
     private boolean looksLikeGovTld(String host) {
         if (host.length() < 8)
             return false;
