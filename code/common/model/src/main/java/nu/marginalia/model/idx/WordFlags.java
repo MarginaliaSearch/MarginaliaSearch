@@ -31,14 +31,15 @@ public enum WordFlags {
     SiteAdjacent,
 
     /** Keyword appears in URL path
-     *
      */
     UrlPath,
 
     /** Keyword appears in domain name
-     *
      */
-    UrlDomain
+    UrlDomain,
+
+    /** Word appears in an external link */
+    ExternalLink
     ;
 
     public int asBit() {

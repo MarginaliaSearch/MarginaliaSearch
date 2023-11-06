@@ -53,14 +53,14 @@ public class IndexResultValuator {
     }
 
     private final long flagsFilterMask =
-            WordFlags.Title.asBit() | WordFlags.Subjects.asBit() | WordFlags.UrlDomain.asBit() | WordFlags.UrlPath.asBit();
+            WordFlags.Title.asBit() | WordFlags.Subjects.asBit() | WordFlags.UrlDomain.asBit() | WordFlags.UrlPath.asBit() | WordFlags.ExternalLink.asBit();
 
     @Nullable
-    public SearchResultItem calculatePreliminaryScore(long id) {
+    public SearchResultItem calculatePreliminaryScore(long combinedId) {
 
-        final long docId = UrlIdCodec.removeRank(id);
+        final long docId = UrlIdCodec.removeRank(combinedId);
 
-        if (!termMetadataForDocuments.testCoherence(id, searchTerms.coherences))
+        if (!termMetadataForDocuments.testCoherence(combinedId, searchTerms.coherences))
             return null;
 
         long docMetadata = metadataService.getDocumentMetadata(docId);
@@ -70,7 +70,7 @@ public class IndexResultValuator {
         boolean anyAllSynthetic = false;
         int maxPositionsSet = 0;
 
-        SearchResultItem searchResult = new SearchResultItem(id,
+        SearchResultItem searchResult = new SearchResultItem(combinedId,
                 searchTermVariants.stream().mapToInt(List::size).sum());
 
         for (int querySetId = 0;
@@ -133,7 +133,7 @@ public class IndexResultValuator {
                 rankingContext);
 
         searchResult.setScore(new SearchResultPreliminaryScore(
-                resultsWithPriorityTerms.contains(id),
+                resultsWithPriorityTerms.contains(combinedId),
                 score
         ));
 

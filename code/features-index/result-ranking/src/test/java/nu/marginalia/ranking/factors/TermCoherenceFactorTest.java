@@ -17,7 +17,7 @@ class TermCoherenceFactorTest {
     @Test
     public void testAllBitsSet() {
         var allPositionsSet = createSet(
-                0xFF_FFFF_FFFF_FFFFL, 0xFF_FFFF_FFFF_FFFFL
+                WordMetadata.POSITIONS_MASK, WordMetadata.POSITIONS_MASK
         );
 
         long mask = termCoherenceFactor.combinedMask(allPositionsSet);

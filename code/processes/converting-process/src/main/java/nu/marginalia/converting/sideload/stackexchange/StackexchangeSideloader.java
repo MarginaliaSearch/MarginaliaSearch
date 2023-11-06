@@ -126,9 +126,12 @@ public class StackexchangeSideloader implements SideloadSource {
 
             ret.details = new ProcessedDocumentDetails();
             ret.details.pubYear = post.year();
-            ret.details.quality = 5;
-            ret.details.metadata = new DocumentMetadata(4,
+            ret.details.quality = 10;
+            ret.details.metadata = new DocumentMetadata(3,
                     PubDate.toYearByte(ret.details.pubYear), (int) -ret.details.quality, EnumSet.noneOf(DocumentFlags.class));
+
+            ret.details.metadata.withSizeAndTopology(10000, 0);
+
             ret.details.features = EnumSet.noneOf(HtmlFeature.class);
             ret.details.generator = GeneratorType.DOCS;
             ret.details.title = StringUtils.truncate(post.title(), 128);

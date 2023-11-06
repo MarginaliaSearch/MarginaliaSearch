@@ -49,6 +49,7 @@ dependencies {
     implementation project(':code:process-models:crawling-model')
 
     implementation project(':code:features-convert:adblock')
+    implementation project(':code:features-convert:anchor-keywords')
     implementation project(':code:features-convert:topic-detection')
     implementation project(':code:features-convert:pubdate')
     implementation project(':code:features-convert:keyword-extraction')

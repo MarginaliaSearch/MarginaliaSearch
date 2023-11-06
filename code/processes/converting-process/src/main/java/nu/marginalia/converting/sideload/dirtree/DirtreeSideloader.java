@@ -1,6 +1,7 @@
 package nu.marginalia.converting.sideload.dirtree;
 
 import lombok.SneakyThrows;
+import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.sideload.SideloadSource;
@@ -78,7 +79,7 @@ public class DirtreeSideloader implements SideloadSource, AutoCloseable {
         }
 
         return sideloaderProcessing
-                .processDocument(url, body, extraKeywords, 10_000);
+                .processDocument(url, body, extraKeywords, new DomainLinks(), 10_000);
     }
 
     @Override

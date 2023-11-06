@@ -31,6 +31,7 @@ include 'code:features-qs:query-parser'
 include 'code:features-index:result-ranking'
 
 include 'code:features-convert:adblock'
+include 'code:features-convert:anchor-keywords'
 include 'code:features-convert:stackexchange-xml'
 include 'code:features-convert:pubdate'
 include 'code:features-convert:summary-extraction'
@@ -149,7 +150,7 @@ dependencyResolutionManagement {
             library('fastutil', 'it.unimi.dsi', 'fastutil').version('8.5.8')
 
             library('hll', 'net.agkn', 'hll').version('1.6.0')
-
+            library('duckdb', 'org.duckdb', 'duckdb_jdbc').version('0.9.1')
             library('okhttp3','com.squareup.okhttp3','okhttp').version('4.11.0')
 
             library('httpcomponents.core','org.apache.httpcomponents','httpcore').version('4.4.15')

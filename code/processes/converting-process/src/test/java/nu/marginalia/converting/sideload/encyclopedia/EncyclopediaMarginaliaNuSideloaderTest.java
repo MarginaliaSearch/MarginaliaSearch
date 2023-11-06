@@ -3,6 +3,8 @@ package nu.marginalia.converting.sideload.encyclopedia;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import gnu.trove.list.array.TLongArrayList;
+import nu.marginalia.atags.source.AnchorTagsSourceFactory;
+import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.converting.ConverterModule;
 import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.processor.ConverterDomainTypes;
@@ -30,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 class EncyclopediaMarginaliaNuSideloaderTest {
     Path tempFile;
@@ -68,7 +71,7 @@ class EncyclopediaMarginaliaNuSideloaderTest {
             return;
         }
         var domainTypesMock = Mockito.mock(ConverterDomainTypes.class);
-        Mockito.when(domainTypesMock.isBlog(Mockito.any())).thenReturn(false);
+        when(domainTypesMock.isBlog(Mockito.any())).thenReturn(false);
         var processing = Guice.createInjector(new ConverterModule(),
                 new AbstractModule() {
                     public void configure() {
@@ -78,10 +81,14 @@ class EncyclopediaMarginaliaNuSideloaderTest {
             )
                 .getInstance(SideloaderProcessing.class);
 
+        var atagsFactory = Mockito.mock(AnchorTagsSourceFactory.class);
+        when(atagsFactory.create(Mockito.any())).thenReturn(domain -> new DomainLinks());
+
         var sideloader = new EncyclopediaMarginaliaNuSideloader(
                 pathToDbFile,
                 "https://en.wikipedia.org/wiki/",
                 GsonFactory.get(),
+                atagsFactory,
                 processing
         );
 

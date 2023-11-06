@@ -43,7 +43,7 @@ public class DomainProber {
         var fetchResult = fetcher.probeDomain(firstUrlInQueue.withPathAndParam("/", null));
 
         if (fetchResult.ok())
-            return new ProbeResultOk();
+            return new ProbeResultOk(fetchResult.url);
 
         if (fetchResult.state == FetchResultState.REDIRECT)
             return new ProbeResultRedirect(fetchResult.domain);
@@ -51,9 +51,21 @@ public class DomainProber {
         return new ProbeResultError(CrawlerDomainStatus.ERROR, "Bad status");
     }
 
-    interface ProbeResult {};
+    public sealed interface ProbeResult permits ProbeResultError, ProbeResultRedirect, ProbeResultOk {};
 
-    record ProbeResultError(CrawlerDomainStatus status, String desc) implements ProbeResult {}
-    record ProbeResultRedirect(EdgeDomain domain) implements ProbeResult {}
-    record ProbeResultOk() implements ProbeResult {}
+    /** The probing failed for one reason or another
+     * @param status  Machine readable status
+     * @param desc   Human-readable description of the error
+     */
+    public record ProbeResultError(CrawlerDomainStatus status, String desc) implements ProbeResult {}
+
+    /** This domain redirects to another domain */
+    public record ProbeResultRedirect(EdgeDomain domain) implements ProbeResult {}
+
+    /** If the retreivala of the probed url was successful, return the url as it was fetched
+     * (which may be different from the url we probed, if we attempted another URL schema).
+     *
+     * @param probedUrl  The url we successfully probed
+     */
+    public record ProbeResultOk(EdgeUrl probedUrl) implements ProbeResult {}
 }

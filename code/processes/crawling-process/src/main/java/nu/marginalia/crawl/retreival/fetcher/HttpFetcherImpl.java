@@ -15,6 +15,7 @@ import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.crawl.retreival.logic.ContentTypeLogic;
 import nu.marginalia.crawl.retreival.logic.ContentTypeParser;
 import okhttp3.*;
+import org.apache.commons.collections4.queue.PredicatedQueue;
 import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -106,13 +107,12 @@ public class HttpFetcherImpl implements HttpFetcher {
         var call = client.newCall(head);
 
         try (var rsp = call.execute()) {
-            var requestUrl = rsp.request().url().toString();
-            EdgeDomain requestDomain = new EdgeUrl(requestUrl).domain;
+            EdgeUrl requestUrl = new EdgeUrl(rsp.request().url().toString());
 
-            if (!Objects.equals(requestDomain, url.domain)) {
-                return new FetchResult(FetchResultState.REDIRECT, requestDomain);
+            if (!Objects.equals(requestUrl.domain, url.domain)) {
+                return new FetchResult(FetchResultState.REDIRECT, requestUrl);
             }
-            return new FetchResult(FetchResultState.OK, requestDomain);
+            return new FetchResult(FetchResultState.OK, requestUrl);
         }
 
         catch (Exception ex) {
@@ -121,7 +121,7 @@ public class HttpFetcherImpl implements HttpFetcher {
             }
 
             logger.info("Error during fetching", ex);
-            return new FetchResult(FetchResultState.ERROR, url.domain);
+            return new FetchResult(FetchResultState.ERROR, url);
         }
     }
 

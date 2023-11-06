@@ -75,7 +75,7 @@ class DocumentMetadataTest {
     @Test
     public void encRank() {
         var meta = new DocumentMetadata(0, 22, 8, EnumSet.noneOf(DocumentFlags.class))
-                .withSize(0xffffffff, 5).encode();
+                .withSizeAndTopology(0xffffffff, 5).encode();
         var enc2 = DocumentMetadata.encodeRank(meta, 83);
 
         assertEquals(83, DocumentMetadata.decodeRank(enc2));
@@ -86,7 +86,7 @@ class DocumentMetadataTest {
     public void testYear() {
         for (int year = 1996; year < 2023; year++) {
             var meta = new DocumentMetadata(~0, new PubDate(null, year).yearByte(), ~0, EnumSet.allOf(DocumentFlags.class))
-                    .withSize(~0, ~0);
+                    .withSizeAndTopology(~0, ~0);
 
             var encoded = DocumentMetadata.encodeRank(meta.encode(), 0);
 
@@ -95,7 +95,7 @@ class DocumentMetadataTest {
 
         for (int year = 1996; year < 2023; year++) {
             var meta = new DocumentMetadata(0, new PubDate(null, year).yearByte(), 0, EnumSet.noneOf(DocumentFlags.class))
-                    .withSize(0, 0);
+                    .withSizeAndTopology(0, 0);
 
             var encoded = DocumentMetadata.encodeRank(meta.encode(), 0);
 

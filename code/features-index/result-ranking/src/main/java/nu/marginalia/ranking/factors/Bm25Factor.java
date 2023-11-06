@@ -2,6 +2,7 @@ package nu.marginalia.ranking.factors;
 
 import nu.marginalia.index.client.model.results.Bm25Parameters;
 import nu.marginalia.index.client.model.results.ResultRankingContext;
+import nu.marginalia.index.client.model.results.SearchResultKeywordScore;
 import nu.marginalia.model.idx.WordFlags;
 import nu.marginalia.ranking.ResultKeywordSet;
 
@@ -39,21 +40,39 @@ public class Bm25Factor {
 
         double sum = 0.;
 
-        long mask = WordFlags.Site.asBit()
-                | WordFlags.SiteAdjacent.asBit()
-                | WordFlags.UrlPath.asBit()
-                | WordFlags.UrlDomain.asBit()
-                | WordFlags.Subjects.asBit();
-
         for (var keyword : keywordSet.keywords()) {
-            double count = Long.bitCount(keyword.encodedWordMetadata() & mask);
+            double count = evaluatePriorityScore(keyword);
 
             int freq = ctx.priorityFrequency(keyword.keyword);
 
+            // note we override b to zero for priority terms as they are independent of document length
             sum += invFreq(docCount, freq) * f(bm25Parameters.k(), 0, count, 0);
         }
 
         return sum;
+    }
+
+    private static double evaluatePriorityScore(SearchResultKeywordScore keyword) {
+        double qcount = 0.;
+        if ((keyword.encodedWordMetadata() & WordFlags.Site.asBit()) != 0)
+            qcount += 2.;
+        if ((keyword.encodedWordMetadata() & WordFlags.SiteAdjacent.asBit()) != 0)
+            qcount += 0.5;
+        if ((keyword.encodedWordMetadata() & WordFlags.UrlPath.asBit()) != 0)
+            qcount += 1.25;
+        if ((keyword.encodedWordMetadata() & WordFlags.UrlDomain.asBit()) != 0)
+            qcount += 1.25;
+        if ((keyword.encodedWordMetadata() & WordFlags.ExternalLink.asBit()) != 0)
+            qcount += 2.5;
+        if ((keyword.encodedWordMetadata() & WordFlags.Title.asBit()) != 0)
+            qcount += 1.5;
+        if ((keyword.encodedWordMetadata() & WordFlags.Subjects.asBit()) != 0)
+            qcount += 1.25;
+        if ((keyword.encodedWordMetadata() & WordFlags.NamesWords.asBit()) != 0)
+            qcount += 0.25;
+        if ((keyword.encodedWordMetadata() & WordFlags.TfIdfHigh.asBit()) != 0)
+            qcount += 0.5;
+        return qcount;
     }
 
     /**
