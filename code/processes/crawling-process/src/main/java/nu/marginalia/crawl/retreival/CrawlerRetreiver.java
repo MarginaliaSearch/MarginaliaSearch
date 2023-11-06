@@ -4,6 +4,7 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import crawlercommons.robots.SimpleRobotRules;
 import lombok.SneakyThrows;
+import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.crawl.retreival.fetcher.ContentTags;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
 import nu.marginalia.crawl.retreival.fetcher.SitemapRetriever;
@@ -81,49 +82,41 @@ public class CrawlerRetreiver {
     }
 
     public int fetch() {
-        return fetch(new CrawlDataReference());
+        return fetch(new DomainLinks(), new CrawlDataReference());
     }
 
-    public int fetch(CrawlDataReference oldCrawlData) {
+    public int fetch(DomainLinks domainLinks, CrawlDataReference oldCrawlData) {
         final DomainProber.ProbeResult probeResult = domainProber.probeDomain(fetcher, domain, crawlFrontier.peek());
 
-        if (probeResult instanceof DomainProber.ProbeResultOk) {
-            return crawlDomain(oldCrawlData);
-        }
+        return switch (probeResult) {
+            case DomainProber.ProbeResultOk(EdgeUrl probedUrl) -> crawlDomain(oldCrawlData, probedUrl, domainLinks);
+            case DomainProber.ProbeResultError(CrawlerDomainStatus status, String desc) -> {
+                crawledDomainWriter.accept(
+                        CrawledDomain.builder()
+                                .crawlerStatus(status.name())
+                                .crawlerStatusDesc(desc)
+                                .domain(domain)
+                                .ip(findIp(domain))
+                                .build()
+                );
+                yield 1;
+            }
+            case DomainProber.ProbeResultRedirect(EdgeDomain redirectDomain) -> {
+                crawledDomainWriter.accept(
+                        CrawledDomain.builder()
+                                .crawlerStatus(CrawlerDomainStatus.REDIRECT.name())
+                                .crawlerStatusDesc("Redirected to different domain")
+                                .redirectDomain(redirectDomain.toString())
+                                .domain(domain)
+                                .ip(findIp(domain))
+                                .build()
+                );
+                yield 1;
+            }
+        };
+    }
 
-        // handle error cases for probe
-
-        var ip = findIp(domain);
-
-        if (probeResult instanceof DomainProber.ProbeResultError err) {
-            crawledDomainWriter.accept(
-                    CrawledDomain.builder()
-                            .crawlerStatus(err.status().name())
-                            .crawlerStatusDesc(err.desc())
-                            .domain(domain)
-                            .ip(ip)
-                            .build()
-            );
-            return 1;
-        }
-
-        if (probeResult instanceof DomainProber.ProbeResultRedirect redirect) {
-            crawledDomainWriter.accept(
-                    CrawledDomain.builder()
-                            .crawlerStatus(CrawlerDomainStatus.REDIRECT.name())
-                            .crawlerStatusDesc("Redirected to different domain")
-                            .redirectDomain(redirect.domain().toString())
-                            .domain(domain)
-                            .ip(ip)
-                            .build()
-            );
-            return 1;
-        }
-
-        throw new IllegalStateException("Unknown probe result: " + probeResult);
-    };
-
-    private int crawlDomain(CrawlDataReference oldCrawlData) {
+    private int crawlDomain(CrawlDataReference oldCrawlData, EdgeUrl rootUrl, DomainLinks domainLinks) {
         String ip = findIp(domain);
 
         assert !crawlFrontier.isEmpty();
@@ -131,7 +124,7 @@ public class CrawlerRetreiver {
         final SimpleRobotRules robotsRules = fetcher.fetchRobotRules(crawlFrontier.peek().domain);
         final CrawlDelayTimer delayTimer = new CrawlDelayTimer(robotsRules.getCrawlDelay());
 
-        sniffRootDocument(delayTimer);
+        sniffRootDocument(delayTimer, rootUrl);
 
         // Play back the old crawl data (if present) and fetch the documents comparing etags and last-modified
         int recrawled = recrawl(oldCrawlData, robotsRules, delayTimer);
@@ -141,7 +134,11 @@ public class CrawlerRetreiver {
             crawlFrontier.increaseDepth(1.5);
         }
 
-        downloadSitemaps(robotsRules);
+        // Add external links to the crawl frontier
+        crawlFrontier.addAllToQueue(domainLinks.getUrls(rootUrl.proto));
+
+        // Add links from the sitemap to the crawl frontier
+        downloadSitemaps(robotsRules, rootUrl);
 
         CrawledDomain ret = new CrawledDomain(domain, null, CrawlerDomainStatus.OK.name(), null, ip, new ArrayList<>(), null);
 
@@ -259,17 +256,17 @@ public class CrawlerRetreiver {
         return recrawled;
     }
 
-    private void downloadSitemaps(SimpleRobotRules robotsRules) {
+    private void downloadSitemaps(SimpleRobotRules robotsRules, EdgeUrl rootUrl) {
         List<String> sitemaps = robotsRules.getSitemaps();
-        if (sitemaps.isEmpty()) {
-            sitemaps = List.of(
-                    "http://" + domain + "/sitemap.xml",
-                    "https://" + domain + "/sitemap.xml");
-        }
 
         List<EdgeUrl> urls = new ArrayList<>(sitemaps.size());
-        for (var url : sitemaps) {
-            EdgeUrl.parse(url).ifPresent(urls::add);
+        if (!sitemaps.isEmpty()) {
+            for (var url : sitemaps) {
+                EdgeUrl.parse(url).ifPresent(urls::add);
+            }
+        }
+        else {
+            urls.add(rootUrl.withPathAndParam("/sitemap.xml", null));
         }
 
         downloadSitemaps(urls);
@@ -305,11 +302,11 @@ public class CrawlerRetreiver {
         logger.debug("Queue is now {}", crawlFrontier.queueSize());
     }
 
-    private void sniffRootDocument(CrawlDelayTimer delayTimer) {
+    private void sniffRootDocument(CrawlDelayTimer delayTimer, EdgeUrl rootUrl) {
         try {
             logger.debug("Configuring link filter");
 
-            var url = crawlFrontier.peek().withPathAndParam("/", null);
+            var url = rootUrl.withPathAndParam("/", null);
 
             var maybeSample = fetchUrl(url, delayTimer, DocumentWithReference.empty()).filter(sample -> sample.httpStatus == 200);
             if (maybeSample.isEmpty())

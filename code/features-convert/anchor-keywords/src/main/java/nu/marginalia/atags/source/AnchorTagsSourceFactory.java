@@ -30,25 +30,29 @@ public class AnchorTagsSourceFactory {
     }
 
     public AnchorTagsSource create() throws SQLException {
-        if (!Files.exists(atagsPath))
-            return dummy();
-
-        List<EdgeDomain> relevantDomains = getRelevantDomains();
-
-        if (relevantDomains.isEmpty())
-            return dummy();
-
-        return new AnchorTagsImpl(atagsPath, relevantDomains);
+        return create(getRelevantDomainsByNodeAffinity());
     }
 
-    private AnchorTagsSource dummy() {
-        return x -> new DomainLinks();
+    public AnchorTagsSource create(List<EdgeDomain> relevantDomains) throws SQLException {
+        if (!Files.exists(atagsPath)) {
+            logger.info("Omitting anchor tag data because '{}' does not exist, or is not reachable from the crawler process", atagsPath);
+
+            return domain -> new DomainLinks();
+        }
+
+        if (relevantDomains.isEmpty()) {
+            logger.info("Omitting anchor tag data because no relevant domains were provided");
+
+            return domain -> new DomainLinks();
+        }
+
+        return new AnchorTagsImpl(atagsPath, relevantDomains);
     }
 
     // Only get domains that are assigned to this node.  This reduces the amount of data
     // that needs to be loaded into the duckdb instance to a more manageable level, and keeps
     // the memory footprint of the service down.
-    private List<EdgeDomain> getRelevantDomains() {
+    private List<EdgeDomain> getRelevantDomainsByNodeAffinity() {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
                         SELECT DOMAIN_NAME

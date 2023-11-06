@@ -3,6 +3,7 @@ package nu.marginalia.converting;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import nu.marginalia.LanguageModels;
+import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.converting.processor.ConverterDomainTypes;
 import nu.marginalia.service.module.ServiceConfiguration;
@@ -17,7 +18,9 @@ public class ConvertingIntegrationTestModule  extends AbstractModule {
         bind(ServiceConfiguration.class).toInstance(new ServiceConfiguration(
                 null, 1, "localhost", 0, 0, null
         ));
-
+        bind(ProcessConfiguration.class).toInstance(new ProcessConfiguration(
+                "converting-process", 1, null
+        ));
         bind(LanguageModels.class).toInstance(WmsaHome.getLanguageModels());
         bind(ConverterDomainTypes.class).toInstance(Mockito.mock(ConverterDomainTypes.class));
     }

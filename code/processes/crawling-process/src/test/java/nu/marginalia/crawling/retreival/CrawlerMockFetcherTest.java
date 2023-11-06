@@ -114,7 +114,7 @@ public class CrawlerMockFetcherTest {
         @Override
         public FetchResult probeDomain(EdgeUrl url) {
             logger.info("Probing {}", url);
-            return new FetchResult(FetchResultState.OK, url.domain);
+            return new FetchResult(FetchResultState.OK, url);
         }
 
         @Override

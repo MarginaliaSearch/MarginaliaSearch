@@ -2,6 +2,7 @@ package nu.marginalia.crawling.retreival;
 
 import lombok.SneakyThrows;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
@@ -139,7 +140,7 @@ class CrawlerRetreiverTest {
             if (d instanceof CrawledDocument doc) {
                 System.out.println(doc.url + ": " + doc.recrawlState + "\t" + doc.httpStatus);
             }
-        }).fetch(new CrawlDataReference(stream));
+        }).fetch(new DomainLinks(), new CrawlDataReference(stream));
 
     }
 }

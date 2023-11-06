@@ -8,6 +8,8 @@ import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.ProcessConfigurationModule;
 import nu.marginalia.UserAgent;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.atags.source.AnchorTagsSource;
+import nu.marginalia.atags.source.AnchorTagsSourceFactory;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.spec.CrawlSpecProvider;
@@ -56,6 +58,7 @@ public class CrawlerMain {
     private final MessageQueueFactory messageQueueFactory;
     private final FileStorageService fileStorageService;
     private final DbCrawlSpecProvider dbCrawlSpecProvider;
+    private final AnchorTagsSourceFactory anchorTagsSourceFactory;
     private final Gson gson;
     private final int node;
     private final SimpleBlockingThreadPool pool;
@@ -76,12 +79,14 @@ public class CrawlerMain {
                        FileStorageService fileStorageService,
                        ProcessConfiguration processConfiguration,
                        DbCrawlSpecProvider dbCrawlSpecProvider,
+                       AnchorTagsSourceFactory anchorTagsSourceFactory,
                        Gson gson) {
         this.heartbeat = heartbeat;
         this.userAgent = userAgent;
         this.messageQueueFactory = messageQueueFactory;
         this.fileStorageService = fileStorageService;
         this.dbCrawlSpecProvider = dbCrawlSpecProvider;
+        this.anchorTagsSourceFactory = anchorTagsSourceFactory;
         this.gson = gson;
         this.node = processConfiguration.node();
 
@@ -131,7 +136,10 @@ public class CrawlerMain {
     public void run(CrawlSpecProvider specProvider, Path outputDir) throws InterruptedException, IOException {
 
         heartbeat.start();
-        try (WorkLog workLog = new WorkLog(outputDir.resolve("crawler.log"))) {
+        try (WorkLog workLog = new WorkLog(outputDir.resolve("crawler.log"));
+             AnchorTagsSource anchorTagsSource = anchorTagsSourceFactory.create(specProvider.getDomains())
+        ) {
+
             // First a validation run to ensure the file is all good to parse
             logger.info("Validating JSON");
 
@@ -144,7 +152,7 @@ public class CrawlerMain {
                         .takeWhile((e) -> abortMonitor.isAlive())
                         .filter(e -> !workLog.isJobFinished(e.domain))
                         .filter(e -> processingIds.put(e.domain, "") == null)
-                        .map(e -> new CrawlTask(e, outputDir, workLog))
+                        .map(e -> new CrawlTask(e, anchorTagsSource, outputDir, workLog))
                         .forEach(pool::submitQuietly);
             }
 
@@ -178,13 +186,16 @@ public class CrawlerMain {
         private final String domain;
         private final String id;
 
+        private final AnchorTagsSource anchorTagsSource;
         private final Path outputDir;
         private final WorkLog workLog;
 
         CrawlTask(CrawlSpecRecord specification,
+                  AnchorTagsSource anchorTagsSource,
                   Path outputDir,
                   WorkLog workLog) {
             this.specification = specification;
+            this.anchorTagsSource = anchorTagsSource;
             this.outputDir = outputDir;
             this.workLog = workLog;
 
@@ -202,18 +213,20 @@ public class CrawlerMain {
             try (CrawledDomainWriter writer = new CrawledDomainWriter(outputDir, domain, id);
                  CrawlDataReference reference = getReference())
             {
-                Thread.currentThread().setName("crawling:" + specification.domain);
+                Thread.currentThread().setName("crawling:" + domain);
+
+                var domainLinks = anchorTagsSource.getAnchorTags(domain);
 
                 var retreiver = new CrawlerRetreiver(fetcher, specification, writer::accept);
-                int size = retreiver.fetch(reference);
+                int size = retreiver.fetch(domainLinks, reference);
 
-                workLog.setJobToFinished(specification.domain, writer.getOutputFile().toString(), size);
+                workLog.setJobToFinished(domain, writer.getOutputFile().toString(), size);
                 heartbeat.setProgress(tasksDone.incrementAndGet() / (double) totalTasks);
 
-                logger.info("Fetched {}", specification.domain);
+                logger.info("Fetched {}", domain);
 
             } catch (Exception e) {
-                logger.error("Error fetching domain " + specification.domain, e);
+                logger.error("Error fetching domain " + domain, e);
             }
             finally {
                 // We don't need to double-count these; it's also kept int he workLog
