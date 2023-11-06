@@ -2,6 +2,7 @@ package nu.marginalia.converting.sideload;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import nu.marginalia.atags.source.AnchorTagsSourceFactory;
 import nu.marginalia.converting.sideload.dirtree.DirtreeSideloaderFactory;
 import nu.marginalia.converting.sideload.encyclopedia.EncyclopediaMarginaliaNuSideloader;
 import nu.marginalia.converting.sideload.stackexchange.StackexchangeSideloader;
@@ -19,6 +20,7 @@ public class SideloadSourceFactory {
     private final SideloaderProcessing sideloaderProcessing;
     private final ThreadLocalSentenceExtractorProvider sentenceExtractorProvider;
     private final DocumentKeywordExtractor documentKeywordExtractor;
+    private final AnchorTagsSourceFactory anchorTagsSourceFactory;
     private final DirtreeSideloaderFactory dirtreeSideloaderFactory;
 
     @Inject
@@ -26,16 +28,18 @@ public class SideloadSourceFactory {
                                  SideloaderProcessing sideloaderProcessing,
                                  ThreadLocalSentenceExtractorProvider sentenceExtractorProvider,
                                  DocumentKeywordExtractor documentKeywordExtractor,
+                                 AnchorTagsSourceFactory anchorTagsSourceFactory,
                                  DirtreeSideloaderFactory dirtreeSideloaderFactory) {
         this.gson = gson;
         this.sideloaderProcessing = sideloaderProcessing;
         this.sentenceExtractorProvider = sentenceExtractorProvider;
         this.documentKeywordExtractor = documentKeywordExtractor;
+        this.anchorTagsSourceFactory = anchorTagsSourceFactory;
         this.dirtreeSideloaderFactory = dirtreeSideloaderFactory;
     }
 
     public SideloadSource sideloadEncyclopediaMarginaliaNu(Path pathToDbFile, String baseUrl) throws SQLException {
-        return new EncyclopediaMarginaliaNuSideloader(pathToDbFile, baseUrl, gson, sideloaderProcessing);
+        return new EncyclopediaMarginaliaNuSideloader(pathToDbFile, baseUrl, gson, anchorTagsSourceFactory, sideloaderProcessing);
     }
 
     public Collection<? extends SideloadSource> sideloadDirtree(Path pathToYamlFile) throws IOException {

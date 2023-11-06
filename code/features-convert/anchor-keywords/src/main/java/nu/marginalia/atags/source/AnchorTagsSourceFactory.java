@@ -53,6 +53,9 @@ public class AnchorTagsSourceFactory {
     // that needs to be loaded into the duckdb instance to a more manageable level, and keeps
     // the memory footprint of the service down.
     private List<EdgeDomain> getRelevantDomainsByNodeAffinity() {
+        if (dataSource == null)
+            return List.of();
+
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""
                         SELECT DOMAIN_NAME

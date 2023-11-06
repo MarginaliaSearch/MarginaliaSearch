@@ -3,13 +3,18 @@ package nu.marginalia.converting.sideload.encyclopedia;
 import com.github.luben.zstd.ZstdInputStream;
 import com.google.gson.Gson;
 import lombok.SneakyThrows;
+import nu.marginalia.atags.model.DomainLinks;
+import nu.marginalia.atags.source.AnchorTagsSourceFactory;
 import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.converting.sideload.SideloaderProcessing;
+import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -38,10 +43,13 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
     private final EdgeUrl baseUrl;
     private final Gson gson;
     private final SideloaderProcessing sideloaderProcessing;
+    private final AnchorTagsSourceFactory anchorTagsSourceFactory;
+    private static final Logger logger = LoggerFactory.getLogger(EncyclopediaMarginaliaNuSideloader.class);
 
     public EncyclopediaMarginaliaNuSideloader(Path pathToDbFile,
                                               String baseUrl,
                                               Gson gson,
+                                              AnchorTagsSourceFactory anchorTagsSourceFactory,
                                               SideloaderProcessing sideloaderProcessing) throws SQLException {
         this.baseUrl = EdgeUrl.parse(baseUrl).orElseThrow(AssertionError::new);
         this.gson = gson;
@@ -49,6 +57,7 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
         String sqliteDbString = "jdbc:sqlite:" + pathToDbFile.toString();
 
         connection = DriverManager.getConnection(sqliteDbString);
+        this.anchorTagsSourceFactory = anchorTagsSourceFactory;
 
     }
 
@@ -72,6 +81,8 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
         ExecutorService executorService = Executors.newFixedThreadPool(16);
         Semaphore sem = new Semaphore(16);
 
+        DomainLinks domainLinks = getDomainLinks();
+
         executorService.submit(() -> {
             try {
                 var stmt = connection.prepareStatement("""
@@ -89,7 +100,7 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
 
                     executorService.submit(() -> {
                         try {
-                            docs.add(convertDocument(articleParts.parts, title, url));
+                            docs.add(convertDocument(articleParts.parts, title, url, domainLinks));
                         } catch (URISyntaxException | DisqualifiedException e) {
                             e.printStackTrace();
                         } finally {
@@ -122,9 +133,21 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
         };
     }
 
+    private DomainLinks getDomainLinks() {
+        try (var source = anchorTagsSourceFactory.create(List.of(new EdgeDomain("en.wikipedia.org")))) {
+            return source.getAnchorTags("en.wikipedia.org");
+        }
+        catch (Exception ex) {
+            logger.error("Failed to create anchor tags source", ex);
+            return new DomainLinks();
+        }
+
+    }
+
     ProcessedDocument processJust(String url) throws SQLException, IOException, URISyntaxException, DisqualifiedException {
         var stmt = connection.prepareStatement("""
-                SELECT url,title,html FROM articles
+                SELECT url,title,html
+                FROM articles
                 WHERE url=?
                 """);
         stmt.setFetchSize(100);
@@ -135,12 +158,16 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
             var articleParts = fromCompressedJson(rs.getBytes("html"), ArticleParts.class);
             String title = rs.getString("title");
 
-            return convertDocument(articleParts.parts, title, URLEncoder.encode(rs.getString("url"), StandardCharsets.UTF_8));
+            return convertDocument(articleParts.parts,
+                    title,
+                    URLEncoder.encode(rs.getString("url"), StandardCharsets.UTF_8),
+                    new DomainLinks() // FIXME (2023-11-06): Sideloaded dirtrees don't have access to anchor tag data.
+            );
         }
         return null;
     }
 
-    private ProcessedDocument convertDocument(List<String> parts, String title, String url) throws URISyntaxException, DisqualifiedException {
+    private ProcessedDocument convertDocument(List<String> parts, String title, String url, DomainLinks domainLinks) throws URISyntaxException, DisqualifiedException {
         String fullUrl = baseUrl.toString() + url;
 
         StringBuilder fullHtml = new StringBuilder();
@@ -156,6 +183,7 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
                 .processDocument(fullUrl,
                         fullHtml.toString(),
                         List.of("encyclopedia", "wiki"),
+                        domainLinks,
                         10_000_000);
     }
 
