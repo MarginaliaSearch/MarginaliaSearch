@@ -2,6 +2,7 @@ package nu.marginalia.crawl.spec;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
+import lombok.SneakyThrows;
 import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.model.crawlspec.CrawlSpecRecord;
 import org.slf4j.Logger;
@@ -67,8 +68,13 @@ public class DbCrawlSpecProvider implements CrawlSpecProvider {
         return domains.size();
     }
 
+    @SneakyThrows
     @Override
     public Stream<CrawlSpecRecord> stream() {
+        if (domains == null) {
+            domains = loadData();
+        }
+
         return domains.stream();
     }
 
