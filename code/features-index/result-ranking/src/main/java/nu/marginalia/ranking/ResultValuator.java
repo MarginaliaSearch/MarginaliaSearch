@@ -89,24 +89,26 @@ public class ResultValuator {
                            + flagsPenalty
                            + priorityTermBonus.calculate(scores);
 
-        double bestScore = 10;
+        double bestTcf = 0;
+        double bestBM25F = 0;
+        double bestBM25P = 0;
+        double bestBM25PN = 0;
+
         for (int set = 0; set < sets; set++) {
             ResultKeywordSet keywordSet = createKeywordSet(threadListPool, scores, set);
 
-            if (keywordSet.isEmpty() || keywordSet.hasNgram())
+            if (keywordSet.isEmpty())
                 continue;
 
-            final double tcf = rankingParams.tcfWeight * termCoherenceFactor.calculate(keywordSet);
-            final double bm25 = rankingParams.bm25FullWeight * bm25Factor.calculateBm25(rankingParams.fullParams, keywordSet, length, ctx);
-            final double bm25p = rankingParams.bm25PrioWeight * bm25Factor.calculateBm25Prio(rankingParams.prioParams, keywordSet, ctx);
-
-            double score = normalize(bm25 + bm25p + tcf + overallPart);
-
-            bestScore = min(bestScore, score);
-
+            bestTcf = Math.max(bestTcf, rankingParams.tcfWeight * termCoherenceFactor.calculate(keywordSet));
+            bestBM25P = Math.max(bestBM25P, rankingParams.bm25PrioWeight * bm25Factor.calculateBm25Prio(rankingParams.prioParams, keywordSet, ctx));
+            bestBM25F = Math.max(bestBM25F, rankingParams.bm25FullWeight * bm25Factor.calculateBm25(rankingParams.fullParams, keywordSet, length, ctx));
+            if (keywordSet.hasNgram()) {
+                bestBM25PN = Math.max(bestBM25PN, rankingParams.bm25PrioWeight * bm25Factor.calculateBm25Prio(rankingParams.prioParams, keywordSet, ctx));
+            }
         }
 
-        return bestScore;
+        return normalize(bestTcf + bestBM25F + bestBM25P + bestBM25PN * 0.25 + overallPart);
     }
 
     private double calculateQualityPenalty(int size, int quality, ResultRankingParameters rankingParams) {
