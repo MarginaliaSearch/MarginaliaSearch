@@ -3,6 +3,7 @@ package nu.marginalia.converting.processor;
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
 import nu.marginalia.atags.AnchorTextKeywords;
+import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.atags.source.AnchorTagsSource;
 import nu.marginalia.atags.source.AnchorTagsSourceFactory;
 import nu.marginalia.converting.model.ProcessedDocument;
@@ -90,7 +91,7 @@ public class DomainProcessor {
             terms.add(HtmlFeature.COOKIES.getKeyword());
         }
 
-        var atags = anchorTagsSource.getAnchorTags(ret.domain);
+        var externalDomainLinks = anchorTagsSource.getAnchorTags(ret.domain);
 
         for (var document : ret.documents) {
             if (document.details == null)
@@ -103,11 +104,11 @@ public class DomainProcessor {
             document.words.addAllSyntheticTerms(terms);
 
             document.words.addAnchorTerms(
-                    anchorTextKeywords.getAnchorTextKeywords(atags, document.url)
+                    anchorTextKeywords.getAnchorTextKeywords(externalDomainLinks, document.url)
             );
         }
         documentDeduplicator.deduplicate(ret.documents);
-        calculateStatistics(ret);
+        calculateStatistics(ret, externalDomainLinks);
 
         return ret;
     }
@@ -131,7 +132,7 @@ public class DomainProcessor {
         }
     }
 
-    private void calculateStatistics(ProcessedDomain ret) {
+    private void calculateStatistics(ProcessedDomain ret, DomainLinks externalDomainLinks) {
         LinkGraph linkGraph = new LinkGraph();
         TopKeywords topKeywords = new TopKeywords();
 
@@ -147,9 +148,10 @@ public class DomainProcessor {
                 return;
 
             int size = linkGraph.size();
-            int topology = invertedLinkGraph.numLinks(doc.url);
+            int topology = invertedLinkGraph.numLinks(doc.url)
+                         + externalDomainLinks.countForUrl(doc.url);
 
-            doc.details.metadata = doc.details.metadata.withSize(size, topology);
+            doc.details.metadata = doc.details.metadata.withSizeAndTopology(size, topology);
         });
 
         siteWords.flagCommonSiteWords(ret);

@@ -79,7 +79,7 @@ public record DocumentMetadata(int avgSentLength,
         this(avgSentLength, 0, 0, 0, year, 0, quality, encodeFlags(flags));
     }
 
-    public DocumentMetadata withSize(int size, int topology) {
+    public DocumentMetadata withSizeAndTopology(int size, int topology) {
         final int encSize = (int) Math.min(ENC_DOMAIN_SIZE_MASK, Math.max(1, size / ENC_DOMAIN_SIZE_MULTIPLIER));
 
         return new DocumentMetadata(avgSentLength, rank, encSize, topology, year, sets, quality, flags);

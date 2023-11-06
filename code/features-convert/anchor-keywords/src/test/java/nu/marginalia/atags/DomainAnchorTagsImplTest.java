@@ -23,7 +23,7 @@ class DomainAnchorTagsImplTest {
             var tags = domainAnchorTags.getAnchorTags(new EdgeDomain("www.chiark.greenend.org.uk"));
 
             System.out.println(tags);
-            System.out.println(tags.getUrls());
+            System.out.println(tags.getUrls("http"));
             System.out.println(tags.forUrl(new EdgeUrl("https://www.chiark.greenend.org.uk/~sgtatham/putty/")));
             System.out.println(tags.forUrl(new EdgeUrl("http://www.chiark.greenend.org.uk/~sgtatham/putty/")));
             System.out.println(tags.forUrl(new EdgeUrl("http://www.chiark.greenend.org.uk/~sgtatham/putt")));

@@ -53,7 +53,7 @@ public class SideloaderProcessing {
 
             ret.details = details.details();
             ret.details.metadata = ret.details.metadata
-                    .withSize(size, Math.max(0, 32 - url.length()) / 4);
+                    .withSizeAndTopology(size, Math.max(0, 32 - url.length()) / 4);
             ret.url = new EdgeUrl(url);
             ret.state = UrlIndexingState.OK;
             ret.stateReason = "SIDELOAD";
