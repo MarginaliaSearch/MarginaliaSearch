@@ -11,7 +11,8 @@ for local development, you're strongly encouraged to use docker
 or podman. These are a bit of a pain to install, but if you follow
 [this guide](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository) you're on the right track.
 
-The system requires JDK21+, and uses preview features.
+The system requires JDK21+, and uses Java 21 preview features. Gradle complains
+a bit about this since it's not currently supported, but it works anyway.
 
 ## Set up
 To go from a clean check out of the git repo to a running search engine,
@@ -49,12 +50,16 @@ $ docker-compose up
 
 ### 5. You should now be able to access the system.
 
+By default, the docker-compose file publishes the following ports:
+
 | Address                 | Description      |
 |-------------------------|------------------|
 | http://localhost:8080/ | User-facing GUI  |
 | http://localhost:8081/ | Operator's GUI   |
 
-Note that the operator's GUI does not perform any sort of authentication.  Preferrably don't expose it publicly, but if you absolutely must, use a proxy or Basic Auth to add security.
+Note that the operator's GUI does not perform any sort of authentication.  
+Preferably don't expose it publicly, but if you absolutely must, use a proxy or 
+Basic Auth to add security.
 
 ### 6. Download Sample Data
 
@@ -78,11 +83,10 @@ Four sets are available:
 
 Warning: The XL set is intended to provide a large amount of data for 
 setting up a pre-production environment. It may be hard to run on a smaller
-machine.  It's barely runnable on a 32GB machine; and total processing time
-is around 5 hours.
+machine and will on most machines take several hours to process.
 
-The 'l' set is a good compromise between size and processing time and should
-work on most machines.
+The 'm' or 'l' sets are a good compromise between size and processing time 
+and should work on most machines.
 
 ### 7. Process the data
 
