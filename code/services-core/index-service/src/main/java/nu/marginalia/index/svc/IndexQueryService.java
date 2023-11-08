@@ -44,8 +44,6 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
-
 @Singleton
 public class IndexQueryService extends IndexApiImplBase {
 
@@ -55,9 +53,22 @@ public class IndexQueryService extends IndexApiImplBase {
     // so that they can be filtered out in the production logging configuration
     private final Marker queryMarker = MarkerFactory.getMarker("QUERY");
 
-    private static final Counter wmsa_edge_index_query_timeouts = Counter.build().name("wmsa_edge_index_query_timeouts").help("-").register();
-    private static final Gauge wmsa_edge_index_query_cost = Gauge.build().name("wmsa_edge_index_query_cost").help("-").register();
-    private static final Histogram wmsa_edge_index_query_time = Histogram.build().name("wmsa_edge_index_query_time").linearBuckets(25/1000., 25/1000., 15).help("-").register();
+    private static final Counter wmsa_query_timeouts = Counter.build()
+            .name("wmsa_query_timeouts")
+            .help("Query timeout counter")
+            .subsystem("index-"+System.getenv("WMSA_SERVICE_NODE"))
+            .register();
+    private static final Gauge wmsa_query_cost = Gauge.build()
+            .name("wmsa_query_cost")
+            .help("Computational cost of query")
+            .subsystem("index-"+System.getenv("WMSA_SERVICE_NODE"))
+            .register();
+    private static final Histogram wmsa_query_time = Histogram.build()
+            .name("wmsa_query_time")
+            .linearBuckets(50., 50., 15)
+            .subsystem("index-"+System.getenv("WMSA_SERVICE_NODE"))
+            .help("Index-side query time")
+            .register();
 
     private final IndexQueryExecutor queryExecutor;
     private final Gson gson = GsonFactory.get();
@@ -120,16 +131,16 @@ public class IndexQueryService extends IndexApiImplBase {
         }
 
         try {
-            return wmsa_edge_index_query_time.time(() -> {
+            return wmsa_query_time.time(() -> {
                 var params = new SearchParameters(specsSet, getSearchSet(specsSet));
 
                 SearchResultSet results = executeSearch(params);
 
                 logger.info(queryMarker, "Index Result Count: {}", results.size());
 
-                wmsa_edge_index_query_cost.set(params.getDataCost());
+                wmsa_query_cost.set(params.getDataCost());
                 if (!params.hasTimeLeft()) {
-                    wmsa_edge_index_query_timeouts.inc();
+                    wmsa_query_timeouts.inc();
                 }
 
                 return results;

@@ -24,28 +24,30 @@ public class Service {
 
     private final Initialization initialization;
 
-    private final static Counter request_counter = Counter.build("wmsa_service_in_request_counter", "Request Counter")
-            .labelNames("service")
+    private final static Counter request_counter = Counter.build("wmsa_request_counter", "Request Counter")
+            .labelNames("service", "node")
             .register();
-    private final static Counter request_counter_good = Counter.build("wmsa_service_good_request_counter", "Good Requests")
-            .labelNames("service")
+    private final static Counter request_counter_good = Counter.build("wmsa_request_counter_good", "Good Requests")
+            .labelNames("service", "node")
             .register();
-    private final static Counter request_counter_bad = Counter.build("wmsa_service_bad_request_counter", "Bad Requests")
-            .labelNames("service")
+    private final static Counter request_counter_bad = Counter.build("wmsa_request_counter_bad", "Bad Requests")
+            .labelNames("service", "node")
             .register();
-    private final static Counter request_counter_err = Counter.build("wmsa_service_error_request_counter", "Error Requests")
-            .labelNames("service")
+    private final static Counter request_counter_err = Counter.build("wmsa_request_counter_err", "Error Requests")
+            .labelNames("service", "node")
             .register();
     private final String serviceName;
     private static volatile boolean initialized = false;
 
     protected final MqInboxIf messageQueueInbox;
+    private final int node;
 
     public Service(BaseServiceParams params,
                    Runnable configureStaticFiles
                    ) {
         this.initialization = params.initialization;
         var config = params.configuration;
+        node = config.node();
 
         String inboxName = config.serviceName();
         logger.info("Inbox name: {}", inboxName);
@@ -150,7 +152,7 @@ public class Service {
         // Paint context
         paintThreadName(request, "req:");
 
-        request_counter.labels(serviceName).inc();
+        request_counter.labels(serviceName, Integer.toString(node)).inc();
     }
 
     private void auditRequestOut(Request request, Response response) {
@@ -158,10 +160,10 @@ public class Service {
         paintThreadName(request, "rsp:");
 
         if (response.status() < 400) {
-            request_counter_good.labels(serviceName).inc();
+            request_counter_good.labels(serviceName, Integer.toString(node)).inc();
         }
         else {
-            request_counter_bad.labels(serviceName).inc();
+            request_counter_bad.labels(serviceName, Integer.toString(node)).inc();
         }
 
         logResponse(request, response);
@@ -174,7 +176,7 @@ public class Service {
     }
 
     protected void handleException(Exception ex, Request request, Response response) {
-        request_counter_err.labels(serviceName).inc();
+        request_counter_err.labels(serviceName, Integer.toString(node)).inc();
         if (ex instanceof MessagingException) {
             logger.error("{} {}", ex.getClass().getSimpleName(), ex.getMessage());
         }

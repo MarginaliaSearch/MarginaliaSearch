@@ -26,8 +26,14 @@ import java.util.concurrent.ConcurrentHashMap;
 @Singleton
 public class QueryClient extends AbstractDynamicClient {
 
-    private static final Summary wmsa_search_index_api_delegate_time = Summary.build().name("wmsa_search_index_api_delegate_time").help("-").register();
-    private static final Summary wmsa_search_index_api_search_time = Summary.build().name("wmsa_search_index_api_search_time").help("-").register();
+    private static final Summary wmsa_qs_api_delegate_time = Summary.build()
+            .name("wmsa_qs_api_delegate_time")
+            .help("query service delegate time")
+            .register();
+    private static final Summary wmsa_qs_api_search_time = Summary.build()
+            .name("wmsa_qs_api_search_time")
+            .help("query service search time")
+            .register();
 
     private final Map<ServiceAndNode, ManagedChannel> channels = new ConcurrentHashMap<>();
     private final Map<ServiceAndNode, QueryApiGrpc.QueryApiBlockingStub > queryApis = new ConcurrentHashMap<>();
@@ -64,14 +70,16 @@ public class QueryClient extends AbstractDynamicClient {
     /** Delegate an Index API style query directly to the index service */
     @CheckReturnValue
     public SearchResultSet delegate(Context ctx, SearchSpecification specs) {
-        return wmsa_search_index_api_delegate_time.time(
+        return wmsa_qs_api_delegate_time.time(
                 () -> this.postGet(ctx, 0, "/delegate/", specs, SearchResultSet.class).blockingFirst()
         );
     }
 
     @CheckReturnValue
     public QueryResponse search(Context ctx, QueryParams params) {
-        return QueryProtobufCodec.convertQueryResponse(queryApi(0).query(QueryProtobufCodec.convertQueryParams(params)));
+        return wmsa_qs_api_search_time.time(
+                () ->  QueryProtobufCodec.convertQueryResponse(queryApi(0).query(QueryProtobufCodec.convertQueryParams(params)))
+        );
     }
 
 }
