@@ -218,23 +218,6 @@ public class DomainInformationService {
         }
     }
 
-    @SneakyThrows
-    public double getDomainQuality(int domainId) {
-        try (var connection = dataSource.getConnection()) {
-
-            try (var stmt = connection.prepareStatement("SELECT QUALITY FROM EC_DOMAIN WHERE ID=?")) {
-                stmt.setInt(1, domainId);
-                var rsp = stmt.executeQuery();
-                if (rsp.next()) {
-                    return rsp.getDouble(1);
-                }
-            } catch (Exception ex) {
-                logger.error("DB error", ex);
-            }
-            return -5;
-        }
-    }
-
     public DomainIndexingState getDomainState(int domainId) {
         try (var connection = dataSource.getConnection()) {
 
