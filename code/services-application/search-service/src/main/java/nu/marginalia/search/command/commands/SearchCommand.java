@@ -8,7 +8,6 @@ import nu.marginalia.search.command.SearchCommandInterface;
 import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.search.model.DecoratedSearchResults;
 import nu.marginalia.search.model.UrlDetails;
-import nu.marginalia.search.model.UserSearchParameters;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 
@@ -33,10 +32,8 @@ public class SearchCommand implements SearchCommandInterface {
     }
 
     @Override
-    public Optional<Object> process(Context ctx, SearchParameters parameters, String query) {
-        UserSearchParameters params = new UserSearchParameters(query, parameters.profile(), parameters.js());
-
-        DecoratedSearchResults results = searchOperator.doSearch(ctx, params);
+    public Optional<Object> process(Context ctx, SearchParameters parameters) {
+        DecoratedSearchResults results = searchOperator.doSearch(ctx, parameters);
 
         return Optional.of(searchResultsRenderer.render(results));
     }

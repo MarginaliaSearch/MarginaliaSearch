@@ -56,14 +56,14 @@ public class BrowseCommand implements SearchCommandInterface {
     }
 
     @Override
-    public Optional<Object> process(Context ctx, SearchParameters parameters, String query) {
-        if (!queryPatternPredicate.test(query)) {
+    public Optional<Object> process(Context ctx, SearchParameters parameters) {
+        if (!queryPatternPredicate.test(parameters.query())) {
             return Optional.empty();
         }
 
-        return Optional.ofNullable(browseSite(ctx, query))
+        return Optional.ofNullable(browseSite(ctx, parameters.query()))
                 .map(results -> browseResultsRenderer.render(results,
-                        Map.of("query", query,
+                        Map.of("query", parameters.query(),
                         "profile", parameters.profileStr(),
                         "focusDomain", results.focusDomain())));
     }

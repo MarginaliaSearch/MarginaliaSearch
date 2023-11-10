@@ -9,10 +9,11 @@ import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.query.client.QueryClient;
 import nu.marginalia.query.model.QueryResponse;
+import nu.marginalia.search.command.SearchParameters;
+import nu.marginalia.search.model.SearchProfile;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.client.Context;
 import nu.marginalia.search.model.DecoratedSearchResults;
-import nu.marginalia.search.model.UserSearchParameters;
 import nu.marginalia.search.svc.SearchQueryIndexService;
 import nu.marginalia.search.svc.SearchUnitConversionService;
 import org.apache.logging.log4j.util.Strings;
@@ -70,9 +71,9 @@ public class SearchOperator {
         return searchQueryService.getResultsFromQuery(queryResponse);
     }
 
-    public DecoratedSearchResults doSearch(Context ctx, UserSearchParameters userParams) {
+    public DecoratedSearchResults doSearch(Context ctx, SearchParameters userParams) {
 
-        Future<String> eval = searchUnitConversionService.tryEval(ctx, userParams.humanQuery());
+        Future<String> eval = searchUnitConversionService.tryEval(ctx, userParams.query());
         var queryParams = paramFactory.forRegularSearch(userParams);
         var queryResponse = queryClient.search(ctx, queryParams);
 

@@ -51,12 +51,12 @@ public class SiteListCommand implements SearchCommandInterface {
     }
 
     @Override
-    public Optional<Object> process(Context ctx, SearchParameters parameters, String query) {
-        if (!queryPatternPredicate.test(query)) {
+    public Optional<Object> process(Context ctx, SearchParameters parameters) {
+        if (!queryPatternPredicate.test(parameters.query())) {
             return Optional.empty();
         }
 
-        var results = siteInfo(ctx, query);
+        var results = siteInfo(ctx, parameters.query());
         var domain = results.getDomain();
 
         List<UrlDetails> resultSet;
@@ -81,7 +81,7 @@ public class SiteListCommand implements SearchCommandInterface {
 
         Map<String, Object> renderObject = new HashMap<>(10);
 
-        renderObject.put("query", query);
+        renderObject.put("query", parameters.query());
         renderObject.put("hideRanking", true);
         renderObject.put("profile", parameters.profileStr());
         renderObject.put("results", resultSet);

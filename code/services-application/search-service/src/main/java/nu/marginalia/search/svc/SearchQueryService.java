@@ -48,13 +48,13 @@ public class SearchQueryService {
         final String humanQuery = queryParam.trim();
 
         var params = new SearchParameters(
+                humanQuery,
                 SearchProfile.getSearchProfile(profileStr),
-                SearchJsParameter.parse(request.queryParams("js")),
-                Boolean.parseBoolean(request.queryParams("detailed"))
+                SearchJsParameter.parse(request.queryParams("js"))
         );
 
         try {
-            return searchCommandEvaulator.eval(ctx, params, humanQuery);
+            return searchCommandEvaulator.eval(ctx, params);
         }
         catch (RedirectException ex) {
             response.redirect(ex.newUrl);

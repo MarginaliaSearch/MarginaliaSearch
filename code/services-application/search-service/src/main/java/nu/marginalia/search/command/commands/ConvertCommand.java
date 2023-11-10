@@ -24,12 +24,16 @@ public class ConvertCommand implements SearchCommandInterface {
     }
 
     @Override
-    public Optional<Object> process(Context ctx, SearchParameters parameters, String query) {
-        var conversion = searchUnitConversionService.tryConversion(ctx, query);
+    public Optional<Object> process(Context ctx, SearchParameters parameters) {
+        var conversion = searchUnitConversionService.tryConversion(ctx, parameters.query());
         if (conversion.isEmpty()) {
             return Optional.empty();
         }
 
-        return Optional.of(conversionRenderer.render(Map.of("query", query, "result", conversion.get(), "profile", parameters.profileStr())));
+        return Optional.of(conversionRenderer.render(Map.of(
+                "query", parameters.query(),
+                "result", conversion.get(),
+                "profile", parameters.profileStr()))
+        );
     }
 }

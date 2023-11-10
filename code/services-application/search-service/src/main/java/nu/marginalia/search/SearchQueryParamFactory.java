@@ -5,20 +5,20 @@ import nu.marginalia.index.client.model.query.SearchSubquery;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.SpecificationLimit;
 import nu.marginalia.query.model.QueryParams;
-import nu.marginalia.search.model.UserSearchParameters;
+import nu.marginalia.search.command.SearchParameters;
 
 import java.util.List;
 
 public class SearchQueryParamFactory {
 
-    public QueryParams forRegularSearch(UserSearchParameters userParams) {
+    public QueryParams forRegularSearch(SearchParameters userParams) {
         SearchSubquery prototype =  new SearchSubquery();
         var profile = userParams.profile();
         profile.addTacitTerms(prototype);
-        userParams.jsSetting().addTacitTerms(prototype);
+        userParams.js().addTacitTerms(prototype);
 
         return new QueryParams(
-                userParams.humanQuery(),
+                userParams.query(),
                 null,
                 prototype.searchTermsInclude,
                 prototype.searchTermsExclude,

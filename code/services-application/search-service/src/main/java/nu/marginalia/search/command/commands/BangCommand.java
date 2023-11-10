@@ -23,36 +23,75 @@ public class BangCommand implements SearchCommandInterface {
     }
 
     @Override
-    public Optional<Object> process(Context ctx, SearchParameters parameters, String query) {
+    public Optional<Object> process(Context ctx, SearchParameters parameters) {
 
         for (var entry : bangsToPattern.entrySet()) {
-            matchBangPattern(query, entry.getKey(), entry.getValue());
+            String bangPattern = entry.getKey();
+            String redirectPattern = entry.getValue();
+
+            var match = matchBangPattern(parameters.query(), bangPattern);
+
+            if (match.isPresent()) {
+                var url = String.format(redirectPattern, URLEncoder.encode(match.get(), StandardCharsets.UTF_8));
+                throw new RedirectException(url);
+            }
         }
 
         return Optional.empty();
     }
 
-    private void matchBangPattern(String query, String bangKey, String urlPattern) {
-        for (int idx = query.indexOf(bangKey); idx >= 0; idx = query.indexOf(bangKey, idx + 1)) {
+    private Optional<String> matchBangPattern(String query, String bangKey) {
+        var bm = new BangMatcher(query);
 
-            if (idx > 0) { // Don't match "search term!b", require either "!b term" or "search term !b"
-                if (!Character.isSpaceChar(query.charAt(idx-1))) {
-                    continue;
-                }
-            }
-            int nextIdx = idx + bangKey.length();
+        while (bm.findNext(bangKey)) {
 
-            if (nextIdx >= query.length()) { // allow "search term !b"
-                redirect(urlPattern, query.substring(0, idx));
-            }
-            else if (Character.isSpaceChar(query.charAt(nextIdx))) { // skip matches on pattern "!bsearch term" for !b
-                redirect(urlPattern, query.substring(0, idx).stripTrailing() + " " + query.substring(nextIdx).stripLeading());
-            }
+            if (bm.isRelativeSpaceOrInvalid(-1))
+                continue;
+            if (bm.isRelativeSpaceOrInvalid(bangKey.length()))
+                continue;
+
+            String queryWithoutBang = bm.prefix().trim() + " " + bm.suffix(bangKey.length()).trim();
+            return Optional.of(queryWithoutBang);
         }
+
+        return Optional.empty();
     }
 
-    private void redirect(String pattern, String terms) {
-        var url = String.format(pattern, URLEncoder.encode(terms.trim(), StandardCharsets.UTF_8));
-        throw new RedirectException(url);
+    private static class BangMatcher {
+        private final String str;
+        private int pos;
+
+        public String prefix() {
+            return str.substring(0, pos);
+        }
+
+        public String suffix(int offset) {
+            if (pos+offset < str.length())
+                return str.substring(pos + offset);
+            return "";
+        }
+
+        public BangMatcher(String str) {
+            this.str = str;
+            this.pos = -1;
+        }
+
+        public boolean findNext(String pattern) {
+            if (pos + 1 >= str.length())
+                return false;
+
+            return (pos = str.indexOf(pattern, pos + 1)) >= 0;
+        }
+
+        public boolean isRelativeSpaceOrInvalid(int offset) {
+            if (offset + pos < 0)
+                return true;
+            if (offset + pos >= str.length())
+                return true;
+
+            return Character.isSpaceChar(str.charAt(offset + pos));
+        }
+
     }
+
 }

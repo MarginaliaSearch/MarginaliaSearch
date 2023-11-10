@@ -38,14 +38,17 @@ public class DefinitionCommand implements SearchCommandInterface {
     }
 
     @Override
-    public Optional<Object> process(Context ctx, SearchParameters parameters, String query) {
-        if (!queryPatternPredicate.test(query.trim())) {
+    public Optional<Object> process(Context ctx, SearchParameters parameters) {
+        if (!queryPatternPredicate.test(parameters.query())) {
             return Optional.empty();
         }
 
-        var results = lookupDefinition(ctx, query);
+        var results = lookupDefinition(ctx, parameters.query());
 
-        return Optional.of(dictionaryRenderer.render(results, Map.of("query", query, "profile", parameters.profileStr())));
+        return Optional.of(dictionaryRenderer.render(results,
+                Map.of("query", parameters.query(),
+                        "profile", parameters.profileStr())
+        ));
     }
 
 

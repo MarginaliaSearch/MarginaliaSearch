@@ -3,12 +3,13 @@ package nu.marginalia.search.model;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import nu.marginalia.search.command.SearchParameters;
 
 import java.util.List;
 
 @AllArgsConstructor @Getter @Builder
 public class DecoratedSearchResults {
-    private final UserSearchParameters params;
+    private final SearchParameters params;
     private final List<String> problems;
     private final String evalResult;
 
@@ -18,12 +19,12 @@ public class DecoratedSearchResults {
     private final int focusDomainId;
 
     public String getQuery() {
-        return params.humanQuery();
+        return params.query();
     }
     public String getProfile() {
         return params.profile().name;
     }
     public String getJs() {
-        return params.jsSetting().value;
+        return params.js().value;
     }
 }

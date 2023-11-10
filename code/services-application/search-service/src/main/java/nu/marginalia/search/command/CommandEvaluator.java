@@ -30,16 +30,16 @@ public class CommandEvaluator {
         defaultCommand = search;
     }
 
-    public Object eval(Context ctx, SearchParameters parameters, String query) {
+    public Object eval(Context ctx, SearchParameters parameters) {
         for (var cmd : specialCommands) {
-            var ret = cmd.process(ctx, parameters, query);
+            var ret = cmd.process(ctx, parameters);
             if (ret.isPresent()) {
                 return ret.get();
             }
         }
 
         // Always process the search command last
-        return defaultCommand.process(ctx, parameters, query)
+        return defaultCommand.process(ctx, parameters)
                 .orElseThrow(() -> new IllegalStateException("Search Command returned Optional.empty()!") /* This Should Not be Possible™ */ );
     }
 
