@@ -14,9 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import spark.Request;
 import spark.Response;
 import spark.Spark;
-import spark.resource.ClassPathResource;
 
-import java.io.FileNotFoundException;
 import java.util.Map;
 import java.util.Optional;
 

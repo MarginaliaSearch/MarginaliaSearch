@@ -48,6 +48,7 @@ dependencies {
     implementation libs.notnull
     implementation libs.guice
     implementation libs.rxjava
+    implementation libs.handlebars
     implementation libs.spark
     implementation libs.opencsv
     implementation libs.trove

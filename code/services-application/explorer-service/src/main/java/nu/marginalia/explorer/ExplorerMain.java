@@ -26,6 +26,7 @@ public class ExplorerMain extends MainClass {
 
         Injector injector = Guice.createInjector(
                 new ServiceConfigurationModule(SearchServiceDescriptors.descriptors, ServiceId.Explorer),
+                new ExplorerModule(),
                 new DatabaseModule()
         );
 

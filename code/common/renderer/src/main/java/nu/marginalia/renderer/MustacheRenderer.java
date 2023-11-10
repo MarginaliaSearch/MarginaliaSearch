@@ -5,6 +5,7 @@ import com.github.jknack.handlebars.helper.ConditionalHelpers;
 import com.github.jknack.handlebars.io.ClassPathTemplateLoader;
 import com.github.jknack.handlebars.io.TemplateLoader;
 import lombok.SneakyThrows;
+import nu.marginalia.renderer.config.HandlebarsConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,38 +18,18 @@ public class MustacheRenderer<T> {
     private final Template template;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    MustacheRenderer(String templateFile) throws IOException {
+    MustacheRenderer(HandlebarsConfigurator configurator, String templateFile) throws IOException {
 
         TemplateLoader loader = new ClassPathTemplateLoader();
         loader.setPrefix("/templates");
         loader.setSuffix(".hdb");
 
         var handlebars = new Handlebars(loader);
+
         handlebars.registerHelpers(ConditionalHelpers.class);
         handlebars.registerHelper("md", new MarkdownHelper());
-        handlebars.registerHelper("readableUUID", (context, options) -> {
-            if (context == null) return "";
-            String instance = context.toString();
-            if (instance.length() < 31) return "";
 
-            instance = instance.replace("-", "");
-            String color1 = "#"+instance.substring(0, 6);
-            String color2 = "#"+instance.substring(6, 12);
-            String color3 = "#"+instance.substring(12, 18);
-            String color4 = "#"+instance.substring(18, 24);
-
-            String shortName1 = instance.substring(0, 2);
-            String shortName2 = instance.substring(2, 4);
-            String shortName3 = instance.substring(4, 6);
-            String shortName4 = instance.substring(6, 8);
-
-            String ret = "<span title=\"%s\">".formatted(context.toString()) +
-                    "<span style=\"text-shadow: 0 0 0.2ch %s; font-family: monospace;\">%s</span>".formatted(color1, shortName1) +
-                    "<span style=\"text-shadow: 0 0 0.2ch %s; font-family: monospace;\">%s</span>".formatted(color2, shortName2) +
-                    "<span style=\"text-shadow: 0 0 0.2ch %s; font-family: monospace;\">%s</span>".formatted(color3, shortName3) +
-                    "<span style=\"text-shadow :0 0 0.2ch %s; font-family: monospace;\">%s</span>".formatted(color4, shortName4);
-            return ret;
-        });
+        configurator.configure(handlebars);
 
         try {
             template = handlebars.compile(templateFile);
