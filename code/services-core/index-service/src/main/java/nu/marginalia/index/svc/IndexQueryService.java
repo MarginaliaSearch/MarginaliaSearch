@@ -31,6 +31,7 @@ import nu.marginalia.index.svc.searchset.SmallSearchSet;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.model.idx.DocumentMetadata;
 import nu.marginalia.model.idx.WordMetadata;
+import nu.marginalia.service.module.ServiceConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -56,17 +57,17 @@ public class IndexQueryService extends IndexApiImplBase {
     private static final Counter wmsa_query_timeouts = Counter.build()
             .name("wmsa_query_timeouts")
             .help("Query timeout counter")
-            .subsystem("index-"+System.getenv("WMSA_SERVICE_NODE"))
+            .labelNames("node")
             .register();
     private static final Gauge wmsa_query_cost = Gauge.build()
             .name("wmsa_query_cost")
             .help("Computational cost of query")
-            .subsystem("index-"+System.getenv("WMSA_SERVICE_NODE"))
+            .labelNames("node")
             .register();
     private static final Histogram wmsa_query_time = Histogram.build()
             .name("wmsa_query_time")
             .linearBuckets(50., 50., 15)
-            .subsystem("index-"+System.getenv("WMSA_SERVICE_NODE"))
+            .labelNames("node")
             .help("Index-side query time")
             .register();
 
@@ -79,16 +80,19 @@ public class IndexQueryService extends IndexApiImplBase {
 
     private final IndexMetadataService metadataService;
     private final SearchTermsService searchTermsSvc;
+    private final int nodeId;
 
 
     @Inject
     public IndexQueryService(IndexQueryExecutor queryExecutor,
+                             ServiceConfiguration serviceConfiguration,
                              SearchIndex index,
                              IndexResultDecorator resultDecorator,
                              IndexSearchSetsService searchSetsService,
                              IndexMetadataService metadataService,
                              SearchTermsService searchTerms)
     {
+        this.nodeId = serviceConfiguration.node();
         this.queryExecutor = queryExecutor;
         this.index = index;
         this.resultDecorator = resultDecorator;
@@ -123,24 +127,32 @@ public class IndexQueryService extends IndexApiImplBase {
     }
 
     public Object search(Request request, Response response) {
-        String json = request.body();
-        SearchSpecification specsSet = gson.fromJson(json, SearchSpecification.class);
+        final String json = request.body();
+        final SearchSpecification specsSet = gson.fromJson(json, SearchSpecification.class);
 
         if (!index.isAvailable()) {
             Spark.halt(503, "Index is not loaded");
         }
 
+        final String nodeName = Integer.toString(nodeId);
+
         try {
-            return wmsa_query_time.time(() -> {
+            return wmsa_query_time
+                    .labels(nodeName)
+                    .time(() -> {
                 var params = new SearchParameters(specsSet, getSearchSet(specsSet));
 
                 SearchResultSet results = executeSearch(params);
 
                 logger.info(queryMarker, "Index Result Count: {}", results.size());
 
-                wmsa_query_cost.set(params.getDataCost());
+                wmsa_query_cost
+                        .labels(nodeName)
+                        .set(params.getDataCost());
                 if (!params.hasTimeLeft()) {
-                    wmsa_query_timeouts.inc();
+                    wmsa_query_timeouts
+                            .labels(nodeName)
+                            .inc();
                 }
 
                 return results;
