@@ -112,4 +112,6 @@
 
     </section>
 </footer>
-<script src="/tts.js" rel="javascript"></script>
+
+<script src="js/tts.js"></script>
+<script src="js/serp.js"></script>

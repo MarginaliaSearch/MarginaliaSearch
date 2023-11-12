@@ -1,6 +1,7 @@
 plugins {
     id 'java'
-
+    id 'io.freefair.sass-base' version '8.4'
+    id 'io.freefair.sass-java' version '8.4'
     id 'com.palantir.docker' version '0.35.0'
     id 'application'
     id 'jvm-test-suite'
@@ -19,6 +20,11 @@ java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(21))
     }
+}
+sass {
+    sourceMapEnabled = true
+    sourceMapEmbed = true
+    outputStyle = EXPANDED
 }
 dependencies {
     implementation project(':code:common:db')

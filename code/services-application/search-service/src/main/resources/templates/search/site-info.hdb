@@ -27,7 +27,7 @@
     {{>search/parts/site-info-index}}
     {{>search/parts/site-info-links}}
 
-    {{#each results}}{{>search/search-result}}{{/each}}
+    {{#each results}}{{>search/parts/search-result}}{{/each}}
 </section>
 </article>
 

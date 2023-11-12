@@ -1,8 +1,0 @@
-{{#if problems}} <span class="problems" title="{{problems}}"> ⚠ {{problemCount}} </span> {{/if}}
-
-<span
-    aria-hidden="true"
-    class="meta positions"
-    title="Positions where keywords were found within the document">
-{{positions}}
-</span>

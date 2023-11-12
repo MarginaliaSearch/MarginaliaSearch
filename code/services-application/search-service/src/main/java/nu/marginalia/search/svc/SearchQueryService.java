@@ -14,8 +14,6 @@ import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
-import java.util.Optional;
-
 public class SearchQueryService {
 
     private final WebsiteUrl websiteUrl;
@@ -38,23 +36,8 @@ public class SearchQueryService {
 
         final var ctx = Context.fromRequest(request);
 
-        final String queryParam = request.queryParams("query");
-        if (null == queryParam || queryParam.isBlank()) {
-            response.redirect(websiteUrl.url());
-            return null;
-        }
-
-        final String profileStr = Optional.ofNullable(request.queryParams("profile")).orElse(SearchProfile.YOLO.name);
-        final String humanQuery = queryParam.trim();
-
-        var params = new SearchParameters(
-                humanQuery,
-                SearchProfile.getSearchProfile(profileStr),
-                SearchJsParameter.parse(request.queryParams("js"))
-        );
-
         try {
-            return searchCommandEvaulator.eval(ctx, params);
+            return searchCommandEvaulator.eval(ctx, parseParameters(request));
         }
         catch (RedirectException ex) {
             response.redirect(ex.newUrl);
@@ -67,4 +50,15 @@ public class SearchQueryService {
         return "";
     }
 
+    private SearchParameters parseParameters(Request request) {
+        final String queryParam = request.queryParams("query");
+
+        if (null == queryParam || queryParam.isBlank()) {
+            throw new RedirectException(websiteUrl.url());
+        }
+
+        return new SearchParameters(queryParam.trim(),
+                                    SearchProfile.getSearchProfile(request.queryParams("profile")),
+                                    SearchJsParameter.parse(request.queryParams("js")));
+    }
 }

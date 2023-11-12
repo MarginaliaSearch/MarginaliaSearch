@@ -17,7 +17,7 @@ public class DecoratedSearchResults {
 
     private final String focusDomain;
     private final int focusDomainId;
-
+    private final SearchFilters filters;
     public String getQuery() {
         return params.query();
     }
