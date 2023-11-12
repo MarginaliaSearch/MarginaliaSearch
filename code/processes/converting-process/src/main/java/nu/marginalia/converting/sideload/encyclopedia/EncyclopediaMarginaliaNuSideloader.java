@@ -6,6 +6,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.atags.source.AnchorTagsSourceFactory;
 import nu.marginalia.converting.model.DisqualifiedException;
+import nu.marginalia.converting.model.GeneratorType;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.sideload.SideloadSource;
@@ -184,6 +185,7 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
                         fullHtml.toString(),
                         List.of("encyclopedia", "wiki"),
                         domainLinks,
+                        GeneratorType.WIKI,
                         10_000_000);
     }
 
