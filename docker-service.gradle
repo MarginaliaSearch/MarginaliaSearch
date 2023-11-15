@@ -34,7 +34,7 @@ dockerfileZip {
 
 docker {
     dockerfile = tasks.dockerFile.outputs.files.singleFile
-    name = 'marginalia.nu/'+application.applicationName+':latest'
+    name = 'registry.marginalia.nu/'+application.applicationName+':latest'
     files tasks.distTar.outputs
     tags 'latest'
     dependsOn tasks.distTar
