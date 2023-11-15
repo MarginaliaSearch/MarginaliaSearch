@@ -2,11 +2,14 @@
 
 set -e
 
+export EXPERIMENT_RUNNER_OPTS="--enable-preview"
+
 EXPERIMENT=$1
 SAMPLE_NAME=crawl-${2:-m}
 ARGS=${@:3}
-export EXPERIMENT_RUNNER_OPTS="--enable-preview"
-SAMPLE_DIR="node-1/samples/${SAMPLE_NAME}/"
+
+SAMPLE_DIR_BASE="node-1/samples/"
+SAMPLE_DIR="${SAMPLE_DIR_BASE}${SAMPLE_NAME}/"
 
 echo "args = $ARGS"
 
@@ -45,17 +48,17 @@ tar xf ../code/tools/experiment-runner/build/distributions/experiment-runner.tar
 ## Download the sample if necessary
 
 if [ ! -d ${SAMPLE_DIR} ]; then
-  mkdir -p samples/
+  mkdir -p ${SAMPLE_DIR_BASE}
 
-  SAMPLE_TARBALL=samples/${SAMPLE_NAME}.tar.gz
-  download_model ${SAMPLE_TARBALL} https://downloads.marginalia.nu/${SAMPLE_TARBALL} || rm ${SAMPLE_TARBALL}
+  SAMPLE_TARBALL=${SAMPLE_DIR_BASE}${SAMPLE_NAME}.tar.gz
+  download_model ${SAMPLE_TARBALL} https://downloads.marginalia.nu/samples/${SAMPLE_NAME}.tar.gz || rm ${SAMPLE_TARBALL}
 
   if [ ! -f ${SAMPLE_TARBALL} ]; then
     echo "!! Failed"
     exit 255
   fi
 
-  mkdir -p samples/${SAMPLE_NAME}
+  mkdir -p ${SAMPLE_DIR_BASE}/${SAMPLE_NAME}
   if [ ! -f $SAMPLE_DIR/plan.yaml ]; then
     echo "Uncompressing"
     tar zxf ${SAMPLE_TARBALL} --strip-components=1 -C ${SAMPLE_DIR}
