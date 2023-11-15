@@ -8,6 +8,7 @@ import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.util.TestLanguageModels;
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.List;
@@ -17,6 +18,14 @@ class DomainAnchorTagsImplTest {
     @Test
     void getAnchorTags() {
         Path atagsPath = Path.of("/home/vlofgren/atags.parquet");
+
+        if (!Files.exists(atagsPath)) {
+            // Not really practical to ship a multi-gb file in the git repo
+            // atags.parquet is available at https://downloads.marginalia.nu/exports
+
+            return;  // skip test
+        }
+
         try (var domainAnchorTags = new AnchorTagsImpl(
                 atagsPath, List.of(new EdgeDomain("www.chiark.greenend.org.uk"))
         )) {
