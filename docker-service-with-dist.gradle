@@ -45,15 +45,15 @@ dockerfileZip {
 
 docker {
     dockerfile = tasks.dockerFile.outputs.files.singleFile
-    name = 'registry.marginalia.nu/'+application.applicationName+':latest'
+
+    name = (project.hasProperty('docker-registry') ? project.property('docker-registry') : 'marginalia')+'/'+application.applicationName+':'+(project.hasProperty('docker-tag') ? project.property('docker-tag') : 'latest')
+
     files tasks.distTar.outputs, \
          project(':code:processes:crawling-process').distTar.outputs, \
          project(':code:processes:loading-process').distTar.outputs, \
          project(':code:processes:converting-process').distTar.outputs, \
          project(':code:processes:index-constructor-process').distTar.outputs, \
          project(':code:processes:website-adjacencies-calculator').distTar.outputs
-
-    tags 'latest'
 
     dependsOn project(':code:processes:crawling-process').distTar
     dependsOn project(':code:processes:loading-process').distTar

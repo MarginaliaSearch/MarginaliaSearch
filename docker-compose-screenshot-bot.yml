@@ -10,7 +10,7 @@ x-svc: &service
 services:
   screenshot-capture-tool:
     <<: *service
-    image: "marginalia.nu/screenshot-capture-tool"
+    image: "marginalia/screenshot-capture-tool"
     container_name: "screenshot-capture-tool"
     networks:
     - wmsa
