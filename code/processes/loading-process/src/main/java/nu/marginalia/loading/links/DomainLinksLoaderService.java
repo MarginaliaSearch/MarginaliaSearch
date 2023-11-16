@@ -3,6 +3,7 @@ package nu.marginalia.loading.links;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.io.processed.DomainLinkRecordParquetFileReader;
 import nu.marginalia.io.processed.ProcessedDataFileNames;
 import nu.marginalia.loading.LoaderInputData;
@@ -23,10 +24,12 @@ public class DomainLinksLoaderService {
 
     private final HikariDataSource dataSource;
     private static final Logger logger = LoggerFactory.getLogger(DomainLinksLoaderService.class);
-
+    private final int nodeId;
     @Inject
-    public DomainLinksLoaderService(HikariDataSource dataSource) {
+    public DomainLinksLoaderService(HikariDataSource dataSource,
+                                    ProcessConfiguration processConfiguration) {
         this.dataSource = dataSource;
+        this.nodeId = processConfiguration.node();
     }
 
     public boolean loadLinks(DomainIdRegistry domainIdRegistry,
@@ -54,11 +57,12 @@ public class DomainLinksLoaderService {
     }
 
     private void dropLinkData() throws SQLException {
-        logger.info("Truncating EC_DOMAIN_LINK");
+        logger.info("Clearing EC_DOMAIN_LINK");
 
         try (var conn = dataSource.getConnection();
-             var stmt = conn.createStatement()) {
-            stmt.executeUpdate("TRUNCATE TABLE EC_DOMAIN_LINK");
+             var call = conn.prepareCall("CALL PURGE_LINKS_TABLE(?)")) {
+            call.setInt(1, nodeId);
+            call.executeUpdate();
         }
     }
 
@@ -84,7 +88,7 @@ public class DomainLinksLoaderService {
 
             connection = dataSource.getConnection();
             insertStatement = connection.prepareStatement("""
-                    INSERT INTO EC_DOMAIN_LINK(SOURCE_DOMAIN_ID, DEST_DOMAIN_ID)
+                    INSERT IGNORE INTO EC_DOMAIN_LINK(SOURCE_DOMAIN_ID, DEST_DOMAIN_ID)
                     VALUES (?, ?)
                     """);
         }
