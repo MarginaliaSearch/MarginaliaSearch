@@ -4,7 +4,7 @@ This document is a draft.
 
 ## WARNING
 Please don't run the crawler unless you intend to actually operate a public
-facing search engine!  Use crawl sets from downloads.marginalia.nu instead.
+facing search engine!  For testing, use crawl sets from downloads.marginalia.nu instead.
 
 See the documentation in run/ for more information.
 
@@ -30,7 +30,8 @@ This can be done by editing the file `${WMSA_HOME}/conf/user-agent`.
 
 ## Setup
 
-Ensure that the system is running and go to https://localhost:8081.  See the documentation in [run/](../run/) for more information.
+Ensure that the system is running and go to https://localhost:8081.  
+
 By default the system is configured to store data in `run/node-1/samples`. 
 
 
@@ -42,23 +43,71 @@ system does not know of any links.  To bootstrap a crawl, a crawl specification 
 You need a list of known domains.  This is just a text file with one domain name per line,
 with blanklines and comments starting with `#` ignored.  Make it available over HTTP(S).
 
-Go to ??? and select `Download a list of domains from a URL` in the `Create New Specification`
-form.  Make sure to give this specification a good description, as it will follow you around for a while.
+Go to
 
-## Crawling
+* System -> Nodes
+* Select node 1
+* Storage -> Specs
+* Click `[Create New Specification]`
+
+Fill out the form with a description and a link to the domain list. 
+
+## Crawling 
 
 Refresh the specification list in the operator's gui.  You should see your new specification in the list.
-Click the `[Info]` link next to it and select `[Crawl]` under `Actions`.
+Click the link and select `[Crawl]` under `Actions`.
 
 Depending on the size of the specification, this may take anywhere between a few minutes to a few weeks. 
-You can follow the progress in the `Actors` view.
+You can follow the progress in the `Overview` view.  It's fairly common for the crawler to get stuck at 
+99%, this is from the crawler finishing up the largest sites.  It will abort if no progress has been made
+in five hours. 
+
+You can manually also abort the crawler by going to
+
+* System -> Nodes -> `[your node]` -> Actors.
+
+Toggle both CRAWL and PROC_CRAWLER_SPAWNER to `[OFF]`.  
+
+CRAWL controls the larger crawler process, and PROC_CRAWLER_SPAWNER spawns the actual
+crawler process.  The crawler will be aborted, but the crawl data should be intact. 
+
+At this point you'll want to set PROC_CRAWLER_SPAWNER back to `[ON]`, as the crawler
+won't be able to start until it's set to this mode.
+
+!!! FIXME: This UX kinda sucks, should be an abort button ideally, none of this having to toggle
+circuit breakers on and off.
 
 ## Converting
 
-Once the crawl is finished, you can convert the data to a format that can be loaded into the database.
-This is done by going to the `storage -> crawl` view in the operator's gui, clicking the `[Info]` link
-and pressing `[Convert]` under `Actions`.
+Once the crawl is finished, you can convert and load the data to a format that can be loaded into the database.
 
-The rest of the process should be automatic.  Follow the progress in the `Actors` view; the actor
-`RECONVERT_LOAD` drives the process.  The process can be stopped by terminating this actor.  Depending on the
-state, it may be necessary to restart from the beginning.  
+First you'll want to go to Storage -> Crawl Data, and toggle the `State` field next to your new crawl
+data into `Active`.  This will mark it as eligible for processing. 
+
+Next, go to Actions -> Process Crawl Data, and click `[Trigger Reprocessing]`.  Ensure your crawl data
+is visible in the list. This will start the automatic conversion and loading process, which can be followed
+in the `Overview` view.
+
+This process will take a while, and will run these discrete steps:
+
+* CONVERT the crawl data into a format that can be loaded into the database
+* LOAD, load posts into the mariadb database, construct an index journal and sqlite linkdb 
+* Delete the processed data (optional; depending on node configuration)
+* Create a backup of the index journal to be loaded (can be restored later)
+* Repartition and create new domain rankings
+* Construct a new index 
+* * Forward
+* * Full
+* * Priority
+* Switch to the new index
+
+All of this is automatic and most of it is visible in the `Overview` view. 
+
+## Recrawling (IMPORTANT)
+
+The work flow with a crawl spec was a one-off process to bootstrap the search engine.  To keep the search engine up to date,
+it is preferrable to do a recrawl.  This will try to reduce the amount of data that needs to be fetched.
+
+To trigger a Recrawl, ensure your crawl data is set to active, and then go to Actions -> Trigger Recrawl,
+and click `[Trigger Recrawl]`.  This will behave much like the old crawling step.   Once done, it needs to be
+processed like the old crawl data.
