@@ -35,7 +35,12 @@ dockerfileZip {
 docker {
     dockerfile = tasks.dockerFile.outputs.files.singleFile
 
-    name = (project.hasProperty('docker-registry') ? project.property('docker-registry') : 'marginalia')+'/'+application.applicationName+':' + (project.hasProperty('docker-tag') ? project.property('docker-tag') : 'latest')
+    var registry = project.hasProperty('docker-registry') ? project.property('docker-registry') : 'marginalia'
+    var tagName = project.hasProperty('docker-tag') ? project.property('docker-tag') : 'latest'
+
+    name = registry+'/'+application.applicationName+':'+tagName
+    tag 'test', (registry+'/'+application.applicationName+':'+tagName)
+
     files tasks.distTar.outputs
     dependsOn tasks.distTar
 }
