@@ -10,9 +10,9 @@ import nu.marginalia.search.model.DecoratedSearchResults;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
+import spark.Response;
 
 import java.io.IOException;
-import java.util.Optional;
 
 public class SearchCommand implements SearchCommandInterface {
     private final DomainBlacklist blacklist;
@@ -32,10 +32,12 @@ public class SearchCommand implements SearchCommandInterface {
     }
 
     @Override
-    public Optional<Object> process(Context ctx, SearchParameters parameters) {
+    public boolean process(Context ctx, Response response, SearchParameters parameters) {
         DecoratedSearchResults results = searchOperator.doSearch(ctx, parameters);
 
-        return Optional.of(searchResultsRenderer.render(results));
+        searchResultsRenderer.renderInto(response, results);
+
+        return true;
     }
 
     private boolean isBlacklisted(UrlDetails details) {

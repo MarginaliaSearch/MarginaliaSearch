@@ -1,0 +1,25 @@
+<section id="index-info">
+<h2>Indexing Information</h2>
+{{#if domainState.blacklisted}}
+    {{>search/site-info/site-info-index-blacklisted}}
+{{/if}}
+
+{{#if domainState.unknownDomain}}
+    {{>search/site-info/site-info-index-unknown}}
+{{/if}}
+
+{{#if domainState.inCrawlQueue}}
+<p>
+This website is in the queue for crawling.
+It may take up to a month before it is indexed.
+</p>
+{{/if}}
+
+{{#if domainState.suggestForCrawling}}
+ {{>search/site-info/site-info-index-suggest}}
+{{/if}}
+
+{{#if domainState.indexed}}
+ {{>search/site-info/site-info-index-indexed}}
+{{/if}}
+</section>

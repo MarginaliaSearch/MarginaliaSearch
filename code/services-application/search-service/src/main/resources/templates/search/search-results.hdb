@@ -20,6 +20,12 @@
 
 <section class="sidebar-narrow">
     <section id="results" class="sb-left">
+        {{#if focusDomain}}
+            <div class="infobox">
+                Showing search results from <a href="/site/{{focusDomain}}">{{focusDomain}}</a>.
+            </div>
+
+        {{/if}}
         {{#each results}}{{>search/parts/search-result}}{{/each}}
     </section>
 

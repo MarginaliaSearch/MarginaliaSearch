@@ -51,4 +51,22 @@ public class SearchQueryParamFactory {
                 SearchSetIdentifier.NONE
         );
     }
+
+
+    public QueryParams forBacklinkSearch(String domain) {
+        return new QueryParams("links:"+domain,
+                null,
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                SpecificationLimit.none(),
+                SpecificationLimit.none(),
+                SpecificationLimit.none(),
+                SpecificationLimit.none(),
+                List.of(),
+                new QueryLimits(100, 100, 100, 512),
+                SearchSetIdentifier.NONE
+        );
+    }
 }

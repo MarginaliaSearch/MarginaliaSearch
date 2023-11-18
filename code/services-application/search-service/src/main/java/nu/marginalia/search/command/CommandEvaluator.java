@@ -3,6 +3,7 @@ package nu.marginalia.search.command;
 import com.google.inject.Inject;
 import nu.marginalia.search.command.commands.*;
 import nu.marginalia.client.Context;
+import spark.Response;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,30 +18,32 @@ public class CommandEvaluator {
             BrowseCommand browse,
             ConvertCommand convert,
             DefinitionCommand define,
-            SiteListCommand site,
             BangCommand bang,
+            SiteRedirectCommand siteRedirect,
             SearchCommand search
     ) {
         specialCommands.add(browse);
         specialCommands.add(convert);
         specialCommands.add(define);
-        specialCommands.add(site);
         specialCommands.add(bang);
+        specialCommands.add(siteRedirect);
 
         defaultCommand = search;
     }
 
-    public Object eval(Context ctx, SearchParameters parameters) {
+    public Object eval(Context ctx, Response response, SearchParameters parameters) {
         for (var cmd : specialCommands) {
-            var ret = cmd.process(ctx, parameters);
-            if (ret.isPresent()) {
-                return ret.get();
+            if (cmd.process(ctx, response, parameters)) {
+                // The commands will write directly to the response, so we don't need to do anything else
+                // but it's important we don't return null, as this signals to Spark that we haven't handled
+                // the request.
+
+                return "";
             }
         }
 
-        // Always process the search command last
-        return defaultCommand.process(ctx, parameters)
-                .orElseThrow(() -> new IllegalStateException("Search Command returned Optional.empty()!") /* This Should Not be Possible™ */ );
+        defaultCommand.process(ctx, response, parameters);
+        return "";
     }
 
 }

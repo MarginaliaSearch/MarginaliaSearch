@@ -76,7 +76,7 @@ public class DomainInformationService {
                 .linkingDomains(linkingDomains)
                 .inCrawlQueue(inCrawlQueue)
                 .nodeAffinity(nodeAffinity)
-                .suggestForCrawling((pagesVisited == 0 && !inCrawlQueue))
+                .suggestForCrawling((pagesVisited == 0 && outboundLinks == 0 && !inCrawlQueue))
                 .build();
 
         return Optional.of(di);

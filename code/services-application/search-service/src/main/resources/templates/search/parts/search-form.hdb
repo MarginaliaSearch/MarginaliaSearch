@@ -1,4 +1,4 @@
-<form action="search" method="get">
+<form action="/search" method="get">
     <div id="search-box">
         <h1>
             Search The Internet

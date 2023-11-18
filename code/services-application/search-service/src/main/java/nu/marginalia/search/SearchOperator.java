@@ -75,7 +75,14 @@ public class SearchOperator {
 
         return searchQueryService.getResultsFromQuery(queryResponse);
     }
+    public List<UrlDetails> doBacklinkSearch(Context ctx,
+                                         String domain) {
 
+        var queryParams = paramFactory.forBacklinkSearch(domain);
+        var queryResponse = queryClient.search(ctx, queryParams);
+
+        return searchQueryService.getResultsFromQuery(queryResponse);
+    }
     public DecoratedSearchResults doSearch(Context ctx, SearchParameters userParams) {
 
         Future<String> eval = searchUnitConversionService.tryEval(ctx, userParams.query());

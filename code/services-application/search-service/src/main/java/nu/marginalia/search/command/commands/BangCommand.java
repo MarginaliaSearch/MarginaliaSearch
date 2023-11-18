@@ -5,6 +5,7 @@ import nu.marginalia.search.command.SearchCommandInterface;
 import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.client.Context;
 import nu.marginalia.search.exceptions.RedirectException;
+import spark.Response;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -23,7 +24,7 @@ public class BangCommand implements SearchCommandInterface {
     }
 
     @Override
-    public Optional<Object> process(Context ctx, SearchParameters parameters) {
+    public boolean process(Context ctx, Response response, SearchParameters parameters) {
 
         for (var entry : bangsToPattern.entrySet()) {
             String bangPattern = entry.getKey();
@@ -37,7 +38,7 @@ public class BangCommand implements SearchCommandInterface {
             }
         }
 
-        return Optional.empty();
+        return false;
     }
 
     private Optional<String> matchBangPattern(String query, String bangKey) {

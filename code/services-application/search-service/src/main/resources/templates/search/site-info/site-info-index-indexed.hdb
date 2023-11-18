@@ -1,0 +1,16 @@
+<fieldset>
+    <legend>Index</legend>
+    State: {{state}}<br/>
+    Domain ID: {{domainId}} <br/>
+    Node Affinity: {{nodeAffinity}} <br/>
+    Pages Known: {{pagesKnown}} <br/>
+    Pages Crawled: {{pagesFetched}} <br/>
+    Pages Indexed: {{pagesIndexed}} <br/>
+</fieldset>
+<br/>
+
+{{#if pagesFetched}}
+<p>
+    If you've found a reason why this website should not be indexed,
+    you may use <a href="/site/flag-site/{{domainId}}">this form</a> to file a report.<p>
+{{/if}}

@@ -37,7 +37,7 @@ public class SearchQueryService {
         final var ctx = Context.fromRequest(request);
 
         try {
-            return searchCommandEvaulator.eval(ctx, parseParameters(request));
+            return searchCommandEvaulator.eval(ctx, response, parseParameters(request));
         }
         catch (RedirectException ex) {
             response.redirect(ex.newUrl);
