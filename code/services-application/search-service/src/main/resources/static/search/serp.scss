@@ -48,12 +48,6 @@ body {
         display: inline-block;
         color: #000;
       }
-
-      .link-unavailable {
-        display: inline-block;
-        text-decoration: line-through;
-        color: #888;
-      }
     }
 
     li.current {
@@ -154,6 +148,10 @@ header {
 }
 
 .infobox {
+  h2 {
+    @extend .heading;
+  }
+
   background-color: #fff;
   padding: 1ch;
   margin: 1ch;
@@ -177,17 +175,7 @@ section.cards {
     box-shadow: #0008 0 0 5px;
 
     h2 {
-      color: #fff;
-      background-color: $highlight-light;
-      border-bottom: 1px solid $border-color;
-      font-weight: normal;
-      font-size: 12pt;
-      padding: .5ch .5ch .5ch .5ch;
-      margin: 0 0 0 0;
-      word-break: break-word;
-      font-family: $heading-fonts;
-
-      text-decoration: none;
+      @extend .heading;
     }
 
     h2 a {
@@ -289,11 +277,14 @@ footer {
   margin: 0;
   padding: 0.5ch;
   background-color: $highlight-dark;
+  border-bottom: 1px solid $border-color;
   font-family: $heading-fonts;
   font-weight: normal;
   color: $fg-light;
   font-size: 12pt;
+  word-break: break-word;
 }
+
 
 .sidebar-narrow {
   display: grid;

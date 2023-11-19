@@ -13,38 +13,24 @@
 <body>
 
 {{>search/parts/search-header}}
-
-<article>
-    {{>search/parts/search-form}}
+{{>search/parts/search-form}}
 
 <section class="cards">
 
+<div class="infobox">
 {{#if focusDomain}}
-  <section class="card semantic">
-    <h2>Similar Domains</h2>
-
-    <p class="description">
-        Showing domains similar to <tt>{{focusDomain}}</tt>.
-    </p>
-  </section>
+  Showing domains similar to <tt>{{focusDomain}}</tt>.
 {{/if}}
+{{#unless focusDomain}}
+This list of domains is random. <a href="https://search.marginalia.nu/explore/random">Refresh</a> to get
+new domains, or click <b>Similar Domains</b> to
+take the helm.
+{{/unless}}
+</div>
 
 {{#each results}}{{>search/browse-result}}{{/each}}
 
-{{#unless focusDomain}}
-  <section class="card semantic">
-    <h2>Random Domains</h2>
-
-    <p class="description">
-        This list of domains is random. <a href="/explore/random">Refresh</a> to get
-        new domains, or click <b>Similar Domains</b> to
-        take the helm.
-    </p>
-  </section>
-{{/unless}}
-
 </section>
-</article>
 
 {{>search/parts/search-footer}}
 </body>

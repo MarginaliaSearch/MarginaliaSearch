@@ -1,4 +1,4 @@
-<section class="card browse-result">
+<section class="card">
     <h2>{{url.domain}}</h2>
 
     <a href="{{url.proto}}://{{url.domain}}/">

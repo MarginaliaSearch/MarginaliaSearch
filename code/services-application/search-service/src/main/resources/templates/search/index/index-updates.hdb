@@ -1,10 +1,10 @@
-    <section class="card">
-        <h2>Updates</h2>
-        <div class="info">
-            <p>☛ It is possible to search by website generator.</p>
-            <p>☛ New filters for forums and wikis are added.</p>
-        </div>
-        <div class="utils">
-            <a href="https://www.marginalia.nu/release-notes/">Release Notes</a>
-        </div>
-    </section>
+<section class="card">
+    <h2>Updates</h2>
+    <div class="info">
+        <p>☛ It is possible to search by website generator.</p>
+        <p>☛ New filters for forums and wikis are added.</p>
+    </div>
+    <div class="utils">
+        <a href="https://www.marginalia.nu/release-notes/">Release Notes</a>
+    </div>
+</section>

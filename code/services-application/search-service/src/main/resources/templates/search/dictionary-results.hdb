@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Marginalia Search - {{query}}</title>
 
-    <link rel="stylesheet" href="/style-new.css" />
+    <link rel="stylesheet" href="/serp.css" />
     <link rel="search" type="application/opensearchdescription+xml" href="/opensearch.xml" title="Marginalia">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex" />
@@ -12,37 +12,29 @@
 <body>
 
 {{>search/parts/search-header}}
+{{>search/parts/search-form}}
 
-<article>
-    {{>search/parts/search-form}}
+<div class="infobox">
+{{#unless entries}}
+No definitions were found for that word
+{{/unless}}
 
-<section class="cards">
-  {{#unless entries}}
-    <div class="card problems">
-        <h2>No Results</h2>
-        <div class="description">No definitions were found for that word</div>
-    </div>
-  {{/unless}}
+{{#if entries}}
+<ul>
+{{#each entries}}
+    <li>{{word}}, {{type}}: {{definition}}<br></li>
+{{/each}}
+</ul>
+{{/if}}
+</div>
 
-  {{#each entries}}
-  <div class="card definition">
-    <h2>{{type}} - {{word}}</h2>
-    <div class="description">{{definition}}</div>
-  </div>
-  {{/each}}
-
-  {{#if entries}}
-  <div class="card problem">
-    <h2>Legal</h2>
-    <p class="description">
-      This data is derived from <a href="https://en.wiktionary.org/">wiktionary</a>,
-      available under GFDL and CC BY-SA 3.0. <a href="https://dumps.wikimedia.org/legal.html">More Information</a>.
-    </p>
-  </div>
-  {{/if}}
-</section>
-
-</article>
+{{#if entries}}
+<div class="infobox">
+<h2>Legal</h2>
+This data is derived from <a href="https://en.wiktionary.org/">wiktionary</a>,
+available under GFDL and CC BY-SA 3.0. <a href="https://dumps.wikimedia.org/legal.html">More Information</a>.
+</div>
+{{/if}}
 
 {{>search/parts/search-footer}}
 </body>

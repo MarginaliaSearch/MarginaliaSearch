@@ -15,7 +15,6 @@
 <!-- Hi there, fellow human being :-) -->
 
 {{>search/parts/search-header}}
-
 {{>search/parts/search-form}}
 
 <section class="sidebar-narrow">
