@@ -1,8 +1,18 @@
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.flywaydb:flyway-mysql:10.0.1'
+    }
+}
+
 plugins {
     id 'java'
 
     id 'jvm-test-suite'
-    id "org.flywaydb.flyway" version "8.2.0"
+    id "org.flywaydb.flyway" version "10.0.1"
 }
 
 java {
@@ -10,6 +20,7 @@ java {
         languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
+
 
 configurations {
     flywayMigration.extendsFrom(implementation)
@@ -31,7 +42,7 @@ dependencies {
 
     implementation libs.rxjava
     implementation libs.bundles.mariadb
-    flywayMigration 'org.flywaydb:flyway-mysql:9.8.1'
+    flywayMigration 'org.flywaydb:flyway-mysql:10.0.1'
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit
@@ -50,5 +61,6 @@ flyway {
     schemas = ['WMSA_prod']
     configurations = [ 'compileClasspath', 'flywayMigration' ]
     locations = ['filesystem:src/main/resources/db/migration']
+    cleanDisabled = false
 }
 
