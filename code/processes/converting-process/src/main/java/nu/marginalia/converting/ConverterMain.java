@@ -50,21 +50,27 @@ public class ConverterMain {
     private final int node;
 
     public static void main(String... args) throws Exception {
-        Injector injector = Guice.createInjector(
-                new ConverterModule(),
-                new ProcessConfigurationModule("converter"),
-                new DatabaseModule()
-        );
 
-        var converter = injector.getInstance(ConverterMain.class);
+        try {
+            Injector injector = Guice.createInjector(
+                    new ConverterModule(),
+                    new ProcessConfigurationModule("converter"),
+                    new DatabaseModule()
+            );
 
-        logger.info("Starting pipe");
+            var converter = injector.getInstance(ConverterMain.class);
 
-        converter
-                .fetchInstructions()
-                .execute(converter);
+            logger.info("Starting pipe");
 
-        logger.info("Finished");
+            converter
+                    .fetchInstructions()
+                    .execute(converter);
+
+            logger.info("Finished");
+        }
+        catch (Exception ex) {
+            logger.error("Uncaught Exception", ex);
+        }
 
         System.exit(0);
     }

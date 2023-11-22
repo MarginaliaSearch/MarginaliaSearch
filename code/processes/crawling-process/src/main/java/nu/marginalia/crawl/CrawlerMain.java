@@ -46,7 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static nu.marginalia.mqapi.ProcessInboxNames.CRAWLER_INBOX;
 
 public class CrawlerMain {
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final static Logger logger = LoggerFactory.getLogger(CrawlerMain.class);
 
     private final ProcessHeartbeatImpl heartbeat;
     private final ConnectionPool connectionPool = new ConnectionPool(5, 10, TimeUnit.SECONDS);
@@ -110,26 +110,28 @@ public class CrawlerMain {
         // We don't want to use too much memory caching sessions for https
         System.setProperty("javax.net.ssl.sessionCacheSize", "2048");
 
-        Injector injector = Guice.createInjector(
-                new CrawlerModule(),
-                new ProcessConfigurationModule("crawler"),
-                new DatabaseModule()
-        );
-        var crawler = injector.getInstance(CrawlerMain.class);
-
-        var instructions = crawler.fetchInstructions();
         try {
-            crawler.run(instructions.specProvider, instructions.outputDir);
-            instructions.ok();
+            Injector injector = Guice.createInjector(
+                    new CrawlerModule(),
+                    new ProcessConfigurationModule("crawler"),
+                    new DatabaseModule()
+            );
+            var crawler = injector.getInstance(CrawlerMain.class);
+
+            var instructions = crawler.fetchInstructions();
+            try {
+                crawler.run(instructions.specProvider, instructions.outputDir);
+                instructions.ok();
+            } catch (Exception ex) {
+                logger.error("Crawler failed", ex);
+                instructions.err();
+            }
+
+            TimeUnit.SECONDS.sleep(5);
         }
         catch (Exception ex) {
-            System.err.println("Crawler failed");
-            ex.printStackTrace();
-            instructions.err();
+            logger.error("Uncaught exception", ex);
         }
-
-        TimeUnit.SECONDS.sleep(5);
-
         System.exit(0);
     }
 

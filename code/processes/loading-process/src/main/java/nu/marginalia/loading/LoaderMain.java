@@ -52,17 +52,18 @@ public class LoaderMain {
     private final int node;
     private final Gson gson;
 
-    public static void main(String... args) throws Exception {
-        new org.mariadb.jdbc.Driver();
-
-        Injector injector = Guice.createInjector(
-                new ProcessConfigurationModule("loader"),
-                new LoaderModule(),
-                new DatabaseModule()
-        );
-
-        var instance = injector.getInstance(LoaderMain.class);
+    public static void main(String... args) {
         try {
+            new org.mariadb.jdbc.Driver();
+
+            Injector injector = Guice.createInjector(
+                    new ProcessConfigurationModule("loader"),
+                    new LoaderModule(),
+                    new DatabaseModule()
+            );
+
+            var instance = injector.getInstance(LoaderMain.class);
+
             var instructions = instance.fetchInstructions();
             logger.info("Instructions received");
             instance.run(instructions);

@@ -48,25 +48,31 @@ public class IndexConstructorMain {
     private static final Logger logger = LoggerFactory.getLogger(IndexConstructorMain.class);
     private final Gson gson = GsonFactory.get();
     public static void main(String[] args) throws Exception {
-        new org.mariadb.jdbc.Driver();
-
-        var main = Guice.createInjector(
-                new IndexConstructorModule(),
-                new ProcessConfigurationModule("index-constructor"),
-                new DatabaseModule())
-                .getInstance(IndexConstructorMain.class);
-
-        var instructions = main.fetchInstructions();
+        CreateIndexInstructions instructions = null;
 
         try {
+            new org.mariadb.jdbc.Driver();
+
+            var main = Guice.createInjector(
+                            new IndexConstructorModule(),
+                            new ProcessConfigurationModule("index-constructor"),
+                            new DatabaseModule())
+                    .getInstance(IndexConstructorMain.class);
+
+            instructions = main.fetchInstructions();
+
             main.run(instructions);
             instructions.ok();
         }
         catch (Exception ex) {
             logger.error("Constructor failed", ex);
-            instructions.err();
+
+            if (instructions != null) {
+                instructions.err();
+            }
         }
 
+        // Grace period so we don't rug pull the logger or jdbc
         TimeUnit.SECONDS.sleep(5);
 
         System.exit(0);
