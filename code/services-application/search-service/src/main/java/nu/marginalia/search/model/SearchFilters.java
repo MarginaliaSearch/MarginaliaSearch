@@ -5,12 +5,14 @@ import nu.marginalia.WebsiteUrl;
 import nu.marginalia.search.command.SearchJsParameter;
 import nu.marginalia.search.command.SearchParameters;
 
-import javax.annotation.Nullable;
 import java.util.List;
 
 /** Models the search filters displayed next to the search results */
 public class SearchFilters {
     private final WebsiteUrl url;
+
+    @Getter
+    public final String currentFilter;
 
     // These are necessary for the renderer to access the data
     @Getter
@@ -18,10 +20,14 @@ public class SearchFilters {
     @Getter
     public final List<List<Filter>> filterGroups;
 
+
+
     public SearchFilters(WebsiteUrl url, SearchParameters parameters) {
         this.url = url;
 
         removeJsOption = new RemoveJsOption(parameters);
+
+        currentFilter = parameters.profile().filterId;
 
         filterGroups = List.of(
                             List.of(
@@ -43,6 +49,7 @@ public class SearchFilters {
                                 new Filter("Recipes", SearchProfile.FOOD, parameters)
                             )
                         );
+
 
     }
 

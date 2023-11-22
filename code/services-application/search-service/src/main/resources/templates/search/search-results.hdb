@@ -10,7 +10,7 @@
     <meta name="robots" content="noindex" />
 </head>
 
-<body>
+<body data-filter="{{filters.currentFilter}}">
 
 <!-- Hi there, fellow human being :-) -->
 
