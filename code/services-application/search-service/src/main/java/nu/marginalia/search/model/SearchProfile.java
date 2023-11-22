@@ -27,11 +27,11 @@ public enum SearchProfile {
     ;
 
 
-    public final String name;
+    public final String filterId;
     public final SearchSetIdentifier searchSetIdentifier;
 
-    SearchProfile(String name, SearchSetIdentifier searchSetIdentifier) {
-        this.name = name;
+    SearchProfile(String filterId, SearchSetIdentifier searchSetIdentifier) {
+        this.filterId = filterId;
         this.searchSetIdentifier = searchSetIdentifier;
     }
 
@@ -42,7 +42,7 @@ public enum SearchProfile {
         }
 
         for (var profile : values) {
-            if (Objects.equals(profile.name, param)) {
+            if (Objects.equals(profile.filterId, param)) {
                 return profile;
             }
         }

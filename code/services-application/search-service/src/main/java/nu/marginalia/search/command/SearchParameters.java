@@ -8,7 +8,7 @@ import java.nio.charset.StandardCharsets;
 
 public record SearchParameters(String query, SearchProfile profile, SearchJsParameter js) {
     public String profileStr() {
-        return profile.name;
+        return profile.filterId;
     }
 
     public SearchParameters withProfile(SearchProfile profile) {
@@ -22,7 +22,7 @@ public record SearchParameters(String query, SearchProfile profile, SearchJsPara
     public String renderUrl(WebsiteUrl baseUrl) {
         String path = String.format("/search?query=%s&profile=%s&js=%s",
                 URLEncoder.encode(query, StandardCharsets.UTF_8),
-                URLEncoder.encode(profile.name, StandardCharsets.UTF_8),
+                URLEncoder.encode(profile.filterId, StandardCharsets.UTF_8),
                 URLEncoder.encode(js.value, StandardCharsets.UTF_8));
 
         return baseUrl.withPath(path);

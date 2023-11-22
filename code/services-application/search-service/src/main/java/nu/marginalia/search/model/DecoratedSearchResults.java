@@ -22,7 +22,7 @@ public class DecoratedSearchResults {
         return params.query();
     }
     public String getProfile() {
-        return params.profile().name;
+        return params.profile().filterId;
     }
     public String getJs() {
         return params.js().value;
