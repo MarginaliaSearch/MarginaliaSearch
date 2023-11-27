@@ -11,7 +11,6 @@ import nu.marginalia.executor.model.ActorRunStates;
 import nu.marginalia.executor.svc.*;
 import nu.marginalia.service.server.BaseServiceParams;
 import nu.marginalia.service.server.Service;
-import nu.marginalia.service.server.mq.MqNotification;
 import nu.marginalia.service.server.mq.MqRequest;
 import nu.marginalia.storage.FileStorageService;
 import org.slf4j.Logger;
@@ -82,7 +81,7 @@ public class ExecutorSvc extends Service {
         Spark.post("/transfer/yield", transferService::yieldDomain);
     }
 
-    @MqNotification(endpoint="FIRST-BOOT")
+    @MqRequest(endpoint="FIRST-BOOT")
     public void setUpDefaultActors(String message) throws Exception {
         logger.info("Initializing default actors");
         actorControlService.start(ExecutorActor.MONITOR_PROCESS_LIVENESS);

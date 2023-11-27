@@ -15,7 +15,6 @@ import java.util.Map;
 public class ServiceMqSubscription implements MqSubscription {
     private static final Logger logger = LoggerFactory.getLogger(ServiceMqSubscription.class);
     private final Map<String, Method> requests = new HashMap<>();
-    private final Map<String, Method> notifications = new HashMap<>();
     private final Service service;
 
 
@@ -31,21 +30,11 @@ public class ServiceMqSubscription implements MqSubscription {
                 requests.put(annotation.endpoint(), method);
             }
         }
-
-        for (var method : service.getClass().getMethods()) {
-            var annotation = method.getAnnotation(MqNotification.class);
-            if (annotation != null) {
-                notifications.put(annotation.endpoint(), method);
-            }
-        }
     }
 
     @Override
     public boolean filter(MqMessage rawMessage) {
         if (requests.containsKey(rawMessage.function())) {
-            return true;
-        }
-        if (notifications.containsKey(rawMessage.function())) {
             return true;
         }
 
@@ -58,8 +47,21 @@ public class ServiceMqSubscription implements MqSubscription {
     public MqInboxResponse onRequest(MqMessage msg) {
         var method = requests.get(msg.function());
 
+        if (null == method) {
+            logger.error("Received message for unregistered function handler " + msg.function());
+            return MqInboxResponse.err("[No handler]");
+        }
+
         try {
-            return MqInboxResponse.ok(method.invoke(service, msg.payload()).toString());
+            if (method.getReturnType() == void.class) {
+                method.invoke(service, msg.payload());
+                return MqInboxResponse.ok();
+            }
+            else {
+                // Do we want to just toString() here?  Gson? Something else?
+                String rv = method.invoke(service, msg.payload()).toString();
+                return MqInboxResponse.ok(rv);
+            }
         }
         catch (InvocationTargetException ex) {
             logger.error("Error invoking method " + method, ex);
@@ -71,15 +73,4 @@ public class ServiceMqSubscription implements MqSubscription {
         }
     }
 
-    @Override
-    public void onNotification(MqMessage msg) {
-        var method = notifications.get(msg.function());
-
-        try {
-            method.invoke(service, msg.payload());
-        }
-        catch (Exception ex) {
-            logger.error("Error invoking method " + method, ex);
-        }
-    }
 }

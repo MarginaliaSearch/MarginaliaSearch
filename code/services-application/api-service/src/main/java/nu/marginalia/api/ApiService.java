@@ -11,7 +11,7 @@ import nu.marginalia.client.Context;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.query.client.QueryClient;
 import nu.marginalia.service.server.*;
-import nu.marginalia.service.server.mq.MqNotification;
+import nu.marginalia.service.server.mq.MqRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -62,7 +62,7 @@ public class ApiService extends Service {
         Spark.get("/public/api/:key/search/*", this::search, gson::toJson);
     }
 
-    @MqNotification(endpoint = "FLUSH_CACHES")
+    @MqRequest(endpoint = "FLUSH_CACHES")
     public void flushCaches(String unusedArg) {
         logger.info("Flushing caches");
 

@@ -15,7 +15,6 @@ import nu.marginalia.linkdb.LinkdbReader;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.server.*;
-import nu.marginalia.service.server.mq.MqNotification;
 import nu.marginalia.service.server.mq.MqRequest;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -98,7 +97,7 @@ public class IndexService extends Service {
     }
 
     @SneakyThrows
-    @MqNotification(endpoint = IndexMqEndpoints.SWITCH_LINKDB)
+    @MqRequest(endpoint = IndexMqEndpoints.SWITCH_LINKDB)
     public void switchLinkdb(String unusedArg) {
         logger.info("Switching link database");
 
@@ -112,7 +111,7 @@ public class IndexService extends Service {
         }
     }
 
-    @MqNotification(endpoint = IndexMqEndpoints.SWITCH_INDEX)
+    @MqRequest(endpoint = IndexMqEndpoints.SWITCH_INDEX)
     public String switchIndex(String message) throws Exception {
         if (!opsService.switchIndex()) {
             throw new IllegalStateException("Ops lock busy");

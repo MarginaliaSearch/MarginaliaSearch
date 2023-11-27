@@ -344,11 +344,6 @@ public class ActorStateMachine {
 
         @Override
         public MqInboxResponse onRequest(MqMessage msg) {
-            return null;
-        }
-
-        @Override
-        public void onNotification(MqMessage msg) {
             onStateTransition(msg);
             try {
                 stateChangeListeners.forEach(l -> l.accept(msg.function(), msg.payload()));
@@ -357,6 +352,7 @@ public class ActorStateMachine {
                 // Rethrowing this will flag the message as an error in the message queue
                 throw new RuntimeException("Error in state change listener", ex);
             }
+            return MqInboxResponse.ok();
         }
     }
 

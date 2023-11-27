@@ -3,12 +3,12 @@ package nu.marginalia.mq;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.mq.inbox.MqAsynchronousInbox;
-import nu.marginalia.mq.inbox.MqInboxIf;
 import nu.marginalia.mq.inbox.MqSingleShotInbox;
 import nu.marginalia.mq.inbox.MqSynchronousInbox;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.mq.persistence.MqPersistence;
 
+import javax.annotation.Nullable;
 import java.util.UUID;
 
 @Singleton
@@ -40,5 +40,12 @@ public class MessageQueueFactory {
     public MqOutbox createOutbox(String inboxName, int inboxNode,  String outboxName, int outboxNode, UUID instanceUUID)
     {
         return new MqOutbox(persistence, inboxName, inboxNode, outboxName, outboxNode, instanceUUID);
+    }
+
+    /** Send a request to the specified inbox with a dummy reply inbox,
+     * do not wait for a response.
+     */
+    public void sendSingleShotRequest(String inboxName, String function, @Nullable String payload) throws Exception {
+        persistence.sendNewMessage(inboxName, null, null, function, payload, null);
     }
 }

@@ -9,6 +9,4 @@ public interface MqSubscription {
     /** Handle the message and return a response. */
     MqInboxResponse onRequest(MqMessage msg);
 
-    /** Handle a message with no reply address */
-    void onNotification(MqMessage msg);
 }

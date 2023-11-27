@@ -4,24 +4,15 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.client.Context;
 import nu.marginalia.control.RedirectControl;
-import nu.marginalia.control.Redirects;
-import nu.marginalia.db.DomainTypes;
 import nu.marginalia.executor.client.ExecutorClient;
 import nu.marginalia.index.client.IndexClient;
-import nu.marginalia.index.client.IndexMqEndpoints;
-import nu.marginalia.mq.MessageQueueFactory;
-import nu.marginalia.mq.outbox.MqOutbox;
-import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.service.control.ServiceEventLog;
-import nu.marginalia.service.id.ServiceId;
-import nu.marginalia.service.module.ServiceConfiguration;
 import spark.Request;
 import spark.Response;
 import spark.Spark;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.UUID;
 
 @Singleton
 public class ControlNodeActionsService {
@@ -112,7 +103,8 @@ public class ControlNodeActionsService {
     }
 
     public Object triggerRepartition(Request request, Response response) throws Exception {
-        indexClient.outbox().sendAsync(IndexMqEndpoints.INDEX_REPARTITION, "");
+        indexClient.triggerRepartition(Integer.parseInt(request.params("node")));
+
         return "";
     }
 

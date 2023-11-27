@@ -283,8 +283,6 @@ public class MqOutboxTest {
                 return MqInboxResponse.ok(response);
             }
 
-            @Override
-            public void onNotification(MqMessage msg) { }
         };
     }
 
@@ -300,8 +298,6 @@ public class MqOutboxTest {
                 return MqInboxResponse.ok(msg.payload());
             }
 
-            @Override
-            public void onNotification(MqMessage msg) {}
         };
     }
 

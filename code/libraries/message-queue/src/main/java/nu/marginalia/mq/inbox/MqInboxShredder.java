@@ -22,8 +22,4 @@ class MqInboxShredder implements MqSubscription {
         return MqInboxResponse.err();
     }
 
-    @Override
-    public void onNotification(MqMessage msg) {
-        logger.warn("Unhandled message {}", msg.msgId());
-    }
 }

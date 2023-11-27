@@ -131,50 +131,30 @@ public class MqAsynchronousInbox implements MqInboxIf {
     }
 
     private void handleMessageWithSubscriber(MqSubscription subscriber, MqMessage msg) {
-
-        if (msg.expectsResponse()) {
-            threadPool.execute(() -> respondToMessage(subscriber, msg));
-        }
-        else {
-            threadPool.execute(() -> acknowledgeNotification(subscriber, msg));
-        }
+        threadPool.execute(() -> respondToMessage(subscriber, msg));
     }
 
     private void respondToMessage(MqSubscription subscriber, MqMessage msg) {
         try {
             final var rsp = subscriber.onRequest(msg);
-            sendResponse(msg, rsp.state(), rsp.message());
+            if (msg.expectsResponse()) {
+                sendResponse(msg, rsp.state(), rsp.message());
+            }
+            else {
+                registerResponse(msg, rsp.state());
+            }
         } catch (Exception ex) {
             logger.error("Message Queue subscriber threw exception", ex);
-            sendResponse(msg, MqMessageState.ERR);
+            registerResponse(msg, MqMessageState.ERR);
         }
     }
 
-    private void acknowledgeNotification(MqSubscription subscriber, MqMessage msg) {
-        try {
-            subscriber.onNotification(msg);
-            updateMessageState(msg, MqMessageState.OK);
-        } catch (Exception ex) {
-            logger.error("Message Queue subscriber threw exception", ex);
-            updateMessageState(msg, MqMessageState.ERR);
-        }
-    }
-
-    private void sendResponse(MqMessage msg, MqMessageState state) {
+    private void registerResponse(MqMessage msg, MqMessageState state) {
         try {
             persistence.updateMessageState(msg.msgId(), state);
         }
         catch (SQLException ex) {
             logger.error("Failed to update message state", ex);
-        }
-    }
-
-    private void updateMessageState(MqMessage msg, MqMessageState state) {
-        try {
-            persistence.updateMessageState(msg.msgId(), state);
-        }
-        catch (SQLException ex2) {
-            logger.error("Failed to update message state", ex2);
         }
     }
 

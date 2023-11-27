@@ -19,6 +19,10 @@ public enum ServiceId {
         this.name = name;
     }
 
+    public String withNode(int node) {
+        return name + ":" + node;
+    }
+
     public static ServiceId byName(String name) {
         for (ServiceId id : values()) {
             if (id.name.equals(name)) {

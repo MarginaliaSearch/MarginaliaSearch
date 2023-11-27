@@ -17,7 +17,6 @@ import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.service.descriptor.ServiceDescriptors;
 import nu.marginalia.service.id.ServiceId;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.CheckReturnValue;
@@ -27,6 +26,7 @@ import java.util.UUID;
 public class IndexClient extends AbstractDynamicClient {
 
     private static final Summary wmsa_search_index_api_time = Summary.build().name("wmsa_search_index_api_time").help("-").register();
+    private final MessageQueueFactory messageQueueFactory;
 
     MqOutbox outbox;
 
@@ -36,6 +36,7 @@ public class IndexClient extends AbstractDynamicClient {
                        @Named("wmsa-system-node") Integer nodeId)
     {
         super(descriptors.forId(ServiceId.Index), GsonFactory::get);
+        this.messageQueueFactory = messageQueueFactory;
 
         String inboxName = ServiceId.Index.name;
         String outboxName = System.getProperty("service-name:"+nodeId, UUID.randomUUID().toString());
@@ -76,4 +77,11 @@ public class IndexClient extends AbstractDynamicClient {
         return super.get(ctx, node, "/is-blocked", Boolean.class);
     }
 
+    public void triggerRepartition(int node) throws Exception {
+        messageQueueFactory.sendSingleShotRequest(
+                ServiceId.Index.withNode(node),
+                IndexMqEndpoints.INDEX_REPARTITION,
+                null
+        );
+    }
 }
