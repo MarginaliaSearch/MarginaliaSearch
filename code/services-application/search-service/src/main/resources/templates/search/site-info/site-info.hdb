@@ -42,6 +42,7 @@
     </div>
     {{#each results}}{{>search/parts/search-result}}{{/each}}
 {{/if}}
+
 {{#if view.docs}}
     <div class="infobox">
         Showing documents found in {{domain}}.
@@ -49,9 +50,18 @@
 
     {{#each results}}{{>search/parts/search-result}}{{/each}}
 {{/if}}
+
 {{#if view.report}}
     {{>search/site-info/site-info-report}}
 {{/if}}
+
+{{#if view.similar}}
+    <div class="infobox">Showing domains similar to {{domain}}</div>
+    <section class="cards">
+        {{#each results}}{{>search/browse-result}}{{/each}}
+    </section>
+{{/if}}
+
 {{>search/parts/search-footer}}
 </body>
 

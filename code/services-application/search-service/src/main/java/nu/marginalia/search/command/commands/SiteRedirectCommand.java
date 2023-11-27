@@ -17,7 +17,7 @@ public class SiteRedirectCommand implements SearchCommandInterface {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final Predicate<String> queryPatternPredicate = Pattern.compile("^site:[.A-Za-z\\-0-9]+$").asPredicate();
+    private final Predicate<String> queryPatternPredicate = Pattern.compile("^(site|links|similar):[.A-Za-z\\-0-9]+$").asPredicate();
 
     @Inject
     public SiteRedirectCommand() {
@@ -30,18 +30,24 @@ public class SiteRedirectCommand implements SearchCommandInterface {
             return false;
         }
 
-        String definePrefix = "site:";
-        String domain = parameters.query().substring(definePrefix.length()).toLowerCase();
+        int idx = parameters.query().indexOf(':');
+        String prefix = parameters.query().substring(0, idx);
+        String domain = parameters.query().substring(idx + 1).toLowerCase();
 
         // Use an HTML redirect here, so we can use relative URLs
+        String view = switch (prefix) {
+            case "links" -> "links";
+            case "similar" -> "similar";
+            default -> "info";
+        };
 
         response.raw().getOutputStream().println("""
                 <!DOCTYPE html>
                 <html lang="en">
                 <meta charset="UTF-8">
                 <title>Redirecting...</title>
-                <meta http-equiv="refresh" content="0; url=/site/%s">
-                """.formatted(domain));
+                <meta http-equiv="refresh" content="0; url=/site/%s?view=%s">
+                """.formatted(domain, view));
 
         return true;
     }

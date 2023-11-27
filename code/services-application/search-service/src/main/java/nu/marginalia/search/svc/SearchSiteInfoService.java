@@ -1,5 +1,7 @@
 package nu.marginalia.search.svc;
 import com.google.inject.Inject;
+import nu.marginalia.browse.model.BrowseResult;
+import nu.marginalia.browse.model.BrowseResultSet;
 import nu.marginalia.client.Context;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.model.EdgeDomain;
@@ -15,6 +17,7 @@ import spark.*;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
@@ -25,6 +28,7 @@ public class SearchSiteInfoService {
     private final DomainInformationService domainInformationService;
     private final SearchFlagSiteService flagSiteService;
     private final DbDomainQueries domainQueries;
+    private final SearchBrowseService browseService;
     private final MustacheRenderer<Object> renderer;
 
     @Inject
@@ -32,13 +36,15 @@ public class SearchSiteInfoService {
                                  DomainInformationService domainInformationService,
                                  RendererFactory rendererFactory,
                                  SearchFlagSiteService flagSiteService,
-                                 DbDomainQueries domainQueries) throws IOException {
+                                 DbDomainQueries domainQueries, SearchBrowseService browseService) throws IOException {
         this.searchOperator = searchOperator;
         this.domainInformationService = domainInformationService;
         this.flagSiteService = flagSiteService;
         this.domainQueries = domainQueries;
 
         this.renderer = rendererFactory.renderer("search/site-info/site-info");
+        this.browseService = browseService;
+
     }
 
     public Object handle(Request request, Response response) throws SQLException {
@@ -55,6 +61,7 @@ public class SearchSiteInfoService {
             case "links" -> listLinks(ctx, domainName);
             case "docs" -> listDocs(ctx, domainName);
             case "info" -> siteInfo(ctx, domainName);
+            case "similar" -> listSimilar(ctx, domainName);
             case "report" -> reportSite(ctx, domainName);
             default -> siteInfo(ctx, domainName);
         };
@@ -129,7 +136,12 @@ public class SearchSiteInfoService {
                 domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1),
                 searchOperator.doBacklinkSearch(ctx, domainName));
     }
+    private SimilarSites listSimilar(Context ctx, String domainName) {
 
+        return new SimilarSites(domainName,
+                domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1),
+                browseService.getRelatedEntries(domainName));
+    }
     private Docs listDocs(Context ctx, String domainName) {
         return new Docs(domainName,
                 domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1),
@@ -204,6 +216,18 @@ public class SearchSiteInfoService {
         }
 
         public String query() { return "links:" + domain; }
+
+        public boolean isKnown() {
+            return domainId > 0;
+        }
+    }
+
+    public record SimilarSites(Map<String, Boolean> view, String domain, long domainId, List<BrowseResult> results) {
+        public SimilarSites(String domain, long domainId, BrowseResultSet results) {
+            this(Map.of("similar", true), domain, domainId, new ArrayList<>(results.results()));
+        }
+
+        public String query() { return "similar:" + domain; }
 
         public boolean isKnown() {
             return domainId > 0;
