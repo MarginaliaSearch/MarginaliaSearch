@@ -16,6 +16,7 @@ public class SearchQueryParamFactory {
         var profile = userParams.profile();
         profile.addTacitTerms(prototype);
         userParams.js().addTacitTerms(prototype);
+        userParams.adtech().addTacitTerms(prototype);
 
         return new QueryParams(
                 userParams.query(),

@@ -3,6 +3,9 @@
     {{#with removeJsOption}}
         <li class="filter-toggle-{{#if set}}on{{/if}}{{#unless set}}off{{/unless}}"><a href="{{url}}">{{name}}</a></li>
     {{/with}}
+    {{#with reduceAdtechOption}}
+        <li class="filter-toggle-{{#if set}}on{{/if}}{{#unless set}}off{{/unless}}"><a href="{{url}}">{{name}}</a></li>
+    {{/with}}
 </ul>
 <h3>Domains</h3>
 <ul>

@@ -2,8 +2,10 @@ package nu.marginalia.search.model;
 
 import lombok.Getter;
 import nu.marginalia.WebsiteUrl;
+import nu.marginalia.search.command.SearchAdtechParameter;
 import nu.marginalia.search.command.SearchJsParameter;
 import nu.marginalia.search.command.SearchParameters;
+import org.apache.regexp.RE;
 
 import java.util.List;
 
@@ -18,6 +20,8 @@ public class SearchFilters {
     @Getter
     public final RemoveJsOption removeJsOption;
     @Getter
+    public final ReduceAdtechOption reduceAdtechOption;
+    @Getter
     public final List<List<Filter>> filterGroups;
 
 
@@ -26,6 +30,7 @@ public class SearchFilters {
         this.url = url;
 
         removeJsOption = new RemoveJsOption(parameters);
+        reduceAdtechOption = new ReduceAdtechOption(parameters);
 
         currentFilter = parameters.profile().filterId;
 
@@ -76,6 +81,31 @@ public class SearchFilters {
             };
 
             this.url = parameters.withJs(toggledValue).renderUrl(SearchFilters.this.url);
+        }
+    }
+    public class ReduceAdtechOption {
+        private final SearchAdtechParameter value;
+
+        @Getter
+        public final String url;
+
+        public boolean isSet() {
+            return value.equals(SearchAdtechParameter.REDUCE);
+        }
+
+        public String name() {
+            return "Reduce Adtech";
+        }
+
+        public ReduceAdtechOption(SearchParameters parameters) {
+            this.value = parameters.adtech();
+
+            var toggledValue = switch (parameters.adtech()) {
+                case REDUCE -> SearchAdtechParameter.DEFAULT;
+                default -> SearchAdtechParameter.REDUCE;
+            };
+
+            this.url = parameters.withAdtech(toggledValue).renderUrl(SearchFilters.this.url);
         }
     }
 

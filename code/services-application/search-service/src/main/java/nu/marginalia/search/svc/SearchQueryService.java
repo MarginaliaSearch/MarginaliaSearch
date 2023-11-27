@@ -3,6 +3,7 @@ package nu.marginalia.search.svc;
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
 import nu.marginalia.WebsiteUrl;
+import nu.marginalia.search.command.SearchAdtechParameter;
 import nu.marginalia.search.model.SearchProfile;
 import nu.marginalia.client.Context;
 import nu.marginalia.search.command.CommandEvaluator;
@@ -59,6 +60,7 @@ public class SearchQueryService {
 
         return new SearchParameters(queryParam.trim(),
                                     SearchProfile.getSearchProfile(request.queryParams("profile")),
-                                    SearchJsParameter.parse(request.queryParams("js")));
+                                    SearchJsParameter.parse(request.queryParams("js")),
+                                    SearchAdtechParameter.parse(request.queryParams("adtech")));
     }
 }
