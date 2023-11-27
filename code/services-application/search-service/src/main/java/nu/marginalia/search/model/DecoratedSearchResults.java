@@ -27,4 +27,5 @@ public class DecoratedSearchResults {
     public String getJs() {
         return params.js().value;
     }
+    public String getAdtech() { return params.adtech().value; }
 }
