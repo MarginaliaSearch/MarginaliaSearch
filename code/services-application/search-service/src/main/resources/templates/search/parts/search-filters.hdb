@@ -1,10 +1,16 @@
 <h2>Filters <button id="menu-close">X</button></h2>
 <ul>
     {{#with removeJsOption}}
-        <li class="filter-toggle-{{#if set}}on{{/if}}{{#unless set}}off{{/unless}}"><a href="{{url}}">{{name}}</a></li>
+        <li title="Exclude results with javascript"
+            class="filter-toggle-{{#if set}}on{{/if}}{{#unless set}}off{{/unless}}">
+            <a href="{{url}}">{{name}}</a>
+        </li>
     {{/with}}
     {{#with reduceAdtechOption}}
-        <li class="filter-toggle-{{#if set}}on{{/if}}{{#unless set}}off{{/unless}}"><a href="{{url}}">{{name}}</a></li>
+        <li title="Exclude results with tracking or likely affiliate links"
+            class="filter-toggle-{{#if set}}on{{/if}}{{#unless set}}off{{/unless}}">
+            <a href="{{url}}">{{name}}</a>
+        </li>
     {{/with}}
 </ul>
 <h3>Domains</h3>

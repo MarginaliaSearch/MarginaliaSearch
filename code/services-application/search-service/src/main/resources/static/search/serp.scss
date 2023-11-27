@@ -325,7 +325,7 @@ footer {
 .heading {
   margin: 0;
   padding: 0.5ch;
-  background-color: $highlight-dark;
+  background-color: $highlight-light;
   border-bottom: 1px solid $border-color;
   font-family: $heading-fonts;
   font-weight: normal;
@@ -358,7 +358,7 @@ footer {
     padding: 0.5ch;
     font-size: 14pt;
     word-break: keep-all;
-    background-color: $highlight-dark;
+    background-color: $highlight-light;
     color: $fg-light;
     font-family: $heading-fonts;
     font-weight: normal;
@@ -461,11 +461,13 @@ footer {
   }
   h2 {
     a {
-      color: $fg-light;
+      color: $fg-dark;
       text-decoration: none;
     }
     font-size: 12pt;
     @extend .heading;
+    background-color: $highlight-light2;
+
   }
 
   .description {
