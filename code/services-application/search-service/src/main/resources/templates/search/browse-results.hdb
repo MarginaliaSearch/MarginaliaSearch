@@ -15,8 +15,6 @@
 {{>search/parts/search-header}}
 {{>search/parts/search-form}}
 
-<section class="cards">
-
 <div class="infobox">
 {{#if focusDomain}}
   Showing domains similar to <tt>{{focusDomain}}</tt>.
@@ -28,8 +26,8 @@ take the helm.
 {{/unless}}
 </div>
 
+<section class="cards">
 {{#each results}}{{>search/browse-result}}{{/each}}
-
 </section>
 
 {{>search/parts/search-footer}}

@@ -1,5 +1,5 @@
-<section class="card">
-    <h2>{{url.domain}}</h2>
+<section class="card browse-result">
+    <h2 title="{{url.domain}}">{{displayDomain}}</h2>
 
     <a href="{{url.proto}}://{{url.domain}}/">
         <img src="/screenshot/{{domainId}}" title="{{description}}" loading="lazy"/>

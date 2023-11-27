@@ -224,6 +224,7 @@ section.cards {
 
     h2 {
       @extend .heading;
+      word-break: break-word;
     }
 
     h2 a {
@@ -548,3 +549,5 @@ footer {
     }
   }
 }
+
+.w3m-helper { display: none; }
