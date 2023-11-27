@@ -472,8 +472,14 @@ footer {
     padding: 1ch;
     margin: 0;
   }
-
 }
+
+.search-result[data-ms-rank="1"] {  .url, h2 { filter: grayscale(0%); } }
+.search-result[data-ms-rank="2"] {  .url, h2 { filter: grayscale(5%); } }
+.search-result[data-ms-rank="3"] {  .url, h2 { filter: grayscale(15%); } }
+.search-result[data-ms-rank="4"] {  .url, h2 { filter: grayscale(20%); } }
+.search-result[data-ms-rank="5"] {  .url, h2 { filter: grayscale(30%); } }
+.search-result[data-ms-rank="10"] { .url, h2 { filter: grayscale(60%); } }
 
 .utils {
   display: flex;
