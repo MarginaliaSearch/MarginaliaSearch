@@ -10,5 +10,9 @@ public enum MqMessageState {
     /** The message processing has failed */
     ERR,
     /** The message did not reach a terminal state within the TTL */
-    DEAD
+    DEAD;
+
+    public boolean isTerminal() {
+        return this == OK || this == ERR || this == DEAD;
+    }
 }

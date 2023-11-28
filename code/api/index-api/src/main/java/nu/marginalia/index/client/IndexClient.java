@@ -77,8 +77,8 @@ public class IndexClient extends AbstractDynamicClient {
         return super.get(ctx, node, "/is-blocked", Boolean.class);
     }
 
-    public void triggerRepartition(int node) throws Exception {
-        messageQueueFactory.sendSingleShotRequest(
+    public long triggerRepartition(int node) throws Exception {
+        return messageQueueFactory.sendSingleShotRequest(
                 ServiceId.Index.withNode(node),
                 IndexMqEndpoints.INDEX_REPARTITION,
                 null

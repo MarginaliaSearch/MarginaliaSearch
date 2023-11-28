@@ -45,7 +45,7 @@ public class MessageQueueFactory {
     /** Send a request to the specified inbox with a dummy reply inbox,
      * do not wait for a response.
      */
-    public void sendSingleShotRequest(String inboxName, String function, @Nullable String payload) throws Exception {
-        persistence.sendNewMessage(inboxName, null, null, function, payload, null);
+    public long sendSingleShotRequest(String inboxName, String function, @Nullable String payload) throws Exception {
+        return persistence.sendNewMessage(inboxName, null, null, function, payload, null);
     }
 }
