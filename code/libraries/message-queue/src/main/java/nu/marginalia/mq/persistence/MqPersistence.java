@@ -495,4 +495,35 @@ public class MqPersistence {
     public Gson getGson() {
         return gson;
     }
+
+    /** Returns the last message sent to this inbox with a state of 'OK' */
+    public Optional<MqMessage> getHeadMessage(String inboxName) {
+        try (var conn = dataSource.getConnection();
+             var query = conn.prepareStatement("""
+                     SELECT ID, RELATED_ID, FUNCTION, PAYLOAD, STATE, SENDER_INBOX 
+                     FROM MESSAGE_QUEUE
+                     WHERE RECIPIENT_INBOX = ? AND STATE='OK'
+                     ORDER BY ID DESC LIMIT 1
+            """))
+        {
+            query.setString(1, inboxName);
+            var rs = query.executeQuery();
+            if (rs.next()) {
+                long msgId = rs.getLong(1);
+                long relatedId = rs.getLong(2);
+
+                String function = rs.getString(3);
+                String payload = rs.getString(4);
+
+                MqMessageState state = MqMessageState.valueOf(rs.getString(5));
+                boolean expectsResponse = rs.getBoolean(6);
+
+                return Optional.of(new MqMessage(msgId, relatedId, function, payload, state, expectsResponse));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return Optional.empty();
+    }
 }

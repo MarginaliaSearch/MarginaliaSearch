@@ -9,6 +9,7 @@ import nu.marginalia.actor.prototype.ActorPrototype;
 import nu.marginalia.actor.state.ActorStateInstance;
 import nu.marginalia.control.actor.monitor.MessageQueueMonitorActor;
 import nu.marginalia.control.actor.precession.ReindexAllActor;
+import nu.marginalia.control.actor.precession.ReprocessAllActor;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.service.control.ServiceEventLog;
@@ -33,7 +34,8 @@ public class ControlActorService {
     public ControlActorService(MessageQueueFactory messageQueueFactory,
                                BaseServiceParams baseServiceParams,
                                MessageQueueMonitorActor messageQueueMonitor,
-                               ReindexAllActor reindexAllActor
+                               ReindexAllActor reindexAllActor,
+                               ReprocessAllActor reprocessAllActor
     ) {
         this.messageQueueFactory = messageQueueFactory;
         this.eventLog = baseServiceParams.eventLog;
@@ -44,6 +46,7 @@ public class ControlActorService {
 
         register(ControlActor.MONITOR_MESSAGE_QUEUE, messageQueueMonitor);
         register(ControlActor.REINDEX_ALL, reindexAllActor);
+        register(ControlActor.REPROCESS_ALL, reprocessAllActor);
     }
 
     private void register(ControlActor process, ActorPrototype graph) {

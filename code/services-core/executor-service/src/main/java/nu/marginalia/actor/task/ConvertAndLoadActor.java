@@ -40,18 +40,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
 
     // STATES
 
-    public static final String INITIAL = "INITIAL";
-    public static final String RECONVERT = "RECONVERT";
-    public static final String RECONVERT_WAIT = "RECONVERT-WAIT";
-    public static final String LOAD = "LOAD";
-    public static final String BACKUP = "BACKUP";
     public static final String REPARTITION = "REPARTITION";
-    public static final String REINDEX_FWD = "REINDEX_FWD";
-    public static final String REINDEX_FULL = "REINDEX_FULL";
-    public static final String REINDEX_PRIO = "REINDEX_PRIO";
-    public static final String SWITCH_OVER = "SWITCH-OVER";
-
-    public static final String END = "END";
     private final ActorProcessWatcher processWatcher;
     private final MqOutbox mqConverterOutbox;
     private final MqOutbox mqLoaderOutbox;

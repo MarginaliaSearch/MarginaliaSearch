@@ -7,30 +7,29 @@ import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.state.Resume;
-import nu.marginalia.index.client.IndexClient;
-import nu.marginalia.mq.persistence.MqPersistence;
+import nu.marginalia.executor.client.ExecutorRemoteActorFactory;
 import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.nodecfg.model.NodeConfiguration;
+import nu.marginalia.storage.FileStorageService;
+import nu.marginalia.storage.model.FileStorageType;
 
 import java.sql.SQLException;
 import java.util.OptionalInt;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
-public class ReindexAllActor extends RecordActorPrototype {
+public class ReprocessAllActor extends RecordActorPrototype {
+    private final ExecutorRemoteActorFactory remoteActorFactory;
 
-    private final MqPersistence persistence;
-    private final IndexClient indexClient;
+    private final FileStorageService fileStorageService;
     private final NodeConfigurationService nodeConfigurationService;
 
 
     public record Initial() implements ActorStep {}
 
+    public record WaitFinished(int node) implements ActorStep {}
     @Resume(behavior=ActorResumeBehavior.RETRY)
-    public record ReindexNode(int node, long msgId) implements ActorStep {
-        public ReindexNode(int node) { this(node, -1L); }
-
-    }
+    public record Trigger(int node) implements ActorStep {}
     public record AdvanceNode(int node) implements ActorStep {}
 
 
@@ -42,25 +41,42 @@ public class ReindexAllActor extends RecordActorPrototype {
             case Initial i -> {
                 var id = precessionNodes.first();
                 if (id.isPresent()) {
-                    yield new ReindexNode(id.getAsInt());
+                    yield new Trigger(id.getAsInt());
                 }
                 else {
                     yield new End();
                 }
             }
-            case ReindexNode(int node, long msgId) when msgId < 0 -> new ReindexNode(node, indexClient.triggerRepartition(node));
-            case ReindexNode(int node, long msgId) -> {
-                while (!isMessageTerminal(msgId)) {
-                    TimeUnit.SECONDS.sleep(10);
+            case Trigger(int node) -> {
+                var activeFileStorage = fileStorageService.getActiveFileStorages(node, FileStorageType.CRAWL_DATA);
+                if (activeFileStorage.size() != 1) {
+                    yield new AdvanceNode(node);
                 }
 
+                var data = new ExecutorRemoteActorFactory.ConvertAndLoadData(activeFileStorage.get(0));
+
+                if (remoteActorFactory.createConvertAndLoadRemote(node).trigger(data)) {
+                    yield new WaitFinished(node);
+                }
+                else {
+                    yield new AdvanceNode(node);
+                }
+            }
+            case WaitFinished(int node) -> {
+                var remoteActor = remoteActorFactory.createConvertAndLoadRemote(node);
+                for (;;) {
+                    var state = remoteActor.getState();
+                    if ("END".equals(state) || "ERROR".equals(state))
+                        break;
+                    TimeUnit.SECONDS.sleep(10);
+                }
                 yield new AdvanceNode(node);
             }
             case AdvanceNode(int node) -> {
                 var id = precessionNodes.next(node);
 
                 if (id.isPresent())
-                    yield new ReindexNode(id.getAsInt());
+                    yield new Trigger(id.getAsInt());
                 else
                     yield new End();
             }
@@ -68,24 +84,21 @@ public class ReindexAllActor extends RecordActorPrototype {
         };
     }
 
-    private boolean isMessageTerminal(long msgId) throws SQLException {
-        return persistence.getMessage(msgId).state().isTerminal();
-    }
-
     @Inject
-    public ReindexAllActor(Gson gson,
-                           MqPersistence persistence,
-                           IndexClient indexClient, NodeConfigurationService nodeConfigurationService)
+    public ReprocessAllActor(Gson gson,
+                             ExecutorRemoteActorFactory remoteActorFactory,
+                             FileStorageService fileStorageService,
+                             NodeConfigurationService nodeConfigurationService)
     {
         super(gson);
-        this.persistence = persistence;
-        this.indexClient = indexClient;
+        this.remoteActorFactory = remoteActorFactory;
+        this.fileStorageService = fileStorageService;
         this.nodeConfigurationService = nodeConfigurationService;
     }
 
     @Override
     public String describe() {
-        return "Triggeres a cascade of reindex instructions across each node included in the precession";
+        return "Triggers a cascade of reindex instructions across each node included in the precession";
     }
 
     private class PrecessionNodes {
