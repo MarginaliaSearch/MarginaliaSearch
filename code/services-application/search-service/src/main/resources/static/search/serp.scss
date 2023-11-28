@@ -454,6 +454,7 @@ footer {
       font-family: monospace;
       font-size: 8pt;
       color: $fg-light;
+      text-shadow: 0 0 1ch #000; // guarantee decent contrast across background colors
     }
     a:visited {
       color: $visited;
@@ -505,8 +506,11 @@ footer {
     color: #000;
   }
 }
+
 @media (max-device-width: 624px) {
-  body[data-has-js="true"] {
+  body[data-has-js="true"] { // This property is set via js so we can selectively enable these changes only if JS is enabled;
+                             // This is desirable since mobile navigation is JS-driven.  If JS is disabled, having a squished
+                             // GUI is better than having no working UI.
     margin: 0 !important;
     padding: 0 0 0 0 !important;
     max-width: 100%;
@@ -552,4 +556,7 @@ footer {
   }
 }
 
-.w3m-helper { display: none; }
+// The search results page is very confusing on text-based browsers, so we add a hr to separate the search results.  This is
+// hidden on modern browsers via CSS.
+
+hr.w3m-helper { display: none; }
