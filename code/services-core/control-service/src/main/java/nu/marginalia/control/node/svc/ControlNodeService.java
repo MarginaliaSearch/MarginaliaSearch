@@ -108,6 +108,9 @@ public class ControlNodeService {
         Spark.post("/public/nodes/:id/storage/crawl/:fid", this::triggerCrawl,
                 redirectControl.renderRedirectAcknowledgement("Crawling", "..")
                 );
+        Spark.post("/public/nodes/:id/storage/reset-state/:fid", this::resetState,
+                redirectControl.renderRedirectAcknowledgement("Restoring", "..")
+        );
         Spark.post("/public/nodes/:id/storage/backup-restore/:fid", this::triggerRestoreBackup,
                 redirectControl.renderRedirectAcknowledgement("Restoring", "..")
                 );
@@ -119,6 +122,11 @@ public class ControlNodeService {
                 );
         Spark.post("/public/nodes/:id/fsms/:fsm/start", this::startFsm);
         Spark.post("/public/nodes/:id/fsms/:fsm/stop", this::stopFsm);
+    }
+
+    private Object resetState(Request request, Response response) throws SQLException {
+        fileStorageService.setFileStorageState(FileStorageId.parse(request.params("fid")), FileStorageState.UNSET);
+        return "";
     }
 
     private Object exportData(Request req, Response rsp) {

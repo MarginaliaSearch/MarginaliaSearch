@@ -67,6 +67,14 @@
                         </tr>
                     </form>
                 {{/if}}
+                {{#if isStatusNew}}
+                    <form method="post" action="/nodes/{{node.id}}/storage/reset-state/{{storage.id}}" onsubmit="return confirm('Confirm removal of \'NEW\' state for {{storage.path}}')">
+                        <tr>
+                            <td>Remove 'NEW' state (use this if the generating process stopped)</td>
+                            <td><button class="btn btn-primary" type="submit">Reset State</button></td>
+                        </tr>
+                    </form>
+                {{/if}}
                 {{#if isAtagsExportable}}
                     <form method="post" action="/nodes/{{node.id}}/storage/{{storage.id}}/export-atags" onsubmit="return confirm('Confirm export of anchor tags from {{storage.path}}')">
                         <tr>

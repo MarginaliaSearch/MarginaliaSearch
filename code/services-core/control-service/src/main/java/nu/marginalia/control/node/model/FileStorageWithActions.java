@@ -2,6 +2,7 @@ package nu.marginalia.control.node.model;
 
 import nu.marginalia.storage.model.FileStorage;
 import nu.marginalia.storage.model.FileStorageBaseType;
+import nu.marginalia.storage.model.FileStorageState;
 import nu.marginalia.storage.model.FileStorageType;
 
 import java.nio.file.Path;
@@ -11,6 +12,9 @@ import java.time.format.DateTimeFormatter;
 public record FileStorageWithActions(FileStorage storage) {
     public boolean isCrawlable() {
         return storage.type() == FileStorageType.CRAWL_SPEC;
+    }
+    public boolean isStatusNew() {
+        return storage.state() == FileStorageState.NEW;
     }
     public boolean isAtagsExportable() {
         return storage.type() == FileStorageType.CRAWL_DATA;
