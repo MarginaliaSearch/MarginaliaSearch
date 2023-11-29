@@ -14,6 +14,11 @@
     {{/unless}}
 
     {{#if nodes}}
+    <div class="my-3 p-3 border bg-light">
+        Index nodes are processing units.  The search engine requires at least one, but more can be added
+        to spread the system load across multiple physical disks or even multiple servers.
+    </div>
+
     <table class="table">
         <tr>
             <th>Node ID</th>
@@ -28,14 +33,6 @@
         </tr>
         {{/each}}
     </table>
-
-    <div class="m-5 p-5 border bg-light">
-        <h2 class="my-3">Index Nodes</h2>
-        <p>
-            Index nodes are processing units.  The search engine requires at least one, but more can be added
-            to spread the system load across multiple physical disks or even multiple servers.
-        </p>
-    </div>
     {{/if}}
 
 </div>

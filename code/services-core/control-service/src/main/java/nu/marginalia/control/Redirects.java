@@ -3,9 +3,9 @@ package nu.marginalia.control;
 import spark.ResponseTransformer;
 
 public class Redirects {
-    public static final HtmlRedirect redirectToActors = new HtmlRedirect("/actors");
     public static final HtmlRedirect redirectToApiKeys = new HtmlRedirect("/api-keys");
     public static final HtmlRedirect redirectToStorage = new HtmlRedirect("/storage");
+    public static final HtmlRedirect redirectToOverview = new HtmlRedirect("/");
     public static final HtmlRedirect redirectToBlacklist = new HtmlRedirect("/blacklist");
     public static final HtmlRedirect redirectToComplaints = new HtmlRedirect("/complaints");
     public static final HtmlRedirect redirectToMessageQueue = new HtmlRedirect("/message-queue");

@@ -69,7 +69,7 @@ public class ProcessingService {
     }
 
     public Object startAdjacencyCalculation(Request request, Response response) throws Exception {
-        actorControlService.start(ExecutorActor.ADJACENCY_CALCULATION);
+        actorControlService.startFrom(ExecutorActor.ADJACENCY_CALCULATION, new TriggerAdjacencyCalculationActor.Run());
         return "";
     }
 

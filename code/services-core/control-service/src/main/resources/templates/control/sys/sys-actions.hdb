@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+{{> control/partials/head-includes }}
+<head><title>Control Service: Actions</title></head>
+<body>
+{{> control/partials/nav}}
+
+<div class="container">
+    <h1 class="my-3">System Actions</h1>
+
+    <div class="my-3 border p-3 bg-light">
+        These are actions that perform system-wide operations,
+        on each node in the system.  Nodes are included if they are
+        configured to be part of the <em>precession</em> in the Node Configuration.
+        For a single-node system, most of these actions may be triggered from the
+        single node's actions tab.
+    </div>
+
+    <div class="accordion mt-3" id="accordionActions">
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseCalculateAdjacencies"
+                        aria-expanded="false"
+                        aria-controls="collapseCalculateAdjacencies">
+                    Calculate Adjacencies
+                </button>
+            </h2>
+            <div id="collapseCalculateAdjacencies" class="accordion-collapse collapse p-3" data-bs-parent="#accordionActions">
+                <div class="mb-3">
+                    This will re-calculate the adjacencies graph.  The adjacencies graph is used to calculate the domain ranking.
+                </div>
+                <form method="post" action="actions/recalculate-adjacencies-graph">
+                    <button
+                            class="btn btn-primary me-md-2"
+                            onclick="return confirm('Confirm recalculation of adjacencies graph');"
+                            type="submit">
+                        Recalculate Graph</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseReindexAll"
+                        aria-expanded="false"
+                        aria-controls="collapseReindexAll">
+                    Recalculate Rankings
+                </button>
+            </h2>
+            <div id="collapseReindexAll" class="accordion-collapse collapse p-3" data-bs-parent="#accordionActions">
+                <div class="mb-3">
+                    This will successively re-calculate the domain rankings for all nodes configured to be part in the precession,
+                    and then re-construct the indexes from existing journal data.
+                </div>
+                <form method="post" action="actions/reindex-all">
+                    <button
+                            class="btn btn-primary me-md-2"
+                            onclick="return confirm('Confirm reindexing of all nodes');"
+                            type="submit">
+                        Reconstruct Indexes</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseReprocessAll"
+                        aria-expanded="false"
+                        aria-controls="collapseReprocessAll">
+                    Reprocess Data
+                </button>
+            </h2>
+            <div id="collapseReprocessAll" class="accordion-collapse collapse p-3" data-bs-parent="#accordionActions">
+                <div class="mb-3">
+                    This will reprocess the crawl data on each node configured to be part in the precession, based on
+                    the currently ACTIVE crawl data.  If no crawl data is ACTIVE, the node will be omitted.
+                </div>
+                <form method="post" action="actions/reprocess-all">
+                    <button
+                            class="btn btn-primary me-md-2"
+                            onclick="return confirm('Confirm reprocessing');"
+                            type="submit">
+                        Reprocess Crawl Data</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+{{> control/partials/foot-includes }}
+</html>
