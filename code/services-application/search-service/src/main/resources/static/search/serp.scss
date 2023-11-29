@@ -445,7 +445,7 @@ footer {
 
 .search-result {
   @extend .shadowbox;
-  margin: 1ch;
+  margin: 1ch 0 2ch 0;
 
   .url {
     background-color: $highlight-light;
