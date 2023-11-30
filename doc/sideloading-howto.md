@@ -9,6 +9,16 @@ large they are impractical to crawl in the traditional fashion,
 but luckily they make available data dumps that can be processed
 and loaded into the search engine through other means.
 
+## Notes on Docker
+
+If you're running the system in docker, you'll need to provide the paths
+to the data in a way where it is available to the docker container.   
+
+Either mount the data into the executor's container, or copy it into e.g. 
+the data directory, which is mounted into the container as `/wmsa/data`.  
+For a test deployment, a file placed in `run/data/foo` will be available 
+in the container as `/wmsa/data/foo`.
+
 ## Sideloading a directory tree
 
 For relatively small websites, ad-hoc side-loading is available directly from a
@@ -103,8 +113,8 @@ and follow the instructions for downloading a ZIM file, and then run something l
 This db-file can be processed and loaded into the search engine through the
 Actions view.
 
-FIXME: It will currently only point to encyclopedia.marginalia.nu and not main Wikipedia,
-this should be made configurable.
+FIXME: It will currently only point to en.wikipedia.org, this should be 
+made configurable.
 
 ## Sideloading Stack Overflow/Stackexchange
 
