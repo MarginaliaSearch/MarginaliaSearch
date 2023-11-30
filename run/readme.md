@@ -15,36 +15,44 @@ The system requires JDK21+, and uses Java 21 preview features. Gradle complains
 a bit about this since it's not currently supported, but it works anyway.
 
 ## Set up
+
 To go from a clean check out of the git repo to a running search engine,
-follow these steps. You're assumed to sit in the project root the whole time.
+follow these steps.  This assumes a test deployment.  For a production like
+setup... (TODO: write a guide for this).
 
-### 1. Run the one-time setup, it will create the
-basic runtime directory structure and download some models and data that doesn't
-come with the git repo because git deals poorly with large binary files.
+You're assumed to sit in the project root the whole time.
 
-```
+### 1. Run the one-time setup
+
+It will create the basic runtime directory structure and download some models and 
+data that doesn't come with the git repo because git deals poorly with large binary files.
+
+```shell
 $ run/setup.sh
 ```
 
 ### 2. Compile the project and build docker images
 
+```shell
+$ ./gradlew docker
 ```
-$ ./gradlew dist docker
-```
-
-* `dist` is necessary for the processes to be possible to start and run.
-* `docker` is necessary for the services to be possible to start and run.
 
 ### 3. Initialize the database
-```
+
+Before the system can be brought online, the database needs to be initialized.  To do this,
+bring up the database in the background, and run the flyway migration tool.
+
+```shell
 $ docker-compose up -d mariadb
 $ ./gradlew flywayMigrate
 ```
 
-### 4. Bring the system online. We'll run it in the foreground in the terminal this time
-because it's educational to see the logs. Add `-d` to run in the background.
+### 4. Bring the system online. 
 
-```
+We'll run it in the foreground in the terminal this time because it's educational to see the logs. 
+Add `-d` to run in the background.
+
+```shell
 $ docker-compose up
 ```
 
