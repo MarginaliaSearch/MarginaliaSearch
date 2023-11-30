@@ -12,3 +12,5 @@
         <button type="submit">Search</button>
     </div>
 </form>
+<!-- load the mobile customizations script early to avoid flicker -->
+<script src="/serp.js"></script>

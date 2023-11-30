@@ -450,7 +450,9 @@ footer {
   .url {
     background-color: $highlight-light;
     padding-left: 0.5ch;
+
     a {
+      word-break: break-all;
       font-family: monospace;
       font-size: 8pt;
       color: $fg-light;
@@ -460,19 +462,21 @@ footer {
       color: $visited;
     }
   }
+
   h2 {
     a {
+      word-break: break-all;
       color: $fg-dark;
       text-decoration: none;
     }
     font-size: 12pt;
     @extend .heading;
     background-color: $highlight-light2;
-
   }
 
   .description {
     background-color: $fg-light;
+    word-break: break-word;
     padding: 1ch;
     margin: 0;
   }
@@ -514,6 +518,10 @@ footer {
     margin: 0 !important;
     padding: 0 0 0 0 !important;
     max-width: 100%;
+
+    .sidebar-narrow {
+      display: block; // fix for bizarre chrome rendering issue
+    }
 
     #mcfeast {
       display: inline;
