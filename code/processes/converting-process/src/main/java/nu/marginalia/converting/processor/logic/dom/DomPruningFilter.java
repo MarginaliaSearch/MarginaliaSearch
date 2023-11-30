@@ -96,6 +96,8 @@ public class DomPruningFilter implements NodeFilter {
 
         if ("nav".equalsIgnoreCase(tagName))
             return true;
+        if ("iframe".equalsIgnoreCase(tagName))
+            return true;
         if ("footer".equalsIgnoreCase(tagName))
             return true;
         if ("header".equalsIgnoreCase(tagName))

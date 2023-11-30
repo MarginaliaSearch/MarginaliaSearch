@@ -2,6 +2,7 @@ package nu.marginalia.converting.processor.plugin.specialization;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.converting.model.GeneratorType;
 import nu.marginalia.converting.processor.ConverterDomainTypes;
 import nu.marginalia.converting.processor.logic.DocumentGeneratorExtractor;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
@@ -18,6 +19,7 @@ public class HtmlProcessorSpecializations {
     private final PhpBBSpecialization phpBBSpecialization;
     private final JavadocSpecialization javadocSpecialization;
     private final MariadbKbSpecialization mariadbKbSpecialization;
+    private final WikiSpecialization wikiSpecialization;
     private final BlogSpecialization blogSpecialization;
     private final DefaultSpecialization defaultSpecialization;
 
@@ -27,7 +29,9 @@ public class HtmlProcessorSpecializations {
                                         XenForoSpecialization xenforoSpecialization,
                                         PhpBBSpecialization phpBBSpecialization,
                                         JavadocSpecialization javadocSpecialization,
-                                        MariadbKbSpecialization mariadbKbSpecialization, BlogSpecialization blogSpecialization,
+                                        MariadbKbSpecialization mariadbKbSpecialization,
+                                        WikiSpecialization wikiSpecialization,
+                                        BlogSpecialization blogSpecialization,
                                         DefaultSpecialization defaultSpecialization) {
         this.domainTypes = domainTypes;
         this.lemmySpecialization = lemmySpecialization;
@@ -35,6 +39,7 @@ public class HtmlProcessorSpecializations {
         this.phpBBSpecialization = phpBBSpecialization;
         this.javadocSpecialization = javadocSpecialization;
         this.mariadbKbSpecialization = mariadbKbSpecialization;
+        this.wikiSpecialization = wikiSpecialization;
         this.blogSpecialization = blogSpecialization;
         this.defaultSpecialization = defaultSpecialization;
     }
@@ -65,6 +70,9 @@ public class HtmlProcessorSpecializations {
         }
         if (generator.keywords().contains("javadoc")) {
             return javadocSpecialization;
+        }
+        if (generator.type() == GeneratorType.WIKI) {
+            return wikiSpecialization;
         }
 
         return defaultSpecialization;
