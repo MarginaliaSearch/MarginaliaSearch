@@ -32,8 +32,8 @@ This can be done by editing the file `${WMSA_HOME}/conf/user-agent`.
 
 Ensure that the system is running and go to https://localhost:8081.  
 
-By default the system is configured to store data in `run/node-1/samples`. 
-
+With the default test configuration, the system is configured to 
+store data in `run/node-1/samples`.
 
 ### Specifications
 
@@ -41,7 +41,7 @@ While a running search engine can use the link database to figure out which webs
 system does not know of any links.  To bootstrap a crawl, a crawl specification can be created.  
 
 You need a list of known domains.  This is just a text file with one domain name per line,
-with blanklines and comments starting with `#` ignored.  Make it available over HTTP(S).
+with blank lines and comments starting with `#` ignored.  Make it available over HTTP(S).
 
 Go to
 
@@ -55,7 +55,7 @@ Fill out the form with a description and a link to the domain list.
 ## Crawling 
 
 Refresh the specification list in the operator's gui.  You should see your new specification in the list.
-Click the link and select `[Crawl]` under `Actions`.
+Click the link, then select `[Crawl]` under `Actions`.
 
 Depending on the size of the specification, this may take anywhere between a few minutes to a few weeks. 
 You can follow the progress in the `Overview` view.  It's fairly common for the crawler to get stuck at 
@@ -106,7 +106,7 @@ All of this is automatic and most of it is visible in the `Overview` view.
 ## Recrawling (IMPORTANT)
 
 The work flow with a crawl spec was a one-off process to bootstrap the search engine.  To keep the search engine up to date,
-it is preferrable to do a recrawl.  This will try to reduce the amount of data that needs to be fetched.
+it is preferable to do a recrawl.  This will try to reduce the amount of data that needs to be fetched.
 
 To trigger a Recrawl, ensure your crawl data is set to active, and then go to Actions -> Trigger Recrawl,
 and click `[Trigger Recrawl]`.  This will behave much like the old crawling step.   Once done, it needs to be
