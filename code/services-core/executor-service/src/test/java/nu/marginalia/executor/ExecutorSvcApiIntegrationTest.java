@@ -6,7 +6,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provides;
 import nu.marginalia.actor.ExecutorActor;
 import nu.marginalia.actor.ExecutorActorControlService;
-import nu.marginalia.actor.task.CrawlJobExtractorActor;
+import nu.marginalia.actor.task.TriggerAdjacencyCalculationActor;
 import nu.marginalia.client.Context;
 import nu.marginalia.client.route.RouteProvider;
 import nu.marginalia.process.ProcessOutboxes;
@@ -105,7 +105,7 @@ public class ExecutorSvcApiIntegrationTest {
     public void calculateAdjacencies() throws Exception {
         testInstances.client.calculateAdjacencies(Context.internal(), 0);
 
-        Mockito.verify(testInstances.actorControlService).start(eq(ExecutorActor.ADJACENCY_CALCULATION));
+        Mockito.verify(testInstances.actorControlService).startFrom(eq(ExecutorActor.ADJACENCY_CALCULATION), eq(new TriggerAdjacencyCalculationActor.Run()));
     }
 
 }
