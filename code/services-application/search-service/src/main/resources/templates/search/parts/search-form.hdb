@@ -1,15 +1,15 @@
-<form action="/search" method="get">
+<form action="/search" method="get" id="search-form">
     <div id="search-box">
         <h1>
             Search The Internet
         </h1>
-        <input type="text" name="query" placeholder="Search..." value="{{query}}" autocomplete="off">
-
+        <div id="suggestions-anchor"></div>
+        <input type="text" id="query" name="query" placeholder="Search..." value="{{query}}">
         <input type="hidden" name="js" value="{{js}}">
         <input type="hidden" name="adtech" value="{{adtech}}">
         <input type="hidden" name="profile" value="{{profile}}">
 
-        <button type="submit">Search</button>
+        <input type="submit" form="search-form" title="Execute Search" value="Search">
     </div>
 </form>
 <!-- load the mobile customizations script early to avoid flicker -->

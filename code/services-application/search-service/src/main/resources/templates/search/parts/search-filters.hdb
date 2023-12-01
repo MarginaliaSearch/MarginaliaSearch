@@ -1,4 +1,4 @@
-<h2>Filters <button id="menu-close">X</button></h2>
+<h2>Filters</h2>
 <ul>
     {{#with removeJsOption}}
         <li title="Exclude results with javascript"

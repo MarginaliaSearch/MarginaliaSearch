@@ -1,86 +1,96 @@
 
-if(!window.matchMedia("(pointer: coarse)").matches) {
-    query = document.getElementById('query');
+function setupTypeahead() {
+    const query = document.getElementById('query');
     query.setAttribute('autocomplete', 'off');
-    timer = null;
+    const queryBox = document.getElementById('suggestions-anchor');
+    let timer = null;
+
     function fetchSuggestions(e) {
-            if (timer != null) {
-                clearTimeout(timer);
-            }
-            timer = setTimeout(() => {
-                req = new XMLHttpRequest();
+        if (timer != null) {
+            clearTimeout(timer);
+        }
+        timer = setTimeout(() => {
+            const req = new XMLHttpRequest();
 
-                req.onload = rsp => {
-                    items = JSON.parse(req.responseText);
+            req.onload = rsp => {
+                let items = JSON.parse(req.responseText);
 
-                    var old = document.getElementById('suggestions');
-                    if (old != null) old.remove();
-
-                    if (items.length == 0) return;
-
-                    suggestions = document.createElement('div');
-                    suggestions.setAttribute('id', 'suggestions');
-                    suggestions.setAttribute('class', 'suggestions');
+                const old = document.getElementById('suggestions');
+                if (old != null) old.remove();
 
 
-                    for (i=0;i<items.length;i++) {
-                        item = document.createElement('a');
-                        item.innerHTML=items[i];
-                        item.setAttribute('href', '#')
+                if (items.length === 0) return;
 
-                        function suggestionClickHandler(e) {
-                            query.value = e.target.text;
-                            query.focus();
-                            document.getElementById('suggestions').remove();
+                console.log(items);
+
+                const suggestions = document.createElement('div');
+                suggestions.setAttribute('id', 'suggestions');
+                suggestions.setAttribute('class', 'suggestions');
+
+
+                for (i=0;i<items.length;i++) {
+                    item = document.createElement('a');
+                    item.innerHTML=items[i];
+                    item.setAttribute('href', '#')
+
+                    function suggestionClickHandler(e) {
+                        query.value = e.target.text;
+                        query.focus();
+                        document.getElementById('suggestions').remove();
+                        e.preventDefault()
+                    }
+                    item.addEventListener('click', suggestionClickHandler);
+
+                    item.addEventListener('keydown', e=> {
+                        if (e.key === "ArrowDown") {
+                            if (e.target.nextElementSibling != null) {
+                                e.target.nextElementSibling.focus();
+                            }
+
                             e.preventDefault()
                         }
-                        item.addEventListener('click', suggestionClickHandler);
-
-                        item.addEventListener('keydown', e=> {
-                            if (e.key === "ArrowDown") {
-                                if (e.target.nextElementSibling != null) {
-                                    e.target.nextElementSibling.focus();
-                                }
-
-                                e.preventDefault()
+                        else if (e.key === "ArrowUp") {
+                            if (e.target.previousElementSibling != null) {
+                                e.target.previousElementSibling.focus();
                             }
-                            else if (e.key === "ArrowUp") {
-                                if (e.target.previousElementSibling != null) {
-                                    e.target.previousElementSibling.focus();
-                                }
-                                else {
-                                    query.focus();
-                                }
-                                e.preventDefault()
-                            }
-                            else if (e.key === "Escape") {
-                                var suggestions = document.getElementById('suggestions');
-                                if (suggestions != null) {
-                                    suggestions.remove();
-                                }
+                            else {
                                 query.focus();
-                                e.preventDefault();
                             }
-                        });
-                        item.addEventListener('keypress', e=> {
-                            if (e.key === "Enter") {
-                                suggestionClickHandler(e);
+                            e.preventDefault()
+                        }
+                        else if (e.key === "Escape") {
+                            var suggestions = document.getElementById('suggestions');
+                            if (suggestions != null) {
+                                suggestions.remove();
                             }
-                        });
-                        suggestions.appendChild(item);
-                    }
-                    document.getElementsByClassName('input')[0].appendChild(suggestions);
+                            query.focus();
+                            e.preventDefault();
+                        }
+                    });
+                    item.addEventListener('keypress', e=> {
+                        if (e.key === "Enter") {
+                            suggestionClickHandler(e);
+                        }
+                    });
+                    suggestions.appendChild(item);
                 }
+                queryBox.prepend(suggestions);
+            }
 
-                req.open("GET", "/suggest/?partial="+encodeURIComponent(query.value));
-                req.send();
-            }, 250);
-        }
+            req.open("GET", "/suggest/?partial="+encodeURIComponent(query.value));
+            req.send();
+        }, 250);
+    }
     query.addEventListener("input", fetchSuggestions);
-    query.addEventListener("click", e=> { var suggestions = document.getElementById('suggestions'); if (suggestions != null) suggestions.remove(); });
+    query.addEventListener("click", e=> {
+        const suggestions = document.getElementById('suggestions');
+        if (suggestions != null) {
+            suggestions.remove();
+        }
+    });
     query.addEventListener("keydown", e => {
         if (e.key === "ArrowDown") {
-            var suggestions = document.getElementById('suggestions');
+            const suggestions = document.getElementById('suggestions');
             if (suggestions != null) {
                 suggestions.childNodes[0].focus();
             }
@@ -90,7 +100,7 @@ if(!window.matchMedia("(pointer: coarse)").matches) {
             e.preventDefault()
         }
         else if (e.key === "Escape") {
-            var suggestions = document.getElementById('suggestions');
+            const suggestions = document.getElementById('suggestions');
             if (suggestions != null) {
                 suggestions.remove();
             }
@@ -98,4 +108,8 @@ if(!window.matchMedia("(pointer: coarse)").matches) {
             e.preventDefault();
         }
     });
+}
+
+if(!window.matchMedia("(pointer: coarse)").matches) {
+    setupTypeahead();
 }

@@ -272,6 +272,7 @@ section.cards {
   margin-left: 1ch;
 }
 
+
 footer {
   clear: both;
 
@@ -348,7 +349,7 @@ footer {
   padding: 0.5ch;
   background-color: $fg-light;
   display: grid;
-  grid-template-columns: max-content auto max-content;
+  grid-template-columns: max-content 0 auto max-content;
   grid-gap: 0.5ch;
   grid-auto-rows: minmax(1ch, auto);
   width: 100%;
@@ -366,6 +367,11 @@ footer {
     text-align: center;
   }
 
+  #suggestions-anchor {
+    margin: -0.5ch; // We need this anchor for the typeahead suggestions, but we don't want it to affect the layout
+    padding: 0;
+  }
+
   input[type="text"] {
     font-family: monospace;
     font-size: 12pt;
@@ -375,11 +381,40 @@ footer {
     color: $fg-dark;
   }
 
-  button[type="submit"] {
+  input[type="submit"] {
     font-size: 12pt;
     border: 1px solid $border-color;
     background-color: $fg-light;
     color: $fg-dark;
+  }
+
+  .suggestions {
+    background-color: #fff;
+    padding: .5ch;
+    margin-top: 5.5ch;
+    margin-left: 1ch;
+    position: absolute;
+    display: inline-block;
+    width: 300px;
+    border-left: 1px solid #ccc;
+    border-top: 1px solid #ccc;
+    box-shadow: 5px 5px 5px #888;
+    z-index: 10;
+
+    a {
+      display: block;
+      color: #000;
+      font-size: 12pt;
+      font-family: 'fixedsys', monospace, serif;
+      text-decoration: none;
+      outline: none;
+    }
+
+    a:focus {
+      display: block;
+      background-color: #000;
+      color: #eee;
+    }
   }
 
 }
@@ -518,6 +553,8 @@ footer {
     margin: 0 !important;
     padding: 0 0 0 0 !important;
     max-width: 100%;
+
+    #suggestions-anchor { display: none; } // suggestions are not useful on mobile
 
     .sidebar-narrow {
       display: block; // fix for bizarre chrome rendering issue
