@@ -1,5 +1,6 @@
 package nu.marginalia.converting.processor.plugin;
 
+import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.converting.language.LanguageFilter;
 import nu.marginalia.language.model.DocumentLanguageData;
@@ -21,7 +22,7 @@ public abstract class AbstractDocumentProcessorPlugin {
         this.languageFilter = languageFilter;
     }
 
-    public abstract DetailsWithWords createDetails(CrawledDocument crawledDocument) throws DisqualifiedException, URISyntaxException;
+    public abstract DetailsWithWords createDetails(CrawledDocument crawledDocument, DocumentClass documentClass) throws DisqualifiedException, URISyntaxException;
     public abstract boolean isApplicable(CrawledDocument doc);
 
     protected void checkDocumentLanguage(DocumentLanguageData dld) throws DisqualifiedException {

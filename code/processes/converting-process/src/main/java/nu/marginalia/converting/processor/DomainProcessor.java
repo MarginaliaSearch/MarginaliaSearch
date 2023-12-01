@@ -53,6 +53,9 @@ public class DomainProcessor {
 
         boolean cookies = false;
         String ip = "";
+
+        DomainLinks externalDomainLinks = anchorTagsSource.getAnchorTags(ret.domain);
+
         while (dataStream.hasNext()) {
             var data = dataStream.next();
 
@@ -75,7 +78,7 @@ public class DomainProcessor {
                         continue;
                     fixBadCanonicalTag(doc);
 
-                    docs.add(documentProcessor.process(doc));
+                    docs.add(documentProcessor.process(doc, externalDomainLinks));
                 }
                 catch (Exception ex) {
                     logger.warn("Failed to process " + doc.url, ex);
@@ -90,8 +93,6 @@ public class DomainProcessor {
         if (cookies) {
             terms.add(HtmlFeature.COOKIES.getKeyword());
         }
-
-        var externalDomainLinks = anchorTagsSource.getAnchorTags(ret.domain);
 
         for (var document : ret.documents) {
             if (document.details == null)

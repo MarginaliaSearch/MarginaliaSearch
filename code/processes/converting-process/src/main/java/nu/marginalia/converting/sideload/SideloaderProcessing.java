@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.converting.model.GeneratorType;
 import nu.marginalia.converting.model.ProcessedDocument;
+import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.processor.plugin.HtmlDocumentProcessorPlugin;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.model.EdgeUrl;
@@ -54,7 +55,7 @@ public class SideloaderProcessing {
 
         var ret = new ProcessedDocument();
         try {
-            var details = htmlProcessorPlugin.createDetails(crawledDoc);
+            var details = htmlProcessorPlugin.createDetails(crawledDoc, DocumentClass.NORMAL);
 
             ret.words = details.words();
 

@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import nu.marginalia.converting.language.LanguageFilter;
 import nu.marginalia.converting.model.GeneratorType;
+import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.processor.MetaRobotsTag;
 import nu.marginalia.converting.processor.logic.dom.MeasureLengthVisitor;
 import nu.marginalia.converting.processor.logic.links.FileLinks;
@@ -15,7 +16,6 @@ import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
-import nu.marginalia.language.sentence.SentenceExtractor;
 import nu.marginalia.model.html.HtmlStandard;
 import nu.marginalia.model.idx.DocumentFlags;
 import nu.marginalia.keyword.model.DocumentKeywordsBuilder;
@@ -98,7 +98,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
     }
 
     @Override
-    public DetailsWithWords createDetails(CrawledDocument crawledDocument)
+    public DetailsWithWords createDetails(CrawledDocument crawledDocument, DocumentClass documentClass)
             throws DisqualifiedException, URISyntaxException {
 
         String documentBody = crawledDocument.documentBody;
@@ -140,8 +140,9 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         // don't move this up! it uses title and quality
         // and is run before the heavy computations below
-        documentLengthLogic.validateLength(dld, specialization.lengthModifier());
-        if (isDisqualified(url, ret)) {
+        documentLengthLogic.validateLength(dld, specialization.lengthModifier() * documentClass.lengthLimitModifier());
+
+        if (isDisqualified(documentClass, url, ret)) {
             throw new DisqualifiedException(DisqualificationReason.QUALITY);
         }
 
@@ -205,9 +206,11 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
     private static final GuardedRegex mastodonFeedRegex = GuardedRegexFactory.startsWith("/@", "^/@[^/]+/?$");
 
-    private boolean isDisqualified(EdgeUrl url, ProcessedDocumentDetails ret) {
+    private boolean isDisqualified(DocumentClass documentClass, EdgeUrl url, ProcessedDocumentDetails ret) {
 
-        if (ret.quality < minDocumentQuality) {
+        if (documentClass.enforceQualityLimits()
+            && ret.quality < minDocumentQuality)
+        {
             return true;
         }
 

@@ -1,6 +1,7 @@
 package nu.marginalia.converting.processor;
 
 import com.google.inject.Inject;
+import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawlerDocumentStatus;
 import nu.marginalia.model.crawl.UrlIndexingState;
@@ -37,14 +38,20 @@ public class DocumentProcessor {
         processorPlugins.add(plainTextDocumentProcessorPlugin);
     }
 
-    public ProcessedDocument process(CrawledDocument crawledDocument) {
+    public ProcessedDocument process(CrawledDocument crawledDocument, DomainLinks externalDomainLinks) {
         ProcessedDocument ret = new ProcessedDocument();
 
         try {
             // We must always provide the URL, even if we don't process the document
             ret.url = getDocumentUrl(crawledDocument);
 
-            processDocument(crawledDocument, ret);
+            DocumentClass documentClass = switch (externalDomainLinks.countForUrl(ret.url)) {
+                case 0 -> DocumentClass.NORMAL;
+                case 1 -> DocumentClass.EXTERNALLY_LINKED_ONCE;
+                default -> DocumentClass.EXTERNALLY_LINKED_MULTI;
+            };
+
+            processDocument(crawledDocument, documentClass, ret);
         }
         catch (DisqualifiedException ex) {
             ret.state = UrlIndexingState.DISQUALIFIED;
@@ -60,7 +67,7 @@ public class DocumentProcessor {
         return ret;
     }
 
-    private void processDocument(CrawledDocument crawledDocument, ProcessedDocument ret) throws URISyntaxException, DisqualifiedException {
+    private void processDocument(CrawledDocument crawledDocument, DocumentClass documentClass, ProcessedDocument ret) throws URISyntaxException, DisqualifiedException {
 
         var crawlerStatus = CrawlerDocumentStatus.valueOf(crawledDocument.crawlerStatus);
         if (crawlerStatus != CrawlerDocumentStatus.OK) {
@@ -79,7 +86,7 @@ public class DocumentProcessor {
 
         final var plugin = findPlugin(crawledDocument);
 
-        AbstractDocumentProcessorPlugin.DetailsWithWords detailsWithWords = plugin.createDetails(crawledDocument);
+        AbstractDocumentProcessorPlugin.DetailsWithWords detailsWithWords = plugin.createDetails(crawledDocument, documentClass);
 
         ret.details = detailsWithWords.details();
         ret.words = detailsWithWords.words();

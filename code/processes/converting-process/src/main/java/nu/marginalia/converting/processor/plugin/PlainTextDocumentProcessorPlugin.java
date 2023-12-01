@@ -3,6 +3,7 @@ package nu.marginalia.converting.processor.plugin;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import nu.marginalia.converting.language.LanguageFilter;
+import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.processor.logic.DocumentLengthLogic;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
@@ -57,7 +58,7 @@ public class PlainTextDocumentProcessorPlugin extends AbstractDocumentProcessorP
     }
 
     @Override
-    public DetailsWithWords createDetails(CrawledDocument crawledDocument)
+    public DetailsWithWords createDetails(CrawledDocument crawledDocument, DocumentClass documentClass)
             throws DisqualifiedException, URISyntaxException {
 
         String documentBody = crawledDocument.documentBody;
