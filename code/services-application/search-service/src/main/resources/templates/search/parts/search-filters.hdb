@@ -9,10 +9,10 @@
         </li>
     {{/with}}
     {{#with reduceAdtechOption}}
-    <li {{#if set}}aria-checked="true" class="current"{{/if}}
+    <li title="Exclude results with tracking or likely affiliate links"
+        {{#if set}}aria-checked="true" class="current"{{/if}}
         {{#unless set}}aria-checked="false"{{/unless}}
-        role="checkbox"
-        title="Exclude results with tracking or likely affiliate links" ">
+        role="checkbox">
             <a href="{{url}}">{{name}}</a>
         </li>
     {{/with}}
