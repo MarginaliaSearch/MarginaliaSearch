@@ -20,4 +20,9 @@ public enum ExecutorActor {
     public String id() {
         return "fsm:" + name().toLowerCase();
     }
+
+    public String id(int node) {
+        return "fsm:" + name().toLowerCase() + ":" + node;
+    }
+
 }

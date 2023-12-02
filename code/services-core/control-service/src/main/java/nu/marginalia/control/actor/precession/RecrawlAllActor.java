@@ -9,13 +9,14 @@ import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.state.Resume;
 import nu.marginalia.control.actor.PrecessionNodes;
 import nu.marginalia.executor.client.ExecutorRemoteActorFactory;
+import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageType;
 
 import java.util.concurrent.TimeUnit;
 
 @Singleton
-public class ReprocessAllActor extends RecordActorPrototype {
+public class RecrawlAllActor extends RecordActorPrototype {
     private final ExecutorRemoteActorFactory remoteActorFactory;
 
     private final FileStorageService fileStorageService;
@@ -32,6 +33,7 @@ public class ReprocessAllActor extends RecordActorPrototype {
 
     @Override
     public ActorStep transition(ActorStep self) throws Exception {
+
         return switch (self) {
             case Initial i -> {
                 var first = precessionNodes.first();
@@ -45,9 +47,9 @@ public class ReprocessAllActor extends RecordActorPrototype {
                     yield new AdvanceNode(node);
                 }
 
-                var data = new ExecutorRemoteActorFactory.ConvertAndLoadData(activeFileStorage.get(0));
+                var data = new ExecutorRemoteActorFactory.CrawlData(activeFileStorage.get(0), true);
 
-                if (remoteActorFactory.createConvertAndLoadRemote(node).trigger(data)) {
+                if (remoteActorFactory.createCrawlRemote(node).trigger(data)) {
                     yield new WaitFinished(node);
                 }
                 else {
@@ -55,11 +57,12 @@ public class ReprocessAllActor extends RecordActorPrototype {
                 }
             }
             case WaitFinished(int node) -> {
-                var remoteActor = remoteActorFactory.createConvertAndLoadRemote(node);
+                var remoteActor = remoteActorFactory.createCrawlRemote(node);
                 for (;;) {
                     var state = remoteActor.getState();
-                    if ("END".equals(state) || "ERROR".equals(state))
+                    if ("END".equals(state) || "ERROR".equals(state)) {
                         break;
+                    }
                     TimeUnit.SECONDS.sleep(10);
                 }
                 yield new AdvanceNode(node);
@@ -74,10 +77,11 @@ public class ReprocessAllActor extends RecordActorPrototype {
     }
 
     @Inject
-    public ReprocessAllActor(Gson gson,
-                             ExecutorRemoteActorFactory remoteActorFactory,
-                             FileStorageService fileStorageService,
-                             PrecessionNodes precessionNodes)
+    public RecrawlAllActor(Gson gson,
+                           ExecutorRemoteActorFactory remoteActorFactory,
+                           FileStorageService fileStorageService,
+                           PrecessionNodes precessionNodes,
+                           NodeConfigurationService nodeConfigurationService)
     {
         super(gson);
         this.remoteActorFactory = remoteActorFactory;
@@ -87,7 +91,7 @@ public class ReprocessAllActor extends RecordActorPrototype {
 
     @Override
     public String describe() {
-        return "Triggers a cascade of reindex instructions across each node included in the precession";
+        return "Triggers a cascade of recrawl instructions across each node included in the precession";
     }
 
 }

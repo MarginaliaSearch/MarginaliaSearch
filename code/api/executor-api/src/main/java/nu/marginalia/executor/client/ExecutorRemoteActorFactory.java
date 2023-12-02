@@ -38,7 +38,7 @@ public class ExecutorRemoteActorFactory {
         String getState();
     }
 
-    public record CrawlData(FileStorageId storageId) {}
+    public record CrawlData(FileStorageId storageId, boolean cascadeLoad) {}
     public record ConvertAndLoadData(FileStorageId fid) {}
 }
 

@@ -26,7 +26,7 @@ public class ProcessingService {
 
         actorControlService.startFrom(
                 ExecutorActor.RECRAWL,
-                new RecrawlActor.Initial(crawlId)
+                new RecrawlActor.Initial(crawlId, false)
         );
 
         return "";

@@ -3,6 +3,8 @@ package nu.marginalia.actor.task;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.actor.ExecutorActor;
+import nu.marginalia.actor.ExecutorActorStateMachines;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
@@ -26,16 +28,22 @@ public class RecrawlActor extends RecordActorPrototype {
     private final FileStorageService storageService;
     private final DomainListRefreshService refreshService;
     private final ActorProcessWatcher processWatcher;
+    private final ExecutorActorStateMachines executorActorStateMachines;
 
+    /** Initial step
+     * @param storageId - the id of the storage to recrawl
+     * @param cascadeLoad - whether to automatically start the convert and load actor after the crawl
+     */
+    public record Initial(FileStorageId storageId, boolean cascadeLoad) implements ActorStep {}
 
-    public record Initial(FileStorageId storageId) implements ActorStep {}
+    /** The action step */
     @Resume(behavior = ActorResumeBehavior.RETRY)
-    public record Crawl(long messageId) implements ActorStep {}
+    public record Crawl(long messageId, FileStorageId fid, boolean cascadeLoad) implements ActorStep {}
 
     @Override
     public ActorStep transition(ActorStep self) throws Exception {
         return switch (self) {
-            case Initial (FileStorageId fid) -> {
+            case Initial (FileStorageId fid, boolean cascadeLoad) -> {
                 var crawlStorage = storageService.getStorage(fid);
 
                 if (crawlStorage == null) yield new Error("Bad storage id");
@@ -47,17 +55,25 @@ public class RecrawlActor extends RecordActorPrototype {
 
                 long id = mqCrawlerOutbox.sendAsync(new CrawlRequest(null, fid));
 
-                yield new Crawl(id);
+                yield new Crawl(id, fid, cascadeLoad);
             }
-            case Crawl (long msgId) -> {
-                var rsp = processWatcher.waitResponse(mqCrawlerOutbox, ProcessService.ProcessId.CRAWLER, msgId);
+            case Crawl (long msgId, FileStorageId fid, boolean cascadeLoad) -> {
+                var rsp = processWatcher.waitResponse(
+                        mqCrawlerOutbox,
+                        ProcessService.ProcessId.CRAWLER,
+                        msgId);
 
                 if (rsp.state() != MqMessageState.OK) {
                     yield new Error("Crawler failed");
                 }
-                else {
-                    yield new End();
+
+                if (cascadeLoad) {
+                    // Spawn the convert and load actor
+                    executorActorStateMachines.initFrom(ExecutorActor.CONVERT_AND_LOAD,
+                            new ConvertAndLoadActor.Initial(fid));
                 }
+
+                yield new End();
             }
             default -> new End();
         };
@@ -73,13 +89,16 @@ public class RecrawlActor extends RecordActorPrototype {
                         ProcessOutboxes processOutboxes,
                         FileStorageService storageService,
                         DomainListRefreshService refreshService,
+                        ExecutorActorStateMachines executorActorStateMachines,
                         Gson gson)
     {
         super(gson);
+
         this.processWatcher = processWatcher;
         this.mqCrawlerOutbox = processOutboxes.getCrawlerOutbox();
         this.storageService = storageService;
         this.refreshService = refreshService;
+        this.executorActorStateMachines = executorActorStateMachines;
     }
 
 }

@@ -10,14 +10,18 @@ import nu.marginalia.db.DomainTypes;
 import nu.marginalia.executor.client.ExecutorClient;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.outbox.MqOutbox;
+import nu.marginalia.nodecfg.NodeConfigurationService;
+import nu.marginalia.nodecfg.model.NodeConfiguration;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.id.ServiceId;
+import nu.marginalia.storage.FileStorageService;
+import nu.marginalia.storage.model.FileStorageType;
 import spark.Request;
 import spark.Response;
 import spark.Spark;
 
-import java.util.UUID;
+import java.util.*;
 
 public class ControlSysActionsService {
     private final MqOutbox apiOutbox;
@@ -25,6 +29,8 @@ public class ControlSysActionsService {
     private final ServiceEventLog eventLog;
     private final RendererFactory rendererFactory;
     private final ControlActorService controlActorService;
+    private final NodeConfigurationService nodeConfigurationService;
+    private final FileStorageService fileStorageService;
     private final ExecutorClient executorClient;
 
     @Inject
@@ -33,6 +39,8 @@ public class ControlSysActionsService {
                                     ServiceEventLog eventLog,
                                     RendererFactory rendererFactory,
                                     ControlActorService controlActorService,
+                                    NodeConfigurationService nodeConfigurationService,
+                                    FileStorageService fileStorageService,
                                     ExecutorClient executorClient)
     {
         this.apiOutbox = createApiOutbox(mqFactory);
@@ -40,6 +48,8 @@ public class ControlSysActionsService {
         this.domainTypes = domainTypes;
         this.rendererFactory = rendererFactory;
         this.controlActorService = controlActorService;
+        this.nodeConfigurationService = nodeConfigurationService;
+        this.fileStorageService = fileStorageService;
         this.executorClient = executorClient;
     }
 
@@ -56,13 +66,38 @@ public class ControlSysActionsService {
     public void register() {
         var actionsView = rendererFactory.renderer("control/sys/sys-actions");
 
-        Spark.get("/public/actions", (rq,rsp) -> new Object(), actionsView::render);
+        Spark.get("/public/actions", this::actionsModel, actionsView::render);
         Spark.post("/public/actions/recalculate-adjacencies-graph", this::calculateAdjacencies, Redirects.redirectToOverview);
         Spark.post("/public/actions/reindex-all", this::reindexAll, Redirects.redirectToOverview);
         Spark.post("/public/actions/reprocess-all", this::reprocessAll, Redirects.redirectToOverview);
+        Spark.post("/public/actions/recrawl-all", this::recrawlAll, Redirects.redirectToOverview);
         Spark.post("/public/actions/flush-api-caches", this::flushApiCaches, Redirects.redirectToOverview);
         Spark.post("/public/actions/reload-blogs-list", this::reloadBlogsList, Redirects.redirectToOverview);
         Spark.post("/public/actions/trigger-data-exports", this::triggerDataExports, Redirects.redirectToOverview);
+    }
+
+    @SneakyThrows
+    private Object actionsModel(Request request, Response response) {
+
+        List<Map<String, Object>> eligibleNodes = new ArrayList<>();
+        for (var node : nodeConfigurationService.getAll()) {
+            if (!node.includeInPrecession()) {
+                continue;
+            }
+
+            Map<String, Object> properties = new HashMap<>();
+            properties.put("node", node);
+            properties.put("include", node.includeInPrecession());
+
+            var storageIdMaybe = fileStorageService.getActiveFileStorages(node.node(), FileStorageType.CRAWL_DATA).stream().findFirst();
+            if(storageIdMaybe.isPresent()) {
+                properties.put("storage", fileStorageService.getStorage(storageIdMaybe.get()));
+            }
+
+            eligibleNodes.add(properties);
+        }
+
+        return Map.of("precessionNodes", eligibleNodes);
     }
 
     public Object triggerDataExports(Request request, Response response) throws Exception {
@@ -111,6 +146,14 @@ public class ControlSysActionsService {
         eventLog.logEvent("USER-ACTION", "REPROCESS-ALL");
 
         controlActorService.start(ControlActor.REPROCESS_ALL);
+
+        return "";
+    }
+
+    public Object recrawlAll(Request request, Response response) throws Exception {
+        eventLog.logEvent("USER-ACTION", "RECRAWL-ALL");
+
+        controlActorService.start(ControlActor.RECRAWL_ALL);
 
         return "";
     }

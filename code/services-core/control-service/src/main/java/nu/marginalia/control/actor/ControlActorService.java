@@ -8,6 +8,7 @@ import nu.marginalia.actor.ActorStateMachine;
 import nu.marginalia.actor.prototype.ActorPrototype;
 import nu.marginalia.actor.state.ActorStateInstance;
 import nu.marginalia.control.actor.monitor.MessageQueueMonitorActor;
+import nu.marginalia.control.actor.precession.RecrawlAllActor;
 import nu.marginalia.control.actor.precession.ReindexAllActor;
 import nu.marginalia.control.actor.precession.ReprocessAllActor;
 import nu.marginalia.model.gson.GsonFactory;
@@ -24,7 +25,6 @@ import java.util.stream.Collectors;
 @Singleton
 public class ControlActorService {
     private final ServiceEventLog eventLog;
-    private final ReindexAllActor reindexAllActor;
     private final Gson gson;
     private final MessageQueueFactory messageQueueFactory;
     public Map<ControlActor, ActorStateMachine> stateMachines = new HashMap<>();
@@ -35,11 +35,11 @@ public class ControlActorService {
                                BaseServiceParams baseServiceParams,
                                MessageQueueMonitorActor messageQueueMonitor,
                                ReindexAllActor reindexAllActor,
-                               ReprocessAllActor reprocessAllActor
+                               ReprocessAllActor reprocessAllActor,
+                               RecrawlAllActor recrawlAllActor
     ) {
         this.messageQueueFactory = messageQueueFactory;
         this.eventLog = baseServiceParams.eventLog;
-        this.reindexAllActor = reindexAllActor;
         this.gson = GsonFactory.get();
         this.node = baseServiceParams.configuration.node();
 
@@ -47,6 +47,7 @@ public class ControlActorService {
         register(ControlActor.MONITOR_MESSAGE_QUEUE, messageQueueMonitor);
         register(ControlActor.REINDEX_ALL, reindexAllActor);
         register(ControlActor.REPROCESS_ALL, reprocessAllActor);
+        register(ControlActor.RECRAWL_ALL, recrawlAllActor);
     }
 
     private void register(ControlActor process, ActorPrototype graph) {

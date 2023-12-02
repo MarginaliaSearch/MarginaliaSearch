@@ -29,7 +29,6 @@ public class ExecutorSvc extends Service {
     private final BaseServiceParams params;
     private final Gson gson;
     private final ExecutorActorControlService actorControlService;
-    private final FileStorageService fileStorageService;
     private final TransferService transferService;
 
     private static final Logger logger = LoggerFactory.getLogger(ExecutorSvc.class);
@@ -41,7 +40,6 @@ public class ExecutorSvc extends Service {
                        SideloadService sideloadService,
                        BackupService backupService,
                        ExportService exportService,
-                       FileStorageService fileStorageService,
                        Gson gson,
                        TransferService transferService,
                        ActorApi actorApi) {
@@ -49,7 +47,6 @@ public class ExecutorSvc extends Service {
         this.params = params;
         this.gson = gson;
         this.actorControlService = actorControlService;
-        this.fileStorageService = fileStorageService;
         this.transferService = transferService;
 
         Spark.post("/actor/:id/start", actorApi::startActor);
@@ -84,6 +81,7 @@ public class ExecutorSvc extends Service {
     @MqRequest(endpoint="FIRST-BOOT")
     public void setUpDefaultActors(String message) throws Exception {
         logger.info("Initializing default actors");
+
         actorControlService.start(ExecutorActor.MONITOR_PROCESS_LIVENESS);
         actorControlService.start(ExecutorActor.MONITOR_FILE_STORAGE);
         actorControlService.start(ExecutorActor.PROC_CONVERTER_SPAWNER);

@@ -94,6 +94,64 @@
                 </form>
             </div>
         </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseRecrawlAll"
+                        aria-expanded="false"
+                        aria-controls="collapseRecrawlAll">
+                    Recrawl Data
+                </button>
+            </h2>
+            <div id="collapseRecrawlAll" class="accordion-collapse collapse p-3" data-bs-parent="#accordionActions">
+                <div class="mb-3">
+                    This will recrawl the crawl data on each node configured to be part in the precession, based on
+                    the currently ACTIVE crawl data.  If no crawl data is ACTIVE, the node will be omitted.  After
+                    each node is recrawled, the crawl data will automatically be reprocessed.
+                </div>
+                <form method="post" action="actions/recrawl-all">
+                    <button
+                            class="btn btn-primary me-md-2"
+                            onclick="return confirm('Confirm recrawling');"
+                            type="submit">
+                        Recrawl Data</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="my-3">
+        <h1>Precession Nodes</h1>
+
+        <div class="my-3 border p-3 bg-light">
+{{#unless precessionNodes}} No nodes are configured to be part of the precession. {{/unless}}
+{{#if precessionNodes}} These nodes are configured to be part of the precession,
+        and will be included in the above actions unless otherwise noted. {{/if}}
+        </div>
+
+        {{#if precessionNodes}}
+            <table class="table">
+                <tr><th>Node</th><th>Storage</th></tr>
+                {{#each precessionNodes}}
+                    <tr {{#unless storage}}class="table-danger"{{/unless}}>
+                        <td><a href="/nodes/{{node.node}}">{{node.description}}</a></td>
+                        <td>
+                            {{#if storage}}
+                                <a href="/nodes/{{node.node}}/storage/details?fid={{storage.id}}">
+                                {{storage.path}}
+                                </a>
+                            {{/if}}
+                            {{#unless storage}}
+                                NOT CONFIGURED
+                            {{/unless}}
+                        </td>
+                    </tr>
+                {{/each}}
+            </table>
+        {{/if}}
     </div>
 </div>
 

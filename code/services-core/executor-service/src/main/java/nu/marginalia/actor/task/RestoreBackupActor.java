@@ -26,7 +26,7 @@ public class RestoreBackupActor extends RecordActorPrototype {
                 backupService.restoreBackup(fid);
 
                 mqPersistence.sendNewMessage(
-                        ExecutorActor.CONVERT_AND_LOAD.id() + ":" + node,
+                        ExecutorActor.CONVERT_AND_LOAD.id(node),
                         null,
                         null,
                         ConvertAndLoadActor.REPARTITION,
