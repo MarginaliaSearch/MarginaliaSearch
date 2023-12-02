@@ -22,3 +22,5 @@
         <hr>
     {{/each}}
 </ul>
+<!-- load this ASAP to avoid flicker -->
+<script src="/menu.js"></script>

@@ -12,5 +12,5 @@
         <input type="submit" form="search-form" title="Execute Search" value="Search">
     </div>
 </form>
-<!-- load the mobile customizations script early to avoid flicker -->
-<script src="/serp.js"></script>
+<!-- load the first stage mobile customizations script early to avoid flicker -->
+<script src="/main.js"></script>
