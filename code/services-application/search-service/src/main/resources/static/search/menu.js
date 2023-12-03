@@ -17,6 +17,8 @@ const registerCloseButton = () => {
 const filtersButton = document.createElement('button');
 filtersButton.setAttribute('id', 'mcfeast');
 filtersButton.setAttribute('aria-controls', '#filters');
+filtersButton.innerHTML = '&Xi;';
+filtersButton.setAttribute('title', 'Open the filters menu');
 filtersButton.onclick = (event) => {
     // Defer creation of the close button until the menu is opened.  This is needed because the script for creating
     // the filter button is run early to avoid layout shifts.
@@ -29,5 +31,4 @@ filtersButton.onclick = (event) => {
     event.stopPropagation();
     return false;
 }
-filtersButton.innerHTML = 'Filters';
 document.getElementById('search-box').getElementsByTagName('h1')[0].append(filtersButton);
