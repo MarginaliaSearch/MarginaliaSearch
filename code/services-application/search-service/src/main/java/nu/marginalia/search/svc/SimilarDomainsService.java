@@ -114,7 +114,7 @@ public class SimilarDomainsService {
                     LEFT JOIN EC_DOMAIN_LINK STOD ON STOD.SOURCE_DOMAIN_ID = NEIGHBOR.ID AND STOD.DEST_DOMAIN_ID =   EC_DOMAIN_NEIGHBORS_2.DOMAIN_ID
                     LEFT JOIN EC_DOMAIN_LINK DTOS ON DTOS.DEST_DOMAIN_ID   = NEIGHBOR.ID AND DTOS.SOURCE_DOMAIN_ID = EC_DOMAIN_NEIGHBORS_2.DOMAIN_ID
                     WHERE DOMAIN_ID = ?
-                    ORDER BY RELATEDNESS DESC
+                    ORDER BY RELATEDNESS DESC, RANK ASC
                     LIMIT ?
                     """;
         String q2 = """
@@ -134,7 +134,7 @@ public class SimilarDomainsService {
                     LEFT JOIN EC_DOMAIN_LINK STOD ON STOD.SOURCE_DOMAIN_ID = NEIGHBOR.ID AND STOD.DEST_DOMAIN_ID = EC_DOMAIN_NEIGHBORS_2.NEIGHBOR_ID
                     LEFT JOIN EC_DOMAIN_LINK DTOS ON DTOS.DEST_DOMAIN_ID = NEIGHBOR.ID AND DTOS.SOURCE_DOMAIN_ID = EC_DOMAIN_NEIGHBORS_2.NEIGHBOR_ID
                     WHERE NEIGHBOR_ID = ?
-                    ORDER BY RELATEDNESS DESC
+                    ORDER BY RELATEDNESS DESC, RANK ASC
                     LIMIT ?
             """;
 
@@ -166,7 +166,7 @@ public class SimilarDomainsService {
                          LEFT JOIN EC_DOMAIN_LINK DTOS ON DTOS.DEST_DOMAIN_ID = STOD.SOURCE_DOMAIN_ID AND DTOS.SOURCE_DOMAIN_ID = STOD.DEST_DOMAIN_ID
                 WHERE STOD.DEST_DOMAIN_ID = ?
                 GROUP BY NEIGHBOR.ID
-                ORDER BY RELATEDNESS DESC
+                ORDER BY RELATEDNESS DESC, RANK ASC
                 LIMIT ?
                     """;
         String q2 = """
@@ -188,7 +188,7 @@ public class SimilarDomainsService {
                          LEFT JOIN EC_DOMAIN_LINK STOD ON STOD.DEST_DOMAIN_ID = DTOS.SOURCE_DOMAIN_ID AND STOD.SOURCE_DOMAIN_ID = DTOS.DEST_DOMAIN_ID
                 WHERE DTOS.SOURCE_DOMAIN_ID = ?
                 GROUP BY NEIGHBOR.ID
-                ORDER BY RELATEDNESS DESC
+                ORDER BY RELATEDNESS DESC, RANK ASC
                 LIMIT ?
             """;
 
@@ -225,8 +225,8 @@ public class SimilarDomainsService {
                             domains.add(new SimilarDomain(
                                     new EdgeDomain(rsp.getString("DOMAIN_NAME")).toRootUrl(),
                                     id,
-                                    100 * rsp.getDouble("RELATEDNESS"),
-                                    100 * (1. - rsp.getDouble("RANK")),
+                                    Math.round(100 * rsp.getDouble("RELATEDNESS")),
+                                    Math.round(100 * (1. - rsp.getDouble("RANK"))),
                                     rsp.getBoolean("INDEXED"),
                                     rsp.getBoolean("ACTIVE"),
                                     rsp.getBoolean("HAS_SCREENSHOT"),

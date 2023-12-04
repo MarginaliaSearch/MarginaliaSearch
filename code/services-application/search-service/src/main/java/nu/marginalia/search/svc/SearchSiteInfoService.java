@@ -197,6 +197,16 @@ public class SearchSiteInfoService {
                     linking);
         }
 
+        public String getLayout() {
+            // My CSS is too weak to handle this in CSS alone, so I guess we're doing layout in Java...
+            if (similar.size() < 25) {
+                return "lopsided";
+            }
+            else {
+                return "balanced";
+            }
+        }
+
         public String query() { return "site:" + domain; }
 
         private static String domainInfoState(DomainInformation info) {

@@ -53,7 +53,7 @@
     </div>
 
 
-    <div id="similar-view">
+    <div id="similar-view" data-layout="{{layout}}">
         <div id="similar-info">
             <h2><span title="External Link">&#x1F30E;</span>&nbsp;<a rel="external noopener" href="https://{{domain}}/">{{domain}}</a></h2>
 
