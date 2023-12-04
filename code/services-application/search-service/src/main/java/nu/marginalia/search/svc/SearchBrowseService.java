@@ -52,7 +52,7 @@ public class SearchBrowseService {
     public BrowseResultSet getRelatedEntries(String word) {
         var domain = domainQueries.getDomainId(new EdgeDomain(word));
 
-        var neighbors = similarDomains.getDomainNeighborsAdjacentCosine(domain, blacklist, 256);
+        var neighbors = similarDomains.getDomainNeighborsAdjacentCosineRequireScreenshot(domain, blacklist, 256);
         neighbors.removeIf(browseResultCleaner.shouldRemoveResultPredicate());
 
         // If the results are very few, supplement with the alternative shitty algorithm

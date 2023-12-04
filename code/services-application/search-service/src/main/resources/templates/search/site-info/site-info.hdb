@@ -21,21 +21,12 @@
     <ul>
         <li {{#if info}}class="current"{{/if}}><a href="?view=info">Info</a></li>
         <li {{#if docs}}class="current"{{/if}}>{{#if known}}<a href="?view=docs">Docs</a>{{/if}}{{#unless known}}<a class="link-unavailable" title="This domain is not known by the search engine">Docs</a>{{/unless}}</li>
-        <li {{#if links}}class="current"{{/if}}><a href="?view=links">Links</a></li>
-        <li {{#if browse}}class="current"{{/if}}><a href="?view=similar">Similar</a></li>
+        <li {{#if links}}class="current"{{/if}}><a href="?view=links">Backlinks</a></li>
 
         <li {{#if report}}class="current"{{/if}}>{{#if known}}<a href="?view=report">Report</a>{{/if}}{{#unless known}}<a class="link-unavailable" title="This domain is not known by the search engine">Report</a>{{/unless}}</li>
     </ul>
 </nav>
 {{/with}}
-
-{{#if view.info}}{{#with domainInformation}}
-<section id="siteinfo">
-{{> search/site-info/site-info-screenshot}}
-{{> search/site-info/site-info-index}}
-{{> search/site-info/site-info-links}}
-</section>
-{{/with}}{{/if}}
 
 {{#if view.links}}
     <div class="infobox">
@@ -56,11 +47,118 @@
     {{>search/site-info/site-info-report}}
 {{/if}}
 
-{{#if view.similar}}
-    <div class="infobox">Showing domains similar to {{domain}}</div>
-    <section class="cards">
-        {{#each results}}{{>search/browse-result}}{{/each}}
-    </section>
+{{#if view.info}}
+    <div class="infobox">
+        A <a href="/explore/{{domain}}">visual exploration</a> mode is also available.
+    </div>
+
+
+    <div id="similar-view">
+        <div id="similar-info">
+            <h2><span title="External Link">&#x1F30E;</span>&nbsp;<a rel="external noopener" href="https://{{domain}}/">{{domain}}</a></h2>
+
+
+            <a rel="external noopener" href="https://{{domain}}/">
+            <img class="screenshot" width="300" height="225" src="/screenshot/{{domainId}}" alt="Screenshot of {{domain}}" />
+            </a>
+            {{#with domainInformation}}
+                    {{> search/site-info/site-info-index}}
+                    {{> search/site-info/site-info-links}}
+            {{/with}}
+        </div>
+
+        {{#if similar}}
+        <div id="similar-domains">
+            <h2>Similar Domains</h2>
+
+            <table class="similarity-table">
+                <tr>
+                    <th colspan="3">Meta</th>
+                    <th>Rank</th>
+                    <th>Domain</th>
+                    <th>Similarity</th>
+                </tr>
+                {{#each similar}}
+                    <tr>
+                        <td>
+                            {{#if indexed}}
+                                {{#if active}}
+                                    <span title="Indexed">&#128064;</span>
+                                {{/if}}
+                                {{#unless active}}
+                                    <span title="Problem">&#128293;</span>
+                                {{/unless}}
+                            {{/if}}
+                        </td>
+                        <td>
+                            {{#if screenshot}}&#x1f4f7;{{/if}}
+                        </td>
+                        <td>
+                            <span title="{{linkType.description}}">{{{linkType}}}</span>
+                        </td>
+                        <td>
+                            <span title="{{rank}}%">{{{rankSymbols}}}</span>
+                        </td>
+                        <td>
+                            <a href="/site/{{url.domain}}?view=similar" rel="external noopener nofollow">{{url.domain}}</a></td>
+                        <td>
+                            <progress value="{{relatedness}}" max="100.0">{{relatedness}}</progress><br>
+
+                        </td>
+                    </tr>
+                {{/each}}
+            </table>
+            <p><b>Note</b>: Because two domains are considered similar does not always mean they're in
+                cahoots.   Similarity is a measure of how often they appear in the same contexts,
+                which may be an association like peas and carrots, but some pairings are also defined by their
+                contrasting opposition, like Sparta and Athens.</p>
+        </div>
+        {{/if}}
+
+        {{#if linking}}
+        <div id="similar-links">
+            <h2>Linking Domains</h2>
+
+            <table class="similarity-table">
+                <tr>
+                    <th colspan="3">Meta</th>
+                    <th>Rank</th>
+                    <th>Domain</th>
+                    <th>Similarity</th>
+                </tr>
+                {{#each linking}}
+                    <tr>
+                        <td>
+                            {{#if indexed}}
+                                {{#if active}}
+                                    <span title="Indexed">&#128064;</span>
+                                {{/if}}
+                                {{#unless active}}
+                                    <span title="Problem">&#128293;</span>
+                                {{/unless}}
+                            {{/if}}
+                        </td>
+                        <td>
+                            {{#if screenshot}}&#x1f4f7;{{/if}}
+                        </td>
+                        <td>
+                            <span title="{{linkType.description}}">{{{linkType}}}</span>
+                        </td>
+                        <td>
+                            <span title="{{rank}}%">{{{rankSymbols}}}</span>
+                        </td>
+                        <td>
+                            <a href="/site/{{url.domain}}?view=similar" rel="external noopener nofollow">{{url.domain}}</a></td>
+                        <td>
+                            <progress value="{{relatedness}}" max="100.0">{{relatedness}}</progress><br>
+
+                        </td>
+                    </tr>
+                {{/each}}
+            </table>
+        </div>
+        {{/if}}
+    </div>
 {{/if}}
 
 {{>search/parts/search-footer}}

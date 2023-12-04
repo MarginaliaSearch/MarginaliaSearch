@@ -27,7 +27,7 @@ public class DbBrowseDomainsSimilarOldAlgo {
         final Set<BrowseResult> domains = new HashSet<>(count*3);
 
         final String q = """
-                            SELECT EC_DOMAIN.ID AS NEIGHBOR_ID, DOMAIN_NAME, COUNT(*) AS CNT 
+                            SELECT EC_DOMAIN.ID AS NEIGHBOR_ID, DOMAIN_NAME, COUNT(*) AS CNT, INDEXED
                             FROM EC_DOMAIN_NEIGHBORS 
                             INNER JOIN EC_DOMAIN ON NEIGHBOR_ID=EC_DOMAIN.ID 
                             INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID 
@@ -54,14 +54,14 @@ public class DbBrowseDomainsSimilarOldAlgo {
                     String domain = rsp.getString(2);
 
                     if (!blacklist.isBlacklisted(id)) {
-                        domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id, 0));
+                        domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id, 0, rsp.getBoolean("INDEXED")));
                     }
                 }
             }
 
             if (domains.size() < count/2) {
                 final String q2 = """
-                        SELECT EC_DOMAIN.ID, DOMAIN_NAME
+                        SELECT EC_DOMAIN.ID, DOMAIN_NAME, INDEXED
                         FROM EC_DOMAIN
                         INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID 
                         INNER JOIN EC_DOMAIN_LINK B ON DEST_DOMAIN_ID=EC_DOMAIN.ID 
@@ -83,7 +83,7 @@ public class DbBrowseDomainsSimilarOldAlgo {
                         String domain = rsp.getString(2);
 
                         if (!blacklist.isBlacklisted(id)) {
-                            domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id, 0));
+                            domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id, 0, rsp.getBoolean("INDEXED")));
                         }
                     }
                 }
@@ -91,7 +91,7 @@ public class DbBrowseDomainsSimilarOldAlgo {
 
             if (domains.size() < count/2) {
                 final String q3 = """
-                    SELECT EC_DOMAIN.ID, DOMAIN_NAME
+                    SELECT EC_DOMAIN.ID, DOMAIN_NAME, INDEXED
                     FROM EC_DOMAIN
                     INNER JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID
                     INNER JOIN EC_DOMAIN_LINK B ON B.SOURCE_DOMAIN_ID=EC_DOMAIN.ID
@@ -115,7 +115,7 @@ public class DbBrowseDomainsSimilarOldAlgo {
                         String domain = rsp.getString(2);
 
                         if (!blacklist.isBlacklisted(id)) {
-                            domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id, 0));
+                            domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id, 0, rsp.getBoolean("INDEXED")));
                         }
                     }
                 }
@@ -128,38 +128,5 @@ public class DbBrowseDomainsSimilarOldAlgo {
         return new ArrayList<>(domains);
     }
 
-    public List<BrowseResult> getRandomDomains(int count, DomainBlacklist blacklist, int set) {
-
-        final String q = """
-                SELECT DOMAIN_ID, DOMAIN_NAME
-                FROM EC_RANDOM_DOMAINS
-                INNER JOIN EC_DOMAIN ON EC_DOMAIN.ID=DOMAIN_ID
-                WHERE STATE<2
-                AND DOMAIN_SET=?
-                AND DOMAIN_ALIAS IS NULL
-                ORDER BY RAND()
-                LIMIT ?
-                """;
-        List<BrowseResult> domains = new ArrayList<>(count);
-        try (var conn = dataSource.getConnection()) {
-            try (var stmt = conn.prepareStatement(q)) {
-                stmt.setInt(1, set);;
-                stmt.setInt(2, count);
-                var rsp = stmt.executeQuery();
-                while (rsp.next()) {
-                    int id = rsp.getInt(1);
-                    String domain = rsp.getString(2);
-
-                    if (!blacklist.isBlacklisted(id)) {
-                        domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id, 0));
-                    }
-                }
-            }
-        }
-        catch (SQLException ex) {
-            logger.error("SQL error", ex);
-        }
-        return domains;
-    }
 
 }

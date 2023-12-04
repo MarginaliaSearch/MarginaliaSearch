@@ -1,4 +1,3 @@
-<section id="index-info">
 <h2>Indexing Information</h2>
 {{#if domainState.blacklisted}}
     {{>search/site-info/site-info-index-blacklisted}}
@@ -22,4 +21,3 @@ It may take up to a month before it is indexed.
 {{#if domainState.indexed}}
  {{>search/site-info/site-info-index-indexed}}
 {{/if}}
-</section>

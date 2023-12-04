@@ -12,6 +12,15 @@ $visited: #fcc;
 * {
   box-sizing: border-box;
 }
+h1 a, h2 a {
+  color: $fg-light;
+}
+h1 a:visited, h2 a:visited {
+  color: $visited;
+}
+progress {
+  width: 10ch;
+}
 
 body {
   background-color: $nicotine-light;
@@ -341,6 +350,49 @@ footer {
   grid-template-columns: auto max-content;
   grid-gap: 1ch;
   align-items: start;
+}
+
+
+#similar-view {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    grid-gap: 1ch;
+    align-content: start;
+    justify-content: start;
+    align-items: start;
+  table {
+    th {
+      text-align: left;
+    }
+  }
+  .screenshot {
+    width: 100%;
+    height: auto;
+  }
+}
+
+#similar-info {
+    @extend .dialog;
+}
+
+#similar-domains {
+    grid-row: span 2;
+
+    @extend .dialog;
+}
+
+#similar-links {
+    @extend .dialog;
+}
+
+@media (max-device-width: 900px) {
+  #similar-view {
+    display: block;
+    * {
+      margin-bottom: 1ch;
+    }
+  }
 }
 
 #search-box {

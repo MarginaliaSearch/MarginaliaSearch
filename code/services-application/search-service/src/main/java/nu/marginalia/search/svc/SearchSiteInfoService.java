@@ -1,9 +1,9 @@
 package nu.marginalia.search.svc;
+
 import com.google.inject.Inject;
-import nu.marginalia.browse.model.BrowseResult;
-import nu.marginalia.browse.model.BrowseResultSet;
 import nu.marginalia.client.Context;
 import nu.marginalia.db.DbDomainQueries;
+import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
@@ -12,38 +12,37 @@ import nu.marginalia.search.model.DomainInformation;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.siteinfo.DomainInformationService;
 import nu.marginalia.search.svc.SearchFlagSiteService.FlagSiteFormData;
-import spark.*;
+import spark.Request;
+import spark.Response;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.OptionalInt;
 
 public class SearchSiteInfoService {
 
     private final SearchOperator searchOperator;
+    private final SimilarDomainsService similarDomains;
     private final DomainInformationService domainInformationService;
     private final SearchFlagSiteService flagSiteService;
     private final DbDomainQueries domainQueries;
-    private final SearchBrowseService browseService;
     private final MustacheRenderer<Object> renderer;
 
     @Inject
     public SearchSiteInfoService(SearchOperator searchOperator,
+                                 SimilarDomainsService similarDomains,
                                  DomainInformationService domainInformationService,
                                  RendererFactory rendererFactory,
                                  SearchFlagSiteService flagSiteService,
-                                 DbDomainQueries domainQueries, SearchBrowseService browseService) throws IOException {
+                                 DbDomainQueries domainQueries) throws IOException {
         this.searchOperator = searchOperator;
+        this.similarDomains = similarDomains;
         this.domainInformationService = domainInformationService;
         this.flagSiteService = flagSiteService;
         this.domainQueries = domainQueries;
 
         this.renderer = rendererFactory.renderer("search/site-info/site-info");
-        this.browseService = browseService;
 
     }
 
@@ -60,10 +59,9 @@ public class SearchSiteInfoService {
         var model = switch (view) {
             case "links" -> listLinks(ctx, domainName);
             case "docs" -> listDocs(ctx, domainName);
-            case "info" -> siteInfo(ctx, domainName);
-            case "similar" -> listSimilar(ctx, domainName);
+            case "info" -> listInfo(ctx, domainName);
             case "report" -> reportSite(ctx, domainName);
-            default -> siteInfo(ctx, domainName);
+            default -> listInfo(ctx, domainName);
         };
 
         return renderer.renderInto(response, model);
@@ -108,21 +106,6 @@ public class SearchSiteInfoService {
                 false);
     }
 
-    private SiteInfo siteInfo(Context ctx, String domainName) {
-        OptionalInt id = domainQueries.tryGetDomainId(new EdgeDomain(domainName));
-
-        if (id.isEmpty()) {
-            return new SiteInfo(domainName, -1, null, dummyInformation(domainName));
-        }
-
-        String screenshotPath = "/screenshot/"+id.getAsInt();
-        DomainInformation domainInfo = domainInformationService
-                .domainInfo(domainName)
-                .orElseGet(() -> dummyInformation(domainName));
-
-        return new SiteInfo(domainName, id.getAsInt(), screenshotPath, domainInfo);
-    }
-
     private DomainInformation dummyInformation(String domainName) {
         return DomainInformation.builder()
                 .domain(new EdgeDomain(domainName))
@@ -136,61 +119,30 @@ public class SearchSiteInfoService {
                 domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1),
                 searchOperator.doBacklinkSearch(ctx, domainName));
     }
-    private SimilarSites listSimilar(Context ctx, String domainName) {
 
-        return new SimilarSites(domainName,
-                domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1),
-                browseService.getRelatedEntries(domainName));
+    private SiteInfoWithContext listInfo(Context ctx, String domainName) {
+
+        final int domainId = domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1);
+
+        final DomainInformation domainInfo = domainInformationService.domainInfo(domainName)
+                .orElseGet(() -> dummyInformation(domainName));
+
+        final List<SimilarDomainsService.SimilarDomain> similarSet =
+                similarDomains.getSimilarDomains(domainId, 100);
+        final List<SimilarDomainsService.SimilarDomain> linkingDomains =
+                similarDomains.getLinkingDomains(domainId, 100);
+
+        return new SiteInfoWithContext(domainName,
+                domainId,
+                domainInfo,
+                similarSet,
+                linkingDomains
+        );
     }
     private Docs listDocs(Context ctx, String domainName) {
         return new Docs(domainName,
                 domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1),
                 searchOperator.doSiteSearch(ctx, domainName));
-    }
-
-    public record SiteInfo(Map<String, Boolean> view,
-                           Map<String, Boolean> domainState,
-                           long domainId,
-                           String domain,
-                           @Nullable String screenshotUrl,
-                           DomainInformation domainInformation)
-    {
-        public SiteInfo(String domain,
-                        long domainId,
-                        @Nullable String screenshotUrl,
-                        DomainInformation domainInformation)
-        {
-            this(Map.of("info", true),
-                 Map.of(domainInfoState(domainInformation), true),
-                 domainId,
-                 domain,
-                 screenshotUrl,
-                 domainInformation);
-        }
-
-        private static String domainInfoState(DomainInformation info) {
-            if (info.isBlacklisted()) {
-                return "blacklisted";
-            }
-            if (!info.isUnknownDomain() && info.isSuggestForCrawling()) {
-                return "suggestForCrawling";
-            }
-            if (info.isInCrawlQueue()) {
-                return "inCrawlQueue";
-            }
-            if (info.isUnknownDomain()) {
-                return "unknownDomain";
-            }
-            else {
-                return "indexed";
-            }
-        }
-
-        public String query() { return "site:" + domain; }
-
-        public boolean isKnown() {
-            return domainId > 0;
-        }
     }
 
     public record Docs(Map<String, Boolean> view,
@@ -222,12 +174,48 @@ public class SearchSiteInfoService {
         }
     }
 
-    public record SimilarSites(Map<String, Boolean> view, String domain, long domainId, List<BrowseResult> results) {
-        public SimilarSites(String domain, long domainId, BrowseResultSet results) {
-            this(Map.of("similar", true), domain, domainId, new ArrayList<>(results.results()));
+    public record SiteInfoWithContext(Map<String, Boolean> view,
+                                      Map<String, Boolean> domainState,
+                                      String domain,
+                                      long domainId,
+                                      DomainInformation domainInformation,
+                                      List<SimilarDomainsService.SimilarDomain> similar,
+                                      List<SimilarDomainsService.SimilarDomain> linking) {
+        public SiteInfoWithContext(String domain,
+                                   long domainId,
+                                   DomainInformation domainInformation,
+                                   List<SimilarDomainsService.SimilarDomain> similar,
+                                   List<SimilarDomainsService.SimilarDomain> linking
+                            )
+        {
+            this(Map.of("info", true),
+                    Map.of(domainInfoState(domainInformation), true),
+                    domain,
+                    domainId,
+                    domainInformation,
+                    similar,
+                    linking);
         }
 
-        public String query() { return "similar:" + domain; }
+        public String query() { return "site:" + domain; }
+
+        private static String domainInfoState(DomainInformation info) {
+            if (info.isBlacklisted()) {
+                return "blacklisted";
+            }
+            if (!info.isUnknownDomain() && info.isSuggestForCrawling()) {
+                return "suggestForCrawling";
+            }
+            if (info.isInCrawlQueue()) {
+                return "inCrawlQueue";
+            }
+            if (info.isUnknownDomain()) {
+                return "unknownDomain";
+            }
+            else {
+                return "indexed";
+            }
+        }
 
         public boolean isKnown() {
             return domainId > 0;

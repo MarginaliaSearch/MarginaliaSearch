@@ -2,7 +2,10 @@ package nu.marginalia.browse.model;
 
 import nu.marginalia.model.EdgeUrl;
 
-public record BrowseResult (EdgeUrl url, int domainId, double relatedness) {
+public record BrowseResult (EdgeUrl url,
+                            int domainId,
+                            double relatedness,
+                            boolean indexed) {
 
     public String domainHash() {
         var domain = url.domain;
