@@ -2,264 +2,331 @@ package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
-import gnu.trove.map.TIntDoubleMap;
+import gnu.trove.list.TIntList;
+import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntDoubleHashMap;
+import gnu.trove.map.hash.TIntIntHashMap;
+import gnu.trove.map.hash.TLongDoubleHashMap;
 import gnu.trove.set.TIntSet;
-import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TIntHashSet;
-import gnu.trove.set.hash.TLongHashSet;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.BitSet;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.stream.IntStream;
 
 public class SimilarDomainsService {
 
     private static final Logger logger = LoggerFactory.getLogger(SimilarDomainsService.class);
     private final HikariDataSource dataSource;
 
+    private volatile TIntIntHashMap domainIdToIdx = new TIntIntHashMap(100_000);
+    private volatile int[] domainIdxToId;
+
+    public volatile TIntDoubleHashMap[] relatedDomains;
+    public volatile TIntList[] domainNeighbors = null;
+    public volatile TIntList[] linkStoD = null;
+    public volatile TIntList[] linkDtoS = null;
+    public volatile BitSet screenshotDomains = null;
+    public volatile BitSet activeDomains = null;
+    public volatile BitSet indexedDomains = null;
+    public volatile double[] domainRanks = null;
+    public volatile String[] domainNames = null;
+
     @Inject
     public SimilarDomainsService(HikariDataSource dataSource) {
         this.dataSource = dataSource;
+
+        Executors.newSingleThreadExecutor().submit(this::init);
     }
 
-    public List<SimilarDomain> getSimilarDomains(int domainId, int count) {
-        // Tell me you've worked in enterprise software without telling me you've worked in enterprise software
-        String q1 = """
-                    SELECT
-                        NEIGHBOR.ID AS ID,
-                        NEIGHBOR.DOMAIN_NAME AS DOMAIN_NAME,
-                        SCREENSHOT.DOMAIN_NAME IS NOT NULL AS HAS_SCREENSHOT,
-                        NODE_AFFINITY > 0 AS INDEXED,
-                        STATE='ACTIVE' AS ACTIVE,
-                        RELATEDNESS,
-                        RANK,
-                        STOD.ID IS NOT NULL AS LINK_STOD,
-                        DTOS.ID IS NOT NULL AS LINK_DTOS
-                    FROM EC_DOMAIN_NEIGHBORS_2
-                    INNER JOIN EC_DOMAIN AS NEIGHBOR ON EC_DOMAIN_NEIGHBORS_2.NEIGHBOR_ID = NEIGHBOR.ID
-                    LEFT JOIN DATA_DOMAIN_SCREENSHOT AS SCREENSHOT ON NEIGHBOR.DOMAIN_NAME = SCREENSHOT.DOMAIN_NAME
-                    LEFT JOIN EC_DOMAIN_LINK STOD ON STOD.SOURCE_DOMAIN_ID = NEIGHBOR.ID AND STOD.DEST_DOMAIN_ID =   EC_DOMAIN_NEIGHBORS_2.DOMAIN_ID
-                    LEFT JOIN EC_DOMAIN_LINK DTOS ON DTOS.DEST_DOMAIN_ID   = NEIGHBOR.ID AND DTOS.SOURCE_DOMAIN_ID = EC_DOMAIN_NEIGHBORS_2.DOMAIN_ID
-                    WHERE DOMAIN_ID = ?
-                    ORDER BY RELATEDNESS DESC, RANK ASC
-                    LIMIT ?
-                    """;
-        String q2 = """
-                    SELECT
-                        NEIGHBOR.ID AS ID,
-                        NEIGHBOR.DOMAIN_NAME AS DOMAIN_NAME,
-                        SCREENSHOT.DOMAIN_NAME IS NOT NULL AS HAS_SCREENSHOT,
-                        NODE_AFFINITY > 0 AS INDEXED,
-                        STATE='ACTIVE' AS ACTIVE,
-                        RELATEDNESS,
-                        RANK,
-                        STOD.ID IS NOT NULL AS LINK_STOD,
-                        DTOS.ID IS NOT NULL AS LINK_DTOS
-                    FROM EC_DOMAIN_NEIGHBORS_2
-                    INNER JOIN EC_DOMAIN AS NEIGHBOR ON EC_DOMAIN_NEIGHBORS_2.DOMAIN_ID = NEIGHBOR.ID
-                    LEFT JOIN DATA_DOMAIN_SCREENSHOT AS SCREENSHOT ON NEIGHBOR.DOMAIN_NAME = SCREENSHOT.DOMAIN_NAME
-                    LEFT JOIN EC_DOMAIN_LINK STOD ON STOD.SOURCE_DOMAIN_ID = NEIGHBOR.ID AND STOD.DEST_DOMAIN_ID = EC_DOMAIN_NEIGHBORS_2.NEIGHBOR_ID
-                    LEFT JOIN EC_DOMAIN_LINK DTOS ON DTOS.DEST_DOMAIN_ID = NEIGHBOR.ID AND DTOS.SOURCE_DOMAIN_ID = EC_DOMAIN_NEIGHBORS_2.NEIGHBOR_ID
-                    WHERE NEIGHBOR_ID = ?
-                    ORDER BY RELATEDNESS DESC, RANK ASC
-                    LIMIT ?
-            """;
+    private void init() {
 
-        var domains = executeSimilarDomainsQueries(domainId, count, q1, q2);
+        logger.info("Loading similar domains data... ");
+        try (var connection = dataSource.getConnection()) {
+            try (var stmt = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
+
+                stmt.setFetchSize(1000);
+                ResultSet rs;
+
+                rs = stmt.executeQuery("SELECT ID FROM EC_DOMAIN");
+                while (rs.next()) {
+                    int id = rs.getInt(1);
+                    domainIdToIdx.put(id, domainIdToIdx.size());
+                }
+                domainIdxToId = new int[domainIdToIdx.size()];
+                domainIdToIdx.forEachEntry((id, idx) -> {
+                    domainIdxToId[idx] = id;
+                    return true;
+                });
+                domainRanks = new double[domainIdToIdx.size()];
+                domainNames = new String[domainIdToIdx.size()];
+                domainNeighbors = new TIntList[domainIdToIdx.size()];
+                linkStoD = new TIntList[domainIdToIdx.size()];
+                linkDtoS = new TIntList[domainIdToIdx.size()];
+                screenshotDomains = new BitSet(domainIdToIdx.size());
+                activeDomains = new BitSet(domainIdToIdx.size());
+                indexedDomains = new BitSet(domainIdToIdx.size());
+                relatedDomains = new TIntDoubleHashMap[domainIdToIdx.size()];
+
+                logger.info("Loaded {} domain IDs", domainIdToIdx.size());
+
+                rs = stmt.executeQuery("""
+                    SELECT DOMAIN_ID, NEIGHBOR_ID, RELATEDNESS FROM EC_DOMAIN_NEIGHBORS_2
+                    """);
+
+                while (rs.next()) {
+                    int did = rs.getInt(1);
+                    int nid = rs.getInt(2);
+
+                    int didx = domainIdToIdx.get(did);
+                    int nidx = domainIdToIdx.get(nid);
+
+                    int lowerIndex = Math.min(didx, nidx);
+                    int higherIndex = Math.max(didx, nidx);
+
+                    if (relatedDomains[lowerIndex] == null)
+                        relatedDomains[lowerIndex] = new TIntDoubleHashMap(32);
+                    relatedDomains[lowerIndex].put(higherIndex, Math.round(100 * rs.getDouble(3)));
+
+                    if (domainNeighbors[didx] == null)
+                        domainNeighbors[didx] = new TIntArrayList(32);
+                    if (domainNeighbors[nidx] == null)
+                        domainNeighbors[nidx] = new TIntArrayList(32);
+
+                    domainNeighbors[didx].add(nidx);
+                    domainNeighbors[nidx].add(didx);
+                }
+
+                logger.info("Loaded {} related domains", relatedDomains.length);
+
+                rs = stmt.executeQuery("""
+                    SELECT SOURCE_DOMAIN_ID, DEST_DOMAIN_ID FROM EC_DOMAIN_LINK
+                    """);
+
+                while (rs.next()) {
+                    int source = rs.getInt(1);
+                    int dest = rs.getInt(2);
+
+                    int sourceIdx = domainIdToIdx.get(source);
+                    int destIdx = domainIdToIdx.get(dest);
+
+                    if (linkStoD[sourceIdx] == null)
+                        linkStoD[sourceIdx] = new TIntArrayList(32);
+                    if (linkDtoS[destIdx] == null)
+                        linkDtoS[destIdx] = new TIntArrayList(32);
+
+                    linkStoD[sourceIdx].add(destIdx);
+                    linkDtoS[destIdx].add(sourceIdx);
+
+                }
+                logger.info("Loaded links...");
+
+                rs = stmt.executeQuery("""
+                    SELECT EC_DOMAIN.ID,
+                           RANK,
+                           STATE='ACTIVE' AS ACTIVE,
+                           NODE_AFFINITY > 0 AS INDEXED,
+                           EC_DOMAIN.DOMAIN_NAME AS DOMAIN_NAME
+                    FROM EC_DOMAIN
+                    """);
+
+                while (rs.next()) {
+                    final int id = rs.getInt("ID");
+                    final int idx = domainIdToIdx.get(id);
+
+                    domainRanks[idx] = Math.round(100 * (1. - rs.getDouble("RANK")));
+                    domainNames[idx] = rs.getString("DOMAIN_NAME");
+
+                    if (rs.getBoolean("INDEXED"))
+                        indexedDomains.set(idx);
+
+                    if (rs.getBoolean("ACTIVE"))
+                        activeDomains.set(idx);
+                }
+
+
+                rs = stmt.executeQuery("""
+                    SELECT EC_DOMAIN.ID
+                    FROM EC_DOMAIN INNER JOIN DATA_DOMAIN_SCREENSHOT AS SCREENSHOT ON EC_DOMAIN.DOMAIN_NAME = SCREENSHOT.DOMAIN_NAME
+                    """);
+
+                while (rs.next()) {
+                    final int id = rs.getInt(1);
+                    final int idx = domainIdToIdx.get(id);
+
+                    screenshotDomains.set(idx);
+                }
+
+                logger.info("Loaded {} domains", domainRanks.length);
+                logger.info("All done!");
+            }
+        }
+        catch (SQLException throwables) {
+            logger.warn("Failed to get domain neighbors for domain", throwables);
+        }
+    }
+
+    double getRelatedness(int a, int b) {
+        int lowerIndex = Math.min(domainIdToIdx.get(a), domainIdToIdx.get(b));
+        int higherIndex = Math.max(domainIdToIdx.get(a), domainIdToIdx.get(b));
+
+        if (relatedDomains[lowerIndex] == null)
+            return 0;
+
+        return relatedDomains[lowerIndex].get(higherIndex);
+    }
+
+
+    public List<SimilarDomain> getSimilarDomains(int domainId, int count) {
+        int domainIdx = domainIdToIdx.get(domainId);
+
+        TIntList allIdsList = domainNeighbors[domainIdx];
+        if (allIdsList == null)
+            return List.of();
+        TIntList allIds = new TIntArrayList(new TIntHashSet(allIdsList));
+
+        TIntSet linkingIdsDtoS = getLinkingIdsDToS(domainIdx);
+        TIntSet linkingIdsStoD = getLinkingIdsSToD(domainIdx);
+
+        int[] idsArray = new int[allIds.size()];
+        int[] idxArray = new int[idsArray.length];
+
+        for (int i = 0; i < idsArray.length; i++) {
+            idxArray[i] = allIds.get(i);
+            idsArray[i] = domainIdxToId[allIds.get(i)];
+        }
+
+        double[] relatednessArray = new double[idsArray.length];
+        for (int i = 0; i < idsArray.length; i++) {
+            relatednessArray[i] = getRelatedness(domainId, idsArray[i]);
+        }
+
+        int[] resultIds = IntStream.range(0, idsArray.length)
+                .boxed()
+                .sorted((id1, id2) -> {
+                    int diff = Double.compare(relatednessArray[id1], relatednessArray[id2]);
+                    if (diff != 0)
+                        return -diff;
+                    return Integer.compare(idsArray[id1], idsArray[id2]);
+                })
+                .mapToInt(idx -> idxArray[idx])
+                .limit(count)
+                .toArray();
+
+        List<SimilarDomain> domains = new ArrayList<>();
+        for (int idx : resultIds) {
+            int id = domainIdxToId[idx];
+
+            domains.add(new SimilarDomain(
+                    new EdgeDomain(domainNames[idx]).toRootUrl(),
+                    id,
+                    getRelatedness(domainId, id),
+                    domainRanks[idx],
+                    indexedDomains.get(idx),
+                    activeDomains.get(idx),
+                    screenshotDomains.get(idx),
+                    LinkType.find(
+                            linkingIdsStoD.contains(idx),
+                            linkingIdsDtoS.contains(idx)
+                    )
+            ));
+        }
 
         domains.removeIf(d -> d.url.domain.toString().length() > 32);
-
-        domains.sort(Comparator.comparing(SimilarDomain::relatedness).reversed().thenComparing(SimilarDomain::domainId));
 
         return domains;
     }
 
-    private TIntSet getLinkingIdsDToS(int domainId) {
-        String idQuery = """
-                SELECT DEST_DOMAIN_ID AS ID FROM EC_DOMAIN_LINK WHERE SOURCE_DOMAIN_ID=?
-                """;
-
-        TIntSet ids = new TIntHashSet();
-
-        try (var connection = dataSource.getConnection()) {
-            try (var stmt1 = connection.prepareStatement(idQuery)) {
-
-                stmt1.setInt(1, domainId);
-                var rsp = stmt1.executeQuery();
-
-                while (rsp.next()) {
-                    ids.add(rsp.getInt(1));
-                }
-            }
-        }
-        catch (SQLException throwables) {
-            logger.warn("Failed to get domain neighbors for domain", throwables);
-        }
-        return ids;
-    }
-    private TIntSet getLinkingIdsSToD(int domainId) {
-        String idQuery = """
-                SELECT SOURCE_DOMAIN_ID AS ID FROM EC_DOMAIN_LINK WHERE DEST_DOMAIN_ID=?
-                """;
-
-        TIntSet ids = new TIntHashSet();
-
-        try (var connection = dataSource.getConnection()) {
-            try (var stmt1 = connection.prepareStatement(idQuery)) {
-
-                stmt1.setInt(1, domainId);
-                var rsp = stmt1.executeQuery();
-
-                while (rsp.next()) {
-                    ids.add(rsp.getInt(1));
-                }
-            }
-        }
-        catch (SQLException throwables) {
-            logger.warn("Failed to get domain neighbors for domain", throwables);
-        }
-        return ids;
+    private TIntSet getLinkingIdsDToS(int domainIdx) {
+        var items = linkDtoS[domainIdx];
+        if (items == null)
+            return new TIntHashSet();
+        return new TIntHashSet(items);
     }
 
-    private TIntDoubleMap getRelatedness(int selfId, TIntSet ids) {
-        String idQuery = """
-            SELECT RELATEDNESS FROM WMSA_prod.EC_DOMAIN_NEIGHBORS_2 WHERE DOMAIN_ID=? AND NEIGHBOR_ID=?
-            """;
-
-        TIntDoubleMap ret = new TIntDoubleHashMap(ids.size());
-
-        try (var connection = dataSource.getConnection()) {
-            try (var stmt = connection.prepareStatement(idQuery)) {
-                for (var id : ids.toArray()) {
-                    if (selfId > id) {
-                        stmt.setInt(1, selfId);
-                        stmt.setInt(2, id);
-                    }
-                    else {
-                        stmt.setInt(1, id);
-                        stmt.setInt(2, selfId);
-                    }
-
-                    var rsp = stmt.executeQuery();
-                    if (rsp.next()) {
-                        double relatedness = rsp.getDouble(1);
-                        ret.put(id, relatedness);
-                    }
-
-                }
-            }
-        }
-        catch (SQLException throwables) {
-            logger.warn("Failed to get domain neighbors for domain", throwables);
-        }
-
-        return ret;
+    private TIntSet getLinkingIdsSToD(int domainIdx) {
+        var items = linkStoD[domainIdx];
+        if (items == null)
+            return new TIntHashSet();
+        return new TIntHashSet(items);
     }
 
     public List<SimilarDomain> getLinkingDomains(int domainId, int count) {
-        TIntSet linkingIdsDtoS = getLinkingIdsDToS(domainId);
-        TIntSet linkingIdsStoD = getLinkingIdsSToD(domainId);
+        int domainIdx = domainIdToIdx.get(domainId);
 
-        TIntSet allIds = new TIntHashSet(linkingIdsDtoS.size() + linkingIdsStoD.size());
-        allIds.addAll(linkingIdsDtoS);
-        allIds.addAll(linkingIdsStoD);
+        TIntSet linkingIdsDtoS = getLinkingIdsDToS(domainIdx);
+        TIntSet linkingIdsStoD = getLinkingIdsSToD(domainIdx);
 
-        TIntDoubleMap relatedness = getRelatedness(domainId, allIds);
+        TIntSet allIdx = new TIntHashSet(linkingIdsDtoS.size() + linkingIdsStoD.size());
+        allIdx.addAll(linkingIdsDtoS);
+        allIdx.addAll(linkingIdsStoD);
 
-        List<SimilarDomain> domains = new ArrayList();
-
-        try (var connection = dataSource.getConnection()) {
-            try (var stmt = connection.prepareStatement("""
-                SELECT EC_DOMAIN.DOMAIN_NAME,
-                       SCREENSHOT.DOMAIN_NAME IS NOT NULL AS HAS_SCREENSHOT,
-                       NODE_AFFINITY > 0 AS INDEXED,
-                       STATE='ACTIVE' AS ACTIVE,
-                       RANK
-                FROM EC_DOMAIN
-                LEFT JOIN DATA_DOMAIN_SCREENSHOT AS SCREENSHOT
-                     ON EC_DOMAIN.DOMAIN_NAME = SCREENSHOT.DOMAIN_NAME
-                WHERE ID=?
-            """)) {
-                for (int id : allIds.toArray()) {
-                    stmt.setInt(1, id);
-                    var rsp = stmt.executeQuery();
-                    if (rsp.next()) {
-                        domains.add(new SimilarDomain(
-                                new EdgeDomain(rsp.getString("DOMAIN_NAME")).toRootUrl(),
-                                id,
-                                Math.round(100 * relatedness.get(id)),
-                                Math.round(100 * (1. - rsp.getDouble("RANK"))),
-                                rsp.getBoolean("INDEXED"),
-                                rsp.getBoolean("ACTIVE"),
-                                rsp.getBoolean("HAS_SCREENSHOT"),
-                                LinkType.find(
-                                        linkingIdsStoD.contains(id),
-                                        linkingIdsDtoS.contains(id)
-                                )
-                        ));
-                    }
-                }
-            }
+        int[] idxArray = allIdx.toArray();
+        int[] idsArray = new int[idxArray.length];
+        for (int i = 0; i < idsArray.length; i++) {
+            idsArray[i] = domainIdxToId[idxArray[i]];
         }
-        catch (SQLException throwables) {
-            logger.warn("Failed to get domain neighbors for domain", throwables);
+
+        double[] ranksArray = new double[idsArray.length];
+        for (int i = 0; i < idxArray.length; i++) {
+            ranksArray[i] = domainRanks[idxArray[i]];
+        }
+        double[] relatednessArray = new double[idsArray.length];
+        for (int i = 0; i < idsArray.length; i++) {
+            relatednessArray[i] = getRelatedness(domainId, idsArray[i]);
+        }
+
+        int[] linkinessArray = new int[idxArray.length];
+        for (int i = 0; i < idxArray.length; i++) {
+            linkinessArray[i] = (linkingIdsDtoS.contains(idxArray[i]) ? 1 : 0) + (linkingIdsStoD.contains(idxArray[i]) ? 1 : 0);
+        }
+
+        int[] resultIds = IntStream.range(0, idsArray.length)
+                .boxed()
+                .sorted((id1, id2) -> {
+                    int diff = Double.compare(ranksArray[id1], ranksArray[id2]);
+                    if (diff != 0)
+                        return -diff;
+                    diff = Double.compare(relatednessArray[id1], relatednessArray[id2]);
+                    if (diff != 0)
+                        return -diff;
+                    diff = Integer.compare(linkinessArray[id1], linkinessArray[id2]);
+                    if (diff != 0)
+                        return -diff;
+                    return Integer.compare(idsArray[id1], idsArray[id2]);
+                })
+                .mapToInt(idx -> idsArray[idx])
+                .limit(count)
+                .toArray();
+
+        List<SimilarDomain> domains = new ArrayList<>();
+        for (int id : resultIds) {
+            int idx = domainIdToIdx.get(id);
+
+            domains.add(new SimilarDomain(
+                    new EdgeDomain(domainNames[idx]).toRootUrl(),
+                    id,
+                    getRelatedness(domainId, id),
+                    domainRanks[idx],
+                    indexedDomains.get(idx),
+                    activeDomains.get(idx),
+                    screenshotDomains.get(idx),
+                    LinkType.find(
+                            linkingIdsStoD.contains(idx),
+                            linkingIdsDtoS.contains(idx)
+                    )
+            ));
         }
 
         domains.removeIf(d -> d.url.domain.toString().length() > 32);
-
-        domains.sort(Comparator.comparing(SimilarDomain::rank)
-                .thenComparing(SimilarDomain::relatedness)
-                .thenComparing(SimilarDomain::indexed).reversed()
-                .thenComparing(SimilarDomain::domainId));
-        if (domains.size() > count)
-            domains.subList(count, domains.size()).clear();
-
-        return domains;
-    }
-
-    private List<SimilarDomain> executeSimilarDomainsQueries(int domainId, int count, String... queries) {
-        List<SimilarDomain> domains = new ArrayList<>(count);
-        TIntHashSet seen = new TIntHashSet();
-
-        try (var connection = dataSource.getConnection()) {
-
-            for (var query : queries) {
-                try (var stmt = connection.prepareStatement(query)) {
-                    stmt.setFetchSize(count);
-                    stmt.setInt(1, domainId);
-                    stmt.setInt(2, count);
-                    var rsp = stmt.executeQuery();
-                    while (rsp.next() && domains.size() < count * 2) {
-                        int id = rsp.getInt("ID");
-
-                        if (seen.add(id)) {
-                            boolean linkStod = rsp.getBoolean("LINK_STOD");
-                            boolean linkDtos = rsp.getBoolean("LINK_DTOS");
-                            LinkType linkType = LinkType.find(linkStod, linkDtos);
-
-                            domains.add(new SimilarDomain(
-                                    new EdgeDomain(rsp.getString("DOMAIN_NAME")).toRootUrl(),
-                                    id,
-                                    Math.round(100 * rsp.getDouble("RELATEDNESS")),
-                                    Math.round(100 * (1. - rsp.getDouble("RANK"))),
-                                    rsp.getBoolean("INDEXED"),
-                                    rsp.getBoolean("ACTIVE"),
-                                    rsp.getBoolean("HAS_SCREENSHOT"),
-                                    linkType
-                            ));
-                        }
-                    }
-                }
-            }
-        } catch (SQLException throwables) {
-            logger.warn("Failed to get domain neighbors for domain", throwables);
-        }
 
         return domains;
     }

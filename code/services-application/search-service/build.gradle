@@ -50,6 +50,7 @@ dependencies {
 
     implementation libs.bundles.slf4j
 
+    implementation libs.roaringbitmap
     implementation libs.prometheus
     implementation libs.notnull
     implementation libs.guice
