@@ -413,6 +413,19 @@ footer {
   }
 }
 
+@media (max-device-width: 840px) {
+  section.cards {
+    display: block;
+    .card {
+      margin-bottom: 2ch;
+      img {
+        width: 100% !important;
+        height: auto;
+      }
+    }
+  }
+}
+
 #search-box {
   @extend .shadowbox;
 

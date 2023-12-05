@@ -2,7 +2,7 @@
     <h2 title="{{url.domain}}">{{displayDomain}}</h2>
 
     <a href="{{url.proto}}://{{url.domain}}/">
-        <img src="/screenshot/{{domainId}}" title="{{description}}" loading="lazy"/>
+        <img src="/screenshot/{{domainId}}" title="{{description}}" loading="lazy" width="400" height="300" />
     </a>
 
     <div class="utils">
