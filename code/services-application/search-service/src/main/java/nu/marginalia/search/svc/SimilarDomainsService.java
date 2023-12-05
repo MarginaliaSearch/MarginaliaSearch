@@ -3,7 +3,6 @@ package nu.marginalia.search.svc;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import gnu.trove.set.hash.TIntHashSet;
-import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import org.slf4j.Logger;
@@ -22,77 +21,6 @@ public class SimilarDomainsService {
     @Inject
     public SimilarDomainsService(HikariDataSource dataSource) {
         this.dataSource = dataSource;
-    }
-
-    enum LinkType {
-        STOD,
-        DTOS,
-        BIDI,
-        NONE;
-
-        public static LinkType find(boolean linkStod, boolean linkDtos) {
-            if (linkDtos && linkStod)
-                return BIDI;
-            if (linkDtos)
-                return DTOS;
-            if (linkStod)
-                return STOD;
-
-            return NONE;
-        }
-
-        public String toString() {
-            return switch (this) {
-                case DTOS -> "&#8594;";
-                case STOD -> "&#8592;";
-                case BIDI -> "&#8646;";
-                case NONE -> "-";
-            };
-        }
-
-        public String getDescription() {
-            return switch (this) {
-                case STOD -> "Backward Link";
-                case DTOS -> "Forward Link";
-                case BIDI -> "Mutual Link";
-                case NONE -> "No Link";
-            };
-        }
-    };
-
-    public record SimilarDomain(EdgeUrl url,
-                                int domainId,
-                                double relatedness,
-                                double rank,
-                                boolean indexed,
-                                boolean active,
-                                boolean screenshot,
-                                LinkType linkType)
-    {
-        public String getRankSymbols() {
-            if (rank > 90) {
-                return "&#9733;&#9733;&#9733;&#9733;&#9733;";
-            }
-            if (rank > 70) {
-                return "&#9733;&#9733;&#9733;&#9733;";
-            }
-            if (rank > 50) {
-                return "&#9733;&#9733;&#9733;";
-            }
-            if (rank > 30) {
-                return "&#9733;&#9733;";
-            }
-            if (rank > 10) {
-                return "&#9733;";
-            }
-            return "";
-        }
-    }
-
-    public record SimilarDomainsSet(List<SimilarDomain> domains, String focusDomain) {
-        public SimilarDomainsSet(List<SimilarDomain> domains) {
-            this(domains, "");
-        }
     }
 
     public List<SimilarDomain> getSimilarDomains(int domainId, int count) {
@@ -144,9 +72,7 @@ public class SimilarDomainsService {
 
         return domains;
     }
-
     public List<SimilarDomain> getLinkingDomains(int domainId, int count) {
-        // Tell me you've worked in enterprise software without telling me you've worked in enterprise software
         String q1 = """
                 SELECT
                     NEIGHBOR.ID AS ID,
@@ -201,7 +127,6 @@ public class SimilarDomainsService {
 
         return domains;
     }
-
     private List<SimilarDomain> executeSimilarDomainsQueries(int domainId, int count, String... queries) {
         List<SimilarDomain> domains = new ArrayList<>(count);
         TIntHashSet seen = new TIntHashSet();
@@ -242,4 +167,73 @@ public class SimilarDomainsService {
 
         return domains;
     }
+
+    public record SimilarDomain(EdgeUrl url,
+                                int domainId,
+                                double relatedness,
+                                double rank,
+                                boolean indexed,
+                                boolean active,
+                                boolean screenshot,
+                                LinkType linkType)
+    {
+
+        public String getRankSymbols() {
+            if (rank > 90) {
+                return "&#9733;&#9733;&#9733;&#9733;&#9733;";
+            }
+            if (rank > 70) {
+                return "&#9733;&#9733;&#9733;&#9733;";
+            }
+            if (rank > 50) {
+                return "&#9733;&#9733;&#9733;";
+            }
+            if (rank > 30) {
+                return "&#9733;&#9733;";
+            }
+            if (rank > 10) {
+                return "&#9733;";
+            }
+            return "";
+        }
+    }
+
+    enum LinkType {
+        BACKWARD,
+        FOWARD,
+        BIDIRECTIONAL,
+        NONE;
+
+        public static LinkType find(boolean linkStod,
+                                    boolean linkDtos)
+        {
+            if (linkDtos && linkStod)
+                return BIDIRECTIONAL;
+            if (linkDtos)
+                return FOWARD;
+            if (linkStod)
+                return BACKWARD;
+
+            return NONE;
+        }
+
+        public String toString() {
+            return switch (this) {
+                case FOWARD -> "&#8594;";
+                case BACKWARD -> "&#8592;";
+                case BIDIRECTIONAL -> "&#8646;";
+                case NONE -> "-";
+            };
+        }
+
+        public String getDescription() {
+            return switch (this) {
+                case BACKWARD -> "Backward Link";
+                case FOWARD -> "Forward Link";
+                case BIDIRECTIONAL -> "Mutual Link";
+                case NONE -> "No Link";
+            };
+        }
+    };
+
 }
