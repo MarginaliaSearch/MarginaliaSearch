@@ -50,6 +50,8 @@ public class SearchSiteInfoService {
         String domainName = request.params("site");
         String view = request.queryParamOrDefault("view", "info");
 
+        response.type("text/html");
+
         if (null == domainName || domainName.isBlank()) {
             return null;
         }
