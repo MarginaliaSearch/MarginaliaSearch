@@ -68,6 +68,8 @@ public class SimilarDomainsService {
 
         var domains = executeSimilarDomainsQueries(domainId, count, q1, q2);
 
+        domains.removeIf(d -> d.url.domain.toString().length() > 32);
+
         domains.sort(Comparator.comparing(SimilarDomain::relatedness).reversed().thenComparing(SimilarDomain::domainId));
 
         return domains;
@@ -119,6 +121,8 @@ public class SimilarDomainsService {
             """;
 
         var domains = executeSimilarDomainsQueries(domainId, count, q1, q2);
+
+        domains.removeIf(d -> d.url.domain.toString().length() > 32);
 
         domains.sort(Comparator.comparing(SimilarDomain::rank)
                 .thenComparing(SimilarDomain::relatedness)
