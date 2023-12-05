@@ -32,6 +32,7 @@ public class SearchService extends Service {
                          SearchErrorPageService errorPageService,
                          SearchAddToCrawlQueueService addToCrawlQueueService,
                          SearchFlagSiteService flagSiteService,
+                         SearchSiteInfoService siteInfoService,
                          SearchQueryService searchQueryService
                              ) {
         super(params);
@@ -50,10 +51,10 @@ public class SearchService extends Service {
 
         Spark.post("/public/site/suggest/", addToCrawlQueueService::suggestCrawling);
 
-        Spark.get("/public/site/flag-site/:domainId", flagSiteService::flagSiteForm);
-        Spark.post("/public/site/flag-site/:domainId", flagSiteService::flagSiteAction);
         Spark.get("/public/site-search/:site/*", this::siteSearchRedir);
-        Spark.get("/public/site/:site", this::siteSearchRedir);
+
+        Spark.get("/public/site/:site", siteInfoService::handle);
+        Spark.post("/public/site/:site", siteInfoService::handlePost);
 
         Spark.exception(Exception.class, (e,p,q) -> {
             logger.error("Error during processing", e);

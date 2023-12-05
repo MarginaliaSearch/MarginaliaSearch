@@ -1,0 +1,10 @@
+<fieldset>
+    <legend>Index</legend>
+    State: {{state}}<br/>
+    Domain ID: {{domainId}} <br/>
+    Node Affinity: {{nodeAffinity}} <br/>
+    Pages Known: {{pagesKnown}} <br/>
+    Pages Crawled: {{pagesFetched}} <br/>
+    Pages Indexed: {{pagesIndexed}} <br/>
+</fieldset>
+<br/>

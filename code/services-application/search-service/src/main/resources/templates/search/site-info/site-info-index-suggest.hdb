@@ -1,0 +1,12 @@
+<form method="POST" action="/site/suggest/">
+    <fieldset>
+        <legend>Crawling</legend>
+        This website is not queued for crawling. If you would like it to be crawled,
+        use the checkbox and button below.<p/>
+        <input type="hidden" name="id" value="{{domainId}}" />
+        <input type="checkbox" id="nomisclick" name="nomisclick" /> <label for="nomisclick"> This is not a mis-click </label>
+        <br/>
+        <br/>
+        <input type="submit" value="Add {{domain}} to queue" />
+    </fieldset>
+</form>

@@ -1,41 +1,16 @@
-<form method="get" action="/search">
-    <section class="search-box">
-        <h1>Search the Internet</h1>
-        <div class="input">
-            <input id="query" name="query" placeholder="Search terms" value="{{query}}">
-            <input value="Go" type="submit">
-        </div>
-        <div class="settings">
-            <select name="profile" id="profile">
-                <optgroup label="General Search">
-                    <option {{#eq profile "default"}}selected{{/eq}} value="default">Popular Sites</option>
-                    <option {{#eq profile "modern"}}selected{{/eq}} value="modern">Personal Websites</option>
-                    <option {{#eq profile "academia"}}selected{{/eq}} value="academia">Academia</option>
-                    <option {{#eq profile "corpo"}}selected{{/eq}} value="corpo">No Domain Ranking</option>
-                </optgroup>
-                <optgroup label="Vintage">
-                    <option {{#eq profile "vintage"}}selected{{/eq}} value="vintage">Web 1.0</option>
-                    <option {{#eq profile "tilde"}}selected{{/eq}} value="tilde">~tilde/</option>
-                    <option {{#eq profile "plain-text"}}selected{{/eq}} value="plain-text">Text Files</option>
-                </optgroup>
-                <optgroup label="Category">
-                    <option {{#eq profile "blogosphere"}}selected{{/eq}} value="blogosphere">Blogosphere (NEW)</option>
-                    <option {{#eq profile "wiki"}}selected{{/eq}} value="wiki">Wiki</option>
-                    <option {{#eq profile "forum"}}selected{{/eq}} value="forum">Forum</option>
-                    <option {{#eq profile "docs"}}selected{{/eq}} value="docs">Docs (experimental)</option>
-                </optgroup>
-                <optgroup label="Topics Search">
-                    <option {{#eq profile "food"}}selected{{/eq}} value="food">Recipes &#127859;</option>
-                    <option {{#eq profile "crafts"}}selected{{/eq}} value="crafts">Crafts &#129697;&#128296; (WIP; mostly textile-craft)</option>
-                    <option {{#eq profile "classics"}}selected{{/eq}} value="classics">Classics and Antiquity &#128220;</option>
-                </optgroup>
+<form action="/search" method="get" id="search-form">
+    <div id="search-box">
+        <h1>
+            Search The Internet
+        </h1>
+        <div id="suggestions-anchor"></div>
+        <input type="text" id="query" name="query" placeholder="Search..." value="{{query}}">
+        <input type="hidden" name="js" value="{{js}}">
+        <input type="hidden" name="adtech" value="{{adtech}}">
+        <input type="hidden" name="profile" value="{{profile}}">
 
-            </select>
-            <select name="js" id="js">
-                <option {{#eq js "default"}}selected{{/eq}} value="default">Allow JS</option>
-                <option {{#eq js "no-js"}}selected{{/eq}} value="no-js">Deny JS</option>
-                <option {{#eq js "yes-js"}}selected{{/eq}} value="yes-js">Require JS</option>
-            </select>
-        </div>
-    </section>
+        <input type="submit" form="search-form" title="Execute Search" value="Search">
+    </div>
 </form>
+<!-- load the first stage mobile customizations script early to avoid flicker -->
+<script src="/main.js"></script>

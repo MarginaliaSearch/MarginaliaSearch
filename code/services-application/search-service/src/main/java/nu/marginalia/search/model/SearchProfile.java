@@ -9,9 +9,9 @@ import java.util.Objects;
 
 public enum SearchProfile {
     DEFAULT("default",  SearchSetIdentifier.RETRO),
-    MODERN("modern", SearchSetIdentifier.SMALLWEB),
+    SMALLWEB("modern", SearchSetIdentifier.SMALLWEB),
     BLOGOSPHERE("blogosphere", SearchSetIdentifier.BLOGS),
-    CORPO("corpo", SearchSetIdentifier.NONE),
+    NO_FILTER("corpo", SearchSetIdentifier.NONE),
     YOLO("yolo", SearchSetIdentifier.NONE),
     VINTAGE("vintage", SearchSetIdentifier.NONE),
     TILDE("tilde", SearchSetIdentifier.NONE),
@@ -27,27 +27,27 @@ public enum SearchProfile {
     ;
 
 
-    public final String name;
+    public final String filterId;
     public final SearchSetIdentifier searchSetIdentifier;
 
-    SearchProfile(String name, SearchSetIdentifier searchSetIdentifier) {
-        this.name = name;
+    SearchProfile(String filterId, SearchSetIdentifier searchSetIdentifier) {
+        this.filterId = filterId;
         this.searchSetIdentifier = searchSetIdentifier;
     }
 
     private final static SearchProfile[] values = values();
     public static SearchProfile getSearchProfile(String param) {
         if (null == param) {
-            return YOLO;
+            return NO_FILTER;
         }
 
         for (var profile : values) {
-            if (Objects.equals(profile.name, param)) {
+            if (Objects.equals(profile.filterId, param)) {
                 return profile;
             }
         }
 
-        return YOLO;
+        return NO_FILTER;
     }
 
     public void addTacitTerms(SearchSubquery subquery) {
@@ -82,7 +82,7 @@ public enum SearchProfile {
     }
 
     public SpecificationLimit getYearLimit() {
-        if (this == MODERN) {
+        if (this == SMALLWEB) {
             return SpecificationLimit.greaterThan(2015);
         }
         if (this == VINTAGE) {
@@ -92,7 +92,7 @@ public enum SearchProfile {
     }
 
     public SpecificationLimit getSizeLimit() {
-        if (this == MODERN) {
+        if (this == SMALLWEB) {
             return SpecificationLimit.lessThan(500);
         }
         else return SpecificationLimit.none();
@@ -100,7 +100,7 @@ public enum SearchProfile {
 
 
     public SpecificationLimit getQualityLimit() {
-        if (this == MODERN) {
+        if (this == SMALLWEB) {
             return SpecificationLimit.lessThan(5);
         }
         else return SpecificationLimit.none();

@@ -1,0 +1,677 @@
+$nicotine-dark: #acae89;
+$nicotine-light: #f8f8ee;
+$fg-dark: #000;
+$fg-light: #fff;
+$highlight-dark: #2f4858;
+$highlight-light: #3F5F6F;
+$highlight-light2: #eee;
+$border-color: #ccc;
+$heading-fonts: serif;
+$visited: #fcc;
+
+* {
+  box-sizing: border-box;
+}
+h1 a, h2 a {
+  color: $fg-light;
+}
+h1 a:visited, h2 a:visited {
+  color: $visited;
+}
+progress {
+  width: 10ch;
+}
+
+body {
+  background-color: $nicotine-light;
+  color: $fg-dark;
+  font-family: sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-left: 2ch;
+  margin-right: 4ch;
+  max-width: 120ch;
+  padding: 0;
+}
+
+#frontpage {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto 1fr;
+  grid-gap: 1ch;
+  align-items: start;
+  justify-content: start;
+  margin-top: 1ch;
+  margin-bottom: 1ch;
+  // named grid areas
+  grid-template-areas:
+        "frontpage-about frontpage-news"
+        "frontpage-tips  frontpage-news";
+
+  @media (max-device-width: 624px) {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    grid-gap: 1ch;
+    align-items: start;
+    justify-content: start;
+    margin-top: 1ch;
+    margin-bottom: 1ch;
+    // named grid areas
+    grid-template-areas:
+            "frontpage-about"
+            "frontpage-tips"
+            "frontpage-news";
+
+    * { max-width: unset !important; min-width: unset !important; }
+  }
+
+  #frontpage-news {
+    grid-area: frontpage-news;
+    max-width: 40ch;
+    @extend .dialog;
+  }
+  #frontpage-about {
+    grid-area: frontpage-about;
+    min-width: 40ch;
+    @extend .dialog;
+  }
+  #frontpage-tips {
+    grid-area: frontpage-tips;
+    min-width: 40ch;
+    @extend .dialog;
+  }
+}
+
+#siteinfo-nav {
+  display: block;
+  width: 100%;
+  @extend .dialog;
+  padding: 0.25ch !important;
+  margin-top: 1.5ch;
+
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 1ch;
+
+    li {
+      display: inline;
+      padding: 1ch;
+      background-color: $highlight-light2;
+
+      a {
+        text-decoration: none;
+        display: inline-block;
+        color: #000;
+      }
+    }
+
+    li.current {
+      background-color: $highlight-light;
+      a {
+        color: #fff;
+      }
+    }
+  }
+}
+
+.dialog {
+  border: 1px solid $border-color;
+  box-shadow: 0 0 1ch $border-color;
+  background-color: #fff;
+  padding: 1ch;
+
+  h2 {
+    margin: 0;
+    font-family: sans-serif;
+    font-weight: normal;
+    padding: 0.5ch;
+    font-size: 12pt;
+    background-color: $highlight-light;
+    color: #fff;
+  }
+}
+
+header {
+  background-color: $nicotine-dark;
+  color: #fff;
+  border: 1px solid #888;
+  box-shadow: 0 0 0.5ch #888;
+  margin-bottom: 1ch;
+
+  nav {
+    a {
+      text-decoration: none;
+      color: #000;
+
+      padding: .5ch;
+      display: inline-block;
+    }
+
+    a.extra {
+      background: #ccc linear-gradient(45deg,
+              rgba(255,100,100,1) 0%,
+              rgba(100,255,100,1) 50%,
+              rgba(100,100,255,1) 100%);
+      color: black;
+      text-shadow: 0 0 0.25ch #ccc;
+    }
+
+    a:hover, a:focus {
+      background: #2f4858;
+      color: #fff !important;
+    }
+  }
+}
+
+#complaint {
+  @extend .dialog;
+  max-width: 60ch;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 2ch;
+
+  textarea {
+    width: 100%;
+    height: 10ch;
+  }
+}
+
+#siteinfo {
+  margin-top: 1ch;
+  display: flex;
+  gap: 1ch;
+  flex-grow: 0.5;
+  flex-shrink: 0.5;
+  flex-basis: 10ch 10ch;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-content: stretch;
+  align-items: stretch;
+  justify-content: stretch;
+
+  #index-info, #link-info {
+    width: 32ch;
+    @extend .dialog;
+  }
+  #screenshot {
+    @extend .dialog;
+  }
+  #screenshot img {
+    width: 30ch;
+    height: 22.5ch;
+  }
+}
+
+.infobox {
+  h2 {
+    @extend .heading;
+  }
+
+  background-color: #fff;
+  padding: 1ch;
+  margin: 1ch;
+  border: 1px solid $border-color;
+  box-shadow: 0 0 1ch $border-color;
+}
+
+section.cards {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  padding-top: 1ch;
+  gap: 2ch;
+  justify-content: flex-start;
+
+  .card {
+    border: 2px #ccc;
+    background-color: #fff;
+    border-left: 1px solid #ecb;
+    border-top: 1px solid #ecb;
+    box-shadow: #0008 0 0 5px;
+
+    h2 {
+      @extend .heading;
+      word-break: break-word;
+    }
+
+    h2 a {
+      display: block !important;
+      color: #fff;
+      text-decoration: none;
+    }
+    a:focus img  {
+      filter: sepia(100%);
+      box-shadow: #444 0px 0px 20px;
+    }
+    a:focus:not(.nofocus) {
+      background-color: black;
+      color: white;
+    }
+
+    .description {
+      padding-left: 1ch;
+      padding-right: 1ch;
+      overflow: auto;
+      -webkit-hyphens: auto;
+      -moz-hyphens: auto;
+      -ms-hyphens: auto;
+      hyphens: auto;
+    }
+
+    img {
+      width: 28ch;
+      height: auto;
+    }
+
+    .info {
+      padding-left: 1ch;
+      padding-right: 1ch;
+      line-height: 1.6;
+    }
+  }
+}
+
+.positions {
+  box-shadow: 0 0 2px #888;
+  background-color: #e4e4e4;
+  padding: 2px;
+  margin-right: -1ch;
+  margin-left: 1ch;
+}
+
+
+footer {
+  clear: both;
+
+  padding: 2ch;
+  margin: 16ch 0 0 0;
+
+  font-size: 12pt;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+
+  h1 {
+    font-weight: normal;
+    border-bottom: 4px solid $highlight-light;
+  }
+
+  h2 {
+    font-size: 14pt;
+    font-weight: normal;
+    border-bottom: 2px solid $highlight-dark;
+    width: 80%;
+  }
+
+  section {
+    line-height: 1.5;
+    flex-basis: 40ch;
+    flex-grow: 1.1;
+
+    background-color: #fff;
+    border-left: 1px solid $border-color;
+    box-shadow: -1px -1px 5px $border-color;
+
+    padding-left: 1ch;
+    padding-right: 1ch;
+    margin-left: 1ch;
+    padding-bottom: 1ch;
+    margin-bottom: 1ch;
+  }
+}
+
+#mcfeast, #menu-close {
+  display: none;
+}
+
+.shadowbox {
+  box-shadow: 0 0 1ch $border-color;
+  border: 1px solid $border-color;
+}
+
+.heading {
+  margin: 0;
+  padding: 0.5ch;
+  background-color: $highlight-light;
+  border-bottom: 1px solid $border-color;
+  font-family: $heading-fonts;
+  font-weight: normal;
+  color: $fg-light;
+  font-size: 12pt;
+  word-break: break-word;
+}
+
+
+.sidebar-narrow {
+  display: grid;
+  grid-template-columns: auto max-content;
+  grid-gap: 1ch;
+  align-items: start;
+}
+
+
+#similar-view {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    grid-gap: 1ch;
+    align-content: start;
+    justify-content: start;
+    align-items: start;
+  table {
+    th {
+      text-align: left;
+    }
+  }
+  .screenshot {
+    width: 100%;
+    height: auto;
+  }
+}
+
+#similar-view[data-layout="lopsided"] {
+  #similar-info {
+    @extend .dialog;
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+  #similar-domains {
+    @extend .dialog;
+    grid-column: 2;
+    grid-row: 1;
+  }
+  #similar-links {
+    @extend .dialog;
+    grid-row: 2;
+    grid-column: 2;
+  }
+
+}
+
+#similar-view[data-layout="balanced"] {
+  #similar-info {
+    @extend .dialog;
+  }
+  #similar-domains {
+    grid-row: span 2;
+    @extend .dialog;
+  }
+  #similar-links {
+    @extend .dialog;
+  }
+}
+
+@media (max-device-width: 900px) {
+  #similar-view {
+    display: block;
+    * {
+      margin-bottom: 1ch;
+    }
+  }
+}
+
+#search-box {
+  @extend .shadowbox;
+
+  padding: 0.5ch;
+  background-color: $fg-light;
+  display: grid;
+  grid-template-columns: max-content 0 auto max-content;
+  grid-gap: 0.5ch;
+  grid-auto-rows: minmax(1ch, auto);
+  width: 100%;
+
+  h1 {
+    margin: 0;
+    padding: 0.5ch;
+    font-size: 14pt;
+    word-break: keep-all;
+    background-color: $highlight-light;
+    color: $fg-light;
+    font-family: $heading-fonts;
+    font-weight: normal;
+    border: 1px solid;
+    text-align: center;
+  }
+
+  #suggestions-anchor {
+    margin: -0.5ch; // We need this anchor for the typeahead suggestions, but we don't want it to affect the layout
+    padding: 0;
+  }
+
+  input[type="text"] {
+    font-family: monospace;
+    font-size: 12pt;
+    padding: 0.5ch;
+    border: 1px solid $border-color;
+    background-color: $fg-light;
+    color: $fg-dark;
+  }
+
+  input[type="submit"] {
+    font-size: 12pt;
+    border: 1px solid $border-color;
+    background-color: $fg-light;
+    color: $fg-dark;
+  }
+
+  .suggestions {
+    background-color: #fff;
+    padding: .5ch;
+    margin-top: 5.5ch;
+    margin-left: 1ch;
+    position: absolute;
+    display: inline-block;
+    width: 300px;
+    border-left: 1px solid #ccc;
+    border-top: 1px solid #ccc;
+    box-shadow: 5px 5px 5px #888;
+    z-index: 10;
+
+    a {
+      display: block;
+      color: #000;
+      font-size: 12pt;
+      font-family: 'fixedsys', monospace, serif;
+      text-decoration: none;
+      outline: none;
+    }
+
+    a:focus {
+      display: block;
+      background-color: #000;
+      color: #eee;
+    }
+  }
+
+}
+
+.filter-toggle-on {
+  a:before {
+    content: '✓';
+    margin-right: 1.5ch;
+  }
+}
+.filter-toggle-off {
+  a:before {
+    content: '✗';
+    margin-right: 1.5ch;
+  }
+}
+
+#filters {
+  @extend .shadowbox;
+  margin-top: 1ch;
+  background-color: $fg-light;
+
+  h2 {
+    @extend .heading;
+    background-color: $highlight-light;
+  }
+  h3 {
+    @extend .heading;
+    background-color: $highlight-light2;
+    font-family: sans-serif;
+    color: #000;
+    border-bottom: 1px solid #000;
+  }
+
+  hr {
+    border-top: 0.5px solid $border-color;
+    border-bottom: none;
+  }
+  ul {
+    list-style-type: none;
+    padding-left: 0;
+
+    li {
+      padding: 1ch;
+      a {
+        color: $fg-dark;
+        text-decoration: none;
+      }
+      a:hover, a:focus {
+        border-bottom: 1px solid $highlight-light;
+      }
+    }
+
+    li.current {
+      border-left: 4px solid $highlight-light;
+      background-color: $highlight-light2;
+      a {
+        margin-left: -4px;
+      }
+    }
+  }
+}
+
+.search-result {
+  @extend .shadowbox;
+  margin: 1ch 0 2ch 0;
+
+  .url {
+    background-color: $highlight-light;
+    padding-left: 0.5ch;
+
+    a {
+      word-break: break-all;
+      font-family: monospace;
+      font-size: 8pt;
+      color: $fg-light;
+      text-shadow: 0 0 1ch #000; // guarantee decent contrast across background colors
+    }
+    a:visited {
+      color: $visited;
+    }
+  }
+
+  h2 {
+    a {
+      word-break: break-all;
+      color: $fg-dark;
+      text-decoration: none;
+    }
+    font-size: 12pt;
+    @extend .heading;
+    background-color: $highlight-light2;
+  }
+
+  .description {
+    background-color: $fg-light;
+    word-break: break-word;
+    padding: 1ch;
+    margin: 0;
+  }
+}
+
+.search-result[data-ms-rank="1"] {  .url, h2 { filter: grayscale(0%); } }
+.search-result[data-ms-rank="2"] {  .url, h2 { filter: grayscale(5%); } }
+.search-result[data-ms-rank="3"] {  .url, h2 { filter: grayscale(15%); } }
+.search-result[data-ms-rank="4"] {  .url, h2 { filter: grayscale(20%); } }
+.search-result[data-ms-rank="5"] {  .url, h2 { filter: grayscale(30%); } }
+.search-result[data-ms-rank="10"] { .url, h2 { filter: grayscale(60%); } }
+
+.utils {
+  display: flex;
+  font-size: 10pt;
+  padding: 1ch;
+  background-color: #eee;
+
+  > * {
+    margin-right: 1ch;
+    margin-left: 1ch;
+  }
+  .meta {
+    flex-grow: 2;
+    text-align: right;
+  }
+  .meta > * {
+    padding-left: 4px;
+  }
+  a {
+    color: #000;
+  }
+}
+
+@media (max-device-width: 624px) {
+  body[data-has-js="true"] { // This property is set via js so we can selectively enable these changes only if JS is enabled;
+                             // This is desirable since mobile navigation is JS-driven.  If JS is disabled, having a squished
+                             // GUI is better than having no working UI.
+    margin: 0 !important;
+    padding: 0 0 0 0 !important;
+    max-width: 100%;
+
+    #suggestions-anchor { display: none; } // suggestions are not useful on mobile
+
+    .sidebar-narrow {
+      display: block; // fix for bizarre chrome rendering issue
+    }
+
+    #mcfeast {
+      display: inline;
+      float: right;
+    }
+
+    #menu-close {
+      float: right;
+      display: inline;
+    }
+
+    #filters {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      z-index: 100;
+    }
+
+    .sidebar-narrow {
+      grid-template-columns: auto;
+    }
+
+    #search-box {
+      grid-template-columns: auto;
+    }
+
+    #filters {
+      margin-top: 0;
+    }
+
+    .search-result {
+      margin-left: 0;
+      margin-right: 0;
+    }
+  }
+}
+
+// The search results page is very confusing on text-based browsers, so we add a hr to separate the search results.  This is
+// hidden on modern browsers via CSS.
+
+hr.w3m-helper { display: none; }

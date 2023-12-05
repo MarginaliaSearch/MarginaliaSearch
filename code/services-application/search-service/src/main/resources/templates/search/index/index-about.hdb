@@ -1,4 +1,4 @@
-    <section class="card">
+    <section id="frontpage-about">
         <h2>About</h2>
         <div class="info">
             <p>This is an independent DIY search engine that focuses on non-commercial content, and attempts to

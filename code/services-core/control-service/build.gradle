@@ -49,6 +49,7 @@ dependencies {
     implementation libs.guice
     implementation libs.zstd
     implementation libs.rxjava
+    implementation libs.handlebars
 
     implementation libs.trove
     implementation libs.spark

@@ -109,12 +109,14 @@ public class AbstractClientTest {
 
         assertError(client.post(Context.internal(), 0,"/post", "test"));
     }
+
     @Test
     public void testGet404() {
         testServer.get(this::error404);
 
         assertError(client.get(Context.internal(), 0,"/get"));
     }
+
     @Test
     public void testDelete404() {
         testServer.delete(this::error404);

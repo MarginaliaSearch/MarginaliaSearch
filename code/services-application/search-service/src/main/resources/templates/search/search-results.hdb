@@ -4,49 +4,37 @@
     <meta charset="UTF-8">
     <title>Marginalia Search - {{query}}</title>
 
-    <link rel="stylesheet" href="/style-new.css" />
+    <link rel="stylesheet" href="/serp.css" />
     <link rel="search" type="application/opensearchdescription+xml" href="/opensearch.xml" title="Marginalia">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex" />
 </head>
 
-<body>
+<body data-filter="{{filters.currentFilter}}">
 
 <!-- Hi there, fellow human being :-) -->
 
 {{>search/parts/search-header}}
-
-<article>
 {{>search/parts/search-form}}
 
+<section class="sidebar-narrow">
+    <section id="results" class="sb-left">
+        {{#if focusDomain}}
+            <div class="infobox">
+                Showing search results from <a href="/site/{{focusDomain}}">{{focusDomain}}</a>.
+            </div>
 
-<hr class="w3m-helper" />
-<section class="cards">
-
-    {{#if maintenanceMessage}}<section class="card problems onlyscreen"><h2>Maintenance</h2><p class="description">{{maintenanceMessage}}</p></section>{{/if}}
-    {{#if evalResult}}<section class="card semantic onlyscreen"><h2>Evaluation</h2><p class="description">{{query}} = {{evalResult}}</p><hr class="w3m-helper" /></section>{{/if}}
-    {{#each wiki.entries}}<section class="card semantic onlyscreen"><h2>Encyclopedia</h2><p class="description"><a href="https://encyclopedia.marginalia.nu/wiki/{{.}}"><em>{{.}}</em> Encyclopedia Page</a></p><hr class="w3m-helper" /></section>{{/each}}
-
-    {{#if focusDomain}}
-    <section class="card semantic">
-        <h2>{{focusDomain}}</h2>
-        <p class="description">
-            Showing results from <tt>{{focusDomain}}</tt>
-        </p>
-        <div class="utils">
-            <a href="/site/{{focusDomain}}">Info</a>
-            <a href="/explore/{{focusDomain}}">Similar Domains</a>
-        </div>
+        {{/if}}
+        {{#each results}}{{>search/parts/search-result}}{{/each}}
     </section>
-    {{/if}}
 
-    {{#unless evalResult}}{{#if problems}}<section class="card problems onlyscreen"><h2>Suggestions</h2><ul class="onlyscreen search-problems">{{#each problems}}<li>{{{.}}}</li>{{/each}}</ul></section> {{/if}}{{/unless}}
-
-    {{#each domainResults}}{{>search/browse-result}}{{/each}}
-    {{#each results}}{{>search/search-result}}{{/each}}
+    {{#with filters}}
+    <section id="filters" class="sb-right">
+        {{>search/parts/search-filters}}
+    </section>
+    {{/with}}
 
 </section>
-</article>
-
 {{>search/parts/search-footer}}
 </body>
+</html>

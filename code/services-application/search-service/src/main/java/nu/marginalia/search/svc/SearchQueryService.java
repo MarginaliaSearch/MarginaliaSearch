@@ -3,6 +3,7 @@ package nu.marginalia.search.svc;
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
 import nu.marginalia.WebsiteUrl;
+import nu.marginalia.search.command.SearchAdtechParameter;
 import nu.marginalia.search.model.SearchProfile;
 import nu.marginalia.client.Context;
 import nu.marginalia.search.command.CommandEvaluator;
@@ -13,8 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
-
-import java.util.Optional;
 
 public class SearchQueryService {
 
@@ -38,23 +37,8 @@ public class SearchQueryService {
 
         final var ctx = Context.fromRequest(request);
 
-        final String queryParam = request.queryParams("query");
-        if (null == queryParam || queryParam.isBlank()) {
-            response.redirect(websiteUrl.url());
-            return null;
-        }
-
-        final String profileStr = Optional.ofNullable(request.queryParams("profile")).orElse(SearchProfile.YOLO.name);
-        final String humanQuery = queryParam.trim();
-
-        var params = new SearchParameters(
-                SearchProfile.getSearchProfile(profileStr),
-                SearchJsParameter.parse(request.queryParams("js")),
-                Boolean.parseBoolean(request.queryParams("detailed"))
-        );
-
         try {
-            return searchCommandEvaulator.eval(ctx, params, humanQuery);
+            return searchCommandEvaulator.eval(ctx, response, parseParameters(request));
         }
         catch (RedirectException ex) {
             response.redirect(ex.newUrl);
@@ -67,4 +51,16 @@ public class SearchQueryService {
         return "";
     }
 
+    private SearchParameters parseParameters(Request request) {
+        final String queryParam = request.queryParams("query");
+
+        if (null == queryParam || queryParam.isBlank()) {
+            throw new RedirectException(websiteUrl.url());
+        }
+
+        return new SearchParameters(queryParam.trim(),
+                                    SearchProfile.getSearchProfile(request.queryParams("profile")),
+                                    SearchJsParameter.parse(request.queryParams("js")),
+                                    SearchAdtechParameter.parse(request.queryParams("adtech")));
+    }
 }

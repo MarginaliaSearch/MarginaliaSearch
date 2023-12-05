@@ -1,0 +1,19 @@
+<section {{#unless hideRanking}} data-rs-rank="{{logRank}}" data-ms-rank="{{matchRank}}"{{/unless}}
+        class="card search-result {{#if specialDomain}}special-domain{{/if}}" >
+<div class="url"><a rel="nofollow external" href="{{url}}">{{url}}</a></div>
+<h2> <a tabindex="-1" class="title" rel="nofollow external" href="{{url}}">{{title}}</a> </h2>
+<p class="description">{{description}}</p>
+
+<div class="utils">
+    {{#unless focusDomain}}
+    <a href="/site/{{url.domain}}" title="Domain Information">Info</a>
+    {{#if hasMoreResults}}<a href="/site-search/{{url.domain}}/{{query}}?profile={{profile}}" title="More results from this domain">{{resultsFromSameDomain}}+</a>{{/if}}
+    {{/unless}}
+    <div class="meta">
+        {{#if problems}} <span class="problems" title="{{problems}}"> ⚠ {{problemCount}} </span> {{/if}}
+        <span aria-hidden="true" class="meta positions"
+              title="Positions where keywords were found within the document">{{positions}}</span>
+    </div>
+</div>
+</section>
+<hr class="w3m-helper" />

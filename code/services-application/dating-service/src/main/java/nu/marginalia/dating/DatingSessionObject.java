@@ -28,7 +28,7 @@ public class DatingSessionObject {
     }
 
     public BrowseResult nextSimilar(int domainId, DbBrowseDomainsSimilarCosine adjacent, DomainBlacklist blacklist) {
-        adjacent.getDomainNeighborsAdjacentCosine(domainId, blacklist, 25).forEach(queue::addFirst);
+        adjacent.getDomainNeighborsAdjacentCosineRequireScreenshot(domainId, blacklist, 25).forEach(queue::addFirst);
 
         while (queue.size() > MAX_QUEUE_SIZE) {
             queue.removeLast();

@@ -15,6 +15,8 @@ dependencies {
     implementation libs.bundles.slf4j
 
     implementation libs.bundles.handlebars
+    implementation libs.guice
+    implementation libs.spark
 
     testImplementation libs.bundles.slf4j.test
     testImplementation libs.bundles.junit

@@ -26,7 +26,7 @@ public class DbBrowseDomainsRandom {
     public List<BrowseResult> getRandomDomains(int count, DomainBlacklist blacklist, int set) {
 
         final String q = """
-                SELECT DOMAIN_ID, DOMAIN_NAME
+                SELECT DOMAIN_ID, DOMAIN_NAME, INDEXED
                 FROM EC_RANDOM_DOMAINS
                 INNER JOIN EC_DOMAIN ON EC_DOMAIN.ID=DOMAIN_ID
                 WHERE STATE<2
@@ -44,9 +44,10 @@ public class DbBrowseDomainsRandom {
                 while (rsp.next()) {
                     int id = rsp.getInt(1);
                     String domain = rsp.getString(2);
+                    boolean indexed = rsp.getBoolean("INDEXED");
 
                     if (!blacklist.isBlacklisted(id)) {
-                        domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id, 0));
+                        domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id, 0, indexed));
                     }
                 }
             }

@@ -1,0 +1,30 @@
+<h2>Filters</h2>
+<ul>
+    {{#with removeJsOption}}
+        <li title="Exclude results with javascript"
+            {{#if set}}aria-checked="true" class="current"{{/if}}
+            {{#unless set}}aria-checked="false"{{/unless}}
+            role="checkbox">
+            <a href="{{url}}">{{name}}</a>
+        </li>
+    {{/with}}
+    {{#with reduceAdtechOption}}
+    <li title="Exclude results with tracking or likely affiliate links"
+        {{#if set}}aria-checked="true" class="current"{{/if}}
+        {{#unless set}}aria-checked="false"{{/unless}}
+        role="checkbox">
+            <a href="{{url}}">{{name}}</a>
+        </li>
+    {{/with}}
+</ul>
+<h3>Domains</h3>
+<ul>
+    {{#each filterGroups}}
+        {{#each .}}
+            <li {{#if current}}aria-selected="true" class="current"{{/if}}><a href="{{url}}">{{displayName}}</a></li>
+        {{/each}}
+        <hr>
+    {{/each}}
+</ul>
+<!-- load this ASAP to avoid flicker -->
+<script src="/menu.js"></script>

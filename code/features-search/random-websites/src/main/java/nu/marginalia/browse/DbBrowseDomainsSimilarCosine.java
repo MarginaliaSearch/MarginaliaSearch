@@ -3,6 +3,7 @@ package nu.marginalia.browse;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
+import gnu.trove.set.hash.TIntHashSet;
 import nu.marginalia.browse.model.BrowseResult;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.db.DomainBlacklist;
@@ -23,14 +24,15 @@ public class DbBrowseDomainsSimilarCosine {
         this.dataSource = dataSource;
     }
 
-    public List<BrowseResult> getDomainNeighborsAdjacentCosine(int domainId, DomainBlacklist blacklist, int count) {
+    public List<BrowseResult> getDomainNeighborsAdjacentCosineRequireScreenshot(int domainId, DomainBlacklist blacklist, int count) {
         List<BrowseResult> domains = new ArrayList<>(count);
 
         String q = """
                         SELECT
                             EC_DOMAIN.ID,
                             NV.NEIGHBOR_NAME,
-                            NV.RELATEDNESS
+                            NV.RELATEDNESS,
+                            EC_DOMAIN.INDEXED
                         FROM EC_NEIGHBORS_VIEW NV
                         INNER JOIN DATA_DOMAIN_SCREENSHOT ON DATA_DOMAIN_SCREENSHOT.DOMAIN_NAME=NV.NEIGHBOR_NAME
                         INNER JOIN EC_DOMAIN ON EC_DOMAIN.ID=NV.NEIGHBOR_ID
@@ -49,9 +51,10 @@ public class DbBrowseDomainsSimilarCosine {
                     int id = rsp.getInt(1);
                     String domain = rsp.getString(2);
                     double relatedness = rsp.getDouble(3);
+                    boolean indexed = rsp.getBoolean("INDEXED");
 
                     if (!blacklist.isBlacklisted(id)) {
-                        domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id, relatedness));
+                        domains.add(new BrowseResult(new EdgeDomain(domain).toRootUrl(), id, relatedness, indexed));
                     }
                 }
             }

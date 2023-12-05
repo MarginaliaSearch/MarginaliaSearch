@@ -2,9 +2,8 @@ package nu.marginalia.search.command;
 
 
 import nu.marginalia.client.Context;
-
-import java.util.Optional;
+import spark.Response;
 
 public interface SearchCommandInterface {
-    Optional<Object> process(Context ctx, SearchParameters parameters, String query);
+    boolean process(Context ctx, Response response, SearchParameters parameters);
 }
