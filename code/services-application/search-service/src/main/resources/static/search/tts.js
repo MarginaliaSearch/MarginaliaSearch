@@ -21,12 +21,9 @@ function setupTypeahead() {
 
                 if (items.length === 0) return;
 
-                console.log(items);
-
                 const suggestions = document.createElement('div');
                 suggestions.setAttribute('id', 'suggestions');
                 suggestions.setAttribute('class', 'suggestions');
-
 
                 for (i=0;i<items.length;i++) {
                     item = document.createElement('a');
