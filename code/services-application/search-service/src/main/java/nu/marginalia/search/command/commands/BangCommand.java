@@ -24,7 +24,7 @@ public class BangCommand implements SearchCommandInterface {
     }
 
     @Override
-    public boolean process(Context ctx, Response response, SearchParameters parameters) {
+    public Optional<Object> process(Context ctx, Response response, SearchParameters parameters) {
 
         for (var entry : bangsToPattern.entrySet()) {
             String bangPattern = entry.getKey();
@@ -38,7 +38,7 @@ public class BangCommand implements SearchCommandInterface {
             }
         }
 
-        return false;
+        return Optional.empty();
     }
 
     private Optional<String> matchBangPattern(String query, String bangKey) {

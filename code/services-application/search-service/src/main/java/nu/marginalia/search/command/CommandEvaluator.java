@@ -33,17 +33,12 @@ public class CommandEvaluator {
 
     public Object eval(Context ctx, Response response, SearchParameters parameters) {
         for (var cmd : specialCommands) {
-            if (cmd.process(ctx, response, parameters)) {
-                // The commands will write directly to the response, so we don't need to do anything else
-                // but it's important we don't return null, as this signals to Spark that we haven't handled
-                // the request.
-
-                return "";
-            }
+            var maybe = cmd.process(ctx, response, parameters);
+            if (maybe.isPresent())
+                return maybe.get();
         }
 
-        defaultCommand.process(ctx, response, parameters);
-        return "";
+        return defaultCommand.process(ctx, response, parameters).orElse("");
     }
 
 }

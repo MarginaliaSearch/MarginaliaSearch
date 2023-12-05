@@ -14,6 +14,7 @@ import spark.Response;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -34,22 +35,21 @@ public class BrowseCommand implements SearchCommandInterface {
     }
 
     @Override
-    public boolean process(Context ctx, Response response, SearchParameters parameters) {
+    public Optional<Object> process(Context ctx, Response response, SearchParameters parameters) {
         if (!queryPatternPredicate.test(parameters.query())) {
-            return false;
+            return Optional.empty();
         }
 
         var model = browseSite(ctx, parameters.query());
 
         if (null == model)
-            return false;
+            return Optional.empty();
 
-        browseResultsRenderer.renderInto(response, model,
+        return Optional.of(browseResultsRenderer.render(model,
                         Map.of("query", parameters.query(),
                         "profile", parameters.profileStr(),
                         "focusDomain", model.focusDomain())
-        );
-        return true;
+        ));
     }
 
 

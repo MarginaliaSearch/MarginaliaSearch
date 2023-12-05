@@ -12,6 +12,7 @@ import spark.Response;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 
 public class ConvertCommand implements SearchCommandInterface {
     private final SearchUnitConversionService searchUnitConversionService;
@@ -26,18 +27,13 @@ public class ConvertCommand implements SearchCommandInterface {
 
     @Override
     @SneakyThrows
-    public boolean process(Context ctx, Response response, SearchParameters parameters) {
+    public Optional<Object> process(Context ctx, Response response, SearchParameters parameters) {
         var conversion = searchUnitConversionService.tryConversion(ctx, parameters.query());
-        if (conversion.isEmpty()) {
-            return false;
-        }
-
-        conversionRenderer.renderInto(response, Map.of(
+        return conversion.map(s -> conversionRenderer.render(Map.of(
                 "query", parameters.query(),
-                "result", conversion.get(),
+                "result", s,
                 "profile", parameters.profileStr())
-        );
+        ));
 
-        return true;
     }
 }
