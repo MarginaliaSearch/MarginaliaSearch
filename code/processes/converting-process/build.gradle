@@ -65,6 +65,7 @@ dependencies {
     implementation libs.bundles.slf4j
 
     implementation libs.notnull
+    implementation libs.jwarc
 
     implementation libs.jsoup
 

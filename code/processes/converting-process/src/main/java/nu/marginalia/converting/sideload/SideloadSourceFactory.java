@@ -6,6 +6,7 @@ import nu.marginalia.atags.source.AnchorTagsSourceFactory;
 import nu.marginalia.converting.sideload.dirtree.DirtreeSideloaderFactory;
 import nu.marginalia.converting.sideload.encyclopedia.EncyclopediaMarginaliaNuSideloader;
 import nu.marginalia.converting.sideload.stackexchange.StackexchangeSideloader;
+import nu.marginalia.converting.sideload.warc.WarcSideloadFactory;
 import nu.marginalia.keyword.DocumentKeywordExtractor;
 import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
 
@@ -22,6 +23,7 @@ public class SideloadSourceFactory {
     private final DocumentKeywordExtractor documentKeywordExtractor;
     private final AnchorTagsSourceFactory anchorTagsSourceFactory;
     private final DirtreeSideloaderFactory dirtreeSideloaderFactory;
+    private final WarcSideloadFactory warcSideloadFactory;
 
     @Inject
     public SideloadSourceFactory(Gson gson,
@@ -29,13 +31,15 @@ public class SideloadSourceFactory {
                                  ThreadLocalSentenceExtractorProvider sentenceExtractorProvider,
                                  DocumentKeywordExtractor documentKeywordExtractor,
                                  AnchorTagsSourceFactory anchorTagsSourceFactory,
-                                 DirtreeSideloaderFactory dirtreeSideloaderFactory) {
+                                 DirtreeSideloaderFactory dirtreeSideloaderFactory,
+                                 WarcSideloadFactory warcSideloadFactory) {
         this.gson = gson;
         this.sideloaderProcessing = sideloaderProcessing;
         this.sentenceExtractorProvider = sentenceExtractorProvider;
         this.documentKeywordExtractor = documentKeywordExtractor;
         this.anchorTagsSourceFactory = anchorTagsSourceFactory;
         this.dirtreeSideloaderFactory = dirtreeSideloaderFactory;
+        this.warcSideloadFactory = warcSideloadFactory;
     }
 
     public SideloadSource sideloadEncyclopediaMarginaliaNu(Path pathToDbFile, String baseUrl) throws SQLException {
@@ -44,6 +48,10 @@ public class SideloadSourceFactory {
 
     public Collection<? extends SideloadSource> sideloadDirtree(Path pathToYamlFile) throws IOException {
         return dirtreeSideloaderFactory.createSideloaders(pathToYamlFile);
+    }
+
+    public Collection<? extends SideloadSource> sideloadWarc(Path pathToWarcFiles) throws IOException {
+        return warcSideloadFactory.createSideloaders(pathToWarcFiles);
     }
 
     /** Do not use, this code isn't finished */

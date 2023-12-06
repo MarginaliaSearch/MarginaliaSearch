@@ -262,6 +262,14 @@ public class ConverterMain {
                         processData.asPath(),
                         msg, inbox);
             }
+            case SideloadWarc -> {
+                var processData = fileStorageService.getStorage(request.processedDataStorage);
+
+                yield new SideloadAction(
+                        sideloadSourceFactory.sideloadWarc(Path.of(request.inputSource)),
+                        processData.asPath(),
+                        msg, inbox);
+            }
             case SideloadStackexchange -> {
                 var processData = fileStorageService.getStorage(request.processedDataStorage);
 

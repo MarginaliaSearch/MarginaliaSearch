@@ -38,6 +38,13 @@ public class ConvertRequest {
                 destId,
                 null);
     }
+    public static ConvertRequest forWarc(Path sourcePath, FileStorageId destId) {
+        return new ConvertRequest(ConvertAction.SideloadWarc,
+                sourcePath.toString(),
+                null,
+                destId,
+                null);
+    }
 
     public static ConvertRequest forStackexchange(Path sourcePath, FileStorageId destId) {
         return new ConvertRequest(ConvertAction.SideloadStackexchange,
