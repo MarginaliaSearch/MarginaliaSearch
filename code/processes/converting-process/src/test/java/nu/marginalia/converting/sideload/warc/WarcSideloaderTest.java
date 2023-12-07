@@ -3,6 +3,8 @@ package nu.marginalia.converting.sideload.warc;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import nu.marginalia.converting.ConverterModule;
+import nu.marginalia.converting.model.ProcessedDocument;
+import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.processor.ConverterDomainTypes;
 import nu.marginalia.converting.sideload.SideloaderProcessing;
 import org.junit.jupiter.api.AfterEach;
@@ -16,7 +18,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 
 class WarcSideloaderTest extends AbstractModule {
@@ -53,13 +59,23 @@ class WarcSideloaderTest extends AbstractModule {
             throw new RuntimeException(e);
         }
 
-        try (var sideloader = new WarcSideloader(warcFile, processing)) {
+        ProcessedDomain domain;
+        List<ProcessedDocument> docs = new ArrayList<>();
 
-            var domain = sideloader.getDomain();
-            System.out.println(domain);
-            sideloader.getDocumentsStream().forEachRemaining(System.out::println);
+        try (var sideloader = new WarcSideloader(warcFile, processing)) {
+            domain = sideloader.getDomain();
+            sideloader.getDocumentsStream().forEachRemaining(docs::add);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+
+        assertNotNull(domain);
+        assertEquals(3, docs.size());
+        List<String> fetchedUrls = docs.stream().map(doc -> doc.url).map(Object::toString).toList();
+        assertEquals(List.of(
+                "https://www.marginalia.nu/",
+                "https://www.marginalia.nu/log/93_atags/",
+                "https://www.marginalia.nu/links/"),
+                fetchedUrls);
     }
 }

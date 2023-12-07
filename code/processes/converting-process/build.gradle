@@ -58,6 +58,7 @@ dependencies {
 
     implementation project(':code:features-crawl:crawl-blocklist')
     implementation project(':code:features-crawl:link-parser')
+    implementation project(':code:features-crawl:content-type')
 
     testImplementation project(':code:libraries:term-frequency-dict')
     testImplementation project(':code:process-models:crawl-spec')

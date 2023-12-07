@@ -2,6 +2,8 @@ package nu.marginalia.converting.sideload.warc;
 
 import lombok.SneakyThrows;
 import nu.marginalia.atags.model.DomainLinks;
+import nu.marginalia.contenttype.ContentTypeParser;
+import nu.marginalia.contenttype.DocumentBodyToString;
 import nu.marginalia.converting.model.GeneratorType;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.model.ProcessedDomain;
@@ -11,31 +13,32 @@ import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import org.netpreserve.jwarc.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.StreamSupport;
 
 public class WarcSideloader implements SideloadSource, AutoCloseable {
 
-    private final Path warcFile;
+    private static final Logger logger = LoggerFactory.getLogger(WarcSideloader.class);
+
     private final SideloaderProcessing sideloaderProcessing;
 
     private final WarcReader reader;
 
     private final EdgeDomain domain;
 
+
     public WarcSideloader(Path warcFile,
                           SideloaderProcessing sideloaderProcessing)
     throws IOException
     {
-        this.warcFile = warcFile;
         this.sideloaderProcessing = sideloaderProcessing;
         this.reader = new WarcReader(warcFile);
         this.domain = sniffDomainFromWarc()
@@ -82,6 +85,8 @@ public class WarcSideloader implements SideloadSource, AutoCloseable {
                 .map(WarcResponse.class::cast)
                 .filter(this::isRelevantResponse)
                 .map(this::process)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .iterator();
     }
 
@@ -109,8 +114,8 @@ public class WarcSideloader implements SideloadSource, AutoCloseable {
     }
 
     @SneakyThrows
-    private ProcessedDocument process(WarcResponse response) {
-        String body = getBody(response);
+    private Optional<ProcessedDocument> process(WarcResponse response) {
+        Optional<String> body = getBody(response);
         String url = response.target();
 
         // We trim "/index.html"-suffixes from the index if they are present,
@@ -119,18 +124,32 @@ public class WarcSideloader implements SideloadSource, AutoCloseable {
             url = url.substring(0, url.length() - "index.html".length());
         }
 
-        return sideloaderProcessing
-                .processDocument(url, body, List.of(), new DomainLinks(),
+        if (body.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(sideloaderProcessing
+                .processDocument(url, body.get(), List.of(), new DomainLinks(),
                         GeneratorType.DOCS,
-                        10_000);
+                        10_000));
     }
 
     @SneakyThrows
-    private String getBody(WarcResponse response) {
+    private Optional<String> getBody(WarcResponse response) {
         var http = response.http();
 
         // TODO: We should support additional encodings here
-        return new String(http.body().stream().readAllBytes(), StandardCharsets.UTF_8);
+        try (var body = http.body()) {
+            String contentType = http.headers().first("Content-Type").orElse(null);
+            byte[] bytes = body.stream().readAllBytes();
+
+            var ct = ContentTypeParser.parseContentType(contentType, bytes);
+            return Optional.of(DocumentBodyToString.getStringData(ct, bytes));
+        }
+        catch (Exception ex) {
+            logger.info("Failed to parse body", ex);
+        }
+        return Optional.empty();
     }
 
     @Override
