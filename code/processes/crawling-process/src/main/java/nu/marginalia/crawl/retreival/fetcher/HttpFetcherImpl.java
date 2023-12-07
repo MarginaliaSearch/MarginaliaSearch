@@ -5,17 +5,17 @@ import com.google.inject.name.Named;
 import crawlercommons.robots.SimpleRobotRules;
 import crawlercommons.robots.SimpleRobotRulesParser;
 import lombok.SneakyThrows;
+import nu.marginalia.contenttype.DocumentBodyToString;
 import nu.marginalia.crawl.retreival.Cookies;
 import nu.marginalia.crawl.retreival.RateLimitException;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawlerDocumentStatus;
-import nu.marginalia.crawling.model.ContentType;
+import nu.marginalia.contenttype.ContentType;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.crawl.retreival.logic.ContentTypeLogic;
-import nu.marginalia.crawl.retreival.logic.ContentTypeParser;
+import nu.marginalia.contenttype.ContentTypeParser;
 import okhttp3.*;
-import org.apache.commons.collections4.queue.PredicatedQueue;
 import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -281,7 +281,7 @@ public class HttpFetcherImpl implements HttpFetcher {
 
         byte[] data = byteStream.readNBytes(maxFetchSize);
 
-        var contentType = ContentTypeParser.parse(contentTypeHeader, data);
+        var contentType = ContentTypeParser.parseContentType(contentTypeHeader, data);
         if (!contentTypeLogic.isAllowableContentType(contentType.contentType())) {
             return createErrorResponse(url, rsp, CrawlerDocumentStatus.BAD_CONTENT_TYPE, "");
         }
@@ -301,7 +301,8 @@ public class HttpFetcherImpl implements HttpFetcher {
                     .build();
         }
 
-        var strData = getStringData(data, contentType);
+        var strData = DocumentBodyToString.getStringData(contentType, data);
+
         var canonical = rsp.header("rel=canonical", "");
 
         return CrawledDocument.builder()
@@ -361,24 +362,6 @@ public class HttpFetcherImpl implements HttpFetcher {
         if (isForbiddenMarginalia)
             return false;
         return isPermittedGeneral;
-    }
-
-    private String getStringData(byte[] data, ContentType contentType) {
-        Charset charset;
-        try {
-            charset = Charset.forName(contentType.charset());
-        }
-        catch (IllegalCharsetNameException ex) {
-            charset = StandardCharsets.UTF_8;
-        }
-        catch (UnsupportedCharsetException ex) {
-            // This is usually like Macintosh Latin
-            // (https://en.wikipedia.org/wiki/Macintosh_Latin_encoding)
-            //
-            // It's close enough to 8859-1 to serve
-            charset = StandardCharsets.ISO_8859_1;
-        }
-        return new String(data, charset);
     }
 
     private CrawledDocument createRedirectResponse(EdgeUrl url, Response rsp, EdgeUrl responseUrl) {

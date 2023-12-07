@@ -1,7 +1,8 @@
-package nu.marginalia.crawl.retreival.logic;
+package nu.marginalia.contenttype;
 
 import crawlercommons.mimetypes.MimeTypeDetector;
-import nu.marginalia.crawling.model.ContentType;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jsoup.Jsoup;
 
 import java.util.Arrays;
@@ -11,28 +12,40 @@ public class ContentTypeParser {
 
     static final MimeTypeDetector mimeTypeDetector = new MimeTypeDetector();
 
-    public static ContentType parse(String contentType, byte[] data) {
-        return getContentTypeFromContentTypeString(contentType)
-                .or(() -> getContentTypeStringFromTag(data))
+    /** Parse the content type and charset from a content type header and/or the body of a document,
+     * best effort
+     */
+    public static ContentType parseContentType(
+            @Nullable String contentTypeHeader,
+            @NotNull byte[] body)
+    {
+        return getContentTypeFromContentTypeString(contentTypeHeader)
+                .or(() -> getContentTypeStringFromTag(body))
                 .orElseGet(() -> {
-                    Optional<String> charset = getCharsetFromTag(data);
+                    Optional<String> charset = getCharsetFromTag(body);
                     return new ContentType(
-                            Optional.ofNullable(contentType)
-                                    .or(() -> Optional.ofNullable(mimeTypeDetector.detect(data)))
-                                    .orElseGet(() -> ContentTypeParser.shittyMimeSniffer(data)), charset.orElse("ISO_8859_1"));
+                            Optional.ofNullable(contentTypeHeader)
+                                    .or(() -> Optional.ofNullable(mimeTypeDetector.detect(body)))
+                                    .orElseGet(() -> ContentTypeParser.shittyMimeSniffer(body)), charset.orElse("ISO_8859_1"));
                 });
     }
 
-    private static Optional<ContentType> getContentTypeFromContentTypeString(String contentType) {
-        if (contentType != null && contentType.contains(";")) {
-            var parts = contentType.split(";");
-            var content = parts[0].trim();
-            var extra = parts[1].trim();
-            if (extra.startsWith("charset=")) {
-                return Optional.of(new ContentType(content, extra.substring("charset=".length())));
-            }
-        }
-        return Optional.empty();
+    /** Parse the charset from a content type string. */
+    private static Optional<ContentType> getContentTypeFromContentTypeString(@Nullable String contentType) {
+        if (contentType == null)
+            return Optional.empty();
+
+        if (!contentType.contains(";"))
+            return Optional.empty();
+
+        var parts = contentType.split(";");
+        var content = parts[0].trim();
+        var extra = parts[1].trim();
+
+        if (!extra.startsWith("charset="))
+            return Optional.empty();
+
+        return Optional.of(new ContentType(content, extra.substring("charset=".length())));
     }
 
     private static String shittyMimeSniffer(byte[] data) {
@@ -45,6 +58,7 @@ public class ContentTypeParser {
 
         String startStr = new String(Arrays.copyOf(data, Math.min(128, data.length))).trim().toLowerCase();
         if (startStr.contains("<!doctype html") || startStr.contains("<html")) {
+            // note we use contains here, since xhtml may be served with a <?xml-style header first
             return "text/html";
         }
         else {

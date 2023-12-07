@@ -41,6 +41,7 @@ dependencies {
     implementation project(':code:features-convert:anchor-keywords')
     implementation project(':code:features-crawl:crawl-blocklist')
     implementation project(':code:features-crawl:link-parser')
+    implementation project(':code:features-crawl:content-type')
 
     implementation libs.bundles.slf4j
 
