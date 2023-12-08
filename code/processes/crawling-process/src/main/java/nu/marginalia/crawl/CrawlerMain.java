@@ -50,12 +50,6 @@ public class CrawlerMain {
     private final static Logger logger = LoggerFactory.getLogger(CrawlerMain.class);
 
     private final ProcessHeartbeatImpl heartbeat;
-    private final ConnectionPool connectionPool = new ConnectionPool(5, 10, TimeUnit.SECONDS);
-
-    private final Dispatcher dispatcher = new Dispatcher(new ThreadPoolExecutor(0, Integer.MAX_VALUE, 5, TimeUnit.SECONDS,
-            new SynchronousQueue<>(), Util.threadFactory("OkHttp Dispatcher", true)));
-
-    private final UserAgent userAgent;
     private final MessageQueueFactory messageQueueFactory;
     private final FileStorageService fileStorageService;
     private final DbCrawlSpecProvider dbCrawlSpecProvider;
@@ -71,7 +65,7 @@ public class CrawlerMain {
 
     volatile int totalTasks;
     final AtomicInteger tasksDone = new AtomicInteger(0);
-    private final CrawlLimiter limiter = new CrawlLimiter();
+    private HttpFetcherImpl fetcher;
 
     @Inject
     public CrawlerMain(UserAgent userAgent,
@@ -83,7 +77,6 @@ public class CrawlerMain {
                        AnchorTagsSourceFactory anchorTagsSourceFactory,
                        Gson gson) {
         this.heartbeat = heartbeat;
-        this.userAgent = userAgent;
         this.messageQueueFactory = messageQueueFactory;
         this.fileStorageService = fileStorageService;
         this.dbCrawlSpecProvider = dbCrawlSpecProvider;
@@ -91,8 +84,14 @@ public class CrawlerMain {
         this.gson = gson;
         this.node = processConfiguration.node();
 
-        // maybe need to set -Xss for JVM to deal with this?
-        pool = new SimpleBlockingThreadPool("CrawlerPool", CrawlLimiter.maxPoolSize, 1);
+        pool = new SimpleBlockingThreadPool("CrawlerPool",
+                Integer.getInteger("crawler.pool-size", 256),
+                1);
+
+        fetcher = new HttpFetcherImpl(userAgent.uaString(),
+                new Dispatcher(Executors.newVirtualThreadPerTaskExecutor()),
+                new ConnectionPool(5, 10, TimeUnit.SECONDS)
+        );
     }
 
     public static void main(String... args) throws Exception {
@@ -173,6 +172,7 @@ public class CrawlerMain {
                     activePoolCount = newActivePoolCount;
                 }
             }
+
         }
         catch (Exception ex) {
             logger.warn("Exception in crawler", ex);
@@ -208,11 +208,6 @@ public class CrawlerMain {
 
         @Override
         public void run() throws Exception {
-
-            limiter.waitForEnoughRAM();
-
-            HttpFetcher fetcher = new HttpFetcherImpl(userAgent.uaString(), dispatcher, connectionPool);
-
 
             try (CrawledDomainWriter writer = new CrawledDomainWriter(outputDir, domain, id);
                  var warcRecorder = new WarcRecorder(); // write to a temp file for now
