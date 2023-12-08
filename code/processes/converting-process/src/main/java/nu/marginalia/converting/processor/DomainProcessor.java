@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class DomainProcessor {
     private final DocumentProcessor documentProcessor;
@@ -94,6 +95,10 @@ public class DomainProcessor {
             terms.add(HtmlFeature.COOKIES.getKeyword());
         }
 
+        if (isAcademicDomain(ret.domain)) {
+            terms.add("special:academia");
+        }
+
         for (var document : ret.documents) {
             if (document.details == null)
                 continue;
@@ -112,6 +117,19 @@ public class DomainProcessor {
         calculateStatistics(ret, externalDomainLinks);
 
         return ret;
+    }
+
+
+    private static final Pattern academicPattern = Pattern.compile(".*\\.(ac|edu)\\.[a-z]{2}$");
+    private boolean isAcademicDomain(EdgeDomain domain) {
+
+        if (domain.domain.endsWith(".edu"))
+            return true;
+
+        if (academicPattern.matcher(domain.domain).matches())
+            return true;
+
+        return false;
     }
 
     private void fixBadCanonicalTag(CrawledDocument doc) {
