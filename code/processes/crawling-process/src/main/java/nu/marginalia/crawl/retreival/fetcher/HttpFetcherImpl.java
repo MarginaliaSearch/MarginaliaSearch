@@ -8,9 +8,9 @@ import lombok.SneakyThrows;
 import nu.marginalia.contenttype.DocumentBodyToString;
 import nu.marginalia.crawl.retreival.Cookies;
 import nu.marginalia.crawl.retreival.RateLimitException;
+import nu.marginalia.crawl.retreival.fetcher.socket.*;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawlerDocumentStatus;
-import nu.marginalia.contenttype.ContentType;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.crawl.retreival.logic.ContentTypeLogic;
@@ -26,10 +26,7 @@ import javax.net.ssl.X509TrustManager;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.*;
-import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
-import java.nio.charset.StandardCharsets;
-import java.nio.charset.UnsupportedCharsetException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -65,6 +62,7 @@ public class HttpFetcherImpl implements HttpFetcher {
         return builder.sslSocketFactory(NoSecuritySSL.buildSocketFactory(), (X509TrustManager) NoSecuritySSL.trustAllCerts[0])
             .socketFactory(ftSocketFactory)
             .hostnameVerifier(NoSecuritySSL.buildHostnameVerifyer())
+            .addNetworkInterceptor(new IpInterceptingNetworkInterceptor())
             .connectionPool(pool)
             .cookieJar(cookies.getJar())
             .followRedirects(true)
@@ -141,8 +139,8 @@ public class HttpFetcherImpl implements HttpFetcher {
 
             var headBuilder = new Request.Builder().head()
                     .addHeader("User-agent", userAgent)
-                    .url(url.toString())
-                    .addHeader("Accept-Encoding", "gzip");
+                    .addHeader("Accept-Encoding", "gzip")
+                    .url(url.toString());
 
             var head = headBuilder.build();
             var call = client.newCall(head);

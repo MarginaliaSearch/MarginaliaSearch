@@ -49,6 +49,7 @@ dependencies {
     implementation libs.guice
     implementation libs.gson
     implementation libs.zstd
+    implementation libs.jwarc
     implementation libs.crawlercommons
     implementation libs.okhttp3
     implementation libs.jsoup

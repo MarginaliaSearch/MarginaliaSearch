@@ -232,4 +232,11 @@ public class EdgeUrl implements Serializable {
 
         return new URL(this.proto, this.domain.toString(), port, this.path);
     }
+
+    public URI asURI() throws URISyntaxException {
+        if (port == null)
+            return new URI(this.proto, null, this.domain.toString(), this.path, this.param);
+        else
+            return new URI(this.proto, null, this.domain.toString(), this.port, this.path, this.param, null);
+    }
 }

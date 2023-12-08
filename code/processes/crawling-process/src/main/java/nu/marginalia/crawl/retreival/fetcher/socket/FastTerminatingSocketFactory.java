@@ -1,4 +1,4 @@
-package nu.marginalia.crawl.retreival.fetcher;
+package nu.marginalia.crawl.retreival.fetcher.socket;
 
 import javax.net.SocketFactory;
 import java.io.IOException;
