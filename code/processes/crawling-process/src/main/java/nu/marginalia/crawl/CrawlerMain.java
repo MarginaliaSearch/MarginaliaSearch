@@ -12,6 +12,7 @@ import nu.marginalia.atags.source.AnchorTagsSource;
 import nu.marginalia.atags.source.AnchorTagsSourceFactory;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
+import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.spec.CrawlSpecProvider;
 import nu.marginalia.crawl.spec.DbCrawlSpecProvider;
 import nu.marginalia.crawl.spec.ParquetCrawlSpecProvider;
@@ -212,21 +213,23 @@ public class CrawlerMain {
 
             HttpFetcher fetcher = new HttpFetcherImpl(userAgent.uaString(), dispatcher, connectionPool);
 
+
             try (CrawledDomainWriter writer = new CrawledDomainWriter(outputDir, domain, id);
+                 var warcRecorder = new WarcRecorder(); // write to a temp file for now
+                 var retreiver = new CrawlerRetreiver(fetcher, specification, warcRecorder, writer::accept);
                  CrawlDataReference reference = getReference())
             {
                 Thread.currentThread().setName("crawling:" + domain);
 
                 var domainLinks = anchorTagsSource.getAnchorTags(domain);
 
-                var retreiver = new CrawlerRetreiver(fetcher, specification, writer::accept);
+
                 int size = retreiver.fetch(domainLinks, reference);
 
                 workLog.setJobToFinished(domain, writer.getOutputFile().toString(), size);
                 heartbeat.setProgress(tasksDone.incrementAndGet() / (double) totalTasks);
 
                 logger.info("Fetched {}", domain);
-
             } catch (Exception e) {
                 logger.error("Error fetching domain " + domain, e);
             }

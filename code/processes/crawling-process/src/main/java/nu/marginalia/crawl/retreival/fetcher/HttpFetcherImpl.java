@@ -8,7 +8,11 @@ import lombok.SneakyThrows;
 import nu.marginalia.contenttype.DocumentBodyToString;
 import nu.marginalia.crawl.retreival.Cookies;
 import nu.marginalia.crawl.retreival.RateLimitException;
+import nu.marginalia.crawl.retreival.fetcher.ContentTypeProber.ContentTypeProbeResult;
 import nu.marginalia.crawl.retreival.fetcher.socket.*;
+import nu.marginalia.crawl.retreival.fetcher.warc.HttpFetchResult;
+import static nu.marginalia.crawl.retreival.fetcher.CrawledDocumentFactory.*;
+import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawlerDocumentStatus;
 import nu.marginalia.model.EdgeDomain;
@@ -32,16 +36,17 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
+
 public class HttpFetcherImpl implements HttpFetcher {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final String userAgent;
-    private final int maxFetchSize = 1024*512;
     private final Cookies cookies = new Cookies();
 
     private static final SimpleRobotRulesParser robotsParser = new SimpleRobotRulesParser();
 
     private final ContentTypeLogic contentTypeLogic = new ContentTypeLogic();
+    private final ContentTypeProber contentTypeProber;
 
     @Override
     public void setAllowAllContentTypes(boolean allowAllContentTypes) {
@@ -88,13 +93,22 @@ public class HttpFetcherImpl implements HttpFetcher {
     public HttpFetcherImpl(@Named("user-agent") String userAgent, Dispatcher dispatcher, ConnectionPool connectionPool) {
         this.client = createClient(dispatcher, connectionPool);
         this.userAgent = userAgent;
+        this.contentTypeProber = new ContentTypeProber(userAgent, client);
     }
 
     public HttpFetcherImpl(@Named("user-agent") String userAgent) {
         this.client = createClient(null, new ConnectionPool());
         this.userAgent = userAgent;
+        this.contentTypeProber = new ContentTypeProber(userAgent, client);
     }
 
+    /**
+     * Probe the domain to see if it is reachable, attempting to identify which schema to use,
+     * and if there are any redirects.  This is done by one or more HEAD requests.
+     *
+     * @param url The URL to probe.
+     * @return The result of the probe, indicating the state and the URL.
+     */
     @Override
     @SneakyThrows
     public FetchResult probeDomain(EdgeUrl url) {
@@ -127,6 +141,7 @@ public class HttpFetcherImpl implements HttpFetcher {
     @Override
     @SneakyThrows
     public CrawledDocument fetchContent(EdgeUrl url,
+                                        WarcRecorder warcRecorder,
                                         ContentTags contentTags)
             throws RateLimitException
     {
@@ -135,149 +150,96 @@ public class HttpFetcherImpl implements HttpFetcher {
         // looks like it might be something else, we perform a HEAD first to check the content type
         if (contentTags.isEmpty() && contentTypeLogic.isUrlLikeBinary(url))
         {
-            logger.debug("Probing suspected binary {}", url);
-
-            var headBuilder = new Request.Builder().head()
-                    .addHeader("User-agent", userAgent)
-                    .addHeader("Accept-Encoding", "gzip")
-                    .url(url.toString());
-
-            var head = headBuilder.build();
-            var call = client.newCall(head);
-
-            try (var rsp = call.execute()) {
-                var contentTypeHeader = rsp.header("Content-type");
-                if (contentTypeHeader != null && !contentTypeLogic.isAllowableContentType(contentTypeHeader)) {
-                    return createErrorResponse(url, rsp, CrawlerDocumentStatus.BAD_CONTENT_TYPE, "Early probe failed");
-                }
-
-                // Update the URL to the final URL of the HEAD request, otherwise we might end up doing
-
-                // HEAD 301 url1 -> url2
-                // HEAD 200 url2
-                // GET 301 url1 -> url2
-                // GET 200 url2
-
-                // which is not what we want. Overall we want to do as few requests as possible to not raise
-                // too many eyebrows when looking at the logs on the target server.  Overall it's probably desirable
-                // that it looks like the traffic makes sense, as opposed to looking like a broken bot.
-
-                var redirectUrl = new EdgeUrl(rsp.request().url().toString());
-                if (Objects.equals(redirectUrl.domain, url.domain))
+            ContentTypeProbeResult probeResult = contentTypeProber.probeContentType(url);
+            switch (probeResult) {
+                case ContentTypeProbeResult.Ok(EdgeUrl redirectUrl) -> {
                     url = redirectUrl;
-            }
-            catch (SocketTimeoutException ex) {
-                return createTimeoutErrorRsp(url, ex);
-            }
-            catch (Exception ex) {
-                logger.error("Error during fetching {}[{}]", ex.getClass().getSimpleName(), ex.getMessage());
-                return createHardErrorRsp(url, ex);
-            }
+                }
+                case ContentTypeProbeResult.BadContentType (String contentType, int statusCode) -> {
+                    return createErrorResponse(url, contentType, statusCode,
+                            CrawlerDocumentStatus.BAD_CONTENT_TYPE,
+                            contentType
+                    );
+                }
+                case ContentTypeProbeResult.Timeout timeout -> {
+                    return createTimeoutErrorRsp(url);
+                }
+                case ContentTypeProbeResult.Exception ex -> {
+                    return createErrorFromException(url, ex.ex());
+                }
+            };
         }
 
         var getBuilder = new Request.Builder().get();
 
-        getBuilder.addHeader("User-agent", userAgent)
-                .url(url.toString())
-                .addHeader("Accept-Encoding", "gzip");
+        getBuilder.url(url.toString())
+                .addHeader("Accept-Encoding", "gzip")
+                .addHeader("User-agent", userAgent);
 
         contentTags.paint(getBuilder);
 
-        var get = getBuilder.build();
-        var call = client.newCall(get);
+        HttpFetchResult result = warcRecorder.fetch(client, getBuilder.build());
 
-        try (var rsp = call.execute()) {
-            return extractBody(url, rsp);
+        if (result instanceof HttpFetchResult.ResultError err) {
+            return createErrorFromException(url, err.ex());
         }
-        catch (RateLimitException rle) {
-            throw rle;
+        else if (result instanceof HttpFetchResult.ResultOk ok) {
+            try {
+                return extractBody(url, ok);
+            }
+            catch (Exception ex) {
+                return createErrorFromException(url, ex);
+            }
         }
-        catch (SocketTimeoutException ex) {
-            return createTimeoutErrorRsp(url, ex);
-        }
-        catch (UnknownHostException ex) {
-            return createUnknownHostError(url, ex);
-        }
-        catch (SocketException | ProtocolException | IllegalCharsetNameException | SSLException | EOFException ex) {
-            // This is a bit of a grab-bag of errors that crop up
-            // IllegalCharsetName is egg on our face,
-            // but SSLException and EOFException are probably the server's fault
-
-            return createHardErrorRsp(url, ex);
-        }
-        catch (Exception ex) {
-            logger.error("Error during fetching", ex);
-            return createHardErrorRsp(url, ex);
+        else {
+            throw new IllegalStateException("Unknown result type " + result.getClass());
         }
     }
 
-    private CrawledDocument createHardErrorRsp(EdgeUrl url, Exception why) {
-        return CrawledDocument.builder()
-                .crawlerStatus(CrawlerDocumentStatus.ERROR.toString())
-                .crawlerStatusDesc(why.getClass().getSimpleName() + ": " + why.getMessage())
-                .timestamp(LocalDateTime.now().toString())
-                .url(url.toString())
-                .build();
+    private CrawledDocument createErrorFromException(EdgeUrl url, Exception exception) throws RateLimitException {
+        return switch (exception) {
+            case RateLimitException rle -> throw rle;
+            case SocketTimeoutException ex -> createTimeoutErrorRsp(url);
+            case UnknownHostException ex -> createUnknownHostError(url);
+            case SocketException ex -> createHardErrorRsp(url, ex);
+            case ProtocolException ex -> createHardErrorRsp(url, ex);
+            case IllegalCharsetNameException ex -> createHardErrorRsp(url, ex);
+            case SSLException ex -> createHardErrorRsp(url, ex);
+            case EOFException ex -> createHardErrorRsp(url, ex);
+            default -> {
+                logger.error("Error during fetching", exception);
+                yield createHardErrorRsp(url, exception);
+            }
+        };
     }
 
-    private CrawledDocument createUnknownHostError(EdgeUrl url, Exception why) {
-        return CrawledDocument.builder()
-                .crawlerStatus(CrawlerDocumentStatus.ERROR.toString())
-                .crawlerStatusDesc("Unknown Host")
-                .timestamp(LocalDateTime.now().toString())
-                .url(url.toString())
-                .build();
-    }
+    private CrawledDocument extractBody(EdgeUrl url, HttpFetchResult.ResultOk rsp) throws IOException, RateLimitException {
 
-    private CrawledDocument createTimeoutErrorRsp(EdgeUrl url, Exception why) {
-        return CrawledDocument.builder()
-                .crawlerStatus("Timeout")
-                .crawlerStatusDesc(why.getMessage())
-                .timestamp(LocalDateTime.now().toString())
-                .url(url.toString())
-                .build();
-    }
-    private CrawledDocument createErrorResponse(EdgeUrl url, Response rsp, CrawlerDocumentStatus status, String why) {
-        return CrawledDocument.builder()
-                .crawlerStatus(status.toString())
-                .crawlerStatusDesc(why)
-                .headers(rsp.headers().toString())
-                .contentType(rsp.header("Content-type"))
-                .timestamp(LocalDateTime.now().toString())
-                .httpStatus(rsp.code())
-                .url(url.toString())
-                .build();
-    }
+        var responseUrl = new EdgeUrl(rsp.uri());
 
-    private CrawledDocument extractBody(EdgeUrl url, Response rsp) throws IOException, URISyntaxException, RateLimitException {
-
-        var responseUrl = new EdgeUrl(rsp.request().url().toString());
         if (!Objects.equals(responseUrl.domain, url.domain)) {
             return createRedirectResponse(url, rsp, responseUrl);
         }
 
-        if (rsp.code() == 429) {
-            throw new RateLimitException(rsp.header("Retry-After", "1000"));
+        if (rsp.statusCode() == 429) {
+            String retryAfter = Objects.requireNonNullElse(rsp.header("Retry-After"), "1000");
+
+            throw new RateLimitException(retryAfter);
         }
 
-        var body = rsp.body();
-        if (null == body) {
-            return createErrorResponse(url, rsp, CrawlerDocumentStatus.ERROR, "No body");
-        }
+        var byteStream = rsp.getInputStream();
 
-        var byteStream = body.byteStream();
-
-        if ("gzip".equals(rsp.header("Content-encoding"))) {
+        if ("gzip".equals(rsp.header("Content-Encoding"))) {
             byteStream = new GZIPInputStream(byteStream);
         }
         byteStream = new BOMInputStream(byteStream);
 
-        var contentTypeHeader = rsp.header("Content-type");
+        var contentTypeHeader = rsp.header("Content-Type");
         if (contentTypeHeader != null && !contentTypeLogic.isAllowableContentType(contentTypeHeader)) {
             return createErrorResponse(url, rsp, CrawlerDocumentStatus.BAD_CONTENT_TYPE, "");
         }
 
-        byte[] data = byteStream.readNBytes(maxFetchSize);
+        byte[] data = byteStream.readAllBytes(); // size is limited by WarcRecorder
 
         var contentType = ContentTypeParser.parseContentType(contentTypeHeader, data);
         if (!contentTypeLogic.isAllowableContentType(contentType.contentType())) {
@@ -288,7 +250,7 @@ public class HttpFetcherImpl implements HttpFetcher {
             return createErrorResponse(url, rsp, CrawlerDocumentStatus.BAD_CHARSET, "");
         }
 
-        if (!isXRobotsTagsPermitted(rsp.headers("X-Robots-Tag"), userAgent)) {
+        if (!isXRobotsTagsPermitted(rsp.allHeaders("X-Robots-Tag"), userAgent)) {
             return CrawledDocument.builder()
                     .crawlerStatus(CrawlerDocumentStatus.ROBOTS_TXT.name())
                     .crawlerStatusDesc("X-Robots-Tag")
@@ -301,15 +263,12 @@ public class HttpFetcherImpl implements HttpFetcher {
 
         var strData = DocumentBodyToString.getStringData(contentType, data);
 
-        var canonical = rsp.header("rel=canonical", "");
-
         return CrawledDocument.builder()
                 .crawlerStatus(CrawlerDocumentStatus.OK.name())
                 .headers(rsp.headers().toString())
-                .contentType(rsp.header("Content-type"))
+                .contentType(contentTypeHeader)
                 .timestamp(LocalDateTime.now().toString())
-                .canonicalUrl(canonical)
-                .httpStatus(rsp.code())
+                .httpStatus(rsp.statusCode())
                 .url(responseUrl.toString())
                 .documentBody(strData)
                 .build();
@@ -362,24 +321,11 @@ public class HttpFetcherImpl implements HttpFetcher {
         return isPermittedGeneral;
     }
 
-    private CrawledDocument createRedirectResponse(EdgeUrl url, Response rsp, EdgeUrl responseUrl) {
-
-        return CrawledDocument.builder()
-                .crawlerStatus(CrawlerDocumentStatus.REDIRECT.name())
-                .redirectUrl(responseUrl.toString())
-                .headers(rsp.headers().toString())
-                .contentType(rsp.header("Content-type"))
-                .timestamp(LocalDateTime.now().toString())
-                .httpStatus(rsp.code())
-                .url(url.toString())
-                .build();
-
-    }
 
     @Override
-    public SimpleRobotRules fetchRobotRules(EdgeDomain domain) {
-        return fetchRobotsForProto("https", domain)
-                .or(() -> fetchRobotsForProto("http", domain))
+    public SimpleRobotRules fetchRobotRules(EdgeDomain domain, WarcRecorder recorder) {
+        return fetchRobotsForProto("https", recorder, domain)
+                .or(() -> fetchRobotsForProto("http", recorder, domain))
                 .orElseGet(() -> new SimpleRobotRules(SimpleRobotRules.RobotRulesMode.ALLOW_ALL));
     }
 
@@ -388,10 +334,10 @@ public class HttpFetcherImpl implements HttpFetcher {
         return new SitemapRetriever();
     }
 
-    private Optional<SimpleRobotRules> fetchRobotsForProto(String proto, EdgeDomain domain) {
+    private Optional<SimpleRobotRules> fetchRobotsForProto(String proto, WarcRecorder recorder, EdgeDomain domain) {
         try {
             var url = new EdgeUrl(proto, domain, null, "/robots.txt", null);
-            return Optional.of(parseRobotsTxt(fetchContent(url, ContentTags.empty())));
+            return Optional.of(parseRobotsTxt(fetchContent(url, recorder, ContentTags.empty())));
         }
         catch (Exception ex) {
             return Optional.empty();
@@ -406,3 +352,4 @@ public class HttpFetcherImpl implements HttpFetcher {
     }
 
 }
+

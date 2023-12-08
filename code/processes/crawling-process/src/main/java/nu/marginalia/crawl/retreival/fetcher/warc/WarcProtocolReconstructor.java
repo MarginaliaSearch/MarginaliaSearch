@@ -106,7 +106,8 @@ public class WarcProtocolReconstructor {
         response.headers().toMultimap().forEach((k, values) -> {
             String headerCapitalized = capitalizeHeader(k);
 
-            if (headerCapitalized.startsWith("X"))
+            // Omit pseudoheaders injected by the crawler itself
+            if (headerCapitalized.startsWith("X-Marginalia"))
                 return;
 
             for (var value : values) {

@@ -4,6 +4,7 @@ import crawlercommons.robots.SimpleRobotRules;
 import lombok.SneakyThrows;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.fetcher.*;
+import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawlerDocumentStatus;
 import nu.marginalia.crawling.model.SerializableCrawlData;
@@ -17,11 +18,13 @@ import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class CrawlerMockFetcherTest {
 
@@ -60,42 +63,46 @@ public class CrawlerMockFetcherTest {
 
     }
 
+    void crawl(CrawlSpecRecord spec, Consumer<SerializableCrawlData> consumer)  throws IOException {
+        try (var recorder = new WarcRecorder()) {
+            new CrawlerRetreiver(fetcherMock, spec, recorder, consumer)
+                    .fetch();
+        }
+    }
+
     @Test
-    public void testLemmy() throws URISyntaxException {
+    public void testLemmy() throws URISyntaxException, IOException {
         List<SerializableCrawlData> out = new ArrayList<>();
 
         registerUrlClasspathData(new EdgeUrl("https://startrek.website/"), "mock-crawl-data/lemmy/index.html");
         registerUrlClasspathData(new EdgeUrl("https://startrek.website/c/startrek"), "mock-crawl-data/lemmy/c_startrek.html");
         registerUrlClasspathData(new EdgeUrl("https://startrek.website/post/108995"), "mock-crawl-data/lemmy/108995.html");
 
-        new CrawlerRetreiver(fetcherMock, new CrawlSpecRecord("startrek.website", 10, new ArrayList<>()), out::add)
-                .fetch();
+        crawl(new CrawlSpecRecord("startrek.website", 10, new ArrayList<>()), out::add);
 
         out.forEach(System.out::println);
     }
 
     @Test
-    public void testMediawiki() throws URISyntaxException {
+    public void testMediawiki() throws URISyntaxException, IOException {
         List<SerializableCrawlData> out = new ArrayList<>();
 
         registerUrlClasspathData(new EdgeUrl("https://en.wikipedia.org/"), "mock-crawl-data/mediawiki/index.html");
 
-        new CrawlerRetreiver(fetcherMock, new CrawlSpecRecord("en.wikipedia.org", 10, new ArrayList<>()), out::add)
-                .fetch();
+        crawl(new CrawlSpecRecord("en.wikipedia.org", 10, new ArrayList<>()), out::add);
 
         out.forEach(System.out::println);
     }
 
     @Test
-    public void testDiscourse() throws URISyntaxException {
+    public void testDiscourse() throws URISyntaxException, IOException {
         List<SerializableCrawlData> out = new ArrayList<>();
 
         registerUrlClasspathData(new EdgeUrl("https://community.tt-rss.org/"), "mock-crawl-data/discourse/index.html");
         registerUrlClasspathData(new EdgeUrl("https://community.tt-rss.org/t/telegram-channel-to-idle-on/3501"), "mock-crawl-data/discourse/telegram.html");
         registerUrlClasspathData(new EdgeUrl("https://community.tt-rss.org/t/combined-mode-but-grid/4489"), "mock-crawl-data/discourse/grid.html");
 
-        new CrawlerRetreiver(fetcherMock, new CrawlSpecRecord("community.tt-rss.org", 100, new ArrayList<>()), out::add)
-                .fetch();
+        crawl(new CrawlSpecRecord("community.tt-rss.org", 10, new ArrayList<>()), out::add);
 
         out.forEach(System.out::println);
     }
@@ -118,7 +125,7 @@ public class CrawlerMockFetcherTest {
         }
 
         @Override
-        public CrawledDocument fetchContent(EdgeUrl url, ContentTags tags) {
+        public CrawledDocument fetchContent(EdgeUrl url, WarcRecorder recorder, ContentTags tags) {
             logger.info("Fetching {}", url);
             if (mockData.containsKey(url)) {
                 return mockData.get(url);
@@ -135,7 +142,7 @@ public class CrawlerMockFetcherTest {
         }
 
         @Override
-        public SimpleRobotRules fetchRobotRules(EdgeDomain domain) {
+        public SimpleRobotRules fetchRobotRules(EdgeDomain domain, WarcRecorder recorder) {
             return new SimpleRobotRules();
         }
 

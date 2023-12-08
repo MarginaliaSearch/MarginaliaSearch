@@ -8,6 +8,7 @@ import nu.marginalia.converting.processor.DomainProcessor;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
+import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawling.io.SerializableCrawlDataStream;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,7 +48,7 @@ public class CrawlingThenConvertingIntegrationTest {
     }
 
     @Test
-    public void crawlThenProcess() {
+    public void crawlThenProcess() throws IOException {
         var specs = CrawlSpecRecord.builder()
                 .domain("www.marginalia.nu")
                 .crawlDepth(10)
@@ -72,10 +74,12 @@ public class CrawlingThenConvertingIntegrationTest {
 
     }
 
-    private CrawledDomain crawl(CrawlSpecRecord specs) {
+    private CrawledDomain crawl(CrawlSpecRecord specs) throws IOException {
         List<SerializableCrawlData> data = new ArrayList<>();
 
-        new CrawlerRetreiver(httpFetcher, specs, data::add).fetch();
+        try (var recorder = new WarcRecorder()) {
+            new CrawlerRetreiver(httpFetcher, specs, recorder, data::add).fetch();
+        }
 
         CrawledDomain domain = data.stream().filter(CrawledDomain.class::isInstance).map(CrawledDomain.class::cast).findFirst().get();
         data.stream().filter(CrawledDocument.class::isInstance).map(CrawledDocument.class::cast).forEach(domain.doc::add);

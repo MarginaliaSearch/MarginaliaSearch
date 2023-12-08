@@ -14,11 +14,11 @@ public class IpInterceptingNetworkInterceptor implements Interceptor  {
 
         return chain.proceed(chain.request())
                 .newBuilder()
-                .addHeader("X-Remote-IP", IP)
+                .addHeader("X-Marginalia-Remote-IP", IP)
                 .build();
     }
 
     public static String getIpFromResponse(Response response) {
-        return response.header("X-Remote-IP");
+        return response.header("X-Marginalia-Remote-IP");
     }
 }

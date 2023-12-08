@@ -8,6 +8,7 @@ import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.crawl.retreival.fetcher.ContentTags;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
 import nu.marginalia.crawl.retreival.fetcher.SitemapRetriever;
+import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.crawling.model.*;
 import nu.marginalia.ip_blocklist.UrlBlocklist;
@@ -20,13 +21,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Consumer;
 
-public class CrawlerRetreiver {
+public class CrawlerRetreiver implements AutoCloseable {
 
     private static final int MAX_ERRORS = 20;
 
@@ -45,6 +48,7 @@ public class CrawlerRetreiver {
     private static final DomainProber domainProber = new DomainProber();
     private final SitemapRetriever sitemapRetriever;
     private final DomainCrawlFrontier crawlFrontier;
+    private final WarcRecorder warcRecorder;
 
     int errorCount = 0;
 
@@ -56,7 +60,10 @@ public class CrawlerRetreiver {
 
     public CrawlerRetreiver(HttpFetcher fetcher,
                             CrawlSpecRecord specs,
-                            Consumer<SerializableCrawlData> writer) {
+                            WarcRecorder warcRecorder,
+                            Consumer<SerializableCrawlData> writer)
+    {
+        this.warcRecorder = warcRecorder;
         this.fetcher = fetcher;
 
         domain = specs.domain;
@@ -121,7 +128,7 @@ public class CrawlerRetreiver {
 
         assert !crawlFrontier.isEmpty();
 
-        final SimpleRobotRules robotsRules = fetcher.fetchRobotRules(crawlFrontier.peek().domain);
+        final SimpleRobotRules robotsRules = fetcher.fetchRobotRules(crawlFrontier.peek().domain, warcRecorder);
         final CrawlDelayTimer delayTimer = new CrawlDelayTimer(robotsRules.getCrawlDelay());
 
         sniffRootDocument(delayTimer, rootUrl);
@@ -419,7 +426,7 @@ public class CrawlerRetreiver {
     private CrawledDocument tryDownload(EdgeUrl top, CrawlDelayTimer timer, ContentTags tags) {
         for (int i = 0; i < 2; i++) {
             try {
-                var doc = fetcher.fetchContent(top, tags);
+                var doc = fetcher.fetchContent(top, warcRecorder, tags);
                 doc.recrawlState = "NEW";
                 return doc;
             }
@@ -494,6 +501,11 @@ public class CrawlerRetreiver {
                 .httpStatus(429)
                 .crawlerStatus(CrawlerDocumentStatus.ERROR.name())
                 .build();
+    }
+
+    @Override
+    public void close() throws Exception {
+        warcRecorder.close();
     }
 
     private record DocumentWithReference(

@@ -1,8 +1,7 @@
 package nu.marginalia.crawl.retreival.fetcher;
 
 import nu.marginalia.crawl.retreival.fetcher.socket.IpInterceptingNetworkInterceptor;
-import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecordingFetcherClient;
-import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.junit.jupiter.api.AfterEach;
@@ -23,9 +22,9 @@ import java.util.zip.GZIPInputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class WarcRecordingFetcherClientTest {
+class WarcRecorderTest {
     Path fileName;
-    WarcRecordingFetcherClient client;
+    WarcRecorder client;
     OkHttpClient httpClient;
     @BeforeEach
     public void setUp() throws Exception {
@@ -34,7 +33,7 @@ class WarcRecordingFetcherClientTest {
                 .build();
 
         fileName = Files.createTempFile("test", ".warc.gz");
-        client = new WarcRecordingFetcherClient(fileName, new EdgeDomain("www.marginalia.nu"));
+        client = new WarcRecorder(fileName);
     }
 
     @AfterEach

@@ -20,7 +20,11 @@ class WarcDigestBuilder {
     }
 
     public void update(byte[] buffer, int n) {
-        digest.update(buffer, 0, n);
+        update(buffer, 0, n);
+    }
+
+    public void update(byte[] buffer, int s, int n) {
+        digest.update(buffer, s, n);
     }
 
     public WarcDigest build() {
