@@ -29,7 +29,6 @@ public class NoSecuritySSL {
             }
     };
 
-
     @SneakyThrows
     public static SSLSocketFactory buildSocketFactory() {
         // Install the all-trusting trust manager
