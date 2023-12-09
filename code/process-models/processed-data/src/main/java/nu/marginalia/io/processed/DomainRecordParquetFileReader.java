@@ -3,6 +3,7 @@ package nu.marginalia.io.processed;
 import blue.strategic.parquet.HydratorSupplier;
 import blue.strategic.parquet.ParquetReader;
 import nu.marginalia.model.processed.DomainRecord;
+import nu.marginalia.model.processed.DomainWithIp;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -19,10 +20,10 @@ public class DomainRecordParquetFileReader {
     }
 
     @NotNull
-    public static List<String> getDomainNames(Path path) throws IOException {
+    public static List<DomainWithIp> getBasicDomainInformation(Path path) throws IOException {
         return ParquetReader.streamContent(path.toFile(),
                 HydratorSupplier.constantly(DomainRecord.newDomainNameHydrator()),
-                List.of("domain"))
+                List.of("domain", "ip"))
                 .toList();
     }
 

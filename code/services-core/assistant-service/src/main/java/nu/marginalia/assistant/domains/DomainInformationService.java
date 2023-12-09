@@ -11,17 +11,14 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-/*
-  TODO: This class needs to be refactored, a lot of
-        these SQL queries are redundant and can be
-        collapsed into one single query that fetches
-        all the information
- */
 @Singleton
 public class DomainInformationService {
+    private final GeoIpDictionary geoIpDictionary;
 
     private DbDomainQueries dbDomainQueries;
     private HikariDataSource dataSource;
@@ -30,8 +27,10 @@ public class DomainInformationService {
     @Inject
     public DomainInformationService(
             DbDomainQueries dbDomainQueries,
+            GeoIpDictionary geoIpDictionary,
             HikariDataSource dataSource) {
         this.dbDomainQueries = dbDomainQueries;
+        this.geoIpDictionary = geoIpDictionary;
         this.dataSource = dataSource;
     }
 
@@ -43,226 +42,75 @@ public class DomainInformationService {
             return Optional.empty();
         }
 
-        boolean blacklisted = isBlacklisted(domain.get());
-        int pagesKnown = getPagesKnown(domainId);
-        int pagesVisited = getPagesVisited(domainId);
-        int pagesIndexed = getPagesIndexed(domainId);
-        int incomingLinks = getIncomingLinks(domainId);
-        int outboundLinks = getOutboundLinks(domainId);
-        int nodeAffinity = getNodeAffinity(domainId);
-        boolean inCrawlQueue = inCrawlQueue(domainId);
 
-        double rank = Math.round(10000.0*(1.0-getRank(domainId)))/100;
+        var builder = DomainInformation.builder();
+        try (var connection = dataSource.getConnection();
+             var stmt = connection.createStatement();
+        ) {
+            boolean inCrawlQueue;
+            int outboundLinks = 0;
+            int pagesVisited = 0;
 
-        DomainIndexingState state = getDomainState(domainId);
+            ResultSet rs;
 
-        var di = DomainInformation.builder()
-                .domain(domain.get())
-                .blacklisted(blacklisted)
-                .pagesKnown(pagesKnown)
-                .pagesFetched(pagesVisited)
-                .pagesIndexed(pagesIndexed)
-                .incomingLinks(incomingLinks)
-                .outboundLinks(outboundLinks)
-                .ranking(rank)
-                .state(state.desc)
-                .inCrawlQueue(inCrawlQueue)
-                .nodeAffinity(nodeAffinity)
-                .suggestForCrawling((pagesVisited == 0 && outboundLinks == 0 && !inCrawlQueue))
-                .build();
+            rs = stmt.executeQuery(STR."""
+                    SELECT IP, NODE_AFFINITY, DOMAIN_NAME, STATE, IFNULL(RANK, 1) AS RANK
+                           FROM EC_DOMAIN WHERE ID=\{domainId}
+                       """);
+            if (rs.next()) {
+                String ip = rs.getString("IP");
 
-        return Optional.of(di);
-    }
+                builder.ip(ip);
+                builder.ipCountry(geoIpDictionary.getCountry(ip));
 
-    private int getNodeAffinity(int domainId) {
-        try (var connection = dataSource.getConnection()) {
-            try (var stmt = connection.prepareStatement("""
-                    SELECT NODE_AFFINITY FROM EC_DOMAIN WHERE ID=?
-                    """)) {
-                stmt.setInt(1, domainId);
-                var rs = stmt.executeQuery();
-                if (rs.next())
-                    return rs.getInt(1);
+                builder.nodeAffinity(rs.getInt("NODE_AFFINITY"));
+                builder.domain(new EdgeDomain(rs.getString("DOMAIN_NAME")));
+                builder.state(rs.getString("STATE"));
+                builder.ranking(Math.round(100.0*(1.0-rs.getDouble("RANK"))));
             }
+            rs = stmt.executeQuery(STR."""
+                    SELECT 1 FROM CRAWL_QUEUE
+                    INNER JOIN EC_DOMAIN ON CRAWL_QUEUE.DOMAIN_NAME = EC_DOMAIN.DOMAIN_NAME
+                    WHERE EC_DOMAIN.ID=\{domainId}
+                       """);
+            inCrawlQueue = rs.next();
+            builder.inCrawlQueue(inCrawlQueue);
+
+            rs = stmt.executeQuery(STR."""
+                    SELECT COUNT(ID) FROM EC_DOMAIN_LINK WHERE DEST_DOMAIN_ID=\{domainId}
+                       """);
+            if (rs.next()) {
+                builder.incomingLinks(rs.getInt(1));
+            }
+
+            rs = stmt.executeQuery(STR."""
+                    SELECT COUNT(ID) FROM EC_DOMAIN_LINK WHERE SOURCE_DOMAIN_ID=\{domainId}
+                       """);
+            if (rs.next()) {
+                builder.outboundLinks(rs.getInt(1));
+                outboundLinks = rs.getInt(1);
+            }
+
+
+            rs = stmt.executeQuery(STR."""
+                    SELECT KNOWN_URLS, GOOD_URLS, VISITED_URLS FROM DOMAIN_METADATA WHERE ID=\{domainId}
+                       """);
+            if (rs.next()) {
+                pagesVisited = rs.getInt("VISITED_URLS");
+
+                builder.pagesKnown(rs.getInt("KNOWN_URLS"));
+                builder.pagesIndexed(rs.getInt("GOOD_URLS"));
+                builder.pagesFetched(rs.getInt("VISITED_URLS"));
+            }
+
+            builder.suggestForCrawling((pagesVisited == 0 && outboundLinks == 0 && !inCrawlQueue));
+
+            return Optional.of(builder.build());
         }
         catch (SQLException ex) {
             logger.error("SQL error", ex);
-        }
-        return -1;
-    }
-
-    @SneakyThrows
-    private boolean inCrawlQueue(int domainId) {
-        try (var connection = dataSource.getConnection()) {
-            try (var stmt = connection.prepareStatement(
-                """
-                    SELECT 1 FROM CRAWL_QUEUE
-                    INNER JOIN EC_DOMAIN ON CRAWL_QUEUE.DOMAIN_NAME = EC_DOMAIN.DOMAIN_NAME
-                    WHERE EC_DOMAIN.ID=?
-                    """))
-            {
-                stmt.setInt(1, domainId);
-                var rsp = stmt.executeQuery();
-                return rsp.next();
-            }
+            return Optional.empty();
         }
     }
 
-    private OptionalInt getDomainFromPartial(String site) {
-        return dbDomainQueries.tryGetDomainId(new EdgeDomain(site));
-    }
-
-    @SneakyThrows
-    public boolean isBlacklisted(EdgeDomain domain) {
-
-        try (var connection = dataSource.getConnection()) {
-            try (var stmt = connection.prepareStatement("SELECT ID FROM EC_DOMAIN_BLACKLIST WHERE URL_DOMAIN IN (?,?)")) {
-                stmt.setString(1, domain.domain);
-                stmt.setString(2, domain.toString());
-                var rsp = stmt.executeQuery();
-                return rsp.next();
-            }
-        }
-    }
-
-    @SneakyThrows
-    public int getPagesKnown(int domainId) {
-        try (var connection = dataSource.getConnection()) {
-
-            try (var stmt = connection.prepareStatement("SELECT KNOWN_URLS FROM DOMAIN_METADATA WHERE ID=?")) {
-                stmt.setInt(1, domainId);
-                var rsp = stmt.executeQuery();
-                if (rsp.next()) {
-                    return rsp.getInt(1);
-                }
-            } catch (Exception ex) {
-                logger.error("DB error", ex);
-            }
-            return 0;
-        }
-    }
-
-    @SneakyThrows
-    public int getPagesVisited(int domainId) {
-        try (var connection = dataSource.getConnection()) {
-
-            try (var stmt = connection.prepareStatement("SELECT VISITED_URLS FROM DOMAIN_METADATA WHERE ID=?")) {
-                stmt.setInt(1, domainId);
-                var rsp = stmt.executeQuery();
-                if (rsp.next()) {
-                    return rsp.getInt(1);
-                }
-            } catch (Exception ex) {
-                logger.error("DB error", ex);
-            }
-            return 0;
-        }
-    }
-
-
-    @SneakyThrows
-    public int getPagesIndexed(int domainId) {
-        try (var connection = dataSource.getConnection()) {
-
-            try (var stmt = connection.prepareStatement("SELECT GOOD_URLS FROM DOMAIN_METADATA WHERE ID=?")) {
-                stmt.setInt(1, domainId);
-                var rsp = stmt.executeQuery();
-                if (rsp.next()) {
-                    return rsp.getInt(1);
-                }
-            } catch (Exception ex) {
-                logger.error("DB error", ex);
-            }
-            return 0;
-        }
-    }
-
-    @SneakyThrows
-    public int getIncomingLinks(int domainId) {
-        try (var connection = dataSource.getConnection()) {
-
-            try (var stmt = connection.prepareStatement("SELECT COUNT(ID) FROM EC_DOMAIN_LINK WHERE DEST_DOMAIN_ID=?")) {
-                stmt.setInt(1, domainId);
-                var rsp = stmt.executeQuery();
-                if (rsp.next()) {
-                    return rsp.getInt(1);
-                }
-            } catch (Exception ex) {
-                logger.error("DB error", ex);
-            }
-            return 0;
-        }
-    }
-    @SneakyThrows
-    public int getOutboundLinks(int domainId) {
-        try (var connection = dataSource.getConnection()) {
-
-            try (var stmt = connection.prepareStatement("SELECT COUNT(ID) FROM EC_DOMAIN_LINK WHERE SOURCE_DOMAIN_ID=?")) {
-                stmt.setInt(1, domainId);
-                var rsp = stmt.executeQuery();
-                if (rsp.next()) {
-                    return rsp.getInt(1);
-                }
-            } catch (Exception ex) {
-                logger.error("DB error", ex);
-            }
-            return 0;
-        }
-    }
-
-    public DomainIndexingState getDomainState(int domainId) {
-        try (var connection = dataSource.getConnection()) {
-
-            try (var stmt = connection.prepareStatement("SELECT STATE FROM EC_DOMAIN WHERE ID=?")) {
-                stmt.setInt(1, domainId);
-                var rsp = stmt.executeQuery();
-                if (rsp.next()) {
-                    return DomainIndexingState.valueOf(rsp.getString(1));
-                }
-            } catch (Exception ex) {
-                logger.error("DB error", ex);
-            }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-        return DomainIndexingState.ERROR;
-    }
-
-    public List<EdgeDomain> getLinkingDomains(int domainId) {
-        try (var connection = dataSource.getConnection()) {
-            List<EdgeDomain> results = new ArrayList<>(25);
-            try (var stmt = connection.prepareStatement("SELECT SOURCE_DOMAIN FROM EC_RELATED_LINKS_VIEW WHERE DEST_DOMAIN_ID=? ORDER BY SOURCE_DOMAIN_ID LIMIT 25")) {
-                stmt.setInt(1, domainId);
-                var rsp = stmt.executeQuery();
-                while (rsp.next()) {
-                    results.add(new EdgeDomain(rsp.getString(1)));
-                }
-                return results;
-            } catch (Exception ex) {
-                logger.error("DB error", ex);
-            }
-
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-        return Collections.emptyList();
-    }
-
-    public double getRank(int domainId) {
-        try (var connection = dataSource.getConnection()) {
-
-            try (var stmt = connection.prepareStatement("SELECT IFNULL(RANK, 1) FROM EC_DOMAIN WHERE ID=?")) {
-                stmt.setInt(1, domainId);
-                var rsp = stmt.executeQuery();
-                if (rsp.next()) {
-                    return rsp.getDouble(1);
-                }
-            } catch (Exception ex) {
-                logger.error("DB error", ex);
-            }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-        return 1;
-    }
 }

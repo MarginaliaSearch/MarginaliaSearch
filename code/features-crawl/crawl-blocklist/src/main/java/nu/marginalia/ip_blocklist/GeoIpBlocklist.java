@@ -18,6 +18,7 @@ import java.util.TreeMap;
 @Singleton
 public class GeoIpBlocklist {
     private final TreeMap<Long, GeoIpBlocklist.IpRange> ranges = new TreeMap<>();
+
     private final Set<String> blacklist = Set.of("CN", "HK");
     private final Set<String> graylist = Set.of("RU", "TW", "IN", "ZA", "SG", "UA");
 

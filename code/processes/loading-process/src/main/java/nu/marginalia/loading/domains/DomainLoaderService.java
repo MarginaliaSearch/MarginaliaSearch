@@ -9,6 +9,7 @@ import nu.marginalia.io.processed.DomainRecordParquetFileReader;
 import nu.marginalia.loading.LoaderInputData;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.processed.DomainRecord;
+import nu.marginalia.model.processed.DomainWithIp;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,9 +52,9 @@ public class DomainLoaderService {
         ) {
 
             try (var inserter = new DomainInserter(conn, nodeId)) {
-                for (var domain : readSetDomainNames(inputData)) {
-                    inserter.accept(new EdgeDomain(domain));
-                    domainNamesAll.add(domain);
+                for (var domainWithIp : readBasicDomainInformation(inputData)) {
+                    inserter.accept(new EdgeDomain(domainWithIp.domain));
+                    domainNamesAll.add(domainWithIp.domain);
                 }
             }
             try (var inserter = new DomainInserter(conn, -1)) {
@@ -63,9 +64,9 @@ public class DomainLoaderService {
                 }
             }
 
-            try (var updater = new DomainAffinityUpdater(conn, nodeId)) {
-                for (var domain : readSetDomainNames(inputData)) {
-                    updater.accept(new EdgeDomain(domain));
+            try (var updater = new DomainAffinityAndIpUpdater(conn, nodeId)) {
+                for (var domainWithIp : readBasicDomainInformation(inputData)) {
+                    updater.accept(new EdgeDomain(domainWithIp.domain), domainWithIp.ip);
                 }
             }
 
@@ -84,15 +85,15 @@ public class DomainLoaderService {
         return ret;
     }
 
-    Collection<String> readSetDomainNames(LoaderInputData inputData) throws IOException {
-        final Set<String> domainNamesAll = new HashSet<>(100_000);
+    Collection<DomainWithIp> readBasicDomainInformation(LoaderInputData inputData) throws IOException {
+        final Set<DomainWithIp> domainsAll = new HashSet<>(100_000);
 
         var domainFiles = inputData.listDomainFiles();
         for (var file : domainFiles) {
-            domainNamesAll.addAll(DomainRecordParquetFileReader.getDomainNames(file));
+            domainsAll.addAll(DomainRecordParquetFileReader.getBasicDomainInformation(file));
         }
 
-        return domainNamesAll;
+        return domainsAll;
     }
 
     Collection<String> readReferencedDomainNames(LoaderInputData inputData) throws IOException {
@@ -164,20 +165,25 @@ public class DomainLoaderService {
             statement.close();
         }
     }
-    private static class DomainAffinityUpdater implements AutoCloseable {
+    private static class DomainAffinityAndIpUpdater implements AutoCloseable {
         private final PreparedStatement statement;
         private final int nodeAffinity;
 
         private int count = 0;
 
-        public DomainAffinityUpdater(Connection connection, int affinity) throws SQLException {
+        public DomainAffinityAndIpUpdater(Connection connection, int affinity) throws SQLException {
             this.nodeAffinity = affinity;
-            statement = connection.prepareStatement("UPDATE EC_DOMAIN SET NODE_AFFINITY = ? WHERE DOMAIN_NAME=?");
+            statement = connection.prepareStatement("""
+                        UPDATE EC_DOMAIN
+                            SET NODE_AFFINITY = ?, IP = ?
+                            WHERE DOMAIN_NAME=?
+                        """);
         }
 
-        public void accept(EdgeDomain domain) throws SQLException {
+        public void accept(EdgeDomain domain, String ip) throws SQLException {
             statement.setInt(1, nodeAffinity);
-            statement.setString(2, domain.toString());
+            statement.setString(2, ip);
+            statement.setString(3, domain.toString());
             statement.addBatch();
 
             if (++count > 1000) {

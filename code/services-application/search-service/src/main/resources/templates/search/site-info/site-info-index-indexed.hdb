@@ -6,5 +6,6 @@
     Pages Known: {{pagesKnown}} <br/>
     Pages Crawled: {{pagesFetched}} <br/>
     Pages Indexed: {{pagesIndexed}} <br/>
+    IP: {{ip}} {{#if ipCountry}}<span title="{{ipCountry}}">{{getIpFlag}}</span>{{/if}}<br/>
 </fieldset>
 <br/>
