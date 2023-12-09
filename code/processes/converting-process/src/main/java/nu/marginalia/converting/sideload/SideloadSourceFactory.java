@@ -2,6 +2,7 @@ package nu.marginalia.converting.sideload;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import nu.marginalia.atags.AnchorTextKeywords;
 import nu.marginalia.atags.source.AnchorTagsSourceFactory;
 import nu.marginalia.converting.sideload.dirtree.DirtreeSideloaderFactory;
 import nu.marginalia.converting.sideload.encyclopedia.EncyclopediaMarginaliaNuSideloader;
@@ -20,6 +21,7 @@ public class SideloadSourceFactory {
     private final SideloaderProcessing sideloaderProcessing;
     private final ThreadLocalSentenceExtractorProvider sentenceExtractorProvider;
     private final DocumentKeywordExtractor documentKeywordExtractor;
+    private final AnchorTextKeywords anchorTextKeywords;
     private final AnchorTagsSourceFactory anchorTagsSourceFactory;
     private final DirtreeSideloaderFactory dirtreeSideloaderFactory;
 
@@ -27,19 +29,20 @@ public class SideloadSourceFactory {
     public SideloadSourceFactory(Gson gson,
                                  SideloaderProcessing sideloaderProcessing,
                                  ThreadLocalSentenceExtractorProvider sentenceExtractorProvider,
-                                 DocumentKeywordExtractor documentKeywordExtractor,
+                                 DocumentKeywordExtractor documentKeywordExtractor, AnchorTextKeywords anchorTextKeywords,
                                  AnchorTagsSourceFactory anchorTagsSourceFactory,
                                  DirtreeSideloaderFactory dirtreeSideloaderFactory) {
         this.gson = gson;
         this.sideloaderProcessing = sideloaderProcessing;
         this.sentenceExtractorProvider = sentenceExtractorProvider;
         this.documentKeywordExtractor = documentKeywordExtractor;
+        this.anchorTextKeywords = anchorTextKeywords;
         this.anchorTagsSourceFactory = anchorTagsSourceFactory;
         this.dirtreeSideloaderFactory = dirtreeSideloaderFactory;
     }
 
     public SideloadSource sideloadEncyclopediaMarginaliaNu(Path pathToDbFile, String baseUrl) throws SQLException {
-        return new EncyclopediaMarginaliaNuSideloader(pathToDbFile, baseUrl, gson, anchorTagsSourceFactory, sideloaderProcessing);
+        return new EncyclopediaMarginaliaNuSideloader(pathToDbFile, baseUrl, gson, anchorTagsSourceFactory, anchorTextKeywords, sideloaderProcessing);
     }
 
     public Collection<? extends SideloadSource> sideloadDirtree(Path pathToYamlFile) throws IOException {
