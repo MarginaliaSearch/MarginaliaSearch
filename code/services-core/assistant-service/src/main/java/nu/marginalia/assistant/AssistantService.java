@@ -3,6 +3,8 @@ package nu.marginalia.assistant;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
+import nu.marginalia.assistant.domains.DomainInformationService;
+import nu.marginalia.assistant.domains.SimilarDomainsService;
 import nu.marginalia.assistant.eval.Units;
 import nu.marginalia.assistant.suggest.Suggestions;
 import nu.marginalia.assistant.eval.MathParser;
@@ -16,11 +18,16 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
+import java.util.ArrayList;
+import java.util.Objects;
+
 public class AssistantService extends Service {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Gson gson = GsonFactory.get();
     private final Units units;
     private final MathParser mathParser;
+    private final SimilarDomainsService similarDomainsService;
+    private final DomainInformationService domainInformationService;
     private final Suggestions suggestions;
 
     @SneakyThrows
@@ -30,12 +37,16 @@ public class AssistantService extends Service {
                             MathParser mathParser,
                             Units units,
                             ScreenshotService screenshotService,
+                            SimilarDomainsService similarDomainsService,
+                            DomainInformationService domainInformationService,
                             Suggestions suggestions)
     {
         super(params);
 
         this.mathParser = mathParser;
         this.units = units;
+        this.similarDomainsService = similarDomainsService;
+        this.domainInformationService = domainInformationService;
         this.suggestions = suggestions;
 
         Spark.staticFiles.expireTime(600);
@@ -56,10 +67,48 @@ public class AssistantService extends Service {
                 rsp,
                 req.queryParams("value")
         ));
-
+        Spark.get("/domain/:id/similar", this::getSimilarDomains, this::convertToJson);
+        Spark.get("/domain/:id/linking", this::getLinkingDomains, this::convertToJson);
+        Spark.get("/domain/:id/info", this::getDomainInformation, this::convertToJson);
         Spark.get("/public/suggest/", this::getSuggestions, this::convertToJson);
 
         Spark.awaitInitialization();
+    }
+
+    private Object getSimilarDomains(Request request, Response response) {
+        int domainId = Integer.parseInt(request.params("id"));
+        int count = Integer.parseInt(Objects.requireNonNullElse(request.queryParams("count"), "25"));
+
+        response.type("application/json");
+
+        if (!similarDomainsService.isReady()) {
+            return new ArrayList<>();
+        }
+
+        return similarDomainsService.getSimilarDomains(domainId, count);
+    }
+
+    private Object getLinkingDomains(Request request, Response response) {
+        int domainId = Integer.parseInt(request.params("id"));
+        int count = Integer.parseInt(Objects.requireNonNullElse(request.queryParams("count"), "25"));
+
+        response.type("application/json");
+        if (!similarDomainsService.isReady()) {
+            return new ArrayList<>();
+        }
+        return similarDomainsService.getLinkingDomains(domainId, count);
+    }
+
+    private Object getDomainInformation(Request request, Response response) {
+        int domainId = Integer.parseInt(request.params("id"));
+
+        response.type("application/json");
+
+        var maybeDomainInfo = domainInformationService.domainInfo(domainId);
+        if (maybeDomainInfo.isEmpty()) {
+            Spark.halt(404);
+        }
+        return maybeDomainInfo.get();
     }
 
     private Object getSuggestions(Request request, Response response) {

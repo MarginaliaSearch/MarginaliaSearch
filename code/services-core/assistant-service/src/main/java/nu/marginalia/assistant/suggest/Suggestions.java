@@ -20,8 +20,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Suggestions {
-    private final PatriciaTrie<String> suggestionsTrie;
-    private final TermFrequencyDict termFrequencyDict;
+    private PatriciaTrie<String> suggestionsTrie = null;
+    private TermFrequencyDict termFrequencyDict = null;
+    private volatile boolean ready = false;
     private final SpellChecker spellChecker;
 
     private static final Pattern suggestionPattern = Pattern.compile("^[a-zA-Z0-9]+( [a-zA-Z0-9]+)*$");
@@ -35,10 +36,12 @@ public class Suggestions {
                        ) {
         this.spellChecker = spellChecker;
 
-        suggestionsTrie = loadSuggestions(suggestionsFile);
-        termFrequencyDict = dict;
-
-        logger.info("Loaded {} suggestions", suggestionsTrie.size());
+        Thread.ofPlatform().start(() -> {
+            suggestionsTrie = loadSuggestions(suggestionsFile);
+            termFrequencyDict = dict;
+            ready = true;
+            logger.info("Loaded {} suggestions", suggestionsTrie.size());
+        });
     }
 
     private static PatriciaTrie<String> loadSuggestions(Path file) {
@@ -71,6 +74,9 @@ public class Suggestions {
     }
 
     public List<String> getSuggestions(int count, String searchWord) {
+        if (!ready)
+            return Collections.emptyList();
+
         if (searchWord.length() < MIN_SUGGEST_LENGTH) {
             return Collections.emptyList();
         }
@@ -126,6 +132,9 @@ public class Suggestions {
 
 
     public Stream<String> getSuggestionsForKeyword(int count, String prefix) {
+        if (!ready)
+            return Stream.empty();
+
         if (prefix.length() < MIN_SUGGEST_LENGTH) {
             return Stream.empty();
         }

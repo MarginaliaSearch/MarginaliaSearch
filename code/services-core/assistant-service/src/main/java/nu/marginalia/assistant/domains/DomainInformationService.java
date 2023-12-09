@@ -1,11 +1,11 @@
-package nu.marginalia.search.siteinfo;
+package nu.marginalia.assistant.domains;
 
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.db.DbDomainQueries;
-import nu.marginalia.search.model.DomainInformation;
+import nu.marginalia.assistant.client.model.DomainInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,13 +36,7 @@ public class DomainInformationService {
     }
 
 
-    public Optional<DomainInformation> domainInfo(String site) {
-
-        OptionalInt maybeDomainId = getDomainFromPartial(site);
-        if (maybeDomainId.isEmpty()) {
-            return Optional.empty();
-        }
-        int domainId = maybeDomainId.getAsInt();
+    public Optional<DomainInformation> domainInfo(int domainId) {
 
         Optional<EdgeDomain> domain = dbDomainQueries.getDomain(domainId);
         if (domain.isEmpty()) {
@@ -61,7 +55,6 @@ public class DomainInformationService {
         double rank = Math.round(10000.0*(1.0-getRank(domainId)))/100;
 
         DomainIndexingState state = getDomainState(domainId);
-        List<EdgeDomain> linkingDomains = getLinkingDomains(domainId);
 
         var di = DomainInformation.builder()
                 .domain(domain.get())
@@ -73,7 +66,6 @@ public class DomainInformationService {
                 .outboundLinks(outboundLinks)
                 .ranking(rank)
                 .state(state.desc)
-                .linkingDomains(linkingDomains)
                 .inCrawlQueue(inCrawlQueue)
                 .nodeAffinity(nodeAffinity)
                 .suggestForCrawling((pagesVisited == 0 && outboundLinks == 0 && !inCrawlQueue))

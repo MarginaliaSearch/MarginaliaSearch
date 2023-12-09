@@ -1,4 +1,4 @@
-package nu.marginalia.search.model;
+package nu.marginalia.assistant.client.model;
 
 import lombok.*;
 import nu.marginalia.model.EdgeDomain;
@@ -24,5 +24,4 @@ public class DomainInformation {
     boolean unknownDomain;
 
     String state;
-    List<EdgeDomain> linkingDomains;
 }

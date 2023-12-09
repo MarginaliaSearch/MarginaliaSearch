@@ -1,6 +1,7 @@
 package nu.marginalia.client;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.google.protobuf.GeneratedMessageV3;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableSource;
@@ -20,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import spark.utils.IOUtils;
 
 import java.io.OutputStream;
+import java.lang.reflect.Type;
 import java.net.ConnectException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -233,6 +235,22 @@ public abstract class AbstractClient implements AutoCloseable {
                 .doFinally(() -> ThreadContext.remove("outbound-request"));
     }
 
+    protected synchronized <T> Observable<T> get(Context ctx, int node, String endpoint, TypeToken<T> type) {
+        ensureAlive(node);
+
+        var req = ctx.paint(new Request.Builder()).url(serviceRoutes.get(node) + endpoint).get().build();
+
+        return Observable.just(client.newCall(req))
+                .subscribeOn(scheduler().get())
+                .map(this::logInbound)
+                .map(Call::execute)
+                .map(this::logOutbound)
+                .map(rsp -> validateResponseStatus(rsp, req, 200))
+                .map(rsp -> getEntity(rsp, type))
+                .retryWhen(this::retryHandler)
+                .timeout(timeout, TimeUnit.SECONDS)
+                .doFinally(() -> ThreadContext.remove("outbound-request"));
+    }
     protected synchronized Observable<Integer> get(Context ctx, int node, String endpoint, OutputStream outputStream) {
         ensureAlive(node);
 
@@ -380,6 +398,15 @@ public abstract class AbstractClient implements AutoCloseable {
 
     @SneakyThrows
     private <T> T getEntity(Response response, Class<T> clazz) {
+        try (response) {
+            return gson.fromJson(response.body().charStream(), clazz);
+        }
+        catch (Exception ex) {
+            throw ex;
+        }
+    }
+    @SneakyThrows
+    private <T> T getEntity(Response response, TypeToken<T> clazz) {
         try (response) {
             return gson.fromJson(response.body().charStream(), clazz);
         }
