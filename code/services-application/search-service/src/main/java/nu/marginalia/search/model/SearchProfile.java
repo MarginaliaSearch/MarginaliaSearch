@@ -8,11 +8,10 @@ import nu.marginalia.index.client.model.query.SearchSetIdentifier;
 import java.util.Objects;
 
 public enum SearchProfile {
-    DEFAULT("default",  SearchSetIdentifier.RETRO),
+    POPULAR("default",  SearchSetIdentifier.POPULAR),
     SMALLWEB("modern", SearchSetIdentifier.SMALLWEB),
     BLOGOSPHERE("blogosphere", SearchSetIdentifier.BLOGS),
     NO_FILTER("corpo", SearchSetIdentifier.NONE),
-    YOLO("yolo", SearchSetIdentifier.NONE),
     VINTAGE("vintage", SearchSetIdentifier.NONE),
     TILDE("tilde", SearchSetIdentifier.NONE),
     CORPO_CLEAN("corpo-clean",  SearchSetIdentifier.NONE),
@@ -38,7 +37,7 @@ public enum SearchProfile {
     private final static SearchProfile[] values = values();
     public static SearchProfile getSearchProfile(String param) {
         if (null == param) {
-            return DEFAULT;
+            return POPULAR;
         }
 
         for (var profile : values) {
@@ -47,7 +46,7 @@ public enum SearchProfile {
             }
         }
 
-        return DEFAULT;
+        return POPULAR;
     }
 
     public void addTacitTerms(SearchSubquery subquery) {

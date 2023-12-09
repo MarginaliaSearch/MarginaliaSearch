@@ -37,7 +37,7 @@ public class IndexSearchSetsService {
 
 
     // Below are binary indices that are used to constrain a search
-    private volatile RankingSearchSet retroSet;
+    private volatile RankingSearchSet popularSet;
     private volatile RankingSearchSet smallWebSet;
     private volatile RankingSearchSet academiaSet;
     private volatile RankingSearchSet blogsSet;
@@ -72,7 +72,7 @@ public class IndexSearchSetsService {
 
         smallWebSet = new RankingSearchSet(SearchSetIdentifier.SMALLWEB, servicesFactory.getSearchSetsBase().resolve("small-web.dat"));
         academiaSet = new RankingSearchSet(SearchSetIdentifier.ACADEMIA, servicesFactory.getSearchSetsBase().resolve("academia.dat"));
-        retroSet = new RankingSearchSet(SearchSetIdentifier.RETRO, servicesFactory.getSearchSetsBase().resolve("retro.dat"));
+        popularSet = new RankingSearchSet(SearchSetIdentifier.POPULAR, servicesFactory.getSearchSetsBase().resolve("popular.dat"));
         blogsSet = new RankingSearchSet(SearchSetIdentifier.BLOGS, servicesFactory.getSearchSetsBase().resolve("blogs.dat"));
     }
 
@@ -86,7 +86,7 @@ public class IndexSearchSetsService {
         }
         return switch (searchSetIdentifier) {
             case NONE -> anySet;
-            case RETRO -> retroSet;
+            case POPULAR -> popularSet;
             case ACADEMIA -> academiaSet;
             case SMALLWEB -> smallWebSet;
             case BLOGS -> blogsSet;
@@ -95,7 +95,7 @@ public class IndexSearchSetsService {
 
     enum RepartitionSteps {
         UPDATE_ACADEMIA,
-        UPDATE_RETRO,
+        UPDATE_POPULAR,
         UPDATE_SMALL_WEB,
         UPDATE_BLOGS,
         UPDATE_RANKINGS,
@@ -107,8 +107,8 @@ public class IndexSearchSetsService {
             processHeartbeat.progress(RepartitionSteps.UPDATE_ACADEMIA);
             updateAcademiaDomainsSet();
 
-            processHeartbeat.progress(RepartitionSteps.UPDATE_RETRO);
-            updateRetroDomainsSet();
+            processHeartbeat.progress(RepartitionSteps.UPDATE_POPULAR);
+            updatePopularDomainsSet();
 
             processHeartbeat.progress(RepartitionSteps.UPDATE_SMALL_WEB);
             updateSmallWebDomainsSet();
@@ -139,15 +139,15 @@ public class IndexSearchSetsService {
     }
 
     @SneakyThrows
-    public void updateRetroDomainsSet() {
+    public void updatePopularDomainsSet() {
         var entry = rankingSettings.retro;
 
         var spr = new StandardPageRank(similarityDomains, entry.domains.toArray(String[]::new));
         var data = spr.pageRankWithPeripheralNodes(entry.max, RankingResultHashSetAccumulator::new);
 
         synchronized (this) {
-            retroSet = new RankingSearchSet(SearchSetIdentifier.RETRO, retroSet.source, data);
-            retroSet.write();
+            popularSet = new RankingSearchSet(SearchSetIdentifier.POPULAR, popularSet.source, data);
+            popularSet.write();
         }
     }
 

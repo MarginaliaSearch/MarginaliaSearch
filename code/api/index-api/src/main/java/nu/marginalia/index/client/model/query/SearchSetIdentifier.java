@@ -7,7 +7,7 @@ package nu.marginalia.index.client.model.query;
  * */
 public enum SearchSetIdentifier {
     NONE,
-    RETRO,
+    POPULAR,
     BLOGS,
     ACADEMIA,
     SMALLWEB
