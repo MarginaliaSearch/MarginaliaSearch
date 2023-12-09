@@ -17,7 +17,7 @@ public enum SearchProfile {
     CORPO_CLEAN("corpo-clean",  SearchSetIdentifier.NONE),
     ACADEMIA("academia",  SearchSetIdentifier.NONE),
     PLAIN_TEXT("plain-text", SearchSetIdentifier.NONE),
-    FOOD("food", SearchSetIdentifier.NONE),
+    FOOD("food", SearchSetIdentifier.POPULAR),
     FORUM("forum", SearchSetIdentifier.NONE),
     WIKI("wiki", SearchSetIdentifier.NONE),
     DOCS("docs", SearchSetIdentifier.NONE),
@@ -72,6 +72,7 @@ public enum SearchProfile {
         }
         if (this == FOOD) {
             subquery.searchTermsAdvice.add(HtmlFeature.CATEGORY_FOOD.getKeyword());
+            subquery.searchTermsExclude.add("special:ads");
         }
     }
 
