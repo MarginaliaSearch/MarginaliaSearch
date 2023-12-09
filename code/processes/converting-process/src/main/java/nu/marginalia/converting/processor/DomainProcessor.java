@@ -55,10 +55,20 @@ public class DomainProcessor {
         boolean cookies = false;
         String ip = "";
 
-        DomainLinks externalDomainLinks = anchorTagsSource.getAnchorTags(ret.domain);
+        DomainLinks externalDomainLinks = null;
 
         while (dataStream.hasNext()) {
             var data = dataStream.next();
+
+            // Do a lazy load of the external domain links since we don't know the domain
+            // until we see the first document
+            if (externalDomainLinks == null) {
+                var domain = data.getDomain();
+
+                if (domain != null) {
+                    externalDomainLinks = anchorTagsSource.getAnchorTags(domain);
+                }
+            }
 
             if (data instanceof CrawledDomain crawledDomain) {
                 ret.domain = new EdgeDomain(crawledDomain.domain);
@@ -77,7 +87,14 @@ public class DomainProcessor {
                 try {
                     if (doc.url == null)
                         continue;
+
                     fixBadCanonicalTag(doc);
+
+                    // This case should never be reachable, as we should have initiated
+                    // the externalDomainLinks variable above if we made it past the
+                    // doc.url == null check; but we'll leave it here just in case
+                    // to make debugging easier if we break this.
+                    assert externalDomainLinks != null : "externalDomainLinks has not been initialized";
 
                     docs.add(documentProcessor.process(doc, externalDomainLinks));
                 }

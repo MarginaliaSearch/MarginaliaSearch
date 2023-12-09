@@ -138,10 +138,16 @@ public class ConverterMain {
             for (var domain : plan.crawlDataIterable(id -> !batchingWorkLog.isItemProcessed(id)))
             {
                 pool.submit(() -> {
-                    ProcessedDomain processed = processor.process(domain);
-                    converterWriter.accept(processed);
-
-                    heartbeat.setProgress(processedDomains.incrementAndGet() / (double) totalDomains);
+                    try {
+                        ProcessedDomain processed = processor.process(domain);
+                        converterWriter.accept(processed);
+                    }
+                    catch (Exception ex) {
+                        logger.info("Error in processing", ex);
+                    }
+                    finally {
+                        heartbeat.setProgress(processedDomains.incrementAndGet() / (double) totalDomains);
+                    }
                 });
             }
 
