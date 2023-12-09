@@ -34,8 +34,23 @@ public class ExecutorRemoteActorFactory {
     }
 
     public interface ExecutorRemoteActorIf<T> {
-        boolean trigger(T object) throws Exception;
-        String getState();
+
+        /** Trigger the remote actor with the given object.  The object will be serialized to JSON and sent to the
+         * remote actor.  If the remote actor does not respond after a time period, a timeout will occur and a negative
+         * message id will be returned.
+         *
+         * @param object The message to send to the remote actot
+         * @return The message id of the response message, or a negative number if the remote actor did not respond
+         * within a reasonable timeout seconds.
+         */
+        long trigger(T object) throws Exception;
+
+        /** Get the last finished state of the actor.
+         * <p>
+         * The message id of the request initiating the actor must be provided to ensure that
+         * we don't get a state from a previous run.
+         */
+        String getState(long fromMsgId);
     }
 
     public record CrawlData(FileStorageId storageId, boolean cascadeLoad) {}
@@ -58,11 +73,11 @@ class ExecutorRemoteActor<T> implements ExecutorRemoteActorFactory.ExecutorRemot
         this.triggerFunction = triggerFunction;
     }
 
-    public boolean trigger(T object) throws Exception {
+    public long trigger(T object) throws Exception {
         return trigger(gson.toJson(object));
     }
 
-    public boolean trigger(String payload) throws Exception {
+    public long trigger(String payload) throws Exception {
         long id = persistence.sendNewMessage(inboxName, null, null, triggerFunction, payload, null);
 
         // Wait for the remote actor to respond to the message
@@ -70,19 +85,19 @@ class ExecutorRemoteActor<T> implements ExecutorRemoteActorFactory.ExecutorRemot
         for (int i = 0; i < 120; i++) {
             var msg = persistence.getMessage(id);
             if (msg.state() == MqMessageState.ACK || msg.state() == MqMessageState.OK)
-                return true;
+                return id;
             if (msg.state() == MqMessageState.ERR || msg.state() == MqMessageState.DEAD)
-                return false;
+                return -id;
 
             TimeUnit.SECONDS.sleep(1);
         }
 
-        return false; // Timeout
+        return -1; // Timeout
     }
 
-    public String getState() {
+    public String getState(long fromMsgId) {
         return persistence
-                .getHeadMessage(inboxName)
+                .getHeadMessage(inboxName, fromMsgId)
                 .map(MqMessage::function)
                 .orElse("INITIAL");
     }

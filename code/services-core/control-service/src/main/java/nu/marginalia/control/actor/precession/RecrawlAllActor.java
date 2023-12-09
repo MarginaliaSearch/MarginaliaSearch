@@ -25,7 +25,7 @@ public class RecrawlAllActor extends RecordActorPrototype {
 
     public record Initial() implements ActorStep {}
 
-    public record WaitFinished(int node) implements ActorStep {}
+    public record WaitFinished(int node, long msgId) implements ActorStep {}
     @Resume(behavior=ActorResumeBehavior.RETRY)
     public record Trigger(int node) implements ActorStep {}
     public record AdvanceNode(int node) implements ActorStep {}
@@ -49,17 +49,18 @@ public class RecrawlAllActor extends RecordActorPrototype {
 
                 var data = new ExecutorRemoteActorFactory.CrawlData(activeFileStorage.get(0), true);
 
-                if (remoteActorFactory.createCrawlRemote(node).trigger(data)) {
-                    yield new WaitFinished(node);
+                long msgId = remoteActorFactory.createCrawlRemote(node).trigger(data);
+                if (msgId >= 0) {
+                    yield new WaitFinished(node, msgId);
                 }
                 else {
                     yield new AdvanceNode(node);
                 }
             }
-            case WaitFinished(int node) -> {
+            case WaitFinished(int node, long msgId) -> {
                 var remoteActor = remoteActorFactory.createCrawlRemote(node);
                 for (;;) {
-                    var state = remoteActor.getState();
+                    var state = remoteActor.getState(msgId);
                     if ("END".equals(state) || "ERROR".equals(state)) {
                         break;
                     }
@@ -80,8 +81,7 @@ public class RecrawlAllActor extends RecordActorPrototype {
     public RecrawlAllActor(Gson gson,
                            ExecutorRemoteActorFactory remoteActorFactory,
                            FileStorageService fileStorageService,
-                           PrecessionNodes precessionNodes,
-                           NodeConfigurationService nodeConfigurationService)
+                           PrecessionNodes precessionNodes)
     {
         super(gson);
         this.remoteActorFactory = remoteActorFactory;
