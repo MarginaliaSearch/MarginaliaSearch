@@ -15,6 +15,7 @@ import nu.marginalia.converting.sideload.SideloaderProcessing;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.DomainIndexingState;
+import nu.marginalia.util.ProcessingIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,11 +29,6 @@ import java.nio.file.Path;
 import java.sql.*;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /** This is an experimental sideloader for encyclopedia.marginalia.nu's database;
  * (which serves as a way of loading wikipedia's zim files without binding to GPL2'd code)
@@ -80,62 +76,24 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
     @SneakyThrows
     @Override
     public Iterator<ProcessedDocument> getDocumentsStream() {
-        LinkedBlockingQueue<ProcessedDocument> docs = new LinkedBlockingQueue<>(32);
-        AtomicBoolean isFinished = new AtomicBoolean(false);
+        return new ProcessingIterator<>(24, 16, (taskConsumer) -> {
+            DomainLinks domainLinks = getDomainLinks();
 
-        ExecutorService executorService = Executors.newFixedThreadPool(16);
-        Semaphore sem = new Semaphore(16);
+            var stmt = connection.prepareStatement("""
+                    SELECT url,title,html FROM articles
+                    """);
+            stmt.setFetchSize(100);
 
-        DomainLinks domainLinks = getDomainLinks();
+            var rs = stmt.executeQuery();
 
-        executorService.submit(() -> {
-            try {
-                var stmt = connection.prepareStatement("""
-                        SELECT url,title,html FROM articles
-                        """);
-                stmt.setFetchSize(100);
+            while (rs.next()) {
+                var articleParts = fromCompressedJson(rs.getBytes("html"), ArticleParts.class);
+                String title = rs.getString("title");
+                String url = URLEncoder.encode(rs.getString("url"), StandardCharsets.UTF_8);
 
-                var rs = stmt.executeQuery();
-                while (rs.next()) {
-                    var articleParts = fromCompressedJson(rs.getBytes("html"), ArticleParts.class);
-                    String title = rs.getString("title");
-                    String url = URLEncoder.encode(rs.getString("url"), StandardCharsets.UTF_8);
-
-                    sem.acquire();
-
-                    executorService.submit(() -> {
-                        try {
-                            docs.add(convertDocument(articleParts.parts, title, url, domainLinks));
-                        } catch (URISyntaxException | DisqualifiedException e) {
-                            logger.warn("Problem converting encyclopedia article " + url, e);
-                        } finally {
-                            sem.release();
-                        }
-                    });
-                }
-
-                stmt.close();
-            }
-            catch (Exception e) {
-                logger.warn("Problem converting encyclopedia article", e);
-            }
-            finally {
-                isFinished.set(true);
+                taskConsumer.accept(() -> convertDocument(articleParts.parts, title, url, domainLinks));
             }
         });
-
-        return new Iterator<>() {
-            @Override
-            public boolean hasNext() {
-                return !isFinished.get() || !docs.isEmpty() || sem.availablePermits() < 16;
-            }
-
-            @SneakyThrows
-            @Override
-            public ProcessedDocument next() {
-                return docs.take();
-            }
-        };
     }
 
     private DomainLinks getDomainLinks() {
