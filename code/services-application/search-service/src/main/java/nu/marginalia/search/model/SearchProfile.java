@@ -15,11 +15,9 @@ public enum SearchProfile {
     VINTAGE("vintage", SearchSetIdentifier.NONE),
     TILDE("tilde", SearchSetIdentifier.NONE),
     CORPO_CLEAN("corpo-clean",  SearchSetIdentifier.NONE),
-    ACADEMIA("academia",  SearchSetIdentifier.ACADEMIA),
+    ACADEMIA("academia",  SearchSetIdentifier.NONE),
     PLAIN_TEXT("plain-text", SearchSetIdentifier.NONE),
     FOOD("food", SearchSetIdentifier.NONE),
-    CRAFTS("crafts", SearchSetIdentifier.NONE),
-    CLASSICS("classics", SearchSetIdentifier.NONE),
     FORUM("forum", SearchSetIdentifier.NONE),
     WIKI("wiki", SearchSetIdentifier.NONE),
     DOCS("docs", SearchSetIdentifier.NONE),
@@ -51,7 +49,7 @@ public enum SearchProfile {
 
     public void addTacitTerms(SearchSubquery subquery) {
         if (this == ACADEMIA) {
-            subquery.searchTermsPriority.add("tld:edu");
+            subquery.searchTermsAdvice.add("special:academia");
         }
         if (this == VINTAGE) {
             subquery.searchTermsPriority.add("format:html123");
@@ -74,9 +72,6 @@ public enum SearchProfile {
         }
         if (this == FOOD) {
             subquery.searchTermsAdvice.add(HtmlFeature.CATEGORY_FOOD.getKeyword());
-        }
-        if (this == CRAFTS) {
-            subquery.searchTermsAdvice.add(HtmlFeature.CATEGORY_CRAFTS.getKeyword());
         }
     }
 
@@ -105,13 +100,5 @@ public enum SearchProfile {
         else return SpecificationLimit.none();
     }
 
-
-
-    public String getNearDomain() {
-        if (this == CLASSICS) {
-            return "classics.mit.edu";
-        }
-        return null;
-    }
 }
 
