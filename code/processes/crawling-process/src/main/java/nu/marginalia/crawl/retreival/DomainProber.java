@@ -1,5 +1,7 @@
 package nu.marginalia.crawl.retreival;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import nu.marginalia.crawl.retreival.fetcher.FetchResultState;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
 import nu.marginalia.crawling.model.CrawlerDomainStatus;
@@ -11,17 +13,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.util.function.Predicate;
 
+@Singleton
 public class DomainProber {
     private final Logger logger = LoggerFactory.getLogger(DomainProber.class);
-    private static IpBlockList ipBlockList;
+    private final Predicate<EdgeDomain> domainBlacklist;
 
-    static {
-        try {
-            ipBlockList = new IpBlockList(new GeoIpBlocklist());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    @Inject
+    public DomainProber(IpBlockList ipBlockList) {
+        this.domainBlacklist = ipBlockList::isAllowed;
+    }
+
+    /** For testing */
+    public DomainProber(Predicate<EdgeDomain> domainBlacklist) {
+        this.domainBlacklist = domainBlacklist;
     }
 
     /** To detect problems early we do a probing request to the domain before we start crawling it properly.
@@ -37,7 +43,7 @@ public class DomainProber {
             return new ProbeResultError(CrawlerDomainStatus.ERROR, "No known URLs");
         }
 
-        if (!ipBlockList.isAllowed(firstUrlInQueue.domain))
+        if (!domainBlacklist.test(firstUrlInQueue.domain))
             return new ProbeResultError(CrawlerDomainStatus.BLOCKED, "IP not allowed");
 
         var fetchResult = fetcher.probeDomain(firstUrlInQueue.withPathAndParam("/", null));
@@ -62,7 +68,7 @@ public class DomainProber {
     /** This domain redirects to another domain */
     public record ProbeResultRedirect(EdgeDomain domain) implements ProbeResult {}
 
-    /** If the retreivala of the probed url was successful, return the url as it was fetched
+    /** If the retrieval of the probed url was successful, return the url as it was fetched
      * (which may be different from the url we probed, if we attempted another URL schema).
      *
      * @param probedUrl  The url we successfully probed

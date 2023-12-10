@@ -12,6 +12,7 @@ include 'code:services-application:dating-service'
 include 'code:services-application:explorer-service'
 
 include 'code:libraries:array'
+include 'code:libraries:geo-ip'
 include 'code:libraries:btree'
 include 'code:libraries:easy-lsh'
 include 'code:libraries:guarded-regex'

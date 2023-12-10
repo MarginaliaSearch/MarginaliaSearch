@@ -15,6 +15,7 @@ dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:config')
     implementation project(':code:libraries:guarded-regex')
+    implementation project(':code:libraries:geo-ip')
 
     implementation libs.notnull
 

@@ -11,6 +11,7 @@ import nu.marginalia.WmsaHome;
 import nu.marginalia.atags.source.AnchorTagsSource;
 import nu.marginalia.atags.source.AnchorTagsSourceFactory;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
+import nu.marginalia.crawl.retreival.DomainProber;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.spec.CrawlSpecProvider;
 import nu.marginalia.crawl.spec.DbCrawlSpecProvider;
@@ -56,6 +57,7 @@ public class CrawlerMain {
 
     private final UserAgent userAgent;
     private final MessageQueueFactory messageQueueFactory;
+    private final DomainProber domainProber;
     private final FileStorageService fileStorageService;
     private final DbCrawlSpecProvider dbCrawlSpecProvider;
     private final AnchorTagsSourceFactory anchorTagsSourceFactory;
@@ -75,7 +77,7 @@ public class CrawlerMain {
     @Inject
     public CrawlerMain(UserAgent userAgent,
                        ProcessHeartbeatImpl heartbeat,
-                       MessageQueueFactory messageQueueFactory,
+                       MessageQueueFactory messageQueueFactory, DomainProber domainProber,
                        FileStorageService fileStorageService,
                        ProcessConfiguration processConfiguration,
                        DbCrawlSpecProvider dbCrawlSpecProvider,
@@ -84,6 +86,7 @@ public class CrawlerMain {
         this.heartbeat = heartbeat;
         this.userAgent = userAgent;
         this.messageQueueFactory = messageQueueFactory;
+        this.domainProber = domainProber;
         this.fileStorageService = fileStorageService;
         this.dbCrawlSpecProvider = dbCrawlSpecProvider;
         this.anchorTagsSourceFactory = anchorTagsSourceFactory;
@@ -219,7 +222,7 @@ public class CrawlerMain {
 
                 var domainLinks = anchorTagsSource.getAnchorTags(domain);
 
-                var retreiver = new CrawlerRetreiver(fetcher, specification, writer::accept);
+                var retreiver = new CrawlerRetreiver(fetcher, domainProber, specification, writer::accept);
                 int size = retreiver.fetch(domainLinks, reference);
 
                 workLog.setJobToFinished(domain, writer.getOutputFile().toString(), size);

@@ -10,6 +10,7 @@ import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.processor.logic.links.LinkGraph;
 import nu.marginalia.crawling.io.SerializableCrawlDataStream;
 import nu.marginalia.crawling.model.*;
+import nu.marginalia.geoip.GeoIpDictionary;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.model.EdgeDomain;
@@ -30,6 +31,7 @@ public class DomainProcessor {
     private final AnchorTagsSource anchorTagsSource;
     private final AnchorTextKeywords anchorTextKeywords;
     private final LshDocumentDeduplicator documentDeduplicator;
+    private final GeoIpDictionary geoIpDictionary;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -38,17 +40,21 @@ public class DomainProcessor {
                            SiteWords siteWords,
                            AnchorTagsSourceFactory anchorTagsSourceFactory,
                            AnchorTextKeywords anchorTextKeywords,
-                           LshDocumentDeduplicator documentDeduplicator) throws SQLException
+                           LshDocumentDeduplicator documentDeduplicator, GeoIpDictionary geoIpDictionary) throws SQLException
     {
         this.documentProcessor = documentProcessor;
         this.siteWords = siteWords;
         this.anchorTextKeywords = anchorTextKeywords;
         this.documentDeduplicator = documentDeduplicator;
         this.anchorTagsSource = anchorTagsSourceFactory.create();
+        this.geoIpDictionary = geoIpDictionary;
+
     }
 
     @SneakyThrows
     public ProcessedDomain process(SerializableCrawlDataStream dataStream) {
+        geoIpDictionary.waitReady();
+
         var ret = new ProcessedDomain();
         List<ProcessedDocument> docs = new ArrayList<>();
 
@@ -107,7 +113,14 @@ public class DomainProcessor {
         // Add late keywords and features from domain-level information
 
         List<String> terms = new ArrayList<>();
+
         terms.add("ip:"+ip);
+
+        String geoIp = geoIpDictionary.getCountry(ip);
+        if (!geoIp.isBlank()) {
+            terms.add("geoip:"+geoIp.toLowerCase());
+        }
+
         if (cookies) {
             terms.add(HtmlFeature.COOKIES.getKeyword());
         }

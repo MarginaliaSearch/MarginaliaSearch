@@ -6,6 +6,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.converting.processor.DomainProcessor;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
+import nu.marginalia.crawl.retreival.DomainProber;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawling.io.SerializableCrawlDataStream;
@@ -75,7 +76,7 @@ public class CrawlingThenConvertingIntegrationTest {
     private CrawledDomain crawl(CrawlSpecRecord specs) {
         List<SerializableCrawlData> data = new ArrayList<>();
 
-        new CrawlerRetreiver(httpFetcher, specs, data::add).fetch();
+        new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, data::add).fetch();
 
         CrawledDomain domain = data.stream().filter(CrawledDomain.class::isInstance).map(CrawledDomain.class::cast).findFirst().get();
         data.stream().filter(CrawledDocument.class::isInstance).map(CrawledDocument.class::cast).forEach(domain.doc::add);

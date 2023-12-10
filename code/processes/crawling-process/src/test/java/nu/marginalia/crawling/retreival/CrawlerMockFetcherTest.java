@@ -3,6 +3,7 @@ package nu.marginalia.crawling.retreival;
 import crawlercommons.robots.SimpleRobotRules;
 import lombok.SneakyThrows;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
+import nu.marginalia.crawl.retreival.DomainProber;
 import nu.marginalia.crawl.retreival.fetcher.*;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawlerDocumentStatus;
@@ -68,7 +69,7 @@ public class CrawlerMockFetcherTest {
         registerUrlClasspathData(new EdgeUrl("https://startrek.website/c/startrek"), "mock-crawl-data/lemmy/c_startrek.html");
         registerUrlClasspathData(new EdgeUrl("https://startrek.website/post/108995"), "mock-crawl-data/lemmy/108995.html");
 
-        new CrawlerRetreiver(fetcherMock, new CrawlSpecRecord("startrek.website", 10, new ArrayList<>()), out::add)
+        new CrawlerRetreiver(fetcherMock, new DomainProber(d -> true),  new CrawlSpecRecord("startrek.website", 10, new ArrayList<>()), out::add)
                 .fetch();
 
         out.forEach(System.out::println);
@@ -80,7 +81,7 @@ public class CrawlerMockFetcherTest {
 
         registerUrlClasspathData(new EdgeUrl("https://en.wikipedia.org/"), "mock-crawl-data/mediawiki/index.html");
 
-        new CrawlerRetreiver(fetcherMock, new CrawlSpecRecord("en.wikipedia.org", 10, new ArrayList<>()), out::add)
+        new CrawlerRetreiver(fetcherMock, new DomainProber(d -> true),  new CrawlSpecRecord("en.wikipedia.org", 10, new ArrayList<>()), out::add)
                 .fetch();
 
         out.forEach(System.out::println);
@@ -94,7 +95,7 @@ public class CrawlerMockFetcherTest {
         registerUrlClasspathData(new EdgeUrl("https://community.tt-rss.org/t/telegram-channel-to-idle-on/3501"), "mock-crawl-data/discourse/telegram.html");
         registerUrlClasspathData(new EdgeUrl("https://community.tt-rss.org/t/combined-mode-but-grid/4489"), "mock-crawl-data/discourse/grid.html");
 
-        new CrawlerRetreiver(fetcherMock, new CrawlSpecRecord("community.tt-rss.org", 100, new ArrayList<>()), out::add)
+        new CrawlerRetreiver(fetcherMock, new DomainProber(d -> true),  new CrawlSpecRecord("community.tt-rss.org", 100, new ArrayList<>()), out::add)
                 .fetch();
 
         out.forEach(System.out::println);

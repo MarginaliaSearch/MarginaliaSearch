@@ -1,7 +1,6 @@
-package nu.marginalia.assistant.domains;
+package nu.marginalia.geoip;
 
 import com.opencsv.CSVReader;
-import lombok.AllArgsConstructor;
 import nu.marginalia.WmsaHome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,12 +13,7 @@ public class GeoIpDictionary {
     private volatile TreeMap<Long, IpRange> ranges = null;
     private static final Logger logger = LoggerFactory.getLogger(GeoIpDictionary.class);
 
-    @AllArgsConstructor
-    static class IpRange {
-        public final long from;
-        public final long to;
-        public final String country;
-    }
+    record IpRange(long from, long to, String country) {}
 
     public GeoIpDictionary() {
         Thread.ofPlatform().start(() -> {
@@ -39,10 +33,28 @@ public class GeoIpDictionary {
                 ranges = dict;
                 logger.info("Loaded {} IP ranges", ranges.size());
             } catch (Exception e) {
+                ranges = new TreeMap<>();
                 throw new RuntimeException(e);
             }
+            finally {
+                this.notifyAll();
+            }
         });
+    }
 
+    public boolean isReady() {
+        return null != ranges;
+    }
+
+    public boolean waitReady() {
+        while (null == ranges) {
+            try {
+                this.wait();
+            } catch (InterruptedException e) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public String getCountry(String ip) {

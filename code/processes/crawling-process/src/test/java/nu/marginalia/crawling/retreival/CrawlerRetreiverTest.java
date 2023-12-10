@@ -5,6 +5,7 @@ import nu.marginalia.WmsaHome;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
+import nu.marginalia.crawl.retreival.DomainProber;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawling.io.CrawledDomainReader;
@@ -53,7 +54,7 @@ class CrawlerRetreiverTest {
 
         List<SerializableCrawlData> data = new ArrayList<>();
 
-        new CrawlerRetreiver(httpFetcher, specs, data::add).fetch();
+        new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, data::add).fetch();
 
         var fetchedUrls =
                 data.stream().filter(CrawledDocument.class::isInstance)
@@ -82,7 +83,7 @@ class CrawlerRetreiverTest {
 
         List<SerializableCrawlData> data = new ArrayList<>();
 
-        new CrawlerRetreiver(httpFetcher, specs, data::add).fetch();
+        new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, data::add).fetch();
 
         data.stream().filter(CrawledDocument.class::isInstance)
                 .map(CrawledDocument.class::cast)
@@ -118,7 +119,7 @@ class CrawlerRetreiverTest {
         var writer = new CrawledDomainWriter(out, specs.domain, "idid");
         Map<Class<? extends SerializableCrawlData>, List<SerializableCrawlData>> data = new HashMap<>();
 
-        new CrawlerRetreiver(httpFetcher, specs, d -> {
+        new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, d -> {
             data.computeIfAbsent(d.getClass(), k->new ArrayList<>()).add(d);
             if (d instanceof CrawledDocument doc) {
                 System.out.println(doc.url + ": " + doc.recrawlState + "\t" + doc.httpStatus);
@@ -136,7 +137,7 @@ class CrawlerRetreiverTest {
         CrawledDomain domain = (CrawledDomain) data.get(CrawledDomain.class).get(0);
         domain.doc = data.get(CrawledDocument.class).stream().map(CrawledDocument.class::cast).collect(Collectors.toList());
 
-        new CrawlerRetreiver(httpFetcher, specs, d -> {
+        new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, d -> {
             if (d instanceof CrawledDocument doc) {
                 System.out.println(doc.url + ": " + doc.recrawlState + "\t" + doc.httpStatus);
             }

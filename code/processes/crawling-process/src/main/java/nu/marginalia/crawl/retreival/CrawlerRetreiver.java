@@ -42,7 +42,7 @@ public class CrawlerRetreiver {
     private static final UrlBlocklist urlBlocklist = new UrlBlocklist();
     private static final LinkFilterSelector linkFilterSelector = new LinkFilterSelector();
 
-    private static final DomainProber domainProber = new DomainProber();
+    private final DomainProber domainProber;
     private final SitemapRetriever sitemapRetriever;
     private final DomainCrawlFrontier crawlFrontier;
 
@@ -55,9 +55,11 @@ public class CrawlerRetreiver {
     private static final String documentWasSameTag = "SAME-BY-COMPARISON";
 
     public CrawlerRetreiver(HttpFetcher fetcher,
+                            DomainProber domainProber,
                             CrawlSpecRecord specs,
                             Consumer<SerializableCrawlData> writer) {
         this.fetcher = fetcher;
+        this.domainProber = domainProber;
 
         domain = specs.domain;
 

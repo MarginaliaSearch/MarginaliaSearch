@@ -15,7 +15,6 @@ import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.crawl.retreival.logic.ContentTypeLogic;
 import nu.marginalia.crawl.retreival.logic.ContentTypeParser;
 import okhttp3.*;
-import org.apache.commons.collections4.queue.PredicatedQueue;
 import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -87,7 +86,10 @@ public class HttpFetcherImpl implements HttpFetcher {
     }
 
     @Inject
-    public HttpFetcherImpl(@Named("user-agent") String userAgent, Dispatcher dispatcher, ConnectionPool connectionPool) {
+    public HttpFetcherImpl(@Named("user-agent") String userAgent,
+                           Dispatcher dispatcher,
+                           ConnectionPool connectionPool)
+    {
         this.client = createClient(dispatcher, connectionPool);
         this.userAgent = userAgent;
     }
