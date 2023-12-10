@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -95,7 +96,7 @@ class DomainLoaderServiceTest {
 
         // Verify
         Set<String> expectedDomains1 = Sets.union(new HashSet<>(domains1), new HashSet<>(domains2));
-        assertEquals(expectedDomains1, domainService.readBasicDomainInformation(new LoaderInputData(workDir, 2)));
+        assertEquals(expectedDomains1, domainService.readBasicDomainInformation(new LoaderInputData(workDir, 2)).stream().map(d -> d.domain).collect(Collectors.toSet()));
 
         Set<String> expectedDomains2 = new HashSet<>(linkDomains);
         assertEquals(expectedDomains2, domainService.readReferencedDomainNames(new LoaderInputData(workDir, 2)));
