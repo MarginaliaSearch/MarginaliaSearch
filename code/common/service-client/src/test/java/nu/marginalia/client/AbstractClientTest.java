@@ -42,7 +42,7 @@ public class AbstractClientTest {
         client = new AbstractClient(new RouteProvider(new ServiceDescriptor(ServiceId.Api, "localhost")), 1, Gson::new) {
             @Override
             public AbortingScheduler scheduler() {
-                return new AbortingScheduler(name());
+                return new AbortingScheduler();
             }
 
             @Override

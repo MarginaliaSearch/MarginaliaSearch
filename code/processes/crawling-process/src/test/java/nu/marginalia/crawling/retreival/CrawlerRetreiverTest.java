@@ -5,6 +5,7 @@ import nu.marginalia.WmsaHome;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
+import nu.marginalia.crawl.retreival.DomainProber;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
@@ -59,7 +60,7 @@ class CrawlerRetreiverTest {
             List<SerializableCrawlData> data = new ArrayList<>();
 
             try (var recorder = new WarcRecorder(tempFile)) {
-                new CrawlerRetreiver(httpFetcher, specs, recorder, data::add).fetch();
+                new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, recorder, data::add).fetch();
             } catch (IOException ex) {
                 Assertions.fail(ex);
             }
@@ -103,7 +104,7 @@ class CrawlerRetreiverTest {
         List<SerializableCrawlData> data = new ArrayList<>();
 
         try (var recorder = new WarcRecorder()) {
-            new CrawlerRetreiver(httpFetcher, specs, recorder, data::add).fetch();
+            new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, recorder, data::add).fetch();
         }
         catch (IOException ex) {
             Assertions.fail(ex);
@@ -137,7 +138,7 @@ class CrawlerRetreiverTest {
         List<SerializableCrawlData> data = new ArrayList<>();
 
         try (var recorder = new WarcRecorder()) {
-            new CrawlerRetreiver(httpFetcher, specs, recorder, data::add).fetch();
+            new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, recorder, data::add).fetch();
         }
         catch (IOException ex) {
             Assertions.fail(ex);
@@ -178,7 +179,7 @@ class CrawlerRetreiverTest {
         Map<Class<? extends SerializableCrawlData>, List<SerializableCrawlData>> data = new HashMap<>();
 
         try (var recorder = new WarcRecorder()) {
-            new CrawlerRetreiver(httpFetcher, specs, recorder, d -> {
+            new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, recorder, d -> {
                 data.computeIfAbsent(d.getClass(), k->new ArrayList<>()).add(d);
                 if (d instanceof CrawledDocument doc) {
                     System.out.println(doc.url + ": " + doc.recrawlState + "\t" + doc.httpStatus);
@@ -202,7 +203,7 @@ class CrawlerRetreiverTest {
         CrawledDomain domain = (CrawledDomain) data.get(CrawledDomain.class).get(0);
         domain.doc = data.get(CrawledDocument.class).stream().map(CrawledDocument.class::cast).collect(Collectors.toList());
         try (var recorder = new WarcRecorder()) {
-            new CrawlerRetreiver(httpFetcher, specs, recorder, d -> {
+            new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, recorder, d -> {
                 if (d instanceof CrawledDocument doc) {
                     System.out.println(doc.url + ": " + doc.recrawlState + "\t" + doc.httpStatus);
                 }

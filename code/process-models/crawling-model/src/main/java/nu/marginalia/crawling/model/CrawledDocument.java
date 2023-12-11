@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.ToString;
 import nu.marginalia.bigstring.BigString;
+import nu.marginalia.model.EdgeUrl;
 
 @Builder
 @AllArgsConstructor
@@ -33,6 +34,18 @@ public class CrawledDocument implements SerializableCrawlData {
     @Override
     public String getSerialIdentifier() {
         return SERIAL_IDENTIFIER;
+    }
+
+    @Override
+    public String getDomain() {
+        if (url == null)
+            return null;
+
+        return EdgeUrl
+                .parse(url)
+                .map(EdgeUrl::getDomain)
+                .map(d -> d.domain)
+                .orElse(null);
     }
 
 }

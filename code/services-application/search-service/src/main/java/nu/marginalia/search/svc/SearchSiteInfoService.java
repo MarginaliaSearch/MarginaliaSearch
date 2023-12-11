@@ -1,16 +1,16 @@
 package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
+import nu.marginalia.assistant.client.AssistantClient;
+import nu.marginalia.assistant.client.model.SimilarDomain;
 import nu.marginalia.client.Context;
 import nu.marginalia.db.DbDomainQueries;
-import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.search.SearchOperator;
-import nu.marginalia.search.model.DomainInformation;
+import nu.marginalia.assistant.client.model.DomainInformation;
 import nu.marginalia.search.model.UrlDetails;
-import nu.marginalia.search.siteinfo.DomainInformationService;
 import nu.marginalia.search.svc.SearchFlagSiteService.FlagSiteFormData;
 import spark.Request;
 import spark.Response;
@@ -23,22 +23,19 @@ import java.util.Map;
 public class SearchSiteInfoService {
 
     private final SearchOperator searchOperator;
-    private final SimilarDomainsService similarDomains;
-    private final DomainInformationService domainInformationService;
+    private final AssistantClient assistantClient;
     private final SearchFlagSiteService flagSiteService;
     private final DbDomainQueries domainQueries;
     private final MustacheRenderer<Object> renderer;
 
     @Inject
     public SearchSiteInfoService(SearchOperator searchOperator,
-                                 SimilarDomainsService similarDomains,
-                                 DomainInformationService domainInformationService,
+                                 AssistantClient assistantClient,
                                  RendererFactory rendererFactory,
                                  SearchFlagSiteService flagSiteService,
                                  DbDomainQueries domainQueries) throws IOException {
         this.searchOperator = searchOperator;
-        this.similarDomains = similarDomains;
-        this.domainInformationService = domainInformationService;
+        this.assistantClient = assistantClient;
         this.flagSiteService = flagSiteService;
         this.domainQueries = domainQueries;
 
@@ -108,13 +105,6 @@ public class SearchSiteInfoService {
                 false);
     }
 
-    private DomainInformation dummyInformation(String domainName) {
-        return DomainInformation.builder()
-                .domain(new EdgeDomain(domainName))
-                .suggestForCrawling(true)
-                .unknownDomain(true)
-                .build();
-    }
 
     private Backlinks listLinks(Context ctx, String domainName) {
         return new Backlinks(domainName,
@@ -126,13 +116,24 @@ public class SearchSiteInfoService {
 
         final int domainId = domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1);
 
-        final DomainInformation domainInfo = domainInformationService.domainInfo(domainName)
-                .orElseGet(() -> dummyInformation(domainName));
+        final DomainInformation domainInfo;
+        final List<SimilarDomain> similarSet;
+        final List<SimilarDomain> linkingDomains;
 
-        final List<SimilarDomainsService.SimilarDomain> similarSet =
-                similarDomains.getSimilarDomains(domainId, 100);
-        final List<SimilarDomainsService.SimilarDomain> linkingDomains =
-                similarDomains.getLinkingDomains(domainId, 100);
+        if (domainId < 0 || !assistantClient.isAccepting()) {
+            domainInfo = createDummySiteInfo(domainName);
+            similarSet = List.of();
+            linkingDomains = List.of();
+        }
+        else {
+            domainInfo = assistantClient.domainInformation(ctx, domainId).blockingFirst();
+            similarSet = assistantClient
+                    .similarDomains(ctx, domainId, 100)
+                    .blockingFirst();
+            linkingDomains = assistantClient
+                    .linkedDomains(ctx, domainId, 100)
+                    .blockingFirst();
+        }
 
         return new SiteInfoWithContext(domainName,
                 domainId,
@@ -141,6 +142,15 @@ public class SearchSiteInfoService {
                 linkingDomains
         );
     }
+
+    private DomainInformation createDummySiteInfo(String domainName) {
+        return DomainInformation.builder()
+                .domain(new EdgeDomain(domainName))
+                .suggestForCrawling(true)
+                .unknownDomain(true)
+                .build();
+    }
+
     private Docs listDocs(Context ctx, String domainName) {
         return new Docs(domainName,
                 domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1),
@@ -181,13 +191,13 @@ public class SearchSiteInfoService {
                                       String domain,
                                       long domainId,
                                       DomainInformation domainInformation,
-                                      List<SimilarDomainsService.SimilarDomain> similar,
-                                      List<SimilarDomainsService.SimilarDomain> linking) {
+                                      List<SimilarDomain> similar,
+                                      List<SimilarDomain> linking) {
         public SiteInfoWithContext(String domain,
                                    long domainId,
                                    DomainInformation domainInformation,
-                                   List<SimilarDomainsService.SimilarDomain> similar,
-                                   List<SimilarDomainsService.SimilarDomain> linking
+                                   List<SimilarDomain> similar,
+                                   List<SimilarDomain> linking
                             )
         {
             this(Map.of("info", true),

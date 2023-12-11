@@ -24,7 +24,7 @@ public class ReprocessAllActor extends RecordActorPrototype {
 
     public record Initial() implements ActorStep {}
 
-    public record WaitFinished(int node) implements ActorStep {}
+    public record WaitFinished(int node, long msgId) implements ActorStep {}
     @Resume(behavior=ActorResumeBehavior.RETRY)
     public record Trigger(int node) implements ActorStep {}
     public record AdvanceNode(int node) implements ActorStep {}
@@ -47,17 +47,18 @@ public class ReprocessAllActor extends RecordActorPrototype {
 
                 var data = new ExecutorRemoteActorFactory.ConvertAndLoadData(activeFileStorage.get(0));
 
-                if (remoteActorFactory.createConvertAndLoadRemote(node).trigger(data)) {
-                    yield new WaitFinished(node);
+                long msgId = remoteActorFactory.createConvertAndLoadRemote(node).trigger(data);
+                if (msgId >= 0) {
+                    yield new WaitFinished(node, msgId);
                 }
                 else {
                     yield new AdvanceNode(node);
                 }
             }
-            case WaitFinished(int node) -> {
+            case WaitFinished(int node, long msgId) -> {
                 var remoteActor = remoteActorFactory.createConvertAndLoadRemote(node);
                 for (;;) {
-                    var state = remoteActor.getState();
+                    var state = remoteActor.getState(msgId);
                     if ("END".equals(state) || "ERROR".equals(state))
                         break;
                     TimeUnit.SECONDS.sleep(10);

@@ -1,8 +1,6 @@
 package nu.marginalia.client;
 
 import com.google.gson.Gson;
-import nu.marginalia.client.route.RouteProvider;
-import nu.marginalia.client.route.ServiceRoute;
 import nu.marginalia.service.descriptor.ServiceDescriptor;
 
 import javax.annotation.Nonnull;
@@ -20,7 +18,7 @@ public class AbstractDynamicClient extends AbstractClient {
         );
 
         this.service = service;
-        this.scheduler = new AbortingScheduler(name());
+        this.scheduler = new AbortingScheduler();
     }
 
     @Override

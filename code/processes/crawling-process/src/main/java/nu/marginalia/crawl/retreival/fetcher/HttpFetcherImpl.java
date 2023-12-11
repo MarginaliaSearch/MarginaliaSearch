@@ -90,7 +90,10 @@ public class HttpFetcherImpl implements HttpFetcher {
     }
 
     @Inject
-    public HttpFetcherImpl(@Named("user-agent") String userAgent, Dispatcher dispatcher, ConnectionPool connectionPool) {
+    public HttpFetcherImpl(@Named("user-agent") String userAgent,
+                           Dispatcher dispatcher,
+                           ConnectionPool connectionPool)
+    {
         this.client = createClient(dispatcher, connectionPool);
         this.userAgent = userAgent;
         this.contentTypeProber = new ContentTypeProber(userAgent, client);

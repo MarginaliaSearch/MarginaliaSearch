@@ -496,17 +496,21 @@ public class MqPersistence {
         return gson;
     }
 
-    /** Returns the last message sent to this inbox with a state of 'OK' */
-    public Optional<MqMessage> getHeadMessage(String inboxName) {
+    /** Returns the last message sent to this inbox with a state of 'OK'
+     * with an id greater than or equal to fromMsgId
+     */
+    public Optional<MqMessage> getHeadMessage(String inboxName, long fromMsgId) {
         try (var conn = dataSource.getConnection();
              var query = conn.prepareStatement("""
                      SELECT ID, RELATED_ID, FUNCTION, PAYLOAD, STATE, SENDER_INBOX 
                      FROM MESSAGE_QUEUE
-                     WHERE RECIPIENT_INBOX = ? AND STATE='OK'
+                     WHERE RECIPIENT_INBOX = ? AND STATE='OK' AND ID >= ?
                      ORDER BY ID DESC LIMIT 1
             """))
         {
             query.setString(1, inboxName);
+            query.setLong(2, fromMsgId);
+
             var rs = query.executeQuery();
             if (rs.next()) {
                 long msgId = rs.getLong(1);

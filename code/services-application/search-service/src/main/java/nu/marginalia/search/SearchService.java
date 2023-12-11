@@ -31,7 +31,6 @@ public class SearchService extends Service {
                          SearchFrontPageService frontPageService,
                          SearchErrorPageService errorPageService,
                          SearchAddToCrawlQueueService addToCrawlQueueService,
-                         SearchFlagSiteService flagSiteService,
                          SearchSiteInfoService siteInfoService,
                          SearchQueryService searchQueryService
                              ) {

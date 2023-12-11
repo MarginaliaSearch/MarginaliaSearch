@@ -1,4 +1,4 @@
-package nu.marginalia.search.svc;
+package nu.marginalia.assistant.domains;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
@@ -6,11 +6,10 @@ import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntDoubleHashMap;
 import gnu.trove.map.hash.TIntIntHashMap;
-import gnu.trove.map.hash.TLongDoubleHashMap;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
+import nu.marginalia.assistant.client.model.SimilarDomain;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.EdgeUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +38,8 @@ public class SimilarDomainsService {
     public volatile BitSet indexedDomains = null;
     public volatile double[] domainRanks = null;
     public volatile String[] domainNames = null;
+
+    volatile boolean isReady = false;
 
     @Inject
     public SimilarDomainsService(HikariDataSource dataSource) {
@@ -167,6 +168,7 @@ public class SimilarDomainsService {
 
                 logger.info("Loaded {} domains", domainRanks.length);
                 logger.info("All done!");
+                isReady = true;
             }
         }
         catch (SQLException throwables) {
@@ -174,7 +176,11 @@ public class SimilarDomainsService {
         }
     }
 
-    double getRelatedness(int a, int b) {
+    public boolean isReady() {
+        return isReady;
+    }
+
+    private double getRelatedness(int a, int b) {
         int lowerIndex = Math.min(domainIdToIdx.get(a), domainIdToIdx.get(b));
         int higherIndex = Math.max(domainIdToIdx.get(a), domainIdToIdx.get(b));
 
@@ -233,14 +239,14 @@ public class SimilarDomainsService {
                     indexedDomains.get(idx),
                     activeDomains.get(idx),
                     screenshotDomains.get(idx),
-                    LinkType.find(
+                    SimilarDomain.LinkType.find(
                             linkingIdsStoD.contains(idx),
                             linkingIdsDtoS.contains(idx)
                     )
             ));
         }
 
-        domains.removeIf(d -> d.url.domain.toString().length() > 32);
+        domains.removeIf(d -> d.url().domain.toString().length() > 32);
 
         return domains;
     }
@@ -319,84 +325,16 @@ public class SimilarDomainsService {
                     indexedDomains.get(idx),
                     activeDomains.get(idx),
                     screenshotDomains.get(idx),
-                    LinkType.find(
+                    SimilarDomain.LinkType.find(
                             linkingIdsStoD.contains(idx),
                             linkingIdsDtoS.contains(idx)
                     )
             ));
         }
 
-        domains.removeIf(d -> d.url.domain.toString().length() > 32);
+        domains.removeIf(d -> d.url().domain.toString().length() > 32);
 
         return domains;
     }
-
-    public record SimilarDomain(EdgeUrl url,
-                                int domainId,
-                                double relatedness,
-                                double rank,
-                                boolean indexed,
-                                boolean active,
-                                boolean screenshot,
-                                LinkType linkType)
-    {
-
-        public String getRankSymbols() {
-            if (rank > 90) {
-                return "&#9733;&#9733;&#9733;&#9733;&#9733;";
-            }
-            if (rank > 70) {
-                return "&#9733;&#9733;&#9733;&#9733;";
-            }
-            if (rank > 50) {
-                return "&#9733;&#9733;&#9733;";
-            }
-            if (rank > 30) {
-                return "&#9733;&#9733;";
-            }
-            if (rank > 10) {
-                return "&#9733;";
-            }
-            return "";
-        }
-    }
-
-    enum LinkType {
-        BACKWARD,
-        FOWARD,
-        BIDIRECTIONAL,
-        NONE;
-
-        public static LinkType find(boolean linkStod,
-                                    boolean linkDtos)
-        {
-            if (linkDtos && linkStod)
-                return BIDIRECTIONAL;
-            if (linkDtos)
-                return FOWARD;
-            if (linkStod)
-                return BACKWARD;
-
-            return NONE;
-        }
-
-        public String toString() {
-            return switch (this) {
-                case FOWARD -> "&#8594;";
-                case BACKWARD -> "&#8592;";
-                case BIDIRECTIONAL -> "&#8646;";
-                case NONE -> "-";
-            };
-        }
-
-        public String getDescription() {
-            return switch (this) {
-                case BACKWARD -> "Backward Link";
-                case FOWARD -> "Forward Link";
-                case BIDIRECTIONAL -> "Mutual Link";
-                case NONE -> "No Link";
-            };
-        }
-    };
 
 }

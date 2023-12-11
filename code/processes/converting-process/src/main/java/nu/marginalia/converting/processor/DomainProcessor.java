@@ -10,6 +10,7 @@ import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.processor.logic.links.LinkGraph;
 import nu.marginalia.crawling.io.SerializableCrawlDataStream;
 import nu.marginalia.crawling.model.*;
+import nu.marginalia.geoip.GeoIpDictionary;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.model.EdgeDomain;
@@ -22,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class DomainProcessor {
     private final DocumentProcessor documentProcessor;
@@ -29,6 +31,7 @@ public class DomainProcessor {
     private final AnchorTagsSource anchorTagsSource;
     private final AnchorTextKeywords anchorTextKeywords;
     private final LshDocumentDeduplicator documentDeduplicator;
+    private final GeoIpDictionary geoIpDictionary;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -37,13 +40,16 @@ public class DomainProcessor {
                            SiteWords siteWords,
                            AnchorTagsSourceFactory anchorTagsSourceFactory,
                            AnchorTextKeywords anchorTextKeywords,
-                           LshDocumentDeduplicator documentDeduplicator) throws SQLException
+                           LshDocumentDeduplicator documentDeduplicator, GeoIpDictionary geoIpDictionary) throws SQLException
     {
         this.documentProcessor = documentProcessor;
         this.siteWords = siteWords;
         this.anchorTextKeywords = anchorTextKeywords;
         this.documentDeduplicator = documentDeduplicator;
         this.anchorTagsSource = anchorTagsSourceFactory.create();
+        this.geoIpDictionary = geoIpDictionary;
+
+        geoIpDictionary.waitReady();
     }
 
     @SneakyThrows
@@ -54,10 +60,20 @@ public class DomainProcessor {
         boolean cookies = false;
         String ip = "";
 
-        DomainLinks externalDomainLinks = anchorTagsSource.getAnchorTags(ret.domain);
+        DomainLinks externalDomainLinks = null;
 
         while (dataStream.hasNext()) {
             var data = dataStream.next();
+
+            // Do a lazy load of the external domain links since we don't know the domain
+            // until we see the first document
+            if (externalDomainLinks == null) {
+                var domain = data.getDomain();
+
+                if (domain != null) {
+                    externalDomainLinks = anchorTagsSource.getAnchorTags(domain);
+                }
+            }
 
             if (data instanceof CrawledDomain crawledDomain) {
                 ret.domain = new EdgeDomain(crawledDomain.domain);
@@ -76,7 +92,14 @@ public class DomainProcessor {
                 try {
                     if (doc.url == null)
                         continue;
+
                     fixBadCanonicalTag(doc);
+
+                    // This case should never be reachable, as we should have initiated
+                    // the externalDomainLinks variable above if we made it past the
+                    // doc.url == null check; but we'll leave it here just in case
+                    // to make debugging easier if we break this.
+                    assert externalDomainLinks != null : "externalDomainLinks has not been initialized";
 
                     docs.add(documentProcessor.process(doc, externalDomainLinks));
                 }
@@ -89,9 +112,20 @@ public class DomainProcessor {
         // Add late keywords and features from domain-level information
 
         List<String> terms = new ArrayList<>();
+
         terms.add("ip:"+ip);
+
+        String ipCountryCode = geoIpDictionary.getCountry(ip).toLowerCase();
+        if (!ipCountryCode.isBlank()) {
+            terms.add("ip:"+ipCountryCode);
+        }
+
         if (cookies) {
             terms.add(HtmlFeature.COOKIES.getKeyword());
+        }
+
+        if (isAcademicDomain(ret.domain)) {
+            terms.add("special:academia");
         }
 
         for (var document : ret.documents) {
@@ -112,6 +146,19 @@ public class DomainProcessor {
         calculateStatistics(ret, externalDomainLinks);
 
         return ret;
+    }
+
+
+    private static final Pattern academicPattern = Pattern.compile(".*\\.(ac|edu)\\.[a-z]{2}$");
+    private boolean isAcademicDomain(EdgeDomain domain) {
+
+        if (domain.domain.endsWith(".edu"))
+            return true;
+
+        if (academicPattern.matcher(domain.domain).matches())
+            return true;
+
+        return false;
     }
 
     private void fixBadCanonicalTag(CrawledDocument doc) {

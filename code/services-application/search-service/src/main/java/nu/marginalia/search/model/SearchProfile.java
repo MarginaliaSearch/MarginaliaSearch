@@ -8,19 +8,16 @@ import nu.marginalia.index.client.model.query.SearchSetIdentifier;
 import java.util.Objects;
 
 public enum SearchProfile {
-    DEFAULT("default",  SearchSetIdentifier.RETRO),
+    POPULAR("default",  SearchSetIdentifier.POPULAR),
     SMALLWEB("modern", SearchSetIdentifier.SMALLWEB),
     BLOGOSPHERE("blogosphere", SearchSetIdentifier.BLOGS),
     NO_FILTER("corpo", SearchSetIdentifier.NONE),
-    YOLO("yolo", SearchSetIdentifier.NONE),
     VINTAGE("vintage", SearchSetIdentifier.NONE),
     TILDE("tilde", SearchSetIdentifier.NONE),
     CORPO_CLEAN("corpo-clean",  SearchSetIdentifier.NONE),
-    ACADEMIA("academia",  SearchSetIdentifier.ACADEMIA),
+    ACADEMIA("academia",  SearchSetIdentifier.NONE),
     PLAIN_TEXT("plain-text", SearchSetIdentifier.NONE),
-    FOOD("food", SearchSetIdentifier.NONE),
-    CRAFTS("crafts", SearchSetIdentifier.NONE),
-    CLASSICS("classics", SearchSetIdentifier.NONE),
+    FOOD("food", SearchSetIdentifier.POPULAR),
     FORUM("forum", SearchSetIdentifier.NONE),
     WIKI("wiki", SearchSetIdentifier.NONE),
     DOCS("docs", SearchSetIdentifier.NONE),
@@ -38,7 +35,7 @@ public enum SearchProfile {
     private final static SearchProfile[] values = values();
     public static SearchProfile getSearchProfile(String param) {
         if (null == param) {
-            return NO_FILTER;
+            return POPULAR;
         }
 
         for (var profile : values) {
@@ -47,12 +44,12 @@ public enum SearchProfile {
             }
         }
 
-        return NO_FILTER;
+        return POPULAR;
     }
 
     public void addTacitTerms(SearchSubquery subquery) {
         if (this == ACADEMIA) {
-            subquery.searchTermsPriority.add("tld:edu");
+            subquery.searchTermsAdvice.add("special:academia");
         }
         if (this == VINTAGE) {
             subquery.searchTermsPriority.add("format:html123");
@@ -75,9 +72,7 @@ public enum SearchProfile {
         }
         if (this == FOOD) {
             subquery.searchTermsAdvice.add(HtmlFeature.CATEGORY_FOOD.getKeyword());
-        }
-        if (this == CRAFTS) {
-            subquery.searchTermsAdvice.add(HtmlFeature.CATEGORY_CRAFTS.getKeyword());
+            subquery.searchTermsExclude.add("special:ads");
         }
     }
 
@@ -106,13 +101,5 @@ public enum SearchProfile {
         else return SpecificationLimit.none();
     }
 
-
-
-    public String getNearDomain() {
-        if (this == CLASSICS) {
-            return "classics.mit.edu";
-        }
-        return null;
-    }
 }
 

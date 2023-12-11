@@ -6,6 +6,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.converting.processor.DomainProcessor;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
+import nu.marginalia.crawl.retreival.DomainProber;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
@@ -78,7 +79,7 @@ public class CrawlingThenConvertingIntegrationTest {
         List<SerializableCrawlData> data = new ArrayList<>();
 
         try (var recorder = new WarcRecorder()) {
-            new CrawlerRetreiver(httpFetcher, specs, recorder, data::add).fetch();
+            new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, recorder, data::add).fetch();
         }
 
         CrawledDomain domain = data.stream().filter(CrawledDomain.class::isInstance).map(CrawledDomain.class::cast).findFirst().get();

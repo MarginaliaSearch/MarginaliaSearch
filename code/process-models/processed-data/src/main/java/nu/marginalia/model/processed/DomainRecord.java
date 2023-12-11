@@ -8,7 +8,6 @@ import org.apache.parquet.schema.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.sql.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,8 +47,8 @@ public class DomainRecord {
         return DomainRecord::dehydrate;
     }
 
-    public static Hydrator<String, String> newDomainNameHydrator() {
-        return new DomainNameHydrator();
+    public static Hydrator<DomainWithIp, DomainWithIp> newDomainNameHydrator() {
+        return new DomainWithIpHydrator();
     }
 
 
@@ -124,23 +123,26 @@ class DomainHydrator implements Hydrator<DomainRecord, DomainRecord> {
     }
 }
 
-class DomainNameHydrator implements Hydrator<String, String> {
+class DomainWithIpHydrator implements Hydrator<DomainWithIp, DomainWithIp> {
 
     @Override
-    public String start() {
-        return "";
+    public DomainWithIp start() {
+        return new DomainWithIp();
     }
 
     @Override
-    public String add(String target, String heading, Object value) {
+    public DomainWithIp add(DomainWithIp target, String heading, Object value) {
         if ("domain".equals(heading)) {
-            return (String) value;
+            target.domain = (String) value;
+        }
+        else if ("ip".equals(heading)) {
+            target.ip = (String) value;
         }
         return target;
     }
 
     @Override
-    public String finish(String target) {
+    public DomainWithIp finish(DomainWithIp target) {
         return target;
     }
 }

@@ -6,7 +6,6 @@ import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.io.processed.DomainLinkRecordParquetFileWriter;
 import nu.marginalia.io.processed.DomainRecordParquetFileWriter;
 import nu.marginalia.io.processed.ProcessedDataFileNames;
-import nu.marginalia.loader.DbTestUtil;
 import nu.marginalia.loading.LoaderInputData;
 import nu.marginalia.model.processed.DomainLinkRecord;
 import nu.marginalia.model.processed.DomainRecord;
@@ -21,10 +20,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -99,7 +96,7 @@ class DomainLoaderServiceTest {
 
         // Verify
         Set<String> expectedDomains1 = Sets.union(new HashSet<>(domains1), new HashSet<>(domains2));
-        assertEquals(expectedDomains1, domainService.readSetDomainNames(new LoaderInputData(workDir, 2)));
+        assertEquals(expectedDomains1, domainService.readBasicDomainInformation(new LoaderInputData(workDir, 2)).stream().map(d -> d.domain).collect(Collectors.toSet()));
 
         Set<String> expectedDomains2 = new HashSet<>(linkDomains);
         assertEquals(expectedDomains2, domainService.readReferencedDomainNames(new LoaderInputData(workDir, 2)));

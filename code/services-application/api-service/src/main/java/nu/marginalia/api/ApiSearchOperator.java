@@ -10,8 +10,6 @@ import nu.marginalia.index.client.model.query.SearchSetIdentifier;
 import nu.marginalia.index.client.model.results.DecoratedSearchResultItem;
 import nu.marginalia.index.client.model.results.SearchResultKeywordScore;
 import nu.marginalia.index.query.limit.QueryLimits;
-import nu.marginalia.index.query.limit.SpecificationLimit;
-import nu.marginalia.index.searchset.SearchSet;
 import nu.marginalia.model.idx.WordMetadata;
 import nu.marginalia.query.client.QueryClient;
 import nu.marginalia.query.model.QueryParams;
@@ -64,7 +62,7 @@ public class ApiSearchOperator {
         return switch (index) {
             case 0 -> SearchSetIdentifier.NONE;
             case 1 -> SearchSetIdentifier.SMALLWEB;
-            case 2 -> SearchSetIdentifier.RETRO;
+            case 2 -> SearchSetIdentifier.POPULAR;
             case 3 -> SearchSetIdentifier.NONE;
             case 5 -> SearchSetIdentifier.NONE;
             default -> SearchSetIdentifier.NONE;

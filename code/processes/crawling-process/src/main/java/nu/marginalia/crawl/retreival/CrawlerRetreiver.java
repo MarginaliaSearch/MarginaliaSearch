@@ -45,7 +45,7 @@ public class CrawlerRetreiver implements AutoCloseable {
     private static final UrlBlocklist urlBlocklist = new UrlBlocklist();
     private static final LinkFilterSelector linkFilterSelector = new LinkFilterSelector();
 
-    private static final DomainProber domainProber = new DomainProber();
+    private final DomainProber domainProber;
     private final SitemapRetriever sitemapRetriever;
     private final DomainCrawlFrontier crawlFrontier;
     private final WarcRecorder warcRecorder;
@@ -59,12 +59,14 @@ public class CrawlerRetreiver implements AutoCloseable {
     private static final String documentWasSameTag = "SAME-BY-COMPARISON";
 
     public CrawlerRetreiver(HttpFetcher fetcher,
+                            DomainProber domainProber,
                             CrawlSpecRecord specs,
                             WarcRecorder warcRecorder,
                             Consumer<SerializableCrawlData> writer)
     {
         this.warcRecorder = warcRecorder;
         this.fetcher = fetcher;
+        this.domainProber = domainProber;
 
         domain = specs.domain;
 

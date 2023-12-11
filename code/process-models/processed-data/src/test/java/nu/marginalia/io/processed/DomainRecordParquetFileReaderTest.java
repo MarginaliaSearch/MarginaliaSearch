@@ -1,6 +1,7 @@
 package nu.marginalia.io.processed;
 
 import nu.marginalia.model.processed.DomainRecord;
+import nu.marginalia.model.processed.DomainWithIp;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,8 +54,11 @@ class DomainRecordParquetFileReaderTest {
             writer.write(second);
         }
 
-        var domainNames = DomainRecordParquetFileReader.getDomainNames(parquetFile);
-        assertEquals(List.of("www.marginalia.nu", "memex.marginalia.nu"), domainNames);
+        var domainInfo = DomainRecordParquetFileReader.getBasicDomainInformation(parquetFile);
+        assertEquals(List.of(
+                new DomainWithIp("www.marginalia.nu", "127.0.0.1"),
+                new DomainWithIp("memex.marginalia.nu", "127.0.0.1")),
+                domainInfo);
 
         var items = DomainRecordParquetFileReader
                 .stream(parquetFile)

@@ -11,6 +11,7 @@ import nu.marginalia.WmsaHome;
 import nu.marginalia.atags.source.AnchorTagsSource;
 import nu.marginalia.atags.source.AnchorTagsSourceFactory;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
+import nu.marginalia.crawl.retreival.DomainProber;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.spec.CrawlSpecProvider;
@@ -51,6 +52,7 @@ public class CrawlerMain {
 
     private final ProcessHeartbeatImpl heartbeat;
     private final MessageQueueFactory messageQueueFactory;
+    private final DomainProber domainProber;
     private final FileStorageService fileStorageService;
     private final DbCrawlSpecProvider dbCrawlSpecProvider;
     private final AnchorTagsSourceFactory anchorTagsSourceFactory;
@@ -70,7 +72,7 @@ public class CrawlerMain {
     @Inject
     public CrawlerMain(UserAgent userAgent,
                        ProcessHeartbeatImpl heartbeat,
-                       MessageQueueFactory messageQueueFactory,
+                       MessageQueueFactory messageQueueFactory, DomainProber domainProber,
                        FileStorageService fileStorageService,
                        ProcessConfiguration processConfiguration,
                        DbCrawlSpecProvider dbCrawlSpecProvider,
@@ -78,6 +80,7 @@ public class CrawlerMain {
                        Gson gson) {
         this.heartbeat = heartbeat;
         this.messageQueueFactory = messageQueueFactory;
+        this.domainProber = domainProber;
         this.fileStorageService = fileStorageService;
         this.dbCrawlSpecProvider = dbCrawlSpecProvider;
         this.anchorTagsSourceFactory = anchorTagsSourceFactory;
@@ -211,13 +214,12 @@ public class CrawlerMain {
 
             try (CrawledDomainWriter writer = new CrawledDomainWriter(outputDir, domain, id);
                  var warcRecorder = new WarcRecorder(); // write to a temp file for now
-                 var retreiver = new CrawlerRetreiver(fetcher, specification, warcRecorder, writer::accept);
+                 var retreiver = new CrawlerRetreiver(fetcher, domainProber, specification, warcRecorder, writer::accept);
                  CrawlDataReference reference = getReference())
             {
                 Thread.currentThread().setName("crawling:" + domain);
 
                 var domainLinks = anchorTagsSource.getAnchorTags(domain);
-
 
                 int size = retreiver.fetch(domainLinks, reference);
 

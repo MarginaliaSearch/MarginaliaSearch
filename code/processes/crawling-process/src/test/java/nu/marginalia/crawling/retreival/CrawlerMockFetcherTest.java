@@ -3,6 +3,7 @@ package nu.marginalia.crawling.retreival;
 import crawlercommons.robots.SimpleRobotRules;
 import lombok.SneakyThrows;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
+import nu.marginalia.crawl.retreival.DomainProber;
 import nu.marginalia.crawl.retreival.fetcher.*;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawling.model.CrawledDocument;
@@ -65,7 +66,7 @@ public class CrawlerMockFetcherTest {
 
     void crawl(CrawlSpecRecord spec, Consumer<SerializableCrawlData> consumer)  throws IOException {
         try (var recorder = new WarcRecorder()) {
-            new CrawlerRetreiver(fetcherMock, spec, recorder, consumer)
+            new CrawlerRetreiver(fetcherMock, new DomainProber(d -> true), spec, recorder, consumer)
                     .fetch();
         }
     }

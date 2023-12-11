@@ -1,12 +1,14 @@
 package nu.marginalia.assistant.client;
 
+import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.reactivex.rxjava3.core.Observable;
 import nu.marginalia.assistant.client.model.DictionaryResponse;
+import nu.marginalia.assistant.client.model.DomainInformation;
+import nu.marginalia.assistant.client.model.SimilarDomain;
 import nu.marginalia.client.AbstractDynamicClient;
 import nu.marginalia.client.exception.RouteNotConfiguredException;
-import nu.marginalia.WmsaHome;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.service.descriptor.ServiceDescriptors;
 import nu.marginalia.service.id.ServiceId;
@@ -14,6 +16,7 @@ import nu.marginalia.client.Context;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
 @Singleton
@@ -54,6 +57,33 @@ public class AssistantClient extends AbstractDynamicClient {
     public Observable<String> evalMath(Context ctx, String expression) {
         try {
             return super.get(ctx, 0, "/eval-expression?value=" +  URLEncoder.encode(expression, StandardCharsets.UTF_8));
+        }
+        catch (RouteNotConfiguredException ex) {
+            return Observable.empty();
+        }
+    }
+
+    public Observable<ArrayList<SimilarDomain>> similarDomains(Context ctx, int domainId, int count) {
+        try {
+            return super.get(ctx, 0, STR."/domain/\{domainId}/similar?count=\{count}", new TypeToken<ArrayList<SimilarDomain>>() {});
+        }
+        catch (RouteNotConfiguredException ex) {
+            return Observable.empty();
+        }
+    }
+
+    public Observable<ArrayList<SimilarDomain>> linkedDomains(Context ctx, int domainId, int count) {
+        try {
+            return super.get(ctx, 0, STR."/domain/\{domainId}/linking?count=\{count}", new TypeToken<ArrayList<SimilarDomain>>() {});
+        }
+        catch (RouteNotConfiguredException ex) {
+            return Observable.empty();
+        }
+    }
+
+    public Observable<DomainInformation> domainInformation(Context ctx, int domainId) {
+        try {
+            return super.get(ctx, 0, STR."/domain/\{domainId}/info", DomainInformation.class);
         }
         catch (RouteNotConfiguredException ex) {
             return Observable.empty();
