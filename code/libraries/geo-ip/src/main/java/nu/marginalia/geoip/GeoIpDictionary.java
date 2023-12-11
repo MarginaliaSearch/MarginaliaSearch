@@ -49,7 +49,9 @@ public class GeoIpDictionary {
     public boolean waitReady() {
         while (null == ranges) {
             try {
-                this.wait();
+                synchronized (this) {
+                    this.wait(1000);
+                }
             } catch (InterruptedException e) {
                 return false;
             }
