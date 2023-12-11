@@ -49,12 +49,11 @@ public class DomainProcessor {
         this.anchorTagsSource = anchorTagsSourceFactory.create();
         this.geoIpDictionary = geoIpDictionary;
 
+        geoIpDictionary.waitReady();
     }
 
     @SneakyThrows
     public ProcessedDomain process(SerializableCrawlDataStream dataStream) {
-        geoIpDictionary.waitReady();
-
         var ret = new ProcessedDomain();
         List<ProcessedDocument> docs = new ArrayList<>();
 
@@ -116,9 +115,9 @@ public class DomainProcessor {
 
         terms.add("ip:"+ip);
 
-        String geoIp = geoIpDictionary.getCountry(ip);
-        if (!geoIp.isBlank()) {
-            terms.add("geoip:"+geoIp.toLowerCase());
+        String ipCountryCode = geoIpDictionary.getCountry(ip).toLowerCase();
+        if (!ipCountryCode.isBlank()) {
+            terms.add("ip:"+ipCountryCode);
         }
 
         if (cookies) {
