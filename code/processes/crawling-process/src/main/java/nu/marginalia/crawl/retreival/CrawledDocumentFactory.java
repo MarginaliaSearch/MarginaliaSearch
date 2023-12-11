@@ -1,4 +1,4 @@
-package nu.marginalia.crawl.retreival.fetcher;
+package nu.marginalia.crawl.retreival;
 
 import nu.marginalia.crawl.retreival.fetcher.warc.HttpFetchResult;
 import nu.marginalia.crawling.model.CrawledDocument;
@@ -70,6 +70,22 @@ public class CrawledDocumentFactory {
                 .httpStatus(rsp.statusCode())
                 .url(url.toString())
                 .build();
+    }
 
+    public static CrawledDocument createRobotsError(EdgeUrl url) {
+        return CrawledDocument.builder()
+                .url(url.toString())
+                .timestamp(LocalDateTime.now().toString())
+                .httpStatus(-1)
+                .crawlerStatus(CrawlerDocumentStatus.ROBOTS_TXT.name())
+                .build();
+    }
+    public static CrawledDocument createRetryError(EdgeUrl url) {
+        return CrawledDocument.builder()
+                .url(url.toString())
+                .timestamp(LocalDateTime.now().toString())
+                .httpStatus(429)
+                .crawlerStatus(CrawlerDocumentStatus.ERROR.name())
+                .build();
     }
 }

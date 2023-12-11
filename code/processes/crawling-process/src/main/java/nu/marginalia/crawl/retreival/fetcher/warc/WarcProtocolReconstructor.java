@@ -34,6 +34,17 @@ public class WarcProtocolReconstructor {
         return requestStringBuilder.toString();
     }
 
+    static String getResponseHeader(String headersAsString, int code) {
+        String version = "1.1";
+
+        String statusCode = String.valueOf(code);
+        String statusMessage = STATUS_CODE_MAP.getOrDefault(code, "Unknown");
+
+        String headerString = getHeadersAsString(headersAsString);
+
+        return STR."HTTP/\{version} \{statusCode} \{statusMessage}\r\n\{headerString}\r\n\r\n";
+    }
+
     static String getResponseHeader(Response response) {
         String version = response.protocol() == Protocol.HTTP_1_1 ? "1.1" : "2.0";
 
@@ -99,6 +110,13 @@ public class WarcProtocolReconstructor {
             Map.entry(511, "Network Authentication Required")
     );
 
+    static private String getHeadersAsString(String headersBlob) {
+        StringJoiner joiner = new StringJoiner("\r\n");
+
+        Arrays.stream(headersBlob.split("\n")).forEach(joiner::add);
+
+        return joiner.toString();
+    }
 
     static private String getHeadersAsString(Response response) {
         StringJoiner joiner = new StringJoiner("\r\n");

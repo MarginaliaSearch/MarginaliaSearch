@@ -24,6 +24,10 @@ public class CrawledDomain implements SerializableCrawlData {
         return doc.size();
     }
 
+    public boolean hasCookies() {
+        return cookies != null && !cookies.isEmpty();
+    }
+
     public static final String SERIAL_IDENTIFIER = "// DOMAIN";
     @Override
     public String getSerialIdentifier() {

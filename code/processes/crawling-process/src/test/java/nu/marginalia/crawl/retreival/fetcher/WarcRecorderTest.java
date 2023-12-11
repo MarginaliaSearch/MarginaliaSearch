@@ -2,6 +2,7 @@ package nu.marginalia.crawl.retreival.fetcher;
 
 import nu.marginalia.crawl.retreival.fetcher.socket.IpInterceptingNetworkInterceptor;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
+import nu.marginalia.model.EdgeUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.junit.jupiter.api.AfterEach;
@@ -66,4 +67,33 @@ class WarcRecorderTest {
         assertEquals("https://www.marginalia.nu/", sampleData.get("request"));
         assertEquals("https://www.marginalia.nu/", sampleData.get("response"));
     }
+
+    @Test
+    public void flagAsSkipped() throws IOException, URISyntaxException {
+
+        try (var recorder = new WarcRecorder(fileName)) {
+            recorder.flagAsSkipped(new EdgeUrl("https://www.marginalia.nu/"),
+                    """
+                            Content-type: text/html
+                            X-Cookies: 1
+                            """,
+                    200,
+                    "<?doctype html><html><body>test</body></html>");
+        }
+
+        try (var reader = new WarcReader(fileName)) {
+            for (var record : reader) {
+                if (record instanceof WarcResponse rsp) {
+                    assertEquals("https://www.marginalia.nu/", rsp.target());
+                    assertEquals("text/html", rsp.contentType().type());
+                    assertEquals(200, rsp.http().status());
+                    assertEquals("1", rsp.http().headers().first("X-Cookies").orElse(null));
+                }
+            }
+        }
+
+        new GZIPInputStream(Files.newInputStream(fileName)).transferTo(System.out);
+    }
+
+
 }

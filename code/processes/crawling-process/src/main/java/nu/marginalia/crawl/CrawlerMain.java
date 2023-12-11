@@ -18,6 +18,7 @@ import nu.marginalia.crawl.spec.CrawlSpecProvider;
 import nu.marginalia.crawl.spec.DbCrawlSpecProvider;
 import nu.marginalia.crawl.spec.ParquetCrawlSpecProvider;
 import nu.marginalia.crawling.io.CrawledDomainReader;
+import nu.marginalia.crawling.io.CrawlerOutputFile;
 import nu.marginalia.crawlspec.CrawlSpecFileNames;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.model.crawlspec.CrawlSpecRecord;
@@ -30,16 +31,16 @@ import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.crawling.io.CrawledDomainWriter;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
-import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
 import nu.marginalia.util.SimpleBlockingThreadPool;
 import okhttp3.ConnectionPool;
 import okhttp3.Dispatcher;
-import okhttp3.internal.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.*;
@@ -212,8 +213,19 @@ public class CrawlerMain {
         @Override
         public void run() throws Exception {
 
+            Path newWarcFile = CrawlerOutputFile.createWarcFile(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.LIVE);
+            Path tempFile = CrawlerOutputFile.createWarcFile(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.TEMP);
+            Path finalWarcFile = CrawlerOutputFile.createWarcFile(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.FINAL);
+
+            if (Files.exists(newWarcFile)) {
+                Files.move(newWarcFile, tempFile, StandardCopyOption.REPLACE_EXISTING);
+            }
+            else {
+                Files.deleteIfExists(tempFile);
+            }
+
             try (CrawledDomainWriter writer = new CrawledDomainWriter(outputDir, domain, id);
-                 var warcRecorder = new WarcRecorder(); // write to a temp file for now
+                 var warcRecorder = new WarcRecorder(newWarcFile); // write to a temp file for now
                  var retreiver = new CrawlerRetreiver(fetcher, domainProber, specification, warcRecorder, writer::accept);
                  CrawlDataReference reference = getReference())
             {
@@ -221,7 +233,14 @@ public class CrawlerMain {
 
                 var domainLinks = anchorTagsSource.getAnchorTags(domain);
 
+                if (Files.exists(tempFile)) {
+                    retreiver.syncAbortedRun(tempFile);
+                    Files.delete(tempFile);
+                }
+
                 int size = retreiver.fetch(domainLinks, reference);
+
+                Files.move(newWarcFile, finalWarcFile, StandardCopyOption.REPLACE_EXISTING);
 
                 workLog.setJobToFinished(domain, writer.getOutputFile().toString(), size);
                 heartbeat.setProgress(tasksDone.incrementAndGet() / (double) totalTasks);
@@ -229,11 +248,18 @@ public class CrawlerMain {
                 logger.info("Fetched {}", domain);
             } catch (Exception e) {
                 logger.error("Error fetching domain " + domain, e);
+                Files.deleteIfExists(newWarcFile);
+                if (tempFile != null) {
+                    Files.deleteIfExists(tempFile);
+                }
             }
             finally {
                 // We don't need to double-count these; it's also kept int he workLog
                 processingIds.remove(domain);
                 Thread.currentThread().setName("[idle]");
+
+                // FIXME: Remove this when we're done
+                Files.deleteIfExists(finalWarcFile);
             }
         }
 

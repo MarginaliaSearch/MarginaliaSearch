@@ -14,7 +14,7 @@ public class CrawlerOutputFile {
         String second = id.substring(2, 4);
 
         Path destDir = base.resolve(first).resolve(second);
-        return destDir.resolve(id + "-" + filesystemSafeName(name) + ".zstd");
+        return destDir.resolve(STR."\{id}-\{filesystemSafeName(name)}.zstd");
     }
 
     /** Return the Path to a file for the given id and name, creating the prerequisite
@@ -31,7 +31,7 @@ public class CrawlerOutputFile {
         if (!Files.exists(destDir)) {
             Files.createDirectories(destDir);
         }
-        return destDir.resolve(id + "-" + filesystemSafeName(name) + ".zstd");
+        return destDir.resolve(STR."\{id}-\{filesystemSafeName(name)}.zstd");
     }
 
 
@@ -49,4 +49,25 @@ public class CrawlerOutputFile {
 
     }
 
+    public static Path createWarcFile(Path baseDir, String id, String name, WarcFileVersion version) {
+        if (id.length() < 4) {
+            id = Strings.repeat("0", 4 - id.length()) + id;
+        }
+
+        String fileName = STR."\{id}-\{filesystemSafeName(name)}.zstd\{version.suffix}";
+
+        return baseDir.resolve(fileName);
+    }
+
+    public enum WarcFileVersion {
+        LIVE(".open"),
+        TEMP(".tmp"),
+        FINAL("");
+
+        public final String suffix;
+
+        WarcFileVersion(String suffix) {
+            this.suffix = suffix;
+        }
+    }
 }

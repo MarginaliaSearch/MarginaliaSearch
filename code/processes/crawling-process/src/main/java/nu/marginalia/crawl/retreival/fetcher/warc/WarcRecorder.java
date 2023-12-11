@@ -1,12 +1,14 @@
 package nu.marginalia.crawl.retreival.fetcher.warc;
 
 import nu.marginalia.crawl.retreival.fetcher.socket.IpInterceptingNetworkInterceptor;
+import nu.marginalia.model.EdgeUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.netpreserve.jwarc.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -16,6 +18,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /** Based on JWarc's fetch method, APL 2.0 license
  * <p></p>
@@ -24,6 +29,8 @@ import java.time.Instant;
  * be reconstructed.
  */
 public class WarcRecorder implements AutoCloseable {
+    public static final URI revisitURI = URI.create("urn:marginalia:revisit");
+
     private static final int MAX_TIME = 30_000;
     private static final int MAX_SIZE = 1024 * 1024 * 10;
     private final WarcWriter writer;
@@ -85,8 +92,6 @@ public class WarcRecorder implements AutoCloseable {
                 inputStream = body.byteStream();
             }
 
-            byte[] buf = new byte[8192];
-
             ip = IpInterceptingNetworkInterceptor.getIpFromResponse(response);
 
             String responseHeaders = WarcProtocolReconstructor.getResponseHeader(response);
@@ -111,9 +116,6 @@ public class WarcRecorder implements AutoCloseable {
                 responseDataBuffer.updateDigest(payloadDigestBuilder, startPos, n);
                 totalLength += n;
 
-                responseDigestBuilder.update(buf, n);
-                payloadDigestBuilder.update(buf, n);
-
                 if (MAX_TIME > 0 && System.currentTimeMillis() - startMillis > MAX_TIME) {
                     truncationReason = WarcTruncationReason.TIME;
                     break;
@@ -137,8 +139,6 @@ public class WarcRecorder implements AutoCloseable {
                 responseBuilder.truncated(truncationReason);
 
             // Build and write the response
-
-            long pos = writer.position();
 
             var warcResponse = responseBuilder.build();
             warcResponse.http(); // force HTTP header to be parsed before body is consumed so that caller can use it
@@ -171,6 +171,59 @@ public class WarcRecorder implements AutoCloseable {
         catch (Exception ex) {
             logger.warn("Failed to fetch URL {}", uri, ex);
             return new HttpFetchResult.ResultError(ex);
+        }
+    }
+
+    public void resync(WarcRecord item) throws IOException {
+        writer.write(item);
+    }
+
+    /**
+     * Flag the given URL as skipped by the crawler, so that it will not be retried.
+     * Which URLs were skipped is still important when resynchronizing on the WARC file,
+     * so that the crawler can avoid re-fetching them.
+     *
+     * @param url          The URL to flag
+     * @param headers
+     * @param documentBody
+     */
+    public void flagAsSkipped(EdgeUrl url, String headers, int statusCode, String documentBody) {
+        try {
+            WarcDigestBuilder responseDigestBuilder = new WarcDigestBuilder();
+            WarcDigestBuilder payloadDigestBuilder = new WarcDigestBuilder();
+
+            String header = WarcProtocolReconstructor.getResponseHeader(headers, statusCode);
+            ResponseDataBuffer responseDataBuffer = new ResponseDataBuffer();
+            responseDataBuffer.put(header);
+
+            responseDigestBuilder.update(header);
+
+            try (var inputStream = new ByteArrayInputStream(documentBody.getBytes())) {
+                int remainingLength;
+                while ((remainingLength = responseDataBuffer.remaining()) > 0) {
+                    int startPos = responseDataBuffer.pos();
+
+                    int n = responseDataBuffer.readFrom(inputStream, remainingLength);
+                    if (n < 0)
+                        break;
+
+                    responseDataBuffer.updateDigest(responseDigestBuilder, startPos, n);
+                    responseDataBuffer.updateDigest(payloadDigestBuilder, startPos, n);
+                }
+            }
+
+            WarcRevisit revisit = new WarcRevisit.Builder(url.asURI(), revisitURI)
+                    .blockDigest(responseDigestBuilder.build())
+                    .payloadDigest(payloadDigestBuilder.build())
+                    .date(Instant.now())
+                    .body(MediaType.HTTP_RESPONSE, responseDataBuffer.copyBytes())
+                    .build();
+
+            revisit.http(); // force HTTP header to be parsed before body is consumed so that caller can use it
+
+            writer.write(revisit);
+        } catch (URISyntaxException | IOException | NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
         }
     }
 

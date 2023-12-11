@@ -8,6 +8,7 @@ import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 
+import java.nio.file.Path;
 import java.util.List;
 
 @ImplementedBy(HttpFetcherImpl.class)

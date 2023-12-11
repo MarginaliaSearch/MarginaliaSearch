@@ -224,19 +224,19 @@ public class EdgeUrl implements Serializable {
     }
 
     public URL asURL() throws MalformedURLException {
-        int port = this.port != null ? this.port : switch(proto) {
-            case "http" -> 80;
-            case "https" -> 443;
-            default -> 0;
-        };
-
-        return new URL(this.proto, this.domain.toString(), port, this.path);
+        try {
+            return asURI().toURL();
+        }
+        catch (URISyntaxException e) {
+            throw new MalformedURLException(e.getMessage());
+        }
     }
 
     public URI asURI() throws URISyntaxException {
-        if (port == null)
-            return new URI(this.proto, null, this.domain.toString(), this.path, this.param);
-        else
+        if (port != null) {
             return new URI(this.proto, null, this.domain.toString(), this.port, this.path, this.param, null);
+        }
+
+        return new URI(this.proto, this.domain.toString(), this.path, this.param, null);
     }
 }

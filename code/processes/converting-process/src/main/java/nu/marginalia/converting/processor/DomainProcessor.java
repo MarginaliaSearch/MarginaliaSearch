@@ -79,7 +79,7 @@ public class DomainProcessor {
                 ret.domain = new EdgeDomain(crawledDomain.domain);
                 ret.ip = crawledDomain.ip;
 
-                cookies = Objects.requireNonNullElse(crawledDomain.cookies, Collections.emptyList()).size() > 0;
+                cookies = crawledDomain.hasCookies();
                 ip = crawledDomain.ip;
 
                 if (crawledDomain.redirectDomain != null) {

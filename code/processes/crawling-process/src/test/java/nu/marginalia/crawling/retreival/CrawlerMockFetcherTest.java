@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -151,5 +152,6 @@ public class CrawlerMockFetcherTest {
         public SitemapRetriever createSitemapRetriever() {
             return Mockito.mock(SitemapRetriever.class);
         }
+
     }
 }

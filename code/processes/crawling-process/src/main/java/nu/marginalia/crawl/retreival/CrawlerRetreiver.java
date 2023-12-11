@@ -9,6 +9,9 @@ import nu.marginalia.crawl.retreival.fetcher.ContentTags;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
 import nu.marginalia.crawl.retreival.fetcher.SitemapRetriever;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
+import nu.marginalia.crawl.retreival.revisit.CrawlerRevisitor;
+import nu.marginalia.crawl.retreival.revisit.DocumentWithReference;
+import nu.marginalia.crawl.retreival.sitemap.SitemapFetcher;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.crawling.model.*;
 import nu.marginalia.ip_blocklist.UrlBlocklist;
@@ -20,12 +23,9 @@ import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -46,17 +46,12 @@ public class CrawlerRetreiver implements AutoCloseable {
     private static final LinkFilterSelector linkFilterSelector = new LinkFilterSelector();
 
     private final DomainProber domainProber;
-    private final SitemapRetriever sitemapRetriever;
     private final DomainCrawlFrontier crawlFrontier;
     private final WarcRecorder warcRecorder;
+    private final CrawlerRevisitor crawlerRevisitor;
 
+    private final SitemapFetcher sitemapFetcher;
     int errorCount = 0;
-
-    /** recrawlState tag for documents that had a HTTP status 304 */
-    private static final String documentWasRetainedTag = "RETAINED/304";
-
-    /** recrawlState tag for documents that had a 200 status but were identical to a previous version */
-    private static final String documentWasSameTag = "SAME-BY-COMPARISON";
 
     public CrawlerRetreiver(HttpFetcher fetcher,
                             DomainProber domainProber,
@@ -72,8 +67,10 @@ public class CrawlerRetreiver implements AutoCloseable {
 
         crawledDomainWriter = writer;
 
-        this.crawlFrontier = new DomainCrawlFrontier(new EdgeDomain(domain), Objects.requireNonNullElse(specs.urls, List.of()), specs.crawlDepth);
-        sitemapRetriever = fetcher.createSitemapRetriever();
+
+        crawlFrontier = new DomainCrawlFrontier(new EdgeDomain(domain), Objects.requireNonNullElse(specs.urls, List.of()), specs.crawlDepth);
+        crawlerRevisitor = new CrawlerRevisitor(crawlFrontier, crawledDomainWriter, this, warcRecorder);
+        sitemapFetcher = new SitemapFetcher(crawlFrontier, fetcher.createSitemapRetriever());
 
         // We must always crawl the index page first, this is assumed when fingerprinting the server
         var fst = crawlFrontier.peek();
@@ -125,6 +122,12 @@ public class CrawlerRetreiver implements AutoCloseable {
         };
     }
 
+    public void syncAbortedRun(Path warcFile) {
+        var resync = new CrawlerWarcResynchronizer(crawlFrontier, warcRecorder);
+
+        resync.run(warcFile);
+    }
+
     private int crawlDomain(CrawlDataReference oldCrawlData, EdgeUrl rootUrl, DomainLinks domainLinks) {
         String ip = findIp(domain);
 
@@ -147,9 +150,15 @@ public class CrawlerRetreiver implements AutoCloseable {
         crawlFrontier.addAllToQueue(domainLinks.getUrls(rootUrl.proto));
 
         // Add links from the sitemap to the crawl frontier
-        downloadSitemaps(robotsRules, rootUrl);
+        sitemapFetcher.downloadSitemaps(robotsRules, rootUrl);
 
-        CrawledDomain ret = new CrawledDomain(domain, null, CrawlerDomainStatus.OK.name(), null, ip, new ArrayList<>(), null);
+        CrawledDomain ret = new CrawledDomain(domain,
+                null,
+                CrawlerDomainStatus.OK.name(),
+                null,
+                ip,
+                new ArrayList<>(),
+                null);
 
         int fetchedCount = recrawled;
 
@@ -161,7 +170,7 @@ public class CrawlerRetreiver implements AutoCloseable {
             var top = crawlFrontier.takeNextUrl();
 
             if (!robotsRules.isAllowed(top.toString())) {
-                crawledDomainWriter.accept(createRobotsError(top));
+                crawledDomainWriter.accept(CrawledDocumentFactory.createRobotsError(top));
                 continue;
             }
 
@@ -196,119 +205,9 @@ public class CrawlerRetreiver implements AutoCloseable {
         return fetchedCount;
     }
 
-    /** Performs a re-crawl of old documents, comparing etags and last-modified */
-    private int recrawl(CrawlDataReference oldCrawlData,
-                        SimpleRobotRules robotsRules,
-                        CrawlDelayTimer delayTimer) {
-        int recrawled = 0;
-        int retained = 0;
-
-        for (;;) {
-            CrawledDocument doc = oldCrawlData.nextDocument();
-
-            if (doc == null) {
-                break;
-            }
-
-            // This Shouldn't Happen (TM)
-            var urlMaybe = EdgeUrl.parse(doc.url);
-            if (urlMaybe.isEmpty()) continue;
-            var url = urlMaybe.get();
-
-            // If we've previously 404:d on this URL, we'll refrain from trying to fetch it again
-            if (doc.httpStatus == 404) {
-                crawlFrontier.addVisited(url);
-                continue;
-            }
-
-            if (doc.httpStatus != 200) continue;
-
-            if (!robotsRules.isAllowed(url.toString())) {
-                crawledDomainWriter.accept(createRobotsError(url));
-                continue;
-            }
-            if (!crawlFrontier.filterLink(url))
-                continue;
-            if (!crawlFrontier.addVisited(url))
-                continue;
-
-
-            if (recrawled > 5
-             && retained > 0.9 * recrawled
-             && Math.random() < 0.9)
-            {
-                // Since it looks like most of these documents haven't changed,
-                // we'll load the documents directly; but we do this in a random
-                // fashion to make sure we eventually catch changes over time
-
-                crawledDomainWriter.accept(doc);
-                crawlFrontier.addVisited(url);
-                continue;
-            }
-
-
-            // GET the document with the stored document as a reference
-            // providing etag and last-modified headers, so we can recycle the
-            // document if it hasn't changed without actually downloading it
-
-            var fetchedDocOpt = fetchWriteAndSleep(url,
-                    delayTimer,
-                    new DocumentWithReference(doc, oldCrawlData));
-            if (fetchedDocOpt.isEmpty()) continue;
-
-            if (documentWasRetainedTag.equals(fetchedDocOpt.get().recrawlState)) retained ++;
-            else if (documentWasSameTag.equals(fetchedDocOpt.get().recrawlState)) retained ++;
-
-            recrawled ++;
-        }
-
-        return recrawled;
-    }
-
-    private void downloadSitemaps(SimpleRobotRules robotsRules, EdgeUrl rootUrl) {
-        List<String> sitemaps = robotsRules.getSitemaps();
-
-        List<EdgeUrl> urls = new ArrayList<>(sitemaps.size());
-        if (!sitemaps.isEmpty()) {
-            for (var url : sitemaps) {
-                EdgeUrl.parse(url).ifPresent(urls::add);
-            }
-        }
-        else {
-            urls.add(rootUrl.withPathAndParam("/sitemap.xml", null));
-        }
-
-        downloadSitemaps(urls);
-    }
-
-    private void downloadSitemaps(List<EdgeUrl> urls) {
-
-        Set<String> checkedSitemaps = new HashSet<>();
-
-        for (var url : urls) {
-            // Let's not download sitemaps from other domains for now
-            if (!crawlFrontier.isSameDomain(url)) {
-                continue;
-            }
-
-            if (checkedSitemaps.contains(url.path))
-                continue;
-
-            var sitemap =  sitemapRetriever.fetchSitemap(url);
-            if (sitemap.isEmpty()) {
-                continue;
-            }
-
-            // ensure we don't try to download this sitemap again
-            // (don't move this up, as we may want to check the same
-            // path with different protocols until we find one that works)
-
-            checkedSitemaps.add(url.path);
-
-            crawlFrontier.addAllToQueue(sitemap);
-        }
-
-        logger.debug("Queue is now {}", crawlFrontier.queueSize());
+    /** Using the old crawl data, fetch the documents comparing etags and last-modified */
+    private int recrawl(CrawlDataReference oldCrawlData, SimpleRobotRules robotsRules, CrawlDelayTimer delayTimer) {
+        return crawlerRevisitor.recrawl(oldCrawlData, robotsRules, delayTimer);
     }
 
     private void sniffRootDocument(CrawlDelayTimer delayTimer, EdgeUrl rootUrl) {
@@ -345,7 +244,7 @@ public class CrawlerRetreiver implements AutoCloseable {
                 linkParser.parseLink(url, href)
                         .filter(crawlFrontier::isSameDomain)
                         .map(List::of)
-                        .ifPresent(this::downloadSitemaps);
+                        .ifPresent(sitemapFetcher::downloadSitemaps);
             }
         }
         catch (Exception ex) {
@@ -353,7 +252,7 @@ public class CrawlerRetreiver implements AutoCloseable {
         }
     }
 
-    private Optional<CrawledDocument> fetchWriteAndSleep(EdgeUrl top,
+    public Optional<CrawledDocument> fetchWriteAndSleep(EdgeUrl top,
                                                          CrawlDelayTimer timer,
                                                          DocumentWithReference reference) {
         logger.debug("Fetching {}", top);
@@ -365,11 +264,11 @@ public class CrawlerRetreiver implements AutoCloseable {
         if (docOpt.isPresent()) {
             var doc = docOpt.get();
 
-            if (!Objects.equals(doc.recrawlState, documentWasRetainedTag)
+            if (!Objects.equals(doc.recrawlState, CrawlerRevisitor.documentWasRetainedTag)
                 && reference.isContentBodySame(doc))
             {
                 // The document didn't change since the last time
-                doc.recrawlState = documentWasSameTag;
+                doc.recrawlState = CrawlerRevisitor.documentWasSameTag;
             }
 
             crawledDomainWriter.accept(doc);
@@ -408,7 +307,7 @@ public class CrawlerRetreiver implements AutoCloseable {
                 var parsedDoc = Jsoup.parse(doc.documentBody);
                 EdgeUrl url = new EdgeUrl(doc.url);
 
-                findLinks(url, parsedDoc);
+                crawlFrontier.enqueueLinksFromDocument(url, parsedDoc);
                 findCanonicalUrl(url, parsedDoc)
                         .ifPresent(canonicalLink -> doc.canonicalUrl = canonicalLink.toString());
             }
@@ -442,32 +341,11 @@ public class CrawlerRetreiver implements AutoCloseable {
             }
         }
 
-        return createRetryError(top);
+        return CrawledDocumentFactory.createRetryError(top);
     }
 
     private String createHash(String documentBodyHash) {
         return hashMethod.hashUnencodedChars(documentBodyHash).toString();
-    }
-
-    private void findLinks(EdgeUrl baseUrl, Document parsed) {
-        baseUrl = linkParser.getBaseLink(parsed, baseUrl);
-
-        for (var link : parsed.getElementsByTag("a")) {
-            linkParser.parseLink(baseUrl, link).ifPresent(crawlFrontier::addToQueue);
-        }
-        for (var link : parsed.getElementsByTag("frame")) {
-            linkParser.parseFrame(baseUrl, link).ifPresent(crawlFrontier::addToQueue);
-        }
-        for (var link : parsed.getElementsByTag("iframe")) {
-            linkParser.parseFrame(baseUrl, link).ifPresent(crawlFrontier::addToQueue);
-        }
-        for (var link : parsed.getElementsByTag("link")) {
-            String rel = link.attr("rel");
-
-            if (rel.equalsIgnoreCase("next") || rel.equalsIgnoreCase("prev")) {
-                linkParser.parseLink(baseUrl, link).ifPresent(crawlFrontier::addToQueue);
-            }
-        }
     }
 
     private Optional<EdgeUrl> findCanonicalUrl(EdgeUrl baseUrl, Document parsed) {
@@ -488,97 +366,9 @@ public class CrawlerRetreiver implements AutoCloseable {
         }
     }
 
-    private CrawledDocument createRobotsError(EdgeUrl url) {
-        return CrawledDocument.builder()
-                .url(url.toString())
-                .timestamp(LocalDateTime.now().toString())
-                .httpStatus(-1)
-                .crawlerStatus(CrawlerDocumentStatus.ROBOTS_TXT.name())
-                .build();
-    }
-    private CrawledDocument createRetryError(EdgeUrl url) {
-        return CrawledDocument.builder()
-                .url(url.toString())
-                .timestamp(LocalDateTime.now().toString())
-                .httpStatus(429)
-                .crawlerStatus(CrawlerDocumentStatus.ERROR.name())
-                .build();
-    }
-
     @Override
     public void close() throws Exception {
         warcRecorder.close();
-    }
-
-    private record DocumentWithReference(
-            @Nullable CrawledDocument doc,
-            @Nullable CrawlDataReference reference) {
-
-        private static final DocumentWithReference emptyInstance = new DocumentWithReference(null, null);
-        public static DocumentWithReference empty() {
-            return emptyInstance;
-        }
-
-        public boolean isContentBodySame(CrawledDocument newDoc) {
-            if (reference == null)
-                return false;
-            if (doc == null)
-                return false;
-            if (doc.documentBody == null)
-                return false;
-            if (newDoc.documentBody == null)
-                return false;
-
-            return reference.isContentBodySame(doc, newDoc);
-        }
-
-        private ContentTags getContentTags() {
-            if (null == doc)
-                return ContentTags.empty();
-
-            String headers = doc.headers;
-            if (headers == null)
-                return ContentTags.empty();
-
-            String[] headersLines = headers.split("\n");
-
-            String lastmod = null;
-            String etag = null;
-
-            for (String line : headersLines) {
-                if (line.toLowerCase().startsWith("etag:")) {
-                    etag = line.substring(5).trim();
-                }
-                if (line.toLowerCase().startsWith("last-modified:")) {
-                    lastmod = line.substring(14).trim();
-                }
-            }
-
-            return new ContentTags(etag, lastmod);
-        }
-
-        public boolean isEmpty() {
-            return doc == null || reference == null;
-        }
-
-        /** If the provided document has HTTP status 304, and the reference document is provided,
-         *  return the reference document; otherwise return the provided document.
-         */
-        public CrawledDocument replaceOn304(CrawledDocument fetchedDoc) {
-
-            if (doc == null)
-                return fetchedDoc;
-
-            // HTTP status 304 is NOT MODIFIED, which means the document is the same as it was when
-            // we fetched it last time. We can recycle the reference document.
-            if (fetchedDoc.httpStatus != 304)
-                return fetchedDoc;
-
-            var ret = doc;
-            ret.recrawlState = documentWasRetainedTag;
-            ret.timestamp = LocalDateTime.now().toString();
-            return ret;
-        }
     }
 
 }

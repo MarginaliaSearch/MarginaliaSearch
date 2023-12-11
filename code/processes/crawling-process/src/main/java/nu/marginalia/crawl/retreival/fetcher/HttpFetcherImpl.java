@@ -5,22 +5,21 @@ import com.google.inject.name.Named;
 import crawlercommons.robots.SimpleRobotRules;
 import crawlercommons.robots.SimpleRobotRulesParser;
 import lombok.SneakyThrows;
-import nu.marginalia.contenttype.DocumentBodyToString;
 import nu.marginalia.crawl.retreival.Cookies;
 import nu.marginalia.crawl.retreival.RateLimitException;
 import nu.marginalia.crawl.retreival.fetcher.ContentTypeProber.ContentTypeProbeResult;
+import nu.marginalia.crawl.retreival.fetcher.body.DocumentBodyExtractor;
+import nu.marginalia.crawl.retreival.fetcher.body.DocumentBodyResult;
 import nu.marginalia.crawl.retreival.fetcher.socket.*;
 import nu.marginalia.crawl.retreival.fetcher.warc.HttpFetchResult;
-import static nu.marginalia.crawl.retreival.fetcher.CrawledDocumentFactory.*;
+import static nu.marginalia.crawl.retreival.CrawledDocumentFactory.*;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawlerDocumentStatus;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.crawl.retreival.logic.ContentTypeLogic;
-import nu.marginalia.contenttype.ContentTypeParser;
 import okhttp3.*;
-import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +33,6 @@ import java.nio.charset.IllegalCharsetNameException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.zip.GZIPInputStream;
 
 
 public class HttpFetcherImpl implements HttpFetcher {
@@ -45,7 +43,7 @@ public class HttpFetcherImpl implements HttpFetcher {
 
     private static final SimpleRobotRulesParser robotsParser = new SimpleRobotRulesParser();
 
-    private final ContentTypeLogic contentTypeLogic = new ContentTypeLogic();
+    private static final ContentTypeLogic contentTypeLogic = new ContentTypeLogic();
     private final ContentTypeProber contentTypeProber;
 
     @Override
@@ -188,14 +186,14 @@ public class HttpFetcherImpl implements HttpFetcher {
         }
         else if (result instanceof HttpFetchResult.ResultOk ok) {
             try {
-                return extractBody(url, ok);
+                return extractBody(userAgent, url, ok);
             }
             catch (Exception ex) {
                 return createErrorFromException(url, ex);
             }
         }
         else {
-            throw new IllegalStateException("Unknown result type " + result.getClass());
+            throw new IllegalStateException(STR."Unknown result type \{result.getClass()}");
         }
     }
 
@@ -216,7 +214,7 @@ public class HttpFetcherImpl implements HttpFetcher {
         };
     }
 
-    private CrawledDocument extractBody(EdgeUrl url, HttpFetchResult.ResultOk rsp) throws IOException, RateLimitException {
+    public static CrawledDocument extractBody(String userAgent, EdgeUrl url, HttpFetchResult.ResultOk rsp) throws IOException, RateLimitException {
 
         var responseUrl = new EdgeUrl(rsp.uri());
 
@@ -230,29 +228,6 @@ public class HttpFetcherImpl implements HttpFetcher {
             throw new RateLimitException(retryAfter);
         }
 
-        var byteStream = rsp.getInputStream();
-
-        if ("gzip".equals(rsp.header("Content-Encoding"))) {
-            byteStream = new GZIPInputStream(byteStream);
-        }
-        byteStream = new BOMInputStream(byteStream);
-
-        var contentTypeHeader = rsp.header("Content-Type");
-        if (contentTypeHeader != null && !contentTypeLogic.isAllowableContentType(contentTypeHeader)) {
-            return createErrorResponse(url, rsp, CrawlerDocumentStatus.BAD_CONTENT_TYPE, "");
-        }
-
-        byte[] data = byteStream.readAllBytes(); // size is limited by WarcRecorder
-
-        var contentType = ContentTypeParser.parseContentType(contentTypeHeader, data);
-        if (!contentTypeLogic.isAllowableContentType(contentType.contentType())) {
-            return createErrorResponse(url, rsp, CrawlerDocumentStatus.BAD_CONTENT_TYPE, "");
-        }
-
-        if ("Shift_JIS".equalsIgnoreCase(contentType.charset())) {
-            return createErrorResponse(url, rsp, CrawlerDocumentStatus.BAD_CHARSET, "");
-        }
-
         if (!isXRobotsTagsPermitted(rsp.allHeaders("X-Robots-Tag"), userAgent)) {
             return CrawledDocument.builder()
                     .crawlerStatus(CrawlerDocumentStatus.ROBOTS_TXT.name())
@@ -264,17 +239,20 @@ public class HttpFetcherImpl implements HttpFetcher {
                     .build();
         }
 
-        var strData = DocumentBodyToString.getStringData(contentType, data);
-
-        return CrawledDocument.builder()
-                .crawlerStatus(CrawlerDocumentStatus.OK.name())
-                .headers(rsp.headers().toString())
-                .contentType(contentTypeHeader)
-                .timestamp(LocalDateTime.now().toString())
-                .httpStatus(rsp.statusCode())
-                .url(responseUrl.toString())
-                .documentBody(strData)
-                .build();
+        return switch(DocumentBodyExtractor.extractBody(rsp)) {
+            case DocumentBodyResult.Error(CrawlerDocumentStatus status, String why) ->
+                    createErrorResponse(url, rsp, status, why);
+            case DocumentBodyResult.Ok(String contentType, String body) ->
+                    CrawledDocument.builder()
+                        .crawlerStatus(CrawlerDocumentStatus.OK.name())
+                        .headers(rsp.headers().toString())
+                        .contentType(contentType)
+                        .timestamp(LocalDateTime.now().toString())
+                        .httpStatus(rsp.statusCode())
+                        .url(responseUrl.toString())
+                        .documentBody(body)
+                        .build();
+        };
     }
 
     /**  Check X-Robots-Tag header tag to see if we are allowed to index this page.
