@@ -242,7 +242,7 @@ public final class ParquetWriter<T> implements Closeable {
                     if (type.getLogicalTypeAnnotation() == LogicalTypeAnnotation.stringType()) {
                         recordConsumer.addBinary(Binary.fromString((String)value));
                     } else {
-                        throw new UnsupportedOperationException("We don't support writing logical annotation type " + type.getLogicalTypeAnnotation());
+                        recordConsumer.addBinary(Binary.fromConstantByteArray((byte[])value));
                     }
                     break;
                 default:
