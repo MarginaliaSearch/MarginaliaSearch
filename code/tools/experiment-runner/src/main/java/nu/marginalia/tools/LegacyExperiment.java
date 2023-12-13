@@ -5,12 +5,12 @@ import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
 public abstract class LegacyExperiment extends Experiment {
     public abstract boolean process(CrawledDomain domain);
+
     @Override
     public boolean process(SerializableCrawlDataStream dataStream) throws IOException {
         List<CrawledDocument> documentList = new ArrayList<>();

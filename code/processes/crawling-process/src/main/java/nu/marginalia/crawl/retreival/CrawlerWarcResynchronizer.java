@@ -1,8 +1,8 @@
 package nu.marginalia.crawl.retreival;
 
-import nu.marginalia.crawl.retreival.fetcher.body.DocumentBodyExtractor;
-import nu.marginalia.crawl.retreival.fetcher.body.DocumentBodyResult;
-import nu.marginalia.crawl.retreival.fetcher.warc.HttpFetchResult;
+import nu.marginalia.crawling.body.DocumentBodyExtractor;
+import nu.marginalia.crawling.body.DocumentBodyResult;
+import nu.marginalia.crawling.body.HttpFetchResult;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.model.EdgeUrl;
 import org.jsoup.Jsoup;
@@ -87,7 +87,7 @@ public class CrawlerWarcResynchronizer {
     }
 
     private void revisit(WarcRevisit revisit) throws IOException {
-        if (!WarcRecorder.revisitURI.equals(revisit.profile())) {
+        if (!WarcRecorder.documentRevisitURN.equals(revisit.profile())) {
             return;
         }
 

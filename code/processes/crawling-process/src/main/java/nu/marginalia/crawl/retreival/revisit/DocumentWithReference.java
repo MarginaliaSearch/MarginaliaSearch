@@ -1,12 +1,15 @@
 package nu.marginalia.crawl.retreival.revisit;
 
+import lombok.SneakyThrows;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
-import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.fetcher.ContentTags;
+import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
+import nu.marginalia.crawling.body.DocumentBodyExtractor;
+import nu.marginalia.crawling.body.HttpFetchResult;
 import nu.marginalia.crawling.model.CrawledDocument;
+import nu.marginalia.model.EdgeUrl;
 
 import javax.annotation.Nullable;
-import java.time.LocalDateTime;
 
 public record DocumentWithReference(
         @Nullable CrawledDocument doc,
@@ -18,17 +21,28 @@ public record DocumentWithReference(
         return emptyInstance;
     }
 
-    public boolean isContentBodySame(CrawledDocument newDoc) {
+    /** Returns true if the provided document is the same as the reference document,
+     * or if the result was retained via HTTP 304.
+     */
+    public boolean isSame(HttpFetchResult result) {
+        if (result instanceof HttpFetchResult.ResultSame)
+            return true;
+        if (result instanceof HttpFetchResult.ResultRetained)
+            return true;
+
+        if (!(result instanceof HttpFetchResult.ResultOk resultOk))
+            return false;
+
         if (reference == null)
             return false;
         if (doc == null)
             return false;
         if (doc.documentBody == null)
             return false;
-        if (newDoc.documentBody == null)
-            return false;
 
-        return reference.isContentBodySame(doc, newDoc);
+        return DocumentBodyExtractor.extractBody(resultOk)
+                .map((contentType, body) -> reference.isContentBodySame(doc.documentBody, body))
+                .orElse(false);
     }
 
     public ContentTags getContentTags() {
@@ -60,23 +74,4 @@ public record DocumentWithReference(
         return doc == null || reference == null;
     }
 
-    /**
-     * If the provided document has HTTP status 304, and the reference document is provided,
-     * return the reference document; otherwise return the provided document.
-     */
-    public CrawledDocument replaceOn304(CrawledDocument fetchedDoc) {
-
-        if (doc == null)
-            return fetchedDoc;
-
-        // HTTP status 304 is NOT MODIFIED, which means the document is the same as it was when
-        // we fetched it last time. We can recycle the reference document.
-        if (fetchedDoc.httpStatus != 304)
-            return fetchedDoc;
-
-        var ret = doc;
-        ret.recrawlState = CrawlerRevisitor.documentWasRetainedTag;
-        ret.timestamp = LocalDateTime.now().toString();
-        return ret;
-    }
 }

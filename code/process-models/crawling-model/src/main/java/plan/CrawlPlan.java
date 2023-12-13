@@ -74,23 +74,13 @@ public class CrawlPlan {
         return count;
     }
 
+    @Deprecated
     public Iterable<CrawledDomain> domainsIterable() {
-        final CrawledDomainReader reader = new CrawledDomainReader();
-
-        return WorkLog.iterableMap(crawl.getLogFile(),
-                entry -> {
-                    var path = getCrawledFilePath(entry.path());
-                    if (!Files.exists(path)) {
-                        logger.warn("File not found: {}", path);
-                        return Optional.empty();
-                    }
-                    return reader.readOptionally(path);
-                });
+        // This is no longer supported
+        throw new UnsupportedOperationException();
     }
 
     public Iterable<SerializableCrawlDataStream> crawlDataIterable(Predicate<String> idPredicate) {
-        final CrawledDomainReader reader = new CrawledDomainReader();
-
         return WorkLog.iterableMap(crawl.getLogFile(),
                 entry -> {
                     if (!idPredicate.test(entry.id())) {
@@ -105,7 +95,7 @@ public class CrawlPlan {
                     }
 
                     try {
-                        return Optional.of(reader.createDataStream(path));
+                        return Optional.of(CrawledDomainReader.createDataStream(path));
                     }
                     catch (IOException ex) {
                         return Optional.empty();

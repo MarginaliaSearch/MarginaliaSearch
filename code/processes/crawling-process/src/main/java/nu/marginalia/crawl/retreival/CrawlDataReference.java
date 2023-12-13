@@ -8,6 +8,8 @@ import nu.marginalia.lsh.EasyLSH;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /** A reference to a domain that has been crawled before. */
 public class CrawlDataReference implements AutoCloseable {
@@ -20,6 +22,15 @@ public class CrawlDataReference implements AutoCloseable {
 
     public CrawlDataReference() {
         this(SerializableCrawlDataStream.empty());
+    }
+
+    /** Delete the associated data from disk, if it exists */
+    public void delete() throws IOException {
+        Path filePath = data.path();
+
+        if (filePath != null) {
+            Files.deleteIfExists(filePath);
+        }
     }
 
     @Nullable
@@ -37,12 +48,10 @@ public class CrawlDataReference implements AutoCloseable {
         return null;
     }
 
-    public boolean isContentBodySame(CrawledDocument one, CrawledDocument other) {
-        assert one.documentBody != null;
-        assert other.documentBody != null;
+    public boolean isContentBodySame(String one, String other) {
 
-        final long contentHashOne = contentHash(one.documentBody);
-        final long contentHashOther = contentHash(other.documentBody);
+        final long contentHashOne = contentHash(one);
+        final long contentHashOther = contentHash(other);
 
         return EasyLSH.hammingDistance(contentHashOne, contentHashOther) < 4;
     }

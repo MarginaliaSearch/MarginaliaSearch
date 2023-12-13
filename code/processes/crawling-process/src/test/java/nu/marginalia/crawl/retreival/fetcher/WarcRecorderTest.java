@@ -8,9 +8,7 @@ import okhttp3.Request;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.netpreserve.jwarc.WarcReader;
-import org.netpreserve.jwarc.WarcRequest;
-import org.netpreserve.jwarc.WarcResponse;
+import org.netpreserve.jwarc.*;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -22,6 +20,7 @@ import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 class WarcRecorderTest {
     Path fileName;
@@ -33,7 +32,7 @@ class WarcRecorderTest {
                 .addNetworkInterceptor(new IpInterceptingNetworkInterceptor())
                 .build();
 
-        fileName = Files.createTempFile("test", ".warc.gz");
+        fileName = Files.createTempFile("test", ".warc");
         client = new WarcRecorder(fileName);
     }
 
@@ -73,10 +72,7 @@ class WarcRecorderTest {
 
         try (var recorder = new WarcRecorder(fileName)) {
             recorder.flagAsSkipped(new EdgeUrl("https://www.marginalia.nu/"),
-                    """
-                            Content-type: text/html
-                            X-Cookies: 1
-                            """,
+                    "text/html",
                     200,
                     "<?doctype html><html><body>test</body></html>");
         }
@@ -95,5 +91,27 @@ class WarcRecorderTest {
         new GZIPInputStream(Files.newInputStream(fileName)).transferTo(System.out);
     }
 
+    @Test
+    public void testSaveImport() throws URISyntaxException, IOException {
+        try (var recorder = new WarcRecorder(fileName)) {
+            recorder.flagAsSkipped(new EdgeUrl("https://www.marginalia.nu/"),
+                    "text/html",
+                    200,
+                    "<?doctype html><html><body>test</body></html>");
+        }
+
+        try (var reader = new WarcReader(fileName)) {
+            WarcXResponseReference.register(reader);
+
+            for (var record : reader) {
+                System.out.println(record.type());
+                System.out.println(record.getClass().getSimpleName());
+                if (record instanceof WarcXResponseReference rsp) {
+                    assertEquals("https://www.marginalia.nu/", rsp.target());
+                }
+            }
+        }
+
+    }
 
 }

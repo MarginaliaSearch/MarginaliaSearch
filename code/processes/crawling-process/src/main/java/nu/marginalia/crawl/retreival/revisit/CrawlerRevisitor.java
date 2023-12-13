@@ -5,14 +5,10 @@ import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.CrawlDelayTimer;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.DomainCrawlFrontier;
-import nu.marginalia.crawl.retreival.CrawledDocumentFactory;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawling.model.CrawledDocument;
-import nu.marginalia.crawling.model.SerializableCrawlData;
 import nu.marginalia.model.EdgeUrl;
 import org.jsoup.Jsoup;
-
-import java.util.function.Consumer;
 
 /** This class encapsulates the logic for re-visiting a domain that has already been crawled.
  *  We may use information from the previous crawl to inform the next crawl, specifically the
@@ -27,16 +23,13 @@ public class CrawlerRevisitor {
 
 
     private final DomainCrawlFrontier crawlFrontier;
-    private final Consumer<SerializableCrawlData> crawledDomainWriter;
     private final CrawlerRetreiver crawlerRetreiver;
     private final WarcRecorder warcRecorder;
 
     public CrawlerRevisitor(DomainCrawlFrontier crawlFrontier,
-                            Consumer<SerializableCrawlData> crawledDomainWriter,
                             CrawlerRetreiver crawlerRetreiver,
                             WarcRecorder warcRecorder) {
         this.crawlFrontier = crawlFrontier;
-        this.crawledDomainWriter = crawledDomainWriter;
         this.crawlerRetreiver = crawlerRetreiver;
         this.warcRecorder = warcRecorder;
     }
@@ -69,7 +62,7 @@ public class CrawlerRevisitor {
             if (doc.httpStatus != 200) continue;
 
             if (!robotsRules.isAllowed(url.toString())) {
-                crawledDomainWriter.accept(CrawledDocumentFactory.createRobotsError(url));
+                warcRecorder.flagAsRobotsTxtError(url);
                 continue;
             }
             if (!crawlFrontier.filterLink(url))
@@ -87,7 +80,6 @@ public class CrawlerRevisitor {
                 // fashion to make sure we eventually catch changes over time
                 // and ensure we discover new links
 
-                crawledDomainWriter.accept(doc);
                 crawlFrontier.addVisited(url);
 
                 // Hoover up any links from the document
@@ -97,7 +89,7 @@ public class CrawlerRevisitor {
                 }
 
                 // Add a WARC record so we don't repeat this
-                warcRecorder.flagAsSkipped(url, doc.headers, doc.httpStatus, doc.documentBody);
+                warcRecorder.flagAsSkipped(url, doc.contentType, doc.httpStatus, doc.documentBody);
 
                 continue;
             }
@@ -107,15 +99,14 @@ public class CrawlerRevisitor {
             // providing etag and last-modified headers, so we can recycle the
             // document if it hasn't changed without actually downloading it
 
-            var fetchedDocOpt = crawlerRetreiver.fetchWriteAndSleep(url,
-                    delayTimer,
-                    new DocumentWithReference(doc, oldCrawlData));
-            if (fetchedDocOpt.isEmpty()) continue;
+            var reference = new DocumentWithReference(doc, oldCrawlData);
+            var result = crawlerRetreiver.fetchWriteAndSleep(url, delayTimer, reference);
 
-            if (documentWasRetainedTag.equals(fetchedDocOpt.get().recrawlState)) retained ++;
-            else if (documentWasSameTag.equals(fetchedDocOpt.get().recrawlState)) retained ++;
+            if (reference.isSame(result)) {
+                retained++;
+            }
 
-            recrawled ++;
+            recrawled++;
         }
 
         return recrawled;

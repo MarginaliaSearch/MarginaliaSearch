@@ -9,7 +9,11 @@ import java.nio.file.Path;
 public class CrawlerOutputFile {
 
     /** Return the Path to a file for the given id and name */
-    public static Path getOutputFile(Path base, String id, String name) {
+    public static Path getLegacyOutputFile(Path base, String id, String name) {
+        if (id.length() < 4) {
+            id = Strings.repeat("0", 4 - id.length()) + id;
+        }
+
         String first = id.substring(0, 2);
         String second = id.substring(2, 4);
 
@@ -19,7 +23,7 @@ public class CrawlerOutputFile {
 
     /** Return the Path to a file for the given id and name, creating the prerequisite
      * directory structure as necessary. */
-    public static Path createOutputPath(Path base, String id, String name) throws IOException {
+    public static Path createLegacyOutputPath(Path base, String id, String name) throws IOException {
         if (id.length() < 4) {
             id = Strings.repeat("0", 4 - id.length()) + id;
         }
@@ -49,20 +53,37 @@ public class CrawlerOutputFile {
 
     }
 
-    public static Path createWarcFile(Path baseDir, String id, String name, WarcFileVersion version) {
+    public static Path createWarcPath(Path basePath, String id, String domain, WarcFileVersion version) throws IOException {
         if (id.length() < 4) {
             id = Strings.repeat("0", 4 - id.length()) + id;
         }
 
-        String fileName = STR."\{id}-\{filesystemSafeName(name)}.zstd\{version.suffix}";
+        String first = id.substring(0, 2);
+        String second = id.substring(2, 4);
 
-        return baseDir.resolve(fileName);
+        Path destDir = basePath.resolve(first).resolve(second);
+        if (!Files.exists(destDir)) {
+            Files.createDirectories(destDir);
+        }
+        return destDir.resolve(STR."\{id}-\{filesystemSafeName(domain)}-\{version.suffix}.warc.gz");
+    }
+
+    public static Path getWarcPath(Path basePath, String id, String domain, WarcFileVersion version) {
+        if (id.length() < 4) {
+            id = Strings.repeat("0", 4 - id.length()) + id;
+        }
+
+        String first = id.substring(0, 2);
+        String second = id.substring(2, 4);
+
+        Path destDir = basePath.resolve(first).resolve(second);
+        return destDir.resolve(STR."\{id}-\{filesystemSafeName(domain)}.warc\{version.suffix}");
     }
 
     public enum WarcFileVersion {
-        LIVE(".open"),
-        TEMP(".tmp"),
-        FINAL("");
+        LIVE("open"),
+        TEMP("tmp"),
+        FINAL("final");
 
         public final String suffix;
 

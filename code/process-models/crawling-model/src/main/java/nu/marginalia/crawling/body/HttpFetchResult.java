@@ -1,17 +1,23 @@
-package nu.marginalia.crawl.retreival.fetcher.warc;
+package nu.marginalia.crawling.body;
 
 import okhttp3.Headers;
+import org.jsoup.Jsoup;
 import org.netpreserve.jwarc.MessageHeaders;
 import org.netpreserve.jwarc.WarcResponse;
 import org.netpreserve.jwarc.WarcRevisit;
+import org.jsoup.nodes.Document;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 public sealed interface HttpFetchResult {
+
+    boolean isOk();
+
     static ResultOk importWarc(WarcResponse response) throws IOException {
         var http = response.http();
         try (var body = http.body()) {
@@ -27,6 +33,7 @@ public sealed interface HttpFetchResult {
             );
         }
     }
+
     static ResultOk importWarc(WarcRevisit revisit) throws IOException {
         var http = revisit.http();
         try (var body = http.body()) {
@@ -41,7 +48,11 @@ public sealed interface HttpFetchResult {
                     bytes.length
             );
         }
+        finally {
+            revisit.body().consume();
+        }
     }
+
     record ResultOk(URI uri,
                     int statusCode,
                     Headers headers,
@@ -49,6 +60,10 @@ public sealed interface HttpFetchResult {
                     int bytesStart,
                     int bytesLength
     ) implements HttpFetchResult {
+
+        public boolean isOk() {
+            return statusCode >= 200 && statusCode < 300;
+        }
 
         public ResultOk(URI uri,
                         int statusCode,
@@ -73,6 +88,14 @@ public sealed interface HttpFetchResult {
             return new ByteArrayInputStream(bytesRaw, bytesStart, bytesLength);
         }
 
+        public Optional<Document> parseDocument() throws IOException {
+            return switch(DocumentBodyExtractor.extractBody(this))  {
+                case DocumentBodyResult.Ok ok when "text/html".equalsIgnoreCase(ok.contentType())
+                        -> Optional.of(Jsoup.parse(ok.body()));
+                default -> Optional.empty();
+            };
+        }
+
         public String header(String name) {
             return headers.get(name);
         }
@@ -82,5 +105,34 @@ public sealed interface HttpFetchResult {
 
 
     };
-    record ResultError(Exception ex) implements HttpFetchResult { };
+    record ResultRetained(String url, String body) implements HttpFetchResult {
+
+        public boolean isOk() {
+            return true;
+        }
+
+        public Optional<Document> parseDocument() {
+            try {
+                return Optional.of(Jsoup.parse(body));
+            }
+            catch (Exception ex) {
+                return Optional.empty();
+            }
+        }
+    };
+    record ResultException(Exception ex) implements HttpFetchResult {
+        public boolean isOk() {
+            return false;
+        }
+    };
+    record ResultSame() implements HttpFetchResult {
+        public boolean isOk() {
+            return false;
+        }
+    };
+    record ResultNone() implements HttpFetchResult {
+        public boolean isOk() {
+            return false;
+        }
+    };
 }

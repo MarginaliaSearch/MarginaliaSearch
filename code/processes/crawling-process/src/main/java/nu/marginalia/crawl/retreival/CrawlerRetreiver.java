@@ -7,7 +7,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.crawl.retreival.fetcher.ContentTags;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
-import nu.marginalia.crawl.retreival.fetcher.SitemapRetriever;
+import nu.marginalia.crawling.body.HttpFetchResult;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.retreival.revisit.CrawlerRevisitor;
 import nu.marginalia.crawl.retreival.revisit.DocumentWithReference;
@@ -18,16 +18,15 @@ import nu.marginalia.ip_blocklist.UrlBlocklist;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawlspec.CrawlSpecRecord;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.function.Consumer;
 
 public class CrawlerRetreiver implements AutoCloseable {
 
@@ -36,7 +35,6 @@ public class CrawlerRetreiver implements AutoCloseable {
     private final HttpFetcher fetcher;
 
     private final String domain;
-    private final Consumer<SerializableCrawlData> crawledDomainWriter;
 
     private static final LinkParser linkParser = new LinkParser();
     private static final Logger logger = LoggerFactory.getLogger(CrawlerRetreiver.class);
@@ -56,8 +54,7 @@ public class CrawlerRetreiver implements AutoCloseable {
     public CrawlerRetreiver(HttpFetcher fetcher,
                             DomainProber domainProber,
                             CrawlSpecRecord specs,
-                            WarcRecorder warcRecorder,
-                            Consumer<SerializableCrawlData> writer)
+                            WarcRecorder warcRecorder)
     {
         this.warcRecorder = warcRecorder;
         this.fetcher = fetcher;
@@ -65,11 +62,8 @@ public class CrawlerRetreiver implements AutoCloseable {
 
         domain = specs.domain;
 
-        crawledDomainWriter = writer;
-
-
         crawlFrontier = new DomainCrawlFrontier(new EdgeDomain(domain), Objects.requireNonNullElse(specs.urls, List.of()), specs.crawlDepth);
-        crawlerRevisitor = new CrawlerRevisitor(crawlFrontier, crawledDomainWriter, this, warcRecorder);
+        crawlerRevisitor = new CrawlerRevisitor(crawlFrontier, this, warcRecorder);
         sitemapFetcher = new SitemapFetcher(crawlFrontier, fetcher.createSitemapRetriever());
 
         // We must always crawl the index page first, this is assumed when fingerprinting the server
@@ -94,32 +88,13 @@ public class CrawlerRetreiver implements AutoCloseable {
     public int fetch(DomainLinks domainLinks, CrawlDataReference oldCrawlData) {
         final DomainProber.ProbeResult probeResult = domainProber.probeDomain(fetcher, domain, crawlFrontier.peek());
 
-        return switch (probeResult) {
-            case DomainProber.ProbeResultOk(EdgeUrl probedUrl) -> crawlDomain(oldCrawlData, probedUrl, domainLinks);
-            case DomainProber.ProbeResultError(CrawlerDomainStatus status, String desc) -> {
-                crawledDomainWriter.accept(
-                        CrawledDomain.builder()
-                                .crawlerStatus(status.name())
-                                .crawlerStatusDesc(desc)
-                                .domain(domain)
-                                .ip(findIp(domain))
-                                .build()
-                );
-                yield 1;
-            }
-            case DomainProber.ProbeResultRedirect(EdgeDomain redirectDomain) -> {
-                crawledDomainWriter.accept(
-                        CrawledDomain.builder()
-                                .crawlerStatus(CrawlerDomainStatus.REDIRECT.name())
-                                .crawlerStatusDesc("Redirected to different domain")
-                                .redirectDomain(redirectDomain.toString())
-                                .domain(domain)
-                                .ip(findIp(domain))
-                                .build()
-                );
-                yield 1;
-            }
-        };
+        try {
+            return crawlDomain(oldCrawlData, probeResult, domainLinks);
+        }
+        catch (Exception ex) {
+            logger.error("Error crawling domain {}", domain, ex);
+            return 0;
+        }
     }
 
     public void syncAbortedRun(Path warcFile) {
@@ -128,8 +103,20 @@ public class CrawlerRetreiver implements AutoCloseable {
         resync.run(warcFile);
     }
 
-    private int crawlDomain(CrawlDataReference oldCrawlData, EdgeUrl rootUrl, DomainLinks domainLinks) {
+    private int crawlDomain(CrawlDataReference oldCrawlData, DomainProber.ProbeResult probeResult, DomainLinks domainLinks) throws IOException {
         String ip = findIp(domain);
+
+        EdgeUrl rootUrl;
+
+        warcRecorder.writeWarcinfoHeader(ip, new EdgeDomain(domain), probeResult);
+
+        if (!(probeResult instanceof DomainProber.ProbeResultOk ok)) {
+            return 1;
+        }
+        else {
+            rootUrl = ok.probedUrl();
+        }
+
 
         assert !crawlFrontier.isEmpty();
 
@@ -170,7 +157,7 @@ public class CrawlerRetreiver implements AutoCloseable {
             var top = crawlFrontier.takeNextUrl();
 
             if (!robotsRules.isAllowed(top.toString())) {
-                crawledDomainWriter.accept(CrawledDocumentFactory.createRobotsError(top));
+                warcRecorder.flagAsRobotsTxtError(top);
                 continue;
             }
 
@@ -193,14 +180,12 @@ public class CrawlerRetreiver implements AutoCloseable {
                 continue;
 
 
-            if (fetchWriteAndSleep(top, delayTimer, DocumentWithReference.empty()).isPresent()) {
+            if (fetchWriteAndSleep(top, delayTimer, DocumentWithReference.empty()).isOk()) {
                 fetchedCount++;
             }
         }
 
         ret.cookies = fetcher.getCookies();
-
-        crawledDomainWriter.accept(ret);
 
         return fetchedCount;
     }
@@ -216,16 +201,16 @@ public class CrawlerRetreiver implements AutoCloseable {
 
             var url = rootUrl.withPathAndParam("/", null);
 
-            var maybeSample = fetchUrl(url, delayTimer, DocumentWithReference.empty()).filter(sample -> sample.httpStatus == 200);
-            if (maybeSample.isEmpty())
+            var result = tryDownload(url, delayTimer, ContentTags.empty());
+            if (!(result instanceof HttpFetchResult.ResultOk ok))
                 return;
-            var sample = maybeSample.get();
 
-            if (sample.documentBody == null)
+            var optDoc = ok.parseDocument();
+            if (optDoc.isEmpty())
                 return;
 
             // Sniff the software based on the sample document
-            var doc = Jsoup.parse(sample.documentBody);
+            var doc = optDoc.get();
             crawlFrontier.setLinkFilter(linkFilterSelector.selectFilter(doc));
 
             for (var link : doc.getElementsByTag("link")) {
@@ -252,41 +237,54 @@ public class CrawlerRetreiver implements AutoCloseable {
         }
     }
 
-    public Optional<CrawledDocument> fetchWriteAndSleep(EdgeUrl top,
+    public HttpFetchResult fetchWriteAndSleep(EdgeUrl top,
                                                          CrawlDelayTimer timer,
                                                          DocumentWithReference reference) {
         logger.debug("Fetching {}", top);
 
         long startTime = System.currentTimeMillis();
 
-        var docOpt = fetchUrl(top, timer, reference);
+        var contentTags = reference.getContentTags();
+        var fetchedDoc = tryDownload(top, timer, contentTags);
 
-        if (docOpt.isPresent()) {
-            var doc = docOpt.get();
-
-            if (!Objects.equals(doc.recrawlState, CrawlerRevisitor.documentWasRetainedTag)
-                && reference.isContentBodySame(doc))
-            {
-                // The document didn't change since the last time
-                doc.recrawlState = CrawlerRevisitor.documentWasSameTag;
+        if (fetchedDoc instanceof HttpFetchResult.ResultSame) {
+            var doc = reference.doc();
+            if (doc != null) {
+                warcRecorder.writeReferenceCopy(top, doc.contentType, doc.httpStatus, doc.documentBody);
+                fetchedDoc = new HttpFetchResult.ResultRetained(doc.url, doc.documentBody);
             }
+        }
 
-            crawledDomainWriter.accept(doc);
+        try {
+            if (fetchedDoc instanceof HttpFetchResult.ResultOk ok) {
+                var docOpt = ok.parseDocument();
+                if (docOpt.isPresent()) {
+                    var doc = docOpt.get();
 
-            if (doc.url != null) {
-                // We may have redirected to a different path
-                EdgeUrl.parse(doc.url).ifPresent(crawlFrontier::addVisited);
+                    crawlFrontier.enqueueLinksFromDocument(top, doc);
+                    crawlFrontier.addVisited(new EdgeUrl(ok.uri()));
+                }
             }
+            else if (fetchedDoc instanceof HttpFetchResult.ResultRetained retained) {
+                var docOpt = retained.parseDocument();
+                if (docOpt.isPresent()) {
+                    var doc = docOpt.get();
 
-            if ("ERROR".equals(doc.crawlerStatus) && doc.httpStatus != 404) {
-                errorCount++;
+                    crawlFrontier.enqueueLinksFromDocument(top, doc);
+                    EdgeUrl.parse(retained.url()).ifPresent(crawlFrontier::addVisited);
+                }
             }
-
+            else if (fetchedDoc instanceof HttpFetchResult.ResultException ex) {
+                errorCount ++;
+            }
+        }
+        catch (Exception ex) {
+            logger.error("Error parsing document {}", top, ex);
         }
 
         timer.delay(System.currentTimeMillis() - startTime);
 
-        return docOpt;
+        return fetchedDoc;
     }
 
     private boolean isAllowedProtocol(String proto) {
@@ -294,42 +292,11 @@ public class CrawlerRetreiver implements AutoCloseable {
                 || proto.equalsIgnoreCase("https");
     }
 
-    private Optional<CrawledDocument> fetchUrl(EdgeUrl top, CrawlDelayTimer timer, DocumentWithReference reference) {
-        try {
-            var contentTags = reference.getContentTags();
-            var fetchedDoc = tryDownload(top, timer, contentTags);
-
-            CrawledDocument doc = reference.replaceOn304(fetchedDoc);
-
-            if (doc.documentBody != null) {
-                doc.documentBodyHash = createHash(doc.documentBody);
-
-                var parsedDoc = Jsoup.parse(doc.documentBody);
-                EdgeUrl url = new EdgeUrl(doc.url);
-
-                crawlFrontier.enqueueLinksFromDocument(url, parsedDoc);
-                findCanonicalUrl(url, parsedDoc)
-                        .ifPresent(canonicalLink -> doc.canonicalUrl = canonicalLink.toString());
-            }
-
-            return Optional.of(doc);
-        }
-        catch (Exception ex) {
-            logger.warn("Failed to process document {}", top);
-        }
-
-        return Optional.empty();
-
-    }
-
-
     @SneakyThrows
-    private CrawledDocument tryDownload(EdgeUrl top, CrawlDelayTimer timer, ContentTags tags) {
+    private HttpFetchResult tryDownload(EdgeUrl top, CrawlDelayTimer timer, ContentTags tags) {
         for (int i = 0; i < 2; i++) {
             try {
-                var doc = fetcher.fetchContent(top, warcRecorder, tags);
-                doc.recrawlState = "NEW";
-                return doc;
+                return fetcher.fetchContent(top, warcRecorder, tags);
             }
             catch (RateLimitException ex) {
                 timer.slowDown();
@@ -339,15 +306,20 @@ public class CrawlerRetreiver implements AutoCloseable {
                     Thread.sleep(delay);
                 }
             }
+            catch (Exception ex) {
+                logger.warn("Failed to fetch {}", top, ex);
+                return new HttpFetchResult.ResultException(ex);
+            }
         }
 
-        return CrawledDocumentFactory.createRetryError(top);
+        return new HttpFetchResult.ResultNone();
     }
 
     private String createHash(String documentBodyHash) {
         return hashMethod.hashUnencodedChars(documentBodyHash).toString();
     }
 
+    // FIXME this does not belong in the crawler
     private Optional<EdgeUrl> findCanonicalUrl(EdgeUrl baseUrl, Document parsed) {
         baseUrl = baseUrl.domain.toRootUrl();
 

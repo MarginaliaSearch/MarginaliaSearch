@@ -1,6 +1,9 @@
 package nu.marginalia.crawl.retreival.fetcher.warc;
 
+import nu.marginalia.crawl.retreival.DomainProber;
+import nu.marginalia.crawling.body.HttpFetchResult;
 import nu.marginalia.crawl.retreival.fetcher.socket.IpInterceptingNetworkInterceptor;
+import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -8,7 +11,6 @@ import org.netpreserve.jwarc.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -18,9 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /** Based on JWarc's fetch method, APL 2.0 license
  * <p></p>
@@ -29,7 +29,12 @@ import java.util.Map;
  * be reconstructed.
  */
 public class WarcRecorder implements AutoCloseable {
-    public static final URI revisitURI = URI.create("urn:marginalia:revisit");
+    public static final URI documentRevisitURN = URI.create("urn:marginalia/data/doc/revisit");
+
+    public static final URI documentRobotsTxtSkippedURN = URI.create("urn:marginalia/meta/doc/robots-txt-skipped");
+    public static final URI documentBadContentTypeURN = URI.create("urn:marginalia/meta/doc/content-type-failed-probe");
+    public static final URI documentProbeTimeout = URI.create("urn:marginalia/meta/doc/timeout-probe");
+    public static final URI documentUnspecifiedError = URI.create("urn:marginalia/meta/doc/error");
 
     private static final int MAX_TIME = 30_000;
     private static final int MAX_SIZE = 1024 * 1024 * 10;
@@ -37,9 +42,13 @@ public class WarcRecorder implements AutoCloseable {
     private final Path warcFile;
     private static final Logger logger = LoggerFactory.getLogger(WarcRecorder.class);
 
-    private ThreadLocal<byte[]> bufferThreadLocal = ThreadLocal.withInitial(() -> new byte[MAX_SIZE]);
+    private final ThreadLocal<byte[]> bufferThreadLocal = ThreadLocal.withInitial(() -> new byte[MAX_SIZE]);
 
     private boolean temporaryFile = false;
+
+    // Affix a version string in case we need to change the format in the future
+    // in some way
+    private final String warcRecorderVersion = "1.0";
 
     /**
      * Create a new WarcRecorder that will write to the given file
@@ -48,7 +57,7 @@ public class WarcRecorder implements AutoCloseable {
      */
     public WarcRecorder(Path warcFile) throws IOException {
         this.warcFile = warcFile;
-        this.writer = new WarcWriter(this.warcFile);
+        this.writer = new WarcWriter(warcFile);
     }
 
     /**
@@ -170,7 +179,7 @@ public class WarcRecorder implements AutoCloseable {
         }
         catch (Exception ex) {
             logger.warn("Failed to fetch URL {}", uri, ex);
-            return new HttpFetchResult.ResultError(ex);
+            return new HttpFetchResult.ResultException(ex);
         }
     }
 
@@ -178,55 +187,141 @@ public class WarcRecorder implements AutoCloseable {
         writer.write(item);
     }
 
-    /**
-     * Flag the given URL as skipped by the crawler, so that it will not be retried.
-     * Which URLs were skipped is still important when resynchronizing on the WARC file,
-     * so that the crawler can avoid re-fetching them.
-     *
-     * @param url          The URL to flag
-     * @param headers
-     * @param documentBody
-     */
-    public void flagAsSkipped(EdgeUrl url, String headers, int statusCode, String documentBody) {
+    private void saveOldResponse(EdgeUrl url, String contentType, int statusCode, String documentBody) {
         try {
             WarcDigestBuilder responseDigestBuilder = new WarcDigestBuilder();
             WarcDigestBuilder payloadDigestBuilder = new WarcDigestBuilder();
 
-            String header = WarcProtocolReconstructor.getResponseHeader(headers, statusCode);
+            byte[] bytes = documentBody.getBytes();
+
+            String fakeHeaders = STR."""
+                    Content-Type: \{contentType}
+                    Content-Length: \{bytes.length}
+                    Content-Encoding: UTF-8
+                    """;
+
+            String header = WarcProtocolReconstructor.getResponseHeader(fakeHeaders, statusCode);
             ResponseDataBuffer responseDataBuffer = new ResponseDataBuffer();
             responseDataBuffer.put(header);
 
             responseDigestBuilder.update(header);
 
-            try (var inputStream = new ByteArrayInputStream(documentBody.getBytes())) {
-                int remainingLength;
-                while ((remainingLength = responseDataBuffer.remaining()) > 0) {
-                    int startPos = responseDataBuffer.pos();
+            responseDigestBuilder.update(bytes, bytes.length);
+            payloadDigestBuilder.update(bytes, bytes.length);
+            responseDataBuffer.put(bytes, 0, bytes.length);
 
-                    int n = responseDataBuffer.readFrom(inputStream, remainingLength);
-                    if (n < 0)
-                        break;
-
-                    responseDataBuffer.updateDigest(responseDigestBuilder, startPos, n);
-                    responseDataBuffer.updateDigest(payloadDigestBuilder, startPos, n);
-                }
-            }
-
-            WarcRevisit revisit = new WarcRevisit.Builder(url.asURI(), revisitURI)
+            WarcXResponseReference reference = new WarcXResponseReference.Builder(url.asURI())
                     .blockDigest(responseDigestBuilder.build())
                     .payloadDigest(payloadDigestBuilder.build())
                     .date(Instant.now())
                     .body(MediaType.HTTP_RESPONSE, responseDataBuffer.copyBytes())
                     .build();
 
-            revisit.http(); // force HTTP header to be parsed before body is consumed so that caller can use it
+            reference.http(); // force HTTP header to be parsed before body is consumed so that caller can use it
 
-            writer.write(revisit);
+            writer.write(reference);
         } catch (URISyntaxException | IOException | NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
     }
 
+    /**
+     * Flag the given URL as skipped by the crawler, so that it will not be retried.
+     * Which URLs were skipped is still important when resynchronizing on the WARC file,
+     * so that the crawler can avoid re-fetching them.
+     */
+    public void flagAsSkipped(EdgeUrl url, String contentType, int statusCode, String documentBody) {
+        saveOldResponse(url, contentType, statusCode, documentBody);
+    }
+
+    /**
+     * Write a reference copy of the given document data.  This is used when the crawler provides
+     * an E-Tag or Last-Modified header, and the server responds with a 304 Not Modified.  In this
+     * scenario we want to record the data as it was in the previous crawl, but not re-fetch it.
+     */
+    public void writeReferenceCopy(EdgeUrl url, String contentType, int statusCode, String documentBody) {
+        saveOldResponse(url, contentType, statusCode, documentBody);
+    }
+
+    public void writeWarcinfoHeader(String ip, EdgeDomain domain, DomainProber.ProbeResult result) throws IOException {
+
+        Map<String, List<String>> fields = new HashMap<>();
+        fields.put("ip", List.of(ip));
+        fields.put("software", List.of(STR."search.marginalia.nu/\{warcRecorderVersion}"));
+        fields.put("domain", List.of(domain.toString()));
+
+        switch (result) {
+            case DomainProber.ProbeResultRedirect redirectDomain:
+                fields.put("X-WARC-Probe-Status", List.of(STR."REDIRECT;\{redirectDomain.domain()}"));
+                break;
+            case DomainProber.ProbeResultError error:
+                fields.put("X-WARC-Probe-Status", List.of(STR."\{error.status().toString()};\{error.desc()}"));
+                break;
+            case DomainProber.ProbeResultOk ok:
+                fields.put("X-WARC-Probe-Status", List.of("OK"));
+                break;
+        }
+
+        var warcinfo = new Warcinfo.Builder()
+                .date(Instant.now())
+                .fields(fields)
+                .recordId(UUID.randomUUID())
+                .build();
+
+        writer.write(warcinfo);
+    }
+
+    public void flagAsRobotsTxtError(EdgeUrl top) {
+        try {
+            WarcRevisit revisit = new WarcRevisit.Builder(top.asURI(), documentRobotsTxtSkippedURN)
+                    .date(Instant.now())
+                    .build();
+
+            writer.write(revisit);
+        } catch (URISyntaxException | IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void flagAsFailedContentTypeProbe(EdgeUrl url, String contentType, int status) {
+        try {
+            WarcRevisit revisit = new WarcRevisit.Builder(url.asURI(), documentBadContentTypeURN)
+                    .date(Instant.now())
+                    .addHeader("Rejected-Content-Type", contentType)
+                    .addHeader("Http-Status", Integer.toString(status))
+                    .build();
+
+            writer.write(revisit);
+        } catch (URISyntaxException | IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void flagAsError(EdgeUrl url, Exception ex) {
+        try {
+            WarcRevisit revisit = new WarcRevisit.Builder(url.asURI(), documentUnspecifiedError)
+                    .date(Instant.now())
+                    .addHeader("Exception", ex.getClass().getSimpleName())
+                    .addHeader("ErrorMessage", Objects.requireNonNullElse(ex.getMessage(), ""))
+                    .build();
+
+            writer.write(revisit);
+        } catch (URISyntaxException | IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void flagAsTimeout(EdgeUrl url) {
+        try {
+            WarcRevisit revisit = new WarcRevisit.Builder(url.asURI(), documentProbeTimeout)
+                    .date(Instant.now())
+                    .build();
+
+            writer.write(revisit);
+        } catch (URISyntaxException | IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     private class ResponseDataBuffer {
         private final byte[] data;

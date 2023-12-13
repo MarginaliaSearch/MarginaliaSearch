@@ -79,7 +79,7 @@ public class CrawlingThenConvertingIntegrationTest {
         List<SerializableCrawlData> data = new ArrayList<>();
 
         try (var recorder = new WarcRecorder()) {
-            new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, recorder, data::add).fetch();
+            new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, recorder).fetch();
         }
 
         CrawledDomain domain = data.stream().filter(CrawledDomain.class::isInstance).map(CrawledDomain.class::cast).findFirst().get();

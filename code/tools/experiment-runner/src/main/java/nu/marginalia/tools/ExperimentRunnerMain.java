@@ -50,10 +50,9 @@ public class ExperimentRunnerMain {
         experiment.args(Arrays.copyOfRange(args, 2, args.length));
 
         Path basePath = Path.of(args[0]);
-        var reader = new CrawledDomainReader();
         for (var item : WorkLog.iterable(basePath.resolve("crawler.log"))) {
             Path crawlDataPath = basePath.resolve(item.relPath());
-            try (var stream = reader.createDataStream(crawlDataPath)) {
+            try (var stream = CrawledDomainReader.createDataStream(crawlDataPath)) {
                 experiment.process(stream);
             }
             catch (Exception ex) {

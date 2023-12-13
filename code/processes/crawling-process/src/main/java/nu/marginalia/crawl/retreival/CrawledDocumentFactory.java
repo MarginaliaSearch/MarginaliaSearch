@@ -1,6 +1,6 @@
 package nu.marginalia.crawl.retreival;
 
-import nu.marginalia.crawl.retreival.fetcher.warc.HttpFetchResult;
+import nu.marginalia.crawling.body.HttpFetchResult;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawlerDocumentStatus;
 import nu.marginalia.model.EdgeUrl;

@@ -1,6 +1,6 @@
 package nu.marginalia.crawl.retreival.fetcher;
 
-import nu.marginalia.crawl.retreival.logic.ContentTypeLogic;
+import nu.marginalia.crawling.body.ContentTypeLogic;
 import nu.marginalia.model.EdgeUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;

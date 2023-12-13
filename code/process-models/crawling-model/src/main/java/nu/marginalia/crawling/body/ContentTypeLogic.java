@@ -1,4 +1,4 @@
-package nu.marginalia.crawl.retreival.logic;
+package nu.marginalia.crawling.body;
 
 import nu.marginalia.model.EdgeUrl;
 

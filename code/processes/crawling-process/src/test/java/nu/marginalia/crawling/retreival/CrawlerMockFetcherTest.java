@@ -5,6 +5,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.crawl.retreival.DomainProber;
 import nu.marginalia.crawl.retreival.fetcher.*;
+import nu.marginalia.crawling.body.HttpFetchResult;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawlerDocumentStatus;
@@ -13,6 +14,7 @@ import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawlspec.CrawlSpecRecord;
 import nu.marginalia.test.CommonTestData;
+import okhttp3.Headers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -21,12 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
+import java.util.*;
 
 public class CrawlerMockFetcherTest {
 
@@ -65,9 +62,9 @@ public class CrawlerMockFetcherTest {
 
     }
 
-    void crawl(CrawlSpecRecord spec, Consumer<SerializableCrawlData> consumer)  throws IOException {
+    void crawl(CrawlSpecRecord spec)  throws IOException {
         try (var recorder = new WarcRecorder()) {
-            new CrawlerRetreiver(fetcherMock, new DomainProber(d -> true), spec, recorder, consumer)
+            new CrawlerRetreiver(fetcherMock, new DomainProber(d -> true), spec, recorder)
                     .fetch();
         }
     }
@@ -80,9 +77,7 @@ public class CrawlerMockFetcherTest {
         registerUrlClasspathData(new EdgeUrl("https://startrek.website/c/startrek"), "mock-crawl-data/lemmy/c_startrek.html");
         registerUrlClasspathData(new EdgeUrl("https://startrek.website/post/108995"), "mock-crawl-data/lemmy/108995.html");
 
-        crawl(new CrawlSpecRecord("startrek.website", 10, new ArrayList<>()), out::add);
-
-        out.forEach(System.out::println);
+        crawl(new CrawlSpecRecord("startrek.website", 10, new ArrayList<>()));
     }
 
     @Test
@@ -91,9 +86,7 @@ public class CrawlerMockFetcherTest {
 
         registerUrlClasspathData(new EdgeUrl("https://en.wikipedia.org/"), "mock-crawl-data/mediawiki/index.html");
 
-        crawl(new CrawlSpecRecord("en.wikipedia.org", 10, new ArrayList<>()), out::add);
-
-        out.forEach(System.out::println);
+        crawl(new CrawlSpecRecord("en.wikipedia.org", 10, new ArrayList<>()));
     }
 
     @Test
@@ -104,9 +97,7 @@ public class CrawlerMockFetcherTest {
         registerUrlClasspathData(new EdgeUrl("https://community.tt-rss.org/t/telegram-channel-to-idle-on/3501"), "mock-crawl-data/discourse/telegram.html");
         registerUrlClasspathData(new EdgeUrl("https://community.tt-rss.org/t/combined-mode-but-grid/4489"), "mock-crawl-data/discourse/grid.html");
 
-        crawl(new CrawlSpecRecord("community.tt-rss.org", 10, new ArrayList<>()), out::add);
-
-        out.forEach(System.out::println);
+        crawl(new CrawlSpecRecord("community.tt-rss.org", 10, new ArrayList<>()));
     }
 
     class MockFetcher implements HttpFetcher {
@@ -126,21 +117,23 @@ public class CrawlerMockFetcherTest {
             return new FetchResult(FetchResultState.OK, url);
         }
 
+        @SneakyThrows
         @Override
-        public CrawledDocument fetchContent(EdgeUrl url, WarcRecorder recorder, ContentTags tags) {
+        public HttpFetchResult fetchContent(EdgeUrl url, WarcRecorder recorder, ContentTags tags) {
             logger.info("Fetching {}", url);
             if (mockData.containsKey(url)) {
-                return mockData.get(url);
+                byte[] bodyBytes = mockData.get(url).documentBody.getBytes();
+                return new HttpFetchResult.ResultOk(
+                        url.asURI(),
+                        200,
+                        new Headers.Builder().build(),
+                        bodyBytes,
+                        0,
+                        bodyBytes.length
+                );
             }
-            else {
-                return CrawledDocument.builder()
-                        .crawlId("1")
-                        .url(url.toString())
-                        .contentType("text/html")
-                        .httpStatus(404)
-                        .crawlerStatus(CrawlerDocumentStatus.ERROR.name())
-                        .build();
-            }
+
+            return new HttpFetchResult.ResultNone();
         }
 
         @Override

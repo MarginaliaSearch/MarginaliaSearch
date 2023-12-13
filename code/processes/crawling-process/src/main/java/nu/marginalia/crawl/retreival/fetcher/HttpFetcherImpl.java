@@ -8,30 +8,26 @@ import lombok.SneakyThrows;
 import nu.marginalia.crawl.retreival.Cookies;
 import nu.marginalia.crawl.retreival.RateLimitException;
 import nu.marginalia.crawl.retreival.fetcher.ContentTypeProber.ContentTypeProbeResult;
-import nu.marginalia.crawl.retreival.fetcher.body.DocumentBodyExtractor;
-import nu.marginalia.crawl.retreival.fetcher.body.DocumentBodyResult;
-import nu.marginalia.crawl.retreival.fetcher.socket.*;
-import nu.marginalia.crawl.retreival.fetcher.warc.HttpFetchResult;
-import static nu.marginalia.crawl.retreival.CrawledDocumentFactory.*;
+import nu.marginalia.crawl.retreival.fetcher.socket.FastTerminatingSocketFactory;
+import nu.marginalia.crawl.retreival.fetcher.socket.IpInterceptingNetworkInterceptor;
+import nu.marginalia.crawl.retreival.fetcher.socket.NoSecuritySSL;
+import nu.marginalia.crawling.body.HttpFetchResult;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
-import nu.marginalia.crawling.model.CrawledDocument;
-import nu.marginalia.crawling.model.CrawlerDocumentStatus;
+import nu.marginalia.crawling.body.ContentTypeLogic;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
-import nu.marginalia.crawl.retreival.logic.ContentTypeLogic;
-import okhttp3.*;
+import okhttp3.ConnectionPool;
+import okhttp3.Dispatcher;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLException;
 import javax.net.ssl.X509TrustManager;
-import java.io.EOFException;
-import java.io.IOException;
-import java.net.*;
-import java.nio.charset.IllegalCharsetNameException;
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 
@@ -141,9 +137,9 @@ public class HttpFetcherImpl implements HttpFetcher {
 
     @Override
     @SneakyThrows
-    public CrawledDocument fetchContent(EdgeUrl url,
-                                        WarcRecorder warcRecorder,
-                                        ContentTags contentTags)
+    public HttpFetchResult fetchContent(EdgeUrl url,
+                                           WarcRecorder warcRecorder,
+                                           ContentTags contentTags)
             throws RateLimitException
     {
 
@@ -152,23 +148,21 @@ public class HttpFetcherImpl implements HttpFetcher {
         if (contentTags.isEmpty() && contentTypeLogic.isUrlLikeBinary(url))
         {
             ContentTypeProbeResult probeResult = contentTypeProber.probeContentType(url);
-            switch (probeResult) {
-                case ContentTypeProbeResult.Ok(EdgeUrl redirectUrl) -> {
-                    url = redirectUrl;
-                }
-                case ContentTypeProbeResult.BadContentType (String contentType, int statusCode) -> {
-                    return createErrorResponse(url, contentType, statusCode,
-                            CrawlerDocumentStatus.BAD_CONTENT_TYPE,
-                            contentType
-                    );
-                }
-                case ContentTypeProbeResult.Timeout timeout -> {
-                    return createTimeoutErrorRsp(url);
-                }
-                case ContentTypeProbeResult.Exception ex -> {
-                    return createErrorFromException(url, ex.ex());
-                }
-            };
+            if (probeResult instanceof ContentTypeProbeResult.Ok ok) {
+                url = ok.resolvedUrl();
+            }
+            else if (probeResult instanceof ContentTypeProbeResult.BadContentType badContentType) {
+                warcRecorder.flagAsFailedContentTypeProbe(url, badContentType.contentType(), badContentType.statusCode());
+                return new HttpFetchResult.ResultNone();
+            }
+            else if (probeResult instanceof ContentTypeProbeResult.BadContentType.Timeout timeout) {
+                warcRecorder.flagAsTimeout(url);
+                return new HttpFetchResult.ResultNone();
+            }
+            else if (probeResult instanceof ContentTypeProbeResult.Exception exception) {
+                warcRecorder.flagAsError(url, exception.ex());
+                return new HttpFetchResult.ResultNone();
+            }
         }
 
         var getBuilder = new Request.Builder().get();
@@ -181,78 +175,20 @@ public class HttpFetcherImpl implements HttpFetcher {
 
         HttpFetchResult result = warcRecorder.fetch(client, getBuilder.build());
 
-        if (result instanceof HttpFetchResult.ResultError err) {
-            return createErrorFromException(url, err.ex());
-        }
-        else if (result instanceof HttpFetchResult.ResultOk ok) {
-            try {
-                return extractBody(userAgent, url, ok);
+        if (result instanceof HttpFetchResult.ResultOk ok) {
+            if (ok.statusCode() == 429) {
+                String retryAfter = Objects.requireNonNullElse(ok.header("Retry-After"), "1000");
+                throw new RateLimitException(retryAfter);
             }
-            catch (Exception ex) {
-                return createErrorFromException(url, ex);
+            if (ok.statusCode() == 304) {
+                return new HttpFetchResult.ResultSame();
+            }
+            if (ok.statusCode() == 200) {
+                return ok;
             }
         }
-        else {
-            throw new IllegalStateException(STR."Unknown result type \{result.getClass()}");
-        }
-    }
 
-    private CrawledDocument createErrorFromException(EdgeUrl url, Exception exception) throws RateLimitException {
-        return switch (exception) {
-            case RateLimitException rle -> throw rle;
-            case SocketTimeoutException ex -> createTimeoutErrorRsp(url);
-            case UnknownHostException ex -> createUnknownHostError(url);
-            case SocketException ex -> createHardErrorRsp(url, ex);
-            case ProtocolException ex -> createHardErrorRsp(url, ex);
-            case IllegalCharsetNameException ex -> createHardErrorRsp(url, ex);
-            case SSLException ex -> createHardErrorRsp(url, ex);
-            case EOFException ex -> createHardErrorRsp(url, ex);
-            default -> {
-                logger.error("Error during fetching", exception);
-                yield createHardErrorRsp(url, exception);
-            }
-        };
-    }
-
-    public static CrawledDocument extractBody(String userAgent, EdgeUrl url, HttpFetchResult.ResultOk rsp) throws IOException, RateLimitException {
-
-        var responseUrl = new EdgeUrl(rsp.uri());
-
-        if (!Objects.equals(responseUrl.domain, url.domain)) {
-            return createRedirectResponse(url, rsp, responseUrl);
-        }
-
-        if (rsp.statusCode() == 429) {
-            String retryAfter = Objects.requireNonNullElse(rsp.header("Retry-After"), "1000");
-
-            throw new RateLimitException(retryAfter);
-        }
-
-        if (!isXRobotsTagsPermitted(rsp.allHeaders("X-Robots-Tag"), userAgent)) {
-            return CrawledDocument.builder()
-                    .crawlerStatus(CrawlerDocumentStatus.ROBOTS_TXT.name())
-                    .crawlerStatusDesc("X-Robots-Tag")
-                    .url(responseUrl.toString())
-                    .httpStatus(-1)
-                    .timestamp(LocalDateTime.now().toString())
-                    .headers(rsp.headers().toString())
-                    .build();
-        }
-
-        return switch(DocumentBodyExtractor.extractBody(rsp)) {
-            case DocumentBodyResult.Error(CrawlerDocumentStatus status, String why) ->
-                    createErrorResponse(url, rsp, status, why);
-            case DocumentBodyResult.Ok(String contentType, String body) ->
-                    CrawledDocument.builder()
-                        .crawlerStatus(CrawlerDocumentStatus.OK.name())
-                        .headers(rsp.headers().toString())
-                        .contentType(contentType)
-                        .timestamp(LocalDateTime.now().toString())
-                        .httpStatus(rsp.statusCode())
-                        .url(responseUrl.toString())
-                        .documentBody(body)
-                        .build();
-        };
+        return new HttpFetchResult.ResultNone();
     }
 
     /**  Check X-Robots-Tag header tag to see if we are allowed to index this page.
@@ -318,17 +254,31 @@ public class HttpFetcherImpl implements HttpFetcher {
     private Optional<SimpleRobotRules> fetchRobotsForProto(String proto, WarcRecorder recorder, EdgeDomain domain) {
         try {
             var url = new EdgeUrl(proto, domain, null, "/robots.txt", null);
-            return Optional.of(parseRobotsTxt(fetchContent(url, recorder, ContentTags.empty())));
+
+            var getBuilder = new Request.Builder().get();
+
+            getBuilder.url(url.toString())
+                    .addHeader("Accept-Encoding", "gzip")
+                    .addHeader("User-agent", userAgent);
+
+            HttpFetchResult result = recorder.fetch(client, getBuilder.build());
+
+            if (result instanceof HttpFetchResult.ResultOk ok) {
+                return Optional.of(parseRobotsTxt(ok));
+            }
+            else {
+                return Optional.empty();
+            }
         }
         catch (Exception ex) {
             return Optional.empty();
         }
     }
 
-    private SimpleRobotRules parseRobotsTxt(CrawledDocument doc) {
-        return robotsParser.parseContent(doc.url,
-                doc.documentBody.getBytes(),
-                doc.contentType,
+    private SimpleRobotRules parseRobotsTxt(HttpFetchResult.ResultOk ok) {
+        return robotsParser.parseContent(ok.uri().toString(),
+                ok.bytesRaw(),
+                ok.header("Content-Type"),
                 userAgent);
     }
 

@@ -4,8 +4,10 @@ import lombok.SneakyThrows;
 import nu.marginalia.crawl.retreival.RateLimitException;
 import nu.marginalia.crawl.retreival.fetcher.ContentTags;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
+import nu.marginalia.crawling.body.DocumentBodyExtractor;
+import nu.marginalia.crawling.body.DocumentBodyResult;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
-import nu.marginalia.crawl.retreival.logic.ContentTypeLogic;
+import nu.marginalia.crawling.body.ContentTypeLogic;
 import nu.marginalia.model.EdgeUrl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -33,10 +35,11 @@ class HttpFetcherTest {
     void fetchUTF8() throws URISyntaxException, RateLimitException, IOException {
         var fetcher = new HttpFetcherImpl("nu.marginalia.edge-crawler");
         try (var recorder = new WarcRecorder()) {
-            var str = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu"), recorder, ContentTags.empty());
-            System.out.println(str.contentType);
+            var result = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu"), recorder, ContentTags.empty());
+            if (DocumentBodyExtractor.extractBody(result) instanceof DocumentBodyResult.Ok bodyOk) {
+                System.out.println(bodyOk.contentType());
+            }
         }
-
     }
 
     @Test
@@ -44,8 +47,10 @@ class HttpFetcherTest {
         var fetcher = new HttpFetcherImpl("nu.marginalia.edge-crawler");
 
         try (var recorder = new WarcRecorder()) {
-            var str = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu/robots.txt"), recorder, ContentTags.empty());
-            System.out.println(str.contentType);
+            var result = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu/robots.txt"), recorder, ContentTags.empty());
+            if (DocumentBodyExtractor.extractBody(result) instanceof DocumentBodyResult.Ok bodyOk) {
+                System.out.println(bodyOk.contentType());
+            }
         }
     }
 }

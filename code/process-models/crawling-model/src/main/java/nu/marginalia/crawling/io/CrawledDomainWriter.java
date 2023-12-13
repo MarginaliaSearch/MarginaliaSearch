@@ -55,7 +55,7 @@ public class CrawledDomainWriter implements AutoCloseable {
     }
 
     private Path getOutputFile(String id, String name) throws IOException {
-        return CrawlerOutputFile.createOutputPath(outputDir, id, name);
+        return CrawlerOutputFile.createLegacyOutputPath(outputDir, id, name);
     }
 
     @Override

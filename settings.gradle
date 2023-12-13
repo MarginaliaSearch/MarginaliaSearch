@@ -155,7 +155,7 @@ dependencyResolutionManagement {
             library('duckdb', 'org.duckdb', 'duckdb_jdbc').version('0.9.1')
             library('okhttp3','com.squareup.okhttp3','okhttp').version('4.11.0')
 
-            library('jwarc', 'org.netpreserve', 'jwarc').version('0.28.4')
+            library('jwarc', 'org.netpreserve', 'jwarc').version('0.28.5')
 
             library('httpcomponents.core','org.apache.httpcomponents','httpcore').version('4.4.15')
             library('httpcomponents.client','org.apache.httpcomponents','httpclient').version('4.5.13')

@@ -62,7 +62,6 @@ public class CrawlerMain {
     private final SimpleBlockingThreadPool pool;
 
     private final Map<String, String> processingIds = new ConcurrentHashMap<>();
-    private final CrawledDomainReader reader = new CrawledDomainReader();
 
     final AbortMonitor abortMonitor = AbortMonitor.getInstance();
 
@@ -142,6 +141,7 @@ public class CrawlerMain {
     public void run(CrawlSpecProvider specProvider, Path outputDir) throws InterruptedException, IOException {
 
         heartbeat.start();
+
         try (WorkLog workLog = new WorkLog(outputDir.resolve("crawler.log"));
              AnchorTagsSource anchorTagsSource = anchorTagsSourceFactory.create(specProvider.getDomains())
         ) {
@@ -213,9 +213,9 @@ public class CrawlerMain {
         @Override
         public void run() throws Exception {
 
-            Path newWarcFile = CrawlerOutputFile.createWarcFile(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.LIVE);
-            Path tempFile = CrawlerOutputFile.createWarcFile(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.TEMP);
-            Path finalWarcFile = CrawlerOutputFile.createWarcFile(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.FINAL);
+            Path newWarcFile = CrawlerOutputFile.createWarcPath(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.LIVE);
+            Path tempFile = CrawlerOutputFile.createWarcPath(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.TEMP);
+            Path finalWarcFile = CrawlerOutputFile.createWarcPath(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.FINAL);
 
             if (Files.exists(newWarcFile)) {
                 Files.move(newWarcFile, tempFile, StandardCopyOption.REPLACE_EXISTING);
@@ -224,9 +224,8 @@ public class CrawlerMain {
                 Files.deleteIfExists(tempFile);
             }
 
-            try (CrawledDomainWriter writer = new CrawledDomainWriter(outputDir, domain, id);
-                 var warcRecorder = new WarcRecorder(newWarcFile); // write to a temp file for now
-                 var retreiver = new CrawlerRetreiver(fetcher, domainProber, specification, warcRecorder, writer::accept);
+            try (var warcRecorder = new WarcRecorder(newWarcFile); // write to a temp file for now
+                 var retriever = new CrawlerRetreiver(fetcher, domainProber, specification, warcRecorder);
                  CrawlDataReference reference = getReference())
             {
                 Thread.currentThread().setName("crawling:" + domain);
@@ -234,39 +233,37 @@ public class CrawlerMain {
                 var domainLinks = anchorTagsSource.getAnchorTags(domain);
 
                 if (Files.exists(tempFile)) {
-                    retreiver.syncAbortedRun(tempFile);
+                    retriever.syncAbortedRun(tempFile);
                     Files.delete(tempFile);
                 }
 
-                int size = retreiver.fetch(domainLinks, reference);
+                int size = retriever.fetch(domainLinks, reference);
+
+                // Delete the reference crawl data if it's not the same as the new one
+                // (mostly a case when migrating from legacy->warc)
+                reference.delete();
 
                 Files.move(newWarcFile, finalWarcFile, StandardCopyOption.REPLACE_EXISTING);
 
-                workLog.setJobToFinished(domain, writer.getOutputFile().toString(), size);
+                workLog.setJobToFinished(domain, finalWarcFile.toString(), size);
                 heartbeat.setProgress(tasksDone.incrementAndGet() / (double) totalTasks);
 
                 logger.info("Fetched {}", domain);
             } catch (Exception e) {
                 logger.error("Error fetching domain " + domain, e);
                 Files.deleteIfExists(newWarcFile);
-                if (tempFile != null) {
-                    Files.deleteIfExists(tempFile);
-                }
+                Files.deleteIfExists(tempFile);
             }
             finally {
                 // We don't need to double-count these; it's also kept int he workLog
                 processingIds.remove(domain);
                 Thread.currentThread().setName("[idle]");
-
-                // FIXME: Remove this when we're done
-                Files.deleteIfExists(finalWarcFile);
             }
         }
 
         private CrawlDataReference getReference() {
             try {
-                var dataStream = reader.createDataStream(outputDir, domain, id);
-                return new CrawlDataReference(dataStream);
+                return new CrawlDataReference(CrawledDomainReader.createDataStream(outputDir, domain, id));
             } catch (IOException e) {
                 logger.debug("Failed to read previous crawl data for {}", specification.domain);
                 return new CrawlDataReference();
