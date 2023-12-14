@@ -251,7 +251,7 @@ public class CrawlerRetreiver implements AutoCloseable {
             var doc = reference.doc();
             if (doc != null) {
                 warcRecorder.writeReferenceCopy(top, doc.contentType, doc.httpStatus, doc.documentBody);
-                fetchedDoc = new HttpFetchResult.ResultRetained(doc.url, doc.documentBody);
+                fetchedDoc = new HttpFetchResult.ResultRetained(doc.url, doc.contentType, doc.documentBody);
             }
         }
 

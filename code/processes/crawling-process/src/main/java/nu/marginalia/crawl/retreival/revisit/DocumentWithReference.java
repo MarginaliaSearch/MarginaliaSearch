@@ -1,13 +1,11 @@
 package nu.marginalia.crawl.retreival.revisit;
 
-import lombok.SneakyThrows;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.fetcher.ContentTags;
-import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawling.body.DocumentBodyExtractor;
+import nu.marginalia.crawling.body.DocumentBodyResult;
 import nu.marginalia.crawling.body.HttpFetchResult;
 import nu.marginalia.crawling.model.CrawledDocument;
-import nu.marginalia.model.EdgeUrl;
 
 import javax.annotation.Nullable;
 
@@ -40,9 +38,11 @@ public record DocumentWithReference(
         if (doc.documentBody == null)
             return false;
 
-        return DocumentBodyExtractor.extractBody(resultOk)
-                .map((contentType, body) -> reference.isContentBodySame(doc.documentBody, body))
-                .orElse(false);
+        if (!(DocumentBodyExtractor.asString(resultOk) instanceof DocumentBodyResult.Ok<String> bodyOk)) {
+            return false;
+        }
+
+        return reference.isContentBodySame(doc.documentBody, bodyOk.body());
     }
 
     public ContentTags getContentTags() {

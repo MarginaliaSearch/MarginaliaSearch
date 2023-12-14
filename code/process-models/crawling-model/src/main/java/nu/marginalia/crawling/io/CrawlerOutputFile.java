@@ -10,9 +10,7 @@ public class CrawlerOutputFile {
 
     /** Return the Path to a file for the given id and name */
     public static Path getLegacyOutputFile(Path base, String id, String name) {
-        if (id.length() < 4) {
-            id = Strings.repeat("0", 4 - id.length()) + id;
-        }
+        id = padId(id);
 
         String first = id.substring(0, 2);
         String second = id.substring(2, 4);
@@ -24,9 +22,7 @@ public class CrawlerOutputFile {
     /** Return the Path to a file for the given id and name, creating the prerequisite
      * directory structure as necessary. */
     public static Path createLegacyOutputPath(Path base, String id, String name) throws IOException {
-        if (id.length() < 4) {
-            id = Strings.repeat("0", 4 - id.length()) + id;
-        }
+        id = padId(id);
 
         String first = id.substring(0, 2);
         String second = id.substring(2, 4);
@@ -54,9 +50,7 @@ public class CrawlerOutputFile {
     }
 
     public static Path createWarcPath(Path basePath, String id, String domain, WarcFileVersion version) throws IOException {
-        if (id.length() < 4) {
-            id = Strings.repeat("0", 4 - id.length()) + id;
-        }
+        id = padId(id);
 
         String first = id.substring(0, 2);
         String second = id.substring(2, 4);
@@ -68,10 +62,20 @@ public class CrawlerOutputFile {
         return destDir.resolve(STR."\{id}-\{filesystemSafeName(domain)}-\{version.suffix}.warc.gz");
     }
 
-    public static Path getWarcPath(Path basePath, String id, String domain, WarcFileVersion version) {
-        if (id.length() < 4) {
-            id = Strings.repeat("0", 4 - id.length()) + id;
+    public static Path createParquetPath(Path basePath, String id, String domain) throws IOException {
+        id = padId(id);
+
+        String first = id.substring(0, 2);
+        String second = id.substring(2, 4);
+
+        Path destDir = basePath.resolve(first).resolve(second);
+        if (!Files.exists(destDir)) {
+            Files.createDirectories(destDir);
         }
+        return destDir.resolve(STR."\{id}-\{filesystemSafeName(domain)}.parquet");
+    }
+    public static Path getWarcPath(Path basePath, String id, String domain, WarcFileVersion version) {
+        id = padId(id);
 
         String first = id.substring(0, 2);
         String second = id.substring(2, 4);
@@ -79,6 +83,18 @@ public class CrawlerOutputFile {
         Path destDir = basePath.resolve(first).resolve(second);
         return destDir.resolve(STR."\{id}-\{filesystemSafeName(domain)}.warc\{version.suffix}");
     }
+
+    /**
+     * Pads the given ID with leading zeros to ensure it has a length of 4 characters.
+     */
+    private static String padId(String id) {
+        if (id.length() < 4) {
+            id = Strings.repeat("0", 4 - id.length()) + id;
+        }
+
+        return id;
+    }
+
 
     public enum WarcFileVersion {
         LIVE("open"),

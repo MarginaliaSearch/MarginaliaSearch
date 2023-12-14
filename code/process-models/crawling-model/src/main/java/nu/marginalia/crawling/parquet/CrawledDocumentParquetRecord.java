@@ -22,6 +22,7 @@ public class CrawledDocumentParquetRecord {
     public String url;
     public String ip;
     public boolean cookies;
+    public int httpStatus;
     public String contentType;
     public byte[] body;
 
@@ -39,6 +40,7 @@ public class CrawledDocumentParquetRecord {
             Types.required(BINARY).as(stringType()).named("url"),
             Types.required(BINARY).as(stringType()).named("ip"),
             Types.required(BOOLEAN).named("cookies"),
+            Types.required(INT32).named("httpStatus"),
             Types.required(BINARY).as(stringType()).named("contentType"),
             Types.required(BINARY).named("body")
     );
@@ -49,6 +51,7 @@ public class CrawledDocumentParquetRecord {
             case "domain" -> domain = (String) value;
             case "url" -> url = (String) value;
             case "ip" -> ip = (String) value;
+            case "httpStatus" -> httpStatus = (Integer) value;
             case "cookies" -> cookies = (Boolean) value;
             case "contentType" -> contentType = (String) value;
             case "body" -> body = (byte[]) value;
@@ -61,6 +64,7 @@ public class CrawledDocumentParquetRecord {
         valueWriter.write("domain", domain);
         valueWriter.write("url", url);
         valueWriter.write("ip", ip);
+        valueWriter.write("httpStatus", httpStatus);
         valueWriter.write("cookies", cookies);
         valueWriter.write("contentType", contentType);
         valueWriter.write("body", body);

@@ -19,6 +19,7 @@ import nu.marginalia.crawl.spec.DbCrawlSpecProvider;
 import nu.marginalia.crawl.spec.ParquetCrawlSpecProvider;
 import nu.marginalia.crawling.io.CrawledDomainReader;
 import nu.marginalia.crawling.io.CrawlerOutputFile;
+import nu.marginalia.crawling.parquet.CrawledDocumentParquetRecordFileWriter;
 import nu.marginalia.crawlspec.CrawlSpecFileNames;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.model.crawlspec.CrawlSpecRecord;
@@ -29,7 +30,6 @@ import nu.marginalia.mq.inbox.MqSingleShotInbox;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.service.module.DatabaseModule;
-import nu.marginalia.crawling.io.CrawledDomainWriter;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
 import nu.marginalia.util.SimpleBlockingThreadPool;
 import okhttp3.ConnectionPool;
@@ -216,6 +216,7 @@ public class CrawlerMain {
             Path newWarcFile = CrawlerOutputFile.createWarcPath(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.LIVE);
             Path tempFile = CrawlerOutputFile.createWarcPath(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.TEMP);
             Path finalWarcFile = CrawlerOutputFile.createWarcPath(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.FINAL);
+            Path parquetFile = CrawlerOutputFile.createParquetPath(outputDir, id, domain);
 
             if (Files.exists(newWarcFile)) {
                 Files.move(newWarcFile, tempFile, StandardCopyOption.REPLACE_EXISTING);
@@ -244,6 +245,9 @@ public class CrawlerMain {
                 reference.delete();
 
                 Files.move(newWarcFile, finalWarcFile, StandardCopyOption.REPLACE_EXISTING);
+
+                CrawledDocumentParquetRecordFileWriter
+                        .convertWarc(domain, finalWarcFile, parquetFile);
 
                 workLog.setJobToFinished(domain, finalWarcFile.toString(), size);
                 heartbeat.setProgress(tasksDone.incrementAndGet() / (double) totalTasks);

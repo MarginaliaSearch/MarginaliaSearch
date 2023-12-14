@@ -88,10 +88,9 @@ public class WarcReadingSerializableCrawlDataStream implements AutoCloseable, Se
         if (http.status() != 200) {
             return;
         }
-        CrawledDocument document;
 
-        var parsedBody = DocumentBodyExtractor.extractBody(HttpFetchResult.importWarc(response));
-        if (parsedBody instanceof DocumentBodyResult.Error error) {
+        var parsedBody = DocumentBodyExtractor.asString(HttpFetchResult.importWarc(response));
+        if (parsedBody instanceof DocumentBodyResult.Error<String> error) {
             next = new CrawledDocument(
                     "",
                     response.targetURI().toString(),
@@ -106,7 +105,7 @@ public class WarcReadingSerializableCrawlDataStream implements AutoCloseable, Se
                     "",
                     "",
                     "");
-        } else if (parsedBody instanceof DocumentBodyResult.Ok ok) {
+        } else if (parsedBody instanceof DocumentBodyResult.Ok<String> ok) {
             next = new CrawledDocument(
                     "",
                     response.targetURI().toString(),

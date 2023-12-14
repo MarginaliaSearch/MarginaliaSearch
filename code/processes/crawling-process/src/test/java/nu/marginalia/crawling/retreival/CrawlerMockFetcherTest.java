@@ -127,6 +127,7 @@ public class CrawlerMockFetcherTest {
                         url.asURI(),
                         200,
                         new Headers.Builder().build(),
+                        "127.0.0.1",
                         bodyBytes,
                         0,
                         bodyBytes.length

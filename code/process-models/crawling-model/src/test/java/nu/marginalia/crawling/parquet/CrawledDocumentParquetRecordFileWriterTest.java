@@ -3,6 +3,7 @@ package nu.marginalia.crawling.parquet;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.netpreserve.jwarc.net.WarcRecorder;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -29,6 +30,7 @@ class CrawledDocumentParquetRecordFileWriterTest {
                 "https://www.marginalia.nu/",
                 "127.0.0.1",
                 false,
+                200,
                 "text/html",
                 "hello world".getBytes());
 
@@ -41,4 +43,5 @@ class CrawledDocumentParquetRecordFileWriterTest {
             assertEquals(original, actual);
         }
     }
+
 }

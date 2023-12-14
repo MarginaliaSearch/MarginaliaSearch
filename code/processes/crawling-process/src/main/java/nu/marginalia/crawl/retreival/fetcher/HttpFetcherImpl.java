@@ -11,6 +11,8 @@ import nu.marginalia.crawl.retreival.fetcher.ContentTypeProber.ContentTypeProbeR
 import nu.marginalia.crawl.retreival.fetcher.socket.FastTerminatingSocketFactory;
 import nu.marginalia.crawl.retreival.fetcher.socket.IpInterceptingNetworkInterceptor;
 import nu.marginalia.crawl.retreival.fetcher.socket.NoSecuritySSL;
+import nu.marginalia.crawling.body.DocumentBodyExtractor;
+import nu.marginalia.crawling.body.DocumentBodyResult;
 import nu.marginalia.crawling.body.HttpFetchResult;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawling.body.ContentTypeLogic;
@@ -263,24 +265,19 @@ public class HttpFetcherImpl implements HttpFetcher {
 
             HttpFetchResult result = recorder.fetch(client, getBuilder.build());
 
-            if (result instanceof HttpFetchResult.ResultOk ok) {
-                return Optional.of(parseRobotsTxt(ok));
-            }
-            else {
-                return Optional.empty();
-            }
+            return DocumentBodyExtractor.asBytes(result).mapOpt((contentType, body) ->
+                robotsParser.parseContent(url.toString(),
+                        body,
+                        contentType,
+                        userAgent)
+            );
+
         }
         catch (Exception ex) {
             return Optional.empty();
         }
     }
 
-    private SimpleRobotRules parseRobotsTxt(HttpFetchResult.ResultOk ok) {
-        return robotsParser.parseContent(ok.uri().toString(),
-                ok.bytesRaw(),
-                ok.header("Content-Type"),
-                userAgent);
-    }
 
 }
 

@@ -33,6 +33,8 @@ public class CrawlerWarcResynchronizer {
     public void run(Path tempFile) {
         // First pass, enqueue links
         try (var reader = new WarcReader(tempFile)) {
+            WarcXResponseReference.register(reader);
+
             for (var item : reader) {
                 accept(item);
             }
@@ -54,8 +56,6 @@ public class CrawlerWarcResynchronizer {
         try {
             if (item instanceof WarcResponse rsp) {
                 response(rsp);
-            } else if (item instanceof WarcRevisit revisit) {
-                revisit(revisit);
             } else if (item instanceof WarcRequest req) {
                 request(req);
             }
@@ -76,35 +76,18 @@ public class CrawlerWarcResynchronizer {
 
         try {
             var response = HttpFetchResult.importWarc(rsp);
-            if (DocumentBodyExtractor.extractBody(response) instanceof DocumentBodyResult.Ok ok) {
-                var doc = Jsoup.parse(ok.body());
+            DocumentBodyExtractor
+                    .asString(response)
+                    .ifPresent((ct, body) ->
+            {
+                var doc = Jsoup.parse(body);
                 crawlFrontier.enqueueLinksFromDocument(url, doc);
-            }
+            });
         }
         catch (Exception e) {
             logger.info(STR."Failed to parse response body for \{url}", e);
         }
     }
 
-    private void revisit(WarcRevisit revisit) throws IOException {
-        if (!WarcRecorder.documentRevisitURN.equals(revisit.profile())) {
-            return;
-        }
-
-        var url = new EdgeUrl(revisit.targetURI());
-
-        crawlFrontier.addVisited(url);
-
-        try {
-            var response = HttpFetchResult.importWarc(revisit);
-            if (DocumentBodyExtractor.extractBody(response) instanceof DocumentBodyResult.Ok ok) {
-                var doc = Jsoup.parse(ok.body());
-                crawlFrontier.enqueueLinksFromDocument(url, doc);
-            }
-        }
-        catch (Exception e) {
-            logger.info(STR."Failed to parse response body for \{url}", e);
-        }
-    }
 
 }

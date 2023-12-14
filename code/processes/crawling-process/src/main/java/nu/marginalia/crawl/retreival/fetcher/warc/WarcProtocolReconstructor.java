@@ -6,6 +6,8 @@ import okhttp3.Response;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -18,7 +20,8 @@ public class WarcProtocolReconstructor {
 
     static String getHttpRequestString(Request request, URI uri) {
         StringBuilder requestStringBuilder = new StringBuilder();
-        requestStringBuilder.append(request.method()).append(" ").append(uri.getPath());
+        requestStringBuilder.append(request.method()).append(" ").append(URLEncoder.encode(uri.getPath(), StandardCharsets.UTF_8));
+
         if (uri.getQuery() != null) {
             requestStringBuilder.append("?").append(uri.getQuery());
         }

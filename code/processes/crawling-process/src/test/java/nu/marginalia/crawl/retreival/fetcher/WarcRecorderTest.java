@@ -2,6 +2,8 @@ package nu.marginalia.crawl.retreival.fetcher;
 
 import nu.marginalia.crawl.retreival.fetcher.socket.IpInterceptingNetworkInterceptor;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
+import nu.marginalia.crawling.parquet.CrawledDocumentParquetRecordFileReader;
+import nu.marginalia.crawling.parquet.CrawledDocumentParquetRecordFileWriter;
 import nu.marginalia.model.EdgeUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -20,10 +22,10 @@ import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 class WarcRecorderTest {
-    Path fileName;
+    Path fileNameWarc;
+    Path fileNameParquet;
     WarcRecorder client;
     OkHttpClient httpClient;
     @BeforeEach
@@ -32,14 +34,16 @@ class WarcRecorderTest {
                 .addNetworkInterceptor(new IpInterceptingNetworkInterceptor())
                 .build();
 
-        fileName = Files.createTempFile("test", ".warc");
-        client = new WarcRecorder(fileName);
+        fileNameWarc = Files.createTempFile("test", ".warc");
+        fileNameParquet = Files.createTempFile("test", ".parquet");
+
+        client = new WarcRecorder(fileNameWarc);
     }
 
     @AfterEach
     public void tearDown() throws Exception {
         client.close();
-        Files.delete(fileName);
+        Files.delete(fileNameWarc);
     }
 
     @Test
@@ -49,10 +53,10 @@ class WarcRecorderTest {
                 .addHeader("Accept-Encoding", "gzip")
                 .get().build());
 
-        new GZIPInputStream(Files.newInputStream(fileName)).transferTo(System.out);
+        new GZIPInputStream(Files.newInputStream(fileNameWarc)).transferTo(System.out);
 
         Map<String, String> sampleData = new HashMap<>();
-        try (var warcReader = new WarcReader(fileName)) {
+        try (var warcReader = new WarcReader(fileNameWarc)) {
             warcReader.forEach(record -> {
                 if (record instanceof WarcRequest req) {
                     sampleData.put(record.type(), req.target());
@@ -70,14 +74,14 @@ class WarcRecorderTest {
     @Test
     public void flagAsSkipped() throws IOException, URISyntaxException {
 
-        try (var recorder = new WarcRecorder(fileName)) {
+        try (var recorder = new WarcRecorder(fileNameWarc)) {
             recorder.flagAsSkipped(new EdgeUrl("https://www.marginalia.nu/"),
                     "text/html",
                     200,
                     "<?doctype html><html><body>test</body></html>");
         }
 
-        try (var reader = new WarcReader(fileName)) {
+        try (var reader = new WarcReader(fileNameWarc)) {
             for (var record : reader) {
                 if (record instanceof WarcResponse rsp) {
                     assertEquals("https://www.marginalia.nu/", rsp.target());
@@ -88,19 +92,19 @@ class WarcRecorderTest {
             }
         }
 
-        new GZIPInputStream(Files.newInputStream(fileName)).transferTo(System.out);
+        new GZIPInputStream(Files.newInputStream(fileNameWarc)).transferTo(System.out);
     }
 
     @Test
     public void testSaveImport() throws URISyntaxException, IOException {
-        try (var recorder = new WarcRecorder(fileName)) {
+        try (var recorder = new WarcRecorder(fileNameWarc)) {
             recorder.flagAsSkipped(new EdgeUrl("https://www.marginalia.nu/"),
                     "text/html",
                     200,
                     "<?doctype html><html><body>test</body></html>");
         }
 
-        try (var reader = new WarcReader(fileName)) {
+        try (var reader = new WarcReader(fileNameWarc)) {
             WarcXResponseReference.register(reader);
 
             for (var record : reader) {
@@ -111,6 +115,32 @@ class WarcRecorderTest {
                 }
             }
         }
+
+    }
+
+    @Test
+    public void testConvertToParquet() throws NoSuchAlgorithmException, IOException, URISyntaxException, InterruptedException {
+        client.fetch(httpClient, new Request.Builder().url("https://www.marginalia.nu/")
+                .addHeader("User-agent", "test.marginalia.nu")
+                .addHeader("Accept-Encoding", "gzip")
+                .get().build());
+        client.fetch(httpClient, new Request.Builder().url("https://www.marginalia.nu/log/")
+                .addHeader("User-agent", "test.marginalia.nu")
+                .addHeader("Accept-Encoding", "gzip")
+                .get().build());
+        client.fetch(httpClient, new Request.Builder().url("https://www.marginalia.nu/sanic.png")
+                .addHeader("User-agent", "test.marginalia.nu")
+                .addHeader("Accept-Encoding", "gzip")
+                .get().build());
+        client.close();
+
+        CrawledDocumentParquetRecordFileWriter.convertWarc("www.marginalia.nu", fileNameWarc, fileNameParquet);
+
+        var urls = CrawledDocumentParquetRecordFileReader.stream(fileNameParquet).map(doc -> doc.url).toList();
+        assertEquals(3, urls.size());
+        assertEquals("https://www.marginalia.nu/", urls.get(0));
+        assertEquals("https://www.marginalia.nu/log/", urls.get(1));
+        assertEquals("https://www.marginalia.nu/sanic.png", urls.get(2));
 
     }
 

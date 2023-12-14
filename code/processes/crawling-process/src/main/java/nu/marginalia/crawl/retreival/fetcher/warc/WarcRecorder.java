@@ -29,8 +29,6 @@ import java.util.*;
  * be reconstructed.
  */
 public class WarcRecorder implements AutoCloseable {
-    public static final URI documentRevisitURN = URI.create("urn:marginalia/data/doc/revisit");
-
     public static final URI documentRobotsTxtSkippedURN = URI.create("urn:marginalia/meta/doc/robots-txt-skipped");
     public static final URI documentBadContentTypeURN = URI.create("urn:marginalia/meta/doc/content-type-failed-probe");
     public static final URI documentProbeTimeout = URI.create("urn:marginalia/meta/doc/timeout-probe");
@@ -173,6 +171,7 @@ public class WarcRecorder implements AutoCloseable {
             return new HttpFetchResult.ResultOk(uri,
                     response.code(),
                     response.headers(),
+                    ip,
                     responseDataBuffer.data,
                     dataStart,
                     responseDataBuffer.length() - dataStart);

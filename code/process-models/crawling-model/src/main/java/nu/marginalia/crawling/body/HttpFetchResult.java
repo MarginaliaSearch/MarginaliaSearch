@@ -4,12 +4,12 @@ import okhttp3.Headers;
 import org.jsoup.Jsoup;
 import org.netpreserve.jwarc.MessageHeaders;
 import org.netpreserve.jwarc.WarcResponse;
-import org.netpreserve.jwarc.WarcRevisit;
 import org.jsoup.nodes.Document;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
@@ -18,44 +18,39 @@ public sealed interface HttpFetchResult {
 
     boolean isOk();
 
-    static ResultOk importWarc(WarcResponse response) throws IOException {
-        var http = response.http();
-        try (var body = http.body()) {
-            byte[] bytes = body.stream().readAllBytes();
+    static HttpFetchResult importWarc(WarcResponse response) {
+        try {
+            var http = response.http();
 
-            return new ResultOk(
-                    response.targetURI(),
-                    http.status(),
-                    http.headers(),
-                    bytes,
-                    0,
-                    bytes.length
-            );
+            try (var body = http.body()) {
+                byte[] bytes = body.stream().readAllBytes();
+
+                String ipAddress = response
+                        .ipAddress()
+                        .map(InetAddress::getHostAddress)
+                        .orElse("");
+
+                return new ResultOk(
+                        response.targetURI(),
+                        http.status(),
+                        http.headers(),
+                        ipAddress,
+                        bytes,
+                        0,
+                        bytes.length
+                );
+            }
+        }
+        catch (Exception ex) {
+            return new ResultException(ex);
         }
     }
 
-    static ResultOk importWarc(WarcRevisit revisit) throws IOException {
-        var http = revisit.http();
-        try (var body = http.body()) {
-            byte[] bytes = body.stream().readAllBytes();
-
-            return new ResultOk(
-                    revisit.targetURI(),
-                    http.status(),
-                    http.headers(),
-                    bytes,
-                    0,
-                    bytes.length
-            );
-        }
-        finally {
-            revisit.body().consume();
-        }
-    }
 
     record ResultOk(URI uri,
                     int statusCode,
                     Headers headers,
+                    String ipAddress,
                     byte[] bytesRaw,
                     int bytesStart,
                     int bytesLength
@@ -68,10 +63,11 @@ public sealed interface HttpFetchResult {
         public ResultOk(URI uri,
                         int statusCode,
                         MessageHeaders headers,
+                        String ipAddress,
                         byte[] bytesRaw,
                         int bytesStart,
                         int bytesLength) {
-            this(uri, statusCode, convertHeaders(headers), bytesRaw, bytesStart, bytesLength);
+            this(uri, statusCode, convertHeaders(headers), ipAddress, bytesRaw, bytesStart, bytesLength);
         }
 
         private static Headers convertHeaders(MessageHeaders headers) {
@@ -89,8 +85,8 @@ public sealed interface HttpFetchResult {
         }
 
         public Optional<Document> parseDocument() throws IOException {
-            return switch(DocumentBodyExtractor.extractBody(this))  {
-                case DocumentBodyResult.Ok ok when "text/html".equalsIgnoreCase(ok.contentType())
+            return switch(DocumentBodyExtractor.asString(this))  {
+                case DocumentBodyResult.Ok<String> ok when "text/html".equalsIgnoreCase(ok.contentType())
                         -> Optional.of(Jsoup.parse(ok.body()));
                 default -> Optional.empty();
             };
@@ -105,7 +101,7 @@ public sealed interface HttpFetchResult {
 
 
     };
-    record ResultRetained(String url, String body) implements HttpFetchResult {
+    record ResultRetained(String url, String contentType, String body) implements HttpFetchResult {
 
         public boolean isOk() {
             return true;

@@ -36,7 +36,7 @@ class HttpFetcherTest {
         var fetcher = new HttpFetcherImpl("nu.marginalia.edge-crawler");
         try (var recorder = new WarcRecorder()) {
             var result = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu"), recorder, ContentTags.empty());
-            if (DocumentBodyExtractor.extractBody(result) instanceof DocumentBodyResult.Ok bodyOk) {
+            if (DocumentBodyExtractor.asString(result) instanceof DocumentBodyResult.Ok bodyOk) {
                 System.out.println(bodyOk.contentType());
             }
         }
@@ -48,7 +48,7 @@ class HttpFetcherTest {
 
         try (var recorder = new WarcRecorder()) {
             var result = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu/robots.txt"), recorder, ContentTags.empty());
-            if (DocumentBodyExtractor.extractBody(result) instanceof DocumentBodyResult.Ok bodyOk) {
+            if (DocumentBodyExtractor.asString(result) instanceof DocumentBodyResult.Ok bodyOk) {
                 System.out.println(bodyOk.contentType());
             }
         }
