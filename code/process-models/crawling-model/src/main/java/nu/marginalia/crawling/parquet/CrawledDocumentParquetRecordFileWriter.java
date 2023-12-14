@@ -4,10 +4,7 @@ import blue.strategic.parquet.ParquetWriter;
 import nu.marginalia.crawling.body.DocumentBodyExtractor;
 import nu.marginalia.crawling.body.DocumentBodyResult;
 import nu.marginalia.crawling.body.HttpFetchResult;
-import org.netpreserve.jwarc.WarcReader;
-import org.netpreserve.jwarc.WarcRecord;
-import org.netpreserve.jwarc.WarcResponse;
-import org.netpreserve.jwarc.WarcXResponseReference;
+import org.netpreserve.jwarc.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,11 +22,48 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
             WarcXResponseReference.register(warcReader);
 
             for (var record : warcReader) {
-                parquetWriter.write(domain, record);
+                if (record instanceof WarcResponse response) {
+                    parquetWriter.write(domain, response);
+                }
+                else if (record instanceof Warcinfo warcinfo) {
+                    parquetWriter.write(domain, warcinfo);
+                }
+                else {
+                    logger.warn("Skipping record of type {}", record.type());
+                }
+
             }
         }
         catch (Exception ex) {
             logger.error("Failed to convert WARC file to Parquet", ex);
+        }
+    }
+
+    private void write(String domain, Warcinfo warcinfo) throws IOException {
+        String selfDomain = warcinfo.fields().first("domain").orElse("");
+        String ip = warcinfo.fields().first("ip").orElse("");
+        String probeStatus = warcinfo.fields().first("X-WARC-Probe-Status").orElse("");
+
+        if (probeStatus.startsWith("REDIRECT")) {
+            String redirectDomain = probeStatus.substring("REDIRECT;".length());
+            write(new CrawledDocumentParquetRecord(selfDomain,
+                    STR."https://\{redirectDomain}/",
+                    ip,
+                    false,
+                    0,
+                    "x-marginalia/advisory;state=redirect",
+                    new byte[0]
+            ));
+        }
+        else if (!"OK".equals(probeStatus)) {
+            write(new CrawledDocumentParquetRecord(selfDomain,
+                    STR."https://\{domain}/",
+                    ip,
+                    false,
+                    0,
+                    "x-marginalia/advisory;state=error",
+                    probeStatus.getBytes()
+            ));
         }
     }
 
@@ -42,12 +76,9 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
         writer.write(domainData);
     }
 
-    public void write(String domain, WarcRecord record) throws IOException {
-        if (!(record instanceof WarcResponse ref)) {
-            return;
-        }
+    public void write(String domain, WarcResponse response) throws IOException {
 
-        HttpFetchResult result = HttpFetchResult.importWarc(ref);
+        HttpFetchResult result = HttpFetchResult.importWarc(response);
         if (!(result instanceof HttpFetchResult.ResultOk fetchOk)) {
             return;
         }
@@ -59,7 +90,7 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
 
         if (body instanceof DocumentBodyResult.Ok<byte[]> bodyOk) {
             bodyBytes = bodyOk.body();
-            contentType = bodyOk.contentType();
+            contentType = bodyOk.contentType().toString();
         }
         else {
             bodyBytes = new byte[0];
@@ -68,7 +99,7 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
 
         write(new CrawledDocumentParquetRecord(
                 domain,
-                ref.target(),
+                response.target(),
                 fetchOk.ipAddress(),
                 false, // FIXME
                 fetchOk.statusCode(),

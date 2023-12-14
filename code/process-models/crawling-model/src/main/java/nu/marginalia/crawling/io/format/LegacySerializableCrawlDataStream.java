@@ -11,13 +11,16 @@ import nu.marginalia.crawling.model.SerializableCrawlData;
 import java.io.*;
 import java.nio.file.Path;
 
-public class LegacyFileReadingSerializableCrawlDataStream implements AutoCloseable, SerializableCrawlDataStream {
+/** This class is used to read the old format of crawl data, which was zstd-compressed JSON
+ * with type delimiters between records.
+ */
+public class LegacySerializableCrawlDataStream implements AutoCloseable, SerializableCrawlDataStream {
     private final Gson gson;
     private final BufferedReader bufferedReader;
     private SerializableCrawlData next = null;
 
     private final Path path;
-    public LegacyFileReadingSerializableCrawlDataStream(Gson gson, File file) throws IOException {
+    public LegacySerializableCrawlDataStream(Gson gson, File file) throws IOException {
         this.gson = gson;
         bufferedReader = new BufferedReader(new InputStreamReader(new ZstdInputStream(new FileInputStream(file), RecyclingBufferPool.INSTANCE)));
         path = file.toPath();

@@ -244,12 +244,10 @@ public class CrawlerMain {
                 // (mostly a case when migrating from legacy->warc)
                 reference.delete();
 
-                Files.move(newWarcFile, finalWarcFile, StandardCopyOption.REPLACE_EXISTING);
-
                 CrawledDocumentParquetRecordFileWriter
-                        .convertWarc(domain, finalWarcFile, parquetFile);
+                        .convertWarc(domain, newWarcFile, parquetFile);
 
-                workLog.setJobToFinished(domain, finalWarcFile.toString(), size);
+                workLog.setJobToFinished(domain, parquetFile.toString(), size);
                 heartbeat.setProgress(tasksDone.incrementAndGet() / (double) totalTasks);
 
                 logger.info("Fetched {}", domain);

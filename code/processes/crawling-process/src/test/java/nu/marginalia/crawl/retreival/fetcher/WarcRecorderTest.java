@@ -53,8 +53,6 @@ class WarcRecorderTest {
                 .addHeader("Accept-Encoding", "gzip")
                 .get().build());
 
-        new GZIPInputStream(Files.newInputStream(fileNameWarc)).transferTo(System.out);
-
         Map<String, String> sampleData = new HashMap<>();
         try (var warcReader = new WarcReader(fileNameWarc)) {
             warcReader.forEach(record -> {
@@ -91,8 +89,6 @@ class WarcRecorderTest {
                 }
             }
         }
-
-        new GZIPInputStream(Files.newInputStream(fileNameWarc)).transferTo(System.out);
     }
 
     @Test

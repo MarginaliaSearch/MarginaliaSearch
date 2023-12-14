@@ -23,9 +23,9 @@ public record DocumentWithReference(
      * or if the result was retained via HTTP 304.
      */
     public boolean isSame(HttpFetchResult result) {
-        if (result instanceof HttpFetchResult.ResultSame)
+        if (result instanceof HttpFetchResult.Result304Raw)
             return true;
-        if (result instanceof HttpFetchResult.ResultRetained)
+        if (result instanceof HttpFetchResult.Result304ReplacedWithReference)
             return true;
 
         if (!(result instanceof HttpFetchResult.ResultOk resultOk))

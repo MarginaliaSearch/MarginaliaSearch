@@ -1,5 +1,6 @@
 package nu.marginalia.crawling.body;
 
+import nu.marginalia.contenttype.ContentType;
 import nu.marginalia.model.EdgeUrl;
 
 import java.util.List;
@@ -37,6 +38,9 @@ public class ContentTypeLogic {
         return probableBinaryPattern.test(pathLowerCase);
     }
 
+    public boolean isAllowableContentType(ContentType contentType) {
+        return isAllowableContentType(contentType.contentType());
+    }
     public boolean isAllowableContentType(String contentType) {
         if (allowAllContentTypes)
             return true;

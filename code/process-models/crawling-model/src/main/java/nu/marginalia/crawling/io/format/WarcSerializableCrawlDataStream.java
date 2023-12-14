@@ -14,20 +14,17 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.StringJoiner;
+import java.util.*;
 
-public class WarcReadingSerializableCrawlDataStream implements AutoCloseable, SerializableCrawlDataStream {
-    private static final Logger logger = LoggerFactory.getLogger(WarcReadingSerializableCrawlDataStream.class);
+public class WarcSerializableCrawlDataStream implements AutoCloseable, SerializableCrawlDataStream {
+    private static final Logger logger = LoggerFactory.getLogger(WarcSerializableCrawlDataStream.class);
 
     private final WarcReader reader;
     private final Iterator<WarcRecord> backingIterator;
     private SerializableCrawlData next = null;
     private final Path path;
 
-    public WarcReadingSerializableCrawlDataStream(Path file) throws IOException {
+    public WarcSerializableCrawlDataStream(Path file) throws IOException {
         path = file;
         reader = new WarcReader(file);
         WarcXResponseReference.register(reader);
@@ -51,15 +48,8 @@ public class WarcReadingSerializableCrawlDataStream implements AutoCloseable, Se
             else if (nextRecord instanceof Warcinfo warcinfo) {
                 convertWarcinfo(warcinfo);
             }
-            else if (nextRecord instanceof WarcMetadata metadata) {
-                convertMetadata(metadata);
-            }
         }
         return next != null;
-    }
-
-    private void convertMetadata(WarcMetadata metadata) {
-        // Nothing to do here for now
     }
 
     private void convertWarcinfo(Warcinfo warcinfo) throws IOException {
@@ -79,7 +69,10 @@ public class WarcReadingSerializableCrawlDataStream implements AutoCloseable, Se
         }
 
         // TODO: Fix cookies info somehow
-        next = new CrawledDomain(domain, redirectDomain, status, statusReason, ip, List.of(), List.of());
+        next = new CrawledDomain(domain, redirectDomain, status, statusReason, ip,
+                new ArrayList<>(),
+                new ArrayList<>()
+        );
     }
 
     private void convertResponse(WarcResponse response) throws IOException {
@@ -109,7 +102,7 @@ public class WarcReadingSerializableCrawlDataStream implements AutoCloseable, Se
             next = new CrawledDocument(
                     "",
                     response.targetURI().toString(),
-                    ok.contentType(),
+                    ok.contentType().toString(),
                     response.date().toString(),
                     http.status(),
                     "OK",

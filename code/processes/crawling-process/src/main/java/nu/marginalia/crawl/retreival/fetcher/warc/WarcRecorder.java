@@ -69,8 +69,12 @@ public class WarcRecorder implements AutoCloseable {
         temporaryFile = true;
     }
 
-    public HttpFetchResult fetch(OkHttpClient client, Request request) throws NoSuchAlgorithmException, IOException, URISyntaxException, InterruptedException {
-        URI uri = request.url().uri();
+    public HttpFetchResult fetch(OkHttpClient client, Request request) throws NoSuchAlgorithmException,
+            IOException,
+            URISyntaxException,
+            InterruptedException
+    {
+        URI requestUri = request.url().uri();
 
         WarcDigestBuilder responseDigestBuilder = new WarcDigestBuilder();
         WarcDigestBuilder payloadDigestBuilder = new WarcDigestBuilder();
@@ -133,7 +137,11 @@ public class WarcRecorder implements AutoCloseable {
                 }
             }
 
-            WarcResponse.Builder responseBuilder = new WarcResponse.Builder(uri)
+            // It looks like this might be the same as requestUri, but it's not;
+            // it's the URI after resolving redirects.
+            final URI responseUri = response.request().url().uri();
+
+            WarcResponse.Builder responseBuilder = new WarcResponse.Builder(responseUri)
                     .blockDigest(responseDigestBuilder.build())
                     .date(date)
                     .body(MediaType.HTTP_RESPONSE, responseDataBuffer.copyBytes());
@@ -155,11 +163,11 @@ public class WarcRecorder implements AutoCloseable {
 
             WarcDigestBuilder requestDigestBuilder = new WarcDigestBuilder();
 
-            String httpRequestString = WarcProtocolReconstructor.getHttpRequestString(response.request(), uri);
+            String httpRequestString = WarcProtocolReconstructor.getHttpRequestString(response.request(), requestUri);
 
             requestDigestBuilder.update(httpRequestString);
 
-            WarcRequest warcRequest = new WarcRequest.Builder(uri)
+            WarcRequest warcRequest = new WarcRequest.Builder(requestUri)
                     .blockDigest(requestDigestBuilder.build())
                     .date(date)
                     .body(MediaType.HTTP_REQUEST, httpRequestString.getBytes())
@@ -168,7 +176,7 @@ public class WarcRecorder implements AutoCloseable {
             warcRequest.http(); // force HTTP header to be parsed before body is consumed so that caller can use it
             writer.write(warcRequest);
 
-            return new HttpFetchResult.ResultOk(uri,
+            return new HttpFetchResult.ResultOk(responseUri,
                     response.code(),
                     response.headers(),
                     ip,
@@ -177,7 +185,7 @@ public class WarcRecorder implements AutoCloseable {
                     responseDataBuffer.length() - dataStart);
         }
         catch (Exception ex) {
-            logger.warn("Failed to fetch URL {}", uri, ex);
+            logger.warn("Failed to fetch URL {}", requestUri, ex);
             return new HttpFetchResult.ResultException(ex);
         }
     }

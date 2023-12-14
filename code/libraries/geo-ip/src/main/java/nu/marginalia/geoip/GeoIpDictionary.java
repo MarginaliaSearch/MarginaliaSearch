@@ -37,7 +37,9 @@ public class GeoIpDictionary {
                 throw new RuntimeException(e);
             }
             finally {
-                this.notifyAll();
+                synchronized (this) {
+                    this.notifyAll();
+                }
             }
         });
     }

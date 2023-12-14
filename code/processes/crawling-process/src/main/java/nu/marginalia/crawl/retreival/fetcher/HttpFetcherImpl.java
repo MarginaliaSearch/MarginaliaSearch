@@ -12,7 +12,6 @@ import nu.marginalia.crawl.retreival.fetcher.socket.FastTerminatingSocketFactory
 import nu.marginalia.crawl.retreival.fetcher.socket.IpInterceptingNetworkInterceptor;
 import nu.marginalia.crawl.retreival.fetcher.socket.NoSecuritySSL;
 import nu.marginalia.crawling.body.DocumentBodyExtractor;
-import nu.marginalia.crawling.body.DocumentBodyResult;
 import nu.marginalia.crawling.body.HttpFetchResult;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawling.body.ContentTypeLogic;
@@ -183,7 +182,7 @@ public class HttpFetcherImpl implements HttpFetcher {
                 throw new RateLimitException(retryAfter);
             }
             if (ok.statusCode() == 304) {
-                return new HttpFetchResult.ResultSame();
+                return new HttpFetchResult.Result304Raw();
             }
             if (ok.statusCode() == 200) {
                 return ok;
@@ -268,7 +267,7 @@ public class HttpFetcherImpl implements HttpFetcher {
             return DocumentBodyExtractor.asBytes(result).mapOpt((contentType, body) ->
                 robotsParser.parseContent(url.toString(),
                         body,
-                        contentType,
+                        contentType.toString(),
                         userAgent)
             );
 

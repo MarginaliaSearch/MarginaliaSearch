@@ -5,6 +5,7 @@ import com.google.common.hash.Hashing;
 import crawlercommons.robots.SimpleRobotRules;
 import lombok.SneakyThrows;
 import nu.marginalia.atags.model.DomainLinks;
+import nu.marginalia.contenttype.ContentType;
 import nu.marginalia.crawl.retreival.fetcher.ContentTags;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
 import nu.marginalia.crawling.body.HttpFetchResult;
@@ -247,11 +248,13 @@ public class CrawlerRetreiver implements AutoCloseable {
         var contentTags = reference.getContentTags();
         var fetchedDoc = tryDownload(top, timer, contentTags);
 
-        if (fetchedDoc instanceof HttpFetchResult.ResultSame) {
+        if (fetchedDoc instanceof HttpFetchResult.Result304Raw) {
             var doc = reference.doc();
             if (doc != null) {
                 warcRecorder.writeReferenceCopy(top, doc.contentType, doc.httpStatus, doc.documentBody);
-                fetchedDoc = new HttpFetchResult.ResultRetained(doc.url, doc.contentType, doc.documentBody);
+                fetchedDoc = new HttpFetchResult.Result304ReplacedWithReference(doc.url,
+                        new ContentType(doc.contentType, "UTF-8"),
+                        doc.documentBody);
             }
         }
 
@@ -265,7 +268,7 @@ public class CrawlerRetreiver implements AutoCloseable {
                     crawlFrontier.addVisited(new EdgeUrl(ok.uri()));
                 }
             }
-            else if (fetchedDoc instanceof HttpFetchResult.ResultRetained retained) {
+            else if (fetchedDoc instanceof HttpFetchResult.Result304ReplacedWithReference retained) {
                 var docOpt = retained.parseDocument();
                 if (docOpt.isPresent()) {
                     var doc = docOpt.get();
