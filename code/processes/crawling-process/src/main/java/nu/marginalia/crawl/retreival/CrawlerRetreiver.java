@@ -312,17 +312,6 @@ public class CrawlerRetreiver implements AutoCloseable {
                 || proto.equalsIgnoreCase("https");
     }
 
-    // FIXME this does not belong in the crawler
-    private Optional<EdgeUrl> findCanonicalUrl(EdgeUrl baseUrl, Document parsed) {
-        baseUrl = baseUrl.domain.toRootUrl();
-
-        for (var link : parsed.select("link[rel=canonical]")) {
-            return linkParser.parseLink(baseUrl, link);
-        }
-
-        return Optional.empty();
-    }
-
     private String findIp(String domain) {
         try {
             return InetAddress.getByName(domain).getHostAddress();
