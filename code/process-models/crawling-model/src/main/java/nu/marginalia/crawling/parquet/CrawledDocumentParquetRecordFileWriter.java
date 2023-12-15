@@ -9,29 +9,34 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Path;
 
 public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
     private final ParquetWriter<CrawledDocumentParquetRecord> writer;
     private static final Logger logger = LoggerFactory.getLogger(CrawledDocumentParquetRecordFileWriter.class);
 
-    public static void convertWarc(String domain, Path warcInputFile, Path parquetOutputFile) throws IOException {
+    public static void convertWarc(String domain, Path warcInputFile, Path parquetOutputFile) {
         try (var warcReader = new WarcReader(warcInputFile);
              var parquetWriter = new CrawledDocumentParquetRecordFileWriter(parquetOutputFile)
         ) {
             WarcXResponseReference.register(warcReader);
+            WarcXEntityRefused.register(warcReader);
 
             for (var record : warcReader) {
                 if (record instanceof WarcResponse response) {
+                    // this also captures WarcXResponseReference, which inherits from WarcResponse
+                    // and is used to store old responses from previous crawls; in this part of the logic
+                    // we treat them the same as a normal response
+
                     parquetWriter.write(domain, response);
                 }
+                else if (record instanceof WarcXEntityRefused refused) {
+                    parquetWriter.write(domain, refused);
+                }
                 else if (record instanceof Warcinfo warcinfo) {
-                    parquetWriter.write(domain, warcinfo);
+                    parquetWriter.write(warcinfo);
                 }
-                else {
-                    logger.warn("Skipping record of type {}", record.type());
-                }
-
             }
         }
         catch (Exception ex) {
@@ -39,31 +44,40 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
         }
     }
 
-    private void write(String domain, Warcinfo warcinfo) throws IOException {
+    private void write(String domain, WarcXEntityRefused refused) throws IOException {
+        URI profile = refused.profile();
+
+        String meta;
+        if (profile.equals(WarcXEntityRefused.documentRobotsTxtSkippedURN)) {
+            meta = "x-marginalia/advisory;state=robots-txt-skipped";
+        }
+        else if (profile.equals(WarcXEntityRefused.documentBadContentTypeURN)) {
+            meta = "x-marginalia/advisory;state=content-type-failed-probe";
+        }
+        else if (profile.equals(WarcXEntityRefused.documentProbeTimeout)) {
+            meta = "x-marginalia/advisory;state=timeout-probe";
+        }
+        else if (profile.equals(WarcXEntityRefused.documentUnspecifiedError)) {
+            meta = "x-marginalia/advisory;state=doc-error";
+        }
+        else {
+            meta = "x-marginalia/advisory;state=unknown";
+        }
+
+        write(forDocError(domain, refused.target(), meta));
+    }
+
+    private void write(Warcinfo warcinfo) throws IOException {
         String selfDomain = warcinfo.fields().first("domain").orElse("");
         String ip = warcinfo.fields().first("ip").orElse("");
         String probeStatus = warcinfo.fields().first("X-WARC-Probe-Status").orElse("");
 
         if (probeStatus.startsWith("REDIRECT")) {
             String redirectDomain = probeStatus.substring("REDIRECT;".length());
-            write(new CrawledDocumentParquetRecord(selfDomain,
-                    STR."https://\{redirectDomain}/",
-                    ip,
-                    false,
-                    0,
-                    "x-marginalia/advisory;state=redirect",
-                    new byte[0]
-            ));
+            write(forDomainRedirect(selfDomain, redirectDomain));
         }
         else if (!"OK".equals(probeStatus)) {
-            write(new CrawledDocumentParquetRecord(selfDomain,
-                    STR."https://\{domain}/",
-                    ip,
-                    false,
-                    0,
-                    "x-marginalia/advisory;state=error",
-                    probeStatus.getBytes()
-            ));
+            write(forDomainError(selfDomain, ip, probeStatus));
         }
     }
 
@@ -80,6 +94,15 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
 
         HttpFetchResult result = HttpFetchResult.importWarc(response);
         if (!(result instanceof HttpFetchResult.ResultOk fetchOk)) {
+            return;
+        }
+
+        // We don't want to store robots.txt files, as they are not
+        // interesting for the analysis we want to do.  This is important
+        // since txt-files in general are interesting, and we don't want to
+        // exclude them as a class.
+
+        if (fetchOk.uri().getPath().equals("/robots.txt")) {
             return;
         }
 
@@ -111,5 +134,37 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
 
     public void close() throws IOException {
         writer.close();
+    }
+
+    private CrawledDocumentParquetRecord forDomainRedirect(String domain, String redirectDomain) {
+        return new CrawledDocumentParquetRecord(domain,
+                STR."https://\{redirectDomain}/",
+                "",
+                false,
+                0,
+                "x-marginalia/advisory;state=redirect",
+                new byte[0]
+        );
+    }
+    private CrawledDocumentParquetRecord forDomainError(String domain, String ip, String errorStatus) {
+        return new CrawledDocumentParquetRecord(domain,
+                STR."https://\{domain}/",
+                ip,
+                false,
+                0,
+                "x-marginalia/advisory;state=error",
+                errorStatus.getBytes()
+        );
+    }
+
+    private CrawledDocumentParquetRecord forDocError(String domain, String url, String errorStatus) {
+        return new CrawledDocumentParquetRecord(domain,
+                url,
+                "",
+                false,
+                0,
+                "x-marginalia/advisory;state=error",
+                errorStatus.getBytes()
+        );
     }
 }

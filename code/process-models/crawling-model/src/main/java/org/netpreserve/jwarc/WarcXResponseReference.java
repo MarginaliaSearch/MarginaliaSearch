@@ -4,9 +4,7 @@ import java.io.IOException;
 import java.net.URI;
 
 /** This defines a non-standard extension to WARC for storing old HTTP responses,
- * essentially a 'revisit' with a full body, which is not something that is
- * expected by the jwarc parser, and goes against the semantics of the revisit
- * records a fair bit.
+ * essentially a 'response' with different semantics..
  * <p>
  * An x-response-reference record is a response record with a full body, where
  * the data is a reconstructed HTTP response from a previous crawl.

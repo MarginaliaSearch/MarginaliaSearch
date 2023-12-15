@@ -3,7 +3,6 @@ package nu.marginalia.crawl.retreival;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import crawlercommons.robots.SimpleRobotRules;
-import lombok.SneakyThrows;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.contenttype.ContentType;
 import nu.marginalia.crawl.retreival.fetcher.ContentTags;
@@ -19,6 +18,7 @@ import nu.marginalia.ip_blocklist.UrlBlocklist;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawlspec.CrawlSpecRecord;
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +32,7 @@ import java.util.*;
 public class CrawlerRetreiver implements AutoCloseable {
 
     private static final int MAX_ERRORS = 20;
+    private static final int HTTP_429_RETRY_LIMIT = 1; // Retry 429s once
 
     private final HttpFetcher fetcher;
 
@@ -40,7 +41,6 @@ public class CrawlerRetreiver implements AutoCloseable {
     private static final LinkParser linkParser = new LinkParser();
     private static final Logger logger = LoggerFactory.getLogger(CrawlerRetreiver.class);
 
-    private static final HashFunction hashMethod = Hashing.murmur3_128(0);
     private static final UrlBlocklist urlBlocklist = new UrlBlocklist();
     private static final LinkFilterSelector linkFilterSelector = new LinkFilterSelector();
 
@@ -104,7 +104,7 @@ public class CrawlerRetreiver implements AutoCloseable {
         resync.run(warcFile);
     }
 
-    private int crawlDomain(CrawlDataReference oldCrawlData, DomainProber.ProbeResult probeResult, DomainLinks domainLinks) throws IOException {
+    private int crawlDomain(CrawlDataReference oldCrawlData, DomainProber.ProbeResult probeResult, DomainLinks domainLinks) throws IOException, InterruptedException {
         String ip = findIp(domain);
 
         EdgeUrl rootUrl;
@@ -124,7 +124,7 @@ public class CrawlerRetreiver implements AutoCloseable {
         final SimpleRobotRules robotsRules = fetcher.fetchRobotRules(crawlFrontier.peek().domain, warcRecorder);
         final CrawlDelayTimer delayTimer = new CrawlDelayTimer(robotsRules.getCrawlDelay());
 
-        sniffRootDocument(delayTimer, rootUrl);
+        sniffRootDocument(rootUrl);
 
         // Play back the old crawl data (if present) and fetch the documents comparing etags and last-modified
         int recrawled = recrawl(oldCrawlData, robotsRules, delayTimer);
@@ -181,8 +181,14 @@ public class CrawlerRetreiver implements AutoCloseable {
                 continue;
 
 
-            if (fetchWriteAndSleep(top, delayTimer, DocumentWithReference.empty()).isOk()) {
-                fetchedCount++;
+            try {
+                if (fetchWriteAndSleep(top, delayTimer, DocumentWithReference.empty()).isOk()) {
+                    fetchedCount++;
+                }
+            }
+            catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                break;
             }
         }
 
@@ -192,17 +198,17 @@ public class CrawlerRetreiver implements AutoCloseable {
     }
 
     /** Using the old crawl data, fetch the documents comparing etags and last-modified */
-    private int recrawl(CrawlDataReference oldCrawlData, SimpleRobotRules robotsRules, CrawlDelayTimer delayTimer) {
+    private int recrawl(CrawlDataReference oldCrawlData, SimpleRobotRules robotsRules, CrawlDelayTimer delayTimer) throws InterruptedException {
         return crawlerRevisitor.recrawl(oldCrawlData, robotsRules, delayTimer);
     }
 
-    private void sniffRootDocument(CrawlDelayTimer delayTimer, EdgeUrl rootUrl) {
+    private void sniffRootDocument(EdgeUrl rootUrl) {
         try {
             logger.debug("Configuring link filter");
 
             var url = rootUrl.withPathAndParam("/", null);
 
-            var result = tryDownload(url, delayTimer, ContentTags.empty());
+            var result = fetcher.fetchContent(url, warcRecorder, ContentTags.empty());
             if (!(result instanceof HttpFetchResult.ResultOk ok))
                 return;
 
@@ -239,22 +245,28 @@ public class CrawlerRetreiver implements AutoCloseable {
     }
 
     public HttpFetchResult fetchWriteAndSleep(EdgeUrl top,
-                                                         CrawlDelayTimer timer,
-                                                         DocumentWithReference reference) {
+                                              CrawlDelayTimer timer,
+                                              DocumentWithReference reference) throws InterruptedException
+    {
         logger.debug("Fetching {}", top);
 
+        HttpFetchResult fetchedDoc = new HttpFetchResult.ResultNone();
+
         long startTime = System.currentTimeMillis();
-
         var contentTags = reference.getContentTags();
-        var fetchedDoc = tryDownload(top, timer, contentTags);
 
-        if (fetchedDoc instanceof HttpFetchResult.Result304Raw) {
-            var doc = reference.doc();
-            if (doc != null) {
-                warcRecorder.writeReferenceCopy(top, doc.contentType, doc.httpStatus, doc.documentBody);
-                fetchedDoc = new HttpFetchResult.Result304ReplacedWithReference(doc.url,
-                        new ContentType(doc.contentType, "UTF-8"),
-                        doc.documentBody);
+        // Fetch the document, retrying if we get a rate limit exception
+        for (int i = 0; i <= HTTP_429_RETRY_LIMIT; i++) {
+            try {
+                fetchedDoc = fetcher.fetchContent(top, warcRecorder, contentTags);
+                break;
+            }
+            catch (RateLimitException ex) {
+                timer.waitRetryDelay(ex);
+            }
+            catch (Exception ex) {
+                logger.warn("Failed to fetch {}", top, ex);
+                fetchedDoc = new HttpFetchResult.ResultException(ex);
             }
         }
 
@@ -268,14 +280,19 @@ public class CrawlerRetreiver implements AutoCloseable {
                     crawlFrontier.addVisited(new EdgeUrl(ok.uri()));
                 }
             }
-            else if (fetchedDoc instanceof HttpFetchResult.Result304ReplacedWithReference retained) {
-                var docOpt = retained.parseDocument();
-                if (docOpt.isPresent()) {
-                    var doc = docOpt.get();
+            else if (fetchedDoc instanceof HttpFetchResult.Result304Raw && reference.doc() != null) {
+                var doc = reference.doc();
 
-                    crawlFrontier.enqueueLinksFromDocument(top, doc);
-                    EdgeUrl.parse(retained.url()).ifPresent(crawlFrontier::addVisited);
-                }
+                warcRecorder.writeReferenceCopy(top, doc.contentType, doc.httpStatus, doc.documentBody);
+
+                fetchedDoc = new HttpFetchResult.Result304ReplacedWithReference(doc.url,
+                        new ContentType(doc.contentType, "UTF-8"),
+                        doc.documentBody);
+
+                var parsed = Jsoup.parse(doc.documentBody);
+
+                crawlFrontier.enqueueLinksFromDocument(top, parsed);
+                crawlFrontier.addVisited(top);
             }
             else if (fetchedDoc instanceof HttpFetchResult.ResultException ex) {
                 errorCount ++;
@@ -285,7 +302,7 @@ public class CrawlerRetreiver implements AutoCloseable {
             logger.error("Error parsing document {}", top, ex);
         }
 
-        timer.delay(System.currentTimeMillis() - startTime);
+        timer.waitFetchDelay(System.currentTimeMillis() - startTime);
 
         return fetchedDoc;
     }
@@ -293,33 +310,6 @@ public class CrawlerRetreiver implements AutoCloseable {
     private boolean isAllowedProtocol(String proto) {
         return proto.equalsIgnoreCase("http")
                 || proto.equalsIgnoreCase("https");
-    }
-
-    @SneakyThrows
-    private HttpFetchResult tryDownload(EdgeUrl top, CrawlDelayTimer timer, ContentTags tags) {
-        for (int i = 0; i < 2; i++) {
-            try {
-                return fetcher.fetchContent(top, warcRecorder, tags);
-            }
-            catch (RateLimitException ex) {
-                timer.slowDown();
-
-                int delay = ex.retryAfter();
-                if (delay > 0 && delay < 5000) {
-                    Thread.sleep(delay);
-                }
-            }
-            catch (Exception ex) {
-                logger.warn("Failed to fetch {}", top, ex);
-                return new HttpFetchResult.ResultException(ex);
-            }
-        }
-
-        return new HttpFetchResult.ResultNone();
-    }
-
-    private String createHash(String documentBodyHash) {
-        return hashMethod.hashUnencodedChars(documentBodyHash).toString();
     }
 
     // FIXME this does not belong in the crawler

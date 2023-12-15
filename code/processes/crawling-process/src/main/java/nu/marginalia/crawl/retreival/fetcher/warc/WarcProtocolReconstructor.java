@@ -20,7 +20,10 @@ public class WarcProtocolReconstructor {
 
     static String getHttpRequestString(Request request, URI uri) {
         StringBuilder requestStringBuilder = new StringBuilder();
-        requestStringBuilder.append(request.method()).append(" ").append(URLEncoder.encode(uri.getPath(), StandardCharsets.UTF_8));
+
+        final String encodedURL = encodeURLKeepSlashes(uri.getPath());
+
+        requestStringBuilder.append(request.method()).append(" ").append(encodedURL);
 
         if (uri.getQuery() != null) {
             requestStringBuilder.append("?").append(uri.getQuery());
@@ -35,6 +38,19 @@ public class WarcProtocolReconstructor {
         });
 
         return requestStringBuilder.toString();
+    }
+
+    /** Java's URLEncoder will URLEncode slashes, which is not desirable
+     * when sanitizing a URL for HTTP protocol purposes
+     */
+
+    private static String encodeURLKeepSlashes(String URL) {
+        String[] parts = StringUtils.split(URL,"/");
+        StringJoiner joiner = new StringJoiner("/");
+        for (String part : parts) {
+            joiner.add(URLEncoder.encode(part, StandardCharsets.UTF_8));
+        }
+        return joiner.toString();
     }
 
     static String getResponseHeader(String headersAsString, int code) {
@@ -129,6 +145,11 @@ public class WarcProtocolReconstructor {
 
             // Omit pseudoheaders injected by the crawler itself
             if (headerCapitalized.startsWith("X-Marginalia"))
+                return;
+
+            // Omit Transfer-Encoding header, as we'll be using Content-Length
+            // instead in the warc file, despite what the server says
+            if (headerCapitalized.startsWith("Transfer-Encoding"))
                 return;
 
             for (var value : values) {

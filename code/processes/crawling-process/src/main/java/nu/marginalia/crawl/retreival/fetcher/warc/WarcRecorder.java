@@ -29,11 +29,6 @@ import java.util.*;
  * be reconstructed.
  */
 public class WarcRecorder implements AutoCloseable {
-    public static final URI documentRobotsTxtSkippedURN = URI.create("urn:marginalia/meta/doc/robots-txt-skipped");
-    public static final URI documentBadContentTypeURN = URI.create("urn:marginalia/meta/doc/content-type-failed-probe");
-    public static final URI documentProbeTimeout = URI.create("urn:marginalia/meta/doc/timeout-probe");
-    public static final URI documentUnspecifiedError = URI.create("urn:marginalia/meta/doc/error");
-
     private static final int MAX_TIME = 30_000;
     private static final int MAX_SIZE = 1024 * 1024 * 10;
     private final WarcWriter writer;
@@ -91,6 +86,8 @@ public class WarcRecorder implements AutoCloseable {
 
         ResponseDataBuffer responseDataBuffer = new ResponseDataBuffer();
 
+        boolean hasCookies = !client.cookieJar().loadForRequest(request.url()).isEmpty();
+
         try (var response = call.execute()) {
             var body = response.body();
             InputStream inputStream;
@@ -143,6 +140,7 @@ public class WarcRecorder implements AutoCloseable {
 
             WarcResponse.Builder responseBuilder = new WarcResponse.Builder(responseUri)
                     .blockDigest(responseDigestBuilder.build())
+                    .addHeader("X-Has-Cookies", hasCookies ? "1" : "0")
                     .date(date)
                     .body(MediaType.HTTP_RESPONSE, responseDataBuffer.copyBytes());
 
@@ -280,11 +278,11 @@ public class WarcRecorder implements AutoCloseable {
 
     public void flagAsRobotsTxtError(EdgeUrl top) {
         try {
-            WarcRevisit revisit = new WarcRevisit.Builder(top.asURI(), documentRobotsTxtSkippedURN)
+            WarcXEntityRefused refusal = new WarcXEntityRefused.Builder(top.asURI(), WarcXEntityRefused.documentRobotsTxtSkippedURN)
                     .date(Instant.now())
                     .build();
 
-            writer.write(revisit);
+            writer.write(refusal);
         } catch (URISyntaxException | IOException e) {
             throw new RuntimeException(e);
         }
@@ -292,13 +290,13 @@ public class WarcRecorder implements AutoCloseable {
 
     public void flagAsFailedContentTypeProbe(EdgeUrl url, String contentType, int status) {
         try {
-            WarcRevisit revisit = new WarcRevisit.Builder(url.asURI(), documentBadContentTypeURN)
+            WarcXEntityRefused refusal = new WarcXEntityRefused.Builder(url.asURI(), WarcXEntityRefused.documentBadContentTypeURN)
                     .date(Instant.now())
                     .addHeader("Rejected-Content-Type", contentType)
                     .addHeader("Http-Status", Integer.toString(status))
                     .build();
 
-            writer.write(revisit);
+            writer.write(refusal);
         } catch (URISyntaxException | IOException e) {
             throw new RuntimeException(e);
         }
@@ -306,13 +304,13 @@ public class WarcRecorder implements AutoCloseable {
 
     public void flagAsError(EdgeUrl url, Exception ex) {
         try {
-            WarcRevisit revisit = new WarcRevisit.Builder(url.asURI(), documentUnspecifiedError)
+            WarcXEntityRefused refusal = new WarcXEntityRefused.Builder(url.asURI(), WarcXEntityRefused.documentUnspecifiedError)
                     .date(Instant.now())
                     .addHeader("Exception", ex.getClass().getSimpleName())
                     .addHeader("ErrorMessage", Objects.requireNonNullElse(ex.getMessage(), ""))
                     .build();
 
-            writer.write(revisit);
+            writer.write(refusal);
         } catch (URISyntaxException | IOException e) {
             throw new RuntimeException(e);
         }
@@ -320,11 +318,11 @@ public class WarcRecorder implements AutoCloseable {
 
     public void flagAsTimeout(EdgeUrl url) {
         try {
-            WarcRevisit revisit = new WarcRevisit.Builder(url.asURI(), documentProbeTimeout)
+            WarcXEntityRefused refusal = new WarcXEntityRefused.Builder(url.asURI(), WarcXEntityRefused.documentProbeTimeout)
                     .date(Instant.now())
                     .build();
 
-            writer.write(revisit);
+            writer.write(refusal);
         } catch (URISyntaxException | IOException e) {
             throw new RuntimeException(e);
         }

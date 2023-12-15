@@ -34,6 +34,7 @@ public class CrawlerWarcResynchronizer {
         // First pass, enqueue links
         try (var reader = new WarcReader(tempFile)) {
             WarcXResponseReference.register(reader);
+            WarcXEntityRefused.register(reader);
 
             for (var item : reader) {
                 accept(item);
@@ -58,10 +59,23 @@ public class CrawlerWarcResynchronizer {
                 response(rsp);
             } else if (item instanceof WarcRequest req) {
                 request(req);
+            } else if (item instanceof WarcXEntityRefused refused) {
+                refused(refused);
             }
+
         }
         catch (Exception ex) {
             logger.info(STR."Failed to process warc record \{item}", ex);
+        }
+    }
+
+    private void refused(WarcXEntityRefused refused) {
+        // In general, we don't want to re-crawl urls that were refused,
+        // but to permit circumstances to change over  time, we'll
+        // allow for a small chance of re-probing these entries
+
+        if (Math.random() > 0.1) {
+            crawlFrontier.addVisited(new EdgeUrl(refused.targetURI()));
         }
     }
 

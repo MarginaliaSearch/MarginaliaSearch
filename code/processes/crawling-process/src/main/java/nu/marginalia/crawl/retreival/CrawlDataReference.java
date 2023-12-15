@@ -5,6 +5,8 @@ import com.google.common.hash.Hashing;
 import nu.marginalia.crawling.io.SerializableCrawlDataStream;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.lsh.EasyLSH;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -15,6 +17,7 @@ import java.nio.file.Path;
 public class CrawlDataReference implements AutoCloseable {
 
     private final SerializableCrawlDataStream data;
+    private static final Logger logger = LoggerFactory.getLogger(CrawlDataReference.class);
 
     public CrawlDataReference(SerializableCrawlDataStream data) {
         this.data = data;
@@ -43,8 +46,9 @@ public class CrawlDataReference implements AutoCloseable {
             }
         }
         catch (IOException ex) {
-            ex.printStackTrace();
+            logger.error("Failed to read next document", ex);
         }
+
         return null;
     }
 

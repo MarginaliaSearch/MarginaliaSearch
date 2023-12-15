@@ -28,6 +28,7 @@ public class WarcSerializableCrawlDataStream implements AutoCloseable, Serializa
         path = file;
         reader = new WarcReader(file);
         WarcXResponseReference.register(reader);
+        WarcXEntityRefused.register(reader);
 
         backingIterator = reader.iterator();
     }

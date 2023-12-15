@@ -15,13 +15,6 @@ import org.jsoup.Jsoup;
  *  E-Tag and Last-Modified headers.
  */
 public class CrawlerRevisitor {
-    /** recrawlState tag for documents that had a HTTP status 304 */
-    public static final String documentWasRetainedTag = "RETAINED/304";
-
-    /** recrawlState tag for documents that had a 200 status but were identical to a previous version */
-    public static final String documentWasSameTag = "SAME-BY-COMPARISON";
-
-
     private final DomainCrawlFrontier crawlFrontier;
     private final CrawlerRetreiver crawlerRetreiver;
     private final WarcRecorder warcRecorder;
@@ -37,7 +30,8 @@ public class CrawlerRevisitor {
     /** Performs a re-crawl of old documents, comparing etags and last-modified */
     public int recrawl(CrawlDataReference oldCrawlData,
                        SimpleRobotRules robotsRules,
-                       CrawlDelayTimer delayTimer) {
+                       CrawlDelayTimer delayTimer)
+    throws InterruptedException {
         int recrawled = 0;
         int retained = 0;
 

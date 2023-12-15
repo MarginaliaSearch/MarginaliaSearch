@@ -50,9 +50,14 @@ public class DomainCrawlFrontier {
         }
     }
 
+    /** Increase the depth of the crawl by a factor.  If the current depth is smaller
+     * than the number of already visited documents, the base depth will be adjusted
+     * to the visited count first.
+     */
     public void increaseDepth(double depthIncreaseFactor) {
-        depth = (int)(depth * depthIncreaseFactor);
+        depth = (int)(Math.max(visited.size(), depth) * depthIncreaseFactor);
     }
+
     public void setLinkFilter(Predicate<EdgeUrl> linkFilter) {
         this.linkFilter = linkFilter;
     }
