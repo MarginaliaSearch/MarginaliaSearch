@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
+import java.time.Instant;
 
 public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
     private final ParquetWriter<CrawledDocumentParquetRecord> writer;
@@ -64,7 +65,7 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
             meta = "x-marginalia/advisory;state=unknown";
         }
 
-        write(forDocError(domain, refused.target(), meta));
+        write(forDocError(domain, refused.date(), refused.target(), meta));
     }
 
     private void write(Warcinfo warcinfo) throws IOException {
@@ -74,10 +75,10 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
 
         if (probeStatus.startsWith("REDIRECT")) {
             String redirectDomain = probeStatus.substring("REDIRECT;".length());
-            write(forDomainRedirect(selfDomain, redirectDomain));
+            write(forDomainRedirect(selfDomain, warcinfo.date(), redirectDomain));
         }
         else if (!"OK".equals(probeStatus)) {
-            write(forDomainError(selfDomain, ip, probeStatus));
+            write(forDomainError(selfDomain, warcinfo.date(), ip, probeStatus));
         }
     }
 
@@ -126,6 +127,7 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
                 fetchOk.ipAddress(),
                 WarcXCookieInformationHeader.hasCookies(response),
                 fetchOk.statusCode(),
+                response.date(),
                 contentType,
                 bodyBytes)
         );
@@ -136,33 +138,36 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
         writer.close();
     }
 
-    private CrawledDocumentParquetRecord forDomainRedirect(String domain, String redirectDomain) {
+    private CrawledDocumentParquetRecord forDomainRedirect(String domain, Instant date, String redirectDomain) {
         return new CrawledDocumentParquetRecord(domain,
                 STR."https://\{redirectDomain}/",
                 "",
                 false,
                 0,
+                date,
                 "x-marginalia/advisory;state=redirect",
                 new byte[0]
         );
     }
-    private CrawledDocumentParquetRecord forDomainError(String domain, String ip, String errorStatus) {
+    private CrawledDocumentParquetRecord forDomainError(String domain, Instant date, String ip, String errorStatus) {
         return new CrawledDocumentParquetRecord(domain,
                 STR."https://\{domain}/",
                 ip,
                 false,
                 0,
+                date,
                 "x-marginalia/advisory;state=error",
                 errorStatus.getBytes()
         );
     }
 
-    private CrawledDocumentParquetRecord forDocError(String domain, String url, String errorStatus) {
+    private CrawledDocumentParquetRecord forDocError(String domain, Instant date, String url, String errorStatus) {
         return new CrawledDocumentParquetRecord(domain,
                 url,
                 "",
                 false,
                 0,
+                date,
                 "x-marginalia/advisory;state=error",
                 errorStatus.getBytes()
         );

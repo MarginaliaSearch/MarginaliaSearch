@@ -92,7 +92,7 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
         nextQ.add(new CrawledDocument("",
                 nextRecord.url,
                 nextRecord.contentType,
-                "",
+                nextRecord.timestamp.toString(),
                 nextRecord.httpStatus,
                 "OK",
                 "",

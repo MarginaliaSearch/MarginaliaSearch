@@ -7,11 +7,11 @@ import nu.marginalia.crawling.model.SerializableCrawlData;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.netpreserve.jwarc.net.WarcRecorder;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,6 +36,7 @@ class CrawledDocumentParquetRecordFileWriterTest {
                 "127.0.0.1",
                 false,
                 200,
+                Instant.now(),
                 "text/html",
                 "hello world".getBytes());
 

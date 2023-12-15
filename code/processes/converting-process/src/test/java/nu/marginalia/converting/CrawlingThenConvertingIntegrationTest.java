@@ -104,7 +104,11 @@ public class CrawlingThenConvertingIntegrationTest {
             }
         }
 
-        CrawledDomain domain = data.stream().filter(CrawledDomain.class::isInstance).map(CrawledDomain.class::cast).findFirst().get();
+        CrawledDomain domain = data.stream()
+                .filter(CrawledDomain.class::isInstance)
+                .map(CrawledDomain.class::cast)
+                .findFirst()
+                .get();
         data.stream().filter(CrawledDocument.class::isInstance).map(CrawledDocument.class::cast).forEach(domain.doc::add);
         return domain;
     }

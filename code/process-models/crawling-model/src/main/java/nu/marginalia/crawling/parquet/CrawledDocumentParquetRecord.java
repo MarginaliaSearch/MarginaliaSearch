@@ -10,7 +10,9 @@ import lombok.ToString;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.Types;
 
-import static org.apache.parquet.schema.LogicalTypeAnnotation.stringType;
+import java.time.Instant;
+
+import static org.apache.parquet.schema.LogicalTypeAnnotation.*;
 import static org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName.*;
 
 @AllArgsConstructor
@@ -23,6 +25,7 @@ public class CrawledDocumentParquetRecord {
     public String ip;
     public boolean cookies;
     public int httpStatus;
+    public Instant timestamp;
     public String contentType;
     public byte[] body;
 
@@ -41,6 +44,7 @@ public class CrawledDocumentParquetRecord {
             Types.required(BINARY).as(stringType()).named("ip"),
             Types.required(BOOLEAN).named("cookies"),
             Types.required(INT32).named("httpStatus"),
+            Types.required(INT64).named("epochSeconds"),
             Types.required(BINARY).as(stringType()).named("contentType"),
             Types.required(BINARY).named("body")
     );
@@ -55,6 +59,7 @@ public class CrawledDocumentParquetRecord {
             case "cookies" -> cookies = (Boolean) value;
             case "contentType" -> contentType = (String) value;
             case "body" -> body = (byte[]) value;
+            case "epochSeconds" -> timestamp = Instant.ofEpochSecond((Long) value);
             default -> throw new UnsupportedOperationException("Unknown heading '" + heading + '"');
         }
         return this;
@@ -64,6 +69,7 @@ public class CrawledDocumentParquetRecord {
         valueWriter.write("domain", domain);
         valueWriter.write("url", url);
         valueWriter.write("ip", ip);
+        valueWriter.write("epochSeconds", timestamp.getEpochSecond());
         valueWriter.write("httpStatus", httpStatus);
         valueWriter.write("cookies", cookies);
         valueWriter.write("contentType", contentType);
