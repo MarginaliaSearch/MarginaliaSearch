@@ -58,7 +58,7 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
         String statusReason = "";
 
         String redirectDomain = null;
-        if (parquetRecord.contentType.equals("x-marginalia/advisory;state=redir")) {
+        if (parquetRecord.contentType.equals("x-marginalia/advisory;state=redirect")) {
             EdgeUrl crawledUrl = new EdgeUrl(parquetRecord.url);
             redirectDomain = crawledUrl.getDomain().toString();
             status = CrawlerDomainStatus.REDIRECT;
@@ -84,6 +84,10 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
     }
 
     private void createDocumentRecord(CrawledDocumentParquetRecord nextRecord) {
+        if (nextRecord.contentType.startsWith("x-marginalia/advisory")) {
+            return;
+        }
+
         String bodyString = DocumentBodyToString.getStringData(
                 ContentType.parse(nextRecord.contentType),
                 nextRecord.body);
