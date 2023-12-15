@@ -211,6 +211,43 @@ public class CrawlingThenConvertingIntegrationTest {
 
     }
 
+
+    @Test
+    public void crawlRobotsTxt() throws IOException {
+        var specs = CrawlSpecRecord.builder()
+                .domain("search.marginalia.nu")
+                .crawlDepth(5)
+                .urls(List.of(
+                        "https://search.marginalia.nu/search?q=hello+world"
+                ))
+                .build();
+
+        CrawledDomain domain = crawl(specs);
+        assertFalse(domain.doc.isEmpty());
+        assertEquals("OK", domain.crawlerStatus);
+        assertEquals("search.marginalia.nu", domain.domain);
+
+        Set<String> allUrls = domain.doc.stream().map(doc -> doc.url).collect(Collectors.toSet());
+        assertTrue(allUrls.contains("https://search.marginalia.nu/search"), "We expect a record for entities that are forbidden");
+
+        var output = process();
+
+        assertNotNull(output);
+        assertFalse(output.documents.isEmpty());
+        assertEquals(new EdgeDomain("search.marginalia.nu"), output.domain);
+        assertEquals(DomainIndexingState.ACTIVE, output.state);
+
+        for (var doc : output.documents) {
+            if (doc.isOk()) {
+                System.out.println(doc.url + "\t" + doc.state + "\t" + doc.details.title);
+            }
+            else {
+                System.out.println(doc.url + "\t" + doc.state + "\t" + doc.stateReason);
+            }
+        }
+
+    }
+
     private ProcessedDomain process() {
         try (var stream = new ParquetSerializableCrawlDataStream(fileName2)) {
             return domainProcessor.process(stream);

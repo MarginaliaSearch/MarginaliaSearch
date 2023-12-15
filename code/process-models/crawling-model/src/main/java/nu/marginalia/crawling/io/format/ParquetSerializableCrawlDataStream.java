@@ -88,6 +88,9 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
         if (nextRecord.contentType.startsWith("x-marginalia/advisory;state=content-type-failed-probe")) {
             status = CrawlerDocumentStatus.BAD_CONTENT_TYPE;
         }
+        else if (nextRecord.contentType.startsWith("x-marginalia/advisory;state=robots-txt-skipped")) {
+            status = CrawlerDocumentStatus.ROBOTS_TXT;
+        }
         else if (nextRecord.contentType.startsWith("x-marginalia/advisory")) { // other advisory stuff we don't want
             return;
         }
