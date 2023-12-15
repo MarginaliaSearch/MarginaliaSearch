@@ -97,10 +97,14 @@ public class DomainProcessor {
             }
             else if (data instanceof CrawledDocument doc) {
                 try {
-                    if (doc.url == null || processedUrls.add(doc.url))
+                    if (doc.url == null || !processedUrls.add(doc.url))
                         continue;
 
                     fixBadCanonicalTag(doc);
+
+                    if (Boolean.TRUE.equals(doc.hasCookies)) {
+                        cookies = true;
+                    }
 
                     // This case should never be reachable, as we should have initiated
                     // the externalDomainLinks variable above if we made it past the

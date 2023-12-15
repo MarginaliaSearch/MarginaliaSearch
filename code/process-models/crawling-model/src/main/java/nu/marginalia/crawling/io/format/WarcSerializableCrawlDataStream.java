@@ -69,7 +69,6 @@ public class WarcSerializableCrawlDataStream implements AutoCloseable, Serializa
             redirectDomain = statusReason;
         }
 
-        // TODO: Fix cookies info somehow
         next = new CrawledDomain(domain, redirectDomain, status, statusReason, ip,
                 new ArrayList<>(),
                 new ArrayList<>()
@@ -98,7 +97,9 @@ public class WarcSerializableCrawlDataStream implements AutoCloseable, Serializa
                     response.payloadDigest().map(WarcDigest::base64).orElse(""),
                     "",
                     "",
-                    "");
+                    "",
+                    WarcXCookieInformationHeader.hasCookies(response)
+            );
         } else if (parsedBody instanceof DocumentBodyResult.Ok<String> ok) {
             next = new CrawledDocument(
                     "",
@@ -113,7 +114,8 @@ public class WarcSerializableCrawlDataStream implements AutoCloseable, Serializa
                     response.payloadDigest().map(WarcDigest::base64).orElse(""),
                     "",
                     "",
-                    "");
+                    "",
+                    WarcXCookieInformationHeader.hasCookies(response));
         } else {
             // unreachable
             throw new IllegalStateException("Unknown body type: " + parsedBody);

@@ -11,10 +11,13 @@ import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawling.io.SerializableCrawlDataStream;
+import nu.marginalia.crawling.io.format.ParquetSerializableCrawlDataStream;
 import nu.marginalia.crawling.io.format.WarcSerializableCrawlDataStream;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawledDomain;
 import nu.marginalia.crawling.model.SerializableCrawlData;
+import nu.marginalia.crawling.parquet.CrawledDocumentParquetRecord;
+import nu.marginalia.crawling.parquet.CrawledDocumentParquetRecordFileWriter;
 import nu.marginalia.model.crawlspec.CrawlSpecRecord;
 import org.junit.jupiter.api.*;
 
@@ -31,6 +34,7 @@ public class CrawlingThenConvertingIntegrationTest {
     private HttpFetcher httpFetcher;
 
     private Path fileName;
+    private Path fileName2;
 
     @SneakyThrows
     @BeforeAll
@@ -49,11 +53,13 @@ public class CrawlingThenConvertingIntegrationTest {
         domainProcessor = injector.getInstance(DomainProcessor.class);
         httpFetcher = new HttpFetcherImpl(WmsaHome.getUserAgent().uaString());
         this.fileName = Files.createTempFile("crawling-then-converting", ".warc.gz");
+        this.fileName2 = Files.createTempFile("crawling-then-converting", ".warc.gz");
     }
 
     @AfterEach
     public void tearDown() throws IOException {
         Files.deleteIfExists(fileName);
+        Files.deleteIfExists(fileName2);
     }
 
     @Test
@@ -90,7 +96,9 @@ public class CrawlingThenConvertingIntegrationTest {
             new CrawlerRetreiver(httpFetcher, new DomainProber(d -> true), specs, recorder).fetch();
         }
 
-        try (var reader = new WarcSerializableCrawlDataStream(fileName)) {
+        CrawledDocumentParquetRecordFileWriter.convertWarc(specs.domain, fileName, fileName2);
+
+        try (var reader = new ParquetSerializableCrawlDataStream(fileName2)) {
             while (reader.hasNext()) {
                 data.add(reader.next());
             }

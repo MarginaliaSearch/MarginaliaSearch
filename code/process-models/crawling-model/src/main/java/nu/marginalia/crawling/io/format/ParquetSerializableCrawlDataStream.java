@@ -101,7 +101,8 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
                 "",
                 nextRecord.url,
                 null,
-                ""));
+                "",
+                nextRecord.cookies));
     }
 
     public void close() throws IOException {

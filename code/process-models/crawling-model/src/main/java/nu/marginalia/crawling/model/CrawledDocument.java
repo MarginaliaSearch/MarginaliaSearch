@@ -30,6 +30,10 @@ public class CrawledDocument implements SerializableCrawlData {
 
     public String recrawlState;
 
+    /** This is not guaranteed to be set in all versions of the format,
+     * information may come in CrawledDomain instead */
+    public Boolean hasCookies = false;
+
     public static final String SERIAL_IDENTIFIER = "// DOCUMENT";
     @Override
     public String getSerialIdentifier() {
