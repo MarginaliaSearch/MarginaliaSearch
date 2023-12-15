@@ -28,7 +28,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -148,6 +150,47 @@ public class CrawlingThenConvertingIntegrationTest {
 
         boolean hasRobotsTxt = domain.doc.stream().map(doc -> doc.url).anyMatch(url -> url.endsWith("/robots.txt"));
         assertFalse(hasRobotsTxt, "Robots.txt should not leave the crawler");
+
+        var output = process();
+
+        assertNotNull(output);
+        assertFalse(output.documents.isEmpty());
+        assertEquals(new EdgeDomain("www.marginalia.nu"), output.domain);
+        assertEquals(DomainIndexingState.ACTIVE, output.state);
+
+
+        for (var doc : output.documents) {
+            if (doc.isOk()) {
+                System.out.println(doc.url + "\t" + doc.state + "\t" + doc.details.title);
+            }
+            else {
+                System.out.println(doc.url + "\t" + doc.state + "\t" + doc.stateReason);
+            }
+        }
+
+    }
+
+
+
+    @Test
+    public void crawlContentTypes() throws IOException {
+        var specs = CrawlSpecRecord.builder()
+                .domain("www.marginalia.nu")
+                .crawlDepth(5)
+                .urls(List.of(
+                        "https://www.marginalia.nu/sanic.png",
+                        "https://www.marginalia.nu/invalid"
+                ))
+                .build();
+
+        CrawledDomain domain = crawl(specs);
+        assertFalse(domain.doc.isEmpty());
+        assertEquals("OK", domain.crawlerStatus);
+        assertEquals("www.marginalia.nu", domain.domain);
+
+        Set<String> allUrls = domain.doc.stream().map(doc -> doc.url).collect(Collectors.toSet());
+        assertTrue(allUrls.contains("https://www.marginalia.nu/sanic.png"), "Should have record for image despite blocked content type");
+        assertTrue(allUrls.contains("https://www.marginalia.nu/invalid"), "Should have have record for invalid URL");
 
         var output = process();
 

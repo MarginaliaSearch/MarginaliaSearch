@@ -39,7 +39,12 @@ public class DocumentBodyExtractor {
 
     private static DocumentBodyResult<String> toStringResult(ContentType contentType, byte[] bytes) {
         if (contentTypeLogic.isAllowableContentType(contentType)) {
-            return new DocumentBodyResult.Ok<>(contentType, DocumentBodyToString.getStringData(contentType, bytes));
+            try {
+                return new DocumentBodyResult.Ok<>(contentType, DocumentBodyToString.getStringData(contentType, bytes));
+            }
+            catch (Exception ex) {
+                return new DocumentBodyResult.Error<>(CrawlerDocumentStatus.BAD_CONTENT_TYPE, "");
+            }
         }
         else {
             return new DocumentBodyResult.Error<>(CrawlerDocumentStatus.BAD_CONTENT_TYPE, "");

@@ -4,12 +4,10 @@ import lombok.SneakyThrows;
 import nu.marginalia.contenttype.ContentType;
 import nu.marginalia.contenttype.DocumentBodyToString;
 import nu.marginalia.crawling.io.SerializableCrawlDataStream;
-import nu.marginalia.crawling.model.CrawledDocument;
-import nu.marginalia.crawling.model.CrawledDomain;
-import nu.marginalia.crawling.model.CrawlerDomainStatus;
-import nu.marginalia.crawling.model.SerializableCrawlData;
+import nu.marginalia.crawling.model.*;
 import nu.marginalia.crawling.parquet.CrawledDocumentParquetRecord;
 import nu.marginalia.crawling.parquet.CrawledDocumentParquetRecordFileReader;
+import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.model.EdgeUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,8 +20,9 @@ import java.util.*;
 public class ParquetSerializableCrawlDataStream implements AutoCloseable, SerializableCrawlDataStream {
     private static final Logger logger = LoggerFactory.getLogger(ParquetSerializableCrawlDataStream.class);
 
+    private final MurmurHash3_128 hash = new MurmurHash3_128();
     private final Iterator<CrawledDocumentParquetRecord> backingIterator;
-    private Deque<SerializableCrawlData> nextQ = new ArrayDeque<>();
+    private final Deque<SerializableCrawlData> nextQ = new ArrayDeque<>();
     private boolean wroteDomainRecord = false;
     private final Path path;
 
@@ -64,14 +63,13 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
             status = CrawlerDomainStatus.REDIRECT;
         }
         else if (parquetRecord.contentType.equals("x-marginalia/advisory;state=blocked")) {
-            status = CrawlerDomainStatus.BLOCKED; // FIXME we don't write this yet
+            status = CrawlerDomainStatus.BLOCKED;
         }
         else if (parquetRecord.contentType.equals("x-marginalia/advisory;state=error")) {
             status = CrawlerDomainStatus.ERROR;
             statusReason = new String(parquetRecord.body);
         }
 
-        // FIXME -- cookies
         nextQ.add(new CrawledDomain(
                 parquetRecord.domain,
                 redirectDomain,
@@ -84,25 +82,36 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
     }
 
     private void createDocumentRecord(CrawledDocumentParquetRecord nextRecord) {
-        if (nextRecord.contentType.startsWith("x-marginalia/advisory")) {
+        String bodyString = "";
+        CrawlerDocumentStatus status = CrawlerDocumentStatus.OK;
+
+        if (nextRecord.contentType.startsWith("x-marginalia/advisory;state=content-type-failed-probe")) {
+            status = CrawlerDocumentStatus.BAD_CONTENT_TYPE;
+        }
+        else if (nextRecord.contentType.startsWith("x-marginalia/advisory")) { // other advisory stuff we don't want
             return;
         }
+        else {
+            try {
+                bodyString = DocumentBodyToString.getStringData(
+                        ContentType.parse(nextRecord.contentType),
+                        nextRecord.body);
+            } catch (Exception ex) {
+                logger.error("Failed to convert body to string", ex);
+                status = CrawlerDocumentStatus.BAD_CHARSET;
+            }
+        }
 
-        String bodyString = DocumentBodyToString.getStringData(
-                ContentType.parse(nextRecord.contentType),
-                nextRecord.body);
-
-        // FIXME -- a lot of these fields are not set properly!
         nextQ.add(new CrawledDocument("",
                 nextRecord.url,
                 nextRecord.contentType,
                 nextRecord.timestamp.toString(),
                 nextRecord.httpStatus,
-                "OK",
+                status.toString(),
                 "",
                 "",
                 bodyString,
-                "",
+                Long.toHexString(hash.hashNearlyASCII(bodyString)), // this field isn't actually used, maybe we can skip calculating it?
                 nextRecord.url,
                 null,
                 "",

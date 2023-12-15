@@ -23,6 +23,7 @@ dependencies {
     implementation project(':code:features-crawl:content-type')
     implementation project(':code:libraries:language-processing')
     implementation project(':third-party:parquet-floor')
+    implementation project(':third-party:commons-codec')
 
     implementation libs.bundles.slf4j
 

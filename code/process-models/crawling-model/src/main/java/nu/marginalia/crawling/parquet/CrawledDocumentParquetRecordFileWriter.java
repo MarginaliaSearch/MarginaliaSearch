@@ -168,8 +168,8 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
                 false,
                 0,
                 date,
-                "x-marginalia/advisory;state=error",
-                errorStatus.getBytes()
+                errorStatus,
+                new byte[0]
         );
     }
 }
