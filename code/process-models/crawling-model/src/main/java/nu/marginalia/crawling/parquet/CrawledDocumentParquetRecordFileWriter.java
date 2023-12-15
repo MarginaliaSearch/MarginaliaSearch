@@ -124,7 +124,7 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
                 domain,
                 response.target(),
                 fetchOk.ipAddress(),
-                false, // FIXME
+                WarcXCookieInformationHeader.hasCookies(response),
                 fetchOk.statusCode(),
                 contentType,
                 bodyBytes)

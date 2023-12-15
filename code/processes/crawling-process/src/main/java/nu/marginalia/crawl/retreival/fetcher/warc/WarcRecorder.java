@@ -43,6 +43,11 @@ public class WarcRecorder implements AutoCloseable {
     // in some way
     private final String warcRecorderVersion = "1.0";
 
+    // We need to know if the site uses cookies so this can be reported among the search results
+    // -- flip this to true if we see any cookies.  This information will also be painted on any
+    // revisited pages.  It's not 100% perfect and a bit order dependent, but it's good enough.
+    private final WarcXCookieInformationHeader cookieInformation = new WarcXCookieInformationHeader();
+
     /**
      * Create a new WarcRecorder that will write to the given file
      *
@@ -86,7 +91,7 @@ public class WarcRecorder implements AutoCloseable {
 
         ResponseDataBuffer responseDataBuffer = new ResponseDataBuffer();
 
-        boolean hasCookies = !client.cookieJar().loadForRequest(request.url()).isEmpty();
+        cookieInformation.update(client, request.url());
 
         try (var response = call.execute()) {
             var body = response.body();
@@ -140,9 +145,10 @@ public class WarcRecorder implements AutoCloseable {
 
             WarcResponse.Builder responseBuilder = new WarcResponse.Builder(responseUri)
                     .blockDigest(responseDigestBuilder.build())
-                    .addHeader("X-Has-Cookies", hasCookies ? "1" : "0")
                     .date(date)
                     .body(MediaType.HTTP_RESPONSE, responseDataBuffer.copyBytes());
+
+            cookieInformation.paint(responseBuilder);
 
             if (ip != null) responseBuilder.ipAddress(InetAddress.getByName(ip));
 
@@ -215,16 +221,20 @@ public class WarcRecorder implements AutoCloseable {
             payloadDigestBuilder.update(bytes, bytes.length);
             responseDataBuffer.put(bytes, 0, bytes.length);
 
-            WarcXResponseReference reference = new WarcXResponseReference.Builder(url.asURI())
+            WarcXResponseReference.Builder builder = new WarcXResponseReference.Builder(url.asURI())
                     .blockDigest(responseDigestBuilder.build())
                     .payloadDigest(payloadDigestBuilder.build())
                     .date(Instant.now())
-                    .body(MediaType.HTTP_RESPONSE, responseDataBuffer.copyBytes())
-                    .build();
+                    .body(MediaType.HTTP_RESPONSE, responseDataBuffer.copyBytes());
+
+            cookieInformation.paint(builder);
+
+            var reference = builder.build();
 
             reference.http(); // force HTTP header to be parsed before body is consumed so that caller can use it
 
             writer.write(reference);
+
         } catch (URISyntaxException | IOException | NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
