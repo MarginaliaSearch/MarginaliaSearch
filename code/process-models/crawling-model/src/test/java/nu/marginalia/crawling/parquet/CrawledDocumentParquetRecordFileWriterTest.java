@@ -72,7 +72,6 @@ class CrawledDocumentParquetRecordFileWriterTest {
         assertEquals("text/html", document.contentType);
         assertEquals("hello world", document.documentBody);
         assertEquals(200, document.httpStatus);
-        assertEquals("https://www.marginalia.nu/", document.canonicalUrl);
     }
 
 

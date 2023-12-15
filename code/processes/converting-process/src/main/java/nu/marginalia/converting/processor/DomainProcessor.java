@@ -100,8 +100,6 @@ public class DomainProcessor {
                     if (doc.url == null || !processedUrls.add(doc.url))
                         continue;
 
-                    fixBadCanonicalTag(doc);
-
                     if (Boolean.TRUE.equals(doc.hasCookies)) {
                         cookies = true;
                     }
@@ -170,25 +168,6 @@ public class DomainProcessor {
             return true;
 
         return false;
-    }
-
-    private void fixBadCanonicalTag(CrawledDocument doc) {
-        // Some sites have a canonical tag that points to a different domain,
-        // but our loader can not support this, so we point these back to the
-        // original url.
-
-        var canonicalOpt = EdgeUrl.parse(doc.canonicalUrl);
-        if (canonicalOpt.isEmpty()) return;
-
-        var urlOpt = EdgeUrl.parse(doc.url);
-        if (urlOpt.isEmpty()) return;
-
-        var urlActual = urlOpt.get();
-        var canonicalActual = canonicalOpt.get();
-
-        if (!Objects.equals(urlActual.domain, canonicalActual.domain)) {
-            doc.canonicalUrl = doc.url;
-        }
     }
 
     private void calculateStatistics(ProcessedDomain ret, DomainLinks externalDomainLinks) {
