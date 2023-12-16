@@ -60,7 +60,7 @@ public class UrlDeduplicator {
         final var domain = details.getUrl().getDomain();
         final String key = domain.getDomainKey();
 
-        return keyCount.adjustOrPutValue(key, 1, 1) < resultsPerKey;
+        return keyCount.adjustOrPutValue(key, 1, 1) <= resultsPerKey;
     }
 
 }
