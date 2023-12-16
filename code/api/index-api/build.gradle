@@ -44,11 +44,18 @@ dependencies {
 
 protobuf {
     protoc {
-        artifact = "com.google.protobuf:protoc:3.0.2"
+        if (osdetector.os == "osx") {
+            artifact = "com.google.protobuf:protoc:3.0.2:osx-x86_64"
+        } else {
+            artifact = "com.google.protobuf:protoc:3.0.2"
+        }
     }
     plugins {
         grpc {
-            artifact = 'io.grpc:protoc-gen-grpc-java:1.1.2'
+        if (osdetector.os == "osx") {
+            artifact = "io.grpc:protoc-gen-grpc-java:1.1.2:osx-x86_64"
+        } else {
+            artifact = "io.grpc:protoc-gen-grpc-java:1.1.2"
         }
     }
 
