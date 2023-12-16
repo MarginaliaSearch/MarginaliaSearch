@@ -52,15 +52,23 @@ public class SearchQueryService {
     }
 
     private SearchParameters parseParameters(Request request) {
-        final String queryParam = request.queryParams("query");
+        try {
+            final String queryParam = request.queryParams("query");
 
-        if (null == queryParam || queryParam.isBlank()) {
+            if (null == queryParam || queryParam.isBlank()) {
+                throw new RedirectException(websiteUrl.url());
+            }
+
+            return new SearchParameters(queryParam.trim(),
+                    SearchProfile.getSearchProfile(request.queryParams("profile")),
+                    SearchJsParameter.parse(request.queryParams("js")),
+                    SearchAdtechParameter.parse(request.queryParams("adtech")));
+        }
+        catch (Exception ex) {
+            // Bots keep sending bad requests, suppress the error otherwise it will
+            // fill up the logs.
+
             throw new RedirectException(websiteUrl.url());
         }
-
-        return new SearchParameters(queryParam.trim(),
-                                    SearchProfile.getSearchProfile(request.queryParams("profile")),
-                                    SearchJsParameter.parse(request.queryParams("js")),
-                                    SearchAdtechParameter.parse(request.queryParams("adtech")));
     }
 }
