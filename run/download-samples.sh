@@ -2,16 +2,37 @@
 
 set -e
 
+# Check if wget exists
+if command -v wget &> /dev/null; then
+  dl_prg="wget -O"
+elif command -v curl &> /dev/null; then
+  dl_prg="curl -o"
+else
+  echo "Neither wget nor curl found, exiting .."
+  exit 1
+fi
+
+case "$1" in
+"s"|"m"|"l"|"xl")
+    ;;
+*)
+    echo "Invalid argument. Must be one of 's', 'm', or 'l'."
+    exit 1
+    ;;
+esac
+
 SAMPLE_NAME=crawl-${1:-m}
 SAMPLE_DIR="node-1/samples/${SAMPLE_NAME}/"
 
 function download_model {
+
+
   model=$1
   url=$2
 
   if [ ! -f $model ]; then
     echo "** Downloading $url"
-    wget -O $model $url
+    $dl_prg $model $url
   fi
 }
 
@@ -23,7 +44,7 @@ fi
 
 mkdir -p node-1/samples/
 SAMPLE_TARBALL=samples/${SAMPLE_NAME}.tar.gz
-download_model ${SAMPLE_TARBALL} https://downloads.marginalia.nu/${SAMPLE_TARBALL} || rm ${SAMPLE_TARBALL}
+download_model ${SAMPLE_TARBALL} https://downloads.marginalia.nu/${SAMPLE_TARBALL}
 
 if [ ! -f ${SAMPLE_TARBALL} ]; then
   echo "!! Failed"
