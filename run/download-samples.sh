@@ -16,7 +16,7 @@ case "$1" in
 "s"|"m"|"l"|"xl")
     ;;
 *)
-    echo "Invalid argument. Must be one of 's', 'm', or 'l'."
+    echo "Invalid argument. Must be one of 's', 'm', 'l' or 'xl'."
     exit 1
     ;;
 esac
@@ -25,8 +25,6 @@ SAMPLE_NAME=crawl-${1:-m}
 SAMPLE_DIR="node-1/samples/${SAMPLE_NAME}/"
 
 function download_model {
-
-
   model=$1
   url=$2
 
