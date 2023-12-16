@@ -68,13 +68,15 @@ public class SearchOperator {
     }
 
     public List<UrlDetails> doSiteSearch(Context ctx,
-                                        String domain) {
+                                        String domain,
+                                        int count) {
 
-        var queryParams = paramFactory.forSiteSearch(domain);
+        var queryParams = paramFactory.forSiteSearch(domain, count);
         var queryResponse = queryClient.search(ctx, queryParams);
 
         return searchQueryService.getResultsFromQuery(queryResponse);
     }
+
     public List<UrlDetails> doBacklinkSearch(Context ctx,
                                          String domain) {
 

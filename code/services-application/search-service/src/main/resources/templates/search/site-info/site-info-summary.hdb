@@ -5,10 +5,10 @@
 
 <div id="similar-view" data-layout="{{layout}}">
     <div id="similar-info">
-        <h2><span title="External Link">&#x1F30E;</span>&nbsp;<a rel="external noopener" href="https://{{domain}}/">{{domain}}</a></h2>
+        <h2><span title="External Link">&#x1F30E;</span>&nbsp;<a rel="external noopener" href="{{siteUrl}}">{{domain}}</a></h2>
 
 
-        <a rel="external noopener" href="https://{{domain}}/">
+        <a rel="external noopener" href="{{siteUrl}}">
             <img class="screenshot" width="300" height="225" src="/screenshot/{{domainId}}" alt="Screenshot of {{domain}}" />
         </a>
         {{#with domainInformation}}

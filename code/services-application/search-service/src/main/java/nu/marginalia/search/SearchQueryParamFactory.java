@@ -36,7 +36,7 @@ public class SearchQueryParamFactory {
 
     }
 
-    public QueryParams forSiteSearch(String domain) {
+    public QueryParams forSiteSearch(String domain, int count) {
         return new QueryParams("site:"+domain,
                 null,
                 List.of(),
@@ -48,11 +48,10 @@ public class SearchQueryParamFactory {
                 SpecificationLimit.none(),
                 SpecificationLimit.none(),
                 List.of(),
-                new QueryLimits(100, 100, 100, 512),
+                new QueryLimits(count, count, 100, 512),
                 SearchSetIdentifier.NONE
         );
     }
-
 
     public QueryParams forBacklinkSearch(String domain) {
         return new QueryParams("links:"+domain,

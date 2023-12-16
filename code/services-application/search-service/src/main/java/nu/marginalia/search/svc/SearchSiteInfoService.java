@@ -119,6 +119,7 @@ public class SearchSiteInfoService {
         final DomainInformation domainInfo;
         final List<SimilarDomain> similarSet;
         final List<SimilarDomain> linkingDomains;
+        String url = "https://" + domainName + "/";;
 
         if (domainId < 0 || !assistantClient.isAccepting()) {
             domainInfo = createDummySiteInfo(domainName);
@@ -133,10 +134,16 @@ public class SearchSiteInfoService {
             linkingDomains = assistantClient
                     .linkedDomains(ctx, domainId, 100)
                     .blockingFirst();
+
+            List<UrlDetails> sampleResults = searchOperator.doSiteSearch(ctx, domainName, 1);
+            if (!sampleResults.isEmpty()) {
+                url = sampleResults.getFirst().url.withPathAndParam("/", null).toString();
+            }
         }
 
         return new SiteInfoWithContext(domainName,
                 domainId,
+                url,
                 domainInfo,
                 similarSet,
                 linkingDomains
@@ -154,7 +161,7 @@ public class SearchSiteInfoService {
     private Docs listDocs(Context ctx, String domainName) {
         return new Docs(domainName,
                 domainQueries.tryGetDomainId(new EdgeDomain(domainName)).orElse(-1),
-                searchOperator.doSiteSearch(ctx, domainName));
+                searchOperator.doSiteSearch(ctx, domainName, 100));
     }
 
     public record Docs(Map<String, Boolean> view,
@@ -190,11 +197,13 @@ public class SearchSiteInfoService {
                                       Map<String, Boolean> domainState,
                                       String domain,
                                       long domainId,
+                                      String siteUrl,
                                       DomainInformation domainInformation,
                                       List<SimilarDomain> similar,
                                       List<SimilarDomain> linking) {
         public SiteInfoWithContext(String domain,
                                    long domainId,
+                                   String siteUrl,
                                    DomainInformation domainInformation,
                                    List<SimilarDomain> similar,
                                    List<SimilarDomain> linking
@@ -204,6 +213,7 @@ public class SearchSiteInfoService {
                     Map.of(domainInfoState(domainInformation), true),
                     domain,
                     domainId,
+                    siteUrl,
                     domainInformation,
                     similar,
                     linking);
