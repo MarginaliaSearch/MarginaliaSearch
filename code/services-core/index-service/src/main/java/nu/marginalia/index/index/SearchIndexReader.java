@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class SearchIndexReader {
 
@@ -67,9 +68,29 @@ public class SearchIndexReader {
         return forwardIndexReader.getHtmlFeatures(docId);
     }
 
-    public void close() {
-        forwardIndexReader.close();
-        reverseIndexFullReader.close();
-        reverseIndexPriorityReader.close();
+    public void close() throws InterruptedException {
+        tryClose(forwardIndexReader::close);
+        tryClose(reverseIndexFullReader::close);
+        tryClose(reverseIndexPriorityReader::close);
+    }
+
+    /* Try to close the given resource, retrying a few times if it fails.
+     *  There is a small but non-zero chance we're closing during a query,
+     *  which will cause an IllegalStateException to be thrown.  We don't
+     *  want to add synchronization to the query code, so we just retry a
+     *  few times, fingers crossed.  If worse comes to worst, and we leak resources,
+     *  the GC will clean this up eventually...
+     * */
+    private void tryClose(Runnable closeMethod) throws InterruptedException {
+        for (int i = 0; i < 5; i++) {
+            try {
+                closeMethod.run();
+                return;
+            } catch (Exception ex) {
+                logger.error("Error closing", ex);
+            }
+            TimeUnit.MILLISECONDS.sleep(50);
+        }
+        logger.error("Failed to close index");
     }
 }
