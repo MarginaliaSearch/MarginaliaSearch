@@ -1,5 +1,6 @@
 package nu.marginalia.crawl.retreival.fetcher;
 
+import nu.marginalia.UserAgent;
 import nu.marginalia.crawl.retreival.fetcher.socket.IpInterceptingNetworkInterceptor;
 import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawling.parquet.CrawledDocumentParquetRecordFileReader;
@@ -19,7 +20,6 @@ import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.zip.GZIPInputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -130,7 +130,11 @@ class WarcRecorderTest {
                 .get().build());
         client.close();
 
-        CrawledDocumentParquetRecordFileWriter.convertWarc("www.marginalia.nu", fileNameWarc, fileNameParquet);
+        CrawledDocumentParquetRecordFileWriter.convertWarc(
+                "www.marginalia.nu",
+                new UserAgent("test"),
+                fileNameWarc,
+                fileNameParquet);
 
         var urls = CrawledDocumentParquetRecordFileReader.stream(fileNameParquet).map(doc -> doc.url).toList();
         assertEquals(3, urls.size());

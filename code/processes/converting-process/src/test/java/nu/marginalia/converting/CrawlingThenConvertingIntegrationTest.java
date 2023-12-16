@@ -3,6 +3,7 @@ package nu.marginalia.converting;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import lombok.SneakyThrows;
+import nu.marginalia.UserAgent;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.processor.DomainProcessor;
@@ -268,7 +269,9 @@ public class CrawlingThenConvertingIntegrationTest {
             new CrawlerRetreiver(httpFetcher, new DomainProber(domainBlacklist), specs, recorder).fetch();
         }
 
-        CrawledDocumentParquetRecordFileWriter.convertWarc(specs.domain, fileName, fileName2);
+        CrawledDocumentParquetRecordFileWriter.convertWarc(specs.domain,
+                new UserAgent("test"),
+                fileName, fileName2);
 
         try (var reader = new ParquetSerializableCrawlDataStream(fileName2)) {
             while (reader.hasNext()) {

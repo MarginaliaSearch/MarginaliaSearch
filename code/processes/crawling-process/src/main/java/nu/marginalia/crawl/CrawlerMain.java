@@ -51,6 +51,7 @@ import static nu.marginalia.mqapi.ProcessInboxNames.CRAWLER_INBOX;
 public class CrawlerMain {
     private final static Logger logger = LoggerFactory.getLogger(CrawlerMain.class);
 
+    private final UserAgent userAgent;
     private final ProcessHeartbeatImpl heartbeat;
     private final MessageQueueFactory messageQueueFactory;
     private final DomainProber domainProber;
@@ -78,6 +79,7 @@ public class CrawlerMain {
                        DbCrawlSpecProvider dbCrawlSpecProvider,
                        AnchorTagsSourceFactory anchorTagsSourceFactory,
                        Gson gson) {
+        this.userAgent = userAgent;
         this.heartbeat = heartbeat;
         this.messageQueueFactory = messageQueueFactory;
         this.domainProber = domainProber;
@@ -245,7 +247,7 @@ public class CrawlerMain {
                 reference.delete();
 
                 CrawledDocumentParquetRecordFileWriter
-                        .convertWarc(domain, newWarcFile, parquetFile);
+                        .convertWarc(domain, userAgent, newWarcFile, parquetFile);
 
                 workLog.setJobToFinished(domain, parquetFile.toString(), size);
                 heartbeat.setProgress(tasksDone.incrementAndGet() / (double) totalTasks);

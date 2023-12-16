@@ -192,54 +192,6 @@ public class HttpFetcherImpl implements HttpFetcher {
         return new HttpFetchResult.ResultNone();
     }
 
-    /**  Check X-Robots-Tag header tag to see if we are allowed to index this page.
-     * <p>
-     * Reference: <a href="https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag">https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag</a>
-     *
-     * @param xRobotsHeaderTags List of X-Robots-Tag values
-     * @param userAgent User agent string
-     * @return true if we are allowed to index this page
-     */
-    // Visible for tests
-    public static boolean isXRobotsTagsPermitted(List<String> xRobotsHeaderTags, String userAgent) {
-        boolean isPermittedGeneral = true;
-        boolean isPermittedMarginalia = false;
-        boolean isForbiddenMarginalia = false;
-
-        for (String header : xRobotsHeaderTags) {
-            if (header.indexOf(':') >= 0) {
-                String[] parts = StringUtils.split(header, ":", 2);
-
-                if (parts.length < 2)
-                    continue;
-
-                // Is this relevant to us?
-                if (!Objects.equals(parts[0].trim(), userAgent))
-                    continue;
-
-                if (parts[1].contains("noindex"))
-                    isForbiddenMarginalia = true;
-                else if (parts[1].contains("none"))
-                    isForbiddenMarginalia = true;
-                else if (parts[1].contains("all"))
-                    isPermittedMarginalia = true;
-            }
-            else {
-                if (header.contains("noindex"))
-                    isPermittedGeneral = false;
-                if (header.contains("none"))
-                    isPermittedGeneral = false;
-            }
-        }
-
-        if (isPermittedMarginalia)
-            return true;
-        if (isForbiddenMarginalia)
-            return false;
-        return isPermittedGeneral;
-    }
-
-
     @Override
     public SimpleRobotRules fetchRobotRules(EdgeDomain domain, WarcRecorder recorder) {
         return fetchRobotsForProto("https", recorder, domain)
