@@ -246,9 +246,24 @@ public class SimilarDomainsService {
             ));
         }
 
-        domains.removeIf(d -> d.url().domain.toString().length() > 32);
+        domains.removeIf(this::shouldRemove);
 
         return domains;
+    }
+
+    boolean shouldRemove(SimilarDomain domainResult) {
+        if (domainResult.url().domain.toString().length() > 32)
+            return true;
+
+        // Remove domains that have a relatively high likelihood of being dead links
+        // or not very interesting
+        if (!domainResult.indexed()
+            && !domainResult.active()
+            && domainResult.relatedness() < 0.5)
+        {
+            return true;
+        }
+        return false;
     }
 
     private TIntSet getLinkingIdsDToS(int domainIdx) {
@@ -332,7 +347,7 @@ public class SimilarDomainsService {
             ));
         }
 
-        domains.removeIf(d -> d.url().domain.toString().length() > 32);
+        domains.removeIf(this::shouldRemove);
 
         return domains;
     }
