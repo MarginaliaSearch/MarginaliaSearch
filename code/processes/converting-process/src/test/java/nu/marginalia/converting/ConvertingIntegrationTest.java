@@ -65,6 +65,7 @@ public class ConvertingIntegrationTest {
     @Test
     public void testMemexMarginaliaNu() throws IOException {
         var ret = domainProcessor.process(asSerializableCrawlData(readMarginaliaWorkingSet()));
+        assertNotNull(ret);
         assertEquals(ret.state, DomainIndexingState.ACTIVE);
         assertEquals(ret.domain, new EdgeDomain("memex.marginalia.nu"));
 
@@ -114,7 +115,8 @@ public class ConvertingIntegrationTest {
                     Double.toString(Math.random()),
                     "https://memex.marginalia.nu/" + file,
                     null,
-                    ""
+                    "",
+                    false
                     );
             docs.add(doc);
         }

@@ -3,14 +3,19 @@ package nu.marginalia.crawl.retreival;
 import com.google.common.hash.HashFunction;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import nu.marginalia.ip_blocklist.UrlBlocklist;
+import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
+import org.jsoup.nodes.Document;
 
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.function.Predicate;
 
 public class DomainCrawlFrontier {
+
+    private static final LinkParser linkParser = new LinkParser();
+
     private final ArrayDeque<String> queue;
 
     // To save the number of strings kept in memory,
@@ -45,9 +50,14 @@ public class DomainCrawlFrontier {
         }
     }
 
+    /** Increase the depth of the crawl by a factor.  If the current depth is smaller
+     * than the number of already visited documents, the base depth will be adjusted
+     * to the visited count first.
+     */
     public void increaseDepth(double depthIncreaseFactor) {
-        depth = (int)(depth * depthIncreaseFactor);
+        depth = (int)(Math.max(visited.size(), depth) * depthIncreaseFactor);
     }
+
     public void setLinkFilter(Predicate<EdgeUrl> linkFilter) {
         this.linkFilter = linkFilter;
     }
@@ -141,4 +151,27 @@ public class DomainCrawlFrontier {
     public int queueSize() {
         return queue.size();
     }
+
+
+    public void enqueueLinksFromDocument(EdgeUrl baseUrl, Document parsed) {
+        baseUrl = linkParser.getBaseLink(parsed, baseUrl);
+
+        for (var link : parsed.getElementsByTag("a")) {
+            linkParser.parseLink(baseUrl, link).ifPresent(this::addToQueue);
+        }
+        for (var link : parsed.getElementsByTag("frame")) {
+            linkParser.parseFrame(baseUrl, link).ifPresent(this::addToQueue);
+        }
+        for (var link : parsed.getElementsByTag("iframe")) {
+            linkParser.parseFrame(baseUrl, link).ifPresent(this::addToQueue);
+        }
+        for (var link : parsed.getElementsByTag("link")) {
+            String rel = link.attr("rel");
+
+            if (rel.equalsIgnoreCase("next") || rel.equalsIgnoreCase("prev")) {
+                linkParser.parseLink(baseUrl, link).ifPresent(this::addToQueue);
+            }
+        }
+    }
+
 }

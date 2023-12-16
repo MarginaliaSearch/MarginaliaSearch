@@ -63,8 +63,6 @@ public class ExportAtagsActor extends RecordActorPrototype {
 
                 Path inputDir = storageService.getStorage(crawlId).asPath();
 
-                var reader = new CrawledDomainReader();
-
                 try (var bw = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(tmpFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING))));
                 )
                 {
@@ -78,7 +76,7 @@ public class ExportAtagsActor extends RecordActorPrototype {
                         }
 
                         Path crawlDataPath = inputDir.resolve(item.relPath());
-                        try (var stream = reader.createDataStream(crawlDataPath)) {
+                        try (var stream = CrawledDomainReader.createDataStream(crawlDataPath)) {
                             exportLinks(tagWriter, stream);
                         }
                         catch (Exception ex) {

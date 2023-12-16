@@ -170,6 +170,7 @@ public class IndexQueryService extends IndexApiImplBase {
         }
     }
 
+
     // GRPC endpoint
     @SneakyThrows
     public void query(nu.marginalia.index.api.RpcIndexQuery request,

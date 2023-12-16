@@ -13,6 +13,7 @@ import org.apache.parquet.io.DelegatingSeekableInputStream;
 import org.apache.parquet.io.InputFile;
 import org.apache.parquet.io.SeekableInputStream;
 import org.apache.parquet.io.api.GroupConverter;
+import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.PrimitiveType;
 
@@ -144,7 +145,11 @@ public final class ParquetReader<U, S> implements Spliterator<S>, Closeable {
             case BINARY:
             case FIXED_LEN_BYTE_ARRAY:
             case INT96:
-                return primitiveType.stringifier().stringify(columnReader.getBinary());
+                if (primitiveType.getLogicalTypeAnnotation() == null) {
+                    return columnReader.getBinary().getBytes();
+                } else {
+                    return primitiveType.stringifier().stringify(columnReader.getBinary());
+                }
             case BOOLEAN:
                 return columnReader.getBoolean();
             case DOUBLE:

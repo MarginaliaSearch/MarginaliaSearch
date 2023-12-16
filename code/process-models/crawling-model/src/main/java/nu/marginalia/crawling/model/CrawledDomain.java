@@ -17,11 +17,18 @@ public class CrawledDomain implements SerializableCrawlData {
     public String ip;
 
     public List<CrawledDocument> doc;
+
+    /** This is not guaranteed to be set in all versions of the format,
+     * information may come in CrawledDocument instead */
     public List<String> cookies;
 
     public int size() {
         if (doc == null) return 0;
         return doc.size();
+    }
+
+    public boolean hasCookies() {
+        return cookies != null && !cookies.isEmpty();
     }
 
     public static final String SERIAL_IDENTIFIER = "// DOMAIN";

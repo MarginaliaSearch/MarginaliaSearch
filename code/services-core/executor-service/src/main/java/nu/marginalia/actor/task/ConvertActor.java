@@ -32,6 +32,7 @@ public class ConvertActor extends RecordActorPrototype {
     public record Convert(FileStorageId fid) implements ActorStep {};
     public record ConvertEncyclopedia(String source, String baseUrl) implements ActorStep {};
     public record ConvertDirtree(String source) implements ActorStep {};
+    public record ConvertWarc(String source) implements ActorStep {};
     public record ConvertStackexchange(String source) implements ActorStep {};
     @Resume(behavior = ActorResumeBehavior.RETRY)
     public record ConvertWait(FileStorageId destFid,
@@ -72,6 +73,25 @@ public class ConvertActor extends RecordActorPrototype {
                 yield new ConvertWait(
                         processedArea.id(),
                         mqConverterOutbox.sendAsync(ConvertRequest.forDirtree(sourcePath, processedArea.id()))
+                );
+            }
+            case ConvertWarc(String source) -> {
+                Path sourcePath = Path.of(source);
+                if (!Files.exists(sourcePath))
+                    yield new Error("Source path does not exist: " + sourcePath);
+
+                String fileName = sourcePath.toFile().getName();
+
+                var base = storageService.getStorageBase(FileStorageBaseType.STORAGE);
+                var processedArea = storageService.allocateTemporaryStorage(base,
+                        FileStorageType.PROCESSED_DATA, "processed-data",
+                        "Processed Warc Data; " + fileName);
+
+                storageService.setFileStorageState(processedArea.id(), FileStorageState.NEW);
+
+                yield new ConvertWait(
+                        processedArea.id(),
+                        mqConverterOutbox.sendAsync(ConvertRequest.forWarc(sourcePath, processedArea.id()))
                 );
             }
             case ConvertEncyclopedia(String source, String baseUrl) -> {

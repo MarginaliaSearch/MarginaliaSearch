@@ -18,6 +18,7 @@ import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.converting.processor.logic.links.TopKeywords;
 import nu.marginalia.converting.processor.logic.LshDocumentDeduplicator;
 import nu.marginalia.model.crawl.HtmlFeature;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,9 +54,15 @@ public class DomainProcessor {
     }
 
     @SneakyThrows
+    @Nullable
     public ProcessedDomain process(SerializableCrawlDataStream dataStream) {
+        if (!dataStream.hasNext()) {
+            return null;
+        }
+
         var ret = new ProcessedDomain();
         List<ProcessedDocument> docs = new ArrayList<>();
+        Set<String> processedUrls = new HashSet<>();
 
         boolean cookies = false;
         String ip = "";
@@ -79,7 +86,7 @@ public class DomainProcessor {
                 ret.domain = new EdgeDomain(crawledDomain.domain);
                 ret.ip = crawledDomain.ip;
 
-                cookies = Objects.requireNonNullElse(crawledDomain.cookies, Collections.emptyList()).size() > 0;
+                cookies = crawledDomain.hasCookies();
                 ip = crawledDomain.ip;
 
                 if (crawledDomain.redirectDomain != null) {
@@ -90,10 +97,12 @@ public class DomainProcessor {
             }
             else if (data instanceof CrawledDocument doc) {
                 try {
-                    if (doc.url == null)
+                    if (doc.url == null || !processedUrls.add(doc.url))
                         continue;
 
-                    fixBadCanonicalTag(doc);
+                    if (Boolean.TRUE.equals(doc.hasCookies)) {
+                        cookies = true;
+                    }
 
                     // This case should never be reachable, as we should have initiated
                     // the externalDomainLinks variable above if we made it past the
@@ -159,25 +168,6 @@ public class DomainProcessor {
             return true;
 
         return false;
-    }
-
-    private void fixBadCanonicalTag(CrawledDocument doc) {
-        // Some sites have a canonical tag that points to a different domain,
-        // but our loader can not support this, so we point these back to the
-        // original url.
-
-        var canonicalOpt = EdgeUrl.parse(doc.canonicalUrl);
-        if (canonicalOpt.isEmpty()) return;
-
-        var urlOpt = EdgeUrl.parse(doc.url);
-        if (urlOpt.isEmpty()) return;
-
-        var urlActual = urlOpt.get();
-        var canonicalActual = canonicalOpt.get();
-
-        if (!Objects.equals(urlActual.domain, canonicalActual.domain)) {
-            doc.canonicalUrl = doc.url;
-        }
     }
 
     private void calculateStatistics(ProcessedDomain ret, DomainLinks externalDomainLinks) {

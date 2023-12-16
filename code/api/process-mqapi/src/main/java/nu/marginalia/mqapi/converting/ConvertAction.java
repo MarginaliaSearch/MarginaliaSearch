@@ -4,5 +4,6 @@ public enum ConvertAction {
     ConvertCrawlData,
     SideloadEncyclopedia,
     SideloadDirtree,
+    SideloadWarc,
     SideloadStackexchange
 }

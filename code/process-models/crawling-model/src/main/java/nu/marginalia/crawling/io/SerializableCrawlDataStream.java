@@ -1,11 +1,13 @@
 package nu.marginalia.crawling.io;
 
 import nu.marginalia.crawling.model.SerializableCrawlData;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Iterator;
 
-/** Closable iterator over serialized crawl data
+/** Closable iterator exceptional over serialized crawl data
  * The data may appear in any order, and the iterator must be closed.
  *
  * @see CrawledDomainReader
@@ -17,6 +19,8 @@ public interface SerializableCrawlDataStream extends AutoCloseable {
 
     boolean hasNext() throws IOException;
 
+    @Nullable
+    default Path path() { return null; }
 
     // Dummy iterator over nothing
     static SerializableCrawlDataStream empty() {

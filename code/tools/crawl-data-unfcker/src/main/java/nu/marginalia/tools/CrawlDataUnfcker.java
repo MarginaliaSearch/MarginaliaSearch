@@ -29,13 +29,11 @@ public class CrawlDataUnfcker {
             return;
         }
 
-        var reader = new CrawledDomainReader();
-
         try (var wl = new WorkLog(output.resolve("crawler.log"))) {
             for (var inputItem : WorkLog.iterable(input.resolve("crawler.log"))) {
                 Path inputPath = input.resolve(inputItem.relPath());
 
-                var domainMaybe = readDomain(reader, inputPath).map(CrawledDomain::getDomain);
+                var domainMaybe = readDomain(inputPath).map(CrawledDomain::getDomain);
                 if (domainMaybe.isEmpty())
                     continue;
                 var domain = domainMaybe.get();
@@ -43,7 +41,7 @@ public class CrawlDataUnfcker {
                 // Generate conformant ID
                 String newId = Integer.toHexString(domain.hashCode());
 
-                var outputPath = CrawlerOutputFile.createOutputPath(output, newId, domain);
+                var outputPath = CrawlerOutputFile.createLegacyOutputPath(output, newId, domain);
                 var outputFileName = outputPath.toFile().getName();
 
                 System.out.println(inputPath + " -> " + outputPath);
@@ -56,13 +54,13 @@ public class CrawlDataUnfcker {
         }
     }
 
-    static Optional<CrawledDomain> readDomain(CrawledDomainReader reader, Path file) {
+    static Optional<CrawledDomain> readDomain(Path file) {
         if (!Files.exists(file)) {
             System.out.println("Missing file " + file);
             return Optional.empty();
         }
 
-        try (var stream = reader.createDataStream(file)) {
+        try (var stream = CrawledDomainReader.createDataStream(file)) {
             while (stream.hasNext()) {
                 if (stream.next() instanceof CrawledDomain domain) {
                     return Optional.of(domain);

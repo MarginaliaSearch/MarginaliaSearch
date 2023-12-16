@@ -20,8 +20,18 @@ public class CrawlDelayTimer {
         this.delayTime = delayTime;
     }
 
+    /** Call when we've gotten an HTTP 429 response.  This will wait a moment, and then
+     * set a flag that slows down the main crawl delay as well. */
+    public void waitRetryDelay(RateLimitException ex) throws InterruptedException {
+        slowDown = true;
+
+        int delay = ex.retryAfter();
+
+        Thread.sleep(Math.clamp(delay, 100, 5000));
+    }
+
     @SneakyThrows
-    public void delay(long spentTime) {
+    public void waitFetchDelay(long spentTime) {
         long sleepTime = delayTime;
 
         if (sleepTime >= 1) {
@@ -29,10 +39,6 @@ public class CrawlDelayTimer {
                 return;
 
             Thread.sleep(min(sleepTime - spentTime, 5000));
-        }
-        else if (slowDown) {
-            // Additional delay when the server is signalling it wants slower requests
-            Thread.sleep( DEFAULT_CRAWL_DELAY_MIN_MS);
         }
         else {
             // When no crawl delay is specified, lean toward twice the fetch+process time,
@@ -48,10 +54,10 @@ public class CrawlDelayTimer {
 
             Thread.sleep(sleepTime - spentTime);
         }
-    }
 
-    /** Increase the delay between requests if the server is signalling it wants slower requests with HTTP 429 */
-    public void slowDown() {
-        slowDown = true;
+        if (slowDown) {
+            // Additional delay when the server is signalling it wants slower requests
+            Thread.sleep( DEFAULT_CRAWL_DELAY_MIN_MS);
+        }
     }
 }

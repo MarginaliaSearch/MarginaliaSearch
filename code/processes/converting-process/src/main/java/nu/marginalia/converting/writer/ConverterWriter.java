@@ -3,6 +3,7 @@ package nu.marginalia.converting.writer;
 import lombok.SneakyThrows;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.worklog.BatchingWorkLog;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +42,10 @@ public class ConverterWriter implements AutoCloseable {
     }
 
     @SneakyThrows
-    public void accept(ProcessedDomain domain) {
+    public void accept(@Nullable ProcessedDomain domain) {
+        if (null == domain)
+            return;
+
         domainData.put(domain);
     }
 

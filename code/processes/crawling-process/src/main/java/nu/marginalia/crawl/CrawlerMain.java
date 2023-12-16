@@ -13,10 +13,13 @@ import nu.marginalia.atags.source.AnchorTagsSourceFactory;
 import nu.marginalia.crawl.retreival.CrawlDataReference;
 import nu.marginalia.crawl.retreival.DomainProber;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
+import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.spec.CrawlSpecProvider;
 import nu.marginalia.crawl.spec.DbCrawlSpecProvider;
 import nu.marginalia.crawl.spec.ParquetCrawlSpecProvider;
 import nu.marginalia.crawling.io.CrawledDomainReader;
+import nu.marginalia.crawling.io.CrawlerOutputFile;
+import nu.marginalia.crawling.parquet.CrawledDocumentParquetRecordFileWriter;
 import nu.marginalia.crawlspec.CrawlSpecFileNames;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.model.crawlspec.CrawlSpecRecord;
@@ -27,18 +30,17 @@ import nu.marginalia.mq.inbox.MqSingleShotInbox;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.service.module.DatabaseModule;
-import nu.marginalia.crawling.io.CrawledDomainWriter;
 import nu.marginalia.crawl.retreival.CrawlerRetreiver;
-import nu.marginalia.crawl.retreival.fetcher.HttpFetcher;
 import nu.marginalia.util.SimpleBlockingThreadPool;
 import okhttp3.ConnectionPool;
 import okhttp3.Dispatcher;
-import okhttp3.internal.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.*;
@@ -49,13 +51,8 @@ import static nu.marginalia.mqapi.ProcessInboxNames.CRAWLER_INBOX;
 public class CrawlerMain {
     private final static Logger logger = LoggerFactory.getLogger(CrawlerMain.class);
 
-    private final ProcessHeartbeatImpl heartbeat;
-    private final ConnectionPool connectionPool = new ConnectionPool(5, 10, TimeUnit.SECONDS);
-
-    private final Dispatcher dispatcher = new Dispatcher(new ThreadPoolExecutor(0, Integer.MAX_VALUE, 5, TimeUnit.SECONDS,
-            new SynchronousQueue<>(), Util.threadFactory("OkHttp Dispatcher", true)));
-
     private final UserAgent userAgent;
+    private final ProcessHeartbeatImpl heartbeat;
     private final MessageQueueFactory messageQueueFactory;
     private final DomainProber domainProber;
     private final FileStorageService fileStorageService;
@@ -66,13 +63,12 @@ public class CrawlerMain {
     private final SimpleBlockingThreadPool pool;
 
     private final Map<String, String> processingIds = new ConcurrentHashMap<>();
-    private final CrawledDomainReader reader = new CrawledDomainReader();
 
     final AbortMonitor abortMonitor = AbortMonitor.getInstance();
 
     volatile int totalTasks;
     final AtomicInteger tasksDone = new AtomicInteger(0);
-    private final CrawlLimiter limiter = new CrawlLimiter();
+    private HttpFetcherImpl fetcher;
 
     @Inject
     public CrawlerMain(UserAgent userAgent,
@@ -83,8 +79,8 @@ public class CrawlerMain {
                        DbCrawlSpecProvider dbCrawlSpecProvider,
                        AnchorTagsSourceFactory anchorTagsSourceFactory,
                        Gson gson) {
-        this.heartbeat = heartbeat;
         this.userAgent = userAgent;
+        this.heartbeat = heartbeat;
         this.messageQueueFactory = messageQueueFactory;
         this.domainProber = domainProber;
         this.fileStorageService = fileStorageService;
@@ -93,8 +89,14 @@ public class CrawlerMain {
         this.gson = gson;
         this.node = processConfiguration.node();
 
-        // maybe need to set -Xss for JVM to deal with this?
-        pool = new SimpleBlockingThreadPool("CrawlerPool", CrawlLimiter.maxPoolSize, 1);
+        pool = new SimpleBlockingThreadPool("CrawlerPool",
+                Integer.getInteger("crawler.pool-size", 256),
+                1);
+
+        fetcher = new HttpFetcherImpl(userAgent.uaString(),
+                new Dispatcher(Executors.newVirtualThreadPerTaskExecutor()),
+                new ConnectionPool(5, 10, TimeUnit.SECONDS)
+        );
     }
 
     public static void main(String... args) throws Exception {
@@ -141,6 +143,7 @@ public class CrawlerMain {
     public void run(CrawlSpecProvider specProvider, Path outputDir) throws InterruptedException, IOException {
 
         heartbeat.start();
+
         try (WorkLog workLog = new WorkLog(outputDir.resolve("crawler.log"));
              AnchorTagsSource anchorTagsSource = anchorTagsSourceFactory.create(specProvider.getDomains())
         ) {
@@ -175,6 +178,7 @@ public class CrawlerMain {
                     activePoolCount = newActivePoolCount;
                 }
             }
+
         }
         catch (Exception ex) {
             logger.warn("Exception in crawler", ex);
@@ -211,27 +215,48 @@ public class CrawlerMain {
         @Override
         public void run() throws Exception {
 
-            limiter.waitForEnoughRAM();
+            Path newWarcFile = CrawlerOutputFile.createWarcPath(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.LIVE);
+            Path tempFile = CrawlerOutputFile.createWarcPath(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.TEMP);
+            Path finalWarcFile = CrawlerOutputFile.createWarcPath(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.FINAL);
+            Path parquetFile = CrawlerOutputFile.createParquetPath(outputDir, id, domain);
 
-            HttpFetcher fetcher = new HttpFetcherImpl(userAgent.uaString(), dispatcher, connectionPool);
+            if (Files.exists(newWarcFile)) {
+                Files.move(newWarcFile, tempFile, StandardCopyOption.REPLACE_EXISTING);
+            }
+            else {
+                Files.deleteIfExists(tempFile);
+            }
 
-            try (CrawledDomainWriter writer = new CrawledDomainWriter(outputDir, domain, id);
+            try (var warcRecorder = new WarcRecorder(newWarcFile); // write to a temp file for now
+                 var retriever = new CrawlerRetreiver(fetcher, domainProber, specification, warcRecorder);
                  CrawlDataReference reference = getReference())
             {
                 Thread.currentThread().setName("crawling:" + domain);
 
                 var domainLinks = anchorTagsSource.getAnchorTags(domain);
 
-                var retreiver = new CrawlerRetreiver(fetcher, domainProber, specification, writer::accept);
-                int size = retreiver.fetch(domainLinks, reference);
+                if (Files.exists(tempFile)) {
+                    retriever.syncAbortedRun(tempFile);
+                    Files.delete(tempFile);
+                }
 
-                workLog.setJobToFinished(domain, writer.getOutputFile().toString(), size);
+                int size = retriever.fetch(domainLinks, reference);
+
+                // Delete the reference crawl data if it's not the same as the new one
+                // (mostly a case when migrating from legacy->warc)
+                reference.delete();
+
+                CrawledDocumentParquetRecordFileWriter
+                        .convertWarc(domain, userAgent, newWarcFile, parquetFile);
+
+                workLog.setJobToFinished(domain, parquetFile.toString(), size);
                 heartbeat.setProgress(tasksDone.incrementAndGet() / (double) totalTasks);
 
                 logger.info("Fetched {}", domain);
-
             } catch (Exception e) {
                 logger.error("Error fetching domain " + domain, e);
+                Files.deleteIfExists(newWarcFile);
+                Files.deleteIfExists(tempFile);
             }
             finally {
                 // We don't need to double-count these; it's also kept int he workLog
@@ -242,8 +267,7 @@ public class CrawlerMain {
 
         private CrawlDataReference getReference() {
             try {
-                var dataStream = reader.createDataStream(outputDir, domain, id);
-                return new CrawlDataReference(dataStream);
+                return new CrawlDataReference(CrawledDomainReader.createDataStream(outputDir, domain, id));
             } catch (IOException e) {
                 logger.debug("Failed to read previous crawl data for {}", specification.domain);
                 return new CrawlDataReference();

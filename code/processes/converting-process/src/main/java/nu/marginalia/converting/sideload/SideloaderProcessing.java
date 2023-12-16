@@ -50,7 +50,8 @@ public class SideloaderProcessing {
                 Integer.toHexString(url.hashCode()),
                 url,
                 "",
-                "SIDELOAD"
+                "SIDELOAD",
+                false
         );
 
         var ret = new ProcessedDocument();

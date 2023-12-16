@@ -41,6 +41,7 @@ dependencies {
     implementation project(':code:features-convert:anchor-keywords')
     implementation project(':code:features-crawl:crawl-blocklist')
     implementation project(':code:features-crawl:link-parser')
+    implementation project(':code:features-crawl:content-type')
 
     implementation libs.bundles.slf4j
 
@@ -48,6 +49,7 @@ dependencies {
     implementation libs.guice
     implementation libs.gson
     implementation libs.zstd
+    implementation libs.jwarc
     implementation libs.crawlercommons
     implementation libs.okhttp3
     implementation libs.jsoup

@@ -105,13 +105,6 @@ public class DocumentProcessor {
     private EdgeUrl getDocumentUrl(CrawledDocument crawledDocument)
             throws URISyntaxException
     {
-        if (crawledDocument.canonicalUrl != null) {
-            try {
-                return new EdgeUrl(crawledDocument.canonicalUrl);
-            }
-            catch (URISyntaxException ex) { /* fallthrough */ }
-        }
-
         return new EdgeUrl(crawledDocument.url);
     }
 

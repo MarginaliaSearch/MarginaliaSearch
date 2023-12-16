@@ -4,11 +4,15 @@ import lombok.SneakyThrows;
 import nu.marginalia.crawl.retreival.RateLimitException;
 import nu.marginalia.crawl.retreival.fetcher.ContentTags;
 import nu.marginalia.crawl.retreival.fetcher.HttpFetcherImpl;
-import nu.marginalia.crawl.retreival.logic.ContentTypeLogic;
+import nu.marginalia.crawling.body.DocumentBodyExtractor;
+import nu.marginalia.crawling.body.DocumentBodyResult;
+import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
+import nu.marginalia.crawling.body.ContentTypeLogic;
 import nu.marginalia.model.EdgeUrl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
 
 class HttpFetcherTest {
@@ -28,16 +32,25 @@ class HttpFetcherTest {
     }
 
     @Test
-    void fetchUTF8() throws URISyntaxException, RateLimitException {
+    void fetchUTF8() throws URISyntaxException, RateLimitException, IOException {
         var fetcher = new HttpFetcherImpl("nu.marginalia.edge-crawler");
-        var str = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu"), ContentTags.empty());
-        System.out.println(str.contentType);
+        try (var recorder = new WarcRecorder()) {
+            var result = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu"), recorder, ContentTags.empty());
+            if (DocumentBodyExtractor.asString(result) instanceof DocumentBodyResult.Ok bodyOk) {
+                System.out.println(bodyOk.contentType());
+            }
+        }
     }
 
     @Test
-    void fetchText() throws URISyntaxException, RateLimitException {
+    void fetchText() throws URISyntaxException, RateLimitException, IOException {
         var fetcher = new HttpFetcherImpl("nu.marginalia.edge-crawler");
-        var str = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu/robots.txt"), ContentTags.empty());
-        System.out.println(str);
+
+        try (var recorder = new WarcRecorder()) {
+            var result = fetcher.fetchContent(new EdgeUrl("https://www.marginalia.nu/robots.txt"), recorder, ContentTags.empty());
+            if (DocumentBodyExtractor.asString(result) instanceof DocumentBodyResult.Ok bodyOk) {
+                System.out.println(bodyOk.contentType());
+            }
+        }
     }
 }

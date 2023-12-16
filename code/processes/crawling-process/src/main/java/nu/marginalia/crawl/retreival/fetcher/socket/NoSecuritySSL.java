@@ -1,4 +1,4 @@
-package nu.marginalia.crawl.retreival.fetcher;
+package nu.marginalia.crawl.retreival.fetcher.socket;
 
 import lombok.SneakyThrows;
 
@@ -8,6 +8,8 @@ import java.security.cert.X509Certificate;
 public class NoSecuritySSL {
 
     // Create a trust manager that does not validate certificate chains
+    // We want to accept e.g. self-signed certificates and certificates
+    // that are not signed by a CA is generally trusted by the system.
     public static final TrustManager[] trustAllCerts = new TrustManager[]{
             new X509TrustManager() {
                 @Override
@@ -26,7 +28,6 @@ public class NoSecuritySSL {
                 }
             }
     };
-
 
     @SneakyThrows
     public static SSLSocketFactory buildSocketFactory() {

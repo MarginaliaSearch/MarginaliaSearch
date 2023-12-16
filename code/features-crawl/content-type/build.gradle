@@ -1,0 +1,29 @@
+plugins {
+    id 'java'
+
+
+    id 'jvm-test-suite'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+dependencies {
+    implementation project(':code:common:model')
+    implementation libs.crawlercommons
+    implementation libs.notnull
+
+    implementation libs.bundles.gson
+    implementation libs.bundles.slf4j
+    testImplementation libs.bundles.slf4j.test
+
+    implementation libs.jsoup
+    implementation libs.commons.lang3
+
+    testImplementation libs.bundles.slf4j.test
+    testImplementation libs.bundles.junit
+    testImplementation libs.mockito
+}

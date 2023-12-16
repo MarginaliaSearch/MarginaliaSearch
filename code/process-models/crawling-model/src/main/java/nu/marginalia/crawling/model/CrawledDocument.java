@@ -23,12 +23,20 @@ public class CrawledDocument implements SerializableCrawlData {
 
     public String headers;
     public String documentBody;
+
+    @Deprecated
     public String documentBodyHash;
 
+    @Deprecated
     public String canonicalUrl;
     public String redirectUrl;
 
+    @Deprecated
     public String recrawlState;
+
+    /** This is not guaranteed to be set in all versions of the format,
+     * information may come in CrawledDomain instead */
+    public Boolean hasCookies = false;
 
     public static final String SERIAL_IDENTIFIER = "// DOCUMENT";
     @Override
