@@ -22,6 +22,8 @@ public class DomainInformation {
     boolean unknownDomain;
 
     String ip;
+    Integer asn;
+    String asnOrg;
     String ipCountry;
     String state;
 

@@ -124,10 +124,10 @@ public class DomainProcessor {
 
         terms.add("ip:"+ip);
 
-        String ipCountryCode = geoIpDictionary.getCountry(ip).toLowerCase();
-        if (!ipCountryCode.isBlank()) {
-            terms.add("ip:"+ipCountryCode);
-        }
+        geoIpDictionary.getAsnInfo(ip).ifPresent(asnInfo -> {
+            terms.add("asn:"+asnInfo.asn());
+            terms.add("ip:"+asnInfo.country());
+        });
 
         if (cookies) {
             terms.add(HtmlFeature.COOKIES.getKeyword());

@@ -60,7 +60,12 @@ public class DomainInformationService {
                 String ip = rs.getString("IP");
 
                 builder.ip(ip);
-                builder.ipCountry(geoIpDictionary.getCountry(ip));
+                var isnInfo = geoIpDictionary.getAsnInfo(ip);
+                if (isnInfo.isPresent()) {
+                    builder.asn(isnInfo.get().asn());
+                    builder.ipCountry(isnInfo.get().country());
+                    builder.asnOrg(isnInfo.get().org());
+                }
 
                 builder.nodeAffinity(rs.getInt("NODE_AFFINITY"));
                 builder.domain(new EdgeDomain(rs.getString("DOMAIN_NAME")));

@@ -62,6 +62,15 @@ public class WmsaHome {
 
     public static Path getIPLocationDatabse() {
         return getHomePath().resolve("data").resolve("IP2LOCATION-LITE-DB1.CSV");
+
+    }
+
+    public static Path getAsnMappingDatabase() {
+        return getHomePath().resolve("data").resolve("asn-data-raw-table");
+    }
+
+    public static Path getAsnInfoDatabase() {
+        return getHomePath().resolve("data").resolve("asn-used-autnums");
     }
 
     public static LanguageModels getLanguageModels() {
@@ -85,4 +94,6 @@ public class WmsaHome {
     public static boolean isDebug() {
         return debugMode;
     }
+
+
 }

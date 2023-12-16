@@ -2,6 +2,7 @@ package nu.marginalia.ip_blocklist;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.geoip.AsnTable;
 import nu.marginalia.geoip.GeoIpDictionary;
 import nu.marginalia.model.EdgeDomain;
 import org.slf4j.Logger;
@@ -43,7 +44,9 @@ public class GeoIpBlocklist {
 
     public String getCountry(EdgeDomain domain) {
         try {
-            return ipDictionary.getCountry(InetAddressCache.getAddress(domain));
+            return ipDictionary.getAsnInfo(InetAddressCache.getAddress(domain))
+                    .map(AsnTable.AsnInfo::country)
+                    .orElse("-");
         }
         catch (Throwable ex) {
             logger.debug("Failed to resolve {}", domain);
