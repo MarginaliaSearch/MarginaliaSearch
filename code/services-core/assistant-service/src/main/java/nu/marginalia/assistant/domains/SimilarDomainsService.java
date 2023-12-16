@@ -259,7 +259,7 @@ public class SimilarDomainsService {
         // or not very interesting
         if (!domainResult.indexed()
             && !domainResult.active()
-            && domainResult.relatedness() < 50)
+            && domainResult.relatedness() > 50)
         {
             return true;
         }
