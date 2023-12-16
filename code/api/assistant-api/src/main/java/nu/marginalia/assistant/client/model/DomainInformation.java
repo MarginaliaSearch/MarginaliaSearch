@@ -26,13 +26,15 @@ public class DomainInformation {
     String state;
 
     public String getIpFlag() {
-        if (ipCountry == null || ipCountry.isBlank()) {
+        if (ipCountry == null || ipCountry.codePointCount(0, ipCountry.length()) != 2) {
             return "";
         }
         String country = ipCountry;
+
         if ("UK".equals(country)) {
-            return "GB";
+            country = "GB";
         }
+
         int offset = 0x1F1E6;
         int asciiOffset = 0x41;
         int firstChar = Character.codePointAt(country, 0) - asciiOffset + offset;
