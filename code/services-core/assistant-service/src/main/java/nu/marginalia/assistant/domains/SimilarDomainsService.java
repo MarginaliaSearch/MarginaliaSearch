@@ -251,7 +251,7 @@ public class SimilarDomainsService {
         return domains;
     }
 
-    boolean shouldRemove(SimilarDomain domainResult) {
+    private boolean shouldRemove(SimilarDomain domainResult) {
         if (domainResult.url().domain.toString().length() > 32)
             return true;
 
@@ -259,7 +259,7 @@ public class SimilarDomainsService {
         // or not very interesting
         if (!domainResult.indexed()
             && !domainResult.active()
-            && domainResult.relatedness() < 0.5)
+            && domainResult.relatedness() < 50)
         {
             return true;
         }
