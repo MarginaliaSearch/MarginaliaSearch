@@ -11,12 +11,14 @@ import nu.marginalia.converting.processor.logic.links.LinkGraph;
 import nu.marginalia.crawling.io.SerializableCrawlDataStream;
 import nu.marginalia.crawling.model.*;
 import nu.marginalia.geoip.GeoIpDictionary;
+import nu.marginalia.geoip.sources.AsnTable;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.converting.processor.logic.links.TopKeywords;
 import nu.marginalia.converting.processor.logic.LshDocumentDeduplicator;
 import nu.marginalia.model.crawl.HtmlFeature;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,12 +123,7 @@ public class DomainProcessor {
 
         List<String> terms = new ArrayList<>();
 
-        terms.add("ip:"+ip);
-
-        String ipCountryCode = geoIpDictionary.getCountry(ip).toLowerCase();
-        if (!ipCountryCode.isBlank()) {
-            terms.add("ip:"+ipCountryCode);
-        }
+        addIpInfo(terms, ip);
 
         if (cookies) {
             terms.add(HtmlFeature.COOKIES.getKeyword());
@@ -154,6 +151,59 @@ public class DomainProcessor {
         calculateStatistics(ret, externalDomainLinks);
 
         return ret;
+    }
+
+    private void addIpInfo(List<String> terms, String ip) {
+        terms.add("ip:"+ip);
+
+        // Add IP location country as a term
+        String country = geoIpDictionary.getCountry(ip);
+        if (!country.isBlank()) { // use the ip:-prefix as there's no real confusion between e.g. ip:127.0.0.1 and ip:uk
+            terms.add("ip:"+country.toLowerCase());
+        }
+
+        // Add ASN as a term
+        geoIpDictionary.getAsnInfo(ip).ifPresent(asnInfo -> {
+            terms.add("as:"+asnInfo.asn());
+
+            for (var orgPart : StringUtils.split(asnInfo.org(), '-')) {
+                terms.add("as:"+orgPart.toLowerCase());
+            }
+
+            if (isCloudy(asnInfo)) {
+                terms.add("special:cloud");
+            }
+        });
+
+
+    }
+
+    private boolean isCloudy(AsnTable.AsnInfo asnInfo) {
+        String org = asnInfo.org();
+
+        if (org.contains("MICROSOFT-AZURE")) {
+            return true;
+        }
+        if(org.contains("AMAZON")) {
+            return true;
+        }
+        if (org.contains("CLOUDFLARE")) {
+            return true;
+        }
+        if (org.contains("GOOGLE-CLOUD")) {
+            return true;
+        }
+        if (org.contains("DIGITALOCEAN")) {
+            return true;
+        }
+        if (org.contains("ALIBABA")) {
+            return true;
+        }
+        if (org.contains("CLOUDFLARE")) {
+            return true;
+        }
+
+        return false;
     }
 
 

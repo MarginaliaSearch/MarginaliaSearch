@@ -60,6 +60,11 @@ public class DomainInformationService {
                 String ip = rs.getString("IP");
 
                 builder.ip(ip);
+                geoIpDictionary.getAsnInfo(ip).ifPresent(asnInfo -> {
+                    builder.asn(asnInfo.asn());
+                    builder.asnOrg(asnInfo.org());
+                    builder.asnCountry(asnInfo.country());
+                });
                 builder.ipCountry(geoIpDictionary.getCountry(ip));
 
                 builder.nodeAffinity(rs.getInt("NODE_AFFINITY"));

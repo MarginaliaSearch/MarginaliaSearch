@@ -1,55 +1,45 @@
 package nu.marginalia.geoip;
 
-import com.opencsv.CSVReader;
 import nu.marginalia.WmsaHome;
+import nu.marginalia.geoip.sources.AsnMapping;
+import nu.marginalia.geoip.sources.AsnTable;
+import nu.marginalia.geoip.sources.IP2LocationMapping;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileReader;
 import java.net.InetAddress;
-import java.util.TreeMap;
+import java.util.Optional;
 
 public class GeoIpDictionary {
-    private volatile TreeMap<Long, IpRange> ranges = null;
+    private volatile IP2LocationMapping ip2locMapping = null;
+    private volatile AsnTable asnTable = null;
+    private volatile AsnMapping asnMapping = null;
     private static final Logger logger = LoggerFactory.getLogger(GeoIpDictionary.class);
 
-    record IpRange(long from, long to, String country) {}
+    volatile boolean ready = false;
 
     public GeoIpDictionary() {
         Thread.ofPlatform().start(() -> {
-            try (var reader = new CSVReader(new FileReader(WmsaHome.getIPLocationDatabse().toFile()))) {
-                var dict = new TreeMap<Long, IpRange>();
+            this.asnTable = new AsnTable(WmsaHome.getAsnInfoDatabase());
+            logger.info("Loaded ASN table");
+            this.asnMapping = new AsnMapping(WmsaHome.getAsnMappingDatabase());
+            logger.info("Loaded ASN mapping");
+            this.ip2locMapping = new IP2LocationMapping(WmsaHome.getIPLocationDatabse());
 
-                for (;;) {
-                    String[] vals = reader.readNext();
-                    if (vals == null) {
-                        break;
-                    }
-                    var range = new IpRange(Long.parseLong(vals[0]),
-                            Long.parseLong(vals[1]),
-                            vals[2]);
-                    dict.put(range.from, range);
-                }
-                ranges = dict;
-                logger.info("Loaded {} IP ranges", ranges.size());
-            } catch (Exception e) {
-                ranges = new TreeMap<>();
-                throw new RuntimeException(e);
-            }
-            finally {
-                synchronized (this) {
-                    this.notifyAll();
-                }
+            ready = true;
+
+            synchronized (this) {
+                this.notifyAll();
             }
         });
     }
 
     public boolean isReady() {
-        return null != ranges;
+        return ready;
     }
 
     public boolean waitReady() {
-        while (null == ranges) {
+        while (!ready) {
             try {
                 synchronized (this) {
                     this.wait(1000);
@@ -61,32 +51,46 @@ public class GeoIpDictionary {
         return true;
     }
 
+
     public String getCountry(String ip) {
-        try {
-            return getCountry(InetAddress.getByName(ip));
-        } catch (Exception e) {
+        if (null == ip2locMapping) {
             return "";
         }
+        return ip2locMapping.getCountry(ip);
     }
 
     public String getCountry(InetAddress address) {
-        if (null == ranges) { // not loaded yet or failed to load
+        if (null == ip2locMapping) {
             return "";
         }
 
+        return ip2locMapping.getCountry(address);
+    }
+
+    public Optional<AsnTable.AsnInfo> getAsnInfo(String ip) {
+        try {
+            return getAsnInfo(InetAddress.getByName(ip));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Optional.empty();
+        }
+    }
+
+    public Optional<AsnTable.AsnInfo> getAsnInfo(int ipAddress) {
+        if (null == asnTable) { // not loaded yet or failed to load
+            return Optional.empty();
+        }
+
+        return asnMapping
+                .getAsnNumber(ipAddress)
+                .flatMap(asn -> asnTable.getAsnInfo(asn));
+    }
+
+    public Optional<AsnTable.AsnInfo> getAsnInfo(InetAddress address) {
         byte[] bytes = address.getAddress();
-        long ival = ((long)bytes[0]&0xFF) << 24 | ((long)bytes[1]&0xFF) << 16 | ((long)bytes[2]&0xFF)<< 8 | ((long)bytes[3]&0xFF);
 
-        Long key = ranges.floorKey(ival);
-        if (null == key) {
-            return "";
-        }
+        int ival = (int) (((long)bytes[0]&0xFF) << 24 | ((long)bytes[1]&0xFF) << 16 | ((long)bytes[2]&0xFF)<< 8 | ((long)bytes[3]&0xFF));
 
-        var range = ranges.get(key);
-        if (ival >= key && ival < range.to) {
-            return range.country;
-        }
-
-        return "";
+        return getAsnInfo(ival);
     }
 }

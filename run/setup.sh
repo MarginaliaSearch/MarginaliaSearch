@@ -32,6 +32,9 @@ download_model model/lid.176.ftz https://downloads.marginalia.nu/model/lid.176.f
 download_model data/IP2LOCATION-LITE-DB1.CSV.ZIP https://download.ip2location.com/lite/IP2LOCATION-LITE-DB1.CSV.ZIP
 unzip -qn -d data data/IP2LOCATION-LITE-DB1.CSV.ZIP
 
+download_model data/asn-data-raw-table https://thyme.apnic.net/current/data-raw-table
+download_model data/asn-used-autnums https://thyme.apnic.net/current/data-used-autnums
+
 download_model data/adblock.txt https://downloads.marginalia.nu/data/adblock.txt
 if [ ! -f data/suggestions.txt ]; then
   download_model data/suggestions.txt.gz https://downloads.marginalia.nu/data/suggestions.txt.gz

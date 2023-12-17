@@ -6,6 +6,8 @@
     Pages Known: {{pagesKnown}} <br/>
     Pages Crawled: {{pagesFetched}} <br/>
     Pages Indexed: {{pagesIndexed}} <br/>
+    <p></p>
     IP: {{ip}} {{#if ipCountry}}<span title="{{ipCountry}}">{{getIpFlag}}</span>{{/if}}<br/>
+    <span title="Autonomous System">AS</span>: {{#if asn}}AS{{asn}} {{asnOrg}} {{asnCountry}}{{/if}} <br/>
 </fieldset>
 <br/>
