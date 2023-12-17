@@ -52,7 +52,7 @@ public class CrawledDocument implements SerializableCrawlData {
         return EdgeUrl
                 .parse(url)
                 .map(EdgeUrl::getDomain)
-                .map(d -> d.domain)
+                .map(Object::toString)
                 .orElse(null);
     }
 

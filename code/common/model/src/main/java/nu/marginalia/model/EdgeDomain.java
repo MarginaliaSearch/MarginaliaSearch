@@ -15,7 +15,7 @@ public class EdgeDomain implements Serializable {
     @Nonnull
     public final String subDomain;
     @Nonnull
-    public final String domain;
+    public final String topDomain;
 
     @SneakyThrows
     public EdgeDomain(String host) {
@@ -27,13 +27,13 @@ public class EdgeDomain implements Serializable {
 
         if (dot < 0 || looksLikeAnIp(host)) { // IPV6 >.>
             subDomain = "";
-            domain = host;
+            topDomain = host;
         }
         else {
             int dot2 = host.substring(0, dot).lastIndexOf('.');
             if (dot2 < 0) {
                 subDomain = "";
-                domain = host;
+                topDomain = host;
             }
             else {
                 if (looksLikeGovTld(host))
@@ -42,16 +42,16 @@ public class EdgeDomain implements Serializable {
                     if (dot3 >= 0) {
                         dot2 = dot3;
                         subDomain = host.substring(0, dot2);
-                        domain = host.substring(dot2 + 1);
+                        topDomain = host.substring(dot2 + 1);
                     }
                     else {
                         subDomain = "";
-                        domain = host;
+                        topDomain = host;
                     }
                 }
                 else {
                     subDomain = host.substring(0, dot2);
-                    domain = host.substring(dot2 + 1);
+                    topDomain = host.substring(dot2 + 1);
                 }
             }
         }
@@ -97,28 +97,28 @@ public class EdgeDomain implements Serializable {
 
     public String getAddress() {
         if (!subDomain.isEmpty()) {
-            return subDomain + "." + domain;
+            return subDomain + "." + topDomain;
         }
-        return domain;
+        return topDomain;
     }
 
     public String getDomainKey() {
-        int cutPoint = domain.indexOf('.');
+        int cutPoint = topDomain.indexOf('.');
         if (cutPoint < 0) {
-            return domain;
+            return topDomain;
         }
-        return domain.substring(0, cutPoint).toLowerCase();
+        return topDomain.substring(0, cutPoint).toLowerCase();
     }
 
     public String getLongDomainKey() {
         StringBuilder ret = new StringBuilder();
 
-        int cutPoint = domain.indexOf('.');
+        int cutPoint = topDomain.indexOf('.');
         if (cutPoint < 0) {
-            ret.append(domain);
+            ret.append(topDomain);
         }
         else {
-            ret.append(domain, 0, cutPoint);
+            ret.append(topDomain, 0, cutPoint);
         }
 
         if (!"".equals(subDomain) && !"www".equals(subDomain)) {
@@ -133,30 +133,30 @@ public class EdgeDomain implements Serializable {
     public boolean hasSameTopDomain(EdgeDomain other) {
         if (other == null) return false;
 
-        return domain.equalsIgnoreCase(other.domain);
+        return topDomain.equalsIgnoreCase(other.topDomain);
     }
 
     public String getTld() {
         int dot = -1;
-        int length = domain.length();
+        int length = topDomain.length();
 
-        if (ipPatternTest.test(domain)) {
+        if (ipPatternTest.test(topDomain)) {
             return "IP";
         }
 
-        if (govListTest.test(domain)) {
-            dot = domain.indexOf('.', Math.max(0, length - ".edu.uk".length()));
+        if (govListTest.test(topDomain)) {
+            dot = topDomain.indexOf('.', Math.max(0, length - ".edu.uk".length()));
         }
         else {
-            dot = domain.lastIndexOf('.');
+            dot = topDomain.lastIndexOf('.');
         }
 
 
-        if (dot < 0 || dot == domain.length() - 1) {
+        if (dot < 0 || dot == topDomain.length() - 1) {
             return "-";
         }
         else {
-            return domain.substring(dot + 1);
+            return topDomain.substring(dot + 1);
         }
     }
 
@@ -166,8 +166,8 @@ public class EdgeDomain implements Serializable {
         final String this$subDomain = this.getSubDomain();
         final String other$subDomain = other.getSubDomain();
         if (!Objects.equals(this$subDomain,other$subDomain)) return false;
-        final String this$domain = this.getDomain();
-        final String other$domain = other.getDomain();
+        final String this$domain = this.getTopDomain();
+        final String other$domain = other.getTopDomain();
         if (!Objects.equals(this$domain,other$domain)) return false;
         return true;
     }
@@ -177,7 +177,7 @@ public class EdgeDomain implements Serializable {
         int result = 1;
         final Object $subDomain = this.getSubDomain().toLowerCase();
         result = result * PRIME + $subDomain.hashCode();
-        final Object $domain = this.getDomain().toLowerCase();
+        final Object $domain = this.getTopDomain().toLowerCase();
         result = result * PRIME + $domain.hashCode();
         return result;
     }

@@ -291,7 +291,7 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
 
         for (var fd : lp.getForeignDomains()) {
             linkTerms.add("links:"+fd.toString().toLowerCase());
-            linkTerms.add("links:"+fd.getDomain().toLowerCase());
+            linkTerms.add("links:"+fd.getTopDomain().toLowerCase());
         }
 
         return linkTerms;

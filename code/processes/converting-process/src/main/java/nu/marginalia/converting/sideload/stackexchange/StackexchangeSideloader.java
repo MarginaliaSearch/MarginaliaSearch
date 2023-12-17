@@ -115,8 +115,9 @@ public class StackexchangeSideloader implements SideloadSource {
             ret.words = keywordExtractor.extractKeywords(dld, url);
             ret.words.addAllSyntheticTerms(List.of(
                     "site:" + domainName,
-                    "site:" + url.domain.domain,
-                    url.domain.domain
+                    "site:" + url.domain.topDomain,
+                    url.domain.topDomain,
+                    domainName
             ));
 
             if (!post.tags().isBlank()) {

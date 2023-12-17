@@ -61,7 +61,7 @@ public class DomainListRefreshService {
             for (var domain : domainsAll) {
                 var parsed = new EdgeDomain(domain);
                 insert.setString(1, domain.toLowerCase());
-                insert.setString(2, parsed.domain);
+                insert.setString(2, parsed.topDomain);
                 insert.setInt(3, nodeId);
                 insert.addBatch();
             }

@@ -157,7 +157,7 @@ public class ExportAtagsActor extends RecordActorPrototype {
                 return false;
 
             // This is an artifact of the link parser typically
-            if ("example.com".equals(url.domain.domain))
+            if ("example.com".equals(url.domain.topDomain))
                 return false;
 
             if (linkText.contains(url.domain.toString()))

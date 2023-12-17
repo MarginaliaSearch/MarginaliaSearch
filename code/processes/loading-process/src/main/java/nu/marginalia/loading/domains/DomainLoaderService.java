@@ -147,7 +147,7 @@ public class DomainLoaderService {
 
         public void accept(EdgeDomain domain) throws SQLException {
             statement.setString(1, domain.toString());
-            statement.setString(2, domain.domain);
+            statement.setString(2, domain.topDomain);
             statement.setInt(3, nodeAffinity);
             statement.addBatch();
 

@@ -30,7 +30,7 @@ public class SearchQueryParamFactory {
                 profile.getSizeLimit(),
                 SpecificationLimit.none(),
                 List.of(),
-                new QueryLimits(2, 100, 200, 8192),
+                new QueryLimits(1, 100, 200, 8192),
                 profile.searchSetIdentifier
         );
 
