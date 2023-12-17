@@ -36,6 +36,10 @@ public record SimilarDomain(EdgeUrl url,
         BIDIRECTIONAL,
         NONE;
 
+        public boolean isLinked() {
+            return this != NONE;
+        }
+
         public static LinkType find(boolean linkStod,
                                     boolean linkDtos) {
             if (linkDtos && linkStod)

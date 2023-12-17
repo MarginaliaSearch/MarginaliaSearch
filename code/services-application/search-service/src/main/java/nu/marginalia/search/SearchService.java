@@ -32,6 +32,7 @@ public class SearchService extends Service {
                          SearchErrorPageService errorPageService,
                          SearchAddToCrawlQueueService addToCrawlQueueService,
                          SearchSiteInfoService siteInfoService,
+                         SearchCrosstalkService crosstalkService,
                          SearchQueryService searchQueryService
                              ) {
         super(params);
@@ -54,6 +55,8 @@ public class SearchService extends Service {
 
         Spark.get("/public/site/:site", siteInfoService::handle);
         Spark.post("/public/site/:site", siteInfoService::handlePost);
+
+        Spark.get("/public/crosstalk/", crosstalkService::handle);
 
         Spark.exception(Exception.class, (e,p,q) -> {
             logger.error("Error during processing", e);

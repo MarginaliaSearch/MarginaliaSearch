@@ -85,6 +85,14 @@ public class SearchOperator {
 
         return searchQueryService.getResultsFromQuery(queryResponse);
     }
+
+    public List<UrlDetails> doLinkSearch(Context context, String source, String dest) {
+        var queryParams = paramFactory.forLinkSearch(source, dest);
+        var queryResponse = queryClient.search(context, queryParams);
+
+        return searchQueryService.getResultsFromQuery(queryResponse);
+    }
+
     public DecoratedSearchResults doSearch(Context ctx, SearchParameters userParams) {
 
         Future<String> eval = searchUnitConversionService.tryEval(ctx, userParams.query());
@@ -179,6 +187,7 @@ public class SearchOperator {
         return "\"" + term + "\" could be spelled " +
                 suggestions.stream().map(s -> "\""+s+"\"").collect(Collectors.joining(", "));
     }
+
 
 
 }

@@ -352,6 +352,15 @@ footer {
   align-items: start;
 }
 
+#crosstalk-view {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto 1fr;
+  grid-gap: 1ch;
+  align-content: start;
+  justify-content: start;
+  align-items: start;
+}
 
 #similar-view {
     display: grid;
@@ -405,7 +414,7 @@ footer {
 }
 
 @media (max-device-width: 900px) {
-  #similar-view {
+  #similar-view, #crosstalk-view {
     display: block;
     * {
       margin-bottom: 1ch;

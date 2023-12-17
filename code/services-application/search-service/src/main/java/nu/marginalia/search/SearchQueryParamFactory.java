@@ -69,4 +69,21 @@ public class SearchQueryParamFactory {
                 SearchSetIdentifier.NONE
         );
     }
+
+    public QueryParams forLinkSearch(String sourceDomain, String destDomain) {
+        return new QueryParams(STR."site:\{sourceDomain} links:\{destDomain}",
+                null,
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                SpecificationLimit.none(),
+                SpecificationLimit.none(),
+                SpecificationLimit.none(),
+                SpecificationLimit.none(),
+                List.of(),
+                new QueryLimits(100, 100, 100, 512),
+                SearchSetIdentifier.NONE
+        );
+    }
 }

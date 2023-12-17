@@ -44,7 +44,9 @@
                             {{#if screenshot}}&#x1f4f7;{{/if}}
                         </td>
                         <td>
-                            <span title="{{linkType.description}}">{{{linkType}}}</span>
+                            {{#if linkType.isLinked}}
+                                <span title="{{linkType.description}}"><a href="/crosstalk/?domains={{domain}},{{url.domain}}">{{{linkType}}}</a></span>
+                            {{/if}}
                         </td>
                         <td>
                             <span title="{{rank}}%">{{{rankSymbols}}}</span>
@@ -92,7 +94,9 @@
                             {{#if screenshot}}&#x1f4f7;{{/if}}
                         </td>
                         <td>
-                            <span title="{{linkType.description}}">{{{linkType}}}</span>
+                            {{#if linkType.isLinked}}
+                                <span title="{{linkType.description}}"><a href="/crosstalk/?domains={{domain}},{{url.domain}}">{{{linkType}}}</a></span>
+                            {{/if}}
                         </td>
                         <td>
                             <span title="{{rank}}%">{{{rankSymbols}}}</span>
