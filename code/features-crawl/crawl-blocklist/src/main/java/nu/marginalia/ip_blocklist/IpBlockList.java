@@ -62,7 +62,7 @@ public class IpBlockList {
         if (blocklistDisabled)
             return true;
 
-        if (domain.domain.endsWith(".cn")) {
+        if (domain.topDomain.endsWith(".cn")) {
             logger.debug("Blocking {} on .cn-end", domain);
             return false;
         }

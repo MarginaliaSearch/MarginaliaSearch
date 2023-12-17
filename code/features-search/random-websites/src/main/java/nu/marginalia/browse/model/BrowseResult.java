@@ -10,7 +10,7 @@ public record BrowseResult (EdgeUrl url,
     public String domainHash() {
         var domain = url.domain;
         if ("www".equals(domain.subDomain)) {
-            return domain.domain;
+            return domain.topDomain;
         }
         return domain.toString();
     }
@@ -19,7 +19,7 @@ public record BrowseResult (EdgeUrl url,
         String ret;
         var domain = url.domain;
         if ("www".equals(domain.subDomain)) {
-            ret = domain.domain;
+            ret = domain.topDomain;
         }
         else {
             ret = domain.toString();

@@ -54,7 +54,7 @@ public class HtmlProcessorSpecializations {
             return blogSpecialization;
         }
 
-        if (url.domain.getDomain().equals("mariadb.com")
+        if (url.domain.getTopDomain().equals("mariadb.com")
                 && url.path.startsWith("/kb")) {
             return mariadbKbSpecialization;
         }

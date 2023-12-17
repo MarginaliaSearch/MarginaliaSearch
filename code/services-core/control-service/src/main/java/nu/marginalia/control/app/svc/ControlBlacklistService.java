@@ -81,7 +81,7 @@ public class ControlBlacklistService {
                      """)) {
             stmt.setString(1, domain.toString());
             stmt.addBatch();
-            stmt.setString(1, domain.domain);
+            stmt.setString(1, domain.topDomain);
             stmt.addBatch();
             stmt.executeBatch();
         }

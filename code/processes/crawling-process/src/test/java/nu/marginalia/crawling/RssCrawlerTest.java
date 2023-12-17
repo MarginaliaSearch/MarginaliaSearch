@@ -33,7 +33,7 @@ class RssCrawlerTest {
             var href = element.attr("href");
             if (href != null && !href.isBlank()) {
                 lp.parseLink(base, href)
-                        .filter(u -> Objects.equals(u.domain.domain, base.domain.domain))
+                        .filter(u -> Objects.equals(u.domain.topDomain, base.domain.topDomain))
                         .ifPresent(urls::add);
             }
         });
@@ -42,7 +42,7 @@ class RssCrawlerTest {
             var href = element.text();
             if (href != null && !href.isBlank()) {
                 lp.parseLink(base, href)
-                        .filter(u -> Objects.equals(u.domain.domain, base.domain.domain))
+                        .filter(u -> Objects.equals(u.domain.topDomain, base.domain.topDomain))
                         .ifPresent(urls::add);
             }
         });
@@ -51,7 +51,7 @@ class RssCrawlerTest {
             var href = element.text();
             if (href != null && !href.isBlank()) {
                 lp.parseLink(base, href)
-                        .filter(u -> Objects.equals(u.domain.domain, base.domain.domain))
+                        .filter(u -> Objects.equals(u.domain.topDomain, base.domain.topDomain))
                         .ifPresent(urls::add);
             }
         });

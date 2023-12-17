@@ -67,7 +67,7 @@ public class UrlBlocklist {
 
     public boolean isUrlBlocked(EdgeUrl url) {
         try {
-            if (badDomains.contains(url.domain.domain)) {
+            if (badDomains.contains(url.domain.topDomain)) {
                 return true;
             }
 
@@ -76,7 +76,7 @@ public class UrlBlocklist {
                 return true;
             }
 
-            if ("github.com".equals(url.domain.domain)) {
+            if ("github.com".equals(url.domain.topDomain)) {
                 return url.path.chars().filter(c -> c == '/').count() > 2;
             }
 

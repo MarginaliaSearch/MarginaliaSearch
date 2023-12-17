@@ -14,7 +14,6 @@ import nu.marginalia.geoip.GeoIpDictionary;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.converting.processor.logic.links.TopKeywords;
 import nu.marginalia.converting.processor.logic.LshDocumentDeduplicator;
 import nu.marginalia.model.crawl.HtmlFeature;
@@ -161,10 +160,10 @@ public class DomainProcessor {
     private static final Pattern academicPattern = Pattern.compile(".*\\.(ac|edu)\\.[a-z]{2}$");
     private boolean isAcademicDomain(EdgeDomain domain) {
 
-        if (domain.domain.endsWith(".edu"))
+        if (domain.topDomain.endsWith(".edu"))
             return true;
 
-        if (academicPattern.matcher(domain.domain).matches())
+        if (academicPattern.matcher(domain.topDomain).matches())
             return true;
 
         return false;

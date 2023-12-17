@@ -50,7 +50,7 @@ public abstract class AbstractDocumentProcessorPlugin {
         public MetaTagsBuilder addUrl(EdgeUrl url) {
             add("proto", url.proto);
             add("site", url.domain);
-            add("site", url.domain.domain);
+            add("site", url.domain.topDomain);
             add("tld", url.domain.getTld());
 
             if (url.path.startsWith("/~")) {
