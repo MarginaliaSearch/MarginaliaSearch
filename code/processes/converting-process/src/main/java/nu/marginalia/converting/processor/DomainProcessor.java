@@ -199,9 +199,6 @@ public class DomainProcessor {
         if (org.contains("ALIBABA")) {
             return true;
         }
-        if (org.contains("CLOUDFLARE")) {
-            return true;
-        }
 
         return false;
     }
