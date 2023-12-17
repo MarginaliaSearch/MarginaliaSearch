@@ -1,4 +1,4 @@
-package nu.marginalia.geoip;
+package nu.marginalia.geoip.sources;
 
 import nu.marginalia.WmsaHome;
 import org.slf4j.Logger;

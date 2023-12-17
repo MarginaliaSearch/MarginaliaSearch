@@ -1,6 +1,9 @@
 package nu.marginalia.geoip;
 
 import nu.marginalia.WmsaHome;
+import nu.marginalia.geoip.sources.AsnMapping;
+import nu.marginalia.geoip.sources.AsnTable;
+import nu.marginalia.geoip.sources.IP2LocationMapping;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -8,10 +11,12 @@ import java.net.InetAddress;
 import java.util.Optional;
 
 public class GeoIpDictionary {
+    private volatile IP2LocationMapping ip2locMapping = null;
     private volatile AsnTable asnTable = null;
     private volatile AsnMapping asnMapping = null;
     private static final Logger logger = LoggerFactory.getLogger(GeoIpDictionary.class);
 
+    volatile boolean ready = false;
 
     public GeoIpDictionary() {
         Thread.ofPlatform().start(() -> {
@@ -19,15 +24,22 @@ public class GeoIpDictionary {
             logger.info("Loaded ASN table");
             this.asnMapping = new AsnMapping(WmsaHome.getAsnMappingDatabase());
             logger.info("Loaded ASN mapping");
+            this.ip2locMapping = new IP2LocationMapping(WmsaHome.getIPLocationDatabse());
+
+            ready = true;
+
+            synchronized (this) {
+                this.notifyAll();
+            }
         });
     }
 
     public boolean isReady() {
-        return null != asnMapping;
+        return ready;
     }
 
     public boolean waitReady() {
-        while (null == asnMapping) {
+        while (!ready) {
             try {
                 synchronized (this) {
                     this.wait(1000);
@@ -37,6 +49,22 @@ public class GeoIpDictionary {
             }
         }
         return true;
+    }
+
+
+    public String getCountry(String ip) {
+        if (null == ip2locMapping) {
+            return "";
+        }
+        return ip2locMapping.getCountry(ip);
+    }
+
+    public String getCountry(InetAddress address) {
+        if (null == ip2locMapping) {
+            return "";
+        }
+
+        return ip2locMapping.getCountry(address);
     }
 
     public Optional<AsnTable.AsnInfo> getAsnInfo(String ip) {

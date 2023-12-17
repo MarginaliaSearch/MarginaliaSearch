@@ -29,6 +29,9 @@ download_model model/ngrams.bin https://downloads.marginalia.nu/model/ngrams.bin
 download_model model/tfreq-new-algo3.bin https://downloads.marginalia.nu/model/tfreq-new-algo3.bin
 download_model model/lid.176.ftz https://downloads.marginalia.nu/model/lid.176.ftz
 
+download_model data/IP2LOCATION-LITE-DB1.CSV.ZIP https://download.ip2location.com/lite/IP2LOCATION-LITE-DB1.CSV.ZIP
+unzip -qn -d data data/IP2LOCATION-LITE-DB1.CSV.ZIP
+
 download_model data/asn-data-raw-table https://thyme.apnic.net/current/data-raw-table
 download_model data/asn-used-autnums https://thyme.apnic.net/current/data-used-autnums
 

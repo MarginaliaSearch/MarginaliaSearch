@@ -24,6 +24,8 @@ public class DomainInformation {
     String ip;
     Integer asn;
     String asnOrg;
+    String asnCountry;
+
     String ipCountry;
     String state;
 

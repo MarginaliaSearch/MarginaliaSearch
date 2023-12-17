@@ -108,6 +108,11 @@
       <h1> Open Source </h1>
         The search engine is open source with an AGPL license. The sources can be perused at
         <tt><a href="https://git.marginalia.nu/">https://git.marginalia.nu/</a></tt>.
+      <h1>Data Sources</h1>
+      IP geolocation is sourced from the IP2Location LITE data available from
+      <a rel="external noopener nofollow" href="https://lite.ip2location.com/">https://lite.ip2location.com/</a>
+      under
+      <a rel="external noopener nofollow" href="https://creativecommons.org/licenses/by-sa/4.0/">CC-BY-SA&nbsp;4.0</a>.
     </section>
 
 </footer>
