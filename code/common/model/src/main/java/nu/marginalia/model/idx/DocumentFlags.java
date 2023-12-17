@@ -8,7 +8,7 @@ public enum DocumentFlags {
     GeneratorDocs,
     GeneratorForum,
     GeneratorWiki,
-    Unused6,
+    Sideloaded,
     Unused7,
     Unused8,
     ;

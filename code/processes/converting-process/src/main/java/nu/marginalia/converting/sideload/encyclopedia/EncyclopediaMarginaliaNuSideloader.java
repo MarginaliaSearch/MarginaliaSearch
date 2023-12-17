@@ -110,13 +110,18 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
         String fullUrl = baseUrl.toString() + url;
 
         StringBuilder fullHtml = new StringBuilder();
-        fullHtml.append("<!DOCTYPE html><html><head><title>").append(title).append("</title></head><body>");
+        fullHtml
+                .append("<!DOCTYPE html><html><head><title>")
+                .append(title)
+                .append("</title></head><body>")
+                .append("<div class=\"mw-content-text\">");
+
         for (String part : parts) {
             fullHtml.append("<p>");
             fullHtml.append(part);
             fullHtml.append("</p>");
         }
-        fullHtml.append("</body></html>");
+        fullHtml.append("</div></body></html>");
 
         var doc = sideloaderProcessing
                 .processDocument(fullUrl,

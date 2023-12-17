@@ -63,6 +63,11 @@ public class SideloaderProcessing {
             for (String keyword : extraKeywords)
                 ret.words.add(keyword, WordFlags.Subjects.asBit());
 
+            if (type == GeneratorType.WIKI)
+                ret.words.add("generator:wiki", WordFlags.Subjects.asBit());
+            else if (type == GeneratorType.DOCS)
+                ret.words.add("generator:docs", WordFlags.Subjects.asBit());
+
             ret.details = details.details();
 
             // Add a few things that we know about the document
@@ -80,8 +85,8 @@ public class SideloaderProcessing {
                             PubDate.toYearByte(ret.details.pubYear),
                             (int) -ret.details.quality,
                             switch (type) {
-                                case WIKI -> EnumSet.of(DocumentFlags.GeneratorWiki);
-                                case DOCS -> EnumSet.of(DocumentFlags.GeneratorDocs);
+                                case WIKI -> EnumSet.of(DocumentFlags.GeneratorWiki, DocumentFlags.Sideloaded);
+                                case DOCS -> EnumSet.of(DocumentFlags.GeneratorDocs, DocumentFlags.Sideloaded);
                                 default -> EnumSet.noneOf(DocumentFlags.class);
                             });
 
