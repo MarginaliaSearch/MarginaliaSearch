@@ -131,10 +131,14 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
             return;
         }
 
+
+
         byte[] bodyBytes;
         String contentType;
 
         var body = DocumentBodyExtractor.asBytes(result);
+
+        var headers = fetchOk.headers();
 
         if (body instanceof DocumentBodyResult.Ok<byte[]> bodyOk) {
             bodyBytes = bodyOk.body();
@@ -153,7 +157,9 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
                 fetchOk.statusCode(),
                 response.date(),
                 contentType,
-                bodyBytes)
+                bodyBytes,
+                headers.get("ETag"),
+                headers.get("Last-Modified"))
         );
     }
 
@@ -170,7 +176,9 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
                 0,
                 date,
                 "x-marginalia/advisory;state=redirect",
-                new byte[0]
+                new byte[0],
+                null,
+                null
         );
     }
     private CrawledDocumentParquetRecord forDomainError(String domain, Instant date, String ip, String errorStatus) {
@@ -181,7 +189,9 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
                 0,
                 date,
                 "x-marginalia/advisory;state=error",
-                errorStatus.getBytes()
+                errorStatus.getBytes(),
+                null,
+                null
         );
     }
 
@@ -193,7 +203,9 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
                 0,
                 date,
                 errorStatus,
-                new byte[0]
+                new byte[0],
+                null,
+                null
         );
     }
 

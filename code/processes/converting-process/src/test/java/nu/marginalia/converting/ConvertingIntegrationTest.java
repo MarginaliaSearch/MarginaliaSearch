@@ -116,7 +116,9 @@ public class ConvertingIntegrationTest {
                     "https://memex.marginalia.nu/" + file,
                     null,
                     "",
-                    false
+                    false,
+                    null,
+                    null
                     );
             docs.add(doc);
         }

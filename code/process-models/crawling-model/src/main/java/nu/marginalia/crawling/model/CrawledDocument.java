@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.ToString;
 import nu.marginalia.bigstring.BigString;
 import nu.marginalia.model.EdgeUrl;
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 
 @Builder
 @AllArgsConstructor
@@ -21,7 +23,10 @@ public class CrawledDocument implements SerializableCrawlData {
     public String crawlerStatus;
     public String crawlerStatusDesc;
 
+    @Nullable
+    @Deprecated // use getETag() or getLastModified() instead
     public String headers;
+
     public String documentBody;
 
     @Deprecated
@@ -37,6 +42,51 @@ public class CrawledDocument implements SerializableCrawlData {
     /** This is not guaranteed to be set in all versions of the format,
      * information may come in CrawledDomain instead */
     public Boolean hasCookies = false;
+
+    public String lastModifiedMaybe;
+    public String etagMaybe;
+
+    @Nullable
+    private String getHeader(String header) {
+        if (headers == null) {
+            return null;
+        }
+
+        String headerString = header + ":";
+
+        String[] headersLines = StringUtils.split(headers, '\n');
+        for (String headerLine : headersLines) {
+            if (StringUtils.startsWithIgnoreCase(headerLine, headerString)) {
+                return headerLine.substring(headerString.length()).trim();
+            }
+        }
+
+        return null;
+    }
+
+    /** Returns the ETag header, or null if not present;
+     * <p>
+     * this is a compatibility shim between the old json format, which saves headers in a long string
+     * and the new parquet format which saves only the ETag and Last-Modified headers in separate columns
+     * */
+    public String getEtag() {
+        if (etagMaybe != null) {
+            return etagMaybe;
+        }
+        return getHeader("ETag");
+    }
+
+    /** Returns the Last-Modified header, or null if not present
+     * <p>
+     * this is a compatibility shim between the old json format, which saves headers in a long string
+     *      * and the new parquet format which saves only the ETag and Last-Modified headers in separate columns
+     * */
+    public String getLastModified() {
+        if (lastModifiedMaybe != null) {
+            return lastModifiedMaybe;
+        }
+        return getHeader("Last-Modified");
+    }
 
     public static final String SERIAL_IDENTIFIER = "// DOCUMENT";
     @Override

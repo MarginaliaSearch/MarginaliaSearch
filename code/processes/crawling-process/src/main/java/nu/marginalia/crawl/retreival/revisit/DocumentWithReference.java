@@ -49,22 +49,11 @@ public record DocumentWithReference(
         if (null == doc)
             return ContentTags.empty();
 
-        String headers = doc.headers;
-        if (headers == null)
+        String lastmod = doc.getLastModified();
+        String etag = doc.getEtag();
+
+        if (lastmod == null && etag == null) {
             return ContentTags.empty();
-
-        String[] headersLines = headers.split("\n");
-
-        String lastmod = null;
-        String etag = null;
-
-        for (String line : headersLines) {
-            if (line.toLowerCase().startsWith("etag:")) {
-                etag = line.substring(5).trim();
-            }
-            if (line.toLowerCase().startsWith("last-modified:")) {
-                lastmod = line.substring(14).trim();
-            }
         }
 
         return new ContentTags(etag, lastmod);

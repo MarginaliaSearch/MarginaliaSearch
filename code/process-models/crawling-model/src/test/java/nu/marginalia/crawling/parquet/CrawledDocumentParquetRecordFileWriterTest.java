@@ -38,7 +38,8 @@ class CrawledDocumentParquetRecordFileWriterTest {
                 200,
                 Instant.now(),
                 "text/html",
-                "hello world".getBytes());
+                "hello world".getBytes(),
+                null, null);
 
         try (var writer = new CrawledDocumentParquetRecordFileWriter(tempFile)) {
             writer.write(original);

@@ -29,6 +29,9 @@ public class CrawledDocumentParquetRecord {
     public String contentType;
     public byte[] body;
 
+    public String etagHeader;
+    public String lastModifiedHeader;
+
     public static Hydrator<CrawledDocumentParquetRecord, CrawledDocumentParquetRecord> newHydrator() {
         return new CrawledDocumentParquetRecordHydrator();
     }
@@ -46,7 +49,9 @@ public class CrawledDocumentParquetRecord {
             Types.required(INT32).named("httpStatus"),
             Types.required(INT64).named("epochSeconds"),
             Types.required(BINARY).as(stringType()).named("contentType"),
-            Types.required(BINARY).named("body")
+            Types.required(BINARY).named("body"),
+            Types.optional(BINARY).as(stringType()).named("etagHeader"),
+            Types.optional(BINARY).as(stringType()).named("lastModifiedHeader")
     );
 
 
@@ -60,6 +65,9 @@ public class CrawledDocumentParquetRecord {
             case "contentType" -> contentType = (String) value;
             case "body" -> body = (byte[]) value;
             case "epochSeconds" -> timestamp = Instant.ofEpochSecond((Long) value);
+            case "etagHeader" -> etagHeader = (String) value;
+            case "lastModifiedHeader" -> lastModifiedHeader = (String) value;
+
             default -> throw new UnsupportedOperationException("Unknown heading '" + heading + '"');
         }
         return this;
@@ -74,6 +82,12 @@ public class CrawledDocumentParquetRecord {
         valueWriter.write("cookies", cookies);
         valueWriter.write("contentType", contentType);
         valueWriter.write("body", body);
+        if (etagHeader != null) {
+            valueWriter.write("etagHeader", etagHeader);
+        }
+        if (lastModifiedHeader != null) {
+            valueWriter.write("lastModifiedHeader", lastModifiedHeader);
+        }
     }
 }
 

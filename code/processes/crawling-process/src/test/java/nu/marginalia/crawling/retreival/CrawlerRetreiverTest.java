@@ -234,6 +234,8 @@ class CrawlerRetreiverTest {
         }
         var stream = CrawledDomainReader.createDataStream(tempFile);
 
+        System.out.println("---");
+
         CrawledDomain domain = (CrawledDomain) data.get(CrawledDomain.class).get(0);
         domain.doc = data.get(CrawledDocument.class).stream().map(CrawledDocument.class::cast).collect(Collectors.toList());
         try (var recorder = new WarcRecorder(tempFile2)) {
@@ -243,8 +245,6 @@ class CrawlerRetreiverTest {
         catch (IOException ex) {
             Assertions.fail(ex);
         }
-
-        new GZIPInputStream(Files.newInputStream(tempFile2)).transferTo(System.out);
 
         try (var reader = new WarcReader(tempFile2)) {
             WarcXResponseReference.register(reader);
@@ -270,7 +270,7 @@ class CrawlerRetreiverTest {
                     System.out.println(dr.domain + "/" + dr.crawlerStatus);
                 }
                 else if (doc instanceof CrawledDocument dc) {
-                    System.out.println(dc.url + "/" + dc.crawlerStatus + "/" + dc.httpStatus);
+                    System.out.println(dc.url + "/" + dc.crawlerStatus + "/" + dc.httpStatus + "/" + dc.timestamp);
                 }
             }
         } catch (Exception e) {

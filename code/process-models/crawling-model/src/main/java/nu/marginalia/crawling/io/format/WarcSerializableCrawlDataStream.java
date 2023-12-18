@@ -82,6 +82,8 @@ public class WarcSerializableCrawlDataStream implements AutoCloseable, Serializa
             return;
         }
 
+        var httpHeaders = http.headers();
+
         var parsedBody = DocumentBodyExtractor.asString(HttpFetchResult.importWarc(response));
         if (parsedBody instanceof DocumentBodyResult.Error<String> error) {
             next = new CrawledDocument(
@@ -98,7 +100,9 @@ public class WarcSerializableCrawlDataStream implements AutoCloseable, Serializa
                     "",
                     "",
                     "",
-                    WarcXCookieInformationHeader.hasCookies(response)
+                    WarcXCookieInformationHeader.hasCookies(response),
+                    null,
+                    null
             );
         } else if (parsedBody instanceof DocumentBodyResult.Ok<String> ok) {
             next = new CrawledDocument(
@@ -115,7 +119,9 @@ public class WarcSerializableCrawlDataStream implements AutoCloseable, Serializa
                     "",
                     "",
                     "",
-                    WarcXCookieInformationHeader.hasCookies(response));
+                    WarcXCookieInformationHeader.hasCookies(response),
+                    httpHeaders.first("Last-Modified").orElse(""),
+                    httpHeaders.first("ETag").orElse(""));
         } else {
             // unreachable
             throw new IllegalStateException("Unknown body type: " + parsedBody);

@@ -51,7 +51,9 @@ public class SideloaderProcessing {
                 url,
                 "",
                 "SIDELOAD",
-                false
+                false,
+                null,
+                null
         );
 
         var ret = new ProcessedDocument();
