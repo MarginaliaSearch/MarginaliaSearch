@@ -25,7 +25,7 @@ public class ConverterWriter implements AutoCloseable {
     private final Duration switchInterval
             = Duration.of(10, ChronoUnit.MINUTES);
     private final ArrayBlockingQueue<ProcessedDomain> domainData
-            = new ArrayBlockingQueue<>(4);
+            = new ArrayBlockingQueue<>(1);
 
     private final Thread workerThread;
 
