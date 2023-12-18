@@ -5,7 +5,7 @@ import java.util.Map;
 
 /** Maps domain names to domain ids */
 public class DomainIdRegistry {
-    private final Map<String, Integer> domainIds = new HashMap<>();
+    private final Map<String, Integer> domainIds = new HashMap<>(10_000);
 
     public int getDomainId(String domainName) {
         Integer id = domainIds.get(domainName.toLowerCase());

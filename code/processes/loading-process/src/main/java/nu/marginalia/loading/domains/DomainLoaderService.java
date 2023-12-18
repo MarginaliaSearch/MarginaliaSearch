@@ -42,12 +42,12 @@ public class DomainLoaderService {
     public DomainIdRegistry getOrCreateDomainIds(LoaderInputData inputData)
             throws IOException, SQLException
     {
-        Set<String> domainNamesAll = new HashSet<>();
+        Set<String> domainNamesAll = new HashSet<>(100_000);
         DomainIdRegistry ret = new DomainIdRegistry();
 
         try (var conn = dataSource.getConnection();
              var selectStmt = conn.prepareStatement("""
-                     SELECT ID, DOMAIN_NAME FROM EC_DOMAIN WHERE DOMAIN_NAME=?
+                     SELECT ID FROM EC_DOMAIN WHERE DOMAIN_NAME=?
                      """)
         ) {
 
@@ -70,6 +70,7 @@ public class DomainLoaderService {
                 }
             }
 
+            selectStmt.setFetchSize(1000);
             for (var domain : domainNamesAll) {
                 selectStmt.setString(1, domain);
                 var rs = selectStmt.executeQuery();
@@ -133,7 +134,7 @@ public class DomainLoaderService {
         return true;
     }
 
-    private class DomainInserter implements AutoCloseable {
+    private static class DomainInserter implements AutoCloseable {
         private final PreparedStatement statement;
         private final int nodeAffinity;
 
