@@ -42,7 +42,7 @@ fi
 
 mkdir -p node-1/samples/
 SAMPLE_TARBALL=samples/${SAMPLE_NAME}.tar.gz
-download_model ${SAMPLE_TARBALL} https://downloads.marginalia.nu/${SAMPLE_TARBALL}
+download_model ${SAMPLE_TARBALL}.tmp https://downloads.marginalia.nu/${SAMPLE_TARBALL} && mv ${SAMPLE_TARBALL}.tmp ${SAMPLE_TARBALL}
 
 if [ ! -f ${SAMPLE_TARBALL} ]; then
   echo "!! Failed"

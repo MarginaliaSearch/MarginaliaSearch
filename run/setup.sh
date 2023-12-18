@@ -12,7 +12,8 @@ function download_model {
 
   if [ ! -f $model ]; then
     echo "** Downloading $url"
-    curl -s -o $model $url
+    curl -s -o $model.tmp $url
+    mv $model.tmp $model
   fi
 }
 
