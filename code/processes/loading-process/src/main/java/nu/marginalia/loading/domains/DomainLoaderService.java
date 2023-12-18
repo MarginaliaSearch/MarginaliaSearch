@@ -152,6 +152,7 @@ public class DomainLoaderService {
             statement.addBatch();
 
             if (++count > 1000) {
+                count = 0;
                 statement.executeBatch();
             }
         }
