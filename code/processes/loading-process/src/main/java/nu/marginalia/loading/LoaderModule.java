@@ -10,7 +10,6 @@ import nu.marginalia.LanguageModels;
 import nu.marginalia.WmsaHome;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.linkdb.LinkdbStatusWriter;
 import nu.marginalia.linkdb.LinkdbWriter;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.service.SearchServiceDescriptors;
@@ -43,16 +42,6 @@ public class LoaderModule extends AbstractModule {
             Files.delete(dbPath);
         }
         return new LinkdbWriter(dbPath);
-    }
-
-    @Inject @Provides @Singleton
-    private LinkdbStatusWriter createLinkdbStatusWriter(FileStorageService service) throws SQLException, IOException {
-        Path dbPath = IndexLocations.getLinkdbWritePath(service).resolve("urlstatus.db");
-
-        if (Files.exists(dbPath)) {
-            Files.delete(dbPath);
-        }
-        return new LinkdbStatusWriter(dbPath);
     }
 
     private Gson createGson() {
