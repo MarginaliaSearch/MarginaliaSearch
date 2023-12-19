@@ -54,6 +54,13 @@ public class StackexchangeSideloader implements SideloadSource {
         ret.ip = "127.0.0.1";
         ret.state = DomainIndexingState.ACTIVE;
 
+        if (domainName.contains("stackoverflow.com")) {
+            ret.sizeloadSizeAdvice = 5_000_000;
+        }
+        else {
+            ret.sizeloadSizeAdvice = 1000;
+        }
+
         return ret;
     }
 

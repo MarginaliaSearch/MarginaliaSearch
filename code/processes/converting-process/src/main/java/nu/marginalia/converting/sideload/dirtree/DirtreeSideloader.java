@@ -49,6 +49,7 @@ public class DirtreeSideloader implements SideloadSource, AutoCloseable {
         ret.domain = new EdgeDomain(domainName);
         ret.ip = "0.0.0.0";
         ret.state = DomainIndexingState.ACTIVE;
+        ret.sizeloadSizeAdvice = 1000;
 
         return ret;
     }

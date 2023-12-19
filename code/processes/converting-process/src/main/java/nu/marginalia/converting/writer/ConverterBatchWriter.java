@@ -224,6 +224,13 @@ public class ConverterBatchWriter implements AutoCloseable {
 record DomainMetadata(int known, int good, int visited) {
 
     public static DomainMetadata from(ProcessedDomain domain) {
+        if (domain.sizeloadSizeAdvice != null) {
+            return new DomainMetadata(
+                    domain.sizeloadSizeAdvice,
+                    domain.sizeloadSizeAdvice,
+                    domain.sizeloadSizeAdvice
+            );
+        }
 
         var documents = domain.documents;
         if (documents == null) {

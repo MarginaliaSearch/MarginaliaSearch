@@ -69,7 +69,7 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
         ret.domain = baseUrl.getDomain();
         ret.ip = "0.0.0.0";
         ret.state = DomainIndexingState.ACTIVE;
-
+        ret.sizeloadSizeAdvice = 5_000_000;
         return ret;
     }
 
