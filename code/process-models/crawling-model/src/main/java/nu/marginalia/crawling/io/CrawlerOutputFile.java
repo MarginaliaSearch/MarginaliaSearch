@@ -107,8 +107,7 @@ public class CrawlerOutputFile {
 
     public enum WarcFileVersion {
         LIVE("open"),
-        TEMP("tmp"),
-        FINAL("final");
+        TEMP("tmp");
 
         public final String suffix;
 

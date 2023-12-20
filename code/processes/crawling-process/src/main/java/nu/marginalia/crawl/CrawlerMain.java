@@ -217,7 +217,6 @@ public class CrawlerMain {
 
             Path newWarcFile = CrawlerOutputFile.createWarcPath(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.LIVE);
             Path tempFile = CrawlerOutputFile.createWarcPath(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.TEMP);
-            Path finalWarcFile = CrawlerOutputFile.createWarcPath(outputDir, id, domain, CrawlerOutputFile.WarcFileVersion.FINAL);
             Path parquetFile = CrawlerOutputFile.createParquetPath(outputDir, id, domain);
 
             if (Files.exists(newWarcFile)) {
