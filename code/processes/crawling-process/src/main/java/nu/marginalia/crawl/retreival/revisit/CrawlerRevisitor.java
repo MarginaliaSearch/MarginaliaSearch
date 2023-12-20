@@ -38,13 +38,13 @@ public class CrawlerRevisitor {
         for (;;) {
             CrawledDocument doc = oldCrawlData.nextDocument();
 
-            if (doc == null) {
+            if (doc == null)
                 break;
-            }
 
             // This Shouldn't Happen (TM)
             var urlMaybe = EdgeUrl.parse(doc.url);
-            if (urlMaybe.isEmpty()) continue;
+            if (urlMaybe.isEmpty())
+                continue;
             var url = urlMaybe.get();
 
             // If we've previously 404:d on this URL, we'll refrain from trying to fetch it again
@@ -53,7 +53,8 @@ public class CrawlerRevisitor {
                 continue;
             }
 
-            if (doc.httpStatus != 200) continue;
+            if (doc.httpStatus != 200)
+                continue;
 
             if (!robotsRules.isAllowed(url.toString())) {
                 warcRecorder.flagAsRobotsTxtError(url);
@@ -84,23 +85,21 @@ public class CrawlerRevisitor {
 
                 // Add a WARC record so we don't repeat this
                 warcRecorder.flagAsSkipped(url, doc.contentType, doc.httpStatus, doc.documentBody);
-
-                continue;
             }
+            else {
+                // GET the document with the stored document as a reference
+                // providing etag and last-modified headers, so we can recycle the
+                // document if it hasn't changed without actually downloading it
 
+                var reference = new DocumentWithReference(doc, oldCrawlData);
+                var result = crawlerRetreiver.fetchWriteAndSleep(url, delayTimer, reference);
 
-            // GET the document with the stored document as a reference
-            // providing etag and last-modified headers, so we can recycle the
-            // document if it hasn't changed without actually downloading it
+                if (reference.isSame(result)) {
+                    retained++;
+                }
 
-            var reference = new DocumentWithReference(doc, oldCrawlData);
-            var result = crawlerRetreiver.fetchWriteAndSleep(url, delayTimer, reference);
-
-            if (reference.isSame(result)) {
-                retained++;
+                recrawled++;
             }
-
-            recrawled++;
         }
 
         return recrawled;
