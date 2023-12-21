@@ -134,8 +134,8 @@ public class WebsiteAdjacenciesCalculator {
         return weightedProduct(weights, a, b) / Math.sqrt(a.mulAndSum(weights) * b.mulAndSum(weights));
     }
 
-    record DomainSimilarities(int domainId, List<DomainSimilarity> similarities) {};
-    record DomainSimilarity(int domainId, double value) {};
+    public record DomainSimilarities(int domainId, List<DomainSimilarity> similarities) {};
+    public record DomainSimilarity(int domainId, double value) {};
 
     @SneakyThrows
     private void findAdjacentDtoS(int domainId, Consumer<DomainSimilarities> andThen) {

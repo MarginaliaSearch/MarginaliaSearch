@@ -13,17 +13,16 @@ public class AdjacenciesLoader {
 
     private static final Logger logger = LoggerFactory.getLogger(AdjacenciesLoader.class);
 
-    final HikariDataSource dataSource;
-    final LinkedBlockingDeque<WebsiteAdjacenciesCalculator.DomainSimilarities> similaritiesLinkedBlockingDeque = new LinkedBlockingDeque<>(100);
-    final Thread loaderThread;
+    private final HikariDataSource dataSource;
+    private final LinkedBlockingDeque<WebsiteAdjacenciesCalculator.DomainSimilarities> similaritiesLinkedBlockingDeque = new LinkedBlockingDeque<>(100);
+    private final Thread loaderThread;
 
     volatile boolean running = true;
 
     public AdjacenciesLoader(HikariDataSource dataSource) {
         this.dataSource = dataSource;
 
-        loaderThread = new Thread(this::insertThreadRun, "Adjacencies Loader Thread");
-        loaderThread.start();
+        loaderThread = Thread.ofPlatform().name("Adjacencies Loader Thread").start(this::insertThreadRun);
     }
 
     @SneakyThrows
@@ -47,18 +46,30 @@ public class AdjacenciesLoader {
                     INSERT INTO EC_DOMAIN_NEIGHBORS_TMP (DOMAIN_ID, NEIGHBOR_ID, RELATEDNESS) VALUES (?, ?, ?)
                     """))
             {
-                while (running || !similaritiesLinkedBlockingDeque.isEmpty()) {
-                    var item = similaritiesLinkedBlockingDeque.pollFirst(1, TimeUnit.SECONDS);
-                    if (item == null) continue;
+                int itemCount = 0;
 
-                    for (; item != null; item = similaritiesLinkedBlockingDeque.pollFirst()) {
+                while (running || !similaritiesLinkedBlockingDeque.isEmpty()) {
+                    for (var item = similaritiesLinkedBlockingDeque.pollFirst(1, TimeUnit.SECONDS);
+                         item != null;
+                         item = similaritiesLinkedBlockingDeque.pollFirst())
+                    {
                         for (var similarity : item.similarities()) {
                             stmt.setInt(1, item.domainId());
                             stmt.setInt(2, similarity.domainId());
                             stmt.setDouble(3, similarity.value());
                             stmt.addBatch();
+                            itemCount++;
+                        }
+
+                        if (itemCount++ > 1000) {
+                            stmt.executeBatch();
+                            itemCount = 0;
                         }
                     }
+                }
+
+                // Flush remaining items
+                if (itemCount > 0) {
                     stmt.executeBatch();
                 }
             }
