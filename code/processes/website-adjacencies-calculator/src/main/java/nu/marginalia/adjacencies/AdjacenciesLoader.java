@@ -2,12 +2,16 @@ package nu.marginalia.adjacencies;
 
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
 public class AdjacenciesLoader {
+
+    private static final Logger logger = LoggerFactory.getLogger(AdjacenciesLoader.class);
 
     final HikariDataSource dataSource;
     final LinkedBlockingDeque<WebsiteAdjacenciesCalculator.DomainSimilarities> similaritiesLinkedBlockingDeque = new LinkedBlockingDeque<>(100);
@@ -29,13 +33,8 @@ public class AdjacenciesLoader {
 
     private void insertThreadRun() {
         try (var conn = dataSource.getConnection();
-             var s = conn.createStatement();
-             var stmt = conn.prepareStatement(
-                     """
-                     INSERT INTO EC_DOMAIN_NEIGHBORS_TMP (DOMAIN_ID, NEIGHBOR_ID, RELATEDNESS) VALUES (?, ?, ?)
-                     """)
+             var s = conn.createStatement()
         ) {
-
             s.execute("""
                     DROP TABLE IF EXISTS EC_DOMAIN_NEIGHBORS_TMP
                     """);
@@ -43,22 +42,28 @@ public class AdjacenciesLoader {
                     CREATE TABLE EC_DOMAIN_NEIGHBORS_TMP LIKE EC_DOMAIN_NEIGHBORS_2
                     """);
 
-            while (running || !similaritiesLinkedBlockingDeque.isEmpty()) {
-                var item = similaritiesLinkedBlockingDeque.pollFirst(1, TimeUnit.SECONDS);
-                if (item == null) continue;
+            try (var stmt = conn.prepareStatement(
+                    """
+                    INSERT INTO EC_DOMAIN_NEIGHBORS_TMP (DOMAIN_ID, NEIGHBOR_ID, RELATEDNESS) VALUES (?, ?, ?)
+                    """))
+            {
+                while (running || !similaritiesLinkedBlockingDeque.isEmpty()) {
+                    var item = similaritiesLinkedBlockingDeque.pollFirst(1, TimeUnit.SECONDS);
+                    if (item == null) continue;
 
-                for (;item != null; item = similaritiesLinkedBlockingDeque.pollFirst()) {
-                    for (var similarity : item.similarities()) {
-                        stmt.setInt(1, item.domainId());
-                        stmt.setInt(2, similarity.domainId());
-                        stmt.setDouble(3, similarity.value());
-                        stmt.addBatch();
+                    for (; item != null; item = similaritiesLinkedBlockingDeque.pollFirst()) {
+                        for (var similarity : item.similarities()) {
+                            stmt.setInt(1, item.domainId());
+                            stmt.setInt(2, similarity.domainId());
+                            stmt.setDouble(3, similarity.value());
+                            stmt.addBatch();
+                        }
                     }
+                    stmt.executeBatch();
                 }
-                stmt.executeBatch();
             }
 
-            System.out.println("Loader thread wrapping up");
+            logger.info("Loader thread wrapping up");
 
             s.execute("""
                     DROP TABLE IF EXISTS EC_DOMAIN_NEIGHBORS_2
@@ -68,10 +73,11 @@ public class AdjacenciesLoader {
                     """);
 
         } catch (SQLException | InterruptedException e) {
+            logger.error("Failed to insert into database", e);
             throw new RuntimeException(e);
         }
 
-        System.out.println("Loader thread finished");
+        logger.info("Loader thread finished");
     }
 
     public void stop() throws InterruptedException {
