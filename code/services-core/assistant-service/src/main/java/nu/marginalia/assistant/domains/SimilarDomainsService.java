@@ -258,10 +258,15 @@ public class SimilarDomainsService {
         // Remove domains that have a relatively high likelihood of being dead links
         // or not very interesting
         if (!(domainResult.indexed() && domainResult.active())
-            && domainResult.relatedness() < 50)
+            && domainResult.relatedness() <= 50)
         {
             return true;
         }
+
+        // Remove domains that are not very similar if there is no mutual link
+        if (domainResult.linkType() == SimilarDomain.LinkType.NONE
+         && domainResult.relatedness() <= 25)
+            return true;
 
         return false;
     }
