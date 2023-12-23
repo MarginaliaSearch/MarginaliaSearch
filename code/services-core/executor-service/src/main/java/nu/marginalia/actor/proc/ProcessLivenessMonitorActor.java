@@ -36,11 +36,6 @@ public class ProcessLivenessMonitorActor extends RecordActorPrototype {
             case Monitor() -> {
                 for (;;) {
                     for (var heartbeat : getProcessHeartbeats()) {
-                        if (!heartbeat.isRunning()) continue;
-
-                        var processId = heartbeat.getProcessId();
-                        if (null == processId) continue;
-
                         if (heartbeat.lastSeenMillis() > TimeUnit.DAYS.toMillis(1)) {
                             // This process has been MIA for a long time
                             // ... so  we delete it from the listing altogether
@@ -48,6 +43,11 @@ public class ProcessLivenessMonitorActor extends RecordActorPrototype {
                             removeProcessHeartbeat(heartbeat);
                             continue;
                         }
+
+                        if (!heartbeat.isRunning()) continue;
+
+                        var processId = heartbeat.getProcessId();
+                        if (null == processId) continue;
 
                         if (processService.isRunning(processId) && heartbeat.lastSeenMillis() < 10_000)
                             continue;
