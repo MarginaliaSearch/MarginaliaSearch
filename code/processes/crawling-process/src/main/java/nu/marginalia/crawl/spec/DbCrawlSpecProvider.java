@@ -36,7 +36,7 @@ public class DbCrawlSpecProvider implements CrawlSpecProvider {
 
         try (var conn = dataSource.getConnection();
              var query = conn.prepareStatement("""
-                     SELECT DOMAIN_NAME, COALESCE(GOOD_URLS, 0)
+                     SELECT DOMAIN_NAME, COALESCE(KNOWN_URLS, 0)
                      FROM EC_DOMAIN
                      LEFT JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID
                      WHERE NODE_AFFINITY=?
@@ -48,7 +48,7 @@ public class DbCrawlSpecProvider implements CrawlSpecProvider {
             while (rs.next()) {
                 domains.add(new CrawlSpecRecord(
                                 rs.getString(1),
-                                Math.clamp((int) (1.25 * rs.getInt(2)), 200, 10_000),
+                                Math.clamp((int) (1.25 * rs.getInt(2)), 250, 10_000),
                                 List.of()
                         ));
             }
