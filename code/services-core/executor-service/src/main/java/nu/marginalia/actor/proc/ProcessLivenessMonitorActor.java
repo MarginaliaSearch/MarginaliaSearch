@@ -41,6 +41,14 @@ public class ProcessLivenessMonitorActor extends RecordActorPrototype {
                         var processId = heartbeat.getProcessId();
                         if (null == processId) continue;
 
+                        if (heartbeat.lastSeenMillis() > TimeUnit.DAYS.toMillis(1)) {
+                            // This process has been MIA for a long time
+                            // ... so  we delete it from the listing altogether
+
+                            removeProcessHeartbeat(heartbeat);
+                            continue;
+                        }
+
                         if (processService.isRunning(processId) && heartbeat.lastSeenMillis() < 10_000)
                             continue;
 
@@ -174,7 +182,20 @@ public class ProcessLivenessMonitorActor extends RecordActorPrototype {
             throw new RuntimeException(ex);
         }
     }
+    private void removeProcessHeartbeat(ProcessHeartbeat heartbeat) {
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("""
+                     DELETE FROM PROCESS_HEARTBEAT
+                     WHERE INSTANCE = ?
+                     """)) {
 
+            stmt.setString(1, heartbeat.uuidFull());
+            stmt.executeUpdate();
+        }
+        catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
     private record ProcessHeartbeat(
             String processId,
             String processBase,
