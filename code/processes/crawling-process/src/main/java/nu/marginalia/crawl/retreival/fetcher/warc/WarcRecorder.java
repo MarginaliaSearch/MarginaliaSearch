@@ -189,7 +189,7 @@ public class WarcRecorder implements AutoCloseable {
                     responseDataBuffer.length() - dataStart);
         }
         catch (Exception ex) {
-            logger.warn("Failed to fetch URL {}", requestUri, ex);
+            logger.warn("Failed to fetch URL {}:  {}", requestUri, ex.getMessage());
             return new HttpFetchResult.ResultException(ex);
         }
     }
