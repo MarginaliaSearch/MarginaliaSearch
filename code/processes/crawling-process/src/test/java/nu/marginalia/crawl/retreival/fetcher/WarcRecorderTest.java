@@ -92,6 +92,18 @@ class WarcRecorderTest {
     }
 
     @Test
+    public void flagAsSkippedNullBody() throws IOException, URISyntaxException {
+
+        try (var recorder = new WarcRecorder(fileNameWarc)) {
+            recorder.flagAsSkipped(new EdgeUrl("https://www.marginalia.nu/"),
+                    "text/html",
+                    200,
+                    null);
+        }
+
+    }
+
+    @Test
     public void testSaveImport() throws URISyntaxException, IOException {
         try (var recorder = new WarcRecorder(fileNameWarc)) {
             recorder.flagAsSkipped(new EdgeUrl("https://www.marginalia.nu/"),

@@ -203,7 +203,14 @@ public class WarcRecorder implements AutoCloseable {
             WarcDigestBuilder responseDigestBuilder = new WarcDigestBuilder();
             WarcDigestBuilder payloadDigestBuilder = new WarcDigestBuilder();
 
-            byte[] bytes = documentBody.getBytes();
+            byte[] bytes;
+
+            if (documentBody == null) {
+                bytes = new byte[0];
+            }
+            else {
+                bytes = documentBody.getBytes();
+            }
 
             String fakeHeaders = STR."""
                     Content-Type: \{contentType}
