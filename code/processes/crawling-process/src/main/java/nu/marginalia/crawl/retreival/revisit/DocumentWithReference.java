@@ -49,6 +49,9 @@ public record DocumentWithReference(
         if (null == doc)
             return ContentTags.empty();
 
+        if (doc.documentBody == null || doc.httpStatus != 200)
+            return ContentTags.empty();
+
         String lastmod = doc.getLastModified();
         String etag = doc.getEtag();
 
