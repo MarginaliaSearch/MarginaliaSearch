@@ -289,10 +289,12 @@ public class CrawlerRetreiver implements AutoCloseable {
                         new ContentType(doc.contentType, "UTF-8"),
                         doc.documentBody);
 
-                var parsed = Jsoup.parse(doc.documentBody);
+                if (doc.documentBody != null) {
+                    var parsed = Jsoup.parse(doc.documentBody);
 
-                crawlFrontier.enqueueLinksFromDocument(top, parsed);
-                crawlFrontier.addVisited(top);
+                    crawlFrontier.enqueueLinksFromDocument(top, parsed);
+                    crawlFrontier.addVisited(top);
+                }
             }
             else if (fetchedDoc instanceof HttpFetchResult.ResultException ex) {
                 errorCount ++;
