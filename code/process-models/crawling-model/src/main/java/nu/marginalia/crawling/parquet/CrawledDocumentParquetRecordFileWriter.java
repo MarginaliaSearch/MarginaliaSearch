@@ -34,22 +34,25 @@ public class CrawledDocumentParquetRecordFileWriter implements AutoCloseable {
             String uaString = userAgent.uaString();
 
             for (var record : warcReader) {
-                if (record instanceof WarcResponse response) {
-                    // this also captures WarcXResponseReference, which inherits from WarcResponse
-                    // and is used to store old responses from previous crawls; in this part of the logic
-                    // we treat them the same as a normal response
+                try {
+                    if (record instanceof WarcResponse response) {
+                        // this also captures WarcXResponseReference, which inherits from WarcResponse
+                        // and is used to store old responses from previous crawls; in this part of the logic
+                        // we treat them the same as a normal response
 
-                    if (!filterResponse(uaString, response)) {
-                        continue;
+                        if (!filterResponse(uaString, response)) {
+                            continue;
+                        }
+
+                        parquetWriter.write(domain, response);
+                    } else if (record instanceof WarcXEntityRefused refused) {
+                        parquetWriter.write(domain, refused);
+                    } else if (record instanceof Warcinfo warcinfo) {
+                        parquetWriter.write(warcinfo);
                     }
-
-                    parquetWriter.write(domain, response);
                 }
-                else if (record instanceof WarcXEntityRefused refused) {
-                    parquetWriter.write(domain, refused);
-                }
-                else if (record instanceof Warcinfo warcinfo) {
-                    parquetWriter.write(warcinfo);
+                catch (Exception ex) {
+                    logger.error("Failed to convert WARC record to Parquet", ex);
                 }
             }
         }
