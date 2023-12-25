@@ -254,13 +254,14 @@ public class CrawlerMain {
                 logger.info("Fetched {}", domain);
             } catch (Exception e) {
                 logger.error("Error fetching domain " + domain, e);
-                Files.deleteIfExists(newWarcFile);
-                Files.deleteIfExists(tempFile);
             }
             finally {
                 // We don't need to double-count these; it's also kept int he workLog
                 processingIds.remove(domain);
                 Thread.currentThread().setName("[idle]");
+
+                Files.deleteIfExists(newWarcFile);
+                Files.deleteIfExists(tempFile);
             }
         }
 
