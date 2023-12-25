@@ -130,7 +130,7 @@ public class HttpFetcherImpl implements HttpFetcher {
                 return probeDomain(new EdgeUrl("https", url.domain, url.port, url.path, url.param));
             }
 
-            logger.info("Error during fetching", ex);
+            logger.info("Error during fetching {}", ex.getMessage());
             return new FetchResult(FetchResultState.ERROR, url);
         }
     }
