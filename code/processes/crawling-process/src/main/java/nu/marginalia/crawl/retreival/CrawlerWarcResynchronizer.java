@@ -40,7 +40,7 @@ public class CrawlerWarcResynchronizer {
             for (var item : reader) {
                 accept(item);
             }
-        } catch (UncheckedIOException | IOException e) {
+        } catch (IOException e) {
             logger.info(STR."Failed read full warc file \{tempFile}", e);
         }
 
@@ -49,7 +49,7 @@ public class CrawlerWarcResynchronizer {
             for (var item : reader) {
                 recorder.resync(item);
             }
-        } catch (UncheckedIOException | IOException e) {
+        } catch (IOException e) {
             logger.info(STR."Failed read full warc file \{tempFile}", e);
         }
     }
