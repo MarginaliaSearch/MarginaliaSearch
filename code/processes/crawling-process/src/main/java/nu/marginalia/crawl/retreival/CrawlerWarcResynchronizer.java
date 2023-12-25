@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 
 /**
@@ -39,7 +40,7 @@ public class CrawlerWarcResynchronizer {
             for (var item : reader) {
                 accept(item);
             }
-        } catch (IOException e) {
+        } catch (UncheckedIOException | IOException e) {
             logger.info(STR."Failed read full warc file \{tempFile}", e);
         }
 
@@ -48,7 +49,7 @@ public class CrawlerWarcResynchronizer {
             for (var item : reader) {
                 recorder.resync(item);
             }
-        } catch (IOException e) {
+        } catch (UncheckedIOException | IOException e) {
             logger.info(STR."Failed read full warc file \{tempFile}", e);
         }
     }
