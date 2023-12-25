@@ -1,6 +1,8 @@
 package nu.marginalia.crawl.retreival.fetcher.warc;
 
 import nu.marginalia.crawl.retreival.DomainProber;
+import nu.marginalia.crawl.retreival.fetcher.ContentTags;
+import nu.marginalia.crawl.retreival.revisit.DocumentWithReference;
 import nu.marginalia.crawling.body.HttpFetchResult;
 import nu.marginalia.crawl.retreival.fetcher.socket.IpInterceptingNetworkInterceptor;
 import nu.marginalia.model.EdgeDomain;
@@ -198,7 +200,7 @@ public class WarcRecorder implements AutoCloseable {
         writer.write(item);
     }
 
-    private void saveOldResponse(EdgeUrl url, String contentType, int statusCode, String documentBody) {
+    private void saveOldResponse(EdgeUrl url, String contentType, int statusCode, String documentBody, ContentTags contentTags) {
         try {
             WarcDigestBuilder responseDigestBuilder = new WarcDigestBuilder();
             WarcDigestBuilder payloadDigestBuilder = new WarcDigestBuilder();
@@ -212,13 +214,19 @@ public class WarcRecorder implements AutoCloseable {
                 bytes = documentBody.getBytes();
             }
 
-            String fakeHeaders = STR."""
-                    Content-Type: \{contentType}
-                    Content-Length: \{bytes.length}
-                    Content-Encoding: UTF-8
-                    """;
+            StringJoiner fakeHeadersBuilder = new StringJoiner("\n");
 
-            String header = WarcProtocolReconstructor.getResponseHeader(fakeHeaders, statusCode);
+            fakeHeadersBuilder.add(STR."Content-Type: \{contentType}");
+            fakeHeadersBuilder.add(STR."Content-Length: \{bytes.length}");
+            fakeHeadersBuilder.add(STR."Content-Encoding: UTF-8");
+            if (contentTags.etag() != null) {
+                fakeHeadersBuilder.add(STR."ETag: \{contentTags.etag()}");
+            }
+            if (contentTags.lastMod() != null) {
+                fakeHeadersBuilder.add(STR."Last-Modified: \{contentTags.lastMod()}");
+            }
+
+            String header = WarcProtocolReconstructor.getResponseHeader(fakeHeadersBuilder.toString(), statusCode);
             ResponseDataBuffer responseDataBuffer = new ResponseDataBuffer();
             responseDataBuffer.put(header);
 
@@ -253,7 +261,7 @@ public class WarcRecorder implements AutoCloseable {
      * so that the crawler can avoid re-fetching them.
      */
     public void flagAsSkipped(EdgeUrl url, String contentType, int statusCode, String documentBody) {
-        saveOldResponse(url, contentType, statusCode, documentBody);
+        saveOldResponse(url, contentType, statusCode, documentBody, ContentTags.empty());
     }
 
     /**
@@ -261,8 +269,8 @@ public class WarcRecorder implements AutoCloseable {
      * an E-Tag or Last-Modified header, and the server responds with a 304 Not Modified.  In this
      * scenario we want to record the data as it was in the previous crawl, but not re-fetch it.
      */
-    public void writeReferenceCopy(EdgeUrl url, String contentType, int statusCode, String documentBody) {
-        saveOldResponse(url, contentType, statusCode, documentBody);
+    public void writeReferenceCopy(EdgeUrl url, String contentType, int statusCode, String documentBody, ContentTags ctags) {
+        saveOldResponse(url, contentType, statusCode, documentBody, ctags);
     }
 
     public void writeWarcinfoHeader(String ip, EdgeDomain domain, DomainProber.ProbeResult result) throws IOException {

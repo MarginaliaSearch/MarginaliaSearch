@@ -48,6 +48,8 @@ public class DocumentWithReferenceTest {
         CrawledDocument doc = CrawledDocument.builder()
                 .etagMaybe("12345")
                 .lastModifiedMaybe("67890")
+                .documentBody("Test")
+                .httpStatus(200)
                 .build(); // assume lastModified and eTag are not null
         CrawlDataReference reference = new CrawlDataReference();
 
@@ -70,6 +72,8 @@ public class DocumentWithReferenceTest {
                         Etag: 12345
                         Last-Modified: 67890
                         """)
+                .documentBody("Test")
+                .httpStatus(200)
                 .build(); // assume lastModified and eTag are not null
         CrawlDataReference reference = new CrawlDataReference();
 
