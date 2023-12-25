@@ -20,6 +20,7 @@ public record QueryParams(
         SpecificationLimit year,
         SpecificationLimit size,
         SpecificationLimit rank,
+        SpecificationLimit domainCount,
         List<Integer> domainIds,
         QueryLimits limits,
         SearchSetIdentifier identifier
@@ -31,6 +32,7 @@ public record QueryParams(
                 List.of(),
                 List.of(),
                 List.of(),
+                SpecificationLimit.none(),
                 SpecificationLimit.none(),
                 SpecificationLimit.none(),
                 SpecificationLimit.none(),

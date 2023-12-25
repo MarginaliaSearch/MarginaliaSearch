@@ -38,6 +38,7 @@ public class QueryProtobufCodec {
         builder.setYear(convertSpecLimit(query.specs.year));
         builder.setSize(convertSpecLimit(query.specs.size));
         builder.setRank(convertSpecLimit(query.specs.rank));
+        builder.setDomainCount(convertSpecLimit(query.specs.domainCount));
 
         builder.setQueryLimits(IndexProtobufCodec.convertQueryLimits(query.specs.queryLimits));
         builder.setQueryStrategy(query.specs.queryStrategy.name());
@@ -58,6 +59,7 @@ public class QueryProtobufCodec {
                 convertSpecLimit(request.getYear()),
                 convertSpecLimit(request.getSize()),
                 convertSpecLimit(request.getRank()),
+                convertSpecLimit(request.getDomainCount()),
                 request.getDomainIdsList(),
                 IndexProtobufCodec.convertQueryLimits(request.getQueryLimits()),
                 SearchSetIdentifier.valueOf(request.getSearchSetIdentifier()));
@@ -137,6 +139,7 @@ public class QueryProtobufCodec {
                 IndexProtobufCodec.convertSpecLimit(specs.getYear()),
                 IndexProtobufCodec.convertSpecLimit(specs.getSize()),
                 IndexProtobufCodec.convertSpecLimit(specs.getRank()),
+                IndexProtobufCodec.convertSpecLimit(specs.getDomainCount()),
                 IndexProtobufCodec.convertQueryLimits(specs.getQueryLimits()),
                 QueryStrategy.valueOf(specs.getQueryStrategy()),
                 convertRankingParameterss(specs.getParameters())

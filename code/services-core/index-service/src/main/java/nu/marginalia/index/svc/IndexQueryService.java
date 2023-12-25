@@ -415,6 +415,13 @@ public class IndexQueryService extends IndexApiImplBase {
             }
         }
 
+        if (!params.queryParams.domainCount().isNone()) {
+            // Remove items that don't meet the domain count requirement
+            // This isn't perfect because the domain count is calculated
+            // after the results are sorted
+            resultsList.removeIf(item -> !params.queryParams.domainCount().test(domainCountFilter.getCount(item)));
+        }
+
         if (resultsList.size() > params.limitTotal) {
             // This can't be made a stream limit() operation because we need domainCountFilter
             // to run over the entire list to provide accurate statistics

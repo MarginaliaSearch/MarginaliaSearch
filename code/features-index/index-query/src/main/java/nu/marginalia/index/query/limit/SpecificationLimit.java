@@ -1,8 +1,10 @@
 package nu.marginalia.index.query.limit;
 
-import lombok.ToString;
-
 public record SpecificationLimit(SpecificationLimitType type, int value) {
+    public boolean isNone() {
+        return type == SpecificationLimitType.NONE;
+    }
+
     public static SpecificationLimit none() {
         return new SpecificationLimit(SpecificationLimitType.NONE, 0);
     }

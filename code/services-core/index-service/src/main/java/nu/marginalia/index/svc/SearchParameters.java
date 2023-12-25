@@ -65,6 +65,7 @@ public class SearchParameters {
                 specsSet.year,
                 specsSet.size,
                 specsSet.rank,
+                specsSet.domainCount,
                 searchSet,
                 specsSet.queryStrategy);
 
@@ -90,6 +91,7 @@ public class SearchParameters {
                 IndexProtobufCodec.convertSpecLimit(request.getYear()),
                 IndexProtobufCodec.convertSpecLimit(request.getSize()),
                 IndexProtobufCodec.convertSpecLimit(request.getRank()),
+                IndexProtobufCodec.convertSpecLimit(request.getDomainCount()),
                 searchSet,
                 QueryStrategy.valueOf(request.getQueryStrategy()));
 

@@ -8,6 +8,7 @@ public record IndexQueryParams(SpecificationLimit qualityLimit,
                                SpecificationLimit year,
                                SpecificationLimit size,
                                SpecificationLimit rank,
+                               SpecificationLimit domainCount,
                                SearchSet searchSet,
                                QueryStrategy queryStrategy
                                )

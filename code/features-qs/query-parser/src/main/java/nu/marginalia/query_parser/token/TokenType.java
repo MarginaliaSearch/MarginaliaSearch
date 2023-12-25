@@ -16,6 +16,7 @@ public enum TokenType implements Predicate<Token> {
     YEAR_TERM,
     SIZE_TERM,
     RANK_TERM,
+    DOMAIN_COUNT_TERM,
     NEAR_TERM,
 
     QS_TERM,

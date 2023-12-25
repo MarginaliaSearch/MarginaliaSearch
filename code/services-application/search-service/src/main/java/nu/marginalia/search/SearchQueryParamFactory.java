@@ -29,6 +29,7 @@ public class SearchQueryParamFactory {
                 profile.getYearLimit(),
                 profile.getSizeLimit(),
                 SpecificationLimit.none(),
+                SpecificationLimit.none(),
                 List.of(),
                 new QueryLimits(1, 100, 200, 8192),
                 profile.searchSetIdentifier
@@ -43,6 +44,7 @@ public class SearchQueryParamFactory {
                 List.of(),
                 List.of(),
                 List.of(),
+                SpecificationLimit.none(),
                 SpecificationLimit.none(),
                 SpecificationLimit.none(),
                 SpecificationLimit.none(),
@@ -64,6 +66,7 @@ public class SearchQueryParamFactory {
                 SpecificationLimit.none(),
                 SpecificationLimit.none(),
                 SpecificationLimit.none(),
+                SpecificationLimit.none(),
                 List.of(),
                 new QueryLimits(100, 100, 100, 512),
                 SearchSetIdentifier.NONE
@@ -77,6 +80,7 @@ public class SearchQueryParamFactory {
                 List.of(),
                 List.of(),
                 List.of(),
+                SpecificationLimit.none(),
                 SpecificationLimit.none(),
                 SpecificationLimit.none(),
                 SpecificationLimit.none(),
