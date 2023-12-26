@@ -1,0 +1,10 @@
+{{#with feed}}
+<h2><a title="Atom/RSS feed" target="external" href="{{feedUrl}}"><img width="16" height="16" src="/rss.svg"></a> Feed (Experimental)</h2>
+
+<dl>
+    {{#each items}}
+        <dt><a href="{{url}}" rel="external noopener ugc">{{title}}</a></dt>
+        <dd><date>{{pubDay}}</date><br>{{{description}}}</dd>
+    {{/each}}
+</dl>
+{{/with}}

@@ -5,13 +5,17 @@ import nu.marginalia.assistant.client.AssistantClient;
 import nu.marginalia.assistant.client.model.SimilarDomain;
 import nu.marginalia.client.Context;
 import nu.marginalia.db.DbDomainQueries;
+import nu.marginalia.feedlot.model.FeedItems;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.search.SearchOperator;
 import nu.marginalia.assistant.client.model.DomainInformation;
+import nu.marginalia.feedlot.FeedlotClient;
 import nu.marginalia.search.model.UrlDetails;
 import nu.marginalia.search.svc.SearchFlagSiteService.FlagSiteFormData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
@@ -21,19 +25,23 @@ import java.util.List;
 import java.util.Map;
 
 public class SearchSiteInfoService {
+    private static final Logger logger = LoggerFactory.getLogger(SearchSiteInfoService.class);
 
     private final SearchOperator searchOperator;
     private final AssistantClient assistantClient;
     private final SearchFlagSiteService flagSiteService;
     private final DbDomainQueries domainQueries;
     private final MustacheRenderer<Object> renderer;
+    private final FeedlotClient feedlotClient;
 
     @Inject
     public SearchSiteInfoService(SearchOperator searchOperator,
                                  AssistantClient assistantClient,
                                  RendererFactory rendererFactory,
                                  SearchFlagSiteService flagSiteService,
-                                 DbDomainQueries domainQueries) throws IOException {
+                                 DbDomainQueries domainQueries,
+                                 FeedlotClient feedlotClient) throws IOException
+    {
         this.searchOperator = searchOperator;
         this.assistantClient = assistantClient;
         this.flagSiteService = flagSiteService;
@@ -41,6 +49,7 @@ public class SearchSiteInfoService {
 
         this.renderer = rendererFactory.renderer("search/site-info/site-info");
 
+        this.feedlotClient = feedlotClient;
     }
 
     public Object handle(Request request, Response response) throws SQLException {
@@ -121,6 +130,8 @@ public class SearchSiteInfoService {
         final List<SimilarDomain> linkingDomains;
         String url = "https://" + domainName + "/";;
 
+        var feedItemsFuture = feedlotClient.getFeedItems(domainName);
+
         if (domainId < 0 || !assistantClient.isAccepting()) {
             domainInfo = createDummySiteInfo(domainName);
             similarSet = List.of();
@@ -141,12 +152,20 @@ public class SearchSiteInfoService {
             }
         }
 
+        FeedItems feedItems = null;
+        try {
+            feedItems = feedItemsFuture.get();
+        } catch (Exception e) {
+            logger.debug("Failed to get feed items for {}: {}", domainName, e.getMessage());
+        }
+
         return new SiteInfoWithContext(domainName,
                 domainId,
                 url,
                 domainInfo,
                 similarSet,
-                linkingDomains
+                linkingDomains,
+                feedItems
         );
     }
 
@@ -200,13 +219,16 @@ public class SearchSiteInfoService {
                                       String siteUrl,
                                       DomainInformation domainInformation,
                                       List<SimilarDomain> similar,
-                                      List<SimilarDomain> linking) {
+                                      List<SimilarDomain> linking,
+                                      FeedItems feed
+                                      ) {
         public SiteInfoWithContext(String domain,
                                    long domainId,
                                    String siteUrl,
                                    DomainInformation domainInformation,
                                    List<SimilarDomain> similar,
-                                   List<SimilarDomain> linking
+                                   List<SimilarDomain> linking,
+                                   FeedItems feedInfo
                             )
         {
             this(Map.of("info", true),
@@ -216,7 +238,8 @@ public class SearchSiteInfoService {
                     siteUrl,
                     domainInformation,
                     similar,
-                    linking);
+                    linking,
+                    feedInfo);
         }
 
         public String getLayout() {

@@ -28,6 +28,7 @@ include 'code:libraries:message-queue'
 
 include 'code:features-search:screenshots'
 include 'code:features-search:random-websites'
+include 'code:features-search:feedlot-client'
 include 'code:features-qs:query-parser'
 include 'code:features-index:result-ranking'
 

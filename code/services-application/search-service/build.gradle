@@ -47,6 +47,7 @@ dependencies {
 
     implementation project(':code:features-search:screenshots')
     implementation project(':code:features-search:random-websites')
+    implementation project(':code:features-search:feedlot-client')
 
     implementation libs.bundles.slf4j
 
