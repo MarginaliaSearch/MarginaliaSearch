@@ -94,7 +94,7 @@ public class CrawlerMain {
                 1);
 
         fetcher = new HttpFetcherImpl(userAgent.uaString(),
-                new Dispatcher(Executors.newVirtualThreadPerTaskExecutor()),
+                new Dispatcher(),
                 new ConnectionPool(5, 10, TimeUnit.SECONDS)
         );
     }
