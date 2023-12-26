@@ -131,7 +131,6 @@ public class SearchSiteInfoService {
         String url = "https://" + domainName + "/";;
 
         var feedItemsFuture = feedlotClient.getFeedItems(domainName);
-
         if (domainId < 0 || !assistantClient.isAccepting()) {
             domainInfo = createDummySiteInfo(domainName);
             similarSet = List.of();
@@ -145,11 +144,11 @@ public class SearchSiteInfoService {
             linkingDomains = assistantClient
                     .linkedDomains(ctx, domainId, 100)
                     .blockingFirst();
+        }
 
-            List<UrlDetails> sampleResults = searchOperator.doSiteSearch(ctx, domainName, 1);
-            if (!sampleResults.isEmpty()) {
-                url = sampleResults.getFirst().url.withPathAndParam("/", null).toString();
-            }
+        List<UrlDetails> sampleResults = searchOperator.doSiteSearch(ctx, domainName, 5);
+        if (!sampleResults.isEmpty()) {
+            url = sampleResults.getFirst().url.withPathAndParam("/", null).toString();
         }
 
         FeedItems feedItems = null;
@@ -165,7 +164,8 @@ public class SearchSiteInfoService {
                 domainInfo,
                 similarSet,
                 linkingDomains,
-                feedItems
+                feedItems,
+                sampleResults
         );
     }
 
@@ -220,7 +220,8 @@ public class SearchSiteInfoService {
                                       DomainInformation domainInformation,
                                       List<SimilarDomain> similar,
                                       List<SimilarDomain> linking,
-                                      FeedItems feed
+                                      FeedItems feed,
+                                      List<UrlDetails> samples
                                       ) {
         public SiteInfoWithContext(String domain,
                                    long domainId,
@@ -228,7 +229,8 @@ public class SearchSiteInfoService {
                                    DomainInformation domainInformation,
                                    List<SimilarDomain> similar,
                                    List<SimilarDomain> linking,
-                                   FeedItems feedInfo
+                                   FeedItems feedInfo,
+                                   List<UrlDetails> samples
                             )
         {
             this(Map.of("info", true),
@@ -239,7 +241,8 @@ public class SearchSiteInfoService {
                     domainInformation,
                     similar,
                     linking,
-                    feedInfo);
+                    feedInfo,
+                    samples);
         }
 
         public String getLayout() {

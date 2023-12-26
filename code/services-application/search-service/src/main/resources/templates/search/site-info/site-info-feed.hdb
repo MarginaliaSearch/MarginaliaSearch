@@ -4,7 +4,17 @@
 <dl>
     {{#each items}}
         <dt><a href="{{url}}" rel="external noopener ugc">{{title}}</a></dt>
-        <dd><date>{{pubDay}}</date><br>{{{description}}}</dd>
+        <dd><date>{{pubDay}}</date><br>{{{descriptionSafe}}}</dd>
     {{/each}}
 </dl>
 {{/with}}
+
+{{#unless feed}}{{#if samples}}
+<h2>Sample</h2>
+<dl>
+{{#each samples}}
+    <dt><a href="{{url}}" rel="external noopener ugc">{{title}}</a></dt>
+    <dd>{{{description}}}</dd>
+{{/each}}
+</dl>
+{{/if}}{{/unless}}

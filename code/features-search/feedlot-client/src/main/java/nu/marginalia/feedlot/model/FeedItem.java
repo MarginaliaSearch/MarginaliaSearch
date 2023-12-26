@@ -9,4 +9,9 @@ public record FeedItem(String title, String date, String description, String url
         return date;
     }
 
+    public String descriptionSafe() {
+        return description
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
+    }
 }
