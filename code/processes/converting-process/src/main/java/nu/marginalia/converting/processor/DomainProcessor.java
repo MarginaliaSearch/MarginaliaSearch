@@ -75,7 +75,7 @@ public class DomainProcessor {
         return fullProcessing(domain);
     }
 
-    public ConverterBatchWritableIf sideloadProcessing(SerializableCrawlDataStream dataStream) {
+    public SideloadProcessing sideloadProcessing(SerializableCrawlDataStream dataStream) {
         try {
             return new SideloadProcessing(dataStream);
         }
@@ -86,7 +86,7 @@ public class DomainProcessor {
 
     }
 
-    class SideloadProcessing implements ConverterBatchWritableIf, SideloadSource {
+    public class SideloadProcessing implements ConverterBatchWritableIf, SideloadSource {
         private final SerializableCrawlDataStream dataStream;
         private final ProcessedDomain domain;
         private final DocumentDecorator documentDecorator;
@@ -97,10 +97,9 @@ public class DomainProcessor {
         SideloadProcessing(SerializableCrawlDataStream dataStream) throws IOException {
             this.dataStream = dataStream;
 
-            if (!dataStream.hasNext()) {
-                throw new IllegalStateException("No data in stream");
-            }
-            if (!(dataStream.next() instanceof CrawledDomain crawledDomain)) {
+            if (!dataStream.hasNext()
+             || !(dataStream.next() instanceof CrawledDomain crawledDomain))
+            {
                 throw new IllegalStateException("First record must be a domain");
             }
 
@@ -126,10 +125,11 @@ public class DomainProcessor {
             @Override
             public boolean hasNext() {
                 try {
-                    while (next != null
-                            && dataStream.hasNext()
-                            && dataStream.next() instanceof CrawledDocument doc)
+                    while (next == null
+                            && dataStream.hasNext())
                     {
+                        if (!(dataStream.next() instanceof CrawledDocument doc))
+                            continue;
                         if (doc.url == null || !processedUrls.add(doc.url))
                             continue;
 

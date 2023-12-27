@@ -63,7 +63,7 @@ public class ConvertingIntegrationTest {
     }
 
     @Test
-    public void testMemexMarginaliaNu() throws IOException {
+    public void testMemexMarginaliaNuFullProcessing() throws IOException {
         var ret = domainProcessor.fullProcessing(asSerializableCrawlData(readMarginaliaWorkingSet()));
         assertNotNull(ret);
         assertEquals(ret.state, DomainIndexingState.ACTIVE);
@@ -80,6 +80,39 @@ public class ConvertingIntegrationTest {
         assertTrue(resultsByStatusCount.get(UrlIndexingState.OK) > 25);
 
         for (var doc : ret.documents) {
+
+            if (!doc.isProcessedFully()) {
+                continue;
+            }
+
+            var details = doc.details;
+
+            assertTrue(details.title.length() > 4);
+            assertTrue(details.description.length() > 4);
+            assertEquals(HtmlStandard.HTML5, details.standard);
+
+        }
+    }
+
+    @Test
+    public void testMemexMarginaliaNuSideloadProcessing() throws IOException {
+        var ret = domainProcessor.sideloadProcessing(asSerializableCrawlData(readMarginaliaWorkingSet()));
+        assertNotNull(ret);
+        assertEquals("memex.marginalia.nu", ret.id());
+
+        var domain = ret.getDomain();
+        assertEquals(domain.domain, new EdgeDomain("memex.marginalia.nu"));
+
+        List<ProcessedDocument> docsAll = new ArrayList<>();
+        Map<UrlIndexingState, Integer> resultsByStatusCount = new HashMap<>();
+        ret.getDocumentsStream().forEachRemaining(docsAll::add);
+        assertTrue(docsAll.size() > 25);
+
+        docsAll.forEach(doc -> resultsByStatusCount.merge(doc.state, 1, Integer::sum));
+
+        assertTrue(resultsByStatusCount.get(UrlIndexingState.OK) > 25);
+
+        for (var doc : docsAll) {
 
             if (!doc.isProcessedFully()) {
                 continue;
