@@ -139,10 +139,13 @@ public class ConvertingIntegrationTest {
 
     private SerializableCrawlDataStream asSerializableCrawlData(CrawledDomain domain) {
         List<SerializableCrawlData> data = new ArrayList<>();
+
+        data.add(domain);
+
         if (domain.doc != null) {
             data.addAll(domain.doc);
         }
-        data.add(domain);
+
 
         return SerializableCrawlDataStream.fromIterator(data.iterator());
     }

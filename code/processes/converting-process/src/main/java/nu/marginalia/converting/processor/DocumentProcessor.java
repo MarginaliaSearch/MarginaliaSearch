@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawlerDocumentStatus;
+import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawl.UrlIndexingState;
 import nu.marginalia.converting.model.DisqualifiedException;
 import nu.marginalia.converting.model.ProcessedDocument;
@@ -38,7 +39,7 @@ public class DocumentProcessor {
         processorPlugins.add(plainTextDocumentProcessorPlugin);
     }
 
-    public ProcessedDocument process(CrawledDocument crawledDocument, DomainLinks externalDomainLinks) {
+    public ProcessedDocument process(CrawledDocument crawledDocument, DomainLinks externalDomainLinks, DocumentDecorator documentDecorator) {
         ProcessedDocument ret = new ProcessedDocument();
 
         try {
@@ -51,7 +52,7 @@ public class DocumentProcessor {
                 default -> DocumentClass.EXTERNALLY_LINKED_MULTI;
             };
 
-            processDocument(crawledDocument, documentClass, ret);
+            processDocument(crawledDocument, documentClass, documentDecorator, ret);
         }
         catch (DisqualifiedException ex) {
             ret.state = UrlIndexingState.DISQUALIFIED;
@@ -67,7 +68,7 @@ public class DocumentProcessor {
         return ret;
     }
 
-    private void processDocument(CrawledDocument crawledDocument, DocumentClass documentClass, ProcessedDocument ret) throws URISyntaxException, DisqualifiedException {
+    private void processDocument(CrawledDocument crawledDocument, DocumentClass documentClass, DocumentDecorator documentDecorator, ProcessedDocument ret) throws URISyntaxException, DisqualifiedException {
 
         var crawlerStatus = CrawlerDocumentStatus.valueOf(crawledDocument.crawlerStatus);
         if (crawlerStatus != CrawlerDocumentStatus.OK) {
@@ -90,6 +91,16 @@ public class DocumentProcessor {
 
         ret.details = detailsWithWords.details();
         ret.words = detailsWithWords.words();
+
+        documentDecorator.apply(ret);
+
+        if (Boolean.TRUE.equals(crawledDocument.hasCookies)
+         && ret.details != null
+         && ret.details.features != null)
+        {
+            ret.details.features.add(HtmlFeature.COOKIES);
+        }
+
     }
 
     private AbstractDocumentProcessorPlugin findPlugin(CrawledDocument crawledDocument) throws DisqualifiedException {
