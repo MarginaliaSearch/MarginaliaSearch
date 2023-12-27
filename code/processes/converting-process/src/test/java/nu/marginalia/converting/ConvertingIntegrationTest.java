@@ -120,10 +120,10 @@ public class ConvertingIntegrationTest {
 
             var details = doc.details;
 
+            assertTrue(details.metadata.size() > 0);
             assertTrue(details.title.length() > 4);
             assertTrue(details.description.length() > 4);
             assertEquals(HtmlStandard.HTML5, details.standard);
-
         }
     }
 
