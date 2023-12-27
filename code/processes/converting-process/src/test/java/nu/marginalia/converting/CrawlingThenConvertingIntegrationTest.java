@@ -251,7 +251,7 @@ public class CrawlingThenConvertingIntegrationTest {
 
     private ProcessedDomain process() {
         try (var stream = new ParquetSerializableCrawlDataStream(fileName2)) {
-            return domainProcessor.process(stream);
+            return domainProcessor.fullProcessing(stream);
         }
         catch (Exception e) {
             Assertions.fail(e);

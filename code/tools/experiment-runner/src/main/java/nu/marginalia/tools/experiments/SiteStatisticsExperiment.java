@@ -22,7 +22,7 @@ public class SiteStatisticsExperiment extends Experiment {
 
     @Override
     public boolean process(SerializableCrawlDataStream stream) {
-        var ret = domainProcessor.process(stream);
+        var ret = domainProcessor.fullProcessing(stream);
 
         ret.documents.stream()
                 .filter(ProcessedDocument::isProcessedFully)

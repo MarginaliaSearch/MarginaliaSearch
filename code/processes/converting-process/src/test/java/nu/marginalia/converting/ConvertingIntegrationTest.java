@@ -43,7 +43,7 @@ public class ConvertingIntegrationTest {
 
         var domain = new CrawledDomain("memex.marginalia.nu", null, "OK", "-", "127.0.0.1",
                 docs, Collections.emptyList());
-        var ret = domainProcessor.process(asSerializableCrawlData(domain));
+        var ret = domainProcessor.fullProcessing(asSerializableCrawlData(domain));
 
         assertEquals(ret.state, DomainIndexingState.ACTIVE);
         assertEquals(ret.domain, new EdgeDomain("memex.marginalia.nu"));
@@ -51,7 +51,7 @@ public class ConvertingIntegrationTest {
     }
     @Test
     public void testMemexMarginaliaNuDateInternalConsistency() throws IOException {
-        var ret = domainProcessor.process(asSerializableCrawlData(readMarginaliaWorkingSet()));
+        var ret = domainProcessor.fullProcessing(asSerializableCrawlData(readMarginaliaWorkingSet()));
         ret.documents.stream().filter(ProcessedDocument::isProcessedFully).forEach(doc -> {
             int year = PubDate.fromYearByte(doc.details.metadata.year());
             Integer yearMeta = doc.details.pubYear;
@@ -64,7 +64,7 @@ public class ConvertingIntegrationTest {
 
     @Test
     public void testMemexMarginaliaNu() throws IOException {
-        var ret = domainProcessor.process(asSerializableCrawlData(readMarginaliaWorkingSet()));
+        var ret = domainProcessor.fullProcessing(asSerializableCrawlData(readMarginaliaWorkingSet()));
         assertNotNull(ret);
         assertEquals(ret.state, DomainIndexingState.ACTIVE);
         assertEquals(ret.domain, new EdgeDomain("memex.marginalia.nu"));

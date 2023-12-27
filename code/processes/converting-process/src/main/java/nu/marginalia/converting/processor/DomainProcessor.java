@@ -8,6 +8,9 @@ import nu.marginalia.atags.source.AnchorTagsSource;
 import nu.marginalia.atags.source.AnchorTagsSourceFactory;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.processor.logic.links.LinkGraph;
+import nu.marginalia.converting.sideload.SideloadSource;
+import nu.marginalia.converting.writer.ConverterBatchWritableIf;
+import nu.marginalia.converting.writer.ConverterBatchWriter;
 import nu.marginalia.crawling.io.SerializableCrawlDataStream;
 import nu.marginalia.crawling.model.*;
 import nu.marginalia.geoip.GeoIpDictionary;
@@ -17,11 +20,15 @@ import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.converting.processor.logic.links.TopKeywords;
 import nu.marginalia.converting.processor.logic.LshDocumentDeduplicator;
+import nu.marginalia.util.ProcessingIterator;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -32,6 +39,11 @@ public class DomainProcessor {
     private final AnchorTagsSource anchorTagsSource;
     private final AnchorTextKeywords anchorTextKeywords;
     private final GeoIpDictionary geoIpDictionary;
+
+
+    // The threshold for running a cheaper sideloading-style process
+    // (10 MB is ~ 99.5%th percentile of domain data sizes)
+    private static final long DOMAIN_SIDELOAD_THRESHOLD = 10_000_000L;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -51,9 +63,130 @@ public class DomainProcessor {
         geoIpDictionary.waitReady();
     }
 
+    public ConverterBatchWritableIf createWritable(SerializableCrawlDataStream domain) throws IOException {
+        Path filePath = domain.path();
+
+        if (filePath != null && Files.size(filePath) > DOMAIN_SIDELOAD_THRESHOLD) {
+            // If the file is too big, we run a processing mode that doesn't
+            // require loading the entire dataset into RAM
+            return sideloadProcessing(domain);
+        }
+
+        return fullProcessing(domain);
+    }
+
+    public ConverterBatchWritableIf sideloadProcessing(SerializableCrawlDataStream dataStream) {
+        try {
+            return new SideloadProcessing(dataStream);
+        }
+        catch (Exception ex) {
+            logger.warn("Failed to process domain sideload", ex);
+            return null;
+        }
+
+    }
+
+    class SideloadProcessing implements ConverterBatchWritableIf, SideloadSource {
+        private final SerializableCrawlDataStream dataStream;
+        private final ProcessedDomain domain;
+        private final DocumentDecorator documentDecorator;
+        private final Set<String> processedUrls = new HashSet<>();
+        private final DomainLinks externalDomainLinks;
+        private final LshDocumentDeduplicator deduplicator = new LshDocumentDeduplicator();
+
+        SideloadProcessing(SerializableCrawlDataStream dataStream) throws IOException {
+            this.dataStream = dataStream;
+
+            if (!dataStream.hasNext()) {
+                throw new IllegalStateException("No data in stream");
+            }
+            if (!(dataStream.next() instanceof CrawledDomain crawledDomain)) {
+                throw new IllegalStateException("First record must be a domain");
+            }
+
+            domain = new ProcessedDomain();
+            externalDomainLinks = anchorTagsSource.getAnchorTags(domain.domain);
+            documentDecorator = new DocumentDecorator(anchorTextKeywords, externalDomainLinks);
+
+            processDomain(crawledDomain, domain, documentDecorator);
+        }
+
+        @Override
+        public ProcessedDomain getDomain() {
+            return domain;
+        }
+
+        @Override
+        public Iterator<ProcessedDocument> getDocumentsStream() {
+            return new DocumentsIterator();
+        }
+
+        class DocumentsIterator implements Iterator<ProcessedDocument> {
+            ProcessedDocument next = null;
+            @Override
+            public boolean hasNext() {
+                try {
+                    while (next != null
+                            && dataStream.hasNext()
+                            && dataStream.next() instanceof CrawledDocument doc)
+                    {
+                        if (doc.url == null || !processedUrls.add(doc.url))
+                            continue;
+
+                        var processedDoc = documentProcessor.process(doc, externalDomainLinks, documentDecorator);
+
+                        deduplicator.markIfDuplicate(processedDoc);
+                        next = processedDoc;
+
+                        if (processedDoc.isProcessedFully()) {
+                            // This is a bit sketchy, but we need to set the size and topology to something
+                            processedDoc.details.metadata = processedDoc.details.metadata.withSizeAndTopology(
+                                    10_000, externalDomainLinks.countForUrl(processedDoc.url));
+                        }
+
+                        return true;
+                    }
+                }
+                catch (IOException ex) {
+                    logger.warn("Failed to process domain sideload", ex);
+                }
+
+                return false;
+            }
+
+            @Override
+            public ProcessedDocument next() {
+                try {
+                    if (next == null && !hasNext())
+                        throw new NoSuchElementException();
+                    return next;
+                } finally {
+                    next = null;
+                }
+            }
+        }
+
+        @Override
+        public void write(ConverterBatchWriter writer) throws IOException {
+            writer.writeSideloadSource(this);
+        }
+
+        @Override
+        public String id() {
+            return domain.domain.toString();
+        }
+
+        @Override
+        public void close() throws Exception {
+            dataStream.close();
+            deduplicator.close();
+        }
+    }
+
+
     @SneakyThrows
     @Nullable
-    public ProcessedDomain process(SerializableCrawlDataStream dataStream) {
+    public ProcessedDomain fullProcessing(SerializableCrawlDataStream dataStream) {
         if (!dataStream.hasNext()) {
             return null;
         }
@@ -83,8 +216,7 @@ public class DomainProcessor {
                 if (data instanceof CrawledDomain crawledDomain) {
                     documentDecorator = new DocumentDecorator(anchorTextKeywords, externalDomainLinks);
 
-                    ret = processDomain(crawledDomain, ret, documentDecorator);
-                    
+                    processDomain(crawledDomain, ret, documentDecorator);
                     ret.documents = docs;
 
                 } else if (data instanceof CrawledDocument doc) {
@@ -112,25 +244,23 @@ public class DomainProcessor {
         return ret;
     }
 
-    private ProcessedDomain processDomain(CrawledDomain crawledDomain,
-                                          ProcessedDomain ret,
+    private void processDomain(CrawledDomain crawledDomain,
+                                          ProcessedDomain domain,
                                           DocumentDecorator decorator)
     {
-        ret.domain = new EdgeDomain(crawledDomain.domain);
-        ret.ip = crawledDomain.ip;
+        domain.domain = new EdgeDomain(crawledDomain.domain);
+        domain.ip = crawledDomain.ip;
 
         addIpInfo(decorator, crawledDomain.ip);
 
-        if (isAcademicDomain(ret.domain)) {
+        if (isAcademicDomain(domain.domain)) {
             decorator.addTerm("special:academia");
         }
 
         if (crawledDomain.redirectDomain != null) {
-            ret.redirect = new EdgeDomain(crawledDomain.redirectDomain);
+            domain.redirect = new EdgeDomain(crawledDomain.redirectDomain);
         }
-        ret.state = getState(crawledDomain.crawlerStatus);
-
-        return ret;
+        domain.state = getState(crawledDomain.crawlerStatus);
     }
 
 
@@ -231,5 +361,6 @@ public class DomainProcessor {
             default -> DomainIndexingState.ERROR;
         };
     }
+
 
 }
