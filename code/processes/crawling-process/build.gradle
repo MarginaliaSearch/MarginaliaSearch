@@ -42,6 +42,7 @@ dependencies {
     implementation project(':code:features-crawl:crawl-blocklist')
     implementation project(':code:features-crawl:link-parser')
     implementation project(':code:features-crawl:content-type')
+    implementation project(':third-party:commons-codec')
 
     implementation libs.bundles.slf4j
 

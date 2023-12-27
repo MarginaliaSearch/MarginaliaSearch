@@ -1,7 +1,7 @@
 package nu.marginalia.crawl.retreival;
 
-import com.google.common.hash.HashFunction;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import nu.marginalia.hash.MurmurHash3_128;
 import nu.marginalia.ip_blocklist.UrlBlocklist;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.EdgeDomain;
@@ -16,6 +16,7 @@ public class DomainCrawlFrontier {
 
     private static final LinkParser linkParser = new LinkParser();
 
+    private static final MurmurHash3_128 hasher = new MurmurHash3_128();
     private final ArrayDeque<String> queue;
 
     // To save the number of strings kept in memory,
@@ -27,7 +28,6 @@ public class DomainCrawlFrontier {
     // territory
     private final LongOpenHashSet visited;
     private final LongOpenHashSet known;
-    private final HashFunction hasher = com.google.common.hash.Hashing.murmur3_128();
 
     private final EdgeDomain thisDomain;
     private final UrlBlocklist urlBlocklist;
@@ -98,17 +98,17 @@ public class DomainCrawlFrontier {
     }
 
     public boolean addVisited(EdgeUrl url) {
-        long hashCode = hasher.hashUnencodedChars(url.toString()).padToLong();
+        long hashCode = hasher.hashNearlyASCII(url.toString());
 
         return visited.add(hashCode);
     }
     public boolean addKnown(EdgeUrl url) {
-        long hashCode = hasher.hashUnencodedChars(url.toString()).padToLong();
+        long hashCode = hasher.hashNearlyASCII(url.toString());
         return known.add(hashCode);
     }
 
-    boolean isVisited(EdgeUrl url) {
-        long hashCode = hasher.hashUnencodedChars(url.toString()).padToLong();
+    public boolean isVisited(EdgeUrl url) {
+        long hashCode = hasher.hashNearlyASCII(url.toString());
         return visited.contains(hashCode);
     }
 

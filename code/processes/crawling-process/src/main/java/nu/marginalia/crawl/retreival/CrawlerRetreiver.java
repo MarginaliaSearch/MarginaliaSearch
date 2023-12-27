@@ -1,7 +1,5 @@
 package nu.marginalia.crawl.retreival;
 
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 import crawlercommons.robots.SimpleRobotRules;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.contenttype.ContentType;
@@ -19,7 +17,6 @@ import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawlspec.CrawlSpecRecord;
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
