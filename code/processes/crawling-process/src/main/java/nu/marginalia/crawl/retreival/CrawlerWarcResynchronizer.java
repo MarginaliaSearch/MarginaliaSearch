@@ -40,8 +40,8 @@ public class CrawlerWarcResynchronizer {
             for (var item : reader) {
                 accept(item);
             }
-        } catch (IOException e) {
-            logger.info(STR."Failed read full warc file \{tempFile}", e);
+        } catch (Exception e) {
+            logger.info(STR."(Expected) Failed read full warc file \{tempFile}: \{e.getClass().getSimpleName()} \{e.getMessage()}");
         }
 
         // Second pass, copy records to the new warc file
@@ -49,8 +49,8 @@ public class CrawlerWarcResynchronizer {
             for (var item : reader) {
                 recorder.resync(item);
             }
-        } catch (IOException e) {
-            logger.info(STR."Failed read full warc file \{tempFile}", e);
+        } catch (Exception e) {
+            logger.info(STR."(Expected) Failed read full warc file \{tempFile}: \{e.getClass().getSimpleName()} \{e.getMessage()}");
         }
     }
 
