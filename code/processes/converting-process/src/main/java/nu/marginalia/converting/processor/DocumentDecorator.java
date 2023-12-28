@@ -10,18 +10,16 @@ import java.util.Set;
 public class DocumentDecorator {
     private final Set<String> extraSearchTerms = new HashSet<>();
     private final AnchorTextKeywords keywords;
-    private final DomainLinks externalDomainLinks;
 
-    public DocumentDecorator(AnchorTextKeywords keywords, DomainLinks externalDomainLinks) {
+    public DocumentDecorator(AnchorTextKeywords keywords) {
         this.keywords = keywords;
-        this.externalDomainLinks = externalDomainLinks;
     }
 
     public void addTerm(String term) {
         extraSearchTerms.add(term);
     }
 
-    public void apply(ProcessedDocument doc) {
+    public void apply(ProcessedDocument doc, DomainLinks externalDomainLinks) {
         if (doc == null)
             return;
         if (doc.words == null)

@@ -39,7 +39,9 @@ public class DocumentProcessor {
         processorPlugins.add(plainTextDocumentProcessorPlugin);
     }
 
-    public ProcessedDocument process(CrawledDocument crawledDocument, DomainLinks externalDomainLinks, DocumentDecorator documentDecorator) {
+    public ProcessedDocument process(CrawledDocument crawledDocument,
+                                     DomainLinks externalDomainLinks,
+                                     DocumentDecorator documentDecorator) {
         ProcessedDocument ret = new ProcessedDocument();
 
         try {
@@ -52,7 +54,7 @@ public class DocumentProcessor {
                 default -> DocumentClass.EXTERNALLY_LINKED_MULTI;
             };
 
-            processDocument(crawledDocument, documentClass, documentDecorator, ret);
+            processDocument(crawledDocument, documentClass, documentDecorator, externalDomainLinks, ret);
         }
         catch (DisqualifiedException ex) {
             ret.state = UrlIndexingState.DISQUALIFIED;
@@ -68,7 +70,7 @@ public class DocumentProcessor {
         return ret;
     }
 
-    private void processDocument(CrawledDocument crawledDocument, DocumentClass documentClass, DocumentDecorator documentDecorator, ProcessedDocument ret) throws URISyntaxException, DisqualifiedException {
+    private void processDocument(CrawledDocument crawledDocument, DocumentClass documentClass, DocumentDecorator documentDecorator, DomainLinks externalDomainLinks, ProcessedDocument ret) throws URISyntaxException, DisqualifiedException {
 
         var crawlerStatus = CrawlerDocumentStatus.valueOf(crawledDocument.crawlerStatus);
         if (crawlerStatus != CrawlerDocumentStatus.OK) {
@@ -92,7 +94,7 @@ public class DocumentProcessor {
         ret.details = detailsWithWords.details();
         ret.words = detailsWithWords.words();
 
-        documentDecorator.apply(ret);
+        documentDecorator.apply(ret, externalDomainLinks);
 
         if (Boolean.TRUE.equals(crawledDocument.hasCookies)
          && ret.details != null

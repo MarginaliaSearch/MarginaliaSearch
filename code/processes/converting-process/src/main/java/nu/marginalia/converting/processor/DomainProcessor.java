@@ -105,10 +105,11 @@ public class DomainProcessor {
 
             domain = new ProcessedDomain();
             domain.sizeloadSizeAdvice = 10_000;
-            externalDomainLinks = anchorTagsSource.getAnchorTags(domain.domain);
-            documentDecorator = new DocumentDecorator(anchorTextKeywords, externalDomainLinks);
 
+            documentDecorator = new DocumentDecorator(anchorTextKeywords);
             processDomain(crawledDomain, domain, documentDecorator);
+
+            externalDomainLinks = anchorTagsSource.getAnchorTags(domain.domain);
         }
 
         @Override
@@ -215,7 +216,7 @@ public class DomainProcessor {
                 }
 
                 if (data instanceof CrawledDomain crawledDomain) {
-                    documentDecorator = new DocumentDecorator(anchorTextKeywords, externalDomainLinks);
+                    documentDecorator = new DocumentDecorator(anchorTextKeywords);
 
                     processDomain(crawledDomain, ret, documentDecorator);
                     ret.documents = docs;
