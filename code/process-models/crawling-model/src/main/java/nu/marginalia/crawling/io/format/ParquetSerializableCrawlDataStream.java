@@ -46,7 +46,13 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
                 createDomainRecord(nextRecord);
                 wroteDomainRecord = true;
             }
-            createDocumentRecord(nextRecord);
+
+            try {
+                createDocumentRecord(nextRecord);
+            }
+            catch (Exception ex) {
+                logger.error("Failed to create document record", ex);
+            }
         }
         return !nextQ.isEmpty();
     }
