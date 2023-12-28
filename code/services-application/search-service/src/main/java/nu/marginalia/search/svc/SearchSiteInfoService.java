@@ -247,13 +247,13 @@ public class SearchSiteInfoService {
 
         public String getLayout() {
             // My CSS is too weak to handle this in CSS alone, so I guess we're doing layout in Java...
-            if (similar.size() < 25) {
+            if (similar != null && similar.size() < 25) {
                 return "lopsided";
             }
-            else if (!feed.items().isEmpty()) {
+            else if (feed != null && !feed.items().isEmpty()) {
                 return "lopsided";
             }
-            else if (!samples.isEmpty()) {
+            else if (samples != null && !samples.isEmpty()) {
                 return "lopsided";
             }
             else {
