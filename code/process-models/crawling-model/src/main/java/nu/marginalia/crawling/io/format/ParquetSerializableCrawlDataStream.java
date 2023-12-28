@@ -100,7 +100,7 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
         else if (nextRecord.contentType.startsWith("x-marginalia/advisory")) { // other advisory stuff we don't want
             return;
         }
-        else {
+        else if (nextRecord.body != null) {
             try {
                 bodyString = DocumentBodyToString.getStringData(
                         ContentType.parse(nextRecord.contentType),
@@ -109,6 +109,9 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
                 logger.error("Failed to convert body to string", ex);
                 status = CrawlerDocumentStatus.BAD_CHARSET;
             }
+        }
+        else {
+            status = CrawlerDocumentStatus.ERROR;
         }
 
         nextQ.add(new CrawledDocument("",

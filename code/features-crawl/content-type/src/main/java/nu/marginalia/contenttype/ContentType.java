@@ -8,6 +8,9 @@ import org.apache.commons.lang3.StringUtils;
  */
 public record ContentType(String contentType, String charset) {
     public static ContentType parse(String contentTypeHeader) {
+        if (contentTypeHeader == null || contentTypeHeader.isBlank())
+            return new ContentType(null,  null);
+
         String[] parts = StringUtils.split(contentTypeHeader, ";", 2);
         String contentType = parts[0].trim();
         String charset = parts.length > 1 ? parts[1].trim() : "UTF-8";
