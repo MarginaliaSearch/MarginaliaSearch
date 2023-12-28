@@ -104,6 +104,7 @@ public class DomainProcessor {
             }
 
             domain = new ProcessedDomain();
+            domain.sizeloadSizeAdvice = 10_000;
             externalDomainLinks = anchorTagsSource.getAnchorTags(domain.domain);
             documentDecorator = new DocumentDecorator(anchorTextKeywords, externalDomainLinks);
 
