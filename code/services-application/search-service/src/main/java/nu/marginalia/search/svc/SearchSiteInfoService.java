@@ -250,6 +250,12 @@ public class SearchSiteInfoService {
             if (similar.size() < 25) {
                 return "lopsided";
             }
+            else if (!feed.items().isEmpty()) {
+                return "lopsided";
+            }
+            else if (!samples.isEmpty()) {
+                return "lopsided";
+            }
             else {
                 return "balanced";
             }
