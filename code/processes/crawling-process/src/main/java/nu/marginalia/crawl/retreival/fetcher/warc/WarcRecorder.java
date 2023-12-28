@@ -37,7 +37,7 @@ public class WarcRecorder implements AutoCloseable {
     private final Path warcFile;
     private static final Logger logger = LoggerFactory.getLogger(WarcRecorder.class);
 
-    private final ThreadLocal<byte[]> bufferThreadLocal = ThreadLocal.withInitial(() -> new byte[MAX_SIZE]);
+    private final static ThreadLocal<byte[]> bufferThreadLocal = ThreadLocal.withInitial(() -> new byte[MAX_SIZE]);
 
     private boolean temporaryFile = false;
 
