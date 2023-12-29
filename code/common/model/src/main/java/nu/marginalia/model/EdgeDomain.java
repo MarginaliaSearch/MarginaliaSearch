@@ -23,6 +23,12 @@ public class EdgeDomain implements Serializable {
 
         host = host.toLowerCase();
 
+        // Remove trailing dots, which are allowed in DNS but not in URLs
+        // (though sometimes still show up in the wild)
+        while (!host.isBlank() && host.endsWith(".")) {
+            host = host.substring(0, host.length() - 1);
+        }
+
         var dot = host.lastIndexOf('.');
 
         if (dot < 0 || looksLikeAnIp(host)) { // IPV6 >.>
