@@ -26,7 +26,7 @@ public class WarcProtocolReconstructor {
         requestStringBuilder.append(request.method()).append(" ").append(encodedURL);
 
         if (uri.getQuery() != null) {
-            requestStringBuilder.append("?").append(uri.getQuery());
+            requestStringBuilder.append("?").append(URLEncoder.encode(uri.getQuery(), StandardCharsets.UTF_8));
         }
         requestStringBuilder.append(" HTTP/1.1\r\n");
         requestStringBuilder.append("Host: ").append(uri.getHost()).append("\r\n");
