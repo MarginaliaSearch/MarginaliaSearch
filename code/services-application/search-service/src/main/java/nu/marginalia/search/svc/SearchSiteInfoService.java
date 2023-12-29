@@ -145,10 +145,10 @@ public class SearchSiteInfoService {
         else {
             domainInfo = assistantClient.domainInformation(ctx, domainId).blockingFirst();
             similarSet = assistantClient
-                    .similarDomains(ctx, domainId, 100)
+                    .similarDomains(ctx, domainId, 25)
                     .blockingFirst();
             linkingDomains = assistantClient
-                    .linkedDomains(ctx, domainId, 100)
+                    .linkedDomains(ctx, domainId, 25)
                     .blockingFirst();
         }
 
