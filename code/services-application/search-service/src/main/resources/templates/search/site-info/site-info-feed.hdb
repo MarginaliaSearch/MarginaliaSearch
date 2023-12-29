@@ -14,7 +14,7 @@
 <dl>
 {{#each samples}}
     <dt><a href="{{url}}" rel="external noopener ugc">{{title}}</a></dt>
-    <dd>{{{description}}}</dd>
+    <dd>{{description}}</dd>
 {{/each}}
 </dl>
 {{/if}}{{/unless}}
