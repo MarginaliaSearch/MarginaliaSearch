@@ -38,7 +38,7 @@ public class ProcessingIterator<T> implements Iterator<T> {
 
     private void executeJob(ProcessingJob<T> job) {
         try {
-            job.run(j -> executorService.submit(() -> executeTask(j)));
+            job.run(this::executeTask);
         } catch (Exception e) {
             logger.warn("Exception while processing", e);
         } finally {
@@ -53,13 +53,15 @@ public class ProcessingIterator<T> implements Iterator<T> {
             return;
         }
 
-        try {
-            queue.put(task.get());
-        } catch (Exception e) {
-            logger.warn("Exception while processing", e);
-        } finally {
-            sem.release();
-        }
+        executorService.submit(() -> {
+            try {
+                queue.put(task.get());
+            } catch (Exception e) {
+                logger.warn("Exception while processing", e);
+            } finally {
+                sem.release();
+            }
+        });
     }
 
     /** Returns true if there are more documents to be processed.
