@@ -9,6 +9,7 @@ import nu.marginalia.feedlot.model.FeedItems;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.renderer.MustacheRenderer;
 import nu.marginalia.renderer.RendererFactory;
+import nu.marginalia.screenshot.ScreenshotService;
 import nu.marginalia.search.SearchOperator;
 import nu.marginalia.assistant.client.model.DomainInformation;
 import nu.marginalia.feedlot.FeedlotClient;
@@ -33,6 +34,7 @@ public class SearchSiteInfoService {
     private final DbDomainQueries domainQueries;
     private final MustacheRenderer<Object> renderer;
     private final FeedlotClient feedlotClient;
+    private final ScreenshotService screenshotService;
 
     @Inject
     public SearchSiteInfoService(SearchOperator searchOperator,
@@ -40,7 +42,8 @@ public class SearchSiteInfoService {
                                  RendererFactory rendererFactory,
                                  SearchFlagSiteService flagSiteService,
                                  DbDomainQueries domainQueries,
-                                 FeedlotClient feedlotClient) throws IOException
+                                 FeedlotClient feedlotClient,
+                                 ScreenshotService screenshotService) throws IOException
     {
         this.searchOperator = searchOperator;
         this.assistantClient = assistantClient;
@@ -50,6 +53,7 @@ public class SearchSiteInfoService {
         this.renderer = rendererFactory.renderer("search/site-info/site-info");
 
         this.feedlotClient = feedlotClient;
+        this.screenshotService = screenshotService;
     }
 
     public Object handle(Request request, Response response) throws SQLException {
@@ -130,6 +134,8 @@ public class SearchSiteInfoService {
         final List<SimilarDomain> linkingDomains;
         String url = "https://" + domainName + "/";;
 
+        boolean hasScreenshot = screenshotService.hasScreenshot(domainId);
+
         var feedItemsFuture = feedlotClient.getFeedItems(domainName);
         if (domainId < 0 || !assistantClient.isAccepting()) {
             domainInfo = createDummySiteInfo(domainName);
@@ -161,6 +167,7 @@ public class SearchSiteInfoService {
         return new SiteInfoWithContext(domainName,
                 domainId,
                 url,
+                hasScreenshot,
                 domainInfo,
                 similarSet,
                 linkingDomains,
@@ -217,6 +224,7 @@ public class SearchSiteInfoService {
                                       String domain,
                                       long domainId,
                                       String siteUrl,
+                                      boolean hasScreenshot,
                                       DomainInformation domainInformation,
                                       List<SimilarDomain> similar,
                                       List<SimilarDomain> linking,
@@ -226,6 +234,7 @@ public class SearchSiteInfoService {
         public SiteInfoWithContext(String domain,
                                    long domainId,
                                    String siteUrl,
+                                   boolean hasScreenshot,
                                    DomainInformation domainInformation,
                                    List<SimilarDomain> similar,
                                    List<SimilarDomain> linking,
@@ -238,6 +247,7 @@ public class SearchSiteInfoService {
                     domain,
                     domainId,
                     siteUrl,
+                    hasScreenshot,
                     domainInformation,
                     similar,
                     linking,
