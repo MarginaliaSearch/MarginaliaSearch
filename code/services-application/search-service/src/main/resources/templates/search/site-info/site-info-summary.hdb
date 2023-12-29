@@ -8,9 +8,16 @@
         <h2><span title="External Link">&#x1F30E;</span>&nbsp;<a rel="external noopener" href="{{siteUrl}}">{{domain}}</a></h2>
 
 
+        {{#if hasScreenshot}}
         <a rel="external noopener" href="{{siteUrl}}">
             <img class="screenshot" width="300" height="225" src="/screenshot/{{domainId}}" alt="Screenshot of {{domain}}" />
         </a>
+        {{/if}}
+
+        {{#unless hasScreenshot}}
+            <p>Screenshot not yet available.</p>
+        {{/unless}}
+
         {{#with domainInformation}}
             {{> search/site-info/site-info-feed}}
             {{> search/site-info/site-info-index}}
