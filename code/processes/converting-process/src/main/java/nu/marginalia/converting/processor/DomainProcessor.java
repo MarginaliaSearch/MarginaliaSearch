@@ -20,15 +20,12 @@ import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.converting.processor.logic.links.TopKeywords;
 import nu.marginalia.converting.processor.logic.LshDocumentDeduplicator;
-import nu.marginalia.util.ProcessingIterator;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -39,11 +36,6 @@ public class DomainProcessor {
     private final AnchorTagsSource anchorTagsSource;
     private final AnchorTextKeywords anchorTextKeywords;
     private final GeoIpDictionary geoIpDictionary;
-
-
-    // The threshold for running a cheaper sideloading-style process
-    // (10 MB is ~ 99.5%th percentile of domain data sizes)
-    private static final long DOMAIN_SIDELOAD_THRESHOLD = 10_000_000L;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -63,12 +55,11 @@ public class DomainProcessor {
         geoIpDictionary.waitReady();
     }
 
-    public ConverterBatchWritableIf createWritable(SerializableCrawlDataStream domain) throws IOException {
-        Path filePath = domain.path();
-
-        if (filePath != null && Files.size(filePath) > DOMAIN_SIDELOAD_THRESHOLD) {
+    public ConverterBatchWritableIf createWritable(SerializableCrawlDataStream domain) {
+        if (domain.sizeHint() > 10_000) {
             // If the file is too big, we run a processing mode that doesn't
             // require loading the entire dataset into RAM
+            logger.info("Sideloading {}", domain.path());
             return sideloadProcessing(domain);
         }
 
@@ -100,7 +91,7 @@ public class DomainProcessor {
             if (!dataStream.hasNext()
              || !(dataStream.next() instanceof CrawledDomain crawledDomain))
             {
-                throw new IllegalStateException("First record must be a domain");
+                throw new IllegalStateException("First record must be a domain, was " + dataStream.next().getClass().getSimpleName());
             }
 
             domain = new ProcessedDomain();
@@ -135,7 +126,7 @@ public class DomainProcessor {
                         if (doc.url == null || !processedUrls.add(doc.url))
                             continue;
 
-                        var processedDoc = documentProcessor.process(doc, externalDomainLinks, documentDecorator);
+                        var processedDoc = documentProcessor.process(doc, domain.domain, externalDomainLinks, documentDecorator);
 
                         deduplicator.markIfDuplicate(processedDoc);
                         next = processedDoc;
@@ -226,7 +217,7 @@ public class DomainProcessor {
                         if (doc.url == null || !processedUrls.add(doc.url))
                             continue;
 
-                        var processedDoc = documentProcessor.process(doc, externalDomainLinks, documentDecorator);
+                        var processedDoc = documentProcessor.process(doc, ret.domain, externalDomainLinks, documentDecorator);
 
                         deduplicator.markIfDuplicate(processedDoc);
 

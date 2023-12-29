@@ -32,7 +32,7 @@ public class ProcessedDomain implements ConverterBatchWritableIf  {
 
     @Override
     public void write(ConverterBatchWriter writer) throws IOException {
-        writer.writeDomainData(this);
+        writer.writeProcessedDomain(this);
     }
 
     @Override

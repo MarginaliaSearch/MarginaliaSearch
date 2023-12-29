@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -35,6 +36,21 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
     @Override
     public Path path() {
         return path;
+    }
+
+    public int sizeHint() {
+        // Only calculate size hint for large files
+        // (the reason we calculate them in the first place is to assess whether it is large
+        // because it has many documents, or because it is a small number of large documents)
+        try {
+            if (Files.size(path) > 10_000_000) {
+                return CrawledDocumentParquetRecordFileReader.countGoodStatusCodes(path);
+            }
+        } catch (IOException e) {
+            // suppressed
+        }
+
+        return 0;
     }
 
     @Override

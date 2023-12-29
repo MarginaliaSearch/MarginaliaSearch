@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import nu.marginalia.atags.model.DomainLinks;
 import nu.marginalia.crawling.model.CrawledDocument;
 import nu.marginalia.crawling.model.CrawlerDocumentStatus;
+import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.model.crawl.UrlIndexingState;
 import nu.marginalia.converting.model.DisqualifiedException;
@@ -40,6 +41,7 @@ public class DocumentProcessor {
     }
 
     public ProcessedDocument process(CrawledDocument crawledDocument,
+                                     EdgeDomain domain,
                                      DomainLinks externalDomainLinks,
                                      DocumentDecorator documentDecorator) {
         ProcessedDocument ret = new ProcessedDocument();
@@ -47,6 +49,12 @@ public class DocumentProcessor {
         try {
             // We must always provide the URL, even if we don't process the document
             ret.url = getDocumentUrl(crawledDocument);
+
+            if (!Objects.equals(ret.url.domain, domain)) {
+                ret.state = UrlIndexingState.DISQUALIFIED;
+                ret.stateReason = DisqualifiedException.DisqualificationReason.PROCESSING_EXCEPTION.toString();
+                return ret;
+            }
 
             DocumentClass documentClass = switch (externalDomainLinks.countForUrl(ret.url)) {
                 case 0 -> DocumentClass.NORMAL;
