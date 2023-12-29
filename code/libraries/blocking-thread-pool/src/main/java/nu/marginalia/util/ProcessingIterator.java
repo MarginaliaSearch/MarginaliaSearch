@@ -75,7 +75,7 @@ public class ProcessingIterator<T> implements Iterator<T> {
             return true;
 
         do {
-            next = queue.poll(1, TimeUnit.SECONDS);
+            next = queue.poll(50, TimeUnit.MILLISECONDS);
             if (next != null) {
                 return true;
             }
