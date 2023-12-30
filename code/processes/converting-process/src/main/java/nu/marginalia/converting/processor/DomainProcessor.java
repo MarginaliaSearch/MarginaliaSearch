@@ -99,6 +99,7 @@ public class DomainProcessor {
             domain.sizeloadSizeAdvice = sizeHint == 0 ? 10_000 : sizeHint;
 
             documentDecorator = new DocumentDecorator(anchorTextKeywords);
+
             processDomain(crawledDomain, domain, documentDecorator);
 
             externalDomainLinks = anchorTagsSource.getAnchorTags(domain.domain);
@@ -164,50 +165,41 @@ public class DomainProcessor {
             return null;
         }
 
-        ProcessedDomain ret = new ProcessedDomain();
         List<ProcessedDocument> docs = new ArrayList<>();
         Set<String> processedUrls = new HashSet<>();
 
-        DomainLinks externalDomainLinks = null;
+        if (!(dataStream.next() instanceof CrawledDomain crawledDomain)) {
+            throw new IllegalStateException("First record must be a domain, was " + dataStream.next().getClass().getSimpleName());
+        }
 
-        DocumentDecorator documentDecorator = null;
+        DomainLinks externalDomainLinks = anchorTagsSource.getAnchorTags(crawledDomain.getDomain());
+        DocumentDecorator documentDecorator = new DocumentDecorator(anchorTextKeywords);
 
-        try (var deduplicator = new LshDocumentDeduplicator()){
+        // Process Domain Record
+
+        ProcessedDomain ret = new ProcessedDomain();
+        processDomain(crawledDomain, ret, documentDecorator);
+        ret.documents = docs;
+
+        // Process Documents
+
+        try (var deduplicator = new LshDocumentDeduplicator()) {
             while (dataStream.hasNext()) {
-                var data = dataStream.next();
+                if (!(dataStream.next() instanceof CrawledDocument doc))
+                    continue;
+                if (doc.url == null)
+                    continue;
+                if (!processedUrls.add(doc.url))
+                    continue;
 
-                // Do a lazy load of the external domain links since we don't know the domain
-                // until we see the first document
-                if (externalDomainLinks == null) {
-                    var domain = data.getDomain();
-
-                    if (domain != null) {
-                        externalDomainLinks = anchorTagsSource.getAnchorTags(domain);
-                    }
-                }
-
-                if (data instanceof CrawledDomain crawledDomain) {
-                    documentDecorator = new DocumentDecorator(anchorTextKeywords);
-
-                    processDomain(crawledDomain, ret, documentDecorator);
-                    ret.documents = docs;
-
-                } else if (data instanceof CrawledDocument doc) {
-                    try {
-                        if (doc.url == null || !processedUrls.add(doc.url))
-                            continue;
-
-                        var processedDoc = documentProcessor.process(doc, ret.domain, externalDomainLinks, documentDecorator);
-
-                        deduplicator.markIfDuplicate(processedDoc);
-
-                        docs.add(processedDoc);
-                    } catch (Exception ex) {
-                        logger.warn("Failed to process " + doc.url, ex);
-                    }
+                try {
+                    var processedDoc = documentProcessor.process(doc, ret.domain, externalDomainLinks, documentDecorator);
+                    deduplicator.markIfDuplicate(processedDoc);
+                    docs.add(processedDoc);
+                } catch (Exception ex) {
+                    logger.warn("Failed to process " + doc.url, ex);
                 }
             }
-
         }
 
         // Add late keywords and features from domain-level information
