@@ -96,7 +96,7 @@ public class ConvertingIntegrationTest {
 
     @Test
     public void testMemexMarginaliaNuSideloadProcessing() throws IOException {
-        var ret = domainProcessor.sideloadProcessing(asSerializableCrawlData(readMarginaliaWorkingSet()));
+        var ret = domainProcessor.sideloadProcessing(asSerializableCrawlData(readMarginaliaWorkingSet()), 100);
         assertNotNull(ret);
         assertEquals("memex.marginalia.nu", ret.id());
 
