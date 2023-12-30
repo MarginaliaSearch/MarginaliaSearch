@@ -272,6 +272,7 @@ class CrawlerRetreiverTest {
         tempFileWarc2 = Files.createTempFile("crawling-process", ".warc.gz");
 
         doCrawl(tempFileWarc1, specs);
+        convertToParquet(tempFileWarc1, tempFileParquet1);
         doCrawlWithReferenceStream(specs,
                 CrawledDomainReader.createDataStream(tempFileParquet1)
         );
