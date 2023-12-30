@@ -86,6 +86,7 @@ public class DomainProcessor {
         private final Set<String> processedUrls = new HashSet<>();
         private final DomainLinks externalDomainLinks;
         private final LshDocumentDeduplicator deduplicator = new LshDocumentDeduplicator();
+        private static ProcessingIterator.Factory iteratorFactory = ProcessingIterator.factory(24, 16);
 
         SideloadProcessing(SerializableCrawlDataStream dataStream, int sizeHint) throws IOException {
             this.dataStream = dataStream;
@@ -112,7 +113,7 @@ public class DomainProcessor {
 
         @Override
         public Iterator<ProcessedDocument> getDocumentsStream() {
-            return new ProcessingIterator<>(24, 16, (taskConsumer) -> {
+            return iteratorFactory.create((taskConsumer) -> {
                 while (dataStream.hasNext())
                 {
                     if (!(dataStream.next() instanceof CrawledDocument doc))

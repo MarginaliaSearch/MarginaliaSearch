@@ -76,7 +76,8 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
     @SneakyThrows
     @Override
     public Iterator<ProcessedDocument> getDocumentsStream() {
-        return new ProcessingIterator<>(24, 16, (taskConsumer) -> {
+        // This leaks a thread pool, but it doesn't matter since this is a one-off process
+        return ProcessingIterator.factory(24, 16).create((taskConsumer) -> {
             DomainLinks domainLinks = getDomainLinks();
 
             var stmt = connection.prepareStatement("""

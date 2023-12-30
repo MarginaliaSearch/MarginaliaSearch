@@ -26,14 +26,18 @@ public class ProcessingIterator<T> implements Iterator<T> {
 
     private final int parallelism;
 
-    public ProcessingIterator(int queueSize, int parallelism, ProcessingJob<T> task) {
+    ProcessingIterator(ExecutorService executorService, int queueSize, int parallelism, ProcessingJob<T> task) {
         this.parallelism = parallelism;
 
         queue = new LinkedBlockingQueue<>(queueSize);
-        executorService = Executors.newFixedThreadPool(parallelism);
+        this.executorService = executorService;
         sem = new Semaphore(parallelism);
 
         executorService.submit(() -> executeJob(task));
+    }
+
+    public static Factory factory(int queueSize, int parallelism) {
+        return new Factory(queueSize, parallelism);
     }
 
     private void executeJob(ProcessingJob<T> job) {
@@ -83,10 +87,6 @@ public class ProcessingIterator<T> implements Iterator<T> {
             }
         } while (expectMore());
 
-        if (!executorService.isShutdown()) {
-            executorService.shutdown();
-        }
-
         return false;
     }
 
@@ -128,14 +128,39 @@ public class ProcessingIterator<T> implements Iterator<T> {
      * performed in parallel
      */
     public interface ProcessingJob<T2> {
+
         void run(Consumer<Task<T2>> output) throws Exception;
     }
-
     /**
      * A single task that produces a result to be iterable via the Iterator interface
      * (along with other tasks' outputs)
      */
     public interface Task<T> {
+
         T get() throws Exception;
     }
+
+    public static class Factory {
+        private final int queueSize;
+        private final int parallelism;
+        private final ExecutorService executorService;
+
+        Factory(int queueSize, int parallelism) {
+            this.queueSize = queueSize;
+            this.parallelism = parallelism;
+            this.executorService = Executors.newFixedThreadPool(parallelism);
+        }
+
+        public <T> ProcessingIterator<T> create(ProcessingJob<T> task) {
+            return new ProcessingIterator<>(executorService, queueSize, parallelism, task);
+        }
+
+        public void stop() {
+            if (!executorService.isShutdown()) {
+                executorService.shutdown();
+            }
+        }
+    }
+
 }
+
