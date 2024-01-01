@@ -137,11 +137,13 @@ public class ResultValuator {
         double penalty = 0;
 
         boolean isForum = DocumentFlags.GeneratorForum.isPresent(docFlags);
+        boolean isWiki = DocumentFlags.GeneratorWiki.isPresent(docFlags);
+        boolean isDocs = DocumentFlags.GeneratorDocs.isPresent(docFlags);
 
         // Penalize large sites harder for any bullshit as it's a strong signal of a low quality site
         double largeSiteFactor = 1.;
 
-        if (!isForum && size > 400) {
+        if (!isForum && !isWiki && !isDocs && size > 400) {
             // Long urls-that-look-like-this tend to be poor search results
             if (DocumentMetadata.hasFlags(featureFlags, HtmlFeature.KEBAB_CASE_URL.getFeatureBit()))
                 penalty += 30.0;
@@ -161,7 +163,7 @@ public class ResultValuator {
         if (DocumentMetadata.hasFlags(featureFlags, HtmlFeature.TRACKING.getFeatureBit()))
             penalty += 2.5 * largeSiteFactor;
 
-        if (isForum) {
+        if (isForum || isWiki || isDocs) {
             penalty = Math.min(0, penalty - 2);
         }
 
