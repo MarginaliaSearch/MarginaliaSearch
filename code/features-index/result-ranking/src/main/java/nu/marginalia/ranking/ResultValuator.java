@@ -108,7 +108,8 @@ public class ResultValuator {
             }
         }
 
-        return normalize(bestTcf + bestBM25F + bestBM25P + bestBM25PN * 0.25 + overallPart);
+
+        return normalize(2* bestTcf + bestBM25F + bestBM25P + bestBM25PN * 0.5) - overallPart / 4;
     }
 
     private double calculateQualityPenalty(int size, int quality, ResultRankingParameters rankingParams) {

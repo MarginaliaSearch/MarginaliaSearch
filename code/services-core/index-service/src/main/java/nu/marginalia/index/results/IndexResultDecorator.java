@@ -10,6 +10,8 @@ import nu.marginalia.index.client.model.results.SearchResultItem;
 import nu.marginalia.linkdb.LinkdbReader;
 import nu.marginalia.linkdb.model.LdbUrlDetail;
 import nu.marginalia.ranking.ResultValuator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -20,6 +22,8 @@ import java.util.Map;
 /** Joins the index view of a set of search results with data from the linkdb */
 @Singleton
 public class IndexResultDecorator {
+
+    private static final Logger logger = LoggerFactory.getLogger(IndexResultDecorator.class);
 
     private final LinkdbReader linkdbReader;
     private final ResultValuator valuator;
