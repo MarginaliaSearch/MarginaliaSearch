@@ -109,7 +109,12 @@ public class ResultValuator {
         }
 
 
-        return normalize(2* bestTcf + bestBM25F + bestBM25P + bestBM25PN * 0.5) - overallPart / 4;
+        double overallPartPositive = Math.max(0, overallPart);
+        double overallPartNegative = Math.min(0, overallPart);
+
+        // Renormalize to 0...15, where 0 is the best possible score;
+        // this is a historical artifact of the original ranking function
+        return normalize(1.5 * bestTcf + bestBM25F + bestBM25P + 0.25 * bestBM25PN + overallPartPositive, overallPartNegative);
     }
 
     private double calculateQualityPenalty(int size, int quality, ResultRankingParameters rankingParams) {
@@ -210,11 +215,11 @@ public class ResultValuator {
         return 1 + maxSet;
     }
 
-    public static double normalize(double value) {
+    public static double normalize(double value, double penalty) {
         if (value < 0)
             value = 0;
 
-        return Math.sqrt((1.0 + scalingFactor) / (1.0 + value));
+        return Math.sqrt((1.0 + scalingFactor) / (1.0 + value)) + Math.sqrt(penalty);
     }
 }
 
