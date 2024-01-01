@@ -109,7 +109,12 @@ public class ResultValuator {
         }
 
 
-        return normalize(2* bestTcf + bestBM25F + bestBM25P + bestBM25PN * 0.5) - overallPart / 4;
+        double overallPartPositive = Math.max(0, overallPart);
+        double overallPartNegative = -Math.min(0, overallPart);
+
+        // Renormalize to 0...15, where 0 is the best possible score;
+        // this is a historical artifact of the original ranking function
+        return normalize(1.5 * bestTcf + bestBM25F + bestBM25P + 0.25 * bestBM25PN + overallPartPositive, overallPartNegative);
     }
 
     private double calculateQualityPenalty(int size, int quality, ResultRankingParameters rankingParams) {
@@ -132,11 +137,13 @@ public class ResultValuator {
         double penalty = 0;
 
         boolean isForum = DocumentFlags.GeneratorForum.isPresent(docFlags);
+        boolean isWiki = DocumentFlags.GeneratorWiki.isPresent(docFlags);
+        boolean isDocs = DocumentFlags.GeneratorDocs.isPresent(docFlags);
 
         // Penalize large sites harder for any bullshit as it's a strong signal of a low quality site
         double largeSiteFactor = 1.;
 
-        if (!isForum && size > 400) {
+        if (!isForum && !isWiki && !isDocs && size > 400) {
             // Long urls-that-look-like-this tend to be poor search results
             if (DocumentMetadata.hasFlags(featureFlags, HtmlFeature.KEBAB_CASE_URL.getFeatureBit()))
                 penalty += 30.0;
@@ -156,7 +163,7 @@ public class ResultValuator {
         if (DocumentMetadata.hasFlags(featureFlags, HtmlFeature.TRACKING.getFeatureBit()))
             penalty += 2.5 * largeSiteFactor;
 
-        if (isForum) {
+        if (isForum || isWiki) {
             penalty = Math.min(0, penalty - 2);
         }
 
@@ -210,11 +217,11 @@ public class ResultValuator {
         return 1 + maxSet;
     }
 
-    public static double normalize(double value) {
+    public static double normalize(double value, double penalty) {
         if (value < 0)
             value = 0;
 
-        return Math.sqrt((1.0 + scalingFactor) / (1.0 + value));
+        return Math.sqrt((1.0 + scalingFactor) / (1.0 + value)) + Math.sqrt(penalty);
     }
 }
 
