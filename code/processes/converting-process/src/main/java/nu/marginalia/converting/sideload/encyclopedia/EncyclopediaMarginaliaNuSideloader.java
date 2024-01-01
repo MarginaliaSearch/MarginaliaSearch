@@ -121,6 +121,7 @@ public class EncyclopediaMarginaliaNuSideloader implements SideloadSource, AutoC
             fullHtml.append("<p>");
             fullHtml.append(part);
             fullHtml.append("</p>");
+            break; // Only take the first part, this improves accuracy a lot
         }
         fullHtml.append("</div></body></html>");
 
