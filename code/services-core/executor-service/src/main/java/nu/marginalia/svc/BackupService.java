@@ -3,6 +3,7 @@ package nu.marginalia.svc;
 import com.github.luben.zstd.ZstdInputStream;
 import com.github.luben.zstd.ZstdOutputStream;
 import nu.marginalia.IndexLocations;
+import nu.marginalia.service.control.ServiceHeartbeat;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.storage.model.FileStorageId;
@@ -21,10 +22,19 @@ import java.util.List;
 public class BackupService {
 
     private final FileStorageService storageService;
+    private final ServiceHeartbeat serviceHeartbeat;
+
+    public enum BackupHeartbeatSteps {
+        LINKS,
+        JOURNAL,
+        DONE
+    }
 
     @Inject
-    public BackupService(FileStorageService storageService) {
+    public BackupService(FileStorageService storageService,
+                         ServiceHeartbeat serviceHeartbeat) {
         this.storageService = storageService;
+        this.serviceHeartbeat = serviceHeartbeat;
     }
 
     /** Create a new backup of the contents in the _STAGING storage areas.
@@ -42,13 +52,22 @@ public class BackupService {
             storageService.relateFileStorages(associatedId, backupStorage.id());
         }
 
-
         var indexStagingStorage = IndexLocations.getIndexConstructionArea(storageService);
         var linkdbStagingStorage = IndexLocations.getLinkdbWritePath(storageService);
 
-        backupFileCompressed("links.db", linkdbStagingStorage, backupStorage.asPath());
-        // This file format is already compressed
-        backupJournal(indexStagingStorage, backupStorage.asPath());
+
+        try (var heartbeat = serviceHeartbeat.createServiceTaskHeartbeat(BackupHeartbeatSteps.class, "Backup")) {
+            heartbeat.progress(BackupHeartbeatSteps.LINKS);
+            backupFileCompressed("links.db", linkdbStagingStorage, backupStorage.asPath());
+
+            heartbeat.progress(BackupHeartbeatSteps.JOURNAL);
+            // This file format is already compressed
+            backupJournal(indexStagingStorage, backupStorage.asPath());
+            
+            heartbeat.progress(BackupHeartbeatSteps.DONE);
+        }
+
+
     }
 
 
@@ -59,8 +78,15 @@ public class BackupService {
         var indexStagingStorage = IndexLocations.getIndexConstructionArea(storageService);
         var linkdbStagingStorage = IndexLocations.getLinkdbWritePath(storageService);
 
-        restoreBackupCompressed("links.db", linkdbStagingStorage, backupStorage);
-        restoreJournal(indexStagingStorage, backupStorage);
+        try (var heartbeat = serviceHeartbeat.createServiceTaskHeartbeat(BackupHeartbeatSteps.class, "Restore Backup")) {
+            heartbeat.progress(BackupHeartbeatSteps.LINKS);
+            restoreBackupCompressed("links.db", linkdbStagingStorage, backupStorage);
+
+            heartbeat.progress(BackupHeartbeatSteps.JOURNAL);
+            restoreJournal(indexStagingStorage, backupStorage);
+
+            heartbeat.progress(BackupHeartbeatSteps.DONE);
+        }
     }
 
 
