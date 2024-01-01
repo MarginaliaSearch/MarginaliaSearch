@@ -8,10 +8,8 @@ x-svc: &service
     - logs:/var/log/wmsa
   networks:
     - wmsa
-  depends_on:
-    mariadb:
-        condition: service_healthy
-
+  labels:
+    - "__meta_docker_port_private=7000"
 x-p1: &partition-1
   env_file:
     - "run/env/service.env"
@@ -198,6 +196,18 @@ services:
       - "127.0.0.1:8084:84"
       - "127.0.0.1:8090:8080"
     volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - wmsa
+  prometheus:
+    image: "prom/prometheus"
+    container_name: "prometheus"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    ports:
+      - "127.0.0.1:8091:9090"
+    volumes:
+      - "./run/prometheus.yml:/etc/prometheus/prometheus.yml"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     networks:
       - wmsa
