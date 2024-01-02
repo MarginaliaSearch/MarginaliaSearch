@@ -3,13 +3,13 @@ package nu.marginalia.query;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import io.grpc.ServerBuilder;
+import io.prometheus.client.Histogram;
 import nu.marginalia.client.Context;
 import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.index.client.IndexClient;
 import nu.marginalia.index.client.model.query.SearchSpecification;
 import nu.marginalia.index.client.model.results.DecoratedSearchResultItem;
 import nu.marginalia.index.client.model.results.SearchResultSet;
-import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.query.model.QueryParams;
 import nu.marginalia.query.model.QueryResponse;
 import nu.marginalia.query.svc.NodeConfigurationWatcher;
@@ -21,9 +21,7 @@ import spark.Response;
 import spark.Spark;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class QueryService extends Service {
 
@@ -32,6 +30,13 @@ public class QueryService extends Service {
     private final Gson gson;
     private final DomainBlacklist blacklist;
     private final QueryFactory queryFactory;
+
+    private static final Histogram wmsa_qs_query_time_rest = Histogram.build()
+            .name("wmsa_qs_query_time_rest")
+            .linearBuckets(0.005, 0.005, 15)
+            .help("QS-side query time (REST endpoint)")
+            .register();
+
 
     @Inject
     public QueryService(BaseServiceParams params,
@@ -58,23 +63,25 @@ public class QueryService extends Service {
     }
 
     private Object search(Request request, Response response) {
-        String json = request.body();
-        QueryParams params = gson.fromJson(json, QueryParams.class);
+        return wmsa_qs_query_time_rest.time(() -> {
+            String json = request.body();
+            QueryParams params = gson.fromJson(json, QueryParams.class);
 
-        var query = queryFactory.createQuery(params);
-        var rsp = executeQuery(Context.fromRequest(request), query.specs);
+            var query = queryFactory.createQuery(params);
+            var rsp = executeQuery(Context.fromRequest(request), query.specs);
 
-        rsp.results.removeIf(this::isBlacklisted);
+            rsp.results.removeIf(this::isBlacklisted);
 
-        response.type("application/json");
+            response.type("application/json");
 
-        return new QueryResponse(
-                query.specs,
-                rsp.results,
-                query.searchTermsHuman,
-                List.of(), // no problems
-                query.domain
-        );
+            return new QueryResponse(
+                    query.specs,
+                    rsp.results,
+                    query.searchTermsHuman,
+                    List.of(), // no problems
+                    query.domain
+            );
+        });
     }
 
     private SearchResultSet delegateToIndex(Request request, Response response) {

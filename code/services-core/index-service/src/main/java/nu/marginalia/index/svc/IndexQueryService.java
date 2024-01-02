@@ -55,19 +55,19 @@ public class IndexQueryService extends IndexApiImplBase {
     private final Marker queryMarker = MarkerFactory.getMarker("QUERY");
 
     private static final Counter wmsa_query_timeouts = Counter.build()
-            .name("wmsa_query_timeouts")
+            .name("wmsa_index_query_timeouts")
             .help("Query timeout counter")
-            .labelNames("node")
+            .labelNames("node", "api")
             .register();
     private static final Gauge wmsa_query_cost = Gauge.build()
-            .name("wmsa_query_cost")
+            .name("wmsa_index_query_cost")
             .help("Computational cost of query")
-            .labelNames("node")
+            .labelNames("node", "api")
             .register();
     private static final Histogram wmsa_query_time = Histogram.build()
-            .name("wmsa_query_time")
-            .linearBuckets(50., 50., 15)
-            .labelNames("node")
+            .name("wmsa_index_query_time")
+            .linearBuckets(0.005, 0.005, 15)
+            .labelNames("node", "api")
             .help("Index-side query time")
             .register();
 
@@ -138,7 +138,7 @@ public class IndexQueryService extends IndexApiImplBase {
 
         try {
             return wmsa_query_time
-                    .labels(nodeName)
+                    .labels(nodeName, "REST")
                     .time(() -> {
                 var params = new SearchParameters(specsSet, getSearchSet(specsSet));
 
@@ -147,11 +147,12 @@ public class IndexQueryService extends IndexApiImplBase {
                 logger.info(queryMarker, "Index Result Count: {}", results.size());
 
                 wmsa_query_cost
-                        .labels(nodeName)
+                        .labels(nodeName, "REST")
                         .set(params.getDataCost());
+
                 if (!params.hasTimeLeft()) {
                     wmsa_query_timeouts
-                            .labels(nodeName)
+                            .labels(nodeName, "REST")
                             .inc();
                 }
 
@@ -179,7 +180,22 @@ public class IndexQueryService extends IndexApiImplBase {
         try {
             var params = new SearchParameters(request, getSearchSet(request));
 
-            SearchResultSet results = executeSearch(params);
+            final String nodeName = Integer.toString(nodeId);
+
+            SearchResultSet results = wmsa_query_time
+                    .labels(nodeName, "GRPC")
+                    .time(() -> executeSearch(params));
+
+            wmsa_query_cost
+                    .labels(nodeName, "GRPC")
+                    .set(params.getDataCost());
+
+            if (!params.hasTimeLeft()) {
+                wmsa_query_timeouts
+                        .labels(nodeName, "GRPC")
+                        .inc();
+            }
+
             for (var result : results.results) {
 
                 var rawResult = result.rawIndexResult;

@@ -1,6 +1,7 @@
 package nu.marginalia.search.svc;
 
 import com.google.inject.Inject;
+import io.prometheus.client.Histogram;
 import lombok.SneakyThrows;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.search.command.SearchAdtechParameter;

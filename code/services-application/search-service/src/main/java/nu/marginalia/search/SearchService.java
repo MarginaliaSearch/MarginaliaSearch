@@ -1,6 +1,8 @@
 package nu.marginalia.search;
 
 import com.google.inject.Inject;
+import io.prometheus.client.Counter;
+import io.prometheus.client.Histogram;
 import lombok.SneakyThrows;
 import nu.marginalia.WebsiteUrl;
 import nu.marginalia.client.Context;
@@ -11,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
+import spark.Route;
 import spark.Spark;
 
 import java.net.URLEncoder;
@@ -22,6 +25,17 @@ public class SearchService extends Service {
     private final StaticResources staticResources;
 
     private static final Logger logger = LoggerFactory.getLogger(SearchService.class);
+    private static final Histogram wmsa_search_service_request_time = Histogram.build()
+            .name("wmsa_search_service_request_time")
+            .linearBuckets(0.005, 0.005, 15)
+            .labelNames("matchedPath", "method")
+            .help("Search service request time (seconds)")
+            .register();
+    private static final Counter wmsa_search_service_error_count = Counter.build()
+            .name("wmsa_search_service_error_count")
+            .labelNames("matchedPath", "method")
+            .help("Search service error count")
+            .register();
 
     @SneakyThrows
     @Inject
@@ -42,28 +56,54 @@ public class SearchService extends Service {
 
         Spark.staticFiles.expireTime(600);
 
-        Spark.get("/search", searchQueryService::pathSearch);
+        SearchServiceMetrics.get("/search", searchQueryService::pathSearch);
+        SearchServiceMetrics.get("/public/search", searchQueryService::pathSearch);
 
-        Spark.get("/public/search", searchQueryService::pathSearch);
-        Spark.get("/public/", frontPageService::render);
-        Spark.get("/public/news.xml", frontPageService::renderNewsFeed);
-        Spark.get("/public/:resource", this::serveStatic);
+        SearchServiceMetrics.get("/public/", frontPageService::render);
+        SearchServiceMetrics.get("/public/news.xml", frontPageService::renderNewsFeed);
+        SearchServiceMetrics.get("/public/:resource", this::serveStatic);
 
-        Spark.post("/public/site/suggest/", addToCrawlQueueService::suggestCrawling);
+        SearchServiceMetrics.post("/public/site/suggest/", addToCrawlQueueService::suggestCrawling);
 
-        Spark.get("/public/site-search/:site/*", this::siteSearchRedir);
+        SearchServiceMetrics.get("/public/site-search/:site/*", this::siteSearchRedir);
 
-        Spark.get("/public/site/:site", siteInfoService::handle);
-        Spark.post("/public/site/:site", siteInfoService::handlePost);
+        SearchServiceMetrics.get("/public/site/:site", siteInfoService::handle);
+        SearchServiceMetrics.post("/public/site/:site", siteInfoService::handlePost);
 
-        Spark.get("/public/crosstalk/", crosstalkService::handle);
+        SearchServiceMetrics.get("/public/crosstalk/", crosstalkService::handle);
 
         Spark.exception(Exception.class, (e,p,q) -> {
             logger.error("Error during processing", e);
+            wmsa_search_service_error_count.labels(p.pathInfo(), p.requestMethod()).inc();
             errorPageService.serveError(Context.fromRequest(p), p, q);
         });
 
         Spark.awaitInitialization();
+    }
+
+
+
+    /** Wraps a route with a timer and a counter */
+    private static class SearchServiceMetrics implements Route {
+        private final Route delegatedRoute;
+
+        static void get(String path, Route route) {
+            Spark.get(path, new SearchServiceMetrics(route));
+        }
+        static void post(String path, Route route) {
+            Spark.post(path, new SearchServiceMetrics(route));
+        }
+
+        private SearchServiceMetrics(Route delegatedRoute) {
+            this.delegatedRoute = delegatedRoute;
+        }
+
+        @Override
+        public Object handle(Request request, Response response) throws Exception {
+            return wmsa_search_service_request_time
+                    .labels(request.pathInfo(), request.requestMethod())
+                    .time(() -> delegatedRoute.handle(request, response));
+        }
     }
 
     private Object serveStatic(Request request, Response response) {
