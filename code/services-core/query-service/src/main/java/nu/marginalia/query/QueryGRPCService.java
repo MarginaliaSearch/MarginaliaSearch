@@ -3,6 +3,8 @@ package nu.marginalia.query;
 import com.google.inject.Inject;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.prometheus.client.Histogram;
+import lombok.SneakyThrows;
 import nu.marginalia.db.DomainBlacklist;
 import nu.marginalia.index.api.*;
 import nu.marginalia.model.id.UrlIdCodec;
@@ -18,6 +20,12 @@ import java.util.concurrent.*;
 public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
 
     private final Logger logger = LoggerFactory.getLogger(QueryGRPCService.class);
+
+    private static final Histogram wmsa_qs_query_time_grpc = Histogram.build()
+            .name("wmsa_qs_query_time_grpc")
+            .linearBuckets(0.005, 0.005, 15)
+            .help("QS-side query time (GRPC endpoint)")
+            .register();
 
     private final Map<ServiceAndNode, ManagedChannel> channels
             = new ConcurrentHashMap<>();
@@ -61,23 +69,25 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
                       io.grpc.stub.StreamObserver<nu.marginalia.index.api.RpcQsResponse> responseObserver)
     {
         try {
-            var params = QueryProtobufCodec.convertRequest(request);
-            var query = queryFactory.createQuery(params);
+            wmsa_qs_query_time_grpc.time(() -> {
+                var params = QueryProtobufCodec.convertRequest(request);
+                var query = queryFactory.createQuery(params);
 
-            RpcIndexQuery indexRequest = QueryProtobufCodec.convertQuery(request, query);
-            List<RpcDecoratedResultItem> bestItems = executeQueries(indexRequest, request.getQueryLimits().getResultsTotal());
+                RpcIndexQuery indexRequest = QueryProtobufCodec.convertQuery(request, query);
+                List<RpcDecoratedResultItem> bestItems = executeQueries(indexRequest, request.getQueryLimits().getResultsTotal());
 
-            var responseBuilder = RpcQsResponse.newBuilder()
-                    .addAllResults(bestItems)
-                    .setSpecs(indexRequest)
-                    .addAllSearchTermsHuman(query.searchTermsHuman);
+                var responseBuilder = RpcQsResponse.newBuilder()
+                        .addAllResults(bestItems)
+                        .setSpecs(indexRequest)
+                        .addAllSearchTermsHuman(query.searchTermsHuman);
 
-            if (query.domain != null)
-                responseBuilder.setDomain(query.domain);
+                if (query.domain != null)
+                    responseBuilder.setDomain(query.domain);
 
-            responseObserver.onNext(responseBuilder.build());
+                responseObserver.onNext(responseBuilder.build());
 
-            responseObserver.onCompleted();
+                responseObserver.onCompleted();
+            });
         } catch (Exception e) {
             logger.error("Exception", e);
             responseObserver.onError(e);
@@ -89,8 +99,8 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
     private static final Comparator<RpcDecoratedResultItem> comparator =
             Comparator.comparing(RpcDecoratedResultItem::getRankingScore);
 
-    private List<RpcDecoratedResultItem> executeQueries(RpcIndexQuery indexRequest, int totalSize) throws InterruptedException
-    {
+    @SneakyThrows
+    private List<RpcDecoratedResultItem> executeQueries(RpcIndexQuery indexRequest, int totalSize) {
         List<Callable<List<RpcDecoratedResultItem>>> tasks = createTasks(indexRequest);
 
         return es.invokeAll(tasks).stream()
