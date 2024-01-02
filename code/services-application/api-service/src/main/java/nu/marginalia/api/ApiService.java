@@ -2,6 +2,8 @@ package nu.marginalia.api;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import io.prometheus.client.Counter;
+import io.prometheus.client.Histogram;
 import nu.marginalia.api.model.ApiLicense;
 import nu.marginalia.api.model.ApiSearchResults;
 import nu.marginalia.api.svc.LicenseService;
@@ -33,6 +35,23 @@ public class ApiService extends Service {
 
     // Marker for filtering out sensitive content from the persistent logs
     private final Marker queryMarker = MarkerFactory.getMarker("QUERY");
+
+    private final Counter wmsa_api_timeout_count = Counter.build()
+            .name("wmsa_api_timeout_count")
+            .labelNames("key")
+            .help("API timeout count")
+            .register();
+    private final Counter wmsa_api_cache_hit_count = Counter.build()
+            .name("wmsa_api_cache_hit_count")
+            .labelNames("key")
+            .help("API cache hit count")
+            .register();
+
+    private static final Histogram wmsa_api_query_time = Histogram.build()
+            .name("wmsa_api_query_time")
+            .linearBuckets(0.005, 0.005, 15)
+            .help("API-side query time")
+            .register();
 
     @Inject
     public ApiService(BaseServiceParams params,
@@ -83,6 +102,7 @@ public class ApiService extends Service {
 
         var cachedResponse = responseCache.getResults(license, args[0], request.queryString());
         if (cachedResponse.isPresent()) {
+            wmsa_api_cache_hit_count.labels(license.key).inc();
             return cachedResponse.get();
         }
 
@@ -98,6 +118,7 @@ public class ApiService extends Service {
 
     private ApiSearchResults doSearch(ApiLicense license, String query, Request request) {
         if (!rateLimiterService.isAllowed(license)) {
+            wmsa_api_timeout_count.labels(license.key).inc();
             Spark.halt(503, "Slow down");
         }
 
@@ -106,9 +127,13 @@ public class ApiService extends Service {
 
         logger.info(queryMarker, "{} Search {}", license.key, query);
 
-        return searchOperator
-                .query(Context.fromRequest(request), query, count, index)
-                .withLicense(license.getLicense());
+        return wmsa_api_query_time
+                .labels(license.key)
+                .time(() ->
+                        searchOperator
+                        .query(Context.fromRequest(request), query, count, index)
+                        .withLicense(license.getLicense())
+                );
     }
 
     private int intParam(Request request, String name, int defaultValue) {
