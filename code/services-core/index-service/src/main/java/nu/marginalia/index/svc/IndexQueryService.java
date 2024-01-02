@@ -66,7 +66,7 @@ public class IndexQueryService extends IndexApiImplBase {
             .register();
     private static final Histogram wmsa_query_time = Histogram.build()
             .name("wmsa_index_query_time")
-            .linearBuckets(0.005, 0.005, 15)
+            .linearBuckets(0.05, 0.05, 15)
             .labelNames("node", "api")
             .help("Index-side query time")
             .register();

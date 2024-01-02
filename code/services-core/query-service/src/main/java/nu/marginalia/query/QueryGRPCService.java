@@ -23,7 +23,7 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
 
     private static final Histogram wmsa_qs_query_time_grpc = Histogram.build()
             .name("wmsa_qs_query_time_grpc")
-            .linearBuckets(0.005, 0.005, 15)
+            .linearBuckets(0.05, 0.05, 15)
             .help("QS-side query time (GRPC endpoint)")
             .register();
 
