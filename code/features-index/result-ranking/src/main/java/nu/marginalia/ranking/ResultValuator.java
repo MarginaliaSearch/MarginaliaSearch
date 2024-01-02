@@ -110,7 +110,7 @@ public class ResultValuator {
 
 
         double overallPartPositive = Math.max(0, overallPart);
-        double overallPartNegative = Math.min(0, overallPart);
+        double overallPartNegative = -Math.min(0, overallPart);
 
         // Renormalize to 0...15, where 0 is the best possible score;
         // this is a historical artifact of the original ranking function
@@ -163,7 +163,7 @@ public class ResultValuator {
         if (DocumentMetadata.hasFlags(featureFlags, HtmlFeature.TRACKING.getFeatureBit()))
             penalty += 2.5 * largeSiteFactor;
 
-        if (isForum || isWiki || isDocs) {
+        if (isForum || isWiki) {
             penalty = Math.min(0, penalty - 2);
         }
 

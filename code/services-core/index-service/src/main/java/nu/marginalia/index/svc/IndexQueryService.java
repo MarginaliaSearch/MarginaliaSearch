@@ -265,8 +265,6 @@ public class IndexQueryService extends IndexApiImplBase {
         return new SearchResultSet(resultDecorator.decorateAndRerank(bestResults, rankingContext));
     }
 
-    /* This is used in result ranking, and is also routed back up the search service in order to recalculate BM-25
-     * accurately */
     private ResultRankingContext createRankingContext(ResultRankingParameters rankingParams, List<SearchSubquery> subqueries) {
         final var termToId = searchTermsSvc.getAllIncludeTerms(subqueries);
         final Map<String, Integer> termFrequencies = new HashMap<>(termToId.size());
