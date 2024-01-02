@@ -27,7 +27,7 @@ public class SearchService extends Service {
     private static final Logger logger = LoggerFactory.getLogger(SearchService.class);
     private static final Histogram wmsa_search_service_request_time = Histogram.build()
             .name("wmsa_search_service_request_time")
-            .linearBuckets(0.005, 0.005, 15)
+            .linearBuckets(0.05, 0.05, 15)
             .labelNames("matchedPath", "method")
             .help("Search service request time (seconds)")
             .register();
