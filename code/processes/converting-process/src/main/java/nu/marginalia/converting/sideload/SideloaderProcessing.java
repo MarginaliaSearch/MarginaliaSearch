@@ -80,7 +80,7 @@ public class SideloaderProcessing {
             ret.details.pubYear = LocalDateTime.now().getYear();
             ret.details.features.add(HtmlFeature.JS);
             ret.details.features.add(HtmlFeature.TRACKING);
-            ret.details.quality = -10;
+            ret.details.quality = -4.5;
             ret.details.generator = type;
 
             ret.details.metadata = new DocumentMetadata(3,
