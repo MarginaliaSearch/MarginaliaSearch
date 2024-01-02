@@ -101,7 +101,7 @@ public class SearchService extends Service {
         @Override
         public Object handle(Request request, Response response) throws Exception {
             return wmsa_search_service_request_time
-                    .labels(request.pathInfo(), request.requestMethod())
+                    .labels(request.matchedPath(), request.requestMethod())
                     .time(() -> delegatedRoute.handle(request, response));
         }
     }
