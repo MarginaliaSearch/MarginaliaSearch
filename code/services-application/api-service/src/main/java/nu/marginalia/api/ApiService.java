@@ -49,6 +49,7 @@ public class ApiService extends Service {
 
     private static final Histogram wmsa_api_query_time = Histogram.build()
             .name("wmsa_api_query_time")
+            .labelNames("key")
             .linearBuckets(0.005, 0.005, 15)
             .help("API-side query time")
             .register();
