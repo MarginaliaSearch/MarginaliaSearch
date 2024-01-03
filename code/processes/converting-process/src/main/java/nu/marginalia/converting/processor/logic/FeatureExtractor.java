@@ -59,6 +59,7 @@ public class FeatureExtractor {
             "_taboola",
             "nativeads",
             "skimlinks",
+            "moapt",
             "juicyads.com",
             "counter.yadro.ru"
     );
