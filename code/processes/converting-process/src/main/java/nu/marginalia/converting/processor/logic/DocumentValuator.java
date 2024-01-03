@@ -37,17 +37,31 @@ public class DocumentValuator {
     }
 
     private double getChatGptContentFarmPenalty(Document parsedDocument) {
-        // easily 90% of modern AI-authored content farm spam have this exact string in one of the headings
+        // easily 90% of modern AI-authored content farm spam has these nonsense headers
 
+        boolean benefitsOf = false, keyBenefits = false, keyTakeaways = false;
+
+        outer:
         for (String tagName : List.of("h1", "h2", "h3")) {
             for (var elem : parsedDocument.getElementsByTag(tagName)) {
-                if (elem.text().startsWith("Benefits of")) {
-                    return 10;
-                }
+                if (benefitsOf && keyBenefits && keyTakeaways)
+                    break outer;
+
+                String text = elem.text().toLowerCase();
+
+                benefitsOf = benefitsOf || text.startsWith("benefits of");
+                keyBenefits = keyBenefits || text.startsWith("key benefits");
+                keyTakeaways = keyTakeaways || text.startsWith("key takeaways");
             }
         }
 
-        return 0;
+        double penalty = 0;
+
+        if (benefitsOf) penalty += 10;
+        if (keyBenefits) penalty += 5;
+        if (keyTakeaways) penalty += 5;
+
+        return penalty;
     }
 
 
