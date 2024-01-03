@@ -155,7 +155,7 @@ public class ResultValuator {
         }
 
         if (DocumentMetadata.hasFlags(featureFlags, HtmlFeature.TRACKING_ADTECH.getFeatureBit()))
-            penalty += 5.0 * largeSiteFactor;
+            penalty += 7.5 * largeSiteFactor;
 
         if (DocumentMetadata.hasFlags(featureFlags, HtmlFeature.AFFILIATE_LINK.getFeatureBit()))
             penalty += 5.0 * largeSiteFactor;
