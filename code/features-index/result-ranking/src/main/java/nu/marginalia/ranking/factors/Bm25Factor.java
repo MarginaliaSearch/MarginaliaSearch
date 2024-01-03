@@ -56,16 +56,27 @@ public class Bm25Factor {
         int pcount = keyword.positionCount();
 
         double qcount = 0.;
+
         if ((keyword.encodedWordMetadata() & WordFlags.Site.asBit()) != 0)
             qcount += 0.5;
         if ((keyword.encodedWordMetadata() & WordFlags.SiteAdjacent.asBit()) != 0)
             qcount += 0.5;
-        if ((keyword.encodedWordMetadata() & WordFlags.UrlPath.asBit()) != 0)
-            qcount += 1.25;
-        if ((keyword.encodedWordMetadata() & WordFlags.UrlDomain.asBit()) != 0)
-            qcount += 1.25;
-        if ((keyword.encodedWordMetadata() & WordFlags.ExternalLink.asBit()) != 0)
+
+        if ((keyword.encodedWordMetadata() & WordFlags.ExternalLink.asBit()) != 0) {
             qcount += 2.5;
+
+            if ((keyword.encodedWordMetadata() & WordFlags.UrlDomain.asBit()) != 0)
+                qcount += 2.5;
+            else if ((keyword.encodedWordMetadata() & WordFlags.UrlPath.asBit()) != 0)
+                qcount += 1;
+        }
+        else {
+            if ((keyword.encodedWordMetadata() & WordFlags.UrlPath.asBit()) != 0)
+                qcount += 1;
+            if ((keyword.encodedWordMetadata() & WordFlags.UrlDomain.asBit()) != 0)
+                qcount += 1.5;
+        }
+
         if ((keyword.encodedWordMetadata() & WordFlags.Title.asBit()) != 0)
             qcount += 1.5;
 
