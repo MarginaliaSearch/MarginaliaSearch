@@ -107,6 +107,10 @@ public class HtmlDocumentProcessorPlugin extends AbstractDocumentProcessorPlugin
             throw new DisqualifiedException(DisqualificationReason.LANGUAGE);
         }
 
+        if (documentBody.length() > 128_000) { // 128kb
+            documentBody = documentBody.substring(0, 128_000);
+        }
+
         Document doc = Jsoup.parse(documentBody);
 
         if (!metaRobotsTag.allowIndexingByMetaTag(doc)) {
