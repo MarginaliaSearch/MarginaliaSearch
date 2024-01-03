@@ -221,7 +221,7 @@ public class ResultValuator {
         if (value < 0)
             value = 0;
 
-        return Math.sqrt((1.0 + scalingFactor) / (1.0 + value)) + Math.sqrt(penalty);
+        return Math.sqrt((1.0 + scalingFactor + penalty) / (1.0 + value));
     }
 }
 
