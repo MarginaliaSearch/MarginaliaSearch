@@ -11,6 +11,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.select.NodeVisitor;
 
+import java.util.List;
 import java.util.Set;
 
 public class DocumentValuator {
@@ -21,6 +22,7 @@ public class DocumentValuator {
                              int textLength) throws DisqualifiedException {
 
         double scriptPenalty = getScriptPenalty(parsedDocument);
+        double chatGptPenalty = getChatGptContentFarmPenalty(parsedDocument);
 
         int rawLength = crawledDocument.documentBody.length();
 
@@ -30,7 +32,22 @@ public class DocumentValuator {
 
         return Math.log(textLength / (double) (1+rawLength))*htmlStandard.scale
                 + htmlStandard.offset
-                - scriptPenalty;
+                - scriptPenalty
+                - chatGptPenalty;
+    }
+
+    private double getChatGptContentFarmPenalty(Document parsedDocument) {
+        // easily 90% of modern AI-authored content farm spam have this exact string in one of the headings
+
+        for (String tagName : List.of("h1", "h2", "h3")) {
+            for (var elem : parsedDocument.getElementsByTag(tagName)) {
+                if (elem.text().startsWith("Benefits of")) {
+                    return 10;
+                }
+            }
+        }
+
+        return 0;
     }
 
 
