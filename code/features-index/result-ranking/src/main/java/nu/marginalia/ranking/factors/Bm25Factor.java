@@ -53,9 +53,11 @@ public class Bm25Factor {
     }
 
     private static double evaluatePriorityScore(SearchResultKeywordScore keyword) {
+        int pcount = keyword.positionCount();
+
         double qcount = 0.;
         if ((keyword.encodedWordMetadata() & WordFlags.Site.asBit()) != 0)
-            qcount += 2.;
+            qcount += 0.5;
         if ((keyword.encodedWordMetadata() & WordFlags.SiteAdjacent.asBit()) != 0)
             qcount += 0.5;
         if ((keyword.encodedWordMetadata() & WordFlags.UrlPath.asBit()) != 0)
@@ -66,12 +68,16 @@ public class Bm25Factor {
             qcount += 2.5;
         if ((keyword.encodedWordMetadata() & WordFlags.Title.asBit()) != 0)
             qcount += 1.5;
-        if ((keyword.encodedWordMetadata() & WordFlags.Subjects.asBit()) != 0)
-            qcount += 1.25;
-        if ((keyword.encodedWordMetadata() & WordFlags.NamesWords.asBit()) != 0)
-            qcount += 0.25;
-        if ((keyword.encodedWordMetadata() & WordFlags.TfIdfHigh.asBit()) != 0)
-            qcount += 0.5;
+
+        if (pcount > 2) {
+            if ((keyword.encodedWordMetadata() & WordFlags.Subjects.asBit()) != 0)
+                qcount += 1.25;
+            if ((keyword.encodedWordMetadata() & WordFlags.NamesWords.asBit()) != 0)
+                qcount += 0.25;
+            if ((keyword.encodedWordMetadata() & WordFlags.TfIdfHigh.asBit()) != 0)
+                qcount += 0.5;
+        }
+
         return qcount;
     }
 
