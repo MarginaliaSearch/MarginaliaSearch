@@ -9,6 +9,7 @@ public enum QueryStrategy {
     REQUIRE_FIELD_SUBJECT,
     REQUIRE_FIELD_URL,
     REQUIRE_FIELD_DOMAIN,
+    REQUIRE_FIELD_LINK,
 
     AUTO
 }
