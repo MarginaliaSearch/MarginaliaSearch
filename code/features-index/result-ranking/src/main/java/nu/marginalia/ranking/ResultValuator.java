@@ -80,14 +80,6 @@ public class ResultValuator {
             temporalBias = 0;
         }
 
-        logger.info("averageSentenceLengthPenalty: " + averageSentenceLengthPenalty);
-        logger.info("documentLengthPenalty: " + documentLengthPenalty);
-        logger.info("qualityPenalty: " + qualityPenalty);
-        logger.info("rankingBonus: " + rankingBonus);
-        logger.info("topologyBonus: " + topologyBonus);
-        logger.info("temporalBias: " + temporalBias);
-        logger.info("flagsPenalty: " + flagsPenalty);
-
         double overallPart = averageSentenceLengthPenalty
                            + documentLengthPenalty
                            + qualityPenalty
@@ -120,22 +112,9 @@ public class ResultValuator {
         double overallPartPositive = Math.max(0, overallPart);
         double overallPartNegative = -Math.min(0, overallPart);
 
-
-        logger.info("bestTcf: " + bestTcf);
-        logger.info("bestBM25F: " + bestBM25F);
-        logger.info("bestBM25P: " + bestBM25P);
-        logger.info("bestBM25PN: " + bestBM25PN);
-        logger.info("overallPartPositive: " + overallPartPositive);
-        logger.info("overallPartNegative: " + overallPartNegative);
-
         // Renormalize to 0...15, where 0 is the best possible score;
         // this is a historical artifact of the original ranking function
-        double ret = normalize(1.5 * bestTcf + bestBM25F + bestBM25P + 0.25 * bestBM25PN + overallPartPositive, overallPartNegative);
-
-        logger.info("ret: " + ret);
-
-        return ret;
-
+        return normalize(1.5 * bestTcf + bestBM25F + bestBM25P + 0.25 * bestBM25PN + overallPartPositive, overallPartNegative);
     }
 
     private double calculateQualityPenalty(int size, int quality, ResultRankingParameters rankingParams) {
