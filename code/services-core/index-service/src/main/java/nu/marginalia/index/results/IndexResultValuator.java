@@ -172,7 +172,9 @@ public class IndexResultValuator {
         else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_DOMAIN) {
             return WordMetadata.hasFlags(termScore.encodedWordMetadata(), WordFlags.UrlDomain.asBit());
         }
-
+        else if (queryStrategy == QueryStrategy.REQUIRE_FIELD_LINK) {
+            return WordMetadata.hasFlags(termScore.encodedWordMetadata(), WordFlags.ExternalLink.asBit());
+        }
         return true;
     }
 
