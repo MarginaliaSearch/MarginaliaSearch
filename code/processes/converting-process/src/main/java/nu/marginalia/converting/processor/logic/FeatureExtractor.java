@@ -39,6 +39,7 @@ public class FeatureExtractor {
             "googlesyndication.com",
             "smartadserver.com",
             "doubleclick.com",
+            "doubleclick.net",
             "2mdn.com",
             "dmtry.com",
             "amazon-adsystem.com",
