@@ -19,21 +19,16 @@ public class ProcessingIterator<T> implements Iterator<T> {
 
     private final LinkedBlockingQueue<T> queue;
     private final AtomicBoolean isFinished = new AtomicBoolean(false);
-    private final ExecutorService executorService;
-    private final Semaphore sem;
+    private final SimpleBlockingThreadPool pool;
 
     private T next = null;
 
-    private final int parallelism;
-
-    ProcessingIterator(ExecutorService executorService, int queueSize, int parallelism, ProcessingJob<T> task) {
-        this.parallelism = parallelism;
-
+    @SneakyThrows
+    ProcessingIterator(SimpleBlockingThreadPool pool, int queueSize, ProcessingJob<T> task) {
         queue = new LinkedBlockingQueue<>(queueSize);
-        this.executorService = executorService;
-        sem = new Semaphore(parallelism);
+        this.pool = pool;
 
-        executorService.submit(() -> executeJob(task));
+        pool.submit(() -> executeJob(task));
     }
 
     public static Factory factory(int queueSize, int parallelism) {
@@ -50,20 +45,13 @@ public class ProcessingIterator<T> implements Iterator<T> {
         }
     }
 
+    @SneakyThrows
     private void executeTask(Task<T> task) {
-        try {
-            sem.acquire();
-        } catch (InterruptedException e) {
-            return;
-        }
-
-        executorService.submit(() -> {
+        pool.submit(() -> {
             try {
                 queue.put(task.get());
             } catch (Exception e) {
                 logger.warn("Exception while processing", e);
-            } finally {
-                sem.release();
             }
         });
     }
@@ -97,7 +85,7 @@ public class ProcessingIterator<T> implements Iterator<T> {
     private boolean expectMore() {
         return !isFinished.get() // we are still reading from the database
                 || !queue.isEmpty()   // ... or we have documents in the queue
-                || sem.availablePermits() < parallelism;  // ... or we are still processing documents
+                || pool.getActiveCount() > 0;  // ... or we are still processing documents
     }
 
     /** Returns the next document to be processed.
@@ -142,24 +130,17 @@ public class ProcessingIterator<T> implements Iterator<T> {
 
     public static class Factory {
         private final int queueSize;
-        private final int parallelism;
-        private final ExecutorService executorService;
+        private final SimpleBlockingThreadPool pool;
 
         Factory(int queueSize, int parallelism) {
             this.queueSize = queueSize;
-            this.parallelism = parallelism;
-            this.executorService = Executors.newFixedThreadPool(parallelism);
+            this.pool = new SimpleBlockingThreadPool("sideload", parallelism, 4);
         }
 
         public <T> ProcessingIterator<T> create(ProcessingJob<T> task) {
-            return new ProcessingIterator<>(executorService, queueSize, parallelism, task);
+            return new ProcessingIterator<>(pool, queueSize, task);
         }
 
-        public void stop() {
-            if (!executorService.isShutdown()) {
-                executorService.shutdown();
-            }
-        }
     }
 
 }

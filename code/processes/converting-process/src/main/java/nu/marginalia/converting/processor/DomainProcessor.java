@@ -86,7 +86,9 @@ public class DomainProcessor {
         private final Set<String> processedUrls = new HashSet<>();
         private final DomainLinks externalDomainLinks;
         private final LshDocumentDeduplicator deduplicator = new LshDocumentDeduplicator();
-        private static ProcessingIterator.Factory iteratorFactory = ProcessingIterator.factory(24, 16);
+        private static final ProcessingIterator.Factory iteratorFactory = ProcessingIterator.factory(8,
+                Integer.getInteger("java.util.concurrent.ForkJoinPool.common.parallelism", Runtime.getRuntime().availableProcessors())
+        );
 
         SideloadProcessing(SerializableCrawlDataStream dataStream, int sizeHint) throws IOException {
             this.dataStream = dataStream;
