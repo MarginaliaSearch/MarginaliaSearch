@@ -58,7 +58,10 @@ public class FeatureExtractor {
             "personalized-ads-consent",
             "_taboola",
             "nativeads",
-            "skimlinks"
+            "skimlinks",
+            "moapt",
+            "juicyads.com",
+            "counter.yadro.ru"
     );
 
     private final AdblockSimulator adblockSimulator;
