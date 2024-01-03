@@ -160,6 +160,9 @@ public class ResultValuator {
         if (DocumentMetadata.hasFlags(featureFlags, HtmlFeature.AFFILIATE_LINK.getFeatureBit()))
             penalty += 5.0 * largeSiteFactor;
 
+        if (DocumentMetadata.hasFlags(featureFlags, HtmlFeature.COOKIES.getFeatureBit()))
+            penalty += 2.5 * largeSiteFactor;
+
         if (DocumentMetadata.hasFlags(featureFlags, HtmlFeature.TRACKING.getFeatureBit()))
             penalty += 2.5 * largeSiteFactor;
 
@@ -221,7 +224,7 @@ public class ResultValuator {
         if (value < 0)
             value = 0;
 
-        return Math.sqrt((1.0 + scalingFactor + 10 * penalty) / (1.0 + value));
+        return Math.sqrt((1.0 + scalingFactor + 5 * penalty) / (1.0 + value));
     }
 }
 
