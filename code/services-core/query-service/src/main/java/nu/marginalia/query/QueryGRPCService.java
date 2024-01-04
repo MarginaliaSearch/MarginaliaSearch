@@ -23,6 +23,7 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
 
     private static final Histogram wmsa_qs_query_time_grpc = Histogram.build()
             .name("wmsa_qs_query_time_grpc")
+            .labelNames("timeout", "count")
             .linearBuckets(0.05, 0.05, 15)
             .help("QS-side query time (GRPC endpoint)")
             .register();
@@ -69,7 +70,10 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
                       io.grpc.stub.StreamObserver<nu.marginalia.index.api.RpcQsResponse> responseObserver)
     {
         try {
-            wmsa_qs_query_time_grpc.time(() -> {
+            wmsa_qs_query_time_grpc
+                    .labels(Integer.toString(request.getQueryLimits().getTimeoutMs()),
+                            Integer.toString(request.getQueryLimits().getResultsTotal()))
+                    .time(() -> {
                 var params = QueryProtobufCodec.convertRequest(request);
                 var query = queryFactory.createQuery(params);
 
