@@ -11,8 +11,8 @@ version 'SNAPSHOT'
 compileJava.options.encoding = "UTF-8"
 compileTestJava.options.encoding = "UTF-8"
 
-// Enable preview features for the entire project
 subprojects.forEach {it ->
+    // Enable preview features for the entire project
     it.tasks.withType(JavaCompile).configureEach {
         options.compilerArgs += ['--enable-preview']
     }
@@ -21,6 +21,12 @@ subprojects.forEach {it ->
     }
     it.tasks.withType(Test).configureEach {
         jvmArgs += ['--enable-preview']
+    }
+
+    // Enable reproducible builds for the entire project
+    it.tasks.withType(AbstractArchiveTask).configureEach {
+        preserveFileTimestamps = false
+        reproducibleFileOrder = true
     }
 }
 
