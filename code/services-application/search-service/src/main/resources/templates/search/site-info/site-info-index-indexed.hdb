@@ -8,6 +8,6 @@
     Pages Indexed: {{pagesIndexed}} <br/>
     <p></p>
     IP: {{ip}} {{#if ipCountry}}<span title="{{ipCountry}}">{{getIpFlag}}</span>{{/if}}<br/>
-    <span title="Autonomous System">AS</span>: {{#if asn}}<a href="/search?query=as:{{asn}}">{{asn}}</a> {{asnOrg}} {{asnCountry}}{{/if}} <br/>
+    <span title="Autonomous System">AS</span>: {{#if asn}}<a href="/search?query=as:{{asn}}&profile=corpo">{{asn}}</a> {{asnOrg}} {{asnCountry}}{{/if}} <br/>
 </fieldset>
 <br/>
