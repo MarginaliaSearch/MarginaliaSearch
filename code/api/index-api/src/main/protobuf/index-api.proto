@@ -4,6 +4,28 @@ package actorapi;
 option java_package="nu.marginalia.index.api";
 option java_multiple_files=true;
 
+service IndexDomainLinksApi {
+  rpc getAllLinks(Empty) returns (stream RpcDomainIdPairs) {}
+  rpc getLinksFromDomain(RpcDomainId) returns (RpcDomainIdList) {}
+  rpc getLinksToDomain(RpcDomainId) returns (RpcDomainIdList) {}
+  rpc countLinksFromDomain(RpcDomainId) returns (RpcDomainIdCount) {}
+  rpc countLinksToDomain(RpcDomainId) returns (RpcDomainIdCount) {}
+}
+
+message RpcDomainId {
+  int32 domainId = 1;
+}
+message RpcDomainIdList {
+  repeated int32 domainId = 1 [packed=true];
+}
+message RpcDomainIdCount {
+  int32 idCount = 1;
+}
+message RpcDomainIdPairs {
+  repeated int32 sourceIds = 1 [packed=true];
+  repeated int32 destIds = 2 [packed=true];
+}
+
 service QueryApi {
   rpc query(RpcQsQuery) returns (RpcQsResponse) {}
 }

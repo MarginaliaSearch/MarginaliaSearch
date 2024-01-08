@@ -2,7 +2,6 @@ package nu.marginalia.query;
 
 import com.google.inject.Inject;
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import io.prometheus.client.Histogram;
 import lombok.SneakyThrows;
 import nu.marginalia.db.DomainBlacklist;
@@ -10,7 +9,6 @@ import nu.marginalia.index.api.*;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.query.svc.NodeConfigurationWatcher;
 import nu.marginalia.query.svc.QueryFactory;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,32 +26,7 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
             .help("QS-side query time (GRPC endpoint)")
             .register();
 
-    private final Map<ServiceAndNode, ManagedChannel> channels
-            = new ConcurrentHashMap<>();
-    private final Map<ServiceAndNode, IndexApiGrpc.IndexApiBlockingStub> actorRpcApis
-            = new ConcurrentHashMap<>();
-
-    private ManagedChannel getChannel(ServiceAndNode serviceAndNode) {
-        return channels.computeIfAbsent(serviceAndNode,
-                san -> ManagedChannelBuilder
-                        .forAddress(serviceAndNode.getHostName(), 81)
-                        .usePlaintext()
-                        .build());
-    }
-
-    public IndexApiGrpc.IndexApiBlockingStub indexApi(int node) {
-        return actorRpcApis.computeIfAbsent(new ServiceAndNode("index-service", node), n ->
-                IndexApiGrpc.newBlockingStub(
-                        getChannel(n)
-                )
-        );
-    }
-
-    record ServiceAndNode(String service, int node) {
-        public String getHostName() {
-            return service+"-"+node;
-        }
-    }
+    private final QueryGrpcStubPool<IndexApiGrpc.IndexApiBlockingStub> stubPool;
 
     private final QueryFactory queryFactory;
     private final DomainBlacklist blacklist;
@@ -64,6 +37,13 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
         this.queryFactory = queryFactory;
         this.blacklist = blacklist;
         this.nodeConfigurationWatcher = nodeConfigurationWatcher;
+
+        stubPool = new QueryGrpcStubPool<>(nodeConfigurationWatcher) {
+            @Override
+            public IndexApiGrpc.IndexApiBlockingStub createStub(ManagedChannel channel) {
+                return IndexApiGrpc.newBlockingStub(channel);
+            }
+        };
     }
 
     public void query(nu.marginalia.index.api.RpcQsQuery request,
@@ -89,7 +69,6 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
                     responseBuilder.setDomain(query.domain);
 
                 responseObserver.onNext(responseBuilder.build());
-
                 responseObserver.onCompleted();
             });
         } catch (Exception e) {
@@ -98,16 +77,13 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
         }
     }
 
-    private final ExecutorService es = Executors.newVirtualThreadPerTaskExecutor();
-
     private static final Comparator<RpcDecoratedResultItem> comparator =
             Comparator.comparing(RpcDecoratedResultItem::getRankingScore);
 
     @SneakyThrows
     private List<RpcDecoratedResultItem> executeQueries(RpcIndexQuery indexRequest, int totalSize) {
-        List<Callable<List<RpcDecoratedResultItem>>> tasks = createTasks(indexRequest);
-
-        return es.invokeAll(tasks).stream()
+        return stubPool.invokeAll(stub -> new QueryTask(stub, indexRequest))
+                .stream()
                 .filter(f -> f.state() == Future.State.SUCCESS)
                 .map(Future::resultNow)
                 .flatMap(List::stream)
@@ -116,26 +92,30 @@ public class QueryGRPCService extends QueryApiGrpc.QueryApiImplBase {
                 .toList();
     }
 
-    @NotNull
-    private List<Callable<List<RpcDecoratedResultItem>>> createTasks(RpcIndexQuery indexRequest) {
-        List<Callable<List<RpcDecoratedResultItem>>> tasks = new ArrayList<>();
+    private class QueryTask implements Callable<List<RpcDecoratedResultItem>> {
+        private final IndexApiGrpc.IndexApiBlockingStub stub;
+        private final RpcIndexQuery indexRequest;
 
-        for (var node : nodeConfigurationWatcher.getQueryNodes()) {
-            tasks.add(() -> {
-                var responseIter = indexApi(node).query(indexRequest);
-                var ret = new ArrayList<RpcDecoratedResultItem>();
-                while (responseIter.hasNext()) {
-                    RpcDecoratedResultItem next = responseIter.next();
-                    if (isBlacklisted(next))
-                        continue;
-                    ret.add(next);
-                }
-                return ret;
-            });
+        public QueryTask(IndexApiGrpc.IndexApiBlockingStub stub, RpcIndexQuery indexRequest) {
+            this.stub = stub;
+            this.indexRequest = indexRequest;
         }
-        return tasks;
-    }
 
+        @Override
+        public List<RpcDecoratedResultItem> call() {
+            var rsp = stub.query(indexRequest);
+            List<RpcDecoratedResultItem> ret = new ArrayList<>();
+
+            while (rsp.hasNext()) {
+                RpcDecoratedResultItem next = rsp.next();
+                if (isBlacklisted(next))
+                    continue;
+                ret.add(next);
+            }
+
+            return ret;
+        }
+    }
 
     private boolean isBlacklisted(RpcDecoratedResultItem item) {
         return blacklist.isBlacklisted(UrlIdCodec.getDomainId(item.getRawItem().getCombinedId()));

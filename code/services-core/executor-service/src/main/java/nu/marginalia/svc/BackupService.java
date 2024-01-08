@@ -19,6 +19,9 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static nu.marginalia.linkdb.LinkdbFileNames.DOCDB_FILE_NAME;
+import static nu.marginalia.linkdb.LinkdbFileNames.DOMAIN_LINKS_FILE_NAME;
+
 public class BackupService {
 
     private final FileStorageService storageService;
@@ -26,6 +29,7 @@ public class BackupService {
 
     public enum BackupHeartbeatSteps {
         LINKS,
+        DOCS,
         JOURNAL,
         DONE
     }
@@ -57,8 +61,11 @@ public class BackupService {
 
 
         try (var heartbeat = serviceHeartbeat.createServiceTaskHeartbeat(BackupHeartbeatSteps.class, "Backup")) {
+            heartbeat.progress(BackupHeartbeatSteps.DOCS);
+            backupFileCompressed(DOCDB_FILE_NAME, linkdbStagingStorage, backupStorage.asPath());
+
             heartbeat.progress(BackupHeartbeatSteps.LINKS);
-            backupFileCompressed("links.db", linkdbStagingStorage, backupStorage.asPath());
+            backupFileCompressed(DOMAIN_LINKS_FILE_NAME, linkdbStagingStorage, backupStorage.asPath());
 
             heartbeat.progress(BackupHeartbeatSteps.JOURNAL);
             // This file format is already compressed
@@ -79,8 +86,11 @@ public class BackupService {
         var linkdbStagingStorage = IndexLocations.getLinkdbWritePath(storageService);
 
         try (var heartbeat = serviceHeartbeat.createServiceTaskHeartbeat(BackupHeartbeatSteps.class, "Restore Backup")) {
+            heartbeat.progress(BackupHeartbeatSteps.DOCS);
+            restoreBackupCompressed(DOCDB_FILE_NAME, linkdbStagingStorage, backupStorage);
+
             heartbeat.progress(BackupHeartbeatSteps.LINKS);
-            restoreBackupCompressed("links.db", linkdbStagingStorage, backupStorage);
+            restoreBackupCompressed(DOMAIN_LINKS_FILE_NAME, linkdbStagingStorage, backupStorage);
 
             heartbeat.progress(BackupHeartbeatSteps.JOURNAL);
             restoreJournal(indexStagingStorage, backupStorage);

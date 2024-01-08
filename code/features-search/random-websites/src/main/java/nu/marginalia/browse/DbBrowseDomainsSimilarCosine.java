@@ -3,7 +3,6 @@ package nu.marginalia.browse;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
-import gnu.trove.set.hash.TIntHashSet;
 import nu.marginalia.browse.model.BrowseResult;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.db.DomainBlacklist;

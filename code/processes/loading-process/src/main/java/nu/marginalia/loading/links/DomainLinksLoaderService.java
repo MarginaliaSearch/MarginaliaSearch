@@ -2,10 +2,9 @@ package nu.marginalia.loading.links;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.ProcessConfiguration;
+import lombok.SneakyThrows;
 import nu.marginalia.io.processed.DomainLinkRecordParquetFileReader;
-import nu.marginalia.io.processed.ProcessedDataFileNames;
+import nu.marginalia.linkdb.DomainLinkDbWriter;
 import nu.marginalia.loading.LoaderInputData;
 import nu.marginalia.loading.domains.DomainIdRegistry;
 import nu.marginalia.model.processed.DomainLinkRecord;
@@ -15,28 +14,22 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 
 @Singleton
 public class DomainLinksLoaderService {
 
-    private final HikariDataSource dataSource;
     private static final Logger logger = LoggerFactory.getLogger(DomainLinksLoaderService.class);
-    private final int nodeId;
+
+    private final DomainLinkDbWriter domainLinkDbWriter;
+
     @Inject
-    public DomainLinksLoaderService(HikariDataSource dataSource,
-                                    ProcessConfiguration processConfiguration) {
-        this.dataSource = dataSource;
-        this.nodeId = processConfiguration.node();
+    public DomainLinksLoaderService(DomainLinkDbWriter domainLinkDbWriter) {
+        this.domainLinkDbWriter = domainLinkDbWriter;
     }
 
     public boolean loadLinks(DomainIdRegistry domainIdRegistry,
                              ProcessHeartbeat heartbeat,
-                             LoaderInputData inputData) throws IOException, SQLException {
-
-        dropLinkData();
+                             LoaderInputData inputData) throws IOException {
 
         try (var task = heartbeat.createAdHocTaskHeartbeat("LINKS")) {
             var linkFiles = inputData.listDomainLinkFiles();
@@ -56,17 +49,7 @@ public class DomainLinksLoaderService {
         return true;
     }
 
-    private void dropLinkData() throws SQLException {
-        logger.info("Clearing EC_DOMAIN_LINK");
-
-        try (var conn = dataSource.getConnection();
-             var call = conn.prepareCall("CALL PURGE_LINKS_TABLE(?)")) {
-            call.setInt(1, nodeId);
-            call.executeUpdate();
-        }
-    }
-
-    private void loadLinksFromFile(DomainIdRegistry domainIdRegistry, Path file) throws IOException, SQLException {
+    private void loadLinksFromFile(DomainIdRegistry domainIdRegistry, Path file) throws IOException {
         try (var domainStream = DomainLinkRecordParquetFileReader.stream(file);
              var linkLoader = new LinkLoader(domainIdRegistry))
         {
@@ -76,49 +59,21 @@ public class DomainLinksLoaderService {
     }
 
     class LinkLoader implements AutoCloseable {
-        private final Connection connection;
-        private final PreparedStatement insertStatement;
         private final DomainIdRegistry domainIdRegistry;
 
-        private int batchSize = 0;
-        private int total = 0;
-
-        public LinkLoader(DomainIdRegistry domainIdRegistry) throws SQLException {
+        public LinkLoader(DomainIdRegistry domainIdRegistry) {
             this.domainIdRegistry = domainIdRegistry;
-
-            connection = dataSource.getConnection();
-            insertStatement = connection.prepareStatement("""
-                    INSERT IGNORE INTO EC_DOMAIN_LINK(SOURCE_DOMAIN_ID, DEST_DOMAIN_ID)
-                    VALUES (?, ?)
-                    """);
         }
 
+        @SneakyThrows
         void accept(DomainLinkRecord record) {
-            try {
-                insertStatement.setInt(1, domainIdRegistry.getDomainId(record.source));
-                insertStatement.setInt(2, domainIdRegistry.getDomainId(record.dest));
-                insertStatement.addBatch();
-                if (++batchSize > 1000) {
-                    batchSize = 0;
-                    insertStatement.executeBatch();
-                }
-                total++;
-            }
-            catch (SQLException ex) {
-                throw new RuntimeException(ex);
-            }
+            domainLinkDbWriter.write(
+                    domainIdRegistry.getDomainId(record.source),
+                    domainIdRegistry.getDomainId(record.dest)
+            );
         }
 
         @Override
-        public void close() throws SQLException {
-            if (batchSize > 0) {
-                insertStatement.executeBatch();
-            }
-
-            logger.info("Inserted {} links", total);
-
-            insertStatement.close();
-            connection.close();
-        }
+        public void close() {}
     }
 }

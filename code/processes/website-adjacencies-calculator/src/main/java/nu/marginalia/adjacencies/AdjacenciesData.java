@@ -1,26 +1,25 @@
 package nu.marginalia.adjacencies;
 
-import com.zaxxer.hikari.HikariDataSource;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.hash.TIntHashSet;
+import nu.marginalia.query.client.QueryClient;
 import org.roaringbitmap.RoaringBitmap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 public class AdjacenciesData {
-    TIntList idsList = new TIntArrayList(100_000);
-    ArrayList<SparseBitVector> itemsList = new ArrayList<>(100_000);
+    private static final Logger logger = LoggerFactory.getLogger(AdjacenciesData.class);
+    private final TIntList idsList = new TIntArrayList(100_000);
+    private final ArrayList<SparseBitVector> itemsList = new ArrayList<>(100_000);
 
-    TIntObjectHashMap<SparseBitVector> dToSMap = new TIntObjectHashMap<>(100_000);
-    TIntObjectHashMap<RoaringBitmap> sToDMap = new TIntObjectHashMap<>(100_000);
-
-    RoaringBitmap indexed = new RoaringBitmap();
+    private final TIntObjectHashMap<SparseBitVector> dToSMap = new TIntObjectHashMap<>(100_000);
+    private final TIntObjectHashMap<RoaringBitmap> sToDMap = new TIntObjectHashMap<>(100_000);
 
     public TIntHashSet getCandidates(SparseBitVector vec) {
         TIntHashSet ret = new TIntHashSet();
@@ -36,39 +35,31 @@ public class AdjacenciesData {
         return ret;
     }
 
-    public AdjacenciesData(HikariDataSource dataSource, DomainAliases aliases) throws SQLException {
+    public AdjacenciesData(QueryClient queryClient,
+                           DomainAliases aliases) {
+        logger.info("Loading adjacency data");
 
         Map<Integer, RoaringBitmap> tmpMapDtoS = new HashMap<>(100_000);
-        try (
-                var conn = dataSource.getConnection();
-                var indexedStmt = conn.prepareStatement("SELECT ID FROM EC_DOMAIN WHERE INDEXED>0");
-                var linksStmt = conn.prepareStatement("SELECT SOURCE_DOMAIN_ID, DEST_DOMAIN_ID FROM EC_DOMAIN_LINK")) {
-            ResultSet rsp;
 
-            indexedStmt.setFetchSize(10_000);
-            rsp = indexedStmt.executeQuery();
-            while (rsp.next()) {
-                indexed.add(rsp.getInt(1));
+        int count = 0;
+        var allLinks = queryClient.getAllDomainLinks();
+        for (var iter = allLinks.iterator();;count++) {
+            if (!iter.advance()) {
+                break;
             }
+            int source = aliases.deAlias(iter.source());
+            int dest = aliases.deAlias(iter.dest());
 
-            linksStmt.setFetchSize(10_000);
-            rsp = linksStmt.executeQuery();
-            while (rsp.next()) {
-                int source = aliases.deAlias(rsp.getInt(1));
-                int dest = aliases.deAlias(rsp.getInt(2));
-
-                tmpMapDtoS.computeIfAbsent(dest, this::createBitmapWithSelf).add(source);
-
-
-                RoaringBitmap sToDEntry = sToDMap.get(source);
-                if (sToDEntry == null) {
-                    sToDEntry = new RoaringBitmap();
-                    sToDMap.put(source, sToDEntry);
-                    sToDEntry.add(source);
-                }
-                sToDEntry.add(dest);
+            tmpMapDtoS.computeIfAbsent(dest, this::createBitmapWithSelf).add(source);
+            RoaringBitmap sToDEntry = sToDMap.get(source);
+            if (sToDEntry == null) {
+                sToDEntry = new RoaringBitmap();
+                sToDMap.put(source, sToDEntry);
+                sToDEntry.add(source);
             }
+            sToDEntry.add(dest);
         }
+        logger.info("Links loaded: {}", count);
 
         tmpMapDtoS.entrySet().stream()
                 .filter(e -> isEligible(e.getValue()))
@@ -79,10 +70,10 @@ public class AdjacenciesData {
                     dToSMap.put(e.getKey(), val);
                 });
 
+        logger.info("All adjacency dat loaded");
     }
 
     private boolean isEligible(RoaringBitmap value) {
-//        return true;
         int cardinality = value.getCardinality();
 
         return cardinality < 10000;
@@ -93,10 +84,6 @@ public class AdjacenciesData {
         var bm = new RoaringBitmap();
         bm.add(val);
         return bm;
-    }
-
-    public boolean isIndexedDomain(int domainId) {
-        return indexed.contains(domainId);
     }
 
     public TIntList getIdsList() {

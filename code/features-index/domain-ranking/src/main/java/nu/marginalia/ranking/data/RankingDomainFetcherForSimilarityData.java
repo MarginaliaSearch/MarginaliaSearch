@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.db.DomainBlacklistImpl;
+import nu.marginalia.query.client.QueryClient;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
@@ -14,8 +15,8 @@ public class RankingDomainFetcherForSimilarityData extends RankingDomainFetcher 
     final boolean hasData;
 
     @Inject
-    public RankingDomainFetcherForSimilarityData(HikariDataSource dataSource, DomainBlacklistImpl blacklist) {
-        super(dataSource, blacklist);
+    public RankingDomainFetcherForSimilarityData(HikariDataSource dataSource, QueryClient queryClient, DomainBlacklistImpl blacklist) {
+        super(dataSource, queryClient, blacklist);
 
         hasData = isDomainNeighborTablePopulated(dataSource);
     }
@@ -61,17 +62,6 @@ public class RankingDomainFetcherForSimilarityData extends RankingDomainFetcher 
     }
 
     public void getDomains(Consumer<RankingDomainData> consumer) {
-//        String query =
-//               """
-//                   SELECT EC_DOMAIN.ID,DOMAIN_NAME,DOMAIN_ALIAS,STATE,COALESCE(KNOWN_URLS, 0)
-//                   FROM EC_DOMAIN
-//                   LEFT JOIN DOMAIN_METADATA ON EC_DOMAIN.ID=DOMAIN_METADATA.ID
-//                   INNER JOIN EC_DOMAIN_LINK ON DEST_DOMAIN_ID=EC_DOMAIN.ID
-//                   WHERE SOURCE_DOMAIN_ID!=DEST_DOMAIN_ID
-//                   GROUP BY EC_DOMAIN.ID
-//                   HAVING COUNT(SOURCE_DOMAIN_ID)>5
-//               """;
-
         String query;
         if (getNames) {
             query =

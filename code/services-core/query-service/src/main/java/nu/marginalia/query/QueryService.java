@@ -42,6 +42,7 @@ public class QueryService extends Service {
     public QueryService(BaseServiceParams params,
                         IndexClient indexClient,
                         NodeConfigurationWatcher nodeWatcher,
+                        QueryGRPCDomainLinksService domainLinksService,
                         QueryGRPCService queryGRPCService,
                         Gson gson,
                         DomainBlacklist blacklist,
@@ -55,6 +56,7 @@ public class QueryService extends Service {
 
         var grpcServer = ServerBuilder.forPort(params.configuration.port() + 1)
                 .addService(queryGRPCService)
+                .addService(domainLinksService)
                 .build();
         grpcServer.start();
 

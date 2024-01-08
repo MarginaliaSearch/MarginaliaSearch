@@ -7,7 +7,10 @@ import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
+import nu.marginalia.query.client.QueryClient;
 import nu.marginalia.service.module.DatabaseModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -23,13 +26,14 @@ public class WebsiteAdjacenciesCalculator {
     private final HikariDataSource dataSource;
     public AdjacenciesData adjacenciesData;
     public DomainAliases domainAliases;
+    private static final Logger logger = LoggerFactory.getLogger(WebsiteAdjacenciesCalculator.class);
 
     float[] weights;
-    public WebsiteAdjacenciesCalculator(HikariDataSource dataSource) throws SQLException {
+    public WebsiteAdjacenciesCalculator(QueryClient queryClient, HikariDataSource dataSource) throws SQLException {
         this.dataSource = dataSource;
 
         domainAliases = new DomainAliases(dataSource);
-        adjacenciesData = new AdjacenciesData(dataSource, domainAliases);
+        adjacenciesData = new AdjacenciesData(queryClient, domainAliases);
         weights = adjacenciesData.getWeights();
     }
 
@@ -47,7 +51,6 @@ public class WebsiteAdjacenciesCalculator {
         for (int domainId : domainIds) {
             findAdjacentDtoS(domainId, similarities -> {
                 for (var similarity : similarities.similarities()) {
-                    if (adjacenciesData.isIndexedDomain(similarity.domainId)) System.out.print("*");
                     System.out.println(dataStoreDao.getDomain(similarity.domainId).map(Object::toString).orElse("") + " " + prettyPercent(similarity.value));
                 }
             });
@@ -186,8 +189,9 @@ public class WebsiteAdjacenciesCalculator {
         DatabaseModule dm = new DatabaseModule();
 
         var dataSource = dm.provideConnection();
+        var qc = new QueryClient();
 
-        var main = new WebsiteAdjacenciesCalculator(dataSource);
+        var main = new WebsiteAdjacenciesCalculator(qc, dataSource);
 
         if (args.length == 1 && "load".equals(args[0])) {
             var processHeartbeat = new ProcessHeartbeatImpl(
@@ -195,9 +199,16 @@ public class WebsiteAdjacenciesCalculator {
                     dataSource
             );
 
-            processHeartbeat.start();
-            main.loadAll(processHeartbeat);
-            processHeartbeat.shutDown();
+            try {
+                processHeartbeat.start();
+                main.loadAll(processHeartbeat);
+            }
+            catch (Exception ex) {
+                logger.error("Failed to load", ex);
+            }
+            finally {
+                processHeartbeat.shutDown();
+            }
             return;
         }
 

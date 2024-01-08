@@ -16,6 +16,7 @@ configurations {
 
 dependencies {
     implementation project(':code:common:model')
+    implementation project(':code:common:service')
 
     implementation libs.bundles.slf4j
 
@@ -23,6 +24,7 @@ dependencies {
     implementation libs.bundles.gson
 
     implementation libs.notnull
+    implementation libs.bundles.mariadb
 
     implementation libs.sqlite
     implementation libs.commons.lang3

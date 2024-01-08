@@ -1,7 +1,7 @@
 package nu.marginalia.linkdb;
 
 import gnu.trove.list.array.TLongArrayList;
-import nu.marginalia.linkdb.model.LdbUrlDetail;
+import nu.marginalia.linkdb.model.DocdbUrlDetail;
 import nu.marginalia.model.EdgeDomain;
 import org.junit.jupiter.api.Test;
 
@@ -10,13 +10,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 
-public class LinkdbWriterTest {
+public class DocumentDbWriterTest {
     @Test
     public void testCreate() throws IOException {
-        Path tempPath = Files.createTempFile("linkdb", ".db");
+        Path tempPath = Files.createTempFile("docdb", ".db");
         try {
-            var writer = new LinkdbWriter(tempPath);
-            writer.add(new LdbUrlDetail(
+            var writer = new DocumentDbWriter(tempPath);
+            writer.add(new DocdbUrlDetail(
                     1,
                     new nu.marginalia.model.EdgeUrl("http", new EdgeDomain("example.com"), null, "/", null),
                     "Test",
@@ -30,7 +30,7 @@ public class LinkdbWriterTest {
             ));
             writer.close();
 
-            var reader = new LinkdbReader(tempPath);
+            var reader = new DocumentDbReader(tempPath);
             var deets = reader.getUrlDetails(new TLongArrayList(new long[]{1}));
             System.out.println(deets);
         } catch (SQLException e) {

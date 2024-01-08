@@ -23,9 +23,9 @@ import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
-import nu.marginalia.linkdb.LinkdbReader;
-import nu.marginalia.linkdb.LinkdbWriter;
-import nu.marginalia.linkdb.model.LdbUrlDetail;
+import nu.marginalia.linkdb.DocumentDbReader;
+import nu.marginalia.linkdb.DocumentDbWriter;
+import nu.marginalia.linkdb.model.DocdbUrlDetail;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.crawl.PubDate;
 import nu.marginalia.model.id.UrlIdCodec;
@@ -53,6 +53,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.function.Function;
 
+import static nu.marginalia.linkdb.LinkdbFileNames.DOCDB_FILE_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 
@@ -84,7 +85,7 @@ public class IndexQueryServiceIntegrationTest {
     @Inject
     ProcessHeartbeat processHeartbeat;
     @Inject
-    LinkdbReader linkdbReader;
+    DocumentDbReader documentDbReader;
 
     @BeforeEach
     public void setUp() throws IOException {
@@ -566,11 +567,11 @@ public class IndexQueryServiceIntegrationTest {
                 indexJournalWriter.put(header, entry);
             });
 
-            var linkdbWriter = new LinkdbWriter(
-                    IndexLocations.getLinkdbLivePath(fileStorageService).resolve("links.db")
+            var linkdbWriter = new DocumentDbWriter(
+                    IndexLocations.getLinkdbLivePath(fileStorageService).resolve(DOCDB_FILE_NAME)
             );
             for (Long key : allData.keySet()) {
-                linkdbWriter.add(new LdbUrlDetail(
+                linkdbWriter.add(new DocdbUrlDetail(
                         key,
                         new EdgeUrl("https://www.example.com"),
                         "test",
@@ -587,7 +588,7 @@ public class IndexQueryServiceIntegrationTest {
 
             indexJournalWriter.close();
             constructIndex();
-            linkdbReader.reconnect();
+            documentDbReader.reconnect();
             searchIndex.switchIndex();
         }
     }
