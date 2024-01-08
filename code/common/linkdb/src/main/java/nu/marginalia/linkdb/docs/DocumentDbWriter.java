@@ -1,4 +1,4 @@
-package nu.marginalia.linkdb;
+package nu.marginalia.linkdb.docs;
 
 import nu.marginalia.linkdb.model.DocdbUrlDetail;
 

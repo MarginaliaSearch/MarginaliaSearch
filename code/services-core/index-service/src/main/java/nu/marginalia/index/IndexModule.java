@@ -5,9 +5,10 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.zaxxer.hikari.HikariDataSource;
-import nu.marginalia.linkdb.DomainLinkDb;
-import nu.marginalia.linkdb.FileDomainLinkDb;
-import nu.marginalia.linkdb.SqlDomainLinkDb;
+import nu.marginalia.linkdb.dlinks.DomainLinkDb;
+import nu.marginalia.linkdb.dlinks.FileDomainLinkDb;
+import nu.marginalia.linkdb.dlinks.SelectingDomainLinkDb;
+import nu.marginalia.linkdb.dlinks.SqlDomainLinkDb;
 import nu.marginalia.service.module.ServiceConfiguration;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.IndexLocations;
@@ -41,18 +42,11 @@ public class IndexModule extends AbstractModule {
             FileStorageService storageService,
             HikariDataSource dataSource,
             ServiceConfiguration serviceConfiguration
-            ) throws IOException
+            )
     {
         Path path = IndexLocations.getLinkdbLivePath(storageService).resolve(DOMAIN_LINKS_FILE_NAME);
 
-        if (Files.exists(path)) {
-            logger.info("Using file domain link db {}", path);
-            return new FileDomainLinkDb(path);
-        }
-        else {
-            logger.warn("Using legacy sql domain link db");
-            return new SqlDomainLinkDb(path, dataSource, serviceConfiguration);
-        }
+        return new SelectingDomainLinkDb(path, serviceConfiguration, dataSource);
     }
 
     @Provides

@@ -1,5 +1,7 @@
 package nu.marginalia.linkdb;
 
+import nu.marginalia.linkdb.dlinks.DomainLinkDbLoader;
+import nu.marginalia.linkdb.dlinks.DomainLinkDbWriter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;

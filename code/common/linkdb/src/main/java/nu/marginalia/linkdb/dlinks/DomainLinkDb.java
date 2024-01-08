@@ -1,4 +1,4 @@
-package nu.marginalia.linkdb;
+package nu.marginalia.linkdb.dlinks;
 
 import gnu.trove.list.array.TIntArrayList;
 

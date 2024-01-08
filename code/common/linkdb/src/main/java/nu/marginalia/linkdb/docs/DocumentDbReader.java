@@ -1,4 +1,4 @@
-package nu.marginalia.linkdb;
+package nu.marginalia.linkdb.docs;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

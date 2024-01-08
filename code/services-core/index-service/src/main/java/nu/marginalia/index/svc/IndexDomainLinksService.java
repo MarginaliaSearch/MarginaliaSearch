@@ -3,9 +3,7 @@ package nu.marginalia.index.svc;
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;
 import nu.marginalia.index.api.*;
-import nu.marginalia.linkdb.DomainLinkDb;
-
-import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
+import nu.marginalia.linkdb.dlinks.DomainLinkDb;
 
 /**  GRPC service for interrogating domain links
  */

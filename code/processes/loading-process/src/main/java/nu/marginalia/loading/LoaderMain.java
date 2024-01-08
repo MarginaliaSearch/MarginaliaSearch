@@ -9,7 +9,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.ProcessConfigurationModule;
 import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.linkdb.DocumentDbWriter;
+import nu.marginalia.linkdb.docs.DocumentDbWriter;
 import nu.marginalia.loading.documents.DocumentLoaderService;
 import nu.marginalia.loading.documents.KeywordLoaderService;
 import nu.marginalia.loading.domains.DomainIdRegistry;

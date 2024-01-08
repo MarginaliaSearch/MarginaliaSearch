@@ -7,7 +7,7 @@ import gnu.trove.list.array.TLongArrayList;
 import nu.marginalia.index.client.model.results.DecoratedSearchResultItem;
 import nu.marginalia.index.client.model.results.ResultRankingContext;
 import nu.marginalia.index.client.model.results.SearchResultItem;
-import nu.marginalia.linkdb.DocumentDbReader;
+import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.linkdb.model.DocdbUrlDetail;
 import nu.marginalia.ranking.ResultValuator;
 import org.slf4j.Logger;

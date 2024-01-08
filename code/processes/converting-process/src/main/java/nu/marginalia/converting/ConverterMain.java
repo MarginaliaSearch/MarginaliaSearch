@@ -46,7 +46,6 @@ public class ConverterMain {
     private final MessageQueueFactory messageQueueFactory;
     private final FileStorageService fileStorageService;
     private final SideloadSourceFactory sideloadSourceFactory;
-
     private final int node;
 
     public static void main(String... args) throws Exception {

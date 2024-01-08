@@ -1,6 +1,8 @@
 package nu.marginalia.linkdb;
 
 import gnu.trove.list.array.TLongArrayList;
+import nu.marginalia.linkdb.docs.DocumentDbReader;
+import nu.marginalia.linkdb.docs.DocumentDbWriter;
 import nu.marginalia.linkdb.model.DocdbUrlDetail;
 import nu.marginalia.model.EdgeDomain;
 import org.junit.jupiter.api.Test;

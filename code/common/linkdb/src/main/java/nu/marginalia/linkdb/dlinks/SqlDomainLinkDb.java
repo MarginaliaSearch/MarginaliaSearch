@@ -1,4 +1,4 @@
-package nu.marginalia.linkdb;
+package nu.marginalia.linkdb.dlinks;
 
 import com.google.inject.name.Named;
 import com.zaxxer.hikari.HikariDataSource;
@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -37,21 +38,12 @@ public class SqlDomainLinkDb implements DomainLinkDb {
         this.dataSource = dataSource;
 
         node = configuration.node();
-
-        Thread.ofPlatform().start(() -> {
-            try {
-                loadDb();
-            } catch (Exception e) {
-                logger.error("Failed to load linkdb", e);
-            }
-        });
+        loadDb();
     }
 
     @Override
     public void switchInput(Path newFilename) throws IOException {
-        Files.move(newFilename, filename, StandardCopyOption.REPLACE_EXISTING);
-
-        loadDb();
+        throw new UnsupportedEncodingException();
     }
 
     public void loadDb() {

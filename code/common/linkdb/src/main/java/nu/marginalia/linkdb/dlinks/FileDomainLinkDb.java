@@ -1,4 +1,4 @@
-package nu.marginalia.linkdb;
+package nu.marginalia.linkdb.dlinks;
 
 import com.google.inject.name.Named;
 import gnu.trove.list.array.TIntArrayList;
@@ -22,9 +22,8 @@ public class FileDomainLinkDb implements DomainLinkDb {
 
     public FileDomainLinkDb(@Named("domain-linkdb-file") Path filename) throws IOException {
         this.filename = filename;
-        if (Files.exists(filename)) {
-            switchInput(filename);
-        }
+
+        loadInput(filename);
     }
 
     @Override
