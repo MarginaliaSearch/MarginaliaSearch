@@ -111,18 +111,14 @@ public class UrlDetails {
     public int getProblemCount() {
         int numProblems = 0;
 
-        for (var problem :EnumSet.of(
-                HtmlFeature.JS,
-                HtmlFeature.TRACKING,
-                HtmlFeature.TRACKING_ADTECH,
-                HtmlFeature.AFFILIATE_LINK,
-                HtmlFeature.COOKIES,
-                HtmlFeature.ADVERTISEMENT)) {
-            if (HtmlFeature.hasFeature(features, problem)) {
-                numProblems++;
-            }
-        }
-        return numProblems;
+        int mask = HtmlFeature.JS.getFeatureBit()
+                | HtmlFeature.COOKIES.getFeatureBit()
+                | HtmlFeature.TRACKING.getFeatureBit()
+                | HtmlFeature.AFFILIATE_LINK.getFeatureBit()
+                | HtmlFeature.TRACKING_ADTECH.getFeatureBit()
+                | HtmlFeature.ADVERTISEMENT.getFeatureBit();
+
+        return Integer.bitCount(features & mask);
     }
 
     public String getProblems() {
