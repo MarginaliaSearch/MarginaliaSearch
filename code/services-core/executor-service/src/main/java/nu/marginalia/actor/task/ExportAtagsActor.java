@@ -76,7 +76,7 @@ public class ExportAtagsActor extends RecordActorPrototype {
                         }
 
                         Path crawlDataPath = inputDir.resolve(item.relPath());
-                        try (var stream = CrawledDomainReader.createDataStream(crawlDataPath)) {
+                        try (var stream = CrawledDomainReader.createDataStream(CrawledDomainReader.CompatibilityLevel.FAST, crawlDataPath)) {
                             exportLinks(tagWriter, stream);
                         }
                         catch (Exception ex) {

@@ -12,15 +12,16 @@ import java.io.*;
 import java.nio.file.Path;
 
 /** This class is used to read the old format of crawl data, which was zstd-compressed JSON
- * with type delimiters between records.
+ * with type delimiters between records.  It does not preserve the semantics of the new format,
+ * but it is faster.
  */
-public class LegacySerializableCrawlDataStream implements AutoCloseable, SerializableCrawlDataStream {
+public class FastLegacySerializableCrawlDataStream implements AutoCloseable, SerializableCrawlDataStream {
     private final Gson gson;
     private final BufferedReader bufferedReader;
     private SerializableCrawlData next = null;
 
     private final Path path;
-    public LegacySerializableCrawlDataStream(Gson gson, File file) throws IOException {
+    public FastLegacySerializableCrawlDataStream(Gson gson, File file) throws IOException {
         this.gson = gson;
         bufferedReader = new BufferedReader(new InputStreamReader(new ZstdInputStream(new FileInputStream(file), RecyclingBufferPool.INSTANCE)));
         path = file.toPath();
