@@ -5,6 +5,7 @@ import nu.marginalia.WebsiteUrl;
 import nu.marginalia.search.command.SearchAdtechParameter;
 import nu.marginalia.search.command.SearchJsParameter;
 import nu.marginalia.search.command.SearchParameters;
+import nu.marginalia.search.command.SearchRecentParameter;
 
 import java.util.List;
 
@@ -21,6 +22,9 @@ public class SearchFilters {
     @Getter
     public final ReduceAdtechOption reduceAdtechOption;
     @Getter
+    public final ShowRecentOption showRecentOption;
+
+    @Getter
     public final List<List<Filter>> filterGroups;
 
 
@@ -30,6 +34,8 @@ public class SearchFilters {
 
         removeJsOption = new RemoveJsOption(parameters);
         reduceAdtechOption = new ReduceAdtechOption(parameters);
+        showRecentOption = new ShowRecentOption(parameters);
+
 
         currentFilter = parameters.profile().filterId;
 
@@ -82,6 +88,7 @@ public class SearchFilters {
             this.url = parameters.withJs(toggledValue).renderUrl(SearchFilters.this.url);
         }
     }
+
     public class ReduceAdtechOption {
         private final SearchAdtechParameter value;
 
@@ -105,6 +112,32 @@ public class SearchFilters {
             };
 
             this.url = parameters.withAdtech(toggledValue).renderUrl(SearchFilters.this.url);
+        }
+    }
+
+    public class ShowRecentOption {
+        private final SearchRecentParameter value;
+
+        @Getter
+        public final String url;
+
+        public boolean isSet() {
+            return value.equals(SearchRecentParameter.RECENT);
+        }
+
+        public String name() {
+            return "Recent Results";
+        }
+
+        public ShowRecentOption(SearchParameters parameters) {
+            this.value = parameters.recent();
+
+            var toggledValue = switch (parameters.recent()) {
+                case RECENT -> SearchRecentParameter.DEFAULT;
+                default -> SearchRecentParameter.RECENT;
+            };
+
+            this.url = parameters.withRecent(toggledValue).renderUrl(SearchFilters.this.url);
         }
     }
 

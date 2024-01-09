@@ -14,9 +14,12 @@ public class SearchQueryParamFactory {
     public QueryParams forRegularSearch(SearchParameters userParams) {
         SearchSubquery prototype =  new SearchSubquery();
         var profile = userParams.profile();
+
         profile.addTacitTerms(prototype);
         userParams.js().addTacitTerms(prototype);
         userParams.adtech().addTacitTerms(prototype);
+
+        SpecificationLimit yearLimit = userParams.recent().yearLimit();
 
         return new QueryParams(
                 userParams.query(),
@@ -26,7 +29,7 @@ public class SearchQueryParamFactory {
                 prototype.searchTermsPriority,
                 prototype.searchTermsAdvice,
                 profile.getQualityLimit(),
-                profile.getYearLimit(),
+                yearLimit,
                 profile.getSizeLimit(),
                 SpecificationLimit.none(),
                 SpecificationLimit.none(),

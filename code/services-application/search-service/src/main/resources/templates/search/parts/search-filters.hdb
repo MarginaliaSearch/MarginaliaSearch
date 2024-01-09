@@ -16,6 +16,14 @@
             <a href="{{url}}">{{name}}</a>
         </li>
     {{/with}}
+    {{#with showRecentOption}}
+        <li title="Show Recent Options"
+            {{#if set}}aria-checked="true" class="current"{{/if}}
+            {{#unless set}}aria-checked="false"{{/unless}}
+            role="checkbox">
+            <a href="{{url}}">{{name}}</a>
+        </li>
+    {{/with}}
 </ul>
 <h3>Domains</h3>
 <ul>

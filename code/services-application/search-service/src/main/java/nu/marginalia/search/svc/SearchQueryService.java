@@ -4,12 +4,9 @@ import com.google.inject.Inject;
 import io.prometheus.client.Histogram;
 import lombok.SneakyThrows;
 import nu.marginalia.WebsiteUrl;
-import nu.marginalia.search.command.SearchAdtechParameter;
+import nu.marginalia.search.command.*;
 import nu.marginalia.search.model.SearchProfile;
 import nu.marginalia.client.Context;
-import nu.marginalia.search.command.CommandEvaluator;
-import nu.marginalia.search.command.SearchJsParameter;
-import nu.marginalia.search.command.SearchParameters;
 import nu.marginalia.search.exceptions.RedirectException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,6 +60,7 @@ public class SearchQueryService {
             return new SearchParameters(queryParam.trim(),
                     SearchProfile.getSearchProfile(request.queryParams("profile")),
                     SearchJsParameter.parse(request.queryParams("js")),
+                    SearchRecentParameter.parse(request.queryParams("recent")),
                     SearchAdtechParameter.parse(request.queryParams("adtech")));
         }
         catch (Exception ex) {
