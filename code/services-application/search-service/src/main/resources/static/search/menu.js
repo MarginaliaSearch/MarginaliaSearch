@@ -74,10 +74,10 @@ if (window.matchMedia('(pointer: coarse)').matches) {
         }
 
         if (touchEndX - touchStartX > swipeThreshold) {
-            showMenu();
+            hideMenu();
             event.stopPropagation();
         } else if (touchStartX - touchEndX > swipeThreshold) {
-            hideMenu();
+            showMenu();
             event.stopPropagation();
         }
     });
@@ -86,6 +86,6 @@ if (window.matchMedia('(pointer: coarse)').matches) {
     // Add a floating panel to the bottom of the page to show a message when the filters are hidden
     const floatingPanel = document.createElement('div');
     floatingPanel.setAttribute('style', 'position: fixed; bottom: 0; left: 0; right: 0; background-color: #fff; padding: 1em; text-align: center; display: block; border-top: 1px solid #ccc; box-shadow: 0 0 -5px #eee;');
-    floatingPanel.innerHTML = '&larr; right/left open/close the filters &rarr;';
+    floatingPanel.innerHTML = '&larr; swipe left to open filters &larr;';
     document.body.appendChild(floatingPanel);
 }
