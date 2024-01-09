@@ -18,14 +18,11 @@ public class DecoratedSearchResults {
     private final String focusDomain;
     private final int focusDomainId;
     private final SearchFilters filters;
-    public String getQuery() {
-        return params.query();
-    }
-    public String getProfile() {
-        return params.profile().filterId;
-    }
-    public String getJs() {
-        return params.js().value;
-    }
+
+    // These are used by the search form
+    public String getQuery() { return params.query(); }
+    public String getProfile() { return params.profile().filterId; }
+    public String getJs() { return params.js().value; }
     public String getAdtech() { return params.adtech().value; }
+    public String getRecent() { return params.recent().value; }
 }

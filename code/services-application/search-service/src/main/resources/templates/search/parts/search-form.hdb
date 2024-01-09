@@ -8,6 +8,7 @@
         <input type="hidden" name="js" value="{{js}}">
         <input type="hidden" name="adtech" value="{{adtech}}">
         <input type="hidden" name="profile" value="{{profile}}">
+        <input type="hidden" name="recent" value="{{recent}}">
 
         <input type="submit" form="search-form" title="Execute Search" value="Search">
     </div>
