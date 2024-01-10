@@ -97,13 +97,6 @@ public class UrlDetails {
         return getFeatureScore()*Math.sqrt(1+rankingId)/Math.max(1E-10, lengthAdjustment *(0.7+0.3*Math.exp(urlQualityAdjustment.getScore())));
     }
 
-    public String getGeminiLink() {
-        return url.proto + "://" + url.domain.toString() + url.path.replace(" ", "%20").replace("\"", "%22");
-    }
-    public String getGeminiDescription() {
-        return description.trim();
-    }
-
     public boolean isPlainText() {
          return "PLAIN".equals(format);
     }
