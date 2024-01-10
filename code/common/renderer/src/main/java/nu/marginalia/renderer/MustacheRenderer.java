@@ -50,14 +50,6 @@ public class MustacheRenderer<T> {
     }
 
     @SneakyThrows
-    public Object renderInto(Response response, T model) {
-
-        response.raw().getOutputStream().write(template.apply(model).getBytes(StandardCharsets.UTF_8));
-
-        return "";
-    }
-
-    @SneakyThrows
     public <T2> String render(T model, String name, List<T2> children) {
         Context ctx = Context.newBuilder(model).combine(name, children).build();
 
@@ -70,9 +62,4 @@ public class MustacheRenderer<T> {
         return template.apply(ctx);
     }
 
-    @SneakyThrows
-    public void renderInto(Response response, T model, Map<String, ?> children) {
-        Context ctx = Context.newBuilder(model).combine(children).build();
-        response.raw().getOutputStream().write(template.apply(ctx).getBytes(StandardCharsets.UTF_8));
-    }
 }
