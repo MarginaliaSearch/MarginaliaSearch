@@ -63,6 +63,7 @@ public class ExecutorSvc extends Service {
         Spark.post("/process/adjacency-calculation", processingService::startAdjacencyCalculation);
 
         Spark.post("/sideload/dirtree", sideloadService::sideloadDirtree);
+        Spark.post("/sideload/warc", sideloadService::sideloadWarc);
         Spark.post("/sideload/stackexchange", sideloadService::sideloadStackexchange);
         Spark.post("/sideload/encyclopedia", sideloadService::sideloadEncyclopedia);
 

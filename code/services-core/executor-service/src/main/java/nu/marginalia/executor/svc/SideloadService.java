@@ -19,7 +19,10 @@ public class SideloadService {
          actorControlService.startFrom(ExecutorActor.CONVERT, new ConvertActor.ConvertDirtree(request.queryParams("path")));
          return "";
     }
-
+    public Object sideloadWarc(Request request, Response response) throws Exception {
+        actorControlService.startFrom(ExecutorActor.CONVERT, new ConvertActor.ConvertWarc(request.queryParams("path")));
+        return "";
+    }
     public Object sideloadEncyclopedia(Request request, Response response) throws Exception {
         actorControlService.startFrom(ExecutorActor.CONVERT,
                 new ConvertActor.ConvertEncyclopedia(

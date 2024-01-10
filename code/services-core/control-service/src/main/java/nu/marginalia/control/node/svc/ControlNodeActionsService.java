@@ -46,6 +46,9 @@ public class ControlNodeActionsService {
         Spark.post("/public/nodes/:node/actions/sideload-dirtree", this::sideloadDirtree,
                 redirectControl.renderRedirectAcknowledgement("Sideloading", "..")
         );
+        Spark.post("/public/nodes/:node/actions/sideload-warc", this::sideloadWarc,
+                redirectControl.renderRedirectAcknowledgement("Sideloading", "..")
+        );
         Spark.post("/public/nodes/:node/actions/sideload-stackexchange", this::sideloadStackexchange,
                 redirectControl.renderRedirectAcknowledgement("Sideloading", "..")
         );
@@ -86,6 +89,22 @@ public class ControlNodeActionsService {
         return "";
     }
 
+    public Object sideloadWarc(Request request, Response response) throws Exception {
+
+        Path sourcePath = Path.of(request.queryParams("source"));
+        if (!Files.exists(sourcePath)) {
+            Spark.halt(404);
+            return "No such file " + sourcePath;
+        }
+
+        final int nodeId = Integer.parseInt(request.params("node"));
+
+        eventLog.logEvent("USER-ACTION", "SIDELOAD WARC " + nodeId);
+
+        executorClient.sideloadWarc(Context.fromRequest(request), nodeId, sourcePath);
+
+        return "";
+    }
     public Object sideloadStackexchange(Request request, Response response) throws Exception {
 
         Path sourcePath = Path.of(request.queryParams("source"));

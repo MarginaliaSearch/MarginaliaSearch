@@ -269,12 +269,13 @@
                     Sideload Dirtree
                 </button>
             </h2>
+
             <div id="collapseSideloadDirtree" class="accordion-collapse collapse p-3" data-bs-parent="#accordionActions">
                 This will load HTML from a directory structure as specified by a YAML file.
 
                 <form method="post" action="actions/sideload-dirtree" onsubmit="return confirm('Confirm sideloading')">
                     <div class="my-3 py-3">
-                        <label for="source" class="form-label">yaml file location on server</label>
+                        <label for="source" class="form-label">Path yaml file location on server</label>
 
                         <div class="row">
                             <div class="col">
@@ -287,8 +288,41 @@
                     </div>
                 </form>
             </div>
+
         </div>
 
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseSideloadWarc"
+                        aria-expanded="false"
+                        aria-controls="collapseSideloadWarc">
+                    Sideload WARC Files
+                </button>
+            </h2>
+
+            <div id="collapseSideloadWarc" class="accordion-collapse collapse p-3" data-bs-parent="#accordionActions">
+                This will load HTML from a directory structure containing WARC files, one per domain.
+
+                <form method="post" action="actions/sideload-warc" onsubmit="return confirm('Confirm sideloading')">
+                    <div class="my-3 py-3">
+                        <label for="source" class="form-label">Path WARC file location on server</label>
+
+                        <div class="row">
+                            <div class="col">
+                                <input id="source" name="source" class="form-control" value="">
+                            </div>
+                            <div class="col">
+                                <button type="submit" class="btn btn-primary">Sideload WARC Files</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+        </div>
 
         <div class="accordion-item">
             <h2 class="accordion-header">

@@ -75,6 +75,12 @@ public class ExecutorClient extends AbstractDynamicClient {
                 "").blockingSubscribe();
     }
 
+    public void sideloadWarc(Context ctx, int node, Path sourcePath) {
+        post(ctx, node,
+                "/sideload/warc?path="+ URLEncoder.encode(sourcePath.toString(), StandardCharsets.UTF_8),
+                "").blockingSubscribe();
+    }
+
     public void sideloadStackexchange(Context ctx, int node, Path sourcePath) {
         post(ctx, node,
                 "/sideload/stackexchange?path="+URLEncoder.encode(sourcePath.toString(), StandardCharsets.UTF_8),
