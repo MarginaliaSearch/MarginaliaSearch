@@ -46,8 +46,13 @@ public class QueryService extends Service {
                         QueryGRPCService queryGRPCService,
                         Gson gson,
                         DomainBlacklist blacklist,
-                        QueryFactory queryFactory) throws IOException {
-        super(params);
+                        QueryBasicInterface queryBasicInterface,
+                        QueryFactory queryFactory) throws IOException
+    {
+        super(params, () -> {
+            Spark.staticFileLocation("/static/");
+        });
+
         this.indexClient = indexClient;
         this.nodeWatcher = nodeWatcher;
         this.gson = gson;
@@ -62,6 +67,17 @@ public class QueryService extends Service {
 
         Spark.post("/delegate/", this::delegateToIndex, gson::toJson);
         Spark.post("/search/", this::search, gson::toJson);
+
+        Spark.get("/public/search", queryBasicInterface::handle);
+
+        Spark.exception(Exception.class, (e, request, response) -> {
+            response.status(500);
+            try {
+                e.printStackTrace(response.raw().getWriter());
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
     }
 
     private Object search(Request request, Response response) {

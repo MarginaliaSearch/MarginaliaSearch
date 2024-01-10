@@ -26,6 +26,7 @@ dependencies {
     implementation project(':code:common:model')
     implementation project(':code:common:db')
     implementation project(':code:common:service')
+    implementation project(':code:common:renderer')
     implementation project(':code:common:service-client')
     implementation project(':code:api:index-api')
     implementation project(':code:api:query-api')

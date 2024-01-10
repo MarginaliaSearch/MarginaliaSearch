@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Query Service</title>
+</head>
+<body>
+<div class="container">
+    <h1 class="my-3">Marginalia Query Service</h1>
+    <p>This is the barebones search interface for the <a href="https://git.marginalia.nu/">Marginalia Search Engine software</a>. </p>
+    <p>If you are seeing this somewhere other than your own machine, someone has likely misconfigured something.</p>
+
+    <h2>Control GUI</h2>
+    <p>
+        If this is running on your own machine, you can also use the control interface, which is by default available
+        on <a href="http://localhost:8081/">http://localhost:8081/</a>.
+    </p>
+
+    <h2>API</h2>
+
+    <p>There is not much here, except the <a href="/search">/search</a> endpoint offers a very web interface for
+        performing queries.  The same endpoint also responds with JSON if the <tt>Accept</tt>-header is provided.</p>
+
+        The HTML version of this interface exists for demonstration purposes only.
+        The same endpoint is available as a web API with JSON-results when the
+        'Accept: application/json'-header is sent by the client.</p>
+
+
+    <h3>Minimal integration with the API:</h3>
+    <dl>
+        <dt>Curl</dt>
+        <dd>
+            <code>$ curl -H 'Accept: application/json' 'http://localhost:8080/search?q=test'</code>
+        </dd>
+        <dt>
+            Python 3
+        </dt>
+        <dd>
+<code style="white-space: pre" class="mb-3">#!/bin/env python3
+import requests
+import json
+r = requests.get('http://localhost:8080/search?q=test',
+    headers={'Accept': 'application/json'})
+print(json.dumps(r.json(), indent=4))</code>
+        </dd>
+    <p>Remember to URLencode the query!</p>
+</body>
+</html>
