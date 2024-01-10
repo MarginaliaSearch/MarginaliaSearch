@@ -3,7 +3,6 @@ package nu.marginalia.loading.documents;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.io.processed.DocumentRecordParquetFileReader;
-import nu.marginalia.io.processed.ProcessedDataFileNames;
 import nu.marginalia.keyword.model.DocumentKeywords;
 import nu.marginalia.loading.LoaderIndexJournalWriter;
 import nu.marginalia.loading.LoaderInputData;

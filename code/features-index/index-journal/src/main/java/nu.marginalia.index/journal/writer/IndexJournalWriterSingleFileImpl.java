@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermissions;
 
+/** IndexJournalWriter implementation that creates a single journal file */
 public class IndexJournalWriterSingleFileImpl implements IndexJournalWriter{
 
     private static final int ZSTD_BUFFER_SIZE = 8192;

@@ -10,9 +10,24 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 
+/** IndexJournalWriter implementation that creates a sequence of journal files,
+ * delegating to IndexJournalWriterSingleFileImpl to write the individual files.
+ *
+ */
 public class IndexJournalWriterPagingImpl implements IndexJournalWriter {
     private final Path outputDir;
     private int fileNumber = 0;
+
+    /* Number of entries to write to each file before switching to the next.
+     *
+     * A large limit increases the memory foot print of the index, but reduces
+     * the construction time.  A small number increases the memory footprint, but
+     * reduces the construction time.
+     *
+     * The limit is set to 1,000,000, which amounts to about 1 GB on disk.
+     */
+    private static final int SWITCH_LIMIT = 1_000_000;
+
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private IndexJournalWriter currentWriter = null;
@@ -35,7 +50,7 @@ public class IndexJournalWriterPagingImpl implements IndexJournalWriter {
     @Override
     @SneakyThrows
     public void put(IndexJournalEntryHeader header, IndexJournalEntryData entry) {
-        if (++inputsForFile > 100_000) {
+        if (++inputsForFile > SWITCH_LIMIT) {
             inputsForFile = 0;
             switchToNextWriter();
         }
