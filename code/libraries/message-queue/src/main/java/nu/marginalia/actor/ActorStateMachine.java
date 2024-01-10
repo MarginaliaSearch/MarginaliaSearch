@@ -269,7 +269,6 @@ public class ActorStateMachine {
             }
 
             if (!state.isFinal()) {
-                logger.info("Transitioning from state {}", state.name());
                 var transition = state.next(msg.payload());
 
                 if (!expectedMessage.isExpected(msg)) {
@@ -321,7 +320,8 @@ public class ActorStateMachine {
 
         expectedMessage = ExpectedMessage.expectId(abortMsgId);
 
-        // Add a state transition to the final state
+        // Add a state transition to the monitor state, causing it to reset the state machine to the initial state
+        // (or if no monitor state is defined, set it to the final state)
         smOutbox.sendNotice(abortMsgId, finalState.name(), "");
 
         // Dislodge the current task with an interrupt.

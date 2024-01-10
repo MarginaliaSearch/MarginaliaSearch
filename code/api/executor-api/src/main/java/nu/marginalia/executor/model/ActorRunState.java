@@ -6,6 +6,12 @@ public record ActorRunState(String name,
                             String stateDescription,
                             boolean terminal,
                             boolean canStart) {
+
+    public boolean isDaemon() {
+        return name.startsWith("PROC_")
+                || name.startsWith("MONITOR_");
+    }
+
     public String stateIcon() {
         if (terminal) {
             return "\uD83D\uDE34";

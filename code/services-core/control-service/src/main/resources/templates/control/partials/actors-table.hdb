@@ -17,7 +17,8 @@
                     onsubmit="return toggleActorSwitch('{{name}}')">
                     <input
                             type="submit"
-                            value="On"
+                            {{#if daemon}}value="Disable"{{/if}}
+                            {{#unless daemon}}value="Terminate"{{/unless}}
                             class="toggle-switch-on"
                             id="toggle-{{name}}-button"
                             title="Terminate the actor"
@@ -33,11 +34,12 @@
                         type="submit"
                         {{#unless canStart}}
                         disabled
-                        value="Stop"
+                        value="Enable"
                         title="This actor cannot be started here"
                         {{/unless}}
                         {{#if canStart}}
-                        value="Off"
+                        {{#if daemon}}value="Enable"{{/if}}
+                        {{#unless daemon}}value="Start"{{/unless}}
                         title="Start the actor"
                         {{/if}}
                         class="toggle-switch-off"

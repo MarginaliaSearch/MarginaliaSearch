@@ -3,9 +3,13 @@ package nu.marginalia.actor.task;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import nu.marginalia.actor.state.ActorControlFlowException;
+import nu.marginalia.mq.MqMessageState;
+import nu.marginalia.mq.persistence.MqPersistence;
 import nu.marginalia.process.ProcessService;
 import nu.marginalia.mq.MqMessage;
 import nu.marginalia.mq.outbox.MqOutbox;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
@@ -14,10 +18,14 @@ import java.util.concurrent.TimeoutException;
 @Singleton
 public class ActorProcessWatcher {
 
+    private static final Logger logger = LoggerFactory.getLogger(ActorProcessWatcher.class);
+    private final MqPersistence persistence;
     private final ProcessService processService;
 
     @Inject
-    public ActorProcessWatcher(ProcessService processService) {
+    public ActorProcessWatcher(MqPersistence persistence,
+                               ProcessService processService) {
+        this.persistence = persistence;
         this.processService = processService;
     }
 
@@ -42,7 +50,11 @@ public class ActorProcessWatcher {
 
         for (;;) {
             try {
-                return outbox.waitResponse(msgId, 5, TimeUnit.SECONDS);
+                // Check for interruption before waiting for response
+                if (Thread.currentThread().isInterrupted())
+                    throw new InterruptedException();
+
+                return outbox.waitResponse(msgId, 1, TimeUnit.SECONDS);
             }
             catch (InterruptedException ex) {
                 // Here we mark the message as dead, as it's the user that has aborted the process
@@ -51,9 +63,14 @@ public class ActorProcessWatcher {
                 outbox.flagAsDead(msgId);
                 processService.kill(processId);
 
-                throw ex;
+                logger.info("Process {} killed due to interrupt", processId);
             }
             catch (TimeoutException ex) {
+                var state = persistence.getMessage(msgId).state();
+                if (state == MqMessageState.ERR || state == MqMessageState.DEAD) {
+                    throw new ActorControlFlowException("Process " + processId + " marked message as " + state);
+                }
+
                 // Maybe the process died, wait a moment for it to restart
                 if (!waitForProcess(processId, TimeUnit.SECONDS, 30)) {
                     throw new ActorControlFlowException("Process " + processId + " died and did not re-launch");

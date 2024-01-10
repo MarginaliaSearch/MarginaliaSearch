@@ -146,7 +146,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
             }
             case ReindexFwd(long id) when id < 0 -> new ReindexFwd(createIndex(IndexName.FORWARD));
             case ReindexFwd(long id) -> {
-                var rsp = mqIndexConstructorOutbox.waitResponse(id);
+                var rsp = processWatcher.waitResponse(mqIndexConstructorOutbox, ProcessService.ProcessId.INDEX_CONSTRUCTOR, id);
 
                 if (rsp.state() != MqMessageState.OK)
                     yield new Error("Repartition failed");
@@ -155,7 +155,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
             }
             case ReindexFull(long id) when id < 0 -> new ReindexFull(createIndex(IndexName.REVERSE_FULL));
             case ReindexFull(long id) -> {
-                var rsp = mqIndexConstructorOutbox.waitResponse(id);
+                var rsp = processWatcher.waitResponse(mqIndexConstructorOutbox, ProcessService.ProcessId.INDEX_CONSTRUCTOR, id);
 
                 if (rsp.state() != MqMessageState.OK)
                     yield new Error("Repartition failed");
@@ -164,7 +164,7 @@ public class ConvertAndLoadActor extends RecordActorPrototype {
             }
             case ReindexPrio(long id) when id < 0 -> new ReindexPrio(createIndex(IndexName.REVERSE_PRIO));
             case ReindexPrio(long id) -> {
-                var rsp = mqIndexConstructorOutbox.waitResponse(id);
+                var rsp = processWatcher.waitResponse(mqIndexConstructorOutbox, ProcessService.ProcessId.INDEX_CONSTRUCTOR, id);
 
                 if (rsp.state() != MqMessageState.OK)
                     yield new Error("Repartition failed");
