@@ -43,7 +43,7 @@ public class ConvertingIntegrationTest {
 
         var domain = new CrawledDomain("memex.marginalia.nu", null, "OK", "-", "127.0.0.1",
                 docs, Collections.emptyList());
-        var ret = domainProcessor.process(asSerializableCrawlData(domain));
+        var ret = domainProcessor.fullProcessing(asSerializableCrawlData(domain));
 
         assertEquals(ret.state, DomainIndexingState.ACTIVE);
         assertEquals(ret.domain, new EdgeDomain("memex.marginalia.nu"));
@@ -51,7 +51,7 @@ public class ConvertingIntegrationTest {
     }
     @Test
     public void testMemexMarginaliaNuDateInternalConsistency() throws IOException {
-        var ret = domainProcessor.process(asSerializableCrawlData(readMarginaliaWorkingSet()));
+        var ret = domainProcessor.fullProcessing(asSerializableCrawlData(readMarginaliaWorkingSet()));
         ret.documents.stream().filter(ProcessedDocument::isProcessedFully).forEach(doc -> {
             int year = PubDate.fromYearByte(doc.details.metadata.year());
             Integer yearMeta = doc.details.pubYear;
@@ -63,8 +63,8 @@ public class ConvertingIntegrationTest {
     }
 
     @Test
-    public void testMemexMarginaliaNu() throws IOException {
-        var ret = domainProcessor.process(asSerializableCrawlData(readMarginaliaWorkingSet()));
+    public void testMemexMarginaliaNuFullProcessing() throws IOException {
+        var ret = domainProcessor.fullProcessing(asSerializableCrawlData(readMarginaliaWorkingSet()));
         assertNotNull(ret);
         assertEquals(ret.state, DomainIndexingState.ACTIVE);
         assertEquals(ret.domain, new EdgeDomain("memex.marginalia.nu"));
@@ -91,6 +91,39 @@ public class ConvertingIntegrationTest {
             assertTrue(details.description.length() > 4);
             assertEquals(HtmlStandard.HTML5, details.standard);
 
+        }
+    }
+
+    @Test
+    public void testMemexMarginaliaNuSideloadProcessing() throws IOException {
+        var ret = domainProcessor.sideloadProcessing(asSerializableCrawlData(readMarginaliaWorkingSet()), 100);
+        assertNotNull(ret);
+        assertEquals("memex.marginalia.nu", ret.id());
+
+        var domain = ret.getDomain();
+        assertEquals(domain.domain, new EdgeDomain("memex.marginalia.nu"));
+
+        List<ProcessedDocument> docsAll = new ArrayList<>();
+        Map<UrlIndexingState, Integer> resultsByStatusCount = new HashMap<>();
+        ret.getDocumentsStream().forEachRemaining(docsAll::add);
+        assertTrue(docsAll.size() > 25);
+
+        docsAll.forEach(doc -> resultsByStatusCount.merge(doc.state, 1, Integer::sum));
+
+        assertTrue(resultsByStatusCount.get(UrlIndexingState.OK) > 25);
+
+        for (var doc : docsAll) {
+
+            if (!doc.isProcessedFully()) {
+                continue;
+            }
+
+            var details = doc.details;
+
+            assertTrue(details.metadata.size() > 0);
+            assertTrue(details.title.length() > 4);
+            assertTrue(details.description.length() > 4);
+            assertEquals(HtmlStandard.HTML5, details.standard);
         }
     }
 
@@ -139,10 +172,13 @@ public class ConvertingIntegrationTest {
 
     private SerializableCrawlDataStream asSerializableCrawlData(CrawledDomain domain) {
         List<SerializableCrawlData> data = new ArrayList<>();
+
+        data.add(domain);
+
         if (domain.doc != null) {
             data.addAll(domain.doc);
         }
-        data.add(domain);
+
 
         return SerializableCrawlDataStream.fromIterator(data.iterator());
     }

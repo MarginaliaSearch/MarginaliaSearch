@@ -3,6 +3,7 @@ package nu.marginalia.util;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -14,7 +15,7 @@ class ProcessingIteratorTest {
     @Test
     public void test() {
         Set<Integer> output = new HashSet<>();
-        var iter = new ProcessingIterator<Integer>(2, 2, q -> {
+        Iterator<Integer> iter = ProcessingIterator.factory(2, 2).create(q -> {
             for (int i = 0; i < 10_000; i++) {
                 int j = i;
                 q.accept(() -> task(j));

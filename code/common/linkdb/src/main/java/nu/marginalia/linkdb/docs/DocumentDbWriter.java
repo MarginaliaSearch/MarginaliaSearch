@@ -1,24 +1,23 @@
-package nu.marginalia.linkdb;
+package nu.marginalia.linkdb.docs;
 
-import nu.marginalia.linkdb.model.LdbUrlDetail;
+import nu.marginalia.linkdb.model.DocdbUrlDetail;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.List;
 
-public class LinkdbWriter {
+public class DocumentDbWriter {
 
     private final Connection connection;
 
-    public LinkdbWriter(Path outputFile) throws SQLException {
+    public DocumentDbWriter(Path outputFile) throws SQLException {
         String connStr = "jdbc:sqlite:" + outputFile.toString();
         connection = DriverManager.getConnection(connStr);
 
-        try (var stream = ClassLoader.getSystemResourceAsStream("db/linkdb-document.sql");
+        try (var stream = ClassLoader.getSystemResourceAsStream("db/docdb-document.sql");
              var stmt = connection.createStatement()
         ) {
             var sql = new String(stream.readAllBytes());
@@ -31,11 +30,11 @@ public class LinkdbWriter {
         }
     }
 
-    public void add(LdbUrlDetail ldbUrlDetail) throws SQLException {
-        add(List.of(ldbUrlDetail));
+    public void add(DocdbUrlDetail docdbUrlDetail) throws SQLException {
+        add(List.of(docdbUrlDetail));
     }
 
-    public void add(List<LdbUrlDetail> ldbUrlDetail) throws SQLException {
+    public void add(List<DocdbUrlDetail> docdbUrlDetail) throws SQLException {
 
         try (var stmt = connection.prepareStatement("""
                 INSERT OR IGNORE INTO DOCUMENT(ID, URL, TITLE, DESCRIPTION, WORDS_TOTAL, FORMAT, FEATURES, DATA_HASH, QUALITY, PUB_YEAR)
@@ -43,7 +42,7 @@ public class LinkdbWriter {
                 """)) {
 
             int i = 0;
-            for (var document : ldbUrlDetail) {
+            for (var document : docdbUrlDetail) {
                 var url = document.url();
 
                 stmt.setLong(1, document.urlId());

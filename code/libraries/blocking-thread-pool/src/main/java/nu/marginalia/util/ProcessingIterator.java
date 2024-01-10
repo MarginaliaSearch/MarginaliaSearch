@@ -19,21 +19,20 @@ public class ProcessingIterator<T> implements Iterator<T> {
 
     private final LinkedBlockingQueue<T> queue;
     private final AtomicBoolean isFinished = new AtomicBoolean(false);
-    private final ExecutorService executorService;
-    private final Semaphore sem;
+    private final SimpleBlockingThreadPool pool;
 
     private T next = null;
 
-    private final int parallelism;
-
-    public ProcessingIterator(int queueSize, int parallelism, ProcessingJob<T> task) {
-        this.parallelism = parallelism;
-
+    @SneakyThrows
+    ProcessingIterator(SimpleBlockingThreadPool pool, int queueSize, ProcessingJob<T> task) {
         queue = new LinkedBlockingQueue<>(queueSize);
-        executorService = Executors.newFixedThreadPool(parallelism);
-        sem = new Semaphore(parallelism);
+        this.pool = pool;
 
-        executorService.submit(() -> executeJob(task));
+        pool.submit(() -> executeJob(task));
+    }
+
+    public static Factory factory(int queueSize, int parallelism) {
+        return new Factory(queueSize, parallelism);
     }
 
     private void executeJob(ProcessingJob<T> job) {
@@ -46,20 +45,15 @@ public class ProcessingIterator<T> implements Iterator<T> {
         }
     }
 
+    @SneakyThrows
     private void executeTask(Task<T> task) {
-        try {
-            sem.acquire();
-        } catch (InterruptedException e) {
-            return;
-        }
-
-        try {
-            queue.put(task.get());
-        } catch (Exception e) {
-            logger.warn("Exception while processing", e);
-        } finally {
-            sem.release();
-        }
+        pool.submit(() -> {
+            try {
+                queue.put(task.get());
+            } catch (Exception e) {
+                logger.warn("Exception while processing", e);
+            }
+        });
     }
 
     /** Returns true if there are more documents to be processed.
@@ -75,15 +69,11 @@ public class ProcessingIterator<T> implements Iterator<T> {
             return true;
 
         do {
-            next = queue.poll(1, TimeUnit.SECONDS);
+            next = queue.poll(50, TimeUnit.MILLISECONDS);
             if (next != null) {
                 return true;
             }
         } while (expectMore());
-
-        if (!executorService.isShutdown()) {
-            executorService.shutdown();
-        }
 
         return false;
     }
@@ -95,7 +85,7 @@ public class ProcessingIterator<T> implements Iterator<T> {
     private boolean expectMore() {
         return !isFinished.get() // we are still reading from the database
                 || !queue.isEmpty()   // ... or we have documents in the queue
-                || sem.availablePermits() < parallelism;  // ... or we are still processing documents
+                || pool.getActiveCount() > 0;  // ... or we are still processing documents
     }
 
     /** Returns the next document to be processed.
@@ -126,14 +116,32 @@ public class ProcessingIterator<T> implements Iterator<T> {
      * performed in parallel
      */
     public interface ProcessingJob<T2> {
+
         void run(Consumer<Task<T2>> output) throws Exception;
     }
-
     /**
      * A single task that produces a result to be iterable via the Iterator interface
      * (along with other tasks' outputs)
      */
     public interface Task<T> {
+
         T get() throws Exception;
     }
+
+    public static class Factory {
+        private final int queueSize;
+        private final SimpleBlockingThreadPool pool;
+
+        Factory(int queueSize, int parallelism) {
+            this.queueSize = queueSize;
+            this.pool = new SimpleBlockingThreadPool("sideload", parallelism, 4);
+        }
+
+        public <T> ProcessingIterator<T> create(ProcessingJob<T> task) {
+            return new ProcessingIterator<>(pool, queueSize, task);
+        }
+
+    }
+
 }
+

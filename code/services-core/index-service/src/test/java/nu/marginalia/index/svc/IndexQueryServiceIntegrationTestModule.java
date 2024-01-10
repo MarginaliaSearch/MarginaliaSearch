@@ -7,7 +7,7 @@ import nu.marginalia.storage.model.FileStorageBase;
 import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.index.journal.writer.IndexJournalWriterPagingImpl;
-import nu.marginalia.linkdb.LinkdbReader;
+import nu.marginalia.linkdb.docs.DocumentDbReader;
 import nu.marginalia.process.control.FakeProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.ranking.DomainRankings;
@@ -26,6 +26,7 @@ import java.sql.SQLException;
 import java.util.Random;
 import java.util.UUID;
 
+import static nu.marginalia.linkdb.LinkdbFileNames.DOCDB_FILE_NAME;
 import static org.mockito.Mockito.when;
 
 public class IndexQueryServiceIntegrationTestModule extends AbstractModule {
@@ -57,9 +58,9 @@ public class IndexQueryServiceIntegrationTestModule extends AbstractModule {
             Mockito.when(fileStorageServiceMock.getStorageBase(FileStorageBaseType.CURRENT)).thenReturn(new FileStorageBase(null, null, 0,null, fastDir.toString()));
             Mockito.when(fileStorageServiceMock.getStorageBase(FileStorageBaseType.STORAGE)).thenReturn(new FileStorageBase(null, null, 0, null, fastDir.toString()));
 
-            bind(LinkdbReader.class).toInstance(new LinkdbReader(
+            bind(DocumentDbReader.class).toInstance(new DocumentDbReader(
                     IndexLocations.getLinkdbLivePath(fileStorageServiceMock)
-                            .resolve("links.db")
+                            .resolve(DOCDB_FILE_NAME)
             ));
 
             bind(FileStorageService.class).toInstance(fileStorageServiceMock);

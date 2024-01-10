@@ -95,7 +95,7 @@ public class CrawlPlan {
                     }
 
                     try {
-                        return Optional.of(CrawledDomainReader.createDataStream(path));
+                        return Optional.of(CrawledDomainReader.createDataStream(CrawledDomainReader.CompatibilityLevel.COMPATIBLE, path));
                     }
                     catch (IOException ex) {
                         return Optional.empty();

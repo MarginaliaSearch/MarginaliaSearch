@@ -10,6 +10,7 @@ import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 import nu.marginalia.assistant.client.model.SimilarDomain;
 import nu.marginalia.model.EdgeDomain;
+import nu.marginalia.query.client.QueryClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,14 +26,13 @@ public class SimilarDomainsService {
 
     private static final Logger logger = LoggerFactory.getLogger(SimilarDomainsService.class);
     private final HikariDataSource dataSource;
+    private final QueryClient queryClient;
 
     private volatile TIntIntHashMap domainIdToIdx = new TIntIntHashMap(100_000);
     private volatile int[] domainIdxToId;
 
     public volatile TIntDoubleHashMap[] relatedDomains;
     public volatile TIntList[] domainNeighbors = null;
-    public volatile TIntList[] linkStoD = null;
-    public volatile TIntList[] linkDtoS = null;
     public volatile BitSet screenshotDomains = null;
     public volatile BitSet activeDomains = null;
     public volatile BitSet indexedDomains = null;
@@ -42,8 +42,9 @@ public class SimilarDomainsService {
     volatile boolean isReady = false;
 
     @Inject
-    public SimilarDomainsService(HikariDataSource dataSource) {
+    public SimilarDomainsService(HikariDataSource dataSource, QueryClient queryClient) {
         this.dataSource = dataSource;
+        this.queryClient = queryClient;
 
         Executors.newSingleThreadExecutor().submit(this::init);
     }
@@ -70,8 +71,6 @@ public class SimilarDomainsService {
                 domainRanks = new double[domainIdToIdx.size()];
                 domainNames = new String[domainIdToIdx.size()];
                 domainNeighbors = new TIntList[domainIdToIdx.size()];
-                linkStoD = new TIntList[domainIdToIdx.size()];
-                linkDtoS = new TIntList[domainIdToIdx.size()];
                 screenshotDomains = new BitSet(domainIdToIdx.size());
                 activeDomains = new BitSet(domainIdToIdx.size());
                 indexedDomains = new BitSet(domainIdToIdx.size());
@@ -108,27 +107,6 @@ public class SimilarDomainsService {
 
                 logger.info("Loaded {} related domains", relatedDomains.length);
 
-                rs = stmt.executeQuery("""
-                    SELECT SOURCE_DOMAIN_ID, DEST_DOMAIN_ID FROM EC_DOMAIN_LINK
-                    """);
-
-                while (rs.next()) {
-                    int source = rs.getInt(1);
-                    int dest = rs.getInt(2);
-
-                    int sourceIdx = domainIdToIdx.get(source);
-                    int destIdx = domainIdToIdx.get(dest);
-
-                    if (linkStoD[sourceIdx] == null)
-                        linkStoD[sourceIdx] = new TIntArrayList(32);
-                    if (linkDtoS[destIdx] == null)
-                        linkDtoS[destIdx] = new TIntArrayList(32);
-
-                    linkStoD[sourceIdx].add(destIdx);
-                    linkDtoS[destIdx].add(sourceIdx);
-
-                }
-                logger.info("Loaded links...");
 
                 rs = stmt.executeQuery("""
                     SELECT EC_DOMAIN.ID,
@@ -167,7 +145,6 @@ public class SimilarDomainsService {
                 }
 
                 logger.info("Loaded {} domains", domainRanks.length);
-                logger.info("All done!");
                 isReady = true;
             }
         }
@@ -272,17 +249,23 @@ public class SimilarDomainsService {
     }
 
     private TIntSet getLinkingIdsDToS(int domainIdx) {
-        var items = linkDtoS[domainIdx];
-        if (items == null)
-            return new TIntHashSet();
-        return new TIntHashSet(items);
+        var items = new TIntHashSet();
+
+        for (int id : queryClient.getLinksFromDomain(domainIdxToId[domainIdx])) {
+            items.add(domainIdToIdx.get(id));
+        }
+
+        return items;
     }
 
     private TIntSet getLinkingIdsSToD(int domainIdx) {
-        var items = linkStoD[domainIdx];
-        if (items == null)
-            return new TIntHashSet();
-        return new TIntHashSet(items);
+        var items = new TIntHashSet();
+
+        for (int id : queryClient.getLinksToDomain(domainIdxToId[domainIdx])) {
+            items.add(domainIdToIdx.get(id));
+        }
+
+        return items;
     }
 
     public List<SimilarDomain> getLinkingDomains(int domainId, int count) {

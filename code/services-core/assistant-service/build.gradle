@@ -24,6 +24,7 @@ java {
 dependencies {
     implementation project(':third-party:symspell')
     implementation project(':code:api:assistant-api')
+    implementation project(':code:api:query-api')
     implementation project(':code:common:config')
     implementation project(':code:common:service')
     implementation project(':code:common:model')

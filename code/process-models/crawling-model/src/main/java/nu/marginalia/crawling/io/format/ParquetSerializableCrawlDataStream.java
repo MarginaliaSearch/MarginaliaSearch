@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -37,6 +38,21 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
         return path;
     }
 
+    public int sizeHint() {
+        // Only calculate size hint for large files
+        // (the reason we calculate them in the first place is to assess whether it is large
+        // because it has many documents, or because it is a small number of large documents)
+        try {
+            if (Files.size(path) > 10_000_000) {
+                return CrawledDocumentParquetRecordFileReader.countGoodStatusCodes(path);
+            }
+        } catch (IOException e) {
+            // suppressed
+        }
+
+        return 0;
+    }
+
     @Override
     @SneakyThrows
     public boolean hasNext() {
@@ -46,7 +62,13 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
                 createDomainRecord(nextRecord);
                 wroteDomainRecord = true;
             }
-            createDocumentRecord(nextRecord);
+
+            try {
+                createDocumentRecord(nextRecord);
+            }
+            catch (Exception ex) {
+                logger.error("Failed to create document record", ex);
+            }
         }
         return !nextQ.isEmpty();
     }
@@ -94,7 +116,7 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
         else if (nextRecord.contentType.startsWith("x-marginalia/advisory")) { // other advisory stuff we don't want
             return;
         }
-        else {
+        else if (nextRecord.body != null) {
             try {
                 bodyString = DocumentBodyToString.getStringData(
                         ContentType.parse(nextRecord.contentType),
@@ -103,6 +125,9 @@ public class ParquetSerializableCrawlDataStream implements AutoCloseable, Serial
                 logger.error("Failed to convert body to string", ex);
                 status = CrawlerDocumentStatus.BAD_CHARSET;
             }
+        }
+        else {
+            status = CrawlerDocumentStatus.ERROR;
         }
 
         nextQ.add(new CrawledDocument("",

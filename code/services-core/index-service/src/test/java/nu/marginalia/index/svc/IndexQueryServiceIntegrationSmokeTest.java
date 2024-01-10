@@ -24,9 +24,9 @@ import nu.marginalia.index.journal.writer.IndexJournalWriter;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.index.query.limit.QueryStrategy;
 import nu.marginalia.index.query.limit.SpecificationLimit;
-import nu.marginalia.linkdb.LinkdbReader;
-import nu.marginalia.linkdb.LinkdbWriter;
-import nu.marginalia.linkdb.model.LdbUrlDetail;
+import nu.marginalia.linkdb.docs.DocumentDbReader;
+import nu.marginalia.linkdb.docs.DocumentDbWriter;
+import nu.marginalia.linkdb.model.DocdbUrlDetail;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.id.UrlIdCodec;
 import nu.marginalia.model.idx.WordFlags;
@@ -51,6 +51,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.IntStream;
 
+import static nu.marginalia.linkdb.LinkdbFileNames.DOCDB_FILE_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 
@@ -80,7 +81,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
     DomainRankings domainRankings;
 
     @Inject
-    LinkdbReader linkdbReader;
+    DocumentDbReader documentDbReader;
 
     @Inject
     ProcessHeartbeat processHeartbeat;
@@ -103,15 +104,15 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
     @Test
     public void willItBlend() throws Exception {
-        var linkdbWriter = new LinkdbWriter(
+        var linkdbWriter = new DocumentDbWriter(
                 IndexLocations.getLinkdbLivePath(fileStorageService)
-                        .resolve("links.db")
+                        .resolve(DOCDB_FILE_NAME)
         );
         for (int i = 1; i < 512; i++) {
             loadData(linkdbWriter, i);
         }
         linkdbWriter.close();
-        linkdbReader.reconnect();
+        documentDbReader.reconnect();
 
         indexJournalWriter.close();
         constructIndex();
@@ -146,15 +147,15 @@ public class IndexQueryServiceIntegrationSmokeTest {
     @Test
     public void testDomainQuery() throws Exception {
 
-        var linkdbWriter = new LinkdbWriter(
+        var linkdbWriter = new DocumentDbWriter(
                 IndexLocations.getLinkdbLivePath(fileStorageService)
-                        .resolve("links.db")
+                        .resolve(DOCDB_FILE_NAME)
         );
         for (int i = 1; i < 512; i++) {
             loadDataWithDomain(linkdbWriter, i/100, i);
         }
         linkdbWriter.close();
-        linkdbReader.reconnect();
+        documentDbReader.reconnect();
 
         indexJournalWriter.close();
         constructIndex();
@@ -183,15 +184,15 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
     @Test
     public void testYearQuery() throws Exception {
-        var linkdbWriter = new LinkdbWriter(
+        var linkdbWriter = new DocumentDbWriter(
                 IndexLocations.getLinkdbLivePath(fileStorageService)
-                        .resolve("links.db")
+                        .resolve(DOCDB_FILE_NAME)
         );
         for (int i = 1; i < 512; i++) {
             loadData(linkdbWriter, i);
         }
         linkdbWriter.close();
-        linkdbReader.reconnect();
+        documentDbReader.reconnect();
 
         indexJournalWriter.close();
         constructIndex();
@@ -283,7 +284,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
 
     MurmurHash3_128 hasher = new MurmurHash3_128();
     @SneakyThrows
-    public void loadData(LinkdbWriter ldbw, int id) {
+    public void loadData(DocumentDbWriter ldbw, int id) {
         int[] factors = IntStream
                 .rangeClosed(1, id)
                 .filter(v -> (id % v) == 0)
@@ -299,7 +300,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
             data[2 * i + 1] = new WordMetadata(i, EnumSet.of(WordFlags.Title)).encode();
         }
 
-        ldbw.add(new LdbUrlDetail(
+        ldbw.add(new DocdbUrlDetail(
                 fullId, new EdgeUrl("https://www.example.com/"+id),
                 "test", "test", 0., "HTML5", 0, null, 0, 10
         ));
@@ -308,7 +309,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
     }
 
     @SneakyThrows
-    public void loadDataWithDomain(LinkdbWriter ldbw, int domain, int id) {
+    public void loadDataWithDomain(DocumentDbWriter ldbw, int domain, int id) {
         int[] factors = IntStream.rangeClosed(1, id).filter(v -> (id % v) == 0).toArray();
         long fullId = UrlIdCodec.encodeId(domain, id);
         var header = new IndexJournalEntryHeader(factors.length, 0, fullId, DocumentMetadata.defaultValue());
@@ -319,7 +320,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
             data[2*i + 1] = new WordMetadata(i, EnumSet.of(WordFlags.Title)).encode();
         }
 
-        ldbw.add(new LdbUrlDetail(
+        ldbw.add(new DocdbUrlDetail(
                 fullId, new EdgeUrl("https://www.example.com/"+id),
                 "test", "test", 0., "HTML5", 0, null, 0, 10
         ));

@@ -9,7 +9,7 @@ import lombok.SneakyThrows;
 import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.ProcessConfigurationModule;
 import nu.marginalia.storage.FileStorageService;
-import nu.marginalia.linkdb.LinkdbWriter;
+import nu.marginalia.linkdb.docs.DocumentDbWriter;
 import nu.marginalia.loading.documents.DocumentLoaderService;
 import nu.marginalia.loading.documents.KeywordLoaderService;
 import nu.marginalia.loading.domains.DomainIdRegistry;
@@ -43,7 +43,7 @@ public class LoaderMain {
     private final ProcessHeartbeatImpl heartbeat;
     private final MessageQueueFactory messageQueueFactory;
     private final FileStorageService fileStorageService;
-    private final LinkdbWriter linkdbWriter;
+    private final DocumentDbWriter documentDbWriter;
     private final LoaderIndexJournalWriter journalWriter;
     private final DomainLoaderService domainService;
     private final DomainLinksLoaderService linksService;
@@ -77,7 +77,7 @@ public class LoaderMain {
     public LoaderMain(ProcessHeartbeatImpl heartbeat,
                       MessageQueueFactory messageQueueFactory,
                       FileStorageService fileStorageService,
-                      LinkdbWriter linkdbWriter,
+                      DocumentDbWriter documentDbWriter,
                       LoaderIndexJournalWriter journalWriter,
                       DomainLoaderService domainService,
                       DomainLinksLoaderService linksService,
@@ -90,7 +90,7 @@ public class LoaderMain {
         this.heartbeat = heartbeat;
         this.messageQueueFactory = messageQueueFactory;
         this.fileStorageService = fileStorageService;
-        this.linkdbWriter = linkdbWriter;
+        this.documentDbWriter = documentDbWriter;
         this.journalWriter = journalWriter;
         this.domainService = domainService;
         this.linksService = linksService;
@@ -132,7 +132,7 @@ public class LoaderMain {
         }
         finally {
             journalWriter.close();
-            linkdbWriter.close();
+            documentDbWriter.close();
             heartbeat.shutDown();
         }
 

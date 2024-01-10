@@ -17,6 +17,10 @@ public interface SerializableCrawlDataStream extends AutoCloseable {
 
     SerializableCrawlData next() throws IOException;
 
+    /** Return a size hint for the stream.  0 is returned if the hint is not available,
+     * or if the file is seemed too small to bother */
+    default int sizeHint() { return 0; }
+
     boolean hasNext() throws IOException;
 
     @Nullable

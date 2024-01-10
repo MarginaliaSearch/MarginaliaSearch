@@ -7,8 +7,8 @@ import gnu.trove.list.array.TLongArrayList;
 import nu.marginalia.index.client.model.results.DecoratedSearchResultItem;
 import nu.marginalia.index.client.model.results.ResultRankingContext;
 import nu.marginalia.index.client.model.results.SearchResultItem;
-import nu.marginalia.linkdb.LinkdbReader;
-import nu.marginalia.linkdb.model.LdbUrlDetail;
+import nu.marginalia.linkdb.docs.DocumentDbReader;
+import nu.marginalia.linkdb.model.DocdbUrlDetail;
 import nu.marginalia.ranking.ResultValuator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,13 +25,13 @@ public class IndexResultDecorator {
 
     private static final Logger logger = LoggerFactory.getLogger(IndexResultDecorator.class);
 
-    private final LinkdbReader linkdbReader;
+    private final DocumentDbReader documentDbReader;
     private final ResultValuator valuator;
 
     @Inject
-    public IndexResultDecorator(LinkdbReader linkdbReader,
+    public IndexResultDecorator(DocumentDbReader documentDbReader,
                                 ResultValuator valuator) {
-        this.linkdbReader = linkdbReader;
+        this.documentDbReader = documentDbReader;
         this.valuator = valuator;
     }
 
@@ -46,9 +46,9 @@ public class IndexResultDecorator {
         for (var result : rawResults)
             idsList.add(result.getDocumentId());
 
-        Map<Long, LdbUrlDetail> urlDetailsById = new HashMap<>(rawResults.size());
+        Map<Long, DocdbUrlDetail> urlDetailsById = new HashMap<>(rawResults.size());
 
-        for (var item : linkdbReader.getUrlDetails(idsList))
+        for (var item : documentDbReader.getUrlDetails(idsList))
             urlDetailsById.put(item.urlId(), item);
 
         List<DecoratedSearchResultItem> decoratedItems = new ArrayList<>();
@@ -63,7 +63,7 @@ public class IndexResultDecorator {
     }
 
     private DecoratedSearchResultItem createCombinedItem(SearchResultItem result,
-                                                         LdbUrlDetail linkData,
+                                                         DocdbUrlDetail linkData,
                                                          ResultRankingContext rankingContext) {
         return new DecoratedSearchResultItem(
                 result,

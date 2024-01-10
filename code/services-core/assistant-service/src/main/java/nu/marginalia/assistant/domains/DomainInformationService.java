@@ -5,6 +5,7 @@ import nu.marginalia.geoip.GeoIpDictionary;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.db.DbDomainQueries;
 import nu.marginalia.assistant.client.model.DomainInformation;
+import nu.marginalia.query.client.QueryClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +21,7 @@ public class DomainInformationService {
     private final GeoIpDictionary geoIpDictionary;
 
     private DbDomainQueries dbDomainQueries;
+    private final QueryClient queryClient;
     private HikariDataSource dataSource;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -27,9 +29,11 @@ public class DomainInformationService {
     public DomainInformationService(
             DbDomainQueries dbDomainQueries,
             GeoIpDictionary geoIpDictionary,
+            QueryClient queryClient,
             HikariDataSource dataSource) {
         this.dbDomainQueries = dbDomainQueries;
         this.geoIpDictionary = geoIpDictionary;
+        this.queryClient = queryClient;
         this.dataSource = dataSource;
     }
 
@@ -80,21 +84,8 @@ public class DomainInformationService {
             inCrawlQueue = rs.next();
             builder.inCrawlQueue(inCrawlQueue);
 
-            rs = stmt.executeQuery(STR."""
-                    SELECT COUNT(ID) FROM EC_DOMAIN_LINK WHERE DEST_DOMAIN_ID=\{domainId}
-                       """);
-            if (rs.next()) {
-                builder.incomingLinks(rs.getInt(1));
-            }
-
-            rs = stmt.executeQuery(STR."""
-                    SELECT COUNT(ID) FROM EC_DOMAIN_LINK WHERE SOURCE_DOMAIN_ID=\{domainId}
-                       """);
-            if (rs.next()) {
-                builder.outboundLinks(rs.getInt(1));
-                outboundLinks = rs.getInt(1);
-            }
-
+            builder.incomingLinks(queryClient.countLinksToDomain(domainId));
+            builder.outboundLinks(queryClient.countLinksFromDomain(domainId));
 
             rs = stmt.executeQuery(STR."""
                     SELECT KNOWN_URLS, GOOD_URLS, VISITED_URLS FROM DOMAIN_METADATA WHERE ID=\{domainId}

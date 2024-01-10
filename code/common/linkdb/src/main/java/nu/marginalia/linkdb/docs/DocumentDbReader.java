@@ -1,10 +1,10 @@
-package nu.marginalia.linkdb;
+package nu.marginalia.linkdb.docs;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import gnu.trove.list.TLongList;
-import nu.marginalia.linkdb.model.LdbUrlDetail;
+import nu.marginalia.linkdb.model.DocdbUrlDetail;
 import nu.marginalia.model.EdgeUrl;
 import nu.marginalia.model.id.UrlIdCodec;
 import org.slf4j.Logger;
@@ -23,21 +23,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Singleton
-public class LinkdbReader {
+public class DocumentDbReader {
     private final Path dbFile;
     private volatile Connection connection;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
-    public LinkdbReader(@Named("linkdb-file") Path dbFile) throws SQLException {
+    public DocumentDbReader(@Named("docdb-file") Path dbFile) throws SQLException {
         this.dbFile = dbFile;
 
         if (Files.exists(dbFile)) {
             connection = createConnection();
         }
         else {
-            logger.warn("No linkdb file {}", dbFile);
+            logger.warn("No docdb file {}", dbFile);
         }
     }
 
@@ -107,8 +107,8 @@ public class LinkdbReader {
         return ret;
     }
 
-    public List<LdbUrlDetail> getUrlDetails(TLongList ids) throws SQLException {
-        List<LdbUrlDetail> ret = new ArrayList<>(ids.size());
+    public List<DocdbUrlDetail> getUrlDetails(TLongList ids) throws SQLException {
+        List<DocdbUrlDetail> ret = new ArrayList<>(ids.size());
 
         if (connection == null ||
             connection.isClosed())
@@ -126,7 +126,7 @@ public class LinkdbReader {
                 var rs = stmt.executeQuery();
                 if (rs.next()) {
                     var url = new EdgeUrl(rs.getString("URL"));
-                    ret.add(new LdbUrlDetail(
+                    ret.add(new DocdbUrlDetail(
                             rs.getLong("ID"),
                             url,
                             rs.getString("TITLE"),

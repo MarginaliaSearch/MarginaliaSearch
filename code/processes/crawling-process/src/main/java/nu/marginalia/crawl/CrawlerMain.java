@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.security.Security;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.*;
@@ -100,10 +101,14 @@ public class CrawlerMain {
     }
 
     public static void main(String... args) throws Exception {
+
         if (!AbortMonitor.getInstance().isAlive()) {
             System.err.println("Remove abort file first");
             return;
         }
+
+        // Prevent Java from caching DNS lookups forever (filling up the system RAM as a result)
+        Security.setProperty("networkaddress.cache.ttl" , "3600");
 
         // This must run *early*
         System.setProperty("http.agent", WmsaHome.getUserAgent().uaString());
@@ -267,7 +272,7 @@ public class CrawlerMain {
 
         private CrawlDataReference getReference() {
             try {
-                return new CrawlDataReference(CrawledDomainReader.createDataStream(outputDir, domain, id));
+                return new CrawlDataReference(CrawledDomainReader.createDataStream(CrawledDomainReader.CompatibilityLevel.ANY, outputDir, domain, id));
             } catch (IOException e) {
                 logger.debug("Failed to read previous crawl data for {}", specification.domain);
                 return new CrawlDataReference();

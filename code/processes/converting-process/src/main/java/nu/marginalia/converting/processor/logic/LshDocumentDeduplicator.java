@@ -1,74 +1,43 @@
 package nu.marginalia.converting.processor.logic;
 
-import com.google.inject.Singleton;
+import gnu.trove.list.array.TLongArrayList;
 import nu.marginalia.model.crawl.UrlIndexingState;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.lsh.EasyLSH;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 /** Deduplicates documents based on their LSH
  *
  * @see EasyLSH
  */
-@Singleton
-public class LshDocumentDeduplicator {
+public class LshDocumentDeduplicator implements AutoCloseable {
 
-    private final int DISTANCE_THRESHOLD = 2;
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final TLongArrayList hashCodes = new TLongArrayList(1000);
+    private static final int DISTANCE_THRESHOLD = 2;
 
-    public void deduplicate(List<ProcessedDocument> documents) {
-        ProcessedDocument[] goodDocuments = documents.stream()
-                .filter(ProcessedDocument::isProcessedFully)
-                .filter(doc -> doc.words.size() > 100)
-                .toArray(ProcessedDocument[]::new);
-
-        long[] hashCodes = new long[goodDocuments.length];
-        for (int i = 0; i < goodDocuments.length; i++) {
-            hashCodes[i] = goodDocuments[i].details.hashCode;
+    public void markIfDuplicate(ProcessedDocument document) {
+        if (!document.isProcessedFully()) {
+            return;
         }
 
-        // These arrays can be fairly large (~10,000) so we need to be
-        // careful about what we do in this O(n^2) loop
+        if (document.words.size() < 100) {
+            return;
+        }
 
-        for (int i = 0; i < hashCodes.length; i++) {
-            for (int j = 0; j < hashCodes.length; j++) {
-                // This is basically just a 64 bit XOR and a POPCOUNT so it's pretty fast.
-                if (EasyLSH.hammingDistance(hashCodes[i], hashCodes[j]) < DISTANCE_THRESHOLD) {
-                    if (i == j)
-                        continue;
+        long hashCode = document.details.hashCode;
 
-                    if (flagIfDuplicate(goodDocuments[i], goodDocuments[j])) {
-                        break;
-                    }
-                }
+        for (int i = 0; i < hashCodes.size(); i++) {
+            if (EasyLSH.hammingDistance(hashCode, hashCodes.get(i)) < DISTANCE_THRESHOLD) {
+                document.state = UrlIndexingState.DISQUALIFIED;
+                document.stateReason = "Duplicate";
+                return;
             }
         }
+
+        hashCodes.add(hashCode);
     }
 
-    private boolean flagIfDuplicate(ProcessedDocument thisDoc, ProcessedDocument otherDoc) {
-
-        // This document has already been disqualified as a duplicate
-        if (thisDoc.state != UrlIndexingState.OK)
-            return false;
-
-
-        // We might consider using thisDoc.details.metadata.topology() here instead of the
-        // URL length to determine which document is the "better" one.
-        if (thisDoc.url.path.length()
-                < otherDoc.url.path.length())
-        {
-            logger.debug("{} duplicates {}", otherDoc.url, thisDoc.url);
-
-            otherDoc.state = UrlIndexingState.DISQUALIFIED;
-            otherDoc.stateReason = "Duplicate";
-
-            return true;
-        }
-
-        return false;
-
+    @Override
+    public void close() throws Exception {
+        hashCodes.clear(1);
     }
 }

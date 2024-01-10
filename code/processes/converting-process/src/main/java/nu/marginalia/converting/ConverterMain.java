@@ -6,9 +6,9 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.ProcessConfigurationModule;
-import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.converting.sideload.SideloadSource;
 import nu.marginalia.converting.sideload.SideloadSourceFactory;
+import nu.marginalia.converting.writer.ConverterBatchWritableIf;
 import nu.marginalia.converting.writer.ConverterBatchWriter;
 import nu.marginalia.converting.writer.ConverterWriter;
 import nu.marginalia.storage.FileStorageService;
@@ -46,7 +46,6 @@ public class ConverterMain {
     private final MessageQueueFactory messageQueueFactory;
     private final FileStorageService fileStorageService;
     private final SideloadSourceFactory sideloadSourceFactory;
-
     private final int node;
 
     public static void main(String... args) throws Exception {
@@ -109,7 +108,7 @@ public class ConverterMain {
 
                 taskHeartbeat.progress(sideloadSource.domainName(), i++, sideloadSources.size());
 
-                writer.write(sideloadSource);
+                writer.writeSideloadSource(sideloadSource);
             }
             taskHeartbeat.progress("Finished", i, sideloadSources.size());
 
@@ -139,8 +138,8 @@ public class ConverterMain {
             {
                 pool.submit(() -> {
                     try {
-                        ProcessedDomain processed = processor.process(domain);
-                        converterWriter.accept(processed);
+                        ConverterBatchWritableIf writable = processor.createWritable(domain);
+                        converterWriter.accept(writable);
                     }
                     catch (Exception ex) {
                         logger.info("Error in processing", ex);

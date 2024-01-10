@@ -60,7 +60,7 @@ public class CrawlDataUnfcker {
             return Optional.empty();
         }
 
-        try (var stream = CrawledDomainReader.createDataStream(file)) {
+        try (var stream = CrawledDomainReader.createDataStream(CrawledDomainReader.CompatibilityLevel.FAST, file)) {
             while (stream.hasNext()) {
                 if (stream.next() instanceof CrawledDomain domain) {
                     return Optional.of(domain);

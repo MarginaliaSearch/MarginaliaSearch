@@ -59,6 +59,7 @@ public class IndexOpsService {
     public <T> Optional<T> run(Callable<T> c) throws Exception {
         if (!opsLock.tryLock())
             return Optional.empty();
+
         try {
             return Optional.of(c.call());
         }

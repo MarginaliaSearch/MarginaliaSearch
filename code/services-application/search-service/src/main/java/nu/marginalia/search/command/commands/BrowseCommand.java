@@ -66,7 +66,7 @@ public class BrowseCommand implements SearchCommandInterface {
                 return browseService.getRandomEntries(set);
             }
             else {
-                return browseService.getRelatedEntries(word);
+                return browseService.getRelatedEntries(ctx, word);
             }
         }
         catch (Exception ex) {

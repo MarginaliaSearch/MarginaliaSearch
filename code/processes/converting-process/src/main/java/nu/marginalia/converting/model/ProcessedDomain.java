@@ -1,15 +1,18 @@
 package nu.marginalia.converting.model;
 
 import lombok.ToString;
+import nu.marginalia.converting.writer.ConverterBatchWritableIf;
+import nu.marginalia.converting.writer.ConverterBatchWriter;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.model.crawl.DomainIndexingState;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
 @ToString
-public class ProcessedDomain {
+public class ProcessedDomain implements ConverterBatchWritableIf  {
     public EdgeDomain domain;
 
     public List<ProcessedDocument> documents;
@@ -26,4 +29,17 @@ public class ProcessedDomain {
     public int size() {
         return Optional.ofNullable(documents).map(List::size).orElse(1);
     }
+
+    @Override
+    public void write(ConverterBatchWriter writer) throws IOException {
+        writer.writeProcessedDomain(this);
+    }
+
+    @Override
+    public String id() {
+        return domain.toString();
+    }
+
+    @Override
+    public void close() {}
 }

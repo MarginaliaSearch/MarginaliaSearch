@@ -27,7 +27,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 
 /** Writer for a single batch of converter parquet files */
-public class ConverterBatchWriter implements AutoCloseable {
+public class ConverterBatchWriter implements AutoCloseable, ConverterBatchWriterIf {
     private final DomainRecordParquetFileWriter domainWriter;
     private final DomainLinkRecordParquetFileWriter domainLinkWriter;
     private final DocumentRecordParquetFileWriter documentWriter;
@@ -46,7 +46,13 @@ public class ConverterBatchWriter implements AutoCloseable {
         );
     }
 
-    public void write(SideloadSource sideloadSource) throws IOException {
+    @Override
+    public void write(ConverterBatchWritableIf writable) throws IOException {
+        writable.write(this);
+    }
+
+    @Override
+    public void writeSideloadSource(SideloadSource sideloadSource) throws IOException {
         var domain = sideloadSource.getDomain();
 
         writeDomainData(domain);
@@ -54,7 +60,8 @@ public class ConverterBatchWriter implements AutoCloseable {
         writeDocumentData(domain.domain, sideloadSource.getDocumentsStream());
     }
 
-    public void write(ProcessedDomain domain) {
+    @Override
+    public void writeProcessedDomain(ProcessedDomain domain) {
         var results = ForkJoinPool.commonPool().invokeAll(
                 writeTasks(domain)
         );
@@ -180,7 +187,7 @@ public class ConverterBatchWriter implements AutoCloseable {
         return this;
     }
 
-    private Object writeDomainData(ProcessedDomain domain) throws IOException {
+    public Object writeDomainData(ProcessedDomain domain) throws IOException {
         DomainMetadata metadata = DomainMetadata.from(domain);
 
         List<String> feeds = getFeedUrls(domain);

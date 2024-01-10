@@ -42,6 +42,7 @@ public class SentenceExtractor {
      * that might otherwise use an undue amount of processing power. 250 words is about 10X longer than
      * this comment. */
     private static final int MAX_SENTENCE_LENGTH = 250;
+    private static final int MAX_TEXT_LENGTH = 65536;
 
     @SneakyThrows @Inject
     public SentenceExtractor(LanguageModels models) {
@@ -95,7 +96,7 @@ public class SentenceExtractor {
             title = doc.getElementsByTag("h2").text();
         }
 
-        if (title.trim().length() < 3 && textSentences.length > 0) {
+        if (title.trim().length() < 3) {
             for (DocumentSentence textSentence : textSentences) {
                 if (textSentence.length() > 0) {
                     title = textSentence.originalSentence.toLowerCase();
@@ -136,6 +137,7 @@ public class SentenceExtractor {
         String[] sentences;
 
         String textNormalizedSpaces = SentenceExtractorStringUtils.normalizeSpaces(text);
+
         try {
             sentences = sentenceDetector.sentDetect(textNormalizedSpaces);
         }
@@ -215,7 +217,12 @@ public class SentenceExtractor {
     public String asText(Document dc) {
         String text = dc.getElementsByTag("body").text();
 
-        return text.substring(0, (int) (text.length()*0.95));
+        if (text.length() > MAX_TEXT_LENGTH) {
+            return text.substring(0, MAX_TEXT_LENGTH);
+        }
+        else {
+            return text.substring(0, (int) (text.length() * 0.95));
+        }
     }
 
 

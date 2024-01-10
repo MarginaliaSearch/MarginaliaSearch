@@ -4,13 +4,9 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import nu.marginalia.converting.ConverterModule;
 import nu.marginalia.crawling.io.CrawledDomainReader;
-import nu.marginalia.crawling.model.CrawledDocument;
-import nu.marginalia.crawling.model.CrawledDomain;
-import nu.marginalia.crawling.model.SerializableCrawlData;
 import nu.marginalia.process.log.WorkLog;
 import nu.marginalia.service.module.DatabaseModule;
 import nu.marginalia.tools.experiments.*;
-import plan.CrawlPlanLoader;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -52,7 +48,7 @@ public class ExperimentRunnerMain {
         Path basePath = Path.of(args[0]);
         for (var item : WorkLog.iterable(basePath.resolve("crawler.log"))) {
             Path crawlDataPath = basePath.resolve(item.relPath());
-            try (var stream = CrawledDomainReader.createDataStream(crawlDataPath)) {
+            try (var stream = CrawledDomainReader.createDataStream(CrawledDomainReader.CompatibilityLevel.FAST, crawlDataPath)) {
                 experiment.process(stream);
             }
             catch (Exception ex) {

@@ -4,9 +4,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.SneakyThrows;
 import nu.marginalia.io.processed.DocumentRecordParquetFileReader;
-import nu.marginalia.io.processed.ProcessedDataFileNames;
-import nu.marginalia.linkdb.LinkdbWriter;
-import nu.marginalia.linkdb.model.LdbUrlDetail;
+import nu.marginalia.linkdb.docs.DocumentDbWriter;
+import nu.marginalia.linkdb.model.DocdbUrlDetail;
 import nu.marginalia.loading.LoaderInputData;
 import nu.marginalia.loading.domains.DomainIdRegistry;
 import nu.marginalia.model.EdgeUrl;
@@ -26,11 +25,11 @@ import java.util.List;
 public class DocumentLoaderService {
     private static final Logger logger = LoggerFactory.getLogger(DocumentLoaderService.class);
 
-    private final LinkdbWriter linkdbWriter;
+    private final DocumentDbWriter documentDbWriter;
 
     @Inject
-    public DocumentLoaderService(LinkdbWriter linkdbWriter) {
-        this.linkdbWriter = linkdbWriter;
+    public DocumentLoaderService(DocumentDbWriter documentDbWriter) {
+        this.documentDbWriter = documentDbWriter;
     }
 
     public boolean loadDocuments(
@@ -73,7 +72,7 @@ public class DocumentLoaderService {
 
     class LinkdbLoader implements AutoCloseable {
         private final DomainIdRegistry domainIdRegistry;
-        private final List<LdbUrlDetail> details = new ArrayList<>(1000);
+        private final List<DocdbUrlDetail> details = new ArrayList<>(1000);
 
         LinkdbLoader(DomainIdRegistry domainIdRegistry) {
             this.domainIdRegistry = domainIdRegistry;
@@ -88,7 +87,7 @@ public class DocumentLoaderService {
                     projection.ordinal
             );
 
-            details.add(new LdbUrlDetail(
+            details.add(new DocdbUrlDetail(
                     urlId,
                     new EdgeUrl(projection.url),
                     projection.title,
@@ -102,7 +101,7 @@ public class DocumentLoaderService {
             ));
 
             if (details.size() > 100) {
-                linkdbWriter.add(details);
+                documentDbWriter.add(details);
                 details.clear();
             }
 
@@ -111,7 +110,7 @@ public class DocumentLoaderService {
         @Override
         public void close() throws SQLException {
             if (!details.isEmpty()) {
-                linkdbWriter.add(details);
+                documentDbWriter.add(details);
             }
         }
     }

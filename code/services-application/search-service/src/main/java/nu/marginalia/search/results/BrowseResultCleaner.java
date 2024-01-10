@@ -2,6 +2,7 @@ package nu.marginalia.search.results;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import nu.marginalia.assistant.client.model.SimilarDomain;
 import nu.marginalia.browse.model.BrowseResult;
 import nu.marginalia.screenshot.ScreenshotService;
 
@@ -18,7 +19,7 @@ public class BrowseResultCleaner {
         this.screenshotService = screenshotService;
     }
 
-    public Predicate<BrowseResult> shouldRemoveResultPredicate() {
+    public Predicate<BrowseResult> shouldRemoveResultPredicateBr() {
         Set<String> domainHashes = new HashSet<>(100);
 
         return (res) -> !screenshotService.hasScreenshot(res.domainId())

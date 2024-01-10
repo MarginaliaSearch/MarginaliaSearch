@@ -8,6 +8,9 @@ import nu.marginalia.atags.source.AnchorTagsSource;
 import nu.marginalia.atags.source.AnchorTagsSourceFactory;
 import nu.marginalia.converting.model.ProcessedDocument;
 import nu.marginalia.converting.processor.logic.links.LinkGraph;
+import nu.marginalia.converting.sideload.SideloadSource;
+import nu.marginalia.converting.writer.ConverterBatchWritableIf;
+import nu.marginalia.converting.writer.ConverterBatchWriter;
 import nu.marginalia.crawling.io.SerializableCrawlDataStream;
 import nu.marginalia.crawling.model.*;
 import nu.marginalia.geoip.GeoIpDictionary;
@@ -17,12 +20,13 @@ import nu.marginalia.converting.model.ProcessedDomain;
 import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.converting.processor.logic.links.TopKeywords;
 import nu.marginalia.converting.processor.logic.LshDocumentDeduplicator;
-import nu.marginalia.model.crawl.HtmlFeature;
+import nu.marginalia.util.ProcessingIterator;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -32,7 +36,6 @@ public class DomainProcessor {
     private final SiteWords siteWords;
     private final AnchorTagsSource anchorTagsSource;
     private final AnchorTextKeywords anchorTextKeywords;
-    private final LshDocumentDeduplicator documentDeduplicator;
     private final GeoIpDictionary geoIpDictionary;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -42,78 +45,161 @@ public class DomainProcessor {
                            SiteWords siteWords,
                            AnchorTagsSourceFactory anchorTagsSourceFactory,
                            AnchorTextKeywords anchorTextKeywords,
-                           LshDocumentDeduplicator documentDeduplicator, GeoIpDictionary geoIpDictionary) throws SQLException
+                           GeoIpDictionary geoIpDictionary) throws SQLException
     {
         this.documentProcessor = documentProcessor;
         this.siteWords = siteWords;
         this.anchorTextKeywords = anchorTextKeywords;
-        this.documentDeduplicator = documentDeduplicator;
         this.anchorTagsSource = anchorTagsSourceFactory.create();
         this.geoIpDictionary = geoIpDictionary;
 
         geoIpDictionary.waitReady();
     }
 
+    public ConverterBatchWritableIf createWritable(SerializableCrawlDataStream domain) {
+        final int sizeHint = domain.sizeHint();
+
+        if (sizeHint > 10_000) {
+            // If the file is too big, we run a processing mode that doesn't
+            // require loading the entire dataset into RAM
+            return sideloadProcessing(domain, sizeHint);
+        }
+
+        return fullProcessing(domain);
+    }
+
+    public SideloadProcessing sideloadProcessing(SerializableCrawlDataStream dataStream, int sizeHint) {
+        try {
+            return new SideloadProcessing(dataStream, sizeHint);
+        }
+        catch (Exception ex) {
+            logger.warn("Failed to process domain sideload", ex);
+            return null;
+        }
+
+    }
+
+    public class SideloadProcessing implements ConverterBatchWritableIf, SideloadSource {
+        private final SerializableCrawlDataStream dataStream;
+        private final ProcessedDomain domain;
+        private final DocumentDecorator documentDecorator;
+        private final Set<String> processedUrls = new HashSet<>();
+        private final DomainLinks externalDomainLinks;
+        private final LshDocumentDeduplicator deduplicator = new LshDocumentDeduplicator();
+        private static final ProcessingIterator.Factory iteratorFactory = ProcessingIterator.factory(8,
+                Integer.getInteger("java.util.concurrent.ForkJoinPool.common.parallelism", Runtime.getRuntime().availableProcessors())
+        );
+
+        SideloadProcessing(SerializableCrawlDataStream dataStream, int sizeHint) throws IOException {
+            this.dataStream = dataStream;
+
+            if (!dataStream.hasNext() || !(dataStream.next() instanceof CrawledDomain crawledDomain))
+            {
+                throw new IllegalStateException("First record must be a domain, was " + dataStream.next().getClass().getSimpleName());
+            }
+
+            domain = new ProcessedDomain();
+            domain.sizeloadSizeAdvice = sizeHint == 0 ? 10_000 : sizeHint;
+
+            documentDecorator = new DocumentDecorator(anchorTextKeywords);
+
+            processDomain(crawledDomain, domain, documentDecorator);
+
+            externalDomainLinks = anchorTagsSource.getAnchorTags(domain.domain);
+        }
+
+        @Override
+        public ProcessedDomain getDomain() {
+            return domain;
+        }
+
+        @Override
+        public Iterator<ProcessedDocument> getDocumentsStream() {
+            return iteratorFactory.create((taskConsumer) -> {
+                while (dataStream.hasNext())
+                {
+                    if (!(dataStream.next() instanceof CrawledDocument doc))
+                        continue;
+                    if (doc.url == null || !processedUrls.add(doc.url))
+                        continue;
+
+
+                    taskConsumer.accept(() -> {
+                        var processedDoc = documentProcessor.process(doc, domain.domain, externalDomainLinks, documentDecorator);
+
+                        synchronized (deduplicator) {
+                            deduplicator.markIfDuplicate(processedDoc);
+                        }
+
+                        if (processedDoc.isProcessedFully()) {
+                            // This is a bit sketchy, but we need to set the size and topology to something
+                            processedDoc.details.metadata = processedDoc.details.metadata.withSizeAndTopology(
+                                    10_000, externalDomainLinks.countForUrl(processedDoc.url));
+                        }
+
+                        return processedDoc;
+                    });
+                }
+            });
+        }
+
+        @Override
+        public void write(ConverterBatchWriter writer) throws IOException {
+            writer.writeSideloadSource(this);
+        }
+
+        @Override
+        public String id() {
+            return domain.domain.toString();
+        }
+
+        @Override
+        public void close() throws Exception {
+            dataStream.close();
+            deduplicator.close();
+        }
+    }
+
+
     @SneakyThrows
     @Nullable
-    public ProcessedDomain process(SerializableCrawlDataStream dataStream) {
+    public ProcessedDomain fullProcessing(SerializableCrawlDataStream dataStream) {
         if (!dataStream.hasNext()) {
             return null;
         }
 
-        var ret = new ProcessedDomain();
         List<ProcessedDocument> docs = new ArrayList<>();
         Set<String> processedUrls = new HashSet<>();
 
-        boolean cookies = false;
-        String ip = "";
+        if (!(dataStream.next() instanceof CrawledDomain crawledDomain)) {
+            throw new IllegalStateException("First record must be a domain, was " + dataStream.next().getClass().getSimpleName());
+        }
 
-        DomainLinks externalDomainLinks = null;
+        DomainLinks externalDomainLinks = anchorTagsSource.getAnchorTags(crawledDomain.getDomain());
+        DocumentDecorator documentDecorator = new DocumentDecorator(anchorTextKeywords);
 
-        while (dataStream.hasNext()) {
-            var data = dataStream.next();
+        // Process Domain Record
 
-            // Do a lazy load of the external domain links since we don't know the domain
-            // until we see the first document
-            if (externalDomainLinks == null) {
-                var domain = data.getDomain();
+        ProcessedDomain ret = new ProcessedDomain();
+        processDomain(crawledDomain, ret, documentDecorator);
+        ret.documents = docs;
 
-                if (domain != null) {
-                    externalDomainLinks = anchorTagsSource.getAnchorTags(domain);
-                }
-            }
+        // Process Documents
 
-            if (data instanceof CrawledDomain crawledDomain) {
-                ret.domain = new EdgeDomain(crawledDomain.domain);
-                ret.ip = crawledDomain.ip;
+        try (var deduplicator = new LshDocumentDeduplicator()) {
+            while (dataStream.hasNext()) {
+                if (!(dataStream.next() instanceof CrawledDocument doc))
+                    continue;
+                if (doc.url == null)
+                    continue;
+                if (!processedUrls.add(doc.url))
+                    continue;
 
-                cookies = crawledDomain.hasCookies();
-                ip = crawledDomain.ip;
-
-                if (crawledDomain.redirectDomain != null) {
-                    ret.redirect = new EdgeDomain(crawledDomain.redirectDomain);
-                }
-                ret.documents = docs;
-                ret.state = getState(crawledDomain.crawlerStatus);
-            }
-            else if (data instanceof CrawledDocument doc) {
                 try {
-                    if (doc.url == null || !processedUrls.add(doc.url))
-                        continue;
-
-                    if (Boolean.TRUE.equals(doc.hasCookies)) {
-                        cookies = true;
-                    }
-
-                    // This case should never be reachable, as we should have initiated
-                    // the externalDomainLinks variable above if we made it past the
-                    // doc.url == null check; but we'll leave it here just in case
-                    // to make debugging easier if we break this.
-                    assert externalDomainLinks != null : "externalDomainLinks has not been initialized";
-
-                    docs.add(documentProcessor.process(doc, externalDomainLinks));
-                }
-                catch (Exception ex) {
+                    var processedDoc = documentProcessor.process(doc, ret.domain, externalDomainLinks, documentDecorator);
+                    deduplicator.markIfDuplicate(processedDoc);
+                    docs.add(processedDoc);
+                } catch (Exception ex) {
                     logger.warn("Failed to process " + doc.url, ex);
                 }
             }
@@ -121,57 +207,50 @@ public class DomainProcessor {
 
         // Add late keywords and features from domain-level information
 
-        List<String> terms = new ArrayList<>();
-
-        addIpInfo(terms, ip);
-
-        if (cookies) {
-            terms.add(HtmlFeature.COOKIES.getKeyword());
-        }
-
-        if (isAcademicDomain(ret.domain)) {
-            terms.add("special:academia");
-        }
-
-        for (var document : ret.documents) {
-            if (document.details == null)
-                continue;
-
-            if (cookies) {
-                document.details.features.add(HtmlFeature.COOKIES);
-            }
-
-            document.words.addAllSyntheticTerms(terms);
-
-            document.words.addAnchorTerms(
-                    anchorTextKeywords.getAnchorTextKeywords(externalDomainLinks, document.url)
-            );
-        }
-        documentDeduplicator.deduplicate(ret.documents);
         calculateStatistics(ret, externalDomainLinks);
 
         return ret;
     }
 
-    private void addIpInfo(List<String> terms, String ip) {
-        terms.add("ip:"+ip);
+    private void processDomain(CrawledDomain crawledDomain,
+                                          ProcessedDomain domain,
+                                          DocumentDecorator decorator)
+    {
+        domain.domain = new EdgeDomain(crawledDomain.domain);
+        domain.ip = crawledDomain.ip;
+
+        addIpInfo(decorator, crawledDomain.ip);
+
+        if (isAcademicDomain(domain.domain)) {
+            decorator.addTerm("special:academia");
+        }
+
+        if (crawledDomain.redirectDomain != null) {
+            domain.redirect = new EdgeDomain(crawledDomain.redirectDomain);
+        }
+        domain.state = getState(crawledDomain.crawlerStatus);
+    }
+
+
+    private void addIpInfo(DocumentDecorator decorator, String ip) {
+        decorator.addTerm("ip:"+ip);
 
         // Add IP location country as a term
         String country = geoIpDictionary.getCountry(ip);
         if (!country.isBlank()) { // use the ip:-prefix as there's no real confusion between e.g. ip:127.0.0.1 and ip:uk
-            terms.add("ip:"+country.toLowerCase());
+            decorator.addTerm("ip:"+country.toLowerCase());
         }
 
         // Add ASN as a term
         geoIpDictionary.getAsnInfo(ip).ifPresent(asnInfo -> {
-            terms.add("as:"+asnInfo.asn());
+            decorator.addTerm("as:"+asnInfo.asn());
 
             for (var orgPart : StringUtils.split(asnInfo.org(), '-')) {
-                terms.add("as:"+orgPart.toLowerCase());
+                decorator.addTerm("as:"+orgPart.toLowerCase());
             }
 
             if (isCloudy(asnInfo)) {
-                terms.add("special:cloud");
+                decorator.addTerm("special:cloud");
             }
         });
 
@@ -250,5 +329,6 @@ public class DomainProcessor {
             default -> DomainIndexingState.ERROR;
         };
     }
+
 
 }

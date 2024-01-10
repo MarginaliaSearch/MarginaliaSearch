@@ -24,7 +24,7 @@ public class ConverterWriter implements AutoCloseable {
 
     private final Duration switchInterval
             = Duration.of(10, ChronoUnit.MINUTES);
-    private final ArrayBlockingQueue<ProcessedDomain> domainData
+    private final ArrayBlockingQueue<ConverterBatchWritableIf> domainData
             = new ArrayBlockingQueue<>(1);
 
     private final Thread workerThread;
@@ -42,7 +42,7 @@ public class ConverterWriter implements AutoCloseable {
     }
 
     @SneakyThrows
-    public void accept(@Nullable ProcessedDomain domain) {
+    public void accept(@Nullable ConverterBatchWritableIf domain) {
         if (null == domain)
             return;
 
@@ -66,10 +66,11 @@ public class ConverterWriter implements AutoCloseable {
             if (data == null)
                 continue;
 
-            String id = data.domain.toString();
+            String id = data.id();
 
             if (workLog.isItemCommitted(id) || workLog.isItemInCurrentBatch(id)) {
                 logger.warn("Skipping already logged item {}", id);
+                data.close();
                 continue;
             }
 
