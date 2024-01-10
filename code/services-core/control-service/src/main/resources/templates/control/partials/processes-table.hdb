@@ -7,6 +7,7 @@
         <th>UUID</th>
         <th>Status</th>
         <th>Progress</th>
+        <th>Action</th>
     </tr>
     {{#each processes}}
     <tr class="{{#if isMissing}}table-danger{{/if}}">
@@ -14,6 +15,15 @@
         <td>{{{readableUUID uuidFull}}}</td>
         <td>{{status}}</td>
         <td style="{{progressStyle}}">{{#if progress}}{{progress}}%{{/if}}</td>
+        <td>
+            <form action="/nodes/{{node}}/process/{{processBase}}/stop" method="post">
+                <button
+                        type="submit"
+                        class="btn btn-danger btn-sm"
+                        onclick="return confirm('Confirm stopping process {{displayName}}')"
+                        {{#if isMissing}}disabled{{/if}}>Cancel</button>
+            </form>
+        </td>
     </tr>
     {{/each}}
     {{#unless processes}}

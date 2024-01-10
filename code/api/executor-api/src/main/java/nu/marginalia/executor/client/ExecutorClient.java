@@ -33,6 +33,11 @@ public class ExecutorClient extends AbstractDynamicClient {
         post(ctx, node, "/actor/"+actorName+"/stop", "").blockingSubscribe();
     }
 
+    public void stopProcess(Context ctx, int node, String id) {
+        post(ctx, node, "/process/" + id + "/stop", "").blockingSubscribe();
+    }
+
+
     public void triggerCrawl(Context ctx, int node, String fid) {
         post(ctx, node, "/process/crawl/" + fid, "").blockingSubscribe();
     }

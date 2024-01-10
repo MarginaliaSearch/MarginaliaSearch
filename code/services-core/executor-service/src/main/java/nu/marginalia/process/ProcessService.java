@@ -30,6 +30,18 @@ public class ProcessService {
 
     private final ConcurrentHashMap<ProcessId, Process> processes = new ConcurrentHashMap<>();
 
+
+    public static ProcessService.ProcessId translateExternalIdBase(String id) {
+        return switch (id) {
+            case "converter" -> ProcessService.ProcessId.CONVERTER;
+            case "crawler" -> ProcessService.ProcessId.CRAWLER;
+            case "loader" -> ProcessService.ProcessId.LOADER;
+            case "website-adjacencies-calculator" -> ProcessService.ProcessId.ADJACENCIES_CALCULATOR;
+            case "index-constructor" -> ProcessService.ProcessId.INDEX_CONSTRUCTOR;
+            default -> null;
+        };
+    }
+
     public enum ProcessId {
         CRAWLER("crawler-process/bin/crawler-process"),
         CONVERTER("converter-process/bin/converter-process"),

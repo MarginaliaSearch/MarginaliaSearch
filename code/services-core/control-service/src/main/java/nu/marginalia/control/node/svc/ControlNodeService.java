@@ -87,6 +87,9 @@ public class ControlNodeService {
         Spark.get("/public/nodes/:id/storage/conf", this::nodeStorageConfModel, storageConfRenderer::render);
         Spark.get("/public/nodes/:id/storage/details", this::nodeStorageDetailsModel, storageDetailsRenderer::render);
 
+        Spark.post("/public/nodes/:id/process/:processBase/stop", this::stopProcess,
+                redirectControl.renderRedirectAcknowledgement("Stopping", "../..")
+        );
         Spark.get("/public/nodes/:id/storage/new-specs", this::newSpecsModel, newSpecsFormRenderer::render);
         Spark.post("/public/nodes/:id/storage/new-specs", this::createNewSpecsAction,
                 redirectControl.renderRedirectAcknowledgement("Creating", ".")
@@ -150,6 +153,7 @@ public class ControlNodeService {
 
         return redirectToOverview(req);
     }
+
     private Object nodeListModel(Request request, Response response) throws SQLException {
         var configs = nodeConfigurationService.getAll();
 
@@ -163,6 +167,15 @@ public class ControlNodeService {
         int nodeId = Integer.parseInt(request.params("id"));
 
         executorClient.triggerCrawl(Context.fromRequest(request), nodeId, request.params("fid"));
+
+        return "";
+    }
+
+    private Object stopProcess(Request request, Response response) {
+        int nodeId = Integer.parseInt(request.params("id"));
+        String processBase = request.params("processBase");
+
+        executorClient.stopProcess(Context.fromRequest(request), nodeId, processBase);
 
         return "";
     }

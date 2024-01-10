@@ -226,7 +226,7 @@ public class MqPersistence {
     /** Return up to n unprocessed messages from the specified inbox that are in states 'NEW' or 'ACK'
      * without updating their ownership information
      */
-    public Collection<MqMessage> eavesdrop(String inboxName, int n) throws SQLException {
+    public SequencedCollection<MqMessage> eavesdrop(String inboxName, int n) throws SQLException {
         try (var conn = dataSource.getConnection();
              var queryStmt = conn.prepareStatement("""
                      SELECT

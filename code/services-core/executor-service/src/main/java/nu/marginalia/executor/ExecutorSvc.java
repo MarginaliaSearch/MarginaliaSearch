@@ -52,7 +52,10 @@ public class ExecutorSvc extends Service {
         Spark.post("/actor/:id/start", actorApi::startActor);
         Spark.post("/actor/:id/start/:state", actorApi::startActorFromState);
         Spark.post("/actor/:id/stop", actorApi::stopActor);
+
         Spark.get("/actor", this::getActorStates, gson::toJson);
+
+        Spark.post("/process/:id/stop", actorApi::stopProcess);
 
         Spark.post("/process/crawl/:fid", processingService::startCrawl);
         Spark.post("/process/recrawl", processingService::startRecrawl);

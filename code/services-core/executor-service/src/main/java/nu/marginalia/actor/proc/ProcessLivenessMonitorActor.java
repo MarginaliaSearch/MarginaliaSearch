@@ -196,6 +196,7 @@ public class ProcessLivenessMonitorActor extends RecordActorPrototype {
             throw new RuntimeException(ex);
         }
     }
+
     private record ProcessHeartbeat(
             String processId,
             String processBase,
@@ -208,14 +209,7 @@ public class ProcessLivenessMonitorActor extends RecordActorPrototype {
             return "RUNNING".equals(status);
         }
         public ProcessService.ProcessId getProcessId() {
-            return switch (processBase) {
-                case "converter" -> ProcessService.ProcessId.CONVERTER;
-                case "crawler" -> ProcessService.ProcessId.CRAWLER;
-                case "loader" -> ProcessService.ProcessId.LOADER;
-                case "website-adjacencies-calculator" -> ProcessService.ProcessId.ADJACENCIES_CALCULATOR;
-                case "index-constructor" -> ProcessService.ProcessId.INDEX_CONSTRUCTOR;
-                default -> null;
-            };
+            return ProcessService.translateExternalIdBase(processBase);
         }
     }
 
