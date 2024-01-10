@@ -60,8 +60,6 @@ public class SearchSiteInfoService {
         String domainName = request.params("site");
         String view = request.queryParamOrDefault("view", "info");
 
-        response.type("text/html");
-
         if (null == domainName || domainName.isBlank()) {
             return null;
         }
@@ -76,7 +74,7 @@ public class SearchSiteInfoService {
             default -> listInfo(ctx, domainName);
         };
 
-        return renderer.renderInto(response, model);
+        return renderer.render(model);
     }
 
     public Object handlePost(Request request, Response response) throws SQLException {
@@ -104,7 +102,7 @@ public class SearchSiteInfoService {
 
         var model = new ReportDomain(domainName, domainId, complaints, List.of(), true);
 
-        return renderer.renderInto(response, model);
+        return renderer.render(model);
     }
 
     private Object reportSite(Context ctx, String domainName) throws SQLException {
