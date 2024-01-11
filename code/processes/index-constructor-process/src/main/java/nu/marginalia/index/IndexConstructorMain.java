@@ -56,7 +56,7 @@ public class IndexConstructorMain {
             var main = Guice.createInjector(
                             new IndexConstructorModule(),
                             new ProcessConfigurationModule("index-constructor"),
-                            new DatabaseModule())
+                            new DatabaseModule(false))
                     .getInstance(IndexConstructorMain.class);
 
             instructions = main.fetchInstructions();

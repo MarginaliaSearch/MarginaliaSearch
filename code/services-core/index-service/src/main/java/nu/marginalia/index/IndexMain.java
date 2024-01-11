@@ -24,7 +24,7 @@ public class IndexMain extends MainClass {
 
         Injector injector = Guice.createInjector(
                 new IndexModule(),
-                new DatabaseModule(),
+                new DatabaseModule(false),
                 new ServiceConfigurationModule(SearchServiceDescriptors.descriptors, ServiceId.Index)
         );
 

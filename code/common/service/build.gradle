@@ -23,6 +23,7 @@ dependencies {
     implementation libs.bundles.prometheus
     implementation libs.bundles.slf4j
     implementation libs.bucket4j
+    implementation libs.bundles.flyway
 
     testImplementation libs.bundles.slf4j.test
     implementation libs.bundles.mariadb

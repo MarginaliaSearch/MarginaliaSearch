@@ -29,7 +29,7 @@ public class ScreenshotCaptureToolMain {
     private static final Logger logger = LoggerFactory.getLogger(ScreenshotCaptureToolMain.class);
 
     public static void main(String[] args) {
-        DatabaseModule databaseModule = new DatabaseModule();
+        DatabaseModule databaseModule = new DatabaseModule(false);
         var ds = databaseModule.provideConnection();
 
         System.setProperty(ChromeDriverService.CHROME_DRIVER_SILENT_OUTPUT_PROPERTY, "true");

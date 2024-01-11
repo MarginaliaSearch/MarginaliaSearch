@@ -186,7 +186,7 @@ public class WebsiteAdjacenciesCalculator {
 
 
     public static void main(String[] args) throws SQLException {
-        DatabaseModule dm = new DatabaseModule();
+        DatabaseModule dm = new DatabaseModule(false);
 
         var dataSource = dm.provideConnection();
         var qc = new QueryClient();

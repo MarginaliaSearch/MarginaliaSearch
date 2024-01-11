@@ -124,7 +124,7 @@ public class CrawlerMain {
             Injector injector = Guice.createInjector(
                     new CrawlerModule(),
                     new ProcessConfigurationModule("crawler"),
-                    new DatabaseModule()
+                    new DatabaseModule(false)
             );
             var crawler = injector.getInstance(CrawlerMain.class);
 

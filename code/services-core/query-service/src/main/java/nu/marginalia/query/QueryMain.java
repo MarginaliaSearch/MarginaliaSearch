@@ -23,7 +23,7 @@ public class QueryMain extends MainClass {
 
         Injector injector = Guice.createInjector(
                 new QueryModule(),
-                new DatabaseModule(),
+                new DatabaseModule(false),
                 new ServiceConfigurationModule(SearchServiceDescriptors.descriptors, ServiceId.Query)
         );
 

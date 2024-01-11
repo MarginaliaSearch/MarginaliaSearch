@@ -27,7 +27,7 @@ public class DatingMain extends MainClass {
         Injector injector = Guice.createInjector(
                 new DatingModule(),
                 new ServiceConfigurationModule(SearchServiceDescriptors.descriptors, ServiceId.Dating),
-                new DatabaseModule()
+                new DatabaseModule(false)
         );
 
         injector.getInstance(DatingMain.class);

@@ -20,7 +20,7 @@ public class ApiMain extends MainClass {
         init(ServiceId.Api, args);
 
         Injector injector = Guice.createInjector(
-                new DatabaseModule(),
+                new DatabaseModule(false),
                 new ServiceConfigurationModule(SearchServiceDescriptors.descriptors, ServiceId.Api));
         injector.getInstance(ApiMain.class);
         injector.getInstance(Initialization.class).setReady();

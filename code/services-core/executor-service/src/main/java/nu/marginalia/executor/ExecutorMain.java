@@ -24,7 +24,7 @@ public class ExecutorMain extends MainClass  {
 
         Injector injector = Guice.createInjector(
                 new ExecutorModule(),
-                new DatabaseModule(),
+                new DatabaseModule(false),
                 new ServiceConfigurationModule(SearchServiceDescriptors.descriptors, ServiceId.Executor)
         );
         injector.getInstance(NodeStatusWatcher.class);

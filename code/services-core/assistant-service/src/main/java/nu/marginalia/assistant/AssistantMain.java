@@ -24,7 +24,7 @@ public class AssistantMain extends MainClass {
         Injector injector = Guice.createInjector(
                 new AssistantModule(),
                 new ServiceConfigurationModule(SearchServiceDescriptors.descriptors, ServiceId.Assistant),
-                new DatabaseModule()
+                new DatabaseModule(false)
         );
 
         injector.getInstance(AssistantMain.class);

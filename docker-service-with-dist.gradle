@@ -14,6 +14,8 @@ tasks.register('dockerFile') {
 #
 FROM ${dockerImage}
 
+RUN apt-get update && apt-get install -y curl
+
 ADD ${application.applicationName}.tar /
 ADD crawler-process.tar /dist
 ADD loader-process.tar /dist

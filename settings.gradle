@@ -184,6 +184,9 @@ dependencyResolutionManagement {
             library('zstd','com.github.luben','zstd-jni').version('1.5.2-2')
             library('lz4','org.lz4','lz4-java').version('1.8.0')
 
+            library('flyway.core','org.flywaydb','flyway-core').version('10.4.1')
+            library('flyway.mysql','org.flywaydb','flyway-mysql').version('10.4.1')
+
             library('jsoup','org.jsoup','jsoup').version('1.15.3')
             library('snakeyaml','org.yaml','snakeyaml').version('1.33') // Known CVE, but this library only parses internal config files so it's fine
 
@@ -214,6 +217,7 @@ dependencyResolutionManagement {
             bundle('httpcomponents', ['httpcomponents.core', 'httpcomponents.client'])
             bundle('parquet', ['parquet-column', 'parquet-hadoop'])
             bundle('junit', ['junit.jupiter', 'junit.jupiter.engine'])
+            bundle('flyway', ['flyway.core', 'flyway.mysql'])
         }
 
 

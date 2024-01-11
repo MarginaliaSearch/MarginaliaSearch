@@ -28,7 +28,7 @@ public class SearchMain extends MainClass {
         Injector injector = Guice.createInjector(
                 new SearchModule(),
                 new ServiceConfigurationModule(SearchServiceDescriptors.descriptors, ServiceId.Search),
-                new DatabaseModule()
+                new DatabaseModule(false)
         );
 
         injector.getInstance(SearchMain.class);

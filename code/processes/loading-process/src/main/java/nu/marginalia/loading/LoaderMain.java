@@ -59,7 +59,7 @@ public class LoaderMain {
             Injector injector = Guice.createInjector(
                     new ProcessConfigurationModule("loader"),
                     new LoaderModule(),
-                    new DatabaseModule()
+                    new DatabaseModule(false)
             );
 
             var instance = injector.getInstance(LoaderMain.class);

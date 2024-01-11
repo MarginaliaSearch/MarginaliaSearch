@@ -20,7 +20,7 @@ public class ControlMain extends MainClass {
         init(ServiceId.Control, args);
 
         Injector injector = Guice.createInjector(
-                new DatabaseModule(),
+                new DatabaseModule(true),
                 new ControlProcessModule(),
                 new ServiceConfigurationModule(SearchServiceDescriptors.descriptors, ServiceId.Control));
 

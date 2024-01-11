@@ -6,13 +6,12 @@ bootstrap this directory structure.
 
 ## Requirements
 
-While the system is designed to run bare metal in production,
-for local development, you're strongly encouraged to use docker
-or podman. These are a bit of a pain to install, but if you follow
-[this guide](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository) you're on the right track.
+**Docker** - It is a bit of a pain to install, but if you follow
+[this guide](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository) you're on the right track for ubuntu-like systems.
 
-The system requires JDK21+, and uses Java 21 preview features. Gradle complains
-a bit about this since it's not currently supported, but it works anyway.
+**JDK 21** - The code uses Java 21 preview features. 
+The civilized way of installing this is to use [SDKMAN](https://sdkman.io/);
+graalce is a good distribution choice but it doesn't matter too much.
 
 ## Set up
 

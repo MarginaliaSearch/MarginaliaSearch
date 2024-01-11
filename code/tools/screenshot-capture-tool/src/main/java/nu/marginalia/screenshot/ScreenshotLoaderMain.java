@@ -15,7 +15,7 @@ public class ScreenshotLoaderMain {
     public static void main(String... args) throws IOException {
 
         org.mariadb.jdbc.Driver driver = new Driver();
-        var ds = new DatabaseModule().provideConnection();
+        var ds = new DatabaseModule(false).provideConnection();
 
         try (var tis = new TarArchiveInputStream(new GZIPInputStream(new FileInputStream(args[0])));
              var conn = ds.getConnection();

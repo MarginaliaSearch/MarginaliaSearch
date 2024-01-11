@@ -14,6 +14,7 @@ tasks.register('dockerFile') {
 #
 FROM ${dockerImage}
 
+RUN apt-get update && apt-get install -y curl
 ADD ${application.applicationName}.tar /
 RUN mkdir /wmsa
 

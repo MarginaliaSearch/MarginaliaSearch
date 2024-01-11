@@ -37,7 +37,7 @@ public class ExperimentRunnerMain {
         }
 
         Injector injector = Guice.createInjector(
-                new DatabaseModule(),
+                new DatabaseModule(false),
                 new ConverterModule()
         );
 

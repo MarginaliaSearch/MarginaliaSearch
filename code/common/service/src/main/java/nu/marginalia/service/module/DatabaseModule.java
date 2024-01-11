@@ -7,6 +7,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import nu.marginalia.service.ServiceHomeNotConfiguredException;
+import org.flywaydb.core.Flyway;
 import org.mariadb.jdbc.Driver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,10 +29,25 @@ public class DatabaseModule extends AbstractModule {
 
     private final Properties dbProperties;
 
-    public DatabaseModule() {
+    public DatabaseModule(boolean migrate) {
         new Driver();
 
         dbProperties = loadDbProperties();
+
+        if (migrate) {
+            if (Boolean.getBoolean("disableFlyway")) {
+                logger.info("Flyway disabled");
+            }
+            else {
+                var config = Flyway.configure()
+                        .dataSource(getMariaDB())
+                        .locations("classpath:db/migration")
+                        .load();
+
+                new Flyway(config.getConfiguration()).migrate();
+            }
+        }
+
     }
 
     private Properties loadDbProperties() {

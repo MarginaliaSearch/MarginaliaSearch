@@ -54,7 +54,7 @@ public class ConverterMain {
             Injector injector = Guice.createInjector(
                     new ConverterModule(),
                     new ProcessConfigurationModule("converter"),
-                    new DatabaseModule()
+                    new DatabaseModule(false)
             );
 
             var converter = injector.getInstance(ConverterMain.class);
