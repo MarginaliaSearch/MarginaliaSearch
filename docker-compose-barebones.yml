@@ -1,3 +1,14 @@
+# This is the barebones docker-compose file for the Marginalia Search Engine.
+#
+# It starts a stripped-down version of the search engine, with only the essential
+# services running, including the database, the query service, the control service,
+# and a single index and executor node.
+#
+# It is a good starting point for setting up a white-label search engine that does not
+# have Marginalia's GUI.  The Query Service presents a simple search box, that also talks
+# JSON, so you can use it as a backend for your own search interface.
+
+
 x-svc: &service
   env_file:
     - "run/env/service.env"

@@ -1,3 +1,11 @@
+#  This docker-compose file is for the screenshot-capture-tool service.
+#
+#  It is a standalone daemon that captures screenshots of web pages, based
+#  on the domain database of Marginalia Search.
+#
+#  It does not start the search engine itself.
+#
+
 x-svc: &service
   env_file:
     - "run/env/service.env"

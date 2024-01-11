@@ -56,6 +56,17 @@ Add `-d` to run in the background.
 $ docker-compose up
 ```
 
+There are two docker-compose files available, `docker-compose.yml` and `docker-compose-barebones.yml`;
+the latter is a stripped down version that only runs the bare minimum required to run the system, for e.g.
+running a whitelabel version of the system.  The former is the full system with all the frills of
+Marginalia Search, and is the one used by default.
+
+To start the barebones version, run:
+
+```shell
+$ docker-compose -f docker-compose-barebones.yml up
+```
+
 ### 5. You should now be able to access the system.
 
 By default, the docker-compose file publishes the following ports:

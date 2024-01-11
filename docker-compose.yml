@@ -1,3 +1,10 @@
+# This is the full docker-compose.yml file for the Marginalia Search Engine.
+#
+# It starts all the services, including the GUI, the database, the query service,
+# two nodes for demo purposes, as well as a bunch of peripheral services that are
+# application specific.
+#
+
 x-svc: &service
   env_file:
     - "run/env/service.env"
