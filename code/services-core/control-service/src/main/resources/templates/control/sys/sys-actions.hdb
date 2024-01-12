@@ -6,14 +6,24 @@
 {{> control/partials/nav}}
 
 <div class="container">
-    <h1 class="my-3">System Actions</h1>
+    <h1 class="my-3">System Actions [WORK IN PROGRESS]</h1>
 
     <div class="my-3 border p-3 bg-light">
+        <p>
         These are actions that perform system-wide operations,
         on each node in the system.  Nodes are included if they are
         configured to be part of the <em>precession</em> in the Node Configuration.
         For a single-node system, most of these actions may be triggered from the
         single node's actions tab.
+        </p>
+        <p>
+        <em>
+            More actions will be added here in the future, including node-by-node sequences of
+            crawling and processing.  These are still a bit broken, and need some work.  For now,
+            you can trigger these actions from each individual Node.
+        </em>
+        </p>
+    </p>
     </div>
 
     <div class="accordion mt-3" id="accordionActions">
@@ -43,6 +53,7 @@
             </div>
         </div>
 
+        <!--
         <div class="accordion-item">
             <h2 class="accordion-header">
                 <button class="accordion-button collapsed"
@@ -120,7 +131,7 @@
                         Recrawl Data</button>
                 </form>
             </div>
-        </div>
+        </div> -->
     </div>
 
     <div class="my-3">
@@ -131,6 +142,7 @@
 {{#if precessionNodes}} These nodes are configured to be part of the precession,
         and will be included in the above actions unless otherwise noted. {{/if}}
         </div>
+    </div>
 
         {{#if precessionNodes}}
             <table class="table">
