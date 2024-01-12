@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorStep;
+import nu.marginalia.query.client.QueryClient;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.storage.model.FileStorageId;
@@ -32,6 +33,7 @@ public class ExportDataActor extends RecordActorPrototype {
     private final FileStorageService storageService;
     private final HikariDataSource dataSource;
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final QueryClient queryClient;
 
     public record Export() implements ActorStep {}
     public record ExportBlacklist(FileStorageId fid) implements ActorStep {}
@@ -114,19 +116,22 @@ public class ExportDataActor extends RecordActorPrototype {
                 var tmpFile = Files.createTempFile(storage.asPath(), "export", ".csv.gz",
                         PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-r--r--")));
 
-                try (var bw = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(tmpFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING))));
-                     var conn = dataSource.getConnection();
-                     var stmt = conn.prepareStatement("SELECT SOURCE_DOMAIN_ID, DEST_DOMAIN_ID FROM EC_DOMAIN_LINK");
-                )
+                var allLinks = queryClient.getAllDomainLinks();
+
+                try (var bw = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(tmpFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)))))
                 {
-                    stmt.setFetchSize(1000);
-                    var rs = stmt.executeQuery();
-                    while (rs.next()) {
-                        bw.write(rs.getString("SOURCE_DOMAIN_ID"));
-                        bw.write(",");
-                        bw.write(rs.getString("DEST_DOMAIN_ID"));
-                        bw.write("\n");
+                    var iter = allLinks.iterator();
+                    while (iter.advance()) {
+                        bw.write('"');
+                        bw.write(Integer.toString(iter.source()));
+                        bw.write('"');
+                        bw.write(',');
+                        bw.write('"');
+                        bw.write(Integer.toString(iter.dest()));
+                        bw.write('"');
+                        bw.write('\n');
                     }
+
                     Files.move(tmpFile, storage.asPath().resolve(linkGraphFilename), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
                 }
                 catch (Exception ex) {
@@ -151,11 +156,12 @@ public class ExportDataActor extends RecordActorPrototype {
     @Inject
     public ExportDataActor(Gson gson,
                            FileStorageService storageService,
-                           HikariDataSource dataSource)
+                           HikariDataSource dataSource, QueryClient queryClient)
     {
         super(gson);
         this.storageService = storageService;
         this.dataSource = dataSource;
+        this.queryClient = queryClient;
     }
 
 }

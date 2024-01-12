@@ -1,6 +1,9 @@
 <h1 class="my-3">Export Data</h1>
 
-This will export database data: Domains, blacklist and domain links.
+<div class="my-3 p-3 border bg-light">
+    This will export database data: Domains, blacklist and domain links.  The exported data will be saved as
+    a new <a href="/nodes/{{node.id}}/storage/exports">exports storage object</a>.
+</div>
 
 <form method="post" action="actions/export-data" onsubmit="return confirm('Confirm export')">
     <div class="my-3 py-3">
