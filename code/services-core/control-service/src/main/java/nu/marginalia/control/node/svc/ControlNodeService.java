@@ -300,6 +300,7 @@ public class ControlNodeService {
                     "on".equalsIgnoreCase(request.queryParams("acceptQueries")),
                     "on".equalsIgnoreCase(request.queryParams("autoClean")),
                     "on".equalsIgnoreCase(request.queryParams("includeInPrecession")),
+                    "on".equalsIgnoreCase(request.queryParams("keepWarcs")),
                     "on".equalsIgnoreCase(request.queryParams("disabled"))
             );
 

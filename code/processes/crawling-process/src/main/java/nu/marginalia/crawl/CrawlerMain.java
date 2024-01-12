@@ -17,6 +17,8 @@ import nu.marginalia.crawl.retreival.fetcher.warc.WarcRecorder;
 import nu.marginalia.crawl.spec.CrawlSpecProvider;
 import nu.marginalia.crawl.spec.DbCrawlSpecProvider;
 import nu.marginalia.crawl.spec.ParquetCrawlSpecProvider;
+import nu.marginalia.crawl.warc.WarcArchiverFactory;
+import nu.marginalia.crawl.warc.WarcArchiverIf;
 import nu.marginalia.crawling.io.CrawledDomainReader;
 import nu.marginalia.crawling.io.CrawlerOutputFile;
 import nu.marginalia.crawling.parquet.CrawledDocumentParquetRecordFileWriter;
@@ -59,6 +61,7 @@ public class CrawlerMain {
     private final FileStorageService fileStorageService;
     private final DbCrawlSpecProvider dbCrawlSpecProvider;
     private final AnchorTagsSourceFactory anchorTagsSourceFactory;
+    private final WarcArchiverFactory warcArchiverFactory;
     private final Gson gson;
     private final int node;
     private final SimpleBlockingThreadPool pool;
@@ -79,6 +82,7 @@ public class CrawlerMain {
                        ProcessConfiguration processConfiguration,
                        DbCrawlSpecProvider dbCrawlSpecProvider,
                        AnchorTagsSourceFactory anchorTagsSourceFactory,
+                       WarcArchiverFactory warcArchiverFactory,
                        Gson gson) {
         this.userAgent = userAgent;
         this.heartbeat = heartbeat;
@@ -87,6 +91,7 @@ public class CrawlerMain {
         this.fileStorageService = fileStorageService;
         this.dbCrawlSpecProvider = dbCrawlSpecProvider;
         this.anchorTagsSourceFactory = anchorTagsSourceFactory;
+        this.warcArchiverFactory = warcArchiverFactory;
         this.gson = gson;
         this.node = processConfiguration.node();
 
@@ -150,6 +155,7 @@ public class CrawlerMain {
         heartbeat.start();
 
         try (WorkLog workLog = new WorkLog(outputDir.resolve("crawler.log"));
+             WarcArchiverIf warcArchiver = warcArchiverFactory.get(outputDir);
              AnchorTagsSource anchorTagsSource = anchorTagsSourceFactory.create(specProvider.getDomains())
         ) {
 
@@ -165,7 +171,7 @@ public class CrawlerMain {
                         .takeWhile((e) -> abortMonitor.isAlive())
                         .filter(e -> !workLog.isJobFinished(e.domain))
                         .filter(e -> processingIds.put(e.domain, "") == null)
-                        .map(e -> new CrawlTask(e, anchorTagsSource, outputDir, workLog))
+                        .map(e -> new CrawlTask(e, anchorTagsSource, outputDir, warcArchiver, workLog))
                         .forEach(pool::submitQuietly);
             }
 
@@ -202,15 +208,18 @@ public class CrawlerMain {
 
         private final AnchorTagsSource anchorTagsSource;
         private final Path outputDir;
+        private final WarcArchiverIf warcArchiver;
         private final WorkLog workLog;
 
         CrawlTask(CrawlSpecRecord specification,
                   AnchorTagsSource anchorTagsSource,
                   Path outputDir,
+                  WarcArchiverIf warcArchiver,
                   WorkLog workLog) {
             this.specification = specification;
             this.anchorTagsSource = anchorTagsSource;
             this.outputDir = outputDir;
+            this.warcArchiver = warcArchiver;
             this.workLog = workLog;
 
             this.domain = specification.domain;
@@ -252,6 +261,8 @@ public class CrawlerMain {
 
                 CrawledDocumentParquetRecordFileWriter
                         .convertWarc(domain, userAgent, newWarcFile, parquetFile);
+
+                warcArchiver.consumeWarc(newWarcFile, domain);
 
                 workLog.setJobToFinished(domain, parquetFile.toString(), size);
                 heartbeat.setProgress(tasksDone.incrementAndGet() / (double) totalTasks);

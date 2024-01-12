@@ -50,8 +50,8 @@ public class NodeConfigurationServiceTest {
 
     @Test
     public void test() throws SQLException {
-        var a = nodeConfigurationService.create(1, "Test", false);
-        var b = nodeConfigurationService.create(2, "Foo", true);
+        var a = nodeConfigurationService.create(1, "Test", false, false);
+        var b = nodeConfigurationService.create(2, "Foo", true, false);
 
         assertEquals(1, a.node());
         assertEquals("Test", a.description());

@@ -17,16 +17,17 @@ public class NodeConfigurationService {
         this.dataSource = dataSource;
     }
 
-    public NodeConfiguration create(int id, String description, boolean acceptQueries) throws SQLException {
+    public NodeConfiguration create(int id, String description, boolean acceptQueries, boolean keepWarcs) throws SQLException {
         try (var conn = dataSource.getConnection();
              var is = conn.prepareStatement("""
-                     INSERT IGNORE INTO NODE_CONFIGURATION(ID, DESCRIPTION, ACCEPT_QUERIES) VALUES(?, ?, ?)
+                     INSERT IGNORE INTO NODE_CONFIGURATION(ID, DESCRIPTION, ACCEPT_QUERIES) VALUES(?, ?, ?, ?)
                      """)
         )
         {
             is.setInt(1, id);
             is.setString(2, description);
             is.setBoolean(3, acceptQueries);
+            is.setBoolean(4, keepWarcs);
 
             if (is.executeUpdate() <= 0) {
                 throw new IllegalStateException("Failed to insert configuration");
@@ -39,7 +40,7 @@ public class NodeConfigurationService {
     public List<NodeConfiguration> getAll() throws SQLException {
         try (var conn = dataSource.getConnection();
              var qs = conn.prepareStatement("""
-                     SELECT ID, DESCRIPTION, ACCEPT_QUERIES, AUTO_CLEAN, PRECESSION, DISABLED
+                     SELECT ID, DESCRIPTION, ACCEPT_QUERIES, AUTO_CLEAN, PRECESSION, KEEP_WARCS, DISABLED
                      FROM NODE_CONFIGURATION
                      """)) {
             var rs = qs.executeQuery();
@@ -53,6 +54,7 @@ public class NodeConfigurationService {
                         rs.getBoolean("ACCEPT_QUERIES"),
                         rs.getBoolean("AUTO_CLEAN"),
                         rs.getBoolean("PRECESSION"),
+                        rs.getBoolean("KEEP_WARCS"),
                         rs.getBoolean("DISABLED")
                 ));
             }
@@ -63,7 +65,7 @@ public class NodeConfigurationService {
     public NodeConfiguration get(int nodeId) throws SQLException {
         try (var conn = dataSource.getConnection();
              var qs = conn.prepareStatement("""
-                     SELECT ID, DESCRIPTION, ACCEPT_QUERIES, AUTO_CLEAN, PRECESSION, DISABLED
+                     SELECT ID, DESCRIPTION, ACCEPT_QUERIES, AUTO_CLEAN, PRECESSION, KEEP_WARCS, DISABLED
                      FROM NODE_CONFIGURATION
                      WHERE ID=?
                      """)) {
@@ -76,6 +78,7 @@ public class NodeConfigurationService {
                         rs.getBoolean("ACCEPT_QUERIES"),
                         rs.getBoolean("AUTO_CLEAN"),
                         rs.getBoolean("PRECESSION"),
+                        rs.getBoolean("KEEP_WARCS"),
                         rs.getBoolean("DISABLED")
                 );
             }
@@ -88,7 +91,7 @@ public class NodeConfigurationService {
         try (var conn = dataSource.getConnection();
              var us = conn.prepareStatement("""
                      UPDATE NODE_CONFIGURATION
-                     SET DESCRIPTION=?, ACCEPT_QUERIES=?,  AUTO_CLEAN=?, PRECESSION=?, DISABLED=?
+                     SET DESCRIPTION=?, ACCEPT_QUERIES=?,  AUTO_CLEAN=?, PRECESSION=?, KEEP_WARCS=?, DISABLED=?
                      WHERE ID=?
                      """))
         {
@@ -96,8 +99,9 @@ public class NodeConfigurationService {
             us.setBoolean(2, config.acceptQueries());
             us.setBoolean(3, config.autoClean());
             us.setBoolean(4, config.includeInPrecession());
-            us.setBoolean(5, config.disabled());
-            us.setInt(6, config.node());
+            us.setBoolean(5, config.keepWarcs());
+            us.setBoolean(6, config.disabled());
+            us.setInt(7, config.node());
 
             if (us.executeUpdate() <= 0)
                 throw new IllegalStateException("Failed to update configuration");

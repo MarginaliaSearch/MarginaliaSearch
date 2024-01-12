@@ -44,6 +44,17 @@
                 <div class="form-text">If true, this node will be included in the crawling precession.</div>
             </div>
 
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" name="keepWarcs" {{#if config.keepWarcs}}checked{{/if}}>
+                <label class="form-check-label" for="includeInPrecession">Keep WARC files during crawling</label>
+
+                <div class="form-text">This toggle makes the crawler retain copies of the WebARChive data that is
+                                       normally an intermediate product of the crawling.  This is useful for debugging
+                                       and testing, but the WARC files are large and take up a lot of space.  Unless
+                                       there is a need for exporting these files, it is recommended to leave this off.
+                </div>
+            </div>
+
             <div class="form-check form-switch mb-3">
                 <input class="form-check-input" type="checkbox" role="switch" name="disabled" {{#if config.disabled}}checked{{/if}}>
                 <label class="form-check-label" for="disabled">Disabled</label>

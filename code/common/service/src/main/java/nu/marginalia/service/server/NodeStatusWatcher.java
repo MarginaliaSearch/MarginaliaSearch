@@ -57,7 +57,7 @@ public class NodeStatusWatcher {
 
     private void setupNode() {
         try {
-            configurationService.create(nodeId, "Node " + nodeId, nodeId == 1);
+            configurationService.create(nodeId, "Node " + nodeId, nodeId == 1, false);
             fileStorageService.createStorageBase("Index Data", Path.of("/idx"), nodeId, FileStorageBaseType.CURRENT);
             fileStorageService.createStorageBase("Index Backups", Path.of("/backup"), nodeId, FileStorageBaseType.BACKUP);
             fileStorageService.createStorageBase("Crawl Data", Path.of("/storage"), nodeId, FileStorageBaseType.STORAGE);
