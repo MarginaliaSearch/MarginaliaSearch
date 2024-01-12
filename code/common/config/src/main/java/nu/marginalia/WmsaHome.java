@@ -23,6 +23,10 @@ public class WmsaHome {
     }
 
 
+    public static Path getUploadDir() {
+        return Path.of("/uploads");
+    }
+
     public static Path getHomePath() {
         var retStr = Optional.ofNullable(System.getenv("WMSA_HOME")).orElseGet(WmsaHome::findDefaultHomePath);
 

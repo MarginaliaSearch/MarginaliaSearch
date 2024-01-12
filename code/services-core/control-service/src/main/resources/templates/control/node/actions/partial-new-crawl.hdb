@@ -1,0 +1,53 @@
+<h1 class="my-3">New Crawl</h1>
+
+{{#unless allCrawlSpecs}}
+    No crawling specifications have been created.  You must create a crawl spec before you can crawl.
+    <a href="/nodes/{{node.id}}/storage/new-specs">create a crawl spec</a>.
+{{/unless}}
+
+{{#if allCrawlSpecs}}
+    <div class="my-3 p-3 border bg-light">
+    This will perform a new crawl on node {{node.id}} based on the crawl spec you select below.
+    Additional specifications can be created <a href="/nodes/{{node.id}}/storage/new-specs">with this form</a>.
+    </div>
+    <div class="my-3 p-3 border text-danger">
+        <p><strong>IMPORTANT!</strong>  Be sure you've read and understood the
+            <a href="https://github.com/MarginaliaSearch/MarginaliaSearch/blob/master/doc/crawling.md">crawling documentation</a>
+        before you begin a crawl.  You will be accessing real servers from your connection, and you may end up on IP greylists
+        that temporarily block your access to those servers for up to a few weeks; on rare occasions permanently.  The crawler
+        is generally polite and well-behaved, but it is still a crawler, and it will be accessing a lot of pages.
+    </p>
+    <p>
+        You run the risk of getting in trouble with your ISP, the law, your partner, your landlord, and/or your parents;
+        depending on terms of service, jurisdiction, marital status, living conditions and age.
+    <p>
+    </p>
+        This action is performed at your own risk.
+    </p>
+    </div>
+
+    <form method="post" action="actions/new-crawl">
+    <table class="table">
+        <tr>
+            <th>Use</th>
+            <th>Path</th>
+            <th>Description</th>
+            <th>Details</th>
+        </tr>
+
+        {{#each allCrawlSpecs}}
+            <tr>
+                <td><input {{#if active}}checked{{/if}} class="form-check-input" type="checkbox" name="source" id="{{id}}" value="{{id}}"></td>
+                <td><label for="{{id}}" class="form-check-label" >{{path}}</label></td>
+                <td>{{description}}</td>
+                <td><a href="/nodes/{{node}}/storage/details?fid={{id}}">[Details]</a></td>
+            </tr>
+        {{/each}}
+    </table>
+        <button
+                class="btn btn-primary me-md-2"
+                onclick="return confirm('Confirm crawling on node {{node.id}}');"
+                type="submit">
+            Trigger New  Crawl</button>
+    </form>
+{{/if}}

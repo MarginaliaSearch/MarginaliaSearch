@@ -1,0 +1,7 @@
+<h1 class="my-3">Repartition</h1>
+
+<p>This will recalculate the rankings and search sets for the index</p>
+
+<form method="post" action="actions/repartition-index" onsubmit="return confirm('Confirm repartition')">
+    <button type="submit" class="btn btn-primary">Trigger Repartitioning</button>
+</form>

@@ -8,6 +8,7 @@ import nu.marginalia.executor.model.load.LoadParameters;
 import nu.marginalia.executor.model.transfer.TransferItem;
 import nu.marginalia.executor.model.transfer.TransferSpec;
 import nu.marginalia.executor.storage.FileStorageContent;
+import nu.marginalia.executor.upload.UploadDirContents;
 import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.service.descriptor.ServiceDescriptors;
 import nu.marginalia.service.id.ServiceId;
@@ -38,7 +39,7 @@ public class ExecutorClient extends AbstractDynamicClient {
     }
 
 
-    public void triggerCrawl(Context ctx, int node, String fid) {
+    public void triggerCrawl(Context ctx, int node, FileStorageId fid) {
         post(ctx, node, "/process/crawl/" + fid, "").blockingSubscribe();
     }
 
@@ -110,6 +111,10 @@ public class ExecutorClient extends AbstractDynamicClient {
 
     public ActorRunStates getActorStates(Context context, int node) {
         return get(context, node, "/actor", ActorRunStates.class).blockingFirst();
+    }
+
+    public UploadDirContents listSideloadDir(Context context, int node) {
+        return get(context, node, "/sideload/", UploadDirContents.class).blockingFirst();
     }
 
     public FileStorageContent listFileStorage(Context context, int node, FileStorageId fileId) {

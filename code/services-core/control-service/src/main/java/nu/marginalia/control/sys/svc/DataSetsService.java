@@ -3,8 +3,8 @@ package nu.marginalia.control.sys.svc;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.db.DomainTypes;
-import nu.marginalia.renderer.RendererFactory;
 import spark.Request;
 import spark.Response;
 import spark.Spark;
@@ -17,12 +17,12 @@ import java.util.Map;
 public class DataSetsService {
 
     private final HikariDataSource dataSource;
-    private final RendererFactory rendererFactory;
+    private final ControlRendererFactory rendererFactory;
     private final DomainTypes domainTypes;
 
     @Inject
     public DataSetsService(HikariDataSource dataSource,
-                           RendererFactory rendererFactory,
+                           ControlRendererFactory rendererFactory,
                            DomainTypes domainTypes) {
         this.dataSource = dataSource;
         this.rendererFactory = rendererFactory;

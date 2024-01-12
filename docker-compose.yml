@@ -29,6 +29,7 @@ x-p1: &partition-1
     - work-1:/work
     - backup-1:/backup
     - samples-1:/storage
+    - uploads-1:/uploads
   networks:
     - wmsa
   depends_on:
@@ -47,6 +48,7 @@ x-p2: &partition-2
     - work-2:/work
     - backup-2:/backup
     - samples-2:/storage
+    - uploads-2:/uploads
   networks:
     - wmsa
   depends_on:
@@ -275,6 +277,12 @@ volumes:
       type: none
       o: bind
       device: run/node-1/backup
+  uploads-1:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: run/node-1/uploads
   samples-2:
     driver: local
     driver_opts:
@@ -299,3 +307,9 @@ volumes:
       type: none
       o: bind
       device: run/node-2/backup
+  uploads-2:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: run/node-2/uploads

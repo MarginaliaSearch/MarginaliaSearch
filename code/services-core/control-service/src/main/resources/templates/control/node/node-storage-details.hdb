@@ -14,24 +14,7 @@
         </ol>
     </nav>
 
-    <nav class="nav nav-tabs">
-        <li class="nav-item">
-            <a class="nav-link" href="/nodes/{{node.id}}/">Overview</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="/nodes/{{node.id}}/actions">Actions</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="/nodes/{{node.id}}/actors">Actors</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="/nodes/{{node.id}}/storage/">Storage</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="/nodes/{{node.id}}/configuration">Configuration</a>
-        </li>
-
-    </nav>
+    {{> control/node/partial-node-nav }}
 
     <div class="container">
         {{>control/partials/storage-types}}
@@ -59,14 +42,6 @@
                 <th>Trigger</th>
             </tr>
             {{#with storage.self}}
-                {{#if isCrawlable}}
-                    <form method="post" action="/nodes/{{node.id}}/storage/crawl/{{storage.id}}" onsubmit="return confirm('Confirm crawling of {{storage.path}}')">
-                        <tr>
-                            <td>Perform a full crawl of this data into a new file storage area</td>
-                            <td><button class="btn btn-primary" type="submit">Crawl</button></td>
-                        </tr>
-                    </form>
-                {{/if}}
                 {{#if isStatusNew}}
                     <form method="post" action="/nodes/{{node.id}}/storage/reset-state/{{storage.id}}" onsubmit="return confirm('Confirm removal of \'NEW\' state for {{storage.path}}')">
                         <tr>
@@ -75,19 +50,12 @@
                         </tr>
                     </form>
                 {{/if}}
+
                 {{#if isAtagsExportable}}
                     <form method="post" action="/nodes/{{node.id}}/storage/{{storage.id}}/export-atags" onsubmit="return confirm('Confirm export of anchor tags from {{storage.path}}')">
                         <tr>
                             <td>Export anchor tags from this crawl data</td>
                             <td><button class="btn btn-secondary" type="submit">Export</button></td>
-                        </tr>
-                    </form>
-                {{/if}}
-                {{#if isRestorable}}
-                    <form method="post" action="/nodes/{{node.id}}/storage/backup-restore/{{storage.id}}" onsubmit="return confirm('Confirm restoring backup {{storage.path}}')">
-                        <tr>
-                            <td>Restore into live index</td>
-                            <td><button class="btn btn-primary"  type="submit">Restore</button></td>
                         </tr>
                     </form>
                 {{/if}}

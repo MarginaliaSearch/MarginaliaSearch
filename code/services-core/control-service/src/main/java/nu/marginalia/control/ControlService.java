@@ -10,7 +10,6 @@ import nu.marginalia.control.node.svc.ControlFileStorageService;
 import nu.marginalia.control.node.svc.ControlNodeService;
 import nu.marginalia.control.sys.svc.*;
 import nu.marginalia.model.gson.GsonFactory;
-import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.screenshot.ScreenshotService;
 import nu.marginalia.service.server.*;
 import org.slf4j.Logger;
@@ -40,7 +39,7 @@ public class ControlService extends Service {
                           ServiceMonitors monitors,
                           HeartbeatService heartbeatService,
                           EventLogService eventLogService,
-                          RendererFactory rendererFactory,
+                          ControlRendererFactory rendererFactory,
                           StaticResources staticResources,
                           MessageQueueService messageQueueService,
                           ControlFileStorageService controlFileStorageService,

@@ -3,6 +3,7 @@ package nu.marginalia.control.sys.svc;
 import com.google.inject.Inject;
 import lombok.SneakyThrows;
 import nu.marginalia.client.Context;
+import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.control.Redirects;
 import nu.marginalia.control.actor.ControlActor;
 import nu.marginalia.control.actor.ControlActorService;
@@ -11,8 +12,6 @@ import nu.marginalia.executor.client.ExecutorClient;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.outbox.MqOutbox;
 import nu.marginalia.nodecfg.NodeConfigurationService;
-import nu.marginalia.nodecfg.model.NodeConfiguration;
-import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.id.ServiceId;
 import nu.marginalia.storage.FileStorageService;
@@ -27,7 +26,7 @@ public class ControlSysActionsService {
     private final MqOutbox apiOutbox;
     private final DomainTypes domainTypes;
     private final ServiceEventLog eventLog;
-    private final RendererFactory rendererFactory;
+    private final ControlRendererFactory rendererFactory;
     private final ControlActorService controlActorService;
     private final NodeConfigurationService nodeConfigurationService;
     private final FileStorageService fileStorageService;
@@ -37,7 +36,7 @@ public class ControlSysActionsService {
     public ControlSysActionsService(MessageQueueFactory mqFactory,
                                     DomainTypes domainTypes,
                                     ServiceEventLog eventLog,
-                                    RendererFactory rendererFactory,
+                                    ControlRendererFactory rendererFactory,
                                     ControlActorService controlActorService,
                                     NodeConfigurationService nodeConfigurationService,
                                     FileStorageService fileStorageService,

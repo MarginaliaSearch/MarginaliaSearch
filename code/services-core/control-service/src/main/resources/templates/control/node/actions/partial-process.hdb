@@ -1,0 +1,39 @@
+<h1 class="my-3">Process Data</h1>
+
+<div class="my-3 p-3 border bg-light">
+    <p>
+        This will reprocess a set of crawl data on Node {{node.id}}.
+    </p>
+    <p>
+        The reprocessing will extract keywords, titles, and other metadata from the raw crawl data
+        and generate parquet files that can be loaded into the index.  This loading will be done automatically,
+        and unless the node is <a href="/nodes/{{node.id}}/configuration">configured</a>  to keep the processed data,
+        the processed data will be deleted after loading to save disk space.
+    </p>
+</div>
+
+<form method="post" action="actions/process">
+<p>Select the crawl data to use:</p>
+<table class="table">
+    <tr>
+        <th>Use</th>
+        <th>Path</th>
+        <th>Description</th>
+        <th>Details</th>
+    </tr>
+    {{#each allCrawlData}}
+        <tr>
+            <td><input {{#if active}}checked{{/if}} class="form-check-input" type="radio" name="source" id="{{id}}" value="{{id}}"></td>
+            <td><label for="{{id}}" class="form-check-label" >{{path}}</label></td>
+            <td>{{description}}</td>
+            <td><a href="/nodes/{{node}}/storage/details?fid={{id}}">[Details]</td>
+        </tr>
+    {{/each}}
+</table>
+
+    <button
+            class="btn btn-primary me-md-2"
+            onclick="return confirm('Confirm reprocessing of the selected data on node {{node.id}}');"
+            type="submit">
+        Trigger Reprocessing</button>
+</form>

@@ -1,0 +1,55 @@
+<h1 class="my-3">Sideload Encyclopedia</h1>
+
+<div class="my-3 p-3 border bg-light">
+<p>This will sideload a pre-converted MediaWiki-style OpenZim data set.
+    See the <a href="https://github.com/MarginaliaSearch/MarginaliaSearch/blob/master/doc/sideloading-howto.md">sideloading howto</a>
+    for instructions how to produce this file. </p>
+<p>Place an articles.db file in the upload directory on the server, and select it from the list
+    below.  </p>
+</div>
+<form method="post" action="actions/sideload-encyclopedia" onsubmit="return confirm('Confirm sideloading')">
+    <div class="my-3 py-3">
+
+        <table class="table">
+            <th></th><th>Filename</th><th>Size</th><th>Last Modified</th>
+            {{#each uploadDirContents.items}}
+                <tr>
+                    <td><input {{#if directory}}disabled{{/if}} class="form-check-input" type="radio" name="source" id="{{name}}" value="{{name}}"></td>
+                    <td {{#if directory}}class="text-muted"{{/if}}>
+                        <label class="form-check-label" for="inlineRadio1">{{name}}{{#if directory}}/{{/if}}</label>
+                    </td>
+                    <td>{{#unless directory}}{{size}}{{/unless}}</td>
+                    <td>{{lastModifiedTime}}</td>
+                </tr>
+            {{/each}}
+            {{#unless uploadDirContents.items}}
+                <tr>
+                    <td colspan="3">Nothing found in upload directory</td>
+                </tr>
+            {{/unless}}
+        </table>
+
+        <p>
+            <small class="text-muted">
+                The upload directory is typically mounted to /uploads on the server.  The external
+                directory is typically something like index-{{node.id}}/uploads.
+            </small>
+        </p>
+
+        <label for="baseUrl" class="form-label">Base URL</label>
+        <div class="col mb-3">
+            <input id="baseUrl" name="baseUrl" class="form-control" value="https://en.wikipedia.org/wiki/">
+        </div>
+
+        <small class="text-muted">
+            The base URL is used to construct the URL for each article.  The base URL is prepended to the article path,
+            and the result is used as the URL for the article.  The default value will point to English Wikipedia.
+        </small>
+
+        <div class="row mt-3">
+            <div class="col">
+                <button {{#unless uploadDirContents.items}}disabled{{/unless}} type="submit" class="btn btn-primary">Sideload Encyclopedia</button>
+            </div>
+        </div>
+    </div>
+</form>

@@ -31,7 +31,8 @@ x-p1: &partition-1
     - index-1:/idx
     - work-1:/work
     - backup-1:/backup
-    - samples-1:/storage
+    - storage-1:/storage
+    - uploads-1:/uploads
   networks:
     - wmsa
   environment:
@@ -200,12 +201,18 @@ volumes:
       type: none
       o: bind
       device: ${INSTALL_DIR}/data
-  samples-1:
+  storage-1:
     driver: local
     driver_opts:
       type: none
       o: bind
       device: ${INSTALL_DIR}/index-1/storage
+  uploads-1:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${INSTALL_DIR}/index-1/uploads
   index-1:
     driver: local
     driver_opts:

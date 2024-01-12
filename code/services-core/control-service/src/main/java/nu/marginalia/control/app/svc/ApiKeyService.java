@@ -2,9 +2,9 @@ package nu.marginalia.control.app.svc;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.control.Redirects;
 import nu.marginalia.control.app.model.ApiKeyModel;
-import nu.marginalia.renderer.RendererFactory;
 import org.eclipse.jetty.util.StringUtil;
 import spark.Request;
 import spark.Response;
@@ -20,11 +20,11 @@ import java.util.UUID;
 public class ApiKeyService {
 
     private final HikariDataSource dataSource;
-    private final RendererFactory rendererFactory;
+    private final ControlRendererFactory rendererFactory;
 
     @Inject
     public ApiKeyService(HikariDataSource dataSource,
-                         RendererFactory rendererFactory
+                         ControlRendererFactory rendererFactory
                          ) {
         this.dataSource = dataSource;
         this.rendererFactory = rendererFactory;

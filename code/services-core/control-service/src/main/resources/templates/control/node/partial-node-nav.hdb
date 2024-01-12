@@ -1,0 +1,33 @@
+
+<h1 class="my-3">Index Node {{node.id}}</h1>
+<nav class="nav nav-tabs">
+    <li class="nav-item">
+        <a class="nav-link {{#if tab.overview}}active{{/if}}" href="/nodes/{{node.id}}/">Overview</a>
+    </li>
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle {{#if tab.actions}}active{{/if}}" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">Actions</a>
+        <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=new-crawl">New Crawl</a></li>
+            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=re-crawl">Re-crawl</a></li>
+            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=process">Process Crawl Data</a></li>
+            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=load">Load Crawl Data</a></li>
+            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=repartition">Repartition Index</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=sideload-encyclopedia">Sideload Encyclopedia</a></li>
+            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=sideload-stackexchange">Sideload Stackexchange</a></li>
+            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=sideload-warc">Sideload WARC Files</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=export-data">Export Database Data</a></li>
+            <li><a class="dropdown-item" href="/nodes/{{node.id}}/actions?view=restore-backup">Restore Index Backup</a></li>
+        </ul>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{#if tab.actors}}active{{/if}}" href="/nodes/{{node.id}}/actors">Actors</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{#if tab.storage}}active{{/if}}" href="/nodes/{{node.id}}/storage/">Storage</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{#if tab.config}}active{{/if}}" href="/nodes/{{node.id}}/configuration">Configuration</a>
+    </li>
+</nav>

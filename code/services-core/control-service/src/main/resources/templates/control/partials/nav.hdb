@@ -18,11 +18,20 @@
 						<li><a class="dropdown-item" href="/review-random-domains" title="Review random domains list">Random Exploration</a></li>
 					</ul>
 				</li>
+                <li class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button"  aria-expanded="false">Index Nodes</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/nodes" title="Node Overview">Overview</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        {{#each global-context.nodes}}
+                            <li><a class="dropdown-item" href="/nodes/{{node}}" title="Manage Node {{node}}">Node {{node}}</a></li>
+                        {{/each}}
+                    </ul>
+                </li>
 				<li class="nav-item dropdown">
 					<a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button"  aria-expanded="false">System</a>
 					<ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="/actions" title="System actions">Actions</a></li>
-                        <li><a class="dropdown-item" href="/nodes" title="View and configure index nodes">Nodes</a></li>
                         <li><a class="dropdown-item" href="/datasets" title="View and update the data sets">Datasets</a></li>
                         <li><a class="dropdown-item" href="/events" title="View the event log">Events</a></li>
 						<li><a class="dropdown-item" href="/message-queue" title="View or manipulate the system message queue">Message Queue</a></li>

@@ -3,11 +3,11 @@ package nu.marginalia.control.app.svc;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
+import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.control.Redirects;
 import nu.marginalia.control.app.model.DomainComplaintCategory;
 import nu.marginalia.control.app.model.DomainComplaintModel;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.renderer.RendererFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -26,14 +26,14 @@ import java.util.stream.Collectors;
  */
 public class DomainComplaintService {
     private final HikariDataSource dataSource;
-    private final RendererFactory rendererFactory;
+    private final ControlRendererFactory rendererFactory;
     private final ControlBlacklistService blacklistService;
     private final RandomExplorationService randomExplorationService;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
     public DomainComplaintService(HikariDataSource dataSource,
-                                  RendererFactory rendererFactory,
+                                  ControlRendererFactory rendererFactory,
                                   ControlBlacklistService blacklistService,
                                   RandomExplorationService randomExplorationService
     ) {

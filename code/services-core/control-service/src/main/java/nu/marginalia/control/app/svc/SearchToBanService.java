@@ -2,12 +2,13 @@ package nu.marginalia.control.app.svc;
 
 import com.google.inject.Inject;
 import nu.marginalia.client.Context;
+import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.index.client.model.query.SearchSetIdentifier;
 import nu.marginalia.index.query.limit.QueryLimits;
 import nu.marginalia.model.EdgeUrl;
+import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.query.client.QueryClient;
 import nu.marginalia.query.model.QueryParams;
-import nu.marginalia.renderer.RendererFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -20,19 +21,21 @@ import java.util.Objects;
 
 public class SearchToBanService {
     private final ControlBlacklistService blacklistService;
-    private final RendererFactory rendererFactory;
+    private final ControlRendererFactory rendererFactory;
     private final QueryClient queryClient;
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final NodeConfigurationService nodeConfigurationService;
 
     @Inject
     public SearchToBanService(ControlBlacklistService blacklistService,
-                              RendererFactory rendererFactory,
-                              QueryClient queryClient)
+                              ControlRendererFactory rendererFactory,
+                              QueryClient queryClient, NodeConfigurationService nodeConfigurationService)
     {
 
         this.blacklistService = blacklistService;
         this.rendererFactory = rendererFactory;
         this.queryClient = queryClient;
+        this.nodeConfigurationService = nodeConfigurationService;
     }
 
     public void register() throws IOException {

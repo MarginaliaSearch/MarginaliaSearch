@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import nu.marginalia.client.Context;
 import nu.marginalia.client.ServiceMonitors;
+import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.control.RedirectControl;
 import nu.marginalia.control.Redirects;
 import nu.marginalia.control.node.model.*;
@@ -15,8 +16,6 @@ import nu.marginalia.nodecfg.NodeConfigurationService;
 import nu.marginalia.nodecfg.model.NodeConfiguration;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.executor.client.ExecutorClient;
-import nu.marginalia.executor.model.load.LoadParameters;
-import nu.marginalia.renderer.RendererFactory;
 import nu.marginalia.service.id.ServiceId;
 import nu.marginalia.storage.model.*;
 import org.slf4j.Logger;
@@ -32,7 +31,7 @@ import java.util.*;
 
 public class ControlNodeService {
     private final FileStorageService fileStorageService;
-    private final RendererFactory rendererFactory;
+    private final ControlRendererFactory rendererFactory;
     private final EventLogService eventLogService;
     private final HeartbeatService heartbeatService;
     private final ExecutorClient executorClient;
@@ -46,7 +45,7 @@ public class ControlNodeService {
     @Inject
     public ControlNodeService(
             FileStorageService fileStorageService,
-            RendererFactory rendererFactory,
+            ControlRendererFactory rendererFactory,
             EventLogService eventLogService,
             HeartbeatService heartbeatService,
             ExecutorClient executorClient,
@@ -100,23 +99,9 @@ public class ControlNodeService {
         Spark.get("/public/nodes/:id/configuration", this::nodeConfigModel, configRenderer::render);
         Spark.post("/public/nodes/:id/configuration", this::updateConfigModel, configRenderer::render);
 
-        Spark.post("/public/nodes/:id/storage/recrawl-auto", this::triggerAutoRecrawl,
-                redirectControl.renderRedirectAcknowledgement("Recrawling", ".."));
-        Spark.post("/public/nodes/:id/storage/process-auto", this::triggerAutoProcess,
-                redirectControl.renderRedirectAcknowledgement("Processing", "..")
-                );
-        Spark.post("/public/nodes/:id/storage/load-selected", this::triggerLoadSelected,
-                redirectControl.renderRedirectAcknowledgement("Loading", "..")
-                );
-        Spark.post("/public/nodes/:id/storage/crawl/:fid", this::triggerCrawl,
-                redirectControl.renderRedirectAcknowledgement("Crawling", "..")
-                );
         Spark.post("/public/nodes/:id/storage/reset-state/:fid", this::resetState,
                 redirectControl.renderRedirectAcknowledgement("Restoring", "..")
         );
-        Spark.post("/public/nodes/:id/storage/backup-restore/:fid", this::triggerRestoreBackup,
-                redirectControl.renderRedirectAcknowledgement("Restoring", "..")
-                );
         Spark.post("/public/nodes/:id/actions/export-data", this::exportData,
                 redirectControl.renderRedirectAcknowledgement("Exporting", "../storage/exports")
                 );
@@ -159,16 +144,9 @@ public class ControlNodeService {
 
         int nextId = configs.stream().mapToInt(NodeConfiguration::node).map(i -> i+1).max().orElse(1);
 
-        return Map.of("nodes", nodeConfigurationService.getAll(),
-                      "nextNodeId", nextId);
-    }
-
-    private Object triggerCrawl(Request request, Response response) {
-        int nodeId = Integer.parseInt(request.params("id"));
-
-        executorClient.triggerCrawl(Context.fromRequest(request), nodeId, request.params("fid"));
-
-        return "";
+        return Map.of(
+                "nodes", nodeConfigurationService.getAll(),
+                "nextNodeId", nextId);
     }
 
     private Object stopProcess(Request request, Response response) {
@@ -176,14 +154,6 @@ public class ControlNodeService {
         String processBase = request.params("processBase");
 
         executorClient.stopProcess(Context.fromRequest(request), nodeId, processBase);
-
-        return "";
-    }
-
-    private Object triggerRestoreBackup(Request request, Response response) {
-        int nodeId = Integer.parseInt(request.params("id"));
-
-        executorClient.restoreBackup(Context.fromRequest(request), nodeId, request.params("fid"));
 
         return "";
     }
@@ -208,59 +178,21 @@ public class ControlNodeService {
         return "";
     }
 
-    private Object newSpecsModel(Request request, Response response) {
+    private Object newSpecsModel(Request request, Response response) throws SQLException {
         int nodeId = Integer.parseInt(request.params("id"));
 
         return Map.of(
+                "tab", Map.of("storage", true),
                 "node", new IndexNode(nodeId),
                 "view", Map.of("specs", true)
         );
     }
 
-    private Object triggerAutoRecrawl(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
-
-        var toCrawl = fileStorageService.getOnlyActiveFileStorage(nodeId, FileStorageType.CRAWL_DATA);
-
-        executorClient.triggerRecrawl(
-                Context.fromRequest(request),
-                nodeId,
-                toCrawl.orElseThrow(AssertionError::new)
-        );
-
-        return "";
-    }
-
-    private Object triggerAutoProcess(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
-
-        var toConvert = fileStorageService.getOnlyActiveFileStorage(nodeId, FileStorageType.CRAWL_DATA);
-
-        executorClient.triggerConvertAndLoad(Context.fromRequest(request),
-                nodeId,
-                toConvert.orElseThrow(AssertionError::new));
-
-        return "";
-    }
-
-    private Object triggerLoadSelected(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
-
-        var toLoadStorages = fileStorageService.getActiveFileStorages(nodeId, FileStorageType.PROCESSED_DATA);
-
-        executorClient.loadProcessedData(Context.fromRequest(request),
-                nodeId,
-                new LoadParameters(toLoadStorages)
-        );
-
-        return "";
-    }
-
-
-    private Object nodeActorsModel(Request request, Response response) {
+    private Object nodeActorsModel(Request request, Response response) throws SQLException {
         int nodeId = Integer.parseInt(request.params("id"));
 
         return Map.of(
+                "tab", Map.of("actors", true),
                 "node", new IndexNode(nodeId),
                 "actors", executorClient.getActorStates(Context.fromRequest(request), nodeId).states()
         );
@@ -270,11 +202,18 @@ public class ControlNodeService {
         int nodeId = Integer.parseInt(request.params("id"));
 
         return Map.of(
+                "tab", Map.of("actions", true),
                 "node", new IndexNode(nodeId),
-                "currentCrawlData",
-                        fileStorageService.getStorage(fileStorageService.getActiveFileStorages(nodeId, FileStorageType.CRAWL_DATA)),
-                "currentProcessData",
-                        fileStorageService.getStorage(fileStorageService.getActiveFileStorages(nodeId, FileStorageType.PROCESSED_DATA))
+                "view", Map.of(request.queryParams("view"), true),
+                "uploadDirContents", executorClient.listSideloadDir(Context.fromRequest(request), nodeId),
+                "allBackups",
+                        fileStorageService.getEachFileStorage(nodeId, FileStorageType.BACKUP),
+                "allCrawlData",
+                        fileStorageService.getEachFileStorage(nodeId, FileStorageType.CRAWL_DATA),
+                "allProcessedData",
+                        fileStorageService.getEachFileStorage(nodeId, FileStorageType.PROCESSED_DATA),
+                "allCrawlSpecs",
+                        fileStorageService.getEachFileStorage(nodeId, FileStorageType.CRAWL_SPEC)
         );
     }
 
@@ -282,6 +221,7 @@ public class ControlNodeService {
         int nodeId = Integer.parseInt(request.params("id"));
 
         return Map.of(
+                "tab", Map.of("storage", true),
                 "view", Map.of("conf", true),
                 "node", new IndexNode(nodeId),
                 "storagebase", getStorageBaseList(nodeId)
@@ -303,6 +243,7 @@ public class ControlNodeService {
         };
 
         return Map.of(
+                "tab", Map.of("storage", true),
                 "view", Map.of(view, true),
                 "node", new IndexNode(nodeId),
                 "storage", makeFileStorageBaseWithStorage(getFileStorageIds(type, nodeId))
@@ -323,9 +264,11 @@ public class ControlNodeService {
         };
 
         return Map.of(
+                "tab", Map.of("storage", true),
                 "view", Map.of(view, true),
                 "node", new IndexNode(nodeId),
-                "storage", storage);
+                "storage", storage
+                );
     }
 
     private Object nodeConfigModel(Request request, Response response) throws SQLException {
@@ -340,6 +283,7 @@ public class ControlNodeService {
         }
 
         return Map.of(
+                "tab", Map.of("config", true),
                 "node", new IndexNode(nodeId),
                 "config", Objects.requireNonNull(nodeConfigurationService.get(nodeId), "Failed to fetch configuration"),
                 "storage", storage);
@@ -379,7 +323,8 @@ public class ControlNodeService {
                 "status", getStatus(config),
                 "events", getEvents(nodeId),
                 "processes", heartbeatService.getProcessHeartbeatsForNode(nodeId),
-                "jobs", heartbeatService.getTaskHeartbeatsForNode(nodeId)
+                "jobs", heartbeatService.getTaskHeartbeatsForNode(nodeId),
+                "tab", Map.of("overview", true)
                 );
     }
 

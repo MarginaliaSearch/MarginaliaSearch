@@ -2,10 +2,10 @@ package nu.marginalia.control.app.svc;
 
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.control.Redirects;
 import nu.marginalia.control.app.model.BlacklistedDomainModel;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.renderer.RendererFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -22,12 +22,12 @@ import java.util.Objects;
 public class ControlBlacklistService {
 
     private final HikariDataSource dataSource;
-    private final RendererFactory rendererFactory;
+    private final ControlRendererFactory rendererFactory;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
     public ControlBlacklistService(HikariDataSource dataSource,
-                                   RendererFactory rendererFactory) {
+                                   ControlRendererFactory rendererFactory) {
         this.dataSource = dataSource;
         this.rendererFactory = rendererFactory;
     }

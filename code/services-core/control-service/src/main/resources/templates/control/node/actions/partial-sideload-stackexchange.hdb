@@ -1,0 +1,41 @@
+<h1 class="my-3">Sideload Stackexchange</h1>
+
+<div class="my-3 p-3 border bg-light">
+This will load a set of pre-converted stackexchange .db files
+<p>
+See the <a href="https://github.com/MarginaliaSearch/MarginaliaSearch/blob/master/doc/sideloading-howto.md">sideloading howto</a>
+for instructions how to produce this file. </p>
+</div>
+
+<form method="post" action="actions/sideload-stackexchange" onsubmit="return confirm('Confirm sideloading')">
+    <div class="my-3 py-3">
+
+        <table class="table">
+            <th></th><th>Filename</th><th>Size</th><th>Last Modified</th>
+            {{#each uploadDirContents.items}}
+                <tr>
+                    <td><input {{#unless directory}}disabled{{/unless}} class="form-check-input" type="radio" name="source" id="{{name}}" value="{{name}}"></td>
+                    <td {{#unless directory}}class="text-muted"{{/unless}}>
+                        <label class="form-check-label" for="inlineRadio1">{{name}}{{#if directory}}/{{/if}}</label>
+                    </td>
+                    <td>{{#unless directory}}{{size}}{{/unless}}</td>
+                    <td>{{lastModifiedTime}}</td>
+                </tr>
+            {{/each}}
+            {{#unless uploadDirContents.items}}
+                <tr>
+                    <td colspan="3">Nothing found in upload directory</td>
+                </tr>
+            {{/unless}}
+        </table>
+
+        <p>
+            <small class="text-muted">
+                The upload directory is typically mounted to /uploads on the server.  The external
+                directory is typically something like index-{{node.id}}/uploads.
+            </small>
+        </p>
+
+        <button type="submit" {{#unless uploadDirContents.items}}disabled{{/unless}} class="btn btn-primary">Sideload Stackexchange</button>
+    </div>
+</form>

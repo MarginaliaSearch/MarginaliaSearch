@@ -7,39 +7,21 @@
 
 <div class="container">
 
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/nodes">nodes</a></li>
-            <li class="breadcrumb-item">node-{{node.id}}</li>
-        </ol>
-    </nav>
-
-    <nav class="nav nav-tabs">
-        <li class="nav-item">
-            <a class="nav-link" href="/nodes/{{node.id}}/">Overview</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link active" href="/nodes/{{node.id}}/actions">Actions</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="/nodes/{{node.id}}/actors">Actors</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="/nodes/{{node.id}}/storage/">Storage</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="/nodes/{{node.id}}/configuration">Configuration</a>
-        </li>
-
-    </nav>
+    {{> control/node/partial-node-nav }}
 
     <div class="container">
         {{>control/partials/storage-types}}
 
-        <div class="col-4">
+        <div>
             <h2>Create New Specification</h2>
 
-            <p>To create a new specification fill out the form below. </p>
+            <div class="my-3 p-3 border bg-light">
+            <p>A crawling specification is a list of domain names to crawl.</p>
+            <p>
+                If you are just looking to test the software, feel free to use <a href="https://downloads.marginalia.nu/domain-list-test.txt">this
+                short list of marginalia-related websites</a>, that are safe to crawl repeatedly without causing any problems.
+            </p>
+            </div>
 
             <form method="post" action="new-specs">
                 <div class="form">

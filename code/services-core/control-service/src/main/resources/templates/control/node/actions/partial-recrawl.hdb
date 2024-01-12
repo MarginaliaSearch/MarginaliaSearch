@@ -1,0 +1,48 @@
+<h1 class="my-3">Recrawl</h1>
+
+{{#unless allCrawlData}}
+    <p>
+    No <a href="storage/crawl">crawl data</a> currently exists on this node.  Recrawling is not possible.
+    First, create a crawl spec and do an initial crawl. Then, you can recrawl.
+    </p>
+{{/unless}}
+
+{{#if allCrawlData}}
+
+<div class="my-3 p-3 border bg-light">
+    <p>
+    This will perform a re-crawl on node {{node.id}}.
+    </p><p>
+    A re-crawl is a smart crawl that uses the existing crawl data
+    as a starting point.  It will use the existing crawl data to perform conditional GETs on the domains in the
+    crawl spec.  If the document has changed, it will be re-crawled.  If it has not changed, it will be skipped,
+    and the previous data will be retained.  This is both faster and easier on the target server.
+    </p>
+</div>
+
+<form method="post" action="actions/recrawl">
+<p>Select the crawl data to use:</p>
+<table class="table">
+    <tr>
+        <th>Use</th>
+        <th>Path</th>
+        <th>Description</th>
+        <th>Details</th>
+    </tr>
+{{#each allCrawlData}}
+    <tr>
+        <td><input {{#if active}}checked{{/if}} class="form-check-input" type="radio" name="source" id="{{id}}" value="{{id}}"></td>
+        <td><label for="{{id}}" class="form-check-label" >{{path}}</label></td>
+        <td>{{description}}</td>
+        <td><a href="/nodes/{{node}}/storage/details?fid={{id}}">[Details]</a></td>
+    </tr>
+{{/each}}
+</table>
+
+    <button
+            class="btn btn-primary me-md-2"
+            onclick="return confirm('Confirm recrawl of  the selected data on node {{node.id}}');"
+            type="submit">
+        Trigger Recrawl</button>
+</form>
+{{/if}}

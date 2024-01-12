@@ -455,6 +455,57 @@ public class FileStorageService {
         return ret;
     }
 
+    public List<FileStorage> getEachFileStorage(FileStorageType type) {
+        return getEachFileStorage(node, type);
+    }
+
+    public List<FileStorage> getEachFileStorage(int node, FileStorageType type) {
+        List<FileStorage> ret = new ArrayList<>();
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement("""
+                     SELECT PATH, STATE, TYPE, DESCRIPTION, CREATE_DATE, ID, BASE_ID
+                     FROM FILE_STORAGE_VIEW
+                     WHERE NODE=? AND TYPE=?
+                     """)) {
+
+            stmt.setInt(1, node);
+            stmt.setString(2, type.name());
+
+            long storageId;
+            long baseId;
+            String path;
+            String state;
+            String description;
+            LocalDateTime createDateTime;
+
+            try (var rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    baseId = rs.getLong("BASE_ID");
+                    storageId = rs.getLong("ID");
+                    path = rs.getString("PATH");
+                    state = rs.getString("STATE");
+
+                    description = rs.getString("DESCRIPTION");
+                    createDateTime = rs.getTimestamp("CREATE_DATE").toLocalDateTime();
+                    var base = getStorageBase(new FileStorageBaseId(baseId));
+
+                    ret.add(new FileStorage(
+                            new FileStorageId(storageId),
+                            base,
+                            type,
+                            createDateTime,
+                            path,
+                            FileStorageState.parse(state),
+                            description
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return ret;
+    }
     public void flagFileForDeletion(FileStorageId id) throws SQLException {
         setFileStorageState(id, FileStorageState.DELETE);
     }

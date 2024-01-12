@@ -35,6 +35,7 @@ x-p1: &partition-1
     - work-1:/work
     - backup-1:/backup
     - samples-1:/storage
+    - uploads-1:/uploads
   networks:
     - wmsa
   depends_on:
@@ -172,3 +173,9 @@ volumes:
       type: none
       o: bind
       device: run/node-1/backup
+  uploads-1:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: run/node-1/uploads

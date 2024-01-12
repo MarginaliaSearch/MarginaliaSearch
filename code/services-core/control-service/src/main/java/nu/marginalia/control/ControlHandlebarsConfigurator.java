@@ -1,9 +1,9 @@
 package nu.marginalia.control;
 
-import com.github.jknack.handlebars.Handlebars;
-import com.github.jknack.handlebars.Helper;
-import com.github.jknack.handlebars.Options;
+import com.github.jknack.handlebars.*;
 import nu.marginalia.renderer.config.HandlebarsConfigurator;
+
+import java.io.IOException;
 
 public class ControlHandlebarsConfigurator implements HandlebarsConfigurator {
     @Override

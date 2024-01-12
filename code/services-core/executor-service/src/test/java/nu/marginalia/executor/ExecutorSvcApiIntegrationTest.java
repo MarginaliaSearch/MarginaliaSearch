@@ -80,7 +80,7 @@ public class ExecutorSvcApiIntegrationTest {
 
     @Test
     public void triggerCrawl() throws Exception {
-        testInstances.client.triggerCrawl(Context.internal(), 0, "1");
+        testInstances.client.triggerCrawl(Context.internal(), 0, FileStorageId.of(1));
 
         Mockito.verify(testInstances.actorControlService).startFrom(eq(ExecutorActor.CRAWL), any());
     }

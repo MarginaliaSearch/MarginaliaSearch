@@ -1,0 +1,38 @@
+<h1 class="my-3">Load</h1>
+
+{{#unless allBackups}}
+    No <a href="storage/backups">processed data</a> exist on this node.  Backups are created when loading data into
+    the index.
+{{/unless}}
+
+{{#if allBackups}}
+    <div class="my-3 p-3 border bg-light">
+    This will restore an index backup on Node {{node.id}}.  The index will need to be re-generated after this operation,
+    this happens automatically.
+    </div>
+    <form method="post" action="actions/restore-backup">
+
+    <table class="table">
+        <tr>
+            <th>Use</th>
+            <th>Path</th>
+            <th>Description</th>
+            <th>Details</th>
+        </tr>
+
+        {{#each allBackups}}
+            <tr>
+                <td><input {{#if active}}checked{{/if}} class="form-check-input" type="radio" name="source" id="{{id}}" value="{{id}}"></td>
+                <td><label for="{{id}}" class="form-check-label" >{{path}}</label></td>
+                <td>{{description}}</td>
+                <td><a href="/nodes/{{node}}/storage/details?fid={{id}}">[Details]</a></td>
+            </tr>
+        {{/each}}
+    </table>
+        <button
+                class="btn btn-primary me-md-2"
+                onclick="return confirm('Confirm restoring selected data on node {{node.id}}');"
+                type="submit">
+            Trigger Restoration</button>
+    </form>
+{{/if}}

@@ -3,8 +3,8 @@ package nu.marginalia.control.app.svc;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import gnu.trove.list.array.TIntArrayList;
+import nu.marginalia.control.ControlRendererFactory;
 import nu.marginalia.model.EdgeDomain;
-import nu.marginalia.renderer.RendererFactory;
 import spark.Request;
 import spark.Response;
 import spark.Spark;
@@ -19,12 +19,12 @@ import java.util.Objects;
 public class RandomExplorationService {
 
     private final HikariDataSource dataSource;
-    private final RendererFactory rendererFactory;
+    private final ControlRendererFactory rendererFactory;
 
     @Inject
     public RandomExplorationService(HikariDataSource dataSource,
-                                    RendererFactory rendererFactory
-                                    ) {
+                                    ControlRendererFactory rendererFactory
+    ) {
         this.dataSource = dataSource;
         this.rendererFactory = rendererFactory;
     }
@@ -33,6 +33,7 @@ public class RandomExplorationService {
         var reviewRandomDomainsRenderer = rendererFactory.renderer("control/app/review-random-domains");
 
         Spark.get("/public/review-random-domains", this::reviewRandomDomainsModel, reviewRandomDomainsRenderer::render);
+
         Spark.post("/public/review-random-domains", this::reviewRandomDomainsAction);
     }
 

@@ -1,18 +1,16 @@
 package nu.marginalia.control;
 
 import jakarta.inject.Inject;
-import nu.marginalia.renderer.MustacheRenderer;
-import nu.marginalia.renderer.RendererFactory;
 import spark.ResponseTransformer;
 
 import java.io.IOException;
 import java.util.Map;
 
 public class RedirectControl {
-    private final MustacheRenderer<Object> renderer;
+    private final ControlRendererFactory.Renderer renderer;
 
     @Inject
-    public RedirectControl(RendererFactory rendererFactory) throws IOException {
+    public RedirectControl(ControlRendererFactory rendererFactory) throws IOException {
         renderer = rendererFactory.renderer("control/redirect-ok");
     }
 
