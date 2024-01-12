@@ -7,7 +7,7 @@
 <body>
 {{> control/partials/nav}}
 <div class="container">
-    <h1 class="my-5">Blacklist</h1>
+    <h1 class="my-3">Blacklist</h1>
 
     <p>
         The blacklist is a list of sanctioned domains that will not be

@@ -7,7 +7,7 @@
 <body>
 {{> control/partials/nav}}
 <div class="container">
-    <h1 class="my-5">Domain Review</h1>
+    <h1 class="my-3">Domain Review</h1>
     <form method="POST" action="/review-random-domains">
     <table class="table">
         <tr>

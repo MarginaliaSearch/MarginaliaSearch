@@ -7,7 +7,7 @@
 <body>
   {{> control/partials/nav}}
   <div class="container">
-  <h1 class="my-5">Data Sets</h1>
+  <h1 class="my-3">Data Sets</h1>
   <form method="POST">
       <div class="mb-3">
           <label for="blogs-input" class="form-label">Blogs</label>

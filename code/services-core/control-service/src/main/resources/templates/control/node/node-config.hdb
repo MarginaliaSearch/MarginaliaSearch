@@ -9,7 +9,7 @@
 
     {{> control/node/partial-node-nav }}
 
-    <h1 class="my-5">Node Configuration</h1>
+    <h1 class="my-3">Node Configuration</h1>
 
     <div class="m-4 p-4 border">
         <h2>Settings</h2>

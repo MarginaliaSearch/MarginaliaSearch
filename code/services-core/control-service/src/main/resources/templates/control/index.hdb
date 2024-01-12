@@ -9,7 +9,7 @@
 <body>
   {{> control/partials/nav}}
   <div class="container">
-      <h1 class="my-5">Overview</h1>
+      <h1 class="my-3">Overview</h1>
       {{> control/partials/nodes-table }}
       {{> control/partials/processes-table}}
       {{> control/partials/services-table }}

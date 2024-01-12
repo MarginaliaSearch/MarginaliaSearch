@@ -7,7 +7,7 @@
 <body>
 {{> control/partials/nav}}
 <div class="container">
-    <h1 class="my-5">Domain Complaints</h1>
+    <h1 class="my-3">Domain Complaints</h1>
     {{#unless complaintsNew}}
     <p>No new complaints!</p>
     {{/unless}}
