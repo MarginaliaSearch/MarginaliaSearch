@@ -319,12 +319,18 @@ public class ControlNodeService {
     private Object nodeOverviewModel(Request request, Response response) throws SQLException {
         int nodeId = Integer.parseInt(request.params("id"));
         var config = nodeConfigurationService.get(nodeId);
+
+        var actors = executorClient.getActorStates(Context.fromRequest(request), nodeId).states();
+
+        actors.removeIf(actor -> actor.state().equals("MONITOR"));
+
         return Map.of(
                 "node", new IndexNode(nodeId),
                 "status", getStatus(config),
                 "events", getEvents(nodeId),
                 "processes", heartbeatService.getProcessHeartbeatsForNode(nodeId),
                 "jobs", heartbeatService.getTaskHeartbeatsForNode(nodeId),
+                "actors", actors,
                 "tab", Map.of("overview", true)
                 );
     }

@@ -11,6 +11,7 @@
 
     <div class="mt-2">
     {{> control/partials/processes-table }}
+    {{> control/partials/actor-summary-table }}
     </div>
     <div class="mt-2">
     {{> control/partials/events-table-summary }}
@@ -21,7 +22,7 @@
 {{> control/partials/foot-includes }}
 <script>
     window.setInterval(() => {
-        refresh(["processes", "jobs", "events"]);
+        refresh(["processes", "jobs", "events", "actors"]);
     }, 2000);
 </script>
 </html>

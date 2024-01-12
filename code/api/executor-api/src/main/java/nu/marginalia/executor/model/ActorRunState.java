@@ -14,7 +14,7 @@ public record ActorRunState(String name,
 
     public String stateIcon() {
         if (terminal) {
-            return "\uD83D\uDE34";
+            return "\uD83D\uDC80"; // Unicode Skull
         }
         else if (state.equals("MONITOR")) {
             return "\uD83D\uDD26";

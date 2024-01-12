@@ -1,0 +1,20 @@
+<h2>Actor Summary</h2>
+<small class="text-muted">Idle monitoring actors are hidden.  See the <a href="/nodes/{{node.id}}/actors">Actors tab</a>
+    for a complete view.</small>
+<table id="actors" class="table">
+    <tr>
+        <th>Actor</th>
+        <th>State</th>
+    </tr>
+    {{#each actors}}
+        <tr>
+            <td title="{{actorDescription}}">{{name}}</td>
+            <td title="{{stateDescription}}">{{stateIcon}}&nbsp;{{state}}</td>
+        </tr>
+    {{/each}}
+    {{#unless actors}}
+        <tr>
+            <td colspan="2">No activity</td>
+        </tr>
+    {{/unless}}
+</table>

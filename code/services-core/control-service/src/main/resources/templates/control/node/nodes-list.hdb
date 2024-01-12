@@ -15,8 +15,14 @@
 
     {{#if nodes}}
     <div class="my-3 p-3 border bg-light">
-        Index nodes are processing units.  The search engine requires at least one, but more can be added
-        to spread the system load across multiple physical disks or even multiple servers.
+        <p>
+            Index nodes are processing units.  The search engine requires at least one, but more can be added
+            to spread the system load across multiple physical disks or even multiple servers.
+        </p>
+        <p>
+            New index nodes register themselves automatically upon start-up.  They can't be fully removed,
+            but can be disabled in the settings.
+        </p>
     </div>
 
     <table class="table">
