@@ -38,5 +38,6 @@ dependencies {
     testImplementation platform('org.testcontainers:testcontainers-bom:1.17.4')
     testImplementation 'org.testcontainers:mariadb:1.17.4'
     testImplementation 'org.testcontainers:junit-jupiter:1.17.4'
+    testImplementation project(':code:libraries:test-helpers')
 }
 

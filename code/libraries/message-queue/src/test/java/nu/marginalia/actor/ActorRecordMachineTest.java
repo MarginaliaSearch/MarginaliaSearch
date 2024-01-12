@@ -11,6 +11,7 @@ import nu.marginalia.actor.state.Resume;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqTestUtil;
 import nu.marginalia.mq.persistence.MqPersistence;
+import nu.marginalia.test.TestMigrationLoader;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.parallel.Execution;
 import org.testcontainers.containers.MariaDBContainer;
@@ -31,7 +32,6 @@ public class ActorRecordMachineTest {
             .withDatabaseName("WMSA_prod")
             .withUsername("wmsa")
             .withPassword("wmsa")
-            .withInitScript("db/migration/V23_07_0_003__message_queue.sql")
             .withNetworkAliases("mariadb");
 
     static HikariDataSource dataSource;
@@ -51,6 +51,8 @@ public class ActorRecordMachineTest {
         config.setPassword("wmsa");
 
         dataSource = new HikariDataSource(config);
+        TestMigrationLoader.flywayMigration(dataSource);
+
         persistence = new MqPersistence(dataSource);
         messageQueueFactory = new MessageQueueFactory(persistence);
     }

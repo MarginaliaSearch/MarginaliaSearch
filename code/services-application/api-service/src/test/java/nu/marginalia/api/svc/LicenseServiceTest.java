@@ -3,6 +3,7 @@ package nu.marginalia.api.svc;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
+import nu.marginalia.test.TestMigrationLoader;
 import org.junit.jupiter.api.*;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -21,7 +22,6 @@ class LicenseServiceTest {
             .withDatabaseName("WMSA_prod")
             .withUsername("wmsa")
             .withPassword("wmsa")
-            .withInitScript("db/migration/V23_06_0_006__api_key.sql")
             .withNetworkAliases("mariadb");
 
     private static LicenseService service;
@@ -32,6 +32,7 @@ class LicenseServiceTest {
         mariaDBContainer.start();
 
         dataSource = getConnection(mariaDBContainer.getJdbcUrl());
+        TestMigrationLoader.flywayMigration(dataSource);
 
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""

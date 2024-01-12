@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.db.DomainTypes;
 import nu.marginalia.service.module.ServiceConfiguration;
+import nu.marginalia.test.TestMigrationLoader;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
@@ -29,7 +30,6 @@ class DomainListRefreshServiceTest {
             .withDatabaseName("WMSA_prod")
             .withUsername("wmsa")
             .withPassword("wmsa")
-            .withInitScript("db/migration/V23_06_0_000__base.sql")
             .withNetworkAliases("mariadb");
 
     static HikariDataSource dataSource;
@@ -43,31 +43,7 @@ class DomainListRefreshServiceTest {
 
         dataSource = new HikariDataSource(config);
 
-        // apply migrations
-
-        List<String> migrations = List.of(
-                "db/migration/V23_06_0_003__crawl-queue.sql",
-                "db/migration/V23_07_0_001__domain_type.sql",
-                "db/migration/V23_11_0_007__domain_node_affinity.sql"
-        );
-        for (String migration : migrations) {
-            try (var resource = Objects.requireNonNull(ClassLoader.getSystemResourceAsStream(migration),
-                    "Could not load migration script " + migration);
-                 var conn = dataSource.getConnection();
-                 var stmt = conn.createStatement()
-            ) {
-                String script = new String(resource.readAllBytes());
-                String[] cmds = script.split("\\s*;\\s*");
-                for (String cmd : cmds) {
-                    if (cmd.isBlank())
-                        continue;
-                    System.out.println(cmd);
-                    stmt.executeUpdate(cmd);
-                }
-            } catch (IOException | SQLException ex) {
-
-            }
-        }
+        TestMigrationLoader.flywayMigration(dataSource);
     }
 
     @AfterAll

@@ -3,6 +3,7 @@ package nu.marginalia.db;
 import com.google.common.collect.Sets;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import nu.marginalia.test.TestMigrationLoader;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
@@ -26,7 +27,6 @@ public class DomainTypesTest {
             .withDatabaseName("WMSA_prod")
             .withUsername("wmsa")
             .withPassword("wmsa")
-            .withInitScript("db/migration/V23_07_0_001__domain_type.sql")
             .withNetworkAliases("mariadb");
 
     static HikariDataSource dataSource;
@@ -40,6 +40,7 @@ public class DomainTypesTest {
         config.setPassword("wmsa");
 
         dataSource = new HikariDataSource(config);
+        TestMigrationLoader.flywayMigration(dataSource);
 
         domainTypes = new DomainTypes(dataSource);
     }

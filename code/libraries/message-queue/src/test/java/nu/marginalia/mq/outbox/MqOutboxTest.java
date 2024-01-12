@@ -7,6 +7,7 @@ import nu.marginalia.mq.MqMessageState;
 import nu.marginalia.mq.MqTestUtil;
 import nu.marginalia.mq.inbox.*;
 import nu.marginalia.mq.persistence.MqPersistence;
+import nu.marginalia.test.TestMigrationLoader;
 import org.junit.jupiter.api.*;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -27,7 +28,6 @@ public class MqOutboxTest {
             .withDatabaseName("WMSA_prod")
             .withUsername("wmsa")
             .withPassword("wmsa")
-            .withInitScript("db/migration/V23_07_0_003__message_queue.sql")
             .withNetworkAliases("mariadb");
 
     static HikariDataSource dataSource;
@@ -45,6 +45,7 @@ public class MqOutboxTest {
         config.setPassword("wmsa");
 
         dataSource = new HikariDataSource(config);
+        TestMigrationLoader.flywayMigration(dataSource);
     }
 
     @AfterAll

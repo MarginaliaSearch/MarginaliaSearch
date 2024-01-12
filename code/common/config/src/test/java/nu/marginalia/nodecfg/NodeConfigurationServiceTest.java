@@ -3,6 +3,7 @@ package nu.marginalia.nodecfg;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.storage.FileStorageService;
+import nu.marginalia.test.TestMigrationLoader;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -30,7 +31,6 @@ public class NodeConfigurationServiceTest {
             .withDatabaseName("WMSA_prod")
             .withUsername("wmsa")
             .withPassword("wmsa")
-            .withInitScript("db/migration/V23_11_0_003__node_configuration.sql")
             .withNetworkAliases("mariadb");
 
     static HikariDataSource dataSource;
@@ -44,6 +44,8 @@ public class NodeConfigurationServiceTest {
         config.setPassword("wmsa");
 
         dataSource = new HikariDataSource(config);
+
+        TestMigrationLoader.flywayMigration(dataSource);
 
         nodeConfigurationService = new NodeConfigurationService(dataSource);
     }

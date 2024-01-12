@@ -23,6 +23,7 @@ include 'code:libraries:blocking-thread-pool'
 include 'code:libraries:braille-block-punch-cards'
 include 'code:libraries:language-processing'
 include 'code:libraries:term-frequency-dict'
+include 'code:libraries:test-helpers'
 
 include 'code:libraries:message-queue'
 

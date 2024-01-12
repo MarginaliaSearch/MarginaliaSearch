@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.storage.model.FileStorageBaseType;
 import nu.marginalia.storage.model.FileStorageType;
+import nu.marginalia.test.TestMigrationLoader;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -33,7 +34,6 @@ public class FileStorageServiceTest {
             .withDatabaseName("WMSA_prod")
             .withUsername("wmsa")
             .withPassword("wmsa")
-            .withInitScript("db/migration/V23_07_0_004__file_storage.sql")
             .withNetworkAliases("mariadb");
 
     static HikariDataSource dataSource;
@@ -50,32 +50,7 @@ public class FileStorageServiceTest {
 
         dataSource = new HikariDataSource(config);
 
-        // apply migrations
-
-        List<String> migrations = List.of(
-                "db/migration/V23_11_0_000__file_storage_node.sql",
-                "db/migration/V23_11_0_002__file_storage_state.sql",
-                "db/migration/V23_11_0_004__file_storage_base_type.sql"
-                );
-        for (String migration : migrations) {
-            try (var resource = Objects.requireNonNull(ClassLoader.getSystemResourceAsStream(migration),
-                    "Could not load migration script " + migration);
-                 var conn = dataSource.getConnection();
-                 var stmt = conn.createStatement()
-            ) {
-                String script = new String(resource.readAllBytes());
-                String[] cmds = script.split("\\s*;\\s*");
-                for (String cmd : cmds) {
-                    if (cmd.isBlank())
-                        continue;
-                    System.out.println(cmd);
-                    stmt.executeUpdate(cmd);
-                }
-            }
-            catch (IOException|SQLException ex) {
-
-            }
-        }
+        TestMigrationLoader.flywayMigration(dataSource);
     }
 
 

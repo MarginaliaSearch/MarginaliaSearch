@@ -20,7 +20,7 @@ public class NodeConfigurationService {
     public NodeConfiguration create(int id, String description, boolean acceptQueries, boolean keepWarcs) throws SQLException {
         try (var conn = dataSource.getConnection();
              var is = conn.prepareStatement("""
-                     INSERT IGNORE INTO NODE_CONFIGURATION(ID, DESCRIPTION, ACCEPT_QUERIES) VALUES(?, ?, ?, ?)
+                     INSERT IGNORE INTO NODE_CONFIGURATION(ID, DESCRIPTION, ACCEPT_QUERIES, KEEP_WARCS) VALUES(?, ?, ?, ?)
                      """)
         )
         {

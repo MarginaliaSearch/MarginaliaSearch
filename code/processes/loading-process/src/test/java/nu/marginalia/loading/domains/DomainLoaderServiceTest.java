@@ -11,6 +11,7 @@ import nu.marginalia.model.processed.DomainLinkRecord;
 import nu.marginalia.model.processed.DomainRecord;
 import nu.marginalia.process.control.ProcessAdHocTaskHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeat;
+import nu.marginalia.test.TestMigrationLoader;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 import org.testcontainers.containers.MariaDBContainer;
@@ -30,14 +31,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class DomainLoaderServiceTest {
     List<Path> toDelete = new ArrayList<>();
     ProcessHeartbeat heartbeat;
-
-    @Container
-    static MariaDBContainer<?> mariaDBContainer = new MariaDBContainer<>("mariadb")
-            .withDatabaseName("WMSA_prod")
-            .withUsername("wmsa")
-            .withPassword("wmsa")
-            .withInitScript("db/migration/V23_06_0_000__base.sql")
-            .withNetworkAliases("mariadb");
 
     @BeforeEach
     public void setUp() {

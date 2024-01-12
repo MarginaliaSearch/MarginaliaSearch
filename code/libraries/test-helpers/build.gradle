@@ -1,0 +1,22 @@
+plugins {
+    id 'java'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+dependencies {
+    implementation libs.bundles.slf4j
+    implementation libs.bundles.mariadb
+    implementation libs.bundles.slf4j.test
+    implementation libs.bundles.junit
+    implementation libs.mockito
+    implementation libs.bundles.flyway
+}
+
+test {
+    useJUnitPlatform()
+}
