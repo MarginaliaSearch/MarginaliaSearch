@@ -15,10 +15,7 @@ import spark.Spark;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Singleton
 public class MessageQueueService {
@@ -61,7 +58,7 @@ public class MessageQueueService {
     }
 
 
-    public Object listMessageQueueModel(Request request, Response response) {
+    public Object listMessageQueueModel(Request request, Response response) throws SQLException {
         String inboxParam = request.queryParams("inbox");
         String instanceParam = request.queryParams("instance");
         String afterParam = request.queryParams("after");
@@ -71,7 +68,7 @@ public class MessageQueueService {
         List<MessageQueueEntry> entries;
 
         String mqFilter = "filter=none";
-        if (inboxParam != null) {
+        if (inboxParam != null && !inboxParam.isBlank()) {
             mqFilter = "inbox=" + inboxParam;
             entries = getEntriesForInbox(inboxParam, afterId, 20);
         }
@@ -90,9 +87,45 @@ public class MessageQueueService {
         else
             next = "";
 
+        List<String> inboxes = getAllInboxes();
+
         return Map.of("messages", entries,
                 "next", next,
+                "filterInbox", Objects.requireNonNullElse(inboxParam, ""),
+                "inboxes", inboxes,
                 "mqFilter", mqFilter);
+    }
+
+    private List<String> getAllInboxes() throws SQLException {
+        List<String> inboxes = new ArrayList<>();
+        try (var conn = dataSource.getConnection();
+             var query = conn.prepareStatement("""
+                SELECT DISTINCT RECIPIENT_INBOX
+                FROM MESSAGE_QUEUE
+                WHERE RECIPIENT_INBOX IS NOT NULL
+                """))
+        {
+            var rs = query.executeQuery();
+            while (rs.next()) {
+                inboxes.add(rs.getString(1));
+            }
+        }
+
+        // Remove transient inboxes
+        inboxes.removeIf(inbox -> inbox.contains("//"));
+
+        // Sort inboxes so that fsm inboxes are last
+        Comparator<String> comparator = (o1, o2) -> {
+            int diff = Boolean.compare(o1.startsWith("fsm:"), o2.startsWith("fsm:"));
+            if (diff != 0)
+                return diff;
+
+            return o1.compareTo(o2);
+        };
+
+        inboxes.sort(comparator);
+
+        return inboxes;
     }
 
     public Object newMessageModel(Request request, Response response) {

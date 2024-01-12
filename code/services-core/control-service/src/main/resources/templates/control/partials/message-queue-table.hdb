@@ -11,7 +11,23 @@
         <th>Created<br>Updated</th>
     </tr>
     <tr>
-        <td colspan="6" style="padding: 0.5ch">
+        <td colspan="2"></td>
+        <td>
+            {{#if inboxes}}
+                <div class="btn-group">
+                    <button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        Filter
+                    </button>
+                    <ul class="dropdown-menu">
+                    {{#each inboxes}}
+                        <li><a class="dropdown-item" href="/message-queue?inbox={{this}}">{{this}}&nbsp;</a></li>
+                    {{/each}}
+                    </ul>
+                </div>
+
+            {{/if}}
+        </td>
+        <td colspan="3" style="padding: 0.5ch">
             <a style="float:right" href="/message-queue/new">[Add Message]</a>
         </td>
     </tr>
@@ -47,7 +63,8 @@
     {{/each}}
     <tfoot>
     <tr>
-        <td colspan="6" style="padding: 0.5ch">
+        <td colspan="6"></td>
+        <td colspan="1" style="padding: 0.5ch">
             {{#if next}}<a href="?after={{next}}&{{mqFilter}}" style="float:right">Next</a>{{/if}}
         </td>
     </tr>
