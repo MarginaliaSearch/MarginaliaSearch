@@ -79,7 +79,9 @@ public class ExecutorActorControlService {
     }
 
     private void logStateChange(ExecutorActor process, String state) {
-        eventLog.logEvent("FSM-STATE-CHANGE", process.id() + " -> " + state);
+        if ("ERROR".equals(state)) {
+            eventLog.logEvent("FSM-ERROR", process.id());
+        }
     }
 
     public void start(ExecutorActor process) throws Exception {

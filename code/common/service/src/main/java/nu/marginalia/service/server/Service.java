@@ -60,7 +60,7 @@ public class Service {
 
         initialization.addCallback(params.heartbeat::start);
         initialization.addCallback(messageQueueInbox::start);
-        initialization.addCallback(() -> params.eventLog.logEvent("SVC-INIT", ""));
+        initialization.addCallback(() -> params.eventLog.logEvent("SVC-INIT", serviceName + ":" + config.node()));
 
         if (!initialization.isReady() && ! initialized ) {
             initialized = true;

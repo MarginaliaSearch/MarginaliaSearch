@@ -87,6 +87,7 @@ public class ProcessService {
             processes.put(processId, process);
         }
 
+        eventLog.logEvent("PROCESS-START", processId.toString());
         try {
             new Thread(new ProcessLogStderr(process)).start();
             new Thread(new ProcessLogStdout(process)).start();

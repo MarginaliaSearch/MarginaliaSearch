@@ -33,7 +33,7 @@ public class ServiceEventLog {
 
         logger.info("Starting service {} instance {}", serviceName, instanceUuid);
 
-        logEvent("START", "Service starting");
+        logEvent("SVC-START", serviceName);
     }
 
     public void logEvent(String type, String message) {
