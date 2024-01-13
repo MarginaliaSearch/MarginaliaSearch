@@ -5,6 +5,7 @@ import com.google.inject.name.Named;
 import crawlercommons.robots.SimpleRobotRules;
 import crawlercommons.robots.SimpleRobotRulesParser;
 import lombok.SneakyThrows;
+import nu.marginalia.UserAgent;
 import nu.marginalia.crawl.retreival.Cookies;
 import nu.marginalia.crawl.retreival.RateLimitException;
 import nu.marginalia.crawl.retreival.fetcher.ContentTypeProber.ContentTypeProbeResult;
@@ -35,7 +36,8 @@ import java.util.concurrent.TimeUnit;
 public class HttpFetcherImpl implements HttpFetcher {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final String userAgent;
+    private final String userAgentString;
+    private final String userAgentIdentifier;
     private final Cookies cookies = new Cookies();
 
     private static final SimpleRobotRulesParser robotsParser = new SimpleRobotRulesParser();
@@ -85,18 +87,20 @@ public class HttpFetcherImpl implements HttpFetcher {
     }
 
     @Inject
-    public HttpFetcherImpl(@Named("user-agent") String userAgent,
+    public HttpFetcherImpl(UserAgent userAgent,
                            Dispatcher dispatcher,
                            ConnectionPool connectionPool)
     {
         this.client = createClient(dispatcher, connectionPool);
-        this.userAgent = userAgent;
-        this.contentTypeProber = new ContentTypeProber(userAgent, client);
+        this.userAgentString = userAgent.uaString();
+        this.userAgentIdentifier = userAgent.uaIdentifier();
+        this.contentTypeProber = new ContentTypeProber(userAgentString, client);
     }
 
-    public HttpFetcherImpl(@Named("user-agent") String userAgent) {
+    public HttpFetcherImpl(String userAgent) {
         this.client = createClient(null, new ConnectionPool());
-        this.userAgent = userAgent;
+        this.userAgentString = userAgent;
+        this.userAgentIdentifier = userAgent;
         this.contentTypeProber = new ContentTypeProber(userAgent, client);
     }
 
@@ -110,7 +114,7 @@ public class HttpFetcherImpl implements HttpFetcher {
     @Override
     @SneakyThrows
     public FetchResult probeDomain(EdgeUrl url) {
-        var head = new Request.Builder().head().addHeader("User-agent", userAgent)
+        var head = new Request.Builder().head().addHeader("User-agent", userAgentString)
                 .url(url.toString())
                 .build();
 
@@ -170,7 +174,7 @@ public class HttpFetcherImpl implements HttpFetcher {
 
         getBuilder.url(url.toString())
                 .addHeader("Accept-Encoding", "gzip")
-                .addHeader("User-agent", userAgent);
+                .addHeader("User-agent", userAgentString);
 
         contentTags.paint(getBuilder);
 
@@ -212,7 +216,7 @@ public class HttpFetcherImpl implements HttpFetcher {
 
             getBuilder.url(url.toString())
                     .addHeader("Accept-Encoding", "gzip")
-                    .addHeader("User-agent", userAgent);
+                    .addHeader("User-agent", userAgentString);
 
             HttpFetchResult result = recorder.fetch(client, getBuilder.build());
 
@@ -220,7 +224,7 @@ public class HttpFetcherImpl implements HttpFetcher {
                 robotsParser.parseContent(url.toString(),
                         body,
                         contentType.toString(),
-                        userAgent)
+                        userAgentIdentifier)
             );
 
         }

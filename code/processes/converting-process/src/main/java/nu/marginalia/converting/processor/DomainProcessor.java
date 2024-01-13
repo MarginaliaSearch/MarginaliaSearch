@@ -32,6 +32,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 public class DomainProcessor {
+    private static final int SIDELOAD_THRESHOLD = Integer.getInteger("converter.sideloadThreshold", 10_000);
     private final DocumentProcessor documentProcessor;
     private final SiteWords siteWords;
     private final AnchorTagsSource anchorTagsSource;
@@ -59,7 +60,7 @@ public class DomainProcessor {
     public ConverterBatchWritableIf createWritable(SerializableCrawlDataStream domain) {
         final int sizeHint = domain.sizeHint();
 
-        if (sizeHint > 10_000) {
+        if (sizeHint > SIDELOAD_THRESHOLD) {
             // If the file is too big, we run a processing mode that doesn't
             // require loading the entire dataset into RAM
             return sideloadProcessing(domain, sizeHint);

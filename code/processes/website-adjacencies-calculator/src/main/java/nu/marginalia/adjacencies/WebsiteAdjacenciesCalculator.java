@@ -8,6 +8,7 @@ import nu.marginalia.model.EdgeDomain;
 import nu.marginalia.process.control.ProcessHeartbeat;
 import nu.marginalia.process.control.ProcessHeartbeatImpl;
 import nu.marginalia.query.client.QueryClient;
+import nu.marginalia.service.MainClass;
 import nu.marginalia.service.module.DatabaseModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +23,7 @@ import java.util.stream.IntStream;
 
 import static nu.marginalia.adjacencies.SparseBitVector.*;
 
-public class WebsiteAdjacenciesCalculator {
+public class WebsiteAdjacenciesCalculator extends MainClass {
     private final HikariDataSource dataSource;
     public AdjacenciesData adjacenciesData;
     public DomainAliases domainAliases;

@@ -13,12 +13,12 @@ import java.util.Objects;
 public class ContentTypeProber {
 
     private static final Logger logger = LoggerFactory.getLogger(ContentTypeProber.class);
-    private final String userAgent;
+    private final String userAgentString;
     private final OkHttpClient client;
     private final ContentTypeLogic contentTypeLogic = new ContentTypeLogic();
 
-    public ContentTypeProber(String userAgent, OkHttpClient httpClient) {
-        this.userAgent = userAgent;
+    public ContentTypeProber(String userAgentString, OkHttpClient httpClient) {
+        this.userAgentString = userAgentString;
         this.client = httpClient;
     }
 
@@ -35,7 +35,7 @@ public class ContentTypeProber {
         logger.debug("Probing suspected binary {}", url);
 
         var headBuilder = new Request.Builder().head()
-                .addHeader("User-agent", userAgent)
+                .addHeader("User-agent", userAgentString)
                 .addHeader("Accept-Encoding", "gzip")
                 .url(url.toString());
 

@@ -6,23 +6,13 @@ import nu.marginalia.array.algo.IntArraySearch;
 import nu.marginalia.array.algo.IntArraySort;
 import nu.marginalia.array.algo.IntArrayTransformations;
 import nu.marginalia.array.delegate.ShiftedIntArray;
-import nu.marginalia.array.delegate.ShiftedLongArray;
 import nu.marginalia.array.page.SegmentIntArray;
-import nu.marginalia.array.page.SegmentLongArray;
-import nu.marginalia.array.scheme.ArrayPartitioningScheme;
 
 import java.io.IOException;
 import java.lang.foreign.Arena;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 public interface IntArray extends IntArrayBase, IntArrayTransformations, IntArraySearch, IntArraySort {
     int WORD_SIZE = 4;
-
-    ArrayPartitioningScheme DEFAULT_PARTITIONING_SCHEME
-            = ArrayPartitioningScheme.forPartitionSize(Integer.getInteger("wmsa.page-size",1<<30) / WORD_SIZE);
-
-    int MAX_CONTINUOUS_SIZE = Integer.MAX_VALUE/WORD_SIZE - 16;
 
     static IntArray allocate(long size) {
         return SegmentIntArray.onHeap(Arena.ofShared(), size);

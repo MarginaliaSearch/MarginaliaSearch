@@ -16,7 +16,7 @@ public class DomainBlacklistImpl implements DomainBlacklist {
     private volatile TIntHashSet spamDomainSet = new TIntHashSet();
     private final HikariDataSource dataSource;
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final boolean blacklistDisabled = Boolean.getBoolean("no-domain-blacklist");
+    private final boolean blacklistDisabled = Boolean.getBoolean("blacklist.disable");
     @Inject
     public DomainBlacklistImpl(HikariDataSource dataSource) {
         this.dataSource = dataSource;

@@ -35,7 +35,7 @@ public class DatabaseModule extends AbstractModule {
         dbProperties = loadDbProperties();
 
         if (migrate) {
-            if (Boolean.getBoolean("disableFlyway")) {
+            if (Boolean.getBoolean("flyway.disable")) {
                 logger.info("Flyway disabled");
             }
             else {

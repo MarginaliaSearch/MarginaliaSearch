@@ -25,7 +25,8 @@ public class ControlRendererFactory {
     @SneakyThrows
     public Renderer renderer(String template) {
         Map<String, Object> globalContext = Map.of(
-                "nodes", nodeConfigurationService.getAll()
+                "nodes", nodeConfigurationService.getAll(),
+                "hideMarginaliaApp", Boolean.getBoolean("control.hideMarginaliaApp")
         );
         var baseRenderer = rendererFactory.renderer(template);
 

@@ -22,7 +22,7 @@ public class IpBlockList {
     private final GeoIpBlocklist geoIpBlocklist;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final List<SubnetUtils.SubnetInfo> badSubnets = new ArrayList<>();
-    private final boolean blocklistDisabled = Boolean.getBoolean("no-ip-blocklist");
+    private final boolean blocklistDisabled = Boolean.getBoolean("ip-blocklist.disabled");
 
     @Inject
     public IpBlockList(GeoIpBlocklist geoIpBlocklist) {

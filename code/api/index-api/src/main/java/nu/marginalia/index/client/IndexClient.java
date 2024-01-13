@@ -64,7 +64,7 @@ public class IndexClient extends AbstractDynamicClient {
                                 .postGet(ctx, node, "/search/", specs, SearchResultSet.class).onErrorReturn(t -> new SearchResultSet())
                                 .observeOn(Schedulers.io());
                     } catch (RouteNotConfiguredException ex) {
-                        return Observable.error(ex);
+                        return Observable.empty();
                     }
                 })
                 .reduce(SearchResultSet::combine)

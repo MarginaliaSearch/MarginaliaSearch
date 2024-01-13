@@ -23,6 +23,7 @@ import nu.marginalia.crawling.io.CrawledDomainReader;
 import nu.marginalia.crawling.io.CrawlerOutputFile;
 import nu.marginalia.crawling.parquet.CrawledDocumentParquetRecordFileWriter;
 import nu.marginalia.crawlspec.CrawlSpecFileNames;
+import nu.marginalia.service.ProcessMainClass;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.model.crawlspec.CrawlSpecRecord;
 import nu.marginalia.mq.MessageQueueFactory;
@@ -51,7 +52,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static nu.marginalia.mqapi.ProcessInboxNames.CRAWLER_INBOX;
 
-public class CrawlerMain {
+public class CrawlerMain extends ProcessMainClass {
     private final static Logger logger = LoggerFactory.getLogger(CrawlerMain.class);
 
     private final UserAgent userAgent;
@@ -96,10 +97,10 @@ public class CrawlerMain {
         this.node = processConfiguration.node();
 
         pool = new SimpleBlockingThreadPool("CrawlerPool",
-                Integer.getInteger("crawler.pool-size", 256),
+                Integer.getInteger("crawler.poolSize", 256),
                 1);
 
-        fetcher = new HttpFetcherImpl(userAgent.uaString(),
+        fetcher = new HttpFetcherImpl(userAgent,
                 new Dispatcher(),
                 new ConnectionPool(5, 10, TimeUnit.SECONDS)
         );

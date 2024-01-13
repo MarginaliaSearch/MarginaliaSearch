@@ -11,6 +11,7 @@ import nu.marginalia.converting.sideload.SideloadSourceFactory;
 import nu.marginalia.converting.writer.ConverterBatchWritableIf;
 import nu.marginalia.converting.writer.ConverterBatchWriter;
 import nu.marginalia.converting.writer.ConverterWriter;
+import nu.marginalia.service.ProcessMainClass;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.mq.MqMessage;
@@ -38,7 +39,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static nu.marginalia.mqapi.ProcessInboxNames.CONVERTER_INBOX;
 
-public class ConverterMain {
+public class ConverterMain extends ProcessMainClass {
     private static final Logger logger = LoggerFactory.getLogger(ConverterMain.class);
     private final DomainProcessor processor;
     private final Gson gson;

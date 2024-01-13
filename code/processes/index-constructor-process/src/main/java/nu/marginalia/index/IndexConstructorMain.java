@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import nu.marginalia.IndexLocations;
 import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.ProcessConfigurationModule;
+import nu.marginalia.service.ProcessMainClass;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.index.construction.ReverseIndexConstructor;
 import nu.marginalia.index.forward.ForwardIndexConverter;
@@ -38,7 +39,7 @@ import java.util.function.LongPredicate;
 
 import static nu.marginalia.mqapi.ProcessInboxNames.INDEX_CONSTRUCTOR_INBOX;
 
-public class IndexConstructorMain {
+public class IndexConstructorMain extends ProcessMainClass {
     private final FileStorageService fileStorageService;
     private final ProcessHeartbeatImpl heartbeat;
     private final MessageQueueFactory messageQueueFactory;

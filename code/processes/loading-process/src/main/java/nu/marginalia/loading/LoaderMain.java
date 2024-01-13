@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 import nu.marginalia.ProcessConfiguration;
 import nu.marginalia.ProcessConfigurationModule;
+import nu.marginalia.service.ProcessMainClass;
 import nu.marginalia.storage.FileStorageService;
 import nu.marginalia.linkdb.docs.DocumentDbWriter;
 import nu.marginalia.loading.documents.DocumentLoaderService;
@@ -37,7 +38,7 @@ import java.util.concurrent.TimeUnit;
 
 import static nu.marginalia.mqapi.ProcessInboxNames.LOADER_INBOX;
 
-public class LoaderMain {
+public class LoaderMain extends ProcessMainClass {
     private static final Logger logger = LoggerFactory.getLogger(LoaderMain.class);
 
     private final ProcessHeartbeatImpl heartbeat;

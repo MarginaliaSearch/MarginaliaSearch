@@ -12,19 +12,19 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 public class WmsaHome {
-    public static UserAgent getUserAgent() throws IOException {
-        var uaPath = getHomePath().resolve("conf/user-agent");
+    public static UserAgent getUserAgent()  {
 
-        if (!Files.exists(uaPath)) {
-            throw new FileNotFoundException("Could not find " + uaPath);
-        }
-
-        return new UserAgent(Files.readString(uaPath).trim());
+        return new UserAgent(
+                System.getProperty("crawler.userAgentString", "Mozilla/5.0 (compatible; Marginalia-like bot; +https://git.marginalia.nu/))"),
+                System.getProperty("crawler.userAgentIdentifier", "search.marginalia.nu")
+        );
     }
 
 
     public static Path getUploadDir() {
-        return Path.of("/uploads");
+        return Path.of(
+                System.getProperty("executor.uploadDir", "/uploads")
+        );
     }
 
     public static Path getHomePath() {
@@ -92,11 +92,6 @@ public class WmsaHome {
 
     public static Path getAtagsPath() {
         return getHomePath().resolve("data/atags.parquet");
-    }
-    private static final boolean debugMode = Boolean.getBoolean("wmsa-debug");
-
-    public static boolean isDebug() {
-        return debugMode;
     }
 
 

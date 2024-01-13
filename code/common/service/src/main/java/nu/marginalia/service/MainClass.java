@@ -15,7 +15,14 @@ import java.net.UnknownHostException;
  *  They must also invoke init() in their main method.
  */
 public abstract class MainClass {
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private static final Logger logger = LoggerFactory.getLogger(MainClass.class);
+
+    static {
+        // Load global config ASAP
+        ConfigLoader.loadConfig(
+                ConfigLoader.getConfigPath("system")
+        );
+    }
 
     public MainClass() {
         RxJavaPlugins.setErrorHandler(this::handleError);
@@ -42,10 +49,13 @@ public abstract class MainClass {
 
 
     protected static void init(ServiceId id, String... args) {
-
         System.setProperty("log4j2.isThreadContextMapInheritable", "true");
         System.setProperty("isThreadContextMapInheritable", "true");
         System.setProperty("service-name", id.name);
+
+        ConfigLoader.loadConfig(
+                ConfigLoader.getConfigPath(id.name)
+        );
 
         initJdbc();
         initPrometheus();
