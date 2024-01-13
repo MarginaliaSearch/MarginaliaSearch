@@ -9,4 +9,7 @@ public record NodeConfiguration(int node,
                                 boolean disabled
                                 )
 {
+    public int getId() {
+        return node;
+    }
 }

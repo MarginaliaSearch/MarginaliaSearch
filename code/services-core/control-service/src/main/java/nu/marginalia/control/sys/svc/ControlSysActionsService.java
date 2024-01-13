@@ -72,7 +72,6 @@ public class ControlSysActionsService {
         Spark.post("/public/actions/recrawl-all", this::recrawlAll, Redirects.redirectToOverview);
         Spark.post("/public/actions/flush-api-caches", this::flushApiCaches, Redirects.redirectToOverview);
         Spark.post("/public/actions/reload-blogs-list", this::reloadBlogsList, Redirects.redirectToOverview);
-        Spark.post("/public/actions/trigger-data-exports", this::triggerDataExports, Redirects.redirectToOverview);
     }
 
     @SneakyThrows
@@ -97,14 +96,6 @@ public class ControlSysActionsService {
         }
 
         return Map.of("precessionNodes", eligibleNodes);
-    }
-
-    public Object triggerDataExports(Request request, Response response) throws Exception {
-        eventLog.logEvent("USER-ACTION", "EXPORT-DATA");
-
-        executorClient.exportData(Context.fromRequest(request));
-
-        return "";
     }
 
     public Object reloadBlogsList(Request request, Response response) throws Exception {

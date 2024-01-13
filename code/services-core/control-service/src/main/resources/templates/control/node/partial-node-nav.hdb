@@ -1,5 +1,11 @@
 
 <h1 class="my-3">Index Node {{node.id}}</h1>
+{{#if node.disabled}}
+    <small class="text-danger">This index node is disabled!</small>
+{{/if}}
+{{#unless node.acceptQueries}}
+    <small class="text-danger">This index node is not accepting queries!</small>
+{{/unless}}
 <nav class="nav nav-tabs">
     <li class="nav-item">
         <a class="nav-link {{#if tab.overview}}active{{/if}}" href="/nodes/{{node.id}}/">Overview</a>

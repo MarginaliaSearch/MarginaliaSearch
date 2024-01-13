@@ -183,7 +183,7 @@ public class ControlNodeService {
 
         return Map.of(
                 "tab", Map.of("storage", true),
-                "node", new IndexNode(nodeId),
+                "node", nodeConfigurationService.get(nodeId),
                 "view", Map.of("specs", true)
         );
     }
@@ -193,7 +193,7 @@ public class ControlNodeService {
 
         return Map.of(
                 "tab", Map.of("actors", true),
-                "node", new IndexNode(nodeId),
+                "node", nodeConfigurationService.get(nodeId),
                 "actors", executorClient.getActorStates(Context.fromRequest(request), nodeId).states()
         );
     }
@@ -203,7 +203,7 @@ public class ControlNodeService {
 
         return Map.of(
                 "tab", Map.of("actions", true),
-                "node", new IndexNode(nodeId),
+                "node", nodeConfigurationService.get(nodeId),
                 "view", Map.of(request.queryParams("view"), true),
                 "uploadDirContents", executorClient.listSideloadDir(Context.fromRequest(request), nodeId),
                 "allBackups",
@@ -223,7 +223,7 @@ public class ControlNodeService {
         return Map.of(
                 "tab", Map.of("storage", true),
                 "view", Map.of("conf", true),
-                "node", new IndexNode(nodeId),
+                "node", nodeConfigurationService.get(nodeId),
                 "storagebase", getStorageBaseList(nodeId)
         );
     }
@@ -245,7 +245,7 @@ public class ControlNodeService {
         return Map.of(
                 "tab", Map.of("storage", true),
                 "view", Map.of(view, true),
-                "node", new IndexNode(nodeId),
+                "node", nodeConfigurationService.get(nodeId),
                 "storage", makeFileStorageBaseWithStorage(getFileStorageIds(type, nodeId))
         );
     }
@@ -266,7 +266,7 @@ public class ControlNodeService {
         return Map.of(
                 "tab", Map.of("storage", true),
                 "view", Map.of(view, true),
-                "node", new IndexNode(nodeId),
+                "node", nodeConfigurationService.get(nodeId),
                 "storage", storage
                 );
     }
@@ -284,7 +284,7 @@ public class ControlNodeService {
 
         return Map.of(
                 "tab", Map.of("config", true),
-                "node", new IndexNode(nodeId),
+                "node", nodeConfigurationService.get(nodeId),
                 "config", Objects.requireNonNull(nodeConfigurationService.get(nodeId), "Failed to fetch configuration"),
                 "storage", storage);
     }
@@ -325,7 +325,7 @@ public class ControlNodeService {
         actors.removeIf(actor -> actor.state().equals("MONITOR"));
 
         return Map.of(
-                "node", new IndexNode(nodeId),
+                "node", nodeConfigurationService.get(nodeId),
                 "status", getStatus(config),
                 "events", getEvents(nodeId),
                 "processes", heartbeatService.getProcessHeartbeatsForNode(nodeId),

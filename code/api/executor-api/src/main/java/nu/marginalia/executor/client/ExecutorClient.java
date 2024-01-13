@@ -1,8 +1,10 @@
 package nu.marginalia.executor.client;
 
 import com.google.inject.Inject;
+import io.reactivex.rxjava3.core.Observable;
 import nu.marginalia.client.AbstractDynamicClient;
 import nu.marginalia.client.Context;
+import nu.marginalia.client.exception.RouteNotConfiguredException;
 import nu.marginalia.executor.model.ActorRunStates;
 import nu.marginalia.executor.model.load.LoadParameters;
 import nu.marginalia.executor.model.transfer.TransferItem;
@@ -18,6 +20,8 @@ import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class ExecutorClient extends AbstractDynamicClient {
@@ -63,11 +67,6 @@ public class ExecutorClient extends AbstractDynamicClient {
         post(ctx, node, "/process/adjacency-calculation", "").blockingSubscribe();
     }
 
-    public void exportData(Context ctx) {
-//        post(ctx, node, "/process/adjacency-calculation/", "").blockingSubscribe();
-        // FIXME this shouldn't be done in the executor
-    }
-
     public void sideloadEncyclopedia(Context ctx, int node, Path sourcePath, String baseUrl) {
         post(ctx, node,
                 "/sideload/encyclopedia?path="+ URLEncoder.encode(sourcePath.toString(), StandardCharsets.UTF_8) + "&baseUrl=" + URLEncoder.encode(baseUrl, StandardCharsets.UTF_8),
@@ -110,15 +109,33 @@ public class ExecutorClient extends AbstractDynamicClient {
     }
 
     public ActorRunStates getActorStates(Context context, int node) {
-        return get(context, node, "/actor", ActorRunStates.class).blockingFirst();
+        try {
+            return get(context, node, "/actor", ActorRunStates.class).blockingFirst();
+        }
+        catch (RouteNotConfiguredException ex) {
+            // node is down, return dummy data
+            return new ActorRunStates(node, new ArrayList<>());
+        }
     }
 
     public UploadDirContents listSideloadDir(Context context, int node) {
-        return get(context, node, "/sideload/", UploadDirContents.class).blockingFirst();
+        try {
+            return get(context, node, "/sideload/", UploadDirContents.class).blockingFirst();
+        }
+        catch (RouteNotConfiguredException ex) {
+            // node is down, return dummy data
+            return new UploadDirContents("/", new ArrayList<>());
+        }
     }
 
     public FileStorageContent listFileStorage(Context context, int node, FileStorageId fileId) {
-        return get(context, node, "/storage/"+fileId.id(), FileStorageContent.class).blockingFirst();
+        try {
+            return get(context, node, "/storage/"+fileId.id(), FileStorageContent.class).blockingFirst();
+        }
+        catch (RouteNotConfiguredException ex) {
+            // node is down, return dummy data
+            return new FileStorageContent(new ArrayList<>());
+        }
     }
 
     public void transferFile(Context context, int node, FileStorageId fileId, String path, OutputStream destOutputStream) {

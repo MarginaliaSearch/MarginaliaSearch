@@ -10,8 +10,8 @@
     This will perform a new crawl on node {{node.id}} based on the crawl spec you select below.
     Additional specifications can be created <a href="/nodes/{{node.id}}/storage/new-specs">with this form</a>.
     </div>
-    <div class="my-3 p-3 border text-danger">
-        <p><strong>IMPORTANT!</strong>  Be sure you've read and understood the
+    <div class="my-3 p-3 border">
+        <p><em class="text-danger">IMPORTANT!</em>  Be sure you've read and understood the
             <a href="https://github.com/MarginaliaSearch/MarginaliaSearch/blob/master/doc/crawling.md">crawling documentation</a>
         before you begin a crawl.  You will be accessing real servers from your connection, and you may end up on IP greylists
         that temporarily block your access to those servers for up to a few weeks; on rare occasions permanently.  The crawler
