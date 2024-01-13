@@ -12,8 +12,8 @@ public record MessageQueueEntry (
         String ownerInstanceFull,
         long ownerTick,
         String state,
+        String createdTimeFull,
         String updatedTimeFull,
-        String updatedTime,
         int ttl
 )
 {
@@ -36,10 +36,10 @@ public record MessageQueueEntry (
     }
 
     public String getCreatedTime() {
-        String retDateBase = updatedTimeFull.replace('T', ' ');
+        String retDateBase = createdTimeFull.replace('T', ' ');
 
         // if another day, return date, hour and minute
-        if (!updatedTimeFull.startsWith(LocalDate.now().toString())) {
+        if (!createdTimeFull.startsWith(LocalDate.now().toString())) {
             // return hour minute and seconds
             return retDateBase.substring(0, "YYYY-MM-DDTHH:MM".length());
         }
