@@ -26,6 +26,8 @@ public class CompatibleLegacySerializableCrawlDataStream implements AutoCloseabl
     private SerializableCrawlData next;
 
     private final Path path;
+    private int sizeHint;
+
     public CompatibleLegacySerializableCrawlDataStream(Gson gson, File file) throws IOException {
         this.gson = gson;
         path = file.toPath();
@@ -34,10 +36,15 @@ public class CompatibleLegacySerializableCrawlDataStream implements AutoCloseabl
         bufferedReader = new BufferedReader(new InputStreamReader(new ZstdInputStream(new FileInputStream(file), RecyclingBufferPool.INSTANCE)));
     }
 
+    @Override
+    public int sizeHint() {
+        return sizeHint;
+    }
+
     /** Scan through the file and find the domain record */
     private CrawledDomain findDomain(File file) throws IOException {
         try (var br = new BufferedReader(new InputStreamReader(new ZstdInputStream(new FileInputStream(file), RecyclingBufferPool.INSTANCE)))) {
-            for (;;) {
+            for (;;sizeHint++) {
                 String identifierLine =
                         requireNonNull(br.readLine(), "No identifier line found");
                 String dataLine =
