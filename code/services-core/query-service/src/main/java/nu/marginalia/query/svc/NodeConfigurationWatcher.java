@@ -30,18 +30,13 @@ public class NodeConfigurationWatcher {
     private void pollConfiguration() {
         for (;;) {
             List<Integer> goodNodes = new ArrayList<>();
-            try {
-                for (var cfg : configurationService.getAll()) {
 
-                    if (!cfg.disabled() && cfg.acceptQueries()) {
-                        goodNodes.add(cfg.node());
-                    }
+            for (var cfg : configurationService.getAll()) {
+                if (!cfg.disabled() && cfg.acceptQueries()) {
+                    goodNodes.add(cfg.node());
                 }
-                queryNodes = goodNodes;
             }
-            catch (SQLException ex) {
-                logger.warn("Failed to update node configurations", ex);
-            }
+            queryNodes = goodNodes;
 
             TimeUnit.SECONDS.sleep(10);
         }

@@ -34,8 +34,22 @@ if [ -e "${1}" ]; then
   exit 1
 fi
 
-INSTALL_DIR=${1}
+INSTALL_DIR=$(realpath ${1})
 
+echo "Would you like to set up a:"
+echo
+echo "1) barebones instance"
+echo "2) full Marginalia Search instance?"
+read -p "Enter 1 or 2: " INSTANCE_TYPE
+
+## Validate
+if [ "${INSTANCE_TYPE}" != "1" ] && [ "${INSTANCE_TYPE}" != "2" ]; then
+  echo
+  echo "ERROR: Invalid instance type, choose 1 or 2"
+  exit 1
+fi
+
+echo
 echo "We're going to set up a Mariadb database in docker, please enter some details"
 
 read -p "MariaDB user (e.g. marginalia): " MARIADB_USER
@@ -52,6 +66,7 @@ if [ "${MARIADB_PASSWORD}" != "${MARIADB_PASSWORD2}" ]; then
   exit 1
 fi
 
+echo
 echo "Will install to ${INSTALL_DIR}"
 read -p "Press enter to continue, or Ctrl-C to abort"
 
@@ -63,7 +78,7 @@ mkdir -p ${INSTALL_DIR}
 
 echo "** Copying files to ${INSTALL_DIR}"
 
-for dir in model data conf env; do
+for dir in model data conf conf/properties env; do
   if [ ! -d ${dir} ]; then
     echo "ERROR: ${dir} does not exist"
     exit 1
@@ -73,6 +88,11 @@ for dir in model data conf env; do
   find  ${dir} -maxdepth 1 -type f -exec cp -v {} ${INSTALL_DIR}/{} \;
 done
 
+# for barebones, tell the control service to hide the marginalia app specific stuff
+if [ "${INSTANCE_TYPE}" == "1" ]; then
+  echo "control.hideMarginaliaApp=true" > ${INSTALL_DIR}/conf/properties/control-service.properties
+fi
+
 echo "** Copying settings files"
 cp prometheus.yml ${INSTALL_DIR}/
 
@@ -80,6 +100,7 @@ echo "** Creating directories"
 mkdir -p ${INSTALL_DIR}/logs
 mkdir -p ${INSTALL_DIR}/db
 mkdir -p ${INSTALL_DIR}/index-1/{work,index,backup,storage,uploads}
+mkdir -p ${INSTALL_DIR}/index-2/{work,index,backup,storage,uploads}
 
 echo "** Updating settings files"
 
@@ -93,6 +114,11 @@ export uval="\$\$MARIADB_USER"
 export pval="\$\$MARIADB_PASSWORD"
 
 export INSTALL_DIR
-envsubst < install/docker-compose.yml.template >${INSTALL_DIR}/docker-compose.yml
+
+if [ "${INSTANCE_TYPE}" == "1" ]; then
+  envsubst < install/docker-compose-barebones.yml.template >${INSTALL_DIR}/docker-compose.yml
+else
+  envsubst < install/docker-compose-marginalia.yml.template >${INSTALL_DIR}/docker-compose.yml
+fi
 
 popd

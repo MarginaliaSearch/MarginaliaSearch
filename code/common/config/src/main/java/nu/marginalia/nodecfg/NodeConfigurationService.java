@@ -3,12 +3,15 @@ package nu.marginalia.nodecfg;
 import com.google.inject.Inject;
 import com.zaxxer.hikari.HikariDataSource;
 import nu.marginalia.nodecfg.model.NodeConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class NodeConfigurationService {
+    private final Logger logger = LoggerFactory.getLogger(NodeConfigurationService.class);
 
     private final HikariDataSource dataSource;
 
@@ -37,7 +40,7 @@ public class NodeConfigurationService {
         }
     }
 
-    public List<NodeConfiguration> getAll() throws SQLException {
+    public List<NodeConfiguration> getAll() {
         try (var conn = dataSource.getConnection();
              var qs = conn.prepareStatement("""
                      SELECT ID, DESCRIPTION, ACCEPT_QUERIES, AUTO_CLEAN, PRECESSION, KEEP_WARCS, DISABLED
@@ -59,6 +62,10 @@ public class NodeConfigurationService {
                 ));
             }
             return ret;
+        }
+        catch (SQLException ex) {
+            logger.warn("Failed to get node configurations", ex);
+            return List.of();
         }
     }
 

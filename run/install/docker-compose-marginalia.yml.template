@@ -37,6 +37,29 @@ x-p1: &partition-1
     - wmsa
   environment:
     - "WMSA_SERVICE_NODE=1"
+x-p2: &partition-2
+  env_file:
+    - "${INSTALL_DIR}/env/service.env"
+  healthcheck:
+      test: curl -f http://localhost:80/internal/ping || exit 1
+      start_period: 1s
+      interval: 5s
+      timeout: 5s
+      retries: 60
+  volumes:
+    - conf:/wmsa/conf:ro
+    - model:/wmsa/model
+    - data:/wmsa/data
+    - logs:/var/log/wmsa
+    - index-2:/idx
+    - work-2:/work
+    - backup-2:/backup
+    - storage-2:/storage
+    - uploads-2:/uploads
+  networks:
+    - wmsa
+  environment:
+    - "WMSA_SERVICE_NODE=2"
 services:
   index-service-1:
     <<: *partition-1
@@ -49,6 +72,20 @@ services:
     <<: *partition-1
     image: "marginalia/executor-service"
     container_name: "executor-service-1"
+    depends_on:
+        control-service:
+          condition: service_healthy
+  index-service-2:
+    <<: *partition-2
+    image: "marginalia/index-service"
+    container_name: "index-service-2"
+    depends_on:
+        control-service:
+          condition: service_healthy
+  executor-service-2:
+    <<: *partition-2
+    image: "marginalia/executor-service"
+    container_name: "executor-service-2"
     depends_on:
         control-service:
           condition: service_healthy
@@ -231,3 +268,33 @@ volumes:
       type: none
       o: bind
       device: ${INSTALL_DIR}/index-1/backup
+  storage-2:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${INSTALL_DIR}/index-2/storage
+  uploads-2:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${INSTALL_DIR}/index-2/uploads
+  index-2:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${INSTALL_DIR}/index-2/index
+  work-2:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${INSTALL_DIR}/index-2/work
+  backup-2:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${INSTALL_DIR}/index-2/backup
