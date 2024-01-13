@@ -25,6 +25,12 @@
             </tr>
         {{/each}}
     </table>
+
+    <div class="m-3 p-3 border bg-light">
+        This lists the base paths for the storage object classes.  If the index runs in a container,
+        these are the paths inside the container.  If the index runs on a host, these are the paths
+        on the host.
+    </div>
 </div>
 </body>
 {{> control/partials/foot-includes }}
