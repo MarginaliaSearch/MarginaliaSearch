@@ -11,6 +11,7 @@ import spark.Request;
 import spark.Response;
 
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -108,7 +109,6 @@ public class EventLogService {
                         rs.getLong("ID"),
                         rs.getString("SERVICE_NAME"),
                         rs.getString("INSTANCE"),
-                        rs.getTimestamp("EVENT_TIME").toLocalDateTime().toLocalTime().toString(),
                         rs.getTimestamp("EVENT_TIME").toLocalDateTime().toString(),
                         rs.getString("EVENT_TYPE"),
                         rs.getString("EVENT_MESSAGE")
@@ -143,7 +143,6 @@ public class EventLogService {
                         rs.getLong("ID"),
                         rs.getString("SERVICE_NAME"),
                         rs.getString("INSTANCE"),
-                        rs.getTimestamp("EVENT_TIME").toLocalDateTime().toLocalTime().toString(),
                         rs.getTimestamp("EVENT_TIME").toLocalDateTime().toString(),
                         rs.getString("EVENT_TYPE"),
                         rs.getString("EVENT_MESSAGE")
@@ -155,6 +154,7 @@ public class EventLogService {
             throw new RuntimeException(ex);
         }
     }
+
     public List<EventLogEntry> getLastEntriesForTypeAndService(String typeName, String serviceName, long afterId, int n) {
         try (var conn = dataSource.getConnection();
              var query = conn.prepareStatement("""
@@ -178,7 +178,6 @@ public class EventLogService {
                         rs.getLong("ID"),
                         rs.getString("SERVICE_NAME"),
                         rs.getString("INSTANCE"),
-                        rs.getTimestamp("EVENT_TIME").toLocalDateTime().toLocalTime().toString(),
                         rs.getTimestamp("EVENT_TIME").toLocalDateTime().toString(),
                         rs.getString("EVENT_TYPE"),
                         rs.getString("EVENT_MESSAGE")
@@ -214,7 +213,6 @@ public class EventLogService {
                         rs.getLong("ID"),
                         rs.getString("SERVICE_NAME"),
                         rs.getString("INSTANCE"),
-                        rs.getTimestamp("EVENT_TIME").toLocalDateTime().toLocalTime().toString(),
                         rs.getTimestamp("EVENT_TIME").toLocalDateTime().toString(),
                         rs.getString("EVENT_TYPE"),
                         rs.getString("EVENT_MESSAGE")
@@ -247,7 +245,6 @@ public class EventLogService {
                         rs.getLong("ID"),
                         rs.getString("SERVICE_NAME"),
                         rs.getString("INSTANCE"),
-                        rs.getTimestamp("EVENT_TIME").toLocalDateTime().toLocalTime().toString(),
                         rs.getTimestamp("EVENT_TIME").toLocalDateTime().toString(),
                         rs.getString("EVENT_TYPE"),
                         rs.getString("EVENT_MESSAGE")

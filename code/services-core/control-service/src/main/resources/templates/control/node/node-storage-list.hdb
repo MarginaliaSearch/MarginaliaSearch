@@ -54,8 +54,8 @@
                 </tr>
             {{/unless}}
         </table>
-            </div>
     </div>
+</div>
 </body>
 {{> control/partials/foot-includes }}
 </html>

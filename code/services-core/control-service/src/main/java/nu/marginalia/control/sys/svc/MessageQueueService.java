@@ -364,8 +364,8 @@ public class MessageQueueService {
                 rs.getString("OWNER_INSTANCE"),
                 rs.getLong("OWNER_TICK"),
                 rs.getString("STATE"),
-                rs.getTimestamp("CREATED_TIME").toLocalDateTime().toLocalTime().toString(),
-                rs.getTimestamp("UPDATED_TIME").toLocalDateTime().toLocalTime().toString(),
+                rs.getTimestamp("CREATED_TIME").toLocalDateTime().toString(),
+                rs.getTimestamp("UPDATED_TIME").toLocalDateTime().toString(),
                 rs.getInt("TTL"));
     }
 }
