@@ -15,7 +15,7 @@ import java.net.UnknownHostException;
  *  They must also invoke init() in their main method.
  */
 public abstract class MainClass {
-    private static final Logger logger = LoggerFactory.getLogger(MainClass.class);
+    private final Logger logger = LoggerFactory.getLogger(MainClass.class);
 
     static {
         // Load global config ASAP
