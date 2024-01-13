@@ -65,7 +65,8 @@ public class AssistantClient extends AbstractDynamicClient {
 
     public Observable<ArrayList<SimilarDomain>> similarDomains(Context ctx, int domainId, int count) {
         try {
-            return super.get(ctx, 0, STR."/domain/\{domainId}/similar?count=\{count}", new TypeToken<ArrayList<SimilarDomain>>() {});
+            return super.get(ctx, 0, STR."/domain/\{domainId}/similar?count=\{count}", new TypeToken<ArrayList<SimilarDomain>>() {})
+                    .onErrorResumeWith(Observable.just(new ArrayList<>()));
         }
         catch (RouteNotConfiguredException ex) {
             return Observable.empty();
@@ -74,7 +75,8 @@ public class AssistantClient extends AbstractDynamicClient {
 
     public Observable<ArrayList<SimilarDomain>> linkedDomains(Context ctx, int domainId, int count) {
         try {
-            return super.get(ctx, 0, STR."/domain/\{domainId}/linking?count=\{count}", new TypeToken<ArrayList<SimilarDomain>>() {});
+            return super.get(ctx, 0, STR."/domain/\{domainId}/linking?count=\{count}", new TypeToken<ArrayList<SimilarDomain>>() {})
+                    .onErrorResumeWith(Observable.just(new ArrayList<>()));
         }
         catch (RouteNotConfiguredException ex) {
             return Observable.empty();
@@ -83,7 +85,8 @@ public class AssistantClient extends AbstractDynamicClient {
 
     public Observable<DomainInformation> domainInformation(Context ctx, int domainId) {
         try {
-            return super.get(ctx, 0, STR."/domain/\{domainId}/info", DomainInformation.class);
+            return super.get(ctx, 0, STR."/domain/\{domainId}/info", DomainInformation.class)
+                    .onErrorResumeWith(Observable.just(new DomainInformation()));
         }
         catch (RouteNotConfiguredException ex) {
             return Observable.empty();
