@@ -10,6 +10,7 @@
     {{> control/node/partial-node-nav }}
 
     {{#if view.new-crawl}} {{> control/node/actions/partial-new-crawl }} {{/if}}
+    {{#if view.new-crawl-specs}} {{> control/node/actions/partial-new-crawl-specs }} {{/if}}
     {{#if view.re-crawl}} {{> control/node/actions/partial-recrawl }} {{/if}}
     {{#if view.process}} {{> control/node/actions/partial-process }} {{/if}}
     {{#if view.load}} {{> control/node/actions/partial-load }} {{/if}}

@@ -62,9 +62,11 @@ public class ControlNodeActionsService {
                 redirectControl.renderRedirectAcknowledgement("Sideloading", "..")
         );
         Spark.post("/public/nodes/:id/actions/new-crawl", this::triggerNewCrawl,
-                redirectControl.renderRedirectAcknowledgement("Crawling", ".."));
+                redirectControl.renderRedirectAcknowledgement("Crawling", "..")
+        );
         Spark.post("/public/nodes/:id/actions/recrawl", this::triggerAutoRecrawl,
-                redirectControl.renderRedirectAcknowledgement("Recrawling", ".."));
+                redirectControl.renderRedirectAcknowledgement("Recrawling", "..")
+        );
         Spark.post("/public/nodes/:id/actions/process", this::triggerAutoProcess,
                 redirectControl.renderRedirectAcknowledgement("Processing", "..")
         );
@@ -73,6 +75,9 @@ public class ControlNodeActionsService {
         );
         Spark.post("/public/nodes/:id/actions/restore-backup", this::triggerRestoreBackup,
                 redirectControl.renderRedirectAcknowledgement("Restoring", "..")
+        );
+        Spark.post("/public/nodes/:id/actions/new-crawl-specs", this::createNewSpecsAction,
+                redirectControl.renderRedirectAcknowledgement("Creating", "../actions?view=new-crawl")
         );
     }
 
@@ -215,4 +220,13 @@ public class ControlNodeActionsService {
     }
 
 
+    private Object createNewSpecsAction(Request request, Response response) {
+        final String description = request.queryParams("description");
+        final String url = request.queryParams("url");
+        int nodeId = Integer.parseInt(request.params("id"));
+
+        executorClient.createCrawlSpecFromDownload(Context.fromRequest(request), nodeId, description, url);
+
+        return "";
+    }
 }

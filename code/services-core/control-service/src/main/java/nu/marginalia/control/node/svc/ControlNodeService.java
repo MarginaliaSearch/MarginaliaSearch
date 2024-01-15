@@ -75,7 +75,6 @@ public class ControlNodeService {
         var storageDetailsRenderer = rendererFactory.renderer("control/node/node-storage-details");
         var configRenderer = rendererFactory.renderer("control/node/node-config");
 
-        var newSpecsFormRenderer = rendererFactory.renderer("control/node/node-new-specs-form");
 
         Spark.get("/public/nodes", this::nodeListModel, nodeListRenderer::render);
         Spark.get("/public/nodes/:id", this::nodeOverviewModel, overviewRenderer::render);
@@ -88,10 +87,6 @@ public class ControlNodeService {
 
         Spark.post("/public/nodes/:id/process/:processBase/stop", this::stopProcess,
                 redirectControl.renderRedirectAcknowledgement("Stopping", "../..")
-        );
-        Spark.get("/public/nodes/:id/storage/new-specs", this::newSpecsModel, newSpecsFormRenderer::render);
-        Spark.post("/public/nodes/:id/storage/new-specs", this::createNewSpecsAction,
-                redirectControl.renderRedirectAcknowledgement("Creating", ".")
         );
 
         Spark.get("/public/nodes/:id/storage/:view", this::nodeStorageListModel, storageListRenderer::render);
@@ -166,26 +161,6 @@ public class ControlNodeService {
     @SneakyThrows
     public String redirectToOverview(Request request) {
         return redirectToOverview(Integer.parseInt(request.params("id")));
-    }
-
-    private Object createNewSpecsAction(Request request, Response response) {
-        final String description = request.queryParams("description");
-        final String url = request.queryParams("url");
-        int nodeId = Integer.parseInt(request.params("id"));
-
-        executorClient.createCrawlSpecFromDownload(Context.fromRequest(request), nodeId, description, url);
-
-        return "";
-    }
-
-    private Object newSpecsModel(Request request, Response response) throws SQLException {
-        int nodeId = Integer.parseInt(request.params("id"));
-
-        return Map.of(
-                "tab", Map.of("storage", true),
-                "node", nodeConfigurationService.get(nodeId),
-                "view", Map.of("specs", true)
-        );
     }
 
     private Object nodeActorsModel(Request request, Response response) throws SQLException {

@@ -2,13 +2,13 @@
 
 {{#unless allCrawlSpecs}}
     No crawling specifications have been created.  You must create a crawl spec before you can crawl.
-    <a href="/nodes/{{node.id}}/storage/new-specs">create a crawl spec</a>.
+    <a href="?view=new-crawl-specs">create a crawl spec</a>.
 {{/unless}}
 
 {{#if allCrawlSpecs}}
     <div class="my-3 p-3 border bg-light">
     This will perform a new crawl on node {{node.id}} based on the crawl spec you select below.
-    Additional specifications can be created <a href="/nodes/{{node.id}}/storage/new-specs">with this form</a>.
+    Additional specifications can be created <a href="?view=new-crawl-specs">with this form</a>.
     </div>
     <div class="my-3 p-3 border">
         <p><em class="text-danger">IMPORTANT!</em>  Be sure you've read and understood the
