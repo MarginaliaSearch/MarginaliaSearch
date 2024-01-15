@@ -144,7 +144,7 @@ class WarcRecorderTest {
 
         CrawledDocumentParquetRecordFileWriter.convertWarc(
                 "www.marginalia.nu",
-                new UserAgent("test"),
+                new UserAgent("test", "test"),
                 fileNameWarc,
                 fileNameParquet);
 

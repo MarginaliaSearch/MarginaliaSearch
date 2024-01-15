@@ -270,7 +270,7 @@ public class CrawlingThenConvertingIntegrationTest {
         }
 
         CrawledDocumentParquetRecordFileWriter.convertWarc(specs.domain,
-                new UserAgent("test"),
+                new UserAgent("test", "test"),
                 fileName, fileName2);
 
         try (var reader = new ParquetSerializableCrawlDataStream(fileName2)) {

@@ -312,7 +312,7 @@ class CrawlerRetreiverTest {
 
     private void convertToParquet(Path tempFileWarc2, Path tempFileParquet2) {
         CrawledDocumentParquetRecordFileWriter.convertWarc("www.marginalia.nu",
-                new UserAgent("test"), tempFileWarc2, tempFileParquet2);
+                new UserAgent("test", "test"), tempFileWarc2, tempFileParquet2);
     }
 
 
