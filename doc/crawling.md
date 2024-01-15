@@ -3,79 +3,79 @@
 This document is a draft.
 
 ## WARNING
-Please don't run the crawler unless you intend to actually operate a public
-facing search engine!  For testing, use crawl sets from downloads.marginalia.nu instead.
 
-See the documentation in run/ for more information.
+Please don't run the crawler unless you intend to actually operate a public
+facing search engine!  For testing, use crawl sets from [downloads.marginalia.nu](https://downloads.marginalia.nu/) instead;
+or if you wish to play with the crawler, crawl a small set of domains from people who are
+ok with it, use your own, your friends, or any subdomain from marginalia.nu.
+
+See the documentation in run/ for more information on how to load sample data! 
 
 Reckless crawling annoys webmasters and makes it harder to run an independent search engine. 
 Crawling from a domestic IP address is also likely to put you on a greylist
 of probable bots.  You will solve CAPTCHAs for almost every website you visit
-for weeks.
+for weeks, and may be permanently blocked from a few IPs.
 
 ## Prerequisites
 
 You probably want to run a local bind resolver to speed up DNS lookups and reduce the amount of
 DNS traffic. 
 
-These processes require a lot of disk space.  It's strongly recommended to use a dedicated disk,
-it doesn't need to be extremely fast, but it should be a few terabytes in size.  It should be mounted
-with `noatime` and partitioned with a large block size.  It may be a good idea to format the disk with 
-a block size of 4096 bytes.  This will reduce the amount of disk space used by the crawler.
+These processes require a lot of disk space.  It's strongly recommended to use a dedicated disk for
+the index storage subdirectory, it doesn't need to be extremely fast, but it should be a few terabytes in size.  
+
+It should be mounted with `noatime`.  It may be a good idea to format the disk with a block size of 4096 bytes.  This will reduce the amount of disk space used by the crawler.
 
 Make sure you configure the user-agent properly.  This will be used to identify the crawler,
 and is matched against the robots.txt file.  The crawler will not crawl sites that don't allow it.
-
-This can be done by editing the file `${WMSA_HOME}/conf/user-agent`.
+See [wiki://Robots_exclusion_standard](https://en.wikipedia.org/wiki/Robots_exclusion_standard) for more information
+about robots.txt; the user agent can be configured in conf/properties/system.properties; see the 
+[system-properties](system-properties.md) documentation for more information.
 
 ## Setup
 
 Ensure that the system is running and go to https://localhost:8081.  
 
 With the default test configuration, the system is configured to 
-store data in `run/node-1/samples`.
+store data in `node-1/storage`.
 
-### Specifications
+## Fresh Crawl
 
 While a running search engine can use the link database to figure out which websites to visit, a clean
-system does not know of any links.  To bootstrap a crawl, a crawl specification can be created.  
+system does not know of any links.  To bootstrap a crawl, a crawl specification needs to be created to 
+seed the domain database.
 
-You need a list of known domains.  This is just a text file with one domain name per line,
-with blank lines and comments starting with `#` ignored.  Make it available over HTTP(S).
+Go to `Nodes->Node 1->Actions->New Crawl`
 
-Go to
+![img](images/new_crawl.png)
 
-* System -> Nodes
-* Select node 1
-* Storage -> Specs
-* Click `[Create New Specification]`
+Click the link that says 'New Spec' to arrive at a form for creating a new specification:
 
 Fill out the form with a description and a link to the domain list. 
 
 ## Crawling 
 
-Refresh the specification list in the operator's gui.  You should see your new specification in the list.
-Click the link, then select `[Crawl]` under `Actions`.
+If you aren't redirected there automatically, go back to the `New Crawl` page under Node 1 -> Actions. 
+Your new specification should now be listed.  
 
-Depending on the size of the specification, this may take anywhere between a few minutes to a few weeks. 
-You can follow the progress in the `Overview` view.  It's fairly common for the crawler to get stuck at 
-99%, this is from the crawler finishing up the largest sites.  It will abort if no progress has been made
-in five hours. 
+Check the box next to it, and click `[Trigger New Crawl]`.
 
-You can manually also abort the crawler by going to
+![img](images/new_crawl2.png)
 
-* System -> Nodes -> `[your node]` -> Actors.
+This will start the crawling process.  Crawling may take a while, depending on the size
+of the domain list and the size of the websites.  
 
-Toggle both CRAWL and PROC_CRAWLER_SPAWNER to `[OFF]`.  
+![img](images/crawl_in_progress.png)
 
-CRAWL controls the larger crawler process, and PROC_CRAWLER_SPAWNER spawns the actual
-crawler process.  The crawler will be aborted, but the crawl data should be intact. 
+Eventually a process bar will show up, and the crawl will start.  When it reaches 100%, the crawl is done.
+You can also monitor the `Events Summary` table on the same page to see what happened after the fact.
 
-At this point you'll want to set PROC_CRAWLER_SPAWNER back to `[ON]`, as the crawler
-won't be able to start until it's set to this mode.
+It is expected that the crawl will stall out toward the end  of the process, this is a statistical effect since
+the largest websites take the longest to finish, and tend to be the ones lingering at 99% or so completion.  The
+crawler has a timeout of 5 hours, where if no new domains are finished crawling, it will stop, to prevent crawler traps
+from stalling the crawl indefinitely. 
 
-!!! FIXME: This UX kinda sucks, should be an abort button ideally, none of this having to toggle
-circuit breakers on and off.
+**Be sure to read the section on re-crawling!**
 
 ## Converting
 
