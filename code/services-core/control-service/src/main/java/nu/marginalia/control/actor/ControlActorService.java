@@ -8,6 +8,7 @@ import nu.marginalia.actor.ActorStateMachine;
 import nu.marginalia.actor.prototype.ActorPrototype;
 import nu.marginalia.actor.state.ActorStateInstance;
 import nu.marginalia.control.actor.monitor.MessageQueueMonitorActor;
+import nu.marginalia.control.actor.monitor.ServiceHeartbeatMonitorActor;
 import nu.marginalia.control.actor.precession.RecrawlAllActor;
 import nu.marginalia.control.actor.precession.ReindexAllActor;
 import nu.marginalia.control.actor.precession.ReprocessAllActor;
@@ -15,6 +16,8 @@ import nu.marginalia.model.gson.GsonFactory;
 import nu.marginalia.mq.MessageQueueFactory;
 import nu.marginalia.service.control.ServiceEventLog;
 import nu.marginalia.service.server.BaseServiceParams;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +27,8 @@ import java.util.stream.Collectors;
 
 @Singleton
 public class ControlActorService {
+    private static final Logger logger = LoggerFactory.getLogger(ControlActorService.class);
+
     private final ServiceEventLog eventLog;
     private final Gson gson;
     private final MessageQueueFactory messageQueueFactory;
@@ -34,6 +39,7 @@ public class ControlActorService {
     public ControlActorService(MessageQueueFactory messageQueueFactory,
                                BaseServiceParams baseServiceParams,
                                MessageQueueMonitorActor messageQueueMonitor,
+                               ServiceHeartbeatMonitorActor heartbeatMonitorActor,
                                ReindexAllActor reindexAllActor,
                                ReprocessAllActor reprocessAllActor,
                                RecrawlAllActor recrawlAllActor
@@ -45,6 +51,7 @@ public class ControlActorService {
 
 
         register(ControlActor.MONITOR_MESSAGE_QUEUE, messageQueueMonitor);
+        register(ControlActor.MONITOR_HEARTBEATS, heartbeatMonitorActor);
         register(ControlActor.REINDEX_ALL, reindexAllActor);
         register(ControlActor.REPROCESS_ALL, reprocessAllActor);
         register(ControlActor.RECRAWL_ALL, recrawlAllActor);
@@ -120,4 +127,17 @@ public class ControlActorService {
         return actorDefinitions.get(actor);
     }
 
+    public void startDefaultActors() {
+        try {
+            if (!stateMachines.get(ControlActor.MONITOR_HEARTBEATS).isRunning()) {
+                start(ControlActor.MONITOR_HEARTBEATS);
+            }
+            if (!stateMachines.get(ControlActor.MONITOR_MESSAGE_QUEUE).isRunning()) {
+                start(ControlActor.MONITOR_MESSAGE_QUEUE);
+            }
+        }
+        catch (Exception ex) {
+            logger.error("Failed to start default actors", ex);
+        }
+    }
 }

@@ -56,7 +56,7 @@ class HeartbeatServiceTest {
 
     @Test
     void removeTaskHeartbeat() throws SQLException {
-        var service = new HeartbeatService(dataSource, Mockito.mock(ServiceEventLog.class));
+        var service = new HeartbeatService(dataSource);
 
         try (var conn = dataSource.getConnection();
              var stmt = conn.createStatement()) {

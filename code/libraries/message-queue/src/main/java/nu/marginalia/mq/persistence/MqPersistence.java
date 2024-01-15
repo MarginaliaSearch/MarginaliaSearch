@@ -479,11 +479,12 @@ public class MqPersistence {
     /** Removes messages that have been set to a terminal state a while after their last update timestamp */
     public int cleanOldMessages() throws SQLException {
         try (var conn = dataSource.getConnection();
+             // Keep 72 hours of messages
              var setToDead = conn.prepareStatement("""
                      DELETE FROM MESSAGE_QUEUE
-                     WHERE STATE = 'OK'
-                     AND TTL IS NOT NULL
-                     AND TIMESTAMPDIFF(SECOND, UPDATED_TIME, CURRENT_TIMESTAMP(6)) > 3600
+                     WHERE STATE IN ('OK', 'DEAD')
+                     AND (TTL IS NULL OR TTL = 0)
+                     AND TIMESTAMPDIFF(SECOND, UPDATED_TIME, CURRENT_TIMESTAMP(6)) > 72*3600
                      """)) {
             int ret = setToDead.executeUpdate();
             if (!conn.getAutoCommit())

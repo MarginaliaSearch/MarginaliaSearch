@@ -105,6 +105,8 @@ public class ControlService extends Service {
         Spark.get("/public/:resource", this::serveStatic);
 
         monitors.subscribe(this::logMonitorStateChange);
+
+        controlActorService.startDefaultActors();
     }
 
     private Object overviewModel(Request request, Response response) {

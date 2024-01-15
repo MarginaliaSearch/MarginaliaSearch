@@ -15,13 +15,10 @@ import java.util.List;
 @Singleton
 public class HeartbeatService {
     private final HikariDataSource dataSource;
-    private final ServiceEventLog eventLogService;
 
     @Inject
-    public HeartbeatService(HikariDataSource dataSource,
-                            ServiceEventLog eventLogService) {
+    public HeartbeatService(HikariDataSource dataSource) {
         this.dataSource = dataSource;
-        this.eventLogService = eventLogService;
     }
 
     public List<ServiceHeartbeat> getServiceHeartbeats() {
@@ -113,6 +110,7 @@ public class HeartbeatService {
         }
         return heartbeats;
     }
+
     public void removeTaskHeartbeat(TaskHeartbeat heartbeat) {
         try (var conn = dataSource.getConnection();
              var stmt = conn.prepareStatement("""

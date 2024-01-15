@@ -335,6 +335,16 @@ public class ActorStateMachine {
         return isDirectlyInitializable;
     }
 
+    public boolean isRunning() {
+        if (state == null)
+            return false;
+
+        if (state.isFinal())
+            return false;
+
+        return true;
+    }
+
     private class StateEventSubscription implements MqSubscription {
 
         @Override

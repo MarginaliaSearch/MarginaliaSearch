@@ -8,12 +8,15 @@ import nu.marginalia.actor.state.ActorResumeBehavior;
 import nu.marginalia.actor.state.ActorStep;
 import nu.marginalia.actor.state.Resume;
 import nu.marginalia.mq.persistence.MqPersistence;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class MessageQueueMonitorActor extends RecordActorPrototype {
-
+    private static final Logger logger = LoggerFactory.getLogger(MessageQueueMonitorActor.class);
     private final MqPersistence persistence;
 
     public record Initial() implements ActorStep {}
@@ -26,9 +29,17 @@ public class MessageQueueMonitorActor extends RecordActorPrototype {
             case Initial i -> new Monitor();
             case Monitor m -> {
                 for (;;) {
-                    persistence.reapDeadMessages();
-                    persistence.cleanOldMessages();
+                    // Sleep before reaping dead messages, to avoid problems during startup
                     TimeUnit.SECONDS.sleep(60);
+
+                    try {
+                        persistence.reapDeadMessages();
+                        persistence.cleanOldMessages();
+                    }
+                    catch (SQLException ex) {
+                        logger.warn("Failed to reap dead messages", ex);
+                    }
+
                 }
             }
             default -> new Error();
