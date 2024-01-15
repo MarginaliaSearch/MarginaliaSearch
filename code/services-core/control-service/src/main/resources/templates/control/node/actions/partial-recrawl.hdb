@@ -31,9 +31,12 @@
     </tr>
 {{#each allCrawlData}}
     <tr>
-        <td><input {{#if active}}checked{{/if}} class="form-check-input" type="radio" name="source" id="{{id}}" value="{{id}}"></td>
+        <td><input {{#if active}}checked{{/if}}  {{#if new}}disabled{{/if}} {{#if delete}}disabled{{/if}}  class="form-check-input" type="radio" name="source" id="{{id}}" value="{{id}}"></td>
         <td><label for="{{id}}" class="form-check-label" >{{path}}</label></td>
-        <td>{{description}}</td>
+        <td>{{description}}
+            <span class="text-danger">{{#if new}}[CREATING]{{/if}}</span>
+            <span class="text-danger">{{#if delete}}[DELETING]{{/if}}</span>
+        </td>
         <td><a href="/nodes/{{node}}/storage/details?fid={{id}}">[Details]</a></td>
     </tr>
 {{/each}}
