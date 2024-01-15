@@ -51,9 +51,13 @@ Go to `Nodes->Node 1->Actions->New Crawl`
 
 Click the link that says 'New Spec' to arrive at a form for creating a new specification:
 
-Fill out the form with a description and a link to the domain list. 
+![img](images/new_spec.png)
 
-## Crawling 
+Fill out the form with a description and a link to a domain list.  The domain list is a text file
+with one domain per line, with blank lines and comments starting with `#` ignored.  You can use
+github raw links for this purpose.  For test purposes, you can use this link:
+`https://downloads.marginalia.nu/domain-list-test.txt`, which will create a crawl for a few
+of marignalia.nu's subdomains.
 
 If you aren't redirected there automatically, go back to the `New Crawl` page under Node 1 -> Actions. 
 Your new specification should now be listed.  
@@ -79,35 +83,35 @@ from stalling the crawl indefinitely.
 
 ## Converting
 
-Once the crawl is finished, you can convert and load the data to a format that can be loaded into the database.
+Once the crawl is done, the data needs to be processed before its searchable.  This is done by going to
+`Nodes->Node 1->Actions->Process Crawl Data`.
 
-First you'll want to go to Storage -> Crawl Data, and toggle the `State` field next to your new crawl
-data into `Active`.  This will mark it as eligible for processing. 
+[screenshot here]
 
-Next, go to Actions -> Process Crawl Data, and click `[Trigger Reprocessing]`.  Ensure your crawl data
-is visible in the list. This will start the automatic conversion and loading process, which can be followed
-in the `Overview` view.
+This will start the conversion process.  This will again take a while, depending on the size of the crawl. 
+The process bar will show the progress.  When it reaches 100%, the conversion is done, and the data will begin
+loading automatically.  A cascade of actions is performed in sequence, leading to the data being loaded into the
+search engine and an index being constructed.  This is all automatic, but depending on the size of the crawl data,
+may take a while.
 
-This process will take a while, and will run these discrete steps:
+When an event `INDEX-SWITCH-OK` is logged in the `Event Summary` table, the data is ready to be searched.
 
-* CONVERT the crawl data into a format that can be loaded into the database
-* LOAD, load posts into the mariadb database, construct an index journal and sqlite linkdb 
-* Delete the processed data (optional; depending on node configuration)
-* Create a backup of the index journal to be loaded (can be restored later)
-* Repartition and create new domain rankings
-* Construct a new index 
-* * Forward
-* * Full
-* * Priority
-* Switch to the new index
-
-All of this is automatic and most of it is visible in the `Overview` view. 
-
-## Recrawling (IMPORTANT)
+## Re-crawling
 
 The work flow with a crawl spec was a one-off process to bootstrap the search engine.  To keep the search engine up to date,
 it is preferable to do a recrawl.  This will try to reduce the amount of data that needs to be fetched.
 
-To trigger a Recrawl, ensure your crawl data is set to active, and then go to Actions -> Trigger Recrawl,
-and click `[Trigger Recrawl]`.  This will behave much like the old crawling step.   Once done, it needs to be
-processed like the old crawl data.
+To trigger a Recrawl, go to `Nodes->Node 1->Actions->Re-crawl`.  This will bring you to a page that looks similar to the
+first crawl page, where you can select a set of crawl data to use as a source.  Select the crawl data you want, and
+press `[Trigger Recrawl]`. 
+
+Crawling will proceed as before, but this time, the crawler will try to fetch only the data that has changed since the
+last crawl, increasing the number of documents by a percentage.  This will typically be much faster than the initial crawl.  
+
+### Growing the crawl set
+
+The re-crawl will also pull new domains from the `New Domains` dataset, which is an URL configurable in
+`[Top Menu] -> System -> Data Sets`.  If a new domain is found, it will be assigned to the present node, and crawled in
+the re-crawl.
+
+![Datasets screenshot](images/datasets.png)
