@@ -1,7 +1,5 @@
 # Crawling
 
-This document is a draft.
-
 ## WARNING
 
 Please don't run the crawler unless you intend to actually operate a public
@@ -86,7 +84,7 @@ from stalling the crawl indefinitely.
 Once the crawl is done, the data needs to be processed before its searchable.  This is done by going to
 `Nodes->Node 1->Actions->Process Crawl Data`.
 
-[screenshot here]
+![Conversion screenshot](images/convert.png)
 
 This will start the conversion process.  This will again take a while, depending on the size of the crawl. 
 The process bar will show the progress.  When it reaches 100%, the conversion is done, and the data will begin
