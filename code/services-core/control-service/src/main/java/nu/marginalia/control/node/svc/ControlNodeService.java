@@ -97,9 +97,6 @@ public class ControlNodeService {
         Spark.post("/public/nodes/:id/storage/reset-state/:fid", this::resetState,
                 redirectControl.renderRedirectAcknowledgement("Restoring", "..")
         );
-        Spark.post("/public/nodes/:id/actions/export-data", this::exportData,
-                redirectControl.renderRedirectAcknowledgement("Exporting", "../storage/exports")
-                );
         Spark.post("/public/nodes/:id/storage/:fid/export-atags", this::exportAtags,
                 redirectControl.renderRedirectAcknowledgement("Exporting", "../../storage/exports")
                 );
@@ -109,11 +106,6 @@ public class ControlNodeService {
 
     private Object resetState(Request request, Response response) throws SQLException {
         fileStorageService.setFileStorageState(FileStorageId.parse(request.params("fid")), FileStorageState.UNSET);
-        return "";
-    }
-
-    private Object exportData(Request req, Response rsp) {
-        executorClient.exportData(Context.fromRequest(req), Integer.parseInt(req.params("id")));
         return "";
     }
 

@@ -79,6 +79,9 @@ public class ControlNodeActionsService {
         Spark.post("/public/nodes/:id/actions/new-crawl-specs", this::createNewSpecsAction,
                 redirectControl.renderRedirectAcknowledgement("Creating", "../actions?view=new-crawl")
         );
+        Spark.post("/public/nodes/:id/actions/export-data", this::exportData,
+                redirectControl.renderRedirectAcknowledgement("Exporting", "../storage/exports")
+        );
     }
 
     public Object sideloadEncyclopedia(Request request, Response response) throws Exception {
@@ -227,6 +230,11 @@ public class ControlNodeActionsService {
 
         executorClient.createCrawlSpecFromDownload(Context.fromRequest(request), nodeId, description, url);
 
+        return "";
+    }
+
+    private Object exportData(Request req, Response rsp) {
+        executorClient.exportData(Context.fromRequest(req), Integer.parseInt(req.params("id")));
         return "";
     }
 }
