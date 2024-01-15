@@ -482,7 +482,7 @@ public class MqPersistence {
              // Keep 72 hours of messages
              var setToDead = conn.prepareStatement("""
                      DELETE FROM MESSAGE_QUEUE
-                     WHERE STATE IN ('OK', 'DEAD')
+                     WHERE STATE IN ('OK', 'DEAD', 'NEW')
                      AND (TTL IS NULL OR TTL = 0)
                      AND TIMESTAMPDIFF(SECOND, UPDATED_TIME, CURRENT_TIMESTAMP(6)) > 72*3600
                      """)) {
