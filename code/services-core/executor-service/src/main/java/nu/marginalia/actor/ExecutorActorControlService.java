@@ -44,6 +44,8 @@ public class ExecutorActorControlService {
                                        CrawlJobExtractorActor crawlJobExtractorActor,
                                        ExportDataActor exportDataActor,
                                        ExportAtagsActor exportAtagsActor,
+                                       ExportFeedsActor exportFeedsActor,
+                                       ExportTermFreqActor exportTermFrequenciesActor,
                                        ExecutorActorStateMachines stateMachines) {
         this.messageQueueFactory = messageQueueFactory;
         this.eventLog = baseServiceParams.eventLog;
@@ -68,6 +70,8 @@ public class ExecutorActorControlService {
         register(ExecutorActor.CRAWL_JOB_EXTRACTOR, crawlJobExtractorActor);
         register(ExecutorActor.EXPORT_DATA, exportDataActor);
         register(ExecutorActor.EXPORT_ATAGS, exportAtagsActor);
+        register(ExecutorActor.EXPORT_TERM_FREQUENCIES, exportTermFrequenciesActor);
+        register(ExecutorActor.EXPORT_FEEDS, exportFeedsActor);
     }
 
     private void register(ExecutorActor process, RecordActorPrototype graph) {

@@ -79,8 +79,11 @@ public class ControlNodeActionsService {
         Spark.post("/public/nodes/:id/actions/new-crawl-specs", this::createNewSpecsAction,
                 redirectControl.renderRedirectAcknowledgement("Creating", "../actions?view=new-crawl")
         );
-        Spark.post("/public/nodes/:id/actions/export-data", this::exportData,
-                redirectControl.renderRedirectAcknowledgement("Exporting", "../storage/exports")
+        Spark.post("/public/nodes/:id/actions/export-db-data", this::exportDbData,
+                redirectControl.renderRedirectAcknowledgement("Exporting", "..")
+        );
+        Spark.post("/public/nodes/:id/actions/export-from-crawl-data", this::exportFromCrawlData,
+                redirectControl.renderRedirectAcknowledgement("Exporting", "..")
         );
     }
 
@@ -233,8 +236,29 @@ public class ControlNodeActionsService {
         return "";
     }
 
-    private Object exportData(Request req, Response rsp) {
+    private Object exportDbData(Request req, Response rsp) {
         executorClient.exportData(Context.fromRequest(req), Integer.parseInt(req.params("id")));
+
+        return "";
+    }
+
+    private Object exportFromCrawlData(Request req, Response rsp) {
+        String exportType = req.queryParams("exportType");
+        String source = req.queryParams("source");
+
+        if (exportType.equals("atags")) {
+            executorClient.exportAtags(Context.fromRequest(req), Integer.parseInt(req.params("id")), source);
+        }
+        else if (exportType.equals("rss")) {
+            executorClient.exportRssFeeds(Context.fromRequest(req), Integer.parseInt(req.params("id")), source);
+        }
+        else if (exportType.equals("termFreq")) {
+            executorClient.exportTermFrequencies(Context.fromRequest(req), Integer.parseInt(req.params("id")), source);
+        }
+        else {
+            rsp.status(404);
+        }
+
         return "";
     }
 }

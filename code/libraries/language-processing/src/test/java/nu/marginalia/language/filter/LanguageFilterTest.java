@@ -1,6 +1,5 @@
-package nu.marginalia.converting.language;
+package nu.marginalia.language.filter;
 
-import nu.marginalia.converting.util.TestLanguageModels;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Test;
 

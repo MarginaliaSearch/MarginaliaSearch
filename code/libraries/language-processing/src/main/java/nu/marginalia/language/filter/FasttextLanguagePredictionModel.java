@@ -1,4 +1,4 @@
-package nu.marginalia.converting.language;
+package nu.marginalia.language.filter;
 
 import com.github.jfasttext.JFastText;
 import nu.marginalia.LanguageModels;

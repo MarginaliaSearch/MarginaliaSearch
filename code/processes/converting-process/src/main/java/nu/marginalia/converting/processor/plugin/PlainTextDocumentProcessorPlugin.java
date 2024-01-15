@@ -2,7 +2,7 @@ package nu.marginalia.converting.processor.plugin;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import nu.marginalia.converting.language.LanguageFilter;
+import nu.marginalia.language.filter.LanguageFilter;
 import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.processor.logic.DocumentLengthLogic;
 import nu.marginalia.crawling.model.CrawledDocument;

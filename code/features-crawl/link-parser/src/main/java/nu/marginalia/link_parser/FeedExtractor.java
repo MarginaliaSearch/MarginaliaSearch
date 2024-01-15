@@ -1,4 +1,4 @@
-package nu.marginalia.converting.processor.logic;
+package nu.marginalia.link_parser;
 
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.model.EdgeUrl;

@@ -28,4 +28,14 @@ public class ExportService {
         return "";
     }
 
+    public Object exportFeeds(Request request, Response response) throws Exception {
+        actorControlService.startFrom(ExecutorActor.EXPORT_FEEDS, new ExportAtagsActor.Export(FileStorageId.parse(request.queryParams("fid"))));
+        return "";
+    }
+    public Object exportTermFrequencies(Request request, Response response) throws Exception {
+        actorControlService.startFrom(ExecutorActor.EXPORT_TERM_FREQUENCIES, new ExportAtagsActor.Export(FileStorageId.parse(request.queryParams("fid"))));
+        return "";
+    }
+
+
 }

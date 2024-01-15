@@ -3,20 +3,22 @@ package nu.marginalia.actor.task;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import nu.marginalia.extractor.AtagExporter;
-import nu.marginalia.extractor.ExporterIf;
-import nu.marginalia.storage.model.*;
 import nu.marginalia.actor.prototype.RecordActorPrototype;
 import nu.marginalia.actor.state.ActorStep;
+import nu.marginalia.extractor.ExporterIf;
+import nu.marginalia.extractor.TermFrequencyExporter;
 import nu.marginalia.storage.FileStorageService;
+import nu.marginalia.storage.model.FileStorageBaseType;
+import nu.marginalia.storage.model.FileStorageId;
+import nu.marginalia.storage.model.FileStorageState;
+import nu.marginalia.storage.model.FileStorageType;
 
 import java.time.LocalDateTime;
 
 @Singleton
-public class ExportAtagsActor extends RecordActorPrototype {
+public class ExportTermFreqActor extends RecordActorPrototype {
     private final FileStorageService storageService;
-    private final ExporterIf atagExporter;
-
+    private final ExporterIf exporter;
     public record Export(FileStorageId crawlId) implements ActorStep {}
     public record Run(FileStorageId crawlId, FileStorageId destId) implements ActorStep {}
     @Override
@@ -24,7 +26,7 @@ public class ExportAtagsActor extends RecordActorPrototype {
         return switch(self) {
             case Export(FileStorageId crawlId) -> {
                 var storageBase = storageService.getStorageBase(FileStorageBaseType.STORAGE);
-                var storage = storageService.allocateTemporaryStorage(storageBase, FileStorageType.EXPORT, "atag-export", "Anchor Tags " + LocalDateTime.now());
+                var storage = storageService.allocateTemporaryStorage(storageBase, FileStorageType.EXPORT, "term-freq-export", "Term Frequencies " + LocalDateTime.now());
 
                 if (storage == null) yield new Error("Bad storage id");
                 yield new Run(crawlId, storage.id());
@@ -33,7 +35,7 @@ public class ExportAtagsActor extends RecordActorPrototype {
                 storageService.setFileStorageState(destId, FileStorageState.NEW);
 
                 try {
-                    atagExporter.export(crawlId, destId);
+                    exporter.export(crawlId, destId);
                     storageService.setFileStorageState(destId, FileStorageState.UNSET);
                 }
                 catch (Exception ex) {
@@ -50,17 +52,17 @@ public class ExportAtagsActor extends RecordActorPrototype {
 
     @Override
     public String describe() {
-        return "Export anchor tags from crawl data";
+        return "Export term frequencies from crawl data";
     }
 
     @Inject
-    public ExportAtagsActor(Gson gson,
-                            FileStorageService storageService,
-                            AtagExporter atagExporter)
+    public ExportTermFreqActor(Gson gson,
+                               FileStorageService storageService,
+                               TermFrequencyExporter exporter)
     {
         super(gson);
         this.storageService = storageService;
-        this.atagExporter = atagExporter;
+        this.exporter = exporter;
     }
 
 }

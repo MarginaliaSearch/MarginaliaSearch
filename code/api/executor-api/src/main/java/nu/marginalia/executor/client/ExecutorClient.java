@@ -100,6 +100,13 @@ public class ExecutorClient extends AbstractDynamicClient {
     public void exportAtags(Context ctx, int node, String fid) {
         post(ctx, node, "/export/atags?fid="+fid, "").blockingSubscribe();
     }
+    public void exportRssFeeds(Context ctx, int node, String fid) {
+        post(ctx, node, "/export/feeds?fid="+fid, "").blockingSubscribe();
+    }
+    public void exportTermFrequencies(Context ctx, int node, String fid) {
+        post(ctx, node, "/export/termfreq?fid="+fid, "").blockingSubscribe();
+    }
+
     public void exportData(Context ctx, int node) {
         post(ctx, node, "/export/data", "").blockingSubscribe();
     }

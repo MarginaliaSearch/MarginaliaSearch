@@ -2,7 +2,7 @@ package nu.marginalia.converting.processor.plugin;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import nu.marginalia.converting.language.LanguageFilter;
+import nu.marginalia.language.filter.LanguageFilter;
 import nu.marginalia.converting.model.GeneratorType;
 import nu.marginalia.converting.processor.DocumentClass;
 import nu.marginalia.converting.processor.MetaRobotsTag;
@@ -12,6 +12,7 @@ import nu.marginalia.converting.processor.logic.links.LinkProcessor;
 import nu.marginalia.converting.processor.plugin.specialization.*;
 import nu.marginalia.language.model.DocumentLanguageData;
 import nu.marginalia.language.sentence.ThreadLocalSentenceExtractorProvider;
+import nu.marginalia.link_parser.FeedExtractor;
 import nu.marginalia.model.crawl.HtmlFeature;
 import nu.marginalia.link_parser.LinkParser;
 import nu.marginalia.crawling.model.CrawledDocument;
