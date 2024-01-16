@@ -35,7 +35,7 @@ public class SearchQueryParamFactory {
                 SpecificationLimit.none(),
                 List.of(),
                 new QueryLimits(1, 25, 200, 8192),
-                profile.searchSetIdentifier
+                profile.searchSetIdentifier.name()
         );
 
     }
@@ -54,7 +54,7 @@ public class SearchQueryParamFactory {
                 SpecificationLimit.none(),
                 List.of(),
                 new QueryLimits(count, count, 100, 512),
-                SearchSetIdentifier.NONE
+                SearchSetIdentifier.NONE.name()
         );
     }
 
@@ -72,7 +72,7 @@ public class SearchQueryParamFactory {
                 SpecificationLimit.none(),
                 List.of(),
                 new QueryLimits(100, 100, 100, 512),
-                SearchSetIdentifier.NONE
+                SearchSetIdentifier.NONE.name()
         );
     }
 
@@ -90,7 +90,7 @@ public class SearchQueryParamFactory {
                 SpecificationLimit.none(),
                 List.of(),
                 new QueryLimits(100, 100, 100, 512),
-                SearchSetIdentifier.NONE
+                SearchSetIdentifier.NONE.name()
         );
     }
 }

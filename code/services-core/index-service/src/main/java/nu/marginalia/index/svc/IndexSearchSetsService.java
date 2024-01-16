@@ -80,16 +80,19 @@ public class IndexSearchSetsService {
         return domainRankings;
     }
 
-    public SearchSet getSearchSetByName(SearchSetIdentifier searchSetIdentifier) {
+    public SearchSet getSearchSetByName(String searchSetIdentifier) {
+
         if (null == searchSetIdentifier) {
             return anySet;
         }
+
         return switch (searchSetIdentifier) {
-            case NONE -> anySet;
-            case POPULAR -> popularSet;
-            case ACADEMIA -> academiaSet;
-            case SMALLWEB -> smallWebSet;
-            case BLOGS -> blogsSet;
+            case "POPULAR" -> popularSet;
+            case "ACADEMIA" -> academiaSet;
+            case "SMALLWEB" -> smallWebSet;
+            case "BLOGS" -> blogsSet;
+            case "NONE", "" -> anySet;
+            default -> throw new IllegalArgumentException("Unknown search set");
         };
     }
 

@@ -31,7 +31,7 @@ public class QueryProtobufCodec {
             builder.addSubqueries(IndexProtobufCodec.convertSearchSubquery(subquery));
         }
 
-        builder.setSearchSetIdentifier(query.specs.searchSetIdentifier.name());
+        builder.setSearchSetIdentifier(query.specs.searchSetIdentifier);
         builder.setHumanQuery(request.getHumanQuery());
 
         builder.setQuality(convertSpecLimit(query.specs.quality));
@@ -62,7 +62,7 @@ public class QueryProtobufCodec {
                 convertSpecLimit(request.getDomainCount()),
                 request.getDomainIdsList(),
                 IndexProtobufCodec.convertQueryLimits(request.getQueryLimits()),
-                SearchSetIdentifier.valueOf(request.getSearchSetIdentifier()));
+                request.getSearchSetIdentifier());
     }
 
 
@@ -133,7 +133,7 @@ public class QueryProtobufCodec {
         return new SearchSpecification(
                 subqueries,
                 specs.getDomainsList(),
-                SearchSetIdentifier.valueOf(specs.getSearchSetIdentifier()),
+                specs.getSearchSetIdentifier(),
                 specs.getHumanQuery(),
                 IndexProtobufCodec.convertSpecLimit(specs.getQuality()),
                 IndexProtobufCodec.convertSpecLimit(specs.getYear()),
@@ -159,7 +159,7 @@ public class QueryProtobufCodec {
                 .setYear(convertSpecLimit(params.year()))
                 .setSize(convertSpecLimit(params.size()))
                 .setRank(convertSpecLimit(params.rank()))
-                .setSearchSetIdentifier(params.identifier().name());
+                .setSearchSetIdentifier(params.identifier());
 
         if (params.nearDomain() != null)
             builder.setNearDomain(params.nearDomain());

@@ -44,9 +44,13 @@ public class QueryBasicInterface {
         if (queryParam == null) {
             return renderer.render(new Object());
         }
+
+        int count = request.queryParams("count") == null ? 10 : Integer.parseInt(request.queryParams("count"));
+        String set = request.queryParams("set") == null ? "" : request.queryParams("set");
+
         var query = queryFactory.createQuery(new QueryParams(queryParam, new QueryLimits(
-                1, 10, 250, 8192
-        ), SearchSetIdentifier.NONE));
+                1, count, 250, 8192
+        ), set));
 
         var rsp = indexClient.query(
                 Context.fromRequest(request),

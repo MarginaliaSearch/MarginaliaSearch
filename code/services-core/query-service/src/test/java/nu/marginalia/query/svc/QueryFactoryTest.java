@@ -49,7 +49,7 @@ public class QueryFactoryTest {
                         SpecificationLimit.none(),
                         null,
                         new QueryLimits(100, 100, 100, 100),
-                        SearchSetIdentifier.BLOGS)).specs;
+                        "NONE")).specs;
     }
 
     @Test

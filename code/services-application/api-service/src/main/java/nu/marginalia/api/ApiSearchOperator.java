@@ -55,7 +55,7 @@ public class ApiSearchOperator {
                         Math.min(100, count),
                         150,
                         8192),
-                searchSet);
+                searchSet.name());
     }
 
     private SearchSetIdentifier selectSearchSet(int index) {

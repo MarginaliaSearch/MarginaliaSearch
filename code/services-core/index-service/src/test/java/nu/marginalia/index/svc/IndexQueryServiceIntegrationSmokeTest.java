@@ -129,7 +129,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
                         .domainCount(SpecificationLimit.none())
                         .rankingParams(ResultRankingParameters.sensibleDefaults())
                         .domains(new ArrayList<>())
-                        .searchSetIdentifier(SearchSetIdentifier.NONE)
+                        .searchSetIdentifier("NONE")
                         .subqueries(List.of(new SearchSubquery(
                                 List.of("3", "5", "2"), List.of("4"), Collections.emptyList(), Collections.emptyList(),
                                 Collections.emptyList()))).build());
@@ -207,7 +207,7 @@ public class IndexQueryServiceIntegrationSmokeTest {
                         .rank(SpecificationLimit.none())
                         .domainCount(SpecificationLimit.none())
                         .queryStrategy(QueryStrategy.SENTENCE)
-                        .searchSetIdentifier(SearchSetIdentifier.NONE)
+                        .searchSetIdentifier("NONE")
                         .rankingParams(ResultRankingParameters.sensibleDefaults())
                         .subqueries(List.of(new SearchSubquery(
                                 List.of("4"), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(),

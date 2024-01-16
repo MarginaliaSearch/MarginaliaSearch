@@ -261,9 +261,7 @@ public class IndexQueryService extends IndexApiImplBase {
             return new SmallSearchSet(request.getDomainsList());
         }
 
-        return searchSetsService.getSearchSetByName(
-                SearchSetIdentifier.valueOf(request.getSearchSetIdentifier())
-        );
+        return searchSetsService.getSearchSetByName(request.getSearchSetIdentifier());
     }
     private SearchResultSet executeSearch(SearchParameters params) throws SQLException {
 
